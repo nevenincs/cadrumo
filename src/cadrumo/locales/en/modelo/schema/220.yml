@@ -154,157 +154,281 @@ modelo:
               help: null
               label: Consolidated balance sheet. Assets (page 3A sheet 00). Other
             x-agp34c1g6d0j0c9q60o32c1h:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Cash, cash balances at central banks and
+                other demand deposits.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Cash,
                 cash balances at central banks and other demand deposits
             x-agp34c1g6d0j0c9q60o32c1i:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Financial assets held for trading.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Financial
                 assets held for trading
             x-agp34c1g6d0j0c9q60o32c1j:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Derivatives.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Derivatives
             x-agp34c1g6d0j0c9q60o32c1k:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Equity instruments.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Equity
                 instruments
             x-agp34c1g6d0j0c9q60o32c1l:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Debt securities.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Debt securities
             x-agp34c1g6d0j0c9q60o32c1m:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Loans and advances.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Loans
                 and advances
             x-agp34c1g6d0j0c9q60o32c1n:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Loans and advances. Central banks.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Loans
                 and advances. Central banks
             x-agp34c1g6d0j0c9q60o32c1o:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Loans and advances. Credit institutions.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Loans
                 and advances. Credit institutions
             x-agp34c1g6d0j0c9q60o32c1p:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Loans and advances. Customers.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Loans
                 and advances. Customers
             x-agp34c1g6d0j0c9q60o32c9g:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Financial assets designated at fair value
+                through profit or loss.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Financial
                 assets designated at fair value through profit or loss
             x-agp34c1g6d0j0c9q60o32c9i:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Debt securities.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Debt securities
             x-agp34c1g6d0j0c9q60o32c9j:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Loans and advances.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Loans
                 and advances
             x-agp34c1g6d0j0c9q60o32c9k:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Loans and advances. Central banks.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Loans
                 and advances. Central banks
             x-agp34c1g6d0j0c9q60o32c9l:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Loans and advances. Credit institutions.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Loans
                 and advances. Credit institutions
             x-agp34c1g6d0j0c9q60o32c9m:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Loans and advances. Customers.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Loans
                 and advances. Customers
             x-agp34c1g6d0j0c9q60o32chn:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Derivatives - hedge accounting.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Derivatives
                 - hedge accounting
             x-agp34c1g6d0j0c9q60o32cho:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Fair value changes of the hedged items
+                in a portfolio hedge of interest rate risk.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Fair value
                 changes of the hedged items in a portfolio hedge of interest rate
                 risk
             x-agp34c1g6d0j0c9q60o32chp:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Investments in joint ventures and associates.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Investments
                 in joint ventures and associates
             x-agp34c1g6d0j0c9q60o32cph:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Joint ventures.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Joint
                 ventures
             x-agp34c1g6d0j0c9q60o32cpi:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Associates.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Associates
             x-agp34c1g6d0j0c9q60o32cpj:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Assets covered by insurance or reinsurance
+                contracts.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Assets
                 covered by insurance or reinsurance contracts
             x-agp34c1g6d0j0c9q60o32cpk:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Tangible assets.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Tangible
                 assets
             x-agp34c1g6d0j0c9q60o32cpl:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Property, plant and equipment.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Property,
                 plant and equipment
             x-agp34c1g6d0j0c9q60o32cpm:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Property, plant and equipment. For own
+                use.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Property,
                 plant and equipment. For own use
             x-agp34c1g6d0j0c9q60o32cpn:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Property, plant and equipment. Leased out
+                under operating leases.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Property,
                 plant and equipment. Leased out under operating leases
             x-agp34c1g6d0j0c9q60o32cpo:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Property, plant and equipment. Assigned
+                to welfare projects (savings banks and credit cooperatives).'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Property,
                 plant and equipment. Assigned to welfare projects (savings banks and
                 credit cooperatives)
             x-agp34c1g6d0j0c9q60o32cpp:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Investment property.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Investment
                 property
             x-agp34c1g6d0j0c9q60o32d1g:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Investment property. Of which: leased out
+                under operating leases.'
               label: 'Consolidated balance sheet. Assets (page 3A sheet 01). Investment
                 property. Of which: leased out under operating leases'
             x-agp34c1g6d0j0c9q60o3cc9l:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Non-trading financial assets mandatorily
+                at fair value through profit or loss.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Non-trading
                 financial assets mandatorily at fair value through profit or loss
             x-agp34c1g6d0j0c9q60o3cc9m:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Equity instruments.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Equity
                 instruments
             x-agp34c1g6d0j0c9q60o3cc9n:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Debt securities.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Debt securities
             x-agp34c1g6d0j0c9q60o3cc9o:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Loans and advances.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Loans
                 and advances
             x-agp34c1g6d0j0c9q60o3cc9p:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Central banks.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Central
                 banks
             x-agp34c1g6d0j0c9q60o3cchg:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Credit institutions.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Credit
                 institutions
             x-agp34c1g6d0j0c9q60o3cchh:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Customers.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Customers
             x-agp34c1g6d0j0c9q60o3cchi:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Memorandum item: lent or pledged as collateral
+                with a right of sale or pledge.'
               label: 'Consolidated balance sheet. Assets (page 3A sheet 01). Memorandum
                 item: lent or pledged as collateral with a right of sale or pledge'
             x-agp34c1g6d0j0c9q60o3cchj:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Financial assets at fair value through
+                other comprehensive income.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Financial
                 assets at fair value through other comprehensive income
             x-agp34c1g6d0j0c9q60o3cchk:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Equity instruments.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Equity
                 instruments
             x-agp34c1g6d0j0c9q60o3cchl:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Debt securities.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Debt securities
             x-agp34c1g6d0j0c9q60o3cchm:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Loans and advances.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Loans
                 and advances
             x-agp34c1g6d0j0c9q60o3cchn:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Central banks.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Central
                 banks
             x-agp34c1g6d0j0c9q60o3ccho:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Credit institutions.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Credit
                 institutions
             x-agp34c1g6d0j0c9q60o3cchp:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Customers.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Customers
             x-agp34c1g6d0j0c9q60o3ccpg:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Memorandum item: lent or pledged as collateral
+                with a right of sale or pledge.'
               label: 'Consolidated balance sheet. Assets (page 3A sheet 01). Memorandum
                 item: lent or pledged as collateral with a right of sale or pledge'
             x-agp34c1g6d0j0c9q60o3ccph:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Financial assets at amortised cost.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Financial
                 assets at amortised cost
             x-agp34c1g6d0j0c9q60o3ccpi:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Debt securities.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Debt securities
             x-agp34c1g6d0j0c9q60o3ccpj:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Loans and advances.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Loans
                 and advances
             x-agp34c1g6d0j0c9q60o3ccpk:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Central banks.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Central
                 banks
             x-agp34c1g6d0j0c9q60o3ccpl:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Credit institutions.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Credit
                 institutions
             x-agp34c1g6d0j0c9q60o3ccpm:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Customers.'
               label: Consolidated balance sheet. Assets (page 3A sheet 01). Customers
             x-agp34c1g6d0j0c9q60o3ccpn:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Memorandum item: lent or pledged as collateral
+                with a right of sale or pledge.'
               label: 'Consolidated balance sheet. Assets (page 3A sheet 01). Memorandum
                 item: lent or pledged as collateral with a right of sale or pledge'
             x-agp34c1g6d0j0c9q60o3ed9g:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Memorandum item: lent or pledged as collateral
+                with a right of sale or pledge.'
               label: 'Consolidated balance sheet. Assets (page 3A sheet 01). Memorandum
                 item: lent or pledged as collateral with a right of sale or pledge'
             x-agp34c1g6d0j0c9q60o3ed9h:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Memorandum item: lent or pledged as collateral
+                with a right of sale or pledge.'
               label: 'Consolidated balance sheet. Assets (page 3A sheet 01). Memorandum
                 item: lent or pledged as collateral with a right of sale or pledge'
             x-agp34c1g6d0j0c9q60o3ed9l:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 01). Memorandum item: acquired under finance
+                leases.'
               label: 'Consolidated balance sheet. Assets (page 3A sheet 01). Memorandum
                 item: acquired under finance leases'
             x-agp34c1g6d0j0chq60o32c1h:
@@ -498,36 +622,61 @@ modelo:
               label: Consolidated balance sheet. Assets (page 3A sheet 02). Loans
                 and receivables. Loans. Other
             x-agp34c1g6d0j2c9q60o32d1h:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 11). Intangible assets.'
               label: Consolidated balance sheet. Assets (page 3A sheet 11). Intangible
                 assets
             x-agp34c1g6d0j2c9q60o32d1i:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 11). Goodwill.'
               label: Consolidated balance sheet. Assets (page 3A sheet 11). Goodwill
             x-agp34c1g6d0j2c9q60o32d1j:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 11). Other intangible assets.'
               label: Consolidated balance sheet. Assets (page 3A sheet 11). Other
                 intangible assets
             x-agp34c1g6d0j2c9q60o32d1k:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 11). Tax assets.'
               label: Consolidated balance sheet. Assets (page 3A sheet 11). Tax assets
             x-agp34c1g6d0j2c9q60o32d1l:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 11). Current tax assets.'
               label: Consolidated balance sheet. Assets (page 3A sheet 11). Current
                 tax assets
             x-agp34c1g6d0j2c9q60o32d1m:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 11). Deferred tax assets.'
               label: Consolidated balance sheet. Assets (page 3A sheet 11). Deferred
                 tax assets
             x-agp34c1g6d0j2c9q60o32d1n:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 11). Other assets.'
               label: Consolidated balance sheet. Assets (page 3A sheet 11). Other
                 assets
             x-agp34c1g6d0j2c9q60o32d1o:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 11). Insurance contracts linked to pensions.'
               label: Consolidated balance sheet. Assets (page 3A sheet 11). Insurance
                 contracts linked to pensions
             x-agp34c1g6d0j2c9q60o32d1p:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 11). Inventories.'
               label: Consolidated balance sheet. Assets (page 3A sheet 11). Inventories
             x-agp34c1g6d0j2c9q60o32d9g:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 11). Remaining other assets.'
               label: Consolidated balance sheet. Assets (page 3A sheet 11). Remaining
                 other assets
             x-agp34c1g6d0j2c9q60o32d9h:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 11). Non-current assets and disposal groups
+                classified as held for sale.'
               label: Consolidated balance sheet. Assets (page 3A sheet 11). Non-current
                 assets and disposal groups classified as held for sale
             x-agp34c1g6d0j2c9q60o32d9i:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Assets (page 3A sheet 11). Total assets.'
               label: Consolidated balance sheet. Assets (page 3A sheet 11). Total
                 assets
             x-agp34c1g6d130c1q60o30c1j:
@@ -729,125 +878,217 @@ modelo:
               label: Consolidated balance sheet. Equity and liabilities. Compulsory
                 reserve fund of cooperatives
             x-agp34c1g6d130c9q60o32d9j:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Financial liabilities held for trading.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Financial
                 liabilities held for trading
             x-agp34c1g6d130c9q60o32d9k:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Derivatives.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Derivatives
             x-agp34c1g6d130c9q60o32d9l:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Short positions.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Short
                 positions
             x-agp34c1g6d130c9q60o32d9m:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Deposits.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Deposits
             x-agp34c1g6d130c9q60o32d9n:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Deposits. Central banks.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Deposits.
                 Central banks
             x-agp34c1g6d130c9q60o32d9o:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Deposits. Credit institutions.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Deposits.
                 Credit institutions
             x-agp34c1g6d130c9q60o32d9p:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Deposits. Customers.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Deposits.
                 Customers
             x-agp34c1g6d130c9q60o32dhg:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Debt securities issued.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Debt
                 securities issued
             x-agp34c1g6d130c9q60o32dhh:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Other financial liabilities.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Other
                 financial liabilities
             x-agp34c1g6d130c9q60o32dhi:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Financial liabilities designated at
+                fair value through profit or loss.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Financial
                 liabilities designated at fair value through profit or loss
             x-agp34c1g6d130c9q60o32dhj:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Deposits.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Deposits
             x-agp34c1g6d130c9q60o32dhk:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Deposits. Central banks.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Deposits.
                 Central banks
             x-agp34c1g6d130c9q60o32dhl:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Deposits. Credit institutions.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Deposits.
                 Credit institutions
             x-agp34c1g6d130c9q60o32dhm:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Deposits. Customers.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Deposits.
                 Customers
             x-agp34c1g6d130c9q60o32dhn:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Debt securities issued.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Debt
                 securities issued
             x-agp34c1g6d130c9q60o32dho:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Other financial liabilities.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Other
                 financial liabilities
             x-agp34c1g6d130c9q60o32dhp:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Financial liabilities at amortised
+                cost.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Financial
                 liabilities at amortised cost
             x-agp34c1g6d130c9q60o32dpg:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Deposits.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Deposits
             x-agp34c1g6d130c9q60o32dph:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Deposits. Central banks.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Deposits.
                 Central banks
             x-agp34c1g6d130c9q60o32dpi:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Deposits. Credit institutions.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Deposits.
                 Credit institutions
             x-agp34c1g6d130c9q60o32dpj:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Deposits. Customers.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Deposits.
                 Customers
             x-agp34c1g6d130c9q60o32dpk:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Debt securities issued.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Debt
                 securities issued
             x-agp34c1g6d130c9q60o32dpl:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Other financial liabilities.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Other
                 financial liabilities
             x-agp34c1g6d130c9q60o32dpm:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Derivatives - hedge accounting.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Derivatives
                 - hedge accounting
             x-agp34c1g6d130c9q60o32dpn:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Fair value changes of the hedged items
+                in a portfolio hedge of interest rate risk.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Fair
                 value changes of the hedged items in a portfolio hedge of interest
                 rate risk
             x-agp34c1g6d130c9q60o32dpo:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Liabilities covered by insurance or
+                reinsurance contracts.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Liabilities
                 covered by insurance or reinsurance contracts
             x-agp34c1g6d130c9q60o32dpp:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Provisions.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Provisions
             x-agp34c1g6d130c9q60o32e1g:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Pensions and other post-employment
+                defined benefit obligations.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Pensions
                 and other post-employment defined benefit obligations
             x-agp34c1g6d130c9q60o32e1h:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Other long-term employee benefits.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Other
                 long-term employee benefits
             x-agp34c1g6d130c9q60o32e1i:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Pending legal proceedings and tax
+                litigation.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Pending
                 legal proceedings and tax litigation
             x-agp34c1g6d130c9q60o32e1j:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Commitments and guarantees given.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Commitments
                 and guarantees given
             x-agp34c1g6d130c9q60o32e1k:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Remaining provisions.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Remaining
                 provisions
             x-agp34c1g6d130c9q60o32e1l:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Tax liabilities.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Tax
                 liabilities
             x-agp34c1g6d130c9q60o32e1m:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Current tax liabilities.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Current
                 tax liabilities
             x-agp34c1g6d130c9q60o32e1n:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Deferred tax liabilities.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Deferred
                 tax liabilities
             x-agp34c1g6d130c9q60o32e1o:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Share capital repayable on demand.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Share
                 capital repayable on demand
             x-agp34c1g6d130c9q60o32e1p:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Other liabilities.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Other
                 liabilities
             x-agp34c1g6d130c9q60o32e9g:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Of which: welfare fund (savings banks
+                and credit cooperatives only).'
               label: 'Consolidated balance sheet. Liabilities (page 3B sheet 01).
                 Of which: welfare fund (savings banks and credit cooperatives only)'
             x-agp34c1g6d130c9q60o32e9h:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Liabilities included in disposal groups
+                classified as held for sale.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Liabilities
                 included in disposal groups classified as held for sale
             x-agp34c1g6d130c9q60o32e9i:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Total liabilities.'
               label: Consolidated balance sheet. Liabilities (page 3B sheet 01). Total
                 liabilities
             x-agp34c1g6d130c9q60o3ed9m:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Memorandum item: subordinated liabilities.'
               label: 'Consolidated balance sheet. Liabilities (page 3B sheet 01).
                 Memorandum item: subordinated liabilities'
             x-agp34c1g6d130c9q60o3ed9n:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3B sheet 01). Memorandum item: subordinated liabilities.'
               label: 'Consolidated balance sheet. Liabilities (page 3B sheet 01).
                 Memorandum item: subordinated liabilities'
             x-agp34c1g6d130chq60o32d1l:
@@ -931,473 +1172,947 @@ modelo:
               label: Consolidated balance sheet. Assets (page 3B sheet 02). Intangible
                 fixed assets. Consolidation goodwill
             x-agp34c1g6d1j0c9q60o32e9j:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Shareholders'' funds.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Shareholders'
                 funds
             x-agp34c1g6d1j0c9q60o32e9k:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Capital.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Capital
             x-agp34c1g6d1j0c9q60o32e9l:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Capital. Paid-up capital.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Capital.
                 Paid-up capital
             x-agp34c1g6d1j0c9q60o32e9m:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Capital. Unpaid capital called up.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Capital.
                 Unpaid capital called up
             x-agp34c1g6d1j0c9q60o32e9n:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Share premium.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Share
                 premium
             x-agp34c1g6d1j0c9q60o32e9o:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Equity instruments issued other than capital.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Equity
                 instruments issued other than capital
             x-agp34c1g6d1j0c9q60o32e9p:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Equity component of compound financial
+                instruments.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Equity
                 component of compound financial instruments
             x-agp34c1g6d1j0c9q60o34c1g:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Other equity instruments issued.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Other
                 equity instruments issued
             x-agp34c1g6d1j0c9q60o34c1h:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Other equity items.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Other
                 equity items
             x-agp34c1g6d1j0c9q60o34c1i:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Retained earnings.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Retained
                 earnings
             x-agp34c1g6d1j0c9q60o34c1j:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Revaluation reserves.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Revaluation
                 reserves
             x-agp34c1g6d1j0c9q60o34c1k:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Other reserves.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Other
                 reserves
             x-agp34c1g6d1j0c9q60o34c1l:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Accumulated reserves or losses of investments
+                in joint ventures and associates.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Accumulated
                 reserves or losses of investments in joint ventures and associates
             x-agp34c1g6d1j0c9q60o34c1m:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Others.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Others
             x-agp34c1g6d1j0c9q60o34c1n:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). (-) Own shares.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). (-) Own
                 shares
             x-agp34c1g6d1j0c9q60o34c1o:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Result attributable to the owners of the
+                parent.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Result
                 attributable to the owners of the parent
             x-agp34c1g6d1j0c9q60o34c1p:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). (-) Interim dividends.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). (-) Interim
                 dividends
             x-agp34c1g6d1j0c9q60o34c9g:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Accumulated other comprehensive income.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Accumulated
                 other comprehensive income
             x-agp34c1g6d1j0c9q60o34c9h:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Items that will not be reclassified to
+                profit or loss.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Items
                 that will not be reclassified to profit or loss
             x-agp34c1g6d1j0c9q60o34c9i:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Actuarial gains or (-) losses on defined
+                benefit pension plans.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Actuarial
                 gains or (-) losses on defined benefit pension plans
             x-agp34c1g6d1j0c9q60o34c9j:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Non-current assets and disposal groups
+                classified as held for sale.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Non-current
                 assets and disposal groups classified as held for sale
             x-agp34c1g6d1j0c9q60o34c9m:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Items that may be reclassified to profit
+                or loss.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Items
                 that may be reclassified to profit or loss
             x-agp34c1g6d1j0c9q60o34c9n:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Hedge of net investments in foreign operations
+                [effective portion].'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Hedge
                 of net investments in foreign operations [effective portion]
             x-agp34c1g6d1j0c9q60o34c9o:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Currency translation.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Currency
                 translation
             x-agp34c1g6d1j0c9q60o34c9p:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Hedging derivatives. Cash flow hedge reserve
+                [effective portion].'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Hedging
                 derivatives. Cash flow hedge reserve [effective portion]
             x-agp34c1g6d1j0c9q60o34chj:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Non-current assets and disposal groups
+                classified as held for sale.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Non-current
                 assets and disposal groups classified as held for sale
             x-agp34c1g6d1j0c9q60o34chk:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Share of other recognised income and expense
+                of investments in joint ventures and associates.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Share
                 of other recognised income and expense of investments in joint ventures
                 and associates
             x-agp34c1g6d1j0c9q60o34chl:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Minority interests [non-controlling interests].'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Minority
                 interests [non-controlling interests]
             x-agp34c1g6d1j0c9q60o34chm:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Accumulated other comprehensive income.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Accumulated
                 other comprehensive income
             x-agp34c1g6d1j0c9q60o34chn:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Other items.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Other
                 items
             x-agp34c1g6d1j0c9q60o34cho:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Total equity.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Total
                 equity
             x-agp34c1g6d1j0c9q60o34chp:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Total equity and liabilities.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Total
                 equity and liabilities
             x-agp34c1g6d1j0c9q60o3cd1j:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Fair value changes of debt instruments
+                at fair value through other comprehensive income.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Fair value
                 changes of debt instruments at fair value through other comprehensive
                 income
             x-agp34c1g6d1j0c9q60o3cd1k:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Hedging instruments [non-designated items].'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Hedging
                 instruments [non-designated items]
             x-agp34c1g6d1j0c9q60o3cd1l:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Other commitments given.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Other
                 commitments given
             x-agp34c1g6d1j0c9q60o3cdhg:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Share of other recognised income and expense
+                of investments in joint ventures and associates.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Share
                 of other recognised income and expense of investments in joint ventures
                 and associates
             x-agp34c1g6d1j0c9q60o3ed9o:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Memorandum item: uncalled capital.'
               label: 'Consolidated balance sheet. Equity (page 3C sheet 01). Memorandum
                 item: uncalled capital'
             x-agp34c1g6d1j0c9q60o3ed9p:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Memorandum item: off-balance-sheet exposures.'
               label: 'Consolidated balance sheet. Equity (page 3C sheet 01). Memorandum
                 item: off-balance-sheet exposures'
             x-agp34c1g6d1j0c9q60o3edhg:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Loan commitments given.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Loan commitments
                 given
             x-agp34c1g6d1j0c9q60o3edhh:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Financial guarantees given.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Financial
                 guarantees given
             x-agp34c1g6d1j0c9q60o3edhi:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Capitalisation reserve.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Capitalisation
                 reserve
             x-agp34c1g6d1j0c9q60o3edhj:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Levelling reserve.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Levelling
                 reserve
             x-agp34c1g6d1j0c9q60r36e0:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Fair value changes of equity instruments
+                measured at fair value through other comprehensive income.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Fair value
                 changes of equity instruments measured at fair value through other
                 comprehensive income
             x-agp34c1g6d1j0c9q60r36e8:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Ineffectiveness of fair value hedges of
+                equity instruments measured at fair value through other comprehensive
+                income.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Ineffectiveness
                 of fair value hedges of equity instruments measured at fair value
                 through other comprehensive income
             x-agp34c1g6d1j0c9q60r38c0:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Fair value changes of equity instruments
+                measured at fair value through other comprehensive income [hedged
+                item].'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Fair value
                 changes of equity instruments measured at fair value through other
                 comprehensive income [hedged item]
             x-agp34c1g6d1j0c9q60r38c8:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Fair value changes of equity instruments
+                measured at fair value through other comprehensive income [hedging
+                instrument].'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Fair value
                 changes of equity instruments measured at fair value through other
                 comprehensive income [hedging instrument]
             x-agp34c1g6d1j0c9q60r38cg:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3C sheet 01). Fair value changes of financial liabilities
+                at fair value through profit or loss attributable to changes in credit
+                risk.'
               label: Consolidated balance sheet. Equity (page 3C sheet 01). Fair value
                 changes of financial liabilities at fair value through profit or loss
                 attributable to changes in credit risk
             x-agp34c1g6d1j0chq60o32dhj:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Financial liabilities held for trading.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Financial
                 liabilities held for trading
             x-agp34c1g6d1j0chq60o32dhk:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Other financial liabilities at fair
+                value through profit or loss.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Other
                 financial liabilities at fair value through profit or loss
             x-agp34c1g6d1j0chq60o32dhl:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Debts and payables.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Debts
                 and payables
             x-agp34c1g6d1j0chq60o32dhm:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Debts and payables. Subordinated liabilities.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Debts
                 and payables. Subordinated liabilities
             x-agp34c1g6d1j0chq60o32dhn:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Debts and payables. Deposits received
+                for ceded reinsurance.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Debts
                 and payables. Deposits received for ceded reinsurance
             x-agp34c1g6d1j0chq60o32dho:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Debts and payables. Debts from insurance
+                operations.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Debts
                 and payables. Debts from insurance operations
             x-agp34c1g6d1j0chq60o32dhp:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Debts and payables. Debts with the
+                insured.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Debts
                 and payables. Debts with the insured
             x-agp34c1g6d1j0chq60o32dpg:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Debts and payables. Debts with intermediaries.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Debts
                 and payables. Debts with intermediaries
             x-agp34c1g6d1j0chq60o32dph:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Debts and payables. Conditional debts.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Debts
                 and payables. Conditional debts
             x-agp34c1g6d1j0chq60o32dpi:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Debts and payables. Debts from reinsurance
+                operations.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Debts
                 and payables. Debts from reinsurance operations
             x-agp34c1g6d1j0chq60o32dpj:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Debts and payables. Debts from coinsurance
+                operations.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Debts
                 and payables. Debts from coinsurance operations
             x-agp34c1g6d1j0chq60o32dpk:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Debts and payables. Debentures and
+                other negotiable securities.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Debts
                 and payables. Debentures and other negotiable securities
             x-agp34c1g6d1j0chq60o32dpl:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Debts and payables. Debts with credit
+                institutions.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Debts
                 and payables. Debts with credit institutions
             x-agp34c1g6d1j0chq60o32dpm:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Debts and payables. Debts from operations
+                preparatory to insurance contracts.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Debts
                 and payables. Debts from operations preparatory to insurance contracts
             x-agp34c1g6d1j0chq60o32dpn:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Debts and payables. Other debts.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Debts
                 and payables. Other debts
             x-agp34c1g6d1j0chq60o32dpo:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Debts and payables. Other debts. Debts
+                with public administrations.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Debts
                 and payables. Other debts. Debts with public administrations
             x-agp34c1g6d1j0chq60o32dpp:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Debts and payables. Other debts. Other
+                debts with group and associated entities.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Debts
                 and payables. Other debts. Other debts with group and associated entities
             x-agp34c1g6d1j0chq60o32e1g:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Debts and payables. Other debts. Remaining
+                other debts.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Debts
                 and payables. Other debts. Remaining other debts
             x-agp34c1g6d1j0chq60o32e1h:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Hedging derivatives.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Hedging
                 derivatives
             x-agp34c1g6d1j0chq60o32e1i:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Technical provisions.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Technical
                 provisions
             x-agp34c1g6d1j0chq60o32e1j:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Technical provisions. Provision for
+                unearned premiums.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Technical
                 provisions. Provision for unearned premiums
             x-agp34c1g6d1j0chq60o32e1k:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Technical provisions. Provision for
+                unexpired risks.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Technical
                 provisions. Provision for unexpired risks
             x-agp34c1g6d1j0chq60o32e1l:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Technical provisions. Life insurance
+                provision.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Technical
                 provisions. Life insurance provision
             x-agp34c1g6d1j0chq60o32e1m:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Technical provisions. Life insurance
+                provision. Provision for unearned premiums.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Technical
                 provisions. Life insurance provision. Provision for unearned premiums
             x-agp34c1g6d1j0chq60o32e1n:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Technical provisions. Life insurance
+                provision. Provision for unexpired risks.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Technical
                 provisions. Life insurance provision. Provision for unexpired risks
             x-agp34c1g6d1j0chq60o32e1o:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Technical provisions. Life insurance
+                provision. Mathematical provision.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Technical
                 provisions. Life insurance provision. Mathematical provision
             x-agp34c1g6d1j0chq60o32e1p:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Technical provisions. Life insurance
+                provision. Life insurance provision where the policyholder bears the
+                investment risk.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Technical
                 provisions. Life insurance provision. Life insurance provision where
                 the policyholder bears the investment risk
             x-agp34c1g6d1j0chq60o32e9g:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Technical provisions. Provision for
+                claims outstanding.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Technical
                 provisions. Provision for claims outstanding
             x-agp34c1g6d1j0chq60o32e9h:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Technical provisions. Provision for
+                profit sharing and premium refunds.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Technical
                 provisions. Provision for profit sharing and premium refunds
             x-agp34c1g6d1j0chq60o32e9i:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Technical provisions. Other technical
+                provisions.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Technical
                 provisions. Other technical provisions
             x-agp34c1g6d1j0chq60o32e9j:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Non-technical provisions.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Non-technical
                 provisions
             x-agp34c1g6d1j0chq60o32e9k:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Non-technical provisions. Provisions
+                for taxes and other legal contingencies.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Non-technical
                 provisions. Provisions for taxes and other legal contingencies
             x-agp34c1g6d1j0chq60o32e9l:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Non-technical provisions. Provision
+                for pensions and similar obligations.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Non-technical
                 provisions. Provision for pensions and similar obligations
             x-agp34c1g6d1j0chq60o32e9m:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Non-technical provisions. Provision
+                for payments under settlement agreements.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Non-technical
                 provisions. Provision for payments under settlement agreements
             x-agp34c1g6d1j0chq60o32e9n:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Non-technical provisions. Other non-technical
+                provisions.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Non-technical
                 provisions. Other non-technical provisions
             x-agp34c1g6d1j0chq60o32e9o:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Tax liabilities.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Tax
                 liabilities
             x-agp34c1g6d1j0chq60o32e9p:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Tax liabilities. Current tax liabilities.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Tax
                 liabilities. Current tax liabilities
             x-agp34c1g6d1j0chq60o34c1g:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Tax liabilities. Deferred tax liabilities.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Tax
                 liabilities. Deferred tax liabilities
             x-agp34c1g6d1j0chq60o34c1h:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Remaining liabilities.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Remaining
                 liabilities
             x-agp34c1g6d1j0chq60o34c1i:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Remaining liabilities. Accruals and
+                deferrals.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Remaining
                 liabilities. Accruals and deferrals
             x-agp34c1g6d1j0chq60o34c1j:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Remaining liabilities. Liabilities
+                from accounting mismatches.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Remaining
                 liabilities. Liabilities from accounting mismatches
             x-agp34c1g6d1j0chq60o34c1k:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Remaining liabilities. Commissions
+                and other acquisition costs of ceded reinsurance.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Remaining
                 liabilities. Commissions and other acquisition costs of ceded reinsurance
             x-agp34c1g6d1j0chq60o34c1l:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Remaining liabilities. Other liabilities.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Remaining
                 liabilities. Other liabilities
             x-agp34c1g6d1j0chq60o34c1m:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Liabilities linked to assets held
+                for sale.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Liabilities
                 linked to assets held for sale
             x-agp34c1g6d1j0chq60o34c1n:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Total liabilities.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Total
                 liabilities
             x-agp34c1g6d1j0chq60o3ec1j:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Debts and payables. Other debts. Associated
+                entities.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Debts
                 and payables. Other debts. Associated entities
             x-agp34c1g6d1j0chq60o3ec1k:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Debts and payables. Other debts. Jointly
+                controlled entities.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Debts
                 and payables. Other debts. Jointly controlled entities
             x-agp34c1g6d1j0chq60o3ec1l:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Liabilities (page 3C sheet 02). Debts and payables. Other debts. Other.'
               label: Consolidated balance sheet. Liabilities (page 3C sheet 02). Debts
                 and payables. Other debts. Other
             x-agp34c1g6d230chq60o34c1o:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Shareholders'' funds.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Shareholders'
                 funds
             x-agp34c1g6d230chq60o34c1p:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Shareholders'' funds. Capital or mutual
+                fund.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Shareholders'
                 funds. Capital or mutual fund
             x-agp34c1g6d230chq60o34c9g:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Shareholders'' funds. Registered capital
+                or mutual fund.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Shareholders'
                 funds. Registered capital or mutual fund
             x-agp34c1g6d230chq60o34c9h:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Shareholders'' funds. (Uncalled capital).'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Shareholders'
                 funds. (Uncalled capital)
             x-agp34c1g6d230chq60o34c9i:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Shareholders'' funds. Share premium.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Shareholders'
                 funds. Share premium
             x-agp34c1g6d230chq60o34c9j:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Shareholders'' funds. Reserves.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Shareholders'
                 funds. Reserves
             x-agp34c1g6d230chq60o34c9k:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Shareholders'' funds. Reserves. Legal and
+                statutory.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Shareholders'
                 funds. Reserves. Legal and statutory
             x-agp34c1g6d230chq60o34c9l:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Shareholders'' funds. Reserves. Stabilisation
+                reserve.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Shareholders'
                 funds. Reserves. Stabilisation reserve
             x-agp34c1g6d230chq60o34c9m:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Shareholders'' funds. Reserves. Other reserves.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Shareholders'
                 funds. Reserves. Other reserves
             x-agp34c1g6d230chq60o34c9n:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Shareholders'' funds. (Own shares and shares
+                of the parent company).'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Shareholders'
                 funds. (Own shares and shares of the parent company)
             x-agp34c1g6d230chq60o34c9o:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Shareholders'' funds. Results of prior
+                years attributed to the parent company.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Shareholders'
                 funds. Results of prior years attributed to the parent company
             x-agp34c1g6d230chq60o34c9p:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Shareholders'' funds. Results of prior
+                years attributed to the parent company. Retained surplus.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Shareholders'
                 funds. Results of prior years attributed to the parent company. Retained
                 surplus
             x-agp34c1g6d230chq60o34chg:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Shareholders'' funds. Results of prior
+                years. (Negative results of prior years attributed to the parent company).'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Shareholders'
                 funds. Results of prior years. (Negative results of prior years attributed
                 to the parent company)
             x-agp34c1g6d230chq60o34chh:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Shareholders'' funds. Other contributions
+                from shareholders and mutual members.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Shareholders'
                 funds. Other contributions from shareholders and mutual members
             x-agp34c1g6d230chq60o34chi:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Shareholders'' funds. Result for the year
+                attributed to the parent company. Consolidated profit and loss.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Shareholders'
                 funds. Result for the year attributed to the parent company. Consolidated
                 profit and loss
             x-agp34c1g6d230chq60o34chj:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Shareholders'' funds. (Interim dividend
+                and interim stabilisation reserve).'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Shareholders'
                 funds. (Interim dividend and interim stabilisation reserve)
             x-agp34c1g6d230chq60o34chk:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Shareholders'' funds. Other equity instruments.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Shareholders'
                 funds. Other equity instruments
             x-agp34c1g6d230chq60o34chl:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Valuation adjustments.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Valuation
                 adjustments
             x-agp34c1g6d230chq60o34chm:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Valuation adjustments. Available-for-sale
+                financial assets.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Valuation
                 adjustments. Available-for-sale financial assets
             x-agp34c1g6d230chq60o34chn:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Valuation adjustments. Hedging operations.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Valuation
                 adjustments. Hedging operations
             x-agp34c1g6d230chq60o34cho:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Valuation adjustments. Exchange and translation
+                differences.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Valuation
                 adjustments. Exchange and translation differences
             x-agp34c1g6d230chq60o34chp:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Valuation adjustments. Correction of accounting
+                mismatches.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Valuation
                 adjustments. Correction of accounting mismatches
             x-agp34c1g6d230chq60o34cpg:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Valuation adjustments. Other adjustments.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Valuation
                 adjustments. Other adjustments
             x-agp34c1g6d230chq60o34cph:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Grants, donations and bequests received.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Grants,
                 donations and bequests received
             x-agp34c1g6d230chq60o34cpi:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Total equity.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Total
                 equity
             x-agp34c1g6d230chq60o34cpj:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Total liabilities and equity.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Total
                 liabilities and equity
             x-agp34c1g6d230chq60o3cd1p:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Shareholders'' funds. Reserves. Reserves
+                in consolidated companies.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Shareholders'
                 funds. Reserves. Reserves in consolidated companies
             x-agp34c1g6d230chq60o3cd9i:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Non-controlling interests.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Non-controlling
                 interests
             x-agp34c1g6d230chq60o3ce9i:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Shareholders'' funds. Result for the year
+                attributed to the parent company.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Shareholders'
                 funds. Result for the year attributed to the parent company
             x-agp34c1g6d230chq60o3ce9j:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Shareholders'' funds. Result for the year
+                attributed to the parent company. (Profit and loss of non-controlling
+                interests).'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Shareholders'
                 funds. Result for the year attributed to the parent company. (Profit
                 and loss of non-controlling interests)
             x-agp34c1g6d230chq60o3ce9k:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Non-controlling interests. Valuation adjustments.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Non-controlling
                 interests. Valuation adjustments
             x-agp34c1g6d230chq60o3ce9l:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Non-controlling interests. Remainder.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Non-controlling
                 interests. Remainder
             x-agp34c1g6d230chq60o3echo:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Shareholders'' funds. Reserves. Reserves
+                in equity-method companies.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Shareholders'
                 funds. Reserves. Reserves in equity-method companies
             x-agp34c1g6d230chq60o3echp:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Valuation adjustments. Equity-method companies.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Valuation
                 adjustments. Equity-method companies
             x-agp34c1g6d230chq60o3ecpk:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Shareholders'' funds. Reserves. Capitalisation
+                reserve.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Shareholders'
                 funds. Reserves. Capitalisation reserve
             x-agp34c1g6d230chq60o3ecpl:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated balance sheet.
+                Equity (page 3D sheet 02). Shareholders'' funds. Reserves. Levelling
+                reserve.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Shareholders'
                 funds. Reserves. Levelling reserve
             x-agp34c1g6h130chq60o34dpn:
+              help: 'Modelo 220 entry, tax year 2024: Non-life insurance technical
+                account. Expenses of property, plant and equipment and of investments.'
               label: Non-life insurance technical account. Expenses of property, plant
                 and equipment and of investments
             x-agp34c1g6h130chq60o34dpo:
+              help: 'Modelo 220 entry, tax year 2024: Non-life insurance technical
+                account. Expenses of property, plant and equipment and of investments.
+                Investment management expenses.'
               label: Non-life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Investment management expenses
             x-agp34c1g6h130chq60o34dpp:
+              help: 'Modelo 220 entry, tax year 2024: Non-life insurance technical
+                account. Expenses of property, plant and equipment and of investments.
+                Investment management expenses. Expenses of property, plant and equipment
+                and of investment property.'
               label: Non-life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Investment management expenses.
                 Expenses of property, plant and equipment and of investment property
             x-agp34c1g6h130chq60o34e1g:
+              help: 'Modelo 220 entry, tax year 2024: Non-life insurance technical
+                account. Expenses of property, plant and equipment and of investments.
+                Investment management expenses. Expenses of investments and financial
+                accounts.'
               label: Non-life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Investment management expenses.
                 Expenses of investments and financial accounts
             x-agp34c1g6h130chq60o34e1h:
+              help: 'Modelo 220 entry, tax year 2024: Non-life insurance technical
+                account. Expenses of property, plant and equipment and of investments.
+                Value adjustments of property, plant and equipment and of investments.'
               label: Non-life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Value adjustments of property, plant
                 and equipment and of investments
             x-agp34c1g6h130chq60o34e1i:
+              help: 'Modelo 220 entry, tax year 2024: Non-life insurance technical
+                account. Expenses of property, plant and equipment and of investments.
+                Value adjustments of property, plant and equipment and of investments.
+                Depreciation of property, plant and equipment and of investment property.'
               label: Non-life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Value adjustments of property, plant
                 and equipment and of investments. Depreciation of property, plant
                 and equipment and of investment property
             x-agp34c1g6h130chq60o34e1j:
+              help: 'Modelo 220 entry, tax year 2024: Non-life insurance technical
+                account. Expenses of property, plant and equipment and of investments.
+                Value adjustments of property, plant and equipment and of investments.
+                Impairment of property, plant and equipment and of investment property.'
               label: Non-life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Value adjustments of property, plant
                 and equipment and of investments. Impairment of property, plant and
                 equipment and of investment property
             x-agp34c1g6h130chq60o34e1k:
+              help: 'Modelo 220 entry, tax year 2024: Non-life insurance technical
+                account. Expenses of property, plant and equipment and of investments.
+                Value adjustments of property, plant and equipment and of investments.
+                Impairment of financial investments.'
               label: Non-life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Value adjustments of property, plant
                 and equipment and of investments. Impairment of financial investments
             x-agp34c1g6h130chq60o34e1l:
+              help: 'Modelo 220 entry, tax year 2024: Non-life insurance technical
+                account. Expenses of property, plant and equipment and of investments.
+                Losses on property, plant and equipment and on investments.'
               label: Non-life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Losses on property, plant and equipment
                 and on investments
             x-agp34c1g6h130chq60o34e1m:
+              help: 'Modelo 220 entry, tax year 2024: Non-life insurance technical
+                account. Expenses of property, plant and equipment and of investments.
+                Losses on property, plant and equipment and on investments. On property,
+                plant and equipment and on investment property.'
               label: Non-life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Losses on property, plant and equipment
                 and on investments. On property, plant and equipment and on investment
                 property
             x-agp34c1g6h130chq60o34e1n:
+              help: 'Modelo 220 entry, tax year 2024: Non-life insurance technical
+                account. Expenses of property, plant and equipment and of investments.
+                Losses on property, plant and equipment and on investments. On financial
+                investments.'
               label: Non-life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Losses on property, plant and equipment
                 and on investments. On financial investments
             x-agp34c1g6h130chq60o34e1o:
+              help: 'Modelo 220 entry, tax year 2024: Non-life insurance technical
+                account. Subtotal (Result of the non-life insurance technical account).'
               label: Non-life insurance technical account. Subtotal (Result of the
                 non-life insurance technical account)
             x-agp34c1g6h130chq60o3cd9m:
+              help: 'Modelo 220 entry, tax year 2024: Non-life insurance technical
+                account. Expenses of property, plant and equipment and of investments.
+                Losses on disposal of holdings in consolidated companies.'
               label: Non-life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Losses on disposal of holdings in
                 consolidated companies
             x-agp34c1g6h130chq60o3ec1p:
+              help: 'Modelo 220 entry, tax year 2024: Non-life insurance technical
+                account. Expenses of property, plant and equipment and of investments.
+                Expenses of entities included in the consolidation.'
               label: Non-life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Expenses of entities included in
                 the consolidation
             x-agp34c1g6h130chq60o3ec9g:
+              help: 'Modelo 220 entry, tax year 2024: Non-life insurance technical
+                account. Expenses of property, plant and equipment and of investments.
+                Share of losses of equity-accounted entities.'
               label: Non-life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Share of losses of equity-accounted
                 entities
             x-agp34c1g6h130chq60o3ec9h:
+              help: 'Modelo 220 entry, tax year 2024: Non-life insurance technical
+                account. Expenses of property, plant and equipment and of investments.
+                Losses on disposal of holdings in equity-accounted companies.'
               label: Non-life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Losses on disposal of holdings in
                 equity-accounted companies
+            x-agp34c1g6h230chq60o36cpk:
+              label: Life insurance technical account. Other technical expenses (+
+                or -)
+            x-agp34c1g6h230chq60o36cpl:
+              label: Life insurance technical account. Other technical expenses (+
+                or -). Change in impairment for bad debts (+ or -)
+            x-agp34c1g6h230chq60o36cpm:
+              label: Life insurance technical account. Other technical expenses (+
+                or -). Change in impairment of fixed assets (+ or -)
+            x-agp34c1g6h230chq60o36cpn:
+              label: Life insurance technical account. Other technical expenses (+
+                or -). Other
+            x-agp34c1g6h230chq60o36cpo:
+              label: Life insurance technical account. Expenses of property, plant
+                and equipment and of investments
+            x-agp34c1g6h230chq60o36cpp:
+              label: Life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Management expenses of property,
+                plant and equipment and of investments
+            x-agp34c1g6h230chq60o36d1g:
+              label: Life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Management expenses of property,
+                plant and equipment and of investments. Expenses of property, plant
+                and equipment and of investment property
+            x-agp34c1g6h230chq60o36d1h:
+              label: Life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Management expenses of property,
+                plant and equipment and of investments. Expenses of investments and
+                financial accounts
+            x-agp34c1g6h230chq60o36d1i:
+              label: Life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Value adjustments of property, plant
+                and equipment and of investments
+            x-agp34c1g6h230chq60o36d1j:
+              label: Life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Value adjustments of property, plant
+                and equipment and of investments. Depreciation of property, plant
+                and equipment and of investment property
+            x-agp34c1g6h230chq60o36d1k:
+              label: Life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Value adjustments of property, plant
+                and equipment and of investments. Impairment of property, plant and
+                equipment and of investment property
+            x-agp34c1g6h230chq60o36d1l:
+              label: Life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Value adjustments of property, plant
+                and equipment and of investments. Impairment of financial investments
+            x-agp34c1g6h230chq60o36d1m:
+              label: Life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Losses on property, plant and equipment
+                and on investments
+            x-agp34c1g6h230chq60o36d1n:
+              label: Life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Losses on property, plant and equipment
+                and on investments. On property, plant and equipment and on investment
+                property
+            x-agp34c1g6h230chq60o36d1o:
+              label: Life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Losses on property, plant and equipment
+                and on investments. On financial investments
+            x-agp34c1g6h230chq60o36d1p:
+              label: Life insurance technical account. Expenses of investments backing
+                policies where the policyholder bears the investment risk
+            x-agp34c1g6h230chq60o36d9g:
+              label: Life insurance technical account. Subtotal (Result of the life
+                insurance technical account)
+            x-agp34c1g6h230chq60o3cd9o:
+              label: Life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Losses on disposal of holdings in
+                consolidated companies
+            x-agp34c1g6h230chq60o3ec9l:
+              label: Life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Expenses of entities included in
+                the consolidation
+            x-agp34c1g6h230chq60o3ec9m:
+              label: Life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Expenses of entities included in
+                the consolidation. Share of losses of equity-accounted entities
+            x-agp34c1g6h230chq60o3ec9n:
+              label: Life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Expenses of entities included in
+                the consolidation. Losses on disposal of holdings in equity-accounted
+                companies
             x-agp34c1g6l0j0c1q60o36cpj:
               help: null
               label: Statement of recognised consolidated income and expense. Total
@@ -1870,202 +2585,367 @@ modelo:
                 year (page 5A sheet 02). Entities accounted for using the equity method.
                 Other reclassifications
             x-agp34c1g6so30c1q60o30d1j:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Sum of the individual taxable bases
+                of the tax group''s entities (excluding bases under the objective-assessment
+                shipping regime) (p. 7A).'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Sum of the individual taxable bases of the tax group's entities
                 (excluding bases under the objective-assessment shipping regime) (p.
                 7A)
             x-agp34c1g6so30c1q60o30d1n:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Cooperative groups: sum of individual
+                taxable bases from cooperative results (p. 7A).'
               label: 'Taxable base and gross tax liability of the group (page 7 sheet
                 00). Cooperative groups: sum of individual taxable bases from cooperative
                 results (p. 7A)'
             x-agp34c1g6so30c1q60o30d1o:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Cooperative groups: sum of individual
+                taxable bases from non-cooperative results (p. 7A).'
               label: 'Taxable base and gross tax liability of the group (page 7 sheet
                 00). Cooperative groups: sum of individual taxable bases from non-cooperative
                 results (p. 7A)'
             x-agp34c1g6so30c1q60o30d1p:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Groups with shipping entities under
+                the special regime: sum of tonnage-based taxable bases determined
+                by objective assessment (p. 7A)(*).'
               label: 'Taxable base and gross tax liability of the group (page 7 sheet
                 00). Groups with shipping entities under the special regime: sum of
                 tonnage-based taxable bases determined by objective assessment (p.
                 7A)(*)'
             x-agp34c1g6so30c1q60o30dpp:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Total corrections to the sum of taxable
+                bases for deferral of internal results.'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Total corrections to the sum of taxable bases for deferral of
                 internal results
             x-agp34c1g6so30c1q60o30e1g:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Other corrections to the sum of taxable
+                bases (**). Elimination of internal dividends of the tax group (p.
+                7D).'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Other corrections to the sum of taxable bases (**). Elimination
                 of internal dividends of the tax group (p. 7D)
             x-agp34c1g6so30c1q60o30e1i:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Other corrections to the sum of taxable
+                bases (**). Incorporation of impairments of equity holdings in tax
+                group entities, eliminated in earlier periods (p. 7E).'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Other corrections to the sum of taxable bases (**). Incorporation
                 of impairments of equity holdings in tax group entities, eliminated
                 in earlier periods (p. 7E)
             x-agp34c1g6so30c1q60o30e1j:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Other corrections to the sum of taxable
+                bases (**). Cooperative groups: elimination of "intra-group returns",
+                "intra-group economic aid" and "results distributed by the head entity
+                of the group" (RD 1345/1992) (p. 7G).'
               label: 'Taxable base and gross tax liability of the group (page 7 sheet
                 00). Other corrections to the sum of taxable bases (**). Cooperative
                 groups: elimination of "intra-group returns", "intra-group economic
                 aid" and "results distributed by the head entity of the group" (RD
                 1345/1992) (p. 7G)'
             x-agp34c1g6so30c1q60o30e1l:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Other corrections to the sum of taxable
+                bases (**). Other corrections to the sum of individual taxable bases
+                or to the tax group''s taxable base (p. 7H).'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Other corrections to the sum of taxable bases (**). Other corrections
                 to the sum of individual taxable bases or to the tax group's taxable
                 base (p. 7H)
             x-agp34c1g6so30c1q60o30e1m:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Other corrections to the sum of taxable
+                bases (**). Total other corrections to the sum of taxable bases.'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Other corrections to the sum of taxable bases (**). Total other
                 corrections to the sum of taxable bases
             x-agp34c1g6so30c1q60o34chl:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Preliminary taxable base of the group.'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Preliminary taxable base of the group
             x-agp34c1g6so30c1q60o34e9h:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Application of the art. 11.12 LIS
+                limit (art. 62.1 e) LIS). Decrease.'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Application of the art. 11.12 LIS limit (art. 62.1 e) LIS). Decrease
             x-agp34c1g6so30c1q60o36dhi:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Offset of the group''s negative taxable
+                bases from earlier periods (p. 7K)(***).'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Offset of the group's negative taxable bases from earlier periods
                 (p. 7K)(***)
             x-agp34c1g6so30c1q60o36dhj:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Cooperative groups: offset of the
+                group''s negative tax liabilities from earlier periods (p. 7K bis)(***).'
               label: 'Taxable base and gross tax liability of the group (page 7 sheet
                 00). Cooperative groups: offset of the group''s negative tax liabilities
                 from earlier periods (p. 7K bis)(***)'
             x-agp34c1g6so30c1q60o36e9o:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Allocations referred to in art. 11.12
+                LIS from periods before joining the group (arts. 67 d) and 74.3 d)
+                LIS)(***).'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Allocations referred to in art. 11.12 LIS from periods before
                 joining the group (arts. 67 d) and 74.3 d) LIS)(***)
             x-agp34c1g6so30c1q60o3ad1g:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Application of the art. 11.12 LIS
+                limit and 7th additional provision of Act 20/1990. Decrease.'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Application of the art. 11.12 LIS limit and 7th additional provision
                 of Act 20/1990. Decrease
             x-agp34c1g6so30c1q60o3ad1h:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Allocations referred to in art. 11.12
+                LIS and the 7th additional provision of Act 20/1990, from periods
+                before the entity joined the group (***).'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Allocations referred to in art. 11.12 LIS and the 7th additional
                 provision of Act 20/1990, from periods before the entity joined the
                 group (***)
             x-agp34c1g6so30c1q60o3ad1n:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Offset of entities'' negative taxable
+                bases from periods before joining the group (arts. 67 e) and 74.3
+                e) LIS) (p. 7L)(***).'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Offset of entities' negative taxable bases from periods before
                 joining the group (arts. 67 e) and 74.3 e) LIS) (p. 7L)(***)
             x-agp34c1g6so30c1q60o3ad9g:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Taxable base of the group, before
+                applying the capitalisation reserves and offsetting negative taxable
+                bases from earlier periods.'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Taxable base of the group, before applying the capitalisation
                 reserves and offsetting negative taxable bases from earlier periods
             x-agp34c1g6so30c1q60o3ad9i:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Taxable base of the group.'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Taxable base of the group
             x-agp34c1g6so30c1q60o3ad9j:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Cooperative groups: sum of individual
+                taxable bases less eliminations, from cooperative results.'
               label: 'Taxable base and gross tax liability of the group (page 7 sheet
                 00). Cooperative groups: sum of individual taxable bases less eliminations,
                 from cooperative results'
             x-agp34c1g6so30c1q60o3ad9k:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Cooperative groups: sum of individual
+                taxable bases less eliminations, from non-cooperative results.'
               label: 'Taxable base and gross tax liability of the group (page 7 sheet
                 00). Cooperative groups: sum of individual taxable bases less eliminations,
                 from non-cooperative results'
             x-agp34c1g6so30c1q60o3ad9o:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Tax rate (%).'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Tax rate (%)
             x-agp34c1g6so30c1q60o3adhg:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Sum of the gross tax liabilities of
+                the group''s cooperatives.'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Sum of the gross tax liabilities of the group's cooperatives
             x-agp34c1g6so30c1q60o3adhh:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Cooperative groups: offset of entities''
+                negative tax liabilities from periods before joining the group (p.
+                7L bis)(***).'
               label: 'Taxable base and gross tax liability of the group (page 7 sheet
                 00). Cooperative groups: offset of entities'' negative tax liabilities
                 from periods before joining the group (p. 7L bis)(***)'
             x-agp34c1g6so30c1q60o3adhi:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Gross tax liability of the group.'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Gross tax liability of the group
             x-agp34c1g6so30c1q60oj0chh:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Sum of individual negative taxable
+                bases from earlier periods now included (19th additional provision
+                LIS). General regime (p. 7A bis).'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Sum of individual negative taxable bases from earlier periods
                 now included (19th additional provision LIS). General regime (p. 7A
                 bis)
             x-agp34c1g6so30c1q60oj4dhj:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Sum of 50% of the individual negative
+                taxable bases of the period, not included (19th additional provision
+                LIS). General regime (p. 7A).'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Sum of 50% of the individual negative taxable bases of the period,
                 not included (19th additional provision LIS). General regime (p. 7A)
             x-agp34c1g6so30c1q60oj4dhk:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Sum of 50% of the individual negative
+                taxable bases of the period, not included (19th additional provision
+                LIS). Special regime for vessels and shipping companies in the Canary
+                Islands (p. 7A).'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Sum of 50% of the individual negative taxable bases of the period,
                 not included (19th additional provision LIS). Special regime for vessels
                 and shipping companies in the Canary Islands (p. 7A)
             x-agp34c1g6so30c1q60ojicpl:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Sum of negative taxable bases from
+                earlier periods now included (19th additional provision LIS). Special
+                regime for vessels and shipping companies in the Canary Islands (p.
+                7A bis).'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Sum of negative taxable bases from earlier periods now included
                 (19th additional provision LIS). Special regime for vessels and shipping
                 companies in the Canary Islands (p. 7A bis)
             x-agp34c1g6so30c1q60p3ad1i:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Impairment losses under art. 13.1
+                LIS and provisions and expenses (arts. 14.1 and 14.2 LIS) referred
+                to in art. 11.12 LIS, and allocations under transitional provision
+                33.1 LIS. Increase.'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Impairment losses under art. 13.1 LIS and provisions and expenses
                 (arts. 14.1 and 14.2 LIS) referred to in art. 11.12 LIS, and allocations
                 under transitional provision 33.1 LIS. Increase
             x-agp34c1g6so30c1q60p3ad1j:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Impairment losses under art. 13.1
+                LIS and provisions and expenses (arts. 14.1 and 14.2 LIS) referred
+                to in art. 11.12 LIS. Decrease.'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Impairment losses under art. 13.1 LIS and provisions and expenses
                 (arts. 14.1 and 14.2 LIS) referred to in art. 11.12 LIS. Decrease
             x-agp34c1g6so30c1q60p3ad1k:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Application of the art. 11.12 LIS
+                limit (art. 62.1 e) LIS). Increase.'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Application of the art. 11.12 LIS limit (art. 62.1 e) LIS). Increase
             x-agp34c1g6so30c1q60p3ad1l:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Levelling reserve. Increase.'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Levelling reserve. Increase
             x-agp34c1g6so30c1q60p3ad1m:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Levelling reserve. Decrease.'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Levelling reserve. Decrease
             x-agp34c1g6so30c1q60p3ad1n:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Levelling reserve of entities from
+                periods before joining the group (arts. 67 f) and 74.3 f) LIS).'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Levelling reserve of entities from periods before joining the
                 group (arts. 67 f) and 74.3 f) LIS)
             x-agp34c1g6so30c1q60p3ad1o:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Impairment losses under art. 13.1
+                LIS and provisions and expenses (arts. 14.1 and 14.2 LIS) referred
+                to in art. 11.12 LIS. Increase (cooperatives).'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Impairment losses under art. 13.1 LIS and provisions and expenses
                 (arts. 14.1 and 14.2 LIS) referred to in art. 11.12 LIS. Increase
                 (cooperatives)
             x-agp34c1g6so30c1q60p3ad1p:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Impairment losses under art. 13.1
+                LIS and provisions and expenses (arts. 14.1 and 14.2 LIS) referred
+                to in art. 11.12 LIS. Decrease (cooperatives).'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Impairment losses under art. 13.1 LIS and provisions and expenses
                 (arts. 14.1 and 14.2 LIS) referred to in art. 11.12 LIS. Decrease
                 (cooperatives)
             x-agp34c1g6so30c1q60p3ge9g:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Application of the art. 11.12 LIS
+                limit and 7th additional provision of Act 20/1990. Increase.'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Application of the art. 11.12 LIS limit and 7th additional provision
                 of Act 20/1990. Increase
             x-agp34c1g6so30c1q60p3ge9h:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Levelling reserve. Increase.'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Levelling reserve. Increase
             x-agp34c1g6so30c1q60p3ge9i:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Levelling reserve. Decrease.'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Levelling reserve. Decrease
             x-agp34c1g6so30c1q60p3ge9j:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Levelling reserve of entities from
+                periods before joining the group.'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Levelling reserve of entities from periods before joining the
                 group
             x-agp34c1g6so30c1q60p3idhj:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Capitalisation reserve (***).'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Capitalisation reserve (***)
             x-agp34c1g6so30c1q60pj2d1g:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Capitalisation reserve of entities
+                from periods before joining the group, applied (arts. 67 c) and 74.3
+                c) LIS)(***).'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Capitalisation reserve of entities from periods before joining
                 the group, applied (arts. 67 c) and 74.3 c) LIS)(***)
             x-agp34c1g6so30c1q60pj4d1h:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Corrections to the sum of taxable
+                bases for deferral of internal results (**). Total elimination of
+                results from internal transactions (p. 7C).'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Corrections to the sum of taxable bases for deferral of internal
                 results (**). Total elimination of results from internal transactions
                 (p. 7C)
             x-agp34c1g6so30c1q60pj4d1i:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Corrections to the sum of taxable
+                bases for deferral of internal results (**). Total incorporation of
+                results from internal transactions (p. 7C).'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Corrections to the sum of taxable bases for deferral of internal
                 results (**). Total incorporation of results from internal transactions
                 (p. 7C)
             x-agp34c1g6so30c1qegp34c1g6so30c1e6ss3cb9o60p0:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Taxable base bracket 1.'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Taxable base bracket 1
             x-agp34c1g6so30c1qegp34c1g6so30c1e70o36b9o60rg:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Tax rate bracket 1 (three integer
+                digits, two decimals).'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Tax rate bracket 1 (three integer digits, two decimals)
             x-agp34c1g6so30c1qegp34c1g6so30c1e70o3gb9o68q0:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Taxable base bracket 2.'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Taxable base bracket 2
             x-agp34c1g6so30c1qegp34c1g6so30c1e70p3ab9o68sg:
+              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+                of the group (page 7 sheet 00). Tax rate bracket 2 (three integer
+                digits, two decimals).'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Tax rate bracket 2 (three integer digits, two decimals)
             x-agp34c1g6t230c1q60o30e1g:
@@ -2148,33 +3028,54 @@ modelo:
                 still to be incorporated at the end of the period. Impairment still
                 to be incorporated'
             x-agp34c1g6t3j0c1q60o30e1j:
+              help: 'Modelo 220 entry, tax year 2024: Cooperative groups: eliminations
+                (R.D. 1345/1992). Total eliminations. Total.'
               label: 'Cooperative groups: eliminations (R.D. 1345/1992). Total eliminations.
                 Total'
             x-agp34c1g6t3j0c1q60o32c1j:
+              help: 'Modelo 220 entry, tax year 2024: Cooperative groups: eliminations
+                (R.D. 1345/1992). Intra-group cooperative returns (*). Total.'
               label: 'Cooperative groups: eliminations (R.D. 1345/1992). Intra-group
                 cooperative returns (*). Total'
             x-agp34c1g6t3j0c1q60o32c1l:
+              help: 'Modelo 220 entry, tax year 2024: Cooperative groups: eliminations
+                (R.D. 1345/1992). Intra-group financial assistance (*). Total.'
               label: 'Cooperative groups: eliminations (R.D. 1345/1992). Intra-group
                 financial assistance (*). Total'
             x-agp34c1g6t3j0c1q60o32c1n:
+              help: 'Modelo 220 entry, tax year 2024: Cooperative groups: eliminations
+                (R.D. 1345/1992). Profits distributed by the group parent entity (*).
+                Total.'
               label: 'Cooperative groups: eliminations (R.D. 1345/1992). Profits distributed
                 by the group parent entity (*). Total'
             x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e64r2qchk:
+              help: 'Modelo 220 entry, tax year 2024: Cooperative groups: eliminations
+                (R.D. 1345/1992). Tax ID of the paying entity.'
               label: 'Cooperative groups: eliminations (R.D. 1345/1992). Tax ID of
                 the paying entity'
             x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e68qiqcpj:
+              help: 'Modelo 220 entry, tax year 2024: Cooperative groups: eliminations
+                (R.D. 1345/1992). Tax ID of the receiving entity.'
               label: 'Cooperative groups: eliminations (R.D. 1345/1992). Tax ID of
                 the receiving entity'
             x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e6cq2qd9g:
+              help: 'Modelo 220 entry, tax year 2024: Cooperative groups: eliminations
+                (R.D. 1345/1992). Intra-group cooperative returns.'
               label: 'Cooperative groups: eliminations (R.D. 1345/1992). Intra-group
                 cooperative returns'
             x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e6koiqdhn:
+              help: 'Modelo 220 entry, tax year 2024: Cooperative groups: eliminations
+                (R.D. 1345/1992). Intra-group financial assistance.'
               label: 'Cooperative groups: eliminations (R.D. 1345/1992). Intra-group
                 financial assistance'
             x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e6os2qe1k:
+              help: 'Modelo 220 entry, tax year 2024: Cooperative groups: eliminations
+                (R.D. 1345/1992). Profits distributed by the group parent entity.'
               label: 'Cooperative groups: eliminations (R.D. 1345/1992). Profits distributed
                 by the group parent entity'
             x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e70qiqc9g64:
+              help: 'Modelo 220 entry, tax year 2024: Cooperative groups: eliminations
+                (R.D. 1345/1992). Total eliminations for the transaction.'
               label: 'Cooperative groups: eliminations (R.D. 1345/1992). Total eliminations
                 for the transaction'
             x-agp34c1g6t430c1q60o30e1l:

@@ -152,156 +152,281 @@ modelo:
               help: null
               label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Egyéb
             x-agp34c1g6d0j0c9q60o32c1h:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Pénzeszközök, jegybanki számlaegyenlegek és
+                egyéb látra szóló betétek.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Pénzeszközök,
                 jegybanki számlaegyenlegek és egyéb látra szóló betétek
             x-agp34c1g6d0j0c9q60o32c1i:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Kereskedési célú pénzügyi eszközök.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Kereskedési
                 célú pénzügyi eszközök
             x-agp34c1g6d0j0c9q60o32c1j:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Derivatívák.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Derivatívák
             x-agp34c1g6d0j0c9q60o32c1k:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Tőkeinstrumentumok.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Tőkeinstrumentumok
             x-agp34c1g6d0j0c9q60o32c1l:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Hitelviszonyt megtestesítő értékpapírok.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelviszonyt
                 megtestesítő értékpapírok
             x-agp34c1g6d0j0c9q60o32c1m:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Hitelek és előlegek.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelek és
                 előlegek
             x-agp34c1g6d0j0c9q60o32c1n:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Hitelek és előlegek. Jegybankok.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelek és
                 előlegek. Jegybankok
             x-agp34c1g6d0j0c9q60o32c1o:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Hitelek és előlegek. Hitelintézetek.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelek és
                 előlegek. Hitelintézetek
             x-agp34c1g6d0j0c9q60o32c1p:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Hitelek és előlegek. Ügyfelek.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelek és
                 előlegek. Ügyfelek
             x-agp34c1g6d0j0c9q60o32c9g:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Az eredménnyel szemben valós értéken értékeltnek
+                megjelölt pénzügyi eszközök.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Az eredménnyel
                 szemben valós értéken értékeltnek megjelölt pénzügyi eszközök
             x-agp34c1g6d0j0c9q60o32c9i:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Hitelviszonyt megtestesítő értékpapírok.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelviszonyt
                 megtestesítő értékpapírok
             x-agp34c1g6d0j0c9q60o32c9j:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Hitelek és előlegek.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelek és
                 előlegek
             x-agp34c1g6d0j0c9q60o32c9k:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Hitelek és előlegek. Jegybankok.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelek és
                 előlegek. Jegybankok
             x-agp34c1g6d0j0c9q60o32c9l:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Hitelek és előlegek. Hitelintézetek.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelek és
                 előlegek. Hitelintézetek
             x-agp34c1g6d0j0c9q60o32c9m:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Hitelek és előlegek. Ügyfelek.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelek és
                 előlegek. Ügyfelek
             x-agp34c1g6d0j0c9q60o32chn:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Derivatívák - fedezeti elszámolás.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Derivatívák
                 - fedezeti elszámolás
             x-agp34c1g6d0j0c9q60o32cho:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Kamatlábkockázat portfóliófedezete során a fedezett
+                tételek valós értékének változása.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Kamatlábkockázat
                 portfóliófedezete során a fedezett tételek valós értékének változása
             x-agp34c1g6d0j0c9q60o32chp:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Befektetések közös vállalkozásokban és társult
+                vállalkozásokban.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Befektetések
                 közös vállalkozásokban és társult vállalkozásokban
             x-agp34c1g6d0j0c9q60o32cph:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Közös vállalkozások.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Közös vállalkozások
             x-agp34c1g6d0j0c9q60o32cpi:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Társult vállalkozások.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Társult vállalkozások
             x-agp34c1g6d0j0c9q60o32cpj:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Biztosítási vagy viszontbiztosítási szerződésekkel
+                fedezett eszközök.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Biztosítási
                 vagy viszontbiztosítási szerződésekkel fedezett eszközök
             x-agp34c1g6d0j0c9q60o32cpk:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Tárgyi eszközök.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Tárgyi eszközök
             x-agp34c1g6d0j0c9q60o32cpl:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Ingatlanok, gépek és berendezések.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Ingatlanok,
                 gépek és berendezések
             x-agp34c1g6d0j0c9q60o32cpm:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Ingatlanok, gépek és berendezések. Saját használatú.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Ingatlanok,
                 gépek és berendezések. Saját használatú
             x-agp34c1g6d0j0c9q60o32cpn:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Ingatlanok, gépek és berendezések. Operatív
+                lízingbe adva.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Ingatlanok,
                 gépek és berendezések. Operatív lízingbe adva
             x-agp34c1g6d0j0c9q60o32cpo:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Ingatlanok, gépek és berendezések. Jólét célú
+                tevékenységre rendelve (takarékpénztárak és hitelszövetkezetek).'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Ingatlanok,
                 gépek és berendezések. Jólét célú tevékenységre rendelve (takarékpénztárak
                 és hitelszövetkezetek)
             x-agp34c1g6d0j0c9q60o32cpp:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Befektetési célú ingatlanok.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Befektetési
                 célú ingatlanok
             x-agp34c1g6d0j0c9q60o32d1g:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Befektetési célú ingatlanok. Ebből: operatív
+                lízingbe adva.'
               label: 'Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Befektetési
                 célú ingatlanok. Ebből: operatív lízingbe adva'
             x-agp34c1g6d0j0c9q60o3cc9l:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Nem kereskedési célú pénzügyi eszközök, kötelezően
+                az eredménnyel szemben valós értéken értékelve.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Nem kereskedési
                 célú pénzügyi eszközök, kötelezően az eredménnyel szemben valós értéken
                 értékelve
             x-agp34c1g6d0j0c9q60o3cc9m:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Tőkeinstrumentumok.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Tőkeinstrumentumok
             x-agp34c1g6d0j0c9q60o3cc9n:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Hitelviszonyt megtestesítő értékpapírok.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelviszonyt
                 megtestesítő értékpapírok
             x-agp34c1g6d0j0c9q60o3cc9o:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Hitelek és előlegek.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelek és
                 előlegek
             x-agp34c1g6d0j0c9q60o3cc9p:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Jegybankok.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Jegybankok
             x-agp34c1g6d0j0c9q60o3cchg:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Hitelintézetek.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelintézetek
             x-agp34c1g6d0j0c9q60o3cchh:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Ügyfelek.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Ügyfelek
             x-agp34c1g6d0j0c9q60o3cchi:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Emlékeztető tétel: értékesítési vagy elzálogosítási
+                joggal kölcsönadott vagy biztosítékként átadott.'
               label: 'Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Emlékeztető
                 tétel: értékesítési vagy elzálogosítási joggal kölcsönadott vagy biztosítékként
                 átadott'
             x-agp34c1g6d0j0c9q60o3cchj:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Az egyéb átfogó eredménnyel szemben valós értéken
+                értékelt pénzügyi eszközök.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Az egyéb
                 átfogó eredménnyel szemben valós értéken értékelt pénzügyi eszközök
             x-agp34c1g6d0j0c9q60o3cchk:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Tőkeinstrumentumok.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Tőkeinstrumentumok
             x-agp34c1g6d0j0c9q60o3cchl:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Hitelviszonyt megtestesítő értékpapírok.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelviszonyt
                 megtestesítő értékpapírok
             x-agp34c1g6d0j0c9q60o3cchm:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Hitelek és előlegek.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelek és
                 előlegek
             x-agp34c1g6d0j0c9q60o3cchn:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Jegybankok.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Jegybankok
             x-agp34c1g6d0j0c9q60o3ccho:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Hitelintézetek.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelintézetek
             x-agp34c1g6d0j0c9q60o3cchp:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Ügyfelek.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Ügyfelek
             x-agp34c1g6d0j0c9q60o3ccpg:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Emlékeztető tétel: értékesítési vagy elzálogosítási
+                joggal kölcsönadott vagy biztosítékként átadott.'
               label: 'Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Emlékeztető
                 tétel: értékesítési vagy elzálogosítási joggal kölcsönadott vagy biztosítékként
                 átadott'
             x-agp34c1g6d0j0c9q60o3ccph:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Amortizált bekerülési értéken értékelt pénzügyi
+                eszközök.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Amortizált
                 bekerülési értéken értékelt pénzügyi eszközök
             x-agp34c1g6d0j0c9q60o3ccpi:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Hitelviszonyt megtestesítő értékpapírok.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelviszonyt
                 megtestesítő értékpapírok
             x-agp34c1g6d0j0c9q60o3ccpj:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Hitelek és előlegek.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelek és
                 előlegek
             x-agp34c1g6d0j0c9q60o3ccpk:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Jegybankok.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Jegybankok
             x-agp34c1g6d0j0c9q60o3ccpl:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Hitelintézetek.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelintézetek
             x-agp34c1g6d0j0c9q60o3ccpm:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Ügyfelek.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Ügyfelek
             x-agp34c1g6d0j0c9q60o3ccpn:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Emlékeztető tétel: értékesítési vagy elzálogosítási
+                joggal kölcsönadott vagy biztosítékként átadott.'
               label: 'Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Emlékeztető
                 tétel: értékesítési vagy elzálogosítási joggal kölcsönadott vagy biztosítékként
                 átadott'
             x-agp34c1g6d0j0c9q60o3ed9g:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Emlékeztető tétel: értékesítési vagy elzálogosítási
+                joggal kölcsönadott vagy biztosítékként átadott.'
               label: 'Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Emlékeztető
                 tétel: értékesítési vagy elzálogosítási joggal kölcsönadott vagy biztosítékként
                 átadott'
             x-agp34c1g6d0j0c9q60o3ed9h:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Emlékeztető tétel: értékesítési vagy elzálogosítási
+                joggal kölcsönadott vagy biztosítékként átadott.'
               label: 'Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Emlékeztető
                 tétel: értékesítési vagy elzálogosítási joggal kölcsönadott vagy biztosítékként
                 átadott'
             x-agp34c1g6d0j0c9q60o3ed9l:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 01. lap). Emlékeztető tétel: pénzügyi lízing keretében
+                megszerezve.'
               label: 'Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Emlékeztető
                 tétel: pénzügyi lízing keretében megszerezve'
             x-agp34c1g6d0j0chq60o32c1h:
@@ -500,36 +625,61 @@ modelo:
               label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Hitelek és
                 követelések. Hitelek. Egyéb
             x-agp34c1g6d0j2c9q60o32d1h:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 11. lap). Immateriális javak.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 11. lap). Immateriális
                 javak
             x-agp34c1g6d0j2c9q60o32d1i:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 11. lap). Üzleti vagy cégérték.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 11. lap). Üzleti vagy
                 cégérték
             x-agp34c1g6d0j2c9q60o32d1j:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 11. lap). Egyéb immateriális javak.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 11. lap). Egyéb immateriális
                 javak
             x-agp34c1g6d0j2c9q60o32d1k:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 11. lap). Adókövetelések.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 11. lap). Adókövetelések
             x-agp34c1g6d0j2c9q60o32d1l:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 11. lap). Tényleges adókövetelések.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 11. lap). Tényleges
                 adókövetelések
             x-agp34c1g6d0j2c9q60o32d1m:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 11. lap). Halasztott adókövetelések.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 11. lap). Halasztott
                 adókövetelések
             x-agp34c1g6d0j2c9q60o32d1n:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 11. lap). Egyéb eszközök.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 11. lap). Egyéb eszközök
             x-agp34c1g6d0j2c9q60o32d1o:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 11. lap). Nyugdíjakhoz kapcsolódó biztosítási szerződések.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 11. lap). Nyugdíjakhoz
                 kapcsolódó biztosítási szerződések
             x-agp34c1g6d0j2c9q60o32d1p:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 11. lap). Készletek.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 11. lap). Készletek
             x-agp34c1g6d0j2c9q60o32d9g:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 11. lap). Az egyéb eszközök többi része.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 11. lap). Az egyéb
                 eszközök többi része
             x-agp34c1g6d0j2c9q60o32d9h:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 11. lap). Értékesítésre tartottnak minősített befektetett
+                eszközök és elidegenítési csoportok.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 11. lap). Értékesítésre
                 tartottnak minősített befektetett eszközök és elidegenítési csoportok
             x-agp34c1g6d0j2c9q60o32d9i:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Eszközök
+                (3A. oldal, 11. lap). Eszközök összesen.'
               label: Konszolidált mérleg. Eszközök (3A. oldal, 11. lap). Eszközök
                 összesen
             x-agp34c1g6d130c1q60o30c1j:
@@ -729,123 +879,214 @@ modelo:
               label: Konszolidált mérleg. Saját tőke és kötelezettségek. Szövetkezetek
                 kötelező tartalékalapja
             x-agp34c1g6d130c9q60o32d9j:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Kereskedési célú pénzügyi kötelezettségek.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Kereskedési
                 célú pénzügyi kötelezettségek
             x-agp34c1g6d130c9q60o32d9k:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Derivatívák.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Derivatívák
             x-agp34c1g6d130c9q60o32d9l:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Rövid pozíciók.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Rövid
                 pozíciók
             x-agp34c1g6d130c9q60o32d9m:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Betétek.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Betétek
             x-agp34c1g6d130c9q60o32d9n:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Betétek. Jegybankok.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Betétek.
                 Jegybankok
             x-agp34c1g6d130c9q60o32d9o:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Betétek. Hitelintézetek.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Betétek.
                 Hitelintézetek
             x-agp34c1g6d130c9q60o32d9p:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Betétek. Ügyfelek.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Betétek.
                 Ügyfelek
             x-agp34c1g6d130c9q60o32dhg:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Kibocsátott hitelviszonyt megtestesítő értékpapírok.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Kibocsátott
                 hitelviszonyt megtestesítő értékpapírok
             x-agp34c1g6d130c9q60o32dhh:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Egyéb pénzügyi kötelezettségek.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Egyéb
                 pénzügyi kötelezettségek
             x-agp34c1g6d130c9q60o32dhi:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Az eredménnyel szemben valós értéken értékeltnek
+                megjelölt pénzügyi kötelezettségek.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Az
                 eredménnyel szemben valós értéken értékeltnek megjelölt pénzügyi kötelezettségek
             x-agp34c1g6d130c9q60o32dhj:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Betétek.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Betétek
             x-agp34c1g6d130c9q60o32dhk:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Betétek. Jegybankok.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Betétek.
                 Jegybankok
             x-agp34c1g6d130c9q60o32dhl:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Betétek. Hitelintézetek.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Betétek.
                 Hitelintézetek
             x-agp34c1g6d130c9q60o32dhm:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Betétek. Ügyfelek.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Betétek.
                 Ügyfelek
             x-agp34c1g6d130c9q60o32dhn:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Kibocsátott hitelviszonyt megtestesítő értékpapírok.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Kibocsátott
                 hitelviszonyt megtestesítő értékpapírok
             x-agp34c1g6d130c9q60o32dho:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Egyéb pénzügyi kötelezettségek.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Egyéb
                 pénzügyi kötelezettségek
             x-agp34c1g6d130c9q60o32dhp:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Amortizált bekerülési értéken értékelt pénzügyi
+                kötelezettségek.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Amortizált
                 bekerülési értéken értékelt pénzügyi kötelezettségek
             x-agp34c1g6d130c9q60o32dpg:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Betétek.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Betétek
             x-agp34c1g6d130c9q60o32dph:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Betétek. Jegybankok.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Betétek.
                 Jegybankok
             x-agp34c1g6d130c9q60o32dpi:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Betétek. Hitelintézetek.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Betétek.
                 Hitelintézetek
             x-agp34c1g6d130c9q60o32dpj:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Betétek. Ügyfelek.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Betétek.
                 Ügyfelek
             x-agp34c1g6d130c9q60o32dpk:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Kibocsátott hitelviszonyt megtestesítő értékpapírok.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Kibocsátott
                 hitelviszonyt megtestesítő értékpapírok
             x-agp34c1g6d130c9q60o32dpl:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Egyéb pénzügyi kötelezettségek.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Egyéb
                 pénzügyi kötelezettségek
             x-agp34c1g6d130c9q60o32dpm:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Derivatívák - fedezeti elszámolás.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Derivatívák
                 - fedezeti elszámolás
             x-agp34c1g6d130c9q60o32dpn:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Kamatlábkockázat portfóliófedezete során a fedezett
+                tételek valós értékének változása.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Kamatlábkockázat
                 portfóliófedezete során a fedezett tételek valós értékének változása
             x-agp34c1g6d130c9q60o32dpo:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Biztosítási vagy viszontbiztosítási szerződésekkel
+                fedezett kötelezettségek.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Biztosítási
                 vagy viszontbiztosítási szerződésekkel fedezett kötelezettségek
             x-agp34c1g6d130c9q60o32dpp:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Céltartalékok.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Céltartalékok
             x-agp34c1g6d130c9q60o32e1g:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Nyugdíjak és egyéb, munkaviszony utáni meghatározott
+                juttatási kötelezettségek.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Nyugdíjak
                 és egyéb, munkaviszony utáni meghatározott juttatási kötelezettségek
             x-agp34c1g6d130c9q60o32e1h:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Egyéb hosszú távú munkavállalói juttatások.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Egyéb
                 hosszú távú munkavállalói juttatások
             x-agp34c1g6d130c9q60o32e1i:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Folyamatban lévő jogi eljárások és adóperek.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Folyamatban
                 lévő jogi eljárások és adóperek
             x-agp34c1g6d130c9q60o32e1j:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Vállalt kötelezettségek és garanciák.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Vállalt
                 kötelezettségek és garanciák
             x-agp34c1g6d130c9q60o32e1k:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). További céltartalékok.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). További
                 céltartalékok
             x-agp34c1g6d130c9q60o32e1l:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Adókötelezettségek.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Adókötelezettségek
             x-agp34c1g6d130c9q60o32e1m:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Tényleges adókötelezettségek.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Tényleges
                 adókötelezettségek
             x-agp34c1g6d130c9q60o32e1n:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Halasztott adókötelezettségek.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Halasztott
                 adókötelezettségek
             x-agp34c1g6d130c9q60o32e1o:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Látra visszafizetendő jegyzett tőke.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Látra
                 visszafizetendő jegyzett tőke
             x-agp34c1g6d130c9q60o32e1p:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Egyéb kötelezettségek.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Egyéb
                 kötelezettségek
             x-agp34c1g6d130c9q60o32e9g:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Ebből: jólét célú alap (csak takarékpénztárak
+                és hitelszövetkezetek).'
               label: 'Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Ebből:
                 jólét célú alap (csak takarékpénztárak és hitelszövetkezetek)'
             x-agp34c1g6d130c9q60o32e9h:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Értékesítésre tartottnak minősített elidegenítési
+                csoportokba tartozó kötelezettségek.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Értékesítésre
                 tartottnak minősített elidegenítési csoportokba tartozó kötelezettségek
             x-agp34c1g6d130c9q60o32e9i:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Kötelezettségek összesen.'
               label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Kötelezettségek
                 összesen
             x-agp34c1g6d130c9q60o3ed9m:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Emlékeztető tétel: alárendelt kötelezettségek.'
               label: 'Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Emlékeztető
                 tétel: alárendelt kötelezettségek'
             x-agp34c1g6d130c9q60o3ed9n:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3B. oldal, 01. lap). Emlékeztető tétel: alárendelt kötelezettségek.'
               label: 'Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Emlékeztető
                 tétel: alárendelt kötelezettségek'
             x-agp34c1g6d130chq60o32d1l:
@@ -929,467 +1170,941 @@ modelo:
               label: Konszolidált mérleg. Eszközök (3B. oldal, 02. lap). Immateriális
                 javak. Konszolidációs üzleti vagy cégérték
             x-agp34c1g6d1j0c9q60o32e9j:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Saját források.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Saját források
             x-agp34c1g6d1j0c9q60o32e9k:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Jegyzett tőke.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Jegyzett
                 tőke
             x-agp34c1g6d1j0c9q60o32e9l:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Jegyzett tőke. Befizetett tőke.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Jegyzett
                 tőke. Befizetett tőke
             x-agp34c1g6d1j0c9q60o32e9m:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Jegyzett tőke. Befizetésre felszólított,
+                be nem fizetett tőke.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Jegyzett
                 tőke. Befizetésre felszólított, be nem fizetett tőke
             x-agp34c1g6d1j0c9q60o32e9n:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Tőketartalék.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Tőketartalék
             x-agp34c1g6d1j0c9q60o32e9o:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). A jegyzett tőkétől eltérő kibocsátott tőkeinstrumentumok.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). A jegyzett
                 tőkétől eltérő kibocsátott tőkeinstrumentumok
             x-agp34c1g6d1j0c9q60o32e9p:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Összetett pénzügyi instrumentumok saját
+                tőke komponense.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Összetett
                 pénzügyi instrumentumok saját tőke komponense
             x-agp34c1g6d1j0c9q60o34c1g:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Egyéb kibocsátott tőkeinstrumentumok.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Egyéb kibocsátott
                 tőkeinstrumentumok
             x-agp34c1g6d1j0c9q60o34c1h:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Egyéb saját tőke elemek.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Egyéb saját
                 tőke elemek
             x-agp34c1g6d1j0c9q60o34c1i:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Eredménytartalék.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Eredménytartalék
             x-agp34c1g6d1j0c9q60o34c1j:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Értékhelyesbítési tartalékok.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Értékhelyesbítési
                 tartalékok
             x-agp34c1g6d1j0c9q60o34c1k:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Egyéb eredménytartalékok.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Egyéb eredménytartalékok
             x-agp34c1g6d1j0c9q60o34c1l:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Közös vállalkozásokban és társult vállalkozásokban
+                lévő befektetések halmozott tartalékai vagy veszteségei.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Közös vállalkozásokban
                 és társult vállalkozásokban lévő befektetések halmozott tartalékai
                 vagy veszteségei
             x-agp34c1g6d1j0c9q60o34c1m:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Egyebek.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Egyebek
             x-agp34c1g6d1j0c9q60o34c1n:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). (-) Saját részvények.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). (-) Saját
                 részvények
             x-agp34c1g6d1j0c9q60o34c1o:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Az anyavállalat tulajdonosainak tulajdonítható
+                eredmény.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Az anyavállalat
                 tulajdonosainak tulajdonítható eredmény
             x-agp34c1g6d1j0c9q60o34c1p:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). (-) Osztalékelőlegek.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). (-) Osztalékelőlegek
             x-agp34c1g6d1j0c9q60o34c9g:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Halmozott egyéb átfogó eredmény.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Halmozott
                 egyéb átfogó eredmény
             x-agp34c1g6d1j0c9q60o34c9h:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Az eredménybe át nem sorolható tételek.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Az eredménybe
                 át nem sorolható tételek
             x-agp34c1g6d1j0c9q60o34c9i:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Aktuáriusi nyereség vagy (-) veszteség
+                meghatározott juttatású nyugdíjterveken.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Aktuáriusi
                 nyereség vagy (-) veszteség meghatározott juttatású nyugdíjterveken
             x-agp34c1g6d1j0c9q60o34c9j:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Értékesítésre tartottnak minősített befektetett
+                eszközök és elidegenítési csoportok.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Értékesítésre
                 tartottnak minősített befektetett eszközök és elidegenítési csoportok
             x-agp34c1g6d1j0c9q60o34c9m:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Az eredménybe átsorolható tételek.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Az eredménybe
                 átsorolható tételek
             x-agp34c1g6d1j0c9q60o34c9n:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Külföldi érdekeltségekbe történő nettó
+                befektetések fedezése [hatékony rész].'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Külföldi
                 érdekeltségekbe történő nettó befektetések fedezése [hatékony rész]
             x-agp34c1g6d1j0c9q60o34c9o:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Devizaátváltás.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Devizaátváltás
             x-agp34c1g6d1j0c9q60o34c9p:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Fedezeti derivatívák. Cash flow fedezeti
+                tartalék [hatékony rész].'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Fedezeti
                 derivatívák. Cash flow fedezeti tartalék [hatékony rész]
             x-agp34c1g6d1j0c9q60o34chj:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Értékesítésre tartottnak minősített befektetett
+                eszközök és elidegenítési csoportok.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Értékesítésre
                 tartottnak minősített befektetett eszközök és elidegenítési csoportok
             x-agp34c1g6d1j0c9q60o34chk:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Részesedés a közös vállalkozásokban és
+                társult vállalkozásokban lévő befektetések egyéb elszámolt bevételéből
+                és ráfordításából.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Részesedés
                 a közös vállalkozásokban és társult vállalkozásokban lévő befektetések
                 egyéb elszámolt bevételéből és ráfordításából
             x-agp34c1g6d1j0c9q60o34chl:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Kisebbségi részesedések [nem ellenőrző
+                részesedések].'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Kisebbségi
                 részesedések [nem ellenőrző részesedések]
             x-agp34c1g6d1j0c9q60o34chm:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Halmozott egyéb átfogó eredmény.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Halmozott
                 egyéb átfogó eredmény
             x-agp34c1g6d1j0c9q60o34chn:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Egyéb tételek.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Egyéb tételek
             x-agp34c1g6d1j0c9q60o34cho:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Saját tőke összesen.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Saját tőke
                 összesen
             x-agp34c1g6d1j0c9q60o34chp:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Saját tőke és kötelezettségek összesen.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Saját tőke
                 és kötelezettségek összesen
             x-agp34c1g6d1j0c9q60o3cd1j:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Az egyéb átfogó eredménnyel szemben valós
+                értéken értékelt hitelviszonyt megtestesítő instrumentumok valós értékének
+                változása.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Az egyéb
                 átfogó eredménnyel szemben valós értéken értékelt hitelviszonyt megtestesítő
                 instrumentumok valós értékének változása
             x-agp34c1g6d1j0c9q60o3cd1k:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Fedezeti instrumentumok [nem megjelölt
+                tételek].'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Fedezeti
                 instrumentumok [nem megjelölt tételek]
             x-agp34c1g6d1j0c9q60o3cd1l:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Egyéb nyújtott kötelezettségvállalások.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Egyéb nyújtott
                 kötelezettségvállalások
             x-agp34c1g6d1j0c9q60o3cdhg:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Részesedés a közös vállalkozásokban és
+                társult vállalkozásokban lévő befektetések egyéb elszámolt bevételéből
+                és ráfordításából.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Részesedés
                 a közös vállalkozásokban és társult vállalkozásokban lévő befektetések
                 egyéb elszámolt bevételéből és ráfordításából
             x-agp34c1g6d1j0c9q60o3ed9o:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Emlékeztető tétel: be nem hívott tőke.'
               label: 'Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Emlékeztető
                 tétel: be nem hívott tőke'
             x-agp34c1g6d1j0c9q60o3ed9p:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Emlékeztető tétel: mérlegen kívüli kitettségek.'
               label: 'Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Emlékeztető
                 tétel: mérlegen kívüli kitettségek'
             x-agp34c1g6d1j0c9q60o3edhg:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Nyújtott hitelnyújtási kötelezettségvállalások.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Nyújtott
                 hitelnyújtási kötelezettségvállalások
             x-agp34c1g6d1j0c9q60o3edhh:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Nyújtott pénzügyi garanciák.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Nyújtott
                 pénzügyi garanciák
             x-agp34c1g6d1j0c9q60o3edhi:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Tőkésítési tartalék.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Tőkésítési
                 tartalék
             x-agp34c1g6d1j0c9q60o3edhj:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Kiegyenlítési tartalék.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Kiegyenlítési
                 tartalék
             x-agp34c1g6d1j0c9q60r36e0:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). az egyéb átfogó eredménnyel szemben valós
+                értéken értékelt tőkeinstrumentumok valós értékének változása.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). az egyéb
                 átfogó eredménnyel szemben valós értéken értékelt tőkeinstrumentumok
                 valós értékének változása
             x-agp34c1g6d1j0c9q60r36e8:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). az egyéb átfogó eredménnyel szemben valós
+                értéken értékelt tőkeinstrumentumok valós érték fedezeti ügyleteinek
+                hatékonysághiánya.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). az egyéb
                 átfogó eredménnyel szemben valós értéken értékelt tőkeinstrumentumok
                 valós érték fedezeti ügyleteinek hatékonysághiánya
             x-agp34c1g6d1j0c9q60r38c0:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). az egyéb átfogó eredménnyel szemben valós
+                értéken értékelt tőkeinstrumentumok valós értékének változása [fedezett
+                tétel].'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). az egyéb
                 átfogó eredménnyel szemben valós értéken értékelt tőkeinstrumentumok
                 valós értékének változása [fedezett tétel]
             x-agp34c1g6d1j0c9q60r38c8:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). az egyéb átfogó eredménnyel szemben valós
+                értéken értékelt tőkeinstrumentumok valós értékének változása [fedezeti
+                instrumentum].'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). az egyéb
                 átfogó eredménnyel szemben valós értéken értékelt tőkeinstrumentumok
                 valós értékének változása [fedezeti instrumentum]
             x-agp34c1g6d1j0c9q60r38cg:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3C. oldal, 01. lap). Az eredménnyel szemben valós értéken értékelt
+                pénzügyi kötelezettségek valós értékének a hitelkockázat változásából
+                eredő változása.'
               label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Az eredménnyel
                 szemben valós értéken értékelt pénzügyi kötelezettségek valós értékének
                 a hitelkockázat változásából eredő változása
             x-agp34c1g6d1j0chq60o32dhj:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Kereskedési célú pénzügyi kötelezettségek.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Kereskedési
                 célú pénzügyi kötelezettségek
             x-agp34c1g6d1j0chq60o32dhk:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Egyéb, az eredménnyel szemben valós értéken
+                értékelt pénzügyi kötelezettségek.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Egyéb,
                 az eredménnyel szemben valós értéken értékelt pénzügyi kötelezettségek
             x-agp34c1g6d1j0chq60o32dhl:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Tartozások és kötelezettségek.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek
             x-agp34c1g6d1j0chq60o32dhm:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Tartozások és kötelezettségek. Alárendelt kötelezettségek.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Alárendelt kötelezettségek
             x-agp34c1g6d1j0chq60o32dhn:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Tartozások és kötelezettségek. Átadott viszontbiztosításra
+                kapott betétek.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Átadott viszontbiztosításra kapott betétek
             x-agp34c1g6d1j0chq60o32dho:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Tartozások és kötelezettségek. Biztosítási ügyletekből
+                eredő tartozások.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Biztosítási ügyletekből eredő tartozások
             x-agp34c1g6d1j0chq60o32dhp:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Tartozások és kötelezettségek. Biztosítottakkal
+                szembeni tartozások.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Biztosítottakkal szembeni tartozások
             x-agp34c1g6d1j0chq60o32dpg:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Tartozások és kötelezettségek. Közvetítőkkel
+                szembeni tartozások.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Közvetítőkkel szembeni tartozások
             x-agp34c1g6d1j0chq60o32dph:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Tartozások és kötelezettségek. Feltételhez kötött
+                tartozások.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Feltételhez kötött tartozások
             x-agp34c1g6d1j0chq60o32dpi:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Tartozások és kötelezettségek. Viszontbiztosítási
+                ügyletekből eredő tartozások.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Viszontbiztosítási ügyletekből eredő tartozások
             x-agp34c1g6d1j0chq60o32dpj:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Tartozások és kötelezettségek. Együttbiztosítási
+                ügyletekből eredő tartozások.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Együttbiztosítási ügyletekből eredő tartozások
             x-agp34c1g6d1j0chq60o32dpk:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Tartozások és kötelezettségek. Kötvények és
+                egyéb forgalomképes értékpapírok.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Kötvények és egyéb forgalomképes értékpapírok
             x-agp34c1g6d1j0chq60o32dpl:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Tartozások és kötelezettségek. Hitelintézetekkel
+                szembeni tartozások.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Hitelintézetekkel szembeni tartozások
             x-agp34c1g6d1j0chq60o32dpm:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Tartozások és kötelezettségek. Biztosítási szerződéseket
+                előkészítő ügyletekből eredő tartozások.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Biztosítási szerződéseket előkészítő ügyletekből
                 eredő tartozások
             x-agp34c1g6d1j0chq60o32dpn:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Tartozások és kötelezettségek. Egyéb tartozások.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Egyéb tartozások
             x-agp34c1g6d1j0chq60o32dpo:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Tartozások és kötelezettségek. Egyéb tartozások.
+                Közigazgatási szervekkel szembeni tartozások.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Egyéb tartozások. Közigazgatási szervekkel szembeni
                 tartozások
             x-agp34c1g6d1j0chq60o32dpp:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Tartozások és kötelezettségek. Egyéb tartozások.
+                Egyéb tartozások csoporttagokkal és társult vállalkozásokkal.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Egyéb tartozások. Egyéb tartozások csoporttagokkal
                 és társult vállalkozásokkal
             x-agp34c1g6d1j0chq60o32e1g:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Tartozások és kötelezettségek. Egyéb tartozások.
+                További egyéb tartozások.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Egyéb tartozások. További egyéb tartozások
             x-agp34c1g6d1j0chq60o32e1h:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Fedezeti derivatívák.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Fedezeti
                 derivatívák
             x-agp34c1g6d1j0chq60o32e1i:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Biztosítástechnikai tartalékok.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Biztosítástechnikai
                 tartalékok
             x-agp34c1g6d1j0chq60o32e1j:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Biztosítástechnikai tartalékok. Meg nem szolgált
+                díjak tartaléka.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Biztosítástechnikai
                 tartalékok. Meg nem szolgált díjak tartaléka
             x-agp34c1g6d1j0chq60o32e1k:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Biztosítástechnikai tartalékok. Folyamatban
+                lévő kockázatok tartaléka.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Biztosítástechnikai
                 tartalékok. Folyamatban lévő kockázatok tartaléka
             x-agp34c1g6d1j0chq60o32e1l:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Biztosítástechnikai tartalékok. Életbiztosítási
+                tartalék.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Biztosítástechnikai
                 tartalékok. Életbiztosítási tartalék
             x-agp34c1g6d1j0chq60o32e1m:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Biztosítástechnikai tartalékok. Életbiztosítási
+                tartalék. Meg nem szolgált díjak tartaléka.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Biztosítástechnikai
                 tartalékok. Életbiztosítási tartalék. Meg nem szolgált díjak tartaléka
             x-agp34c1g6d1j0chq60o32e1n:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Biztosítástechnikai tartalékok. Életbiztosítási
+                tartalék. Folyamatban lévő kockázatok tartaléka.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Biztosítástechnikai
                 tartalékok. Életbiztosítási tartalék. Folyamatban lévő kockázatok
                 tartaléka
             x-agp34c1g6d1j0chq60o32e1o:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Biztosítástechnikai tartalékok. Életbiztosítási
+                tartalék. Matematikai tartalék.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Biztosítástechnikai
                 tartalékok. Életbiztosítási tartalék. Matematikai tartalék
             x-agp34c1g6d1j0chq60o32e1p:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Biztosítástechnikai tartalékok. Életbiztosítási
+                tartalék. Életbiztosítási tartalék, ha a befektetési kockázatot a
+                szerződő viseli.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Biztosítástechnikai
                 tartalékok. Életbiztosítási tartalék. Életbiztosítási tartalék, ha
                 a befektetési kockázatot a szerződő viseli
             x-agp34c1g6d1j0chq60o32e9g:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Biztosítástechnikai tartalékok. Kárkifizetési
+                tartalék.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Biztosítástechnikai
                 tartalékok. Kárkifizetési tartalék
             x-agp34c1g6d1j0chq60o32e9h:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Biztosítástechnikai tartalékok. Nyereségrészesedési
+                és díjvisszatérítési tartalék.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Biztosítástechnikai
                 tartalékok. Nyereségrészesedési és díjvisszatérítési tartalék
             x-agp34c1g6d1j0chq60o32e9i:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Biztosítástechnikai tartalékok. Egyéb biztosítástechnikai
+                tartalékok.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Biztosítástechnikai
                 tartalékok. Egyéb biztosítástechnikai tartalékok
             x-agp34c1g6d1j0chq60o32e9j:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Nem biztosítástechnikai tartalékok.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Nem
                 biztosítástechnikai tartalékok
             x-agp34c1g6d1j0chq60o32e9k:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Nem biztosítástechnikai tartalékok. Adókra és
+                egyéb jogi függő tételekre képzett tartalékok.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Nem
                 biztosítástechnikai tartalékok. Adókra és egyéb jogi függő tételekre
                 képzett tartalékok
             x-agp34c1g6d1j0chq60o32e9l:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Nem biztosítástechnikai tartalékok. Nyugdíjakra
+                és hasonló kötelezettségekre képzett tartalék.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Nem
                 biztosítástechnikai tartalékok. Nyugdíjakra és hasonló kötelezettségekre
                 képzett tartalék
             x-agp34c1g6d1j0chq60o32e9m:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Nem biztosítástechnikai tartalékok. Elszámolási
+                megállapodások szerinti kifizetésekre képzett tartalék.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Nem
                 biztosítástechnikai tartalékok. Elszámolási megállapodások szerinti
                 kifizetésekre képzett tartalék
             x-agp34c1g6d1j0chq60o32e9n:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Nem biztosítástechnikai tartalékok. Egyéb nem
+                biztosítástechnikai tartalékok.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Nem
                 biztosítástechnikai tartalékok. Egyéb nem biztosítástechnikai tartalékok
             x-agp34c1g6d1j0chq60o32e9o:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Adókötelezettségek.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Adókötelezettségek
             x-agp34c1g6d1j0chq60o32e9p:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Adókötelezettségek. Tényleges adókötelezettségek.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Adókötelezettségek.
                 Tényleges adókötelezettségek
             x-agp34c1g6d1j0chq60o34c1g:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Adókötelezettségek. Halasztott adókötelezettségek.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Adókötelezettségek.
                 Halasztott adókötelezettségek
             x-agp34c1g6d1j0chq60o34c1h:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). További kötelezettségek.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). További
                 kötelezettségek
             x-agp34c1g6d1j0chq60o34c1i:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). További kötelezettségek. Időbeli elhatárolások.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). További
                 kötelezettségek. Időbeli elhatárolások
             x-agp34c1g6d1j0chq60o34c1j:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). További kötelezettségek. Számviteli aszimmetriákból
+                eredő kötelezettségek.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). További
                 kötelezettségek. Számviteli aszimmetriákból eredő kötelezettségek
             x-agp34c1g6d1j0chq60o34c1k:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). További kötelezettségek. Átadott viszontbiztosítás
+                jutalékai és egyéb szerzési költségei.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). További
                 kötelezettségek. Átadott viszontbiztosítás jutalékai és egyéb szerzési
                 költségei
             x-agp34c1g6d1j0chq60o34c1l:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). További kötelezettségek. Egyéb kötelezettségek.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). További
                 kötelezettségek. Egyéb kötelezettségek
             x-agp34c1g6d1j0chq60o34c1m:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Értékesítésre tartott eszközökhöz kapcsolódó
+                kötelezettségek.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Értékesítésre
                 tartott eszközökhöz kapcsolódó kötelezettségek
             x-agp34c1g6d1j0chq60o34c1n:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Kötelezettségek összesen.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Kötelezettségek
                 összesen
             x-agp34c1g6d1j0chq60o3ec1j:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Tartozások és kötelezettségek. Egyéb tartozások.
+                Társult vállalkozások.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Egyéb tartozások. Társult vállalkozások
             x-agp34c1g6d1j0chq60o3ec1k:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Tartozások és kötelezettségek. Egyéb tartozások.
+                Közös vezetésű vállalkozások.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Egyéb tartozások. Közös vezetésű vállalkozások
             x-agp34c1g6d1j0chq60o3ec1l:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Kötelezettségek
+                (3C. oldal, 02. lap). Tartozások és kötelezettségek. Egyéb tartozások.
+                Egyéb.'
               label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Egyéb tartozások. Egyéb
             x-agp34c1g6d230chq60o34c1o:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Saját források.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források
             x-agp34c1g6d230chq60o34c1p:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Saját források. Jegyzett tőke vagy kölcsönös
+                alap.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Jegyzett tőke vagy kölcsönös alap
             x-agp34c1g6d230chq60o34c9g:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Saját források. Bejegyzett jegyzett tőke
+                vagy kölcsönös alap.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Bejegyzett jegyzett tőke vagy kölcsönös alap
             x-agp34c1g6d230chq60o34c9h:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Saját források. (Be nem fizetett jegyzett
+                tőke).'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 (Be nem fizetett jegyzett tőke)
             x-agp34c1g6d230chq60o34c9i:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Saját források. Tőketartalék.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Tőketartalék
             x-agp34c1g6d230chq60o34c9j:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Saját források. Eredménytartalékok.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Eredménytartalékok
             x-agp34c1g6d230chq60o34c9k:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Saját források. Eredménytartalékok. Törvényi
+                és alapszabály szerinti.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Eredménytartalékok. Törvényi és alapszabály szerinti
             x-agp34c1g6d230chq60o34c9l:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Saját források. Eredménytartalékok. Stabilizációs
+                tartalék.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Eredménytartalékok. Stabilizációs tartalék
             x-agp34c1g6d230chq60o34c9m:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Saját források. Eredménytartalékok. Egyéb
+                eredménytartalékok.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Eredménytartalékok. Egyéb eredménytartalékok
             x-agp34c1g6d230chq60o34c9n:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Saját források. (Saját részvények és az
+                anyavállalat részvényei).'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 (Saját részvények és az anyavállalat részvényei)
             x-agp34c1g6d230chq60o34c9o:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Saját források. Korábbi évek anyavállalatnak
+                tulajdonított eredményei.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Korábbi évek anyavállalatnak tulajdonított eredményei
             x-agp34c1g6d230chq60o34c9p:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Saját források. Korábbi évek anyavállalatnak
+                tulajdonított eredményei. Eredménytartalék.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Korábbi évek anyavállalatnak tulajdonított eredményei. Eredménytartalék
             x-agp34c1g6d230chq60o34chg:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Saját források. Korábbi évek eredményei.
+                (Korábbi évek anyavállalatnak tulajdonított negatív eredményei).'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Korábbi évek eredményei. (Korábbi évek anyavállalatnak tulajdonított
                 negatív eredményei)
             x-agp34c1g6d230chq60o34chh:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Saját források. Tagok és kölcsönös tagok
+                egyéb hozzájárulásai.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Tagok és kölcsönös tagok egyéb hozzájárulásai
             x-agp34c1g6d230chq60o34chi:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Saját források. Az üzleti év anyavállalatnak
+                tulajdonított eredménye. Konszolidált eredmény.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Az üzleti év anyavállalatnak tulajdonított eredménye. Konszolidált
                 eredmény
             x-agp34c1g6d230chq60o34chj:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Saját források. (Osztalékelőleg és stabilizációs
+                tartalék előleg).'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 (Osztalékelőleg és stabilizációs tartalék előleg)
             x-agp34c1g6d230chq60o34chk:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Saját források. Egyéb tőkeinstrumentumok.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Egyéb tőkeinstrumentumok
             x-agp34c1g6d230chq60o34chl:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Értékelési korrekciók.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Értékelési
                 korrekciók
             x-agp34c1g6d230chq60o34chm:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Értékelési korrekciók. Értékesíthető pénzügyi
+                eszközök.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Értékelési
                 korrekciók. Értékesíthető pénzügyi eszközök
             x-agp34c1g6d230chq60o34chn:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Értékelési korrekciók. Fedezeti ügyletek.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Értékelési
                 korrekciók. Fedezeti ügyletek
             x-agp34c1g6d230chq60o34cho:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Értékelési korrekciók. Árfolyam- és átváltási
+                különbözetek.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Értékelési
                 korrekciók. Árfolyam- és átváltási különbözetek
             x-agp34c1g6d230chq60o34chp:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Értékelési korrekciók. Számviteli aszimmetriák
+                korrekciója.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Értékelési
                 korrekciók. Számviteli aszimmetriák korrekciója
             x-agp34c1g6d230chq60o34cpg:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Értékelési korrekciók. Egyéb korrekciók.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Értékelési
                 korrekciók. Egyéb korrekciók
             x-agp34c1g6d230chq60o34cph:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Kapott támogatások, adományok és hagyatékok.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Kapott
                 támogatások, adományok és hagyatékok
             x-agp34c1g6d230chq60o34cpi:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Saját tőke összesen.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját tőke
                 összesen
             x-agp34c1g6d230chq60o34cpj:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Kötelezettségek és saját tőke összesen.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Kötelezettségek
                 és saját tőke összesen
             x-agp34c1g6d230chq60o3cd1p:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Saját források. Eredménytartalékok. Konszolidált
+                társaságok eredménytartalékai.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Eredménytartalékok. Konszolidált társaságok eredménytartalékai
             x-agp34c1g6d230chq60o3cd9i:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Külső tagok.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Külső tagok
             x-agp34c1g6d230chq60o3ce9i:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Saját források. Az üzleti év anyavállalatnak
+                tulajdonított eredménye.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Az üzleti év anyavállalatnak tulajdonított eredménye
             x-agp34c1g6d230chq60o3ce9j:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Saját források. Az üzleti év anyavállalatnak
+                tulajdonított eredménye. (Külső tagok eredménye).'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Az üzleti év anyavállalatnak tulajdonított eredménye. (Külső tagok
                 eredménye)
             x-agp34c1g6d230chq60o3ce9k:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Külső tagok. Értékelési korrekciók.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Külső tagok.
                 Értékelési korrekciók
             x-agp34c1g6d230chq60o3ce9l:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Külső tagok. Többi.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Külső tagok.
                 Többi
             x-agp34c1g6d230chq60o3echo:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Saját források. Eredménytartalékok. Tőkemódszerrel
+                elszámolt társaságok eredménytartalékai.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Eredménytartalékok. Tőkemódszerrel elszámolt társaságok eredménytartalékai
             x-agp34c1g6d230chq60o3echp:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Értékelési korrekciók. Tőkemódszerrel elszámolt
+                társaságok.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Értékelési
                 korrekciók. Tőkemódszerrel elszámolt társaságok
             x-agp34c1g6d230chq60o3ecpk:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Saját források. Eredménytartalékok. Tőkésítési
+                tartalék.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Eredménytartalékok. Tőkésítési tartalék
             x-agp34c1g6d230chq60o3ecpl:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált mérleg. Saját
+                tőke (3D. oldal, 02. lap). Saját források. Eredménytartalékok. Kiegyenlítési
+                tartalék.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Eredménytartalékok. Kiegyenlítési tartalék
             x-agp34c1g6h130chq60o34dpn:
+              help: 'A 220-es modelo adata, 2024. adóév: Nem-életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai.'
               label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
                 befektetések ráfordításai
             x-agp34c1g6h130chq60o34dpo:
+              help: 'A 220-es modelo adata, 2024. adóév: Nem-életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. Befektetések
+                kezelési költségei.'
               label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
                 befektetések ráfordításai. Befektetések kezelési költségei
             x-agp34c1g6h130chq60o34dpp:
+              help: 'A 220-es modelo adata, 2024. adóév: Nem-életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. Befektetések
+                kezelési költségei. A tárgyi eszközök és az ingatlanbefektetések ráfordításai.'
               label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
                 befektetések ráfordításai. Befektetések kezelési költségei. A tárgyi
                 eszközök és az ingatlanbefektetések ráfordításai
             x-agp34c1g6h130chq60o34e1g:
+              help: 'A 220-es modelo adata, 2024. adóév: Nem-életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. Befektetések
+                kezelési költségei. Befektetések és pénzügyi számlák ráfordításai.'
               label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
                 befektetések ráfordításai. Befektetések kezelési költségei. Befektetések
                 és pénzügyi számlák ráfordításai
             x-agp34c1g6h130chq60o34e1h:
+              help: 'A 220-es modelo adata, 2024. adóév: Nem-életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. A tárgyi
+                eszközök és a befektetések értékhelyesbítései.'
               label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
                 befektetések ráfordításai. A tárgyi eszközök és a befektetések értékhelyesbítései
             x-agp34c1g6h130chq60o34e1i:
+              help: 'A 220-es modelo adata, 2024. adóév: Nem-életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. A tárgyi
+                eszközök és a befektetések értékhelyesbítései. A tárgyi eszközök és
+                az ingatlanbefektetések értékcsökkenése.'
               label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
                 befektetések ráfordításai. A tárgyi eszközök és a befektetések értékhelyesbítései.
                 A tárgyi eszközök és az ingatlanbefektetések értékcsökkenése
             x-agp34c1g6h130chq60o34e1j:
+              help: 'A 220-es modelo adata, 2024. adóév: Nem-életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. A tárgyi
+                eszközök és a befektetések értékhelyesbítései. A tárgyi eszközök és
+                az ingatlanbefektetések értékvesztése.'
               label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
                 befektetések ráfordításai. A tárgyi eszközök és a befektetések értékhelyesbítései.
                 A tárgyi eszközök és az ingatlanbefektetések értékvesztése
             x-agp34c1g6h130chq60o34e1k:
+              help: 'A 220-es modelo adata, 2024. adóév: Nem-életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. A tárgyi
+                eszközök és a befektetések értékhelyesbítései. Pénzügyi befektetések
+                értékvesztése.'
               label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
                 befektetések ráfordításai. A tárgyi eszközök és a befektetések értékhelyesbítései.
                 Pénzügyi befektetések értékvesztése
             x-agp34c1g6h130chq60o34e1l:
+              help: 'A 220-es modelo adata, 2024. adóév: Nem-életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. A tárgyi
+                eszközökből és a befektetésekből származó veszteségek.'
               label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
                 befektetések ráfordításai. A tárgyi eszközökből és a befektetésekből
                 származó veszteségek
             x-agp34c1g6h130chq60o34e1m:
+              help: 'A 220-es modelo adata, 2024. adóév: Nem-életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. A tárgyi
+                eszközökből és a befektetésekből származó veszteségek. Tárgyi eszközökből
+                és ingatlanbefektetésekből.'
               label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
                 befektetések ráfordításai. A tárgyi eszközökből és a befektetésekből
                 származó veszteségek. Tárgyi eszközökből és ingatlanbefektetésekből
             x-agp34c1g6h130chq60o34e1n:
+              help: 'A 220-es modelo adata, 2024. adóév: Nem-életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. A tárgyi
+                eszközökből és a befektetésekből származó veszteségek. Pénzügyi befektetésekből.'
               label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
                 befektetések ráfordításai. A tárgyi eszközökből és a befektetésekből
                 származó veszteségek. Pénzügyi befektetésekből
             x-agp34c1g6h130chq60o34e1o:
+              help: 'A 220-es modelo adata, 2024. adóév: Nem-életbiztosítási technikai
+                számla. Részösszeg (A nem-életbiztosítási technikai számla eredménye).'
               label: Nem-életbiztosítási technikai számla. Részösszeg (A nem-életbiztosítási
                 technikai számla eredménye)
             x-agp34c1g6h130chq60o3cd9m:
+              help: 'A 220-es modelo adata, 2024. adóév: Nem-életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. Konszolidált
+                társaságokban lévő részesedések elidegenítéséből származó veszteségek.'
               label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
                 befektetések ráfordításai. Konszolidált társaságokban lévő részesedések
                 elidegenítéséből származó veszteségek
             x-agp34c1g6h130chq60o3ec1p:
+              help: 'A 220-es modelo adata, 2024. adóév: Nem-életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. A konszolidációba
+                bevont entitások ráfordításai.'
               label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
                 befektetések ráfordításai. A konszolidációba bevont entitások ráfordításai
             x-agp34c1g6h130chq60o3ec9g:
+              help: 'A 220-es modelo adata, 2024. adóév: Nem-életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. Részesedés
+                a tőkemódszerrel elszámolt entitások veszteségeiből.'
               label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
                 befektetések ráfordításai. Részesedés a tőkemódszerrel elszámolt entitások
                 veszteségeiből
             x-agp34c1g6h130chq60o3ec9h:
+              help: 'A 220-es modelo adata, 2024. adóév: Nem-életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. Tőkemódszerrel
+                elszámolt társaságokban lévő részesedések elidegenítéséből származó
+                veszteségek.'
               label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
                 befektetések ráfordításai. Tőkemódszerrel elszámolt társaságokban
                 lévő részesedések elidegenítéséből származó veszteségek
+            x-agp34c1g6h230chq60o36cpk:
+              label: Életbiztosítási technikai számla. Egyéb technikai ráfordítások
+                (+ vagy -)
+            x-agp34c1g6h230chq60o36cpl:
+              label: Életbiztosítási technikai számla. Egyéb technikai ráfordítások
+                (+ vagy -). A behajthatatlan követelések értékvesztésének változása
+                (+ vagy -)
+            x-agp34c1g6h230chq60o36cpm:
+              label: Életbiztosítási technikai számla. Egyéb technikai ráfordítások
+                (+ vagy -). A befektetett eszközök értékvesztésének változása (+ vagy
+                -)
+            x-agp34c1g6h230chq60o36cpn:
+              label: Életbiztosítási technikai számla. Egyéb technikai ráfordítások
+                (+ vagy -). Egyebek
+            x-agp34c1g6h230chq60o36cpo:
+              label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
+                ráfordításai
+            x-agp34c1g6h230chq60o36cpp:
+              label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
+                ráfordításai. A tárgyi eszközök és a befektetések kezelési költségei
+            x-agp34c1g6h230chq60o36d1g:
+              label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
+                ráfordításai. A tárgyi eszközök és a befektetések kezelési költségei.
+                A tárgyi eszközök és az ingatlanbefektetések ráfordításai
+            x-agp34c1g6h230chq60o36d1h:
+              label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
+                ráfordításai. A tárgyi eszközök és a befektetések kezelési költségei.
+                Befektetések és pénzügyi számlák ráfordításai
+            x-agp34c1g6h230chq60o36d1i:
+              label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
+                ráfordításai. A tárgyi eszközök és a befektetések értékhelyesbítései
+            x-agp34c1g6h230chq60o36d1j:
+              label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
+                ráfordításai. A tárgyi eszközök és a befektetések értékhelyesbítései.
+                A tárgyi eszközök és az ingatlanbefektetések értékcsökkenése
+            x-agp34c1g6h230chq60o36d1k:
+              label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
+                ráfordításai. A tárgyi eszközök és a befektetések értékhelyesbítései.
+                A tárgyi eszközök és az ingatlanbefektetések értékvesztése
+            x-agp34c1g6h230chq60o36d1l:
+              label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
+                ráfordításai. A tárgyi eszközök és a befektetések értékhelyesbítései.
+                Pénzügyi befektetések értékvesztése
+            x-agp34c1g6h230chq60o36d1m:
+              label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
+                ráfordításai. A tárgyi eszközökből és a befektetésekből származó veszteségek
+            x-agp34c1g6h230chq60o36d1n:
+              label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
+                ráfordításai. A tárgyi eszközökből és a befektetésekből származó veszteségek.
+                Tárgyi eszközökből és ingatlanbefektetésekből
+            x-agp34c1g6h230chq60o36d1o:
+              label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
+                ráfordításai. A tárgyi eszközökből és a befektetésekből származó veszteségek.
+                Pénzügyi befektetésekből
+            x-agp34c1g6h230chq60o36d1p:
+              label: Életbiztosítási technikai számla. Olyan biztosításokat fedező
+                befektetések ráfordításai, amelyeknél a szerződő viseli a befektetési
+                kockázatot
+            x-agp34c1g6h230chq60o36d9g:
+              label: Életbiztosítási technikai számla. Részösszeg (Az életbiztosítási
+                technikai számla eredménye)
+            x-agp34c1g6h230chq60o3cd9o:
+              label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
+                ráfordításai. Konszolidált társaságokban lévő részesedések elidegenítéséből
+                származó veszteségek
+            x-agp34c1g6h230chq60o3ec9l:
+              label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
+                ráfordításai. A konszolidációba bevont entitások ráfordításai
+            x-agp34c1g6h230chq60o3ec9m:
+              label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
+                ráfordításai. A konszolidációba bevont entitások ráfordításai. Részesedés
+                a tőkemódszerrel elszámolt entitások veszteségeiből
+            x-agp34c1g6h230chq60o3ec9n:
+              label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
+                ráfordításai. A konszolidációba bevont entitások ráfordításai. Tőkemódszerrel
+                elszámolt társaságokban lévő részesedések elidegenítéséből származó
+                veszteségek
             x-agp34c1g6l0j0c1q60o36cpj:
               help: null
               label: A konszolidált elszámolt bevételek és ráfordítások kimutatása.
@@ -1861,203 +2576,369 @@ modelo:
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
                 (5A. oldal, 02. lap). Tőkemódszerrel elszámolt entitások. Egyéb átsorolások
             x-agp34c1g6so30c1q60o30d1j:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Az adócsoport entitásainak
+                egyedi adóalapjai összesen (a hajózási társaságok átalányadózása szerinti
+                alapok nélkül) (7A. o.).'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Az adócsoport entitásainak egyedi adóalapjai összesen (a hajózási
                 társaságok átalányadózása szerinti alapok nélkül) (7A. o.)
             x-agp34c1g6so30c1q60o30d1n:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Szövetkezeti csoportok: szövetkezeti
+                eredményből származó egyedi adóalapok összesen (7A. o.).'
               label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Szövetkezeti csoportok: szövetkezeti eredményből származó egyedi
                 adóalapok összesen (7A. o.)'
             x-agp34c1g6so30c1q60o30d1o:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Szövetkezeti csoportok: nem
+                szövetkezeti eredményből származó egyedi adóalapok összesen (7A. o.).'
               label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Szövetkezeti csoportok: nem szövetkezeti eredményből származó
                 egyedi adóalapok összesen (7A. o.)'
             x-agp34c1g6so30c1q60o30d1p:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Különleges rendszerben lévő
+                hajózási társaságokat tartalmazó csoportok: tonnatartalom alapján,
+                átalányadózással meghatározott adóalapok összesen (7A. o.)(*).'
               label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Különleges rendszerben lévő hajózási társaságokat tartalmazó
                 csoportok: tonnatartalom alapján, átalányadózással meghatározott adóalapok
                 összesen (7A. o.)(*)'
             x-agp34c1g6so30c1q60o30dpp:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Az adóalapok összegének belső
+                eredmények halasztása miatti korrekciói összesen.'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Az adóalapok összegének belső eredmények halasztása miatti korrekciói
                 összesen
             x-agp34c1g6so30c1q60o30e1g:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Egyéb korrekciók az adóalapok
+                összegéhez (**). Az adócsoport belső osztalékainak kiszűrése (7D.
+                o.).'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Egyéb korrekciók az adóalapok összegéhez (**). Az adócsoport
                 belső osztalékainak kiszűrése (7D. o.)
             x-agp34c1g6so30c1q60o30e1i:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Egyéb korrekciók az adóalapok
+                összegéhez (**). Az adócsoport entitásaiban lévő saját tőke részesedések
+                korábbi időszakokban kiszűrt értékvesztésének beszámítása (7E. o.).'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Egyéb korrekciók az adóalapok összegéhez (**). Az adócsoport
                 entitásaiban lévő saját tőke részesedések korábbi időszakokban kiszűrt
                 értékvesztésének beszámítása (7E. o.)
             x-agp34c1g6so30c1q60o30e1j:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Egyéb korrekciók az adóalapok
+                összegéhez (**). Szövetkezeti csoportok: a "csoporton belüli visszatérítések",
+                a "csoporton belüli gazdasági támogatások" és a "csoport vezető entitása
+                által felosztott eredmények" kiszűrése (1345/1992. RD) (7G. o.).'
               label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Egyéb korrekciók az adóalapok összegéhez (**). Szövetkezeti
                 csoportok: a "csoporton belüli visszatérítések", a "csoporton belüli
                 gazdasági támogatások" és a "csoport vezető entitása által felosztott
                 eredmények" kiszűrése (1345/1992. RD) (7G. o.)'
             x-agp34c1g6so30c1q60o30e1l:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Egyéb korrekciók az adóalapok
+                összegéhez (**). Egyéb korrekciók az egyedi adóalapok összegéhez vagy
+                az adócsoport adóalapjához (7H. o.).'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Egyéb korrekciók az adóalapok összegéhez (**). Egyéb korrekciók
                 az egyedi adóalapok összegéhez vagy az adócsoport adóalapjához (7H.
                 o.)
             x-agp34c1g6so30c1q60o30e1m:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Egyéb korrekciók az adóalapok
+                összegéhez (**). Egyéb korrekciók összesen.'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Egyéb korrekciók az adóalapok összegéhez (**). Egyéb korrekciók
                 összesen
             x-agp34c1g6so30c1q60o34chl:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). A csoport előzetes adóalapja.'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). A csoport előzetes adóalapja
             x-agp34c1g6so30c1q60o34e9h:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). A LIS 11.12. cikke szerinti
+                korlát alkalmazása (LIS 62.1. e) cikk). Csökkenés.'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). A LIS 11.12. cikke szerinti korlát alkalmazása (LIS 62.1. e)
                 cikk). Csökkenés
             x-agp34c1g6so30c1q60o36dhi:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). A csoport korábbi időszaki
+                negatív adóalapjainak beszámítása (7K. o.)(***).'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). A csoport korábbi időszaki negatív adóalapjainak beszámítása
                 (7K. o.)(***)
             x-agp34c1g6so30c1q60o36dhj:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Szövetkezeti csoportok: a csoport
+                korábbi időszaki negatív adókötelezettségeinek beszámítása (7K bis
+                o.)(***).'
               label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Szövetkezeti csoportok: a csoport korábbi időszaki negatív adókötelezettségeinek
                 beszámítása (7K bis o.)(***)'
             x-agp34c1g6so30c1q60o36e9o:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). A LIS 11.12. cikke szerinti
+                képzések a csoporthoz való csatlakozás előtti időszakokból (LIS 67.
+                d) és 74.3. d) cikk)(***).'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). A LIS 11.12. cikke szerinti képzések a csoporthoz való csatlakozás
                 előtti időszakokból (LIS 67. d) és 74.3. d) cikk)(***)
             x-agp34c1g6so30c1q60o3ad1g:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). A LIS 11.12. cikke és a 20/1990.
+                törvény 7. kiegészítő rendelkezése szerinti korlát alkalmazása. Csökkenés.'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). A LIS 11.12. cikke és a 20/1990. törvény 7. kiegészítő rendelkezése
                 szerinti korlát alkalmazása. Csökkenés
             x-agp34c1g6so30c1q60o3ad1h:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). A LIS 11.12. cikke és a 20/1990.
+                törvény 7. kiegészítő rendelkezése szerinti képzések az entitás csoporthoz
+                való csatlakozása előtti időszakokból (***).'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). A LIS 11.12. cikke és a 20/1990. törvény 7. kiegészítő rendelkezése
                 szerinti képzések az entitás csoporthoz való csatlakozása előtti időszakokból
                 (***)
             x-agp34c1g6so30c1q60o3ad1n:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Entitások negatív adóalapjainak
+                beszámítása a csoporthoz való csatlakozás előtti időszakokból (LIS
+                67. e) és 74.3. e) cikk) (7L. o.)(***).'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Entitások negatív adóalapjainak beszámítása a csoporthoz való
                 csatlakozás előtti időszakokból (LIS 67. e) és 74.3. e) cikk) (7L.
                 o.)(***)
             x-agp34c1g6so30c1q60o3ad9g:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). A csoport adóalapja a tőkésítési
+                tartalékok alkalmazása és a korábbi időszakok negatív adóalapjainak
+                beszámítása előtt.'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). A csoport adóalapja a tőkésítési tartalékok alkalmazása és a
                 korábbi időszakok negatív adóalapjainak beszámítása előtt
             x-agp34c1g6so30c1q60o3ad9i:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). A csoport adóalapja.'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). A csoport adóalapja
             x-agp34c1g6so30c1q60o3ad9j:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Szövetkezeti csoportok: egyedi
+                adóalapok összege a kiszűrések levonása után, szövetkezeti eredményből.'
               label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Szövetkezeti csoportok: egyedi adóalapok összege a kiszűrések
                 levonása után, szövetkezeti eredményből'
             x-agp34c1g6so30c1q60o3ad9k:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Szövetkezeti csoportok: egyedi
+                adóalapok összege a kiszűrések levonása után, nem szövetkezeti eredményből.'
               label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Szövetkezeti csoportok: egyedi adóalapok összege a kiszűrések
                 levonása után, nem szövetkezeti eredményből'
             x-agp34c1g6so30c1q60o3ad9o:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Adókulcs (%).'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Adókulcs (%)
             x-agp34c1g6so30c1q60o3adhg:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). A csoport szövetkezeteinek
+                bruttó adókötelezettségei összesen.'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). A csoport szövetkezeteinek bruttó adókötelezettségei összesen
             x-agp34c1g6so30c1q60o3adhh:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Szövetkezeti csoportok: entitások
+                negatív adókötelezettségeinek beszámítása a csoporthoz való csatlakozás
+                előtti időszakokból (7L bis o.)(***).'
               label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Szövetkezeti csoportok: entitások negatív adókötelezettségeinek
                 beszámítása a csoporthoz való csatlakozás előtti időszakokból (7L
                 bis o.)(***)'
             x-agp34c1g6so30c1q60o3adhi:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). A csoport bruttó adókötelezettsége.'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). A csoport bruttó adókötelezettsége
             x-agp34c1g6so30c1q60oj0chh:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Korábbi időszakok beszámított
+                egyedi negatív adóalapjainak összege (LIS 19. kiegészítő rendelkezés).
+                Általános rendszer (7A bis o.).'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Korábbi időszakok beszámított egyedi negatív adóalapjainak összege
                 (LIS 19. kiegészítő rendelkezés). Általános rendszer (7A bis o.)
             x-agp34c1g6so30c1q60oj4dhj:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Az időszak egyedi negatív adóalapjai
+                50%-anak összege, be nem számítva (LIS 19. kiegészítő rendelkezés).
+                Általános rendszer (7A. o.).'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Az időszak egyedi negatív adóalapjai 50%-anak összege, be nem
                 számítva (LIS 19. kiegészítő rendelkezés). Általános rendszer (7A.
                 o.)
             x-agp34c1g6so30c1q60oj4dhk:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Az időszak egyedi negatív adóalapjai
+                50%-anak összege, be nem számítva (LIS 19. kiegészítő rendelkezés).
+                Kanári-szigeteki hajók és hajózási társaságok különleges rendszere
+                (7A. o.).'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Az időszak egyedi negatív adóalapjai 50%-anak összege, be nem
                 számítva (LIS 19. kiegészítő rendelkezés). Kanári-szigeteki hajók
                 és hajózási társaságok különleges rendszere (7A. o.)
             x-agp34c1g6so30c1q60ojicpl:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Korábbi időszakok beszámított
+                negatív adóalapjainak összege (LIS 19. kiegészítő rendelkezés). Kanári-szigeteki
+                hajók és hajózási társaságok különleges rendszere (7A bis o.).'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Korábbi időszakok beszámított negatív adóalapjainak összege
                 (LIS 19. kiegészítő rendelkezés). Kanári-szigeteki hajók és hajózási
                 társaságok különleges rendszere (7A bis o.)
             x-agp34c1g6so30c1q60p3ad1i:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). A LIS 13.1. cikke szerinti
+                értékvesztések és a LIS 11.12. cikke szerinti céltartalékok és ráfordítások
+                (LIS 14.1. és 14.2. cikk), valamint a LIS 33.1. átmeneti rendelkezés
+                szerinti képzések. Növekedés.'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). A LIS 13.1. cikke szerinti értékvesztések és a LIS 11.12. cikke
                 szerinti céltartalékok és ráfordítások (LIS 14.1. és 14.2. cikk),
                 valamint a LIS 33.1. átmeneti rendelkezés szerinti képzések. Növekedés
             x-agp34c1g6so30c1q60p3ad1j:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). A LIS 13.1. cikke szerinti
+                értékvesztések és a LIS 11.12. cikke szerinti céltartalékok és ráfordítások
+                (LIS 14.1. és 14.2. cikk). Csökkenés.'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). A LIS 13.1. cikke szerinti értékvesztések és a LIS 11.12. cikke
                 szerinti céltartalékok és ráfordítások (LIS 14.1. és 14.2. cikk).
                 Csökkenés
             x-agp34c1g6so30c1q60p3ad1k:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). A LIS 11.12. cikke szerinti
+                korlát alkalmazása (LIS 62.1. e) cikk). Növekedés.'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). A LIS 11.12. cikke szerinti korlát alkalmazása (LIS 62.1. e)
                 cikk). Növekedés
             x-agp34c1g6so30c1q60p3ad1l:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Kiegyenlítési tartalék. Növekedés.'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Kiegyenlítési tartalék. Növekedés
             x-agp34c1g6so30c1q60p3ad1m:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Kiegyenlítési tartalék. Csökkenés.'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Kiegyenlítési tartalék. Csökkenés
             x-agp34c1g6so30c1q60p3ad1n:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Entitások kiegyenlítési tartaléka
+                a csoporthoz való csatlakozás előtti időszakokból (LIS 67. f) és 74.3.
+                f) cikk).'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Entitások kiegyenlítési tartaléka a csoporthoz való csatlakozás
                 előtti időszakokból (LIS 67. f) és 74.3. f) cikk)
             x-agp34c1g6so30c1q60p3ad1o:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). A LIS 13.1. cikke szerinti
+                értékvesztések és a LIS 11.12. cikke szerinti céltartalékok és ráfordítások.
+                Növekedés (szövetkezetek).'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). A LIS 13.1. cikke szerinti értékvesztések és a LIS 11.12. cikke
                 szerinti céltartalékok és ráfordítások. Növekedés (szövetkezetek)
             x-agp34c1g6so30c1q60p3ad1p:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). A LIS 13.1. cikke szerinti
+                értékvesztések és a LIS 11.12. cikke szerinti céltartalékok és ráfordítások.
+                Csökkenés (szövetkezetek).'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). A LIS 13.1. cikke szerinti értékvesztések és a LIS 11.12. cikke
                 szerinti céltartalékok és ráfordítások. Csökkenés (szövetkezetek)
             x-agp34c1g6so30c1q60p3ge9g:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). A LIS 11.12. cikke és a 20/1990.
+                törvény 7. kiegészítő rendelkezése szerinti korlát alkalmazása. Növekedés.'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). A LIS 11.12. cikke és a 20/1990. törvény 7. kiegészítő rendelkezése
                 szerinti korlát alkalmazása. Növekedés
             x-agp34c1g6so30c1q60p3ge9h:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Kiegyenlítési tartalék. Növekedés.'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Kiegyenlítési tartalék. Növekedés
             x-agp34c1g6so30c1q60p3ge9i:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Kiegyenlítési tartalék. Csökkenés.'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Kiegyenlítési tartalék. Csökkenés
             x-agp34c1g6so30c1q60p3ge9j:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Entitások kiegyenlítési tartaléka
+                a csoporthoz való csatlakozás előtti időszakokból.'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Entitások kiegyenlítési tartaléka a csoporthoz való csatlakozás
                 előtti időszakokból
             x-agp34c1g6so30c1q60p3idhj:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Tőkésítési tartalék (***).'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Tőkésítési tartalék (***)
             x-agp34c1g6so30c1q60pj2d1g:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Entitások tőkésítési tartaléka
+                a csoporthoz való csatlakozás előtti időszakokból, érvényesítve (LIS
+                67. c) és 74.3. c) cikk)(***).'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Entitások tőkésítési tartaléka a csoporthoz való csatlakozás
                 előtti időszakokból, érvényesítve (LIS 67. c) és 74.3. c) cikk)(***)
             x-agp34c1g6so30c1q60pj4d1h:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Az adóalapok összegének korrekciói
+                belső eredmények halasztása miatt (**). Belső ügyletek eredményének
+                kiszűrése összesen (7C. o.).'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Az adóalapok összegének korrekciói belső eredmények halasztása
                 miatt (**). Belső ügyletek eredményének kiszűrése összesen (7C. o.)
             x-agp34c1g6so30c1q60pj4d1i:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Az adóalapok összegének korrekciói
+                belső eredmények halasztása miatt (**). Belső ügyletek eredményének
+                beszámítása összesen (7C. o.).'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Az adóalapok összegének korrekciói belső eredmények halasztása
                 miatt (**). Belső ügyletek eredményének beszámítása összesen (7C.
                 o.)
             x-agp34c1g6so30c1qegp34c1g6so30c1e6ss3cb9o60p0:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Adóalap sávja 1.'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Adóalap sávja 1
             x-agp34c1g6so30c1qegp34c1g6so30c1e70o36b9o60rg:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Adókulcs sávja 1 (három egész,
+                két tizedes).'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Adókulcs sávja 1 (három egész, két tizedes)
             x-agp34c1g6so30c1qegp34c1g6so30c1e70o3gb9o68q0:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Adóalap sávja 2.'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Adóalap sávja 2
             x-agp34c1g6so30c1qegp34c1g6so30c1e70p3ab9o68sg:
+              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+                adókötelezettsége (7. oldal, 00. lap). Adókulcs sávja 2 (három egész,
+                két tizedes).'
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Adókulcs sávja 2 (három egész, két tizedes)
             x-agp34c1g6t230c1q60o30e1g:
@@ -2138,33 +3019,55 @@ modelo:
                 lévő saját tőke részesedések korábbi időszakokban kiszűrt, az időszak
                 végén meg be nem számított értékvesztése. Meg be nem számított értékvesztés'
             x-agp34c1g6t3j0c1q60o30e1j:
+              help: 'A 220-es modelo adata, 2024. adóév: Szövetkezeti csoportok: kiszűrések
+                (R.D. 1345/1992). Kiszűrések összege. Összesen.'
               label: 'Szövetkezeti csoportok: kiszűrések (R.D. 1345/1992). Kiszűrések
                 összege. Összesen'
             x-agp34c1g6t3j0c1q60o32c1j:
+              help: 'A 220-es modelo adata, 2024. adóév: Szövetkezeti csoportok: kiszűrések
+                (R.D. 1345/1992). Csoporton belüli szövetkezeti visszatérítések (*).
+                Összesen.'
               label: 'Szövetkezeti csoportok: kiszűrések (R.D. 1345/1992). Csoporton
                 belüli szövetkezeti visszatérítések (*). Összesen'
             x-agp34c1g6t3j0c1q60o32c1l:
+              help: 'A 220-es modelo adata, 2024. adóév: Szövetkezeti csoportok: kiszűrések
+                (R.D. 1345/1992). Csoporton belüli pénzügyi támogatások (*). Összesen.'
               label: 'Szövetkezeti csoportok: kiszűrések (R.D. 1345/1992). Csoporton
                 belüli pénzügyi támogatások (*). Összesen'
             x-agp34c1g6t3j0c1q60o32c1n:
+              help: 'A 220-es modelo adata, 2024. adóév: Szövetkezeti csoportok: kiszűrések
+                (R.D. 1345/1992). A csoport anyaentitása által felosztott eredmények
+                (*). Összesen.'
               label: 'Szövetkezeti csoportok: kiszűrések (R.D. 1345/1992). A csoport
                 anyaentitása által felosztott eredmények (*). Összesen'
             x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e64r2qchk:
+              help: 'A 220-es modelo adata, 2024. adóév: Szövetkezeti csoportok: kiszűrések
+                (R.D. 1345/1992). A kifizető entitás adóazonosítója.'
               label: 'Szövetkezeti csoportok: kiszűrések (R.D. 1345/1992). A kifizető
                 entitás adóazonosítója'
             x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e68qiqcpj:
+              help: 'A 220-es modelo adata, 2024. adóév: Szövetkezeti csoportok: kiszűrések
+                (R.D. 1345/1992). A kedvezményezett entitás adóazonosítója.'
               label: 'Szövetkezeti csoportok: kiszűrések (R.D. 1345/1992). A kedvezményezett
                 entitás adóazonosítója'
             x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e6cq2qd9g:
+              help: 'A 220-es modelo adata, 2024. adóév: Szövetkezeti csoportok: kiszűrések
+                (R.D. 1345/1992). Csoporton belüli szövetkezeti visszatérítések.'
               label: 'Szövetkezeti csoportok: kiszűrések (R.D. 1345/1992). Csoporton
                 belüli szövetkezeti visszatérítések'
             x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e6koiqdhn:
+              help: 'A 220-es modelo adata, 2024. adóév: Szövetkezeti csoportok: kiszűrések
+                (R.D. 1345/1992). Csoporton belüli pénzügyi támogatások.'
               label: 'Szövetkezeti csoportok: kiszűrések (R.D. 1345/1992). Csoporton
                 belüli pénzügyi támogatások'
             x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e6os2qe1k:
+              help: 'A 220-es modelo adata, 2024. adóév: Szövetkezeti csoportok: kiszűrések
+                (R.D. 1345/1992). A csoport anyaentitása által felosztott eredmények.'
               label: 'Szövetkezeti csoportok: kiszűrések (R.D. 1345/1992). A csoport
                 anyaentitása által felosztott eredmények'
             x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e70qiqc9g64:
+              help: 'A 220-es modelo adata, 2024. adóév: Szövetkezeti csoportok: kiszűrések
+                (R.D. 1345/1992). A tranzakció kiszűréseinek összege.'
               label: 'Szövetkezeti csoportok: kiszűrések (R.D. 1345/1992). A tranzakció
                 kiszűréseinek összege'
             x-agp34c1g6t430c1q60o30e1l:

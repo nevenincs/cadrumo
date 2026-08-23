@@ -148,144 +148,264 @@ modelo:
               help: null
               label: Balanç consolidat. Actiu (pàg. 3A full 00). Altres
             x-agp34c1g6d0j0c9q60o32c1h:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Efectiu, saldos en efectiu en bancs centrals i altres
+                dipòsits a la vista.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Efectiu, saldos en
                 efectiu en bancs centrals i altres dipòsits a la vista
             x-agp34c1g6d0j0c9q60o32c1i:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Actius financers mantinguts per negociar.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Actius financers
                 mantinguts per negociar
             x-agp34c1g6d0j0c9q60o32c1j:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Derivats.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Derivats
             x-agp34c1g6d0j0c9q60o32c1k:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Instruments de patrimoni.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Instruments de patrimoni
             x-agp34c1g6d0j0c9q60o32c1l:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Valors representatius de deute.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Valors representatius
                 de deute
             x-agp34c1g6d0j0c9q60o32c1m:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Préstecs i bestretes.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Préstecs i bestretes
             x-agp34c1g6d0j0c9q60o32c1n:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Préstecs i bestretes. Bancs centrals.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Préstecs i bestretes.
                 Bancs centrals
             x-agp34c1g6d0j0c9q60o32c1o:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Préstecs i bestretes. Entitats de crèdit.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Préstecs i bestretes.
                 Entitats de crèdit
             x-agp34c1g6d0j0c9q60o32c1p:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Préstecs i bestretes. Clientela.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Préstecs i bestretes.
                 Clientela
             x-agp34c1g6d0j0c9q60o32c9g:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Actius financers designats a valor raonable amb canvis
+                en resultats.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Actius financers
                 designats a valor raonable amb canvis en resultats
             x-agp34c1g6d0j0c9q60o32c9i:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Valors representatius de deute.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Valors representatius
                 de deute
             x-agp34c1g6d0j0c9q60o32c9j:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Préstecs i bestretes.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Préstecs i bestretes
             x-agp34c1g6d0j0c9q60o32c9k:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Préstecs i bestretes. Bancs centrals.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Préstecs i bestretes.
                 Bancs centrals
             x-agp34c1g6d0j0c9q60o32c9l:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Préstecs i bestretes. Entitats de crèdit.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Préstecs i bestretes.
                 Entitats de crèdit
             x-agp34c1g6d0j0c9q60o32c9m:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Préstecs i bestretes. Clientela.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Préstecs i bestretes.
                 Clientela
             x-agp34c1g6d0j0c9q60o32chn:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Derivats - comptabilitat de cobertures.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Derivats - comptabilitat
                 de cobertures
             x-agp34c1g6d0j0c9q60o32cho:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Canvis del valor raonable dels elements coberts d''una
+                cartera amb cobertura del risc de tipus d''interès.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Canvis del valor
                 raonable dels elements coberts d'una cartera amb cobertura del risc
                 de tipus d'interès
             x-agp34c1g6d0j0c9q60o32chp:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Inversions en negocis conjunts i associades.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Inversions en negocis
                 conjunts i associades
             x-agp34c1g6d0j0c9q60o32cph:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Negocis conjunts.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Negocis conjunts
             x-agp34c1g6d0j0c9q60o32cpi:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Associades.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Associades
             x-agp34c1g6d0j0c9q60o32cpj:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Actius emparats per contractes d''assegurança o reassegurament.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Actius emparats per
                 contractes d'assegurança o reassegurament
             x-agp34c1g6d0j0c9q60o32cpk:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Actius tangibles.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Actius tangibles
             x-agp34c1g6d0j0c9q60o32cpl:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Immobilitzat material.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Immobilitzat material
             x-agp34c1g6d0j0c9q60o32cpm:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Immobilitzat material. D''ús propi.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Immobilitzat material.
                 D'ús propi
             x-agp34c1g6d0j0c9q60o32cpn:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Immobilitzat material. Cedit en arrendament operatiu.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Immobilitzat material.
                 Cedit en arrendament operatiu
             x-agp34c1g6d0j0c9q60o32cpo:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Immobilitzat material. Afecte a l''obra social (caixes
+                d''estalvis i cooperatives de crèdit).'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Immobilitzat material.
                 Afecte a l'obra social (caixes d'estalvis i cooperatives de crèdit)
             x-agp34c1g6d0j0c9q60o32cpp:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Inversions immobiliàries.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Inversions immobiliàries
             x-agp34c1g6d0j0c9q60o32d1g:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Inversions immobiliàries. De les quals: cedit en arrendament
+                operatiu.'
               label: 'Balanç consolidat. Actiu (pàg. 3A full 01). Inversions immobiliàries.
                 De les quals: cedit en arrendament operatiu'
             x-agp34c1g6d0j0c9q60o3cc9l:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Actius financers no destinats a negociació valorats obligatoriament
+                a valor raonable amb canvis en resultats.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Actius financers
                 no destinats a negociació valorats obligatoriament a valor raonable
                 amb canvis en resultats
             x-agp34c1g6d0j0c9q60o3cc9m:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Instruments de patrimoni.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Instruments de patrimoni
             x-agp34c1g6d0j0c9q60o3cc9n:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Valors representatius de deute.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Valors representatius
                 de deute
             x-agp34c1g6d0j0c9q60o3cc9o:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Préstecs i bestretes.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Préstecs i bestretes
             x-agp34c1g6d0j0c9q60o3cc9p:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Bancs centrals.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Bancs centrals
             x-agp34c1g6d0j0c9q60o3cchg:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Entitats de crèdit.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Entitats de crèdit
             x-agp34c1g6d0j0c9q60o3cchh:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Clientela.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Clientela
             x-agp34c1g6d0j0c9q60o3cchi:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Pro memoria: prestats o lliurats com a garantia amb dret
+                de venda o pignoració.'
               label: 'Balanç consolidat. Actiu (pàg. 3A full 01). Pro memoria: prestats
                 o lliurats com a garantia amb dret de venda o pignoració'
             x-agp34c1g6d0j0c9q60o3cchj:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Actius financers a valor raonable amb canvis en altre
+                resultat global.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Actius financers
                 a valor raonable amb canvis en altre resultat global
             x-agp34c1g6d0j0c9q60o3cchk:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Instruments de patrimoni.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Instruments de patrimoni
             x-agp34c1g6d0j0c9q60o3cchl:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Valors representatius de deute.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Valors representatius
                 de deute
             x-agp34c1g6d0j0c9q60o3cchm:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Préstecs i bestretes.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Préstecs i bestretes
             x-agp34c1g6d0j0c9q60o3cchn:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Bancs centrals.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Bancs centrals
             x-agp34c1g6d0j0c9q60o3ccho:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Entitats de crèdit.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Entitats de crèdit
             x-agp34c1g6d0j0c9q60o3cchp:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Clientela.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Clientela
             x-agp34c1g6d0j0c9q60o3ccpg:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Pro memoria: prestats o lliurats com a garantia amb dret
+                de venda o pignoració.'
               label: 'Balanç consolidat. Actiu (pàg. 3A full 01). Pro memoria: prestats
                 o lliurats com a garantia amb dret de venda o pignoració'
             x-agp34c1g6d0j0c9q60o3ccph:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Actius financers a cost amortitzat.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Actius financers
                 a cost amortitzat
             x-agp34c1g6d0j0c9q60o3ccpi:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Valors representatius de deute.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Valors representatius
                 de deute
             x-agp34c1g6d0j0c9q60o3ccpj:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Préstecs i bestretes.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Préstecs i bestretes
             x-agp34c1g6d0j0c9q60o3ccpk:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Bancs centrals.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Bancs centrals
             x-agp34c1g6d0j0c9q60o3ccpl:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Entitats de crèdit.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Entitats de crèdit
             x-agp34c1g6d0j0c9q60o3ccpm:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Clientela.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Clientela
             x-agp34c1g6d0j0c9q60o3ccpn:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Pro memoria: prestats o lliurats com a garantia amb dret
+                de venda o pignoració.'
               label: 'Balanç consolidat. Actiu (pàg. 3A full 01). Pro memoria: prestats
                 o lliurats com a garantia amb dret de venda o pignoració'
             x-agp34c1g6d0j0c9q60o3ed9g:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Pro memoria: prestats o lliurats com a garantia amb dret
+                de venda o pignoració.'
               label: 'Balanç consolidat. Actiu (pàg. 3A full 01). Pro memoria: prestats
                 o lliurats com a garantia amb dret de venda o pignoració'
             x-agp34c1g6d0j0c9q60o3ed9h:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Pro memoria: prestats o lliurats com a garantia amb dret
+                de venda o pignoració.'
               label: 'Balanç consolidat. Actiu (pàg. 3A full 01). Pro memoria: prestats
                 o lliurats com a garantia amb dret de venda o pignoració'
             x-agp34c1g6d0j0c9q60o3ed9l:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 01). Pro memoria: adquirit en arrendament financer.'
               label: 'Balanç consolidat. Actiu (pàg. 3A full 01). Pro memoria: adquirit
                 en arrendament financer'
             x-agp34c1g6d0j0chq60o32c1h:
@@ -482,34 +602,59 @@ modelo:
               label: Balanç consolidat. Actiu (pàg. 3A full 02). Préstecs i partides
                 a cobrar. Préstecs. Altres
             x-agp34c1g6d0j2c9q60o32d1h:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 11). Actius intangibles.'
               label: Balanç consolidat. Actiu (pàg. 3A full 11). Actius intangibles
             x-agp34c1g6d0j2c9q60o32d1i:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 11). Fons de comerç.'
               label: Balanç consolidat. Actiu (pàg. 3A full 11). Fons de comerç
             x-agp34c1g6d0j2c9q60o32d1j:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 11). Altres actius intangibles.'
               label: Balanç consolidat. Actiu (pàg. 3A full 11). Altres actius intangibles
             x-agp34c1g6d0j2c9q60o32d1k:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 11). Actius per impostos.'
               label: Balanç consolidat. Actiu (pàg. 3A full 11). Actius per impostos
             x-agp34c1g6d0j2c9q60o32d1l:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 11). Actius per impostos corrents.'
               label: Balanç consolidat. Actiu (pàg. 3A full 11). Actius per impostos
                 corrents
             x-agp34c1g6d0j2c9q60o32d1m:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 11). Actius per impostos diferits.'
               label: Balanç consolidat. Actiu (pàg. 3A full 11). Actius per impostos
                 diferits
             x-agp34c1g6d0j2c9q60o32d1n:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 11). Altres actius.'
               label: Balanç consolidat. Actiu (pàg. 3A full 11). Altres actius
             x-agp34c1g6d0j2c9q60o32d1o:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 11). Contractes d''assegurances vinculats a pensions.'
               label: Balanç consolidat. Actiu (pàg. 3A full 11). Contractes d'assegurances
                 vinculats a pensions
             x-agp34c1g6d0j2c9q60o32d1p:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 11). Existències.'
               label: Balanç consolidat. Actiu (pàg. 3A full 11). Existències
             x-agp34c1g6d0j2c9q60o32d9g:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 11). Resta dels altres actius.'
               label: Balanç consolidat. Actiu (pàg. 3A full 11). Resta dels altres
                 actius
             x-agp34c1g6d0j2c9q60o32d9h:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 11). Actius no corrents i grups alienables d''elements classificats
+                com a mantinguts per a la venda.'
               label: Balanç consolidat. Actiu (pàg. 3A full 11). Actius no corrents
                 i grups alienables d'elements classificats com a mantinguts per a
                 la venda
             x-agp34c1g6d0j2c9q60o32d9i:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
+                3A full 11). Total actiu.'
               label: Balanç consolidat. Actiu (pàg. 3A full 11). Total actiu
             x-agp34c1g6d130c1q60o30c1j:
               help: null
@@ -699,115 +844,205 @@ modelo:
               label: Balanç consolidat. Patrimoni net i passiu. Fons de reserva obligatori
                 de cooperatives
             x-agp34c1g6d130c9q60o32d9j:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Passius financers mantinguts per negociar.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Passius financers
                 mantinguts per negociar
             x-agp34c1g6d130c9q60o32d9k:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Derivats.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Derivats
             x-agp34c1g6d130c9q60o32d9l:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Posicions curtes.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Posicions curtes
             x-agp34c1g6d130c9q60o32d9m:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Dipòsits.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Dipòsits
             x-agp34c1g6d130c9q60o32d9n:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Dipòsits. Bancs centrals.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Dipòsits. Bancs
                 centrals
             x-agp34c1g6d130c9q60o32d9o:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Dipòsits. Entitats de crèdit.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Dipòsits. Entitats
                 de crèdit
             x-agp34c1g6d130c9q60o32d9p:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Dipòsits. Clientela.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Dipòsits. Clientela
             x-agp34c1g6d130c9q60o32dhg:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Valors representatius de deute emesos.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Valors representatius
                 de deute emesos
             x-agp34c1g6d130c9q60o32dhh:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Altres passius financers.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Altres passius financers
             x-agp34c1g6d130c9q60o32dhi:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Passius financers designats a valor raonable amb
+                canvis en resultats.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Passius financers
                 designats a valor raonable amb canvis en resultats
             x-agp34c1g6d130c9q60o32dhj:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Dipòsits.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Dipòsits
             x-agp34c1g6d130c9q60o32dhk:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Dipòsits. Bancs centrals.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Dipòsits. Bancs
                 centrals
             x-agp34c1g6d130c9q60o32dhl:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Dipòsits. Entitats de crèdit.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Dipòsits. Entitats
                 de crèdit
             x-agp34c1g6d130c9q60o32dhm:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Dipòsits. Clientela.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Dipòsits. Clientela
             x-agp34c1g6d130c9q60o32dhn:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Valors representatius de deute emesos.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Valors representatius
                 de deute emesos
             x-agp34c1g6d130c9q60o32dho:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Altres passius financers.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Altres passius financers
             x-agp34c1g6d130c9q60o32dhp:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Passius financers a cost amortitzat.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Passius financers
                 a cost amortitzat
             x-agp34c1g6d130c9q60o32dpg:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Dipòsits.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Dipòsits
             x-agp34c1g6d130c9q60o32dph:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Dipòsits. Bancs centrals.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Dipòsits. Bancs
                 centrals
             x-agp34c1g6d130c9q60o32dpi:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Dipòsits. Entitats de crèdit.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Dipòsits. Entitats
                 de crèdit
             x-agp34c1g6d130c9q60o32dpj:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Dipòsits. Clientela.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Dipòsits. Clientela
             x-agp34c1g6d130c9q60o32dpk:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Valors representatius de deute emesos.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Valors representatius
                 de deute emesos
             x-agp34c1g6d130c9q60o32dpl:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Altres passius financers.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Altres passius financers
             x-agp34c1g6d130c9q60o32dpm:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Derivats - comptabilitat de cobertures.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Derivats - comptabilitat
                 de cobertures
             x-agp34c1g6d130c9q60o32dpn:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Canvis del valor raonable dels elements coberts
+                d''una cartera amb cobertura del risc de tipus d''interès.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Canvis del valor
                 raonable dels elements coberts d'una cartera amb cobertura del risc
                 de tipus d'interès
             x-agp34c1g6d130c9q60o32dpo:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Passius emparats per contractes d''assegurança
+                o reassegurament.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Passius emparats
                 per contractes d'assegurança o reassegurament
             x-agp34c1g6d130c9q60o32dpp:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Provisions.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Provisions
             x-agp34c1g6d130c9q60o32e1g:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Pensions i altres obligacions de prestacions definides
+                post-ocupació.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Pensions i altres
                 obligacions de prestacions definides post-ocupació
             x-agp34c1g6d130c9q60o32e1h:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Altres retribucions als empleats a llarg termini.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Altres retribucions
                 als empleats a llarg termini
             x-agp34c1g6d130c9q60o32e1i:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Qüestions processals i litigis per impostos pendents.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Qüestions processals
                 i litigis per impostos pendents
             x-agp34c1g6d130c9q60o32e1j:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Compromisos i garanties concedits.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Compromisos i garanties
                 concedits
             x-agp34c1g6d130c9q60o32e1k:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Restants provisions.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Restants provisions
             x-agp34c1g6d130c9q60o32e1l:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Passius per impostos.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Passius per impostos
             x-agp34c1g6d130c9q60o32e1m:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Passius per impostos corrents.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Passius per impostos
                 corrents
             x-agp34c1g6d130c9q60o32e1n:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Passius per impostos diferits.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Passius per impostos
                 diferits
             x-agp34c1g6d130c9q60o32e1o:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Capital social reemborsable a la vista.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Capital social reemborsable
                 a la vista
             x-agp34c1g6d130c9q60o32e1p:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Altres passius.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Altres passius
             x-agp34c1g6d130c9q60o32e9g:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). De les quals: fons de l''obra social (només caixes
+                d''estalvis i cooperatives de crèdit).'
               label: 'Balanç consolidat. Passiu (pàg. 3B full 01). De les quals: fons
                 de l''obra social (només caixes d''estalvis i cooperatives de crèdit)'
             x-agp34c1g6d130c9q60o32e9h:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Passius inclosos en grups alienables d''elements
+                classificats com a mantinguts per a la venda.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Passius inclosos
                 en grups alienables d'elements classificats com a mantinguts per a
                 la venda
             x-agp34c1g6d130c9q60o32e9i:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Total passiu.'
               label: Balanç consolidat. Passiu (pàg. 3B full 01). Total passiu
             x-agp34c1g6d130c9q60o3ed9m:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Pro memoria: passius subordinats.'
               label: 'Balanç consolidat. Passiu (pàg. 3B full 01). Pro memoria: passius
                 subordinats'
             x-agp34c1g6d130c9q60o3ed9n:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3B full 01). Pro memoria: passius subordinats.'
               label: 'Balanç consolidat. Passiu (pàg. 3B full 01). Pro memoria: passius
                 subordinats'
             x-agp34c1g6d130chq60o32d1l:
@@ -886,460 +1121,923 @@ modelo:
               label: Balanç consolidat. Actiu (pàg. 3B full 02). Immobilitzat intangible.
                 Fons de comerç de consolidació
             x-agp34c1g6d1j0c9q60o32e9j:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Fons propis.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Fons propis
             x-agp34c1g6d1j0c9q60o32e9k:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Capital.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Capital
             x-agp34c1g6d1j0c9q60o32e9l:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Capital. Capital desemborsat.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Capital.
                 Capital desemborsat
             x-agp34c1g6d1j0c9q60o32e9m:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Capital. Capital no desemborsat exigit.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Capital.
                 Capital no desemborsat exigit
             x-agp34c1g6d1j0c9q60o32e9n:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Prima d''emissió.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Prima d'emissió
             x-agp34c1g6d1j0c9q60o32e9o:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Instruments de patrimoni emesos diferents del
+                capital.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Instruments
                 de patrimoni emesos diferents del capital
             x-agp34c1g6d1j0c9q60o32e9p:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Component de patrimoni net dels instruments
+                financers compostos.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Component
                 de patrimoni net dels instruments financers compostos
             x-agp34c1g6d1j0c9q60o34c1g:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Altres instruments de patrimoni emesos.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Altres instruments
                 de patrimoni emesos
             x-agp34c1g6d1j0c9q60o34c1h:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Altres elements de patrimoni net.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Altres elements
                 de patrimoni net
             x-agp34c1g6d1j0c9q60o34c1i:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Guanys acumulats.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Guanys acumulats
             x-agp34c1g6d1j0c9q60o34c1j:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Reserves de revaloració.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Reserves
                 de revaloració
             x-agp34c1g6d1j0c9q60o34c1k:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Altres reserves.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Altres reserves
             x-agp34c1g6d1j0c9q60o34c1l:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Reserves o pèrdues acumulades d''inversions
+                en negocis conjunts i associades.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Reserves
                 o pèrdues acumulades d'inversions en negocis conjunts i associades
             x-agp34c1g6d1j0c9q60o34c1m:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Altres.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Altres
             x-agp34c1g6d1j0c9q60o34c1n:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). (-) Accions pròpies.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). (-) Accions
                 pròpies
             x-agp34c1g6d1j0c9q60o34c1o:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Resultat atribuible als propietaris de la dominant.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Resultat
                 atribuible als propietaris de la dominant
             x-agp34c1g6d1j0c9q60o34c1p:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). (-) Dividends a compte.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). (-) Dividends
                 a compte
             x-agp34c1g6d1j0c9q60o34c9g:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Altre resultat global acumulat.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Altre resultat
                 global acumulat
             x-agp34c1g6d1j0c9q60o34c9h:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Elements que no es reclassificaran en resultats.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Elements
                 que no es reclassificaran en resultats
             x-agp34c1g6d1j0c9q60o34c9i:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Guanys o (-) pèrdues actuarials en plans de
+                pensions de prestacions definides.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Guanys o
                 (-) pèrdues actuarials en plans de pensions de prestacions definides
             x-agp34c1g6d1j0c9q60o34c9j:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Actius no corrents i grups alienables d''elements
+                classificats com a mantinguts per a la venda.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Actius no
                 corrents i grups alienables d'elements classificats com a mantinguts
                 per a la venda
             x-agp34c1g6d1j0c9q60o34c9m:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Elements que poden reclassificar-se en resultats.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Elements
                 que poden reclassificar-se en resultats
             x-agp34c1g6d1j0c9q60o34c9n:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Cobertura d''inversions netes en negocis a
+                l''estranger [part eficaç].'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Cobertura
                 d'inversions netes en negocis a l'estranger [part eficaç]
             x-agp34c1g6d1j0c9q60o34c9o:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Conversió de divises.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Conversió
                 de divises
             x-agp34c1g6d1j0c9q60o34c9p:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Derivats de cobertura. Reserva de cobertures
+                de fluxos d''efectiu [part eficaç].'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Derivats
                 de cobertura. Reserva de cobertures de fluxos d'efectiu [part eficaç]
             x-agp34c1g6d1j0c9q60o34chj:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Actius no corrents i grups alienables d''elements
+                classificats com a mantinguts per a la venda.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Actius no
                 corrents i grups alienables d'elements classificats com a mantinguts
                 per a la venda
             x-agp34c1g6d1j0c9q60o34chk:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Participació en altres ingressos i despeses
+                reconeguts d''inversions en negocis conjunts i associades.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Participació
                 en altres ingressos i despeses reconeguts d'inversions en negocis
                 conjunts i associades
             x-agp34c1g6d1j0c9q60o34chl:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Interessos minoritaris [participacions no dominants].'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Interessos
                 minoritaris [participacions no dominants]
             x-agp34c1g6d1j0c9q60o34chm:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Altre resultat global acumulat.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Altre resultat
                 global acumulat
             x-agp34c1g6d1j0c9q60o34chn:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Altres partides.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Altres partides
             x-agp34c1g6d1j0c9q60o34cho:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Total patrimoni net.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Total patrimoni
                 net
             x-agp34c1g6d1j0c9q60o34chp:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Total patrimoni net i passiu.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Total patrimoni
                 net i passiu
             x-agp34c1g6d1j0c9q60o3cd1j:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Canvis del valor raonable dels instruments
+                de deute a valor raonable amb canvis en altre resultat global.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Canvis del
                 valor raonable dels instruments de deute a valor raonable amb canvis
                 en altre resultat global
             x-agp34c1g6d1j0c9q60o3cd1k:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Instruments de cobertura [elements no designats].'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Instruments
                 de cobertura [elements no designats]
             x-agp34c1g6d1j0c9q60o3cd1l:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Altres compromisos concedits.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Altres compromisos
                 concedits
             x-agp34c1g6d1j0c9q60o3cdhg:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Participació en altres ingressos i despeses
+                reconeguts d''inversions en negocis conjunts i associades.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Participació
                 en altres ingressos i despeses reconeguts d'inversions en negocis
                 conjunts i associades
             x-agp34c1g6d1j0c9q60o3ed9o:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Pro memoria: capital no exigit.'
               label: 'Balanç consolidat. Patrimoni net (pàg. 3C full 01). Pro memoria:
                 capital no exigit'
             x-agp34c1g6d1j0c9q60o3ed9p:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Pro memoria: exposicions fora de balanç.'
               label: 'Balanç consolidat. Patrimoni net (pàg. 3C full 01). Pro memoria:
                 exposicions fora de balanç'
             x-agp34c1g6d1j0c9q60o3edhg:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Compromisos de préstec concedits.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Compromisos
                 de préstec concedits
             x-agp34c1g6d1j0c9q60o3edhh:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Garanties financeres concedides.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Garanties
                 financeres concedides
             x-agp34c1g6d1j0c9q60o3edhi:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Reserva de capitalització.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Reserva de
                 capitalització
             x-agp34c1g6d1j0c9q60o3edhj:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Reserva d''anivellació.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Reserva d'anivellació
             x-agp34c1g6d1j0c9q60r36e0:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Canvis del valor raonable dels instruments
+                de patrimoni valorats a valor raonable amb canvis en altre resultat
+                global.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Canvis del
                 valor raonable dels instruments de patrimoni valorats a valor raonable
                 amb canvis en altre resultat global
             x-agp34c1g6d1j0c9q60r36e8:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Ineficàcia de les cobertures de valor raonable
+                dels instruments de patrimoni valorats a valor raonable amb canvis
+                en altre resultat global.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Ineficàcia
                 de les cobertures de valor raonable dels instruments de patrimoni
                 valorats a valor raonable amb canvis en altre resultat global
             x-agp34c1g6d1j0c9q60r38c0:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Canvis del valor raonable dels instruments
+                de patrimoni valorats a valor raonable amb canvis en altre resultat
+                global [element cobert].'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Canvis del
                 valor raonable dels instruments de patrimoni valorats a valor raonable
                 amb canvis en altre resultat global [element cobert]
             x-agp34c1g6d1j0c9q60r38c8:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Canvis del valor raonable dels instruments
+                de patrimoni valorats a valor raonable amb canvis en altre resultat
+                global [instrument de cobertura].'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Canvis del
                 valor raonable dels instruments de patrimoni valorats a valor raonable
                 amb canvis en altre resultat global [instrument de cobertura]
             x-agp34c1g6d1j0c9q60r38cg:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3C full 01). Canvis del valor raonable dels passius financers
+                a valor raonable amb canvis en resultats atribuibles a canvis en el
+                risc de crèdit.'
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Canvis del
                 valor raonable dels passius financers a valor raonable amb canvis
                 en resultats atribuibles a canvis en el risc de crèdit
             x-agp34c1g6d1j0chq60o32dhj:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Passius financers mantinguts per negociar.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Passius financers
                 mantinguts per negociar
             x-agp34c1g6d1j0chq60o32dhk:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Altres passius financers a valor raonable amb canvis
+                en pèrdues i guanys.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Altres passius financers
                 a valor raonable amb canvis en pèrdues i guanys
             x-agp34c1g6d1j0chq60o32dhl:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Dèbits i partides a pagar.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Dèbits i partides
                 a pagar
             x-agp34c1g6d1j0chq60o32dhm:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Dèbits i partides a pagar. Passius subordinats.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Dèbits i partides
                 a pagar. Passius subordinats
             x-agp34c1g6d1j0chq60o32dhn:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Dèbits i partides a pagar. Dipòsits rebuts per
+                reassegurament cedit.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Dèbits i partides
                 a pagar. Dipòsits rebuts per reassegurament cedit
             x-agp34c1g6d1j0chq60o32dho:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Dèbits i partides a pagar. Deutes per operacions
+                d''assegurança.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Dèbits i partides
                 a pagar. Deutes per operacions d'assegurança
             x-agp34c1g6d1j0chq60o32dhp:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Dèbits i partides a pagar. Deutes amb assegurats.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Dèbits i partides
                 a pagar. Deutes amb assegurats
             x-agp34c1g6d1j0chq60o32dpg:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Dèbits i partides a pagar. Deutes amb mediadors.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Dèbits i partides
                 a pagar. Deutes amb mediadors
             x-agp34c1g6d1j0chq60o32dph:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Dèbits i partides a pagar. Deutes condicionats.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Dèbits i partides
                 a pagar. Deutes condicionats
             x-agp34c1g6d1j0chq60o32dpi:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Dèbits i partides a pagar. Deutes per operacions
+                de reassegurament.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Dèbits i partides
                 a pagar. Deutes per operacions de reassegurament
             x-agp34c1g6d1j0chq60o32dpj:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Dèbits i partides a pagar. Deutes per operacions
+                de coassegurament.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Dèbits i partides
                 a pagar. Deutes per operacions de coassegurament
             x-agp34c1g6d1j0chq60o32dpk:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Dèbits i partides a pagar. Obligacions i altres
+                valors negociables.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Dèbits i partides
                 a pagar. Obligacions i altres valors negociables
             x-agp34c1g6d1j0chq60o32dpl:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Dèbits i partides a pagar. Deutes amb entitats
+                de crèdit.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Dèbits i partides
                 a pagar. Deutes amb entitats de crèdit
             x-agp34c1g6d1j0chq60o32dpm:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Dèbits i partides a pagar. Deutes per operacions
+                preparatòries de contractes d''assegurança.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Dèbits i partides
                 a pagar. Deutes per operacions preparatòries de contractes d'assegurança
             x-agp34c1g6d1j0chq60o32dpn:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Dèbits i partides a pagar. Altres deutes.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Dèbits i partides
                 a pagar. Altres deutes
             x-agp34c1g6d1j0chq60o32dpo:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Dèbits i partides a pagar. Altres deutes. Deutes
+                amb les Administracions Públiques.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Dèbits i partides
                 a pagar. Altres deutes. Deutes amb les Administracions Públiques
             x-agp34c1g6d1j0chq60o32dpp:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Dèbits i partides a pagar. Altres deutes. Altres
+                deutes amb entitats del grup i associades.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Dèbits i partides
                 a pagar. Altres deutes. Altres deutes amb entitats del grup i associades
             x-agp34c1g6d1j0chq60o32e1g:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Dèbits i partides a pagar. Altres deutes. Resta
+                d''altres deutes.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Dèbits i partides
                 a pagar. Altres deutes. Resta d'altres deutes
             x-agp34c1g6d1j0chq60o32e1h:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Derivats de cobertura.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Derivats de cobertura
             x-agp34c1g6d1j0chq60o32e1i:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Provisions tècniques.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Provisions tècniques
             x-agp34c1g6d1j0chq60o32e1j:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Provisions tècniques. Provisió per a primes no
+                consumides.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Provisions tècniques.
                 Provisió per a primes no consumides
             x-agp34c1g6d1j0chq60o32e1k:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Provisions tècniques. Provisió per a riscos en
+                curs.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Provisions tècniques.
                 Provisió per a riscos en curs
             x-agp34c1g6d1j0chq60o32e1l:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Provisions tècniques. Provisió d''assegurances
+                de vida.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Provisions tècniques.
                 Provisió d'assegurances de vida
             x-agp34c1g6d1j0chq60o32e1m:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Provisions tècniques. Provisió d''assegurances
+                de vida. Provisió per a primes no consumides.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Provisions tècniques.
                 Provisió d'assegurances de vida. Provisió per a primes no consumides
             x-agp34c1g6d1j0chq60o32e1n:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Provisions tècniques. Provisió d''assegurances
+                de vida. Provisió per a riscos en curs.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Provisions tècniques.
                 Provisió d'assegurances de vida. Provisió per a riscos en curs
             x-agp34c1g6d1j0chq60o32e1o:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Provisions tècniques. Provisió d''assegurances
+                de vida. Provisió matemàtica.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Provisions tècniques.
                 Provisió d'assegurances de vida. Provisió matemàtica
             x-agp34c1g6d1j0chq60o32e1p:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Provisions tècniques. Provisió d''assegurances
+                de vida. Provisió d''assegurances de vida quan el risc de la inversió
+                l''assumeix el prenedor.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Provisions tècniques.
                 Provisió d'assegurances de vida. Provisió d'assegurances de vida quan
                 el risc de la inversió l'assumeix el prenedor
             x-agp34c1g6d1j0chq60o32e9g:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Provisions tècniques. Provisió per a prestacions.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Provisions tècniques.
                 Provisió per a prestacions
             x-agp34c1g6d1j0chq60o32e9h:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Provisions tècniques. Provisió per a participació
+                en beneficis i per a extorns.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Provisions tècniques.
                 Provisió per a participació en beneficis i per a extorns
             x-agp34c1g6d1j0chq60o32e9i:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Provisions tècniques. Altres provisions tècniques.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Provisions tècniques.
                 Altres provisions tècniques
             x-agp34c1g6d1j0chq60o32e9j:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Provisions no tècniques.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Provisions no tècniques
             x-agp34c1g6d1j0chq60o32e9k:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Provisions no tècniques. Provisions per a impostos
+                i altres contingències legals.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Provisions no tècniques.
                 Provisions per a impostos i altres contingències legals
             x-agp34c1g6d1j0chq60o32e9l:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Provisions no tècniques. Provisió per a pensions
+                i obligacions similars.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Provisions no tècniques.
                 Provisió per a pensions i obligacions similars
             x-agp34c1g6d1j0chq60o32e9m:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Provisions no tècniques. Provisió per a pagaments
+                per convenis de liquidació.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Provisions no tècniques.
                 Provisió per a pagaments per convenis de liquidació
             x-agp34c1g6d1j0chq60o32e9n:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Provisions no tècniques. Altres provisions no tècniques.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Provisions no tècniques.
                 Altres provisions no tècniques
             x-agp34c1g6d1j0chq60o32e9o:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Passius fiscals.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Passius fiscals
             x-agp34c1g6d1j0chq60o32e9p:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Passius fiscals. Passius per impost corrent.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Passius fiscals.
                 Passius per impost corrent
             x-agp34c1g6d1j0chq60o34c1g:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Passius fiscals. Passius per impost diferit.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Passius fiscals.
                 Passius per impost diferit
             x-agp34c1g6d1j0chq60o34c1h:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Resta de passius.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Resta de passius
             x-agp34c1g6d1j0chq60o34c1i:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Resta de passius. Periodificacions.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Resta de passius.
                 Periodificacions
             x-agp34c1g6d1j0chq60o34c1j:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Resta de passius. Passius per asimetries comptables.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Resta de passius.
                 Passius per asimetries comptables
             x-agp34c1g6d1j0chq60o34c1k:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Resta de passius. Comissions i altres costos d''adquisició
+                del reassegurament cedit.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Resta de passius.
                 Comissions i altres costos d'adquisició del reassegurament cedit
             x-agp34c1g6d1j0chq60o34c1l:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Resta de passius. Altres passius.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Resta de passius.
                 Altres passius
             x-agp34c1g6d1j0chq60o34c1m:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Passius vinculats amb actius mantinguts per a la
+                venda.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Passius vinculats
                 amb actius mantinguts per a la venda
             x-agp34c1g6d1j0chq60o34c1n:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Total passiu.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Total passiu
             x-agp34c1g6d1j0chq60o3ec1j:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Dèbits i partides a pagar. Altres deutes. Entitats
+                associades.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Dèbits i partides
                 a pagar. Altres deutes. Entitats associades
             x-agp34c1g6d1j0chq60o3ec1k:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Dèbits i partides a pagar. Altres deutes. Entitats
+                multigrup.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Dèbits i partides
                 a pagar. Altres deutes. Entitats multigrup
             x-agp34c1g6d1j0chq60o3ec1l:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Passiu
+                (pàg. 3C full 02). Dèbits i partides a pagar. Altres deutes. Altres.'
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Dèbits i partides
                 a pagar. Altres deutes. Altres
             x-agp34c1g6d230chq60o34c1o:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Fons propis.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Fons propis
             x-agp34c1g6d230chq60o34c1p:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Fons propis. Capital o fons mutual.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Fons propis.
                 Capital o fons mutual
             x-agp34c1g6d230chq60o34c9g:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Fons propis. Capital escripturat o fons mutual.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Fons propis.
                 Capital escripturat o fons mutual
             x-agp34c1g6d230chq60o34c9h:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Fons propis. (Capital no exigit).'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Fons propis.
                 (Capital no exigit)
             x-agp34c1g6d230chq60o34c9i:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Fons propis. Prima d''emissió.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Fons propis.
                 Prima d'emissió
             x-agp34c1g6d230chq60o34c9j:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Fons propis. Reserves.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Fons propis.
                 Reserves
             x-agp34c1g6d230chq60o34c9k:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Fons propis. Reserves. Legals i estatutàries.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Fons propis.
                 Reserves. Legals i estatutàries
             x-agp34c1g6d230chq60o34c9l:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Fons propis. Reserves. Reserva d''estabilització.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Fons propis.
                 Reserves. Reserva d'estabilització
             x-agp34c1g6d230chq60o34c9m:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Fons propis. Reserves. Altres reserves.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Fons propis.
                 Reserves. Altres reserves
             x-agp34c1g6d230chq60o34c9n:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Fons propis. (Accions pròpies i de la societat
+                dominant).'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Fons propis.
                 (Accions pròpies i de la societat dominant)
             x-agp34c1g6d230chq60o34c9o:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Fons propis. Resultats d''exercicis anteriors
+                atribuïts a la societat dominant.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Fons propis.
                 Resultats d'exercicis anteriors atribuïts a la societat dominant
             x-agp34c1g6d230chq60o34c9p:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Fons propis. Resultats d''exercicis anteriors
+                atribuïts a la societat dominant. Romanent.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Fons propis.
                 Resultats d'exercicis anteriors atribuïts a la societat dominant.
                 Romanent
             x-agp34c1g6d230chq60o34chg:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Fons propis. Resultats d''exercicis anteriors.
+                (Resultats negatius d''exercicis anteriors atribuïts a la societat
+                dominant).'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Fons propis.
                 Resultats d'exercicis anteriors. (Resultats negatius d'exercicis anteriors
                 atribuïts a la societat dominant)
             x-agp34c1g6d230chq60o34chh:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Fons propis. Altres aportacions de socis i
+                mutualistes.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Fons propis.
                 Altres aportacions de socis i mutualistes
             x-agp34c1g6d230chq60o34chi:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Fons propis. Resultat de l''exercici atribuït
+                a la societat dominant. Pèrdues i guanys consolidats.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Fons propis.
                 Resultat de l'exercici atribuït a la societat dominant. Pèrdues i
                 guanys consolidats
             x-agp34c1g6d230chq60o34chj:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Fons propis. (Dividend a compte i reserva d''estabilització
+                a compte).'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Fons propis.
                 (Dividend a compte i reserva d'estabilització a compte)
             x-agp34c1g6d230chq60o34chk:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Fons propis. Altres instruments de patrimoni
+                net.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Fons propis.
                 Altres instruments de patrimoni net
             x-agp34c1g6d230chq60o34chl:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Ajustos per canvis de valor.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Ajustos per
                 canvis de valor
             x-agp34c1g6d230chq60o34chm:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Ajustos per canvis de valor. Actius financers
+                disponibles per a la venda.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Ajustos per
                 canvis de valor. Actius financers disponibles per a la venda
             x-agp34c1g6d230chq60o34chn:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Ajustos per canvis de valor. Operacions de
+                cobertura.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Ajustos per
                 canvis de valor. Operacions de cobertura
             x-agp34c1g6d230chq60o34cho:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Ajustos per canvis de valor. Diferències de
+                canvi i conversió.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Ajustos per
                 canvis de valor. Diferències de canvi i conversió
             x-agp34c1g6d230chq60o34chp:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Ajustos per canvis de valor. Correcció d''asimetries
+                comptables.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Ajustos per
                 canvis de valor. Correcció d'asimetries comptables
             x-agp34c1g6d230chq60o34cpg:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Ajustos per canvis de valor. Altres ajustos.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Ajustos per
                 canvis de valor. Altres ajustos
             x-agp34c1g6d230chq60o34cph:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Subvencions, donacions i llegats rebuts.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Subvencions,
                 donacions i llegats rebuts
             x-agp34c1g6d230chq60o34cpi:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Total patrimoni net.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Total patrimoni
                 net
             x-agp34c1g6d230chq60o34cpj:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Total passiu i patrimoni net.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Total passiu
                 i patrimoni net
             x-agp34c1g6d230chq60o3cd1p:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Fons propis. Reserves. Reserves en societats
+                consolidades.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Fons propis.
                 Reserves. Reserves en societats consolidades
             x-agp34c1g6d230chq60o3cd9i:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Socis externs.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Socis externs
             x-agp34c1g6d230chq60o3ce9i:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Fons propis. Resultat de l''exercici atribuït
+                a la societat dominant.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Fons propis.
                 Resultat de l'exercici atribuït a la societat dominant
             x-agp34c1g6d230chq60o3ce9j:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Fons propis. Resultat de l''exercici atribuït
+                a la societat dominant. (Pèrdues i guanys de socis externs).'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Fons propis.
                 Resultat de l'exercici atribuït a la societat dominant. (Pèrdues i
                 guanys de socis externs)
             x-agp34c1g6d230chq60o3ce9k:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Socis externs. Ajustos per valoració.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Socis externs.
                 Ajustos per valoració
             x-agp34c1g6d230chq60o3ce9l:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Socis externs. Resta.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Socis externs.
                 Resta
             x-agp34c1g6d230chq60o3echo:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Fons propis. Reserves. Reserves en societats
+                posades en equivalència.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Fons propis.
                 Reserves. Reserves en societats posades en equivalència
             x-agp34c1g6d230chq60o3echp:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Ajustos per canvis de valor. Societats posades
+                en equivalència.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Ajustos per
                 canvis de valor. Societats posades en equivalència
             x-agp34c1g6d230chq60o3ecpk:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Fons propis. Reserves. Reserva de capitalització.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Fons propis.
                 Reserves. Reserva de capitalització
             x-agp34c1g6d230chq60o3ecpl:
+              help: 'Dada del model 220, exercici 2024: Balanç consolidat. Patrimoni
+                net (pàg. 3D full 02). Fons propis. Reserves. Reserva d''anivellació.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Fons propis.
                 Reserves. Reserva d'anivellació
             x-agp34c1g6h130chq60o34dpn:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                no vida. Despeses de l''immobilitzat material i de les inversions.'
               label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
                 material i de les inversions
             x-agp34c1g6h130chq60o34dpo:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                no vida. Despeses de l''immobilitzat material i de les inversions.
+                Despeses de gestió de les inversions.'
               label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
                 material i de les inversions. Despeses de gestió de les inversions
             x-agp34c1g6h130chq60o34dpp:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                no vida. Despeses de l''immobilitzat material i de les inversions.
+                Despeses de gestió de les inversions. Despeses de l''immobilitzat
+                material i de les inversions immobiliàries.'
               label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
                 material i de les inversions. Despeses de gestió de les inversions.
                 Despeses de l'immobilitzat material i de les inversions immobiliàries
             x-agp34c1g6h130chq60o34e1g:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                no vida. Despeses de l''immobilitzat material i de les inversions.
+                Despeses de gestió de les inversions. Despeses d''inversions i comptes
+                financers.'
               label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
                 material i de les inversions. Despeses de gestió de les inversions.
                 Despeses d'inversions i comptes financers
             x-agp34c1g6h130chq60o34e1h:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                no vida. Despeses de l''immobilitzat material i de les inversions.
+                Correccions de valor de l''immobilitzat material i de les inversions.'
               label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
                 material i de les inversions. Correccions de valor de l'immobilitzat
                 material i de les inversions
             x-agp34c1g6h130chq60o34e1i:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                no vida. Despeses de l''immobilitzat material i de les inversions.
+                Correccions de valor de l''immobilitzat material i de les inversions.
+                Amortització de l''immobilitzat material i de les inversions immobiliàries.'
               label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
                 material i de les inversions. Correccions de valor de l'immobilitzat
                 material i de les inversions. Amortització de l'immobilitzat material
                 i de les inversions immobiliàries
             x-agp34c1g6h130chq60o34e1j:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                no vida. Despeses de l''immobilitzat material i de les inversions.
+                Correccions de valor de l''immobilitzat material i de les inversions.
+                Deteriorament de l''immobilitzat material i de les inversions immobiliàries.'
               label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
                 material i de les inversions. Correccions de valor de l'immobilitzat
                 material i de les inversions. Deteriorament de l'immobilitzat material
                 i de les inversions immobiliàries
             x-agp34c1g6h130chq60o34e1k:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                no vida. Despeses de l''immobilitzat material i de les inversions.
+                Correccions de valor de l''immobilitzat material i de les inversions.
+                Deteriorament d''inversions financeres.'
               label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
                 material i de les inversions. Correccions de valor de l'immobilitzat
                 material i de les inversions. Deteriorament d'inversions financeres
             x-agp34c1g6h130chq60o34e1l:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                no vida. Despeses de l''immobilitzat material i de les inversions.
+                Pèrdues procedents de l''immobilitzat material i de les inversions.'
               label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
                 material i de les inversions. Pèrdues procedents de l'immobilitzat
                 material i de les inversions
             x-agp34c1g6h130chq60o34e1m:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                no vida. Despeses de l''immobilitzat material i de les inversions.
+                Pèrdues procedents de l''immobilitzat material i de les inversions.
+                De l''immobilitzat material i de les inversions immobiliàries.'
               label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
                 material i de les inversions. Pèrdues procedents de l'immobilitzat
                 material i de les inversions. De l'immobilitzat material i de les
                 inversions immobiliàries
             x-agp34c1g6h130chq60o34e1n:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                no vida. Despeses de l''immobilitzat material i de les inversions.
+                Pèrdues procedents de l''immobilitzat material i de les inversions.
+                De les inversions financeres.'
               label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
                 material i de les inversions. Pèrdues procedents de l'immobilitzat
                 material i de les inversions. De les inversions financeres
             x-agp34c1g6h130chq60o34e1o:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                no vida. Subtotal (Resultat del compte tècnic de l''assegurança no
+                vida).'
               label: Compte tècnic de l'assegurança no vida. Subtotal (Resultat del
                 compte tècnic de l'assegurança no vida)
             x-agp34c1g6h130chq60o3cd9m:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                no vida. Despeses de l''immobilitzat material i de les inversions.
+                Pèrdues per l''alienació de participacions en societats consolidades.'
               label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
                 material i de les inversions. Pèrdues per l'alienació de participacions
                 en societats consolidades
             x-agp34c1g6h130chq60o3ec1p:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                no vida. Despeses de l''immobilitzat material i de les inversions.
+                Despeses d''entitats incloses en la consolidació.'
               label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
                 material i de les inversions. Despeses d'entitats incloses en la consolidació
             x-agp34c1g6h130chq60o3ec9g:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                no vida. Despeses de l''immobilitzat material i de les inversions.
+                Participació en pèrdues d''entitats posades en equivalència.'
               label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
                 material i de les inversions. Participació en pèrdues d'entitats posades
                 en equivalència
             x-agp34c1g6h130chq60o3ec9h:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                no vida. Despeses de l''immobilitzat material i de les inversions.
+                Pèrdues per l''alienació de participacions en societats posades en
+                equivalència.'
               label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
                 material i de les inversions. Pèrdues per l'alienació de participacions
                 en societats posades en equivalència
+            x-agp34c1g6h230chq60o36cpk:
+              label: Compte tècnic de l'assegurança de vida. Altres despeses tècniques
+                (+ o -)
+            x-agp34c1g6h230chq60o36cpl:
+              label: Compte tècnic de l'assegurança de vida. Altres despeses tècniques
+                (+ o -). Variació del deteriorament per insolvències (+ o -)
+            x-agp34c1g6h230chq60o36cpm:
+              label: Compte tècnic de l'assegurança de vida. Altres despeses tècniques
+                (+ o -). Variació del deteriorament de l'immobilitzat (+ o -)
+            x-agp34c1g6h230chq60o36cpn:
+              label: Compte tècnic de l'assegurança de vida. Altres despeses tècniques
+                (+ o -). Altres
+            x-agp34c1g6h230chq60o36cpo:
+              label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
+                material i de les inversions
+            x-agp34c1g6h230chq60o36cpp:
+              label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
+                material i de les inversions. Despeses de gestió de l'immobilitzat
+                material i de les inversions
+            x-agp34c1g6h230chq60o36d1g:
+              label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
+                material i de les inversions. Despeses de gestió de l'immobilitzat
+                material i de les inversions. Despeses de l'immobilitzat material
+                i de les inversions immobiliàries
+            x-agp34c1g6h230chq60o36d1h:
+              label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
+                material i de les inversions. Despeses de gestió de l'immobilitzat
+                material i de les inversions. Despeses d'inversions i comptes financers
+            x-agp34c1g6h230chq60o36d1i:
+              label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
+                material i de les inversions. Correccions de valor de l'immobilitzat
+                material i de les inversions
+            x-agp34c1g6h230chq60o36d1j:
+              label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
+                material i de les inversions. Correccions de valor de l'immobilitzat
+                material i de les inversions. Amortització de l'immobilitzat material
+                i de les inversions immobiliàries
+            x-agp34c1g6h230chq60o36d1k:
+              label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
+                material i de les inversions. Correccions de valor de l'immobilitzat
+                material i de les inversions. Deteriorament de l'immobilitzat material
+                i de les inversions immobiliàries
+            x-agp34c1g6h230chq60o36d1l:
+              label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
+                material i de les inversions. Correccions de valor de l'immobilitzat
+                material i de les inversions. Deteriorament d'inversions financeres
+            x-agp34c1g6h230chq60o36d1m:
+              label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
+                material i de les inversions. Pèrdues procedents de l'immobilitzat
+                material i de les inversions
+            x-agp34c1g6h230chq60o36d1n:
+              label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
+                material i de les inversions. Pèrdues procedents de l'immobilitzat
+                material i de les inversions. De l'immobilitzat material i de les
+                inversions immobiliàries
+            x-agp34c1g6h230chq60o36d1o:
+              label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
+                material i de les inversions. Pèrdues procedents de l'immobilitzat
+                material i de les inversions. De les inversions financeres
+            x-agp34c1g6h230chq60o36d1p:
+              label: Compte tècnic de l'assegurança de vida. Despeses d'inversions
+                afectes a assegurances en què el prenedor assumeix el risc de la inversió
+            x-agp34c1g6h230chq60o36d9g:
+              label: Compte tècnic de l'assegurança de vida. Subtotal (Resultat del
+                compte tècnic de l'assegurança de vida)
+            x-agp34c1g6h230chq60o3cd9o:
+              label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
+                material i de les inversions. Pèrdues per l'alienació de participacions
+                en societats consolidades
+            x-agp34c1g6h230chq60o3ec9l:
+              label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
+                material i de les inversions. Despeses d'entitats incloses en la consolidació
+            x-agp34c1g6h230chq60o3ec9m:
+              label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
+                material i de les inversions. Despeses d'entitats incloses en la consolidació.
+                Participació en pèrdues d'entitats posades en equivalència
+            x-agp34c1g6h230chq60o3ec9n:
+              label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
+                material i de les inversions. Despeses d'entitats incloses en la consolidació.
+                Pèrdues per alienació de participacions en societats posades en equivalència
             x-agp34c1g6l0j0c1q60o36cpj:
               help: null
               label: Estat d'ingressos i despeses consolidats reconeguts. Total d'ingressos
@@ -1812,195 +2510,357 @@ modelo:
                 (pàg. 5A full 02). Entitats valorades per posada en equivalència.
                 Altres reclassificacions
             x-agp34c1g6so30c1q60o30d1j:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Suma de bases imposables individuals de
+                les entitats del grup fiscal (excloses les bases en estimació objectiva
+                pel règim d''entitats navilieres) (Pàg. 7A).'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Suma
                 de bases imposables individuals de les entitats del grup fiscal (excloses
                 les bases en estimació objectiva pel règim d'entitats navilieres)
                 (Pàg. 7A)
             x-agp34c1g6so30c1q60o30d1n:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Grups de cooperatives: suma de bases imposables
+                individuals per resultats cooperatius (Pàg. 7A).'
               label: 'Base imposable i quota íntegra del grup (pàg. 7 full 00). Grups
                 de cooperatives: suma de bases imposables individuals per resultats
                 cooperatius (Pàg. 7A)'
             x-agp34c1g6so30c1q60o30d1o:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Grups de cooperatives: suma de bases imposables
+                individuals per resultats extracooperatius (Pàg. 7A).'
               label: 'Base imposable i quota íntegra del grup (pàg. 7 full 00). Grups
                 de cooperatives: suma de bases imposables individuals per resultats
                 extracooperatius (Pàg. 7A)'
             x-agp34c1g6so30c1q60o30d1p:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Grups amb entitats navilieres en règim
+                especial: suma de bases imposables en funció del tonatge, determinades
+                en estimació objectiva (Pàg. 7A)(*).'
               label: 'Base imposable i quota íntegra del grup (pàg. 7 full 00). Grups
                 amb entitats navilieres en règim especial: suma de bases imposables
                 en funció del tonatge, determinades en estimació objectiva (Pàg. 7A)(*)'
             x-agp34c1g6so30c1q60o30dpp:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Total correccions a la suma de bases imposables
+                per diferiment de resultats interns.'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Total
                 correccions a la suma de bases imposables per diferiment de resultats
                 interns
             x-agp34c1g6so30c1q60o30e1g:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Altres correccions a la suma de bases imposables
+                (**). Eliminació de dividends interns del grup fiscal (Pàg. 7D).'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Altres
                 correccions a la suma de bases imposables (**). Eliminació de dividends
                 interns del grup fiscal (Pàg. 7D)
             x-agp34c1g6so30c1q60o30e1i:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Altres correccions a la suma de bases imposables
+                (**). Incorporació de deterioraments de valor de participacions en
+                fons propis d''entitats del grup fiscal, eliminats en períodes anteriors
+                (Pàg. 7E).'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Altres
                 correccions a la suma de bases imposables (**). Incorporació de deterioraments
                 de valor de participacions en fons propis d'entitats del grup fiscal,
                 eliminats en períodes anteriors (Pàg. 7E)
             x-agp34c1g6so30c1q60o30e1j:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Altres correccions a la suma de bases imposables
+                (**). Grups de cooperatives: eliminacions de "retorns intragrup",
+                "ajudes econòmiques intragrup" i "resultats distribuïts per l''entitat
+                cap del grup" (RD 1345/1992) (Pàg. 7G).'
               label: 'Base imposable i quota íntegra del grup (pàg. 7 full 00). Altres
                 correccions a la suma de bases imposables (**). Grups de cooperatives:
                 eliminacions de "retorns intragrup", "ajudes econòmiques intragrup"
                 i "resultats distribuïts per l''entitat cap del grup" (RD 1345/1992)
                 (Pàg. 7G)'
             x-agp34c1g6so30c1q60o30e1l:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Altres correccions a la suma de bases imposables
+                (**). Altres correccions a la suma de bases imposables individuals
+                o a la base imposable del grup fiscal (Pàg. 7H).'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Altres
                 correccions a la suma de bases imposables (**). Altres correccions
                 a la suma de bases imposables individuals o a la base imposable del
                 grup fiscal (Pàg. 7H)
             x-agp34c1g6so30c1q60o30e1m:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Altres correccions a la suma de bases imposables
+                (**). Total altres correccions a la suma de bases imposables.'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Altres
                 correccions a la suma de bases imposables (**). Total altres correccions
                 a la suma de bases imposables
             x-agp34c1g6so30c1q60o34chl:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Base imposable prèvia del grup.'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Base
                 imposable prèvia del grup
             x-agp34c1g6so30c1q60o34e9h:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Aplicació del límit de l''art. 11.12 LIS
+                (art. 62.1 e) LIS). Disminució.'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Aplicació
                 del límit de l'art. 11.12 LIS (art. 62.1 e) LIS). Disminució
             x-agp34c1g6so30c1q60o36dhi:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Compensació de bases imposables negatives
+                del grup de períodes anteriors (Pàg. 7K)(***).'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Compensació
                 de bases imposables negatives del grup de períodes anteriors (Pàg.
                 7K)(***)
             x-agp34c1g6so30c1q60o36dhj:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Grups de cooperatives: compensació de quotes
+                negatives del grup de períodes anteriors (Pàg. 7K bis)(***).'
               label: 'Base imposable i quota íntegra del grup (pàg. 7 full 00). Grups
                 de cooperatives: compensació de quotes negatives del grup de períodes
                 anteriors (Pàg. 7K bis)(***)'
             x-agp34c1g6so30c1q60o36e9o:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Dotacions a que fa referència l''art. 11.12
+                LIS de períodes anteriors a la incorporació al grup (art. 67 d) i
+                74.3 d) LIS)(***).'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Dotacions
                 a que fa referència l'art. 11.12 LIS de períodes anteriors a la incorporació
                 al grup (art. 67 d) i 74.3 d) LIS)(***)
             x-agp34c1g6so30c1q60o3ad1g:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Aplicació del límit de l''art. 11.12 LIS
+                i DA 7a de la Llei 20/1990. Disminució.'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Aplicació
                 del límit de l'art. 11.12 LIS i DA 7a de la Llei 20/1990. Disminució
             x-agp34c1g6so30c1q60o3ad1h:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Dotacions a que fa referència l''art. 11.12
+                LIS i DA 7a de la Llei 20/1990, de períodes anteriors a la incorporació
+                de l''entitat al grup (***).'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Dotacions
                 a que fa referència l'art. 11.12 LIS i DA 7a de la Llei 20/1990, de
                 períodes anteriors a la incorporació de l'entitat al grup (***)
             x-agp34c1g6so30c1q60o3ad1n:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Compensació de bases imposables negatives
+                d''entitats, de períodes anteriors a la incorporació al grup (art.
+                67 e) i 74.3 e) LIS) (Pàg. 7L)(***).'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Compensació
                 de bases imposables negatives d'entitats, de períodes anteriors a
                 la incorporació al grup (art. 67 e) i 74.3 e) LIS) (Pàg. 7L)(***)
             x-agp34c1g6so30c1q60o3ad9g:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Base imposable del grup, prèvia a l''aplicació
+                de les reserves de capitalització i a la compensació de bases imposables
+                negatives de períodes anteriors.'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Base
                 imposable del grup, prèvia a l'aplicació de les reserves de capitalització
                 i a la compensació de bases imposables negatives de períodes anteriors
             x-agp34c1g6so30c1q60o3ad9i:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Base imposable del grup.'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Base
                 imposable del grup
             x-agp34c1g6so30c1q60o3ad9j:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Grups de cooperatives: suma de bases imposables
+                individuals menys eliminacions, per resultats cooperatius.'
               label: 'Base imposable i quota íntegra del grup (pàg. 7 full 00). Grups
                 de cooperatives: suma de bases imposables individuals menys eliminacions,
                 per resultats cooperatius'
             x-agp34c1g6so30c1q60o3ad9k:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Grups de cooperatives: suma de bases imposables
+                individuals menys eliminacions, per resultats extracooperatius.'
               label: 'Base imposable i quota íntegra del grup (pàg. 7 full 00). Grups
                 de cooperatives: suma de bases imposables individuals menys eliminacions,
                 per resultats extracooperatius'
             x-agp34c1g6so30c1q60o3ad9o:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Tipus de gravamen (%).'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Tipus
                 de gravamen (%)
             x-agp34c1g6so30c1q60o3adhg:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Suma de quotes íntegres de les cooperatives
+                del grup.'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Suma
                 de quotes íntegres de les cooperatives del grup
             x-agp34c1g6so30c1q60o3adhh:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Grups de cooperatives: compensació de quotes
+                negatives d''entitats, de períodes anteriors a la incorporació al
+                grup (Pàg. 7L bis)(***).'
               label: 'Base imposable i quota íntegra del grup (pàg. 7 full 00). Grups
                 de cooperatives: compensació de quotes negatives d''entitats, de períodes
                 anteriors a la incorporació al grup (Pàg. 7L bis)(***)'
             x-agp34c1g6so30c1q60o3adhi:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Quota íntegra del grup.'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Quota
                 íntegra del grup
             x-agp34c1g6so30c1q60oj0chh:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Suma de bases imposables negatives individuals
+                de períodes anteriors integrades (DA 19a LIS). Règim general (Pàg.
+                7A bis).'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Suma
                 de bases imposables negatives individuals de períodes anteriors integrades
                 (DA 19a LIS). Règim general (Pàg. 7A bis)
             x-agp34c1g6so30c1q60oj4dhj:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Suma del 50% de les bases imposables negatives
+                individuals del període, no integrades (DA 19a LIS). Règim general
+                (Pàg. 7A).'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Suma
                 del 50% de les bases imposables negatives individuals del període,
                 no integrades (DA 19a LIS). Règim general (Pàg. 7A)
             x-agp34c1g6so30c1q60oj4dhk:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Suma del 50% de les bases imposables negatives
+                individuals del període, no integrades (DA 19a LIS). Règim especial
+                de vaixells i empreses navilieres a les Canàries (Pàg. 7A).'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Suma
                 del 50% de les bases imposables negatives individuals del període,
                 no integrades (DA 19a LIS). Règim especial de vaixells i empreses
                 navilieres a les Canàries (Pàg. 7A)
             x-agp34c1g6so30c1q60ojicpl:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Suma de bases imposables negatives de períodes
+                anteriors integrades (DA 19a LIS). Règim especial de vaixells i empreses
+                navilieres a les Canàries (Pàg. 7A bis).'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Suma
                 de bases imposables negatives de períodes anteriors integrades (DA
                 19a LIS). Règim especial de vaixells i empreses navilieres a les Canàries
                 (Pàg. 7A bis)
             x-agp34c1g6so30c1q60p3ad1i:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Pèrdues per deteriorament de l''art. 13.1
+                LIS i provisions i despeses (art. 14.1 i 14.2 LIS) a que es refereix
+                l''art. 11.12 LIS, i dotacions de la DT 33a.1 LIS. Augment.'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Pèrdues
                 per deteriorament de l'art. 13.1 LIS i provisions i despeses (art.
                 14.1 i 14.2 LIS) a que es refereix l'art. 11.12 LIS, i dotacions de
                 la DT 33a.1 LIS. Augment
             x-agp34c1g6so30c1q60p3ad1j:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Pèrdues per deteriorament de l''art. 13.1
+                LIS i provisions i despeses (art. 14.1 i 14.2 LIS) a que es refereix
+                l''art. 11.12 LIS. Disminució.'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Pèrdues
                 per deteriorament de l'art. 13.1 LIS i provisions i despeses (art.
                 14.1 i 14.2 LIS) a que es refereix l'art. 11.12 LIS. Disminució
             x-agp34c1g6so30c1q60p3ad1k:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Aplicació del límit de l''art. 11.12 LIS
+                (art. 62.1 e) LIS). Augment.'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Aplicació
                 del límit de l'art. 11.12 LIS (art. 62.1 e) LIS). Augment
             x-agp34c1g6so30c1q60p3ad1l:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Reserva d''anivellació. Augment.'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Reserva
                 d'anivellació. Augment
             x-agp34c1g6so30c1q60p3ad1m:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Reserva d''anivellació. Disminució.'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Reserva
                 d'anivellació. Disminució
             x-agp34c1g6so30c1q60p3ad1n:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Reserva d''anivellació d''entitats de períodes
+                anteriors a la incorporació al grup (art. 67 f) i 74.3 f) LIS).'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Reserva
                 d'anivellació d'entitats de períodes anteriors a la incorporació al
                 grup (art. 67 f) i 74.3 f) LIS)
             x-agp34c1g6so30c1q60p3ad1o:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Pèrdues per deteriorament de l''art. 13.1
+                LIS i provisions i despeses (art. 14.1 i 14.2 LIS) a que es refereix
+                l''art. 11.12 LIS. Augment (cooperatives).'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Pèrdues
                 per deteriorament de l'art. 13.1 LIS i provisions i despeses (art.
                 14.1 i 14.2 LIS) a que es refereix l'art. 11.12 LIS. Augment (cooperatives)
             x-agp34c1g6so30c1q60p3ad1p:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Pèrdues per deteriorament de l''art. 13.1
+                LIS i provisions i despeses (art. 14.1 i 14.2 LIS) a que es refereix
+                l''art. 11.12 LIS. Disminució (cooperatives).'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Pèrdues
                 per deteriorament de l'art. 13.1 LIS i provisions i despeses (art.
                 14.1 i 14.2 LIS) a que es refereix l'art. 11.12 LIS. Disminució (cooperatives)
             x-agp34c1g6so30c1q60p3ge9g:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Aplicació del límit de l''art. 11.12 LIS
+                i DA 7a de la Llei 20/1990. Augment.'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Aplicació
                 del límit de l'art. 11.12 LIS i DA 7a de la Llei 20/1990. Augment
             x-agp34c1g6so30c1q60p3ge9h:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Reserva d''anivellació. Augment.'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Reserva
                 d'anivellació. Augment
             x-agp34c1g6so30c1q60p3ge9i:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Reserva d''anivellació. Disminució.'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Reserva
                 d'anivellació. Disminució
             x-agp34c1g6so30c1q60p3ge9j:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Reserva d''anivellació d''entitats de períodes
+                anteriors a la incorporació al grup.'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Reserva
                 d'anivellació d'entitats de períodes anteriors a la incorporació al
                 grup
             x-agp34c1g6so30c1q60p3idhj:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Reserva de capitalització (***).'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Reserva
                 de capitalització (***)
             x-agp34c1g6so30c1q60pj2d1g:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Reserva de capitalització d''entitats,
+                de períodes anteriors a la incorporació al grup, aplicades (art. 67
+                c) i 74.3 c) LIS)(***).'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Reserva
                 de capitalització d'entitats, de períodes anteriors a la incorporació
                 al grup, aplicades (art. 67 c) i 74.3 c) LIS)(***)
             x-agp34c1g6so30c1q60pj4d1h:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Correccions a la suma de bases imposables
+                per diferiment de resultats interns (**). Total eliminació de resultats
+                per operacions internes (Pàg. 7C).'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Correccions
                 a la suma de bases imposables per diferiment de resultats interns
                 (**). Total eliminació de resultats per operacions internes (Pàg.
                 7C)
             x-agp34c1g6so30c1q60pj4d1i:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Correccions a la suma de bases imposables
+                per diferiment de resultats interns (**). Total incorporació de resultats
+                per operacions internes (Pàg. 7C).'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Correccions
                 a la suma de bases imposables per diferiment de resultats interns
                 (**). Total incorporació de resultats per operacions internes (Pàg.
                 7C)
             x-agp34c1g6so30c1qegp34c1g6so30c1e6ss3cb9o60p0:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Tram de base imposable 1.'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Tram
                 de base imposable 1
             x-agp34c1g6so30c1qegp34c1g6so30c1e70o36b9o60rg:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Tram de tipus de gravamen 1 (tres enters,
+                dos decimals).'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Tram
                 de tipus de gravamen 1 (tres enters, dos decimals)
             x-agp34c1g6so30c1qegp34c1g6so30c1e70o3gb9o68q0:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Tram de base imposable 2.'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Tram
                 de base imposable 2
             x-agp34c1g6so30c1qegp34c1g6so30c1e70p3ab9o68sg:
+              help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
+                del grup (pàg. 7 full 00). Tram de tipus de gravamen 2 (tres enters,
+                dos decimals).'
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Tram
                 de tipus de gravamen 2 (tres enters, dos decimals)
             x-agp34c1g6t230c1q60o30e1g:
@@ -2088,33 +2948,55 @@ modelo:
                 eliminats en períodes anteriors, pendents d''incorporar al final del
                 període. Deteriorament de valor pendent d''incorporació'
             x-agp34c1g6t3j0c1q60o30e1j:
+              help: 'Dada del model 220, exercici 2024: Grups de cooperatives: eliminacions
+                (R.D. 1345/1992). Total eliminacions. Total.'
               label: 'Grups de cooperatives: eliminacions (R.D. 1345/1992). Total
                 eliminacions. Total'
             x-agp34c1g6t3j0c1q60o32c1j:
+              help: 'Dada del model 220, exercici 2024: Grups de cooperatives: eliminacions
+                (R.D. 1345/1992). Retorns intragrup (*). Total.'
               label: 'Grups de cooperatives: eliminacions (R.D. 1345/1992). Retorns
                 intragrup (*). Total'
             x-agp34c1g6t3j0c1q60o32c1l:
+              help: 'Dada del model 220, exercici 2024: Grups de cooperatives: eliminacions
+                (R.D. 1345/1992). Ajuts econòmics intragrup (*). Total.'
               label: 'Grups de cooperatives: eliminacions (R.D. 1345/1992). Ajuts
                 econòmics intragrup (*). Total'
             x-agp34c1g6t3j0c1q60o32c1n:
+              help: 'Dada del model 220, exercici 2024: Grups de cooperatives: eliminacions
+                (R.D. 1345/1992). Resultats distribuïts per l''entitat capçalera de
+                grup (*). Total.'
               label: 'Grups de cooperatives: eliminacions (R.D. 1345/1992). Resultats
                 distribuïts per l''entitat capçalera de grup (*). Total'
             x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e64r2qchk:
+              help: 'Dada del model 220, exercici 2024: Grups de cooperatives: eliminacions
+                (R.D. 1345/1992). N.I.F. de l''entitat pagadora.'
               label: 'Grups de cooperatives: eliminacions (R.D. 1345/1992). N.I.F.
                 de l''entitat pagadora'
             x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e68qiqcpj:
+              help: 'Dada del model 220, exercici 2024: Grups de cooperatives: eliminacions
+                (R.D. 1345/1992). N.I.F. de l''entitat perceptora.'
               label: 'Grups de cooperatives: eliminacions (R.D. 1345/1992). N.I.F.
                 de l''entitat perceptora'
             x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e6cq2qd9g:
+              help: 'Dada del model 220, exercici 2024: Grups de cooperatives: eliminacions
+                (R.D. 1345/1992). Retorns intragrup.'
               label: 'Grups de cooperatives: eliminacions (R.D. 1345/1992). Retorns
                 intragrup'
             x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e6koiqdhn:
+              help: 'Dada del model 220, exercici 2024: Grups de cooperatives: eliminacions
+                (R.D. 1345/1992). Ajuts econòmics intragrup.'
               label: 'Grups de cooperatives: eliminacions (R.D. 1345/1992). Ajuts
                 econòmics intragrup'
             x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e6os2qe1k:
+              help: 'Dada del model 220, exercici 2024: Grups de cooperatives: eliminacions
+                (R.D. 1345/1992). Resultats distribuïts per l''entitat capçalera del
+                grup.'
               label: 'Grups de cooperatives: eliminacions (R.D. 1345/1992). Resultats
                 distribuïts per l''entitat capçalera del grup'
             x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e70qiqc9g64:
+              help: 'Dada del model 220, exercici 2024: Grups de cooperatives: eliminacions
+                (R.D. 1345/1992). Total eliminacions de l''operació.'
               label: 'Grups de cooperatives: eliminacions (R.D. 1345/1992). Total
                 eliminacions de l''operació'
             x-agp34c1g6t430c1q60o30e1l:
