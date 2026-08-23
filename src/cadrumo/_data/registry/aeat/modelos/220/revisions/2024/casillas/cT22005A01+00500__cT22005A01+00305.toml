@@ -1,0 +1,569 @@
+# Modelo 220 RECORD T22005A01 -- ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN
+# EL EJERCICIO, the entidades de credito variant: the resultado consolidado, the otro
+# resultado global split into elements that will not be reclassified and elements that may
+# be, and the resultado global total attributed to minority interests and to the owners of
+# the dominante.
+#
+# 43 casillas describe all 53 design fields -- 43 authored and
+# 10 excluded, each excluded field asserted to be envelope, reservado or fin de
+# registro BY ITS OWN TEXT rather than by position. Every box carries AEAT's own five-digit
+# number, so not one number here is minted.
+#
+# 19 OF THESE 43 BOXES SHARE THEIR PRINTED TEXT WITH A SIBLING, and NO
+# HIERARCHY IS INVENTED TO SEPARATE THEM:
+#   x6  Otras reclasificaciones
+#        boxes 00284, 00288, 00293, 00655, 00659, 00301
+#   x6  Transferido a resultados
+#        boxes 00283, 00287, 00291, 00654, 00658, 00300
+#   x5  Ganancias o (-) pérdidas de valor contabilizadas en el patrimonio neto
+#        boxes 00282, 00290, 00653, 00657, 00299
+#   x2  Activos no corrientes y grupos enajenables de elementos mantenidos para la venta
+#        boxes 00276, 00298
+# On the printed modelo these are indented under different parents. THE DISENO DE REGISTRO
+# DOES NOT CARRY THAT INDENTATION -- no level column, no validation, no components, only
+# flat description text, checked on the extracted fields themselves.
+#
+# AN ADJACENCY RULE WAS TRIED AND REFUSED. Taking the parent to be the nearest preceding
+# non-repeated line looks right and is wrong in at least four places, each verified against
+# this design:
+#   [00276] would take [00275] as parent; it is a SIBLING of [00275] under [00274].
+#   [00287] and [00288] would take [00286] as parent; [00286] is itself a child of [00285].
+#   [00292] would be read as a parent of [00293]; both are siblings under [00289].
+#   [00298] to [00301] would all hang off [00656]; [00298] is itself a parent of the rest.
+# The rule was discarded on that evidence rather than shipped because it mostly agreed.
+#
+# SHARING A LABEL IS ESTABLISHED PRACTICE IN THIS REGISTRY, not a defect introduced here:
+# modelo 200 carries 96 label texts used by more than one casilla (one of them 20 times)
+# and modelo 100 carries 198. The box number is the disambiguator this data supports, and
+# it is what an operator sees beside the label.
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T22005A01 tiles
+# 1..908 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
+#
+# AEAT PRINTS 'calorados a valor razonable'; the label reads 'valorados a valor razonable'. Corrected by name, never by a general rule.
+#
+
+# NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
+# pagina-complementaria mechanics; @747+150 RESERVADO PARA LA ADMINISTRACION; and
+# @897+12 Fin de registro.
+#
+# NOT CLAIMED: [00273] otro resultado global, [00274] and [00280] its two halves, and
+# [00303] the resultado global total are AGGREGATES of the lines around them, and NO
+# formula, construct or binding expresses that. Every box is a manual input.
+
+# @16+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Resultado consolidado del ejercicio [00500]
+[[revisions."2024".casillas]]
+id = "T22005A01:00500"
+number = "00500"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @33+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Otro resultado global. [00273]
+[[revisions."2024".casillas]]
+id = "T22005A01:00273"
+number = "00273"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @50+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Elementos que no se reclasificarán en resultados. [00274]
+[[revisions."2024".casillas]]
+id = "T22005A01:00274"
+number = "00274"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @67+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Ganancias o (-) pérdidas actuariales en planes de pensiones de prestaciones definidas. [00275]
+[[revisions."2024".casillas]]
+id = "T22005A01:00275"
+number = "00275"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @84+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Activos no corrientes y grupos enajenables de elementos mantenidos para la venta. [00276]
+[[revisions."2024".casillas]]
+id = "T22005A01:00276"
+number = "00276"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @101+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Participación en otros ingresos y gastos reconocidos de inversiones en negocios conjuntos y asociadas. [00277]
+[[revisions."2024".casillas]]
+id = "T22005A01:00277"
+number = "00277"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @118+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Cambios del valor razonable de los instrumentos de patrimonio calorados a valor razonable con cambios en otro resultado global. [00647]
+[[revisions."2024".casillas]]
+id = "T22005A01:00647"
+number = "00647"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @135+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Ganancias o (-) pérdidas resultantes de la contabilidad de coberturas de instrumentos de patrimonio valorados a valor razonable con cambios en otro resultado global, netas. [00648]
+[[revisions."2024".casillas]]
+id = "T22005A01:00648"
+number = "00648"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @152+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Cambios del valor razonable de los instrumentos de patrimonio valorados a valor razonable con cambios en otro resultado global (elemento cubierto) [00649]
+[[revisions."2024".casillas]]
+id = "T22005A01:00649"
+number = "00649"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @169+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Cambios del valor razonable de los instrumentos de patrimonio valorados a valor razonable con cambios en otro resultado global (instrumento de cobertura) [00650]
+[[revisions."2024".casillas]]
+id = "T22005A01:00650"
+number = "00650"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @186+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Cambios del valor razonable de los pasivos financieros a valor razonable con cambios en resultados atribuibles a cambios en el riesgo de crédito. [00651]
+[[revisions."2024".casillas]]
+id = "T22005A01:00651"
+number = "00651"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @203+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Impuesto sobre las ganancias relativo a los elementos que no se reclasificarán. [00279]
+[[revisions."2024".casillas]]
+id = "T22005A01:00279"
+number = "00279"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @220+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Elementos que pueden reclasificarse en resultados. [00280]
+[[revisions."2024".casillas]]
+id = "T22005A01:00280"
+number = "00280"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @237+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Cobertura de inversiones netas en negocios en el extranjero [parte eficaz]. [00281]
+[[revisions."2024".casillas]]
+id = "T22005A01:00281"
+number = "00281"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @254+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Ganancias o (-) pérdidas de valor contabilizadas en el patrimonio neto. [00282]
+[[revisions."2024".casillas]]
+id = "T22005A01:00282"
+number = "00282"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @271+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Transferido a resultados. [00283]
+[[revisions."2024".casillas]]
+id = "T22005A01:00283"
+number = "00283"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @288+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Otras reclasificaciones. [00284]
+[[revisions."2024".casillas]]
+id = "T22005A01:00284"
+number = "00284"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @305+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Conversión de divisas. [00285]
+[[revisions."2024".casillas]]
+id = "T22005A01:00285"
+number = "00285"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @322+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Ganancias o (-) pérdidas por cambio de divisas contabilizadas en el patrimonio neto. [00286]
+[[revisions."2024".casillas]]
+id = "T22005A01:00286"
+number = "00286"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @339+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Transferido a resultados. [00287]
+[[revisions."2024".casillas]]
+id = "T22005A01:00287"
+number = "00287"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @356+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Otras reclasificaciones. [00288]
+[[revisions."2024".casillas]]
+id = "T22005A01:00288"
+number = "00288"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @373+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Coberturas de flujos de efectivo [parte eficaz]. [00289]
+[[revisions."2024".casillas]]
+id = "T22005A01:00289"
+number = "00289"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @390+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Ganancias o (-) pérdidas de valor contabilizadas en el patrimonio neto. [00290]
+[[revisions."2024".casillas]]
+id = "T22005A01:00290"
+number = "00290"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @407+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Transferido a resultados. [00291]
+[[revisions."2024".casillas]]
+id = "T22005A01:00291"
+number = "00291"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @424+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Transferido al importe en libros inicial de los elementos cubiertos. [00292]
+[[revisions."2024".casillas]]
+id = "T22005A01:00292"
+number = "00292"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @441+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Otras reclasificaciones. [00293]
+[[revisions."2024".casillas]]
+id = "T22005A01:00293"
+number = "00293"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @458+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Instrumentos de cobertura [elementos no designados]. [00652]
+[[revisions."2024".casillas]]
+id = "T22005A01:00652"
+number = "00652"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @475+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Ganancias o (-) pérdidas de valor contabilizadas en el patrimonio neto. [00653]
+[[revisions."2024".casillas]]
+id = "T22005A01:00653"
+number = "00653"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @492+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Transferido a resultados. [00654]
+[[revisions."2024".casillas]]
+id = "T22005A01:00654"
+number = "00654"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @509+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Otras reclasificaciones. [00655]
+[[revisions."2024".casillas]]
+id = "T22005A01:00655"
+number = "00655"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @526+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Instrumentos de deuda a valor razonable con cambios en otro resultado global. [00656]
+[[revisions."2024".casillas]]
+id = "T22005A01:00656"
+number = "00656"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @543+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Ganancias o (-) pérdidas de valor contabilizadas en el patrimonio neto. [00657]
+[[revisions."2024".casillas]]
+id = "T22005A01:00657"
+number = "00657"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @560+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Transferido a resultados. [00658]
+[[revisions."2024".casillas]]
+id = "T22005A01:00658"
+number = "00658"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @577+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Otras reclasificaciones. [00659]
+[[revisions."2024".casillas]]
+id = "T22005A01:00659"
+number = "00659"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @594+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Activos no corrientes y grupos enajenables de elementos mantenidos para la venta. [00298]
+[[revisions."2024".casillas]]
+id = "T22005A01:00298"
+number = "00298"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @611+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Ganancias o (-) pérdidas de valor contabilizadas en el patrimonio neto. [00299]
+[[revisions."2024".casillas]]
+id = "T22005A01:00299"
+number = "00299"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @628+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Transferido a resultados. [00300]
+[[revisions."2024".casillas]]
+id = "T22005A01:00300"
+number = "00300"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @645+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Otras reclasificaciones. [00301]
+[[revisions."2024".casillas]]
+id = "T22005A01:00301"
+number = "00301"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @662+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Participación en otros ingresos y gastos reconocidos de las inversiones en negocios conjuntos y asociadas. [00306]
+[[revisions."2024".casillas]]
+id = "T22005A01:00306"
+number = "00306"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @679+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Impuesto sobre las ganancias relativo a los elementos que pueden reclasificarse en ganancias o (-) perdidas. [00302]
+[[revisions."2024".casillas]]
+id = "T22005A01:00302"
+number = "00302"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @696+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Resultado global total del ejercicio. [00303]
+[[revisions."2024".casillas]]
+id = "T22005A01:00303"
+number = "00303"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @713+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Atribuible a intereses minoritarios (participaciones no dominantes). [00304]
+[[revisions."2024".casillas]]
+id = "T22005A01:00304"
+number = "00304"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @730+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Atribuible a los propietarios de la dominante. [00305]
+[[revisions."2024".casillas]]
+id = "T22005A01:00305"
+number = "00305"
+segmento = "T22005A01"
+section = ["liquidacion", "estado_ingresos_gastos_reconocidos_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
