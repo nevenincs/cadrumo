@@ -19175,3 +19175,66 @@ proved, and only the publication call's temporary-root contract is unresolved.
 The derived map generator now handles payload keys, source cells and the
 envelope contract, so a re-run starts from a working generator rather than from
 scratch.
+
+## Tick: the modelo 322 split LANDED
+
+The 2022/2023 boundary is partitioned. `2008-2023` became `2008-2022` and
+`2023`, each citing ONE design and each publishing its own generated export
+tree through `publish_validated_generated_export_tree`.
+
+### The blocker was a stale journal, not a contract
+
+Last tick's publication failure -- "journal candidate does not match the
+explicit caller temporary root" -- read like a contract needing interpretation.
+Read in the source instead of guessed at, the check runs only
+`if journal_path.exists()`, and a journal DID exist:
+`.generated-export-transaction-322-2008-2022.json`, left by the previous run and
+still recording the abandoned C: candidate path. The publication transaction is
+resumable by design, so it was correctly refusing to resume a transaction whose
+candidate had moved.
+
+That is the modelo 210 lesson recurring in a new shape, and worth stating
+generally: after ANY failed publish, the journal outlives the process and the
+next attempt is a RESUME, not a fresh run. Remove it before retrying.
+
+### What the split contains
+
+* `2008-2022` on `aeat-dr-322-2022`: 197 casillas -- the 211 it inherited, minus
+  the fifteen boxes `150`-`164` that only the 2023 design carries, plus box
+  `[73]` which only the 2022 design carries and which had no casilla anywhere.
+* `2023` on `aeat-dr-322-2023`: 211 casillas, content unchanged; it was always
+  the 2023-authored side.
+* A derived epoch-2022 semantic map: 216 of 217 fields aligned to their 2023
+  counterparts on `(length, normalized_description)`, one authored.
+
+Four generator contracts had to be met, each found by being refused: the
+`export/` fragments key the revision with an UNQUOTED TOML key; a derived map
+must carry every kind-specific payload key (`draft_attribute` among them); the
+join demands a bijection keyed on `source_cell` as well as `source_row` for an
+`.xls` design; and the envelope sheet `DR32200` needs its `variable_envelopes`
+contract, carried over unchanged because that sheet is byte-identical.
+
+### Verified, and in the direction that catches a silenced detector
+
+* `test_no_revision_spans_a_design_relayout` no longer names modelo 322. Modelo
+  200 still reports, so the detector did not go quiet.
+* `test_layout_design_applies_to_claimed_years` now says `2008-2022` claims
+  2008-2021, FOURTEEN years outside its design -- down from fifteen, exactly the
+  predicted arithmetic. The residue is a corpus gap: no design is bundled for
+  2008-2021, and the split neither created nor hid it.
+* both revisions are enrolled as generated-tree rows and pass
+  `check_generated_export_tree`.
+* the box-set equality gate holds for both new revisions.
+* registry package: 9 failed, 5345 passed -- the standing declared inventories,
+  unchanged. Authority loads CLEAN.
+
+Bookkeeping swept in the same change: the known-spanning set, the mid-year
+cross-span set, the generated-tree enrolment rows, and the six
+`test_modelo_322_registry` lookups that named the old revision id. The
+split-progress note was rewritten from "not split because no key pairs the two
+designs" -- which the split disproved -- to what the pairing actually was.
+
+### Still open
+
+Modelo 200 and 347 splits, 347 still needing three revisions. Backlog otherwise
+unchanged.

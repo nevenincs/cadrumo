@@ -4,7 +4,7 @@ tags:
   - '#cli-machine-secret-channel-unification'
 date: '2026-08-23'
 modified: '2026-08-23'
-body_hash: 'sha256:630bf1e01de16519488c64afdf562392ba8cdcf04597a4012de4f8b93d5ac7ad'
+body_hash: 'sha256:421b256523fd245f860a204cf500cbbc718b6289884a8546d714c685c8d33b1d'
 tier: L3
 related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
@@ -37,7 +37,7 @@ Build the reusable parser, selector, option declarations, and descriptor reader.
 Define the authoritative adopter inventory and value-free metadata contract.
 
 - [x] `W01.P02.S03` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and define the exact five-command machine-secret inventory, command-model registration, safe field and type schemas, conditional restore variants, and conformance API; `src/cadrumo/entrypoints/cli/_machine_secret_contract.py`.
-- [ ] `W01.P02.S04` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and project value-free machine-secret payload variants into verb input and command schemas; `src/cadrumo/entrypoints/cli/_verb_input_schema.py and src/cadrumo/entrypoints/cli/_command_schema.py`.
+- [x] `W01.P02.S04` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and project value-free machine-secret payload variants into verb input and command schemas; `src/cadrumo/entrypoints/cli/_verb_input_schema.py and src/cadrumo/entrypoints/cli/_command_schema.py`.
 - [ ] `W01.P02.S05` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and prove exact inventory membership, single identical flag declarations across help, Click, metadata, and schema, safe field types without values, and no outside adopters; `src/cadrumo/entrypoints/cli/tests/test_machine_secret_metadata.py`.
 
 ## Wave `W02` - Atomic verb migration and hard cut
