@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-performance-hardening'
 date: '2026-08-22'
 modified: '2026-08-23'
-body_hash: 'sha256:bcbc9c19e7dedd18f374991b085e9aa2ffa2e33edf20170a1a1a9189e7c8d938'
+body_hash: 'sha256:29d4cb297ab33fd99c9fc120cafaab9e6d988b851b0179e112567142734e9d79'
 tier: L3
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
@@ -66,7 +66,7 @@ Correct the nonconforming generated-resource design before any further command-l
 - [x] `W02.P03a.S11` - Correct the reopened S11 execution and review evidence, preserving its latency observations while re-proving schema and operator-help discovery exclusively from production CommandSpec after the atomic cutover; `.vault/exec/2026-08-22-secure-storage-performance-hardening/ and .vault/audit/`.
 - [x] `W02.P03a.S14` - Correct the open S14 evidence by rejecting the app-manifest reader and generator as nonconforming, then re-prove demand-loaded modelo, registry, ledger, live, maintenance, overview, review, diagnostics, and quickfile descendants exclusively from production CommandSpec after the atomic cutover; `.vault/exec/2026-08-22-secure-storage-performance-hardening/ and .vault/audit/`.
 - [x] `W02.P03a.S55` - Add dynamic CommandSpec exact-set, uniqueness, parent-edge, target, locale-key, schema, policy, side-effect, performance-class, and write-route gates for every current and future root, group, and leaf, forbid every former structural authority and runtime artifact edge, and prove each detector with independently constructed missing, duplicate, orphan, malformed, forbidden-import, and undeclared-node negatives; `src/cadrumo/entrypoints/cli/tests/ and dev/ci/tests/`.
-- [ ] `W02.P03a.S56` - Prove clean-checkout direct-source and editable-install CLI assembly, help, completion, census, schema, operator, MCP/HITL, and write-routing behavior from tracked CommandSpec modules without generation or development imports, including explicit absence of both command JSON names and generator paths; `src/cadrumo/entrypoints/cli/tests/ and dev/packaging/`.
+- [x] `W02.P03a.S56` - Prove clean-checkout direct-source and editable-install CLI assembly, help, completion, census, schema, operator, MCP/HITL, and write-routing behavior from tracked CommandSpec modules without generation or development imports, including explicit absence of both command JSON names and generator paths; `src/cadrumo/entrypoints/cli/tests/ and dev/packaging/`.
 - [ ] `W02.P03a.S57` - Prove direct-wheel, direct-sdist, and sdist-to-wheel contents and installed behavior include every production CommandSpec module, exclude both command JSON names and development generators, and materialize the complete localized root, group, and leaf surface with resolvable public handler and schema targets; `src/cadrumo/tests/test_wheel_content_boundary.py and dev/packaging/`.
 - [ ] `W02.P03a.S58` - Bind one immutable Git-archive Python cohort to exhaustive installed-runtime CommandSpec identities, locale metadata, policy, schema, selected-path import budgets, and artifact absence, then require downstream smoke, Scoop, Homebrew, MCPB, marketplace, and publish lanes to consume that sealed cohort without rebuilding or regenerating command authority; `dev/packaging/ and dev/release/`.
 - [ ] `W02.P03a.S59` - Run two independent post-cutover architecture reviews and reconcile all command-authority, production-development boundary, build-lane, shipping-lane, and installed-runtime findings before resuming the remaining performance campaign; `.vault/audit/`.

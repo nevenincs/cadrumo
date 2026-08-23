@@ -24,38 +24,80 @@ _FORBIDDEN_PATHS = (
 )
 _PROBE = r"""
 import json
+import os
 import sys
+from pathlib import Path
+sys.path.append(os.environ["AEAT_DEPENDENCY_SITE"])
+if editable_site := os.environ.get("AEAT_EDITABLE_SITE"):
+    import site
+    site.addsitedir(editable_site)
 from click.testing import CliRunner
 from typer.main import get_command
+import cadrumo
 from cadrumo.entrypoints import cli
 from cadrumo.entrypoints.cli.command_api import (
     build_verb_input_schemas,
     command_schema_refs,
+    command_schema_types,
     command_spec_nodes,
 )
+from cadrumo.application.operator_surface import build_operator_surface_manifest
+from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION
+from cadrumo.entrypoints.cli._command_spec import BindingState, SchemaState
 from cadrumo_harness.mcp import ConfirmationPolicy, build_tool_descriptors, confirmation_for_tool
+import cadrumo_harness
 
 nodes = command_spec_nodes()
 specs = {node.spec.key: node.spec for node in nodes}
+expected_results = {
+    node.spec.result_schema.identity
+    for node in nodes
+    if node.spec.result_schema.state is SchemaState.TARGET
+}
+expected_exposable = {
+    node.spec.result_schema.identity
+    for node in nodes
+    if node.spec.result_schema.state is SchemaState.TARGET
+    and node.spec.parent_key not in {None, "root"}
+    and node.spec.handler is not None
+    and node.spec.handler.state is BindingState.TARGET
+    and (node.spec.kind == "leaf" or node.spec.invocation.invoke_without_command)
+}
 schemas = command_schema_refs()
-inputs = build_verb_input_schemas(tuple(sorted(ref.command for ref in schemas)))
+inputs = build_verb_input_schemas(tuple(sorted(expected_results)))
+schema_types = command_schema_types()
+operator = build_operator_surface_manifest(
+    envelope_schema_version=ENVELOPE_SCHEMA_VERSION,
+    command_schemas=schemas,
+)
 descriptors = build_tool_descriptors()
 help_result = CliRunner().invoke(get_command(cli.app), ["--help"])
+completion_result = CliRunner().invoke(get_command(cli.app), ["--show-completion", "bash"])
 payload = {
     "nodes": len(nodes),
     "paths": len({node.path for node in nodes}),
     "help_exit": help_result.exit_code,
     "help_has_roots": all(token in help_result.output for token in ("config", "app")),
-    "completion": specs["root"].invocation.add_completion,
+    "completion_exit": completion_result.exit_code,
+    "completion_content": "_AEAT_COMPLETE" in completion_result.output,
     "schemas": len(schemas),
     "inputs": len(inputs),
+    "schema_types": len(schema_types),
     "descriptors": len(descriptors),
-    "operator_exact": {ref.command for ref in schemas} == set(inputs),
-    "mcp_exact": {item.command_key for item in descriptors}.issubset(set(inputs)),
+    "refs_exact": {ref.command for ref in schemas} == expected_results,
+    "inputs_exact": set(inputs) == expected_results,
+    "types_exact": set(schema_types) == expected_results,
+    "operator_exact": {ref.command for ref in operator.command_schemas} == expected_results,
+    "mcp_exact": {item.command_key for item in descriptors} == expected_exposable,
     "hitl_read": confirmation_for_tool(command_key="registry.inspect") is ConfirmationPolicy.AUTO_APPROVE,
     "hitl_write": confirmation_for_tool(command_key="modelo.export") is ConfirmationPolicy.CONFIRM,
     "write_route": specs["config_profile_create"].policy.write_route,
     "dev_imports": sorted(name for name in sys.modules if name == "dev" or name.startswith("dev.")),
+    "origins": [
+        str(Path(cadrumo.__file__).resolve()),
+        str(Path(cli.__file__).resolve()),
+        str(Path(cadrumo_harness.__file__).resolve()),
+    ],
 }
 print(json.dumps(payload, sort_keys=True))
 """
@@ -77,11 +119,17 @@ def _tracked_checkout(tmp_path: Path) -> Path:
     return checkout
 
 
-def _run_probe(*, python: Path, pythonpath: tuple[Path, ...], cwd: Path) -> dict[str, object]:
+def _run_probe(
+    *, python: Path, pythonpath: tuple[Path, ...], cwd: Path, editable_site: Path | None = None
+) -> dict[str, object]:
     environment = os.environ.copy()
     environment["PYTHONPATH"] = os.pathsep.join(str(path) for path in pythonpath)
+    dependency_site = next(path for path in map(Path, sys.path) if path.name == "site-packages" and path.is_dir())
+    environment["AEAT_DEPENDENCY_SITE"] = str(dependency_site)
+    if editable_site is not None:
+        environment["AEAT_EDITABLE_SITE"] = str(editable_site)
     completed = subprocess.run(  # noqa: S603 - selected lane interpreter and fixed probe
-        [str(python), "-c", _PROBE],
+        [str(python), "-S", "-c", _PROBE],
         cwd=cwd,
         env=environment,
         check=False,
@@ -94,19 +142,24 @@ def _run_probe(*, python: Path, pythonpath: tuple[Path, ...], cwd: Path) -> dict
     return cast("dict[str, object]", decoded)
 
 
-def _assert_complete_projection(payload: dict[str, object]) -> None:
+def _assert_complete_projection(payload: dict[str, object], *, checkout: Path) -> None:
     assert payload["nodes"] == payload["paths"] == 361
     assert payload["help_exit"] == 0
     assert payload["help_has_roots"] is True
-    assert payload["completion"] is True
-    assert payload["schemas"] == payload["inputs"] == 296
+    assert payload["completion_exit"] == 0
+    assert payload["completion_content"] is True
+    assert payload["schemas"] == payload["inputs"] == payload["schema_types"] == 296
     assert isinstance(payload["descriptors"], int) and payload["descriptors"] > 0
+    assert payload["refs_exact"] is True
+    assert payload["inputs_exact"] is True
+    assert payload["types_exact"] is True
     assert payload["operator_exact"] is True
     assert payload["mcp_exact"] is True
     assert payload["hitl_read"] is True
     assert payload["hitl_write"] is True
     assert payload["write_route"] == "bootstrap-root"
     assert payload["dev_imports"] == []
+    assert all(Path(origin).is_relative_to(checkout) for origin in cast("list[str]", payload["origins"]))
 
 
 def test_clean_tracked_checkout_direct_source_and_editable_install(tmp_path: Path) -> None:
@@ -118,7 +171,9 @@ def test_clean_tracked_checkout_direct_source_and_editable_install(tmp_path: Pat
     )
 
     source_paths = (checkout / "src", checkout / "src/cadrumo-harness/src")
-    _assert_complete_projection(_run_probe(python=Path(sys.executable), pythonpath=source_paths, cwd=checkout))
+    _assert_complete_projection(
+        _run_probe(python=Path(sys.executable), pythonpath=source_paths, cwd=checkout), checkout=checkout
+    )
 
     editable_target = checkout / ".editable-target"
     uv = shutil.which("uv")
@@ -130,7 +185,9 @@ def test_clean_tracked_checkout_direct_source_and_editable_install(tmp_path: Pat
     _assert_complete_projection(
         _run_probe(
             python=Path(sys.executable),
-            pythonpath=(editable_target, checkout / "src/cadrumo-harness/src"),
+            pythonpath=(checkout / "src/cadrumo-harness/src",),
             cwd=checkout,
-        )
+            editable_site=editable_target,
+        ),
+        checkout=checkout,
     )
