@@ -118,6 +118,8 @@ class MachineSecretSelection:
 
     def __post_init__(self) -> None:
         """Keep descriptor state impossible to misinterpret downstream."""
+        if not isinstance(self.channel, MachineSecretChannel):
+            raise TypeError("machine-secret selection requires a known channel")
         if self.channel is MachineSecretChannel.STDIN and self.descriptor is not None:
             raise ValueError("stdin machine-secret selection cannot carry a descriptor")
         if self.channel is MachineSecretChannel.FILE_DESCRIPTOR and self.descriptor is None:
@@ -324,12 +326,14 @@ def select_machine_secret_channel(
     return None
 
 
-def read_machine_secret_payload[SecretsModelT: BaseModel](
+def read_machine_secret_payload[SecretsModelT: MachineSecretPayload](
     model: type[SecretsModelT],
     *,
     selection: MachineSecretSelection,
 ) -> SecretsModelT:
     """Read and validate one previously selected bounded machine channel."""
+    if not issubclass(model, MachineSecretPayload):
+        raise TypeError("canonical machine-secret payloads must inherit MachineSecretPayload")
     if selection.channel is MachineSecretChannel.STDIN:
         return read_secrets_stdin(model)
     descriptor = selection.descriptor

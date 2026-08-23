@@ -8,10 +8,11 @@ import sys
 import tempfile
 from collections.abc import Iterator
 from contextlib import contextmanager
+from typing import cast
 
 import pytest
 import typer
-from pydantic import SecretStr, ValidationError
+from pydantic import BaseModel, SecretStr, ValidationError
 from typer.core import TyperOption
 from typer.main import get_command
 from typer.testing import CliRunner
@@ -169,6 +170,16 @@ def test_selector_represents_absence_and_each_channel_without_reading() -> None:
         os.close(descriptor)
 
 
+def test_selection_rejects_an_unknown_runtime_channel_before_reading() -> None:
+    descriptor = _pipe_with(_payload())
+    try:
+        with pytest.raises(TypeError, match="known channel"):
+            MachineSecretSelection(cast(MachineSecretChannel, "unknown"), descriptor)
+        assert os.read(descriptor, _MAX_SECRETS_BYTES) == _payload()
+    finally:
+        os.close(descriptor)
+
+
 def test_channel_conflict_refuses_before_reading_either_source() -> None:
     descriptor = _pipe_with(_payload())
     try:
@@ -308,3 +319,21 @@ def test_selected_reader_materialises_exactly_the_selected_descriptor() -> None:
     parsed = read_machine_secret_payload(_ProbeSecrets, selection=selection)
     assert parsed.passphrase.get_secret_value() == _SUPPLIED_VALUE
     _assert_closed(descriptor)
+
+
+def test_selected_reader_rejects_a_model_outside_the_strict_frozen_base_before_reading() -> None:
+    class _PermissivePayload(BaseModel):
+        passphrase: SecretStr
+
+    raw = b'{"passphrase":"value","surplus":"would-be-accepted"}'
+    descriptor = _pipe_with(raw)
+    selection = MachineSecretSelection(MachineSecretChannel.FILE_DESCRIPTOR, descriptor)
+    try:
+        with pytest.raises(TypeError, match="must inherit MachineSecretPayload"):
+            read_machine_secret_payload(
+                _PermissivePayload,  # type: ignore[type-var]  # ty: ignore[invalid-argument-type]  # reason: passing a permissive model is the refusal under test
+                selection=selection,
+            )
+        assert os.read(descriptor, _MAX_SECRETS_BYTES) == raw
+    finally:
+        os.close(descriptor)
