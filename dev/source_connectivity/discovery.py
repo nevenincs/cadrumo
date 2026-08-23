@@ -8,6 +8,7 @@ that decision belongs to the reviewed connectivity census.
 from __future__ import annotations
 
 import ast
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -114,6 +115,19 @@ class SourceOwnershipCapability:
     resolver_id: str
     resolver_type: str | None
     stage: str
+
+
+@dataclass(frozen=True, slots=True)
+class LexicalDestinationAdvisory:
+    """Non-authoritative token overlap between a capability and a casilla."""
+
+    capability_kind: str
+    capability_locator: str
+    modelo_id: str
+    revision_id: str
+    casilla_id: str
+    shared_tokens: tuple[str, ...]
+    advisory_only: Literal[True] = True
 
 
 def _production_python_files(source_root: Path) -> tuple[Path, ...]:
@@ -474,10 +488,119 @@ def discover_source_ownership() -> tuple[SourceOwnershipCapability, ...]:
     )
 
 
+_LEXICAL_STOPWORDS = frozenset(
+    {
+        "aggregate",
+        "aggregation",
+        "calculation",
+        "capability",
+        "casilla",
+        "catalogue",
+        "compute",
+        "document",
+        "importe",
+        "ledger",
+        "modelo",
+        "observation",
+        "payload",
+        "profile",
+        "record",
+        "repository",
+        "secure",
+        "source",
+        "total",
+    }
+)
+
+
+def _lexical_tokens(value: str) -> frozenset[str]:
+    expanded = re.sub(r"(?<=[a-záéíóúñ])(?=[A-ZÁÉÍÓÚÑ])", " ", value)
+    return frozenset(
+        token
+        for token in re.findall(r"[a-záéíóúñ]{4,}", expanded.lower())
+        if token not in _LEXICAL_STOPWORDS
+    )
+
+
+def discover_lexical_destination_advisories(repo_root: Path) -> tuple[LexicalDestinationAdvisory, ...]:
+    """Emit report-only token overlaps; never infer binding identity or equivalence."""
+    from cadrumo.core.resources import resources
+
+    capability_phrases: list[tuple[str, str, str]] = []
+    capability_phrases.extend(
+        ("secure_repository", row.evidence_locator, " ".join((row.repository_name, *row.payload_types)))
+        for row in discover_secure_repositories(repo_root)
+    )
+    capability_phrases.extend(
+        ("calculation_helper", row.evidence_locator, f"{row.function_name} {row.return_type}")
+        for row in discover_calculation_helpers(repo_root)
+    )
+    capability_phrases.extend(
+        ("source_readiness", row.evidence_locator, f"{row.function_name} {row.source_kind_expression}")
+        for row in discover_source_readiness(repo_root)
+    )
+    capability_phrases.extend(
+        ("row_assembler", f"{row.module}:{row.line}", f"{row.grouping} {row.observation_return_type}")
+        for row in discover_row_assemblers(repo_root)
+    )
+    capability_token_sets = tuple(
+        (capability_kind, locator, _lexical_tokens(phrase))
+        for capability_kind, locator, phrase in capability_phrases
+        if _lexical_tokens(phrase)
+    )
+
+    advisories: list[LexicalDestinationAdvisory] = []
+    for modelo in resources().modelos.authority.modelos:
+        for revision in modelo.revisions.values():
+            for casilla in revision.casillas:
+                destination_text = " ".join(
+                    (
+                        casilla.semantic_role or "",
+                        *casilla.localization_keys,
+                        *casilla.section,
+                    )
+                )
+                destination_tokens = _lexical_tokens(destination_text)
+                if not destination_tokens:
+                    continue
+                for capability_kind, locator, capability_tokens in capability_token_sets:
+                    shared = tuple(sorted(capability_tokens & destination_tokens))
+                    single_token_source_fact = capability_kind in {"secure_repository", "source_readiness"}
+                    if (
+                        not shared
+                        or len(shared) * 2 < len(capability_tokens)
+                        or (len(shared) == 1 and not single_token_source_fact)
+                    ):
+                        continue
+                    advisories.append(
+                        LexicalDestinationAdvisory(
+                            capability_kind=capability_kind,
+                            capability_locator=locator,
+                            modelo_id=str(modelo.id),
+                            revision_id=str(revision.id),
+                            casilla_id=str(casilla.id),
+                            shared_tokens=shared,
+                        )
+                    )
+    return tuple(
+        sorted(
+            advisories,
+            key=lambda item: (
+                item.capability_kind,
+                item.capability_locator,
+                item.modelo_id,
+                item.revision_id,
+                item.casilla_id,
+            ),
+        )
+    )
+
+
 __all__ = [
     "CalculationHelperCapability",
     "IngressCapability",
     "IngressChannel",
+    "LexicalDestinationAdvisory",
     "RowAssemblerCapability",
     "SecureRepositoryCapability",
     "SecureRepositoryMechanism",
@@ -485,6 +608,7 @@ __all__ = [
     "SourceReadinessCapability",
     "discover_calculation_helpers",
     "discover_ingress_surfaces",
+    "discover_lexical_destination_advisories",
     "discover_row_assemblers",
     "discover_secure_repositories",
     "discover_source_ownership",
