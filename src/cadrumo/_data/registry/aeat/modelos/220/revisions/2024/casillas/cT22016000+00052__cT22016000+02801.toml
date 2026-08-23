@@ -1,0 +1,1359 @@
+# Modelo 220 RECORD T22016000 -- reparto entre Administraciones forales: calculo de
+# porcentajes de tributacion y determinacion del liquido a ingresar o devolver en cada
+# una de las Administraciones forales.
+#
+# 110 casillas, every one carrying a real AEAT box number and a `segmento`, following
+# the modelo 200 convention this modelo already uses.
+#
+# THE RECORD IS A PERFECTLY REGULAR GRID: 28 concepts x 5 territories across the two
+# family-16 records, verified rather than assumed -- every concept occurs exactly five
+# times, once per territory, and 28 x 5 = 140 equals the numbered-field count exactly.
+#
+# THE CONCEPT AXIS IS DERIVED, NOT MATCHED, and that choice was forced by a real defect.
+# A first attempt hand-wrote matcher fragments taken from a survey that had TRUNCATED the
+# descriptions at 104 characters, so fragments like "Abono de de" and "Complementa"
+# collapsed several distinct concepts into one and produced 24 key collisions. Deriving
+# the concept as the REMAINDER -- what is left once the family heading, the territory
+# name and the row index are removed -- cannot mis-match, because nothing is being
+# guessed at. Never build a matcher from truncated output.
+#
+# AEAT USES BOTH THE BASQUE AND THE SPANISH TERRITORY NAMES in the same design: Araba
+# and Alava, Gipuzkoa and Guipuzcoa, Bizkaia and Vizcaya. Both spellings are matched;
+# the casilla labels use the Basque form, which is the one the design uses in the
+# majority of its rows.
+#
+# AEAT ALSO BREAKS A WORD ACROSS A SPACE -- "insufi ciencia de cuota" for
+# "insuficiencia de cuota". Transcribed as printed in the comment and corrected in the
+# label, the same treatment given to its other typos on this modelo.
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T22016000 tiles
+# 1..2927 exactly once with NO gap and NO PARTIAL OVERLAP, both checked, and every
+# number, offset, length and type below was read from its own field description.
+#
+# NOT MODELLED, deliberately: the modelo and pagina identifier envelope, the
+# pagina-complementaria mechanics, the reservado runs and the end-of-record marker.
+#
+# NOT CLAIMED: these casillas DECLARE the foral allocation; none of them computes it.
+# Nothing here checks that the five territory shares sum to the total, and no formula,
+# construct or binding is attached. The revision carries no export layout.
+
+# @956+17. Cálculo de porcentajes de tributación. Volúmenes de operaciones realizado en cada territorio.Total.Álava
+[[revisions."2024".casillas]]
+id = "T22016000:00052"
+number = "00052"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @973+17. Cálculo de porcentajes de tributación. Volúmenes de operaciones realizado en cada territorio.Total.Guipuzcoa
+[[revisions."2024".casillas]]
+id = "T22016000:00053"
+number = "00053"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @990+17. Cálculo de porcentajes de tributación. Volúmenes de operaciones realizado en cada territorio.Total.Vizcaya
+[[revisions."2024".casillas]]
+id = "T22016000:00054"
+number = "00054"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1007+17. Cálculo de porcentajes de tributación. Volúmenes de operaciones realizado en cada territorio.Total.Navarra
+[[revisions."2024".casillas]]
+id = "T22016000:00055"
+number = "00055"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1024+17. Cálculo de porcentajes de tributación. Volúmenes de operaciones realizado en cada territorio.Total.Territorio común
+[[revisions."2024".casillas]]
+id = "T22016000:00056"
+number = "00056"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1041+5. Cálculo de porcentajes de tributación. Volúmenes de operaciones realizado en cada territorio. Porcentajes de tributacion. Álava
+[[revisions."2024".casillas]]
+id = "T22016000:00626"
+number = "00626"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1046+5. Cálculo de porcentajes de tributación. Volúmenes de operaciones realizado en cada territorio. Porcentajes de tributacion. Guipuzcoa
+[[revisions."2024".casillas]]
+id = "T22016000:00627"
+number = "00627"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1051+5. Cálculo de porcentajes de tributación. Volúmenes de operaciones realizado en cada territorio. Porcentajes de tributacion. Vizcaya
+[[revisions."2024".casillas]]
+id = "T22016000:00628"
+number = "00628"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1056+5. Cálculo de porcentajes de tributación. Volúmenes de operaciones realizado en cada territorio. Porcentajes de tributacion. Navarra
+[[revisions."2024".casillas]]
+id = "T22016000:00629"
+number = "00629"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1061+5. Cálculo de porcentajes de tributación. Volúmenes de operaciones realizado en cada territorio. Porcentajes de tributacion. Territorio común
+[[revisions."2024".casillas]]
+id = "T22016000:00625"
+number = "00625"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1066+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Cuota del ejercicio a ingresar o devolver. Araba
+[[revisions."2024".casillas]]
+id = "T22016000:00420"
+number = "00420"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1083+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Cuota del ejercicio a ingresar o devolver.Gipuzkoa
+[[revisions."2024".casillas]]
+id = "T22016000:00421"
+number = "00421"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1100+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Cuota del ejercicio a ingresar o devolver. Bizkaia
+[[revisions."2024".casillas]]
+id = "T22016000:00426"
+number = "00426"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1117+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Cuota del ejercicio a ingresar o devolver. Navarra
+[[revisions."2024".casillas]]
+id = "T22016000:00427"
+number = "00427"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1134+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Cuota del ejercicio a ingresar o devolver. Total territorios forales
+[[revisions."2024".casillas]]
+id = "T22016000:00600"
+number = "00600"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1151+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados. Araba. 1º
+[[revisions."2024".casillas]]
+id = "T22016000:00402"
+number = "00402"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1168+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados.Gipuzkoa. 1º
+[[revisions."2024".casillas]]
+id = "T22016000:00442"
+number = "00442"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1185+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados. Bizkaia. 1º
+[[revisions."2024".casillas]]
+id = "T22016000:00443"
+number = "00443"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1202+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados. Navarra. 1º
+[[revisions."2024".casillas]]
+id = "T22016000:00444"
+number = "00444"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1219+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados. Total territorios forales. 1º
+[[revisions."2024".casillas]]
+id = "T22016000:00602"
+number = "00602"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1236+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados. Araba. 2º
+[[revisions."2024".casillas]]
+id = "T22016000:00445"
+number = "00445"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1253+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados.Gipuzkoa. 2º
+[[revisions."2024".casillas]]
+id = "T22016000:00446"
+number = "00446"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1270+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados. Bizkaia. 2º
+[[revisions."2024".casillas]]
+id = "T22016000:00447"
+number = "00447"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1287+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados. Navarra. 2º
+[[revisions."2024".casillas]]
+id = "T22016000:00448"
+number = "00448"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1304+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados. Total territorios forales. 2º
+[[revisions."2024".casillas]]
+id = "T22016000:00604"
+number = "00604"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1321+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados. Araba. 3º
+[[revisions."2024".casillas]]
+id = "T22016000:00449"
+number = "00449"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1338+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados.Gipuzkoa. 3º
+[[revisions."2024".casillas]]
+id = "T22016000:00450"
+number = "00450"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1355+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados. Bizkaia. 3º
+[[revisions."2024".casillas]]
+id = "T22016000:00451"
+number = "00451"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1372+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados. Navarra. 3º
+[[revisions."2024".casillas]]
+id = "T22016000:00465"
+number = "00465"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1389+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados. Total territorios forales. 3º
+[[revisions."2024".casillas]]
+id = "T22016000:00606"
+number = "00606"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1406+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Cuota diferencial. Araba.
+[[revisions."2024".casillas]]
+id = "T22016000:00474"
+number = "00474"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1423+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Cuota diferencial .Gipuzkoa.
+[[revisions."2024".casillas]]
+id = "T22016000:00475"
+number = "00475"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1440+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Cuota diferencial. Bizkaia.
+[[revisions."2024".casillas]]
+id = "T22016000:00476"
+number = "00476"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1457+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Cuota diferencial. Navarra.
+[[revisions."2024".casillas]]
+id = "T22016000:00477"
+number = "00477"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1474+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Cuota diferencial. Total territorios forales.
+[[revisions."2024".casillas]]
+id = "T22016000:00612"
+number = "00612"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1491+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Incremento por pérdida beneficios fiscales períodos anteriores. Araba.
+[[revisions."2024".casillas]]
+id = "T22016000:00482"
+number = "00482"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1508+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Incremento por pérdida beneficios fiscales períodos anteriores..Gipuzkoa.
+[[revisions."2024".casillas]]
+id = "T22016000:00483"
+number = "00483"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1525+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Incremento por pérdida beneficios fiscales períodos anteriores. Bizkaia.
+[[revisions."2024".casillas]]
+id = "T22016000:00484"
+number = "00484"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1542+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Incremento por pérdida beneficios fiscales períodos anteriores. Navarra.
+[[revisions."2024".casillas]]
+id = "T22016000:00485"
+number = "00485"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1559+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Incremento por pérdida beneficios fiscales períodos anteriores. Total territorios forales.
+[[revisions."2024".casillas]]
+id = "T22016000:00616"
+number = "00616"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1576+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Intereses de demora. Araba.
+[[revisions."2024".casillas]]
+id = "T22016000:00486"
+number = "00486"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1593+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Intereses de demora.Gipuzkoa.
+[[revisions."2024".casillas]]
+id = "T22016000:00487"
+number = "00487"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1610+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Intereses de demora. Bizkaia.
+[[revisions."2024".casillas]]
+id = "T22016000:00488"
+number = "00488"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1627+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Intereses de demora. Navarra.
+[[revisions."2024".casillas]]
+id = "T22016000:00489"
+number = "00489"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1644+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Intereses de demora. Total territorios forales.
+[[revisions."2024".casillas]]
+id = "T22016000:00618"
+number = "00618"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1661+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones I+D+i por insufi ciencia de cuota (opción art. 39.2 LIS). Araba
+[[revisions."2024".casillas]]
+id = "T22016000:03389"
+number = "03389"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1678+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones I+D+i por insufi ciencia de cuota (opción art. 39.2 LIS). Gipuzkoa
+[[revisions."2024".casillas]]
+id = "T22016000:03390"
+number = "03390"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1695+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones I+D+i por insufi ciencia de cuota (opción art. 39.2 LIS). Bizkaia
+[[revisions."2024".casillas]]
+id = "T22016000:03391"
+number = "03391"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1712+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones I+D+i por insufi ciencia de cuota (opción art. 39.2 LIS). Navarra
+[[revisions."2024".casillas]]
+id = "T22016000:03392"
+number = "03392"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1729+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones I+D+i por insufi ciencia de cuota (opción art. 39.2 LIS). Total territorios forales
+[[revisions."2024".casillas]]
+id = "T22016000:03393"
+number = "03393"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1746+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones por producciones cinematográficas extranjeras (art. 39.3 LIS). Araba
+[[revisions."2024".casillas]]
+id = "T22016000:03394"
+number = "03394"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1763+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones por producciones cinematográficas extranjeras (art. 39.3 LIS). Gipuzkoa
+[[revisions."2024".casillas]]
+id = "T22016000:03395"
+number = "03395"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1780+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones por producciones cinematográficas extranjeras (art. 39.3 LIS). Bizkaia
+[[revisions."2024".casillas]]
+id = "T22016000:03396"
+number = "03396"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1797+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones por producciones cinematográficas extranjeras (art. 39.3 LIS). Navarra
+[[revisions."2024".casillas]]
+id = "T22016000:03397"
+number = "03397"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1814+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones por producciones cinematográficas extranjeras (art. 39.3 LIS). Total territorios forales
+[[revisions."2024".casillas]]
+id = "T22016000:03398"
+number = "03398"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1831+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones por producciones cinematográficas extranjeras en Canarias (art. 39.3 LIS y DA 14ª Ley 19/1994). Araba
+[[revisions."2024".casillas]]
+id = "T22016000:02066"
+number = "02066"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1848+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones por producciones cinematográficas extranjeras en Canarias (art. 39.3 LIS y DA 14ª Ley 19/1994). Gipuzkoa
+[[revisions."2024".casillas]]
+id = "T22016000:02067"
+number = "02067"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1865+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones por producciones cinematográficas extranjeras en Canarias (art. 39.3 LIS y DA 14ª Ley 19/1994). Bizkaia
+[[revisions."2024".casillas]]
+id = "T22016000:02068"
+number = "02068"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1882+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones por producciones cinematográficas extranjeras en Canarias (art. 39.3 LIS y DA 14ª Ley 19/1994). Navarra
+[[revisions."2024".casillas]]
+id = "T22016000:02069"
+number = "02069"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1899+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones por producciones cinematográficas extranjeras en Canarias (art. 39.3 LIS y DA 14ª Ley 19/1994). Total territorios forales
+[[revisions."2024".casillas]]
+id = "T22016000:01632"
+number = "01632"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1916+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Resultado de la autoliquidación. Araba.
+[[revisions."2024".casillas]]
+id = "T22016000:03192"
+number = "03192"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1933+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Resultado de la autoliquidación. Gipuzkoa.
+[[revisions."2024".casillas]]
+id = "T22016000:03193"
+number = "03193"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1950+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Resultado de la autoliquidación. Bizkaia.
+[[revisions."2024".casillas]]
+id = "T22016000:03194"
+number = "03194"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1967+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Resultado de la autoliquidación. Navarra.
+[[revisions."2024".casillas]]
+id = "T22016000:03195"
+number = "03195"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1984+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Resultado de la autoliquidación. Total territorios forales.
+[[revisions."2024".casillas]]
+id = "T22016000:02539"
+number = "02539"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2001+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Resultados a ingresar procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2024. Araba.
+[[revisions."2024".casillas]]
+id = "T22016000:03293"
+number = "03293"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2018+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Resultados a ingresar procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2024. Gipuzkoa.
+[[revisions."2024".casillas]]
+id = "T22016000:03294"
+number = "03294"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2035+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Resultados a ingresar procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2024. Bizkaia.
+[[revisions."2024".casillas]]
+id = "T22016000:03295"
+number = "03295"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2052+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Resultados a ingresar procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2024. Navarra.
+[[revisions."2024".casillas]]
+id = "T22016000:03296"
+number = "03296"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2069+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Resultados a ingresar procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2024. Total territorios forales.
+[[revisions."2024".casillas]]
+id = "T22016000:02541"
+number = "02541"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2086+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Devoluciones acordadas procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2024 Araba.
+[[revisions."2024".casillas]]
+id = "T22016000:03297"
+number = "03297"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2103+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Devoluciones acordadas procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2024 Gipuzkoa.
+[[revisions."2024".casillas]]
+id = "T22016000:03298"
+number = "03298"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2120+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Devoluciones acordadas procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2024 Bizkaia.
+[[revisions."2024".casillas]]
+id = "T22016000:03299"
+number = "03299"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2137+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Devoluciones acordadas procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2024. Navarra.
+[[revisions."2024".casillas]]
+id = "T22016000:03300"
+number = "03300"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2154+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Devoluciones acordadas procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2024 Total territorios forales.
+[[revisions."2024".casillas]]
+id = "T22016000:02789"
+number = "02789"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2171+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Liquido a ingresar o a devolver. Araba.
+[[revisions."2024".casillas]]
+id = "T22016000:00494"
+number = "00494"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2188+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Liquido a ingresar o a devolver. Gipuzkoa.
+[[revisions."2024".casillas]]
+id = "T22016000:00495"
+number = "00495"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2205+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Liquido a ingresar o a devolver. Bizkaia.
+[[revisions."2024".casillas]]
+id = "T22016000:00496"
+number = "00496"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2222+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Liquido a ingresar o a devolver. Navarra.
+[[revisions."2024".casillas]]
+id = "T22016000:00497"
+number = "00497"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2239+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales.Liquido a ingresar o a devolver. Total territorios forales.
+[[revisions."2024".casillas]]
+id = "T22016000:00622"
+number = "00622"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2256+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Importe integrado en la base imponible. Araba.
+[[revisions."2024".casillas]]
+id = "T22016000:03301"
+number = "03301"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2273+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Importe integrado en la base imponible. Gipuzkoa.
+[[revisions."2024".casillas]]
+id = "T22016000:03302"
+number = "03302"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2290+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Importe integrado en la base imponible. Bizkaia.
+[[revisions."2024".casillas]]
+id = "T22016000:03303"
+number = "03303"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2307+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Importe integrado en la base imponible. Navarra.
+[[revisions."2024".casillas]]
+id = "T22016000:03304"
+number = "03304"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2324+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Importe integrado en la base imponible. Total territorios forales.
+[[revisions."2024".casillas]]
+id = "T22016000:02791"
+number = "02791"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2341+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Deuda tributaria resultante del fraccionamiento art. 19.1 LIS. Araba.
+[[revisions."2024".casillas]]
+id = "T22016000:03305"
+number = "03305"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2358+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Deuda tributaria resultante del fraccionamiento art. 19.1 LIS Gipuzkoa.
+[[revisions."2024".casillas]]
+id = "T22016000:03306"
+number = "03306"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2375+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Deuda tributaria resultante del fraccionamiento art. 19.1 LIS Bizkaia.
+[[revisions."2024".casillas]]
+id = "T22016000:03307"
+number = "03307"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2392+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Deuda tributaria resultante del fraccionamiento art. 19.1 LIS Navarra.
+[[revisions."2024".casillas]]
+id = "T22016000:03308"
+number = "03308"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2409+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Deuda tributaria resultante del fraccionamiento art. 19.1 LIS. Total territorios forales.
+[[revisions."2024".casillas]]
+id = "T22016000:02793"
+number = "02793"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2426+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. 1er fraccionamiento Araba.
+[[revisions."2024".casillas]]
+id = "T22016000:03309"
+number = "03309"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2443+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. 1er fraccionamiento Gipuzkoa.
+[[revisions."2024".casillas]]
+id = "T22016000:03310"
+number = "03310"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2460+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. 1er fraccionamiento Bizkaia.
+[[revisions."2024".casillas]]
+id = "T22016000:03311"
+number = "03311"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2477+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. 1er fraccionamiento Navarra.
+[[revisions."2024".casillas]]
+id = "T22016000:03312"
+number = "03312"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2494+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. 1er fraccionamiento. Total territorios forales.
+[[revisions."2024".casillas]]
+id = "T22016000:02795"
+number = "02795"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2511+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Resultado de la autoliquidación incluido el 1er fraccionamiento del art. 19.1 LIS. Araba.
+[[revisions."2024".casillas]]
+id = "T22016000:03313"
+number = "03313"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2528+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Resultado de la autoliquidación incluido el 1er fraccionamiento del art. 19.1 LIS. Gipuzkoa.
+[[revisions."2024".casillas]]
+id = "T22016000:03314"
+number = "03314"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2545+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Resultado de la autoliquidación incluido el 1er fraccionamiento del art. 19.1 LIS. Bizkaia.
+[[revisions."2024".casillas]]
+id = "T22016000:03315"
+number = "03315"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2562+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Resultado de la autoliquidación incluido el 1er fraccionamiento del art. 19.1 LIS. Navarra.
+[[revisions."2024".casillas]]
+id = "T22016000:03316"
+number = "03316"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2579+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Resultado de la autoliquidación incluido el 1er fraccionamiento del art. 19.1 LIS. Total territorios forales.
+[[revisions."2024".casillas]]
+id = "T22016000:02797"
+number = "02797"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2596+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Resultado de la autoliquidación incluido el 1er fraccionamiento del art. 19.1 LIS procedente de autoliquidaciones anteriores correspondientes al período impositivo 2024 Araba.
+[[revisions."2024".casillas]]
+id = "T22016000:03317"
+number = "03317"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2613+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Resultado de la autoliquidación incluido el 1er fraccionamiento del art. 19.1 LIS procedente de autoliquidaciones anteriores correspondientes al período impositivo 2024. Gipuzkoa.
+[[revisions."2024".casillas]]
+id = "T22016000:03318"
+number = "03318"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2630+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Resultado de la autoliquidación incluido el 1er fraccionamiento del art. 19.1 LIS procedente de autoliquidaciones anteriores correspondientes al período impositivo 2024. Bizkaia.
+[[revisions."2024".casillas]]
+id = "T22016000:03319"
+number = "03319"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2647+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Resultado de la autoliquidación incluido el 1er fraccionamiento del art. 19.1 LIS procedente de autoliquidaciones anteriores correspondientes al período impositivo 2024. Navarra.
+[[revisions."2024".casillas]]
+id = "T22016000:03320"
+number = "03320"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2664+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Resultado de la autoliquidación incluido el 1er fraccionamiento del art. 19.1 LIS procedente de autoliquidaciones anteriores correspondientes al período impositivo 2024.
+[[revisions."2024".casillas]]
+id = "T22016000:02799"
+number = "02799"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2681+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Líquido a ingresar incluido el 1er fraccionamiento del art. 19.1 LIS. Araba.
+[[revisions."2024".casillas]]
+id = "T22016000:03321"
+number = "03321"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2698+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Líquido a ingresar incluido el 1er fraccionamiento del art. 19.1 LIS. Gipuzkoa.
+[[revisions."2024".casillas]]
+id = "T22016000:03322"
+number = "03322"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2715+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Líquido a ingresar incluido el 1er fraccionamiento del art. 19.1 LIS. Bizkaia.
+[[revisions."2024".casillas]]
+id = "T22016000:03323"
+number = "03323"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2732+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Líquido a ingresar incluido el 1er fraccionamiento del art. 19.1 LIS. Navarra.
+[[revisions."2024".casillas]]
+id = "T22016000:03324"
+number = "03324"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2749+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Líquido a ingresar incluido el 1er fraccionamiento del art. 19.1 LIS.
+[[revisions."2024".casillas]]
+id = "T22016000:02801"
+number = "02801"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]

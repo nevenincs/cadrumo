@@ -2966,6 +2966,458 @@ modelo:
               label: Deduccions per doble imposicio internacional, LIS. doble imposicio
                 interna, periodes anteriors. doble imposicio de 2022. pendent d'aplicacio
                 en periodes futurs (registre T22012B20)
+            x-agp34c1h6oo30c1q60o30d9i:
+              label: Repartiment entre Administracions forals. Total. Araba
+            x-agp34c1h6oo30c1q60o30d9j:
+              label: Repartiment entre Administracions forals. Total. Gipuzkoa
+            x-agp34c1h6oo30c1q60o30d9k:
+              label: Repartiment entre Administracions forals. Total. Bizkaia
+            x-agp34c1h6oo30c1q60o30d9l:
+              label: Repartiment entre Administracions forals. Total. Navarra
+            x-agp34c1h6oo30c1q60o30d9m:
+              label: Repartiment entre Administracions forals. Total. Territori comu
+            x-agp34c1h6oo30c1q60o38c1i:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                1o pagament fraccionat. Araba
+            x-agp34c1h6oo30c1q60o38chg:
+              label: Repartiment entre Administracions forals. Quota de l'exercici
+                a ingressar o retornar. Araba
+            x-agp34c1h6oo30c1q60o38chh:
+              label: Repartiment entre Administracions forals. Quota de l'exercici
+                a ingressar o retornar. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38chm:
+              label: Repartiment entre Administracions forals. Quota de l'exercici
+                a ingressar o retornar. Bizkaia
+            x-agp34c1h6oo30c1q60o38chn:
+              label: Repartiment entre Administracions forals. Quota de l'exercici
+                a ingressar o retornar. Navarra
+            x-agp34c1h6oo30c1q60o38d1i:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                1o pagament fraccionat. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38d1j:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                1o pagament fraccionat. Bizkaia
+            x-agp34c1h6oo30c1q60o38d1k:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                1o pagament fraccionat. Navarra
+            x-agp34c1h6oo30c1q60o38d1l:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                2o pagament fraccionat. Araba
+            x-agp34c1h6oo30c1q60o38d1m:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                2o pagament fraccionat. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38d1n:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                2o pagament fraccionat. Bizkaia
+            x-agp34c1h6oo30c1q60o38d1o:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                2o pagament fraccionat. Navarra
+            x-agp34c1h6oo30c1q60o38d1p:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                3o pagament fraccionat. Araba
+            x-agp34c1h6oo30c1q60o38d9g:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                3o pagament fraccionat. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38d9h:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                3o pagament fraccionat. Bizkaia
+            x-agp34c1h6oo30c1q60o38dhl:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                3o pagament fraccionat. Navarra
+            x-agp34c1h6oo30c1q60o38dpk:
+              label: Repartiment entre Administracions forals. Quota diferencial.
+                Araba
+            x-agp34c1h6oo30c1q60o38dpl:
+              label: Repartiment entre Administracions forals. Quota diferencial.
+                Gipuzkoa
+            x-agp34c1h6oo30c1q60o38dpm:
+              label: Repartiment entre Administracions forals. Quota diferencial.
+                Bizkaia
+            x-agp34c1h6oo30c1q60o38dpn:
+              label: Repartiment entre Administracions forals. Quota diferencial.
+                Navarra
+            x-agp34c1h6oo30c1q60o38e1i:
+              label: Repartiment entre Administracions forals. Increment per perdua
+                de beneficis fiscals de periodes anteriors. Araba
+            x-agp34c1h6oo30c1q60o38e1j:
+              label: Repartiment entre Administracions forals. Increment per perdua
+                de beneficis fiscals de periodes anteriors. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38e1k:
+              label: Repartiment entre Administracions forals. Increment per perdua
+                de beneficis fiscals de periodes anteriors. Bizkaia
+            x-agp34c1h6oo30c1q60o38e1l:
+              label: Repartiment entre Administracions forals. Increment per perdua
+                de beneficis fiscals de periodes anteriors. Navarra
+            x-agp34c1h6oo30c1q60o38e1m:
+              label: Repartiment entre Administracions forals. Interessos de demora.
+                Araba
+            x-agp34c1h6oo30c1q60o38e1n:
+              label: Repartiment entre Administracions forals. Interessos de demora.
+                Gipuzkoa
+            x-agp34c1h6oo30c1q60o38e1o:
+              label: Repartiment entre Administracions forals. Interessos de demora.
+                Bizkaia
+            x-agp34c1h6oo30c1q60o38e1p:
+              label: Repartiment entre Administracions forals. Interessos de demora.
+                Navarra
+            x-agp34c1h6oo30c1q60o38e9k:
+              label: Repartiment entre Administracions forals. Liquid a ingressar
+                o a retornar. Araba
+            x-agp34c1h6oo30c1q60o38e9l:
+              label: Repartiment entre Administracions forals. Liquid a ingressar
+                o a retornar. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38e9m:
+              label: Repartiment entre Administracions forals. Liquid a ingressar
+                o a retornar. Bizkaia
+            x-agp34c1h6oo30c1q60o38e9n:
+              label: Repartiment entre Administracions forals. Liquid a ingressar
+                o a retornar. Navarra
+            x-agp34c1h6oo30c1q60o3cc1g:
+              label: Repartiment entre Administracions forals. Quota de l'exercici
+                a ingressar o retornar. Total de territoris forals
+            x-agp34c1h6oo30c1q60o3cc1i:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                1o pagament fraccionat. Total de territoris forals
+            x-agp34c1h6oo30c1q60o3cc1k:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                2o pagament fraccionat. Total de territoris forals
+            x-agp34c1h6oo30c1q60o3cc1m:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                3o pagament fraccionat. Total de territoris forals
+            x-agp34c1h6oo30c1q60o3cc9i:
+              label: Repartiment entre Administracions forals. Quota diferencial.
+                Total de territoris forals
+            x-agp34c1h6oo30c1q60o3cc9m:
+              label: Repartiment entre Administracions forals. Increment per perdua
+                de beneficis fiscals de periodes anteriors. Total de territoris forals
+            x-agp34c1h6oo30c1q60o3cc9o:
+              label: Repartiment entre Administracions forals. Interessos de demora.
+                Total de territoris forals
+            x-agp34c1h6oo30c1q60o3cchi:
+              label: Repartiment entre Administracions forals. Liquid a ingressar
+                o a retornar. Total de territoris forals
+            x-agp34c1h6oo30c1q60o3cchl:
+              label: Repartiment entre Administracions forals. Percentatges de tributacio.
+                Territori comu
+            x-agp34c1h6oo30c1q60o3cchm:
+              label: Repartiment entre Administracions forals. Percentatges de tributacio.
+                Araba
+            x-agp34c1h6oo30c1q60o3cchn:
+              label: Repartiment entre Administracions forals. Percentatges de tributacio.
+                Gipuzkoa
+            x-agp34c1h6oo30c1q60o3ccho:
+              label: Repartiment entre Administracions forals. Percentatges de tributacio.
+                Bizkaia
+            x-agp34c1h6oo30c1q60o3cchp:
+              label: Repartiment entre Administracions forals. Percentatges de tributacio.
+                Navarra
+            x-agp34c1h6oo30c1q60ojccpi:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                per produccions cinematografiques estrangeres a Canaries (art. 39.3
+                LIS i DA 14a Llei 19/1994). Total de territoris forals
+            x-agp34c1h6oo30c1q60p30dhm:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                per produccions cinematografiques estrangeres a Canaries (art. 39.3
+                LIS i DA 14a Llei 19/1994). Araba
+            x-agp34c1h6oo30c1q60p30dhn:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                per produccions cinematografiques estrangeres a Canaries (art. 39.3
+                LIS i DA 14a Llei 19/1994). Gipuzkoa
+            x-agp34c1h6oo30c1q60p30dho:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                per produccions cinematografiques estrangeres a Canaries (art. 39.3
+                LIS i DA 14a Llei 19/1994). Bizkaia
+            x-agp34c1h6oo30c1q60p30dhp:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                per produccions cinematografiques estrangeres a Canaries (art. 39.3
+                LIS i DA 14a Llei 19/1994). Navarra
+            x-agp34c1h6oo30c1q60p3acpp:
+              label: Repartiment entre Administracions forals. Resultat de l'autoliquidacio.
+                Total de territoris forals
+            x-agp34c1h6oo30c1q60p3ad1h:
+              label: 'Repartiment entre Administracions forals. Complementaria: resultats
+                a ingressar procedents d''autoliquidacions anteriors corresponents
+                al periode impositiu 2024. Total de territoris forals'
+            x-agp34c1h6oo30c1q60p3ee1p:
+              label: 'Repartiment entre Administracions forals. Complementaria: devolucions
+                acordades procedents d''autoliquidacions anteriors corresponents al
+                periode impositiu 2024. Total de territoris forals'
+            x-agp34c1h6oo30c1q60p3ee9h:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: import integrat a la base imposable. Total de territoris
+                forals'
+            x-agp34c1h6oo30c1q60p3ee9j:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: deute tributari resultant del fraccionament. Total
+                de territoris forals'
+            x-agp34c1h6oo30c1q60p3ee9l:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: 1r fraccionament. Total de territoris forals'
+            x-agp34c1h6oo30c1q60p3ee9n:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: resultat de l''autoliquidacio incloent el 1r fraccionament.
+                Total de territoris forals'
+            x-agp34c1h6oo30c1q60p3ee9p:
+              label: 'Repartiment entre Administracions forals. Complementaria: resultat
+                de l''autoliquidacio incloent el 1r fraccionament de l''art. 19.1
+                LIS, procedent d''autoliquidacions anteriors corresponents al periode
+                impositiu 2024. cinquena columna, territori no anomenat al disseny'
+            x-agp34c1h6oo30c1q60p3gc1h:
+              label: Repartiment entre Administracions forals. Liquid a ingressar
+                incloent el 1r fraccionament de l'art. 19.1 LIS. cinquena columna,
+                territori no anomenat al disseny
+            x-agp34c1h6oo30c1q60pj2e9i:
+              label: Repartiment entre Administracions forals. Resultat de l'autoliquidacio.
+                Araba
+            x-agp34c1h6oo30c1q60pj2e9j:
+              label: Repartiment entre Administracions forals. Resultat de l'autoliquidacio.
+                Gipuzkoa
+            x-agp34c1h6oo30c1q60pj2e9k:
+              label: Repartiment entre Administracions forals. Resultat de l'autoliquidacio.
+                Bizkaia
+            x-agp34c1h6oo30c1q60pj2e9l:
+              label: Repartiment entre Administracions forals. Resultat de l'autoliquidacio.
+                Navarra
+            x-agp34c1h6oo30c1q60pj4e9j:
+              label: 'Repartiment entre Administracions forals. Complementaria: resultats
+                a ingressar procedents d''autoliquidacions anteriors corresponents
+                al periode impositiu 2024. Araba'
+            x-agp34c1h6oo30c1q60pj4e9k:
+              label: 'Repartiment entre Administracions forals. Complementaria: resultats
+                a ingressar procedents d''autoliquidacions anteriors corresponents
+                al periode impositiu 2024. Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj4e9l:
+              label: 'Repartiment entre Administracions forals. Complementaria: resultats
+                a ingressar procedents d''autoliquidacions anteriors corresponents
+                al periode impositiu 2024. Bizkaia'
+            x-agp34c1h6oo30c1q60pj4e9m:
+              label: 'Repartiment entre Administracions forals. Complementaria: resultats
+                a ingressar procedents d''autoliquidacions anteriors corresponents
+                al periode impositiu 2024. Navarra'
+            x-agp34c1h6oo30c1q60pj4e9n:
+              label: 'Repartiment entre Administracions forals. Complementaria: devolucions
+                acordades procedents d''autoliquidacions anteriors corresponents al
+                periode impositiu 2024. Araba'
+            x-agp34c1h6oo30c1q60pj4e9o:
+              label: 'Repartiment entre Administracions forals. Complementaria: devolucions
+                acordades procedents d''autoliquidacions anteriors corresponents al
+                periode impositiu 2024. Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj4e9p:
+              label: 'Repartiment entre Administracions forals. Complementaria: devolucions
+                acordades procedents d''autoliquidacions anteriors corresponents al
+                periode impositiu 2024. Bizkaia'
+            x-agp34c1h6oo30c1q60pj6c1g:
+              label: 'Repartiment entre Administracions forals. Complementaria: devolucions
+                acordades procedents d''autoliquidacions anteriors corresponents al
+                periode impositiu 2024. Navarra'
+            x-agp34c1h6oo30c1q60pj6c1h:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: import integrat a la base imposable. Araba'
+            x-agp34c1h6oo30c1q60pj6c1i:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: import integrat a la base imposable. Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj6c1j:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: import integrat a la base imposable. Bizkaia'
+            x-agp34c1h6oo30c1q60pj6c1k:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: import integrat a la base imposable. Navarra'
+            x-agp34c1h6oo30c1q60pj6c1l:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: deute tributari resultant del fraccionament. Araba'
+            x-agp34c1h6oo30c1q60pj6c1m:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: deute tributari resultant del fraccionament. Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj6c1n:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: deute tributari resultant del fraccionament. Bizkaia'
+            x-agp34c1h6oo30c1q60pj6c1o:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: deute tributari resultant del fraccionament. Navarra'
+            x-agp34c1h6oo30c1q60pj6c1p:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: 1r fraccionament. Araba'
+            x-agp34c1h6oo30c1q60pj6c9g:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: 1r fraccionament. Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj6c9h:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: 1r fraccionament. Bizkaia'
+            x-agp34c1h6oo30c1q60pj6c9i:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: 1r fraccionament. Navarra'
+            x-agp34c1h6oo30c1q60pj6c9j:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: resultat de l''autoliquidacio incloent el 1r fraccionament.
+                Araba'
+            x-agp34c1h6oo30c1q60pj6c9k:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: resultat de l''autoliquidacio incloent el 1r fraccionament.
+                Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj6c9l:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: resultat de l''autoliquidacio incloent el 1r fraccionament.
+                Bizkaia'
+            x-agp34c1h6oo30c1q60pj6c9m:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: resultat de l''autoliquidacio incloent el 1r fraccionament.
+                Navarra'
+            x-agp34c1h6oo30c1q60pj6c9n:
+              label: 'Repartiment entre Administracions forals. Complementaria: resultat
+                de l''autoliquidacio incloent el 1r fraccionament de l''art. 19.1
+                LIS, procedent d''autoliquidacions anteriors corresponents al periode
+                impositiu 2024. Araba'
+            x-agp34c1h6oo30c1q60pj6c9o:
+              label: 'Repartiment entre Administracions forals. Complementaria: resultat
+                de l''autoliquidacio incloent el 1r fraccionament de l''art. 19.1
+                LIS, procedent d''autoliquidacions anteriors corresponents al periode
+                impositiu 2024. Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj6c9p:
+              label: 'Repartiment entre Administracions forals. Complementaria: resultat
+                de l''autoliquidacio incloent el 1r fraccionament de l''art. 19.1
+                LIS, procedent d''autoliquidacions anteriors corresponents al periode
+                impositiu 2024. Bizkaia'
+            x-agp34c1h6oo30c1q60pj6chg:
+              label: 'Repartiment entre Administracions forals. Complementaria: resultat
+                de l''autoliquidacio incloent el 1r fraccionament de l''art. 19.1
+                LIS, procedent d''autoliquidacions anteriors corresponents al periode
+                impositiu 2024. Navarra'
+            x-agp34c1h6oo30c1q60pj6chh:
+              label: Repartiment entre Administracions forals. Liquid a ingressar
+                incloent el 1r fraccionament de l'art. 19.1 LIS. Araba
+            x-agp34c1h6oo30c1q60pj6chi:
+              label: Repartiment entre Administracions forals. Liquid a ingressar
+                incloent el 1r fraccionament de l'art. 19.1 LIS. Gipuzkoa
+            x-agp34c1h6oo30c1q60pj6chj:
+              label: Repartiment entre Administracions forals. Liquid a ingressar
+                incloent el 1r fraccionament de l'art. 19.1 LIS. Bizkaia
+            x-agp34c1h6oo30c1q60pj6chk:
+              label: Repartiment entre Administracions forals. Liquid a ingressar
+                incloent el 1r fraccionament de l'art. 19.1 LIS. Navarra
+            x-agp34c1h6oo30c1q60pj6e1p:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                R+D+i per insuficiencia de quota (opcio art. 39.2 LIS). Araba
+            x-agp34c1h6oo30c1q60pj6e9g:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                R+D+i per insuficiencia de quota (opcio art. 39.2 LIS). Gipuzkoa
+            x-agp34c1h6oo30c1q60pj6e9h:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                R+D+i per insuficiencia de quota (opcio art. 39.2 LIS). Bizkaia
+            x-agp34c1h6oo30c1q60pj6e9i:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                R+D+i per insuficiencia de quota (opcio art. 39.2 LIS). Navarra
+            x-agp34c1h6oo30c1q60pj6e9j:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                R+D+i per insuficiencia de quota (opcio art. 39.2 LIS). Total de territoris
+                forals
+            x-agp34c1h6oo30c1q60pj6e9k:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                per produccions cinematografiques estrangeres (art. 39.3 LIS). Araba
+            x-agp34c1h6oo30c1q60pj6e9l:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                per produccions cinematografiques estrangeres (art. 39.3 LIS). Gipuzkoa
+            x-agp34c1h6oo30c1q60pj6e9m:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                per produccions cinematografiques estrangeres (art. 39.3 LIS). Bizkaia
+            x-agp34c1h6oo30c1q60pj6e9n:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                per produccions cinematografiques estrangeres (art. 39.3 LIS). Navarra
+            x-agp34c1h6oo30c1q60pj6e9o:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                per produccions cinematografiques estrangeres (art. 39.3 LIS). Total
+                de territoris forals
+            x-agp34c1h6oo30c9q60p32dpj:
+              label: 'Repartiment entre Administracions forals. Complementaria: devolucio
+                acordada o compensada. Gipuzkoa'
+            x-agp34c1h6oo30c9q60p32dpk:
+              label: 'Repartiment entre Administracions forals. Complementaria: devolucio
+                acordada o compensada. Bizkaia'
+            x-agp34c1h6oo30c9q60p32dpl:
+              label: 'Repartiment entre Administracions forals. Complementaria: devolucio
+                acordada o compensada. Navarra'
+            x-agp34c1h6oo30c9q60p32dpm:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: abonament. Araba'
+            x-agp34c1h6oo30c9q60p32dpn:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: abonament. Gipuzkoa'
+            x-agp34c1h6oo30c9q60p32dpo:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: abonament. Bizkaia'
+            x-agp34c1h6oo30c9q60p32dpp:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: abonament. Navarra'
+            x-agp34c1h6oo30c9q60p32e1g:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: compensacio. Araba'
+            x-agp34c1h6oo30c9q60p32e1h:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: compensacio. Gipuzkoa'
+            x-agp34c1h6oo30c9q60p32e1i:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: compensacio. Bizkaia'
+            x-agp34c1h6oo30c9q60p32e1j:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: compensacio. Navarra'
+            x-agp34c1h6oo30c9q60p32e1k:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: a ingressar. Araba'
+            x-agp34c1h6oo30c9q60p32e1l:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: a ingressar. Gipuzkoa'
+            x-agp34c1h6oo30c9q60p32e1m:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: a ingressar. Bizkaia'
+            x-agp34c1h6oo30c9q60p32e1n:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: a ingressar. Navarra'
+            x-agp34c1h6oo30c9q60p3gc1k:
+              label: 'Repartiment entre Administracions forals. Complementaria: devolucio
+                acordada o compensada. Total de territoris forals'
+            x-agp34c1h6oo30c9q60p3gc1n:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: abonament. Total de territoris forals'
+            x-agp34c1h6oo30c9q60p3gc9g:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: compensacio. Total de territoris
+                forals'
+            x-agp34c1h6oo30c9q60p3gc9j:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: a ingressar. Total de territoris
+                forals'
+            x-agp34c1h6oo30c9q60pj6chl:
+              label: 'Repartiment entre Administracions forals. Complementaria: devolucio
+                acordada o compensada. Araba'
+            x-agp34c1h6oo30c9q60pj6dhi:
+              label: Repartiment entre Administracions forals. Abonament per conversio
+                d'actius per impost diferit. Total de territoris forals
+            x-agp34c1h6oo30c9q60pj6dhk:
+              label: Repartiment entre Administracions forals. Compensacio per conversio
+                d'actius per impost diferit. Total de territoris forals
+            x-agp34c1h6oo30c9q60pj6dpj:
+              label: Repartiment entre Administracions forals. Abonament per conversio
+                d'actius per impost diferit. Araba
+            x-agp34c1h6oo30c9q60pj6dpk:
+              label: Repartiment entre Administracions forals. Abonament per conversio
+                d'actius per impost diferit. Gipuzkoa
+            x-agp34c1h6oo30c9q60pj6dpl:
+              label: Repartiment entre Administracions forals. Abonament per conversio
+                d'actius per impost diferit. Bizkaia
+            x-agp34c1h6oo30c9q60pj6dpm:
+              label: Repartiment entre Administracions forals. Abonament per conversio
+                d'actius per impost diferit. Navarra
+            x-agp34c1h6oo30c9q60pj6dpn:
+              label: Repartiment entre Administracions forals. Compensacio per conversio
+                d'actius per impost diferit. Araba
+            x-agp34c1h6oo30c9q60pj6dpo:
+              label: Repartiment entre Administracions forals. Compensacio per conversio
+                d'actius per impost diferit. Gipuzkoa
+            x-agp34c1h6oo30c9q60pj6dpp:
+              label: Repartiment entre Administracions forals. Compensacio per conversio
+                d'actius per impost diferit. Bizkaia
+            x-agp34c1h6oo30c9q60pj6e1g:
+              label: Repartiment entre Administracions forals. Compensacio per conversio
+                d'actius per impost diferit. Navarra
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0c8:
               label: Activitats del grup. Epigraf CNAE de l'activitat 1
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0cg:

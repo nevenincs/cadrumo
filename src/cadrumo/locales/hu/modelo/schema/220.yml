@@ -2906,6 +2906,472 @@ modelo:
               label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. belfoldi kettos
                 adoztatas, korabbi idoszakok. 2022. evi kettos adoztatas. jovobeli
                 idoszakokban ervenyesitheto (rekord T22012B20)
+            x-agp34c1h6oo30c1q60o30d9i:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Osszesen. Araba
+            x-agp34c1h6oo30c1q60o30d9j:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Osszesen. Gipuzkoa
+            x-agp34c1h6oo30c1q60o30d9k:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Osszesen. Bizkaia
+            x-agp34c1h6oo30c1q60o30d9l:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Osszesen. Navarra
+            x-agp34c1h6oo30c1q60o30d9m:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Osszesen. Kozos
+                terulet
+            x-agp34c1h6oo30c1q60o38c1i:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetesek.
+                1. reszletfizetes. Araba
+            x-agp34c1h6oo30c1q60o38chg:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Az uzleti ev
+                fizetendo vagy visszajaro adoja. Araba
+            x-agp34c1h6oo30c1q60o38chh:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Az uzleti ev
+                fizetendo vagy visszajaro adoja. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38chm:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Az uzleti ev
+                fizetendo vagy visszajaro adoja. Bizkaia
+            x-agp34c1h6oo30c1q60o38chn:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Az uzleti ev
+                fizetendo vagy visszajaro adoja. Navarra
+            x-agp34c1h6oo30c1q60o38d1i:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetesek.
+                1. reszletfizetes. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38d1j:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetesek.
+                1. reszletfizetes. Bizkaia
+            x-agp34c1h6oo30c1q60o38d1k:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetesek.
+                1. reszletfizetes. Navarra
+            x-agp34c1h6oo30c1q60o38d1l:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetesek.
+                2. reszletfizetes. Araba
+            x-agp34c1h6oo30c1q60o38d1m:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetesek.
+                2. reszletfizetes. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38d1n:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetesek.
+                2. reszletfizetes. Bizkaia
+            x-agp34c1h6oo30c1q60o38d1o:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetesek.
+                2. reszletfizetes. Navarra
+            x-agp34c1h6oo30c1q60o38d1p:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetesek.
+                3. reszletfizetes. Araba
+            x-agp34c1h6oo30c1q60o38d9g:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetesek.
+                3. reszletfizetes. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38d9h:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetesek.
+                3. reszletfizetes. Bizkaia
+            x-agp34c1h6oo30c1q60o38dhl:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetesek.
+                3. reszletfizetes. Navarra
+            x-agp34c1h6oo30c1q60o38dpk:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Kulonbozeti
+                adotartozas. Araba
+            x-agp34c1h6oo30c1q60o38dpl:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Kulonbozeti
+                adotartozas. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38dpm:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Kulonbozeti
+                adotartozas. Bizkaia
+            x-agp34c1h6oo30c1q60o38dpn:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Kulonbozeti
+                adotartozas. Navarra
+            x-agp34c1h6oo30c1q60o38e1i:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Korabbi idoszaki
+                adokedvezmenyek elvesztese miatti novekmeny. Araba
+            x-agp34c1h6oo30c1q60o38e1j:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Korabbi idoszaki
+                adokedvezmenyek elvesztese miatti novekmeny. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38e1k:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Korabbi idoszaki
+                adokedvezmenyek elvesztese miatti novekmeny. Bizkaia
+            x-agp34c1h6oo30c1q60o38e1l:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Korabbi idoszaki
+                adokedvezmenyek elvesztese miatti novekmeny. Navarra
+            x-agp34c1h6oo30c1q60o38e1m:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Kesedelmi kamat.
+                Araba
+            x-agp34c1h6oo30c1q60o38e1n:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Kesedelmi kamat.
+                Gipuzkoa
+            x-agp34c1h6oo30c1q60o38e1o:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Kesedelmi kamat.
+                Bizkaia
+            x-agp34c1h6oo30c1q60o38e1p:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Kesedelmi kamat.
+                Navarra
+            x-agp34c1h6oo30c1q60o38e9k:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Fizetendo vagy
+                visszajaro nettó osszeg. Araba
+            x-agp34c1h6oo30c1q60o38e9l:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Fizetendo vagy
+                visszajaro nettó osszeg. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38e9m:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Fizetendo vagy
+                visszajaro nettó osszeg. Bizkaia
+            x-agp34c1h6oo30c1q60o38e9n:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Fizetendo vagy
+                visszajaro nettó osszeg. Navarra
+            x-agp34c1h6oo30c1q60o3cc1g:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Az uzleti ev
+                fizetendo vagy visszajaro adoja. A kulon jogallasu teruletek osszesen
+            x-agp34c1h6oo30c1q60o3cc1i:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetesek.
+                1. reszletfizetes. A kulon jogallasu teruletek osszesen
+            x-agp34c1h6oo30c1q60o3cc1k:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetesek.
+                2. reszletfizetes. A kulon jogallasu teruletek osszesen
+            x-agp34c1h6oo30c1q60o3cc1m:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetesek.
+                3. reszletfizetes. A kulon jogallasu teruletek osszesen
+            x-agp34c1h6oo30c1q60o3cc9i:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Kulonbozeti
+                adotartozas. A kulon jogallasu teruletek osszesen
+            x-agp34c1h6oo30c1q60o3cc9m:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Korabbi idoszaki
+                adokedvezmenyek elvesztese miatti novekmeny. A kulon jogallasu teruletek
+                osszesen
+            x-agp34c1h6oo30c1q60o3cc9o:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Kesedelmi kamat.
+                A kulon jogallasu teruletek osszesen
+            x-agp34c1h6oo30c1q60o3cchi:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Fizetendo vagy
+                visszajaro nettó osszeg. A kulon jogallasu teruletek osszesen
+            x-agp34c1h6oo30c1q60o3cchl:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Adozasi szazalekok.
+                Kozos terulet
+            x-agp34c1h6oo30c1q60o3cchm:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Adozasi szazalekok.
+                Araba
+            x-agp34c1h6oo30c1q60o3cchn:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Adozasi szazalekok.
+                Gipuzkoa
+            x-agp34c1h6oo30c1q60o3ccho:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Adozasi szazalekok.
+                Bizkaia
+            x-agp34c1h6oo30c1q60o3cchp:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Adozasi szazalekok.
+                Navarra
+            x-agp34c1h6oo30c1q60ojccpi:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Kulfoldi filmgyartasi
+                levonasok kifizetese a Kanari-szigeteken (LIS 39.3. cikk es a 19/1994.
+                torveny 14. kiegeszito rendelkezese). A kulon jogallasu teruletek
+                osszesen
+            x-agp34c1h6oo30c1q60p30dhm:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Kulfoldi filmgyartasi
+                levonasok kifizetese a Kanari-szigeteken (LIS 39.3. cikk es a 19/1994.
+                torveny 14. kiegeszito rendelkezese). Araba
+            x-agp34c1h6oo30c1q60p30dhn:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Kulfoldi filmgyartasi
+                levonasok kifizetese a Kanari-szigeteken (LIS 39.3. cikk es a 19/1994.
+                torveny 14. kiegeszito rendelkezese). Gipuzkoa
+            x-agp34c1h6oo30c1q60p30dho:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Kulfoldi filmgyartasi
+                levonasok kifizetese a Kanari-szigeteken (LIS 39.3. cikk es a 19/1994.
+                torveny 14. kiegeszito rendelkezese). Bizkaia
+            x-agp34c1h6oo30c1q60p30dhp:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Kulfoldi filmgyartasi
+                levonasok kifizetese a Kanari-szigeteken (LIS 39.3. cikk es a 19/1994.
+                torveny 14. kiegeszito rendelkezese). Navarra
+            x-agp34c1h6oo30c1q60p3acpp:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Az onadozas
+                eredmenye. A kulon jogallasu teruletek osszesen
+            x-agp34c1h6oo30c1q60p3ad1h:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Kiegeszito:
+                a 2024. adozasi idoszak korabbi onadozasaibol fizetendo osszegek.
+                A kulon jogallasu teruletek osszesen'
+            x-agp34c1h6oo30c1q60p3ee1p:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Kiegeszito:
+                a 2024. adozasi idoszakra vonatkozo korabbi onadozasokbol megitelt
+                visszateritesek. A kulon jogallasu teruletek osszesen'
+            x-agp34c1h6oo30c1q60p3ee9h:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetes
+                valasztasa a LIS 19.1. cikk szerint: az adoalapba beszamitott osszeg.
+                A kulon jogallasu teruletek osszesen'
+            x-agp34c1h6oo30c1q60p3ee9j:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetes
+                valasztasa a LIS 19.1. cikk szerint: a reszletfizetesbol eredo adotartozas.
+                A kulon jogallasu teruletek osszesen'
+            x-agp34c1h6oo30c1q60p3ee9l:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetes
+                valasztasa a LIS 19.1. cikk szerint: elso reszlet. A kulon jogallasu
+                teruletek osszesen'
+            x-agp34c1h6oo30c1q60p3ee9n:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetes
+                valasztasa a LIS 19.1. cikk szerint: az onadozas eredmenye az elso
+                reszlettel egyutt. A kulon jogallasu teruletek osszesen'
+            x-agp34c1h6oo30c1q60p3ee9p:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Kiegeszito:
+                az onadozas eredmenye a LIS 19.1. cikk szerinti elso reszlettel egyutt,
+                a 2024. adozasi idoszak korabbi onadozasaibol. otodik oszlop, a tervben
+                meg nem nevezett terulet'
+            x-agp34c1h6oo30c1q60p3gc1h:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Fizetendo nettó
+                osszeg a LIS 19.1. cikk szerinti elso reszlettel egyutt. otodik oszlop,
+                a tervben meg nem nevezett terulet
+            x-agp34c1h6oo30c1q60pj2e9i:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Az onadozas
+                eredmenye. Araba
+            x-agp34c1h6oo30c1q60pj2e9j:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Az onadozas
+                eredmenye. Gipuzkoa
+            x-agp34c1h6oo30c1q60pj2e9k:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Az onadozas
+                eredmenye. Bizkaia
+            x-agp34c1h6oo30c1q60pj2e9l:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Az onadozas
+                eredmenye. Navarra
+            x-agp34c1h6oo30c1q60pj4e9j:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Kiegeszito:
+                a 2024. adozasi idoszak korabbi onadozasaibol fizetendo osszegek.
+                Araba'
+            x-agp34c1h6oo30c1q60pj4e9k:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Kiegeszito:
+                a 2024. adozasi idoszak korabbi onadozasaibol fizetendo osszegek.
+                Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj4e9l:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Kiegeszito:
+                a 2024. adozasi idoszak korabbi onadozasaibol fizetendo osszegek.
+                Bizkaia'
+            x-agp34c1h6oo30c1q60pj4e9m:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Kiegeszito:
+                a 2024. adozasi idoszak korabbi onadozasaibol fizetendo osszegek.
+                Navarra'
+            x-agp34c1h6oo30c1q60pj4e9n:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Kiegeszito:
+                a 2024. adozasi idoszakra vonatkozo korabbi onadozasokbol megitelt
+                visszateritesek. Araba'
+            x-agp34c1h6oo30c1q60pj4e9o:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Kiegeszito:
+                a 2024. adozasi idoszakra vonatkozo korabbi onadozasokbol megitelt
+                visszateritesek. Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj4e9p:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Kiegeszito:
+                a 2024. adozasi idoszakra vonatkozo korabbi onadozasokbol megitelt
+                visszateritesek. Bizkaia'
+            x-agp34c1h6oo30c1q60pj6c1g:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Kiegeszito:
+                a 2024. adozasi idoszakra vonatkozo korabbi onadozasokbol megitelt
+                visszateritesek. Navarra'
+            x-agp34c1h6oo30c1q60pj6c1h:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetes
+                valasztasa a LIS 19.1. cikk szerint: az adoalapba beszamitott osszeg.
+                Araba'
+            x-agp34c1h6oo30c1q60pj6c1i:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetes
+                valasztasa a LIS 19.1. cikk szerint: az adoalapba beszamitott osszeg.
+                Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj6c1j:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetes
+                valasztasa a LIS 19.1. cikk szerint: az adoalapba beszamitott osszeg.
+                Bizkaia'
+            x-agp34c1h6oo30c1q60pj6c1k:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetes
+                valasztasa a LIS 19.1. cikk szerint: az adoalapba beszamitott osszeg.
+                Navarra'
+            x-agp34c1h6oo30c1q60pj6c1l:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetes
+                valasztasa a LIS 19.1. cikk szerint: a reszletfizetesbol eredo adotartozas.
+                Araba'
+            x-agp34c1h6oo30c1q60pj6c1m:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetes
+                valasztasa a LIS 19.1. cikk szerint: a reszletfizetesbol eredo adotartozas.
+                Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj6c1n:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetes
+                valasztasa a LIS 19.1. cikk szerint: a reszletfizetesbol eredo adotartozas.
+                Bizkaia'
+            x-agp34c1h6oo30c1q60pj6c1o:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetes
+                valasztasa a LIS 19.1. cikk szerint: a reszletfizetesbol eredo adotartozas.
+                Navarra'
+            x-agp34c1h6oo30c1q60pj6c1p:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetes
+                valasztasa a LIS 19.1. cikk szerint: elso reszlet. Araba'
+            x-agp34c1h6oo30c1q60pj6c9g:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetes
+                valasztasa a LIS 19.1. cikk szerint: elso reszlet. Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj6c9h:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetes
+                valasztasa a LIS 19.1. cikk szerint: elso reszlet. Bizkaia'
+            x-agp34c1h6oo30c1q60pj6c9i:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetes
+                valasztasa a LIS 19.1. cikk szerint: elso reszlet. Navarra'
+            x-agp34c1h6oo30c1q60pj6c9j:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetes
+                valasztasa a LIS 19.1. cikk szerint: az onadozas eredmenye az elso
+                reszlettel egyutt. Araba'
+            x-agp34c1h6oo30c1q60pj6c9k:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetes
+                valasztasa a LIS 19.1. cikk szerint: az onadozas eredmenye az elso
+                reszlettel egyutt. Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj6c9l:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetes
+                valasztasa a LIS 19.1. cikk szerint: az onadozas eredmenye az elso
+                reszlettel egyutt. Bizkaia'
+            x-agp34c1h6oo30c1q60pj6c9m:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Reszletfizetes
+                valasztasa a LIS 19.1. cikk szerint: az onadozas eredmenye az elso
+                reszlettel egyutt. Navarra'
+            x-agp34c1h6oo30c1q60pj6c9n:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Kiegeszito:
+                az onadozas eredmenye a LIS 19.1. cikk szerinti elso reszlettel egyutt,
+                a 2024. adozasi idoszak korabbi onadozasaibol. Araba'
+            x-agp34c1h6oo30c1q60pj6c9o:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Kiegeszito:
+                az onadozas eredmenye a LIS 19.1. cikk szerinti elso reszlettel egyutt,
+                a 2024. adozasi idoszak korabbi onadozasaibol. Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj6c9p:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Kiegeszito:
+                az onadozas eredmenye a LIS 19.1. cikk szerinti elso reszlettel egyutt,
+                a 2024. adozasi idoszak korabbi onadozasaibol. Bizkaia'
+            x-agp34c1h6oo30c1q60pj6chg:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Kiegeszito:
+                az onadozas eredmenye a LIS 19.1. cikk szerinti elso reszlettel egyutt,
+                a 2024. adozasi idoszak korabbi onadozasaibol. Navarra'
+            x-agp34c1h6oo30c1q60pj6chh:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Fizetendo nettó
+                osszeg a LIS 19.1. cikk szerinti elso reszlettel egyutt. Araba
+            x-agp34c1h6oo30c1q60pj6chi:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Fizetendo nettó
+                osszeg a LIS 19.1. cikk szerinti elso reszlettel egyutt. Gipuzkoa
+            x-agp34c1h6oo30c1q60pj6chj:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Fizetendo nettó
+                osszeg a LIS 19.1. cikk szerinti elso reszlettel egyutt. Bizkaia
+            x-agp34c1h6oo30c1q60pj6chk:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Fizetendo nettó
+                osszeg a LIS 19.1. cikk szerinti elso reszlettel egyutt. Navarra
+            x-agp34c1h6oo30c1q60pj6e1p:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. K+F+I levonasok
+                kifizetese elegtelen adotartozas miatt (LIS 39.2. cikk szerinti valasztas).
+                Araba
+            x-agp34c1h6oo30c1q60pj6e9g:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. K+F+I levonasok
+                kifizetese elegtelen adotartozas miatt (LIS 39.2. cikk szerinti valasztas).
+                Gipuzkoa
+            x-agp34c1h6oo30c1q60pj6e9h:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. K+F+I levonasok
+                kifizetese elegtelen adotartozas miatt (LIS 39.2. cikk szerinti valasztas).
+                Bizkaia
+            x-agp34c1h6oo30c1q60pj6e9i:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. K+F+I levonasok
+                kifizetese elegtelen adotartozas miatt (LIS 39.2. cikk szerinti valasztas).
+                Navarra
+            x-agp34c1h6oo30c1q60pj6e9j:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. K+F+I levonasok
+                kifizetese elegtelen adotartozas miatt (LIS 39.2. cikk szerinti valasztas).
+                A kulon jogallasu teruletek osszesen
+            x-agp34c1h6oo30c1q60pj6e9k:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Kulfoldi filmgyartasi
+                levonasok kifizetese (LIS 39.3. cikk). Araba
+            x-agp34c1h6oo30c1q60pj6e9l:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Kulfoldi filmgyartasi
+                levonasok kifizetese (LIS 39.3. cikk). Gipuzkoa
+            x-agp34c1h6oo30c1q60pj6e9m:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Kulfoldi filmgyartasi
+                levonasok kifizetese (LIS 39.3. cikk). Bizkaia
+            x-agp34c1h6oo30c1q60pj6e9n:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Kulfoldi filmgyartasi
+                levonasok kifizetese (LIS 39.3. cikk). Navarra
+            x-agp34c1h6oo30c1q60pj6e9o:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Kulfoldi filmgyartasi
+                levonasok kifizetese (LIS 39.3. cikk). A kulon jogallasu teruletek
+                osszesen
+            x-agp34c1h6oo30c9q60p32dpj:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Kiegeszito:
+                megitelt vagy beszamitott visszaterites. Gipuzkoa'
+            x-agp34c1h6oo30c9q60p32dpk:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Kiegeszito:
+                megitelt vagy beszamitott visszaterites. Bizkaia'
+            x-agp34c1h6oo30c9q60p32dpl:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Kiegeszito:
+                megitelt vagy beszamitott visszaterites. Navarra'
+            x-agp34c1h6oo30c9q60p32dpm:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. A halasztott
+                adokoveteles atvaltasanak eredmenye korrekcio utan: kifizetes. Araba'
+            x-agp34c1h6oo30c9q60p32dpn:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. A halasztott
+                adokoveteles atvaltasanak eredmenye korrekcio utan: kifizetes. Gipuzkoa'
+            x-agp34c1h6oo30c9q60p32dpo:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. A halasztott
+                adokoveteles atvaltasanak eredmenye korrekcio utan: kifizetes. Bizkaia'
+            x-agp34c1h6oo30c9q60p32dpp:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. A halasztott
+                adokoveteles atvaltasanak eredmenye korrekcio utan: kifizetes. Navarra'
+            x-agp34c1h6oo30c9q60p32e1g:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. A halasztott
+                adokoveteles atvaltasanak eredmenye korrekcio utan: beszamitas. Araba'
+            x-agp34c1h6oo30c9q60p32e1h:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. A halasztott
+                adokoveteles atvaltasanak eredmenye korrekcio utan: beszamitas. Gipuzkoa'
+            x-agp34c1h6oo30c9q60p32e1i:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. A halasztott
+                adokoveteles atvaltasanak eredmenye korrekcio utan: beszamitas. Bizkaia'
+            x-agp34c1h6oo30c9q60p32e1j:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. A halasztott
+                adokoveteles atvaltasanak eredmenye korrekcio utan: beszamitas. Navarra'
+            x-agp34c1h6oo30c9q60p32e1k:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. A halasztott
+                adokoveteles atvaltasanak eredmenye korrekcio utan: fizetendo. Araba'
+            x-agp34c1h6oo30c9q60p32e1l:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. A halasztott
+                adokoveteles atvaltasanak eredmenye korrekcio utan: fizetendo. Gipuzkoa'
+            x-agp34c1h6oo30c9q60p32e1m:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. A halasztott
+                adokoveteles atvaltasanak eredmenye korrekcio utan: fizetendo. Bizkaia'
+            x-agp34c1h6oo30c9q60p32e1n:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. A halasztott
+                adokoveteles atvaltasanak eredmenye korrekcio utan: fizetendo. Navarra'
+            x-agp34c1h6oo30c9q60p3gc1k:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Kiegeszito:
+                megitelt vagy beszamitott visszaterites. A kulon jogallasu teruletek
+                osszesen'
+            x-agp34c1h6oo30c9q60p3gc1n:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. A halasztott
+                adokoveteles atvaltasanak eredmenye korrekcio utan: kifizetes. A kulon
+                jogallasu teruletek osszesen'
+            x-agp34c1h6oo30c9q60p3gc9g:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. A halasztott
+                adokoveteles atvaltasanak eredmenye korrekcio utan: beszamitas. A
+                kulon jogallasu teruletek osszesen'
+            x-agp34c1h6oo30c9q60p3gc9j:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. A halasztott
+                adokoveteles atvaltasanak eredmenye korrekcio utan: fizetendo. A kulon
+                jogallasu teruletek osszesen'
+            x-agp34c1h6oo30c9q60pj6chl:
+              label: 'Felosztas a kulon jogallasu adohatosagok kozott. Kiegeszito:
+                megitelt vagy beszamitott visszaterites. Araba'
+            x-agp34c1h6oo30c9q60pj6dhi:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Halasztott adokovetelesek
+                atvaltasabol szarmazo kifizetes. A kulon jogallasu teruletek osszesen
+            x-agp34c1h6oo30c9q60pj6dhk:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Halasztott adokovetelesek
+                atvaltasabol szarmazo beszamitas. A kulon jogallasu teruletek osszesen
+            x-agp34c1h6oo30c9q60pj6dpj:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Halasztott adokovetelesek
+                atvaltasabol szarmazo kifizetes. Araba
+            x-agp34c1h6oo30c9q60pj6dpk:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Halasztott adokovetelesek
+                atvaltasabol szarmazo kifizetes. Gipuzkoa
+            x-agp34c1h6oo30c9q60pj6dpl:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Halasztott adokovetelesek
+                atvaltasabol szarmazo kifizetes. Bizkaia
+            x-agp34c1h6oo30c9q60pj6dpm:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Halasztott adokovetelesek
+                atvaltasabol szarmazo kifizetes. Navarra
+            x-agp34c1h6oo30c9q60pj6dpn:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Halasztott adokovetelesek
+                atvaltasabol szarmazo beszamitas. Araba
+            x-agp34c1h6oo30c9q60pj6dpo:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Halasztott adokovetelesek
+                atvaltasabol szarmazo beszamitas. Gipuzkoa
+            x-agp34c1h6oo30c9q60pj6dpp:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Halasztott adokovetelesek
+                atvaltasabol szarmazo beszamitas. Bizkaia
+            x-agp34c1h6oo30c9q60pj6e1g:
+              label: Felosztas a kulon jogallasu adohatosagok kozott. Halasztott adokovetelesek
+                atvaltasabol szarmazo beszamitas. Navarra
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0c8:
               label: A csoport tevekenysegei. A(z) 1. tevekenyseg CNAE-kodja
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0cg:

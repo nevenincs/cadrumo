@@ -3045,6 +3045,470 @@ modelo:
               label: Deductions for international double taxation, LIS. internal double
                 taxation, prior periods. double taxation of 2022. outstanding for
                 application in future periods (record T22012B20)
+            x-agp34c1h6oo30c1q60o30d9i:
+              label: Allocation between chartered tax administrations. Total. Araba
+            x-agp34c1h6oo30c1q60o30d9j:
+              label: Allocation between chartered tax administrations. Total. Gipuzkoa
+            x-agp34c1h6oo30c1q60o30d9k:
+              label: Allocation between chartered tax administrations. Total. Bizkaia
+            x-agp34c1h6oo30c1q60o30d9l:
+              label: Allocation between chartered tax administrations. Total. Navarre
+            x-agp34c1h6oo30c1q60o30d9m:
+              label: Allocation between chartered tax administrations. Total. Common
+                territory
+            x-agp34c1h6oo30c1q60o38c1i:
+              label: Allocation between chartered tax administrations. Instalment
+                payments. instalment payment 1. Araba
+            x-agp34c1h6oo30c1q60o38chg:
+              label: Allocation between chartered tax administrations. Tax liability
+                for the year, payable or refundable. Araba
+            x-agp34c1h6oo30c1q60o38chh:
+              label: Allocation between chartered tax administrations. Tax liability
+                for the year, payable or refundable. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38chm:
+              label: Allocation between chartered tax administrations. Tax liability
+                for the year, payable or refundable. Bizkaia
+            x-agp34c1h6oo30c1q60o38chn:
+              label: Allocation between chartered tax administrations. Tax liability
+                for the year, payable or refundable. Navarre
+            x-agp34c1h6oo30c1q60o38d1i:
+              label: Allocation between chartered tax administrations. Instalment
+                payments. instalment payment 1. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38d1j:
+              label: Allocation between chartered tax administrations. Instalment
+                payments. instalment payment 1. Bizkaia
+            x-agp34c1h6oo30c1q60o38d1k:
+              label: Allocation between chartered tax administrations. Instalment
+                payments. instalment payment 1. Navarre
+            x-agp34c1h6oo30c1q60o38d1l:
+              label: Allocation between chartered tax administrations. Instalment
+                payments. instalment payment 2. Araba
+            x-agp34c1h6oo30c1q60o38d1m:
+              label: Allocation between chartered tax administrations. Instalment
+                payments. instalment payment 2. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38d1n:
+              label: Allocation between chartered tax administrations. Instalment
+                payments. instalment payment 2. Bizkaia
+            x-agp34c1h6oo30c1q60o38d1o:
+              label: Allocation between chartered tax administrations. Instalment
+                payments. instalment payment 2. Navarre
+            x-agp34c1h6oo30c1q60o38d1p:
+              label: Allocation between chartered tax administrations. Instalment
+                payments. instalment payment 3. Araba
+            x-agp34c1h6oo30c1q60o38d9g:
+              label: Allocation between chartered tax administrations. Instalment
+                payments. instalment payment 3. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38d9h:
+              label: Allocation between chartered tax administrations. Instalment
+                payments. instalment payment 3. Bizkaia
+            x-agp34c1h6oo30c1q60o38dhl:
+              label: Allocation between chartered tax administrations. Instalment
+                payments. instalment payment 3. Navarre
+            x-agp34c1h6oo30c1q60o38dpk:
+              label: Allocation between chartered tax administrations. Differential
+                tax liability. Araba
+            x-agp34c1h6oo30c1q60o38dpl:
+              label: Allocation between chartered tax administrations. Differential
+                tax liability. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38dpm:
+              label: Allocation between chartered tax administrations. Differential
+                tax liability. Bizkaia
+            x-agp34c1h6oo30c1q60o38dpn:
+              label: Allocation between chartered tax administrations. Differential
+                tax liability. Navarre
+            x-agp34c1h6oo30c1q60o38e1i:
+              label: Allocation between chartered tax administrations. Increase for
+                loss of tax benefits from prior periods. Araba
+            x-agp34c1h6oo30c1q60o38e1j:
+              label: Allocation between chartered tax administrations. Increase for
+                loss of tax benefits from prior periods. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38e1k:
+              label: Allocation between chartered tax administrations. Increase for
+                loss of tax benefits from prior periods. Bizkaia
+            x-agp34c1h6oo30c1q60o38e1l:
+              label: Allocation between chartered tax administrations. Increase for
+                loss of tax benefits from prior periods. Navarre
+            x-agp34c1h6oo30c1q60o38e1m:
+              label: Allocation between chartered tax administrations. Late-payment
+                interest. Araba
+            x-agp34c1h6oo30c1q60o38e1n:
+              label: Allocation between chartered tax administrations. Late-payment
+                interest. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38e1o:
+              label: Allocation between chartered tax administrations. Late-payment
+                interest. Bizkaia
+            x-agp34c1h6oo30c1q60o38e1p:
+              label: Allocation between chartered tax administrations. Late-payment
+                interest. Navarre
+            x-agp34c1h6oo30c1q60o38e9k:
+              label: Allocation between chartered tax administrations. Net amount
+                payable or refundable. Araba
+            x-agp34c1h6oo30c1q60o38e9l:
+              label: Allocation between chartered tax administrations. Net amount
+                payable or refundable. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38e9m:
+              label: Allocation between chartered tax administrations. Net amount
+                payable or refundable. Bizkaia
+            x-agp34c1h6oo30c1q60o38e9n:
+              label: Allocation between chartered tax administrations. Net amount
+                payable or refundable. Navarre
+            x-agp34c1h6oo30c1q60o3cc1g:
+              label: Allocation between chartered tax administrations. Tax liability
+                for the year, payable or refundable. Total of the chartered territories
+            x-agp34c1h6oo30c1q60o3cc1i:
+              label: Allocation between chartered tax administrations. Instalment
+                payments. instalment payment 1. Total of the chartered territories
+            x-agp34c1h6oo30c1q60o3cc1k:
+              label: Allocation between chartered tax administrations. Instalment
+                payments. instalment payment 2. Total of the chartered territories
+            x-agp34c1h6oo30c1q60o3cc1m:
+              label: Allocation between chartered tax administrations. Instalment
+                payments. instalment payment 3. Total of the chartered territories
+            x-agp34c1h6oo30c1q60o3cc9i:
+              label: Allocation between chartered tax administrations. Differential
+                tax liability. Total of the chartered territories
+            x-agp34c1h6oo30c1q60o3cc9m:
+              label: Allocation between chartered tax administrations. Increase for
+                loss of tax benefits from prior periods. Total of the chartered territories
+            x-agp34c1h6oo30c1q60o3cc9o:
+              label: Allocation between chartered tax administrations. Late-payment
+                interest. Total of the chartered territories
+            x-agp34c1h6oo30c1q60o3cchi:
+              label: Allocation between chartered tax administrations. Net amount
+                payable or refundable. Total of the chartered territories
+            x-agp34c1h6oo30c1q60o3cchl:
+              label: Allocation between chartered tax administrations. Taxation percentages.
+                Common territory
+            x-agp34c1h6oo30c1q60o3cchm:
+              label: Allocation between chartered tax administrations. Taxation percentages.
+                Araba
+            x-agp34c1h6oo30c1q60o3cchn:
+              label: Allocation between chartered tax administrations. Taxation percentages.
+                Gipuzkoa
+            x-agp34c1h6oo30c1q60o3ccho:
+              label: Allocation between chartered tax administrations. Taxation percentages.
+                Bizkaia
+            x-agp34c1h6oo30c1q60o3cchp:
+              label: Allocation between chartered tax administrations. Taxation percentages.
+                Navarre
+            x-agp34c1h6oo30c1q60ojccpi:
+              label: Allocation between chartered tax administrations. Payment of
+                deductions for foreign film productions in the Canary Islands (art.
+                39.3 LIS and 14th additional provision, Law 19/1994). Total of the
+                chartered territories
+            x-agp34c1h6oo30c1q60p30dhm:
+              label: Allocation between chartered tax administrations. Payment of
+                deductions for foreign film productions in the Canary Islands (art.
+                39.3 LIS and 14th additional provision, Law 19/1994). Araba
+            x-agp34c1h6oo30c1q60p30dhn:
+              label: Allocation between chartered tax administrations. Payment of
+                deductions for foreign film productions in the Canary Islands (art.
+                39.3 LIS and 14th additional provision, Law 19/1994). Gipuzkoa
+            x-agp34c1h6oo30c1q60p30dho:
+              label: Allocation between chartered tax administrations. Payment of
+                deductions for foreign film productions in the Canary Islands (art.
+                39.3 LIS and 14th additional provision, Law 19/1994). Bizkaia
+            x-agp34c1h6oo30c1q60p30dhp:
+              label: Allocation between chartered tax administrations. Payment of
+                deductions for foreign film productions in the Canary Islands (art.
+                39.3 LIS and 14th additional provision, Law 19/1994). Navarre
+            x-agp34c1h6oo30c1q60p3acpp:
+              label: Allocation between chartered tax administrations. Self-assessment
+                result. Total of the chartered territories
+            x-agp34c1h6oo30c1q60p3ad1h:
+              label: 'Allocation between chartered tax administrations. Supplementary:
+                amounts payable from earlier self-assessments for tax period 2024.
+                Total of the chartered territories'
+            x-agp34c1h6oo30c1q60p3ee1p:
+              label: 'Allocation between chartered tax administrations. Supplementary:
+                refunds granted from earlier self-assessments for tax period 2024.
+                Total of the chartered territories'
+            x-agp34c1h6oo30c1q60p3ee9h:
+              label: 'Allocation between chartered tax administrations. Instalment
+                election under art. 19.1 LIS: amount included in the taxable base.
+                Total of the chartered territories'
+            x-agp34c1h6oo30c1q60p3ee9j:
+              label: 'Allocation between chartered tax administrations. Instalment
+                election under art. 19.1 LIS: tax debt resulting from the instalment.
+                Total of the chartered territories'
+            x-agp34c1h6oo30c1q60p3ee9l:
+              label: 'Allocation between chartered tax administrations. Instalment
+                election under art. 19.1 LIS: first instalment. Total of the chartered
+                territories'
+            x-agp34c1h6oo30c1q60p3ee9n:
+              label: 'Allocation between chartered tax administrations. Instalment
+                election under art. 19.1 LIS: self-assessment result including the
+                first instalment. Total of the chartered territories'
+            x-agp34c1h6oo30c1q60p3ee9p:
+              label: 'Allocation between chartered tax administrations. Supplementary:
+                self-assessment result including the first instalment of art. 19.1
+                LIS, from earlier self-assessments for tax period 2024. fifth column,
+                territory not named in the design'
+            x-agp34c1h6oo30c1q60p3gc1h:
+              label: Allocation between chartered tax administrations. Net amount
+                payable including the first instalment of art. 19.1 LIS. fifth column,
+                territory not named in the design
+            x-agp34c1h6oo30c1q60pj2e9i:
+              label: Allocation between chartered tax administrations. Self-assessment
+                result. Araba
+            x-agp34c1h6oo30c1q60pj2e9j:
+              label: Allocation between chartered tax administrations. Self-assessment
+                result. Gipuzkoa
+            x-agp34c1h6oo30c1q60pj2e9k:
+              label: Allocation between chartered tax administrations. Self-assessment
+                result. Bizkaia
+            x-agp34c1h6oo30c1q60pj2e9l:
+              label: Allocation between chartered tax administrations. Self-assessment
+                result. Navarre
+            x-agp34c1h6oo30c1q60pj4e9j:
+              label: 'Allocation between chartered tax administrations. Supplementary:
+                amounts payable from earlier self-assessments for tax period 2024.
+                Araba'
+            x-agp34c1h6oo30c1q60pj4e9k:
+              label: 'Allocation between chartered tax administrations. Supplementary:
+                amounts payable from earlier self-assessments for tax period 2024.
+                Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj4e9l:
+              label: 'Allocation between chartered tax administrations. Supplementary:
+                amounts payable from earlier self-assessments for tax period 2024.
+                Bizkaia'
+            x-agp34c1h6oo30c1q60pj4e9m:
+              label: 'Allocation between chartered tax administrations. Supplementary:
+                amounts payable from earlier self-assessments for tax period 2024.
+                Navarre'
+            x-agp34c1h6oo30c1q60pj4e9n:
+              label: 'Allocation between chartered tax administrations. Supplementary:
+                refunds granted from earlier self-assessments for tax period 2024.
+                Araba'
+            x-agp34c1h6oo30c1q60pj4e9o:
+              label: 'Allocation between chartered tax administrations. Supplementary:
+                refunds granted from earlier self-assessments for tax period 2024.
+                Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj4e9p:
+              label: 'Allocation between chartered tax administrations. Supplementary:
+                refunds granted from earlier self-assessments for tax period 2024.
+                Bizkaia'
+            x-agp34c1h6oo30c1q60pj6c1g:
+              label: 'Allocation between chartered tax administrations. Supplementary:
+                refunds granted from earlier self-assessments for tax period 2024.
+                Navarre'
+            x-agp34c1h6oo30c1q60pj6c1h:
+              label: 'Allocation between chartered tax administrations. Instalment
+                election under art. 19.1 LIS: amount included in the taxable base.
+                Araba'
+            x-agp34c1h6oo30c1q60pj6c1i:
+              label: 'Allocation between chartered tax administrations. Instalment
+                election under art. 19.1 LIS: amount included in the taxable base.
+                Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj6c1j:
+              label: 'Allocation between chartered tax administrations. Instalment
+                election under art. 19.1 LIS: amount included in the taxable base.
+                Bizkaia'
+            x-agp34c1h6oo30c1q60pj6c1k:
+              label: 'Allocation between chartered tax administrations. Instalment
+                election under art. 19.1 LIS: amount included in the taxable base.
+                Navarre'
+            x-agp34c1h6oo30c1q60pj6c1l:
+              label: 'Allocation between chartered tax administrations. Instalment
+                election under art. 19.1 LIS: tax debt resulting from the instalment.
+                Araba'
+            x-agp34c1h6oo30c1q60pj6c1m:
+              label: 'Allocation between chartered tax administrations. Instalment
+                election under art. 19.1 LIS: tax debt resulting from the instalment.
+                Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj6c1n:
+              label: 'Allocation between chartered tax administrations. Instalment
+                election under art. 19.1 LIS: tax debt resulting from the instalment.
+                Bizkaia'
+            x-agp34c1h6oo30c1q60pj6c1o:
+              label: 'Allocation between chartered tax administrations. Instalment
+                election under art. 19.1 LIS: tax debt resulting from the instalment.
+                Navarre'
+            x-agp34c1h6oo30c1q60pj6c1p:
+              label: 'Allocation between chartered tax administrations. Instalment
+                election under art. 19.1 LIS: first instalment. Araba'
+            x-agp34c1h6oo30c1q60pj6c9g:
+              label: 'Allocation between chartered tax administrations. Instalment
+                election under art. 19.1 LIS: first instalment. Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj6c9h:
+              label: 'Allocation between chartered tax administrations. Instalment
+                election under art. 19.1 LIS: first instalment. Bizkaia'
+            x-agp34c1h6oo30c1q60pj6c9i:
+              label: 'Allocation between chartered tax administrations. Instalment
+                election under art. 19.1 LIS: first instalment. Navarre'
+            x-agp34c1h6oo30c1q60pj6c9j:
+              label: 'Allocation between chartered tax administrations. Instalment
+                election under art. 19.1 LIS: self-assessment result including the
+                first instalment. Araba'
+            x-agp34c1h6oo30c1q60pj6c9k:
+              label: 'Allocation between chartered tax administrations. Instalment
+                election under art. 19.1 LIS: self-assessment result including the
+                first instalment. Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj6c9l:
+              label: 'Allocation between chartered tax administrations. Instalment
+                election under art. 19.1 LIS: self-assessment result including the
+                first instalment. Bizkaia'
+            x-agp34c1h6oo30c1q60pj6c9m:
+              label: 'Allocation between chartered tax administrations. Instalment
+                election under art. 19.1 LIS: self-assessment result including the
+                first instalment. Navarre'
+            x-agp34c1h6oo30c1q60pj6c9n:
+              label: 'Allocation between chartered tax administrations. Supplementary:
+                self-assessment result including the first instalment of art. 19.1
+                LIS, from earlier self-assessments for tax period 2024. Araba'
+            x-agp34c1h6oo30c1q60pj6c9o:
+              label: 'Allocation between chartered tax administrations. Supplementary:
+                self-assessment result including the first instalment of art. 19.1
+                LIS, from earlier self-assessments for tax period 2024. Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj6c9p:
+              label: 'Allocation between chartered tax administrations. Supplementary:
+                self-assessment result including the first instalment of art. 19.1
+                LIS, from earlier self-assessments for tax period 2024. Bizkaia'
+            x-agp34c1h6oo30c1q60pj6chg:
+              label: 'Allocation between chartered tax administrations. Supplementary:
+                self-assessment result including the first instalment of art. 19.1
+                LIS, from earlier self-assessments for tax period 2024. Navarre'
+            x-agp34c1h6oo30c1q60pj6chh:
+              label: Allocation between chartered tax administrations. Net amount
+                payable including the first instalment of art. 19.1 LIS. Araba
+            x-agp34c1h6oo30c1q60pj6chi:
+              label: Allocation between chartered tax administrations. Net amount
+                payable including the first instalment of art. 19.1 LIS. Gipuzkoa
+            x-agp34c1h6oo30c1q60pj6chj:
+              label: Allocation between chartered tax administrations. Net amount
+                payable including the first instalment of art. 19.1 LIS. Bizkaia
+            x-agp34c1h6oo30c1q60pj6chk:
+              label: Allocation between chartered tax administrations. Net amount
+                payable including the first instalment of art. 19.1 LIS. Navarre
+            x-agp34c1h6oo30c1q60pj6e1p:
+              label: Allocation between chartered tax administrations. Payment of
+                R&D&i deductions for insufficient tax liability (election art. 39.2
+                LIS). Araba
+            x-agp34c1h6oo30c1q60pj6e9g:
+              label: Allocation between chartered tax administrations. Payment of
+                R&D&i deductions for insufficient tax liability (election art. 39.2
+                LIS). Gipuzkoa
+            x-agp34c1h6oo30c1q60pj6e9h:
+              label: Allocation between chartered tax administrations. Payment of
+                R&D&i deductions for insufficient tax liability (election art. 39.2
+                LIS). Bizkaia
+            x-agp34c1h6oo30c1q60pj6e9i:
+              label: Allocation between chartered tax administrations. Payment of
+                R&D&i deductions for insufficient tax liability (election art. 39.2
+                LIS). Navarre
+            x-agp34c1h6oo30c1q60pj6e9j:
+              label: Allocation between chartered tax administrations. Payment of
+                R&D&i deductions for insufficient tax liability (election art. 39.2
+                LIS). Total of the chartered territories
+            x-agp34c1h6oo30c1q60pj6e9k:
+              label: Allocation between chartered tax administrations. Payment of
+                deductions for foreign film productions (art. 39.3 LIS). Araba
+            x-agp34c1h6oo30c1q60pj6e9l:
+              label: Allocation between chartered tax administrations. Payment of
+                deductions for foreign film productions (art. 39.3 LIS). Gipuzkoa
+            x-agp34c1h6oo30c1q60pj6e9m:
+              label: Allocation between chartered tax administrations. Payment of
+                deductions for foreign film productions (art. 39.3 LIS). Bizkaia
+            x-agp34c1h6oo30c1q60pj6e9n:
+              label: Allocation between chartered tax administrations. Payment of
+                deductions for foreign film productions (art. 39.3 LIS). Navarre
+            x-agp34c1h6oo30c1q60pj6e9o:
+              label: Allocation between chartered tax administrations. Payment of
+                deductions for foreign film productions (art. 39.3 LIS). Total of
+                the chartered territories
+            x-agp34c1h6oo30c9q60p32dpj:
+              label: 'Allocation between chartered tax administrations. Supplementary:
+                refund granted or offset. Gipuzkoa'
+            x-agp34c1h6oo30c9q60p32dpk:
+              label: 'Allocation between chartered tax administrations. Supplementary:
+                refund granted or offset. Bizkaia'
+            x-agp34c1h6oo30c9q60p32dpl:
+              label: 'Allocation between chartered tax administrations. Supplementary:
+                refund granted or offset. Navarre'
+            x-agp34c1h6oo30c9q60p32dpm:
+              label: 'Allocation between chartered tax administrations. Result of
+                deferred tax asset conversion after adjustment: payment. Araba'
+            x-agp34c1h6oo30c9q60p32dpn:
+              label: 'Allocation between chartered tax administrations. Result of
+                deferred tax asset conversion after adjustment: payment. Gipuzkoa'
+            x-agp34c1h6oo30c9q60p32dpo:
+              label: 'Allocation between chartered tax administrations. Result of
+                deferred tax asset conversion after adjustment: payment. Bizkaia'
+            x-agp34c1h6oo30c9q60p32dpp:
+              label: 'Allocation between chartered tax administrations. Result of
+                deferred tax asset conversion after adjustment: payment. Navarre'
+            x-agp34c1h6oo30c9q60p32e1g:
+              label: 'Allocation between chartered tax administrations. Result of
+                deferred tax asset conversion after adjustment: offset. Araba'
+            x-agp34c1h6oo30c9q60p32e1h:
+              label: 'Allocation between chartered tax administrations. Result of
+                deferred tax asset conversion after adjustment: offset. Gipuzkoa'
+            x-agp34c1h6oo30c9q60p32e1i:
+              label: 'Allocation between chartered tax administrations. Result of
+                deferred tax asset conversion after adjustment: offset. Bizkaia'
+            x-agp34c1h6oo30c9q60p32e1j:
+              label: 'Allocation between chartered tax administrations. Result of
+                deferred tax asset conversion after adjustment: offset. Navarre'
+            x-agp34c1h6oo30c9q60p32e1k:
+              label: 'Allocation between chartered tax administrations. Result of
+                deferred tax asset conversion after adjustment: payable. Araba'
+            x-agp34c1h6oo30c9q60p32e1l:
+              label: 'Allocation between chartered tax administrations. Result of
+                deferred tax asset conversion after adjustment: payable. Gipuzkoa'
+            x-agp34c1h6oo30c9q60p32e1m:
+              label: 'Allocation between chartered tax administrations. Result of
+                deferred tax asset conversion after adjustment: payable. Bizkaia'
+            x-agp34c1h6oo30c9q60p32e1n:
+              label: 'Allocation between chartered tax administrations. Result of
+                deferred tax asset conversion after adjustment: payable. Navarre'
+            x-agp34c1h6oo30c9q60p3gc1k:
+              label: 'Allocation between chartered tax administrations. Supplementary:
+                refund granted or offset. Total of the chartered territories'
+            x-agp34c1h6oo30c9q60p3gc1n:
+              label: 'Allocation between chartered tax administrations. Result of
+                deferred tax asset conversion after adjustment: payment. Total of
+                the chartered territories'
+            x-agp34c1h6oo30c9q60p3gc9g:
+              label: 'Allocation between chartered tax administrations. Result of
+                deferred tax asset conversion after adjustment: offset. Total of the
+                chartered territories'
+            x-agp34c1h6oo30c9q60p3gc9j:
+              label: 'Allocation between chartered tax administrations. Result of
+                deferred tax asset conversion after adjustment: payable. Total of
+                the chartered territories'
+            x-agp34c1h6oo30c9q60pj6chl:
+              label: 'Allocation between chartered tax administrations. Supplementary:
+                refund granted or offset. Araba'
+            x-agp34c1h6oo30c9q60pj6dhi:
+              label: Allocation between chartered tax administrations. Payment for
+                conversion of deferred tax assets. Total of the chartered territories
+            x-agp34c1h6oo30c9q60pj6dhk:
+              label: Allocation between chartered tax administrations. Offset for
+                conversion of deferred tax assets. Total of the chartered territories
+            x-agp34c1h6oo30c9q60pj6dpj:
+              label: Allocation between chartered tax administrations. Payment for
+                conversion of deferred tax assets. Araba
+            x-agp34c1h6oo30c9q60pj6dpk:
+              label: Allocation between chartered tax administrations. Payment for
+                conversion of deferred tax assets. Gipuzkoa
+            x-agp34c1h6oo30c9q60pj6dpl:
+              label: Allocation between chartered tax administrations. Payment for
+                conversion of deferred tax assets. Bizkaia
+            x-agp34c1h6oo30c9q60pj6dpm:
+              label: Allocation between chartered tax administrations. Payment for
+                conversion of deferred tax assets. Navarre
+            x-agp34c1h6oo30c9q60pj6dpn:
+              label: Allocation between chartered tax administrations. Offset for
+                conversion of deferred tax assets. Araba
+            x-agp34c1h6oo30c9q60pj6dpo:
+              label: Allocation between chartered tax administrations. Offset for
+                conversion of deferred tax assets. Gipuzkoa
+            x-agp34c1h6oo30c9q60pj6dpp:
+              label: Allocation between chartered tax administrations. Offset for
+                conversion of deferred tax assets. Bizkaia
+            x-agp34c1h6oo30c9q60pj6e1g:
+              label: Allocation between chartered tax administrations. Offset for
+                conversion of deferred tax assets. Navarre
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0c8:
               label: Group activities. CNAE code of activity 1
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0cg:
