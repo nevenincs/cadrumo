@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#source-casilla-integration'
 date: '2026-08-22'
-modified: '2026-08-22'
+modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:2dd53ee97d5604839990c2f1095a704f801e1f16f891ad0d78ff28f222f41620'
+body_hash: 'sha256:fa7594d05de0dfe8db9977833b666d488d3b592129d225498a3b342af83393d4'
 related:
   - "[[2026-08-22-source-casilla-integration-research]]"
   - "[[2026-08-22-modelo-work-binding-architecture-reference]]"
@@ -82,3 +82,39 @@ The ratcheted-census option is the only option that covers both present and futu
 - Some apparently obvious automation candidates will remain manual or be rejected after tax adjudication.
 - Continuous discovery produces recurring audit work and bounded child features rather than one perpetual plan, increasing lifecycle-document count while keeping each authorization honest.
 - The census and gates require maintenance whenever a new secure domain, ingress surface, assembler, helper, source kind, or registry binding is introduced.
+
+## Amendment (2026-08-23): composite calculation-source provenance
+
+### Problem
+
+The accepted connectivity proof requires the resolver-owned binding source to agree with persisted calculation provenance. That is sufficient for a direct source, but it is not truthful for a composite resolver: the resolver owns the resolved economic object while its inputs retain different upstream source kinds. Foreign-asset aggregation and IVA wallet reconciliation expose this distinction. Treating either axis as the other makes a real resolver appear disconnected or lets an upstream contributor incorrectly satisfy connectivity.
+
+Codebase-wide semantic and regex sentinels confirmed that this distinction is not already implemented elsewhere. The existing `CalculationSourceProvenance`, `CalculationSourceRef`, `CalculationRevision.source_provenance`, revision-identity payload, and live proof authority are therefore amended in place; no parallel provenance or canonical-casilla model is authorized.
+
+### Decision
+
+Calculation-source provenance represents both resolution ownership and contribution lineage. Its canonical vocabulary is:
+
+- `resolved_binding_source: BindingSourceKind`: the source kind owned by the resolver that produced the resolved economic object;
+- `contributor_source_kind: str`: the contributor's existing source taxonomy value;
+- `contributor_binding_source: BindingSourceKind | None`: the contributor's registry binding kind when one exists;
+- `lineage_role: CalculationSourceLineageRole`, with the closed values `PRIMARY` and `CONTRIBUTOR`;
+- the existing `source_ref` and `fingerprint`, which remain the durable object identity and content identity for that node; and
+- `parent_source_ref: str | None`, which links a contributor to its primary resolved object.
+
+A direct resolver emits a `PRIMARY`; its resolved and contributor axes may be equal. A composite resolver emits exactly one truthful `PRIMARY` for each resolved economic object and zero or more `CONTRIBUTOR` nodes whose `parent_source_ref` identifies that primary. A contributor never satisfies resolver connectivity by itself. Every connected primary has a stable, non-empty `source_ref` and content fingerprint, and every contributor parent resolves to exactly one primary in the same provenance graph. Merge and persistence preserve resolver identity and parent edges. Every axis above participates in calculation-revision identity so that changing ownership, role, lineage, object identity, or content changes the revision identity.
+
+`LiveSourceConnectivityProofAuthority` accepts a persisted connection only when exactly one `PRIMARY` matches the claimed resolver, `resolved_binding_source`, durable reference, and fingerprint. Contributor nodes are supporting evidence only.
+
+For IVA wallet reconciliation, the primary reference is the existing immutable `iva_wallet_decision_event_key(decision)` and the resolved binding source is `IVA_WALLET_DECISION`; the decision's canonical content digest is its primary fingerprint. Authority sources are contributors parented to that event key. The mutable wallet-decision lookup key is not a provenance identity.
+
+Foreign-asset observations do not currently expose an authoritative unique identity for the resolved asset. `source_object_id` identifies an upstream carrier, `asset_external_id` is not uniqueness-enforced, and row position or `(source_kind, asset_class)` would be synthetic identities. The M720 composite therefore remains `grounding_blocked` until a typed persisted asset identity is established or a separately approved, uniqueness-enforced composite key is grounded. No transient aggregation key may be fabricated to make the proof pass.
+
+This is an atomic, no-legacy replacement of the existing provenance shape. Compatibility aliases, defaults, dual readers, and alternate proof paths are not permitted. All constructors, serializers, revision hashing, encrypted persistence, resolver emissions, authority checks, and tests move together.
+
+### Consequences
+
+- Composite calculations can prove both who resolved the filing value and which upstream facts contributed without collapsing the two meanings.
+- IVA wallet decisions can connect through an already durable event identity.
+- Foreign assets remain visibly blocked instead of receiving a convenient but ungrounded primary identity.
+- Existing provenance constructors and encrypted revision fixtures require a coordinated migration, and primary-only authority checks become stricter.
