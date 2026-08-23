@@ -8,6 +8,7 @@ that decision belongs to the reviewed connectivity census.
 from __future__ import annotations
 
 import ast
+import hashlib
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -44,6 +45,11 @@ class SecureRepositoryCapability:
         """Return a re-fetchable source locator for review and census rows."""
         return f"{self.module}:{self.line}"
 
+    @property
+    def capability_id(self) -> str:
+        """Return the stable structural identity independent of source line."""
+        return f"secure_repository:{self.module}:{self.repository_name}"
+
 
 @dataclass(frozen=True, slots=True)
 class IngressCapability:
@@ -62,6 +68,11 @@ class IngressCapability:
         """Return a re-fetchable source locator for review and census rows."""
         return f"{self.module}:{self.line}"
 
+    @property
+    def capability_id(self) -> str:
+        """Return the stable structural identity independent of source line."""
+        return f"ingress:{self.module}:{self.callback_name}"
+
 
 @dataclass(frozen=True, slots=True)
 class CalculationHelperCapability:
@@ -77,6 +88,11 @@ class CalculationHelperCapability:
     def evidence_locator(self) -> str:
         """Return a re-fetchable source locator for review and census rows."""
         return f"{self.module}:{self.line}"
+
+    @property
+    def capability_id(self) -> str:
+        """Return the stable structural identity independent of source line."""
+        return f"calculation_helper:{self.module}:{self.function_name}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,6 +110,11 @@ class SourceReadinessCapability:
         """Return a re-fetchable source locator for review and census rows."""
         return f"{self.module}:{self.line}"
 
+    @property
+    def capability_id(self) -> str:
+        """Return the stable structural identity independent of source line."""
+        return f"source_readiness:{self.module}:{self.function_name}"
+
 
 @dataclass(frozen=True, slots=True)
 class RowAssemblerCapability:
@@ -106,6 +127,11 @@ class RowAssemblerCapability:
     observation_return_type: str
     line: int
 
+    @property
+    def capability_id(self) -> str:
+        """Return the stable grouping identity independent of dispatch line."""
+        return f"row_assembler:{self.grouping}"
+
 
 @dataclass(frozen=True, slots=True)
 class SourceOwnershipCapability:
@@ -115,6 +141,11 @@ class SourceOwnershipCapability:
     resolver_id: str
     resolver_type: str | None
     stage: str
+
+    @property
+    def capability_id(self) -> str:
+        """Return the stable source-kind identity independent of resolver placement."""
+        return f"source_ownership:{self.source_kind}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -488,6 +519,105 @@ def discover_source_ownership() -> tuple[SourceOwnershipCapability, ...]:
     )
 
 
+def discovered_source_capability_ids(repo_root: Path) -> tuple[str, ...]:
+    """Return the collision-free union of every structural capability identity."""
+    capability_ids = tuple(
+        row.capability_id
+        for rows in (
+            discover_secure_repositories(repo_root),
+            discover_ingress_surfaces(repo_root),
+            discover_calculation_helpers(repo_root),
+            discover_source_readiness(repo_root),
+            discover_row_assemblers(repo_root),
+            discover_source_ownership(),
+        )
+        for row in rows
+    )
+    if len(set(capability_ids)) != len(capability_ids):
+        duplicates = sorted(
+            capability_id for capability_id in set(capability_ids) if capability_ids.count(capability_id) > 1
+        )
+        raise ValueError(f"source capability identities collide: {duplicates!r}")
+    return tuple(sorted(capability_ids))
+
+
+_COVERAGE_SELECTOR_PREFIXES = {
+    "remaining_calculation_helpers": "calculation_helper:",
+    "remaining_ingress_surfaces": "ingress:",
+    "remaining_row_assemblers": "row_assembler:",
+    "remaining_secure_repositories": "secure_repository:",
+    "remaining_source_ownership": "source_ownership:",
+    "remaining_source_readiness": "source_readiness:",
+}
+
+
+def _capability_digest(capability_ids: tuple[str, ...]) -> str:
+    payload = "".join(f"{capability_id}\n" for capability_id in sorted(capability_ids))
+    return f"sha256:{hashlib.sha256(payload.encode()).hexdigest()}"
+
+
+def assign_capabilities_to_census(
+    capability_ids: tuple[str, ...],
+    manifest: object,
+) -> dict[str, tuple[str, ...]]:
+    """Assign every discovered capability exactly once or refuse census drift."""
+    entries = manifest.entries
+    discovered = set(capability_ids)
+    assignments: dict[str, tuple[str, ...]] = {}
+    explicitly_claimed: set[str] = set()
+
+    for entry in entries:
+        if entry.capability_selector is not None:
+            continue
+        claimed = set(entry.capability_ids)
+        unknown = claimed - discovered
+        if unknown:
+            raise ValueError(f"census claims undiscovered capabilities: {sorted(unknown)!r}")
+        overlap = explicitly_claimed & claimed
+        if overlap:
+            raise ValueError(f"capabilities have multiple explicit census rows: {sorted(overlap)!r}")
+        explicitly_claimed.update(claimed)
+        assignments[entry.candidate_id] = tuple(sorted(claimed))
+
+    selector_claimed: set[str] = set()
+    for entry in entries:
+        selector = entry.capability_selector
+        if selector is None:
+            continue
+        prefix = _COVERAGE_SELECTOR_PREFIXES[selector]
+        claimed = tuple(
+            sorted(
+                capability_id
+                for capability_id in discovered - explicitly_claimed
+                if capability_id.startswith(prefix)
+            )
+        )
+        actual_digest = _capability_digest(claimed)
+        if actual_digest != entry.expected_capability_digest:
+            raise ValueError(
+                f"capability coverage drift for {entry.candidate_id}: "
+                f"expected {entry.expected_capability_digest}, got {actual_digest}"
+            )
+        overlap = selector_claimed.intersection(claimed)
+        if overlap:
+            raise ValueError(f"capabilities match multiple census selectors: {sorted(overlap)!r}")
+        selector_claimed.update(claimed)
+        assignments[entry.candidate_id] = claimed
+
+    unclaimed = discovered - explicitly_claimed - selector_claimed
+    if unclaimed:
+        raise ValueError(f"discovered capabilities lack a census row: {sorted(unclaimed)!r}")
+    return assignments
+
+
+def validate_census_completeness(repo_root: Path) -> dict[str, tuple[str, ...]]:
+    """Validate the bundled census against independent live-tree discovery."""
+    from cadrumo.application.registry.source_connectivity import load_source_connectivity_census
+
+    manifest = load_source_connectivity_census()
+    return assign_capabilities_to_census(discovered_source_capability_ids(repo_root), manifest)
+
+
 _LEXICAL_STOPWORDS = frozenset(
     {
         "aggregate",
@@ -606,6 +736,7 @@ __all__ = [
     "SecureRepositoryMechanism",
     "SourceOwnershipCapability",
     "SourceReadinessCapability",
+    "assign_capabilities_to_census",
     "discover_calculation_helpers",
     "discover_ingress_surfaces",
     "discover_lexical_destination_advisories",
@@ -613,4 +744,6 @@ __all__ = [
     "discover_secure_repositories",
     "discover_source_ownership",
     "discover_source_readiness",
+    "discovered_source_capability_ids",
+    "validate_census_completeness",
 ]

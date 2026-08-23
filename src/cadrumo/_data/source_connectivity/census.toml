@@ -19,6 +19,14 @@ capability_locators = [
   "src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py:102",
   "src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py:152",
 ]
+capability_ids = [
+  "secure_repository:src/cadrumo/adapters/persistence/profile/inventory.py:InventoryLedgerRepository",
+  "source_readiness:src/cadrumo/application/inventory/_source_readiness.py:inventory_source_readiness",
+  "calculation_helper:src/cadrumo/domain/contribuyente/inventory/__init__.py:compute_inventory_variation",
+  "calculation_helper:src/cadrumo/domain/contribuyente/inventory/__init__.py:compute_anexo_d_inventory_variation",
+  "ingress:src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py:inventory_create",
+  "ingress:src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py:inventory_movement_add",
+]
 advisory_destination_refs = [
   "modelo:100:semantic:inventory-increase",
   "modelo:100:semantic:inventory-purchases",
@@ -54,6 +62,9 @@ review_condition = "After inventory adjudication, official evidence must settle 
 capability_locators = [
   "src/cadrumo/adapters/persistence/profile/assets.py:227",
 ]
+capability_ids = [
+  "secure_repository:src/cadrumo/adapters/persistence/profile/assets.py:AmortizacionLedgerRepository",
+]
 advisory_destination_refs = [
   "modelo:100:semantic:amortization",
 ]
@@ -83,6 +94,9 @@ expires_on = 2026-12-31
 capability_locators = [
   "src/cadrumo/adapters/persistence/profile/assets.py:112",
 ]
+capability_ids = [
+  "secure_repository:src/cadrumo/adapters/persistence/profile/assets.py:AssetsLedgerRepository",
+]
 advisory_destination_refs = [
   "modelo:100:family:economic-activity-assets",
 ]
@@ -108,6 +122,11 @@ capability_locators = [
   "src/cadrumo/domain/fincas/_aggregates.py:113",
   "src/cadrumo/domain/fincas/_amortization_ledger.py:92",
   "src/cadrumo/domain/fincas/_source_readiness.py:34",
+]
+capability_ids = [
+  "calculation_helper:src/cadrumo/domain/fincas/_aggregates.py:compute_finca_aggregates",
+  "calculation_helper:src/cadrumo/domain/fincas/_amortization_ledger.py:compute_amortization_for_year",
+  "source_readiness:src/cadrumo/domain/fincas/_source_readiness.py:fincas_source_readiness",
 ]
 advisory_destination_refs = [
   "modelo:100:family:real-estate-income",
@@ -138,6 +157,7 @@ expires_on = 2026-12-31
 capability_locators = [
   "src/cadrumo/application/calculations/_row_set_assembly.py:168",
 ]
+capability_ids = ["row_assembler:per_related_party_operation"]
 advisory_destination_refs = ["modelo:232:rows:related-party-operation"]
 
 [[entries.grounding]]
@@ -164,6 +184,7 @@ expires_on = 2026-12-31
 capability_locators = [
   "src/cadrumo/application/calculations/_row_set_assembly.py:174",
 ]
+capability_ids = ["row_assembler:per_refund_operation"]
 advisory_destination_refs = ["modelo:360:rows:refund-operation"]
 
 [[entries.grounding]]
@@ -190,6 +211,7 @@ expires_on = 2026-12-31
 capability_locators = [
   "src/cadrumo/application/calculations/_row_set_assembly.py:176",
 ]
+capability_ids = ["row_assembler:per_donativo_donor"]
 advisory_destination_refs = ["modelo:182:rows:donativo-donor"]
 
 [[entries.grounding]]
@@ -216,6 +238,7 @@ expires_on = 2026-12-31
 capability_locators = [
   "src/cadrumo/application/calculations/_row_set_assembly.py:178",
 ]
+capability_ids = ["row_assembler:per_gasto193_contribuyente"]
 advisory_destination_refs = ["modelo:193:rows:gasto-contributor"]
 
 [[entries.grounding]]
@@ -242,6 +265,7 @@ expires_on = 2026-12-31
 capability_locators = [
   "src/cadrumo/application/calculations/_row_set_assembly.py:180",
 ]
+capability_ids = ["row_assembler:per_perceptor_296"]
 advisory_destination_refs = ["modelo:296:rows:withholding"]
 
 [[entries.grounding]]
@@ -258,3 +282,68 @@ summary = "Worksheet rows already dispatch to a typed Withholding296 observation
 action_id = "source-casilla.rows-withholding296-registry"
 deadline = 2026-11-30
 completion_criterion = "Official-source adjudication authors or rejects the Modelo 296 withholding row bindings before a bounded secure-ingress and resolver slice proceeds."
+
+[[entries]]
+candidate_id = "coverage.remaining-calculation-helpers"
+disposition = "not_applicable"
+owner = "source-connectivity-campaign"
+capability_locators = ["dev/source_connectivity/discovery.py"]
+capability_selector = "remaining_calculation_helpers"
+expected_capability_digest = "sha256:1bd52137591b1878c9240528c0c9c63b753c074c0dca6a5e2b437f25a04ad541"
+
+[[entries.grounding]]
+locator_kind = "repository"
+reference = "dev/source_connectivity/discovery.py"
+summary = "The frozen remainder contains exported arithmetic and aggregation helpers that are not independently accepted source candidates; inventory and finca exceptions have explicit rows."
+
+[[entries]]
+candidate_id = "coverage.remaining-ingress-surfaces"
+disposition = "not_applicable"
+owner = "source-connectivity-campaign"
+capability_locators = ["dev/source_connectivity/discovery.py"]
+capability_selector = "remaining_ingress_surfaces"
+expected_capability_digest = "sha256:f3a5bea0df1c652545461d264cdf64fc22396c7a76e7614387175f2ce9c5ab2c"
+
+[[entries.grounding]]
+locator_kind = "repository"
+reference = "dev/source_connectivity/discovery.py"
+summary = "The frozen remainder contains operator transport callbacks, not independent source facts; accepted source-specific ingress is covered by explicit candidate rows."
+
+[[entries]]
+candidate_id = "coverage.remaining-row-assemblers"
+disposition = "duplicate_or_stale"
+owner = "source-connectivity-campaign"
+capability_locators = ["dev/source_connectivity/discovery.py"]
+capability_selector = "remaining_row_assemblers"
+expected_capability_digest = "sha256:29367043b2b6a7eea92c952f702e1e6632895b1fce0aba3d69482a884ceeb2e8"
+
+[[entries.grounding]]
+locator_kind = "repository"
+reference = "src/cadrumo/application/modelo/_calculation_route.py:100"
+summary = "The frozen remaining assemblers resolve to already-owned atribucion, foreign-asset, and withholding source families; their connection authority is the canonical calculation route."
+
+[[entries]]
+candidate_id = "coverage.remaining-secure-repositories"
+disposition = "duplicate_or_stale"
+owner = "source-connectivity-campaign"
+capability_locators = ["dev/source_connectivity/discovery.py"]
+capability_selector = "remaining_secure_repositories"
+expected_capability_digest = "sha256:568799bff1927133b375b537378095adacb4c701cbd3b3bf3f0573dcf489223a"
+
+[[entries.grounding]]
+locator_kind = "repository"
+reference = "src/cadrumo/application/modelo/_calculation_route.py:100"
+summary = "The frozen remainder is operational secure state or storage behind an already canonical source route; disconnected inventory, asset, and amortization repositories have explicit rows."
+
+[[entries]]
+candidate_id = "coverage.remaining-source-ownership"
+disposition = "duplicate_or_stale"
+owner = "source-connectivity-campaign"
+capability_locators = ["dev/source_connectivity/discovery.py"]
+capability_selector = "remaining_source_ownership"
+expected_capability_digest = "sha256:613c8b032a49610ba8968ac35bba869a0b04e37ce84664b9572413a92411e8be"
+
+[[entries.grounding]]
+locator_kind = "repository"
+reference = "src/cadrumo/application/modelo/_calculation_route.py:100"
+summary = "Every frozen ownership capability is already declared and validated by the canonical live calculation route, so a second census connection row would duplicate that authority."

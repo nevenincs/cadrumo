@@ -71,12 +71,26 @@ __all__ = [
 ]
 
 type ManualCasillaRequirement = Literal["required", "optional"]
+type CapabilityCoverageSelector = Literal[
+    "remaining_calculation_helpers",
+    "remaining_ingress_surfaces",
+    "remaining_row_assemblers",
+    "remaining_secure_repositories",
+    "remaining_source_ownership",
+    "remaining_source_readiness",
+]
 
 
 class SourceConnectivityCensusEntry(SourceConnectivityCensusRow):
     """Reviewed census row linked to generated capabilities and advisory destinations."""
 
     capability_locators: tuple[str, ...] = Field(min_length=1)
+    capability_ids: tuple[str, ...] = ()
+    capability_selector: CapabilityCoverageSelector | None = None
+    expected_capability_digest: str | None = Field(
+        default=None,
+        pattern=r"^sha256:[0-9a-f]{64}$",
+    )
     advisory_destination_refs: tuple[str, ...] = ()
 
     @model_validator(mode="after")
@@ -85,6 +99,13 @@ class SourceConnectivityCensusEntry(SourceConnectivityCensusRow):
             raise ValueError("connectivity census capability locators must be unique within one entry")
         if len(set(self.advisory_destination_refs)) != len(self.advisory_destination_refs):
             raise ValueError("connectivity census advisory destination refs must be unique within one entry")
+        if len(set(self.capability_ids)) != len(self.capability_ids):
+            raise ValueError("connectivity census capability ids must be unique within one entry")
+        if self.capability_selector is None:
+            if not self.capability_ids or self.expected_capability_digest is not None:
+                raise ValueError("explicit census coverage requires capability_ids and no expected digest")
+        elif self.capability_ids or self.expected_capability_digest is None:
+            raise ValueError("selector census coverage requires an expected digest and no explicit capability ids")
         return self
 
 
@@ -102,6 +123,13 @@ class SourceConnectivityCensusManifest(BaseModel):
         candidate_ids = tuple(row.candidate_id for row in self.entries)
         if len(set(candidate_ids)) != len(candidate_ids):
             raise ValueError("source-connectivity census candidate ids must be unique")
+        destination_refs = tuple(
+            destination_ref
+            for row in self.entries
+            for destination_ref in row.advisory_destination_refs
+        )
+        if len(set(destination_refs)) != len(destination_refs):
+            raise ValueError("source-connectivity advisory destinations must have one census owner")
         return self
 
 
