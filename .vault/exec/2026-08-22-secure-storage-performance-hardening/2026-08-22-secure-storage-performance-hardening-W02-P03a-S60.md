@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:fa2509d70cde298ecb90c0a3428c73dec8fb461d540f75b511b56cb020caa3ae'
+body_hash: 'sha256:bedcf56916ba1ab0fa3618f2a4d43de936b6185ca01302707ed8b6be884e28e9'
 step_id: 'S60'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
@@ -36,6 +36,8 @@ The isolated staged-tree proof reported no harness path or membership reference,
 
 ## Notes
 
-An uncontrolled shared writer prepared the deletion before this executor started, and mixed commit `0a4c5377ef6` consumed the complete tree while this Step was in progress. The whole commit contains 194 deleted paths and 31,696 deleted lines: the 157-path, 23,823-line S60 harness slice plus a premature 37-path, 7,873-line `dev/agent_eval/` slice assigned to S63. S60 claims only the path-scoped harness deletion, not commit purity or S63 completion. History was not rewritten or reverted; S63 remains open and must independently audit, complete, and record its already-landed payload. The remaining S60 code/configuration cleanup is staged separately and contains exactly `pyproject.toml` and `uv.lock`; the S60 lifecycle records join only at close.
+An uncontrolled shared writer prepared the deletion before this executor started, and mixed commit `0a4c5377ef6` consumed the complete tree while this Step was in progress. The whole commit contains 194 deleted paths and 31,696 deleted lines: the 157-path, 23,823-line S60 harness slice plus a premature 37-path, 7,873-line `dev/agent_eval/` slice assigned to S63. S60 claims only the path-scoped harness deletion, not commit purity or S63 completion. History was not rewritten or reverted; S63 remains open and must independently audit, complete, and record its already-landed payload. The remaining S60 code/configuration cleanup was staged separately as exactly `pyproject.toml` and `uv.lock`, with the S60 lifecycle records joining only at close.
+
+A second uncontrolled shared-index collision consumed the final S60 membership and lifecycle tranche in mixed commit `2a77bbb4cc` before this executor's guarded commit could run. The whole commit contains nine paths with 95 insertions and 144 deletions. Its S60 slice contains exactly six paths with 12 insertions and 142 deletions: the S60 audit, Step record, feature index, corrected plan, `pyproject.toml`, and `uv.lock`. Its excluded S174 slice contains exactly three paths with 83 insertions and two deletions: the source-casilla S174 audit, Step record, and plan. S60 claims only the six-path slice, not commit purity or S174 completion. The guarded commit observed an empty index after the concurrent commit and aborted without creating a redundant commit; history was not rewritten.
 
 Commit `b97a051f48` separately and prematurely deleted `dev/packaging/installed_mcp_oracle.py` and `dev/packaging/tests/test_installed_oracles.py`, which belong to S69. The adjacent removal of the now-stale `dev/packaging/tests/test_installed_oracles.py` default-test-path row remains deliberately outside S60's staged index because S69 and S73 own its lifecycle; both Steps remain open and must audit and record the landed deletion and residual configuration. The staged baseline also still names the deleted harness test in the `justfile` per-push enrollment and names the retired distribution in the Homebrew generator; those are explicit dependencies for S73 and S70 respectively. The external-client inverse gate retains its two marker literals intentionally. No surviving Python file is modified by S60, so Ruff and static typing have no scoped source target; lock, export, build, installed-runtime, and real test gates cover the changed boundary.

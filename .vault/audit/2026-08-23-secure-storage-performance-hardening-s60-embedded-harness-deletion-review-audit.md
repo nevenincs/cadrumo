@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:a3ebc27b7a5d1524edc6f474185dbac747d768ac07a18bcd3a3c79214dfe84fa'
+body_hash: 'sha256:8e32841f9d50b876341fe0461303719fdc2b0fa2926722e02ce7ddeb4f601146'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
   - "[[2026-08-23-external-client-boundary-adr]]"
@@ -21,6 +21,10 @@ staged changes to `pyproject.toml` and `uv.lock`, and the corresponding
 execution evidence. The review compared that surface with the accepted
 external-client boundary decision and the S60 plan row. No implementation,
 plan, frontmatter, staging, or unrelated work was changed.
+
+A final provenance re-review also examined mixed HEAD commit `2a77bbb4cc`,
+the corrected working-copy S60 Step record, the committed feature index and
+plan state, and the absence of residual S60 implementation or membership work.
 
 ## Findings
 
@@ -62,9 +66,37 @@ one Homebrew dependency token is assigned to S70. Neither later-step file is
 part of the S60 staged diff, and there is no surviving Python import of
 `cadrumo_harness`.
 
+### final-tranche-attribution | high | corrected provenance is not yet committed
+
+Mixed HEAD commit `2a77bbb4cc` contains exactly nine paths with 95 insertions
+and 144 deletions. The S60 partition is exactly six paths with 12 insertions
+and 142 deletions: this audit, the S60 Step record, the feature index, the
+secure-storage plan, `pyproject.toml`, and `uv.lock`. The unrelated S174
+partition is exactly three paths with 83 insertions and two deletions: its
+audit, Step record, and source-casilla plan. The S60 checkbox, Step record,
+audit, and feature-index links are present in HEAD; S61 through S77, S58, and
+S59 remain open.
+
+The corrected working-copy S60 Step record now states that exact partition,
+claims only the six-path slice, and explains that the guarded commit aborted
+after finding the shared index empty. Its content is accurate. However, the
+correction is an unstaged modification and therefore is not evidence carried
+by HEAD. This audit amendment is likewise uncommitted. No S60 implementation,
+target-tree, project-membership, or lock work remains: the deleted root is
+absent from the filesystem and index, HEAD's project and lock files contain
+zero harness references, and the current unrelated `pyproject.toml` working
+change belongs to later cleanup. The only residual S60 work is to land the
+corrected Step record and this audit together without consuming concurrent
+changes. Until that exact lifecycle-only commit exists, HEAD under-declares
+the second mixed-commit provenance and S60 closure is not fully anchored.
+
 ## Recommendations
 
 Close S60 only for its path-scoped deletion and two-file membership cutover.
 Keep S63, S69, S70, and S73 open until each separately audits and records its
 already-landed or residual surface; do not use S60 as evidence of their
 completion.
+
+Commit only the corrected S60 Step record and this audit amendment through a
+guarded exact-path lifecycle commit, then verify that no other path entered
+the commit and that the remaining correction steps stay open.
