@@ -1,7 +1,7 @@
 [project]
 name = "cadrumo"
 version = "0.2.2"
-description = "Cadrumo is a deterministic Spanish tax calculation CLI and MCP server that turns local financial records into checked, exportable modelo filing artifacts. Independent software; not affiliated with AEAT."
+description = "Cadrumo is a deterministic Spanish tax calculation CLI that turns local financial records into checked, exportable modelo filing artifacts. Independent software; not affiliated with AEAT."
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
 license = "Apache-2.0"
@@ -25,7 +25,7 @@ dependencies = [
   # The command-bearing distribution is complete by default. The two data
   # companions are separate files only to stay below the package-index
   # per-file cap; they are exact-version runtime dependencies because the CLI
-  # and MCP server cannot perform grounded tax work without both corpus slices.
+  # cannot perform grounded tax work without both corpus slices.
   "cadrumo-data-manuals==0.2.2",
   "cadrumo-data-official==0.2.2",
   # Capability-gated integrations live in [project.optional-dependencies].
@@ -115,7 +115,7 @@ dependencies = [
   # localise AEAT timestamps to Europe/Madrid).
   "tzdata>=2026.2 ; sys_platform == 'win32'",
   "xlrd>=2.0.1,<3",
-  # Full-screen TUI framework for the paged flow frontend (screens, focus,
+  # Full-screen TUI framework for paged terminal flows (screens, focus,
   # reactive widgets, headless Pilot test driver). MIT; depends on rich
   # (shared pin above) and not on prompt_toolkit, so the line-mode and
   # full-screen stacks stay independent.
@@ -197,6 +197,10 @@ llm = [
   # be refused.
   "nvidia-ml-py>=13,<14",
 ]
+# Deliberately absent: an `agent` extra. The operator agent harness, its
+# reviewed operating data, accessors, and MCP runtime are a separate
+# `cadrumo-harness` distribution which depends on this base package.
+#
 # Deliberately absent: a `search` extra. The on-host grounding search stack
 # needs none — the lexical index (stdlib sqlite3 FTS5 plus the core
 # `snowballstemmer` stemmed column) and the structured citation lookup run on
@@ -326,6 +330,10 @@ torch = [
 # distributions from the configured package index.
 cadrumo-data-manuals = { path = "packaging/cadrumo_data_manuals" }
 cadrumo-data-official = { path = "packaging/cadrumo_data_official" }
+cadrumo-harness = { workspace = true }
+
+[tool.uv.workspace]
+members = ["src/cadrumo-harness"]
 
 [tool.vaultspec-rag]
 managed-torch-direct-dependency = true
@@ -395,16 +403,16 @@ dev = [
   "types-lxml>=2025.3.30",
   "ruff>=0.15.12",
   "ty>=0.0.1a1",
-  # Vault tooling — contributor-only; not imported by src/cadrumo/. vaultspec-rag
-  # carries the [mcp] extra here (demoted from the base dependency set): it is
-  # developer search tooling, so a published product wheel must not ship it.
+  # Vault tooling — contributor-only; not imported by src/cadrumo/ and never
+  # shipped in a published product wheel.
   # 0.1.55 is the first version that understands the `body_hash` frontmatter
   # fingerprint; older versions drop unknown frontmatter keys on rewrite, so a
   # mixed-version corpus silently loses the stamp on exactly the documents
   # being edited (nevenincs/vaultspec-core#299). Operator directive: the
-  # tooling tracks latest. This floor is what carried `mcp` to its 2.x major.
+  # tooling tracks latest.
   "vaultspec-core>=0.1.55",
   "vaultspec-rag[mcp]>=0.3.8",
+  "cadrumo-harness",
   # Sphinx documentation pipeline — `just docs` builds HTML + Markdown from
   # the Google-style + Sphinx-cross-referenced docstrings under src/cadrumo/.
   "sphinx>=8.1,<9",  # <9: sphinx-hoverxref 1.4.2 (latest) crashes on Sphinx 9's _Opt config repr at config-inited
@@ -549,6 +557,8 @@ convention = "google"
 "src/cadrumo/**/tests/**/*.py" = ["T20", "D", "E501"]
 "src/cadrumo/tests/**/*.py" = ["T20", "D"]
 "src/cadrumo/**/conftest.py" = ["D"]
+"src/cadrumo-harness/**/tests/**/*.py" = ["T20", "D", "E501"]
+"src/cadrumo-harness/**/conftest.py" = ["D"]
 # dev/docs/ holds contributor-only documentation tools and tests.
 "dev/docs/**/*.py" = ["T20", "D", "E402"]
 # `dev/` holds contributor-only developer tooling (quality gates, audits,
@@ -714,6 +724,7 @@ convention = "google"
 # (partial paths resolved from PATH by design), mirroring the src/cadrumo
 # wheel-build gates.
 "dev/packaging/tests/test_cadrumo_data_distribution.py" = ["S603", "S607"]
+"src/cadrumo-harness/src/cadrumo_harness/mcp/tests/test_stdio_lifetime.py" = ["S603"]
 "src/cadrumo/adapters/persistence/storage/bucket/tests/test_lockfile.py" = ["S603"]
 # Cross-process custody-root exclusion is only provable against real spawned
 # processes killed abruptly; every argv is a fixed `sys.executable -c <script>`
@@ -925,7 +936,7 @@ reportUnnecessaryTypeIgnoreComment = "error"
 # the default unit gate fails on drift instead of relying on manual CLI use.
 testpaths = [
   "src/cadrumo",
-  "dev/packaging/tests/test_installed_oracles.py",
+  "src/cadrumo-harness",
   "dev/source_connectivity/tests",
 ]
 pythonpath = ["src"]
