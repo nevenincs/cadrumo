@@ -431,7 +431,7 @@ def _is_introspection_only_invocation(ctx: typer.Context) -> bool:
       remainder. Click's eager help callback (or the curated subgroup help
       in the group callbacks) aborts before any verb body runs.
     - An unresolvable command chain: the leading non-option tokens do not
-      name a registered command, so click can only emit the usage error.
+      name a graph-materialized command, so click can only emit the usage error.
       Opening the session first would mask that exit-2 usage error with a
       master-key refusal, hiding the typo from the operator.
 

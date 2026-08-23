@@ -406,7 +406,11 @@ def _emit_crash(exc: Exception) -> NoReturn:
     defect. Forward it verbatim instead, with its own exit code.
     """
     from ...core.logging import OPERATOR_DOCUMENT_LOG_EXTRA, get_logger
-    from ._common import cli_policy_refusal_projection, project_cli_policy_refusal
+    from ._common import (
+        cli_policy_refusal_projection,
+        current_requested_cli_leaf,
+        project_cli_policy_refusal,
+    )
     from ._errors import (
         CliUnexpectedBoundaryError,
         boundary_no_recovery_verdict,
@@ -455,6 +459,12 @@ def _emit_crash(exc: Exception) -> NoReturn:
     # var: that var is set at callback ENTRY, and this funnel exists precisely
     # for failures that never got that far.
     requested_leaf = None if projection is None else projection.requested_leaf
+    if requested_leaf is None:
+        # No projection, or one carrying no leaf: `ProfileNotFoundError` and the
+        # label-ambiguity refusal both reach here that way. The invocation-scoped
+        # holder still knows which leaf was requested, where the Click context no
+        # longer does.
+        requested_leaf = current_requested_cli_leaf()
     payload = render_error_payload(
         boundary,
         as_json=_json_requested_for(exc),
@@ -510,21 +520,28 @@ def run_standalone_with_error_contract(
     and ``--language`` tokens even when the failure carries no command context;
     it defaults to ``sys.argv[1:]`` for a console launch.
     """
+    from ._common import boundary_requested_leaf_scope
+
     captured = tuple(argv) if argv is not None else tuple(sys.argv[1:])
     token = _INVOCATION_ARGV.set(captured)
     vendored_click_exception, _vendored_usage, vendored_abort = _vendored_exceptions()
-    try:
-        result = dispatch()
-    except (vendored_click_exception, click.ClickException) as exc:
-        _emit_click_exception(exc)
-    except (vendored_abort, click.Abort):
-        _emit_abort()
-    except KeyboardInterrupt:  # pragma: no cover - interactive only
-        sys.exit(_KEYBOARD_INTERRUPT_EXIT_CODE)
-    except Exception as exc:
-        _emit_crash(exc)
-    finally:
-        _INVOCATION_ARGV.reset(token)
+    # Bounds the invocation-scoped requested leaf to THIS dispatch, the same
+    # ownership `_INVOCATION_ARGV` already has above. Without the bound, a leaf
+    # resolved here would still be readable during the next invocation and could
+    # name the wrong command on an unrelated error.
+    with boundary_requested_leaf_scope():
+        try:
+            result = dispatch()
+        except (vendored_click_exception, click.ClickException) as exc:
+            _emit_click_exception(exc)
+        except (vendored_abort, click.Abort):
+            _emit_abort()
+        except KeyboardInterrupt:  # pragma: no cover - interactive only
+            sys.exit(_KEYBOARD_INTERRUPT_EXIT_CODE)
+        except Exception as exc:
+            _emit_crash(exc)
+        finally:
+            _INVOCATION_ARGV.reset(token)
     # Non-standalone dispatch RETURNS an explicit Exit's code as an int
     # (typer _main: `except Exit: ... return e.exit_code`); a successful
     # callback chain returns None. Mirror standalone exit semantics.

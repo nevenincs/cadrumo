@@ -24,7 +24,8 @@ as ``aeat --version``.
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
+from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import date as _date
@@ -204,6 +205,34 @@ _REQUESTED_CLI_LEAF_CONTEXT: ContextVar[RequestedCliLeaf | None] = ContextVar(
     default=None,
 )
 
+#: The same leaf, held for the WHOLE invocation rather than the Click context.
+#:
+#: :data:`_REQUESTED_CLI_LEAF_CONTEXT` is reset by ``ctx.call_on_close`` when the
+#: Click context closes, which is correct for in-command reads and useless to the
+#: PROCESS boundary: ``_terminal_errors._emit_crash`` runs after that close, so it
+#: asked and got ``None``, and every refusal escaping there published a null
+#: ``command`` even where the leaf was known.
+#:
+#: Lifetime is owned by :func:`run_standalone_with_error_contract`, which every
+#: invocation passes through, exactly as it already owns ``_INVOCATION_ARGV``.
+#: That reset is what stops a leaf leaking into the NEXT invocation -- the failure
+#: mode that matters here is not a crash but a WRONG command name on an unrelated
+#: error, which the cached in-process runner would surface first.
+_BOUNDARY_REQUESTED_CLI_LEAF: ContextVar[RequestedCliLeaf | None] = ContextVar(
+    "cadrumo_boundary_requested_cli_leaf",
+    default=None,
+)
+
+
+@contextmanager
+def boundary_requested_leaf_scope() -> Generator[None]:
+    """Bound the invocation-scoped requested leaf to one CLI dispatch."""
+    token = _BOUNDARY_REQUESTED_CLI_LEAF.set(None)
+    try:
+        yield
+    finally:
+        _BOUNDARY_REQUESTED_CLI_LEAF.reset(token)
+
 
 class CliPolicyRefusalProjection(BaseModel):
     """Typed policy handoff awaiting generic boundary transport in S18."""
@@ -292,6 +321,10 @@ def preserve_requested_cli_leaf(ctx: typer.Context) -> RequestedCliLeaf | None:
             ctx.meta[REQUESTED_CLI_LEAF_META_KEY] = requested
             token = _REQUESTED_CLI_LEAF_CONTEXT.set(requested)
             ctx.call_on_close(partial(_REQUESTED_CLI_LEAF_CONTEXT.reset, token))
+            # Written through to the invocation-scoped holder as well, so the
+            # process boundary can still name the command after this Click
+            # context has closed. Deliberately NOT reset on close.
+            _BOUNDARY_REQUESTED_CLI_LEAF.set(requested)
             return requested
     return None
 
@@ -313,7 +346,10 @@ def current_requested_cli_leaf() -> RequestedCliLeaf | None:
         return bound
     ctx = click.get_current_context(silent=True)
     if ctx is None:
-        return None
+        # No Click context: either before one opened, or after it closed. The
+        # invocation-scoped holder answers the second case, which is where the
+        # process boundary asks from.
+        return _BOUNDARY_REQUESTED_CLI_LEAF.get()
     return requested_cli_leaf(cast(typer.Context, ctx))
 
 

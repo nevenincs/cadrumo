@@ -6,11 +6,13 @@ import traceback
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import cast
 
 import pytest
 from sqlalchemy import select
 
 from ....adapters.persistence.profile.inventory import InventoryLedgerRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....adapters.persistence.storage.sql.engine import get_engine
@@ -43,7 +45,11 @@ from ....domain.contribuyente.inventory import (
     fingerprint_prior_authoritative_closing,
 )
 from ....domain.filing_evidence import FilingEvidenceReference
+from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
+from ....domain.transactions import TransactionCatalogue
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
+from ...modelo import _calculation_actions
+from ...modelo._calculation_actions import _resolve_bucket_source_mesh
 from .._inventory import _VALUE_ATTRIBUTE_BY_OPERATION, InventorySourceResolver
 from .._source_mesh import CalculationSourceContext
 
@@ -228,6 +234,35 @@ def _context(revision: ModeloRevision, *, bucket_id: str = "operator", year: int
     )
 
 
+def _work_unit(*, bucket_id: str, revision: ModeloRevision) -> WorkUnit:
+    period = Period.from_year_and_code(2025, "0A")
+    return WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=bucket_id,
+            modelo=ModeloCode("100"),
+            filing_year=2025,
+            period=period,
+            revision_id=revision.id,
+        ),
+        bucket_id=bucket_id,
+        modelo=ModeloCode("100"),
+        filing_year=2025,
+        period=period,
+        revision_id=revision.id,
+        name="inventory-composition",
+        created_at=datetime(2025, 1, 1, tzinfo=UTC),
+        updated_at=datetime(2025, 1, 1, tzinfo=UTC),
+    )
+
+
+def _empty_transaction_repository() -> TransactionCatalogueRepository:
+    class _EmptyRepository:
+        def load(self) -> TransactionCatalogue:
+            return TransactionCatalogue()
+
+    return cast(TransactionCatalogueRepository, _EmptyRepository())
+
+
 def test_complete_ledger_resolves_three_values_and_stable_provenance() -> None:
     repository = _Repository(InventoryLedgerDocument(ledgers=(_ledger(),)))
     resolver = InventorySourceResolver(inventory_repository=repository)
@@ -369,9 +404,26 @@ def test_real_encrypted_empty_repository_reports_absence(tmp_path: Path) -> None
         result = InventorySourceResolver(inventory_repository=repository).resolve(
             _context(_revision(), bucket_id=runtime.bucket_id)
         )
+        revision = _revision()
+        snapshot = resources().modelos.authority.snapshot(
+            "100",
+            filing_year=2025,
+            period="0A",
+        ).model_copy(update={"revision": revision})
+        mesh_result = _resolve_bucket_source_mesh(
+            snapshot,
+            _work_unit(bucket_id=runtime.bucket_id, revision=revision),
+            transaction_repository=_empty_transaction_repository(),
+            invoice_repository=None,
+            foreign_asset_observations=(),
+        )
 
     assert result.binding_values == {}
     assert result.diagnostics[0].reason == "unresolved_binding"
+    assert mesh_result.binding_values == {}
+    assert "unresolved_binding" in {
+        item.reason for item in mesh_result.diagnostics if item.binding_source is BindingSourceKind.INVENTORY
+    }
 
 
 def test_real_encrypted_complete_repository_resolves_projection(tmp_path: Path) -> None:
@@ -385,8 +437,22 @@ def test_real_encrypted_complete_repository_resolves_projection(tmp_path: Path) 
         result = InventorySourceResolver(inventory_repository=repository).resolve(
             _context(_revision(), bucket_id=runtime.bucket_id)
         )
+        revision = _revision()
+        snapshot = resources().modelos.authority.snapshot(
+            "100",
+            filing_year=2025,
+            period="0A",
+        ).model_copy(update={"revision": revision})
+        mesh_result = _resolve_bucket_source_mesh(
+            snapshot,
+            _work_unit(bucket_id=runtime.bucket_id, revision=revision),
+            transaction_repository=_empty_transaction_repository(),
+            invoice_repository=None,
+            foreign_asset_observations=(),
+        )
 
     assert result.binding_values["inventory-0181"] == Decimal("100.00")
+    assert mesh_result.binding_values["inventory-0181"] == Decimal("100.00")
     assert result.provenance[0].fingerprint == compute_inventory_anexo_d_projection(ledger).projection_fingerprint
 
 
@@ -426,11 +492,28 @@ def test_real_encrypted_corruption_becomes_value_free_storage_diagnostic(
         result = InventorySourceResolver(inventory_repository=repository).resolve(
             _context(_revision(), bucket_id=runtime.bucket_id)
         )
+        revision = _revision()
+        snapshot = resources().modelos.authority.snapshot(
+            "100",
+            filing_year=2025,
+            period="0A",
+        ).model_copy(update={"revision": revision})
+        mesh_result = _resolve_bucket_source_mesh(
+            snapshot,
+            _work_unit(bucket_id=runtime.bucket_id, revision=revision),
+            transaction_repository=_empty_transaction_repository(),
+            invoice_repository=None,
+            foreign_asset_observations=(),
+        )
 
     assert result.binding_values == {}
     assert result.diagnostics[0].reason == "storage_degraded"
+    assert mesh_result.binding_values == {}
+    assert "storage_degraded" in {
+        item.reason for item in mesh_result.diagnostics if item.binding_source is BindingSourceKind.INVENTORY
+    }
     rendered = "".join(traceback.format_exception(exc_info.value))
-    rendered += " ".join(item.message for item in result.diagnostics) + caplog.text
+    rendered += " ".join(item.message for item in (*result.diagnostics, *mesh_result.diagnostics)) + caplog.text
     for secret in (
         "invoice-secret",
         "cost-review-secret",
@@ -444,3 +527,168 @@ def test_real_encrypted_corruption_becomes_value_free_storage_diagnostic(
         *(character * 64 for character in "abcdef12"),
     ):
         assert secret not in rendered
+
+
+def test_calculation_mesh_composes_active_bucket_encrypted_inventory(tmp_path: Path) -> None:
+    bucket_id = "00000000-0000-4000-8000-000000000341"
+    revision = _revision()
+    base_snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+    snapshot = base_snapshot.model_copy(update={"revision": revision})
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as runtime:
+        InventoryLedgerRepository(objects=runtime.repository).save(
+            InventoryLedgerDocument(ledgers=(_ledger(),)),
+        )
+        resolution = _resolve_bucket_source_mesh(
+            snapshot,
+            _work_unit(bucket_id=bucket_id, revision=revision),
+            transaction_repository=_empty_transaction_repository(),
+            invoice_repository=None,
+            foreign_asset_observations=(),
+        )
+
+    assert resolution.binding_values["inventory-0181"] == Decimal("100.00")
+    assert BindingSourceKind.INVENTORY in resolution.owned_sources
+    inventory_provenance = tuple(
+        row for row in resolution.provenance if row.resolved_binding_source is BindingSourceKind.INVENTORY
+    )
+    assert inventory_provenance[0].source_ref == f"inventory:{bucket_id}:2025:retail"
+    assert not tuple(
+        diagnostic
+        for diagnostic in resolution.diagnostics
+        if diagnostic.binding_source is BindingSourceKind.INVENTORY
+    )
+
+
+def test_calculation_mesh_does_not_fall_back_to_another_bucket_inventory(tmp_path: Path) -> None:
+    source_bucket = "00000000-0000-4000-8000-000000000741"
+    active_bucket = "00000000-0000-4000-8000-000000000841"
+    revision = _revision()
+    base_snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+    snapshot = base_snapshot.model_copy(update={"revision": revision})
+
+    with isolated_runtime_profile(tmp_path=tmp_path / "source", bucket_id=source_bucket) as source_runtime:
+        InventoryLedgerRepository(objects=source_runtime.repository).save(
+            InventoryLedgerDocument(ledgers=(_ledger(),)),
+        )
+    with isolated_runtime_profile(tmp_path=tmp_path / "active", bucket_id=active_bucket):
+        resolution = _resolve_bucket_source_mesh(
+            snapshot,
+            _work_unit(bucket_id=active_bucket, revision=revision),
+            transaction_repository=_empty_transaction_repository(),
+            invoice_repository=None,
+            foreign_asset_observations=(),
+        )
+
+    assert not {"inventory-0177", "inventory-0181", "inventory-0182"}.intersection(resolution.binding_values)
+    assert set(resolution.unresolved_binding_ids).issuperset(
+        {"inventory-0177", "inventory-0181", "inventory-0182"},
+    )
+
+
+def test_calculation_mesh_without_inventory_binding_allocates_no_inventory_store(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    bucket_id = "00000000-0000-4000-8000-000000000441"
+    revision = _revision(inventory=False)
+    base_snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+    snapshot = base_snapshot.model_copy(update={"revision": revision})
+
+    def refuse_inventory_store(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("inventory secure store must stay lazy")
+
+    monkeypatch.setattr(_calculation_actions, "secure_object_repository_for_bucket", refuse_inventory_store)
+    monkeypatch.setattr(_calculation_actions, "InventoryLedgerRepository", refuse_inventory_store)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
+        resolution = _resolve_bucket_source_mesh(
+            snapshot,
+            _work_unit(bucket_id=bucket_id, revision=revision),
+            transaction_repository=_empty_transaction_repository(),
+            invoice_repository=None,
+            foreign_asset_observations=(),
+        )
+
+    assert BindingSourceKind.INVENTORY not in resolution.owned_sources
+
+
+def test_calculation_mesh_constructs_inventory_once_for_exact_active_bucket(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    bucket_id = "00000000-0000-4000-8000-000000000541"
+    revision = _revision()
+    base_snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+    snapshot = base_snapshot.model_copy(update={"revision": revision})
+    repository = _Repository(InventoryLedgerDocument(ledgers=(_ledger(),)))
+    secure_calls: list[str] = []
+    repository_objects: list[object] = []
+    inventory_route_stages: list[str] = []
+    secure_marker = object()
+    real_route_guard = _calculation_actions._require_calculation_route_resolver
+
+    def secure_factory(requested_bucket_id: str) -> object:
+        secure_calls.append(requested_bucket_id)
+        return secure_marker
+
+    def repository_factory(*, objects: object) -> _Repository:
+        repository_objects.append(objects)
+        return repository
+
+    def route_guard(stage: str, resolver: object) -> None:
+        real_route_guard(stage, resolver)  # type: ignore[arg-type]
+        if getattr(resolver, "resolver_id", None) == "inventory":
+            inventory_route_stages.append(stage)
+
+    monkeypatch.setattr(_calculation_actions, "secure_object_repository_for_bucket", secure_factory)
+    monkeypatch.setattr(_calculation_actions, "InventoryLedgerRepository", repository_factory)
+    monkeypatch.setattr(_calculation_actions, "_require_calculation_route_resolver", route_guard)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
+        resolution = _resolve_bucket_source_mesh(
+            snapshot,
+            _work_unit(bucket_id=bucket_id, revision=revision),
+            transaction_repository=_empty_transaction_repository(),
+            invoice_repository=None,
+            foreign_asset_observations=(),
+        )
+
+    assert secure_calls == [bucket_id]
+    assert repository_objects == [secure_marker]
+    assert repository.loads == 1
+    assert inventory_route_stages == ["mesh"]
+    assert resolution.binding_values["inventory-0181"] == Decimal("100.00")
+
+
+def test_calculation_mesh_inventory_storage_degradation_is_value_free(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    tmp_path: Path,
+) -> None:
+    bucket_id = "00000000-0000-4000-8000-000000000641"
+    revision = _revision()
+    base_snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+    snapshot = base_snapshot.model_copy(update={"revision": revision})
+    repository = _Repository(error=True)
+    monkeypatch.setattr(_calculation_actions, "secure_object_repository_for_bucket", lambda _bucket_id: object())
+    monkeypatch.setattr(
+        _calculation_actions,
+        "InventoryLedgerRepository",
+        lambda *, objects: repository,
+    )
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
+        resolution = _resolve_bucket_source_mesh(
+            snapshot,
+            _work_unit(bucket_id=bucket_id, revision=revision),
+            transaction_repository=_empty_transaction_repository(),
+            invoice_repository=None,
+            foreign_asset_observations=(),
+        )
+
+    inventory_diagnostics = tuple(
+        item for item in resolution.diagnostics if item.binding_source is BindingSourceKind.INVENTORY
+    )
+    assert repository.loads == 1
+    assert {item.reason for item in inventory_diagnostics} == {"storage_degraded"}
+    rendered = " ".join(item.message for item in inventory_diagnostics) + caplog.text
+    assert "sensitive database failure detail" not in rendered
