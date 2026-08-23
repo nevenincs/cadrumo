@@ -902,7 +902,7 @@ def bucket_scoped_storage_path(
 
 
 def storage_tree_targets(settings: Settings) -> tuple[Path, ...]:
-    """Return every directory :func:`~core.config.ensure_storage_tree` creates.
+    """Return every directory :func:`~core.storage_materialization.ensure_storage_tree` creates.
 
     Derived from the declaration and from nothing else, so the materialiser
     cannot drift from the taxonomy by carrying a second list. A file-valued

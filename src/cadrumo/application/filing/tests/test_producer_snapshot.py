@@ -781,7 +781,18 @@ def test_m303_filing_facts_resolver_refuses_non_official_period_before_producer_
         )
 
 
-def test_real_2026_dp30301_source_pins_a16_a30_lexical_domains_and_non_producer_a29() -> None:
+def test_real_2026_dp30301_source_pins_a16_a30_lexical_domains() -> None:
+    """The official 2026 design pins the A16-A30 lexical domains verbatim.
+
+    This case once also asserted that A29, the non-zero annual volume marker,
+    had NO producer key. That pin was written while the box was unmodelled and
+    was never revisited when the marker was implemented three days later as a
+    deliberate, evidence-gated producer grounded in art. 121 -- see
+    ``test_modelo_303_annual_volume_marker_requires_explicit_evidence``, which
+    proves the value cannot be inferred from rows or the profile. Two claims
+    about the same box disagreed, and the newer one is the one with the
+    grounding, so the stale assertion is gone rather than the producer.
+    """
     source = (
         Path(__file__).parents[3]
         / "_data/corpus/aeat_official/disenos_registro/modelo_303/files"
@@ -816,7 +827,6 @@ def test_real_2026_dp30301_source_pins_a16_a30_lexical_domains_and_non_producer_
     )
     assert all(note in page for note in exact_nota_5)
     assert "Sujeto pasivo con volumen anual de operaciones distinto de cero" in page
-    assert not any("annual" in key.value and "volume" in key.value for key in FilingProducerKey)
 
 
 def test_modelo_iva_profile_refuses_absent_tax_territory() -> None:

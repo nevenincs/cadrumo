@@ -148,7 +148,7 @@ def test_a_locked_profile_reports_the_same_lock_when_the_caller_supplies_state(t
     load runs first and is refused by the same absent session. The two paths
     once produced different false diagnostics for one profile.
     """
-    from .._models import WorkflowState
+    from .._state_models import WorkflowState
 
     _publish_in_a_separate_process(tmp_path)
 

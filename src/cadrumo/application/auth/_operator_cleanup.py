@@ -58,6 +58,7 @@ def clear_scoped_locks(
     provider_ids: tuple[str, ...],
     *,
     bucket_id: str,
+    allow_held: bool = False,
 ) -> tuple[int, tuple[str, ...]]:
     cleared = 0
     affected: list[str] = []
@@ -70,6 +71,7 @@ def clear_scoped_locks(
             kind,
             reason="operator-auth-reset",
             bucket_id=bucket_id,
+            allow_held=allow_held,
         )
         if status.state is not AuthAcquisitionLockState.ABSENT:
             cleared += 1
@@ -81,6 +83,7 @@ def clear_operator_auth_acquisition_locks(
     settings: Settings,
     *,
     bucket_id: str,
+    allow_held: bool = False,
 ) -> tuple[str, ...]:
     """Clear every provider's acquisition lock for ``bucket_id`` without its key.
 
@@ -101,6 +104,7 @@ def clear_operator_auth_acquisition_locks(
         settings,
         tuple(kind.value for kind in AuthProviderKind),
         bucket_id=bucket_id,
+        allow_held=allow_held,
     )
     return affected
 

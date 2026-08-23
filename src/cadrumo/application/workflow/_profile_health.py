@@ -59,9 +59,9 @@ from ..user_profile import (
     record_to_path_values,
     validate_profile_values,
 )
-from ._models import WorkflowState
 from ._persistence import workflow_state_repository
 from ._profile_bucket_scan import list_profile_buckets, resolve_profile_bucket
+from ._state_models import WorkflowState
 
 ProfileHealthStatus = Literal[
     "none",

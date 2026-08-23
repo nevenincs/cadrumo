@@ -70,6 +70,7 @@ from ...core.aggregation import (
     OperationKind349,
     RetencionScheme,
 )
+from ...domain.calculations import DirectRowMaterializationProvenance, RowCasillaKey
 from ...domain.calculations.registry import WithholdingObservation
 from ...domain.modelos import LedgerFilingSnapshot
 from ._atribucion_member import AtribucionMemberSourceResolver
@@ -300,6 +301,7 @@ __all__ = [
     "CounterpartAggregation",
     "CounterpartObservation",
     "CounterpartSourceKind",
+    "DirectRowMaterializationProvenance",
     "ForeignAssetClass",
     "ForeignAssetClassRollup",
     "ForeignAssetIngestObservation",
@@ -349,6 +351,7 @@ __all__ = [
     "RetencionesAggregation",
     "RetencionesAggregationSourceResolver",
     "RetencionesTotalsParity",
+    "RowCasillaKey",
     "SourceMeshError",
     "UnadmittedActivityIncome",
     "WithholdingObservation",

@@ -19,7 +19,7 @@ from ..operator_actions import (
     PreconditionVerdict,
 )
 from ._errors import UnhandledWorkflowError, WorkflowAbortSignalError
-from ._models import (
+from ._run_models import (
     SiteHealthAlert,
     SiteHealthStatus,
     WorkflowAbortReason,

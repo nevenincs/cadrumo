@@ -731,11 +731,11 @@ ignore_imports =
     # Reaches NO persistence: the second pin in this sweep whose storage-shaped
     cadrumo.application.workflow._adapters -> cadrumo.adapters.outbound.aeat.auth
     cadrumo.application.workflow._adapters -> cadrumo.adapters.outbound.aeat.sede
-    # The workflow model surface reports whether a browser session can be
+    # The workflow run-contract surface reports whether a browser session can be
     # established, so it names the outbound browser adapter alongside its
     # persistence reach.
-    cadrumo.application.workflow._models -> cadrumo.adapters.outbound.aeat.browser
-    cadrumo.application.workflow._models -> cadrumo.adapters.persistence.**
+    cadrumo.application.workflow._run_models -> cadrumo.adapters.outbound.aeat.browser
+    cadrumo.application.workflow._state_models -> cadrumo.adapters.persistence.**
     cadrumo.application.workflow._persistence -> cadrumo.adapters.persistence.**
     cadrumo.application.workflow._profile_health -> cadrumo.adapters.persistence.**
     # The shared secure-SQL test helper wraps the real persistence adapter for

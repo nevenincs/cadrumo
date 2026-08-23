@@ -23,7 +23,6 @@ from contextlib import contextmanager
 from datetime import date
 from functools import lru_cache
 from pathlib import Path
-from stat import S_ISDIR
 from typing import TYPE_CHECKING, Annotated, Any, Final, override
 
 from pydantic import BeforeValidator, Field, SecretStr, field_validator, model_validator
@@ -1360,121 +1359,6 @@ def reset_settings_cache() -> None:
     does not disturb the cache at all.
     """
     _constructed_settings.cache_clear()
-
-
-STORAGE_ROOT_MODE: Final[int] = 0o700
-"""Permission mode :func:`ensure_storage_tree` requests on the state root.
-
-Named because a second reader needs it: a drift check that verifies the root
-still carries what was asked for has to compare against the same value, and a
-literal repeated in both places lets the check keep passing against a mode the
-materialiser no longer requests.
-"""
-
-
-def ensure_storage_tree(settings: Settings | None = None) -> Path:
-    """Materialise the state root and its declared directories, and return the root.
-
-    The taxonomy declares where every derived output lands and the validator
-    above turns those declarations into absolute paths -- but nothing built
-    them. Directories appeared only when some consumer happened to write: the
-    local provider made its root on first write, the journal repository made
-    its own, bucket provisioning made a bucket's tree. A fresh machine
-    therefore held whichever subset of the taxonomy had been reached, and
-    "where does my data live" had no answer that could be given before the
-    fact.
-
-    This is that answer: it creates the root and every declared directory,
-    returns the root, and is safe to call repeatedly -- so a caller that needs
-    the tree can say so, instead of relying on having written something first.
-
-    Which directories those are is not decided here.
-    :func:`~core._storage_taxonomy.storage_tree_targets` derives them from the
-    typed declaration, so this materialiser cannot drift from the taxonomy by
-    carrying a second list of its own. That matters most for the distinction a
-    second list gets wrong: file-valued members contribute their parent and
-    explicitly not their leaf, and which members those are is a typed fact on
-    the declaration rather than a guess from a field-name suffix -- a suffix
-    guess cannot reach the per-bucket file names no naming convention governs,
-    and putting a directory where a document must be written fails much later,
-    at the write.
-
-    Restrictive permissions are requested on the root because the tree holds
-    encrypted taxpayer records, their key material, and the audit trail over
-    both. Platforms that do not implement POSIX modes ignore it, which is why
-    this asks rather than verifies; on such a host the filesystem's own
-    access control is the boundary.
-
-    Args:
-        settings: Settings to read the taxonomy from. Defaults to
-            :func:`load_settings`.
-
-    Returns:
-        The state root, guaranteed to exist when this returns.
-
-    Raises:
-        CoreValidationError: When the root or one of its directories cannot
-            be created, or a path in the taxonomy is occupied by a file. The
-            refusal carries the offending path and which of the two conditions
-            failed as typed facts: a half-built tree is worse than an absent
-            one, because the gap only surfaces later, at a write.
-    """
-    from ._storage_taxonomy import storage_tree_targets
-
-    resolved = settings if settings is not None else load_settings()
-    root = Path(resolved.cadrumo_local_storage_root)
-
-    for target in (root, *storage_tree_targets(resolved)):
-        # One stat answers both questions this loop used to ask with three
-        # syscalls (``exists``, then ``is_dir``, then an unconditional
-        # ``mkdir`` that re-walked the path). Every CLI invocation runs this
-        # over the whole taxonomy, and on a machine that has been used once
-        # the answer is always "already a directory" -- so the common case
-        # now costs one stat per target instead of three calls, and mkdir is
-        # issued only for a target that is genuinely absent.
-        try:
-            mode = target.stat().st_mode
-        except OSError:
-            mode = None
-        if mode is not None:
-            if not S_ISDIR(mode):
-                raise CoreValidationError(
-                    translated_message="errors.integrity.integrity_cadrumo_core_validation",
-                    context={
-                        "state_directory_target": str(target),
-                        "occupied_by_file": True,
-                        "directory_created": False,
-                    },
-                )
-            continue
-        try:
-            target.mkdir(parents=True, exist_ok=True)
-        except OSError as exc:
-            raise CoreValidationError(
-                translated_message="errors.integrity.integrity_cadrumo_core_validation",
-                context={
-                    "state_directory_target": str(target),
-                    "occupied_by_file": False,
-                    "directory_created": False,
-                    "mkdir_error_type": type(exc).__name__,
-                },
-            ) from exc
-
-    # Harden the ROOT once, with inheritance, rather than each file as it is
-    # written. ``chmod`` alone is POSIX-only: on NTFS it sets little beyond the
-    # read-only bit and the tree keeps inheriting the parent's ACL, so the
-    # earlier "relying on filesystem ACLs" fallback was relying on exactly the
-    # inherited ACL it meant to replace. The directory helper covers both
-    # platforms and, on Windows, grants ``(OI)(CI)F`` so every file written
-    # into the tree afterwards inherits the restriction at zero per-write cost.
-    # The per-file variant costs an ``icacls`` spawn (~28 ms) and is O(N) across
-    # the blob and journal writers -- unusable at the record counts this store
-    # targets, which is why hardening lives here and not on the write path.
-    from .file_permissions import restrict_directory_permissions
-
-    restrict_directory_permissions(root)
-
-    return root
 
 
 def load_settings() -> Settings:

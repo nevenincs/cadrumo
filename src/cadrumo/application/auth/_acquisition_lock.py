@@ -251,13 +251,34 @@ def clear_auth_acquisition_lock(
     *,
     reason: str = "operator-reset",
     bucket_id: str | None = None,
+    allow_held: bool = False,
 ) -> AuthAcquisitionLockStatus:
     """Remove the acquisition lock and return the pre-reset status.
 
     Returns an :class:`AuthAcquisitionLockStatus` reflecting the state
     observed immediately before the file was removed.
+
+    A HELD lock refuses unless the caller passes ``allow_held``. This function
+    used to delete on any state but ABSENT, so a live holder's record was
+    removed under the reason ``stale_reclaim`` and the next acquisition
+    succeeded while the first holder was still authenticating -- two processes
+    each believing they held the lock, which is a second petition to AEAT and
+    a second prompt on the taxpayer's phone. The compare-and-delete below does
+    not catch it: it guards against the bytes CHANGING, and a live holder's
+    bytes are unchanged.
+
+    Only a caller that is destroying the profile wholesale may pass
+    ``allow_held``: there the lock is going with everything else, and refusing
+    would strand the erase. A caller whose profile SURVIVES -- an auth reset,
+    or ``login --reset-lock`` -- must not, because nothing there compensates
+    for the aborted acquisition and the duplicate petition follows immediately.
     """
     status, observed = _inspect_with_observed_text(settings, kind, bucket_id=bucket_id)
+    if status.state is AuthAcquisitionLockState.HELD and not allow_held:
+        raise AuthAcquisitionLockedError(
+            translated_message="application.auth.acquisition_lock.errors.lock_held",
+            status=status,
+        )
     if status.state is not AuthAcquisitionLockState.ABSENT:
         if not _remove_lock_file_if_unchanged(status.path, observed):
             # A replacement landed after the operator's snapshot; report the

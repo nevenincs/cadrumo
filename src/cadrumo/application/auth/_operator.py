@@ -1113,10 +1113,17 @@ def reset_operator_auth(
                 intent.session_provider_ids,
                 bucket_id=bucket_id,
             )
+            # `auth reset` keeps its existing clearance for now. The ruling that
+            # produced the held-lock refusal flagged this caller too -- the
+            # profile survives here, so nothing compensates for an aborted
+            # acquisition -- but the operator decision taken covered the
+            # `login --reset-lock` path only, and widening it unasked would
+            # change a second verb's behaviour on the strength of an inference.
             clear_scoped_locks(
                 resolved_settings,
                 intent.lock_provider_ids,
                 bucket_id=bucket_id,
+                allow_held=True,
             )
             delete_certificate_source_secrets(
                 bucket_id,

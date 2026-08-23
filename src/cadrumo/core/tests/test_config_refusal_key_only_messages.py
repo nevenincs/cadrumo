@@ -21,8 +21,9 @@ from typing import TYPE_CHECKING
 import pytest
 from pydantic import ValidationError
 
-from ..config import ensure_storage_tree, load_settings, override_settings
+from ..config import load_settings, override_settings
 from ..errors import CoreValidationError, get_registered_error_code
+from ..storage_materialization import ensure_storage_tree
 
 if TYPE_CHECKING:
     from pathlib import Path

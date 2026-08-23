@@ -45,8 +45,8 @@ from ..operator_actions import (
     PreconditionVerdict,
 )
 from ._errors import WorkflowAbortSignalError
-from ._models import WorkflowAbortReason, WorkflowPurpose, WorkflowStage, WorkflowStep
 from ._protocols import DeadlineEngineProtocol
+from ._run_models import WorkflowAbortReason, WorkflowPurpose, WorkflowStage, WorkflowStep
 
 
 def resolve_deadline_stage_obligation(

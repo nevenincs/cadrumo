@@ -64,7 +64,12 @@ from ...core.aggregation import BindingSourceKind
 from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol
-from ...domain.calculations import RowBindingKey, RowSourceIdentity
+from ...domain.calculations import (
+    DirectRowMaterializationProvenance,
+    RowBindingKey,
+    RowCasillaKey,
+    RowSourceIdentity,
+)
 from ...domain.calculations.registry import (
     BindingId,
     InputKind,
@@ -375,6 +380,8 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     backend_binding_values: Mapping[BindingId, Decimal] | None = None,
     row_binding_values: Mapping[tuple[BindingId, int], Decimal | str] | None = None,
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity] | None = None,
+    row_casilla_values: Mapping[RowCasillaKey, Decimal] | None = None,
+    row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] | None = None,
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
     iva_compensation_decision: object | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
@@ -557,6 +564,8 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         binding_overrides=replay_payloads.binding_overrides,
         row_binding_values=replay_payloads.row_binding_values,
         row_source_identities=dict(row_source_identities or {}),
+        row_casilla_values=dict(row_casilla_values or {}),
+        row_casilla_provenance=dict(row_casilla_provenance or {}),
         relation_overrides=replay_payloads.relation_overrides,
         casilla_values=casilla_values,
         source_transaction_ids=source_transaction_ids,
@@ -1413,6 +1422,8 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         backend_binding_values=channels.backend_binding_values,
         row_binding_values=channels.source_resolution.row_binding_values,
         row_source_identities=channels.source_resolution.row_source_identities,
+        row_casilla_values=channels.source_resolution.row_casilla_values,
+        row_casilla_provenance=channels.source_resolution.row_casilla_provenance,
         backend_casilla_inputs=channels.backend_casilla_inputs,
         iva_compensation_decision=iva_compensation_decision,
         iva_compensation_decision_repository=iva_compensation_decision_repository,

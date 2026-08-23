@@ -55,7 +55,7 @@
 #
 # NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
 # pagina-complementaria mechanics; @356+150 RESERVADO PARA LA ADMINISTRACION; and
-# @506+12 Fin de registro.
+# @506+12 the record terminator, which this design words 'Fin de registro'.
 #
 # NOT CLAIMED: THIS BALANCE SHEET DOES NOT BALANCE HERE. Every subtotal and the TOTAL are
 # DECLARED, not computed: no formula, construct or binding sums a group into its head or

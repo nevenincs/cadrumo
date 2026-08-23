@@ -46,7 +46,8 @@ from .._storage_taxonomy import (
     StorageNodeKind,
     StorageScope,
 )
-from ..config import Settings, ensure_storage_tree, load_settings, override_settings
+from ..config import Settings, load_settings, override_settings
+from ..storage_materialization import ensure_storage_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

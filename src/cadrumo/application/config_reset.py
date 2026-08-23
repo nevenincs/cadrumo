@@ -620,8 +620,12 @@ def _clear_auth_for_target(bucket_id: str) -> ConfigResetAuthClearance:
     a clean sweep.
     """
     settings = load_settings()
+    # The erase is the one caller entitled to take a HELD lock: this profile is
+    # being destroyed wholesale, the lock is going with it, and refusing would
+    # strand the reset. Every other caller leaves the profile alive and must
+    # not abort somebody's live acquisition.
     cleared_lock_provider_ids = tuple(
-        sorted(clear_operator_auth_acquisition_locks(settings, bucket_id=bucket_id)),
+        sorted(clear_operator_auth_acquisition_locks(settings, bucket_id=bucket_id, allow_held=True)),
     )
     # Asked on the ambient route, with no injected Settings, because that is
     # exactly the route the revocation below would take: a probe on a different

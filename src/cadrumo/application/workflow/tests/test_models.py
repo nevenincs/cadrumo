@@ -1,5 +1,5 @@
 """Unit tests for the strict pydantic v2 records in
-:mod:`cadrumo.application.workflow._models`.
+:mod:`cadrumo.application.workflow._run_models`.
 
 Exercises :func:`cadrumo.application.workflow.compute_run_id` hash
 stability and the validators on :class:`cadrumo.application.workflow.WorkflowStep`,

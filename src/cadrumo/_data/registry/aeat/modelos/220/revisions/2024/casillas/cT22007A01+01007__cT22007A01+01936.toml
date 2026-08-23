@@ -64,7 +64,7 @@
 #
 # NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
 # pagina-complementaria mechanics; @560+150 RESERVADO PARA LA ADMINISTRACION; and
-# @710+12 Fin de registro.
+# @710+12 the record terminator, which this design words 'Fin de registro'.
 #
 # NOT CLAIMED: THIS CARRY-FORWARD TABLE DOES NOT RECONCILE ITSELF. Within each regimen
 # and each generation period the four columns are a chain -- original, pendiente at the

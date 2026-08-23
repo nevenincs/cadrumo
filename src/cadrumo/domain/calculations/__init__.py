@@ -20,6 +20,13 @@ See Also:
         registry binding and relation inputs without becoming domain authority.
 """
 
+from ._row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
 from ._row_source_identity import OpaqueSourceRowIdentity, RowBindingKey, RowSourceIdentity
 
-__all__ = ["OpaqueSourceRowIdentity", "RowBindingKey", "RowSourceIdentity"]
+__all__ = [
+    "DirectRowMaterializationProvenance",
+    "OpaqueSourceRowIdentity",
+    "RowBindingKey",
+    "RowCasillaKey",
+    "RowSourceIdentity",
+]

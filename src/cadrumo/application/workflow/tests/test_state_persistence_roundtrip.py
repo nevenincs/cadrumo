@@ -19,13 +19,13 @@ from ...review import (
     LedgerReviewRecord,
 )
 from .. import AuthState
-from .._models import (
+from .._persistence import WorkflowStateRepository
+from .._profile_bucket_scan import list_profile_buckets
+from .._state_models import (
     DeclaracionPointer,
     WorkflowEvent,
     WorkflowState,
 )
-from .._persistence import WorkflowStateRepository
-from .._profile_bucket_scan import list_profile_buckets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

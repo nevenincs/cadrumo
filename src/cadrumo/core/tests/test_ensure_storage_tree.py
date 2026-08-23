@@ -24,8 +24,9 @@ from typing import Final
 import pytest
 
 from .. import iter_directory
-from ..config import ensure_storage_tree, load_settings, override_settings
+from ..config import load_settings, override_settings
 from ..errors import CoreValidationError
+from ..storage_materialization import ensure_storage_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -33,6 +34,18 @@ PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset(
     {"tokens", "secrets", "blobs", "live-state", "logs", "cache", "drafts"},
 )
 """Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
+
+
+def test_settings_and_derived_path_reads_do_not_materialise_storage(tmp_path: Path) -> None:
+    """Reading configuration computes paths without creating their topology."""
+    root = tmp_path / "read-only-state"
+
+    with override_settings(cadrumo_local_storage_root=root):
+        settings = load_settings()
+        assert settings.cadrumo_token_dir == root / "tokens"
+        assert settings.cadrumo_log_dir == root / "logs"
+
+    assert not root.exists(), "settings/path resolution crossed the explicit materialization boundary"
 
 
 def test_it_builds_the_tree_and_returns_the_root(tmp_path: Path) -> None:

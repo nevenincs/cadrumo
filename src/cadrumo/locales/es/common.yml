@@ -193,6 +193,8 @@ aggregation:
         en la malla de fuentes.'
       duplicate_row_binding_owner: 'Error interno: propietario de vinculación de fila
         duplicado en la malla de fuentes.'
+      duplicate_row_casilla_coordinate: 'Error interno: coordenada de casilla de fila duplicada.'
+      duplicate_row_casilla_owner: 'Error interno: propietario de casilla de fila duplicado en la malla de fuentes.'
       out_of_window_summary_date_span_invalid: La fecha máxima de presentación de
         un resumen fuera de ventana no puede ser anterior a su fecha mínima.
       out_of_window_summary_incomplete: Un resumen fuera de ventana debe establecer
@@ -232,6 +234,13 @@ aggregation:
         debe ser mayor o igual que 1.'
       row_binding_value_invalid: 'Error interno: el valor decimal de la vinculación
         de fila no es válido.'
+      row_casilla_index_invalid: 'Error interno: el índice de casilla de fila debe ser mayor o igual que 1.'
+      row_casilla_provenance_coordinate_mismatch: Cada valor de casilla de fila debe tener exactamente una procedencia.
+      row_casilla_row_index_mismatch: La casilla de fila y su vinculación de origen deben usar el mismo índice.
+      row_casilla_source_coordinate_missing: Falta el valor o la identidad de la vinculación de origen de una casilla de fila.
+      row_casilla_source_identity_mismatch: La identidad de procedencia de la casilla de fila difiere de su identidad de origen.
+      row_casilla_source_value_mismatch: El valor de la casilla de fila difiere del valor de su vinculación de origen.
+      row_casilla_value_invalid: 'Error interno: el valor decimal de la casilla de fila no es válido.'
       row_source_identity_coordinate_mismatch: Toda coordenada de identidad de fila
         debe corresponder a un valor de vínculo presente en la propia fila. Se ha
         declarado una coordenada que la fila no aporta.

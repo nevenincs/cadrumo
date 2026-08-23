@@ -1,0 +1,509 @@
+# Modelo 220 RECORD T22004B00 -- CUENTA DE PERDIDAS Y GANANCIAS CONSOLIDADA, the financial half of
+# OPERACIONES CONTINUADAS: ingresos and gastos financieros, variacion
+# de valor razonable, diferencias de cambio, deterioro y resultado por
+# enajenaciones de instrumentos financieros, down through RESULTADO
+# FINANCIERO and RESULTADO ANTES DE IMPUESTOS to the RESULTADO
+# CONSOLIDADO DEL EJERCICIO and its attribution.
+#
+# 35 casillas describe all 45 design fields -- 35 authored and
+# 10 excluded, each excluded field asserted to be envelope, reservado or fin de
+# registro BY ITS OWN TEXT rather than by position.
+#
+# All 35 of this record's numbers carry AEAT's own printed box number (34 are 5-digit, 1 are 6-digit).
+# Not one number here is minted.
+#
+# CHILDREN CARRY THEIR PARENT'S NAME INLINE, so every label is distinct on AEAT's own text
+# and no nesting is inferred from position. Where a design does NOT do this the record is
+# authored flat instead -- T22005A01 is the worked example, and the difference between the
+# two treatments is in the data, never in the preference.
+#
+# ONE BOX NUMBER IS PRINTED WITH AN EXTRA LEADING ZERO: [000304], six digits, where
+# every other box on this record is five. IT IS RECORDED EXACTLY AS PRINTED. The evidence
+# that AEAT meant 00304 is strong -- its immediate neighbours are [00301] and [00305],
+# and 00304 is a real box number elsewhere in this modelo -- but the
+# campaign's invariant is that a casilla number is TRANSCRIBED FROM THE DESIGN, never
+# minted and never corrected, and the corpus verifier checks exactly that. Writing
+# 00304 would be this agent deciding what AEAT meant on a filing-grade identifier.
+#
+# THE SAME DEFECT AFFECTS EIGHT BOXES ACROSS THE DESIGN, not just this one: [000304],
+# [000507], [000742], [006308], [006309], [006310], [007504] and [007656], in records
+# T22004B00, T22012B20, T22014004 and T22014B20. In five of the eight the immediate
+# neighbours prove the intended five-digit reading ([007504] sits between [07503] and
+# [07505]). Whoever authors those three records meets the same decision, and it should
+# be made the same way.
+#
+# THE RECORD TERMINATOR IS MISWORDED: this design writes "Fin de ejercicio" where 132
+# records write "Fin de registro". The field closes a RECORD, not an ejercicio. Only
+# this record and T22005C00 do it. The generator therefore matches the terminator by
+# its closing tag rather than by AEAT's words, which is the thing that actually
+# identifies the field and is identical in all 137 records.
+#
+# AEAT MOVES A PARENT MID-GROUP. [00319] reads "Deterioro y resultado por enajenaciones
+# de instrumentos financieros. Resultados por enajenaciones y otras" while [00320] to
+# [00323], which are its breakdown on the printed modelo, drop the outer name and head
+# straight with "Resultados por enajenaciones y otras". Each label follows its own
+# printed text; the nesting is not repaired.
+#
+# AEAT IS INCONSISTENT ABOUT THE SEPARATOR AFTER A HEADING, writing the same one
+# both with and without the space that should follow its period. The heading is derived as
+# the common prefix of every numbered line and the remainder is stripped, so both
+# spellings land on the same heading. 4 parent-child separator
+# repair(s) applied to this record:
+#   after 'OPERACIONES CONTINUADAS (cont.). Deterioro y resultado por enajenaciones de instrumentos financieros. Deterioros y pérdidas'
+#   after 'OPERACIONES CONTINUADAS (cont.). Deterioro y resultado por enajenaciones de instrumentos financieros'
+#   after 'RESULTADO CONSOLIDADO DEL EJERCICIO'
+#   after 'RESULTADO CONSOLIDADO DEL EJERCICIO'
+#
+# THE LIGATURE REPAIR IS GROUNDED IN THE WORKBOOK'S OWN VOCABULARY, and the vocabulary is
+# counted twice so the damage cannot attest itself: once over every token, and once over
+# only those tokens seen where they CANNOT be the left half of a split. 0
+# rejoin(s) applied to this record, 0 distinct: none.
+#
+# 20 of this record's 35 numbered lines carry the real ligature CODEPOINT, unsplit,
+# expanded in the labels and kept as emitted in the verbatim comments. The design carries
+# 309 such codepoints in all, so a plain-text search of this workbook for a Spanish
+# word silently misses them.
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T22004B00 tiles
+# 1..772 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
+#
+# AEAT DECLARES THIS RECORD'S IDENTITY IN ITS ENVELOPE, as literal constants:
+# pagina 04, letra B, hoja 00. Sibling sector pages in this modelo
+# can share every heading AEAT prints in the BODY -- on the balance-sheet pages two
+# records both head their lines "ACTIVO" and both declare a "Total activo" -- so the
+# envelope is the ONLY non-inferential way to tell such records apart. The operator label
+# carries it for exactly that reason; it claims no sector, which the design does not state.
+#
+# NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
+# pagina-complementaria mechanics; @611+150 RESERVADO PARA LA ADMINISTRACION; and
+# @761+12 the record terminator, which this design words 'Fin de ejercicio'.
+#
+# NOT CLAIMED: THIS PROFIT AND LOSS ACCOUNT DOES NOT ADD UP HERE. RESULTADO FINANCIERO,
+# RESULTADO ANTES DE IMPUESTOS, RESULTADO DEL EJERCICIO PROCEDENTE DE OPERACIONES
+# CONTINUADAS and RESULTADO CONSOLIDADO DEL EJERCICIO are each DECLARED, not computed,
+# and the split of the consolidated result between the sociedad dominante and socios
+# externos is declared beside it without anything checking that the two sum back. No
+# formula, construct or binding relates any of them, and nothing joins this page to the
+# operating half of the same cuenta de perdidas y ganancias. Every box is a manual
+# input.
+
+# @16+17 N. OPERACIONES CONTINUADAS (cont.). Ingresos ﬁnancieros [00297]
+[[revisions."2024".casillas]]
+id = "T22004B00:00297"
+number = "00297"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @33+17 N. OPERACIONES CONTINUADAS (cont.). Ingresos ﬁnancieros. De participaciones en instrumentos de patrimonio [00298]
+[[revisions."2024".casillas]]
+id = "T22004B00:00298"
+number = "00298"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @50+17 N. OPERACIONES CONTINUADAS (cont.). Ingresos ﬁnancieros. De valores negociables y otros instrumentos ﬁnancieros [00301]
+[[revisions."2024".casillas]]
+id = "T22004B00:00301"
+number = "00301"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @67+17 N. OPERACIONES CONTINUADAS (cont.). Ingresos ﬁnancieros. Imputación de subvenciones, donaciones y legados de carácter ﬁnanciero [000304]
+[[revisions."2024".casillas]]
+id = "T22004B00:000304"
+number = "000304"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @84+17 N. OPERACIONES CONTINUADAS (cont.). Gastos ﬁnancieros [00305]
+[[revisions."2024".casillas]]
+id = "T22004B00:00305"
+number = "00305"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @101+17 N. OPERACIONES CONTINUADAS (cont.). Gastos ﬁnancieros. Por deudas con empresas del grupo asociadas [00306]
+[[revisions."2024".casillas]]
+id = "T22004B00:00306"
+number = "00306"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @118+17 N. OPERACIONES CONTINUADAS (cont.). Gastos ﬁnancieros. Por deudas con terceros [00307]
+[[revisions."2024".casillas]]
+id = "T22004B00:00307"
+number = "00307"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @135+17 N. OPERACIONES CONTINUADAS (cont.). Gastos ﬁnancieros. Por actuación de provisiones [00308]
+[[revisions."2024".casillas]]
+id = "T22004B00:00308"
+number = "00308"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @152+17 N. OPERACIONES CONTINUADAS (cont.). Variación de valor razonable en instrumentos ﬁnancieros [00309]
+[[revisions."2024".casillas]]
+id = "T22004B00:00309"
+number = "00309"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @169+17 N. OPERACIONES CONTINUADAS (cont.). Variación de valor razonable en instrumentos ﬁnancieros. Valor razonable con cambios en pérdidas y ganancias [00310]
+[[revisions."2024".casillas]]
+id = "T22004B00:00310"
+number = "00310"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @186+17 N. OPERACIONES CONTINUADAS (cont.). Variación de valor razonable en instrumentos financieros. Transferencias de ajustes de valor razonable con cambios en el patrimonio neto [00311]
+[[revisions."2024".casillas]]
+id = "T22004B00:00311"
+number = "00311"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @203+17 N. OPERACIONES CONTINUADAS (cont.). Diferencias de cambio [00312]
+[[revisions."2024".casillas]]
+id = "T22004B00:00312"
+number = "00312"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @220+17 N. OPERACIONES CONTINUADAS (cont.). Deterioro y resultado por enajenaciones de instrumentos ﬁnancieros [00313]
+[[revisions."2024".casillas]]
+id = "T22004B00:00313"
+number = "00313"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @237+17 N. OPERACIONES CONTINUADAS (cont.). Deterioro y resultado por enajenaciones de instrumentos ﬁnancieros. Deterioros y pérdidas [00314]
+[[revisions."2024".casillas]]
+id = "T22004B00:00314"
+number = "00314"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @254+17 N. OPERACIONES CONTINUADAS (cont.). Deterioro y resultado por enajenaciones de instrumentos ﬁnancieros. Deterioros y pérdidas.Deterioros, empresas del grupo, asociadas y vinculadas [00315]
+[[revisions."2024".casillas]]
+id = "T22004B00:00315"
+number = "00315"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @271+17 N. OPERACIONES CONTINUADAS (cont.). Deterioro y resultado por enajenaciones de instrumentos ﬁnancieros.Deterioros y pérdidas. Deterioros, otras empresas [00316]
+[[revisions."2024".casillas]]
+id = "T22004B00:00316"
+number = "00316"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @288+17 N. OPERACIONES CONTINUADAS (cont.). Deterioro y resultado por enajenaciones de instrumentos ﬁnancieros. Deterioros y pérdidas. Reversión de deterioros, empresas del grupo, asociadas y vinculadas [00317]
+[[revisions."2024".casillas]]
+id = "T22004B00:00317"
+number = "00317"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @305+17 N. OPERACIONES CONTINUADAS (cont.). Deterioro y resultado por enajenaciones de instrumentos ﬁnancieros. Deterioros y pérdidas. Reversión de deterioros, otras empresas [00318]
+[[revisions."2024".casillas]]
+id = "T22004B00:00318"
+number = "00318"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @322+17 N. OPERACIONES CONTINUADAS (cont.). Deterioro y resultado por enajenaciones de instrumentos ﬁnancieros. Resultados por enajenaciones y otras [00319]
+[[revisions."2024".casillas]]
+id = "T22004B00:00319"
+number = "00319"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @339+17 N. OPERACIONES CONTINUADAS (cont.). Resultados por enajenaciones y otras. Beneﬁcios, empresas del grupo asociadas y vinculadas [00320]
+[[revisions."2024".casillas]]
+id = "T22004B00:00320"
+number = "00320"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @356+17 N. OPERACIONES CONTINUADAS (cont.). Resultados por enajenaciones y otras. Beneﬁcios, otras empresas [00321]
+[[revisions."2024".casillas]]
+id = "T22004B00:00321"
+number = "00321"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @373+17 N. OPERACIONES CONTINUADAS (cont.). Resultados por enajenaciones y otras. Pérdidas, empresas del grupo asociadas y vinculadas [00322]
+[[revisions."2024".casillas]]
+id = "T22004B00:00322"
+number = "00322"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @390+17 N. OPERACIONES CONTINUADAS (cont.). Resultados por enajenaciones y otras. Pérdidas, otras empresas [00323]
+[[revisions."2024".casillas]]
+id = "T22004B00:00323"
+number = "00323"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @407+17 N. OPERACIONES CONTINUADAS (cont.). Otros ingresos y gastos de carácter financiero [00360]
+[[revisions."2024".casillas]]
+id = "T22004B00:00360"
+number = "00360"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @424+17 N. OPERACIONES CONTINUADAS (cont.). Otros ingresos y gastos de carácter financiero. Incorporación al activo de gastos financieros [00361]
+[[revisions."2024".casillas]]
+id = "T22004B00:00361"
+number = "00361"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @441+17 N. OPERACIONES CONTINUADAS (cont.). Otros ingresos y gastos de carácter financiero. Ingresos financieros derivados de convenios de acreedores [00362]
+[[revisions."2024".casillas]]
+id = "T22004B00:00362"
+number = "00362"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @458+17 N. OPERACIONES CONTINUADAS (cont.). Otros ingresos y gastos de carácter financiero. Resto de ingresos y gastos [00363]
+[[revisions."2024".casillas]]
+id = "T22004B00:00363"
+number = "00363"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @475+17 N. OPERACIONES CONTINUADAS (cont.). RESULTADO FINANCIERO [00324]
+[[revisions."2024".casillas]]
+id = "T22004B00:00324"
+number = "00324"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @492+17 N. OPERACIONES CONTINUADAS (cont.). RESULTADO ANTES DE IMPUESTOS [00325]
+[[revisions."2024".casillas]]
+id = "T22004B00:00325"
+number = "00325"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @509+17 N. OPERACIONES CONTINUADAS (cont.). Impuestos sobre beneﬁcios [00326]
+[[revisions."2024".casillas]]
+id = "T22004B00:00326"
+number = "00326"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @526+17 N. OPERACIONES CONTINUADAS (cont.). RESULTADO DEL EJERCICIO PROCEDENTE DE OPERACIONES CONTINUADAS [00327]
+[[revisions."2024".casillas]]
+id = "T22004B00:00327"
+number = "00327"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @543+17 N. OPERACIONES INTERRUMPIDAS. RESULTADO DEL EJERCICIO PROCEDENTE DE OPERACIONES INTERRUMPIDAS NETO DE IMPUESTOS. [00328]
+[[revisions."2024".casillas]]
+id = "T22004B00:00328"
+number = "00328"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @560+17 N. RESULTADO CONSOLIDADO DEL EJERCICIO. [00500]
+[[revisions."2024".casillas]]
+id = "T22004B00:00500"
+number = "00500"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @577+17 N. RESULTADO CONSOLIDADO DEL EJERCICIO.Resultado atribuido a la sociedad dominante. [00247]
+[[revisions."2024".casillas]]
+id = "T22004B00:00247"
+number = "00247"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @594+17 N. RESULTADO CONSOLIDADO DEL EJERCICIO.Resultado atribuido a socios externos. [00248]
+[[revisions."2024".casillas]]
+id = "T22004B00:00248"
+number = "00248"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]

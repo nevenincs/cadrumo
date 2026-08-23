@@ -11,6 +11,8 @@ from pydantic import ValidationError
 from ....adapters.persistence.storage.errors import DecryptionError
 from ....core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, validated_casilla_id
 from ....core.resources import resources
+from ....domain.calculations import DirectRowMaterializationProvenance
+from ....domain.calculations.registry import RevisionId
 from .. import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
@@ -115,6 +117,132 @@ def _row_identity(
         source_row_identity=identity,
         fingerprint=fingerprint,
     )
+
+
+def _row_casilla_provenance(
+    *,
+    binding_id: str = "inventory-operation-a",
+    row_index: int = 1,
+    identity: RowSourceIdentity | None = None,
+    revision: RevisionId = "2025",
+) -> DirectRowMaterializationProvenance:
+    return DirectRowMaterializationProvenance(
+        source_binding_id=binding_id,
+        source_row_index=row_index,
+        source_identity=identity or _row_identity(),
+        materialization_rule_id=binding_id,
+        materialization_rule_version=revision,
+    )
+
+
+def test_row_casilla_direct_materialization_is_sorted_and_redacts_provenance() -> None:
+    identity = _row_identity("opaque-activity-do-not-display")
+    resolution = CalculationSourceResolution(
+        resolver_id="inventory",
+        row_binding_values={
+            ("inventory-operation-z", 2): Decimal("2.00"),
+            ("inventory-operation-a", 1): Decimal("1.00"),
+        },
+        row_source_identities={
+            ("inventory-operation-z", 2): _row_identity("opaque-z", fingerprint="b" * 64),
+            ("inventory-operation-a", 1): identity,
+        },
+        row_casilla_values={("0182", 2): Decimal("2.00"), ("0177", 1): Decimal("1.00")},
+        row_casilla_provenance={
+            ("0182", 2): _row_casilla_provenance(
+                binding_id="inventory-operation-z",
+                row_index=2,
+                identity=_row_identity("opaque-z", fingerprint="b" * 64),
+            ),
+            ("0177", 1): _row_casilla_provenance(identity=identity),
+        },
+    )
+
+    assert tuple(resolution.row_casilla_values) == (("0177", 1), ("0182", 2))
+    assert resolution.model_dump(mode="json")["row_casilla_values"] == [
+        {"casilla_id": "0177", "row_index": 1, "value": "1.00"},
+        {"casilla_id": "0182", "row_index": 2, "value": "2.00"},
+    ]
+    assert "row_casilla_provenance" not in resolution.model_dump(mode="json")
+    assert "opaque-activity-do-not-display" not in repr(resolution)
+    assert "opaque-activity-do-not-display" not in resolution.model_dump_json()
+
+
+@pytest.mark.parametrize(
+    ("values", "provenance", "message"),
+    [
+        ({}, {("0177", 1): _row_casilla_provenance()}, "row_casilla_provenance_coordinate_mismatch"),
+        ({("0177", 1): Decimal("1.00")}, {}, "row_casilla_provenance_coordinate_mismatch"),
+        (
+            {("0177", 2): Decimal("1.00")},
+            {("0177", 2): _row_casilla_provenance()},
+            "row_casilla_row_index_mismatch",
+        ),
+        (
+            {("0177", 1): Decimal("9.00")},
+            {("0177", 1): _row_casilla_provenance()},
+            "row_casilla_source_value_mismatch",
+        ),
+        (
+            {("0177", 1): Decimal("1.00")},
+            {("0177", 1): _row_casilla_provenance(identity=_row_identity("substituted"))},
+            "row_casilla_source_identity_mismatch",
+        ),
+    ],
+)
+def test_row_casilla_direct_materialization_refuses_non_bijective_claims(
+    values: dict[tuple[str, int], Decimal],
+    provenance: dict[tuple[str, int], DirectRowMaterializationProvenance],
+    message: str,
+) -> None:
+    with pytest.raises(ValidationError, match=message):
+        CalculationSourceResolution(
+            resolver_id="inventory",
+            row_binding_values={("inventory-operation-a", 1): Decimal("1.00")},
+            row_source_identities={("inventory-operation-a", 1): _row_identity()},
+            row_casilla_values=values,
+            row_casilla_provenance=provenance,
+        )
+
+
+def test_row_casilla_direct_materialization_refuses_missing_source_coordinate() -> None:
+    with pytest.raises(ValidationError, match="row_casilla_source_coordinate_missing"):
+        CalculationSourceResolution(
+            resolver_id="inventory",
+            row_casilla_values={("0177", 1): Decimal("1.00")},
+            row_casilla_provenance={("0177", 1): _row_casilla_provenance()},
+        )
+
+
+def test_direct_materialization_rule_must_be_the_source_binding() -> None:
+    with pytest.raises(ValidationError, match="rule must equal its source binding"):
+        DirectRowMaterializationProvenance(
+            source_binding_id="inventory-operation-a",
+            source_row_index=1,
+            source_identity=_row_identity(),
+            materialization_rule_id="inventory-operation-b",
+            materialization_rule_version="2025",
+        )
+
+
+@pytest.mark.parametrize("field", ["row_casilla_values", "row_casilla_provenance"])
+def test_row_casilla_serialized_hydration_refuses_duplicate_coordinates(field: str) -> None:
+    value_row = {"casilla_id": "0177", "row_index": 1, "value": "1.00"}
+    provenance_row = {
+        "casilla_id": "0177",
+        "row_index": 1,
+        "source_binding_id": "inventory-operation-a",
+        "source_row_index": 1,
+        "source_identity": _row_identity().model_dump(mode="json"),
+        "materialization_rule_id": "inventory-operation-a",
+        "materialization_rule_version": "2025",
+    }
+    duplicate = value_row if field == "row_casilla_values" else provenance_row
+
+    with pytest.raises(ValidationError, match="duplicate_row_casilla_coordinate"):
+        CalculationSourceResolution.model_validate(
+            {"resolver_id": "inventory", field: [duplicate, duplicate]},
+        )
 
 
 def test_row_source_identity_is_sorted_and_excluded_from_generic_serialization() -> None:
@@ -707,6 +835,50 @@ def test_source_resolution_merge_rejects_duplicate_row_binding_ownership() -> No
     assert context["row_index"] == 1
     assert context["first_resolver"] == "foreign-assets"
     assert context["second_resolver"] == "manual-bridge"
+
+
+@pytest.mark.parametrize("merge", [merge_source_resolutions, merge_source_resolutions_by_precedence])
+def test_source_resolution_merges_refuse_duplicate_row_casilla_ownership(merge: object) -> None:
+    identity = _row_identity()
+
+    def resolution(resolver_id: str) -> CalculationSourceResolution:
+        binding_id = f"inventory-operation-{resolver_id}"
+        return CalculationSourceResolution(
+            resolver_id=resolver_id,
+            row_binding_values={(binding_id, 1): Decimal("1.00")},
+            row_source_identities={(binding_id, 1): identity},
+            row_casilla_values={("0177", 1): Decimal("1.00")},
+            row_casilla_provenance={
+                ("0177", 1): _row_casilla_provenance(binding_id=binding_id, identity=identity),
+            },
+        )
+
+    with pytest.raises(AggregationValidationError) as exc_info:
+        merge((resolution("inventory-left"), resolution("inventory-right")))  # type: ignore[operator]
+
+    assert str(exc_info.value) == "aggregation.source_mesh.errors.duplicate_row_casilla_owner"
+    assert exc_info.value.context == {
+        "casilla_id": "0177",
+        "row_index": 1,
+        "first_resolver": "inventory-left",
+        "second_resolver": "inventory-right",
+    }
+
+
+def test_source_resolution_merge_preserves_row_casilla_direct_materialization() -> None:
+    identity = _row_identity()
+    source = CalculationSourceResolution(
+        resolver_id="inventory",
+        row_binding_values={("inventory-operation-a", 1): Decimal("1.00")},
+        row_source_identities={("inventory-operation-a", 1): identity},
+        row_casilla_values={("0177", 1): Decimal("1.00")},
+        row_casilla_provenance={("0177", 1): _row_casilla_provenance(identity=identity)},
+    )
+
+    merged = merge_source_resolutions((source,))
+
+    assert merged.row_casilla_values == source.row_casilla_values
+    assert merged.row_casilla_provenance == source.row_casilla_provenance
 
 
 @pytest.mark.parametrize(

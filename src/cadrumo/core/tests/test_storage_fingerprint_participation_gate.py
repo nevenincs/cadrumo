@@ -210,7 +210,8 @@ def test_writing_beneath_a_participating_category_moves_the_digest(tmp_path: Pat
     notices.
     """
     root = tmp_path / "state"
-    from ..config import ensure_storage_tree, load_settings
+    from ..config import load_settings
+    from ..storage_materialization import ensure_storage_tree
 
     with override_settings(cadrumo_local_storage_root=root):
         ensure_storage_tree()
@@ -236,7 +237,8 @@ def test_writing_beneath_a_participating_category_moves_the_digest(tmp_path: Pat
 def test_writing_beneath_an_excluded_category_leaves_the_digest_unchanged(tmp_path: Path) -> None:
     """The property half: a regenerable cache must not churn the refusal."""
     root = tmp_path / "state"
-    from ..config import ensure_storage_tree, load_settings
+    from ..config import load_settings
+    from ..storage_materialization import ensure_storage_tree
 
     with override_settings(cadrumo_local_storage_root=root):
         ensure_storage_tree()

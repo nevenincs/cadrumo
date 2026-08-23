@@ -27,8 +27,8 @@ from ....core import BucketPointer, read_pointer, write_pointer
 from ....core.config import override_settings
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ...user_profile import profile_bind_bucket_session
-from .._models import WorkflowState
 from .._profile_health import assess_active_profile_health, repair_active_profile_pointer
+from .._state_models import WorkflowState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

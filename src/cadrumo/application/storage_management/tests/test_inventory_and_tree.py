@@ -13,15 +13,17 @@ import stat
 import pytest
 
 from ....core import (
+    STORAGE_ROOT_MODE,
     STORAGE_TAXONOMY,
     StorageArea,
     StorageCategory,
     StorageNodeKind,
     StorageScope,
+    ensure_storage_tree,
     scan_directory,
     storage_path,
 )
-from ....core.config import STORAGE_ROOT_MODE, ensure_storage_tree, load_settings, override_settings
+from ....core.config import load_settings, override_settings
 from .._models import StorageAreaDisposition, StorageOccupancy, StorageTreeIssueKind
 from .._service import (
     collect_storage_area_inventory,
