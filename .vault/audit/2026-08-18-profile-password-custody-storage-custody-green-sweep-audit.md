@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:70a9b0057405010c513567d4675e70ae8ec0208c7b490c25143c7f52079f630e'
+body_hash: 'sha256:77e66ef2f9c678d88d7ed0fbdc2ec43f66575f9e11b99ccef54e38aacd794262'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6999,3 +6999,38 @@ This is the lead's own warning paying off. A consumer sweep that counts only IMP
 package boundaries reports this class as unused; the thing keeping it alive is an `isinstance`
 check inside its defining module, which no cross-package import scan can see. Both halves of
 the lead are now closed on evidence, and nothing in `master_key` is deletable.
+
+### Complete census of the domain, and a correction to this campaign's own closure
+
+Finishing the arithmetic the serial slice started. The three paths hold 2,049 collected cases.
+The campaign's two prescribed lanes cover 361 + 1,644, the serial pass adds 16, totalling
+2,021. The residue is 28, and measured rather than assumed, the uncovered set is EXACTLY the
+`os_keychain` set: collecting "uncovered AND not os_keychain" returns nothing. Every case in
+this domain is therefore accounted for -- verified here, or unverifiable here by the standing
+operator ruling that a network logon carries no credentials.
+
+What that residue CONTAINS is the part worth stating, because a count hides it. Among the 28
+are `test_receipt_never_writes_plaintext_dek`, `test_tampered_aad_record_is_refused_and_
+cleaned`, `test_handover_leaves_no_resumable_session_material_for_the_retired_profile`,
+`test_registration_displaced_profile_keeps_no_resumable_material_after_the_next_login`,
+`test_same_profile_relogin_in_a_new_process_keeps_its_own_session_material` and
+`test_the_resumed_key_is_a_buffer_whose_wipe_reaches_the_material`. Those are the
+confidentiality, integrity, key-wiping and cross-process session-isolation contracts of the
+custody surface -- exactly the properties this campaign's goal names.
+
+**Correcting an earlier entry in this document.** The multiuser-safety lead was closed here
+"on evidence", citing `test_login_handover.py` and `test_registration_retires_displaced_
+profile.py` among others. The evidence was that those contracts EXIST and are written against
+real separate processes. It was not evidence that they pass in this environment, and for one
+of the two cited modules the gap is wide: `test_registration_retires_displaced_profile.py`
+holds 5 cases of which 4 never execute here. `test_login_handover.py` is better at 22 of 29.
+The lead stays closed -- the contracts are real, and running them is an operator action on an
+interactive desktop session, not a code gap -- but "covered" overstated it for the
+`os_keychain` portion, and this entry is the qualification.
+
+A measurement note, because the first attempt at this was wrong in a way that looked right.
+Counting a module's cases with a bare `pytest --collect-only` reported `total=0` for two
+modules, which would have made the arithmetic nonsense. The cause is the project's default
+`addopts` pinning `-m unit`, so a module carrying no unit cases collects nothing. `-o
+addopts=""` is what makes a whole-module count honest. The tell was that a total of zero for a
+module with known cases is impossible, not that the numbers looked odd.
