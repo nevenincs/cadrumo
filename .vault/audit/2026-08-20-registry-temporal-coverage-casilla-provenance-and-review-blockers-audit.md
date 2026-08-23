@@ -4677,3 +4677,55 @@ a minute.
 
 **10154 of 11570 slots remain** across 103 numbered records; 1416 modelled, zero orphaned.
 The aseguradoras activo now has a total, and nothing computes it.
+
+## 2026-08-23 — T22003C02, the aseguradoras pasivo
+
+### What landed
+
+Record **T22003C02** — the *balance consolidado pasivo* in the aseguradoras shape: débitos y
+partidas a pagar with its long breakdown, provisiones técnicas and no técnicas, pasivos
+fiscales, resto de pasivos, closing on `00207` TOTAL PASIVO. **48 casillas**, revision
+1582 → **1630**, thirty-one of 137 records.
+
+### One suffix, two parents, one translation
+
+`Provisión para primas no consumidas` sits **twice** in this record — once under
+*provisiones técnicas* (`00183`) and once under *provisión de seguros de vida* (`00186`).
+`Provisión para riesgos en curso` does the same (`00184`, `00187`).
+
+They are different boxes; the composed labels separate them. But **translating each suffix
+once is what keeps the two readings identical in all four catalogues where AEAT prints them
+identically.** A per-box translation table would have let the pair drift — the same failure
+the campaign already hit when a Hungarian string collapsed two lines AEAT separates by a
+definite article.
+
+That is the quiet argument for composition over per-box tables: it makes *sameness* as
+enforceable as difference.
+
+### The page identifier held
+
+`(pág. 3C hoja 02)`, from the envelope constants. The revision's duplicated-label count is
+**unchanged at 4 texts over 19 casillas** — all AEAT's own repeats inside T22005A01. This
+record added none, which is the first evidence the mechanism generalises rather than just
+patching the four collisions that prompted it.
+
+### The suite measured a moving tree for the third iteration running
+
+Three new FAILED entries — one legal-grounding scan over production Python, two
+scenario-runner reachability checks. **All three pass on an individual re-run.** None reads
+registry TOML or locale YAML.
+
+The cost of establishing that is about a minute, and the diff-against-baseline is what makes
+it cheap: without it the choice is between accepting a twelve-failure run and re-running
+everything. Worth stating as settled practice rather than re-deriving it each time.
+
+### Both totals now exist for this sector, and nothing relates them
+
+`00162` TOTAL ACTIVO (page 3B) and `00207` TOTAL PASIVO (page 3C) are both declared. Nothing
+sums a group into its head, nothing sums heads into either total, and nothing checks activo
+against pasivo plus patrimonio neto — **for which T22003D02 is not authored at all**, so the
+accounting identity could not be expressed here even if something were willing to.
+
+### Scale
+
+**10106 of 11570 slots remain** across 102 numbered records; 1464 modelled, zero orphaned.
