@@ -252,7 +252,7 @@ def _locked_resources(lock_path: Path) -> tuple[Resource, ...]:
         # The formula installs the ``cadrumo`` distribution and its mandatory
         # runtime closure only. Workspace-only packages are not formula resources.
         queue = list(root.get("dependencies", []))
-        seen = {"cadrumo-data-manuals", "cadrumo-data-official", "cadrumo-harness"}
+        seen = {"cadrumo-data-manuals", "cadrumo-data-official"}
         while queue:
             dependency = queue.pop(0)
             name = str(dependency["name"])

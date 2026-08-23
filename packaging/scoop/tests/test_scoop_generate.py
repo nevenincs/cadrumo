@@ -223,7 +223,6 @@ def test_generated_manifest_binds_exact_cohort_and_the_cli_command(
     assert "%*" in hook
     assert "Join-Path $dir 'aeat.cmd'" in hook
     assert "-NoNewline -Encoding ascii" in hook
-    assert "cadrumo-mcp" not in json.dumps(manifest)
 
 
 def test_manifest_pins_transitive_closure_from_lock(

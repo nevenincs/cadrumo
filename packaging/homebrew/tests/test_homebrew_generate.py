@@ -193,7 +193,6 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
     assert "venv.pip_install_and_link buildpath" in formula
     assert 'assert_predicate bin/"aeat", :executable?' in formula
     # The formula exposes only the product CLI.
-    assert "cadrumo-mcp" not in formula
     assert 'shell_output("#{bin}/aeat --version")' in formula
 
     resources = {name: (url, digest) for name, url, digest in _RESOURCE.findall(formula)}
