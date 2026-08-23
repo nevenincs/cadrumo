@@ -1,6 +1,6 @@
 """Tests for the ``cli-tree.json`` help-projection generator (``dev/docs/cli_tree.py``).
 
-The projection is the build-time help catalogue the ``cli-sequence`` frontend
+The projection is the build-time help catalogue the ``cli-sequence`` browser
 widget consumes. These tests prove it generates, is byte-deterministic across
 two builds, covers every node the immutable command graph yields, round-trips through
 its serialised form, and that a documented command path absent from the

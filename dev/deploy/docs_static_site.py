@@ -709,10 +709,8 @@ def _invalidate_distribution_paths(
 ) -> None:
     """Invalidate the given published paths on the distribution and wait for completion.
 
-    Shared by both deployment entry points in this package: the docs site
-    invalidates its own subtree, the landing site passes the page set Vite does
-    not content-hash. Only that path list differs, so the create-invalidate,
-    id-extract, and wait-for-completion sequence lives here once.
+    The documentation publisher invalidates its own subtree through this
+    single create-invalidation, id-extract, and wait-for-completion sequence.
     """
     created = _run(
         [

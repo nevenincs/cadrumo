@@ -12,7 +12,7 @@ Scope and judgement:
   attribution. The project's public copyright holder / privacy responsible
   party ("Neve Nincs") and the published ``hello@neve.md`` contact address on
   the neve.md domain are legally load-bearing attribution carried in NOTICE,
-  PRIVACY.md, the frontend, and license-chain tests; they are intentionally
+  PRIVACY.md and license-chain tests; they are intentionally
   public and are NOT banned here. The retired personal identity that predated
   it is now a privacy leak if it resurfaces in a shipped doc and is banned
   below.

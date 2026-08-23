@@ -6,7 +6,7 @@ Two tiers, both real, no mocks or skips:
   classifies a frame's argv against the command graph, and the directive's
   render pipeline (``dev/docs/sequence_directive``) projects a parsed sequence
   plus its golden into one payload and renders the static HTML from that single
-  source. These assert token classification, the payload shape the frontend
+  source. These assert token classification, the payload shape the browser
   widget consumes, and that the inline JSON cannot drift from the visible frames.
 
 - **Real-build tier.** A minimal Sphinx site is built in-process with the

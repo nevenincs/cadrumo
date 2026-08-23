@@ -6,10 +6,10 @@ version, builds one immutable cohort, proves it, publishes those exact bytes, an
 retires the sealed candidate only after publication succeeds. There is no release PR,
 normal-path soak, or second approval step.
 
-A successful release uses one version, source commit, and set of artifact digests
-across GitHub Releases, the three PyPI distributions, Scoop, Homebrew, the Claude
-marketplace, and the MCPB asset. A destination is release-ready only when its declared
-credentials and required evidence exist.
+A successful release uses one version, source commit, and set of artifact digests.
+The currently claimed registry tier publishes the three PyPI distributions and the
+GitHub release cohort. Scoop, Homebrew, Claude marketplace, and MCPB publication remain
+conditional until the channel descriptor claims them and their prerequisites are met.
 
 The marketing website belongs to the separate `cadrumo-marketing` repository; its
 source, build, tests, deployment, and release lifecycle are not part of this product
@@ -29,7 +29,7 @@ release.
 The workflow run and its logs are the authoritative operational record. A
 `release-alert` issue is a notification, not a substitute for the run result.
 
-## Prerequisites
+## One-time setup
 
 Before a first real publication, issue
 [#612](https://github.com/nevenincs/cadrumo/issues/612) must record the three exact
@@ -49,6 +49,8 @@ Confirm the repository configuration used by the destinations that are enabled:
 - variable `HOMEBREW_TAP_REPO` and secret `HOMEBREW_TAP_TOKEN`
 - variable `CLAUDE_MARKETPLACE_REPO` and secret `CLAUDE_MARKETPLACE_TOKEN`
 - the `release-alert` repository label, or the configured webhook fallback
+
+## Per-release preflight
 
 Confirm the self-hosted runner fleet is online for every requested shape: Linux/X64,
 Linux/ARM64, macOS/ARM64, and Windows/X64. Scoop additionally requires a dedicated
@@ -77,7 +79,8 @@ correct.
 
 ## Start with a rehearsal
 
-Run the complete non-publishing path first:
+Run the complete non-publishing path first. It uses `packaging-quick.yml`, so its child
+run is deliberately different from a real release's `packaging-smoke.yml` run:
 
 ```console
 gh workflow run release-orchestrator.yml --repo nevenincs/cadrumo --ref main -f dry_run=true
@@ -85,7 +88,8 @@ gh run list --repo nevenincs/cadrumo --workflow release-orchestrator.yml --limit
 ```
 
 A rehearsal computes the candidate version, exercises packaging and evidence
-selection, and seals a dry-run candidate. It does not push a version commit or tag and
+selection, and seals a dry-run candidate under `release-candidate-<run-id>`. It does
+not push a version commit or tag and
 does not dispatch the publication authority.
 
 Inspect the selected run:
@@ -106,28 +110,7 @@ Start a real release from `main`:
 gh workflow run release-orchestrator.yml --repo nevenincs/cadrumo --ref main -f dry_run=false
 ```
 
-The orchestrator performs these steps in order:
-
-1. Computes the next version from conventional commits, updates all seven version
-   surfaces, commits `chore(release): vX.Y.Z`, creates the annotated tag, and pushes
-   the commit and tag directly to `main`.
-2. Dispatches `packaging-smoke.yml` at that exact commit and resolves the run by
-   immutable identity.
-3. Builds the cohort once and gathers the evidence required by the derived claimed
-   channel set. Acquisition run IDs are required only for channels that claim them.
-4. Seals a typed draft candidate containing the source commit, version, cohort run ID,
-   evidence run IDs, channel set, and artifact identity.
-5. Dispatches `publish-release.yml` at the campaign commit and waits for that exact run
-   to finish successfully.
-6. Revalidates all identities and digests, then writes GitHub Release assets, Scoop,
-   Homebrew, and Claude marketplace state before the irreversible PyPI uploads.
-7. Retags the candidate into the consumed namespace only after publication succeeds.
-
-The publication workflow never rebuilds. PyPI upload uses Trusted Publishing and a
-check-before-upload operation, allowing a retry with the same cohort to converge after
-a partial upload.
-
-Monitor the orchestrator rather than dispatching `publish-release.yml` independently:
+Monitor the orchestrator and the child run IDs it resolves:
 
 ```console
 gh run list --repo nevenincs/cadrumo --workflow release-orchestrator.yml --limit 5
@@ -135,7 +118,40 @@ gh run view <RUN_ID> --repo nevenincs/cadrumo
 gh run view <RUN_ID> --repo nevenincs/cadrumo --log-failed
 ```
 
+The orchestrator performs these steps in order:
+
+1. Computes the next version from conventional commits, updates all seven version
+   surfaces, commits `chore(release): vX.Y.Z`, creates the annotated tag, and pushes
+   the commit and tag directly to `main`.
+2. Dispatches `packaging-smoke.yml` at that exact commit and resolves the run by
+   immutable identity.
+3. Builds the cohort once and gathers the evidence required by the claimed channels.
+   The packaging run ID is always required. Other evidence run IDs are required only
+   for claimed channels; missing, mismatched, or failed evidence is refused.
+4. Seals a typed draft candidate containing the source commit, version, cohort run ID,
+   evidence run IDs, channel set, and artifact identity.
+5. Dispatches `publish-release.yml` at the campaign commit and waits for that exact run
+   to finish successfully.
+6. Revalidates all identities and digests, then writes GitHub Release assets, Scoop,
+   Homebrew, and Claude marketplace state before the irreversible PyPI uploads.
+7. Replaces `release-candidate-<run-id>` with
+   `release-candidate-consumed-<run-id>` only after publication succeeds.
+
+The publication workflow never rebuilds. PyPI upload uses Trusted Publishing and a
+check-before-upload operation, allowing a retry with the same cohort to converge after
+a partial upload.
+
 ## Verify the published cohort
+
+First confirm the resolved publication run succeeded and inspect the final release:
+
+```console
+gh run view <PUBLICATION_RUN_ID> --repo nevenincs/cadrumo
+gh release view v<VERSION> --repo nevenincs/cadrumo --json isDraft,targetCommitish,tagName,assets
+```
+
+Require `isDraft: false`, the expected tag and source commit, and the complete cohort
+asset inventory before reacquisition.
 
 Download the retained cohort from the packaging run recorded by the orchestrator:
 
@@ -143,9 +159,17 @@ Download the retained cohort from the packaging run recorded by the orchestrator
 gh run download <PACKAGING_RUN_ID> --repo nevenincs/cadrumo --name cadrumo-release-cohort --dir var/post-release/v<VERSION>/download
 ```
 
-Extract `cadrumo-release-cohort.tar.gz` into
-`var/post-release/v<VERSION>/cohort`, then reacquire each destination that the release
-claims:
+Create a new cohort directory and extract the archive. Stop if the directory already
+exists; mixing files from another attempt invalidates the check.
+
+```powershell
+$cohort = "var/post-release/v<VERSION>/cohort"
+if (Test-Path -LiteralPath $cohort) { throw "$cohort already exists" }
+New-Item -ItemType Directory -Path $cohort | Out-Null
+tar -xzf var/post-release/v<VERSION>/download/cadrumo-release-cohort.tar.gz -C $cohort
+```
+
+Run only the reacquisition commands for destinations the channel descriptor claims:
 
 ```console
 uv run --no-sync python -m dev.packaging.acquire_github_release --cohort-dir var/post-release/v<VERSION>/cohort --evidence-dir var/post-release/v<VERSION>/evidence/github-release --repo nevenincs/cadrumo
@@ -158,11 +182,18 @@ uv run --no-sync python -m dev.packaging.acquire_claude_plugin --cohort-dir var/
 On the dedicated Windows Scoop runner:
 
 ```powershell
-uv run --no-sync powershell dev/packaging/acquire_scoop.ps1 -CohortDir var/post-release/v<VERSION>/cohort/python -BucketSource <PUBLIC_BUCKET> -EvidenceDir var/post-release/v<VERSION>/evidence/scoop
+$bucketSource = "OWNER/BUCKET"
+& ./dev/packaging/acquire_scoop.ps1 -CohortDir var/post-release/v<VERSION>/cohort/python -BucketSource $bucketSource -EvidenceDir var/post-release/v<VERSION>/evidence/scoop
 ```
 
-Every applicable command must exit zero and every retained evidence JSON must report
-`status: passed`. These local records are verification evidence; the current tooling
+Every applicable command must exit zero. Fail closed unless every retained evidence
+JSON file reports `status: passed`:
+
+```console
+uv run --no-sync python -c "import json,pathlib,sys; p=pathlib.Path(sys.argv[1]); rows=list(p.rglob('*.json')); assert rows and all(json.loads(x.read_text(encoding='utf-8')).get('status') == 'passed' for x in rows)" var/post-release/v<VERSION>/evidence
+```
+
+These local records are verification evidence; the current tooling
 does not upload them into a durable release-close ledger, so retain them with the
 operator record.
 
@@ -184,13 +215,15 @@ Classify the failure before acting:
   existing files and publishes only the missing members.
 - After any PyPI file is public: the version is burned. Never overwrite or reuse it.
 
-Resume a successful packaging cohort through the sole entry point:
+Only a successful `packaging-smoke.yml` run is resumable. Resume it through the sole
+entry point:
 
 ```console
 gh workflow run release-orchestrator.yml --repo nevenincs/cadrumo --ref main -f dry_run=false -f resume_packaging_run_id=<PACKAGING_RUN_ID>
 ```
 
-The resume path verifies the run identity and selects the same sealed bytes. A failed,
+The resume path neither bumps the version nor rebuilds. It verifies the run identity
+and selects the same sealed bytes. A failed,
 cancelled, or timed-out publication leaves its candidate selectable; only a successful
 publication consumes it.
 
@@ -229,6 +262,4 @@ A release is closed when:
 - `docs/_release_notes_template.md` — release-note template
 - `.vault/reference/2026-07-19-post-release-distribution-reference.md` — detailed
   implementation reference
-- `.vault/adr/2026-08-23-website-repository-boundary-adr.md` — repository ownership
-  boundary
 - `SECURITY.md` — private security reporting
