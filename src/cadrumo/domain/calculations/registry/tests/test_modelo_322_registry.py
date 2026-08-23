@@ -42,7 +42,7 @@ def test_modelo_322_metadata_matches_orden_eha_3434_2007() -> None:
 
 def test_modelo_322_revision_starts_at_2008() -> None:
     modelo, _ = _load_modelo_322()
-    revision = modelo.revisions["2008-2023"]
+    revision = modelo.revisions["2008-2022"]
     assert revision.valid_from == date(2008, 1, 1)
     assert revision.period_selector.year_from == 2008
     assert len(revision.period_selector.periods) == 12
@@ -100,7 +100,7 @@ def test_modelo_322_other_months_close_within_30_days_of_following_month() -> No
 
 def test_modelo_322_live_cross_references_forbid_writes() -> None:
     modelo, _ = _load_modelo_322()
-    revision = modelo.revisions["2008-2023"]
+    revision = modelo.revisions["2008-2022"]
     cross_refs = {ref.id: ref for ref in revision.live_cross_references}
 
     filed_ref = cross_refs["modelo-322-filed-declarations-read"]
@@ -111,7 +111,7 @@ def test_modelo_322_live_cross_references_forbid_writes() -> None:
 
 def test_modelo_322_filing_schedule_is_monthly() -> None:
     modelo, _ = _load_modelo_322()
-    revision = modelo.revisions["2008-2023"]
+    revision = modelo.revisions["2008-2022"]
     schedule = next(s for s in revision.filing_schedules if s.id == "modelo-322-mensual")
     assert schedule.period_kind == "monthly"
     assert len(schedule.periods) == 12
@@ -119,7 +119,7 @@ def test_modelo_322_filing_schedule_is_monthly() -> None:
 
 def test_modelo_322_construct_links_workbook_parity() -> None:
     modelo, _ = _load_modelo_322()
-    revision = modelo.revisions["2008-2023"]
+    revision = modelo.revisions["2008-2022"]
     construct = next(c for c in revision.constructs if c.id == "modelo-322-iva-grupo-individual")
     assert "modelo-322-dr-2026" in construct.workbook_parity_refs
     assert construct.filing_schedules == ("modelo-322-mensual",)
@@ -129,7 +129,7 @@ def test_modelo_322_declares_iva_aggregation_bindings_for_all_three_flow_directi
     """Modelo 322 declares the same IVA flow-direction binding pattern as
     Modelo 303, scoped to the individual group entity."""
     modelo, _ = _load_modelo_322()
-    revision = modelo.revisions["2008-2023"]
+    revision = modelo.revisions["2008-2022"]
     iva_bindings = {binding.id: binding for binding in revision.bindings if binding.source == "ledger_iva_aggregation"}
     assert "modelo-322-iva-repercutido-general-cuota" in iva_bindings
     assert "modelo-322-iva-repercutido-reducido-cuota" in iva_bindings
@@ -152,7 +152,7 @@ def test_modelo_322_iva_bindings_resolve_against_ledger_observations() -> None:
     )
 
     modelo, _ = _load_modelo_322()
-    revision = modelo.revisions["2008-2023"]
+    revision = modelo.revisions["2008-2022"]
     observations = [
         IvaLedgerObservation(
             ledger_id="rep-1",

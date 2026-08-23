@@ -43,7 +43,7 @@ _MID_YEAR_HALVES = {
     ("490", "2022-2t-4t"),
 }
 #: Revisions that genuinely cross a design re-layout between YEARS.
-_CROSS_YEAR_SPANS = {("200", "2024-y-siguientes"), ("322", "2008-2023"), ("347", "2008-2024")}
+_CROSS_YEAR_SPANS = {("200", "2024-y-siguientes"), ("347", "2008-2024")}
 
 
 def _by_subject() -> dict[tuple[str, str], dict]:
