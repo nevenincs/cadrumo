@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:96ee6a6b71892b7420e6a0e6ab9152531af2ba9fb0f33c6e76393a4d25a17142'
+body_hash: 'sha256:d98ba921976d3ad3f718d7c74c5bfe1e34a819bc359b5bebbb8a3cad5d2ef08d'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7173,3 +7173,42 @@ raised. Narrowing `Exception` to a project class feels like the fix and often is
 question to ask is how many distinct conditions raise the class chosen, and if the answer is
 more than one, the cause has to be named too. Two rounds were needed here because the first
 round asked "which type" and stopped, rather than "what else raises this type".
+
+### Where "name the cause" applies, and where applying it would be busywork
+
+The previous entry's lesson -- an exception class is only as discriminating as the number of
+ways it can be raised -- was swept across the domain before being treated as general. It does
+not generalise the way it first appears to, and the boundary is the useful finding.
+
+Measured mechanically: 237 `pytest.raises(X)` sites in the three paths pass no `match=` while
+`X` has four or more distinct raise sites in production. Two hundred and thirty-seven is not a
+defect count, it is proof the metric is wrong. It counts causes for the CLASS tree-wide, while
+what matters is how many ways the CALL UNDER TEST can fail; a case that feeds one specific bad
+input to one validator is unambiguous however many other places raise that class. Adding
+`match=` to 237 sites would be mechanical churn dressed as rigour.
+
+Narrowing to where discrimination is the entire point -- proofs this domain marks
+`ANTI-TAUTOLOGY`, `DISCRIMINATING` or `ANTI-VACUITY` in their docstrings -- gives 12. Read,
+they are sound, and the reason sharpens the rule:
+
+**`match=` earns its place when the raise IS the evidence for a MECHANISM. It earns nothing
+when refusal is itself the property and the mechanism is asserted separately.**
+
+The lock case qualified: nothing but the exception attested exclusivity, so a same-class
+refusal from another cause left the claim unproven while the test stayed green. The twelve do
+not. `test_a_symlinked_tombstone_is_refused_and_its_target_survives` follows its `raises` with
+`assert (victim / "keepsake.bin").read_bytes() == b"must survive"` -- the security property
+stands on its own assertion, and the exception only records that the call declined.
+`test_a_refused_entry_closes_the_session_it_had_opened` and `test_a_lost_compare_and_swap_
+preserves_the_other_partys_bytes` are the same shape.
+
+This campaign's own `test_keystore_path_components.py` was checked hardest, being the most
+tempting to "fix". Its loop over `("..", ".", "D:x", "C:x", "")` asserts only
+`BucketValidationError`, but each input is reachable by exactly one rule in
+`validate_path_component`: delete the drive-qualification rule and `D:x` and `C:x` stop raising
+at all, so the case already protects the rule that fixed the original escape. And the property
+under proof there is refusal itself, which any rule refusing genuinely satisfies. Narrowing it
+would pin the test to today's rule attribution for no gain in what it guarantees.
+
+No change was made this iteration. The prior fix stands as correctly scoped rather than as the
+first of a family, which is what the sweep was for.
