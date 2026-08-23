@@ -1,0 +1,51 @@
+"""Import-light helpers shared by independently loaded profile commands."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ....application.workflow import ProfileBucketPointer
+
+
+def profile_state():
+    from ....application.workflow import workflow_state_repository
+
+    return workflow_state_repository()
+
+
+def resolve_profile_by_label(name: str) -> ProfileBucketPointer:
+    from ....application.workflow import ProfileLabelAmbiguousError, read_profile_bucket
+    from .._errors import CliRefusedBoundaryError
+
+    try:
+        pointer = read_profile_bucket(name)
+    except ProfileLabelAmbiguousError as error:
+        raise CliRefusedBoundaryError(
+            translated_message="errors.refused.refused_profile_label_ambiguous",
+        ) from error
+    except ValueError as error:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": name},
+        ) from error
+    if pointer is None:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": name},
+        )
+    return pointer
+
+
+def resolve_active_profile_pointer() -> ProfileBucketPointer | None:
+    from ....application.workflow import read_profile_bucket_by_id
+    from ....core import resolve_active_bucket_id
+
+    active = resolve_active_bucket_id()
+    return None if active is None else read_profile_bucket_by_id(active)
+
+
+def read_profile_record(pointer: ProfileBucketPointer):
+    from ._profile_readiness import _read_profile_record
+
+    return _read_profile_record(pointer)
