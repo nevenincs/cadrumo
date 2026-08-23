@@ -197,12 +197,6 @@ llm = [
   # be refused.
   "nvidia-ml-py>=13,<14",
 ]
-# Deliberately absent: an `agent` extra. The operator agent harness — its
-# reviewed operating data, its accessors, and the MCP server runtime that serves
-# them — is a separate `cadrumo-harness` distribution that depends on this one.
-# It carries its own dependencies and its own `cadrumo-mcp` console script, so
-# this package gates nothing on its behalf.
-#
 # Deliberately absent: a `search` extra. The on-host grounding search stack
 # needs none — the lexical index (stdlib sqlite3 FTS5 plus the core
 # `snowballstemmer` stemmed column) and the structured citation lookup run on
@@ -228,7 +222,7 @@ build-backend = "hatchling.build"
 
 # Deny-by-default. Without an explicit target, hatchling packs every
 # non-gitignored path into the sdist — which meant publishing the project's own
-# development harness (the `.vault/` record, `.vaultspec/`, `.claude/`, `dev/`)
+# development records and tooling (`.vault/`, `.vaultspec/`, `dev/`)
 # inside the product's source distribution. The sdist carries what is needed to
 # build the wheel and nothing else; anything absent from this list is not shipped.
 [tool.hatch.build.targets.sdist]
@@ -317,33 +311,11 @@ name = "pytorch-cu130"
 url = "https://download.pytorch.org/whl/cu130"
 explicit = true
 
-# Where a companion distribution built from this repository lives. One criterion,
-# applied to all three, and it is NOT "companion": does the distribution own Python
-# source?
-#
-#   owns source     ->  src/<distribution-name>/       (a src/ layout inside it)
-#   owns no source  ->  packaging/<distribution_name>/ (a build recipe alone)
-#
-# `cadrumo-harness` (src/cadrumo-harness/) owns `src/cadrumo_harness/`: real modules,
-# its own colocated test suites, its own `cadrumo-mcp` console script. It sits beside
-# `src/cadrumo` because both are source trees this repository authors.
-#
 # `cadrumo-data-manuals` (packaging/cadrumo_data_manuals/) and `cadrumo-data-official`
 # (packaging/cadrumo_data_official/) own NO source. Each is a project file plus a
 # hatchling build hook that force-includes a disjoint slice of the ONE corpus tree at
 # `src/cadrumo/_data/corpus` under a mirrored `cadrumo_data` namespace. They author
-# nothing and they repackage — the same job as packaging/{homebrew,scoop,mcpb,
-# marketplace}, which emit a formula, a manifest and a bundle from trees they do not
-# own. That shared job is what `packaging/` is for.
-#
-# So the two homes are not one concept split across two directories; they are two
-# concepts, and this rule assigns each. A distribution that grows its own source moves
-# to `src/`; one that sheds its source moves to `packaging/`. There is no third home,
-# and no distribution belongs at the repository root. The directory name is the
-# distribution name: hyphenated under `src/` (matching the distribution), snake under
-# `packaging/` (matching the import namespace those recipes emit). Every name here is
-# `cadrumo`-prefixed, and only `cadrumo-harness` carries a console script besides the
-# core `aeat` — `cadrumo-mcp`, per the product-identity discipline.
+# nothing and only repackage the base product's mandatory corpus payload.
 [tool.uv.sources]
 torch = [
     {index = "pytorch-cu130", marker = "sys_platform == 'linux' or sys_platform == 'win32'"},
@@ -354,17 +326,6 @@ torch = [
 # distributions from the configured package index.
 cadrumo-data-manuals = { path = "packaging/cadrumo_data_manuals" }
 cadrumo-data-official = { path = "packaging/cadrumo_data_official" }
-cadrumo-harness = { workspace = true }
-
-# `cadrumo-harness` is a formal uv workspace member (not merely a path source, like
-# the two data companions above) so it is locked together with `cadrumo` in this
-# single `uv.lock` and can be addressed independently via `uv export --package
-# cadrumo-harness` (`dev/packaging/uv_constraints.py` needs this to pin the MCP
-# server's own third-party closure for the Scoop/MCPB bundles). Membership does NOT
-# create a dependency: `cadrumo` still declares no reliance on `cadrumo-harness`
-# anywhere in `[project.dependencies]` — only the `dev` group does, for local tooling.
-[tool.uv.workspace]
-members = ["src/cadrumo-harness"]
 
 [tool.vaultspec-rag]
 managed-torch-direct-dependency = true
@@ -441,15 +402,9 @@ dev = [
   # fingerprint; older versions drop unknown frontmatter keys on rewrite, so a
   # mixed-version corpus silently loses the stamp on exactly the documents
   # being edited (nevenincs/vaultspec-core#299). Operator directive: the
-  # harness tracks latest. This floor is what carried `mcp` to its 2.x major.
+  # tooling tracks latest. This floor is what carried `mcp` to its 2.x major.
   "vaultspec-core>=0.1.55",
   "vaultspec-rag[mcp]>=0.3.8",
-  # The sibling agent-harness distribution, resolved from the in-repo tree via
-  # the `[tool.uv.sources]` path override above. It depends on `cadrumo`, never
-  # the reverse, so it cannot live in [project.dependencies]; it belongs here
-  # because the repository's own dev and packaging code imports `cadrumo_harness`
-  # and its test suite runs in this environment.
-  "cadrumo-harness",
   # Sphinx documentation pipeline — `just docs` builds HTML + Markdown from
   # the Google-style + Sphinx-cross-referenced docstrings under src/cadrumo/.
   "sphinx>=8.1,<9",  # <9: sphinx-hoverxref 1.4.2 (latest) crashes on Sphinx 9's _Opt config repr at config-inited
@@ -594,10 +549,6 @@ convention = "google"
 "src/cadrumo/**/tests/**/*.py" = ["T20", "D", "E501"]
 "src/cadrumo/tests/**/*.py" = ["T20", "D"]
 "src/cadrumo/**/conftest.py" = ["D"]
-# The sibling cadrumo-harness distribution colocates its tests the same way, so
-# the same audience-scoped exemption applies to them.
-"src/cadrumo-harness/**/tests/**/*.py" = ["T20", "D", "E501"]
-"src/cadrumo-harness/**/conftest.py" = ["D"]
 # dev/docs/ holds contributor-only documentation tools and tests.
 "dev/docs/**/*.py" = ["T20", "D", "E402"]
 # `dev/` holds contributor-only developer tooling (quality gates, audits,
@@ -763,9 +714,6 @@ convention = "google"
 # (partial paths resolved from PATH by design), mirroring the src/cadrumo
 # wheel-build gates.
 "dev/packaging/tests/test_cadrumo_data_distribution.py" = ["S603", "S607"]
-# The stdio-lifetime watchdog can only be proven against real spawned processes
-# and real pipes; every argv is a fixed `sys.executable -c <literal>`.
-"src/cadrumo-harness/src/cadrumo_harness/mcp/tests/test_stdio_lifetime.py" = ["S603"]
 "src/cadrumo/adapters/persistence/storage/bucket/tests/test_lockfile.py" = ["S603"]
 # Cross-process custody-root exclusion is only provable against real spawned
 # processes killed abruptly; every argv is a fixed `sys.executable -c <script>`
@@ -977,7 +925,6 @@ reportUnnecessaryTypeIgnoreComment = "error"
 # the default unit gate fails on drift instead of relying on manual CLI use.
 testpaths = [
   "src/cadrumo",
-  "src/cadrumo-harness",
   "dev/packaging/tests/test_installed_oracles.py",
   "dev/source_connectivity/tests",
 ]
