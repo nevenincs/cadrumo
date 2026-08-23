@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:393fe53987280c5977db5748a21715912883b04eb18fe5708d73999c4ee5f0a8'
+body_hash: 'sha256:71f2fea4e1bac63501d1d7d8cf3e21c055558541f9cc69aa359299cbac6eda9b'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7494,3 +7494,42 @@ document's earlier dev/ci baseline, not a consequence of the refactor. It report
 `domain.calculations.registry` and `application.workflow` trees. Worth flagging to its owner
 with some force: the campaign that owns this surface is named for performance hardening, and
 this is the cold-start property they are optimising for, failing.
+
+### Ruling: the KDF refusal taxonomy, decided and closed
+
+Operator authorised this campaign to rule on the parked items. This one splits, because its
+two halves were not equally blocked, and treating them as one decision is why it sat parked
+across several iterations.
+
+**`retryable` stays `False`, and the reasoning now lives at the decision site.** The class
+carries 38 raise sites, and enumerating their homes -- rather than reasoning from the refusal
+NAMES -- is what settles it. They are genuinely mixed: worker ATTESTATION failures
+(`_kdf_worker_identity`), Windows job-object capability failures (`_kdf_windows_job`), and
+permanent host limits sit beside the transient memory-pressure and spawn cases. Retry is
+actively wrong for the attestation group. The asymmetry decides the rest: `False` on a
+transient failure costs one operation the operator repeats by hand, while `True` on a permanent
+one hands an autonomous agent an unbounded loop against a host that will never succeed. A
+comment at the `ErrorCode` entry records this, because the value has already been questioned
+once (by this campaign, which built a `retryable=True` subclass and reverted it) and an audit
+entry alone does not reach whoever reads the registry next.
+
+**The missing operator guidance is FIXED, and did not need the taxonomy resolved.** That was
+the error in parking them together. The code cannot distinguish a host that can never supervise
+from one momentarily out of room -- but the OPERATOR can, from whether it recurs, which is a
+signal available to them and not to the process. So the guidance keys on recurrence and covers
+both without asserting either: "Retry when the machine is less loaded; if it persists, this
+host cannot start the supervised worker process key derivation requires." Both KDF messages now
+carry it, in all four catalogues, set through `dev.locales` rather than hand-edited. A boolean
+must pick one branch; prose does not have to, and that asymmetry is what unblocked it.
+
+Note on custody of the change: the four catalogue edits are in HEAD but under a peer's
+`locales: error catalogue string sweep` commit, which absorbed the working-tree state before
+this campaign committed it -- the second time that has happened here. The content is verified
+present in all four `errors.yml` files at HEAD; only the registry comment remained to commit.
+
+Lane state at commit: unit green at 1698 (a larger population than the long-standing 1644, as
+peers land tests). Integration shows 32 failures which are NOT this change -- zero mention of
+the KDF keys or the new guidance anywhere in the output -- and are attributable to a peer
+editing `_config/_secure_input.py` and `_config/_root_cli.py`, both modified one minute before
+the run, which is exactly the path deciding the `INTERNAL` versus `REFUSED` classification the
+failures assert on.
