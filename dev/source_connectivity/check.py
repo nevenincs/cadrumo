@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 
 from cadrumo.application.registry.source_connectivity import load_source_connectivity_census
+from cadrumo.core import SourceConnectivityDisposition, SourceConnectivityExpiryPosture
 
 from .discovery import assign_capabilities_to_census, discovered_source_capability_ids
 
@@ -23,10 +25,40 @@ class SourceConnectivityCheckError(ValueError):
     """Live discovery added, removed, duplicated, or otherwise drifted from review."""
 
 
-def check_capability_census(repo_root: Path) -> SourceConnectivityCheckResult:
+_UNRESOLVED_DISPOSITIONS = frozenset(
+    {
+        SourceConnectivityDisposition.CONNECT_CANDIDATE,
+        SourceConnectivityDisposition.GROUNDING_BLOCKED,
+        SourceConnectivityDisposition.INGRESS_BLOCKED,
+        SourceConnectivityDisposition.REGISTRY_BLOCKED,
+    }
+)
+
+
+def check_census_governance(manifest: object, *, as_of: date) -> None:
+    """Reject stale blockers and unresolved rows without bounded accountability."""
+    for row in manifest.entries:
+        if row.disposition not in _UNRESOLVED_DISPOSITIONS:
+            continue
+        if not row.owner or row.bounded_follow_up is None or not row.follow_up_owner():
+            raise SourceConnectivityCheckError(
+                f"unresolved census row lacks owned bounded follow-up: {row.candidate_id}"
+            )
+        if row.expiry_posture(as_of=as_of) is SourceConnectivityExpiryPosture.EXPIRED:
+            raise SourceConnectivityCheckError(
+                f"blocked census row expired without adjudication: {row.candidate_id}"
+            )
+
+
+def check_capability_census(
+    repo_root: Path,
+    *,
+    as_of: date | None = None,
+) -> SourceConnectivityCheckResult:
     """Reject any live capability addition or unexplained reviewed disappearance."""
     capability_ids = discovered_source_capability_ids(repo_root)
     manifest = load_source_connectivity_census()
+    check_census_governance(manifest, as_of=as_of or date.today())
     try:
         assignments = assign_capabilities_to_census(capability_ids, manifest)
     except ValueError as error:
@@ -42,4 +74,5 @@ __all__ = [
     "SourceConnectivityCheckError",
     "SourceConnectivityCheckResult",
     "check_capability_census",
+    "check_census_governance",
 ]
