@@ -44,8 +44,7 @@ def test_complete_authority_import_does_not_import_behavior_modules() -> None:
         "targets = {spec.result_schema.target.module for spec in COMMAND_SPECS "
         "if spec.result_schema.target is not None}; "
         "targets.update(spec.handler.target.module for spec in COMMAND_SPECS "
-        "if spec.handler is not None and spec.handler.target is not None "
-        "and spec.handler.target.module != 'cadrumo.entrypoints.cli'); "
+        "if spec.handler is not None and spec.handler.target is not None); "
         "loaded = sorted(targets.intersection(sys.modules)); "
         "print(json.dumps({'specs': len(COMMAND_SPECS), 'loaded': loaded}))"
     )

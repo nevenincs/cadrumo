@@ -210,11 +210,30 @@ def _render_graph_command(language: OutputLanguage, path: tuple[str, ...], spec:
     if not isinstance(spec, CommandSpec):
         raise TypeError("CLI reference received a non-CommandSpec node")
     parts = [_rst_heading(" ".join(path), "-"), "\n", tr(spec.help_key.value), "\n\n"]
+    if spec.parameters:
+        parts.append(docs_chrome("docs.cli.command.parameters_heading", language) + "\n\n")
     for parameter in spec.parameters:
-        declaration = parameter.name if isinstance(parameter, ArgumentSpec) else " / ".join(parameter.declarations)
+        is_argument = isinstance(parameter, ArgumentSpec)
+        declaration = parameter.name if is_argument else " / ".join(parameter.declarations)
         required = parameter.default.kind.value == "required"
-        parts.append(f"{declaration}\n   {parameter.help_key.value if parameter.help_key else ''}")
-        parts.append(f" ({'required' if required else 'optional'})\n\n")
+
+        # The help key NAMES the operator-facing sentence rather than being it. Emitting
+        # the key put dotted identifiers such as ``cli.ledger.add.description_help`` on
+        # every parameter of every page of the published reference.
+        described = (
+            tr(parameter.help_key.value)
+            if parameter.help_key
+            else docs_chrome("docs.cli.command.no_description", language)
+        )
+
+        # Argument-versus-option and required-versus-optional are four authored strings,
+        # not one English word in parentheses: this reference is rendered once per
+        # language, and a hardcoded "required" is the only untranslated text on the page.
+        kind = "argument" if is_argument else "option"
+        state = "required" if required else "optional"
+        classification = docs_chrome(f"docs.cli.param.{kind}_{state}", language)
+
+        parts.append(f"{declaration}\n   {described}\n   {classification}\n\n")
     return "".join(parts)
 
 

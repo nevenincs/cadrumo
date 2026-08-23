@@ -22,7 +22,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager, nullcontext
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 import typer
 from typer._click.core import Command as _TyCommand
@@ -60,7 +60,6 @@ from ...core import StorageCategory as _StorageCategory
 from ...core import storage_location as _storage_location
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
 from ...core.json_contract import strict_round_trip as _strict_round_trip
-from ...core.output_rendering import OutputFormat as _OutputFormat
 from ._command_policy import CommandExecutionPolicy as _CommandExecutionPolicy
 from ._command_runtime import build_command_app as _build_command_app
 from ._command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
@@ -68,7 +67,6 @@ from ._common import (
     _emit_envelope,
     active_profile_label,
     attach_cli_policy_verdict,
-    preserve_requested_cli_leaf,
     requested_cli_leaf,
     resolve_cli_precondition_action,
 )
@@ -80,7 +78,6 @@ from ._framework_localisation import (
     localise_typer_parse_error_messages as _localise_typer_parse_error_messages,
 )
 from ._language_argv import apply_language_argv_to_environment as _apply_language_argv_to_environment
-from ._log_levels import resolve_log_level as _resolve_log_level
 
 CommandExecutionPolicy = _CommandExecutionPolicy
 
@@ -97,76 +94,6 @@ CommandExecutionPolicy = _CommandExecutionPolicy
 # ---------------------------------------------------------------------
 # Root app + callback
 # ---------------------------------------------------------------------
-
-
-def root_command(
-    ctx: typer.Context,
-    language: str | None = None,
-    profile: str | None = None,
-    profile_secrets_stdin: bool = False,
-    profile_secrets_fd: int | None = None,
-    version: bool = False,
-    detail: bool = False,
-    help_: bool = False,
-    format_: _OutputFormat = _OutputFormat.TEXT,
-    quiet: bool = False,
-    verbose: bool = False,
-    debug: bool = False,
-) -> None:
-    """Capture root-level CLI flags into the Typer context."""
-    if language is not None:
-        from ...core.config import override_settings
-
-        ctx.with_resource(override_settings(cadrumo_output_language=language))
-    state = cast("dict[str, object]", ctx.ensure_object(dict))
-    state["format"] = format_
-    state["log_level"] = _resolve_log_level(quiet=quiet, verbose=verbose, debug=debug)
-    if version:
-        _emit_version_report_and_exit(detail=detail)
-    if help_:
-        _emit_root_help_and_exit(ctx)
-    if ctx.invoked_subcommand is not None and _is_introspection_only_invocation(ctx):
-        return
-    preserve_requested_cli_leaf(ctx)
-    # Defer profile override and bucket-session activation to after the
-    # version/help fast-paths (already exited above). Bare invocation
-    # (ctx.invoked_subcommand is None) defers the full application-layer
-    # imports (user_profile, wizard, workflow) into its own branch so
-    # state-free dispatch avoids the registry load.
-    state["profile_override"] = profile
-    if ctx.invoked_subcommand is None:
-        if profile is not None:
-            _activate_profile_override(ctx, profile)
-        else:
-            _normalize_root_active_profile(ctx)
-        _emit_bare_invocation_and_exit(ctx)
-    from ._profile_authentication_contract import ProfileSecretSourceOptions
-
-    state["profile_secret_source"] = ProfileSecretSourceOptions(
-        stdin=profile_secrets_stdin,
-        descriptor=profile_secrets_fd,
-    )
-    # A subcommand is being invoked, so the state tree is about to be written
-    # to. Build it once here rather than leaving each consumer to create its
-    # own corner on first write: that left a fresh machine holding whichever
-    # directories had happened to be reached, and made "where does my data
-    # live" unanswerable before the fact.
-    #
-    # Placed after every state-free fast path has already returned or exited.
-    # --version, --help, bare invocation and introspection must not touch the
-    # filesystem at all: someone browsing the command tree should not have a
-    # storage tree created for them, and these surfaces are the ones a
-    # newcomer meets first.
-    # Activate the bucket session here so verbs that need it have access to
-    # the active profile's encrypted records. Deferred after the
-    # bare-invocation path for the same reason as above. Help and usage-error
-    # renderings are introspection surfaces too: they must never require the
-    # profile session, or a newcomer without an explicit authentication act
-    # cannot browse the command tree and an unknown-command typo is masked by a
-    # master-key refusal instead of the usage error.
-    # Session activation runs from the graph-generated leaf wrapper after the
-    # complete command has parsed, so root and leaf secret sources can be
-    # preflighted together before either is consumed.
 
 
 def _emit_version_report_and_exit(*, detail: bool) -> None:
@@ -636,18 +563,6 @@ def _full_invocation_tokens() -> tuple[str, ...]:
     if executable not in {canonical_executable, f"{canonical_executable}.exe"}:
         return ()
     return tuple(sys.argv[1:])
-
-
-def app_root(ctx: typer.Context, help_: bool = False) -> None:
-    """Render app-level workflow help when requested."""
-    if help_ or ctx.invoked_subcommand is None:
-        from ...application.operator_surface import build_help_document, render_help_text
-        from ._root_payloads import AppRootResult
-
-        document = build_help_document("app")
-        typed_app = _strict_round_trip(AppRootResult, document)
-        _emit_envelope(ctx, command="root.app", result=typed_app, lines=render_help_text(document).splitlines())
-        raise typer.Exit()
 
 
 app = _build_command_app(_COMMAND_GRAPH)
