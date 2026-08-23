@@ -1,0 +1,24 @@
+schema_version = 1
+fragment_id = "records"
+modelo = "840"
+design_epoch = "2003"
+source_ref = "aeat-dr-840"
+source_sha256 = "d0348a78787db7eb767dd8093ea84773c248c0b92bcefb512972573aff34391a"
+
+[[records]]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+export_record_id = "m840-pagina01"
+record_type = "pagina01"
+
+[[records]]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+export_record_id = "m840-pagina02"
+record_type = "pagina02"
+
+[[records]]
+sheet = "Anexo"
+record_identity = "Anexo"
+export_record_id = "m840-anexo"
+record_type = "anexo"

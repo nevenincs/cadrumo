@@ -1944,3 +1944,15 @@ sheet = "Anexo"
 source_row = 421
 ordinal = "164"
 record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f165"
+kind = "literal"
+literal = "\r\n"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 422
+ordinal = "165"
+record_identity = "Anexo"

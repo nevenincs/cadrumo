@@ -1280,3 +1280,15 @@ sheet = "Pág. 2"
 source_row = 238
 ordinal = "109"
 record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f110"
+kind = "literal"
+literal = "\r\n"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 239
+ordinal = "110"
+record_identity = "Pág. 2"

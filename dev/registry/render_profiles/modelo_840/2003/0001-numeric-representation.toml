@@ -1,0 +1,3761 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+
+[design_identity]
+modelo = "840"
+design_epoch = "2003"
+source_ref = "aeat-dr-840"
+source_sha256 = "d0348a78787db7eb767dd8093ea84773c248c0b92bcefb512972573aff34391a"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 14
+ordinal = "9"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-1-9"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apart. I: Datos ident. del sujeto pasivo. Núm. [5]': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 14
+ordinal = "9"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 6
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 22
+ordinal = "17"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-1-17"
+decision_statement = "6 position(s) rendered as digit string."
+justification = "Read from the design text 'Reservado Apart. I: Datos ident. del sujeto pasivo. Cod. Mun.': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 22
+ordinal = "17"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 23
+ordinal = "18"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-1-18"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apart. I: Datos ident. del sujeto pasivo. Cód. Postal. [12]': a código postal: positional digits whose leading zero is significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 23
+ordinal = "18"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 24
+ordinal = "19"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-1-19"
+decision_statement = "9 position(s) rendered as digit string."
+justification = "Read from the design text 'Apart. I: Datos ident. del sujeto pasivo. Teléfono de contacto (prefijo incluido). [13]': a telephone number: positional digits carrying no arithmetic value."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 24
+ordinal = "19"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 25
+ordinal = "20"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-1-20"
+decision_statement = "4 position(s) rendered as year yyyy."
+justification = "Read from the design text 'Apart. II: Declaración. Ejercicio. [14]': the design names the field an ejercicio/año, written as four digits."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 25
+ordinal = "20"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 33
+ordinal = "28"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-1-28"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apart. III: Representante. Núm. [22]': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 33
+ordinal = "28"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 38
+ordinal = "33"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-1-33"
+decision_statement = "9 position(s) rendered as digit string."
+justification = "Read from the design text 'Apart. III: Representante. Teléfono. [27]': a telephone number: positional digits carrying no arithmetic value."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 38
+ordinal = "33"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 39
+ordinal = "34"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-1-34"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apart. III: Representante. Cód. Postal. [28]': a código postal: positional digits whose leading zero is significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 39
+ordinal = "34"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 6
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 46
+ordinal = "38"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-1-38"
+decision_statement = "6 position(s) rendered as digit string."
+justification = "Read from the design text 'Reservado. Apart. III: Representante. C. Mun. [30]': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 46
+ordinal = "38"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 6
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 58
+ordinal = "50"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-1-50"
+decision_statement = "6 position(s) rendered as digit string."
+justification = "Read from the design text 'Reservado. Apart. IV: Datos de la act. C. Mun. [39]': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 58
+ordinal = "50"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 62
+ordinal = "54"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-1-54"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apart. IV: Datos de la act. Domicilio de la act. C. Postal [44]': a código postal: positional digits whose leading zero is significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 62
+ordinal = "54"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 64
+ordinal = "56"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-1-56"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apart. IV: Datos de la act. Domicilio de la act. Núm. [46]': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 64
+ordinal = "56"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 70
+ordinal = "62"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-1-62"
+decision_statement = "9 position(s) rendered as digit string."
+justification = "Read from the design text 'Apart. IV: Datos de la act. Domicilio de la act. Teléfono [52]': a telephone number: positional digits carrying no arithmetic value."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 70
+ordinal = "62"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "day_dd"
+value_policy = "two-digit-day"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 90
+ordinal = "79"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-1-79"
+decision_statement = "2 position(s) rendered as day dd."
+justification = "Read from the design text 'Apart. IV: Datos de la act. Fecha de inicio, variación, cese u otras causas. Dia [62]': the design names the field Día, a two-position day-of-month component."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 90
+ordinal = "79"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "month_mm"
+value_policy = "two-digit-month"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 91
+ordinal = "80"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-1-80"
+decision_statement = "2 position(s) rendered as month mm."
+justification = "Read from the design text 'Apart. IV: Datos de la act. Fecha de inicio, variación, cese u otras causas. Mes [62]': the design names the field Mes, a two-position month component."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 91
+ordinal = "80"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 92
+ordinal = "81"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-1-81"
+decision_statement = "4 position(s) rendered as year yyyy."
+justification = "Read from the design text 'Apart. IV: Datos de la act. Fecha de inicio, variación, cese u otras causas. Año [62]': the design names the field an ejercicio/año, written as four digits."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 92
+ordinal = "81"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 96
+ordinal = "85"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-1-85"
+decision_statement = "4 position(s) rendered as year yyyy."
+justification = "Read from the design text 'Apart. IV: Datos de la act. Año en que inicio la act por 1ª vez [65]': the design names the field an ejercicio/año, written as four digits."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 96
+ordinal = "85"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 98
+ordinal = "87"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-1-87"
+decision_statement = "13 position(s) rendered as digit string."
+justification = "Read from the design text 'Apart. IV: Datos de la act. N.º Ref [67]': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 98
+ordinal = "87"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 100
+ordinal = "89"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-1-89"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apart. V: Local afecto indirectamente a la act. Cód. Postal [69]': a código postal: positional digits whose leading zero is significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 100
+ordinal = "89"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 6
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 104
+ordinal = "93"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-1-93"
+decision_statement = "6 position(s) rendered as digit string."
+justification = "Read from the design text 'Reservado. Apart. V: Local afecto indirectamente a la act. C. Mun. [71]': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 104
+ordinal = "93"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 109
+ordinal = "98"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-1-98"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apart. V: Local afecto indirectamente a la act. Núm. [77]': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 109
+ordinal = "98"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 115
+ordinal = "104"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-1-104"
+decision_statement = "9 position(s) rendered as digit string."
+justification = "Read from the design text 'Apart. V: Local afecto indirectamente a la act. Teléfono. [83]': a telephone number: positional digits carrying no arithmetic value."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 115
+ordinal = "104"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 7
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 128
+ordinal = "5"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-5"
+decision_statement = "9 position(s) rendered as decimal."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. del grupo o epígrafe. A) 1. Número 7ent + 2dec': the design states the layout verbatim as '7ent + 2dec', tiling the 9-position field."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 128
+ordinal = "5"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 7
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 132
+ordinal = "9"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-9"
+decision_statement = "9 position(s) rendered as decimal."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. del grupo o epígrafe. A) 2. Número 7ent + 2dec': the design states the layout verbatim as '7ent + 2dec', tiling the 9-position field."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 132
+ordinal = "9"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 7
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 136
+ordinal = "13"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-13"
+decision_statement = "9 position(s) rendered as decimal."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. del grupo o epígrafe. A) 3. Número 7ent + 2dec': the design states the layout verbatim as '7ent + 2dec', tiling the 9-position field."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 136
+ordinal = "13"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 7
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 140
+ordinal = "17"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-17"
+decision_statement = "9 position(s) rendered as decimal."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. del grupo o epígrafe. A) 4. Número 7ent + 2dec': the design states the layout verbatim as '7ent + 2dec', tiling the 9-position field."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 140
+ordinal = "17"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 7
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 163
+ordinal = "37"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-37"
+decision_statement = "7 position(s) rendered as digit string."
+justification = "Read from the design text 'Apartado VI: Máquinas recreativas Tipo A. Número': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 163
+ordinal = "37"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 7
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 166
+ordinal = "40"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-40"
+decision_statement = "7 position(s) rendered as digit string."
+justification = "Read from the design text 'Apartado VI: Máquinas recreativas Tipo B. Número': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 166
+ordinal = "40"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 7
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 169
+ordinal = "43"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-43"
+decision_statement = "7 position(s) rendered as digit string."
+justification = "Read from the design text 'Apartado VI: Expositores para autoventa. Número': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 169
+ordinal = "43"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 173
+ordinal = "47"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-47"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 0.1. Total': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 173
+ordinal = "47"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 174
+ordinal = "48"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-48"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 0.1. Rectificada': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 174
+ordinal = "48"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 175
+ordinal = "49"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-49"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 0.1. Computable': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 175
+ordinal = "49"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 176
+ordinal = "50"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-50"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 0.2. Total': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 176
+ordinal = "50"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 177
+ordinal = "51"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-51"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 0.2. Rectificada': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 177
+ordinal = "51"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 178
+ordinal = "52"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-52"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 0.2. Computable': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 178
+ordinal = "52"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 179
+ordinal = "53"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-53"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 1.1. Total': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 179
+ordinal = "53"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 180
+ordinal = "54"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-54"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 1.1. Rectificada': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 180
+ordinal = "54"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 181
+ordinal = "55"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-55"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 1.1. Computable': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 181
+ordinal = "55"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 182
+ordinal = "56"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-56"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 1.2. Total': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 182
+ordinal = "56"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 183
+ordinal = "57"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-57"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 1.2. Rectificada': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 183
+ordinal = "57"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 184
+ordinal = "58"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-58"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 1.2. Computable': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 184
+ordinal = "58"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 185
+ordinal = "59"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-59"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 1.3. Total': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 185
+ordinal = "59"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 186
+ordinal = "60"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-60"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 1.3. Rectificada': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 186
+ordinal = "60"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 187
+ordinal = "61"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-61"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 1.3. Computable': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 187
+ordinal = "61"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 188
+ordinal = "62"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-62"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 2.0. Total': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 188
+ordinal = "62"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 189
+ordinal = "63"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-63"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 2.0. Rectificada': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 189
+ordinal = "63"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 190
+ordinal = "64"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-64"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 2.0. Computable': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 190
+ordinal = "64"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 191
+ordinal = "65"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-65"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 3.1. Total': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 191
+ordinal = "65"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 192
+ordinal = "66"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-66"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 3.1. Rectificada': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 192
+ordinal = "66"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 193
+ordinal = "67"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-67"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 3.1. Computable': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 193
+ordinal = "67"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 194
+ordinal = "68"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-68"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 3.2. Total': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 194
+ordinal = "68"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 195
+ordinal = "69"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-69"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 3.2. Rectificada': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 195
+ordinal = "69"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 196
+ordinal = "70"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-70"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 3.2. Computable': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 196
+ordinal = "70"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 197
+ordinal = "71"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-71"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 4.0. Total': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 197
+ordinal = "71"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 198
+ordinal = "72"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-72"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 4.0. Rectificada': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 198
+ordinal = "72"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 199
+ordinal = "73"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-73"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 4.0. Computable': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 199
+ordinal = "73"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 200
+ordinal = "74"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-74"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 5.0. Total': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 200
+ordinal = "74"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 201
+ordinal = "75"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-75"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 5.0. Rectificada': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 201
+ordinal = "75"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 205
+ordinal = "76"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-76"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 5.0. Computable': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 205
+ordinal = "76"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 206
+ordinal = "77"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-77"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 6.0. Total': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 206
+ordinal = "77"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 207
+ordinal = "78"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-78"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 6.0. Rectificada': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 207
+ordinal = "78"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 208
+ordinal = "79"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-79"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) 6.0. Computable': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 208
+ordinal = "79"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 7
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 209
+ordinal = "80"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-80"
+decision_statement = "7 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) Suma de Total [87]': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 209
+ordinal = "80"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 7
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 210
+ordinal = "81"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-81"
+decision_statement = "7 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) Suma de Rectificada [88]': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 210
+ordinal = "81"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 7
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 211
+ordinal = "82"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-82"
+decision_statement = "7 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) Suma de Computable [89]': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 211
+ordinal = "82"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 212
+ordinal = "83"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-83"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) Superficie deducible [90]': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 212
+ordinal = "83"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 7
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 213
+ordinal = "84"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-84"
+decision_statement = "7 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Elem. Trib. Local (Cuota municipal). C) Superficie computable [91]': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 213
+ordinal = "84"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 217
+ordinal = "88"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-88"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apartado VI: D) Locales (Cuota provincial o nacional). N. º locales [95]': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 217
+ordinal = "88"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 218
+ordinal = "89"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-89"
+decision_statement = "8 position(s) rendered as digit string."
+justification = "Read from the design text 'Apartado VI: D) Locales (Cuota provincial o nacional). Total [96]': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 218
+ordinal = "89"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 219
+ordinal = "90"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-90"
+decision_statement = "8 position(s) rendered as digit string."
+justification = "Read from the design text 'Apartado VI: D) Locales (Cuota provincial o nacional). Rectificada [97]': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 219
+ordinal = "90"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 220
+ordinal = "91"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-91"
+decision_statement = "8 position(s) rendered as digit string."
+justification = "Read from the design text 'Apartado VI: D) Locales (Cuota provincial o nacional). Computable [98]': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 220
+ordinal = "91"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "day_dd"
+value_policy = "two-digit-day"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 233
+ordinal = "104"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-104"
+decision_statement = "2 position(s) rendered as day dd."
+justification = "Read from the design text 'Notificación. Día [109]': the design names the field Día, a two-position day-of-month component."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 233
+ordinal = "104"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "month_mm"
+value_policy = "two-digit-month"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 234
+ordinal = "105"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-105"
+decision_statement = "2 position(s) rendered as month mm."
+justification = "Read from the design text 'Notificación. Mes [109]': the design names the field Mes, a two-position month component."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 234
+ordinal = "105"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 235
+ordinal = "106"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-p-g-2-106"
+decision_statement = "4 position(s) rendered as year yyyy."
+justification = "Read from the design text 'Notificación. Año [109]': the design names the field an ejercicio/año, written as four digits."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 235
+ordinal = "106"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 251
+ordinal = "6"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-6"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apartado II: Relación de locales. Núm.': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 251
+ordinal = "6"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 256
+ordinal = "11"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-11"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apartado II: Relación de locales. Cód. Postal': a código postal: positional digits whose leading zero is significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 256
+ordinal = "11"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 6
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 260
+ordinal = "15"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-15"
+decision_statement = "6 position(s) rendered as digit string."
+justification = "Read from the design text 'Reservado. Apartado II: Relación de locales. C. Mun.': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 260
+ordinal = "15"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 262
+ordinal = "17"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-17"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Total': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 262
+ordinal = "17"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 263
+ordinal = "18"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-18"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Rectificada': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 263
+ordinal = "18"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 264
+ordinal = "19"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-19"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Computable': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 264
+ordinal = "19"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 268
+ordinal = "23"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-23"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apartado II: Relación de locales. Núm.': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 268
+ordinal = "23"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 273
+ordinal = "28"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-28"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apartado II: Relación de locales. Cód. Postal': a código postal: positional digits whose leading zero is significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 273
+ordinal = "28"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 6
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 277
+ordinal = "32"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-32"
+decision_statement = "6 position(s) rendered as digit string."
+justification = "Read from the design text 'Reservado. Apartado II: Relación de locales. C. Mun.': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 277
+ordinal = "32"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 279
+ordinal = "34"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-34"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Total': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 279
+ordinal = "34"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 280
+ordinal = "35"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-35"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Rectificada': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 280
+ordinal = "35"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 284
+ordinal = "36"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-36"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Computable': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 284
+ordinal = "36"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 288
+ordinal = "40"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-40"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apartado II: Relación de locales. Núm.': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 288
+ordinal = "40"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 293
+ordinal = "45"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-45"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apartado II: Relación de locales. Cód. Postal': a código postal: positional digits whose leading zero is significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 293
+ordinal = "45"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 6
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 297
+ordinal = "49"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-49"
+decision_statement = "6 position(s) rendered as digit string."
+justification = "Read from the design text 'Reservado. Apartado II: Relación de locales. C. Mun.': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 297
+ordinal = "49"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 299
+ordinal = "51"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-51"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Total': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 299
+ordinal = "51"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 300
+ordinal = "52"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-52"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Rectificada': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 300
+ordinal = "52"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 301
+ordinal = "53"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-53"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Computable': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 301
+ordinal = "53"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 305
+ordinal = "57"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-57"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apartado II: Relación de locales. Núm.': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 305
+ordinal = "57"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 310
+ordinal = "62"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-62"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apartado II: Relación de locales. Cód. Postal': a código postal: positional digits whose leading zero is significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 310
+ordinal = "62"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 6
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 314
+ordinal = "66"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-66"
+decision_statement = "6 position(s) rendered as digit string."
+justification = "Read from the design text 'Reservado. Apartado II: Relación de locales. C. Mun.': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 314
+ordinal = "66"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 316
+ordinal = "68"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-68"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Total': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 316
+ordinal = "68"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 317
+ordinal = "69"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-69"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Rectificada': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 317
+ordinal = "69"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 318
+ordinal = "70"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-70"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Computable': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 318
+ordinal = "70"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 322
+ordinal = "74"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-74"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apartado II: Relación de locales. Núm.': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 322
+ordinal = "74"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 330
+ordinal = "79"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-79"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apartado II: Relación de locales. Cód. Postal': a código postal: positional digits whose leading zero is significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 330
+ordinal = "79"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 6
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 334
+ordinal = "83"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-83"
+decision_statement = "6 position(s) rendered as digit string."
+justification = "Read from the design text 'Reservado. Apartado II: Relación de locales. C. Mun.': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 334
+ordinal = "83"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 336
+ordinal = "85"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-85"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Total': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 336
+ordinal = "85"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 337
+ordinal = "86"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-86"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Rectificada': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 337
+ordinal = "86"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 338
+ordinal = "87"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-87"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Computable': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 338
+ordinal = "87"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 342
+ordinal = "91"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-91"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apartado II: Relación de locales. Núm.': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 342
+ordinal = "91"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 347
+ordinal = "96"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-96"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apartado II: Relación de locales. Cód. Postal': a código postal: positional digits whose leading zero is significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 347
+ordinal = "96"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 6
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 351
+ordinal = "100"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-100"
+decision_statement = "6 position(s) rendered as digit string."
+justification = "Read from the design text 'Reservado. Apartado II: Relación de locales. C. Mun.': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 351
+ordinal = "100"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 353
+ordinal = "102"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-102"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Total': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 353
+ordinal = "102"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 354
+ordinal = "103"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-103"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Rectificada': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 354
+ordinal = "103"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 355
+ordinal = "104"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-104"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Computable': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 355
+ordinal = "104"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 359
+ordinal = "108"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-108"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apartado II: Relación de locales. Núm.': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 359
+ordinal = "108"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 364
+ordinal = "113"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-113"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apartado II: Relación de locales. Cód. Postal': a código postal: positional digits whose leading zero is significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 364
+ordinal = "113"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 6
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 371
+ordinal = "117"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-117"
+decision_statement = "6 position(s) rendered as digit string."
+justification = "Read from the design text 'Reservado. Apartado II: Relación de locales. C. Mun.': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 371
+ordinal = "117"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 373
+ordinal = "119"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-119"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Total': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 373
+ordinal = "119"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 374
+ordinal = "120"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-120"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Rectificada': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 374
+ordinal = "120"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 375
+ordinal = "121"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-121"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Computable': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 375
+ordinal = "121"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 379
+ordinal = "125"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-125"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apartado II: Relación de locales. Núm.': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 379
+ordinal = "125"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 384
+ordinal = "130"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-130"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apartado II: Relación de locales. Cód. Postal': a código postal: positional digits whose leading zero is significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 384
+ordinal = "130"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 6
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 388
+ordinal = "134"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-134"
+decision_statement = "6 position(s) rendered as digit string."
+justification = "Read from the design text 'Reservado. Apartado II: Relación de locales. C. Mun.': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 388
+ordinal = "134"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 390
+ordinal = "136"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-136"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Total': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 390
+ordinal = "136"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 391
+ordinal = "137"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-137"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Rectificada': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 391
+ordinal = "137"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 392
+ordinal = "138"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-138"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Computable': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 392
+ordinal = "138"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 396
+ordinal = "142"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-142"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apartado II: Relación de locales. Núm.': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 396
+ordinal = "142"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 401
+ordinal = "147"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-147"
+decision_statement = "5 position(s) rendered as digit string."
+justification = "Read from the design text 'Apartado II: Relación de locales. Cód. Postal': a código postal: positional digits whose leading zero is significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 401
+ordinal = "147"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 6
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 405
+ordinal = "151"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-151"
+decision_statement = "6 position(s) rendered as digit string."
+justification = "Read from the design text 'Reservado. Apartado II: Relación de locales. C. Mun.': an administrative code or street number: positional digits, never summed, leading zeros significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 405
+ordinal = "151"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 407
+ordinal = "153"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-153"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Total': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 407
+ordinal = "153"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 408
+ordinal = "154"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-154"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Rectificada': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 408
+ordinal = "154"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 409
+ordinal = "155"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-155"
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Computable': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 409
+ordinal = "155"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 7
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 413
+ordinal = "156"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-156"
+decision_statement = "7 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Suma parcial del Total [96]': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 413
+ordinal = "156"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 7
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 414
+ordinal = "157"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-157"
+decision_statement = "7 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Suma parcial de Rectificada [97]': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 414
+ordinal = "157"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 7
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 415
+ordinal = "158"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-158"
+decision_statement = "7 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado II: Relación de locales. Suma parcial de Computable [98]': a counted or measured quantity the design prints without a decimal part or a sign."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 415
+ordinal = "158"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "day_dd"
+value_policy = "two-digit-day"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 417
+ordinal = "160"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-160"
+decision_statement = "2 position(s) rendered as day dd."
+justification = "Read from the design text 'Reservado. Día [109]': the design names the field Día, a two-position day-of-month component."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 417
+ordinal = "160"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "month_mm"
+value_policy = "two-digit-month"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 418
+ordinal = "161"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-161"
+decision_statement = "2 position(s) rendered as month mm."
+justification = "Read from the design text 'Reservado. Mes [109]': the design names the field Mes, a two-position month component."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 418
+ordinal = "161"
+record_identity = "Anexo"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Anexo"
+source_row = 419
+ordinal = "162"
+record_identity = "Anexo"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m840-anexo-162"
+decision_statement = "4 position(s) rendered as year yyyy."
+justification = "Read from the design text 'Reservado. Año [109]': the design names the field an ejercicio/año, written as four digits."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Anexo"
+source_row = 419
+ordinal = "162"
+record_identity = "Anexo"
