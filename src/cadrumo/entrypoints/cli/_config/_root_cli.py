@@ -5,15 +5,12 @@ from __future__ import annotations
 import typer
 
 from ....core.i18n import tr
-from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
-from ._execution_policies import STATE_FREE
 
 
-@command_execution_policy(STATE_FREE)
 def config_root(
     ctx: typer.Context,
-    help_: bool = typer.Option(False, "--help", "-h", help=tr("cli.config.workflow_help"), is_eager=True),
+    help_: bool = False,
 ) -> None:
     """Render config-level workflow help when requested."""
     if not help_ and ctx.invoked_subcommand is not None:

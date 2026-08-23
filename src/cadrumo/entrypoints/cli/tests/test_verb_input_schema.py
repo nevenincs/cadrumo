@@ -137,6 +137,25 @@ def test_required_options_and_enum_choices_are_surfaced() -> None:
     assert set(direction["enum"]) == {"INCOMING", "OUTGOING", "INTERNAL_TRANSFER"}
 
 
+def test_machine_secret_payload_variants_are_value_free_and_conditional() -> None:
+    schemas = build_verb_input_schemas(("config.login", "config.profile.restore"))
+
+    (login_payload,) = schemas["config.login"].machine_secret_payloads
+    assert login_payload.key == "passphrase"
+    assert [(field.name, field.json_type) for field in login_payload.fields] == [("passphrase", "string")]
+    assert login_payload.condition is None
+
+    restore_payloads = schemas["config.profile.restore"].machine_secret_payloads
+    assert [payload.key for payload in restore_payloads] == ["passphrase", "recovery"]
+    assert [payload.condition.presence for payload in restore_payloads if payload.condition is not None] == [
+        "absent",
+        "present",
+    ]
+    rendered = schemas["config.profile.restore"].model_dump(mode="json")["machine_secret_payloads"]
+    assert all(set(payload) == {"key", "fields", "condition"} for payload in rendered)
+    assert all(set(field) == {"name", "json_type"} for payload in rendered for field in payload["fields"])
+
+
 def test_resolved_cli_path_uses_the_hyphenated_command_name() -> None:
     schemas = build_verb_input_schemas(_exposable_keys())
     # The command key segment is ``iva_wallet`` but the live CLI command is

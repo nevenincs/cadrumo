@@ -39,32 +39,13 @@ import typer
 
 from ...core.i18n import tr
 from ...core.telemetry import TelemetryTier
-from ._app_execution_policies import LOCAL_STORAGE_READ, LOCAL_STORAGE_WRITE, declare_metadata_group
-from ._command_policy import command_execution_policy
 from ._common import _emit_envelope, case_insensitive_choice
 from ._diagnostics_payloads import (
     TelemetryFlushResult,
     TelemetryStatusResult,
 )
 
-telemetry_app = typer.Typer(
-    name="telemetry",
-    help=tr(
-        "cli.diagnostics.telemetry.app_help",
-        default="Inspect and control the default-off, opt-in remote telemetry tier.",
-    ),
-    no_args_is_help=True,
-)
-declare_metadata_group(telemetry_app)
 
-
-@telemetry_app.command(
-    "status",
-    help=tr(
-        "cli.diagnostics.telemetry.status.help",
-        default="Report the current remote-telemetry consent posture. Never emits anything.",
-    ),
-)
 def diagnostics_telemetry_status(
     ctx: typer.Context,
     opt_in: bool | None = typer.Option(
@@ -150,13 +131,6 @@ def diagnostics_telemetry_status(
     _emit_envelope(ctx, command="diagnostics.telemetry.status", result=result, lines=lines)
 
 
-@telemetry_app.command(
-    "flush",
-    help=tr(
-        "cli.diagnostics.telemetry.flush.help",
-        default="Build the aggregate local telemetry payload and, unless --dry-run, send it.",
-    ),
-)
 def diagnostics_telemetry_flush(
     ctx: typer.Context,
     dry_run: bool = typer.Option(
@@ -309,5 +283,4 @@ def diagnostics_telemetry_flush(
     _emit_envelope(ctx, command="diagnostics.telemetry.flush", result=result, lines=lines, notices=notices)
 
 
-command_execution_policy(LOCAL_STORAGE_READ)(diagnostics_telemetry_status)
-command_execution_policy(LOCAL_STORAGE_WRITE)(diagnostics_telemetry_flush)
+__all__ = ["diagnostics_telemetry_flush", "diagnostics_telemetry_status"]

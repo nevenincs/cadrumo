@@ -72,6 +72,7 @@ from ._app_execution_policies import CALCULATION_READ as _ROOT_STATUS_POLICY
 from ._app_execution_policies import METADATA as _APP_HELP_POLICY
 from ._command_policy import CommandExecutionPolicy as _CommandExecutionPolicy
 from ._command_policy import command_execution_policy as _command_execution_policy
+from ._command_spec import ExecutionPolicySpec as _ExecutionPolicySpec
 from ._command_suggestions import CadrumoTyperGroup as _CadrumoTyperGroup
 from ._command_suggestions import (
     LazyImportTarget as _LazyImportTarget,
@@ -541,7 +542,7 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     leaf = requested_cli_leaf(ctx)
     if leaf is None:
         raise RuntimeError("root dispatch cannot resolve execution policy without a requested CLI leaf")
-    execution_policy = _execution_policy_for_cli_path(app, leaf.canonical_cli_path)
+    execution_policy = _declared_execution_policy_for_cli_path(leaf.canonical_cli_path)
     if execution_policy.write_route == "profile-bound":
         from ...application.storage_write_policy import inspect_storage_write_policy
 
@@ -730,7 +731,7 @@ def _authenticated_at_the_gate(ctx: typer.Context, *, bucket_id: str) -> bool:
     always name the same profile.
     """
     from ...application.user_profile import bind_resumed_profile_session
-    from ._config import offer_login_to_a_gated_verb
+    from ._config._login_frontend import offer_login_to_a_gated_verb
 
     outcome = offer_login_to_a_gated_verb(ctx, bucket_id=bucket_id)
     if outcome is None:
@@ -1185,7 +1186,6 @@ _LAZY_COMMAND_REGISTRATIONS: tuple[tuple[str, str, str, str], ...] = (
     ("app", "quickfile", "._app_quickfile", "cli.app.quickfile.app_help"),
     ("app", "registry", "._app_lazy_families", "cli.registry.app_help"),
     ("app", "review", "._app_lazy_families", "cli.review.app_help"),
-    (_PRODUCT_IDENTITY.cli_executable, "config", "._config", "cli.config.app_help"),
 )
 
 # The dynamic-import guard is derived from the same registrations that wire
@@ -1252,6 +1252,9 @@ def _lazy(group_name: str, name: str, module_name: str, help_key: str) -> None:
 
 for _group_name, _command_name, _module_name, _help_key in _LAZY_COMMAND_REGISTRATIONS:
     _lazy(_group_name, _command_name, _module_name, _help_key)
+from ._config import app as _config_app
+
+app.add_typer(_config_app, name="config")
 app.add_typer(app_app, name="app")
 _decorate_typer_app(app)
 
@@ -1282,14 +1285,26 @@ def full_command_tree() -> _TyCommand:
     return root
 
 
-def command_execution_policy_for_cli_path(cli_path: tuple[str, ...]) -> _CommandExecutionPolicy:
+def _declared_execution_policy_for_cli_path(
+    cli_path: tuple[str, ...],
+) -> _CommandExecutionPolicy | _ExecutionPolicySpec:
+    if cli_path[:1] == ("config",):
+        from ._config import CONFIG_COMMAND_GRAPH
+
+        return CONFIG_COMMAND_GRAPH.resolve_path((_PRODUCT_IDENTITY.cli_executable, *cli_path)).policy
+    return _execution_policy_for_cli_path(app, cli_path)
+
+
+def command_execution_policy_for_cli_path(
+    cli_path: tuple[str, ...],
+) -> _CommandExecutionPolicy | _ExecutionPolicySpec:
     """Return callback-attached policy for one live path, loading only that path.
 
     The concrete policy type remains owned by the CLI metadata module.  This
     facade keeps cross-distribution consumers on the public entrypoint boundary
     without importing the complete command tree.
     """
-    return _execution_policy_for_cli_path(app, cli_path)
+    return _declared_execution_policy_for_cli_path(cli_path)
 
 
 #: The per-verb input-schema projection re-exported from this facade. The module

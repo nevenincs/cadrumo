@@ -48,9 +48,6 @@ import warnings
 from contextlib import suppress
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Annotated
-
-import typer
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from ....core.external_constants import UTF_8_ENCODING
@@ -81,25 +78,6 @@ class MachineSecretPayload(BaseModel):
     """Canonical strict base for every command-specific machine-secret payload."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
-
-
-MachineSecretsStdinOption = Annotated[
-    bool,
-    typer.Option(
-        "--secrets-stdin",
-        help=tr("cli.config.custody.secrets_stdin_help"),
-    ),
-]
-"""Reusable declaration for the portable machine-secret stdin channel."""
-
-MachineSecretsFdOption = Annotated[
-    int | None,
-    typer.Option(
-        "--secrets-fd",
-        help=tr("cli.config.custody.secrets_fd_help"),
-    ),
-]
-"""Reusable declaration for the inherited-descriptor machine-secret channel."""
 
 
 class MachineSecretChannel(StrEnum):
@@ -529,8 +507,6 @@ __all__ = [
     "MachineSecretChannel",
     "MachineSecretPayload",
     "MachineSecretSelection",
-    "MachineSecretsFdOption",
-    "MachineSecretsStdinOption",
     "prompt_secret_no_echo",
     "read_machine_secret_payload",
     "read_secrets_fd",

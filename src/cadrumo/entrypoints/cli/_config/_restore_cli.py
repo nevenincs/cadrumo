@@ -47,10 +47,8 @@ from pydantic import BaseModel, ConfigDict, SecretStr
 
 from ....core.i18n import OutputLanguage, tr
 from ....core.json_contract import Notice, NoticeSeverity
-from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
-from ._execution_policies import BOOTSTRAP_WRITE
 
 if TYPE_CHECKING:
     from ....application.user_profile import ProfileCapsuleSource, ProfileRestoreOutcome
@@ -131,49 +129,15 @@ def _restore_lines(outcome: ProfileRestoreOutcome) -> tuple[str, ...]:
     )
 
 
-def register_restore_commands(profile_app: typer.Typer) -> None:
-    """Mount ``config profile restore`` on ``profile_app``."""
-
-    @profile_app.command("restore", help=tr("cli.config.profile.restore.help"))
-    @command_execution_policy(BOOTSTRAP_WRITE)
-    def profile_restore(
-        ctx: typer.Context,
-        label: str = typer.Argument(..., help=tr("cli.config.profile.restore.label_help")),
-        file: Path = typer.Option(
-            ...,
-            "--file",
-            help=tr("cli.config.profile.restore.file_help"),
-            exists=True,
-            file_okay=True,
-            dir_okay=True,
-            readable=True,
-        ),
-        artifact: Path | None = typer.Option(
-            None,
-            "--artifact",
-            help=tr("cli.config.profile.restore.artifact_help"),
-            exists=True,
-            file_okay=True,
-            dir_okay=False,
-            readable=True,
-        ),
-        secrets_stdin: bool = typer.Option(
-            False,
-            "--secrets-stdin",
-            help=tr("cli.config.custody.secrets_stdin_help"),
-        ),
-        secrets_fd: int | None = typer.Option(
-            None,
-            "--secrets-fd",
-            help=tr("cli.config.custody.secrets_fd_help"),
-        ),
-        output_language: OutputLanguage | None = typer.Option(
-            None,
-            "--output-language",
-            "--language",
-            help=tr("cli.config.auth.output_language_help"),
-        ),
-    ) -> None:
+def profile_restore(
+    ctx: typer.Context,
+    label: str,
+    file: Path,
+    artifact: Path | None = None,
+    secrets_stdin: bool = False,
+    secrets_fd: int | None = None,
+    output_language: OutputLanguage | None = None,
+) -> None:
         """Republish a capsule directory as a usable profile."""
         _activate_subcommand_output_language(ctx, output_language)
         from ....application.user_profile import (
@@ -229,4 +193,4 @@ def register_restore_commands(profile_app: typer.Typer) -> None:
         )
 
 
-__all__ = ["register_restore_commands"]
+__all__ = ["profile_restore"]

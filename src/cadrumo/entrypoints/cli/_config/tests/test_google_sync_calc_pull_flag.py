@@ -1,55 +1,35 @@
-"""Smoke check for the ``--assemble-observations`` flag on
-``aeat config google sync calc pull``.
-
-Guards three regressions:
-- The flag stays registered on the typer command (rename or
-  accidental delete would surface here, not silently at runtime).
-- The localized help text resolves through ``tr()`` rather than
-  falling back to the literal translation key.
-- The flag default remains ``False`` so existing callers that omit
-  it keep their fast-path behavior (no extra assembler dispatch).
-"""
+"""Command-spec checks for the calc-pull observation assembly flag."""
 
 from __future__ import annotations
 
-import inspect
-
 import pytest
 
-from .._google import google_sync_calc_pull
+from .....core.i18n import tr
+from ..._command_spec import DefaultKind
+from .._google_command_specs import GOOGLE_COMMAND_SPECS
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+def _parameter():
+    pull = next(spec for spec in GOOGLE_COMMAND_SPECS if spec.key == "config_google_sync_calc_pull")
+    return next(parameter for parameter in pull.parameters if parameter.name == "assemble_observations")
 
 
 def test_assemble_observations_flag_is_registered_on_pull_command() -> None:
-    signature = inspect.signature(google_sync_calc_pull)
-    assert "assemble_observations" in signature.parameters, (
-        "google_sync_calc_pull must declare an `assemble_observations` parameter "
-        "so the operator-facing CLI can invoke the row-set assembler"
-    )
+    parameter = _parameter()
+    assert parameter.declarations == ("--assemble-observations/--no-assemble-observations",)
+    assert parameter.is_flag is True
 
 
 def test_assemble_observations_flag_defaults_to_false() -> None:
-    signature = inspect.signature(google_sync_calc_pull)
-    parameter = signature.parameters["assemble_observations"]
-    default = parameter.default
-    # `default` is a typer.Option; the underlying default value is on `.default`.
-    underlying_default = getattr(default, "default", default)
-    assert underlying_default is False, (
-        f"--assemble-observations default must be False so existing pull callers "
-        f"are not slowed down by the assembler dispatch; got {underlying_default!r}"
-    )
+    default = _parameter().default
+    assert default.kind is DefaultKind.LITERAL
+    assert default.literal is False
 
 
 def test_assemble_observations_flag_help_resolves_through_tr() -> None:
-    signature = inspect.signature(google_sync_calc_pull)
-    parameter = signature.parameters["assemble_observations"]
-    help_text = getattr(parameter.default, "help", "") or ""
-    # The translation key string would be something like
-    # "cli.config.google.sync.calc.pull.assemble_observations_help".
-    # Real Spanish output is e.g. "Tras recuperar, reensambla las celdas...".
+    parameter = _parameter()
+    help_text = tr(parameter.help_key.value)
     assert help_text, "--assemble-observations help text must be non-empty"
-    assert "cli.config.google.sync.calc.pull.assemble_observations_help" not in help_text, (
-        "help text fell back to the raw translation key — the locale catalogue is missing "
-        "an entry for the active language"
-    )
+    assert parameter.help_key.value not in help_text

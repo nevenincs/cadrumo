@@ -6,7 +6,6 @@ active profile bucket's append-only events.
 
 from __future__ import annotations
 
-import typing
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -16,123 +15,78 @@ from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.time import coerce_utc_aware
 from ....domain.buckets import BucketEvent, BucketEventType
-from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
-from ._execution_policies import ENCRYPTED_READ
 
 if TYPE_CHECKING:
     from .._config_bucket_history_payloads import BucketHistoryEventPayload
 
 
-def register_bucket_history_commands(profile_app: typer.Typer) -> None:
-    """Register the ``config profile history`` event-history command on ``profile_app``."""
+def profile_history(
+    ctx: typer.Context,
+    profile: str | None = None,
+    event_type: list[str] | None = None,
+    since: str | None = None,
+    until: str | None = None,
+    object_id: str | None = None,
+    actor: str | None = None,
+    output_language: OutputLanguage | None = None,
+) -> None:
+    """Browse the active profile's append-only event history."""
+    _activate_subcommand_output_language(ctx, output_language)
+    from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ....adapters.persistence.storage import (
+        active_bucket_session_serves,
+        secure_object_repository_for_bucket,
+    )
+    from .._config_bucket_history_payloads import BucketHistoryResult
 
-    @profile_app.command("history", help=tr("cli.config.profile.history_help"))
-    @command_execution_policy(ENCRYPTED_READ)
-    def profile_history(
-        ctx: typer.Context,
-        profile: typing.Annotated[
-            str | None,
-            typer.Argument(help=tr("cli.config.profile.history_bucket_id_help")),
-        ] = None,
-        event_type: typing.Annotated[
-            list[str] | None,
-            typer.Option(
-                "--event-type",
-                help=tr("cli.config.profile.history_event_type_help"),
-            ),
-        ] = None,
-        since: typing.Annotated[
-            str | None,
-            typer.Option(
-                "--since",
-                help=tr("cli.config.profile.history_since_help"),
-            ),
-        ] = None,
-        until: typing.Annotated[
-            str | None,
-            typer.Option(
-                "--until",
-                help=tr("cli.config.profile.history_until_help"),
-            ),
-        ] = None,
-        object_id: typing.Annotated[
-            str | None,
-            typer.Option(
-                "--object-id",
-                help=tr("cli.config.profile.history_object_id_help"),
-            ),
-        ] = None,
-        actor: typing.Annotated[
-            str | None,
-            typer.Option(
-                "--actor",
-                help=tr("cli.config.profile.history_actor_help"),
-            ),
-        ] = None,
-        output_language: OutputLanguage | None = typer.Option(
-            None,
-            "--output-language",
-            "--language",
-            help=tr("cli.config.auth.output_language_help"),
-        ),
-    ) -> None:
-        """Browse the active profile's append-only event history."""
-        _activate_subcommand_output_language(ctx, output_language)
-        from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-        from ....adapters.persistence.storage import (
-            active_bucket_session_serves,
-            secure_object_repository_for_bucket,
+    profile_label, bucket_id = _resolve_profile_history_target(profile)
+    if not active_bucket_session_serves(bucket_id):
+        from .. import resume_profile_session_for_target
+
+        resume_profile_session_for_target(ctx, bucket_id=bucket_id)
+    from .. import bind_profile_target_to_invocation
+
+    bind_profile_target_to_invocation(ctx, bucket_id=bucket_id)
+    selected = _parse_bucket_event_types(event_type)
+    since_dt = _parse_bucket_history_instant(since, flag="--since")
+    until_dt = _parse_bucket_history_instant(until, flag="--until")
+    if since_dt is not None and until_dt is not None and since_dt > until_dt:
+        raise typer.BadParameter(tr("cli.config.profile.history.since_after_until"))
+    object_id_token = object_id.strip() if object_id else None
+    actor_token = actor.strip() if actor else None
+
+    catalogue = BucketEventHistoryRepository(
+        objects=secure_object_repository_for_bucket(bucket_id),
+    ).load()
+    events = tuple(
+        event
+        for event in catalogue.for_bucket(bucket_id, event_types=selected)
+        if _bucket_history_event_matches(
+            event,
+            since_dt=since_dt,
+            until_dt=until_dt,
+            object_id_token=object_id_token,
+            actor_token=actor_token,
         )
-        from .._config_bucket_history_payloads import BucketHistoryResult
+    )
 
-        profile_label, bucket_id = _resolve_profile_history_target(profile)
-        if not active_bucket_session_serves(bucket_id):
-            from .. import resume_profile_session_for_target
-
-            resume_profile_session_for_target(ctx, bucket_id=bucket_id)
-        from .. import bind_profile_target_to_invocation
-
-        bind_profile_target_to_invocation(ctx, bucket_id=bucket_id)
-        selected = _parse_bucket_event_types(event_type)
-        since_dt = _parse_bucket_history_instant(since, flag="--since")
-        until_dt = _parse_bucket_history_instant(until, flag="--until")
-        if since_dt is not None and until_dt is not None and since_dt > until_dt:
-            raise typer.BadParameter(tr("cli.config.profile.history.since_after_until"))
-        object_id_token = object_id.strip() if object_id else None
-        actor_token = actor.strip() if actor else None
-
-        catalogue = BucketEventHistoryRepository(
-            objects=secure_object_repository_for_bucket(bucket_id),
-        ).load()
-        events = tuple(
-            event
-            for event in catalogue.for_bucket(bucket_id, event_types=selected)
-            if _bucket_history_event_matches(
-                event,
-                since_dt=since_dt,
-                until_dt=until_dt,
-                object_id_token=object_id_token,
-                actor_token=actor_token,
-            )
-        )
-
-        bucket_result = BucketHistoryResult(
-            operation="config.bucket.history",
-            bucket_id=bucket_id,
-            event_types=list(selected) if selected else None,
-            since=since_dt,
-            until=until_dt,
-            object_id=object_id_token,
-            actor=actor_token,
-            events=[_bucket_history_event_payload(event) for event in events],
-        )
-        lines = ["operation\tconfig.profile.history", f"profile\t{profile_label}", f"event_count\t{len(events)}"] + [
-            f"{e.occurred_at.isoformat()}\t{e.event_type.value}\t{e.object_type.value}\t{e.object_id}\t{e.actor}"
-            for e in events
-        ]
-        _emit_envelope(ctx, command="config.bucket.history", result=bucket_result, lines=lines)
+    bucket_result = BucketHistoryResult(
+        operation="config.bucket.history",
+        bucket_id=bucket_id,
+        event_types=list(selected) if selected else None,
+        since=since_dt,
+        until=until_dt,
+        object_id=object_id_token,
+        actor=actor_token,
+        events=[_bucket_history_event_payload(event) for event in events],
+    )
+    lines = ["operation\tconfig.profile.history", f"profile\t{profile_label}", f"event_count\t{len(events)}"] + [
+        f"{e.occurred_at.isoformat()}\t{e.event_type.value}\t{e.object_type.value}\t{e.object_id}\t{e.actor}"
+        for e in events
+    ]
+    _emit_envelope(ctx, command="config.bucket.history", result=bucket_result, lines=lines)
 
 
 def _resolve_profile_history_target(profile: str | None) -> tuple[str, str]:
@@ -228,4 +182,4 @@ def _bucket_history_event_payload(event: BucketEvent) -> BucketHistoryEventPaylo
     )
 
 
-__all__ = ["_parse_bucket_event_types", "register_bucket_history_commands"]
+__all__ = ["_parse_bucket_event_types", "profile_history"]

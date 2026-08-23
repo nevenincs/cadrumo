@@ -26,12 +26,10 @@ from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from ....core.logging import get_logger as _get_logger
 from ....domain.calculations.registry import RevisionId
-from .._command_policy import command_execution_policy
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._common import emit_envelope, no_active_profile_refusal
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._errors import ConfigBoundaryError as _ConfigBoundaryError
-from ._execution_policies import CALCULATION_READ, ENCRYPTED_READ
 from ._profile_readiness import (
     _emit_profile_record_missing,
     _emit_profile_record_unreadable,
@@ -46,17 +44,6 @@ if TYPE_CHECKING:
     from ....application.user_profile import ProfileValidationReport as _ProfileValidationReport
     from ....application.workflow import ProfileBucketPointer as _ProfileBucketPointer
     from ....domain.user_profile import UserProfileRecord as _UserProfileRecord
-
-
-def register_profile_inspect_commands(
-    profile_app: typer.Typer,
-    *,
-    resolve_active_profile_pointer: Callable[[], _ProfileBucketPointer | None],
-) -> None:
-    """Register ``show``, ``preflight``, and ``validate`` on *profile_app*."""
-    _register_show_command(profile_app, resolve_active_profile_pointer=resolve_active_profile_pointer)
-    _register_preflight_command(profile_app, resolve_active_profile_pointer=resolve_active_profile_pointer)
-    _register_validate_command(profile_app, resolve_active_profile_pointer=resolve_active_profile_pointer)
 
 
 def _resolve_show_pointer(
@@ -138,22 +125,14 @@ def _read_record_for_show(ctx: typer.Context, pointer: _ProfileBucketPointer) ->
         raise typer.Exit(code=2) from boundary
 
 
-def _register_show_command(
-    profile_app: typer.Typer,
-    *,
-    resolve_active_profile_pointer: Callable[[], _ProfileBucketPointer | None],
+def config_profile_show(
+    ctx: typer.Context,
+    name: str | None = None,
+    output_language: _OutputLanguage | None = None,
 ) -> None:
-    def config_profile_show(
-        ctx: typer.Context,
-        name: str | None = typer.Argument(None, help=tr("cli.config.profile.show_name_help")),
-        output_language: _OutputLanguage | None = typer.Option(
-            None,
-            "--output-language",
-            "--language",
-            help=tr("cli.config.auth.output_language_help"),
-        ),
-    ) -> None:
-        """View one profile's facts (defaults to the active profile).
+    from ._profile_support import resolve_active_profile_pointer
+
+    """View one profile's facts (defaults to the active profile).
 
         Emits a ``record_validity`` header line carrying the validation
         outcome of the canonical ProfileValidationService — the persisted
@@ -163,52 +142,48 @@ def _register_show_command(
         so operators discover the failure on stdout and via the shell exit
         status.
         """
-        _activate_subcommand_output_language(ctx, output_language)
-        from ....application.user_profile import ProfileValidationService, record_to_path_values
-        from ....domain.user_profile import load_user_profile_schema
+    _activate_subcommand_output_language(ctx, output_language)
+    from ....application.user_profile import ProfileValidationService, record_to_path_values
+    from ....domain.user_profile import load_user_profile_schema
 
-        pointer = _resolve_show_pointer(name, resolve_active_profile_pointer=resolve_active_profile_pointer)
-        record = _read_record_for_show(ctx, pointer)
-        from .._config_payloads import ConfigProfileShowResult, ProfileFactPayload, ProfileIssuePayload
+    pointer = _resolve_show_pointer(name, resolve_active_profile_pointer=resolve_active_profile_pointer)
+    record = _read_record_for_show(ctx, pointer)
+    from .._config_payloads import ConfigProfileShowResult, ProfileFactPayload, ProfileIssuePayload
 
-        report = ProfileValidationService(schema=load_user_profile_schema()).validate_record(record)
-        blocking = [issue for issue in report.issues if issue.severity.value == "error"]
-        values = record_to_path_values(record)
-        result = ConfigProfileShowResult(
-            profile_id=record.profile_id,
-            display_name=pointer.label,
-            setup_state=record.setup_state,
-            valid=not blocking,
-            schema_version=report.schema_version,
-            issues=[
-                ProfileIssuePayload(
-                    severity=issue.severity,
-                    code=issue.code,
-                    path=issue.path,
-                    message=issue.message,
-                )
-                for issue in report.issues
-            ],
-            facts=[ProfileFactPayload(path=path, value=str(value)) for path, value in sorted(values.items())],
-        )
-        lines = _record_validity_lines(
-            record=record,
-            report=report,
-            blocking_count=len(blocking),
-            values=values,
-            display_name=pointer.label,
-        )
-        from ....application.user_profile import censo_divergence_notice
-
-        divergence_notice = censo_divergence_notice(record)
-        notices = [divergence_notice] if divergence_notice is not None else []
-        emit_envelope(ctx, command="config.profile.show", result=result, lines=lines, notices=notices)
-        if blocking:
-            raise typer.Exit(code=2)
-
-    profile_app.command("show", help=tr("cli.config.profile.show_help"))(
-        command_execution_policy(ENCRYPTED_READ)(config_profile_show)
+    report = ProfileValidationService(schema=load_user_profile_schema()).validate_record(record)
+    blocking = [issue for issue in report.issues if issue.severity.value == "error"]
+    values = record_to_path_values(record)
+    result = ConfigProfileShowResult(
+        profile_id=record.profile_id,
+        display_name=pointer.label,
+        setup_state=record.setup_state,
+        valid=not blocking,
+        schema_version=report.schema_version,
+        issues=[
+            ProfileIssuePayload(
+                severity=issue.severity,
+                code=issue.code,
+                path=issue.path,
+                message=issue.message,
+            )
+            for issue in report.issues
+        ],
+        facts=[ProfileFactPayload(path=path, value=str(value)) for path, value in sorted(values.items())],
     )
+    lines = _record_validity_lines(
+        record=record,
+        report=report,
+        blocking_count=len(blocking),
+        values=values,
+        display_name=pointer.label,
+    )
+    from ....application.user_profile import censo_divergence_notice
+
+    divergence_notice = censo_divergence_notice(record)
+    notices = [divergence_notice] if divergence_notice is not None else []
+    emit_envelope(ctx, command="config.profile.show", result=result, lines=lines, notices=notices)
+    if blocking:
+        raise typer.Exit(code=2)
 
 
 def _resolve_preflight_revision_id(*, modelo: str, period: _Period, revision_id: RevisionId | None) -> str:
@@ -278,33 +253,17 @@ def _resolve_preflight_revision_id(*, modelo: str, period: _Period, revision_id:
         ) from exc
 
 
-def _register_preflight_command(
-    profile_app: typer.Typer,
-    *,
-    resolve_active_profile_pointer: Callable[[], _ProfileBucketPointer | None],
+def config_profile_preflight(
+    ctx: typer.Context,
+    modelo: str,
+    filing_year: int,
+    period: str,
+    revision_id: str | None = None,
+    output_language: _OutputLanguage | None = None,
 ) -> None:
-    def config_profile_preflight(
-        ctx: typer.Context,
-        modelo: str = typer.Option(..., "--modelo", help=tr("cli.config.profile.preflight_modelo_help")),
-        filing_year: int = typer.Option(
-            ...,
-            "--filing-year",
-            help=tr("cli.config.profile.preflight_filing_year_help"),
-        ),
-        period: str = typer.Option(..., "--period", help=tr("cli.config.profile.preflight_period_help")),
-        revision_id: str | None = typer.Option(
-            None,
-            "--revision-id",
-            help=tr("cli.config.profile.preflight_revision_id_help"),
-        ),
-        output_language: _OutputLanguage | None = typer.Option(
-            None,
-            "--output-language",
-            "--language",
-            help=tr("cli.config.auth.output_language_help"),
-        ),
-    ) -> None:
-        """Report which profile fields a given filing context requires that are missing.
+    from ._profile_support import resolve_active_profile_pointer
+
+    """Report which profile fields a given filing context requires that are missing.
 
         Operates on the active profile. ``--revision-id`` is an explicit override
         for exact replay; when omitted the active revision for the natural key
@@ -312,111 +271,107 @@ def _register_preflight_command(
         resolver. Exits with code ``2`` when any required field is missing so
         operators discover the gap via the shell exit status.
         """
-        _activate_subcommand_output_language(ctx, output_language)
-        from ....application.modelo import modelo_work_profile_preflight_report
-        from ....core.resources import resources
-        from ....domain.user_profile import ProfileNotFoundError
+    _activate_subcommand_output_language(ctx, output_language)
+    from ....application.modelo import modelo_work_profile_preflight_report
+    from ....core.resources import resources
+    from ....domain.user_profile import ProfileNotFoundError
 
-        pointer = resolve_active_profile_pointer()
-        if pointer is None:
-            raise no_active_profile_refusal()
-        try:
-            record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
-        except ProfileNotFoundError as exc:
-            raise _CliRefusedBoundaryError(
-                translated_message="cli.config.profile.unknown_profile",
-                context={"name": pointer.label or pointer.bucket_id},
-            ) from exc
-        try:
-            filing_period = _Period.from_year_and_code(filing_year, period)
-        except ValueError as exc:
-            raise _CliRefusedBoundaryError(
-                translated_message="cli.config.profile.preflight_revision_unresolved",
-                context={"modelo": modelo, "filing_year": filing_year, "period": period},
-            ) from exc
-        from .._config_payloads import ConfigProfilePreflightResult, ProfilePreflightMissingPayload
+    pointer = resolve_active_profile_pointer()
+    if pointer is None:
+        raise no_active_profile_refusal()
+    try:
+        record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
+    except ProfileNotFoundError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": pointer.label or pointer.bucket_id},
+        ) from exc
+    try:
+        filing_period = _Period.from_year_and_code(filing_year, period)
+    except ValueError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.preflight_revision_unresolved",
+            context={"modelo": modelo, "filing_year": filing_year, "period": period},
+        ) from exc
+    from .._config_payloads import ConfigProfilePreflightResult, ProfilePreflightMissingPayload
 
+    report = modelo_work_profile_preflight_report(
+        record=record,
+        modelo=modelo,
+        revision_id=revision_id.strip() if revision_id else "unresolved",
+        filing_year=filing_period.filing_year,
+        period=filing_period,
+        resolve_revision_when_missing=False,
+        authority=resources().modelos.authority,
+    )
+    if report.ready:
+        resolved_revision_id = _resolve_preflight_revision_id(
+            modelo=modelo,
+            period=filing_period,
+            revision_id=revision_id,
+        )
+        revision = resources().modelos.authority.validate_modelo(modelo).revisions[resolved_revision_id]
         report = modelo_work_profile_preflight_report(
             record=record,
             modelo=modelo,
-            revision_id=revision_id.strip() if revision_id else "unresolved",
+            revision_id=resolved_revision_id,
             filing_year=filing_period.filing_year,
             period=filing_period,
-            resolve_revision_when_missing=False,
+            revision=revision,
             authority=resources().modelos.authority,
         )
-        if report.ready:
-            resolved_revision_id = _resolve_preflight_revision_id(
-                modelo=modelo,
-                period=filing_period,
-                revision_id=revision_id,
+    result = ConfigProfilePreflightResult(
+        profile_id=report.profile_id,
+        modelo=report.modelo,
+        revision_id=report.revision_id,
+        filing_year=report.filing_year,
+        period=report.period,
+        ready=report.ready,
+        per_operation_requirements_assessed=report.per_operation_requirements_assessed,
+        missing=[
+            ProfilePreflightMissingPayload(
+                selector=requirement.selector,
+                section_key=requirement.section_key,
+                field_key=requirement.field_key,
+                label=requirement.label,
+                legal_refs=list(requirement.legal_refs),
+                modelos=list(requirement.modelos),
             )
-            revision = resources().modelos.authority.validate_modelo(modelo).revisions[resolved_revision_id]
-            report = modelo_work_profile_preflight_report(
-                record=record,
-                modelo=modelo,
-                revision_id=resolved_revision_id,
-                filing_year=filing_period.filing_year,
-                period=filing_period,
-                revision=revision,
-                authority=resources().modelos.authority,
-            )
-        result = ConfigProfilePreflightResult(
-            profile_id=report.profile_id,
-            modelo=report.modelo,
-            revision_id=report.revision_id,
-            filing_year=report.filing_year,
-            period=report.period,
-            ready=report.ready,
-            per_operation_requirements_assessed=report.per_operation_requirements_assessed,
-            missing=[
-                ProfilePreflightMissingPayload(
-                    selector=requirement.selector,
-                    section_key=requirement.section_key,
-                    field_key=requirement.field_key,
-                    label=requirement.label,
-                    legal_refs=list(requirement.legal_refs),
-                    modelos=list(requirement.modelos),
-                )
-                for requirement in report.missing
-            ],
-        )
-        lines = [
-            f"profile_readiness\t{'ready' if report.ready else 'missing'}\tmissing={len(report.missing)}",
-            "readiness_scope\tprofile_fields_only",
-            f"profile_id\t{report.profile_id}",
-            f"modelo\t{report.modelo}",
-            f"revision_id\t{report.revision_id}",
-            f"filing_year\t{report.filing_year}",
-            f"period\t{report.period.registry_token}",
-        ]
-        for requirement in report.missing:
-            legal_refs = ", ".join(requirement.legal_refs) or "-"
-            modelos = ", ".join(requirement.modelos) or "-"
-            lines.append(
-                f"missing\t{requirement.section_key}\t{requirement.field_key}\t{requirement.selector}\t"
-                f"{requirement.label}\t{legal_refs}\t{modelos}",
-            )
-        notices: list[Notice] = []
-        if not report.per_operation_requirements_assessed:
-            notices.append(
-                Notice(
-                    severity=NoticeSeverity.WARNING,
-                    code="config.profile.preflight.per_operation_axis_not_assessed",
-                    message=tr(
-                        "cli.config.profile.preflight.per_operation_axis_not_assessed",
-                        modelo=report.modelo,
-                    ),
-                    context={"modelo": report.modelo, "ready": str(report.ready)},
-                ),
-            )
-        emit_envelope(ctx, command="config.profile.preflight", result=result, lines=lines, notices=tuple(notices))
-        if not report.ready:
-            raise typer.Exit(code=2)
-
-    profile_app.command("preflight", help=tr("cli.config.profile.preflight_help"))(
-        command_execution_policy(CALCULATION_READ)(config_profile_preflight)
+            for requirement in report.missing
+        ],
     )
+    lines = [
+        f"profile_readiness\t{'ready' if report.ready else 'missing'}\tmissing={len(report.missing)}",
+        "readiness_scope\tprofile_fields_only",
+        f"profile_id\t{report.profile_id}",
+        f"modelo\t{report.modelo}",
+        f"revision_id\t{report.revision_id}",
+        f"filing_year\t{report.filing_year}",
+        f"period\t{report.period.registry_token}",
+    ]
+    for requirement in report.missing:
+        legal_refs = ", ".join(requirement.legal_refs) or "-"
+        modelos = ", ".join(requirement.modelos) or "-"
+        lines.append(
+            f"missing\t{requirement.section_key}\t{requirement.field_key}\t{requirement.selector}\t"
+            f"{requirement.label}\t{legal_refs}\t{modelos}",
+        )
+    notices: list[Notice] = []
+    if not report.per_operation_requirements_assessed:
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="config.profile.preflight.per_operation_axis_not_assessed",
+                message=tr(
+                    "cli.config.profile.preflight.per_operation_axis_not_assessed",
+                    modelo=report.modelo,
+                ),
+                context={"modelo": report.modelo, "ready": str(report.ready)},
+            ),
+        )
+    emit_envelope(ctx, command="config.profile.preflight", result=result, lines=lines, notices=tuple(notices))
+    if not report.ready:
+        raise typer.Exit(code=2)
 
 
 def _resolve_validate_target_pointer(
@@ -460,89 +415,77 @@ def _resolve_validate_target_pointer(
     return pointer
 
 
-def _register_validate_command(
-    profile_app: typer.Typer,
-    *,
-    resolve_active_profile_pointer: Callable[[], _ProfileBucketPointer | None],
+def config_profile_validate(
+    ctx: typer.Context,
+    name: str | None = None,
+    output_language: _OutputLanguage | None = None,
 ) -> None:
-    def config_profile_validate(
-        ctx: typer.Context,
-        name: str | None = typer.Argument(None, help=tr("cli.config.profile.validate_name_help")),
-        output_language: _OutputLanguage | None = typer.Option(
-            None,
-            "--output-language",
-            "--language",
-            help=tr("cli.config.auth.output_language_help"),
-        ),
-    ) -> None:
-        """Validate a profile against the loaded schema (defaults to the active profile).
+    from ._profile_support import resolve_active_profile_pointer
+
+    """Validate a profile against the loaded schema (defaults to the active profile).
 
         Exits with code ``2`` when blocking issues surface so operators discover
         schema-conformance failures via the shell exit status. Report-only
         companion to ``config_profile_show`` — same validator, narrower
         payload (no fact dump).
         """
-        _activate_subcommand_output_language(ctx, output_language)
-        from ....application.modelo import modelo_work_profile_baseline_validation_issues
-        from ....application.user_profile import ProfileValidationService
-        from ....domain.user_profile import ProfileNotFoundError, load_user_profile_schema
+    _activate_subcommand_output_language(ctx, output_language)
+    from ....application.modelo import modelo_work_profile_baseline_validation_issues
+    from ....application.user_profile import ProfileValidationService
+    from ....domain.user_profile import ProfileNotFoundError, load_user_profile_schema
 
-        pointer = _resolve_validate_target_pointer(
-            name,
-            resolve_active_profile_pointer=resolve_active_profile_pointer,
-        )
-        try:
-            record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
-        except ProfileNotFoundError as exc:
-            raise _CliRefusedBoundaryError(
-                translated_message="cli.config.profile.unknown_profile",
-                context={"name": name or pointer.label or pointer.bucket_id},
-            ) from exc
-        from .._config_payloads import ConfigProfileValidateResult, ProfileIssuePayload
-
-        report = ProfileValidationService(schema=load_user_profile_schema()).validate_record(record)
-        issues = list(report.issues)
-        seen_issues = {(issue.code, issue.path) for issue in issues}
-        for issue in modelo_work_profile_baseline_validation_issues(record):
-            key = (issue.code, issue.path)
-            if key in seen_issues:
-                continue
-            seen_issues.add(key)
-            issues.append(issue)
-        blocking = [issue for issue in issues if issue.severity.value == "error"]
-        result = ConfigProfileValidateResult(
-            profile_id=record.profile_id,
-            display_name=pointer.label,
-            setup_state=record.setup_state,
-            valid=not blocking,
-            schema_version=report.schema_version,
-            issues=[
-                ProfileIssuePayload(
-                    severity=issue.severity,
-                    code=issue.code,
-                    path=issue.path,
-                    message=issue.message,
-                )
-                for issue in issues
-            ],
-        )
-        lines = [
-            f"readiness\t{'blocked' if blocking else 'ready'}\tissues={len(issues)}",
-            f"profile_id\t{record.profile_id}",
-            f"display_name\t{pointer.label}",
-            f"setup_state\t{record.setup_state.value}",
-            f"schema_version\t{report.schema_version}",
-            f"valid\t{not blocking}",
-        ]
-        for issue in issues:
-            lines.append(f"{issue.severity.value}\t{issue.code}\t{issue.path or '-'}\t{issue.message}")
-        emit_envelope(ctx, command="config.profile.validate", result=result, lines=lines)
-        if blocking:
-            raise typer.Exit(code=2)
-
-    profile_app.command("validate", help=tr("cli.config.profile.validate_help"))(
-        command_execution_policy(CALCULATION_READ)(config_profile_validate)
+    pointer = _resolve_validate_target_pointer(
+        name,
+        resolve_active_profile_pointer=resolve_active_profile_pointer,
     )
+    try:
+        record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
+    except ProfileNotFoundError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": name or pointer.label or pointer.bucket_id},
+        ) from exc
+    from .._config_payloads import ConfigProfileValidateResult, ProfileIssuePayload
+
+    report = ProfileValidationService(schema=load_user_profile_schema()).validate_record(record)
+    issues = list(report.issues)
+    seen_issues = {(issue.code, issue.path) for issue in issues}
+    for issue in modelo_work_profile_baseline_validation_issues(record):
+        key = (issue.code, issue.path)
+        if key in seen_issues:
+            continue
+        seen_issues.add(key)
+        issues.append(issue)
+    blocking = [issue for issue in issues if issue.severity.value == "error"]
+    result = ConfigProfileValidateResult(
+        profile_id=record.profile_id,
+        display_name=pointer.label,
+        setup_state=record.setup_state,
+        valid=not blocking,
+        schema_version=report.schema_version,
+        issues=[
+            ProfileIssuePayload(
+                severity=issue.severity,
+                code=issue.code,
+                path=issue.path,
+                message=issue.message,
+            )
+            for issue in issues
+        ],
+    )
+    lines = [
+        f"readiness\t{'blocked' if blocking else 'ready'}\tissues={len(issues)}",
+        f"profile_id\t{record.profile_id}",
+        f"display_name\t{pointer.label}",
+        f"setup_state\t{record.setup_state.value}",
+        f"schema_version\t{report.schema_version}",
+        f"valid\t{not blocking}",
+    ]
+    for issue in issues:
+        lines.append(f"{issue.severity.value}\t{issue.code}\t{issue.path or '-'}\t{issue.message}")
+    emit_envelope(ctx, command="config.profile.validate", result=result, lines=lines)
+    if blocking:
+        raise typer.Exit(code=2)
 
 
 def _record_validity_verdict(*, blocking_count: int, issue_count: int) -> tuple[str, str]:
@@ -607,4 +550,4 @@ def _record_validity_lines(
     return lines
 
 
-__all__ = ["register_profile_inspect_commands"]
+__all__ = ["config_profile_preflight", "config_profile_show", "config_profile_validate"]

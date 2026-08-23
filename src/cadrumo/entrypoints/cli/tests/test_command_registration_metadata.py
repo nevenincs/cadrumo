@@ -43,6 +43,19 @@ def test_projection_is_cached_immutable_and_declared_gaps_are_exact() -> None:
     assert all(node.handler_owner == "<none>" or node.source_sha256 for node in first.nodes)
 
 
+def test_registration_projection_carries_value_free_machine_secret_variants() -> None:
+    rows = {row.command: row for row in command_registration_projection().commands}
+
+    assert rows["ledger.add"].machine_secret_payloads == ()
+    restore = rows["config.profile.restore"].machine_secret_payloads
+    assert [variant.key for variant in restore] == ["passphrase", "recovery"]
+    assert [[field.name for field in variant.fields] for variant in restore] == [["passphrase"], ["recovery_secret"]]
+    assert [variant.condition.presence for variant in restore if variant.condition is not None] == [
+        "absent",
+        "present",
+    ]
+
+
 def test_generated_projection_matches_both_localized_materialized_trees() -> None:
     completed = subprocess.run(  # noqa: S603 - fixed interpreter, generator, and check flag
         [sys.executable, "-I", str(_GENERATOR.resolve()), "--check"],

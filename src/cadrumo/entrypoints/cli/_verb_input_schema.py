@@ -42,6 +42,7 @@ from typer._click.core import Parameter as ClickParameter
 from typer.main import get_command as _typer_get_command
 
 from ..schema_surface import CLI_PATH_BY_SCHEMA_KEY, GROUP_CALLBACK_SCHEMA_KEYS, ROOT_LANDING_SCHEMA_KEYS
+from ._command_schema import MachineSecretPayloadMetadata, machine_secret_payload_metadata
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -167,6 +168,7 @@ class VerbInputSchema(BaseModel):
     command_key: str = Field(min_length=1)
     cli_path: tuple[str, ...]
     parameters: tuple[VerbParameter, ...] = ()
+    machine_secret_payloads: tuple[MachineSecretPayloadMetadata, ...] = ()
     #: The command's own one-line help (its click ``short_help`` / first help
     #: line), so a consumer's per-verb description can be verb-specific rather
     #: than the shared family intent.
@@ -555,6 +557,7 @@ def _schema_from_resolution(
         command_key=command_key,
         cli_path=cli_path,
         parameters=parameters,
+        machine_secret_payloads=machine_secret_payload_metadata(command_key),
         help=_command_help(command),
     )
 
@@ -684,6 +687,7 @@ def build_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInp
                 )
                 for parameter in parameters
             ),
+            machine_secret_payloads=row.machine_secret_payloads,
             help=help_by_language.get(language, help_by_language.get("es", "")),
         )
     assert_schema_coverage(tuple(resolution_errors))
