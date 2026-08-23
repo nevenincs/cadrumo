@@ -733,9 +733,7 @@ def sequence_sandbox(
     # (correctly) refuses every profile-bound verb because the route bucket (this
     # sandbox's pointer) is not the session bucket (the previous sandbox's). The
     # stale session also holds an engine handle on the torn-down sandbox's
-    # database. Evicting on BOTH edges — entry covers a sandbox that raised — is
-    # the same per-call relock discipline the MCP warm in-process transport
-    # applies, through the same canonical primitive.
+    # database. Evicting on BOTH edges also covers a sandbox that raised.
     close_active_bucket_session()
     with (
         _neutralized_ambient_env(),

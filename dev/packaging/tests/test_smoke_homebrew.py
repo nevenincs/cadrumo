@@ -221,8 +221,8 @@ def test_localization_changes_only_the_three_cohort_acquisition_urls(tmp_path: P
             f'    url "{base}/{filenames[2]}"',
             f'    sha256 "{digests[filenames[2]]}"',
             "  end",
-            '  resource "mcp" do',
-            '    url "https://files.pythonhosted.org/packages/mcp.tar.gz"',
+            '  resource "unrelated-dependency" do',
+            '    url "https://files.pythonhosted.org/packages/unrelated-dependency.tar.gz"',
             "  end",
             "end",
             "",
@@ -236,7 +236,7 @@ def test_localization_changes_only_the_three_cohort_acquisition_urls(tmp_path: P
     )
 
     assert len(replacements) == 3
-    assert "https://files.pythonhosted.org/packages/mcp.tar.gz" in localized
+    assert "https://files.pythonhosted.org/packages/unrelated-dependency.tar.gz" in localized
     restored = localized
     for original, replacement in replacements.items():
         assert replacement in localized

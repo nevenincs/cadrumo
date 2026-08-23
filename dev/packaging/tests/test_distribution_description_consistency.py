@@ -2,9 +2,8 @@
 
 The ungoverned metadata description tier (root ``pyproject.toml``, the Scoop
 manifest, the Homebrew formula) was reconciled on 2026-07-19 to a single
-README-derived canonical sentence (operator-approved). Unlike the client-display
-tier — which ``dev/packaging/verify_distribution_identity.py`` pins byte-exact —
-nothing guarded these metadata strings, so they had drifted independently. This
+README-derived canonical sentence (operator-approved). Nothing previously
+guarded these metadata strings, so they had drifted independently. This
 gate asserts they stay reconciled: the canonical sentence lives verbatim in the
 PyPI package summary and the Scoop generator, and the Homebrew ``desc`` (kept
 terse per Homebrew's style guide) is the canonical's leading clause.
@@ -44,7 +43,7 @@ def _string_literals(source_path: Path) -> list[str]:
 
 # The operator-approved canonical short description (README H1 + lede, compressed).
 _CANONICAL_DESCRIPTION = (
-    "Cadrumo is a deterministic Spanish tax calculation CLI and MCP server "
+    "Cadrumo is a deterministic Spanish tax calculation CLI "
     "that turns local financial records into checked, exportable modelo filing "
     "artifacts. Independent software; not affiliated with AEAT."
 )

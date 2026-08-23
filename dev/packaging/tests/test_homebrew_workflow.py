@@ -107,13 +107,6 @@ def test_homebrew_workflow_mints_every_row_from_the_immutable_cohort() -> None:
     assert "--release-cohort-dir " in emit["run"]
     assert '--tax-evidence "$tax"' in emit["run"]
     assert 'if [[ -z "$tax" ]]' in emit["run"]
-    # The formula is CLI-only: the CLI-only smoke writes no mcp-evidence.json,
-    # the emitter runs without the mcp dependency, and the record marks the
-    # MCP leg absent.
-    assert "mcp-evidence.json" not in emit["run"]
-    assert "--mcp-evidence" not in emit["run"]
-    assert "--with mcp" not in emit["run"]
-
     # All three legs publish their rows (distinct {row_id}-{evidence_id}.json
     # basenames) and per-leg bundles as their OWN artifacts. Draft tags raced
     # on creation and needed a dedicated single-creator job; artifacts do not

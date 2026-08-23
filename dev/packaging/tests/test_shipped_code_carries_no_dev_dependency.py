@@ -13,7 +13,7 @@ other half, which is how harness code actually announces itself: it reaches for
 the tooling that only ever exists on a developer's machine.
 
 **The signal is a dev-only DISTRIBUTION, not a name.** Judging by filename is
-what makes this class hard -- ``_harness_tools.py`` is a shipped MCP product
+what makes this class hard -- shipped helper code can resemble development tooling
 feature and ``_parity_harness.py`` is reached by a real CLI verb, while genuinely
 non-production code is free to be blandly named. But a module that imports
 ``pytest``, ``reportlab``, ``hypothesis`` or ``torch`` cannot be production here,

@@ -154,12 +154,8 @@ def test_scoop_workflow_binds_the_smoke_evidence_before_minting_the_row() -> Non
     assert names.index("Verify the smoke evidence binds to this run") < names.index(
         "Emit the sanctioned Scoop distribution-evidence record"
     )
-    # The CLI-only lane emits from the tax oracle JSON alone: the emitter runs
-    # without the mcp dependency and the record marks the MCP leg absent.
+    # The CLI-only lane emits from the tax oracle JSON.
     assert "--tax-evidence $tax" in emit["run"]
-    assert "mcp-evidence.json" not in emit["run"]
-    assert "--mcp-evidence" not in emit["run"]
-    assert "--with mcp" not in emit["run"]
     assert '$evidence.status -ne "passed"' in verify["run"]
     assert '$evidence.mode -ne "Host"' in verify["run"]
     assert "$evidence.container_identity_verified -ne $false" in verify["run"]

@@ -470,7 +470,7 @@ def test_a_waited_on_acquisition_lane_is_deliberately_excluded() -> None:
     """
     needs = _needs_own_alert(_WORKFLOW_DIR, module_root=_REPO_ROOT)
 
-    for waited in ("packaging-scoop.yml", "packaging-homebrew.yml", "packaging-claude.yml", "packaging-smoke.yml"):
+    for waited in ("packaging-scoop.yml", "packaging-homebrew.yml", "packaging-smoke.yml"):
         present = {path.name for path in iter_directory(_WORKFLOW_DIR, pattern="*.yml")}
         assert waited in present, f"{waited} should exist to be excluded"
         assert waited not in needs, f"{waited} is waited on by its dispatcher and must not alert separately"

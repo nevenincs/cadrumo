@@ -133,6 +133,13 @@ against concrete locale entries. No additional static registration is needed.
 #: finding constructors use ``message_locale_key``; the error registry and the
 #: wizard verifiers use the other three; the CLI command-spec tables use
 #: ``help_key`` for every command, group and option help string they declare.
+#:
+#: ``help_key`` currently recovers NOTHING on its own: all 893 sites wrap their
+#: value, so the wrapper rule below already reaches every one, and removing this
+#: entry leaves the scanner's output unchanged. It is kept because an unwrapped
+#: ``help_key="cli..."`` is the form a new spec would most naturally reach for and
+#: would otherwise be silently invisible. Stated rather than left implied, so nobody
+#: later reads it as evidence that bare help kwargs exist.
 _TRANSLATION_KEY_KWARGS: frozenset[str] = frozenset(
     {"translated_message", "message_key", "translation_key", "message_locale_key", "help_key"},
 )

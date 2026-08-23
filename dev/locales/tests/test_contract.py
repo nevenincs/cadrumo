@@ -3,7 +3,7 @@
 The suite pins the command roots, mounted command families, lifecycle tokens,
 parser-only source-kind aliases, help documents, and registered refusal error
 used by entrypoint adapters. It deliberately exercises the application-owned
-contract as data so CLI and MCP surfaces cannot redefine operator vocabulary in
+contract as data so entrypoint adapters cannot redefine operator vocabulary in
 their own layers.
 
 The live reconciliation against the materialised Click tree lives in the
@@ -21,11 +21,8 @@ See Also:
         command families.
     :func:`~application.operator_surface.require_accepted_root`
         Refusal gate that raises the registered operator-surface contract error.
-    :func:`~application.operator_surface.build_operator_surface_manifest`
-        Agent-facing manifest builder that consumes the same backend contract.
     :mod:`~entrypoints.cli`
-        Entrypoint layer supplying the result-schema references the manifest
-        composes with, without owning the contract.
+        Entrypoint layer consuming the contract without owning it.
 """
 
 from __future__ import annotations

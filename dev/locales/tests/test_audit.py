@@ -65,7 +65,6 @@ _PROSE_KEYS = {
         "cli.config.google.profile_help",
         "cli.ledger.add.system_state_not_assignable",
         "cli.ledger.classify.system_state_not_assignable",
-        "mcp.elicitation.refusal.no_channel",
         "provisioning.model.licence.non_commercial_advisory",
         "docs.legal.index.intro",
         "docs.legal.page.intro",
@@ -80,7 +79,6 @@ _PROSE_KEYS = {
         "adapters.outbound.storage.google_drive.errors.former_vault_folder",
         "application.iva_wallet.decision_reason.first_period_zero_activity_start_uncontrasted",
         "cli.config.google.profile_help",
-        "mcp.elicitation.refusal.no_channel",
         "provisioning.model.licence.non_commercial_advisory",
         "docs.legal.index.intro",
         "docs.legal.page.intro",
@@ -93,7 +91,6 @@ _PROSE_KEYS = {
         "application.iva_wallet.decision_reason.first_period_zero_activity_start_uncontrasted",
         "cli.ledger.add.system_state_not_assignable",
         "cli.ledger.classify.system_state_not_assignable",
-        "mcp.elicitation.refusal.no_channel",
         "provisioning.model.licence.non_commercial_advisory",
         "docs.legal.index.intro",
         "docs.legal.page.intro",
@@ -106,20 +103,11 @@ _PROSE_KEYS = {
         "application.iva_wallet.decision_reason.first_period_zero_activity_start_uncontrasted",
         "cli.ledger.add.system_state_not_assignable",
         "cli.ledger.classify.system_state_not_assignable",
-        "mcp.elicitation.refusal.no_channel",
         "provisioning.model.licence.non_commercial_advisory",
         "docs.legal.index.intro",
         "docs.legal.page.intro",
     },
 }
-_CLI_KEYS = {
-    "ca": {"mcp.call.timeout", "mcp.elicitation.refusal.no_channel"},
-    "en": {"mcp.elicitation.refusal.no_channel"},
-    "es": {"mcp.call.timeout", "mcp.elicitation.refusal.no_channel"},
-    "hu": {"mcp.elicitation.refusal.no_channel"},
-}
-
-
 def _manager_for(tmp_path: Path, values: Mapping[str, str]) -> LocaleManager:
     """Write one real YAML catalogue per language and return its manager."""
     locales_dir = tmp_path / "locales"
@@ -385,8 +373,6 @@ def test_committed_catalogues_follow_contextual_product_identity_contract() -> N
         )
         assert {key for key, value in leaves.items() if _PROSE_NAME_RE.search(value)} == _PROSE_KEYS[locale]
         assert {key for key, value in leaves.items() if _DISPLAY_NAME_RE.search(value)} == _IDENTITY_HEADING_KEYS
-        assert all(PRODUCT_IDENTITY.cli_executable in leaves[key] for key in _CLI_KEYS[locale])
-        assert all(PRODUCT_IDENTITY.display_name not in leaves[key] for key in _CLI_KEYS[locale])
         assert not {key for key, value in leaves.items() if normalise_product_identity_references(value) != value}
         assert any(PRODUCT_IDENTITY.environment_prefix in value for value in leaves.values())
         assert any("cadrumo-vault/" in value for value in leaves.values())

@@ -29,7 +29,7 @@ def _scoop_manifest(version: str) -> str:
     return json.dumps(
         {
             "version": version,
-            "description": "Deterministic Spanish tax calculation CLI and MCP server",
+            "description": "Deterministic Spanish tax calculation CLI",
             "homepage": "https://github.com/nevenincs/cadrumo",
             "license": "Apache-2.0",
             "url": f"https://github.com/nevenincs/cadrumo/releases/download/v{version}/cadrumo-{version}.tar.gz",
@@ -48,7 +48,7 @@ def _homebrew_formula(version: str) -> str:
     return (
         "class Cadrumo < Formula\n"
         "  include Language::Python::Virtualenv\n"
-        '  desc "Deterministic Spanish tax calculation CLI and MCP server"\n'
+        '  desc "Deterministic Spanish tax calculation CLI"\n'
         '  homepage "https://github.com/nevenincs/cadrumo"\n'
         f'  url "https://github.com/nevenincs/cadrumo/releases/download/v{version}/cadrumo-{version}.tar.gz"\n'
         f'  sha256 "{"0" * 64}"\n'

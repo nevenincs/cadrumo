@@ -11,20 +11,13 @@ so this module centralises the two behaviours every acquisition script needs:
   :func:`verify_python_cohort_download`, :func:`verify_release_download`) that
   re-hashes acquired bytes against the promoted cohort manifest.
 
-The oracle runner (:func:`run_installed_behavior_oracles`) re-uses the canonical
-installed CLI and MCP oracles rather than re-deriving tax truth. Its heavy
-imports (``mcp``) are deferred so the pure digest helpers stay importable in a
-minimal environment.
+The installed CLI oracle is reused rather than re-deriving tax truth.
 """
 
 from __future__ import annotations
 
 import hashlib
-import json
 import os
-import subprocess
-from collections.abc import Mapping, Sequence
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, NoReturn
 
@@ -33,7 +26,6 @@ from dev._paths import UTF_8
 
 from ._hashing import sha256_path
 from .cohort_manifest import LoadedReleaseCohort
-from .evidence import CommandTranscript
 from .python_cohort import PythonCohort
 
 if TYPE_CHECKING:
@@ -346,122 +338,6 @@ def venv_executable(venv: Path, name: str) -> Path:
     return venv_bin_dir(venv) / f"{name}{suffix}"
 
 
-def _initialize_server_name(stdout: str) -> str | None:
-    """Return the server name from the MCP ``initialize`` response, if present."""
-    for line in stdout.splitlines():
-        stripped = line.strip()
-        if not stripped:
-            continue
-        try:
-            message = json.loads(stripped)
-        except json.JSONDecodeError:
-            continue
-        if isinstance(message, dict) and message.get("id") == 1:
-            result = message.get("result")
-            if isinstance(result, dict):
-                server_info = result.get("serverInfo")
-                if isinstance(server_info, dict):
-                    name = server_info.get("name")
-                    return str(name) if name is not None else None
-    return None
-
-
-def capture_owned_server_launch(
-    *,
-    server: Path,
-    server_args: Sequence[str] = (),
-    env: Mapping[str, str],
-    cwd: Path,
-    timeout_seconds: float = 60.0,
-    expected_server_name: str = "cadrumo",
-) -> CommandTranscript:
-    """Spawn the client's MCP server as an owned subprocess and capture its launch.
-
-    For a pure-client (MCP-only) distribution row, this is the single genuine
-    command transcript required by option A: we own the process, so its argv,
-    cwd, wall-clock span, exit status, and stream digests are all real. The
-    handshake drives the public ``initialize`` protocol to prove the installed
-    server launches and identifies as ``cadrumo``; closing stdin then lets the
-    stdio server loop end and exit ``0`` cleanly (a killed server would report a
-    non-zero exit and could never sit in a passing record). No field is
-    fabricated.
-
-    Args:
-        server: The absolute installed server executable to launch.
-        server_args: Any arguments the client passes the server (e.g. uvx args).
-        env: The isolated environment the client provides the server.
-        cwd: The working directory to launch the server in.
-        timeout_seconds: How long to wait for the handshake and clean exit.
-        expected_server_name: The server name the ``initialize`` reply must carry.
-
-    Returns:
-        The real :class:`~dev.packaging.evidence.CommandTranscript` of the launch.
-
-    Raises:
-        AcquisitionError: If the server fails to identify or does not exit cleanly.
-    """
-    argv = (str(server), *server_args)
-    handshake = "".join(
-        json.dumps(message) + "\n"
-        for message in (
-            {
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "initialize",
-                "params": {
-                    "protocolVersion": "2025-06-18",
-                    "capabilities": {},
-                    "clientInfo": {"name": "owned-launch-capture", "version": "0"},
-                },
-            },
-            {"jsonrpc": "2.0", "method": "notifications/initialized"},
-            {"jsonrpc": "2.0", "id": 2, "method": "tools/list"},
-        )
-    )
-    started_at = datetime.now(UTC)
-    process = subprocess.Popen(  # noqa: S603 - the executable is the client's own installed server
-        argv,
-        cwd=str(cwd),
-        env=dict(env),
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        encoding=_UTF_8,
-    )
-    try:
-        stdout, stderr = process.communicate(input=handshake, timeout=timeout_seconds)
-    except subprocess.TimeoutExpired as exc:
-        process.kill()
-        process.communicate()
-        raise AcquisitionError(
-            f"installed MCP server did not complete the launch handshake within {timeout_seconds}s: {argv!r}",
-        ) from exc
-    completed_at = datetime.now(UTC)
-
-    server_name = _initialize_server_name(stdout)
-    if server_name != expected_server_name:
-        raise AcquisitionError(
-            f"installed MCP server launch did not identify as {expected_server_name!r} "
-            f"(got {server_name!r}); stderr: {stderr.strip()[:200]}",
-        )
-    if process.returncode != 0:
-        raise AcquisitionError(
-            f"installed MCP server did not exit cleanly on stdin EOF (rc={process.returncode}); "
-            f"stderr: {stderr.strip()[:200]}",
-        )
-    return CommandTranscript.from_output(
-        argv=argv,
-        cwd=str(cwd),
-        started_at=started_at,
-        completed_at=completed_at,
-        exit_status=process.returncode,
-        stdout=stdout,
-        stderr=stderr,
-        relevant_output=(f"initialize serverInfo.name={server_name}",),
-    )
-
-
 def run_installed_cli_oracle(
     *,
     cli: Path,
@@ -512,7 +388,6 @@ __all__ = [
     "EXPECTED_ORACLE_TARGET_VALUE",
     "PYTHON_COHORT_WHEEL_NAMES",
     "AcquisitionError",
-    "capture_owned_server_launch",
     "match_downloaded_cohort_wheels",
     "refuse_digest_mismatch",
     "refuse_unavailable",

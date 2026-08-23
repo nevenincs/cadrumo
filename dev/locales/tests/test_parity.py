@@ -207,10 +207,9 @@ def _assert_catalogue_strings_for_state(
 
 @pytest.fixture(scope="module")
 def manager():
-    # The documentation generators and the MCP harness both live outside the
-    # package but render operator-facing prose from this same catalogue, so
-    # the gate must see their keys or it reports every one as an extra key
-    # with no codebase site.
+    # Documentation generators live outside the package but render
+    # operator-facing prose from this same catalogue, so the gate must see
+    # their keys or it reports every one as an extra key with no codebase site.
     return LocaleManager(SRC_DIR, LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR,))
 
 
@@ -294,11 +293,6 @@ def test_english_catalogue_distinguishes_product_prose_cli_and_identity_headings
         "Cadrumo profile name override (default = active profile on workflow state)"
     )
 
-    assert _leaf(data, "mcp", "elicitation", "refusal", "no_channel") == (
-        "'{command}' needs a human confirmation, and this client does not support elicitation. "
-        "Run it from a client that can ask you questions, or run the equivalent Cadrumo CLI (`aeat`) command "
-        "directly in a terminal."
-    )
     # Identity contract only, not the prose. These two strings are live operator
     # copy this test does not own; pinning the sentence made every reword fail
     # here, and re-pinning it to whatever the catalogue now says only resets the
@@ -345,15 +339,6 @@ def test_spanish_catalogue_distinguishes_product_prose_cli_and_identity_headings
     # sentence made every unrelated copy edit (an accent repair, a reword) fail here,
     # and re-pinning it to whatever the catalogue now says only proves the two strings
     # were copied from each other.
-    timeout_copy = _leaf(data, "mcp", "call", "timeout")
-    assert "aeat" in timeout_copy
-    assert all(token in timeout_copy for token in ("{command}", "{tier}", "{seconds}"))
-    assert _leaf(data, "mcp", "elicitation", "refusal", "no_channel") == (
-        "'{command}' requiere confirmación humana y este cliente no admite la función de preguntas (elicitation). "
-        "Ejecútalo desde un cliente que pueda hacerte preguntas, o ejecuta el comando equivalente de Cadrumo CLI "
-        "(`aeat`) "
-        "directamente en un terminal."
-    )
     # Identity contract only — see the English counterpart for why the prose is not pinned.
     _assert_identity_contract(
         data,
@@ -429,14 +414,6 @@ def test_catalan_catalogue_distinguishes_product_prose_cli_and_identity_headings
         "Tria'n una: BUSINESS, PERSONAL, MIXED."
     )
     # Naming contract only — see the Spanish counterpart for why the prose is not pinned.
-    timeout_copy = _leaf(data, "mcp", "call", "timeout")
-    assert "aeat" in timeout_copy
-    assert all(token in timeout_copy for token in ("{command}", "{tier}", "{seconds}"))
-    assert _leaf(data, "mcp", "elicitation", "refusal", "no_channel") == (
-        "'{command}' requereix confirmació humana i aquest client no admet la funció de preguntes (elicitation). "
-        "Executa'l des d'un client que pugui fer-te preguntes, o executa l'ordre equivalent de Cadrumo CLI "
-        "(`aeat`) directament en un terminal."
-    )
     # Identity contract only — see the English counterpart for why the prose is not pinned.
     _assert_identity_contract(
         data,
@@ -475,11 +452,6 @@ def test_hungarian_catalogue_distinguishes_product_prose_cli_and_identity_headin
     assert _leaf(data, "cli", "ledger", "classify", "system_state_not_assignable") == (
         "A(z) '%{value}' besorolást a Cadrumo automatikusan állítja be, kézzel nem adható meg. "
         "Válassz egyet: BUSINESS, PERSONAL, MIXED."
-    )
-    assert _leaf(data, "mcp", "elicitation", "refusal", "no_channel") == (
-        "A(z) '{command}' emberi megerősítést igényel, és ez a kliens nem támogatja a kérdezés "
-        "(elicitation) funkciót. Futtasd olyan kliensből, amely tud kérdezni, vagy futtasd a megfelelő "
-        "Cadrumo CLI (`aeat`) parancsot közvetlenül a terminálban."
     )
     # Identity contract only — see the English counterpart for why the prose is not pinned.
     _assert_identity_contract(

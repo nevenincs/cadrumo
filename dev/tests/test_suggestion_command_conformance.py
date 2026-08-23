@@ -463,7 +463,7 @@ def test_action_ledger_marks_known_return_and_provenance_clusters_as_producers()
 def test_action_ledger_exclusions_have_specific_non_action_contexts() -> None:
     """An exclusion needs a non-action role, not absence of a scanner sink.
 
-    The remaining exclusions are static CRUD contract identifiers, MCP resource
+    The remaining exclusions are static CRUD contract identifiers and resource
     names, or the schema-derived CLI rendering prefix.  They each carry a
     source-specific reason; this rejects the former generic syntactic rationale
     without introducing a fragile numerical baseline.
