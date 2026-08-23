@@ -265,8 +265,10 @@ cli:
         yes_help: Bizonyíték törlésének megerősítése.
         yes_required: Adja meg a --yes kapcsolót a bizonyíték törléséhez.
       inventory:
-        acquisition_cost_invalid: "Érvénytelen beszerzési költség JSON a szabványos bemenetről: {details}"
-        acquisition_cost_stdin_help: A teljes beszerzési költség JSON-objektum beolvasása a szabványos bemenetről
+        acquisition_cost_invalid: 'Érvénytelen beszerzési költség JSON a szabványos
+          bemenetről: {details}'
+        acquisition_cost_stdin_help: A teljes beszerzési költség JSON-objektum beolvasása
+          a szabványos bemenetről
         actividad_id_help: Gazdasági tevékenység azonosítója.
         create_help: Készlet-főkönyv létrehozása egy tevékenységhez és adóévhez.
         group_help: Készlet-főkönyvek tevékenységek, mozgások és értékelés szerint.
