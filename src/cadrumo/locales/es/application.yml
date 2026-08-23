@@ -1126,8 +1126,8 @@ application:
         %{filing_year} %{period}; completa antes estos datos de perfil: %{missing}.'
       profile_readiness_profile_missing: No existe un perfil activo persistido para
         este trabajo de modelo; crea o repara el perfil antes de continuar.
-      profile_readiness_setup_incomplete: La configuración del perfil está incompleta;
-        termina el asistente de configuración antes de trabajar con modelos.
+      profile_readiness_setup_incomplete: La configuración del perfil aún no se ha declarado completa;
+        ejecuta `aeat config profile complete-setup` antes de trabajar con modelos.
       profile_readiness_setup_incomplete_missing: 'La configuración del perfil está
         incompleta; termina el asistente de configuración antes de trabajar con modelos.
         Campos pendientes: %{missing}.'

@@ -2224,7 +2224,7 @@ cli:
         un terminal interactiu perquè se't pregunti.
       import_uuid_collision: El UUID del paquet entra en conflicte amb un perfil existent.
       manager_closed: Els canvis a '{profile}' estan desats.
-      manager_closed_created: Perfil '{profile}' creat i a punt. Torna a obrir-lo
+      manager_closed_created: Perfil '{profile}' creat. Declara que la configuració està completa amb `aeat config profile complete-setup` abans de treballar amb models. Torna a obrir-lo
         quan vulguis amb 'aeat config profile edit'.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF>` first.

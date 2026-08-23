@@ -1029,8 +1029,8 @@ application:
         %{period}; complete these profile facts first: %{missing}.'
       profile_readiness_profile_missing: No persisted active profile exists for this
         modelo work target; create or repair the profile before continuing.
-      profile_readiness_setup_incomplete: Profile setup is incomplete; finish the
-        setup flow before working on modelos.
+      profile_readiness_setup_incomplete: Profile setup has not yet been declared complete;
+        run `aeat config profile complete-setup` before working on modelos.
       profile_readiness_setup_incomplete_missing: 'Profile setup is incomplete; finish
         the setup flow before working on modelos. Outstanding fields: %{missing}.'
       recipient_decryption_failed: The recipient-encrypted package could not be decrypted;
