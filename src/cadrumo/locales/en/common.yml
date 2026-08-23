@@ -179,6 +179,8 @@ aggregation:
         mesh.'
       duplicate_row_binding_owner: 'Internal error: duplicate row-binding owner in
         the source mesh.'
+      duplicate_row_casilla_coordinate: 'Internal error: duplicate row-casilla coordinate.'
+      duplicate_row_casilla_owner: 'Internal error: duplicate row-casilla owner in the source mesh.'
       out_of_window_summary_date_span_invalid: An out-of-window summary's maximum
         filing date must not precede its minimum filing date.
       out_of_window_summary_incomplete: An out-of-window summary must set the count,
@@ -214,6 +216,13 @@ aggregation:
         1 or greater.'
       row_binding_value_invalid: 'Internal error: the row-binding decimal value is
         not valid.'
+      row_casilla_index_invalid: 'Internal error: the row-casilla row index must be 1 or greater.'
+      row_casilla_provenance_coordinate_mismatch: Every row-casilla value must have exactly one provenance row.
+      row_casilla_row_index_mismatch: A row-casilla and its source binding must use the same row index.
+      row_casilla_source_coordinate_missing: A row-casilla source binding value or identity is missing.
+      row_casilla_source_identity_mismatch: A row-casilla provenance identity differs from its source identity.
+      row_casilla_source_value_mismatch: A row-casilla value differs from its source binding value.
+      row_casilla_value_invalid: 'Internal error: the row-casilla decimal value is not valid.'
       row_source_identity_coordinate_mismatch: Every row source identity coordinate
         must correspond to a binding value present on the row itself. A coordinate
         was declared that the row does not carry.

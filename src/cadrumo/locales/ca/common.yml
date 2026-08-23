@@ -189,6 +189,8 @@ aggregation:
         malla de fonts.'
       duplicate_row_binding_owner: 'Error intern: propietari de vinculació de fila
         duplicat a la malla de fonts.'
+      duplicate_row_casilla_coordinate: 'Error intern: coordenada de casella de fila duplicada.'
+      duplicate_row_casilla_owner: 'Error intern: propietari de casella de fila duplicat a la malla de fonts.'
       out_of_window_summary_date_span_invalid: La data màxima de presentació d'un
         resum fora de finestra no pot ser anterior a la seva data mínima.
       out_of_window_summary_incomplete: Un resum fora de finestra ha d'establir conjuntament
@@ -225,6 +227,13 @@ aggregation:
         ha de ser 1 o superior.'
       row_binding_value_invalid: 'Error intern: el valor decimal de la vinculació
         de fila no és vàlid.'
+      row_casilla_index_invalid: 'Error intern: l''índex de casella de fila ha de ser 1 o superior.'
+      row_casilla_provenance_coordinate_mismatch: Cada valor de casella de fila ha de tenir exactament una procedència.
+      row_casilla_row_index_mismatch: La casella de fila i la vinculació d'origen han d'usar el mateix índex.
+      row_casilla_source_coordinate_missing: Falta el valor o la identitat de la vinculació d'origen d'una casella de fila.
+      row_casilla_source_identity_mismatch: La identitat de procedència de la casella de fila difereix de la identitat d'origen.
+      row_casilla_source_value_mismatch: El valor de la casella de fila difereix del valor de la vinculació d'origen.
+      row_casilla_value_invalid: 'Error intern: el valor decimal de la casella de fila no és vàlid.'
       row_source_identity_coordinate_mismatch: Tota coordenada d'identitat de fila
         ha de correspondre a un valor de vincle present a la mateixa fila. S'ha declarat
         una coordenada que la fila no aporta.

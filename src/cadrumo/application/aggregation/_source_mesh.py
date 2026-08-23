@@ -45,7 +45,12 @@ from ...core.errors import CoreValidationError
 from ...core.i18n import tr
 from ...core.identity import BucketId, SnapshotId, WorkUnitId
 from ...core.logging import get_logger
-from ...domain.calculations import RowBindingKey, RowSourceIdentity
+from ...domain.calculations import (
+    DirectRowMaterializationProvenance,
+    RowBindingKey,
+    RowCasillaKey,
+    RowSourceIdentity,
+)
 from ...domain.calculations.registry import (
     BindingId,
     LegalRefId,
@@ -64,12 +69,24 @@ _ROW_BINDING_VALUES = TypeAdapter(dict[RowBindingKey, RowBindingValue])
 
 _ROW_SOURCE_IDENTITIES = TypeAdapter(dict[RowBindingKey, RowSourceIdentity])
 
+_ROW_CASILLA_VALUES = TypeAdapter(dict[RowCasillaKey, Decimal])
+
+_ROW_CASILLA_PROVENANCE = TypeAdapter(dict[RowCasillaKey, DirectRowMaterializationProvenance])
+
 
 def _empty_row_binding_values() -> dict[RowBindingKey, RowBindingValue]:
     return {}
 
 
 def _empty_row_source_identities() -> dict[RowBindingKey, RowSourceIdentity]:
+    return {}
+
+
+def _empty_row_casilla_values() -> dict[RowCasillaKey, Decimal]:
+    return {}
+
+
+def _empty_row_casilla_provenance() -> dict[RowCasillaKey, DirectRowMaterializationProvenance]:
     return {}
 
 
@@ -859,6 +876,12 @@ class CalculationSourceResolution(BaseModel):
         exclude=True,
         repr=False,
     )
+    row_casilla_values: Mapping[RowCasillaKey, Decimal] = Field(default_factory=_empty_row_casilla_values)
+    row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] = Field(
+        default_factory=_empty_row_casilla_provenance,
+        exclude=True,
+        repr=False,
+    )
     relation_values: Mapping[RelationId, Decimal] = Field(default_factory=dict)
     unresolved_relation_ids: tuple[RelationId, ...] = Field(default_factory=tuple)
     unresolved_binding_ids: tuple[BindingId, ...] = Field(default_factory=tuple)
@@ -1006,6 +1029,76 @@ class CalculationSourceResolution(BaseModel):
             normalized[(binding_id, row_index)] = identity
         return MappingProxyType(dict(sorted(normalized.items(), key=lambda item: (item[0][0], item[0][1]))))
 
+    @field_validator("row_casilla_values", mode="before")
+    @classmethod
+    def _coerce_row_casilla_values(cls, value: object) -> object:
+        if isinstance(value, Mapping):
+            return _ROW_CASILLA_VALUES.validate_python(value)
+        if not isinstance(value, (list, tuple)):
+            return value
+        items = OBJECT_TUPLE_ADAPTER.validate_python(value)
+        normalized: dict[tuple[object, object], object] = {}
+        for item in items:
+            if not isinstance(item, Mapping):
+                return items
+            row = STR_KEYED_MAPPING_ADAPTER.validate_python(item)
+            key = (row.get("casilla_id"), row.get("row_index"))
+            if key in normalized:
+                raise SourceMeshError("aggregation.source_mesh.errors.duplicate_row_casilla_coordinate")
+            row_value = coerce_decimal(row.get("value"))
+            if row_value is None:
+                raise SourceMeshError("aggregation.source_mesh.errors.row_casilla_value_invalid")
+            normalized[key] = row_value
+        return normalized
+
+    @field_validator("row_casilla_values")
+    @classmethod
+    def _freeze_row_casilla_values(cls, value: Mapping[RowCasillaKey, Decimal]) -> Mapping[RowCasillaKey, Decimal]:
+        normalized: dict[RowCasillaKey, Decimal] = {}
+        for (casilla_id, row_index), row_value in value.items():
+            if row_index < 1:
+                raise SourceMeshError("aggregation.source_mesh.errors.row_casilla_index_invalid")
+            normalized[(casilla_id, row_index)] = row_value
+        return MappingProxyType(dict(sorted(normalized.items(), key=lambda item: (item[0][0], item[0][1]))))
+
+    @field_validator("row_casilla_provenance", mode="before")
+    @classmethod
+    def _coerce_row_casilla_provenance(cls, value: object) -> object:
+        if isinstance(value, Mapping):
+            return _ROW_CASILLA_PROVENANCE.validate_python(value)
+        if not isinstance(value, (list, tuple)):
+            return value
+        items = OBJECT_TUPLE_ADAPTER.validate_python(value)
+        normalized: dict[tuple[object, object], object] = {}
+        for item in items:
+            if not isinstance(item, Mapping):
+                return items
+            row = STR_KEYED_MAPPING_ADAPTER.validate_python(item)
+            key = (row.get("casilla_id"), row.get("row_index"))
+            if key in normalized:
+                raise SourceMeshError("aggregation.source_mesh.errors.duplicate_row_casilla_coordinate")
+            normalized[key] = {
+                "source_binding_id": row.get("source_binding_id"),
+                "source_row_index": row.get("source_row_index"),
+                "source_identity": row.get("source_identity"),
+                "materialization_rule_id": row.get("materialization_rule_id"),
+                "materialization_rule_version": row.get("materialization_rule_version"),
+            }
+        return normalized
+
+    @field_validator("row_casilla_provenance")
+    @classmethod
+    def _freeze_row_casilla_provenance(
+        cls,
+        value: Mapping[RowCasillaKey, DirectRowMaterializationProvenance],
+    ) -> Mapping[RowCasillaKey, DirectRowMaterializationProvenance]:
+        normalized: dict[RowCasillaKey, DirectRowMaterializationProvenance] = {}
+        for (casilla_id, row_index), provenance in value.items():
+            if row_index < 1:
+                raise SourceMeshError("aggregation.source_mesh.errors.row_casilla_index_invalid")
+            normalized[(casilla_id, row_index)] = provenance
+        return MappingProxyType(dict(sorted(normalized.items(), key=lambda item: (item[0][0], item[0][1]))))
+
     @field_validator("relation_values")
     @classmethod
     def _freeze_relation_values(cls, value: Mapping[RelationId, Decimal]) -> Mapping[RelationId, Decimal]:
@@ -1060,6 +1153,27 @@ class CalculationSourceResolution(BaseModel):
         return self
 
     @model_validator(mode="after")
+    def _row_casillas_are_an_exact_direct_materialization(self) -> CalculationSourceResolution:
+        if set(self.row_casilla_values) != set(self.row_casilla_provenance):
+            raise SourceMeshError("aggregation.source_mesh.errors.row_casilla_provenance_coordinate_mismatch")
+        for (casilla_id, casilla_row_index), provenance in self.row_casilla_provenance.items():
+            source_key = (provenance.source_binding_id, provenance.source_row_index)
+            source_value = self.row_binding_values.get(source_key)
+            source_identity = self.row_source_identities.get(source_key)
+            if source_value is None or source_identity is None:
+                raise SourceMeshError("aggregation.source_mesh.errors.row_casilla_source_coordinate_missing")
+            if casilla_row_index != provenance.source_row_index:
+                raise SourceMeshError("aggregation.source_mesh.errors.row_casilla_row_index_mismatch")
+            if (
+                not isinstance(source_value, Decimal)
+                or self.row_casilla_values[(casilla_id, casilla_row_index)] != source_value
+            ):
+                raise SourceMeshError("aggregation.source_mesh.errors.row_casilla_source_value_mismatch")
+            if provenance.source_identity != source_identity:
+                raise SourceMeshError("aggregation.source_mesh.errors.row_casilla_source_identity_mismatch")
+        return self
+
+    @model_validator(mode="after")
     def _provenance_names_its_producing_resolver(self) -> CalculationSourceResolution:
         primary_refs = tuple(
             row.source_ref for row in self.provenance if row.lineage_role is CalculationSourceLineageRole.PRIMARY
@@ -1107,6 +1221,16 @@ class CalculationSourceResolution(BaseModel):
                 "value_kind": "decimal" if isinstance(row_value, Decimal) else "text",
             }
             for (binding_id, row_index), row_value in value.items()
+        )
+
+    @field_serializer("row_casilla_values")
+    def _serialize_row_casilla_values(
+        self,
+        value: Mapping[RowCasillaKey, Decimal],
+    ) -> tuple[dict[str, object], ...]:
+        return tuple(
+            {"casilla_id": casilla_id, "row_index": row_index, "value": row_value}
+            for (casilla_id, row_index), row_value in value.items()
         )
 
     @field_serializer("relation_values")
@@ -1168,6 +1292,8 @@ class _SourceResolutionMergeState:
     date_binding_values: dict[BindingId, date] = field(default_factory=dict)
     row_binding_values: dict[RowBindingKey, RowBindingValue] = field(default_factory=dict)
     row_source_identities: dict[RowBindingKey, RowSourceIdentity] = field(default_factory=dict)
+    row_casilla_values: dict[RowCasillaKey, Decimal] = field(default_factory=dict)
+    row_casilla_provenance: dict[RowCasillaKey, DirectRowMaterializationProvenance] = field(default_factory=dict)
     relation_values: dict[RelationId, Decimal] = field(default_factory=dict)
     unresolved_relation_ids: set[RelationId] = field(default_factory=set)
     unresolved_binding_ids: set[BindingId] = field(default_factory=set)
@@ -1179,6 +1305,7 @@ class _SourceResolutionMergeState:
     owned_sources: set[BindingSourceKind] = field(default_factory=set)
     binding_owners: dict[BindingId, str] = field(default_factory=dict)
     row_binding_owners: dict[RowBindingKey, str] = field(default_factory=dict)
+    row_casilla_owners: dict[RowCasillaKey, str] = field(default_factory=dict)
     relation_owners: dict[RelationId, str] = field(default_factory=dict)
     casilla_owners: dict[CasillaId, str] = field(default_factory=dict)
     borrador_provenance: BorradorSourceProvenance | None = None
@@ -1207,6 +1334,7 @@ class _SourceResolutionMergeState:
             self.m303_regimen_simplificado_annual_summary_handoff = handoff
         self._absorb_binding_values(resolution)
         self._absorb_row_binding_values(resolution)
+        self._absorb_row_casilla_values(resolution)
         self._absorb_relation_values(resolution)
         self._absorb_bound_inputs(resolution)
 
@@ -1232,6 +1360,12 @@ class _SourceResolutionMergeState:
             if identity is not None:
                 self.row_source_identities[row_binding_key] = identity
             self.unresolved_binding_ids.discard(row_binding_key[0])
+
+    def _absorb_row_casilla_values(self, resolution: CalculationSourceResolution) -> None:
+        for row_casilla_key, value in resolution.row_casilla_values.items():
+            _claim_row_casilla(self.row_casilla_owners, row_casilla_key, resolution.resolver_id)
+            self.row_casilla_values[row_casilla_key] = value
+            self.row_casilla_provenance[row_casilla_key] = resolution.row_casilla_provenance[row_casilla_key]
 
     def _absorb_relation_values(self, resolution: CalculationSourceResolution) -> None:
         for relation_id, value in resolution.relation_values.items():
@@ -1266,6 +1400,8 @@ class _SourceResolutionMergeState:
             date_binding_values=self.date_binding_values,
             row_binding_values=self.row_binding_values,
             row_source_identities=self.row_source_identities,
+            row_casilla_values=self.row_casilla_values,
+            row_casilla_provenance=self.row_casilla_provenance,
             relation_values=self.relation_values,
             unresolved_relation_ids=tuple(sorted(self.unresolved_relation_ids.difference(self.relation_values))),
             unresolved_binding_ids=self._unresolved_binding_ids(),
@@ -1321,6 +1457,9 @@ def merge_source_resolutions_by_precedence(
     date_binding_values: dict[BindingId, date] = {}
     row_binding_values: dict[RowBindingKey, RowBindingValue] = {}
     row_source_identities: dict[RowBindingKey, RowSourceIdentity] = {}
+    row_casilla_values: dict[RowCasillaKey, Decimal] = {}
+    row_casilla_provenance: dict[RowCasillaKey, DirectRowMaterializationProvenance] = {}
+    row_casilla_owners: dict[RowCasillaKey, str] = {}
     row_binding_owners: dict[RowBindingKey, str] = {}
     relation_values: dict[RelationId, Decimal] = {}
     unresolved_relation_ids: set[RelationId] = set()
@@ -1368,6 +1507,10 @@ def merge_source_resolutions_by_precedence(
         row_source_identities.update(tier.row_source_identities)
         for binding_id, _row_index in tier.row_binding_values:
             unresolved_binding_ids.discard(binding_id)
+        for row_casilla_key in tier.row_casilla_values:
+            _claim_row_casilla(row_casilla_owners, row_casilla_key, tier.resolver_id)
+        row_casilla_values.update(tier.row_casilla_values)
+        row_casilla_provenance.update(tier.row_casilla_provenance)
         bound_inputs_by_casilla_id.update(tier.bound_inputs_by_casilla_id)
         for relation_id, value in tier.relation_values.items():
             relation_values[relation_id] = value
@@ -1381,6 +1524,8 @@ def merge_source_resolutions_by_precedence(
         date_binding_values=date_binding_values,
         row_binding_values=row_binding_values,
         row_source_identities=row_source_identities,
+        row_casilla_values=row_casilla_values,
+        row_casilla_provenance=row_casilla_provenance,
         relation_values=relation_values,
         unresolved_relation_ids=tuple(sorted(unresolved_relation_ids.difference(relation_values))),
         unresolved_binding_ids=tuple(
@@ -1484,6 +1629,23 @@ def _claim_row_binding(owners: dict[RowBindingKey, str], row_binding_key: RowBin
         t("aggregation.source_mesh.errors.duplicate_row_binding_owner"),
         context={
             "binding_id": binding_id,
+            "row_index": row_index,
+            "first_resolver": existing,
+            "second_resolver": resolver_id,
+        },
+    )
+
+
+def _claim_row_casilla(owners: dict[RowCasillaKey, str], row_casilla_key: RowCasillaKey, resolver_id: str) -> None:
+    existing = owners.get(row_casilla_key)
+    if existing is None:
+        owners[row_casilla_key] = resolver_id
+        return
+    casilla_id, row_index = row_casilla_key
+    raise AggregationValidationError(
+        t("aggregation.source_mesh.errors.duplicate_row_casilla_owner"),
+        context={
+            "casilla_id": casilla_id,
             "row_index": row_index,
             "first_resolver": existing,
             "second_resolver": resolver_id,

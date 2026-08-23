@@ -178,6 +178,8 @@ aggregation:
       duplicate_relation_owner: 'Belső hiba: ismétlődő kapcsolati tulajdonos a forráshálon.'
       duplicate_row_binding_owner: 'Belső hiba: duplikált sor-binding tulajdonos a
         forráshálóban.'
+      duplicate_row_casilla_coordinate: 'Belső hiba: duplikált sor-mező koordináta.'
+      duplicate_row_casilla_owner: 'Belső hiba: duplikált sor-mező tulajdonos a forráshálóban.'
       out_of_window_summary_date_span_invalid: Az ablakon kívüli összesítő legkésőbbi
         benyújtási dátuma nem előzheti meg a legkorábbi benyújtási dátumot.
       out_of_window_summary_incomplete: Az ablakon kívüli összesítőnek együtt kell
@@ -211,6 +213,13 @@ aggregation:
       row_binding_index_invalid: 'Belső hiba: a sor-binding sorindexének 1-nek vagy
         nagyobbnak kell lennie.'
       row_binding_value_invalid: 'Belső hiba: a sor-binding decimális értéke érvénytelen.'
+      row_casilla_index_invalid: 'Belső hiba: a sor-mező indexének 1-nek vagy nagyobbnak kell lennie.'
+      row_casilla_provenance_coordinate_mismatch: Minden sor-mező értékhez pontosan egy származási sor szükséges.
+      row_casilla_row_index_mismatch: A sor-mezőnek és forráskötésének ugyanazt a sorindexet kell használnia.
+      row_casilla_source_coordinate_missing: Hiányzik egy sor-mező forráskötési értéke vagy azonossága.
+      row_casilla_source_identity_mismatch: A sor-mező származási azonossága eltér a forrás azonosságától.
+      row_casilla_source_value_mismatch: A sor-mező értéke eltér a forráskötés értékétől.
+      row_casilla_value_invalid: 'Belső hiba: a sor-mező decimális értéke érvénytelen.'
       row_source_identity_coordinate_mismatch: Minden sorazonosító-koordinátának a
         soron ténylegesen jelen lévő kötési értékhez kell tartoznia. Olyan koordinátát
         jelöltek meg, amelyet a sor nem hordoz.
