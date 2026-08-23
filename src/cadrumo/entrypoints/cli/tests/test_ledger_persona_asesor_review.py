@@ -178,7 +178,7 @@ def test_preflight_issue_detail_is_actionable_text() -> None:
     assert pre.exit_code == 0, pre.output
     json_result = _json(pre.output)
     issues_val = json_result.get("issues")
-    detail_parts: list[str] = []
+detail_parts: list[str] = []
     if isinstance(issues_val, list):
         for issue in issues_val:
             if isinstance(issue, dict):

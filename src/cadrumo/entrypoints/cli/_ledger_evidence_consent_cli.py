@@ -34,13 +34,11 @@ from ...application.ledger import (
 from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ._command_policy import command_execution_policy
 from ._common import _emit_envelope, _state, _tx_repo
 from ._ledger_business_payloads import (
     EvidenceConsentListResult,
     EvidenceConsentRederiveResult,
 )
-from ._ledger_execution_policies import LEDGER_NETWORK_WRITE, LEDGER_READ, declare_metadata_group
 
 _UNRECALLABLE_LOCALE_KEY = "cli.app.ledger.evidence.consent.bytes_unrecallable"
 _NO_HISTORY_LOCALE_KEY = "cli.app.ledger.evidence.consent.no_history"
@@ -49,9 +47,6 @@ _REDERIVE_HELP_LOCALE_KEY = "cli.app.ledger.evidence.consent.rederive_help"
 _REDERIVED_LOCALE_KEY = "cli.app.ledger.evidence.consent.rederived"
 _REDERIVE_REFUSED_LOCALE_KEY = "cli.app.ledger.evidence.consent.rederive_refused"
 _GROUP_HELP_LOCALE_KEY = "cli.app.ledger.evidence.consent.group_help"
-
-consent_app = typer.Typer(no_args_is_help=True)
-declare_metadata_group(consent_app)
 
 
 def _unrecallable_notice() -> Notice:
@@ -88,62 +83,44 @@ def _no_history_notice() -> Notice:
     )
 
 
-def register_evidence_consent_commands(evidence_app: typer.Typer) -> None:
-    """Mount the consent verbs under the evidence group."""
-    evidence_app.add_typer(
-        consent_app,
-        name="consent",
-        help=tr(_GROUP_HELP_LOCALE_KEY),
+def consent_list(ctx: typer.Context) -> None:
+    """List off-host dispatches and the artefacts derived from them."""
+    bucket_id = _tx_repo(_state()).bucket_id
+    survey = survey_cloud_consent(
+        bucket_id=bucket_id, settings=load_settings(), consent_entries=_recorded_dispatches(bucket_id)
     )
-    _register_consent_list_command()
-    _register_consent_rederive_command()
-
-
-def _register_consent_list_command() -> None:
-    @consent_app.command("list", help=tr(_LIST_HELP_LOCALE_KEY))
-    @command_execution_policy(LEDGER_READ)
-    def consent_list(ctx: typer.Context) -> None:
-        """List off-host dispatches and the artefacts derived from them."""
-        bucket_id = _tx_repo(_state()).bucket_id
-        survey = survey_cloud_consent(
-            bucket_id=bucket_id,
-            settings=load_settings(),
-            consent_entries=_recorded_dispatches(bucket_id),
-        )
-        payload = {
-            "bucket_id": bucket_id,
-            "transmitted_bytes_are_unrecallable": survey.transmitted_bytes_are_unrecallable,
-            "consented_dispatches": [_dispatch_payload(row) for row in survey.consented_dispatches],
-            "cloud_derived_artefacts": [
-                {
-                    "evidence_reference": row.evidence_reference,
-                    "provenance_stamp": row.provenance_stamp,
-                    "transport": row.transport,
-                    "drafted_at": row.drafted_at.isoformat(),
-                    "rederivable_on_host": row.rederivable_on_host,
-                }
-                for row in survey.cloud_derived_artefacts
-            ],
-        }
-        lines = ["evidence_reference\ttransport\trederivable_on_host\tprovenance_stamp"]
-        lines.extend(
-            f"{row.evidence_reference}\t{row.transport or '-'}\t"
-            f"{'-' if row.rederivable_on_host is None else row.rederivable_on_host}\t{row.provenance_stamp}"
+    payload = {
+        "bucket_id": bucket_id,
+        "transmitted_bytes_are_unrecallable": survey.transmitted_bytes_are_unrecallable,
+        "consented_dispatches": [_dispatch_payload(row) for row in survey.consented_dispatches],
+        "cloud_derived_artefacts": [
+            {
+                "evidence_reference": row.evidence_reference,
+                "provenance_stamp": row.provenance_stamp,
+                "transport": row.transport,
+                "drafted_at": row.drafted_at.isoformat(),
+                "rederivable_on_host": row.rederivable_on_host,
+            }
             for row in survey.cloud_derived_artefacts
-        )
-        # The caveat is unconditional; the empty statement is conditional on
-        # there genuinely being nothing, so it reports a fact rather than always
-        # firing over a listing that just showed something.
-        notices = [_unrecallable_notice()]
-        if not survey.consented_dispatches and not survey.cloud_derived_artefacts:
-            notices.append(_no_history_notice())
-        _emit_envelope(
-            ctx,
-            command="ledger.evidence.consent.list",
-            result=EvidenceConsentListResult.model_validate(payload),
-            lines=lines,
-            notices=notices,
-        )
+        ],
+    }
+    lines = ["evidence_reference\ttransport\trederivable_on_host\tprovenance_stamp"]
+    lines.extend(
+
+            f"{row.evidence_reference}\t{row.transport or '-'}\t{('-' if row.rederivable_on_host is None else row.rederivable_on_host)}\t{row.provenance_stamp}"
+            for row in survey.cloud_derived_artefacts
+
+    )
+    notices = [_unrecallable_notice()]
+    if not survey.consented_dispatches and (not survey.cloud_derived_artefacts):
+        notices.append(_no_history_notice())
+    _emit_envelope(
+        ctx,
+        command="ledger.evidence.consent.list",
+        result=EvidenceConsentListResult.model_validate(payload),
+        lines=lines,
+        notices=notices,
+    )
 
 
 def _recorded_dispatches(bucket_id: str) -> tuple[ConsentedDispatch, ...]:
@@ -193,59 +170,42 @@ def _dispatch_payload(dispatch: ConsentedDispatch) -> dict[str, str]:
     }
 
 
-def _register_consent_rederive_command() -> None:
-    @consent_app.command("rederive", help=tr(_REDERIVE_HELP_LOCALE_KEY))
-    @command_execution_policy(LEDGER_NETWORK_WRITE)
-    def consent_rederive(
-        ctx: typer.Context,
-        evidence_reference: str = typer.Argument(
-            ...,
-            help=tr("cli.app.ledger.evidence.consent.evidence_reference_help"),
+def consent_rederive(
+    ctx: typer.Context, evidence_reference: str = ..., content_address: str = ..., transcriber: str = ...
+) -> None:
+    """Re-derive one artefact on this host from its cached transcription."""
+    bucket_id = _tx_repo(_state()).bucket_id
+    outcome = rederive_artefact_on_host(
+        bucket_id=bucket_id,
+        evidence_reference=evidence_reference,
+        source_content_sha256=content_address,
+        transcriber_cache_key=transcriber,
+        settings=load_settings(),
+        read_on_host=_on_host_reader(),
+    )
+    _emit_envelope(
+        ctx,
+        command="ledger.evidence.consent.rederive",
+        result=EvidenceConsentRederiveResult.model_validate(
+            {
+                "bucket_id": bucket_id,
+                "evidence_reference": outcome.evidence_reference,
+                "previous_provenance_stamp": outcome.previous_provenance_stamp,
+                "provenance_stamp": outcome.provenance_stamp,
+                "transcription_reused": outcome.transcription_reused,
+                "transmitted_bytes_are_unrecallable": True,
+            }
         ),
-        content_address: str = typer.Option(
-            ...,
-            "--content-address",
-            help=tr("cli.app.ledger.evidence.consent.content_address_help"),
-        ),
-        transcriber: str = typer.Option(
-            ...,
-            "--transcriber",
-            help=tr("cli.app.ledger.evidence.consent.transcriber_help"),
-        ),
-    ) -> None:
-        """Re-derive one artefact on this host from its cached transcription."""
-        bucket_id = _tx_repo(_state()).bucket_id
-        outcome = rederive_artefact_on_host(
-            bucket_id=bucket_id,
-            evidence_reference=evidence_reference,
-            source_content_sha256=content_address,
-            transcriber_cache_key=transcriber,
-            settings=load_settings(),
-            read_on_host=_on_host_reader(),
-        )
-        _emit_envelope(
-            ctx,
-            command="ledger.evidence.consent.rederive",
-            result=EvidenceConsentRederiveResult.model_validate(
-                {
-                    "bucket_id": bucket_id,
-                    "evidence_reference": outcome.evidence_reference,
-                    "previous_provenance_stamp": outcome.previous_provenance_stamp,
-                    "provenance_stamp": outcome.provenance_stamp,
-                    "transcription_reused": outcome.transcription_reused,
-                    "transmitted_bytes_are_unrecallable": True,
-                },
-            ),
-            lines=[
-                tr(
-                    _REDERIVED_LOCALE_KEY,
-                    reference=outcome.evidence_reference,
-                    previous=outcome.previous_provenance_stamp,
-                    current=outcome.provenance_stamp,
-                ),
-            ],
-            notices=[_unrecallable_notice()],
-        )
+        lines=[
+            tr(
+                _REDERIVED_LOCALE_KEY,
+                reference=outcome.evidence_reference,
+                previous=outcome.previous_provenance_stamp,
+                current=outcome.provenance_stamp,
+            )
+        ],
+        notices=[_unrecallable_notice()],
+    )
 
 
 def _on_host_reader() -> OnHostReader:

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Annotated
-
 import typer
 
 from ...application.operator_actions import ActionReference
@@ -21,7 +19,6 @@ from ...core import (
     Period,
     PeriodError,
 )
-from ...core.i18n import tr
 from ...core.json_contract import (
     Notice,
     NoticeSeverity,
@@ -29,11 +26,9 @@ from ...core.json_contract import (
 )
 from ...domain.calculations.registry import RevisionId
 from ...domain.user_profile import ProfileNotFoundError
-from ._command_policy import command_execution_policy
-from ._common import MODELO_CODE_CHOICE, _emit_envelope, _no_active_profile_refusal, resolve_notice_action
+from ._common import _emit_envelope, _no_active_profile_refusal, resolve_notice_action
 from ._errors import CliRefusedBoundaryError
 from ._modelo_cli_support import unsupported_local_work_period_refusal
-from ._modelo_execution_policies import CALCULATION_READ
 from ._modelo_payloads import (
     LedgerIssuePayload,
     ModeloReadinessMissingBindingPayload,
@@ -42,79 +37,40 @@ from ._modelo_payloads import (
 )
 
 
-def register_readiness_commands(app: typer.Typer) -> None:
-    """Register modelo readiness commands."""
-
-    @app.command(
-        "readiness",
-        help=tr(
-            "cli.app.modelo.readiness_help",
-            default="Report whether the active profile is ready to file one modelo / year / period.",
-        ),
+def modelo_readiness(
+    ctx: typer.Context,
+    modelo: str,
+    revision_id: str,
+    filing_year: int,
+    period: str | None = None,
+) -> None:
+    """Report active-profile readiness for one modelo target."""
+    request = ModeloReadinessRequest(
+        modelo=modelo,
+        revision_id=revision_id,
+        filing_year=filing_year,
+        period=_resolve_readiness_period(modelo=modelo, filing_year=filing_year, period=period),
     )
-    @command_execution_policy(CALCULATION_READ)
-    def modelo_readiness(
-        ctx: typer.Context,
-        modelo: Annotated[
-            str,
-            typer.Option(
-                "--modelo",
-                click_type=MODELO_CODE_CHOICE,
-                help=tr("cli.app.modelo.readiness.modelo_help", default="Modelo code (e.g. 303)."),
-            ),
-        ],
-        revision_id: Annotated[
-            str,
-            typer.Option(
-                "--revision-id",
-                help=tr("cli.app.modelo.readiness.revision_help", default="Registry revision id."),
-            ),
-        ],
-        filing_year: Annotated[
-            int,
-            typer.Option("--year", help=tr("cli.app.modelo.readiness.year_help", default="Filing year.")),
-        ],
-        period: Annotated[
-            str | None,
-            typer.Option(
-                "--period",
-                help=tr(
-                    "cli.app.modelo.readiness.period_help",
-                    default=(
-                        "Period token used to resolve the modelo revision: 0A annual, 1T-4T quarters, "
-                        "01-12 months; for censo modelos (036) use alta, modificacion, or baja."
-                    ),
-                ),
-            ),
-        ] = None,
-    ) -> None:
-        """Report active-profile readiness for one modelo target."""
-        request = ModeloReadinessRequest(
-            modelo=modelo,
-            revision_id=revision_id,
-            filing_year=filing_year,
-            period=_resolve_readiness_period(modelo=modelo, filing_year=filing_year, period=period),
-        )
-        report = _readiness_report(request)
-        readiness_result = _readiness_result(
+    report = _readiness_report(request)
+    readiness_result = _readiness_result(
+        report,
+        modelo=modelo,
+        revision_id=revision_id,
+        filing_year=filing_year,
+    )
+    _emit_envelope(
+        ctx,
+        command="modelo.readiness",
+        result=readiness_result,
+        lines=_readiness_lines(
             report,
             modelo=modelo,
             revision_id=revision_id,
             filing_year=filing_year,
-        )
-        _emit_envelope(
-            ctx,
-            command="modelo.readiness",
-            result=readiness_result,
-            lines=_readiness_lines(
-                report,
-                modelo=modelo,
-                revision_id=revision_id,
-                filing_year=filing_year,
-                period=period,
-            ),
-            notices=_readiness_notices(report),
-        )
+            period=period,
+        ),
+        notices=_readiness_notices(report),
+    )
 
 
 def _resolve_readiness_period(*, modelo: str, filing_year: int, period: str | None) -> Period | None:
@@ -372,4 +328,4 @@ def _readiness_finish_line(export_context: dict[str, str] | None) -> str:
     return "finish_line\texport verified-complete revision via 'aeat app modelo export' (local finish line)"
 
 
-__all__ = ["register_readiness_commands"]
+__all__ = ["modelo_readiness"]

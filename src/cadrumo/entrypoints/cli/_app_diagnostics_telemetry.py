@@ -39,7 +39,7 @@ import typer
 
 from ...core.i18n import tr
 from ...core.telemetry import TelemetryTier
-from ._common import _emit_envelope, case_insensitive_choice
+from ._common import _emit_envelope
 from ._diagnostics_payloads import (
     TelemetryFlushResult,
     TelemetryStatusResult,
@@ -48,40 +48,9 @@ from ._diagnostics_payloads import (
 
 def diagnostics_telemetry_status(
     ctx: typer.Context,
-    opt_in: bool | None = typer.Option(
-        None,
-        "--opt-in/--no-opt-in",
-        help=tr(
-            "cli.diagnostics.telemetry.opt_in_help",
-            default=(
-                "Preview the posture as if CADRUMO_TELEMETRY_OPT_IN were this value for this "
-                "invocation only; omit to report the deployment's actual configured setting."
-            ),
-        ),
-    ),
-    tier: TelemetryTier | None = typer.Option(
-        None,
-        "--tier",
-        click_type=case_insensitive_choice(TelemetryTier),
-        help=tr(
-            "cli.diagnostics.telemetry.tier_help",
-            default=(
-                "Preview the posture as if CADRUMO_TELEMETRY_TIER were this value (off / crash_only / "
-                "full) for this invocation only; omit to report the deployment's actual configured tier."
-            ),
-        ),
-    ),
-    endpoint: str | None = typer.Option(
-        None,
-        "--endpoint",
-        help=tr(
-            "cli.diagnostics.telemetry.endpoint_help",
-            default=(
-                "Preview the posture as if CADRUMO_TELEMETRY_ENDPOINT were this URL for this invocation "
-                "only; omit to report the deployment's actual configured endpoint."
-            ),
-        ),
-    ),
+    opt_in: bool | None = None,
+    tier: TelemetryTier | None = None,
+    endpoint: str | None = None,
 ) -> None:
     """Report the current remote-telemetry consent posture; never emits anything."""
     from ...application.diagnostics_telemetry import build_telemetry_status_report
@@ -133,63 +102,11 @@ def diagnostics_telemetry_status(
 
 def diagnostics_telemetry_flush(
     ctx: typer.Context,
-    dry_run: bool = typer.Option(
-        True,
-        "--dry-run/--no-dry-run",
-        help=tr(
-            "cli.diagnostics.telemetry.flush.dry_run_help",
-            default=(
-                "Preview the payload that would be sent without transmitting anything (default). "
-                "Pass --no-dry-run to actually send when the consent gate permits."
-            ),
-        ),
-    ),
-    opt_in: bool | None = typer.Option(
-        None,
-        "--opt-in/--no-opt-in",
-        help=tr(
-            "cli.diagnostics.telemetry.opt_in_help",
-            default=(
-                "Preview/send as if CADRUMO_TELEMETRY_OPT_IN were this value for this invocation only; "
-                "omit to use the deployment's actual configured setting."
-            ),
-        ),
-    ),
-    tier: TelemetryTier | None = typer.Option(
-        None,
-        "--tier",
-        click_type=case_insensitive_choice(TelemetryTier),
-        help=tr(
-            "cli.diagnostics.telemetry.tier_help",
-            default=(
-                "Preview/send as if CADRUMO_TELEMETRY_TIER were this value (off / crash_only / full) for "
-                "this invocation only; omit to use the deployment's actual configured tier."
-            ),
-        ),
-    ),
-    endpoint: str | None = typer.Option(
-        None,
-        "--endpoint",
-        help=tr(
-            "cli.diagnostics.telemetry.endpoint_help",
-            default=(
-                "Preview/send as if CADRUMO_TELEMETRY_ENDPOINT were this URL for this invocation only; "
-                "omit to use the deployment's actual configured endpoint."
-            ),
-        ),
-    ),
-    acknowledge: bool = typer.Option(
-        False,
-        "--acknowledge-remote-telemetry",
-        help=tr(
-            "cli.diagnostics.telemetry.flush.acknowledge_help",
-            default=(
-                "Acknowledge this specific remote-telemetry send. Required (in addition to opt-in "
-                "and a non-off tier) for --no-dry-run to actually transmit; never sticky, re-affirm "
-                "on every invocation."
-            ),
-        ),
-    ),
+    dry_run: bool = True,
+    opt_in: bool | None = None,
+    tier: TelemetryTier | None = None,
+    endpoint: str | None = None,
+    acknowledge: bool = False,
 ) -> None:
     """Build the aggregate local telemetry payload and, unless --dry-run, send it."""
     from ...application.diagnostics_telemetry import build_telemetry_flush_preview, flush_telemetry

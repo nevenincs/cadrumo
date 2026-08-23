@@ -1,8 +1,7 @@
 """Secure explicit operator-secret input helpers for custody commands.
 
-This module owns the canonical explicit machine-secret capability: reusable
-``--secrets-stdin`` and ``--secrets-fd`` declarations, conflict-before-read
-selection, bounded strict-JSON parsing, one-shot descriptor closure, and the
+This module owns the canonical explicit machine-secret behavior:
+conflict-before-read selection, bounded strict-JSON parsing, one-shot descriptor closure, and the
 strict frozen payload base. It also owns the interactive no-echo prompt used
 after a command has established that no explicit channel was selected. No
 secret value is accepted as an ``argv`` option, so passphrases and recovery
@@ -48,10 +47,10 @@ import warnings
 from contextlib import suppress
 from dataclasses import dataclass
 from enum import StrEnum
+
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from ....core.external_constants import UTF_8_ENCODING
-from ....core.i18n import tr
 from ....core.tty import stdin_is_tty
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 

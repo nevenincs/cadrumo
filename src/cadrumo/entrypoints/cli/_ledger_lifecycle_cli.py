@@ -37,14 +37,7 @@ from ...domain.transactions import (
     is_classified,
 )
 from ...llm import LLMSplitApplyResult
-from ._command_policy import command_execution_policy
 from ._common import _bad, _emit_envelope, _state, _tx_repo, parse_decimal_amount
-from ._ledger_execution_policies import (
-    LEDGER_DESTRUCTIVE,
-    LEDGER_GOOGLE_WRITE,
-    LEDGER_NETWORK_COMPUTE_WRITE,
-    LEDGER_WRITE,
-)
 from ._ledger_support import (
     _emit_update_result,
     _ledger_transaction_validation_no_recovery,
@@ -58,41 +51,11 @@ if TYPE_CHECKING:
     from ._ledger_payloads import LedgerSplitChildIdPayload, LedgerSplitChildProposalPayload
 
 
-def register_lifecycle_commands(app: typer.Typer) -> None:
-    """Register ledger lifecycle and structure mutation commands."""
-    app.command("attach", help=tr("cli.ledger.attach.help"))(ledger_attach)
-    app.command(
-        "doclink",
-        help=tr("cli.ledger.doclink.help"),
-    )(ledger_doclink)
-    app.command(
-        "pull-folder",
-        help=tr("cli.ledger.pull_folder.help"),
-    )(ledger_pull_folder)
-    app.command("detach", help=tr("cli.ledger.detach.help"))(ledger_detach)
-    app.command("archive", help=tr("cli.ledger.archive.help"))(ledger_archive)
-    app.command("stash", help=tr("cli.ledger.stash.help"))(ledger_stash)
-    app.command(
-        "exclude",
-        help=tr("cli.ledger.exclude.help"),
-    )(ledger_exclude)
-    app.command("restore", help=tr("cli.ledger.restore.help"))(ledger_restore)
-    app.command("remove", help=tr("cli.ledger.remove.help"))(ledger_remove)
-    app.command("reset", help=tr("cli.ledger.reset.help"))(ledger_reset)
-    app.command("split", help=tr("cli.ledger.split.help"))(ledger_split)
-    app.command("merge", help=tr("cli.ledger.merge.help"))(ledger_merge)
-
-
-@command_execution_policy(LEDGER_WRITE)
 def ledger_detach(
     ctx: typer.Context,
-    transaction_id: str = typer.Argument(..., help=tr("cli.ledger.detach.id_help")),
-    attachment_ids: list[str] = typer.Option(
-        [],
-        "--attachment-id",
-        help=tr("cli.ledger.detach.attachment_help"),
-    ),
-    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.detach.actor_help")),
+    transaction_id: str = ...,
+    attachment_ids: tuple[str, ...] = (),
+    actor: str | None = None,
 ) -> None:
     """Detach supplementary attachments from one ledger transaction."""
     from ...application.ledger import detach_manual_transaction_attachments
@@ -121,21 +84,12 @@ def ledger_detach(
     )
 
 
-@command_execution_policy(LEDGER_WRITE)
 def ledger_attach(
     ctx: typer.Context,
-    transaction_id: str = typer.Argument(..., help=tr("cli.ledger.attach.id_help")),
-    purchase_invoice_evidence_id: str | None = typer.Option(
-        None,
-        "--purchase-invoice-evidence-id",
-        help=tr("cli.ledger.attach.purchase_invoice_evidence_help"),
-    ),
-    attachment_ids: list[str] = typer.Option(
-        [],
-        "--attachment-id",
-        help=tr("cli.ledger.attach.attachment_help"),
-    ),
-    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.attach.actor_help")),
+    transaction_id: str = ...,
+    purchase_invoice_evidence_id: str | None = None,
+    attachment_ids: tuple[str, ...] = (),
+    actor: str | None = None,
 ) -> None:
     """Attach existing secure evidence objects to one ledger transaction."""
     from ...application.ledger import attach_manual_transaction_evidence
@@ -231,29 +185,13 @@ def _sniff_document_mime_type(reference: str, data: bytes) -> str:
     return guessed or "application/octet-stream"
 
 
-@command_execution_policy(LEDGER_GOOGLE_WRITE)
 def ledger_doclink(
     ctx: typer.Context,
-    transaction_id: str = typer.Argument(
-        ...,
-        help=tr("cli.ledger.doclink.id_help"),
-    ),
-    source: DocumentLinkSource = typer.Option(
-        ...,
-        "--source",
-        help=tr("cli.ledger.doclink.source_help"),
-    ),
-    reference: str = typer.Option(
-        ...,
-        "--reference",
-        help=tr("cli.ledger.doclink.reference_help"),
-    ),
-    note: str = typer.Option("", "--note", help=tr("cli.ledger.doclink.note_help")),
-    actor: str | None = typer.Option(
-        None,
-        "--actor",
-        help=tr("cli.ledger.doclink.actor_help"),
-    ),
+    transaction_id: str = ...,
+    source: DocumentLinkSource = ...,
+    reference: str = ...,
+    note: str = "",
+    actor: str | None = None,
 ) -> None:
     """Fetch a document link and store its bytes as encrypted evidence on a ledger row.
 
@@ -346,19 +284,10 @@ def _parse_drive_folder_reference(reference: str) -> str:
     return folder_id
 
 
-@command_execution_policy(LEDGER_GOOGLE_WRITE)
 def ledger_pull_folder(
     ctx: typer.Context,
-    folder: str = typer.Option(
-        ...,
-        "--folder",
-        help=tr("cli.ledger.pull_folder.folder_help"),
-    ),
-    note: str = typer.Option(
-        "",
-        "--note",
-        help=tr("cli.ledger.pull_folder.note_help"),
-    ),
+    folder: str = ...,
+    note: str = "",
 ) -> None:
     """Bulk-fetch every PDF/image child of a Drive folder into encrypted evidence.
 
@@ -490,13 +419,12 @@ def ledger_pull_folder(
     )
 
 
-@command_execution_policy(LEDGER_WRITE)
 def ledger_archive(
     ctx: typer.Context,
-    transaction_id: str = typer.Argument(..., help=tr("cli.ledger.archive.id_help")),
-    reason: str = typer.Option("", "--reason", help=tr("cli.ledger.archive.reason_help")),
-    yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.archive.yes_help")),
-    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.archive.actor_help")),
+    transaction_id: str = ...,
+    reason: str = "",
+    yes: bool = False,
+    actor: str | None = None,
 ) -> None:
     """Archive one ledger transaction through the bucket-scoped backend."""
     if not yes:
@@ -524,13 +452,12 @@ def ledger_archive(
     )
 
 
-@command_execution_policy(LEDGER_DESTRUCTIVE)
 def ledger_stash(
     ctx: typer.Context,
-    transaction_id: str = typer.Argument(..., help=tr("cli.ledger.stash.id_help")),
-    reason: str = typer.Option("", "--reason", help=tr("cli.ledger.stash.reason_help")),
-    yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.stash.yes_help")),
-    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.stash.actor_help")),
+    transaction_id: str = ...,
+    reason: str = "",
+    yes: bool = False,
+    actor: str | None = None,
 ) -> None:
     """Stash one ledger transaction through the bucket-scoped backend."""
     if not yes:
@@ -558,28 +485,12 @@ def ledger_stash(
     )
 
 
-@command_execution_policy(LEDGER_WRITE)
 def ledger_exclude(
     ctx: typer.Context,
-    transaction_id: str = typer.Argument(
-        ...,
-        help=tr("cli.ledger.exclude.id_help"),
-    ),
-    reason: str = typer.Option(
-        "",
-        "--reason",
-        help=tr("cli.ledger.exclude.reason_help"),
-    ),
-    yes: bool = typer.Option(
-        False,
-        "--yes",
-        help=tr("cli.ledger.exclude.yes_help"),
-    ),
-    actor: str | None = typer.Option(
-        None,
-        "--actor",
-        help=tr("cli.ledger.exclude.actor_help"),
-    ),
+    transaction_id: str = ...,
+    reason: str = "",
+    yes: bool = False,
+    actor: str | None = None,
 ) -> None:
     """Mark one active ledger transaction as reviewed and excluded from filing."""
     if not yes:
@@ -607,13 +518,12 @@ def ledger_exclude(
     )
 
 
-@command_execution_policy(LEDGER_WRITE)
 def ledger_restore(
     ctx: typer.Context,
-    transaction_id: str = typer.Argument(..., help=tr("cli.ledger.restore.id_help")),
-    reason: str = typer.Option("", "--reason", help=tr("cli.ledger.restore.reason_help")),
-    yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.restore.yes_help")),
-    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.restore.actor_help")),
+    transaction_id: str = ...,
+    reason: str = "",
+    yes: bool = False,
+    actor: str | None = None,
 ) -> None:
     """Restore one stashed or archived ledger transaction to active."""
     if not yes:
@@ -641,14 +551,13 @@ def ledger_restore(
     )
 
 
-@command_execution_policy(LEDGER_DESTRUCTIVE)
 def ledger_remove(
     ctx: typer.Context,
-    transaction_id: str = typer.Argument(..., help=tr("cli.ledger.remove.id_help")),
-    reason: str = typer.Option("", "--reason", help=tr("cli.ledger.remove.reason_help")),
-    dry_run: bool = typer.Option(False, "--dry-run", help=tr("cli.ledger.remove.dry_run_help")),
-    yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.remove.yes_help")),
-    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.remove.actor_help")),
+    transaction_id: str = ...,
+    reason: str = "",
+    dry_run: bool = False,
+    yes: bool = False,
+    actor: str | None = None,
 ) -> None:
     """Remove one ledger transaction through the bucket-scoped backend."""
     if not dry_run and not yes:
@@ -680,13 +589,12 @@ def ledger_remove(
     )
 
 
-@command_execution_policy(LEDGER_DESTRUCTIVE)
 def ledger_reset(
     ctx: typer.Context,
-    reason: str = typer.Option("", "--reason", help=tr("cli.ledger.reset.reason_help")),
-    dry_run: bool = typer.Option(False, "--dry-run", help=tr("cli.ledger.reset.dry_run_help")),
-    yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.reset.yes_help")),
-    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.reset.actor_help")),
+    reason: str = "",
+    dry_run: bool = False,
+    yes: bool = False,
+    actor: str | None = None,
 ) -> None:
     """Reset the active bucket ledger catalogue through the backend."""
     if not dry_run and not yes:
@@ -716,39 +624,18 @@ def ledger_reset(
     )
 
 
-@command_execution_policy(LEDGER_NETWORK_COMPUTE_WRITE)
 def ledger_split(
     ctx: typer.Context,
-    transaction_id: str = typer.Argument(..., help=tr("cli.ledger.split.id_help")),
-    child_amount: list[str] = typer.Option([], "--child-amount", help=tr("cli.ledger.split.child_amount_help")),
-    child_description: list[str] = typer.Option(
-        [],
-        "--child-description",
-        help=tr("cli.ledger.split.child_description_help"),
-    ),
-    llm: bool = typer.Option(
-        False,
-        "--llm",
-        help=tr("cli.ledger.split.llm_help"),
-    ),
-    apply: bool = typer.Option(
-        False,
-        "--apply",
-        help=tr("cli.ledger.split.apply_help"),
-    ),
-    read_evidence: bool = typer.Option(
-        False,
-        "--read-evidence",
-        help=tr("cli.ledger.split.read_evidence_help"),
-    ),
-    vision_model: str | None = typer.Option(
-        None,
-        "--vision-model",
-        help=tr("cli.ledger.split.vision_model_help"),
-    ),
-    reason: str = typer.Option("", "--reason", help=tr("cli.ledger.split.reason_help")),
-    yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.split.yes_help")),
-    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.split.actor_help")),
+    transaction_id: str = ...,
+    child_amount: tuple[str, ...] = (),
+    child_description: tuple[str, ...] = (),
+    llm: bool = False,
+    apply: bool = False,
+    read_evidence: bool = False,
+    vision_model: str | None = None,
+    reason: str = "",
+    yes: bool = False,
+    actor: str | None = None,
 ) -> None:
     """Redistribute one parent transaction into N child transactions (manual or --llm)."""
     if llm or read_evidence:
@@ -1065,13 +952,12 @@ def _ledger_split_llm(
     )
 
 
-@command_execution_policy(LEDGER_DESTRUCTIVE)
 def ledger_merge(
     ctx: typer.Context,
-    child_id: list[str] = typer.Option([], "--child-id", help=tr("cli.ledger.merge.child_id_help")),
-    reason: str = typer.Option("", "--reason", help=tr("cli.ledger.merge.reason_help")),
-    yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.merge.yes_help")),
-    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.merge.actor_help")),
+    child_id: tuple[str, ...] = (),
+    reason: str = "",
+    yes: bool = False,
+    actor: str | None = None,
 ) -> None:
     """Re-merge a complete cohort of split children into a fresh transaction."""
     if not yes:

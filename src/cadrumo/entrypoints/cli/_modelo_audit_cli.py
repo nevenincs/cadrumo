@@ -3,29 +3,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated
 
 import typer
 
-from ...core.i18n import tr
-from ._command_policy import command_execution_policy
 from ._common import _emit_envelope, active_bucket_id_or_refuse
-from ._modelo_execution_policies import MODEL_HANDOFF, MODEL_READ, declare_metadata_group
-
-audit_app = typer.Typer(
-    name="audit",
-    help=tr(
-        "cli.app.modelo.audit.group_help",
-        default="Evidence bundle audit verbs (show/check/export).",
-    ),
-    no_args_is_help=True,
-)
-declare_metadata_group(audit_app)
-
-
-def register_audit_commands(app: typer.Typer) -> None:
-    """Mount modelo evidence-bundle audit commands on the modelo app."""
-    app.add_typer(audit_app, name="audit")
 
 
 def _evidence_bundle_service():
@@ -34,20 +15,9 @@ def _evidence_bundle_service():
     return EvidenceBundleService()
 
 
-@audit_app.command(
-    "show",
-    help=tr(
-        "cli.app.modelo.audit.show_help",
-        default="Render an evidence bundle's manifest and referenced records.",
-    ),
-)
-@command_execution_policy(MODEL_READ)
 def audit_show(
     ctx: typer.Context,
-    bundle_id: Annotated[
-        str,
-        typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
-    ],
+    bundle_id: str,
 ) -> None:
     """Render an evidence bundle's manifest and referenced record list."""
     bucket_id = active_bucket_id_or_refuse()
@@ -86,20 +56,9 @@ def audit_show(
     _emit_envelope(ctx, command="modelo.audit.show", result=result, lines=lines)
 
 
-@audit_app.command(
-    "check",
-    help=tr(
-        "cli.app.modelo.audit.check_help",
-        default="Re-verify the evidence bundle's integrity (report-only).",
-    ),
-)
-@command_execution_policy(MODEL_READ)
 def audit_check(
     ctx: typer.Context,
-    bundle_id: Annotated[
-        str,
-        typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
-    ],
+    bundle_id: str,
 ) -> None:
     """Re-verify the evidence bundle's integrity without mutating state."""
     bucket_id = active_bucket_id_or_refuse()
@@ -129,37 +88,11 @@ def audit_check(
     _emit_envelope(ctx, command="modelo.audit.check", result=result, lines=lines)
 
 
-@audit_app.command(
-    "export",
-    help=tr(
-        "cli.app.modelo.audit.export_help",
-        default="Write a ZIP archive of the bundle (manifest emitted last).",
-    ),
-)
-@command_execution_policy(MODEL_HANDOFF)
 def audit_export(
     ctx: typer.Context,
-    bundle_id: Annotated[
-        str,
-        typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
-    ],
-    output: Annotated[
-        Path,
-        typer.Option(
-            "--output",
-            help=tr("cli.app.modelo.audit.output_help", default="Output ZIP path."),
-        ),
-    ],
-    force_incomplete: Annotated[
-        bool,
-        typer.Option(
-            "--force-incomplete",
-            help=tr(
-                "cli.app.modelo.audit.force_incomplete_help",
-                default="Allow export when verification is incomplete.",
-            ),
-        ),
-    ] = False,
+    bundle_id: str,
+    output: Path,
+    force_incomplete: bool = False,
 ) -> None:
     """Write the evidence bundle as a ZIP archive to ``--output``."""
     bucket_id = active_bucket_id_or_refuse()
@@ -189,4 +122,4 @@ def audit_export(
     _emit_envelope(ctx, command="modelo.audit.export", result=result, lines=lines)
 
 
-__all__ = ["audit_app", "register_audit_commands"]
+__all__ = ["audit_check", "audit_export", "audit_show"]

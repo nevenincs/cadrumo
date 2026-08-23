@@ -22,9 +22,7 @@ from ...core.external_constants import XLS_EXTENSION, XLSX_EXTENSION
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.transactions import TransactionValidationError
-from ._command_policy import command_execution_policy
 from ._common import _bad, _emit_envelope, _optional_canonical_period, _state, _tx_repo
-from ._ledger_execution_policies import LEDGER_NETWORK_WRITE
 from ._ledger_support import _ledger_transaction_validation_no_recovery
 
 if TYPE_CHECKING:
@@ -177,71 +175,52 @@ def _import_report(result: LedgerSourceImportResult, *, verbose: bool, verify: b
     )
 
 
-def register_import_commands(app: typer.Typer) -> None:
-    """Register ledger import commands."""
+def ledger_import(
+    ctx: typer.Context,
+    file: Path = ...,
+    provider: LedgerProviderID = ...,
+    dry_run: bool = False,
+    verify: bool = False,
+    verify_source: Path | None = None,
+    verbose: bool = False,
+    period: str | None = None,
+    year: int | None = None,
+) -> None:
+    """Import a financial-statement file via the existing provider registry."""
+    normalised_provider = _validate_import_provider(provider)
+    context = _import_bucket_context(dry_run=dry_run)
+    from ...adapters.outbound.fx import default_ecb_rate_provider
+    from ...domain.currency import CurrencyNormalizationService
 
-    @app.command("import", help=tr("cli.ledger.import.help"))
-    @command_execution_policy(LEDGER_NETWORK_WRITE)
-    def ledger_import(
-        ctx: typer.Context,
-        file: Path = typer.Option(..., "--file", help=tr("cli.ledger.import.file_help")),
-        provider: LedgerProviderID = typer.Option(
-            ...,
-            "--provider",
-            help=tr("cli.ledger.import.provider_help", providers=_provider_catalogue_text()),
+    currency_normalizer = CurrencyNormalizationService(rate_provider=default_ecb_rate_provider())
+    canonical_period = _optional_canonical_period(period, year=year)
+    file_results = _imported_files(
+        _resolve_import_paths(file),
+        command=lambda file_path: LedgerSourceImportCommand(
+            bucket_id=context.bucket_id,
+            path=file_path,
+            provider=normalised_provider,
+            dry_run=dry_run,
+            verify=verify,
+            source=verify_source,
+            period=canonical_period,
+            actor=context.actor,
+            source_command="aeat app ledger import",
         ),
-        dry_run: bool = typer.Option(False, "--dry-run", help=tr("cli.ledger.import.dry_run_help")),
-        verify: bool = typer.Option(False, "--verify", help=tr("cli.ledger.import.verify_help")),
-        verify_source: Path | None = typer.Option(
-            None,
-            "--verify-source",
-            help=tr("cli.ledger.import.verify_source_help"),
-        ),
-        verbose: bool = typer.Option(False, "--verbose", help=tr("cli.ledger.import.verbose_help")),
-        period: str | None = typer.Option(None, "--period", help=tr("cli.ledger.import.period_help")),
-        year: int | None = typer.Option(
-            None,
-            "--year",
-            help=tr("cli.ledger.import.year_help"),
-        ),
-    ) -> None:
-        """Import a financial-statement file via the existing provider registry."""
-        normalised_provider = _validate_import_provider(provider)
-        context = _import_bucket_context(dry_run=dry_run)
+        transaction_repository=context.transaction_repository,
+        currency_normalizer=currency_normalizer,
+    )
+    result = file_results[0] if len(file_results) == 1 else _aggregate_import_results(file_results)
+    report = _import_report(result, verbose=verbose, verify=verify)
+    from ._ledger_payloads import LedgerImportPayload
 
-        from ...adapters.outbound.fx import default_ecb_rate_provider
-        from ...domain.currency import CurrencyNormalizationService
-
-        currency_normalizer = CurrencyNormalizationService(rate_provider=default_ecb_rate_provider())
-        canonical_period = _optional_canonical_period(period, year=year)
-        file_results = _imported_files(
-            _resolve_import_paths(file),
-            command=lambda file_path: LedgerSourceImportCommand(
-                bucket_id=context.bucket_id,
-                path=file_path,
-                provider=normalised_provider,
-                dry_run=dry_run,
-                verify=verify,
-                source=verify_source,
-                period=canonical_period,
-                actor=context.actor,
-                source_command="aeat app ledger import",
-            ),
-            transaction_repository=context.transaction_repository,
-            currency_normalizer=currency_normalizer,
-        )
-        result = file_results[0] if len(file_results) == 1 else _aggregate_import_results(file_results)
-        report = _import_report(result, verbose=verbose, verify=verify)
-
-        from ._ledger_payloads import LedgerImportPayload
-
-        _emit_envelope(
-            ctx,
-            command="ledger.import",
-            result=LedgerImportPayload.from_result(result),
-            lines=report.lines,
-            notices=report.notices,
-        )
+    _emit_envelope(
+        ctx,
+        command="ledger.import",
+        result=LedgerImportPayload.from_result(result),
+        lines=report.lines,
+        notices=report.notices,
+    )
 
 
 _IMPORT_DIR_EXTENSIONS = frozenset(

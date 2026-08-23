@@ -20,37 +20,27 @@ from ...application.ledger import (
 )
 from ...application.review import FilterParseError, LedgerReviewFilterSpec
 from ...core.i18n import tr
-from ._command_policy import command_execution_policy
 from ._common import _emit_envelope, _state, _tx_repo
-from ._ledger_execution_policies import LEDGER_READ
 from ._ledger_list import ledger_review_query_for_spec
+from ._ledger_read_cli import resolve_ledger_transaction_id
 from ._ledger_support import _ledger_cli_no_recovery
 
 ResolveTransactionId = Callable[[TransactionCatalogueRepository, str], str]
 
 
-def register_ledger_review_command(app: typer.Typer, *, resolve_transaction_id: ResolveTransactionId) -> None:
-    @app.command("review", help=tr("cli.ledger.review.help"))
-    @command_execution_policy(LEDGER_READ)
-    def ledger_review(
-        ctx: typer.Context,
-        filters: list[str] = typer.Option([], "--filter", help=tr("cli.ledger.review.filter_help")),
-        record_id: str | None = typer.Argument(None, help=tr("cli.ledger.review.id_help")),
-        verbose: bool = typer.Option(False, "--verbose", help=tr("cli.ledger.review.verbose_help")),
-    ) -> None:
-        """Render rows or a single row using the typed filter spec."""
-        spec = _ledger_review_filter_spec(filters)
-        transaction_repository = _tx_repo(_state())
-        result = query_ledger_review_rows(
-            _ledger_review_query(
-                transaction_repository,
-                spec=spec,
-                record_id=record_id,
-                resolve_transaction_id=resolve_transaction_id,
-            ),
-            transaction_repository=transaction_repository,
-        )
-        _emit_ledger_review_result(ctx, record_id=record_id, verbose=verbose, result=result)
+def ledger_review(
+    ctx: typer.Context, filters: tuple[str, ...] = (), record_id: str | None = None, verbose: bool = False
+) -> None:
+    """Render rows or a single row using the typed filter spec."""
+    spec = _ledger_review_filter_spec(filters)
+    transaction_repository = _tx_repo(_state())
+    result = query_ledger_review_rows(
+        _ledger_review_query(
+            transaction_repository, spec=spec, record_id=record_id, resolve_transaction_id=resolve_ledger_transaction_id
+        ),
+        transaction_repository=transaction_repository,
+    )
+    _emit_ledger_review_result(ctx, record_id=record_id, verbose=verbose, result=result)
 
 
 def _ledger_review_filter_spec(filters: list[str]) -> LedgerReviewFilterSpec:

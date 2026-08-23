@@ -26,7 +26,6 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.invoices import InvoiceClass, InvoiceValidationError
 from ...domain.iva import InvoiceKind, SupplyNature
 from ...llm import EvidenceConsentToken, LLMProvider, mint_evidence_consent_token
-from ._command_policy import command_execution_policy
 from ._common import (
     _bad,
     _emit_envelope,
@@ -39,17 +38,8 @@ from ._common import (
 )
 from ._evidence_field_notices import field_degradation_notices
 from ._ledger_business_invoice_cli import _catalogue_invoice_shared_fields
-from ._ledger_evidence_batch_cli import register_evidence_batch_command
 from ._ledger_evidence_confirm_notices import confirm_resolution_lines, confirm_resolution_notices
-from ._ledger_evidence_consent_cli import register_evidence_consent_commands
-from ._ledger_evidence_review_cli import parse_finding_resolution, register_evidence_review_commands
-from ._ledger_execution_policies import (
-    LEDGER_DESTRUCTIVE,
-    LEDGER_NETWORK_WRITE,
-    LEDGER_READ,
-    LEDGER_WRITE,
-    declare_metadata_group,
-)
+from ._ledger_evidence_review_cli import parse_finding_resolution
 from ._ledger_payloads import (
     AttachmentReviewQueueResult,
     AttachmentReviewViewResult,
@@ -63,34 +53,11 @@ from ._ledger_payloads import (
 )
 from ._ledger_support import _ledger_cli_no_recovery
 
-evidence_app = typer.Typer(
-    name="evidence",
-    help=tr("cli.app.ledger.evidence.group_help"),
-    no_args_is_help=True,
-)
-declare_metadata_group(evidence_app)
-
 
 class _InvoiceClassKwarg(TypedDict, total=False):
     """Optional keyword passed only when the operator supplied an invoice class."""
 
     invoice_class: InvoiceClass
-
-
-def register_evidence_commands(app: typer.Typer) -> None:
-    """Mount and register ledger evidence commands."""
-    app.add_typer(evidence_app, name="evidence")
-    _register_evidence_add_command()
-    _register_evidence_view_command()
-    _register_evidence_list_command()
-    _register_attachment_review_commands()
-    _register_evidence_update_command()
-    _register_evidence_remove_command()
-    _register_evidence_extract_command()
-    _register_evidence_confirm_command()
-    register_evidence_batch_command(evidence_app)
-    register_evidence_consent_commands(evidence_app)
-    register_evidence_review_commands(evidence_app)
 
 
 def _attachment_store(bucket_id: str):
@@ -121,252 +88,142 @@ def _attachment_review_lines(payload: dict[str, object]) -> list[str]:
     ]
 
 
-def _register_attachment_review_commands() -> None:
-    @evidence_app.command("attachment-queue", help=tr("cli.app.ledger.evidence.attachment_queue_help"))
-    @command_execution_policy(LEDGER_READ)
-    def attachment_queue(ctx: typer.Context) -> None:
-        """List Drive attachments that still require invoice review."""
-        bucket_id = _tx_repo(_state()).bucket_id
-        rows = list_attachment_review_queue(_attachment_store(bucket_id))
-        payloads = [_attachment_review_payload(row) for row in rows]
-        _emit_envelope(
-            ctx,
-            command="ledger.evidence.attachment_queue",
-            result=AttachmentReviewQueueResult.model_validate(
-                {"bucket_id": bucket_id, "count": len(payloads), "rows": payloads},
-            ),
-            lines=[line for payload in payloads for line in _attachment_review_lines(payload)],
-        )
-
-    @evidence_app.command("attachment-view", help=tr("cli.app.ledger.evidence.attachment_view_help"))
-    @command_execution_policy(LEDGER_READ)
-    def attachment_view(
-        ctx: typer.Context,
-        attachment_id: str = typer.Argument(..., help=tr("cli.app.ledger.evidence.attachment_id_help")),
-    ) -> None:
-        """Inspect non-secret metadata and provenance for one attachment."""
-        bucket_id = _tx_repo(_state()).bucket_id
-        item = get_attachment_review_item(_attachment_store(bucket_id), attachment_id)
-        payload = {"bucket_id": bucket_id, **_attachment_review_payload(item)}
-        _emit_envelope(
-            ctx,
-            command="ledger.evidence.attachment_view",
-            result=AttachmentReviewViewResult.model_validate(payload),
-            lines=[f"bucket_id\t{bucket_id}", *_attachment_review_lines(payload)],
-        )
-
-
-def _register_evidence_add_command() -> None:
-    @evidence_app.command(
-        "add",
-        help=tr("cli.app.ledger.evidence.add_help"),
+def attachment_queue(ctx: typer.Context) -> None:
+    """List Drive attachments that still require invoice review."""
+    bucket_id = _tx_repo(_state()).bucket_id
+    rows = list_attachment_review_queue(_attachment_store(bucket_id))
+    payloads = [_attachment_review_payload(row) for row in rows]
+    _emit_envelope(
+        ctx,
+        command="ledger.evidence.attachment_queue",
+        result=AttachmentReviewQueueResult.model_validate(
+            {"bucket_id": bucket_id, "count": len(payloads), "rows": payloads}
+        ),
+        lines=[line for payload in payloads for line in _attachment_review_lines(payload)],
     )
-    @command_execution_policy(LEDGER_WRITE)
-    def evidence_add(
-        ctx: typer.Context,
-        source_path: str = typer.Argument(
-            ...,
-            help=tr("cli.app.ledger.evidence.source_path_help"),
-        ),
-        supplier: str | None = typer.Option(
-            None,
-            "--supplier",
-            help=tr("cli.app.ledger.evidence.supplier_help"),
-        ),
-        invoice_number: str | None = typer.Option(
-            None,
-            "--invoice-number",
-            help=tr("cli.app.ledger.evidence.invoice_number_help"),
-        ),
-        invoice_date: str | None = typer.Option(
-            None,
-            "--invoice-date",
-            help=tr("cli.app.ledger.evidence.invoice_date_help"),
-        ),
-        taxable_base: str | None = typer.Option(
-            None,
-            "--taxable-base",
-            help=tr("cli.app.ledger.evidence.taxable_base_help"),
-        ),
-        iva_rate: str | None = typer.Option(
-            None,
-            "--iva-rate",
-            help=tr("cli.app.ledger.evidence.iva_rate_help"),
-        ),
-        iva_amount: str | None = typer.Option(
-            None,
-            "--iva-amount",
-            help=tr("cli.app.ledger.evidence.iva_amount_help"),
-        ),
-        notes: str = typer.Option(
-            "",
-            "--notes",
-            help=tr("cli.app.ledger.evidence.notes_help"),
-        ),
-    ) -> None:
-        """Register a purchase invoice evidence record and return its id."""
-        transaction_repository = _tx_repo(_state())
-        result = _evidence_service().add(
-            bucket_id=transaction_repository.bucket_id,
-            source_path=source_path,
-            supplier=supplier,
-            invoice_number=invoice_number,
-            invoice_date=_parse_optional_iso_date_str(invoice_date, label="invoice-date"),
-            taxable_base=parse_optional_decimal_amount(taxable_base, label="taxable-base"),
-            iva_rate=parse_optional_decimal_amount(iva_rate, label="iva-rate"),
-            iva_amount=parse_optional_decimal_amount(iva_amount, label="iva-amount"),
-            notes=notes,
-        )
-        payload = _evidence_payload(result.record)
-        payload["bucket_event_ids"] = list(result.bucket_event_ids)
-        lines = _evidence_text_lines(result.record)
-        lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-        _emit_envelope(
-            ctx,
-            command="ledger.evidence.add",
-            result=EvidenceAddResult.model_validate(payload),
-            lines=lines,
-        )
 
 
-def _register_evidence_view_command() -> None:
-    @evidence_app.command(
-        "view",
-        help=tr("cli.app.ledger.evidence.view_help"),
+def attachment_view(ctx: typer.Context, attachment_id: str = ...) -> None:
+    """Inspect non-secret metadata and provenance for one attachment."""
+    bucket_id = _tx_repo(_state()).bucket_id
+    item = get_attachment_review_item(_attachment_store(bucket_id), attachment_id)
+    payload = {"bucket_id": bucket_id, **_attachment_review_payload(item)}
+    _emit_envelope(
+        ctx,
+        command="ledger.evidence.attachment_view",
+        result=AttachmentReviewViewResult.model_validate(payload),
+        lines=[f"bucket_id\t{bucket_id}", *_attachment_review_lines(payload)],
     )
-    @command_execution_policy(LEDGER_READ)
-    def evidence_view(
-        ctx: typer.Context,
-        evidence_id: str = typer.Argument(
-            ...,
-            help=tr("cli.app.ledger.evidence.evidence_id_help"),
-        ),
-    ) -> None:
-        """Show one purchase invoice evidence record by id."""
-        transaction_repository = _tx_repo(_state())
-        record = _evidence_service().view(bucket_id=transaction_repository.bucket_id, evidence_id=evidence_id)
-        _emit_envelope(
-            ctx,
-            command="ledger.evidence.view",
-            result=EvidenceViewResult.model_validate(_evidence_payload(record)),
-            lines=_evidence_text_lines(record),
-        )
 
 
-def _register_evidence_list_command() -> None:
-    @evidence_app.command(
-        "list",
-        help=tr("cli.app.ledger.evidence.list_help"),
+def evidence_add(
+    ctx: typer.Context,
+    source_path: str = ...,
+    supplier: str | None = None,
+    invoice_number: str | None = None,
+    invoice_date: str | None = None,
+    taxable_base: str | None = None,
+    iva_rate: str | None = None,
+    iva_amount: str | None = None,
+    notes: str = "",
+) -> None:
+    """Register a purchase invoice evidence record and return its id."""
+    transaction_repository = _tx_repo(_state())
+    result = _evidence_service().add(
+        bucket_id=transaction_repository.bucket_id,
+        source_path=source_path,
+        supplier=supplier,
+        invoice_number=invoice_number,
+        invoice_date=_parse_optional_iso_date_str(invoice_date, label="invoice-date"),
+        taxable_base=parse_optional_decimal_amount(taxable_base, label="taxable-base"),
+        iva_rate=parse_optional_decimal_amount(iva_rate, label="iva-rate"),
+        iva_amount=parse_optional_decimal_amount(iva_amount, label="iva-amount"),
+        notes=notes,
     )
-    @command_execution_policy(LEDGER_READ)
-    def evidence_list(ctx: typer.Context) -> None:
-        """List every purchase invoice evidence record in the active bucket."""
-        transaction_repository = _tx_repo(_state())
-        records = _evidence_service().list_all(bucket_id=transaction_repository.bucket_id)
-        payload = {
-            "bucket_id": transaction_repository.bucket_id,
-            "count": len(records),
-            "rows": [_evidence_payload(record) for record in records],
-        }
-        lines = ["evidence_id\tmedia_kind\tsupplier\tinvoice_number\tinvoice_date\ttaxable_base\tnotes"]
-        for record in records:
-            data = _evidence_payload(record)
-            lines.append(
-                f"{data['evidence_id']}\t{data['media_kind']}\t{data.get('supplier') or '-'}\t"
-                f"{data.get('invoice_number') or '-'}\t{data.get('invoice_date') or '-'}\t"
-                f"{data.get('taxable_base') or '-'}\t{data.get('notes') or '-'}",
-            )
-        _emit_envelope(
-            ctx,
-            command="ledger.evidence.list",
-            result=EvidenceListResult.model_validate(payload),
-            lines=lines,
-        )
+    payload = _evidence_payload(result.record)
+    payload["bucket_event_ids"] = list(result.bucket_event_ids)
+    lines = _evidence_text_lines(result.record)
+    lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
+    _emit_envelope(ctx, command="ledger.evidence.add", result=EvidenceAddResult.model_validate(payload), lines=lines)
 
 
-def _register_evidence_update_command() -> None:
-    @evidence_app.command(
-        "update",
-        help=tr("cli.app.ledger.evidence.update_help"),
+def evidence_view(ctx: typer.Context, evidence_id: str = ...) -> None:
+    """Show one purchase invoice evidence record by id."""
+    transaction_repository = _tx_repo(_state())
+    record = _evidence_service().view(bucket_id=transaction_repository.bucket_id, evidence_id=evidence_id)
+    _emit_envelope(
+        ctx,
+        command="ledger.evidence.view",
+        result=EvidenceViewResult.model_validate(_evidence_payload(record)),
+        lines=_evidence_text_lines(record),
     )
-    @command_execution_policy(LEDGER_WRITE)
-    def evidence_update(
-        ctx: typer.Context,
-        evidence_id: str = typer.Argument(
-            ...,
-            help=tr("cli.app.ledger.evidence.evidence_id_help"),
-        ),
-        supplier: str | None = typer.Option(None, "--supplier"),
-        invoice_number: str | None = typer.Option(None, "--invoice-number"),
-        invoice_date: str | None = typer.Option(None, "--invoice-date"),
-        taxable_base: str | None = typer.Option(None, "--taxable-base"),
-        iva_rate: str | None = typer.Option(None, "--iva-rate"),
-        iva_amount: str | None = typer.Option(None, "--iva-amount"),
-        notes: str | None = typer.Option(None, "--notes"),
-    ) -> None:
-        """Update mutable fields on one purchase invoice evidence record."""
-        transaction_repository = _tx_repo(_state())
-        patch = PurchaseInvoiceEvidencePatch(
-            supplier=supplier,
-            invoice_number=invoice_number,
-            invoice_date=_parse_optional_iso_date_str(invoice_date, label="invoice-date"),
-            taxable_base=parse_optional_decimal_amount(taxable_base, label="taxable-base"),
-            iva_rate=parse_optional_decimal_amount(iva_rate, label="iva-rate"),
-            iva_amount=parse_optional_decimal_amount(iva_amount, label="iva-amount"),
-            notes=notes,
-        )
-        result = _evidence_service().update(
-            bucket_id=transaction_repository.bucket_id,
-            evidence_id=evidence_id,
-            patch=patch,
-        )
-        payload = _evidence_payload(result.record)
-        payload["bucket_event_ids"] = list(result.bucket_event_ids)
-        lines = _evidence_text_lines(result.record)
-        lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-        _emit_envelope(
-            ctx,
-            command="ledger.evidence.update",
-            result=EvidenceUpdateResult.model_validate(payload),
-            lines=lines,
-        )
 
 
-def _register_evidence_remove_command() -> None:
-    @evidence_app.command(
-        "remove",
-        help=tr("cli.app.ledger.evidence.remove_help"),
+def evidence_list(ctx: typer.Context) -> None:
+    """List every purchase invoice evidence record in the active bucket."""
+    transaction_repository = _tx_repo(_state())
+    records = _evidence_service().list_all(bucket_id=transaction_repository.bucket_id)
+    payload = {
+        "bucket_id": transaction_repository.bucket_id,
+        "count": len(records),
+        "rows": [_evidence_payload(record) for record in records],
+    }
+    lines = ["evidence_id\tmedia_kind\tsupplier\tinvoice_number\tinvoice_date\ttaxable_base\tnotes"]
+    for record in records:
+        data = _evidence_payload(record)
+        lines.append(
+            f"{data['evidence_id']}\t{data['media_kind']}\t{data.get('supplier') or '-'}\t{data.get('invoice_number') or '-'}\t{data.get('invoice_date') or '-'}\t{data.get('taxable_base') or '-'}\t{data.get('notes') or '-'}"
+        )
+    _emit_envelope(ctx, command="ledger.evidence.list", result=EvidenceListResult.model_validate(payload), lines=lines)
+
+
+def evidence_update(
+    ctx: typer.Context,
+    evidence_id: str = ...,
+    supplier: str | None = None,
+    invoice_number: str | None = None,
+    invoice_date: str | None = None,
+    taxable_base: str | None = None,
+    iva_rate: str | None = None,
+    iva_amount: str | None = None,
+    notes: str | None = None,
+) -> None:
+    """Update mutable fields on one purchase invoice evidence record."""
+    transaction_repository = _tx_repo(_state())
+    patch = PurchaseInvoiceEvidencePatch(
+        supplier=supplier,
+        invoice_number=invoice_number,
+        invoice_date=_parse_optional_iso_date_str(invoice_date, label="invoice-date"),
+        taxable_base=parse_optional_decimal_amount(taxable_base, label="taxable-base"),
+        iva_rate=parse_optional_decimal_amount(iva_rate, label="iva-rate"),
+        iva_amount=parse_optional_decimal_amount(iva_amount, label="iva-amount"),
+        notes=notes,
     )
-    @command_execution_policy(LEDGER_DESTRUCTIVE)
-    def evidence_remove(
-        ctx: typer.Context,
-        evidence_id: str = typer.Argument(
-            ...,
-            help=tr("cli.app.ledger.evidence.evidence_id_help"),
-        ),
-        yes: bool = typer.Option(
-            False,
-            "--yes",
-            help=tr("cli.app.ledger.evidence.yes_help"),
-        ),
-    ) -> None:
-        """Delete one purchase invoice evidence record."""
-        if not yes:
-            raise _bad(
-                tr("cli.app.ledger.evidence.yes_required"),
-            )
-        transaction_repository = _tx_repo(_state())
-        result = _evidence_service().remove(bucket_id=transaction_repository.bucket_id, evidence_id=evidence_id)
-        payload = _evidence_payload(result.record)
-        payload["bucket_event_ids"] = list(result.bucket_event_ids)
-        lines = _evidence_text_lines(result.record)
-        lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-        _emit_envelope(
-            ctx,
-            command="ledger.evidence.remove",
-            result=EvidenceRemoveResult.model_validate(payload),
-            lines=lines,
-        )
+    result = _evidence_service().update(
+        bucket_id=transaction_repository.bucket_id, evidence_id=evidence_id, patch=patch
+    )
+    payload = _evidence_payload(result.record)
+    payload["bucket_event_ids"] = list(result.bucket_event_ids)
+    lines = _evidence_text_lines(result.record)
+    lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
+    _emit_envelope(
+        ctx, command="ledger.evidence.update", result=EvidenceUpdateResult.model_validate(payload), lines=lines
+    )
+
+
+def evidence_remove(ctx: typer.Context, evidence_id: str = ..., yes: bool = False) -> None:
+    """Delete one purchase invoice evidence record."""
+    if not yes:
+        raise _bad(tr("cli.app.ledger.evidence.yes_required"))
+    transaction_repository = _tx_repo(_state())
+    result = _evidence_service().remove(bucket_id=transaction_repository.bucket_id, evidence_id=evidence_id)
+    payload = _evidence_payload(result.record)
+    payload["bucket_event_ids"] = list(result.bucket_event_ids)
+    lines = _evidence_text_lines(result.record)
+    lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
+    _emit_envelope(
+        ctx, command="ledger.evidence.remove", result=EvidenceRemoveResult.model_validate(payload), lines=lines
+    )
 
 
 #: Operator surface recorded on a token this command mints. Names the exact verb
@@ -453,264 +310,142 @@ def _mint_extract_consent(
     )
 
 
-def _register_evidence_extract_command() -> None:
-    @evidence_app.command(
-        "extract",
-        help=tr("cli.app.ledger.evidence.extract_help"),
+def evidence_extract(
+    ctx: typer.Context,
+    evidence_id: str | None = None,
+    attachment_id: str | None = None,
+    off_host_provider: LLMProvider | None = None,
+    acknowledge_off_host: bool = False,
+) -> None:
+    """Run the on-host PDF text-layer extractor over stored evidence bytes.
+
+    Reads the evidence or attachment bytes from secure storage into memory,
+    runs the grounded on-host heuristics (never a cloud call, never a
+    temp file: ``sensitive-financial-data-secure-storage-only``), and
+    prints the best-effort :class:`InvoiceDraft` for operator review.
+    Every field the heuristics could not ground in the extracted text is
+    ``null`` rather than guessed. Extracting never mints or persists an
+    invoice; confirmation is a separate operator action.
+    """
+    if (evidence_id is None) == (attachment_id is None):
+        raise _bad(tr("cli.app.ledger.evidence.extract_reference_required"))
+    transaction_repository = _tx_repo(_state())
+    consent_token = _mint_extract_consent(
+        bucket_id=transaction_repository.bucket_id,
+        evidence_id=evidence_id,
+        off_host_provider=off_host_provider,
+        acknowledged=acknowledge_off_host,
     )
-    @command_execution_policy(LEDGER_NETWORK_WRITE)
-    def evidence_extract(
-        ctx: typer.Context,
-        evidence_id: str | None = typer.Option(
-            None,
-            "--evidence-id",
-            help=tr("cli.app.ledger.evidence.extract_evidence_id_help"),
-        ),
-        attachment_id: str | None = typer.Option(
-            None,
-            "--attachment-id",
-            help=tr("cli.app.ledger.evidence.extract_attachment_id_help"),
-        ),
-        off_host_provider: LLMProvider | None = typer.Option(
-            None,
-            "--off-host-provider",
-            help=tr("cli.app.ledger.evidence.extract_off_host_provider_help"),
-        ),
-        acknowledge_off_host: bool = typer.Option(
-            False,
-            "--acknowledge-off-host",
-            help=tr("cli.app.ledger.evidence.extract_acknowledge_off_host_help"),
-        ),
-    ) -> None:
-        """Run the on-host PDF text-layer extractor over stored evidence bytes.
-
-        Reads the evidence or attachment bytes from secure storage into memory,
-        runs the grounded on-host heuristics (never a cloud call, never a
-        temp file: ``sensitive-financial-data-secure-storage-only``), and
-        prints the best-effort :class:`InvoiceDraft` for operator review.
-        Every field the heuristics could not ground in the extracted text is
-        ``null`` rather than guessed. Extracting never mints or persists an
-        invoice; confirmation is a separate operator action.
-        """
-        if (evidence_id is None) == (attachment_id is None):
-            raise _bad(
-                tr("cli.app.ledger.evidence.extract_reference_required"),
-            )
-        transaction_repository = _tx_repo(_state())
-        consent_token = _mint_extract_consent(
-            bucket_id=transaction_repository.bucket_id,
-            evidence_id=evidence_id,
-            off_host_provider=off_host_provider,
-            acknowledged=acknowledge_off_host,
-        )
-        draft = extract_invoice_draft_from_evidence(
-            bucket_id=transaction_repository.bucket_id,
-            evidence_id=evidence_id,
-            attachment_id=attachment_id,
-            off_host_provider=off_host_provider,
-            consent_token=consent_token,
-        )
-
-        payload = {
-            "bucket_id": transaction_repository.bucket_id,
-            "evidence_id": evidence_id,
-            "attachment_id": attachment_id,
-            **draft.model_dump(mode="json"),
-            # Read off the TOKEN rather than off the flags. A flag says what the
-            # operator asked for; the token exists only because the deployment
-            # posture, the profile bar and the acknowledgement all permitted it,
-            # so it is the nearest thing to an observation this surface holds.
-            "off_host_provider": None if consent_token is None else off_host_provider,
-            "off_host_acknowledged_surface": None if consent_token is None else consent_token.surface,
-        }
-        lines = [
-            f"bucket_id\t{transaction_repository.bucket_id}",
-            f"evidence_id\t{evidence_id or '-'}",
-            f"attachment_id\t{attachment_id or '-'}",
-            f"supplier_tax_id\t{draft.supplier_tax_id or '-'}",
-            f"supplier_name\t{draft.supplier_name or '-'}",
-            f"customer_tax_id\t{draft.customer_tax_id or '-'}",
-            f"customer_name\t{draft.customer_name or '-'}",
-            f"invoice_number\t{draft.invoice_number or '-'}",
-            f"invoice_series\t{draft.invoice_series or '-'}",
-            f"invoice_date\t{draft.invoice_date or '-'}",
-            f"taxable_base\t{draft.taxable_base if draft.taxable_base is not None else '-'}",
-            f"iva_rate\t{draft.iva_rate if draft.iva_rate is not None else '-'}",
-            f"iva_amount\t{draft.iva_amount if draft.iva_amount is not None else '-'}",
-            f"grand_total\t{draft.grand_total if draft.grand_total is not None else '-'}",
-            f"currency\t{draft.currency if draft.currency is not None else '-'}",
-            f"retencion_rate\t{draft.retencion_rate if draft.retencion_rate is not None else '-'}",
-            f"retencion_amount\t{draft.retencion_amount if draft.retencion_amount is not None else '-'}",
-            f"suplidos_amount\t{draft.suplidos_amount if draft.suplidos_amount is not None else '-'}",
-            f"suggested_kind\t{draft.suggested_kind.value if draft.suggested_kind is not None else '-'}",
-            f"transcription_sha256\t{draft.transcription_sha256 or '-'}",
-            # The text surface cannot carry a per-field envelope legibly, so it
-            # carries the COUNT and the JSON payload carries the envelopes. A
-            # count of zero is honest -- it says no provenance was recorded, not
-            # that the values were exact.
-            f"provenance_fields\t{len(draft.provenance)}",
-            f"discrepancies\t{len(draft.discrepancies)}",
-            f"raw_text_length\t{draft.raw_text_length}",
-        ]
-        # `extract_invoice_draft_from_evidence` raises when the resolved PDF has
-        # no usable text layer at all (scan-only / XFA), so a returned draft
-        # always carries `raw_text_length > 0`; the review hint below is
-        # therefore unconditional.
-        reviewed_reference = evidence_id or attachment_id or ""
-        notices: list[Notice] = [
-            Notice(
-                severity=NoticeSeverity.INFO,
-                code="ledger.evidence.extract.review_hint",
-                message=tr(
-                    "cli.app.ledger.evidence.extract_review_hint_message",
-                ),
-                context={
-                    "reference": reviewed_reference,
-                },
-            ),
-        ]
-        # Per-field degradation, so a thin read is distinguishable from a clean
-        # one. The reading path raises on neither, and the field COUNT above
-        # cannot say which fields failed a check or why.
-        notices.extend(field_degradation_notices(draft.provenance))
-        _emit_envelope(
-            ctx,
-            command="ledger.evidence.extract",
-            result=EvidenceExtractResult.model_validate(payload),
-            lines=lines,
-            notices=notices,
-        )
-
-
-def _register_evidence_confirm_command() -> None:
-    @evidence_app.command(
-        "confirm",
-        help=tr("cli.app.ledger.evidence.confirm_help"),
+    draft = extract_invoice_draft_from_evidence(
+        bucket_id=transaction_repository.bucket_id,
+        evidence_id=evidence_id,
+        attachment_id=attachment_id,
+        off_host_provider=off_host_provider,
+        consent_token=consent_token,
     )
-    @command_execution_policy(LEDGER_NETWORK_WRITE)
-    def evidence_confirm(
-        ctx: typer.Context,
-        kind: InvoiceKind = typer.Option(
-            ...,
-            "--kind",
-            help=tr("cli.app.ledger.invoice.kind_help"),
-        ),
-        evidence_id: str | None = typer.Option(
-            None,
-            "--evidence-id",
-            help=tr("cli.app.ledger.evidence.extract_evidence_id_help"),
-        ),
-        attachment_id: str | None = typer.Option(
-            None,
-            "--attachment-id",
-            help=tr("cli.app.ledger.evidence.extract_attachment_id_help"),
-        ),
-        counterparty_nif: str | None = typer.Option(
-            None,
-            "--counterparty-nif",
-            help=tr("cli.app.ledger.evidence.confirm_counterparty_nif_help"),
-        ),
-        counterparty_name: str | None = typer.Option(
-            None,
-            "--counterparty-name",
-            help=tr("cli.app.ledger.evidence.confirm_counterparty_name_help"),
-        ),
-        invoice_number: str | None = typer.Option(
-            None,
-            "--invoice-number",
-            help=tr("cli.app.ledger.evidence.confirm_invoice_number_help"),
-        ),
-        invoice_date: str | None = typer.Option(
-            None,
-            "--invoice-date",
-            help=tr("cli.app.ledger.evidence.confirm_invoice_date_help"),
-        ),
-        taxable_base: str | None = typer.Option(
-            None,
-            "--taxable-base",
-            help=tr("cli.app.ledger.evidence.confirm_taxable_base_help"),
-        ),
-        iva_rate: str | None = typer.Option(
-            None,
-            "--iva-rate",
-            help=tr("cli.app.ledger.evidence.confirm_iva_rate_help"),
-        ),
-        country_code: str = typer.Option(
-            ...,
-            "--country-code",
-            help=tr("cli.app.ledger.invoice.country_code_help"),
-        ),
-        currency: str | None = typer.Option(
-            None,
-            "--currency",
-            help=tr("cli.app.ledger.evidence.confirm_currency_help"),
-        ),
-        operation_type: IntracomOperationType | None = typer.Option(
-            None,
-            "--operation-type",
-            help=tr("cli.app.ledger.evidence.confirm_operation_type_help"),
-        ),
-        supply_nature: SupplyNature | None = typer.Option(
-            None,
-            "--supply-nature",
-            help=tr("cli.app.ledger.evidence.confirm_supply_nature_help"),
-        ),
-        invoice_class: InvoiceClass | None = typer.Option(
-            None,
-            "--invoice-class",
-            help=tr("cli.app.ledger.evidence.confirm_invoice_class_help"),
-        ),
-        rectifies: str | None = typer.Option(
-            None,
-            "--rectifies",
-            help=tr("cli.app.ledger.evidence.confirm_rectifies_help"),
-        ),
-        series: str | None = typer.Option(
-            None,
-            "--series",
-            help=tr("cli.app.ledger.evidence.confirm_series_help"),
-        ),
-        notes: str = typer.Option(
-            "",
-            "--notes",
-            help=tr("cli.app.ledger.evidence.notes_help"),
-        ),
-        resolve: list[str] = typer.Option(
-            [],
-            "--resolve",
-            help=tr("cli.app.ledger.evidence.confirm_resolve_help"),
-        ),
-    ) -> None:
-        """Non-interactively confirm a reviewed evidence extraction into an Invoice.
-
-        Re-runs the on-host extraction (never a cloud call, never a temp
-        file), layers any supplied override on top of each extracted field,
-        and delegates the write to the sole sanctioned catalogue-invoice
-        writer. A confirm whose resolved fields match an already-persisted
-        invoice is a guarded no-op: the existing invoice is returned
-        unchanged (``created: false``) rather than raising or duplicating.
-        """
-        _run_evidence_confirm(
-            ctx=ctx,
-            kind=kind,
-            evidence_id=evidence_id,
-            attachment_id=attachment_id,
-            counterparty_nif=counterparty_nif,
-            counterparty_name=counterparty_name,
-            invoice_number=invoice_number,
-            invoice_date=invoice_date,
-            taxable_base=taxable_base,
-            iva_rate=iva_rate,
-            country_code=country_code,
-            currency=currency,
-            operation_type=operation_type,
-            supply_nature=supply_nature,
-            invoice_class=invoice_class,
-            rectifies=rectifies,
-            series=series,
-            notes=notes,
-            resolve=resolve,
+    payload = {
+        "bucket_id": transaction_repository.bucket_id,
+        "evidence_id": evidence_id,
+        "attachment_id": attachment_id,
+        **draft.model_dump(mode="json"),
+        "off_host_provider": None if consent_token is None else off_host_provider,
+        "off_host_acknowledged_surface": None if consent_token is None else consent_token.surface,
+    }
+    lines = [
+        f"bucket_id\t{transaction_repository.bucket_id}",
+        f"evidence_id\t{evidence_id or '-'}",
+        f"attachment_id\t{attachment_id or '-'}",
+        f"supplier_tax_id\t{draft.supplier_tax_id or '-'}",
+        f"supplier_name\t{draft.supplier_name or '-'}",
+        f"customer_tax_id\t{draft.customer_tax_id or '-'}",
+        f"customer_name\t{draft.customer_name or '-'}",
+        f"invoice_number\t{draft.invoice_number or '-'}",
+        f"invoice_series\t{draft.invoice_series or '-'}",
+        f"invoice_date\t{draft.invoice_date or '-'}",
+        f"taxable_base\t{(draft.taxable_base if draft.taxable_base is not None else '-')}",
+        f"iva_rate\t{(draft.iva_rate if draft.iva_rate is not None else '-')}",
+        f"iva_amount\t{(draft.iva_amount if draft.iva_amount is not None else '-')}",
+        f"grand_total\t{(draft.grand_total if draft.grand_total is not None else '-')}",
+        f"currency\t{(draft.currency if draft.currency is not None else '-')}",
+        f"retencion_rate\t{(draft.retencion_rate if draft.retencion_rate is not None else '-')}",
+        f"retencion_amount\t{(draft.retencion_amount if draft.retencion_amount is not None else '-')}",
+        f"suplidos_amount\t{(draft.suplidos_amount if draft.suplidos_amount is not None else '-')}",
+        f"suggested_kind\t{(draft.suggested_kind.value if draft.suggested_kind is not None else '-')}",
+        f"transcription_sha256\t{draft.transcription_sha256 or '-'}",
+        f"provenance_fields\t{len(draft.provenance)}",
+        f"discrepancies\t{len(draft.discrepancies)}",
+        f"raw_text_length\t{draft.raw_text_length}",
+    ]
+    reviewed_reference = evidence_id or attachment_id or ""
+    notices: list[Notice] = [
+        Notice(
+            severity=NoticeSeverity.INFO,
+            code="ledger.evidence.extract.review_hint",
+            message=tr("cli.app.ledger.evidence.extract_review_hint_message"),
+            context={"reference": reviewed_reference},
         )
+    ]
+    notices.extend(field_degradation_notices(draft.provenance))
+    _emit_envelope(
+        ctx,
+        command="ledger.evidence.extract",
+        result=EvidenceExtractResult.model_validate(payload),
+        lines=lines,
+        notices=notices,
+    )
+
+
+def evidence_confirm(
+    ctx: typer.Context,
+    kind: InvoiceKind = ...,
+    evidence_id: str | None = None,
+    attachment_id: str | None = None,
+    counterparty_nif: str | None = None,
+    counterparty_name: str | None = None,
+    invoice_number: str | None = None,
+    invoice_date: str | None = None,
+    taxable_base: str | None = None,
+    iva_rate: str | None = None,
+    country_code: str = ...,
+    currency: str | None = None,
+    operation_type: IntracomOperationType | None = None,
+    supply_nature: SupplyNature | None = None,
+    invoice_class: InvoiceClass | None = None,
+    rectifies: str | None = None,
+    series: str | None = None,
+    notes: str = "",
+    resolve: tuple[str, ...] = (),
+) -> None:
+    """Non-interactively confirm a reviewed evidence extraction into an Invoice.
+
+    Re-runs the on-host extraction (never a cloud call, never a temp
+    file), layers any supplied override on top of each extracted field,
+    and delegates the write to the sole sanctioned catalogue-invoice
+    writer. A confirm whose resolved fields match an already-persisted
+    invoice is a guarded no-op: the existing invoice is returned
+    unchanged (``created: false``) rather than raising or duplicating.
+    """
+    _run_evidence_confirm(
+        ctx=ctx,
+        kind=kind,
+        evidence_id=evidence_id,
+        attachment_id=attachment_id,
+        counterparty_nif=counterparty_nif,
+        counterparty_name=counterparty_name,
+        invoice_number=invoice_number,
+        invoice_date=invoice_date,
+        taxable_base=taxable_base,
+        iva_rate=iva_rate,
+        country_code=country_code,
+        currency=currency,
+        operation_type=operation_type,
+        supply_nature=supply_nature,
+        invoice_class=invoice_class,
+        rectifies=rectifies,
+        series=series,
+        notes=notes,
+        resolve=resolve,
+    )
 
 
 def _run_evidence_confirm(

@@ -50,7 +50,6 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.time import now
 from ...domain.iva import EUMemberState, IvaTerritorialScope
-from ._command_policy import command_execution_policy
 from ._common import _bad, _emit_envelope
 from ._common import active_bucket_id_or_refuse as _counterparty_bucket_id
 from ._ledger_counterparty_payloads import (
@@ -59,22 +58,9 @@ from ._ledger_counterparty_payloads import (
     CounterpartyShowResult,
     CounterpartyWithdrawResult,
 )
-from ._ledger_execution_policies import LEDGER_READ, LEDGER_WRITE, declare_metadata_group
 
 if TYPE_CHECKING:
     from ...application.ledger import ConfirmedCounterpartyFacts
-
-counterparty_app = typer.Typer(
-    name="counterparty",
-    help=tr("cli.app.ledger.counterparty.group_help"),
-    no_args_is_help=True,
-)
-declare_metadata_group(counterparty_app)
-
-
-def register_counterparty_commands(app: typer.Typer) -> None:
-    """Mount the counterparty establishment commands on the ledger app."""
-    app.add_typer(counterparty_app, name="counterparty")
 
 
 def _confirmed_answers(fact: ConfirmedCounterpartyFacts) -> str:
@@ -109,52 +95,24 @@ def _payload(fact: ConfirmedCounterpartyFacts) -> CounterpartyEstablishmentPaylo
     )
 
 
-@counterparty_app.command(
-    "confirm",
-    help=tr("cli.app.ledger.counterparty.confirm_help"),
-)
-@command_execution_policy(LEDGER_WRITE)
 def counterparty_confirm(
     ctx: typer.Context,
     # The subject is a POSITIONAL argument, not an option: the verb addresses one
     # counterparty and the flags configure the operation, which is the shape
     # every single-subject ledger verb takes.
-    tax_identifier: str = typer.Argument(
-        ...,
-        help=tr("cli.app.ledger.counterparty.tax_identifier_help"),
-    ),
+    tax_identifier: str = ...,
     # Declared as the enum so click renders the accepted set on a parse failure,
     # rather than the operator meeting a late refusal that names no alternatives.
-    scope: IvaTerritorialScope | None = typer.Option(
-        None,
-        "--scope",
-        help=tr("cli.app.ledger.counterparty.scope_help"),
-    ),
+    scope: IvaTerritorialScope | None = None,
     # A SECOND axis, not a synonym for --scope. Ley 37/1992 art. 25 exempts on
     # where a counterparty is IVA-IDENTIFIED; arts. 69-70 govern where it is
     # ESTABLISHED. They diverge in real trade, so the operator answers each.
     # Declared as the enum for the same reason --scope is: a guessed Member
     # State is precisely the invented fact this axis exists to prevent.
-    identification_state: EUMemberState | None = typer.Option(
-        None,
-        "--identification-state",
-        help=tr("cli.app.ledger.counterparty.identification_state_help"),
-    ),
-    country_code: str | None = typer.Option(
-        None,
-        "--country-code",
-        help=tr("cli.app.ledger.counterparty.country_code_help"),
-    ),
-    note: str = typer.Option(
-        "",
-        "--note",
-        help=tr("cli.app.ledger.counterparty.note_help"),
-    ),
-    actor: str | None = typer.Option(
-        None,
-        "--actor",
-        help=tr("cli.app.ledger.counterparty.actor_help"),
-    ),
+    identification_state: EUMemberState | None = None,
+    country_code: str | None = None,
+    note: str = "",
+    actor: str | None = None,
 ) -> None:
     """Persist the operator's answer, or report the stored one unchanged."""
     from ...application.ledger import record_confirmed_counterparty_facts
@@ -225,22 +183,10 @@ def counterparty_confirm(
     )
 
 
-@counterparty_app.command(
-    "withdraw",
-    help=tr("cli.app.ledger.counterparty.withdraw_help"),
-)
-@command_execution_policy(LEDGER_WRITE)
 def counterparty_withdraw(
     ctx: typer.Context,
-    tax_identifier: str = typer.Argument(
-        ...,
-        help=tr("cli.app.ledger.counterparty.tax_identifier_help"),
-    ),
-    country_code: str | None = typer.Option(
-        None,
-        "--country-code",
-        help=tr("cli.app.ledger.counterparty.country_code_help"),
-    ),
+    tax_identifier: str = ...,
+    country_code: str | None = None,
 ) -> None:
     """Remove a confirmed fact so a corrected one can be confirmed."""
     from ...application.ledger import confirmed_counterparty_facts_key, forget_confirmed_counterparty_facts
@@ -280,27 +226,11 @@ def counterparty_withdraw(
     )
 
 
-@counterparty_app.command(
-    "show",
-    help=tr("cli.app.ledger.counterparty.show_help"),
-)
-@command_execution_policy(LEDGER_READ)
 def counterparty_show(
     ctx: typer.Context,
-    tax_identifier: str = typer.Argument(
-        ...,
-        help=tr("cli.app.ledger.counterparty.tax_identifier_help"),
-    ),
-    country_code: str | None = typer.Option(
-        None,
-        "--country-code",
-        help=tr("cli.app.ledger.counterparty.country_code_help"),
-    ),
-    evidenced_scope: IvaTerritorialScope | None = typer.Option(
-        None,
-        "--evidenced-scope",
-        help=tr("cli.app.ledger.counterparty.evidenced_scope_help"),
-    ),
+    tax_identifier: str = ...,
+    country_code: str | None = None,
+    evidenced_scope: IvaTerritorialScope | None = None,
 ) -> None:
     """Report what the ladder's last rung will answer for this counterparty.
 

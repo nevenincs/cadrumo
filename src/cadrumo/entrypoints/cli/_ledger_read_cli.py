@@ -59,7 +59,6 @@ from ...domain.categories import (
 )
 from ...domain.invoices import LinkInconsistency
 from ...domain.transactions import Transaction, ledger_irpf_category_catalogue
-from ._command_policy import command_execution_policy
 from ._common import (
     _bad,
     _canonical_period,
@@ -71,7 +70,6 @@ from ._common import (
     optional_decimal_text,
     resolve_notice_action,
 )
-from ._ledger_execution_policies import LEDGER_COMPUTE_READ, LEDGER_HANDOFF, LEDGER_READ
 from ._ledger_list import (
     LLM_DECISION_EVENT_TYPES,
     project_ledger_list,
@@ -89,6 +87,27 @@ if TYPE_CHECKING:
     from ._ledger_rule_payloads import LedgerLlmDiagnosticsResult
 
 ResolveTransactionId = Callable[[Any, str], str]
+
+
+def resolve_ledger_transaction_id(
+    transaction_repository: TransactionCatalogueRepository,
+    prefix: str,
+) -> str:
+    """Resolve a read-side transaction id while following stable edit lineage."""
+    from ...application.cli_exception_preconditions import CliExceptionPrecondition
+    from ...application.ledger import resolve_lineage_transaction_id
+    from ...domain.transactions import TransactionIdPrefixError
+
+    catalogue = transaction_repository.load()
+    try:
+        return resolve_lineage_transaction_id(prefix, catalogue)
+    except TransactionIdPrefixError as exc:
+        raise _ledger_cli_no_recovery(
+            exc,
+            condition=CliExceptionPrecondition.LEDGER_TRANSACTION_ID_RESOLVES,
+            facts={"transaction_id_resolves": False},
+        ) from None
+
 
 _LEDGER_HISTORY_EVENT_TYPES: tuple[BucketEventType, ...] = (
     BucketEventType.LEDGER_TRANSACTION_CREATED,
@@ -115,20 +134,6 @@ _LEDGER_EVIDENCE_HISTORY_EVENT_TYPES: tuple[BucketEventType, ...] = (
 )
 
 
-def register_read_commands(app: typer.Typer, *, resolve_transaction_id: ResolveTransactionId) -> None:
-    """Register ledger read/discovery/reporting commands."""
-    _register_ledger_llm_diagnostics_command(app)
-    _register_ledger_categories_command(app)
-    _register_ledger_check_command(app)
-    _register_ledger_preflight_command(app)
-    _register_ledger_history_command(app, resolve_transaction_id=resolve_transaction_id)
-    _register_ledger_export_command(app)
-    _register_ledger_list_command(app)
-    _register_ledger_view_command(app, resolve_transaction_id=resolve_transaction_id)
-    _register_ledger_status_command(app)
-    _register_ledger_track_command(app, resolve_transaction_id=resolve_transaction_id)
-
-
 def _ledger_list_pairing_error_year(filters: list[str], option_year: int | None) -> int | None:
     """Return a safe year to include in period/year pairing guidance."""
     if option_year is not None:
@@ -142,49 +147,21 @@ def _ledger_list_pairing_error_year(filters: list[str], option_year: int | None)
     return None
 
 
-def _register_ledger_llm_diagnostics_command(app: typer.Typer) -> None:
-    @app.command(
-        "llm-diagnostics",
-        help=tr("cli.ledger.llm_diagnostics.help"),
-    )
-    @command_execution_policy(LEDGER_READ)
-    def ledger_llm_diagnostics(
-        ctx: typer.Context,
-        since: str | None = typer.Option(
-            None,
-            "--since",
-            help=tr("cli.ledger.llm_diagnostics.since_help"),
-        ),
-        until: str | None = typer.Option(
-            None,
-            "--until",
-            help=tr("cli.ledger.llm_diagnostics.until_help"),
-        ),
-        low_confidence_below: float = typer.Option(
-            0.5,
-            "--low-confidence-below",
-            help=tr("cli.ledger.llm_diagnostics.threshold_help"),
-        ),
-    ) -> None:
-        """Report existing LLM usage, cost, and classification-confidence metrics."""
-        from ...application.ledger import build_llm_diagnostics_report
+def ledger_llm_diagnostics(
+    ctx: typer.Context, since: str | None = None, until: str | None = None, low_confidence_below: float = 0.5
+) -> None:
+    """Report existing LLM usage, cost, and classification-confidence metrics."""
+    from ...application.ledger import build_llm_diagnostics_report
 
-        since_date = _parse_iso_date(since, "--since")
-        until_date = _parse_iso_date(until, "--until")
-        threshold = coerce_decimal_strict(low_confidence_below)
-        if not Decimal("0") <= threshold <= Decimal("1"):
-            raise _bad(
-                tr("cli.ledger.llm_diagnostics.threshold_range"),
-            )
-
-        report = build_llm_diagnostics_report(
-            since=since_date,
-            until=until_date,
-            low_confidence_threshold=threshold,
-        )
-        result = _llm_diagnostics_result(report, since=since_date, until=until_date)
-        lines, notices = _llm_diagnostics_lines_and_notices(report)
-        _emit_envelope(ctx, command="ledger.llm_diagnostics", result=result, lines=lines, notices=notices)
+    since_date = _parse_iso_date(since, "--since")
+    until_date = _parse_iso_date(until, "--until")
+    threshold = coerce_decimal_strict(low_confidence_below)
+    if not Decimal("0") <= threshold <= Decimal("1"):
+        raise _bad(tr("cli.ledger.llm_diagnostics.threshold_range"))
+    report = build_llm_diagnostics_report(since=since_date, until=until_date, low_confidence_threshold=threshold)
+    result = _llm_diagnostics_result(report, since=since_date, until=until_date)
+    lines, notices = _llm_diagnostics_lines_and_notices(report)
+    _emit_envelope(ctx, command="ledger.llm_diagnostics", result=result, lines=lines, notices=notices)
 
 
 def _llm_diagnostics_result(
@@ -278,85 +255,83 @@ def _parse_iso_date(value: str | None, option: str) -> date | None:
     )
 
 
-def _register_ledger_categories_command(app: typer.Typer) -> None:
-    def _irpf_purpose_label(purpose: str) -> str:
-        if purpose == "activity_income_withholding":
-            return tr("cli.ledger.categories.irpf_purpose_activity_income_withholding")
-        if purpose == "rent_expense_withholding":
-            return tr("cli.ledger.categories.irpf_purpose_rent_expense_withholding")
-        if purpose == "employment_income":
-            return tr("cli.ledger.categories.irpf_purpose_employment_income")
-        return purpose
+def _irpf_purpose_label(purpose: str) -> str:
+    if purpose == "activity_income_withholding":
+        return tr("cli.ledger.categories.irpf_purpose_activity_income_withholding")
+    if purpose == "rent_expense_withholding":
+        return tr("cli.ledger.categories.irpf_purpose_rent_expense_withholding")
+    if purpose == "employment_income":
+        return tr("cli.ledger.categories.irpf_purpose_employment_income")
+    return purpose
 
-    @app.command("categories", help=tr("cli.ledger.categories.help"))
-    @command_execution_policy(LEDGER_COMPUTE_READ)
-    def ledger_categories(ctx: typer.Context) -> None:
-        """List the recognised `--category-id` spending-category catalogue."""
-        families: list[dict[str, object]] = []
-        lines: list[str] = [
-            tr("cli.ledger.categories.header"),
-            f"{tr('cli.ledger.categories.id_column')}\t{tr('cli.ledger.categories.family_column')}",
+
+def ledger_categories(ctx: typer.Context) -> None:
+    """List the recognised `--category-id` spending-category catalogue."""
+    families: list[dict[str, object]] = []
+    lines: list[str] = [
+        tr("cli.ledger.categories.header"),
+        f"{tr('cli.ledger.categories.id_column')}\t{tr('cli.ledger.categories.family_column')}",
+    ]
+    first_category_id: str | None = None
+    for family in SpendingCategoryFamily:
+        members = CATEGORY_FAMILY_MEMBERS.get(family, ())
+        if not members:
+            continue
+        category_ids = tuple(member.value for member in members)
+        families.append({"family": family.value, "category_ids": list(category_ids)})
+        for category_id in category_ids:
+            if first_category_id is None:
+                first_category_id = category_id
+            lines.append(f"{category_id}\t{family.value}")
+    if first_category_id is not None:
+        lines.append(tr("cli.ledger.categories.usage_example", example=first_category_id))
+    lines.append(tr("cli.ledger.categories.income_note"))
+    irpf_categories = [
+        {
+            "id": category.id,
+            "purpose": category.purpose,
+            "directions": [direction.value for direction in category.directions],
+            "net_paid_invoice": category.net_paid_invoice,
+            "related_category_ids": list(category.related_category_ids),
+        }
+        for category in ledger_irpf_category_catalogue()
+    ]
+    lines.extend(
+        [
+            "",
+            tr("cli.ledger.categories.irpf_header"),
+            f"{tr('cli.ledger.categories.irpf_id_column')}\t{tr('cli.ledger.categories.irpf_use_column')}",
         ]
-        first_category_id: str | None = None
-        for family in SpendingCategoryFamily:
-            members = CATEGORY_FAMILY_MEMBERS.get(family, ())
-            if not members:
-                continue
-            category_ids = tuple(member.value for member in members)
-            families.append({"family": family.value, "category_ids": list(category_ids)})
-            for category_id in category_ids:
-                if first_category_id is None:
-                    first_category_id = category_id
-                lines.append(f"{category_id}\t{family.value}")
-        if first_category_id is not None:
-            lines.append(tr("cli.ledger.categories.usage_example", example=first_category_id))
-        lines.append(tr("cli.ledger.categories.income_note"))
-        irpf_categories = [
+    )
+    for category in irpf_categories:
+        lines.append(f"{category['id']}\t{_irpf_purpose_label(str(category['purpose']))}")
+    lines.append(
+        tr(
+            "cli.ledger.categories.irpf_usage_example",
+            rent_category="arrendamiento_local",
+            professional_category="asesoria_fiscal",
+            activity_category="actividad_economica",
+        )
+    )
+    from ._ledger_payloads import LedgerCategoriesResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.categories",
+        result=LedgerCategoriesResult.model_validate(
             {
-                "id": category.id,
-                "purpose": category.purpose,
-                "directions": [direction.value for direction in category.directions],
-                "net_paid_invoice": category.net_paid_invoice,
-                "related_category_ids": list(category.related_category_ids),
+                "families": families,
+                "category_ids": [category.value for category in SpendingCategory],
+                "irpf_categories": irpf_categories,
+                "irpf_category_ids": [category["id"] for category in irpf_categories],
+                "net_paid_withholding_irpf_category_ids": [
+                    category["id"] for category in irpf_categories if category["net_paid_invoice"]
+                ],
+                "income_requires_category": False,
             }
-            for category in ledger_irpf_category_catalogue()
-        ]
-        lines.extend(
-            [
-                "",
-                tr("cli.ledger.categories.irpf_header"),
-                f"{tr('cli.ledger.categories.irpf_id_column')}\t{tr('cli.ledger.categories.irpf_use_column')}",
-            ],
-        )
-        for category in irpf_categories:
-            lines.append(f"{category['id']}\t{_irpf_purpose_label(str(category['purpose']))}")
-        lines.append(
-            tr(
-                "cli.ledger.categories.irpf_usage_example",
-                rent_category="arrendamiento_local",
-                professional_category="asesoria_fiscal",
-                activity_category="actividad_economica",
-            ),
-        )
-        from ._ledger_payloads import LedgerCategoriesResult
-
-        _emit_envelope(
-            ctx,
-            command="ledger.categories",
-            result=LedgerCategoriesResult.model_validate(
-                {
-                    "families": families,
-                    "category_ids": [category.value for category in SpendingCategory],
-                    "irpf_categories": irpf_categories,
-                    "irpf_category_ids": [category["id"] for category in irpf_categories],
-                    "net_paid_withholding_irpf_category_ids": [
-                        category["id"] for category in irpf_categories if category["net_paid_invoice"]
-                    ],
-                    "income_requires_category": False,
-                },
-            ),
-            lines=lines,
-        )
+        ),
+        lines=lines,
+    )
 
 
 def _link_inconsistency_notices(rows: tuple[LinkInconsistency, ...]) -> list[Notice]:
@@ -411,96 +386,64 @@ def _link_inconsistency_notices(rows: tuple[LinkInconsistency, ...]) -> list[Not
     ]
 
 
-def _register_ledger_check_command(app: typer.Typer) -> None:
-    @app.command(
-        "check",
-        help=tr("cli.ledger.check.help"),
-    )
-    @command_execution_policy(LEDGER_COMPUTE_READ)
-    def ledger_check(
-        ctx: typer.Context,
-        bucket_id_option: str | None = typer.Option(
-            None,
-            "--bucket-id",
-            help=tr("cli.ledger.check.bucket_id_help"),
-        ),
-        period: str | None = typer.Option(None, "--period", help=tr("cli.ledger.check.period_help")),
-        year: int | None = typer.Option(
-            None,
-            "--year",
-            help=tr("cli.ledger.check.year_help"),
-        ),
-    ) -> None:
-        """Surface ledger anomalies and broken invoice links without mutating state."""
-        from ...application.invoices import verify_invoice_repository_links
-        from ._ledger_payloads import LedgerLinkInconsistencyPayload
+def ledger_check(
+    ctx: typer.Context, bucket_id_option: str | None = None, period: str | None = None, year: int | None = None
+) -> None:
+    """Surface ledger anomalies and broken invoice links without mutating state."""
+    from ...application.invoices import verify_invoice_repository_links
+    from ._ledger_payloads import LedgerLinkInconsistencyPayload
 
-        if bucket_id_option is not None:
-            transaction_repository = TransactionCatalogueRepository(bucket_id=bucket_id_option)
-        else:
-            transaction_repository = _tx_repo(_state())
-        bucket_id = transaction_repository.bucket_id
-        catalogue = transaction_repository.load()
-        # Link integrity is a whole-bucket property of the two catalogues, not a
-        # per-period readiness fact, so it is resolved once and reported by every
-        # branch below regardless of the --period narrowing.
-        link_inconsistencies = verify_invoice_repository_links(bucket_id=bucket_id)
-        # Projected as typed payload rows rather than serialised mappings so the
-        # closed ``direction`` axis reaches the envelope as an enum member; the
-        # strict payload model refuses a bare string here by design.
-        link_rows = [
-            LedgerLinkInconsistencyPayload(
-                invoice_id=row.invoice_id,
-                transaction_id=row.transaction_id,
-                direction=row.direction,
-            )
-            for row in link_inconsistencies
-        ]
-        link_lines = [
-            f"link_inconsistency\t{row.invoice_id}\t{row.transaction_id}\t{row.direction.value}"
-            for row in link_inconsistencies
-        ]
-        link_notices = _link_inconsistency_notices(link_inconsistencies)
-        canonical_period = _optional_canonical_period(period, year=year)
-        if canonical_period is not None:
-            _emit_ledger_check_period(
-                ctx,
-                bucket_id=bucket_id,
-                period=canonical_period,
-                catalogue=catalogue,
-                link_rows=link_rows,
-                link_lines=link_lines,
-                link_notices=link_notices,
-            )
-            return
-
-        years = sorted(
-            {
-                (tx.raw.value_date or tx.raw.booked_date).year
-                for tx in catalogue.values()
-                if (tx.raw.value_date or tx.raw.booked_date) is not None
-            },
+    if bucket_id_option is not None:
+        transaction_repository = TransactionCatalogueRepository(bucket_id=bucket_id_option)
+    else:
+        transaction_repository = _tx_repo(_state())
+    bucket_id = transaction_repository.bucket_id
+    catalogue = transaction_repository.load()
+    link_inconsistencies = verify_invoice_repository_links(bucket_id=bucket_id)
+    link_rows = [
+        LedgerLinkInconsistencyPayload(
+            invoice_id=row.invoice_id, transaction_id=row.transaction_id, direction=row.direction
         )
-
-        if not years:
-            _emit_ledger_check_empty(
-                ctx,
-                bucket_id=bucket_id,
-                link_rows=link_rows,
-                link_lines=link_lines,
-                link_notices=link_notices,
-            )
-            return
-
-        _emit_ledger_check_all_periods(
+        for row in link_inconsistencies
+    ]
+    link_lines = [
+        f"link_inconsistency\t{row.invoice_id}\t{row.transaction_id}\t{row.direction.value}"
+        for row in link_inconsistencies
+    ]
+    link_notices = _link_inconsistency_notices(link_inconsistencies)
+    canonical_period = _optional_canonical_period(period, year=year)
+    if canonical_period is not None:
+        _emit_ledger_check_period(
             ctx,
             bucket_id=bucket_id,
-            years=years,
+            period=canonical_period,
             catalogue=catalogue,
             link_rows=link_rows,
             link_lines=link_lines,
             link_notices=link_notices,
         )
+        return
+    years = sorted(
+        {
+            (tx.raw.value_date or tx.raw.booked_date).year
+            for tx in catalogue.values()
+            if (tx.raw.value_date or tx.raw.booked_date) is not None
+        }
+    )
+    if not years:
+        _emit_ledger_check_empty(
+            ctx, bucket_id=bucket_id, link_rows=link_rows, link_lines=link_lines, link_notices=link_notices
+        )
+        return
+    _emit_ledger_check_all_periods(
+        ctx,
+        bucket_id=bucket_id,
+        years=years,
+        catalogue=catalogue,
+        link_rows=link_rows,
+        link_lines=link_lines,
+        link_notices=link_notices,
+    )
 
 
 def _emit_ledger_check_period(
@@ -649,458 +592,349 @@ def _ledger_check_issue_lines_from_items(issues: Any) -> list[str]:
     return [f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}" for issue in issues]
 
 
-def _register_ledger_preflight_command(app: typer.Typer) -> None:
-    @app.command(
-        "preflight",
-        help=tr("cli.ledger.preflight.help"),
+def ledger_preflight(ctx: typer.Context, period: str = ..., year: int = ...) -> None:
+    """Surface modelo-readiness gaps for the active bucket without mutating ledger state."""
+    from ...application.ledger import preflight_ledger_tax_readiness
+
+    transaction_repository = _tx_repo(_state())
+    canonical = _canonical_period(period, year=year)
+    report = preflight_ledger_tax_readiness(
+        bucket_id=transaction_repository.bucket_id, period=canonical, transaction_repository=transaction_repository
     )
-    @command_execution_policy(LEDGER_COMPUTE_READ)
-    def ledger_preflight(
-        ctx: typer.Context,
-        period: str = typer.Option(
-            ...,
-            "--period",
-            help=tr("cli.ledger.preflight.period_help"),
+    payload = report.model_dump(mode="json")
+    lines = [
+        f"bucket\t{report.bucket_id}",
+        f"period\t{canonical}",
+        f"checked\t{report.checked_transaction_count}",
+        f"issues\t{len(report.issues)}",
+        f"ready\t{str(report.ready).lower()}",
+    ]
+    notices: list[Notice] = []
+    if report.checked_transaction_count == 0 and (not report.issues):
+        message = tr("cli.ledger.preflight.empty_ledger_advisory")
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="ledger.preflight.empty_period",
+                message=message,
+                context={"period": canonical.registry_token, "year": str(canonical.filing_year)},
+            )
+        )
+        lines.append(f"advisory\tempty_ledger\t{message}")
+    for issue in report.issues:
+        lines.append(f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
+    from ._ledger_payloads import LedgerPreflightResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.preflight",
+        result=LedgerPreflightResult.model_validate(payload),
+        lines=lines,
+        notices=notices,
+    )
+
+
+def ledger_history(ctx: typer.Context, transaction_id: str = ..., include_split_siblings: bool = False) -> None:
+    """Emit the chronological event chain for one ledger transaction id."""
+    transaction_repository = _tx_repo(_state())
+    resolved_id = resolve_ledger_transaction_id(transaction_repository, transaction_id)
+    object_ids = _history_object_ids(
+        transaction_repository, resolved_id=resolved_id, include_split_siblings=include_split_siblings
+    )
+    matches = _collect_ledger_history_events(object_ids)
+    lines = [
+        f"{tr('cli.ledger.labels.bucket')}\t{transaction_repository.bucket_id}",
+        f"{tr('cli.ledger.labels.id')}\t{resolved_id}",
+        f"{tr('cli.ledger.labels.event_count')}\t{len(matches)}",
+    ]
+    lines.extend(f"{event.occurred_at.isoformat()}\t{event.event_type.value}\t{event.event_id}" for event in matches)
+    from ._ledger_payloads import LedgerHistoryResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.history",
+        result=LedgerHistoryResult.model_validate(
+            {
+                "bucket_id": transaction_repository.bucket_id,
+                "transaction_id": resolved_id,
+                "event_count": len(matches),
+                "events": [event.model_dump(mode="json") for event in matches],
+            }
         ),
-        year: int = typer.Option(
-            ...,
-            "--year",
-            help=tr("cli.ledger.preflight.year_help"),
+        lines=lines,
+    )
+
+
+def ledger_export(
+    ctx: typer.Context,
+    output: Path = ...,
+    export_kind: ExportSerializationFormat = ExportSerializationFormat.CSV,
+    include_inactive: bool = False,
+    period: str | None = None,
+    year: int | None = None,
+    actor: str | None = None,
+) -> None:
+    """Export canonical bucket-scoped ledger rows through the backend."""
+    transaction_repository = _tx_repo(_state())
+    result = export_ledger_transactions(
+        LedgerExportCommand(
+            bucket_id=transaction_repository.bucket_id,
+            export_format=export_kind,
+            include_inactive=include_inactive,
+            output_path=output,
+            period=_optional_canonical_period(period, year=year),
+            actor=actor or resolve_active_bucket_id() or "operator",
+            source_command="aeat app ledger export",
         ),
-    ) -> None:
-        """Surface modelo-readiness gaps for the active bucket without mutating ledger state."""
+        transaction_repository=transaction_repository,
+    )
+    from ._ledger_payloads import LedgerExportPayload
+
+    _emit_envelope(
+        ctx,
+        command="ledger.export",
+        result=LedgerExportPayload.from_result(result, output_path=str(output)),
+        lines=[
+            f"{tr('cli.ledger.labels.bucket')}\t{result.bucket_id}",
+            f"{tr('cli.ledger.labels.export_id')}\t{result.export_id}",
+            f"{tr('cli.ledger.labels.rows')}\t{result.row_count}",
+            f"{tr('cli.ledger.labels.sha256')}\t{result.sha256}",
+            f"{tr('cli.ledger.labels.output')}\t{output}",
+        ],
+    )
+
+
+def ledger_list(
+    ctx: typer.Context,
+    filters: tuple[str, ...] = (),
+    period: str | None = None,
+    year: int | None = None,
+    limit: int | None = None,
+    offset: int = 0,
+    group: str | None = None,
+    by_group: bool = False,
+    sort_by: LedgerSortField | None = None,
+    sort_order: LedgerSortOrder = LedgerSortOrder.ASC,
+    hide_llm_rejected: bool = False,
+) -> None:
+    """List bucket-scoped ledger rows through :func:`~cadrumo.entrypoints.cli._ledger_list.project_ledger_list`."""
+    transaction_repository = _tx_repo(_state())
+    resolved_filters = list(filters)
+    if period is not None:
+        resolved_filters.append(f"period={period}")
+    if year is not None:
+        resolved_filters.append(f"year={year}")
+    try:
+        spec = LedgerReviewFilterSpec.from_strings(resolved_filters)
+    except FilterParseError as exc:
+        from ...application.cli_exception_preconditions import CliExceptionPrecondition
+
+        raise _ledger_cli_no_recovery(
+            exc,
+            condition=CliExceptionPrecondition.LEDGER_FILTER_VALID,
+            facts={"ledger_filter_valid": False, "reason": exc.reason},
+        ) from None
+    projection = project_ledger_list(
+        transaction_repository=transaction_repository,
+        spec=spec,
+        group=group,
+        by_group=by_group,
+        limit=limit,
+        offset=offset,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        exclude_llm_rejected=hide_llm_rejected,
+    )
+    from ._ledger_payloads import LedgerListResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.list",
+        result=LedgerListResult.model_validate(
+            {
+                "bucket_id": projection.bucket_id,
+                "rows": projection.rows,
+                "total": projection.total,
+                "shown": projection.shown,
+                "offset": projection.offset,
+                "limit": projection.limit,
+                "truncated": projection.truncated,
+            }
+        ),
+        lines=projection.lines,
+    )
+
+
+def ledger_view(ctx: typer.Context, transaction_id: str = ...) -> None:
+    """Read one bucket-scoped ledger transaction.
+
+    Emits a :class:`~cadrumo.entrypoints.cli._ledger_payloads.LedgerViewResult`.
+    """
+    transaction_repository = _tx_repo(_state())
+    resolved_id = resolve_ledger_transaction_id(transaction_repository, transaction_id)
+    result = get_manual_transaction(
+        bucket_id=transaction_repository.bucket_id,
+        transaction_id=resolved_id,
+        transaction_repository=transaction_repository,
+    )
+    result_payload = ledger_transaction_result_payload(result)
+    transaction_payload = result_payload.transaction
+    review_status = ledger_transaction_review_status(result.transaction)
+
+    def _field(value: object) -> str:
+        return "-" if value is None or value == "" else str(value)
+
+    lines = [
+        f"{tr('cli.ledger.labels.id')}\t{result.ref.transaction_id}",
+        f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
+        f"{tr('cli.ledger.labels.value_date')}\t{_field(transaction_payload.value_date)}",
+        f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
+        f"{tr('cli.ledger.labels.currency')}\t{_field(transaction_payload.currency)}",
+        f"{tr('cli.ledger.labels.direction')}\t{_field(transaction_payload.direction)}",
+        f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
+        f"{tr('cli.ledger.labels.counterparty')}\t{_field(transaction_payload.counterparty)}",
+        f"{tr('cli.ledger.labels.business_classification')}\t{_field(transaction_payload.business_classification)}",
+        f"{tr('cli.ledger.labels.business_pct')}\t{_field(transaction_payload.business_pct)}",
+        f"{tr('cli.ledger.labels.category_id')}\t{_field(transaction_payload.category_id)}",
+        f"{tr('cli.ledger.labels.usage_ratio_id')}\t{_field(transaction_payload.usage_ratio_id)}",
+        f"{tr('cli.ledger.labels.taxable_base')}\t{_field(transaction_payload.taxable_base)}",
+        f"{tr('cli.ledger.labels.iva_rate')}\t{_field(transaction_payload.iva_rate)}",
+        f"{tr('cli.ledger.labels.iva_amount')}\t{_field(transaction_payload.iva_amount)}",
+        f"{tr('cli.ledger.labels.iva_category')}\t{_field(transaction_payload.iva_category)}",
+        f"{tr('cli.ledger.labels.counterparty_country')}\t{_field(transaction_payload.counterparty_country)}",
+        f"{tr('cli.ledger.labels.counterparty_identification_state')}\t{_field(transaction_payload.counterparty_identification_state)}",
+        f"{tr('cli.ledger.labels.irpf_category')}\t{_field(transaction_payload.irpf_category)}",
+        f"{tr('cli.ledger.labels.notes')}\t{_field(transaction_payload.notes)}",
+        f"{tr('cli.ledger.labels.purchase_invoice_evidence_id')}\t{_field(transaction_payload.purchase_invoice_evidence_id)}",
+        f"{tr('cli.ledger.labels.attachment_ids')}\t{_field(', '.join(transaction_payload.attachment_ids))}",
+        f"{tr('cli.ledger.labels.lifecycle_state')}\t{_field(transaction_payload.lifecycle_state)}",
+        f"{tr('cli.ledger.labels.classified_by')}\t{_field(transaction_payload.classified_by)}",
+        f"{tr('cli.ledger.labels.classified_at')}\t{_field(transaction_payload.classified_at)}",
+        f"{tr('cli.ledger.labels.classification_confidence')}\t{_field(transaction_payload.classification_confidence)}",
+        f"{tr('cli.ledger.labels.classification_reason')}\t{_field(transaction_payload.classification_reason)}",
+        f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
+    ]
+    from ._ledger_payloads import LedgerViewResult
+
+    notices: list[Notice] = []
+    rejection_notice = _latest_llm_rejection_notice(transaction_repository, resolved_id=resolved_id)
+    if rejection_notice is not None:
+        notices.append(rejection_notice)
+        reason = (rejection_notice.context or {}).get("operator_reason", "")
+        label = tr("cli.ledger.view.llm_rejected_label")
+        lines.append(f"{label}\t{tr('cli.ledger.classify.llm_rejected_label')}" + (f": {reason}" if reason else ""))
+    _emit_envelope(
+        ctx,
+        command="ledger.view",
+        result=strict_round_trip(LedgerViewResult, result_payload),
+        lines=lines,
+        notices=notices,
+    )
+
+
+def ledger_status(ctx: typer.Context, period: str | None = None, year: int | None = None) -> None:
+    """Summarize active-bucket ledger state through the backend status service."""
+    transaction_repository = _tx_repo(_state())
+    report = summarize_manual_transactions(
+        bucket_id=transaction_repository.bucket_id,
+        period=_optional_canonical_period(period, year=year),
+        transaction_repository=transaction_repository,
+    )
+    transactions = transaction_repository.load()
+    lines = [
+        f"{tr('cli.ledger.labels.profile')}\t{active_profile_label() or '<none>'}",
+        f"business_income_total\t{report.business_income_total}",
+        f"business_expense_total\t{report.business_expense_total}",
+        f"business_net_total\t{report.business_net_total}",
+        f"{tr('cli.ledger.labels.rows')}\t{report.total_count}",
+        f"{tr('cli.ledger.labels.active')}\t{report.active_count}",
+        f"{tr('cli.ledger.labels.archived')}\t{report.archived_count}",
+        f"{tr('cli.ledger.labels.stashed')}\t{report.stashed_count}",
+        f"{tr('cli.ledger.labels.pending')}\t{report.pending_review_count}",
+        f"{tr('cli.ledger.labels.reviewed')}\t{report.reviewed_count}",
+        f"{tr('cli.ledger.labels.skipped')}\t{report.skipped_count}",
+    ]
+    if report.period is not None:
+        lines.extend(
+            [
+                f"{tr('cli.ledger.labels.period')}\t{report.period}",
+                f"{tr('cli.ledger.labels.checked')}\t{report.checked_transaction_count}",
+                f"{tr('cli.ledger.labels.readiness_issues')}\t{report.readiness_issue_count}",
+                f"{tr('cli.ledger.labels.ready')}\t{report.ready}",
+            ]
+        )
         from ...application.ledger import preflight_ledger_tax_readiness
 
-        transaction_repository = _tx_repo(_state())
-        canonical = _canonical_period(period, year=year)
-        report = preflight_ledger_tax_readiness(
+        preflight = preflight_ledger_tax_readiness(
             bucket_id=transaction_repository.bucket_id,
-            period=canonical,
+            period=report.period,
             transaction_repository=transaction_repository,
         )
-        payload = report.model_dump(mode="json")
-        lines = [
-            f"bucket\t{report.bucket_id}",
-            f"period\t{canonical}",
-            f"checked\t{report.checked_transaction_count}",
-            f"issues\t{len(report.issues)}",
-            f"ready\t{str(report.ready).lower()}",
-        ]
-        notices: list[Notice] = []
-        if report.checked_transaction_count == 0 and not report.issues:
-            message = tr(
-                "cli.ledger.preflight.empty_ledger_advisory",
-            )
-            notices.append(
-                Notice(
-                    severity=NoticeSeverity.WARNING,
-                    code="ledger.preflight.empty_period",
-                    message=message,
-                    context={
-                        "period": canonical.registry_token,
-                        "year": str(canonical.filing_year),
-                    },
-                ),
-            )
-            lines.append(f"advisory\tempty_ledger\t{message}")
-        for issue in report.issues:
-            lines.append(f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
-        from ._ledger_payloads import LedgerPreflightResult
-
-        _emit_envelope(
-            ctx,
-            command="ledger.preflight",
-            result=LedgerPreflightResult.model_validate(payload),
-            lines=lines,
-            notices=notices,
-        )
-
-
-def _register_ledger_history_command(app: typer.Typer, *, resolve_transaction_id: ResolveTransactionId) -> None:
-    @app.command("history", help=tr("cli.ledger.history.help"))
-    @command_execution_policy(LEDGER_READ)
-    def ledger_history(
-        ctx: typer.Context,
-        transaction_id: str = typer.Argument(..., help=tr("cli.ledger.history.id_help")),
-        include_split_siblings: bool = typer.Option(
-            False,
-            "--include-split-siblings",
-            help=tr("cli.ledger.history.include_split_siblings_help"),
-        ),
-    ) -> None:
-        """Emit the chronological event chain for one ledger transaction id."""
-        transaction_repository = _tx_repo(_state())
-        resolved_id = resolve_transaction_id(transaction_repository, transaction_id)
-        object_ids = _history_object_ids(
-            transaction_repository,
-            resolved_id=resolved_id,
-            include_split_siblings=include_split_siblings,
-        )
-        matches = _collect_ledger_history_events(object_ids)
-        lines = [
-            f"{tr('cli.ledger.labels.bucket')}\t{transaction_repository.bucket_id}",
-            f"{tr('cli.ledger.labels.id')}\t{resolved_id}",
-            f"{tr('cli.ledger.labels.event_count')}\t{len(matches)}",
-        ]
-        lines.extend(
-            f"{event.occurred_at.isoformat()}\t{event.event_type.value}\t{event.event_id}" for event in matches
-        )
-        from ._ledger_payloads import LedgerHistoryResult
-
-        _emit_envelope(
-            ctx,
-            command="ledger.history",
-            result=LedgerHistoryResult.model_validate(
-                {
-                    "bucket_id": transaction_repository.bucket_id,
-                    "transaction_id": resolved_id,
-                    "event_count": len(matches),
-                    "events": [event.model_dump(mode="json") for event in matches],
-                },
-            ),
-            lines=lines,
-        )
-
-
-def _register_ledger_export_command(app: typer.Typer) -> None:
-    @app.command("export", help=tr("cli.ledger.export.help"))
-    @command_execution_policy(LEDGER_HANDOFF)
-    def ledger_export(
-        ctx: typer.Context,
-        output: Path = typer.Option(..., "--output", help=tr("cli.ledger.export.output_help")),
-        export_kind: ExportSerializationFormat = typer.Option(
-            ExportSerializationFormat.CSV,
-            "--export-format",
-            help=tr("cli.ledger.export.format_help"),
-        ),
-        include_inactive: bool = typer.Option(
-            False,
-            "--include-inactive",
-            help=tr("cli.ledger.export.include_inactive_help"),
-        ),
-        period: str | None = typer.Option(
-            None,
-            "--period",
-            help=tr("cli.ledger.export.period_help"),
-        ),
-        year: int | None = typer.Option(
-            None,
-            "--year",
-            help=tr("cli.ledger.export.year_help"),
-        ),
-        actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.export.actor_help")),
-    ) -> None:
-        """Export canonical bucket-scoped ledger rows through the backend."""
-        transaction_repository = _tx_repo(_state())
-        result = export_ledger_transactions(
-            LedgerExportCommand(
-                bucket_id=transaction_repository.bucket_id,
-                export_format=export_kind,
-                include_inactive=include_inactive,
-                output_path=output,
-                period=_optional_canonical_period(period, year=year),
-                actor=actor or resolve_active_bucket_id() or "operator",
-                source_command="aeat app ledger export",
-            ),
-            transaction_repository=transaction_repository,
-        )
-        from ._ledger_payloads import LedgerExportPayload
-
-        _emit_envelope(
-            ctx,
-            command="ledger.export",
-            result=LedgerExportPayload.from_result(result, output_path=str(output)),
-            lines=[
-                f"{tr('cli.ledger.labels.bucket')}\t{result.bucket_id}",
-                f"{tr('cli.ledger.labels.export_id')}\t{result.export_id}",
-                f"{tr('cli.ledger.labels.rows')}\t{result.row_count}",
-                f"{tr('cli.ledger.labels.sha256')}\t{result.sha256}",
-                f"{tr('cli.ledger.labels.output')}\t{output}",
-            ],
-        )
-
-
-def _register_ledger_list_command(app: typer.Typer) -> None:
-    @app.command("list", help=tr("cli.ledger.list.help"))
-    @command_execution_policy(LEDGER_READ)
-    def ledger_list(
-        ctx: typer.Context,
-        filters: list[str] = typer.Option([], "--filter", help=tr("cli.ledger.list.filter_help")),
-        period: str | None = typer.Option(None, "--period", help=tr("cli.ledger.status.period_help")),
-        year: int | None = typer.Option(None, "--year", help=tr("cli.ledger.status.year_help")),
-        limit: int | None = typer.Option(None, "--limit", min=1, help=tr("cli.ledger.list.limit_help")),
-        offset: int = typer.Option(0, "--offset", min=0, help=tr("cli.ledger.list.offset_help")),
-        group: str | None = typer.Option(None, "--group", help=tr("cli.ledger.list.group_filter_help")),
-        by_group: bool = typer.Option(False, "--by-group", help=tr("cli.ledger.list.by_group_help")),
-        sort_by: LedgerSortField | None = typer.Option(
-            None,
-            "--sort-by",
-            help=tr("cli.ledger.list.sort_by_help"),
-        ),
-        sort_order: LedgerSortOrder = typer.Option(
-            LedgerSortOrder.ASC,
-            "--sort-order",
-            help=tr("cli.ledger.list.sort_order_help"),
-        ),
-        hide_llm_rejected: bool = typer.Option(
-            False,
-            "--hide-llm-rejected",
-            help=tr("cli.ledger.list.hide_llm_rejected_help"),
-        ),
-    ) -> None:
-        """List bucket-scoped ledger rows through :func:`~cadrumo.entrypoints.cli._ledger_list.project_ledger_list`."""
-        transaction_repository = _tx_repo(_state())
-        resolved_filters = list(filters)
-        if period is not None:
-            resolved_filters.append(f"period={period}")
-        if year is not None:
-            resolved_filters.append(f"year={year}")
-        try:
-            spec = LedgerReviewFilterSpec.from_strings(resolved_filters)
-        except FilterParseError as exc:
-            from ...application.cli_exception_preconditions import CliExceptionPrecondition
-
-            raise _ledger_cli_no_recovery(
-                exc,
-                condition=CliExceptionPrecondition.LEDGER_FILTER_VALID,
-                facts={"ledger_filter_valid": False, "reason": exc.reason},
-            ) from None
-        projection = project_ledger_list(
-            transaction_repository=transaction_repository,
-            spec=spec,
-            group=group,
-            by_group=by_group,
-            limit=limit,
-            offset=offset,
-            sort_by=sort_by,
-            sort_order=sort_order,
-            exclude_llm_rejected=hide_llm_rejected,
-        )
-        from ._ledger_payloads import LedgerListResult
-
-        _emit_envelope(
-            ctx,
-            command="ledger.list",
-            result=LedgerListResult.model_validate(
-                {
-                    "bucket_id": projection.bucket_id,
-                    "rows": projection.rows,
-                    "total": projection.total,
-                    "shown": projection.shown,
-                    "offset": projection.offset,
-                    "limit": projection.limit,
-                    "truncated": projection.truncated,
-                },
-            ),
-            lines=projection.lines,
-        )
-
-
-def _register_ledger_view_command(app: typer.Typer, *, resolve_transaction_id: ResolveTransactionId) -> None:
-    @app.command("view", help=tr("cli.ledger.view.help"))
-    @command_execution_policy(LEDGER_READ)
-    def ledger_view(
-        ctx: typer.Context,
-        transaction_id: str = typer.Argument(..., help=tr("cli.ledger.view.transaction_id_help")),
-    ) -> None:
-        """Read one bucket-scoped ledger transaction.
-
-        Emits a :class:`~cadrumo.entrypoints.cli._ledger_payloads.LedgerViewResult`.
-        """
-        transaction_repository = _tx_repo(_state())
-        resolved_id = resolve_transaction_id(transaction_repository, transaction_id)
-        result = get_manual_transaction(
-            bucket_id=transaction_repository.bucket_id,
-            transaction_id=resolved_id,
-            transaction_repository=transaction_repository,
-        )
-        result_payload = ledger_transaction_result_payload(result)
-        transaction_payload = result_payload.transaction
-        review_status = ledger_transaction_review_status(result.transaction)
-
-        def _field(value: object) -> str:
-            return "-" if value is None or value == "" else str(value)
-
-        lines = [
-            f"{tr('cli.ledger.labels.id')}\t{result.ref.transaction_id}",
-            f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
-            f"{tr('cli.ledger.labels.value_date')}\t{_field(transaction_payload.value_date)}",
-            f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
-            f"{tr('cli.ledger.labels.currency')}\t{_field(transaction_payload.currency)}",
-            f"{tr('cli.ledger.labels.direction')}\t{_field(transaction_payload.direction)}",
-            f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
-            f"{tr('cli.ledger.labels.counterparty')}\t{_field(transaction_payload.counterparty)}",
-            f"{tr('cli.ledger.labels.business_classification')}\t{_field(transaction_payload.business_classification)}",
-            f"{tr('cli.ledger.labels.business_pct')}\t{_field(transaction_payload.business_pct)}",
-            f"{tr('cli.ledger.labels.category_id')}\t{_field(transaction_payload.category_id)}",
-            f"{tr('cli.ledger.labels.usage_ratio_id')}\t{_field(transaction_payload.usage_ratio_id)}",
-            f"{tr('cli.ledger.labels.taxable_base')}\t{_field(transaction_payload.taxable_base)}",
-            f"{tr('cli.ledger.labels.iva_rate')}\t{_field(transaction_payload.iva_rate)}",
-            f"{tr('cli.ledger.labels.iva_amount')}\t{_field(transaction_payload.iva_amount)}",
-            f"{tr('cli.ledger.labels.iva_category')}\t{_field(transaction_payload.iva_category)}",
-            f"{tr('cli.ledger.labels.counterparty_country')}\t{_field(transaction_payload.counterparty_country)}",
-            f"{tr('cli.ledger.labels.counterparty_identification_state')}"
-            f"\t{_field(transaction_payload.counterparty_identification_state)}",
-            f"{tr('cli.ledger.labels.irpf_category')}\t{_field(transaction_payload.irpf_category)}",
-            f"{tr('cli.ledger.labels.notes')}\t{_field(transaction_payload.notes)}",
-            f"{tr('cli.ledger.labels.purchase_invoice_evidence_id')}"
-            f"\t{_field(transaction_payload.purchase_invoice_evidence_id)}",
-            f"{tr('cli.ledger.labels.attachment_ids')}\t{_field(', '.join(transaction_payload.attachment_ids))}",
-            f"{tr('cli.ledger.labels.lifecycle_state')}\t{_field(transaction_payload.lifecycle_state)}",
-            f"{tr('cli.ledger.labels.classified_by')}\t{_field(transaction_payload.classified_by)}",
-            f"{tr('cli.ledger.labels.classified_at')}\t{_field(transaction_payload.classified_at)}",
-            f"{tr('cli.ledger.labels.classification_confidence')}"
-            f"\t{_field(transaction_payload.classification_confidence)}",
-            f"{tr('cli.ledger.labels.classification_reason')}\t{_field(transaction_payload.classification_reason)}",
-            f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
-        ]
-        from ._ledger_payloads import LedgerViewResult
-
-        notices: list[Notice] = []
-        rejection_notice = _latest_llm_rejection_notice(transaction_repository, resolved_id=resolved_id)
-        if rejection_notice is not None:
-            notices.append(rejection_notice)
-            reason = (rejection_notice.context or {}).get("operator_reason", "")
-            label = tr("cli.ledger.view.llm_rejected_label")
-            lines.append(f"{label}\t{tr('cli.ledger.classify.llm_rejected_label')}" + (f": {reason}" if reason else ""))
-
-        _emit_envelope(
-            ctx,
-            command="ledger.view",
-            result=strict_round_trip(LedgerViewResult, result_payload),
-            lines=lines,
-            notices=notices,
-        )
-
-
-def _register_ledger_status_command(app: typer.Typer) -> None:
-    @app.command("status", help=tr("cli.ledger.status.help"))
-    @command_execution_policy(LEDGER_READ)
-    def ledger_status(
-        ctx: typer.Context,
-        period: str | None = typer.Option(None, "--period", help=tr("cli.ledger.status.period_help")),
-        year: int | None = typer.Option(
-            None,
-            "--year",
-            help=tr("cli.ledger.status.year_help"),
-        ),
-    ) -> None:
-        """Summarize active-bucket ledger state through the backend status service."""
-        transaction_repository = _tx_repo(_state())
-        report = summarize_manual_transactions(
-            bucket_id=transaction_repository.bucket_id,
-            period=_optional_canonical_period(period, year=year),
-            transaction_repository=transaction_repository,
-        )
-        transactions = transaction_repository.load()
-        lines = [
-            f"{tr('cli.ledger.labels.profile')}\t{active_profile_label() or '<none>'}",
-            f"business_income_total\t{report.business_income_total}",
-            f"business_expense_total\t{report.business_expense_total}",
-            f"business_net_total\t{report.business_net_total}",
-            f"{tr('cli.ledger.labels.rows')}\t{report.total_count}",
-            f"{tr('cli.ledger.labels.active')}\t{report.active_count}",
-            f"{tr('cli.ledger.labels.archived')}\t{report.archived_count}",
-            f"{tr('cli.ledger.labels.stashed')}\t{report.stashed_count}",
-            f"{tr('cli.ledger.labels.pending')}\t{report.pending_review_count}",
-            f"{tr('cli.ledger.labels.reviewed')}\t{report.reviewed_count}",
-            f"{tr('cli.ledger.labels.skipped')}\t{report.skipped_count}",
-        ]
-        if report.period is not None:
-            lines.extend(
-                [
-                    f"{tr('cli.ledger.labels.period')}\t{report.period}",
-                    f"{tr('cli.ledger.labels.checked')}\t{report.checked_transaction_count}",
-                    f"{tr('cli.ledger.labels.readiness_issues')}\t{report.readiness_issue_count}",
-                    f"{tr('cli.ledger.labels.ready')}\t{report.ready}",
-                ],
-            )
-            from ...application.ledger import preflight_ledger_tax_readiness
-
-            preflight = preflight_ledger_tax_readiness(
-                bucket_id=transaction_repository.bucket_id,
-                period=report.period,
-                transaction_repository=transaction_repository,
-            )
-            for issue in preflight.issues:
-                transaction = transactions.get(issue.transaction_id)
-                if transaction is None:
-                    continue
-                lines.append(
-                    _ledger_status_readiness_issue_line(transaction, reason=issue.reason.value, detail=issue.detail),
-                )
-        from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-        from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-        from ...application.aggregation import stale_filed_revisions
-
-        revisions = CalculationRevisionCatalogueRepository().load().revisions
-        work_units = WorkUnitCatalogueRepository().load()
-        for revision, verdict in stale_filed_revisions(revisions=revisions, catalogue=transactions):
-            work_unit = work_units.get(revision.work_unit_id)
-            if work_unit is None or work_unit.bucket_id != transaction_repository.bucket_id:
+        for issue in preflight.issues:
+            transaction = transactions.get(issue.transaction_id)
+            if transaction is None:
                 continue
             lines.append(
-                "\t".join(
-                    (
-                        "ledger_filing_stale",
-                        f"modelo={work_unit.modelo}",
-                        f"year={work_unit.filing_year}",
-                        f"period={work_unit.period.registry_token}",
-                        f"revision={revision.calculation_revision_id}",
-                        f"changed={len(verdict.changed)}",
-                        f"removed={len(verdict.removed)}",
-                    ),
-                ),
+                _ledger_status_readiness_issue_line(transaction, reason=issue.reason.value, detail=issue.detail)
             )
+    from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ...application.aggregation import stale_filed_revisions
 
-        from ._ledger_payloads import LedgerStatusResult
-
-        _emit_envelope(
-            ctx,
-            command="ledger.status",
-            result=strict_round_trip(LedgerStatusResult, report),
-            lines=lines,
+    revisions = CalculationRevisionCatalogueRepository().load().revisions
+    work_units = WorkUnitCatalogueRepository().load()
+    for revision, verdict in stale_filed_revisions(revisions=revisions, catalogue=transactions):
+        work_unit = work_units.get(revision.work_unit_id)
+        if work_unit is None or work_unit.bucket_id != transaction_repository.bucket_id:
+            continue
+        lines.append(
+            "\t".join(
+                (
+                    "ledger_filing_stale",
+                    f"modelo={work_unit.modelo}",
+                    f"year={work_unit.filing_year}",
+                    f"period={work_unit.period.registry_token}",
+                    f"revision={revision.calculation_revision_id}",
+                    f"changed={len(verdict.changed)}",
+                    f"removed={len(verdict.removed)}",
+                )
+            )
         )
+    from ._ledger_payloads import LedgerStatusResult
+
+    _emit_envelope(ctx, command="ledger.status", result=strict_round_trip(LedgerStatusResult, report), lines=lines)
 
 
-def _register_ledger_track_command(app: typer.Typer, *, resolve_transaction_id: ResolveTransactionId) -> None:
-    @app.command("track", help=tr("cli.ledger.track.help"))
-    @command_execution_policy(LEDGER_READ)
-    def ledger_track(
-        ctx: typer.Context,
-        transaction_id: str = typer.Argument(..., help=tr("cli.ledger.track.transaction_id_help")),
-    ) -> None:
-        """Show audit lineage for one transaction.
+def ledger_track(ctx: typer.Context, transaction_id: str = ...) -> None:
+    """Show audit lineage for one transaction.
 
-        Emits a :class:`~cadrumo.entrypoints.cli._ledger_payloads.LedgerTrackResult`.
-        """
-        transaction_repository = _tx_repo(_state())
-        resolved_id = resolve_transaction_id(transaction_repository, transaction_id)
-        result = get_manual_transaction(
-            bucket_id=transaction_repository.bucket_id,
-            transaction_id=resolved_id,
-            transaction_repository=transaction_repository,
-        )
-        from ._ledger_payloads import LedgerTrackResult
+    Emits a :class:`~cadrumo.entrypoints.cli._ledger_payloads.LedgerTrackResult`.
+    """
+    transaction_repository = _tx_repo(_state())
+    resolved_id = resolve_ledger_transaction_id(transaction_repository, transaction_id)
+    result = get_manual_transaction(
+        bucket_id=transaction_repository.bucket_id,
+        transaction_id=resolved_id,
+        transaction_repository=transaction_repository,
+    )
+    from ._ledger_payloads import LedgerTrackResult
 
-        participated_in = _ledger_track_participated_in(
-            transaction_id=result.ref.transaction_id,
-            bucket_id=transaction_repository.bucket_id,
-        )
-
-        _emit_envelope(
-            ctx,
-            command="ledger.track",
-            result=LedgerTrackResult.model_validate(
-                {
-                    "bucket_id": result.ref.bucket_id,
-                    "transaction": ledger_transaction_payload(result.transaction).model_dump(mode="json"),
-                    "tracking": ledger_transaction_tracking_payload(result.transaction).model_dump(mode="json"),
-                    "participated_in": participated_in,
-                },
-            ),
-            lines=_ledger_track_lines(result.ref.transaction_id, result.transaction),
-        )
+    participated_in = _ledger_track_participated_in(
+        transaction_id=result.ref.transaction_id, bucket_id=transaction_repository.bucket_id
+    )
+    _emit_envelope(
+        ctx,
+        command="ledger.track",
+        result=LedgerTrackResult.model_validate(
+            {
+                "bucket_id": result.ref.bucket_id,
+                "transaction": ledger_transaction_payload(result.transaction).model_dump(mode="json"),
+                "tracking": ledger_transaction_tracking_payload(result.transaction).model_dump(mode="json"),
+                "participated_in": participated_in,
+            }
+        ),
+        lines=_ledger_track_lines(result.ref.transaction_id, result.transaction),
+    )
 
 
 def _ledger_track_participated_in(

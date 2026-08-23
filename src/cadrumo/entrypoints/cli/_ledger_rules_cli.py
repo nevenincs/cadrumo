@@ -18,22 +18,8 @@ from ...domain.transactions import (
     Transaction,
     TransactionLifecycleState,
 )
-from ._command_policy import command_execution_policy
 from ._common import _bad, _emit_envelope
 from ._common import active_bucket_id_or_refuse as _rule_bucket_id
-from ._ledger_execution_policies import LEDGER_COMPUTE_WRITE, LEDGER_READ, LEDGER_WRITE, declare_metadata_group
-
-rule_app = typer.Typer(
-    name="rule",
-    help=tr("cli.app.ledger.rule.group_help"),
-    no_args_is_help=True,
-)
-declare_metadata_group(rule_app)
-
-
-def register_rule_commands(app: typer.Typer) -> None:
-    """Mount ledger classification rule commands on the ledger app."""
-    app.add_typer(rule_app, name="rule")
 
 
 def _short_display_id(value: str) -> str:
@@ -57,38 +43,13 @@ def _validate_category_id(category_id: str | None) -> str | None:
     return value
 
 
-@rule_app.command(
-    "add",
-    help=tr("cli.app.ledger.rule.add_help"),
-)
-@command_execution_policy(LEDGER_WRITE)
 def rule_add(
     ctx: typer.Context,
-    description_pattern: str = typer.Option(
-        ...,
-        "--description-pattern",
-        help=tr("cli.app.ledger.rule.description_pattern_help"),
-    ),
-    classification: BusinessClassification = typer.Option(
-        ...,
-        "--classification",
-        help=tr("cli.app.ledger.rule.classification_help"),
-    ),
-    category_id: str | None = typer.Option(
-        None,
-        "--category-id",
-        help=tr("cli.app.ledger.rule.category_id_help"),
-    ),
-    priority: int = typer.Option(
-        100,
-        "--priority",
-        help=tr("cli.app.ledger.rule.priority_help"),
-    ),
-    actor: str | None = typer.Option(
-        None,
-        "--actor",
-        help=tr("cli.app.ledger.rule.actor_help"),
-    ),
+    description_pattern: str = ...,
+    classification: BusinessClassification = ...,
+    category_id: str | None = None,
+    priority: int = 100,
+    actor: str | None = None,
 ) -> None:
     """Add or idempotently update a ledger classification rule."""
     from ...application.ledger import add_classification_rule
@@ -249,28 +210,11 @@ def _emit_rule_apply_result(ctx: typer.Context, result: ApplyRulesResult) -> Non
     )
 
 
-@rule_app.command(
-    "apply",
-    help=tr("cli.app.ledger.rule.apply_help"),
-)
-@command_execution_policy(LEDGER_COMPUTE_WRITE)
 def rule_apply(
     ctx: typer.Context,
-    reaffirm: bool = typer.Option(
-        False,
-        "--reaffirm",
-        help=tr("cli.app.ledger.rule.apply_reaffirm_help"),
-    ),
-    dry_run: bool = typer.Option(
-        False,
-        "--dry-run",
-        help=tr("cli.app.ledger.rule.apply_dry_run_help"),
-    ),
-    actor: str | None = typer.Option(
-        None,
-        "--actor",
-        help=tr("cli.app.ledger.rule.actor_help"),
-    ),
+    reaffirm: bool = False,
+    dry_run: bool = False,
+    actor: str | None = None,
 ) -> None:
     """Apply stored rules to ACTIVE NOT_YET_PROCESSED transactions."""
     from ...application.ledger import apply_classification_rules
@@ -292,11 +236,6 @@ def rule_apply(
     _emit_rule_apply_result(ctx, result)
 
 
-@rule_app.command(
-    "list",
-    help=tr("cli.app.ledger.rule.list_help"),
-)
-@command_execution_policy(LEDGER_READ)
 def rule_list(ctx: typer.Context) -> None:
     """List all stored ledger classification rules (priority ascending)."""
     from ...application.ledger import LedgerClassificationRuleRepository

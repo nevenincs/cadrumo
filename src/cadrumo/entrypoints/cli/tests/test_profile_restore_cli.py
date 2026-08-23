@@ -91,7 +91,7 @@ def test_a_capsule_directory_restores_into_a_fresh_storage_root(tmp_path: Path) 
                 str(capsule),
                 "--secrets-stdin",
             ],
-            input=f'{{"password": "{_test_passphrase()}"}}',
+            input=f'{{"passphrase": "{_test_passphrase()}"}}',
         )
 
         assert result.exit_code == 0, result.output
@@ -137,7 +137,7 @@ def test_restore_refuses_a_directory_that_is_not_a_capsule(tmp_path: Path) -> No
                 str(not_a_capsule),
                 "--secrets-stdin",
             ],
-            input=f'{{"password": "{_test_passphrase()}"}}',
+            input=f'{{"passphrase": "{_test_passphrase()}"}}',
         )
 
         assert result.exit_code != 0

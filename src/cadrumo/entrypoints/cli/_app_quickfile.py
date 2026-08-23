@@ -18,18 +18,15 @@ local export the human files themselves through the AEAT sede
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated
 
 import typer
 
 from ...application.modelo import QuickfileCommand, run_modelo_quickfile
 from ...application.workflow import workflow_state_repository
-from ...core import PaymentElection, Period, PeriodError, PriorDomiciliationElection, RefundElection
+from ...core import OutputLanguage, PaymentElection, Period, PeriodError, PriorDomiciliationElection, RefundElection
 from ...core.i18n import tr
 from ...core.json_contract import Notice
-from ._app_execution_policies import QUICKFILE_HANDOFF
 from ._app_quickfile_payloads import QuickfileResultPayload
-from ._command_policy import command_execution_policy
 from ._common import (
     _emit_envelope,
     _filing_taxpayer_or_refuse,
@@ -37,27 +34,8 @@ from ._common import (
     activate_subcommand_output_language,
 )
 from ._m303_filing_evidence_input import m303_filing_instance_evidence_from_cli
-from ._modelo_cli_support import (
-    OutputLanguageOpt,
-    unsupported_local_work_period_refusal,
-    work_calculate_input_bundle_from_cli,
-)
+from ._modelo_cli_support import unsupported_local_work_period_refusal, work_calculate_input_bundle_from_cli
 from ._modelo_rendering import advisory_notice, verification_report_notices
-from ._modelo_work_options import (
-    _ActorOpt,
-    _BucketIdOpt,
-    _PaymentElectionOpt,
-    _PriorDomiciliationElectionOpt,
-    _RefundElectionOpt,
-    _RevisionOpt,
-)
-
-app = typer.Typer(
-    name="quickfile",
-    help=tr("cli.app.quickfile.app_help"),
-    no_args_is_help=False,
-    invoke_without_command=True,
-)
 
 
 def _require_active_profile() -> str:
@@ -79,44 +57,24 @@ def _resolve_period(*, modelo: str, year: int, period: str) -> Period:
         raise typer.BadParameter(str(exc)) from exc
 
 
-@app.callback()
-@command_execution_policy(QUICKFILE_HANDOFF)
 def quickfile(
     ctx: typer.Context,
-    modelo: Annotated[str, typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help"))],
-    year: Annotated[int, typer.Option("--year", help=tr("cli.app.modelo.work.year_help"))],
-    period: Annotated[str, typer.Option("--period", help=tr("cli.app.modelo.work.period_help"))],
-    output: Annotated[
-        Path | None,
-        typer.Option("--output", help=tr("cli.app.modelo.export.output_help")),
-    ] = None,
-    revision: _RevisionOpt = None,
-    bucket_id: _BucketIdOpt = None,
-    casilla: Annotated[
-        list[str] | None,
-        typer.Option("--casilla", help=tr("cli.app.modelo.work.casilla_help")),
-    ] = None,
-    binding: Annotated[
-        list[str] | None,
-        typer.Option("--binding", help=tr("cli.app.modelo.work.override_help")),
-    ] = None,
-    relation: Annotated[
-        list[str] | None,
-        typer.Option("--relation", help=tr("cli.app.modelo.work.relation_help")),
-    ] = None,
-    row: Annotated[
-        list[str] | None,
-        typer.Option("--row", help=tr("cli.app.modelo.work.row_help")),
-    ] = None,
-    actor: _ActorOpt = None,
-    refund_election: _RefundElectionOpt = RefundElection.COMPENSAR,
-    payment_election: _PaymentElectionOpt = PaymentElection.INGRESO,
-    prior_domiciliation_election: _PriorDomiciliationElectionOpt = PriorDomiciliationElection.KEEP,
-    m303_filing_evidence: Annotated[
-        Path | None,
-        typer.Option("--m303-filing-evidence", help=tr("cli.app.modelo.work.m303_filing_evidence_help")),
-    ] = None,
-    output_language: OutputLanguageOpt = None,
+    modelo: str,
+    year: int,
+    period: str,
+    output: Path | None = None,
+    revision: str | None = None,
+    bucket_id: str | None = None,
+    casilla: list[str] | None = None,
+    binding: list[str] | None = None,
+    relation: list[str] | None = None,
+    row: list[str] | None = None,
+    actor: str | None = None,
+    refund_election: RefundElection = RefundElection.COMPENSAR,
+    payment_election: PaymentElection = PaymentElection.INGRESO,
+    prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP,
+    m303_filing_evidence: Path | None = None,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Run readiness -> create -> calculate -> verify -> export for one modelo target."""
     if ctx.invoked_subcommand is not None:
@@ -249,4 +207,4 @@ def _quickfile_notices(result) -> list[Notice]:
     return notices
 
 
-__all__ = ["app"]
+__all__ = ["quickfile"]

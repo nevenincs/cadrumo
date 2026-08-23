@@ -44,8 +44,6 @@ from ...core.json_contract import Notice, strict_round_trip
 from ...core.logging import get_logger
 from ...core.time import today_madrid
 from ...domain.modelos import WorkUnit
-from ._app_execution_policies import CALCULATION_READ, declare_metadata_group
-from ._command_policy import command_execution_policy
 from ._common import (
     _bad,
     _canonical_period,
@@ -98,14 +96,6 @@ if TYPE_CHECKING:
     from ._errors import CliRefusedBoundaryError
 
 logger = get_logger(__name__)
-
-app = typer.Typer(
-    name="overview",
-    help=tr("cli.overview.app_help"),
-    no_args_is_help=True,
-)
-declare_metadata_group(app)
-
 
 def _grounded_warning_summary(warnings: Sequence[CalendarWarning]) -> str:
     """Render calendar warnings as grounded profile requirements where possible.
@@ -321,16 +311,11 @@ def _overview_status_coverage(
     return coverage_lines, status_notices
 
 
-@app.command("status", help=tr("cli.overview.status_help"))
 def overview_status(
     ctx: typer.Context,
-    period: str | None = typer.Option(None, "--period", help=tr("cli.overview.period_help")),
-    year: int | None = typer.Option(
-        None,
-        "--year",
-        help=tr("cli.overview.year_help", default="Filing year for --period (e.g. 2024)."),
-    ),
-    verbose: bool = typer.Option(False, "--verbose", help=tr("cli.overview.verbose_help")),
+    period: str | None = None,
+    year: int | None = None,
+    verbose: bool = False,
 ) -> None:
     """Emit the overview status payload for readiness or per-period detail.
 
@@ -368,72 +353,14 @@ def overview_status(
     )
 
 
-@app.command(
-    "calendar",
-    help=tr(
-        "cli.overview.calendar.help",
-        default=(
-            "Render the deadline calendar for the active profile across the supplied "
-            "date window. Applies festivos and business-day shifts. Local-only; never "
-            "contacts AEAT."
-        ),
-    ),
-)
 def overview_calendar(
     ctx: typer.Context,
-    from_date: str = typer.Option(
-        ...,
-        "--from",
-        help=tr(
-            "cli.overview.calendar.from_help",
-            default="Inclusive start date for the calendar window (ISO YYYY-MM-DD).",
-        ),
-    ),
-    to_date: str = typer.Option(
-        ...,
-        "--to",
-        help=tr(
-            "cli.overview.calendar.to_help",
-            default="Inclusive end date for the calendar window (ISO YYYY-MM-DD).",
-        ),
-    ),
-    allow_incomplete: bool = typer.Option(
-        False,
-        "--allow-incomplete",
-        help=tr(
-            "cli.overview.calendar.allow_incomplete_help",
-            default="Render the calendar even when profile data is incomplete.",
-        ),
-    ),
-    show_suppressed: bool = typer.Option(
-        False,
-        "--show-suppressed",
-        help=tr(
-            "cli.overview.calendar.show_suppressed_help",
-            default=(
-                "Include filtered (non-applicable) obligations in the output "
-                "with their applicability verdict and reason."
-            ),
-        ),
-    ),
-    all_profiles: bool = typer.Option(
-        False,
-        "--all-profiles",
-        help=tr(
-            "cli.overview.calendar.all_profiles_help",
-            default=(
-                "Render the calendar for every registered active profile instead of "
-                "the currently active one. Each profile's entries are emitted in a "
-                "separate block with a leading profile header line."
-            ),
-        ),
-    ),
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
+    from_date: str,
+    to_date: str,
+    allow_incomplete: bool = False,
+    show_suppressed: bool = False,
+    all_profiles: bool = False,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Emit the overview calendar payload over the supplied date window.
 
@@ -722,43 +649,11 @@ def _overview_calendar_all_profiles(
     _emit_envelope(ctx, command="overview.calendar", result=typed_all, lines=all_lines, notices=all_coverage_notices)
 
 
-@app.command(
-    "agenda",
-    help=tr(
-        "cli.overview.agenda.help",
-        default=(
-            "Rank upcoming and past-due obligations around an as-of date. "
-            "Surfaces a single `next_due` plus due-today / due-soon / overdue cohorts. "
-            "Local-only; never contacts AEAT."
-        ),
-    ),
-)
 def overview_agenda(
     ctx: typer.Context,
-    as_of: str | None = typer.Option(
-        None,
-        "--date",
-        help=tr(
-            "cli.overview.agenda.date_help",
-            default="As-of date for the agenda (ISO YYYY-MM-DD); defaults to today.",
-        ),
-    ),
-    horizon_days: int = typer.Option(
-        14,
-        "--horizon",
-        help=tr(
-            "cli.overview.agenda.horizon_help",
-            default="Forward window (days) the `due_soon` cohort honours.",
-        ),
-    ),
-    allow_incomplete: bool = typer.Option(
-        False,
-        "--allow-incomplete",
-        help=tr(
-            "cli.overview.agenda.allow_incomplete_help",
-            default="Render the agenda even when profile data is incomplete.",
-        ),
-    ),
+    as_of: str | None = None,
+    horizon_days: int = 14,
+    allow_incomplete: bool = False,
 ) -> None:
     """Emit the overview agenda payload with next-due cohort breakdowns.
 
@@ -795,42 +690,11 @@ def overview_agenda(
     _emit_envelope(ctx, command="overview.agenda", result=typed_agenda, lines=lines, notices=coverage_notices)
 
 
-@app.command(
-    "backlog",
-    help=tr(
-        "cli.overview.backlog.help",
-        default=(
-            "List past-due obligations the operator has not yet filed. Sorted oldest "
-            "first so the most-overdue items triage first. Local-only; never contacts AEAT."
-        ),
-    ),
-)
 def overview_backlog(
     ctx: typer.Context,
-    from_date: str | None = typer.Option(
-        None,
-        "--from",
-        help=tr(
-            "cli.overview.backlog.from_help",
-            default="Inclusive start date (ISO YYYY-MM-DD); defaults to 365 days before today.",
-        ),
-    ),
-    to_date: str | None = typer.Option(
-        None,
-        "--to",
-        help=tr(
-            "cli.overview.backlog.to_help",
-            default="Inclusive end date (ISO YYYY-MM-DD); defaults to today.",
-        ),
-    ),
-    allow_incomplete: bool = typer.Option(
-        False,
-        "--allow-incomplete",
-        help=tr(
-            "cli.overview.backlog.allow_incomplete_help",
-            default="Render the backlog even when profile data is incomplete.",
-        ),
-    ),
+    from_date: str | None = None,
+    to_date: str | None = None,
+    allow_incomplete: bool = False,
 ) -> None:
     """Emit the overview backlog payload for past-due obligations.
 
@@ -869,34 +733,10 @@ def overview_backlog(
     _emit_envelope(ctx, command="overview.backlog", result=typed_backlog, lines=lines, notices=backlog_notices)
 
 
-@app.command(
-    "explain",
-    help=tr(
-        "cli.overview.explain.help",
-        default=(
-            "Decompose a modelo's applicability against the active profile. Surfaces "
-            "the binary applicable flag, the registry-backed rationale text, and the "
-            "profile facts the decision depends on. Local-only; never contacts AEAT."
-        ),
-    ),
-)
 def overview_explain(
     ctx: typer.Context,
-    modelo: str = typer.Argument(
-        ...,
-        help=tr(
-            "cli.overview.explain.modelo_help",
-            default="AEAT modelo identifier (e.g. 303, 130, 100).",
-        ),
-    ),
-    year: int | None = typer.Option(
-        None,
-        "--year",
-        help=tr(
-            "cli.overview.explain.year_help",
-            default="Fiscal year for the applicability evaluation; defaults to the current year.",
-        ),
-    ),
+    modelo: str,
+    year: int | None = None,
 ) -> None:
     """Emit the overview explain payload for one modelo applicability verdict.
 
@@ -918,46 +758,11 @@ def overview_explain(
     _emit_envelope(ctx, command="overview.explain", result=typed_explain, lines=lines)
 
 
-@app.command(
-    "prepare",
-    help=tr(
-        "cli.overview.prepare.help",
-        default=(
-            "Walk through the data-preparation steps for one modelo/period in order: "
-            "import transactions, classify them, attach purchase-invoice evidence, "
-            "register business invoices, resolve ledger readiness gaps, then start or "
-            "resume the modelo work unit. Shows each step's current progress and the "
-            "exact next command to run. Read-only; safe to run repeatedly; never "
-            "contacts AEAT."
-        ),
-    ),
-)
 def overview_prepare(
     ctx: typer.Context,
-    modelo: str = typer.Option(
-        ...,
-        "--modelo",
-        help=tr(
-            "cli.overview.prepare.modelo_help",
-            default="AEAT modelo identifier to prepare data for (e.g. 130, 303, 100).",
-        ),
-    ),
-    year: int = typer.Option(
-        ...,
-        "--year",
-        help=tr("cli.overview.prepare.year_help", default="Filing year (e.g. 2026)."),
-    ),
-    period: str = typer.Option(
-        ...,
-        "--period",
-        help=tr(
-            "cli.overview.prepare.period_help",
-            default=(
-                "Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), "
-                "01-12 (months). Combine with --year to choose the year."
-            ),
-        ),
-    ),
+    modelo: str,
+    year: int,
+    period: str,
 ) -> None:
     """Emit the ordered data-prep walkthrough for one (modelo, period) scope.
 
@@ -1019,37 +824,10 @@ def overview_prepare(
     _emit_envelope(ctx, command="overview.prepare", result=typed_result, lines=lines, notices=notices)
 
 
-@app.command(
-    "pipeline",
-    help=tr(
-        "cli.overview.pipeline.help",
-        default=(
-            "Show cross-domain pipeline health for one filing period in one table: "
-            "ledger classification/review state, modelo readiness (calculated / "
-            "verified / filed / blocked) for every work unit in the period, and "
-            "outstanding verification findings. Read-only; safe to run repeatedly; "
-            "never contacts AEAT."
-        ),
-    ),
-)
 def overview_pipeline(
     ctx: typer.Context,
-    year: int = typer.Option(
-        ...,
-        "--year",
-        help=tr("cli.overview.pipeline.year_help", default="Filing year (e.g. 2026)."),
-    ),
-    period: str = typer.Option(
-        ...,
-        "--period",
-        help=tr(
-            "cli.overview.pipeline.period_help",
-            default=(
-                "Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), "
-                "01-12 (months). Combine with --year to choose the year."
-            ),
-        ),
-    ),
+    year: int,
+    period: str,
 ) -> None:
     """Emit the cross-domain pipeline health report for one (filing_year, period) scope.
 
@@ -1128,13 +906,12 @@ def overview_pipeline(
     _emit_envelope(ctx, command="overview.pipeline", result=typed_result, lines=lines, notices=notices)
 
 
-for _callback in (
-    overview_status,
-    overview_calendar,
-    overview_agenda,
-    overview_backlog,
-    overview_explain,
-    overview_prepare,
-    overview_pipeline,
-):
-    command_execution_policy(CALCULATION_READ)(_callback)
+__all__ = [
+    "overview_agenda",
+    "overview_backlog",
+    "overview_calendar",
+    "overview_explain",
+    "overview_pipeline",
+    "overview_prepare",
+    "overview_status",
+]

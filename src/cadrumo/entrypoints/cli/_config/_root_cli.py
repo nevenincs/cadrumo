@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import typer
 
-from ....core.i18n import tr
 from .._common import _emit_envelope
 
 

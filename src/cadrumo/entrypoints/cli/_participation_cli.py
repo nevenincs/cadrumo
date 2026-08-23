@@ -16,14 +16,11 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 import typer
-from typer.core import TyperGroup
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.ledger import get_transaction_participation
-from ...core.i18n import tr
-from ._command_policy import command_execution_policy
 from ._common import _active_bucket_id_or_bad, _emit_envelope, _state, _tx_repo, emit_help_text
-from ._ledger_execution_policies import LEDGER_COMPUTE_WRITE, LEDGER_READ
+from ._ledger_read_cli import resolve_ledger_transaction_id
 
 if TYPE_CHECKING:
     from ._ledger_payloads import LedgerTransactionParticipationEntryPayload
@@ -31,62 +28,17 @@ if TYPE_CHECKING:
 ResolveTransactionId = Callable[[TransactionCatalogueRepository, str], str]
 
 
-def register_participation_commands(
-    app: typer.Typer,
-    *,
-    resolve_transaction_id: ResolveTransactionId,
-) -> None:
-    """Register the ``participation`` subgroup under ``aeat app ledger``.
-
-    The group callback handles ``participation <transaction-id>`` (the inverse
-    audit lookup); the ``rebuild`` subcommand calls
-    :func:`rebuild_participation_index`.
-    ``resolve_transaction_id`` canonicalises a possibly-abbreviated id for the
-    lookup verb.
-    """
-    participation = typer.Typer(
-        name="participation",
-        help=tr("Audit which finalized modelo revisions and filings consumed a ledger transaction."),
-        invoke_without_command=True,
-    )
-
-    @participation.callback(invoke_without_command=True)
-    @command_execution_policy(LEDGER_READ)
-    def participation_lookup(
-        ctx: typer.Context,
-        transaction_id: str | None = typer.Argument(
-            None,
-            help=tr("Ledger transaction id whose finalized-revision participations to list."),
-        ),
-    ) -> None:
-        """List finalized participations as a typed ledger participation payload."""
-        if ctx.invoked_subcommand is not None:
-            return
-        if transaction_id is None:
-            emit_help_text(ctx)
-            raise typer.Exit(code=0)
-        # ``invoke_without_command=True`` plus an optional positional makes Click
-        # bind a bare subcommand token (e.g. ``rebuild``) to ``transaction_id``
-        # instead of dispatching the subcommand. Detect a reserved subcommand
-        # name and forward to it so ``participation rebuild`` works while
-        # ``participation <id>`` keeps its documented lookup UX.
-        if transaction_id in _reserved_subcommand_names(participation):
-            command = typer.main.get_command(participation)
-            if not isinstance(command, TyperGroup):
-                raise typer.Exit(code=2)
-            subcommand = command.get_command(typer.Context(command), transaction_id)
-            if subcommand is None or subcommand.callback is None:
-                raise typer.Exit(code=2)
-            ctx.invoke(subcommand.callback)
-            return
-        _emit_participation_lookup(
-            ctx,
-            transaction_id=transaction_id,
-            resolve_transaction_id=resolve_transaction_id,
-        )
-
-    _register_rebuild_command(participation)
-    app.add_typer(participation, name="participation")
+def participation_lookup(ctx: typer.Context, transaction_id: str | None = None) -> None:
+    """List finalized participations as a typed ledger participation payload."""
+    if ctx.invoked_subcommand is not None:
+        return
+    if transaction_id is None:
+        emit_help_text(ctx)
+        raise typer.Exit(code=0)
+    if transaction_id == "rebuild":
+        participation_rebuild(ctx)
+        return
+    _emit_participation_lookup(ctx, transaction_id=transaction_id, resolve_transaction_id=resolve_ledger_transaction_id)
 
 
 def _reserved_subcommand_names(participation: typer.Typer) -> frozenset[str]:
@@ -173,34 +125,31 @@ def _participation_lines(
     return lines
 
 
-def _register_rebuild_command(participation: typer.Typer) -> None:
-    @participation.command("rebuild")
-    @command_execution_policy(LEDGER_COMPUTE_WRITE)
-    def participation_rebuild(ctx: typer.Context) -> None:
-        """Run :func:`rebuild_participation_index` for the active bucket."""
-        from ...application.modelo import rebuild_participation_index
-        from ._ledger_payloads import LedgerParticipationRebuildResult
+def participation_rebuild(ctx: typer.Context) -> None:
+    """Run :func:`rebuild_participation_index` for the active bucket."""
+    from ...application.modelo import rebuild_participation_index
+    from ._ledger_payloads import LedgerParticipationRebuildResult
 
-        bucket_id = _active_bucket_id_or_bad(_state())
-        stats = rebuild_participation_index(bucket_id=bucket_id)
-        _emit_envelope(
-            ctx,
-            command="ledger.participation.rebuild",
-            result=LedgerParticipationRebuildResult.model_validate(
-                {
-                    "transaction_count": stats.transaction_count,
-                    "participation_count": stats.participation_count,
-                    "revision_count": stats.revision_count,
-                    "stale_removed_count": stats.stale_removed_count,
-                },
-            ),
-            lines=[
-                f"transaction_count\t{stats.transaction_count}",
-                f"participation_count\t{stats.participation_count}",
-                f"revision_count\t{stats.revision_count}",
-                f"stale_removed_count\t{stats.stale_removed_count}",
-            ],
-        )
+    bucket_id = _active_bucket_id_or_bad(_state())
+    stats = rebuild_participation_index(bucket_id=bucket_id)
+    _emit_envelope(
+        ctx,
+        command="ledger.participation.rebuild",
+        result=LedgerParticipationRebuildResult.model_validate(
+            {
+                "transaction_count": stats.transaction_count,
+                "participation_count": stats.participation_count,
+                "revision_count": stats.revision_count,
+                "stale_removed_count": stats.stale_removed_count,
+            }
+        ),
+        lines=[
+            f"transaction_count\t{stats.transaction_count}",
+            f"participation_count\t{stats.participation_count}",
+            f"revision_count\t{stats.revision_count}",
+            f"stale_removed_count\t{stats.stale_removed_count}",
+        ],
+    )
 
 
 __all__ = ["register_participation_commands"]

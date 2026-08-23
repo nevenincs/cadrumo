@@ -39,7 +39,6 @@ from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.iva import StatedCountryCodeStatus
-from ._command_policy import command_execution_policy
 from ._common import _bad, _emit_envelope, _state, _tx_repo, resolve_notice_action
 from ._ledger_business_payloads import (
     EvidenceReviewBlockerPayload,
@@ -48,21 +47,6 @@ from ._ledger_business_payloads import (
     EvidenceReviewRowPayload,
     EvidenceReviewShowResult,
 )
-from ._ledger_execution_policies import LEDGER_READ, declare_metadata_group
-
-review_app = typer.Typer(
-    name="review",
-    help=tr("cli.app.ledger.evidence.review.group_help"),
-    no_args_is_help=True,
-)
-declare_metadata_group(review_app)
-
-
-def register_evidence_review_commands(evidence_app: typer.Typer) -> None:
-    """Mount and register the review verbs under ``evidence``."""
-    evidence_app.add_typer(review_app, name="review")
-    _register_review_list_command()
-    _register_review_show_command()
 
 
 def _printed(value: object | None) -> str | None:
@@ -429,73 +413,43 @@ def _review_queue_notices(rows: list[EvidenceReviewRowPayload]) -> list[Notice]:
     return notices
 
 
-def _register_review_list_command() -> None:
-    @review_app.command(
-        "list",
-        help=tr("cli.app.ledger.evidence.review.list_help"),
-    )
-    @command_execution_policy(LEDGER_READ)
-    def review_list(
-        ctx: typer.Context,
-        reason: ConfirmationBlockReason | None = typer.Option(
-            None,
-            "--reason",
-            help=tr("cli.app.ledger.evidence.review.reason_help"),
-        ),
-        finding: DraftDiscrepancyKind | None = typer.Option(
-            None,
-            "--finding",
-            help=tr("cli.app.ledger.evidence.review.finding_help"),
-        ),
-        advisory: ReviewAdvisoryKind | None = typer.Option(
-            None,
-            "--advisory",
-            help=tr("cli.app.ledger.evidence.review.advisory_help"),
-        ),
-        blocking_only: bool = typer.Option(
-            False,
-            "--blocking",
-            help=tr("cli.app.ledger.evidence.review.blocking_help"),
-        ),
-    ) -> None:
-        """List the review queue, optionally narrowed to one blocking reason, check or advisory."""
-        bucket_id = _tx_repo(_state()).bucket_id
-        document = load_extraction_drafts(bucket_id, load_settings())
-
+def review_list(
+    ctx: typer.Context,
+    reason: ConfirmationBlockReason | None = None,
+    finding: DraftDiscrepancyKind | None = None,
+    advisory: ReviewAdvisoryKind | None = None,
+    blocking_only: bool = False,
+) -> None:
+    """List the review queue, optionally narrowed to one blocking reason, check or advisory."""
+    bucket_id = _tx_repo(_state()).bucket_id
+    document = load_extraction_drafts(bucket_id, load_settings())
         filters: list[str] = []
-        if reason is not None:
-            filters.append(f"reason={reason.value}")
-        if finding is not None:
-            filters.append(f"finding={finding.value}")
-        if advisory is not None:
-            filters.append(f"advisory={advisory.value}")
-        if blocking_only:
-            filters.append("blocking=true")
+    if reason is not None:
+        filters.append(f"reason={reason.value}")
+    if finding is not None:
+        filters.append(f"finding={finding.value}")
+    if advisory is not None:
+        filters.append(f"advisory={advisory.value}")
+    if blocking_only:
+        filters.append("blocking=true")
+    rows = _review_queue_rows(document, reason=reason, finding=finding, advisory=advisory, blocking_only=blocking_only)
+    lines = [f"bucket_id\t{bucket_id}", f"pending\t{len(rows)}"]
+    lines.extend(
 
-        rows = _review_queue_rows(
-            document,
-            reason=reason,
-            finding=finding,
-            advisory=advisory,
-            blocking_only=blocking_only,
-        )
-
-        lines = [f"bucket_id\t{bucket_id}", f"pending\t{len(rows)}"]
-        lines.extend(
-            f"{row.evidence_reference}\t{row.blocking_count}\t{','.join(row.reasons) or '-'}\t{row.extractor}\t"
-            f"{row.advisory_count}\t{','.join(row.advisories) or '-'}"
+            f"{row.evidence_reference}\t{row.blocking_count}\t{','.join(row.reasons) or '-'}\t{row.extractor}\t{row.advisory_count}\t{','.join(row.advisories) or '-'}"
             for row in rows
-        )
-        notices = _review_queue_notices(rows)
-        _emit_envelope(
-            ctx,
-            command="ledger.evidence.review.list",
-            result=EvidenceReviewListResult.model_validate(
-                {"bucket_id": bucket_id, "filters": filters, "rows": [row.model_dump(mode="json") for row in rows]},
-            ),
-            lines=lines,
-            notices=notices,
-        )
+
+    )
+    notices = _review_queue_notices(rows)
+    _emit_envelope(
+        ctx,
+        command="ledger.evidence.review.list",
+        result=EvidenceReviewListResult.model_validate(
+            {"bucket_id": bucket_id, "filters": filters, "rows": [row.model_dump(mode="json") for row in rows]}
+        ),
+        lines=lines,
+        notices=notices,
+    )
 
 
 def _stored_draft_for_reference(document: ExtractionDraftDocument, reference: str) -> StoredExtractionDraft:
@@ -530,76 +484,61 @@ def _review_show_advisories(draft: InvoiceDraft) -> tuple[list[Notice], list[str
     return notices, lines
 
 
-def _register_review_show_command() -> None:
-    @review_app.command(
-        "show",
-        help=tr("cli.app.ledger.evidence.review.show_help"),
-    )
-    @command_execution_policy(LEDGER_READ)
-    def review_show(
-        ctx: typer.Context,
-        reference: str = typer.Argument(
-            ...,
-            help=tr("cli.app.ledger.evidence.review.reference_help"),
-        ),
-    ) -> None:
-        """Show every reviewable field of one pending draft, with its blocking findings."""
-        bucket_id = _tx_repo(_state()).bucket_id
-        document = load_extraction_drafts(bucket_id, load_settings())
-        stored = _stored_draft_for_reference(document, reference)
+def review_show(ctx: typer.Context, reference: str = ...) -> None:
+    """Show every reviewable field of one pending draft, with its blocking findings."""
+    bucket_id = _tx_repo(_state()).bucket_id
+    document = load_extraction_drafts(bucket_id, load_settings())
+    stored = _stored_draft_for_reference(document, reference)
+    draft = stored.draft
+    blockers = confirmation_blockers(draft)
+    fields = _field_payloads(draft)
+    payload = {
+        "bucket_id": bucket_id,
+        "evidence_reference": stored.evidence_reference,
+        "extractor": stored.extractor,
+        "drafted_at": stored.drafted_at.isoformat(),
+        "transcription_sha256": draft.transcription_sha256,
+        "suggested_kind": draft.suggested_kind.value if draft.suggested_kind is not None else None,
+        "suggested_kind_basis": _suggested_kind_basis(draft),
+        "fields": [row.model_dump(mode="json") for row in fields],
+        "discrepancies": [finding.model_dump(mode="json") for finding in draft.discrepancies],
+        "blockers": [_blocker_payload(blocker).model_dump(mode="json") for blocker in blockers],
+    }
+    lines = [
+        f"bucket_id\t{bucket_id}",
+        f"evidence_reference\t{stored.evidence_reference}",
+        f"extractor\t{stored.extractor}",
+        f"drafted_at\t{stored.drafted_at.isoformat()}",
+        f"transcription_sha256\t{draft.transcription_sha256 or '-'}",
+        f"suggested_kind\t{(draft.suggested_kind.value if draft.suggested_kind is not None else '-')}",
+    ]
+    lines.extend(
 
-        draft = stored.draft
-        blockers = confirmation_blockers(draft)
-        fields = _field_payloads(draft)
-        payload = {
-            "bucket_id": bucket_id,
-            "evidence_reference": stored.evidence_reference,
-            "extractor": stored.extractor,
-            "drafted_at": stored.drafted_at.isoformat(),
-            "transcription_sha256": draft.transcription_sha256,
-            "suggested_kind": draft.suggested_kind.value if draft.suggested_kind is not None else None,
-            "suggested_kind_basis": _suggested_kind_basis(draft),
-            "fields": [row.model_dump(mode="json") for row in fields],
-            "discrepancies": [finding.model_dump(mode="json") for finding in draft.discrepancies],
-            "blockers": [_blocker_payload(blocker).model_dump(mode="json") for blocker in blockers],
-        }
-        lines = [
-            f"bucket_id\t{bucket_id}",
-            f"evidence_reference\t{stored.evidence_reference}",
-            f"extractor\t{stored.extractor}",
-            f"drafted_at\t{stored.drafted_at.isoformat()}",
-            f"transcription_sha256\t{draft.transcription_sha256 or '-'}",
-            f"suggested_kind\t{draft.suggested_kind.value if draft.suggested_kind is not None else '-'}",
-        ]
-        lines.extend(
             f"field\t{row.field}\t{row.value or '-'}\t{row.origin or '-'}\t{row.grounding or '-'}\t{row.anchor or '-'}"
             for row in fields
-        )
-        lines.extend(
-            f"blocker\t{blocker.blocker_id}\t{blocker.reason.value}\t{blocker.field or '-'}" for blocker in blockers
-        )
-        notices, advisory_lines = _review_show_advisories(draft)
-        lines.extend(advisory_lines)
-        if blockers:
-            notices.append(
-                Notice(
-                    severity=NoticeSeverity.WARNING,
-                    code="ledger.evidence.review.blocked",
-                    message=tr(
-                        "cli.app.ledger.evidence.review.blocked_message",
-                    ),
-                    context={
-                        "blocker_ids": ",".join(blocker.blocker_id for blocker in blockers),
-                    },
-                ),
+
+    )
+    lines.extend(
+        f"blocker\t{blocker.blocker_id}\t{blocker.reason.value}\t{blocker.field or '-'}" for blocker in blockers
+    )
+    notices, advisory_lines = _review_show_advisories(draft)
+    lines.extend(advisory_lines)
+    if blockers:
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="ledger.evidence.review.blocked",
+                message=tr("cli.app.ledger.evidence.review.blocked_message"),
+                context={"blocker_ids": ",".join(blocker.blocker_id for blocker in blockers)},
             )
-        _emit_envelope(
-            ctx,
-            command="ledger.evidence.review.show",
-            result=EvidenceReviewShowResult.model_validate(payload),
-            lines=lines,
-            notices=notices,
         )
+    _emit_envelope(
+        ctx,
+        command="ledger.evidence.review.show",
+        result=EvidenceReviewShowResult.model_validate(payload),
+        lines=lines,
+        notices=notices,
+    )
 
 
 _RESOLUTION_ACTION_TOKENS: dict[str, FindingResolutionAction] = {
