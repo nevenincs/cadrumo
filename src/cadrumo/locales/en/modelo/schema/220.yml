@@ -86,6 +86,145 @@ modelo:
             x-agp34c1g6l0j0c1q60o3ac1g:
               label: Statement of recognised consolidated income and expense. Consolidated
                 result for the year
+            x-agp34c1g6l0j0c9q60o34dpj:
+              label: Consolidated statement of recognised income and expense for the
+                year. Other comprehensive income
+            x-agp34c1g6l0j0c9q60o34dpk:
+              label: Consolidated statement of recognised income and expense for the
+                year. Items that will not be reclassified to profit or loss
+            x-agp34c1g6l0j0c9q60o34dpl:
+              label: Consolidated statement of recognised income and expense for the
+                year. Actuarial gains or (-) losses on defined benefit pension plans
+            x-agp34c1g6l0j0c9q60o34dpm:
+              label: Consolidated statement of recognised income and expense for the
+                year. Non-current assets and disposal groups classified as held for
+                sale
+            x-agp34c1g6l0j0c9q60o34dpn:
+              label: Consolidated statement of recognised income and expense for the
+                year. Share of other recognised income and expense of investments
+                in joint ventures and associates
+            x-agp34c1g6l0j0c9q60o34dpp:
+              label: Consolidated statement of recognised income and expense for the
+                year. Income tax relating to items that will not be reclassified
+            x-agp34c1g6l0j0c9q60o34e1g:
+              label: Consolidated statement of recognised income and expense for the
+                year. Items that may be reclassified to profit or loss
+            x-agp34c1g6l0j0c9q60o34e1h:
+              label: Consolidated statement of recognised income and expense for the
+                year. Hedge of net investments in foreign operations [effective portion]
+            x-agp34c1g6l0j0c9q60o34e1i:
+              label: Consolidated statement of recognised income and expense for the
+                year. Valuation gains or (-) losses recognised in equity
+            x-agp34c1g6l0j0c9q60o34e1j:
+              label: Consolidated statement of recognised income and expense for the
+                year. Transferred to profit or loss
+            x-agp34c1g6l0j0c9q60o34e1k:
+              label: Consolidated statement of recognised income and expense for the
+                year. Other reclassifications
+            x-agp34c1g6l0j0c9q60o34e1l:
+              label: Consolidated statement of recognised income and expense for the
+                year. Currency translation
+            x-agp34c1g6l0j0c9q60o34e1m:
+              label: Consolidated statement of recognised income and expense for the
+                year. Foreign exchange gains or (-) losses recognised in equity
+            x-agp34c1g6l0j0c9q60o34e1n:
+              label: Consolidated statement of recognised income and expense for the
+                year. Transferred to profit or loss
+            x-agp34c1g6l0j0c9q60o34e1o:
+              label: Consolidated statement of recognised income and expense for the
+                year. Other reclassifications
+            x-agp34c1g6l0j0c9q60o34e1p:
+              label: Consolidated statement of recognised income and expense for the
+                year. Cash flow hedges [effective portion]
+            x-agp34c1g6l0j0c9q60o34e9g:
+              label: Consolidated statement of recognised income and expense for the
+                year. Valuation gains or (-) losses recognised in equity
+            x-agp34c1g6l0j0c9q60o34e9h:
+              label: Consolidated statement of recognised income and expense for the
+                year. Transferred to profit or loss
+            x-agp34c1g6l0j0c9q60o34e9i:
+              label: Consolidated statement of recognised income and expense for the
+                year. Transferred to the initial carrying amount of the hedged items
+            x-agp34c1g6l0j0c9q60o34e9j:
+              label: Consolidated statement of recognised income and expense for the
+                year. Other reclassifications
+            x-agp34c1g6l0j0c9q60o34e9o:
+              label: Consolidated statement of recognised income and expense for the
+                year. Non-current assets and disposal groups classified as held for
+                sale
+            x-agp34c1g6l0j0c9q60o34e9p:
+              label: Consolidated statement of recognised income and expense for the
+                year. Valuation gains or (-) losses recognised in equity
+            x-agp34c1g6l0j0c9q60o36c1g:
+              label: Consolidated statement of recognised income and expense for the
+                year. Transferred to profit or loss
+            x-agp34c1g6l0j0c9q60o36c1h:
+              label: Consolidated statement of recognised income and expense for the
+                year. Other reclassifications
+            x-agp34c1g6l0j0c9q60o36c1i:
+              label: Consolidated statement of recognised income and expense for the
+                year. Income tax relating to items that may be reclassified to profit
+                or (-) loss
+            x-agp34c1g6l0j0c9q60o36c1j:
+              label: Consolidated statement of recognised income and expense for the
+                year. Total comprehensive income for the year
+            x-agp34c1g6l0j0c9q60o36c1k:
+              label: Consolidated statement of recognised income and expense for the
+                year. Attributable to minority interests (non-controlling interests)
+            x-agp34c1g6l0j0c9q60o36c1l:
+              label: Consolidated statement of recognised income and expense for the
+                year. Attributable to the owners of the parent
+            x-agp34c1g6l0j0c9q60o36c1m:
+              label: Consolidated statement of recognised income and expense for the
+                year. Share of other recognised income and expense of the investments
+                in joint ventures and associates
+            x-agp34c1g6l0j0c9q60o3ac1g:
+              label: Consolidated statement of recognised income and expense for the
+                year. Consolidated result for the year
+            x-agp34c1g6l0j0c9q60o3cd1n:
+              label: Consolidated statement of recognised income and expense for the
+                year. Changes in the fair value of equity instruments measured at
+                fair value through other comprehensive income
+            x-agp34c1g6l0j0c9q60o3cd1o:
+              label: Consolidated statement of recognised income and expense for the
+                year. Net gains or (-) losses from hedge accounting of equity instruments
+                measured at fair value through other comprehensive income
+            x-agp34c1g6l0j0c9q60o3cd1p:
+              label: Consolidated statement of recognised income and expense for the
+                year. Changes in the fair value of equity instruments measured at
+                fair value through other comprehensive income (hedged item)
+            x-agp34c1g6l0j0c9q60o3cd9g:
+              label: Consolidated statement of recognised income and expense for the
+                year. Changes in the fair value of equity instruments measured at
+                fair value through other comprehensive income (hedging instrument)
+            x-agp34c1g6l0j0c9q60o3cd9h:
+              label: Consolidated statement of recognised income and expense for the
+                year. Changes in the fair value of financial liabilities at fair value
+                through profit or loss attributable to changes in credit risk
+            x-agp34c1g6l0j0c9q60o3cd9i:
+              label: Consolidated statement of recognised income and expense for the
+                year. Hedging instruments [non-designated items]
+            x-agp34c1g6l0j0c9q60o3cd9j:
+              label: Consolidated statement of recognised income and expense for the
+                year. Valuation gains or (-) losses recognised in equity
+            x-agp34c1g6l0j0c9q60o3cd9k:
+              label: Consolidated statement of recognised income and expense for the
+                year. Transferred to profit or loss
+            x-agp34c1g6l0j0c9q60o3cd9l:
+              label: Consolidated statement of recognised income and expense for the
+                year. Other reclassifications
+            x-agp34c1g6l0j0c9q60o3cd9m:
+              label: Consolidated statement of recognised income and expense for the
+                year. Debt instruments at fair value through other comprehensive income
+            x-agp34c1g6l0j0c9q60o3cd9n:
+              label: Consolidated statement of recognised income and expense for the
+                year. Valuation gains or (-) losses recognised in equity
+            x-agp34c1g6l0j0c9q60o3cd9o:
+              label: Consolidated statement of recognised income and expense for the
+                year. Transferred to profit or loss
+            x-agp34c1g6l0j0c9q60o3cd9p:
+              label: Consolidated statement of recognised income and expense for the
+                year. Other reclassifications
             x-agp34c1g6t230c1q60o30e1g:
               label: 'Other corrections to the sum of taxable bases: elimination of
                 non-exempt internal dividends of the tax group. Total'

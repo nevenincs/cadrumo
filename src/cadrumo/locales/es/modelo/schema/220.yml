@@ -93,6 +93,156 @@ modelo:
             x-agp34c1g6l0j0c1q60o3ac1g:
               label: Estado de ingresos y gastos consolidados reconocidos. Resultado
                 consolidado del ejercicio
+            x-agp34c1g6l0j0c9q60o34dpj:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Otro resultado global
+            x-agp34c1g6l0j0c9q60o34dpk:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Elementos que no se reclasificaran en resultados
+            x-agp34c1g6l0j0c9q60o34dpl:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Ganancias o (-) perdidas actuariales en planes de pensiones de prestaciones
+                definidas
+            x-agp34c1g6l0j0c9q60o34dpm:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Activos no corrientes y grupos enajenables de elementos mantenidos
+                para la venta
+            x-agp34c1g6l0j0c9q60o34dpn:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Participacion en otros ingresos y gastos reconocidos de inversiones
+                en negocios conjuntos y asociadas
+            x-agp34c1g6l0j0c9q60o34dpp:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Impuesto sobre las ganancias relativo a los elementos que no se reclasificaran
+            x-agp34c1g6l0j0c9q60o34e1g:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Elementos que pueden reclasificarse en resultados
+            x-agp34c1g6l0j0c9q60o34e1h:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Cobertura de inversiones netas en negocios en el extranjero [parte
+                eficaz]
+            x-agp34c1g6l0j0c9q60o34e1i:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Ganancias o (-) perdidas de valor contabilizadas en el patrimonio
+                neto
+            x-agp34c1g6l0j0c9q60o34e1j:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Transferido a resultados
+            x-agp34c1g6l0j0c9q60o34e1k:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Otras reclasificaciones
+            x-agp34c1g6l0j0c9q60o34e1l:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Conversion de divisas
+            x-agp34c1g6l0j0c9q60o34e1m:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Ganancias o (-) perdidas por cambio de divisas contabilizadas en el
+                patrimonio neto
+            x-agp34c1g6l0j0c9q60o34e1n:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Transferido a resultados
+            x-agp34c1g6l0j0c9q60o34e1o:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Otras reclasificaciones
+            x-agp34c1g6l0j0c9q60o34e1p:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Coberturas de flujos de efectivo [parte eficaz]
+            x-agp34c1g6l0j0c9q60o34e9g:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Ganancias o (-) perdidas de valor contabilizadas en el patrimonio
+                neto
+            x-agp34c1g6l0j0c9q60o34e9h:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Transferido a resultados
+            x-agp34c1g6l0j0c9q60o34e9i:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Transferido al importe en libros inicial de los elementos cubiertos
+            x-agp34c1g6l0j0c9q60o34e9j:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Otras reclasificaciones
+            x-agp34c1g6l0j0c9q60o34e9o:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Activos no corrientes y grupos enajenables de elementos mantenidos
+                para la venta
+            x-agp34c1g6l0j0c9q60o34e9p:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Ganancias o (-) perdidas de valor contabilizadas en el patrimonio
+                neto
+            x-agp34c1g6l0j0c9q60o36c1g:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Transferido a resultados
+            x-agp34c1g6l0j0c9q60o36c1h:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Otras reclasificaciones
+            x-agp34c1g6l0j0c9q60o36c1i:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Impuesto sobre las ganancias relativo a los elementos que pueden reclasificarse
+                en ganancias o (-) perdidas
+            x-agp34c1g6l0j0c9q60o36c1j:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Resultado global total del ejercicio
+            x-agp34c1g6l0j0c9q60o36c1k:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Atribuible a intereses minoritarios (participaciones no dominantes)
+            x-agp34c1g6l0j0c9q60o36c1l:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Atribuible a los propietarios de la dominante
+            x-agp34c1g6l0j0c9q60o36c1m:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Participacion en otros ingresos y gastos reconocidos de las inversiones
+                en negocios conjuntos y asociadas
+            x-agp34c1g6l0j0c9q60o3ac1g:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Resultado consolidado del ejercicio
+            x-agp34c1g6l0j0c9q60o3cd1n:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Cambios del valor razonable de los instrumentos de patrimonio valorados
+                a valor razonable con cambios en otro resultado global
+            x-agp34c1g6l0j0c9q60o3cd1o:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Ganancias o (-) perdidas resultantes de la contabilidad de coberturas
+                de instrumentos de patrimonio valorados a valor razonable con cambios
+                en otro resultado global, netas
+            x-agp34c1g6l0j0c9q60o3cd1p:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Cambios del valor razonable de los instrumentos de patrimonio valorados
+                a valor razonable con cambios en otro resultado global (elemento cubierto)
+            x-agp34c1g6l0j0c9q60o3cd9g:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Cambios del valor razonable de los instrumentos de patrimonio valorados
+                a valor razonable con cambios en otro resultado global (instrumento
+                de cobertura)
+            x-agp34c1g6l0j0c9q60o3cd9h:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Cambios del valor razonable de los pasivos financieros a valor razonable
+                con cambios en resultados atribuibles a cambios en el riesgo de credito
+            x-agp34c1g6l0j0c9q60o3cd9i:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Instrumentos de cobertura [elementos no designados]
+            x-agp34c1g6l0j0c9q60o3cd9j:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Ganancias o (-) perdidas de valor contabilizadas en el patrimonio
+                neto
+            x-agp34c1g6l0j0c9q60o3cd9k:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Transferido a resultados
+            x-agp34c1g6l0j0c9q60o3cd9l:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Otras reclasificaciones
+            x-agp34c1g6l0j0c9q60o3cd9m:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Instrumentos de deuda a valor razonable con cambios en otro resultado
+                global
+            x-agp34c1g6l0j0c9q60o3cd9n:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Ganancias o (-) perdidas de valor contabilizadas en el patrimonio
+                neto
+            x-agp34c1g6l0j0c9q60o3cd9o:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Transferido a resultados
+            x-agp34c1g6l0j0c9q60o3cd9p:
+              label: Estado de ingresos y gastos reconocidos consolidado en el ejercicio.
+                Otras reclasificaciones
             x-agp34c1g6t230c1q60o30e1g:
               label: 'Otras correcciones a la suma de bases imponibles: eliminacion
                 de dividendos internos no exentos del grupo fiscal. Total'
