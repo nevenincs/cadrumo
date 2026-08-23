@@ -33,8 +33,8 @@ non-permissive licences and are disclosed here explicitly:
   installed `ofx` extra (a container image, a frozen binary, a vendored
   bundle) must comply with the GPL-3.0 for the combined work. This project
   itself ships no such combined artifact: the PyPI wheels contain no
-  third-party code, and the MCP bundle launches the CLI via `uvx`, resolving
-  dependencies on the user's machine.
+  third-party code, and optional dependencies are resolved on the user's
+  machine.
 - **pikepdf** — MPL-2.0 (https://github.com/pikepdf/pikepdf), used for PDF
   sanitisation. MPL-2.0 is a file-level licence; it imposes obligations only
   on modified MPL-covered files, none of which this project modifies or
