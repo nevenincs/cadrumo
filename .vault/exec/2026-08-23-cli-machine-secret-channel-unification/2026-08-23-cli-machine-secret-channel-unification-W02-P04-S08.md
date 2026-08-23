@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:595bbe3e5063f322ff64d0b02bb8c0623bda5f31f0894bc1865f7c90c0ec30f8'
+body_hash: 'sha256:6d317903c52c32b2c27d2036b7ee6e29b19101a6888687cb0ce66771651aa3b1'
 step_id: 'S08'
 related:
   - "[[2026-08-23-cli-machine-secret-channel-unification-plan]]"
@@ -53,3 +53,9 @@ passed. A direct file-only basedpyright invocation reports the longstanding
 private-import diagnostic for `_emit_envelope`, an untouched pre-existing line;
 the change introduced no type diagnostic. No declaration tuple required editing
 because the landed command specification already carries both canonical flags.
+
+Post-landing review identified and closed one LOW narrative drift: the module
+had claimed that the CLI compared confirmation locally, although it correctly
+forwards both values to the application authority. The corrected comment now
+describes that single authoritative comparison without changing behavior.
+Focused rotation integration, Ruff, and Vault checks passed after remediation.

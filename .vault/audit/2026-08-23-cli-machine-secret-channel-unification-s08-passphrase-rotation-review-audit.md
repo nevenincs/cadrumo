@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:3f9b67581ebdf5aa0245e068a7f974e31314a1f08d5369fe2eeafb6723e06560'
+body_hash: 'sha256:76dfd619dd69da04e1837e049a0ef78c4ee769bfab60f493792d462218ef194c'
 related:
   - "[[2026-08-23-cli-machine-secret-channel-unification-plan]]"
 ---
@@ -48,3 +48,11 @@ then proves the current credential before mutation. Focused execution passed wit
 - Keep real inherited-descriptor rotation and cross-process leak coverage assigned to S13-S14;
   the shared reader tests prove descriptor lifecycle mechanics, while S08's existing integration
   path proves stdin rotation and wrong-current non-mutation.
+
+### Remediation closure
+
+The LOW documentation finding is closed at current HEAD. The module narrative now states the
+actual responsibility boundary: the CLI collects and forwards the confirmation in its strict
+payload, and the application rotation authority performs the mandatory comparison for every
+caller. No executable path changed. Focused Ruff and rotation integration checks passed, and the
+feature-scoped Vault check retained only unrelated in-progress record warnings.

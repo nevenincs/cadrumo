@@ -12,9 +12,9 @@ in shell history, and in any supervisor's log of the invocation -- the whole
 point of rotating a credential is defeated if the new one is published in the
 act of setting it.
 
-The confirmation is compared here AND again in the application authority. That
-is not redundant: this surface is one caller among several, and a rotation
-reached by any other route must not be able to skip the check.
+The CLI collects and forwards the confirmation as part of the strict payload.
+The application rotation authority performs the mandatory comparison so every
+caller, not only this surface, is subject to the same check.
 """
 
 from __future__ import annotations
