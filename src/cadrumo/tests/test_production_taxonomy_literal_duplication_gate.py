@@ -88,14 +88,12 @@ grammar (the adapter-layer, filename-level registry) -- both are genuinely
 
 Precision, measured rather than assumed
 -----------------------------------------
-On the current tree: **2 pairwise value-collisions, 4 sites, both verified
-homonyms** -- ``"live"`` (``MountedCommandDomain.LIVE``, which CLI verb group
-a command mounts under, versus ``CallTier.LIVE``, an MCP command's timeout
-tier) and ``"financial"`` (``SensitivityClass.FINANCIAL``, a data
+On the current product tree, ``"financial"`` is the one verified homonym:
+``SensitivityClass.FINANCIAL``, a data
 classification, versus ``SpendingCategory.FINANCIAL``, an IRPF deduction
 category) -- two unrelated closed axes each independently choosing the same
 English word, not an unmigrated storage-path duplicate. Zero genuine
-duplicates remain at this scope beyond the two already fixed. That is a small
+duplicates remain at this scope beyond the fixes already made. That is a small
 enough exception surface, on a real found bug class, to be worth gating on.
 """
 
@@ -143,14 +141,6 @@ too, added deliberately -- not discovered by this gate reddening on it.
 
 HOMONYM_EXCEPTIONS: Final[frozenset[tuple[str, str]]] = frozenset(
     {
-        ("application/operator_surface/_models.py", "live"),
-        ("cadrumo_harness/mcp/_call_runtime.py", "live"),
-        # MountedCommandDomain.LIVE (StrEnum) -- which CLI verb GROUP a
-        # command is mounted under (``aeat app live ...``). CallTier.LIVE
-        # (StrEnum) -- the wall-clock timeout tier an MCP command runs under
-        # (READ / MUTATE / LIVE, where LIVE means "may reach the AEAT sede
-        # and take minutes"). Two unrelated closed axes, same English word,
-        # neither is a directory.
         ("core/classification/__init__.py", "financial"),
         ("domain/categories/_spending_category.py", "financial"),
         # SensitivityClass.FINANCIAL (StrEnum) -- a data-classification axis

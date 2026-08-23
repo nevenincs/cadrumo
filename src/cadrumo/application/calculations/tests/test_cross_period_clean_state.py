@@ -215,6 +215,21 @@ def test_cross_period_requirements_include_relation_rollups(tmp_path: Path) -> N
     assert set(relation_requirement.source_refs) == set(source_relation.source_refs)
 
 
+def test_cross_period_requirements_preserve_previous_filing_presence_policy() -> None:
+    snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
+    binding = next(
+        binding for binding in snapshot.revision.bindings if binding.id == "irpf.previous_year_economic_activity_net_income"
+    )
+    requirement = next(
+        requirement
+        for requirement in cross_period_dependency_requirements(snapshot)
+        if requirement.origin_ids == (binding.id,)
+    )
+
+    assert requirement.required_source_casilla_ids == ()
+    assert requirement.source_presence_groups == (requirement.source_casilla_ids,)
+
+
 def test_cross_period_dependency_inventory_covers_declared_2026_target_modelos(
     tmp_path: Path,
 ) -> None:

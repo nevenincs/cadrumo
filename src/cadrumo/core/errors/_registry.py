@@ -100,7 +100,7 @@ class ErrorCode(BaseModel):
     succeed until something else changes -- a different argument, an operator
     action, a state that only another command can create.
 
-    This is not decoration. The operator of this CLI is an autonomous agent,
+    This is not decoration. A caller of this CLI may be non-interactive,
     and this field is the instruction it acts on, so "retryable" on a
     permanently-failing call is an invitation to loop with no terminating
     condition. The field carried no stated meaning for a long time, and a

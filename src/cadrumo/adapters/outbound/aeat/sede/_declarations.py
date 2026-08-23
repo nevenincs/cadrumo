@@ -51,6 +51,7 @@ from .....domain.calculations.registry import (
     previous_filing_observation_requirements,
     registry_snapshot_id,
     relation_source_requirements,
+    source_presence_gaps,
 )
 from .._html import parse_html
 from .._playwright import BrowserContext, Page, Playwright, PlaywrightError
@@ -1346,11 +1347,21 @@ async def capture_previous_filing_observations(
             observation = await register.capture_observation(declaration, artefact_sink=artefact_sink)
             observation = _with_derived_303_compensation_available_observation(observation)
             observed_casillas: set[CasillaId] = {casilla.casilla_id for casilla in observation.casillas}
-            missing = sorted(set(requirement.enforced_source_casilla_ids).difference(observed_casillas))
+            missing, missing_presence_groups = source_presence_gaps(
+                required_source_casilla_ids=requirement.enforced_source_casilla_ids,
+                source_presence_groups=requirement.source_presence_groups,
+                observed_source_casilla_ids=observed_casillas,
+            )
             if missing:
                 raise SedeParseError(
                     f"previous-filing requirement {requirement.source_modelo!r}/"
                     f"{requirement.filing_year}/{source_period!r} missing observed casillas {missing!r}",
+                )
+            if missing_presence_groups:
+                raise SedeParseError(
+                    f"previous-filing requirement {requirement.source_modelo!r}/"
+                    f"{requirement.filing_year}/{source_period!r} is missing required source-presence groups "
+                    f"{list(missing_presence_groups)!r}",
                 )
             observations.append(observation)
     return tuple(observations)

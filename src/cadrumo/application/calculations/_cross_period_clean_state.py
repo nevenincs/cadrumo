@@ -30,6 +30,7 @@ from ...domain.calculations.registry import (
     ValidatedRegistryAuthority,
     previous_filing_observation_requirements,
     relation_source_requirements,
+    source_presence_gaps,
 )
 from ...domain.justificante import Justificante
 from ...domain.modelos import (
@@ -587,6 +588,7 @@ def _requirements_from_previous_filing(
         period=Period.from_year_and_code(requirement.filing_year, source_period),
         source_casilla_ids=requirement.source_casilla_ids,
         required_source_casilla_ids=requirement.required_source_casilla_ids,
+        source_presence_groups=requirement.source_presence_groups,
         origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
         origin_ids=requirement.binding_ids,
         legal_refs=requirement.legal_refs,
@@ -788,14 +790,22 @@ def _resolve_observation_values(
     blockers: list[CrossPeriodCleanStateBlocker] = []
     observation_source_kind: ObservationSourceKind | None = None
     observation_values: dict[CasillaId, object] = {}
+
+    def _is_missing_declared_source(values: Mapping[CasillaId, object]) -> bool:
+        missing_required, missing_groups = source_presence_gaps(
+            required_source_casilla_ids=requirement.enforced_source_casilla_ids,
+            source_presence_groups=requirement.source_presence_groups,
+            observed_source_casilla_ids=values,
+        )
+        return bool(missing_required or missing_groups)
+
     if requirement.requires_member_fan_in and value_member_payloads:
         observation_source_kind = _combined_source_kind(item.source_kind for item in value_member_payloads)
         if any(item.source_kind is ObservationSourceKind.OPERATOR_MANUAL for item in value_member_payloads):
             blockers.append(CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE)
         for item in value_member_payloads:
-            for casilla_id in requirement.enforced_source_casilla_ids:
-                if casilla_id not in item.observation.casilla_values:
-                    blockers.append(CrossPeriodCleanStateBlocker.MISSING_OBSERVED_CASILLA)
+            if _is_missing_declared_source(item.observation.casilla_values):
+                blockers.append(CrossPeriodCleanStateBlocker.MISSING_OBSERVED_CASILLA)
     elif payload is None:
         blockers.append(CrossPeriodCleanStateBlocker.MISSING_OBSERVATION)
     else:
@@ -803,9 +813,8 @@ def _resolve_observation_values(
         observation_values = dict(payload.observation.casilla_values)
         if payload.source_kind is ObservationSourceKind.OPERATOR_MANUAL:
             blockers.append(CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE)
-        for casilla_id in requirement.enforced_source_casilla_ids:
-            if casilla_id not in observation_values:
-                blockers.append(CrossPeriodCleanStateBlocker.MISSING_OBSERVED_CASILLA)
+        if _is_missing_declared_source(observation_values):
+            blockers.append(CrossPeriodCleanStateBlocker.MISSING_OBSERVED_CASILLA)
     return observation_source_kind, observation_values, blockers
 
 

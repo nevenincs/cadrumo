@@ -10,9 +10,10 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, model_validator
 
 from ....core import CasillaId, Modelo, validated_casilla_id
+from ....core.aggregation import BindingAggregationOp
 from ._binding_selector_utils import selector_against_model
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition
@@ -40,7 +41,7 @@ _INVENTORY_DESTINATION_BY_OPERATION: dict[InventoryProjectionOperation, CasillaI
 
 
 class _InventorySelector(BaseModel):
-    """One approved inventory fact projected at taxpayer/year/activity grain.
+    """One immutable operation template expanded over runtime activity rows.
 
     ``complete_acquisition_cost`` names the legally complete acquisition-cost
     fact, never the existing IVA-exclusive purchase subtotal. The two stock
@@ -50,19 +51,21 @@ class _InventorySelector(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    modelo: Literal[Modelo.M100] = Modelo.M100
-    filing_year: Literal[2025] = 2025
-    projection_grain: Literal["taxpayer_year_activity"] = "taxpayer_year_activity"
-    actividad_id: str = Field(min_length=1)
-    operation: InventoryProjectionOperation
+    modelo: Literal[Modelo.M100]
+    filing_year: Literal[2025]
+    projection_grain: Literal["taxpayer_year_activity"]
+    fact: Literal["row_field"]
+    record: Literal["inventory_activity"]
+    grouping: Literal["per_inventory_activity"]
+    row_field: InventoryProjectionOperation
     target_casilla_id: CasillaId
 
     @model_validator(mode="after")
     def _require_operation_destination_identity(self) -> _InventorySelector:
-        expected = _INVENTORY_DESTINATION_BY_OPERATION[self.operation]
+        expected = _INVENTORY_DESTINATION_BY_OPERATION[self.row_field]
         if self.target_casilla_id != expected:
             raise RegistryValidationError(
-                f"inventory operation {self.operation!r} must target casilla {expected!r}, "
+                f"inventory operation {self.row_field!r} must target casilla {expected!r}, "
                 f"not {self.target_casilla_id!r}",
             )
         return self
@@ -73,7 +76,10 @@ InventorySelector = _InventorySelector
 
 def validate_inventory_binding(binding: DataBindingDefinition) -> list[str]:
     """Validate an inventory selector while preserving field diagnostics."""
-    return selector_against_model(binding, _InventorySelector)
+    failures = selector_against_model(binding, _InventorySelector)
+    if binding.aggregation is None or binding.aggregation.op is not BindingAggregationOp.ROWS:
+        failures.append(f"binding {binding.id!r} inventory operation template requires aggregation op 'rows'")
+    return failures
 
 
 __all__ = [

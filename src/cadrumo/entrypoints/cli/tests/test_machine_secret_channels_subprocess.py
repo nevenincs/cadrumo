@@ -41,6 +41,7 @@ _PROFILE_SECRET = "s13-profile-passphrase-that-must-never-escape"  # noqa: S105
 _NEW_PROFILE_SECRET = "s13-new-profile-passphrase-that-must-never-escape"  # noqa: S105
 _CERTIFICATE_SECRET = "s13-certificate-passphrase-that-must-never-escape"  # noqa: S105
 _REFUSAL_SECRET = "s14-refusal-secret-that-must-never-escape"  # noqa: S105
+_OVERSIZE_SECRET = "s14-oversize-secret-that-must-never-escape"  # noqa: S105
 _ALL_SECRETS = (_PROFILE_SECRET, _NEW_PROFILE_SECRET, _CERTIFICATE_SECRET, _REFUSAL_SECRET)
 _PROMPTS = (
     "profile passphrase:",
@@ -244,6 +245,7 @@ def _run(
     output_language: str = "en",
     assert_unread_indices: Sequence[int] = (),
     assert_stdin_unread: bool = False,
+    unread_payload: str = _REFUSAL_SECRET,
 ) -> subprocess.CompletedProcess[str]:
     """Run the real CLI, mapping payload pipes to argv ``{fd}`` tokens."""
     if inherited_payloads and os.name == "nt":
@@ -258,6 +260,7 @@ def _run(
             output_language=output_language,
             assert_descriptors_unread=bool(assert_unread_indices),
             assert_stdin_unread=assert_stdin_unread,
+            unread_payload=unread_payload,
         )
     readers: list[int] = []
     writers: list[int] = []
@@ -294,7 +297,7 @@ def _run(
             "assert_dispatch_state_unchanged": assert_dispatch_state_unchanged,
             "assert_unread_descriptors": [readers[index] for index in assert_unread_indices],
             "assert_stdin_unread": assert_stdin_unread,
-            "assert_unread_payload": _REFUSAL_SECRET,
+            "assert_unread_payload": unread_payload,
         }
         return subprocess.run(  # noqa: S603 - fixed interpreter plus test-owned argv
             [sys.executable, "-c", _HARNESS, json.dumps(payload), *rendered_args],
@@ -336,6 +339,7 @@ def _run_windows_handles(
     output_language: str,
     assert_descriptors_unread: bool,
     assert_stdin_unread: bool,
+    unread_payload: str,
 ) -> subprocess.CompletedProcess[str]:
     """Run the shipped bootstrap with an explicit STARTUPINFOEX HANDLE allowlist."""
     if sys.platform != "win32":
@@ -395,7 +399,7 @@ def _run_windows_handles(
             "assert_dispatch_state_unchanged": assert_dispatch_state_unchanged,
             "assert_descriptors_unread": assert_descriptors_unread,
             "assert_stdin_unread": assert_stdin_unread,
-            "assert_unread_payload": _REFUSAL_SECRET,
+            "assert_unread_payload": unread_payload,
         }
         return subprocess.run(  # noqa: S603 - fixed interpreter and production bootstrap
             [
@@ -459,6 +463,14 @@ def _assert_refused(
 ) -> str:
     combined = _combined(result)
     assert result.returncode == 2, combined
+    envelope_lines = [
+        line for stream in (result.stdout, result.stderr) for line in stream.splitlines() if line.startswith("{")
+    ]
+    assert len(envelope_lines) == 1, combined
+    envelope = json.loads(envelope_lines[0])
+    assert envelope["status"] == "error"
+    assert isinstance(envelope["error"], dict)
+    assert isinstance(envelope["error"].get("message"), str)
     assert not any(prompt in combined.lower() for prompt in _PROMPTS)
     for secret in (*_ALL_SECRETS, *extra_secrets):
         assert secret not in combined
@@ -864,6 +876,31 @@ def test_each_leaf_refuses_same_scope_channel_conflict_before_state_or_read(
     assert "S14_DESCRIPTOR_UNREAD" in result.stderr
 
 
+def test_root_refuses_same_scope_channel_conflict_before_state_or_read(tmp_path: Path) -> None:
+    root = tmp_path / "root-same-scope"
+    result = _run(
+        root,
+        [
+            "--format",
+            "json",
+            "--profile-secrets-stdin",
+            "--profile-secrets-fd",
+            "{fd:0}",
+            "config",
+            "profile",
+            "history",
+        ],
+        stdin=_REFUSAL_SECRET,
+        inherited_payloads=(_REFUSAL_SECRET,),
+        assert_unread_indices=(0,),
+        assert_stdin_unread=True,
+    )
+    combined = _assert_refused(result, root, before={})
+    assert '"status":"error"' in combined
+    assert "S14_STDIN_UNREAD" in result.stderr
+    assert "S14_DESCRIPTOR_UNREAD" in result.stderr
+
+
 @pytest.mark.parametrize("collision", ("two-stdin", "same-fd"))
 def test_cross_scope_collision_refuses_before_read_authentication_or_mutation(tmp_path: Path, collision: str) -> None:
     root = tmp_path / f"cross-scope-{collision}"
@@ -909,8 +946,13 @@ def test_cross_scope_collision_refuses_before_read_authentication_or_mutation(tm
         assert "S14_DESCRIPTOR_UNREAD" in result.stderr
 
 
-@pytest.mark.parametrize("descriptor", (-1, 1, 2, 999_999))
-def test_leaf_descriptor_refusals_are_typed_secret_free_and_state_free(tmp_path: Path, descriptor: int) -> None:
+@pytest.mark.parametrize(
+    ("descriptor", "expected"),
+    ((-1, "reserved"), (1, "reserved"), (2, "reserved"), (999_999, "Failed to read")),
+)
+def test_leaf_descriptor_refusals_are_typed_secret_free_and_state_free(
+    tmp_path: Path, descriptor: int, expected: str
+) -> None:
     root = tmp_path / f"leaf-fd-{descriptor}"
     result = _run(
         root,
@@ -926,11 +968,21 @@ def test_leaf_descriptor_refusals_are_typed_secret_free_and_state_free(tmp_path:
             str(descriptor),
         ],
     )
-    _assert_refused(result, root, before={})
+    assert expected in _assert_refused(result, root, before={})
 
 
-@pytest.mark.parametrize("descriptor", (-1, 1, 2, 999_999))
-def test_root_descriptor_refusals_are_typed_secret_free_and_non_mutating(tmp_path: Path, descriptor: int) -> None:
+@pytest.mark.parametrize(
+    ("descriptor", "expected"),
+    (
+        (-1, "cannot be used"),
+        (1, "cannot be used"),
+        (2, "cannot be used"),
+        (999_999, "not an inherited readable"),
+    ),
+)
+def test_root_descriptor_refusals_are_typed_secret_free_and_non_mutating(
+    tmp_path: Path, descriptor: int, expected: str
+) -> None:
     root = tmp_path / f"root-fd-{descriptor}"
     _register(root, label="root-fd-operator")
     before = _storage_snapshot(root)
@@ -947,33 +999,56 @@ def test_root_descriptor_refusals_are_typed_secret_free_and_non_mutating(tmp_pat
             "root-fd-operator",
         ],
     )
-    _assert_refused(result, root, before=before)
+    assert expected in _assert_refused(result, root, before=before)
 
 
 _MALFORMED_CREATE_PAYLOADS = (
-    pytest.param(b"\xff", id="invalid-utf8"),
-    pytest.param("not-json", id="invalid-json"),
-    pytest.param("[]", id="non-object"),
+    pytest.param(b"\xff", "invalid", (), id="invalid-utf8"),
+    pytest.param(f"{_REFUSAL_SECRET}{{broken", "invalid", (_REFUSAL_SECRET,), id="invalid-json"),
+    pytest.param(json.dumps(_REFUSAL_SECRET), "invalid", (_REFUSAL_SECRET,), id="non-object"),
     pytest.param(
-        '{"passphrase":"one","passphrase":"two","passphrase_confirmation":"two"}',
+        '{"passphrase":"s14-duplicate-first","passphrase":"s14-duplicate-second",'
+        '"passphrase_confirmation":"s14-duplicate-second"}',
+        "invalid",
+        ("s14-duplicate-first", "s14-duplicate-second"),
         id="duplicate-top-level",
     ),
     pytest.param(
-        '{"passphrase":"one","passphrase_confirmation":"one","extra":{"nested":1,"nested":2}}',
+        '{"passphrase":"s14-recursive-secret","passphrase_confirmation":"s14-recursive-secret",'
+        '"extra":{"nested":"s14-nested-first","nested":"s14-nested-second"}}',
+        "invalid",
+        ("s14-recursive-secret", "s14-nested-first", "s14-nested-second"),
         id="duplicate-recursive",
     ),
-    pytest.param("{}", id="missing-fields"),
+    pytest.param("{}", "fields", (), id="missing-fields"),
     pytest.param(
-        '{"passphrase":"one","passphrase_confirmation":"one","extra":"refused"}',
+        '{"passphrase":"s14-extra-secret","passphrase_confirmation":"s14-extra-secret","extra":"s14-forbidden-extra"}',
+        "fields",
+        ("s14-extra-secret", "s14-forbidden-extra"),
         id="extra-field",
     ),
-    pytest.param(" " * 8193, id="oversize"),
-    pytest.param("", id="empty"),
+    pytest.param(
+        json.dumps(
+            {
+                "passphrase": _OVERSIZE_SECRET * 220,
+                "passphrase_confirmation": _OVERSIZE_SECRET * 220,
+            }
+        ),
+        "large",
+        (_OVERSIZE_SECRET,),
+        id="oversize-valid-json",
+    ),
+    pytest.param("", "invalid", (), id="empty"),
 )
 
 
-@pytest.mark.parametrize("payload", _MALFORMED_CREATE_PAYLOADS)
-def test_leaf_strict_payload_refusals_close_descriptor_without_mutation(tmp_path: Path, payload: str | bytes) -> None:
+@pytest.mark.parametrize(("payload", "diagnostic", "planted_secrets"), _MALFORMED_CREATE_PAYLOADS)
+def test_leaf_strict_payload_refusals_close_descriptor_without_mutation(
+    tmp_path: Path,
+    payload: str | bytes,
+    diagnostic: str,
+    planted_secrets: tuple[str, ...],
+) -> None:
     root = tmp_path / "malformed-leaf"
     result = _run(
         root,
@@ -991,12 +1066,22 @@ def test_leaf_strict_payload_refusals_close_descriptor_without_mutation(tmp_path
         inherited_payloads=(payload,),
         assert_closed_index=0,
     )
-    _assert_refused(result, root, before={})
+    combined = _assert_refused(result, root, before={}, extra_secrets=planted_secrets)
     assert "S13_DESCRIPTOR_CLOSED" in result.stderr
+    assert {
+        "invalid": "not a valid JSON object",
+        "fields": "missing required fields or has unexpected ones",
+        "large": "exceeds the maximum allowed size",
+    }[diagnostic] in combined
 
 
-@pytest.mark.parametrize("payload", _MALFORMED_CREATE_PAYLOADS)
-def test_root_strict_payload_refusals_close_descriptor_without_mutation(tmp_path: Path, payload: str | bytes) -> None:
+@pytest.mark.parametrize(("payload", "diagnostic", "planted_secrets"), _MALFORMED_CREATE_PAYLOADS)
+def test_root_strict_payload_refusals_close_descriptor_without_mutation(
+    tmp_path: Path,
+    payload: str | bytes,
+    diagnostic: str,
+    planted_secrets: tuple[str, ...],
+) -> None:
     root = tmp_path / "malformed-root"
     _register(root, label="malformed-root-operator")
     before = _storage_snapshot(root)
@@ -1015,8 +1100,13 @@ def test_root_strict_payload_refusals_close_descriptor_without_mutation(tmp_path
         inherited_payloads=(payload,),
         assert_closed_index=0,
     )
-    _assert_refused(result, root, before=before)
+    combined = _assert_refused(result, root, before=before, extra_secrets=planted_secrets)
     assert "S13_DESCRIPTOR_CLOSED" in result.stderr
+    assert {
+        "invalid": "one strict UTF-8 JSON object",
+        "fields": "contain exactly these fields",
+        "large": "exceeds the 8192-byte limit",
+    }[diagnostic] in combined
 
 
 def test_retired_restore_password_field_is_refused_without_publication(tmp_path: Path) -> None:
@@ -1035,9 +1125,9 @@ def test_retired_restore_password_field_is_refused_without_publication(tmp_path:
             str(capsule),
             "--secrets-stdin",
         ],
-        stdin=json.dumps({"password": _REFUSAL_SECRET}),
+        stdin=json.dumps({"password": _PROFILE_SECRET}),
     )
-    _assert_refused(result, root, before={})
+    assert "unexpected ones" in _assert_refused(result, root, before={})
 
 
 def test_retired_certificate_secret_field_is_refused_without_mutation(tmp_path: Path) -> None:
@@ -1065,7 +1155,7 @@ def test_retired_certificate_secret_field_is_refused_without_mutation(tmp_path: 
         inherited_payloads=(json.dumps({"profile_passphrase": _PROFILE_SECRET}),),
         assert_closed_index=0,
     )
-    _assert_refused(result, root, before=before)
+    assert "unexpected ones" in _assert_refused(result, root, before=before)
 
 
 def test_hostile_environment_secret_is_ignored_by_leaf_cli(tmp_path: Path) -> None:
@@ -1073,9 +1163,11 @@ def test_hostile_environment_secret_is_ignored_by_leaf_cli(tmp_path: Path) -> No
     result = _run(
         root,
         ["--format", "json", "config", "profile", "create", "hostile-env", "--quiet"],
+        stdin="",
         hostile_env={"CADRUMO_SECRET_PASSPHRASE": _REFUSAL_SECRET},
     )
-    _assert_refused(result, root, before={})
+    combined = _assert_refused(result, root, before={})
+    assert "No passphrase channel is available." in combined
 
 
 def test_live_session_makes_root_source_unused_and_leaves_it_unread(
@@ -1107,32 +1199,65 @@ def test_live_session_makes_root_source_unused_and_leaves_it_unread(
 
 
 @pytest.mark.parametrize(
-    ("command", "payload"),
+    ("command", "payload", "consumed", "expected"),
     (
-        (("config", "profile", "history", "missing-profile"), {"profile_passphrase": _PROFILE_SECRET}),
-        (("config", "profile", "history", ""), {"profile_passphrase": _PROFILE_SECRET}),
-        (("config", "profile", "history"), {"profile_passphrase": _PROFILE_SECRET}),
-        (("config", "profile", "history", "wrong-secret-target"), {"profile_passphrase": ""}),
+        (
+            ("config", "profile", "history", "missing-profile"),
+            {"profile_passphrase": _PROFILE_SECRET},
+            False,
+            "Unknown profile",
+        ),
+        (
+            ("config", "profile", "history", ""),
+            {"profile_passphrase": _PROFILE_SECRET},
+            False,
+            "Unknown profile",
+        ),
+        (
+            ("config", "profile", "history"),
+            {"profile_passphrase": _PROFILE_SECRET},
+            False,
+            "requires an exact profile target",
+        ),
+        (
+            ("config", "profile", "history", "wrong-secret-target"),
+            {"profile_passphrase": ""},
+            True,
+            "The profile password was not accepted.",
+        ),
         (
             ("config", "profile", "history", "wrong-nonblank-secret-target"),
             {"profile_passphrase": _REFUSAL_SECRET},
+            True,
+            "The profile password was not accepted.",
         ),
     ),
     ids=("wrong-target", "blank-target", "no-target", "blank-secret", "wrong-secret"),
 )
 def test_root_wrong_blank_target_or_secret_refuses_without_secret_disclosure(
-    tmp_path: Path, command: tuple[str, ...], payload: dict[str, str]
+    tmp_path: Path,
+    command: tuple[str, ...],
+    payload: dict[str, str],
+    consumed: bool,
+    expected: str,
 ) -> None:
     root = tmp_path / "wrong-blank-root"
     if command[-1] in {"wrong-secret-target", "wrong-nonblank-secret-target"}:
         _register(root, label=command[-1])
     before = _storage_snapshot(root)
+    serialized_payload = json.dumps(payload)
     result = _run(
         root,
-        ["--format", "json", "--profile-secrets-stdin", *command],
-        stdin=json.dumps(payload),
+        ["--format", "json", "--profile-secrets-fd", "{fd:0}", *command],
+        inherited_payloads=(serialized_payload,),
+        assert_closed_index=0 if consumed else None,
+        assert_unread_indices=() if consumed else (0,),
+        unread_payload=serialized_payload,
     )
-    _assert_refused(result, root, before=before)
+    combined = _assert_refused(result, root, before=before)
+    assert ("S13_DESCRIPTOR_CLOSED" if consumed else "S14_DESCRIPTOR_UNREAD") in result.stderr
+    if expected:
+        assert expected in combined
 
 
 def test_root_source_is_inapplicable_to_self_authenticating_rotation_and_unread(
@@ -1170,21 +1295,31 @@ def test_root_source_is_inapplicable_to_self_authenticating_rotation_and_unread(
 
 
 @pytest.mark.parametrize(
-    ("args", "expected_code"),
+    ("command", "expected_code", "expected_diagnostic"),
     (
-        (("--profile-secrets-fd", "999999", "--help"), 0),
-        (("--profile-secrets-fd", "999999", "config", "profile", "history", "--unknown"), 2),
+        (("--help",), 0, "CADRUMO - local-first workflow"),
+        (("config", "profile", "history", "--unknown"), 2, "No such option"),
     ),
     ids=("help", "parse-error"),
 )
 def test_help_and_parse_failures_never_read_root_secret_source(
-    tmp_path: Path, args: tuple[str, ...], expected_code: int
+    tmp_path: Path,
+    command: tuple[str, ...],
+    expected_code: int,
+    expected_diagnostic: str,
 ) -> None:
     root = tmp_path / "parse-precedence"
-    result = _run(root, args)
+    result = _run(
+        root,
+        ["--profile-secrets-fd", "{fd:0}", *command],
+        inherited_payloads=(_REFUSAL_SECRET,),
+        assert_unread_indices=(0,),
+    )
     combined = _combined(result)
     assert result.returncode == expected_code, combined
-    assert "unreadable" not in combined.lower()
+    assert expected_diagnostic in combined
+    assert "S14_DESCRIPTOR_UNREAD" in result.stderr
+    assert not any(prompt in combined.lower() for prompt in _PROMPTS)
     assert _REFUSAL_SECRET not in combined
     assert _storage_snapshot(root) == {}
 

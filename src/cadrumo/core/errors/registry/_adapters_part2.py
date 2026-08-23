@@ -677,7 +677,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     # the transient ones, and retry is actively wrong for the first group. The
     # asymmetry decides it: `False` on a transient failure costs one operation the
     # operator can repeat by hand, while `True` on a permanent one hands an
-    # autonomous agent an unbounded loop against a host that will never succeed.
+    # non-interactive caller an unbounded loop against a host that will never succeed.
     # The operator-facing messages carry the recurrence-keyed guidance the boolean
     # cannot ("retry when the machine is less loaded; if it persists ...").
     (

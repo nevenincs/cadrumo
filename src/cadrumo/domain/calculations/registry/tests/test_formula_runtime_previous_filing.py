@@ -83,6 +83,8 @@ def test_previous_filing_requirements_are_declared_from_registry_binding_selecto
     assert requirement.periods == (source_reference.required_periods[0],)
     assert requirement.binding_ids == (_PREVIOUS_YEAR_NET_INCOME_BINDING,)
     assert requirement.source_casilla_ids == tuple(sorted(source_reference.source_casilla_ids))
+    assert requirement.required_source_casilla_ids == ()
+    assert requirement.source_presence_groups == (tuple(source_reference.source_casilla_ids),)
     assert requirement.legal_refs == tuple(sorted(binding.legal_refs))
     assert requirement.source_refs == tuple(sorted(binding.source_refs))
 
@@ -175,28 +177,29 @@ def test_relation_resolves_annual_summary_from_all_source_periods(
     assert isinstance(result["modelo-180-rel-115-retenciones-anual"], Decimal)
 
 
-def test_previous_filing_binding_requires_complete_observed_casillas(
+def test_previous_filing_binding_resolves_from_any_registry_declared_applicable_casilla(
     committed_modelo_130_snapshot: RegistrySnapshot,
 ) -> None:
     binding = _previous_year_net_income_binding(committed_modelo_130_snapshot)
     source_reference = previous_filing_source_reference(binding)
     source_casilla_ids = source_reference.source_casilla_ids
 
-    with pytest.raises(RegistryValidationError, match="requires observed casilla"):
-        resolve_previous_filing_binding_values(
-            committed_modelo_130_snapshot.revision,
-            (
-                registry_grounded_modelo_observation(
-                    modelo=source_reference.source_modelo,
-                    filing_year=2025,
-                    period=source_reference.required_periods[0],
-                    casilla_values={source_casilla_ids[0]: Decimal("1")},
-                    grade=RegistryAuthorityGrade.CALCULATION,
-                ),
+    resolved = resolve_previous_filing_binding_values(
+        committed_modelo_130_snapshot.revision,
+        (
+            registry_grounded_modelo_observation(
+                modelo=source_reference.source_modelo,
+                filing_year=2025,
+                period=source_reference.required_periods[0],
+                casilla_values={source_casilla_ids[0]: Decimal("1")},
+                grade=RegistryAuthorityGrade.CALCULATION,
             ),
-            filing_year=2026,
-            period="1T",
-        )
+        ),
+        filing_year=2026,
+        period="1T",
+    )
+
+    assert resolved[binding.id] == Decimal("1")
 
 
 def test_previous_filing_requirements_max_year_delta_unset_preserves_unbounded_anchors(

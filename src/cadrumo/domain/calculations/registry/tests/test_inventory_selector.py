@@ -8,6 +8,8 @@ import pytest
 from pydantic import ValidationError
 
 from .....core import BindingSourceKind, Modelo
+from .....core.aggregation import BindingAggregation, BindingAggregationOp
+from .._binding_selector_utils import binding_row_set_selector
 from .._inventory_bindings import InventorySelector, validate_inventory_binding
 from .._schema import DataBindingDefinition
 
@@ -23,15 +25,15 @@ _OPERATION_DESTINATIONS = {
 def _selector(
     operation: str,
     target_casilla_id: str,
-    *,
-    actividad_id: object = "actividad-profesional-1",
 ) -> dict[str, object]:
     return {
         "modelo": Modelo.M100,
         "filing_year": 2025,
         "projection_grain": "taxpayer_year_activity",
-        "actividad_id": actividad_id,
-        "operation": operation,
+        "fact": "row_field",
+        "record": "inventory_activity",
+        "grouping": "per_inventory_activity",
+        "row_field": operation,
         "target_casilla_id": target_casilla_id,
     }
 
@@ -43,10 +45,12 @@ def test_inventory_selector_accepts_each_exact_2025_operation_destination(
 ) -> None:
     selector = InventorySelector.model_validate(_selector(operation, destination))
 
-    assert selector.operation == operation
     assert selector.target_casilla_id == destination
     assert selector.projection_grain == "taxpayer_year_activity"
-    assert selector.actividad_id == "actividad-profesional-1"
+    assert selector.fact == "row_field"
+    assert selector.record == "inventory_activity"
+    assert selector.grouping == "per_inventory_activity"
+    assert selector.row_field == operation
 
 
 @pytest.mark.parametrize(
@@ -72,10 +76,13 @@ def test_inventory_selector_refuses_crossed_operation_destination_identity(
         {"filing_year": "2025"},
         {"modelo": "130"},
         {"projection_grain": "taxpayer_year"},
-        {"actividad_id": ""},
-        {"actividad_id": 7},
-        {"actividad_id": None},
-        {"operation": "signed_stock_variation"},
+        {"actividad_id": "literal-activity-forbidden"},
+        {"actividad_id": "*"},
+        {"fact": "scalar"},
+        {"record": "activity"},
+        {"grouping": "taxpayer_year"},
+        {"operation": "complete_acquisition_cost"},
+        {"row_field": "signed_stock_variation"},
         {"target_casilla_id": "0155"},
         {"signed": True},
         {"source_ready": True},
@@ -91,25 +98,19 @@ def test_inventory_selector_refuses_unsupported_scope_stale_signed_and_readiness
         InventorySelector.model_validate(raw)
 
 
-def test_inventory_selector_requires_exact_actividad_identity() -> None:
+def test_inventory_selector_requires_complete_row_template_shape() -> None:
     raw = _selector("complete_acquisition_cost", "0181")
-    del raw["actividad_id"]
+    del raw["grouping"]
 
-    with pytest.raises(ValidationError, match="actividad_id"):
+    with pytest.raises(ValidationError, match="grouping"):
         InventorySelector.model_validate(raw)
 
 
-def test_inventory_selector_distinguishes_activity_and_roundtrips_exactly() -> None:
-    first = InventorySelector.model_validate(
-        _selector("complete_acquisition_cost", "0181", actividad_id="actividad-a"),
-    )
-    second = InventorySelector.model_validate(
-        _selector("complete_acquisition_cost", "0181", actividad_id="actividad-b"),
-    )
+def test_inventory_selector_roundtrips_without_taxpayer_activity_identity() -> None:
+    selector = InventorySelector.model_validate(_selector("complete_acquisition_cost", "0181"))
 
-    assert first != second
-    assert first.actividad_id != second.actividad_id
-    assert InventorySelector.model_validate(first.model_dump()) == first
+    assert "actividad_id" not in selector.model_dump()
+    assert InventorySelector.model_validate(selector.model_dump()) == selector
 
 
 def test_inventory_binding_validator_preserves_the_operation_destination_failure() -> None:
@@ -117,13 +118,45 @@ def test_inventory_binding_validator_preserves_the_operation_destination_failure
         id="inventory-stock-increase",
         source=BindingSourceKind.INVENTORY,
         selector=_selector("closing_minus_opening_positive", "0182"),
-        aggregation=None,
+        aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
     )
 
     failures = validate_inventory_binding(binding)
 
     assert len(failures) == 1
     assert "must target casilla '0177', not '0182'" in failures[0]
+
+
+def test_inventory_binding_validator_requires_rows_aggregation() -> None:
+    binding = DataBindingDefinition.model_construct(
+        id="inventory-purchases",
+        source=BindingSourceKind.INVENTORY,
+        selector=_selector("complete_acquisition_cost", "0181"),
+        aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
+    )
+
+    assert validate_inventory_binding(binding) == [
+        "binding 'inventory-purchases' inventory operation template requires aggregation op 'rows'",
+    ]
+
+
+def test_inventory_binding_reuses_the_canonical_row_set_projection() -> None:
+    binding = DataBindingDefinition(
+        id="inventory-purchases",
+        source=BindingSourceKind.INVENTORY,
+        selector=_selector("complete_acquisition_cost", "0181"),
+        aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
+        legal_refs=("rd-439-2007:art-75",),
+        source_refs=("aeat-renta-2025-inventory",),
+    )
+
+    row_set = binding_row_set_selector(binding)
+
+    assert row_set is not None
+    assert row_set.fact == "row_field"
+    assert row_set.record == "inventory_activity"
+    assert row_set.grouping == "per_inventory_activity"
+    assert row_set.row_field == "complete_acquisition_cost"
 
 
 def test_inventory_selector_is_frozen_and_has_only_the_three_unsigned_destinations() -> None:

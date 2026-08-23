@@ -3,14 +3,13 @@
 :func:`~cadrumo.core.paths.select_filesystem_retention_survivors` converges
 the four hand-rolled raw-filesystem retention walkers found in
 :mod:`cadrumo.core.observability`,
-:mod:`cadrumo.adapters.outbound.aeat.sede`,
-``cadrumo_harness.mcp``, and
+:mod:`cadrumo.adapters.outbound.aeat.sede`, an external adapter, and
 :mod:`cadrumo.domain.calculations.registry`.
 
 Each bound (age cutoff, count cap, byte ceiling) is pinned alone and then
 composed. The ``combine="union"`` mode and
 ``protect_newest`` are pinned directly here because they are the two
-correctness-critical axes the real callers (MCP session telemetry; the
+correctness-critical axes the real callers (session telemetry; the
 run-trace size ceiling) depend on: a wrong default on either would silently
 change which files survive a real prune with no other test catching it.
 """
@@ -220,7 +219,7 @@ def test_protect_newest_single_entry_is_never_a_removal_candidate() -> None:
 
 
 # --------------------------------------------------------------------- #
-# combine="union" -- the MCP session-telemetry disjunction               #
+# combine="union" -- the session-telemetry disjunction                   #
 # --------------------------------------------------------------------- #
 
 
@@ -256,7 +255,7 @@ def test_union_age_bound_bites_independently_of_rank() -> None:
 
 
 def test_union_protect_newest_survives_even_when_every_bound_is_violated() -> None:
-    """Pins the exact MCP telemetry contract: keep_newest wins over both bounds at once."""
+    """Pin the session-telemetry contract: keep_newest wins over both bounds."""
     entries = [_entry(f"s{i}", 100 - i) for i in range(6)]  # all "stale", s0 least stale
 
     keep, remove = select_filesystem_retention_survivors(
@@ -276,7 +275,7 @@ def test_union_protect_newest_occupies_rank_slots_in_the_count_bound() -> None:
     """The count bound's rank threshold is global, not counted only over non-protected entries.
 
     This is the exact shape ``test_prune_bounds_session_count_dropping_the_oldest``
-    in the MCP telemetry suite depends on: with ``max_count=5`` and
+    in the session telemetry suite depends on: with ``max_count=5`` and
     ``protect_newest=2``, only 5 total survive (not 5 *plus* the 2
     protected) -- the protected entries occupy ranks 0 and 1 within the
     count bound, they are not additive to it.
@@ -306,7 +305,7 @@ def test_stable_sort_preserves_input_order_among_timestamp_ties() -> None:
 
     A caller wanting a secondary tie-break (e.g. filename) pre-sorts its
     input list by that key; ranking here by timestamp alone then preserves
-    it for ties, exactly as the MCP telemetry ``(mtime, name)`` tie-break
+    it for ties, exactly as the session telemetry ``(mtime, name)`` tie-break
     needs.
     """
     entries = [_entry("b_first_in_input", 5), _entry("a_second_in_input", 5)]

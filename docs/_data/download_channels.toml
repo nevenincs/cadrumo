@@ -78,7 +78,13 @@ id = "python"
 title = "Python package"
 platform = "Any platform with Python 3.13+"
 tier = "registry"
-artifact_kinds = ["python-wheel", "python-sdist", "python-manifest", "python-source-archive"]
+artifact_kinds = [
+  "python-wheel",
+  "python-sdist",
+  "python-manifest",
+  "python-source-archive",
+  "python-wheelhouse",
+]
 availability = "public_launch"
 package = "cadrumo"
 registry = "PyPI listing"

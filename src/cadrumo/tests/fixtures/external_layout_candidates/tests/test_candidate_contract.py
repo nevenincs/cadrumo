@@ -1,7 +1,8 @@
-"""Admission gate for the unverified external-layout candidate corpus."""
+"""Admission gate for the external-layout candidate corpus."""
 
 from __future__ import annotations
 
+from copy import deepcopy
 from pathlib import Path
 from shutil import copyfile
 
@@ -35,6 +36,44 @@ _SIDECARS = tuple(
     _ROOT / modelo / f"{kind}.json"
     for modelo, kind in sorted(_EXPECTED_IDENTITIES)
 )
+
+
+def _adjudicated_payload() -> dict[str, object]:
+    candidate = load_external_layout_candidate(_ROOT / "130" / "plain.json")
+    counterpart = load_external_layout_candidate(_ROOT / "130" / "fillable.json")
+    payload = candidate.model_dump(mode="python")
+    source_chain = payload["source_chain"]
+    assert isinstance(source_chain, dict)
+    source_chain.pop("authority_status")
+    payload["authority_adjudication"] = {
+        "artifact_authenticity": {
+            "verdict": "third_party_sample",
+            "evidence_summary": "FiscalBot sample disclaimer and placeholder receipt are present.",
+        },
+        "official_base_derivation": {
+            "verdict": "verified_official_base_derivative",
+            "official_source": {
+                "authority": "aeat",
+                "document_id": "AEAT Modelo 130",
+                "source_url": "https://sede.agenciatributaria.gob.es/example.pdf",
+                "sha256": "a" * 64,
+                "page_mapping": ({"candidate_page": 1, "official_page": 1},),
+            },
+            "comparison_method": "pdf_text_geometry_and_normalized_render",
+            "comparison_summary": "Ordered text and geometry agree with the pinned source.",
+            "pair_render": {
+                "counterpart_kind": "fillable",
+                "counterpart_sha256": counterpart.content.sha256,
+                "comparison_method": "exact_96_dpi_render_match",
+                "comparison_summary": "Plain and fillable members render identically at 96 dpi.",
+            },
+        },
+        "registry_applicability": {
+            "verdict": "current_authored_revision",
+            "revision_id": "2019-y-siguientes",
+        },
+    }
+    return payload
 
 
 def test_candidate_inventory_is_exactly_five_modelos_by_two_variants() -> None:
@@ -83,6 +122,90 @@ def test_external_layout_class_cannot_enrol_as_recognised_or_facsimile_provenanc
     assert EXTERNAL_LAYOUT_SOURCE_CLASSIFICATION not in RECOGNISED_FIXTURE_PROVENANCES
     assert EXTERNAL_LAYOUT_SOURCE_CLASSIFICATION != AEAT_PUBLISHED_FACSIMILE_CLASSIFICATION
     assert frozenset({"real_corpus", "synthetic_generated"}) == RECOGNISED_FIXTURE_PROVENANCES
+
+
+def test_three_axis_adjudication_replaces_the_legacy_unverified_flag() -> None:
+    """A migrated sidecar states three independent verdicts with pinned evidence."""
+    candidate = ExternalLayoutCandidate.model_validate(_adjudicated_payload())
+    adjudication = candidate.authority_adjudication
+    assert adjudication is not None
+    assert adjudication.artifact_authenticity.verdict == "third_party_sample"
+    assert adjudication.official_base_derivation.verdict == "verified_official_base_derivative"
+    assert adjudication.registry_applicability.verdict == "current_authored_revision"
+    assert adjudication.registry_applicability.revision_id == "2019-y-siguientes"
+
+    conflicting_payload = _adjudicated_payload()
+    source_chain = conflicting_payload["source_chain"]
+    assert isinstance(source_chain, dict)
+    source_chain["authority_status"] = "unverified"
+    with pytest.raises(ValidationError, match="exactly one"):
+        ExternalLayoutCandidate.model_validate(conflicting_payload)
+
+
+@pytest.mark.parametrize(
+    "comparison_method",
+    ["exact_96_dpi_render_match", "normalized_96_dpi_render_similarity"],
+)
+def test_pair_render_contract_distinguishes_exact_and_measured_similarity(comparison_method: str) -> None:
+    """Pair evidence can state exact equality or an honestly measured near-match."""
+    payload = _adjudicated_payload()
+    adjudication = payload["authority_adjudication"]
+    assert isinstance(adjudication, dict)
+    derivation = adjudication["official_base_derivation"]
+    assert isinstance(derivation, dict)
+    pair_render = derivation["pair_render"]
+    assert isinstance(pair_render, dict)
+    pair_render["comparison_method"] = comparison_method
+    ExternalLayoutCandidate.model_validate(payload)
+
+
+@pytest.mark.parametrize(
+    ("verdict", "revision_id"),
+    [
+        ("current_authored_revision", None),
+        ("historical_authored_revision", None),
+        ("historical_layout_without_authored_revision", "2025"),
+    ],
+)
+def test_registry_applicability_requires_a_revision_exactly_for_authored_verdicts(
+    verdict: str,
+    revision_id: str | None,
+) -> None:
+    """Historical layouts without a registry row cannot smuggle in a revision claim."""
+    payload = _adjudicated_payload()
+    adjudication = payload["authority_adjudication"]
+    assert isinstance(adjudication, dict)
+    applicability = adjudication["registry_applicability"]
+    assert isinstance(applicability, dict)
+    applicability.update(verdict=verdict, revision_id=revision_id)
+    with pytest.raises(ValidationError, match="revision_id is required exactly"):
+        ExternalLayoutCandidate.model_validate(payload)
+
+
+@pytest.mark.parametrize(
+    ("path", "replacement", "message"),
+    [
+        (("official_source", "source_url"), "http://example.test/form.pdf", "String should match pattern"),
+        (("official_source", "sha256"), "not-a-digest", "String should match pattern"),
+        (("pair_render", "counterpart_kind"), "plain", "counterpart_kind must be 'fillable'"),
+    ],
+)
+def test_official_source_and_pair_evidence_fail_closed(
+    path: tuple[str, str],
+    replacement: str,
+    message: str,
+) -> None:
+    """Authority evidence is typed, content-addressed, and bound to the candidate pair."""
+    payload = deepcopy(_adjudicated_payload())
+    adjudication = payload["authority_adjudication"]
+    assert isinstance(adjudication, dict)
+    derivation = adjudication["official_base_derivation"]
+    assert isinstance(derivation, dict)
+    record = derivation[path[0]]
+    assert isinstance(record, dict)
+    record[path[1]] = replacement
+    with pytest.raises(ValidationError, match=message):
+        ExternalLayoutCandidate.model_validate(payload)
 
 
 def test_strict_contract_rejects_an_unknown_sidecar_field() -> None:

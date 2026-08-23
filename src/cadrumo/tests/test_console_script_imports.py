@@ -95,5 +95,5 @@ def test_console_scripts_expose_only_the_canonical_cadrumo_commands() -> None:
     """The product distribution ships exactly its canonical human CLI."""
     pyproject = tomllib.loads((_PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
 
-    assert pyproject["project"]["scripts"] == {"aeat": "cadrumo.entrypoints.cli:main"}
+    assert pyproject["project"]["scripts"] == {"aeat": "cadrumo.entrypoints._cli_main:main"}
 

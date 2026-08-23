@@ -31,6 +31,7 @@ from .. import (
     previous_filing_observation_requirements,
     resolve_previous_filing_binding_values,
     same_ejercicio_prior_quarter_anchors,
+    source_presence_gaps,
 )
 from .._bindings_previous_filing import PreviousModeloSelector, is_direct_previous_filing_binding
 from .._errors import RegistryValidationError
@@ -133,6 +134,51 @@ def test_omitted_required_source_policy_keeps_all_candidates_mandatory() -> None
     )
 
     assert selector.required_source_casilla_ids is None
+
+
+def test_coalesced_optional_bindings_preserve_each_registry_presence_group() -> None:
+    first = _span_binding(
+        source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA,),
+        selector={
+            "source_modelo": "130",
+            "source_casilla_ids": (_M130_PAGO_FRACCIONADO_CASILLA,),
+            "required_source_casilla_ids": (),
+            "period": "1T",
+        },
+    )
+    second = _span_binding(
+        source_casilla_ids=(_M130_MINORACION_CASILLA,),
+        selector={
+            "source_modelo": "130",
+            "source_casilla_ids": (_M130_MINORACION_CASILLA,),
+            "required_source_casilla_ids": (),
+            "period": "1T",
+        },
+    ).model_copy(update={"id": "modelo-130-test-second-optional-binding"})
+
+    requirement = previous_filing_observation_requirements(
+        _revision(bindings=(first, second)),
+        filing_year=2025,
+        period="2T",
+    )[0]
+
+    assert requirement.required_source_casilla_ids == ()
+    assert requirement.source_presence_groups == (
+        (_M130_PAGO_FRACCIONADO_CASILLA,),
+        (_M130_MINORACION_CASILLA,),
+    )
+    missing_required, missing_groups = source_presence_gaps(
+        required_source_casilla_ids=requirement.enforced_source_casilla_ids,
+        source_presence_groups=requirement.source_presence_groups,
+        observed_source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA,),
+    )
+    assert missing_required == ()
+    assert missing_groups == ((_M130_MINORACION_CASILLA,),)
+    assert source_presence_gaps(
+        required_source_casilla_ids=requirement.enforced_source_casilla_ids,
+        source_presence_groups=requirement.source_presence_groups,
+        observed_source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA, _M130_MINORACION_CASILLA),
+    ) == ((), ())
 
 
 def _resolve_binding(

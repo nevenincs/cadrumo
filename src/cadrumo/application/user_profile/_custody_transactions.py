@@ -71,7 +71,7 @@ class ProfileCustodyDuplicateLabelError(ProfileCustodyTransactionConflictError):
     captured witness went stale", which a re-read genuinely fixes, so that code
     is published as retryable. A label collision is permanent -- the name is
     bound to a committed capsule and the identical command can never succeed --
-    and this CLI's operator is an autonomous agent that retries what it is told
+    and a non-interactive caller may retry what it is told
     is retryable.
     """
 

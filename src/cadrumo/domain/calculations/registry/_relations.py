@@ -44,7 +44,26 @@ __all__ = [
     "relation_source_requirements",
     "resolve_relation_values",
     "resolve_relation_values_from_observations",
+    "source_presence_gaps",
 ]
+
+
+def source_presence_gaps(
+    *,
+    required_source_casilla_ids: Iterable[CasillaId],
+    source_presence_groups: Iterable[Iterable[CasillaId]],
+    observed_source_casilla_ids: Iterable[CasillaId],
+) -> tuple[tuple[CasillaId, ...], tuple[tuple[CasillaId, ...], ...]]:
+    """Return missing mandatory casillas and unsatisfied any-of groups.
+
+    This is the single enforcement primitive for registry-derived previous-
+    filing source presence. Adapters and application gates consume the same
+    result instead of reinterpreting candidate sets independently.
+    """
+    observed = frozenset(observed_source_casilla_ids)
+    missing_required = tuple(sorted(set(required_source_casilla_ids) - observed))
+    missing_groups = tuple(tuple(group) for group in source_presence_groups if not set(group) & observed)
+    return missing_required, missing_groups
 
 
 class RegistryFoldRequirement(BaseModel):
@@ -75,6 +94,7 @@ class RegistryFoldRequirement(BaseModel):
     periods: tuple[RegistrySelectorPeriodCode, ...] = Field(min_length=1)
     source_casilla_ids: tuple[CasillaId, ...] = Field(min_length=1)
     required_source_casilla_ids: tuple[CasillaId, ...] | None = None
+    source_presence_groups: tuple[tuple[CasillaId, ...], ...] = ()
     binding_ids: tuple[BindingId, ...] = ()
     relation_ids: tuple[RelationId, ...] = ()
     target_bindings: tuple[BindingId, ...] = ()
@@ -123,6 +143,12 @@ class RegistryFoldRequirement(BaseModel):
             self.source_casilla_ids
         ):
             raise RegistryValidationError("fold requirement required source casillas must be candidate source casillas")
+        candidate_ids = set(self.source_casilla_ids)
+        for group in self.source_presence_groups:
+            if not group:
+                raise RegistryValidationError("fold requirement source presence groups must not be empty")
+            if not set(group) <= candidate_ids:
+                raise RegistryValidationError("fold requirement source presence groups must contain candidate casillas")
         return self
 
     @property

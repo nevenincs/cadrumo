@@ -528,7 +528,7 @@ def next_action(action_id: str) -> ResolvedNoticeAction:
     inside a locale message. That is untestable and rots silently: renaming a
     verb sweeps the registrations and leaves four translated catalogues naming a
     command that no longer exists, handing the operator - frequently an
-    autonomous agent - an instruction it cannot recover from.
+    non-interactive caller - an instruction it cannot recover from.
 
     Resolution runs through :func:`lookup_action`, which fails closed on an
     unknown id, so the command key comes from the catalogue rather than from

@@ -118,6 +118,7 @@ def previous_filing_observation_requirements(
     binding_ids_by_key: dict[tuple[ModeloId, int, str], set[BindingId]] = {}
     source_casilla_ids_by_key: dict[tuple[ModeloId, int, str], set[CasillaId]] = {}
     required_source_casilla_ids_by_key: dict[tuple[ModeloId, int, str], set[CasillaId]] = {}
+    source_presence_groups_by_key: dict[tuple[ModeloId, int, str], set[tuple[CasillaId, ...]]] = {}
     legal_refs_by_key: dict[tuple[ModeloId, int, str], set[LegalRefId]] = {}
     source_refs_by_key: dict[tuple[ModeloId, int, str], set[SourceRefId]] = {}
     dependency_treatment_by_key: dict[tuple[ModeloId, int, str], str | None] = {}
@@ -140,6 +141,8 @@ def previous_filing_observation_requirements(
                 if selector.required_source_casilla_ids is None
                 else selector.required_source_casilla_ids
             )
+            if selector.required_source_casilla_ids == ():
+                source_presence_groups_by_key.setdefault(key, set()).add(_previous_filing_source_ids(selector))
             legal_refs_by_key.setdefault(key, set()).update(binding.legal_refs)
             source_refs_by_key.setdefault(key, set()).update(binding.source_refs)
             classification = classifications_by_source.get(selector.source_modelo)
@@ -158,6 +161,9 @@ def previous_filing_observation_requirements(
             source_casilla_ids=tuple(sorted(source_casilla_ids_by_key[(modelo, expected_year, required_period)])),
             required_source_casilla_ids=tuple(
                 sorted(required_source_casilla_ids_by_key[(modelo, expected_year, required_period)])
+            ),
+            source_presence_groups=tuple(
+                sorted(source_presence_groups_by_key.get((modelo, expected_year, required_period), set()))
             ),
             dependency_treatment=dependency_treatment_by_key[(modelo, expected_year, required_period)],
             legal_refs=tuple(sorted(legal_refs_by_key[(modelo, expected_year, required_period)])),

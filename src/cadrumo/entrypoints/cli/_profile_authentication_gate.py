@@ -139,7 +139,7 @@ def _resolve_login_target_or_refuse(raw: str):
         # The message already names the next step in prose ("run `aeat config
         # profile list`"), but the TYPED action was null, so the machine-readable
         # half of that guidance was missing -- and this CLI's operator is an
-        # autonomous agent, for which the prose is not actionable. The verdict is
+        # non-interactive caller, for which the prose is not actionable. The verdict is
         # attached to the existing error rather than replacing it with a
         # `CliRefusedBoundaryError`, so `REFUSED_PROFILE_NOT_FOUND` and its
         # message stay exactly as they are on the wire; only the absent
