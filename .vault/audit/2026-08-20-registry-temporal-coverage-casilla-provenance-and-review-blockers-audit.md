@@ -4091,3 +4091,62 @@ iterations ago that class of thing was found by eye; it is now found by the code
 **10441 of 11570 slots remain** across 115 numbered records; 1129 modelled, zero orphaned.
 The cross-record hazard is unchanged: box 00562 is declared twice and nothing yet makes two
 casillas sharing a number resolve to one value.
+
+## 2026-08-23 — the four T22007 correction records, and the same bug twice
+
+### What landed
+
+Records **T22007D00, E00, F00 and H00** — the four sibling per-operation detail records
+under *otras correcciones a la suma de bases imponibles*: elimination of non-exempt
+internal dividends; incorporation of previously-eliminated impairments of group equity
+holdings; those same impairments still pending; and everything not covered by the
+preceding sections. **20 casillas**, revision 1279 → **1299**, twenty-two of 137 records.
+
+Suite: **identical FAILED list, zero regressions.**
+
+### One family, four records, two notations for the same thing
+
+**T22007D00 and T22007H00 print a parenthesised row ordinal; T22007E00 and T22007F00 print
+a trailing digit.** Same family, same purpose, same 50-block shape — two notations.
+
+The generator therefore **tries both forms on every record and requires exactly one to
+explain every line**. An ambiguous or unexplained record refuses rather than being read
+under whichever form its neighbour used. The ordinals are then asserted to be exactly 1..50
+with each appearing once per block field — which is what rules out a description that merely
+ends in a number.
+
+The general point: **sibling records are not evidence about each other.** Four sheets that
+are byte-for-byte the same shape still disagreed on notation.
+
+### The same normalisation bug, one iteration later
+
+Last iteration the period-spacing rule rewrote the legal reference `DT 24.5 LIS` as
+`DT 24. 5 LIS`. This iteration the *same rule* rewrote **`N.I.F.` as `N. I. F.`** on eight
+labels.
+
+It now requires two letters before the period, so it cannot enter an abbreviation. The
+previous iteration's records were re-generated under the sharper rule and came out
+**byte-identical**, so nothing already shipped carried the defect.
+
+Recurrence within one iteration of the first sighting says the earlier fix was **scoped to
+the instance, not to the cause**. The cause is: *a normalisation written to make two strings
+compare equal will reach strings that were already correct.* The durable form is not a
+better regex each time — it is to run the normalisation only where a difference was actually
+observed, or to normalise for comparison only and never for output. Worth doing properly if
+a third instance appears.
+
+### AEAT's own text, again
+
+`Deteriorio` for *Deterioro* on every detail line of T22007E00, and the `fi` ligature broken
+in `grupo fi scal` in its total — the third family carrying that ligature defect. Corrected
+in the labels, kept as printed in the comments, and every correction applied is listed on the
+fragment's own face.
+
+### The record subject had to be derived, not assumed
+
+**T22007E00 and T22007F00 share two detail lines word for word.** Only the record's subject
+tells them apart, and that subject is derived from the total's own text rather than retyped.
+
+### Scale
+
+**10437 of 11570 slots remain** across 111 numbered records; 1133 modelled, zero orphaned.
