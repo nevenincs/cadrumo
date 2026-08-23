@@ -885,6 +885,149 @@ modelo:
               help: null
               label: Balanc consolidat. Actiu (pag. 3B hoja 02). Immobilitzat intangible.
                 Fons de comerc de consolidacio
+            x-agp34c1g6d1j0c9q60o32e9j:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Fons propis
+            x-agp34c1g6d1j0c9q60o32e9k:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Capital
+            x-agp34c1g6d1j0c9q60o32e9l:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Capital.
+                Capital desemborsat
+            x-agp34c1g6d1j0c9q60o32e9m:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Capital.
+                Capital no desemborsat exigit
+            x-agp34c1g6d1j0c9q60o32e9n:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Prima d'emissio
+            x-agp34c1g6d1j0c9q60o32e9o:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Instruments
+                de patrimoni emesos diferents del capital
+            x-agp34c1g6d1j0c9q60o32e9p:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Component
+                de patrimoni net dels instruments financers compostos
+            x-agp34c1g6d1j0c9q60o34c1g:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Altres instruments
+                de patrimoni emesos
+            x-agp34c1g6d1j0c9q60o34c1h:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Altres elements
+                de patrimoni net
+            x-agp34c1g6d1j0c9q60o34c1i:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Guanys acumulats
+            x-agp34c1g6d1j0c9q60o34c1j:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Reserves
+                de revaloracio
+            x-agp34c1g6d1j0c9q60o34c1k:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Altres reserves
+            x-agp34c1g6d1j0c9q60o34c1l:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Reserves
+                o perdues acumulades d'inversions en negocis conjunts i associades
+            x-agp34c1g6d1j0c9q60o34c1m:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Altres
+            x-agp34c1g6d1j0c9q60o34c1n:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). (-) Accions
+                propies
+            x-agp34c1g6d1j0c9q60o34c1o:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Resultat
+                atribuible als propietaris de la dominant
+            x-agp34c1g6d1j0c9q60o34c1p:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). (-) Dividends
+                a compte
+            x-agp34c1g6d1j0c9q60o34c9g:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Altre resultat
+                global acumulat
+            x-agp34c1g6d1j0c9q60o34c9h:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Elements
+                que no es reclassificaran en resultats
+            x-agp34c1g6d1j0c9q60o34c9i:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Guanys o
+                (-) perdues actuarials en plans de pensions de prestacions definides
+            x-agp34c1g6d1j0c9q60o34c9j:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Actius no
+                corrents i grups alienables d'elements classificats com a mantinguts
+                per a la venda
+            x-agp34c1g6d1j0c9q60o34c9m:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Elements
+                que poden reclassificar-se en resultats
+            x-agp34c1g6d1j0c9q60o34c9n:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Cobertura
+                d'inversions netes en negocis a l'estranger [part eficac]
+            x-agp34c1g6d1j0c9q60o34c9o:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Conversio
+                de divises
+            x-agp34c1g6d1j0c9q60o34c9p:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Derivats
+                de cobertura. Reserva de cobertures de fluxos d'efectiu [part eficac]
+            x-agp34c1g6d1j0c9q60o34chj:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Actius no
+                corrents i grups alienables d'elements classificats com a mantinguts
+                per a la venda
+            x-agp34c1g6d1j0c9q60o34chk:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Participacio
+                en altres ingressos i despeses reconeguts d'inversions en negocis
+                conjunts i associades
+            x-agp34c1g6d1j0c9q60o34chl:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Interessos
+                minoritaris [participacions no dominants]
+            x-agp34c1g6d1j0c9q60o34chm:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Altre resultat
+                global acumulat
+            x-agp34c1g6d1j0c9q60o34chn:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Altres partides
+            x-agp34c1g6d1j0c9q60o34cho:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Total patrimoni
+                net
+            x-agp34c1g6d1j0c9q60o34chp:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Total patrimoni
+                net i passiu
+            x-agp34c1g6d1j0c9q60o3cd1j:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Canvis del
+                valor raonable dels instruments de deute a valor raonable amb canvis
+                en altre resultat global
+            x-agp34c1g6d1j0c9q60o3cd1k:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Instruments
+                de cobertura [elements no designats]
+            x-agp34c1g6d1j0c9q60o3cd1l:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Altres compromisos
+                concedits
+            x-agp34c1g6d1j0c9q60o3cdhg:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Participacio
+                en altres ingressos i despeses reconeguts d'inversions en negocis
+                conjunts i associades
+            x-agp34c1g6d1j0c9q60o3ed9o:
+              label: 'Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Pro memoria:
+                capital no exigit'
+            x-agp34c1g6d1j0c9q60o3ed9p:
+              label: 'Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Pro memoria:
+                exposicions fora de balanc'
+            x-agp34c1g6d1j0c9q60o3edhg:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Compromisos
+                de prestec concedits
+            x-agp34c1g6d1j0c9q60o3edhh:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Garanties
+                financeres concedides
+            x-agp34c1g6d1j0c9q60o3edhi:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Reserva de
+                capitalitzacio
+            x-agp34c1g6d1j0c9q60o3edhj:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Reserva d'anivellacio
+            x-agp34c1g6d1j0c9q60r36e0:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Canvis del
+                valor raonable dels instruments de patrimoni valorats a valor raonable
+                amb canvis en altre resultat global
+            x-agp34c1g6d1j0c9q60r36e8:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Ineficacia
+                de les cobertures de valor raonable dels instruments de patrimoni
+                valorats a valor raonable amb canvis en altre resultat global
+            x-agp34c1g6d1j0c9q60r38c0:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Canvis del
+                valor raonable dels instruments de patrimoni valorats a valor raonable
+                amb canvis en altre resultat global [element cobert]
+            x-agp34c1g6d1j0c9q60r38c8:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Canvis del
+                valor raonable dels instruments de patrimoni valorats a valor raonable
+                amb canvis en altre resultat global [instrument de cobertura]
+            x-agp34c1g6d1j0c9q60r38cg:
+              label: Balanc consolidat. Patrimoni net (pag. 3C hoja 01). Canvis del
+                valor raonable dels passius financers a valor raonable amb canvis
+                en resultats atribuibles a canvis en el risc de credit
             x-agp34c1g6d1j0chq60o32dhj:
               label: Balanc consolidat. Passiu (pag. 3C hoja 02). Passius financers
                 mantinguts per negociar

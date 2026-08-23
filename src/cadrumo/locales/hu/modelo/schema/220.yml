@@ -913,6 +913,147 @@ modelo:
               help: null
               label: Konszolidalt merleg. Eszkozok (pag. 3B hoja 02). Immaterialis
                 javak. Konszolidacios uzleti vagy cegertek
+            x-agp34c1g6d1j0c9q60o32e9j:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Sajat forrasok
+            x-agp34c1g6d1j0c9q60o32e9k:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Jegyzett toke
+            x-agp34c1g6d1j0c9q60o32e9l:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Jegyzett toke.
+                Befizetett toke
+            x-agp34c1g6d1j0c9q60o32e9m:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Jegyzett toke.
+                Befizetesre felszolitott, be nem fizetett toke
+            x-agp34c1g6d1j0c9q60o32e9n:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Toketartalek
+            x-agp34c1g6d1j0c9q60o32e9o:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). A jegyzett
+                toketol eltero kibocsatott tokeinstrumentumok
+            x-agp34c1g6d1j0c9q60o32e9p:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Osszetett
+                penzugyi instrumentumok sajat toke komponense
+            x-agp34c1g6d1j0c9q60o34c1g:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Egyeb kibocsatott
+                tokeinstrumentumok
+            x-agp34c1g6d1j0c9q60o34c1h:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Egyeb sajat
+                toke elemek
+            x-agp34c1g6d1j0c9q60o34c1i:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Eredmenytartalek
+            x-agp34c1g6d1j0c9q60o34c1j:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Ertekhelyesbitesi
+                tartalekok
+            x-agp34c1g6d1j0c9q60o34c1k:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Egyeb eredmenytartalekok
+            x-agp34c1g6d1j0c9q60o34c1l:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Kozos vallalkozasokban
+                es tarsult vallalkozasokban levo befektetesek halmozott tartalekai
+                vagy vesztesegei
+            x-agp34c1g6d1j0c9q60o34c1m:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Egyebek
+            x-agp34c1g6d1j0c9q60o34c1n:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). (-) Sajat
+                reszvenyek
+            x-agp34c1g6d1j0c9q60o34c1o:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Az anyavallalat
+                tulajdonosainak tulajdonithato eredmeny
+            x-agp34c1g6d1j0c9q60o34c1p:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). (-) Osztalekelolegek
+            x-agp34c1g6d1j0c9q60o34c9g:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Halmozott
+                egyeb atfogo eredmeny
+            x-agp34c1g6d1j0c9q60o34c9h:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Az eredmenybe
+                at nem sorolhato tetelek
+            x-agp34c1g6d1j0c9q60o34c9i:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Aktuariusi
+                nyereseg vagy (-) veszteseg meghatarozott juttatasu nyugdijterveken
+            x-agp34c1g6d1j0c9q60o34c9j:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Ertekesitesre
+                tartottnak minositett befektetett eszkozok es elidegenitesi csoportok
+            x-agp34c1g6d1j0c9q60o34c9m:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Az eredmenybe
+                atsorolhato tetelek
+            x-agp34c1g6d1j0c9q60o34c9n:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Kulfoldi erdekeltsegekbe
+                torteno netto befektetesek fedezese [hatekony resz]
+            x-agp34c1g6d1j0c9q60o34c9o:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Devizaatvaltas
+            x-agp34c1g6d1j0c9q60o34c9p:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Fedezeti derivativak.
+                Cash flow fedezeti tartalek [hatekony resz]
+            x-agp34c1g6d1j0c9q60o34chj:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Ertekesitesre
+                tartottnak minositett befektetett eszkozok es elidegenitesi csoportok
+            x-agp34c1g6d1j0c9q60o34chk:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Reszesedes
+                a kozos vallalkozasokban es tarsult vallalkozasokban levo befektetesek
+                egyeb elszamolt bevetelebol es raforditasabol
+            x-agp34c1g6d1j0c9q60o34chl:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Kisebbsegi
+                reszesedesek [nem ellenorzo reszesedesek]
+            x-agp34c1g6d1j0c9q60o34chm:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Halmozott
+                egyeb atfogo eredmeny
+            x-agp34c1g6d1j0c9q60o34chn:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Egyeb tetelek
+            x-agp34c1g6d1j0c9q60o34cho:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Sajat toke
+                osszesen
+            x-agp34c1g6d1j0c9q60o34chp:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Sajat toke
+                es kotelezettsegek osszesen
+            x-agp34c1g6d1j0c9q60o3cd1j:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Az egyeb atfogo
+                eredmennyel szemben valos erteken ertekelt hitelviszonyt megtestesito
+                instrumentumok valos ertekenek valtozasa
+            x-agp34c1g6d1j0c9q60o3cd1k:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Fedezeti instrumentumok
+                [nem megjelolt tetelek]
+            x-agp34c1g6d1j0c9q60o3cd1l:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Egyeb nyujtott
+                kotelezettsegvallalasok
+            x-agp34c1g6d1j0c9q60o3cdhg:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Reszesedes
+                a kozos vallalkozasokban es tarsult vallalkozasokban levo befektetesek
+                egyeb elszamolt bevetelebol es raforditasabol
+            x-agp34c1g6d1j0c9q60o3ed9o:
+              label: 'Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Emlekezteto
+                tetel: be nem hivott toke'
+            x-agp34c1g6d1j0c9q60o3ed9p:
+              label: 'Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Emlekezteto
+                tetel: merlegen kivuli kitettsegek'
+            x-agp34c1g6d1j0c9q60o3edhg:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Nyujtott hitelnyujtasi
+                kotelezettsegvallalasok
+            x-agp34c1g6d1j0c9q60o3edhh:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Nyujtott penzugyi
+                garanciak
+            x-agp34c1g6d1j0c9q60o3edhi:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Tokesitesi
+                tartalek
+            x-agp34c1g6d1j0c9q60o3edhj:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Kiegyenlitesi
+                tartalek
+            x-agp34c1g6d1j0c9q60r36e0:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). az egyeb atfogo
+                eredmennyel szemben valos erteken ertekelt tokeinstrumentumok valos
+                ertekenek valtozasa
+            x-agp34c1g6d1j0c9q60r36e8:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). az egyeb atfogo
+                eredmennyel szemben valos erteken ertekelt tokeinstrumentumok valos
+                ertek fedezeti ugyleteinek hatekonysaghianya
+            x-agp34c1g6d1j0c9q60r38c0:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). az egyeb atfogo
+                eredmennyel szemben valos erteken ertekelt tokeinstrumentumok valos
+                ertekenek valtozasa [fedezett tetel]
+            x-agp34c1g6d1j0c9q60r38c8:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). az egyeb atfogo
+                eredmennyel szemben valos erteken ertekelt tokeinstrumentumok valos
+                ertekenek valtozasa [fedezeti instrumentum]
+            x-agp34c1g6d1j0c9q60r38cg:
+              label: Konszolidalt merleg. Sajat toke (pag. 3C hoja 01). Az eredmennyel
+                szemben valos erteken ertekelt penzugyi kotelezettsegek valos ertekenek
+                a hitelkockazat valtozasabol eredo valtozasa
             x-agp34c1g6d1j0chq60o32dhj:
               label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Kereskedesi
                 celu penzugyi kotelezettsegek

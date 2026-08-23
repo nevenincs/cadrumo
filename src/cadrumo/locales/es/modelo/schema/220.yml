@@ -904,6 +904,157 @@ modelo:
               help: null
               label: Balance consolidado. Activo (pag. 3B hoja 02). Inmovilizado intangible.
                 Fondo de comercio de consolidacion
+            x-agp34c1g6d1j0c9q60o32e9j:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Fondos
+                propios
+            x-agp34c1g6d1j0c9q60o32e9k:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Capital
+            x-agp34c1g6d1j0c9q60o32e9l:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Capital.
+                Capital desembolsado
+            x-agp34c1g6d1j0c9q60o32e9m:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Capital.
+                Capital no desembolsado exigido
+            x-agp34c1g6d1j0c9q60o32e9n:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Prima
+                de emision
+            x-agp34c1g6d1j0c9q60o32e9o:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Instrumentos
+                de patrimonio emitidos distintos del capital
+            x-agp34c1g6d1j0c9q60o32e9p:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Componente
+                de patrimonio neto de los instrumentos financieros compuestos
+            x-agp34c1g6d1j0c9q60o34c1g:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Otros
+                instrumentos de patrimonio emitidos
+            x-agp34c1g6d1j0c9q60o34c1h:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Otros
+                elementos de patrimonio neto
+            x-agp34c1g6d1j0c9q60o34c1i:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Ganancias
+                acumuladas
+            x-agp34c1g6d1j0c9q60o34c1j:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Reservas
+                de revalorizacion
+            x-agp34c1g6d1j0c9q60o34c1k:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Otras
+                reservas
+            x-agp34c1g6d1j0c9q60o34c1l:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Reservas
+                o perdidas acumuladas de inversiones en negocios conjuntos y asociadas
+            x-agp34c1g6d1j0c9q60o34c1m:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Otras
+            x-agp34c1g6d1j0c9q60o34c1n:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). (-) Acciones
+                propias
+            x-agp34c1g6d1j0c9q60o34c1o:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Resultado
+                atribuible a los propietarios de la dominante
+            x-agp34c1g6d1j0c9q60o34c1p:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). (-) Dividendos
+                a cuenta
+            x-agp34c1g6d1j0c9q60o34c9g:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Otro
+                resultado global acumulado
+            x-agp34c1g6d1j0c9q60o34c9h:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Elementos
+                que no se reclasificaran en resultados
+            x-agp34c1g6d1j0c9q60o34c9i:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Ganancias
+                o (-) perdidas actuariales en planes de pensiones de prestaciones
+                definidas
+            x-agp34c1g6d1j0c9q60o34c9j:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Activos
+                no corrientes y grupos enajenables de elementos que se han clasificado
+                como mantenidos para la venta
+            x-agp34c1g6d1j0c9q60o34c9m:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Elementos
+                que pueden reclasificarse en resultados
+            x-agp34c1g6d1j0c9q60o34c9n:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Cobertura
+                de inversiones netas en negocios en el extranjero [parte eficaz]
+            x-agp34c1g6d1j0c9q60o34c9o:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Conversion
+                de divisas
+            x-agp34c1g6d1j0c9q60o34c9p:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Derivados
+                de cobertura. Reserva de coberturas de flujos de efectivo [parte eficaz]
+            x-agp34c1g6d1j0c9q60o34chj:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Activos
+                no corrientes y grupos enajenables de elementos que se han clasificado
+                como mantenidos para la venta
+            x-agp34c1g6d1j0c9q60o34chk:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Participacion
+                en otros ingresos y gastos reconocidos de inversiones en negocios
+                conjuntos y asociadas
+            x-agp34c1g6d1j0c9q60o34chl:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Intereses
+                minoritarios [participaciones no dominantes]
+            x-agp34c1g6d1j0c9q60o34chm:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Otro
+                resultado global acumulado
+            x-agp34c1g6d1j0c9q60o34chn:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Otras
+                partidas
+            x-agp34c1g6d1j0c9q60o34cho:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Total
+                patrimonio neto
+            x-agp34c1g6d1j0c9q60o34chp:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Total
+                patrimonio neto y pasivo
+            x-agp34c1g6d1j0c9q60o3cd1j:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Cambios
+                del valor razonable de los instrumentos de deuda a valor razonable
+                con cambios en otro resultado global
+            x-agp34c1g6d1j0c9q60o3cd1k:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Instrumentos
+                de cobertura [elementos no designados]
+            x-agp34c1g6d1j0c9q60o3cd1l:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Otros
+                compromisos concedidos
+            x-agp34c1g6d1j0c9q60o3cdhg:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Participacion
+                en otros ingresos y gastos reconocidos de inversiones en negocios
+                conjuntos y asociadas
+            x-agp34c1g6d1j0c9q60o3ed9o:
+              label: 'Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Pro
+                memoria: capital no exigido'
+            x-agp34c1g6d1j0c9q60o3ed9p:
+              label: 'Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Pro
+                memoria: exposiciones fuera de balance'
+            x-agp34c1g6d1j0c9q60o3edhg:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Compromisos
+                de prestamo concedidos
+            x-agp34c1g6d1j0c9q60o3edhh:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Garantias
+                financieras concedidas
+            x-agp34c1g6d1j0c9q60o3edhi:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Reserva
+                de capitalizacion
+            x-agp34c1g6d1j0c9q60o3edhj:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Reserva
+                de nivelacion
+            x-agp34c1g6d1j0c9q60r36e0:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Cambios
+                del valor razonable de los instrumentos de patrimonio valorados a
+                valor razonable con cambios en otro resultado global
+            x-agp34c1g6d1j0c9q60r36e8:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Ineficacia
+                de las coberturas de valor razonable de los instrumentos de patrimonio
+                valorados a valor razonable con cambios en otro resultado global
+            x-agp34c1g6d1j0c9q60r38c0:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Cambios
+                del valor razonable de los instrumentos de patrimonio valorados a
+                valor razonable con cambios en otro resultado global [elemento cubierto]
+            x-agp34c1g6d1j0c9q60r38c8:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Cambios
+                del valor razonable de los instrumentos de patrimonio valorados a
+                valor razonable con cambios en otro resultado global [instrumento
+                de cobertura]
+            x-agp34c1g6d1j0c9q60r38cg:
+              label: Balance consolidado. Patrimonio neto (pag. 3C hoja 01). Cambios
+                del valor razonable de los pasivos financieros a valor razonable con
+                cambios en resultados atribuibles a cambios en el riesgo de credito
             x-agp34c1g6d1j0chq60o32dhj:
               label: Balance consolidado. Pasivo (pag. 3C hoja 02). Pasivos financieros
                 mantenidos para negociar

@@ -270,6 +270,8 @@ cli:
         yes_help: Confirma la eliminación del justificante
         yes_required: Debes pasar --yes para eliminar un justificante
       inventory:
+        acquisition_cost_invalid: "JSON de coste de adquisición no válido leído de la entrada estándar: {details}"
+        acquisition_cost_stdin_help: Lee de la entrada estándar el objeto JSON de coste de adquisición completo
         actividad_id_help: Identificador de la actividad económica
         create_help: Crea un libro de existencias para una actividad y ejercicio
         group_help: Libros de existencias por actividad, movimientos y valoración

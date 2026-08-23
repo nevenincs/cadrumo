@@ -1,0 +1,632 @@
+# Modelo 220 RECORD T22003C01 -- BALANCE CONSOLIDADO, PATRIMONIO NETO, in the shape used by entidades de
+# credito: fondos propios, otro resultado global acumulado split into
+# elements that will and will not be reclassified, intereses minoritarios,
+# the two closing totals, and the pro memoria exposiciones fuera de balance.
+#
+# 47 casillas describe all 57 design fields -- 47 authored and
+# 10 excluded, each excluded field asserted to be envelope, reservado or fin de
+# registro BY ITS OWN TEXT rather than by position. Every box carries AEAT's own five-digit
+# number, so not one number here is minted.
+#
+# CHILDREN CARRY THEIR PARENT'S NAME INLINE, so every label is distinct on AEAT's own text
+# and no nesting is inferred from position. Where a design does NOT do this the record is
+# authored flat instead -- T22005A01 is the worked example, and the difference between the
+# two treatments is in the data, never in the preference.
+#
+# FIVE BOXES HERE CARRY A FOUR-DIGIT NUMBER: [0638] to [0642]. They are the first
+# non-five-digit boxes this generator has had to author, and it could not have:
+# its number pattern was "\\[(\\d{5})\\]", so all five would have been read as
+# UNNUMBERED fields and then refused as unexplained exclusions. The previous
+# iteration found that AEAT's numbers are not all five digits and corrected the
+# coverage measurement and the corpus verifier -- and NOT this generator. A
+# correction to how a corpus is read has to reach every place that reads it, and
+# this record is what forced the third one.
+#
+# SQUARE BRACKETS IN THIS RECORD ARE NOT ALL BOX NUMBERS: "[parte eficaz]",
+# "[elemento cubierto]", "[instrumento de cobertura]", "[elementos no
+# designados]" and "[participaciones no dominantes]" are AEAT's own qualifiers
+# and stay in the labels verbatim. Only a bracket whose content is entirely
+# digits is read as a number.
+#
+# IT CLOSES THE CREDITO BALANCE SHEET. [00229] TOTAL PATRIMONIO NETO Y PASIVO is
+# the counterpart of [00152] TOTAL ACTIVO on page 3A hoja 11. With both terms
+# declared the accounting identity is now EXPRESSIBLE for this sector too, and it
+# is still not EXPRESSED -- no formula, construct or binding relates them, here or
+# on the aseguradoras pages where the same became true three iterations ago.
+#
+# AEAT IS INCONSISTENT ABOUT THE SEPARATOR AFTER THE HEADING: "ACTIVO. Inmovilizado
+# intangible" with a space, "ACTIVO.Activos por impuesto diferido" without. The heading is
+# derived as the common prefix of every numbered line and the remainder is stripped, so
+# both spellings land on the same heading. 0 parent-child separator
+# repair(s)
+# applied: none needed.
+#
+# THE LIGATURE REPAIR IS GROUNDED IN THE WORKBOOK'S OWN VOCABULARY, and the vocabulary is
+# counted twice so the damage cannot attest itself: once over every token, and once over
+# only those tokens seen where they CANNOT be the left half of a split. 0
+# rejoin(s) applied: none.
+
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T22003C01 tiles
+# 1..976 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
+#
+# AEAT DECLARES THIS RECORD'S IDENTITY IN ITS ENVELOPE, as literal constants:
+# pagina 03, letra C, hoja 01. Sibling sector pages of this
+# family share every heading AEAT prints in the BODY -- two records both head their
+# lines "ACTIVO" and both declare a "Total activo" -- so the envelope is the ONLY
+# non-inferential way to tell them apart. The operator label carries it for exactly
+# that reason; it claims no sector, which the design does not state.
+#
+# NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
+# pagina-complementaria mechanics; @815+150 RESERVADO PARA LA ADMINISTRACION; and
+# @965+12 Fin de registro.
+#
+# NOT CLAIMED: THIS BALANCE SHEET DOES NOT BALANCE HERE. Every subtotal and the TOTAL are
+# DECLARED, not computed: no formula, construct or binding sums a group into its head or
+# the heads into the total, and nothing checks activo against patrimonio neto plus pasivo.
+# Every box is a manual input.
+
+# @16+17 N. Patrimonio neto. Fondos propios [00193]
+[[revisions."2024".casillas]]
+id = "T22003C01:00193"
+number = "00193"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @33+17 N. Patrimonio neto. Capital. [00194]
+[[revisions."2024".casillas]]
+id = "T22003C01:00194"
+number = "00194"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @50+17 N. Patrimonio neto. Capital. Capital desembolsado. [00195]
+[[revisions."2024".casillas]]
+id = "T22003C01:00195"
+number = "00195"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @67+17 N. Patrimonio neto. Capital. Capital no desembolsado exigido. [00196]
+[[revisions."2024".casillas]]
+id = "T22003C01:00196"
+number = "00196"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @84+17 N. Patrimonio neto. Pro memoria: capital no exigido [00758]
+[[revisions."2024".casillas]]
+id = "T22003C01:00758"
+number = "00758"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @101+17 N. Patrimonio neto. Prima de emisión. [00197]
+[[revisions."2024".casillas]]
+id = "T22003C01:00197"
+number = "00197"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @118+17 N. Patrimonio neto. Instrumentos de patrimonio emitidos distintos del capital. [00198]
+[[revisions."2024".casillas]]
+id = "T22003C01:00198"
+number = "00198"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @135+17 N. Patrimonio neto. Componente de patrimonio neto de los instrumentos financieros compuestos. [00199]
+[[revisions."2024".casillas]]
+id = "T22003C01:00199"
+number = "00199"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @152+17 N. Patrimonio neto. Otros instrumentos de patrimonio emitidos. [00200]
+[[revisions."2024".casillas]]
+id = "T22003C01:00200"
+number = "00200"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @169+17 N. Patrimonio neto. Otros elementos de patrimonio neto. [00201]
+[[revisions."2024".casillas]]
+id = "T22003C01:00201"
+number = "00201"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @186+17 N. Patrimonio neto. Ganancias acumuladas [00202]
+[[revisions."2024".casillas]]
+id = "T22003C01:00202"
+number = "00202"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @203+17 N. Patrimonio neto. Reservas de revalorización [00203]
+[[revisions."2024".casillas]]
+id = "T22003C01:00203"
+number = "00203"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @220+17 N. Patrimonio neto. Otras reservas. [00204]
+[[revisions."2024".casillas]]
+id = "T22003C01:00204"
+number = "00204"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @237+17 N. Patrimonio neto. Reserva de capitalización. [00762]
+[[revisions."2024".casillas]]
+id = "T22003C01:00762"
+number = "00762"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @254+17 N. Patrimonio neto. Reserva de nivelación. [00763]
+[[revisions."2024".casillas]]
+id = "T22003C01:00763"
+number = "00763"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @271+17 N. Patrimonio neto. Reservas o pérdidas acumuladas de inversiones en negocios conjuntos y asociadas. [00205]
+[[revisions."2024".casillas]]
+id = "T22003C01:00205"
+number = "00205"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @288+17 N. Patrimonio neto. Otras. [00206]
+[[revisions."2024".casillas]]
+id = "T22003C01:00206"
+number = "00206"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @305+17 N. Patrimonio neto. (-) Acciones propias. [00207]
+[[revisions."2024".casillas]]
+id = "T22003C01:00207"
+number = "00207"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @322+17 N. Patrimonio neto. Resultado atribuible a los propietarios de la dominante. [00208]
+[[revisions."2024".casillas]]
+id = "T22003C01:00208"
+number = "00208"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @339+17 N. Patrimonio neto. (-) Dividendos a cuenta. [00209]
+[[revisions."2024".casillas]]
+id = "T22003C01:00209"
+number = "00209"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @356+17 N. Patrimonio neto. Otro resultado global acumulado. [00210]
+[[revisions."2024".casillas]]
+id = "T22003C01:00210"
+number = "00210"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @373+17 N. Patrimonio neto. Elementos que no se reclasificarán en resultados. [00211]
+[[revisions."2024".casillas]]
+id = "T22003C01:00211"
+number = "00211"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @390+17 N. Patrimonio neto. Ganancias o (-) pérdidas actuariales en planes de pensiones de prestaciones definidas. [00212]
+[[revisions."2024".casillas]]
+id = "T22003C01:00212"
+number = "00212"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @407+17 N. Patrimonio neto. Activos no corrientes y grupos enajenables de elementos que se han clasificado como mantenidos para la venta. [00213]
+[[revisions."2024".casillas]]
+id = "T22003C01:00213"
+number = "00213"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @424+17 N. Patrimonio neto. Participación en otros ingresos y gastos reconocidos de inversiones en negocios conjuntos y asociadas. [00660]
+[[revisions."2024".casillas]]
+id = "T22003C01:00660"
+number = "00660"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @441+17 N. Patrimonio neto. Cambios del valor razonable de los instrumentos de patrimonio valorados a valor razonable con cambios en otro resultado global. [0638]
+[[revisions."2024".casillas]]
+id = "T22003C01:0638"
+number = "0638"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @458+17 N. Patrimonio neto. Ineficacia de las coberturas de valor razonable de los instrumentos de patrimonio valorados a valor razonable con cambios en otro resultado global. [0639]
+[[revisions."2024".casillas]]
+id = "T22003C01:0639"
+number = "0639"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @475+17 N. Patrimonio neto. Cambios del valor razonable de los instrumentos de patrimonio valorados a valor razonable con cambios en otro resultado global [elemento cubierto]. [0640]
+[[revisions."2024".casillas]]
+id = "T22003C01:0640"
+number = "0640"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @492+17 N. Patrimonio neto. Cambios del valor razonable de los instrumentos de patrimonio valorados a valor razonable con cambios en otro resultado global [instrumento de cobertura]. [0641]
+[[revisions."2024".casillas]]
+id = "T22003C01:0641"
+number = "0641"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @509+17 N. Patrimonio neto. Cambios del valor razonable de los pasivos financieros a valor razonable con cambios en resultados atribuibles a cambios en el riesgo de crédito. [0642]
+[[revisions."2024".casillas]]
+id = "T22003C01:0642"
+number = "0642"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @526+17 N. Patrimonio neto. Elementos que pueden reclasificarse en resultados. [00216]
+[[revisions."2024".casillas]]
+id = "T22003C01:00216"
+number = "00216"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @543+17 N. Patrimonio neto. Cobertura de inversiones netas en negocios en el extranjero [parte eficaz]. [00217]
+[[revisions."2024".casillas]]
+id = "T22003C01:00217"
+number = "00217"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @560+17 N. Patrimonio neto. Conversión de divisas. [00218]
+[[revisions."2024".casillas]]
+id = "T22003C01:00218"
+number = "00218"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @577+17 N. Patrimonio neto. Derivados de cobertura. Reserva de coberturas de flujos de efectivo [parte eficaz]. [00219]
+[[revisions."2024".casillas]]
+id = "T22003C01:00219"
+number = "00219"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @594+17 N. Patrimonio neto. Cambios del valor razonable de los instrumentos de deuda a valor razonable con cambios en otro resultado global. [00643]
+[[revisions."2024".casillas]]
+id = "T22003C01:00643"
+number = "00643"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @611+17 N. Patrimonio neto. Instrumentos de cobertura [elementos no designados]. [00644]
+[[revisions."2024".casillas]]
+id = "T22003C01:00644"
+number = "00644"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @628+17 N. Patrimonio neto. Activos no corrientes y grupos enajenables de elementos que se han clasificado como mantenidos para la venta. [00223]
+[[revisions."2024".casillas]]
+id = "T22003C01:00223"
+number = "00223"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @645+17 N. Patrimonio neto. Participación en otros ingresos y gastos reconocidos de inversiones en negocios conjuntos y asociadas. [00224]
+[[revisions."2024".casillas]]
+id = "T22003C01:00224"
+number = "00224"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @662+17 N. Patrimonio neto. Intereses minoritarios [participaciones no dominantes]. [00225]
+[[revisions."2024".casillas]]
+id = "T22003C01:00225"
+number = "00225"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @679+17 N. Patrimonio neto. Otro resultado global acumulado. [00226]
+[[revisions."2024".casillas]]
+id = "T22003C01:00226"
+number = "00226"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @696+17 N. Patrimonio neto. Otras partidas. [00227]
+[[revisions."2024".casillas]]
+id = "T22003C01:00227"
+number = "00227"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @713+17 N. Patrimonio neto. Total patrimonio neto. [00228]
+[[revisions."2024".casillas]]
+id = "T22003C01:00228"
+number = "00228"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @730+17 N. Patrimonio neto. Total patrimonio neto y pasivo. [00229]
+[[revisions."2024".casillas]]
+id = "T22003C01:00229"
+number = "00229"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @747+17 N. Patrimonio neto. Pro memoria: exposiciones fuera de balance. [00759]
+[[revisions."2024".casillas]]
+id = "T22003C01:00759"
+number = "00759"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @764+17 N. Patrimonio neto. Compromisos de préstamo concedidos. [00760]
+[[revisions."2024".casillas]]
+id = "T22003C01:00760"
+number = "00760"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @781+17 N. Patrimonio neto. Garantías financieras concedidas. [00761]
+[[revisions."2024".casillas]]
+id = "T22003C01:00761"
+number = "00761"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @798+17 N. Patrimonio neto. Otros compromisos concedidos. [00645]
+[[revisions."2024".casillas]]
+id = "T22003C01:00645"
+number = "00645"
+segmento = "T22003C01"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]

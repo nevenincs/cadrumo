@@ -246,6 +246,8 @@ cli:
         yes_help: Confirm deleting the evidence
         yes_required: Pass --yes to delete evidence
       inventory:
+        acquisition_cost_invalid: "Invalid acquisition-cost JSON from stdin: {details}"
+        acquisition_cost_stdin_help: Read the complete acquisition-cost JSON object from stdin
         actividad_id_help: Economic activity identifier
         create_help: Create an inventory ledger for one activity and tax year
         group_help: Inventory ledgers by activity, movements, and valuation

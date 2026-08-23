@@ -924,6 +924,149 @@ modelo:
               help: null
               label: Consolidated balance sheet. Assets (pag. 3B hoja 02). Intangible
                 fixed assets. Consolidation goodwill
+            x-agp34c1g6d1j0c9q60o32e9j:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Shareholders'
+                funds
+            x-agp34c1g6d1j0c9q60o32e9k:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Capital
+            x-agp34c1g6d1j0c9q60o32e9l:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Capital.
+                Paid-up capital
+            x-agp34c1g6d1j0c9q60o32e9m:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Capital.
+                Unpaid capital called up
+            x-agp34c1g6d1j0c9q60o32e9n:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Share premium
+            x-agp34c1g6d1j0c9q60o32e9o:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Equity
+                instruments issued other than capital
+            x-agp34c1g6d1j0c9q60o32e9p:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Equity
+                component of compound financial instruments
+            x-agp34c1g6d1j0c9q60o34c1g:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Other equity
+                instruments issued
+            x-agp34c1g6d1j0c9q60o34c1h:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Other equity
+                items
+            x-agp34c1g6d1j0c9q60o34c1i:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Retained
+                earnings
+            x-agp34c1g6d1j0c9q60o34c1j:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Revaluation
+                reserves
+            x-agp34c1g6d1j0c9q60o34c1k:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Other reserves
+            x-agp34c1g6d1j0c9q60o34c1l:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Accumulated
+                reserves or losses of investments in joint ventures and associates
+            x-agp34c1g6d1j0c9q60o34c1m:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Others
+            x-agp34c1g6d1j0c9q60o34c1n:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). (-) Own
+                shares
+            x-agp34c1g6d1j0c9q60o34c1o:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Result
+                attributable to the owners of the parent
+            x-agp34c1g6d1j0c9q60o34c1p:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). (-) Interim
+                dividends
+            x-agp34c1g6d1j0c9q60o34c9g:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Accumulated
+                other comprehensive income
+            x-agp34c1g6d1j0c9q60o34c9h:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Items that
+                will not be reclassified to profit or loss
+            x-agp34c1g6d1j0c9q60o34c9i:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Actuarial
+                gains or (-) losses on defined benefit pension plans
+            x-agp34c1g6d1j0c9q60o34c9j:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Non-current
+                assets and disposal groups classified as held for sale
+            x-agp34c1g6d1j0c9q60o34c9m:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Items that
+                may be reclassified to profit or loss
+            x-agp34c1g6d1j0c9q60o34c9n:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Hedge of
+                net investments in foreign operations [effective portion]
+            x-agp34c1g6d1j0c9q60o34c9o:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Currency
+                translation
+            x-agp34c1g6d1j0c9q60o34c9p:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Hedging
+                derivatives. Cash flow hedge reserve [effective portion]
+            x-agp34c1g6d1j0c9q60o34chj:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Non-current
+                assets and disposal groups classified as held for sale
+            x-agp34c1g6d1j0c9q60o34chk:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Share of
+                other recognised income and expense of investments in joint ventures
+                and associates
+            x-agp34c1g6d1j0c9q60o34chl:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Minority
+                interests [non-controlling interests]
+            x-agp34c1g6d1j0c9q60o34chm:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Accumulated
+                other comprehensive income
+            x-agp34c1g6d1j0c9q60o34chn:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Other items
+            x-agp34c1g6d1j0c9q60o34cho:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Total equity
+            x-agp34c1g6d1j0c9q60o34chp:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Total equity
+                and liabilities
+            x-agp34c1g6d1j0c9q60o3cd1j:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Fair value
+                changes of debt instruments at fair value through other comprehensive
+                income
+            x-agp34c1g6d1j0c9q60o3cd1k:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Hedging
+                instruments [non-designated items]
+            x-agp34c1g6d1j0c9q60o3cd1l:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Other commitments
+                given
+            x-agp34c1g6d1j0c9q60o3cdhg:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Share of
+                other recognised income and expense of investments in joint ventures
+                and associates
+            x-agp34c1g6d1j0c9q60o3ed9o:
+              label: 'Consolidated balance sheet. Equity (pag. 3C hoja 01). Memorandum
+                item: uncalled capital'
+            x-agp34c1g6d1j0c9q60o3ed9p:
+              label: 'Consolidated balance sheet. Equity (pag. 3C hoja 01). Memorandum
+                item: off-balance-sheet exposures'
+            x-agp34c1g6d1j0c9q60o3edhg:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Loan commitments
+                given
+            x-agp34c1g6d1j0c9q60o3edhh:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Financial
+                guarantees given
+            x-agp34c1g6d1j0c9q60o3edhi:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Capitalisation
+                reserve
+            x-agp34c1g6d1j0c9q60o3edhj:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Levelling
+                reserve
+            x-agp34c1g6d1j0c9q60r36e0:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Fair value
+                changes of equity instruments measured at fair value through other
+                comprehensive income
+            x-agp34c1g6d1j0c9q60r36e8:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Ineffectiveness
+                of fair value hedges of equity instruments measured at fair value
+                through other comprehensive income
+            x-agp34c1g6d1j0c9q60r38c0:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Fair value
+                changes of equity instruments measured at fair value through other
+                comprehensive income [hedged item]
+            x-agp34c1g6d1j0c9q60r38c8:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Fair value
+                changes of equity instruments measured at fair value through other
+                comprehensive income [hedging instrument]
+            x-agp34c1g6d1j0c9q60r38cg:
+              label: Consolidated balance sheet. Equity (pag. 3C hoja 01). Fair value
+                changes of financial liabilities at fair value through profit or loss
+                attributable to changes in credit risk
             x-agp34c1g6d1j0chq60o32dhj:
               label: Consolidated balance sheet. Liabilities (pag. 3C hoja 02). Financial
                 liabilities held for trading
