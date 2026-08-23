@@ -541,6 +541,29 @@ def discovered_source_capability_ids(repo_root: Path) -> tuple[str, ...]:
     return tuple(sorted(capability_ids))
 
 
+def discovered_source_capability_evidence(repo_root: Path) -> dict[str, str]:
+    """Map every stable capability identity to its current review locator."""
+    evidence: dict[str, str] = {}
+    located_rows = (
+        *discover_secure_repositories(repo_root),
+        *discover_ingress_surfaces(repo_root),
+        *discover_calculation_helpers(repo_root),
+        *discover_source_readiness(repo_root),
+    )
+    evidence.update((row.capability_id, row.evidence_locator) for row in located_rows)
+    evidence.update(
+        (row.capability_id, f"{row.module}:{row.line}")
+        for row in discover_row_assemblers(repo_root)
+    )
+    evidence.update(
+        (row.capability_id, "src/cadrumo/application/modelo/_calculation_route.py")
+        for row in discover_source_ownership()
+    )
+    if len(evidence) != len(discovered_source_capability_ids(repo_root)):
+        raise ValueError("source capability evidence map does not cover discovery exactly")
+    return dict(sorted(evidence.items()))
+
+
 _COVERAGE_SELECTOR_PREFIXES = {
     "remaining_calculation_helpers": "calculation_helper:",
     "remaining_ingress_surfaces": "ingress:",
@@ -744,6 +767,7 @@ __all__ = [
     "discover_secure_repositories",
     "discover_source_ownership",
     "discover_source_readiness",
+    "discovered_source_capability_evidence",
     "discovered_source_capability_ids",
     "validate_census_completeness",
 ]

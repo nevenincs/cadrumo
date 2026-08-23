@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-23'
 body_schema: body-v1
-body_hash: 'sha256:83998273eb7bdb47d3a9555e7dc35c3dad7430356430a4957c4993191d417c10'
+body_hash: 'sha256:78a8805558599554dd7cd10659c8486a2a8fc71c0b0edee910372fcb5804a66a'
 ---
 
 # `source-casilla-integration` plan
@@ -111,7 +111,7 @@ Make silent capability drift, stale deferral, and false connection claims fail C
 Close the formal review findings before any source candidate is promoted or inventory behavior changes.
 
 - [x] `W01.P23.S156` - replace advisory destination strings with typed registry-resolvable candidate identities and fail on absent or ambiguous destinations; `src/cadrumo/application/registry/source_connectivity.py`.
-- [ ] `W01.P23.S157` - verify every reviewed capability locator remains re-fetchable and corresponds to its stable capability identity; `dev/source_connectivity/check.py`.
+- [x] `W01.P23.S157` - verify every reviewed capability locator remains re-fetchable and corresponds to its stable capability identity; `dev/source_connectivity/check.py`.
 - [ ] `W01.P23.S158` - emit deterministic per-capability census membership and reviewed disposition evidence for aggregate coverage buckets; `dev/source_connectivity/cli.py`.
 - [ ] `W01.P23.S159` - make the census and ratchet modules clean on their intended static type-check surface; `dev/source_connectivity`.
 - [ ] `W01.P23.S160` - decide and implement the canonical live connected-proof gate composition; `src/cadrumo/application/registry`.

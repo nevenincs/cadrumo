@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -19,7 +20,11 @@ from cadrumo.core import (
 )
 from cadrumo.core.resources import resources
 
-from .discovery import assign_capabilities_to_census, discovered_source_capability_ids
+from .discovery import (
+    assign_capabilities_to_census,
+    discovered_source_capability_evidence,
+    discovered_source_capability_ids,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -60,6 +65,36 @@ def check_census_governance(manifest: object, *, as_of: date) -> None:
             )
 
 
+def check_capability_locators(
+    repo_root: Path,
+    manifest: object,
+    *,
+    capability_evidence: Mapping[str, str] | None = None,
+) -> None:
+    """Require reviewed locators to re-fetch and explicit IDs to retain correspondence."""
+    evidence_by_id = capability_evidence or discovered_source_capability_evidence(repo_root)
+    for row in manifest.entries:
+        for locator in row.capability_locators:
+            relative_path, separator, line_text = locator.rpartition(":")
+            has_line = bool(separator and line_text.isdigit())
+            path = repo_root / (relative_path if has_line else locator)
+            if not path.is_file():
+                raise SourceConnectivityCheckError(
+                    f"census capability locator is not re-fetchable: {row.candidate_id}: {locator}"
+                )
+            if has_line:
+                line_count = sum(1 for _ in path.open(encoding="utf-8"))
+                if not 1 <= int(line_text) <= line_count:
+                    raise SourceConnectivityCheckError(
+                        f"census capability locator line is absent: {row.candidate_id}: {locator}"
+                    )
+        for capability_id in row.capability_ids:
+            expected = evidence_by_id.get(capability_id)
+            if expected is None or expected not in row.capability_locators:
+                raise SourceConnectivityCheckError(
+                    f"census capability locator drift for {row.candidate_id}: "
+                    f"{capability_id} now resolves to {expected!r}"
+                )
 def check_capability_census(
     repo_root: Path,
     *,
@@ -77,6 +112,7 @@ def check_capability_census(
     except ValueError as error:
         raise SourceConnectivityCheckError(str(error)) from error
     check_census_governance(manifest, as_of=as_of or date.today())
+    check_capability_locators(repo_root, manifest)
     try:
         assignments = assign_capabilities_to_census(capability_ids, manifest)
     except ValueError as error:
@@ -92,5 +128,6 @@ __all__ = [
     "SourceConnectivityCheckError",
     "SourceConnectivityCheckResult",
     "check_capability_census",
+    "check_capability_locators",
     "check_census_governance",
 ]

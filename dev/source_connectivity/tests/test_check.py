@@ -14,8 +14,12 @@ from cadrumo.application.registry.source_connectivity import (
 )
 from cadrumo.core import SourceConnectivityDisposition
 
-from ..check import SourceConnectivityCheckError, check_census_governance
-from ..discovery import assign_capabilities_to_census, discovered_source_capability_ids
+from ..check import SourceConnectivityCheckError, check_capability_locators, check_census_governance
+from ..discovery import (
+    assign_capabilities_to_census,
+    discovered_source_capability_evidence,
+    discovered_source_capability_ids,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -25,6 +29,11 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 @pytest.fixture(scope="module")
 def live_capability_ids() -> tuple[str, ...]:
     return discovered_source_capability_ids(REPO_ROOT)
+
+
+@pytest.fixture(scope="module")
+def live_capability_evidence() -> dict[str, str]:
+    return discovered_source_capability_evidence(REPO_ROOT)
 
 
 def test_external_new_capability_is_rejected(live_capability_ids: tuple[str, ...]) -> None:
@@ -86,3 +95,37 @@ def test_unsupported_connected_claim_is_rejected_without_live_proof() -> None:
 
     with pytest.raises(ValidationError, match="requires complete connected_proof"):
         SourceConnectivityCensusEntry.model_validate(mutation)
+
+
+def test_missing_capability_locator_line_is_rejected(
+    live_capability_evidence: dict[str, str],
+) -> None:
+    manifest = load_source_connectivity_census()
+    first = manifest.entries[0]
+    stale = first.model_copy(
+        update={"capability_locators": ("src/cadrumo/adapters/persistence/profile/inventory.py:999999",)}
+    )
+    mutation = manifest.model_copy(update={"entries": (stale, *manifest.entries[1:])})
+
+    with pytest.raises(SourceConnectivityCheckError, match="locator line is absent"):
+        check_capability_locators(
+            REPO_ROOT,
+            mutation,
+            capability_evidence=live_capability_evidence,
+        )
+
+
+def test_capability_locator_correspondence_drift_is_rejected(
+    live_capability_evidence: dict[str, str],
+) -> None:
+    manifest = load_source_connectivity_census()
+    first = manifest.entries[0]
+    stale = first.model_copy(update={"capability_locators": first.capability_locators[1:]})
+    mutation = manifest.model_copy(update={"entries": (stale, *manifest.entries[1:])})
+
+    with pytest.raises(SourceConnectivityCheckError, match="capability locator drift"):
+        check_capability_locators(
+            REPO_ROOT,
+            mutation,
+            capability_evidence=live_capability_evidence,
+        )
