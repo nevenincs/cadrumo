@@ -11,6 +11,7 @@ from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
 from .._command_schema import command_registration_metadata, command_registration_projection
 from .._command_spec import (
     MachineSecretChannelKind,
+    MachineSecretFieldSpec,
     OptionSpec,
     ProfileAuthenticationPosture,
     ProfileSecretChannelKind,
@@ -26,6 +27,8 @@ from .._profile_authentication_contract import (
     ProfileAuthenticationSecrets,
     ProfileSecretSourceOptions,
     profile_authentication_posture,
+    resolve_profile_secret_model,
+    root_profile_secret_model,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -99,6 +102,16 @@ def test_profile_payload_is_strict_frozen_secretstr_and_value_free_in_repr() -> 
         )
     with pytest.raises(ValidationError):
         payload.profile_passphrase = payload.profile_passphrase  # ty: ignore[invalid-assignment]  # reason: frozen-model refusal probe
+
+
+def test_graph_profile_payload_model_is_exact_runtime_authority() -> None:
+    root = COMMAND_GRAPH.by_key()["root"]
+    assert root.profile_secret is not None
+    assert resolve_profile_secret_model(root.profile_secret) is ProfileAuthenticationSecrets
+    assert root_profile_secret_model() is ProfileAuthenticationSecrets
+    planted = replace(root.profile_secret, fields=(MachineSecretFieldSpec("planted_passphrase"),))
+    with pytest.raises(ValueError, match="exactly match"):
+        resolve_profile_secret_model(planted)
 
 
 def test_profile_selection_is_distinct_and_conflict_refuses_without_reading() -> None:
