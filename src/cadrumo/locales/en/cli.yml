@@ -642,12 +642,12 @@ cli:
           factura_emitida: issued invoice
           factura_recibida: received invoice
           gasto193_contribuyente: gastos-relationship contributor
+          inventario: inventory stock schedule
           miembro_atribucion: income-attribution member
           operacion_reembolso: refund operation
           operacion_vinculada: related-party operation
           registro_retenciones: withholding register
           regularizacion_bienes_inversion: capital-goods adjustment
-          inventario: inventory stock schedule
           regularizacion_prorrata: prorrata adjustment
           retencion: withholding
           withholding296_perceptor: withholding-declaration perceptor
@@ -1636,12 +1636,12 @@ cli:
         recovery key and cannot show it again.
       errors:
         echo_suppression_unavailable: This terminal cannot suppress echo, so the secret
-          would be visible on screen; use --secrets-stdin instead.
+          would be visible on screen; use --secrets-stdin or --secrets-fd instead.
         new_passphrase_mismatch: The new passphrase and confirmation do not match.
         no_controlling_terminal_for_secret: This secret can only be shown on a terminal,
           and no terminal is attached. Re-run the command from an interactive session.
         non_interactive_secret_required: A secret is required but no interactive terminal
-          is available; use --secrets-stdin.
+          is available; use --secrets-stdin or --secrets-fd.
         secrets_channel_conflict: Cannot specify both --secrets-stdin and --secrets-fd.
         secrets_fd_invalid_json: 'The machine-secret payload is not a valid JSON object.
           Send one object with these keys: {expected_fields}.'
@@ -2489,10 +2489,6 @@ cli:
     try_for_help: Try [blue]'{command_path} {help_option}'[/] for help.
     usage_prefix: 'Usage: '
   ledger:
-    participation:
-      help: Audit which finalized modelo revisions and filings consumed a ledger transaction.
-      rebuild_help: Rebuild the participation index for the active bucket.
-      transaction_id_help: Ledger transaction id whose finalized-revision participations to list.
     add:
       actor_help: Operator name recorded on the bucket event
       amount_help: Transaction amount in the transaction currency (decimal, e.g. 1200.50).
@@ -2937,6 +2933,11 @@ cli:
       reason_help: Reason recorded in the bucket-event payload and lifecycle history
       yes_help: Confirm the merge (archives every child and the parent, persists a
         fresh content-addressed merged transaction)
+    participation:
+      help: Audit which finalized modelo revisions and filings consumed a ledger transaction.
+      rebuild_help: Rebuild the participation index for the active bucket.
+      transaction_id_help: Ledger transaction id whose finalized-revision participations
+        to list.
     preflight:
       empty_ledger_advisory: No active ledger transactions were checked for this period.
       help: Report missing ledger facts (category, taxable base, IVA amount/rate,

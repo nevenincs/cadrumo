@@ -693,12 +693,12 @@ cli:
           factura_emitida: kimenő számla
           factura_recibida: bejövő számla
           gasto193_contribuyente: költség-kimutatás adóalanya
+          inventario: készletnyilvántartás
           miembro_atribucion: jövedelemtulajdonítás tagja
           operacion_reembolso: visszatérítési művelet
           operacion_vinculada: kapcsolt ügylet
           registro_retenciones: levonási nyilvántartás
           regularizacion_bienes_inversion: tárgyi eszközök korrekciója
-          inventario: készletnyilvántartás
           regularizacion_prorrata: prorrata-korrekció
           retencion: levonás
           withholding296_perceptor: visszatartás-bevallás kedvezményezettje
@@ -1742,13 +1742,14 @@ cli:
         tárolja a nyílt helyreállítási kulcsot, és nem tudja újra megjeleníteni.
       errors:
         echo_suppression_unavailable: Ez a terminál nem tudja elrejteni a beírt szöveget,
-          így a titok láthatóvá válna a képernyőn; használja a --secrets-stdin kapcsolót.
+          így a titok láthatóvá válna a képernyőn; használja a --secrets-stdin vagy
+          --secrets-fd kapcsolót.
         new_passphrase_mismatch: Az új passphrase és a megerősítés nem egyezik.
         no_controlling_terminal_for_secret: Ez a titok csak terminálon jeleníthető
           meg, de nincs csatlakoztatva terminál. Futtassa újra a parancsot interaktív
           munkamenetből.
         non_interactive_secret_required: Titok szükséges, de nincs interaktív terminál;
-          használja a --secrets-stdin kapcsolót.
+          használja a --secrets-stdin vagy --secrets-fd kapcsolót.
         secrets_channel_conflict: A --secrets-stdin és a --secrets-fd nem adható meg
           egyszerre.
         secrets_fd_invalid_json: 'A gépi titok tartalma nem érvényes JSON-objektum.
@@ -2665,10 +2666,6 @@ cli:
     try_for_help: 'Súgóért futtassa: [blue]''{command_path} {help_option}''[/].'
     usage_prefix: 'Használat: '
   ledger:
-    participation:
-      help: Annak ellenőrzése, hogy mely véglegesített modelo-revíziók és benyújtások használtak fel egy főkönyvi tranzakciót.
-      rebuild_help: Az aktív bucket részvételi indexének újraépítése.
-      transaction_id_help: A főkönyvi tranzakció azonosítója, amelynek véglegesített revíziós részvételeit listázni kell.
     add:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       amount_help: Tranzakciós összeg a tranzakció pénznemében (tizedes, pl. 1200.50).
@@ -3132,6 +3129,12 @@ cli:
         rögzített ok.
       yes_help: Az egyesítés megerősítése (minden gyermeket és a szülőt archiválja,
         és megőriz egy friss tartalom-azonosítójú egyesített tranzakciót).
+    participation:
+      help: Annak ellenőrzése, hogy mely véglegesített modelo-revíziók és benyújtások
+        használtak fel egy főkönyvi tranzakciót.
+      rebuild_help: Az aktív bucket részvételi indexének újraépítése.
+      transaction_id_help: A főkönyvi tranzakció azonosítója, amelynek véglegesített
+        revíziós részvételeit listázni kell.
     preflight:
       empty_ledger_advisory: Ebben az időszakban egyetlen aktív főkönyvi tranzakciót
         sem ellenőriztek.
