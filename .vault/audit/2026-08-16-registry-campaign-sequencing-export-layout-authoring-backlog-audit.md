@@ -19574,3 +19574,197 @@ Modelo 200's revision half: copy the 3,462-casilla revision, drop the 246 boxes
 that are 2025-only, author the 185 that are 2024-only, then two publish cycles.
 Modelo 347's 2008-2009 and 2010 revisions remain unauthored and are blocked on a
 per-field reading rather than a derivation.
+
+## Tick: modelo 200's revision half built end to end, then reverted at the render profile
+
+The revision half was built completely and stopped at a blocker that was not on
+the plan. The map from the previous tick stays landed; the revision work is
+reverted.
+
+### What was built, and what each step proved
+
+* the 3,462-casilla revision was renamed to `2025-y-siguientes` and a `2024`
+  copy retargeted to `aeat-dr-200-2024`;
+* **291 casillas dropped** -- the 246 boxes only the 2025 diseno carries plus 45
+  segmento-qualified variants -- with the control run before trusting it: of the
+  291, ZERO were design-independent (`decl.*`, ejercicio, periodo). Every one was
+  a box casilla. That check mattered: the drop rule was "not routed by the 2024
+  map", which would have silently taken the identity casillas had the map not
+  routed them;
+* **3,171 export_refs repointed** from `m200-2025.*` to `m200-2024.*`;
+* **185 casillas authored** across 14 records, each taking its record's uniform
+  legal_ref set and a surviving sibling's section, with the design's own field
+  text as the semantic role;
+* 60 casilla fragments were left with no casilla at all by the drop and had to be
+  DELETED -- a fragment declaring no `[revisions.<id>]` table is a hard
+  `RegistryLoadError`, which is how they were found.
+
+The result loads: the `2024` revision carries **3,356 casillas, exactly the 3,356
+casilla ids its map routes**.
+
+### The blocker, which the sizing had missed
+
+Publication refused with `render profile evidence locator does not contain source
+text: ('DP200023', 'H16')`.
+
+The render profile is not epoch-neutral. Modelo 200's is 129 fragments whose
+rules carry per-anchor CELL references -- `sheet`, `source_row`, `source_cell`,
+`ordinal` -- into the design they were authored against, and the loader verifies
+each locator actually contains the expected source text. Copying the 2025 profile
+across points every anchor at a 2025 cell.
+
+That is a real omission in the previous tick's sizing, which counted only fields
+and casillas. It is also solvable by the machinery already built: the anchors can
+be retargeted through the same 2024-to-2025 field resolution the map derivation
+uses. What it is not is free.
+
+The copied profile was REMOVED rather than left in place: its anchors are known
+wrong, and a wrong artifact on disk is worse than an absent one.
+
+### Verified
+
+* modelo 200 restored to its single `2024-y-siguientes` revision with 3,462
+  casillas; authority loads CLEAN.
+* registry package plus generated-tree gates: 13 failed, 5,987 passed. Nine are
+  the standing declared inventories. The other four --
+  `test_binding_build_validation`, `test_selector_shape`,
+  `test_generated_tree_check[semantic-map]` and `test_loader_cache_isolation` --
+  all pass in isolation (76 passed): concurrency artifacts of a peer's in-flight
+  work across a nine-minute run.
+* the epoch-2024 semantic map remains landed and inert.
+
+### Still open
+
+Modelo 200's split, with the remaining work now fully known: retarget the render
+profile's 129 fragments through the field resolution already computed, then the
+revision surgery above (which is scripted and reproducible), then two publish
+cycles. Modelo 347's 2008-2009 and 2010 revisions remain blocked on a per-field
+reading.
+
+## Tick: the render-profile blocker measured -- 4 locators, not 129 fragments -- and one that cannot be grounded
+
+Last tick called the render profile "129 fragments whose rules carry per-anchor
+cell references", which read as a large job. Measured, it is not: the profile
+claims **29 distinct evidence locators in total**, and against the 2024 workbook
+
+* **25 resolve identically** -- same sheet, same cell, same statement;
+* `DP200020D!E110` moved to `E104`, where the wanted statement
+  ("Reversion de las perdidas por deterioro de valores representativos - Numero
+  de periodo impositivo (*)") matches exactly;
+* `DP200001!E23` keeps its cell but the DESIGN's own wording changed:
+  2025 says "Codigo CNAE-2025 Actividad principal", 2024 says "C.N.A.E.
+  Actividad principal". The rule's expected statement follows the design;
+* `DP200023!H16` and `H17` have **no counterpart at all**.
+
+So three of the four are mechanical. The correction matters: the remaining work
+is a handful of locators plus the already-scripted revision surgery, not a
+profile rewrite.
+
+### The one that cannot be grounded, and why it is not mine to decide
+
+Those two rules govern the 8-byte AAAAMMDD date fields on `DP200023`
+("Operaciones fusion, escision, canje valores - 1. Fecha de la inscripcion de
+los acuerdos sociales en Registro Mercantil" and "... Fecha de comunicacion de
+la operacion"). The 2025 design carries an extra column H whose cell reads
+`AAAAMMDD`; the 2024 design has no such column, and a search of columns G-I
+across every sheet of the 2024 workbook finds the token **zero times**. AEAT
+introduced that annotation in 2025.
+
+The rules declare `authority_kind = "official_source"`, and no official cell in
+the 2024 design carries the statement. The available move -- downgrading them to
+`reviewed_policy` so the evidence loader stops asking -- changes the authority
+basis of a filing-grade representation rule from "AEAT states this" to "we
+decided this". That is exactly what the evidence gate exists to prevent, so it is
+recorded rather than taken.
+
+Nothing was landed this tick. That is the honest outcome: the profile could only
+have been landed complete, and completing it needs a ruling on those two rules.
+The tree is untouched -- modelo 200 keeps its single `2024-y-siguientes`
+revision, the epoch-2024 map from two ticks ago remains landed and inert, and no
+partial render profile was left behind.
+
+### Method note worth keeping
+
+The reader is chosen by SUFFIX, and modelo 200's 2024 design is a legacy `.xls`
+whose corpus filename ends `-10-7-mb-xls.xlsx`. Reading that name rather than
+`corpus_path.suffix` sent a first attempt through openpyxl, which refuses the
+format outright. The project's own `_legacy_xls_cell_reader` reads it fine. When
+probing a bundled workbook, take the suffix from the catalogue's path, never from
+the AEAT filename.
+
+### Still open
+
+Modelo 200's split, now fully sized: three locator edits, a ruling on the two
+DP200023 date rules, the scripted revision surgery (291 drops, 3,171 repoints,
+185 casillas authored, 60 emptied fragments deleted), then two publish cycles.
+Modelo 347's 2008-2009 and 2010 revisions remain blocked on a per-field reading.
+
+## Tick: the render profile retargeted and its coverage closed; one type-drift defect left it unpublishable
+
+Three of the four blockers named last tick are solved. A fourth, not previously
+visible, stopped the publish.
+
+### The DP200023 question, answered from the repo's own precedent
+
+Last tick left it open: two date rules declare `authority_kind =
+"official_source"` and the 2024 diseno carries no AAAAMMDD cell. Reading the
+evidence loader's own contract settles it -- "a profile may rest entirely on
+reviewed policy decisions, which cite no official cell" -- and modelo 200's OWN
+2025 profile already uses `reviewed_policy` with the justification "it is not
+represented as official-source text". So classifying those two rules that way is
+what the authority kind exists for, not a downgrade. Taken, with the
+justification stating that AEAT introduced the annotation in 2025 and the token
+appears nowhere in the 2024 workbook.
+
+### The profile, retargeted and then completed
+
+* 112 width-17 rules kept, 1 dropped, 258 anchors dropped as 2025-only;
+* 123 singleton rules kept, 3 dropped; 1 fragment omitted entirely, because a
+  fragment with no authored rule is refused by the loader;
+* `DP200020D!E110` relocated to `E104`; `DP200001!E23` restated to the 2024
+  design's own wording; the two date rules converted to reviewed policy.
+
+It loaded and its evidence resolved -- 27 official cells read from the 2024
+workbook. The loader merges width-17 rules by representation, so both epochs
+report 2 rules; the honest comparison is ANCHORS, 5,298 against 2025's 5,556,
+exactly the 258 dropped.
+
+Coverage then refused: the profile must cover EXACTLY the eligible fields, and
+194 were uncovered -- 185 at (17, Num), which are precisely the 2024-only boxes,
+and 9 at (8, Num), which are dates. Both were closed on the same grounds already
+used: the amounts joined the width-17 Num membership rule that governs every
+other 17-byte Num field on the workbook's own amount note, and the dates took the
+reviewed-policy decision above. Coverage went to **5,615 eligible, 5,615 covered,
+zero missing and zero extra**.
+
+### The defect that stopped it, and why it is not a small fix
+
+`width-17 N membership conflicts with official field at DP200002 row 56`.
+
+A field's `aeat_type` is not stable across designs. My retarget carried each
+anchor to its 2024 counterpart while leaving it filed under the rule it had in
+2025, so a 2025 `N` anchor can now point at a 2024 `Num` field. The rule is
+sound -- anchors must be re-filed by the TYPE OF THE 2024 FIELD, not inherited
+from the 2025 rule that used to hold them -- but applying it means re-partitioning
+5,298 anchors across the two membership rules and re-checking every singleton,
+which is not a line edit.
+
+The profile was REMOVED rather than left in place. It is 95% correct and its
+remaining defect is identified, but a render profile that mis-types a field is
+exactly the artifact that would write wrong bytes, and "mostly right" is not a
+state to leave on disk.
+
+### Verified
+
+* modelo 200 restored to its single `2024-y-siguientes` revision, 3,462
+  casillas; authority loads CLEAN.
+* the epoch-2024 semantic map remains landed and inert; no partial profile and no
+  partial revision remain.
+
+### Still open
+
+Modelo 200's split. Remaining: re-file the profile's anchors by each 2024 field's
+own `aeat_type`, then the scripted revision surgery (291 drops, 3,171 repoints,
+60 emptied fragments removed, 185 casillas authored -- all reproducible), then
+two publish cycles. Modelo 347's earlier revisions remain blocked on a per-field
+reading.
