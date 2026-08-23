@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:a66447660454084442acc1d02feee121e01c41a1405d855db0d2f088c50e144a'
+body_hash: 'sha256:c66a7db5f15103d5500938a7fe46868b393f81bb3bd5944e2447e3877a01b220'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
   - "[[2026-08-23-secure-storage-performance-hardening-command-spec-authority-adr]]"
@@ -15,51 +15,58 @@ related:
 ## Scope
 
 This independent Review A audited command-authority and production/development
-boundaries after steps `W02.P03a.S54` through `W02.P03a.S58`, grounded in the
+boundaries after steps `W02.P03a.S54` through `W02.P03a.S59`, grounded in the
 accepted production-authored `CommandSpec` decision, active plan, semantic
 discovery, and exact production source. The audit attacked duplicate Typer,
 decorator, callback, registrar, route/path/alias, JSON, generator, development
-import, fallback, shim, target, schema, policy, locale, and enrollment authority.
+import, fallback, shim, target, schema, policy, locale, enrollment, and harness
+projection authority.
 
 Clean-archive locale verification is explicitly Review B territory and is not
 part of this Review A verdict.
 
 ## Findings
 
-### schema-authority-decoration-prose | low | Payload prose preserves retired registration terminology
+### schema-authority-decoration-prose | low | resolved after repeated payload and behavior prose remediation
 
 The first pass found nine payload modules saying `OutputSchema` classes were
 "decorated with CommandSpec schema authority." Commit `1de86edd27` corrected
-those sites. A second pass found four more decorator or registry-hook claims in
-`_config_payloads`, `_config/_complete_setup_payloads`, `_review_payloads`, and
-`_registry_diff_payloads`; commit `10e4bfa801` corrected those four.
+those sites. A second pass found four more decorator or registry-hook claims;
+commit `10e4bfa801` corrected those. Further review found registration-era
+payload and behavior-module language; commits `d0c1b6c094` and `c5ccd43e01`
+corrected the cited sites and expanded the AST/token guard recursively across
+all production CLI Python modules. This finding is resolved.
 
-The required broad semantic scan still finds payload and command-surface prose
-using "registered" or "unregistered" for schema enrollment rather than
-deferred public targets or graph exposure: `_app_live_payloads` line 71;
-`_ledger_payloads` lines 140 and 391; `_overview_payloads` line 42;
-`_ledger_llm_payloads` line 6; `_modelo_amend_wizard_payloads` line 1;
-`_config_payloads` lines 65, 351, 1311, and 1351;
-`_prorrata_register_payloads` line 62; `_registry_payloads` line 72;
-`_config/_check_payloads` line 7; and `_ledger_catalogue_invoice_payloads` line
-16. Fiscal register nouns, certificate/profile registration state, the real
-runtime error-boundary decorator, type/API names, and wizard copy-source
-registration were examined and excluded as legitimate unrelated uses.
+### schema-registry-prose-gate | medium | resolved by fail-closed semantic variants and independent plants
 
-No executable duplicate authority was found. Typer construction remains solely
-in the runtime compiler; production has no command decorators, structural
+Final adversarial review found the recursive AST/token guard did not initially
+match direct `schema registry`, `result-schema registry`, registered-result DTO,
+or registered-JSON-payload variants. The implementation now rejects each
+variant, includes an independent planted negative for every bypass, and scans
+every non-test Python module recursively beneath the production CLI root. The
+surviving production phrases were replaced with graph and `CommandSpec` target
+terminology. This finding is resolved.
+
+No executable duplicate authority remains. Typer construction is confined to
+the runtime compiler; production contains no command decorators, structural
 registrars, route/path/alias maps, `dev` imports, retired command JSON or
-generators, fallback, or compatibility authority. Universal gates prove exact
-node enrollment, uniqueness, parent edges, locale keys, policies, schemas, and
-public role-correct targets. The installed-wheel provenance helper is
-development-only and introduces no production authority edge.
+generators, fallback, shim, or compatibility authority. Universal gates prove
+exact node enrollment, uniqueness, parent edges, locale keys, policies,
+schemas, and public role-correct targets. The distribution-harness projection
+consumes the sealed cohort and introduces no production or runtime
+command-authority edge. Remaining `RegisteredSchema` type/API names and wizard
+copy-source registration language describe legitimate contracts and unrelated
+copy-resolution mechanics, not command structure.
 
-Final severity census: critical 0, high 0, medium 0, low 1. Twenty-eight focused
-command-authority tests pass; Ruff and diff checks are clean.
+Final severity census: critical 0, high 0, medium 0, low 0. Two hundred
+fifty-one focused command-authority tests pass; focused Ruff and diff checks
+are clean. The independently reviewed command-authority,
+production/development, no-legacy, and no-source/runtime-authority lens is
+converged.
 
 ## Recommendations
 
-Replace the remaining schema/command-surface registration wording with
-"nested type not directly targeted," "deferred public schema target," or
-"graph-exposed command identity," as applicable. Retain legitimate fiscal,
-profile, certificate, error-decorator, and copy-source terminology unchanged.
+No open recommendation remains for Review A. Retain the recursive AST/token
+prose gate, its independent semantic plants, the universal exact-set and target
+gates, and the production-to-development import boundary as permanent
+regression controls.

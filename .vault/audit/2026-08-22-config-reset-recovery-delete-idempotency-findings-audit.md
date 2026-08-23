@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:173490b0e9776437502356b43cd3a9e0e974c825c48539ac2ae6fafc8602446c'
+body_hash: 'sha256:b424894ceef1f577e452396a1b930ad31ca8c7a47971b0128e296650905c1708'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-adr]]"
 ---
@@ -121,6 +121,33 @@ two cases asserting a pause from persisting a filing, which does not move the
 digest; a child that could not rename because the parent test process held the
 database open; and a case left stale by a re-pointing onto a deletion primitive
 with different semantics, whose expectations were never carried across.
+
+## Open: a completed reset leaves a lockfile naming the profile it erased
+
+Verified end to end through the operator surface. A reset that reports complete,
+one profile deleted, removes the capsule directory and leaves
+`.profile-custody-<uuid>.lock` beside it. The auth acquisition locks ARE cleared
+-- the token directory is empty afterwards -- so this is specifically the custody
+transaction lock.
+
+Sized honestly: the file is zero bytes, so nothing about the profile's contents
+survives. What survives is the filename, which carries the identifier of a
+profile the operator was told had been erased. For a verb whose purpose is
+removing local profiles, that is a completeness gap rather than a disclosure of
+data, and it is worth neither more nor less than that.
+
+Why it was left rather than fixed here. The lock path has no owner: it is built
+inline where the lock is taken, and unlike the transaction, receipt and hold
+directories it is not declared in the storage taxonomy -- which is plausibly why
+nothing reaps it, since nothing else knows it exists. Reaping it is a design
+choice with several defensible homes and one real hazard, the same one the auth
+acquisition locks document: removing a lock another holder is about to take is
+worse than leaving it. The safe shape is to reap only locks whose bucket no
+longer exists, and only while holding the root lock that globally serialises
+custody transactions, so nothing can be mid-flight. Choosing the home for that
+-- the delete transaction's final act, the reset's completion, or a custody
+maintenance verb -- is a decision, and inventing one on a destructive path at
+the end of a long session is how the three refused designs above started.
 
 ## The suite cannot be trusted green while the tree is being written
 

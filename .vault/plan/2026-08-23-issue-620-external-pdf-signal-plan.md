@@ -10,7 +10,7 @@ related:
   - '[[2026-07-26-declaracion-real-render-verification-adr]]'
   - '[[2026-08-03-declaracion-real-render-verification-specimen-corpus-distribution-research]]'
 modified: '2026-08-23'
-body_hash: 'sha256:e783b377df73ffe933b961e6a67967df44e310c9069602550d71c7195c75ba87'
+body_hash: 'sha256:9a375ef6313d3a4749b9a0b4a5a106be3b7ffb2d0b6bccfab0b737d74611e5e6'
 ---
 
 # `issue-620-external-pdf-signal` plan
@@ -32,6 +32,7 @@ The accepted real-render verification decision requires render-dependent claims 
 - [x] `S07` - Add Modelo 130 production-parser regressions for printed-box discovery and zero fabricated blank values; `src/cadrumo/adapters/inbound/declaracion/tests/test_parser_boundary_m130_external_layout.py`.
 - [x] `S08` - Add the cross-model external-layout outcome matrix with explicit unsupported and unavailable results; `src/cadrumo/adapters/inbound/declaracion/tests/test_external_layout_candidate_matrix.py`.
 - [x] `S09` - Correct Modelo 130 extraction-profile evidence claims and lock the operator advisory; `src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/extraction_profiles/`.
+- [ ] `S10` - Resolve final review findings for the M036 route, exact candidate topology, and synthetic-corpus terminology; `src/cadrumo/adapters/inbound/declaracion/tests/test_external_layout_candidate_matrix.py; src/cadrumo/tests/fixtures/external_layout_candidates/tests/test_candidate_contract.py; src/cadrumo/domain/calculations/registry/tests/`.
 
 ## Parallelization
 
