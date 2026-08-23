@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:7f540589b36bb60c52b651f2d66d54d4d07d6ca73e4a3eefd6d2fe58e589bec5'
+body_hash: 'sha256:002cb65055d3295eca8944f7054737d9d85d53a44035a7f676c7e970cb1b890a'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7359,3 +7359,39 @@ wrong instant. And the gate was broken from outside the repo through a scratchpa
 binds it, touching `_live_sessions` but never `_active_session` so the atexit ORDERING under
 test stays intact; the primary case then fails with its own message. Nothing tracked was mutated
 for either.
+
+### Following the exit sweep to its other caller: a narrower gap than it first looked
+
+The hook proven last iteration documents a second caller -- "the MCP watchdog's pre-exit hook
+before an `os._exit` that would otherwise skip both" -- and `os._exit` bypasses `atexit`
+entirely, so that path deserved checking on its own. Every real `os._exit(` in the tree was
+enumerated: all of them are in tests simulating crashes, except one, in
+`cadrumo-harness/.../mcp/_stdio_lifetime.py`.
+
+The design there is sound and well documented. `_exit_on_watched_death` runs
+`_run_pre_exit_hooks()` before `os._exit(0)`; hooks run on a bounded isolated thread with every
+exception swallowed; and the registry's own docstring explains that a hook observes no
+`ContextVar` another thread bound, which is exactly why the server's hook sweeps the live
+registry rather than calling the context-scoped close. `_server.py` registers
+`_close_live_sessions_before_exit` and then `atexit._run_exitfuncs`.
+
+*The gap, stated precisely.* `_close_live_sessions_before_exit` appears at its definition and
+its registration and nowhere else -- no test references it. The pre-exit MECHANISM is tested
+with marker lambdas, and `_run_server` carries `# pragma: no cover - requires the SDK runtime`,
+so the wiring from "server armed" to "live keys zeroised on a reap" is asserted by nothing.
+That is the same mechanism-versus-wiring shape as the `atexit` hook itself.
+
+*And why it is lower severity than it looks.* The server registers `atexit._run_exitfuncs` as
+a SECOND pre-exit hook, and that runs the substrate's own `_close_active_session_at_exit`.
+Measured rather than assumed: importing the storage facade for
+`close_all_live_bucket_sessions` pulls `_active_session` into `sys.modules`, so its hook is
+registered by the time the server arms. Two independent paths therefore zeroise on a reap, and
+the second is the one this campaign proved last iteration. Deleting the explicit hook would not
+silently lose zeroisation.
+
+Not built here, deliberately. A runtime proof would have to run `_run_server`, which blocks on
+the real transport, and stubbing `anyio.run` to get past it would be a mock in a test rather
+than a break-proof outside one. The remaining honest option is a source-inspection pin, and
+choosing to add one to a sibling shipped distribution is its owner's call, not this campaign's
+-- particularly now the property has a proven second path. Recorded for the harness owner with
+the exact locations and the reason the priority is low.
