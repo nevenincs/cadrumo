@@ -6,7 +6,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:d303c192732fd3124069df2f0728701fc2225e877f6a322acc34472ef6a489f6'
+body_hash: 'sha256:7c59b08710d88ece53d6dfb50071261ace7d54e4767cea7ec2763cf83653f6fb'
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S01]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S02]]'
@@ -27,6 +27,7 @@ related:
   - '[[2026-08-22-secure-storage-performance-hardening-W02-P03-S10]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W02-P03-S11]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W02-P03-S12]]'
+  - '[[2026-08-22-secure-storage-performance-hardening-W02-P04-S13]]'
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
   - '[[2026-08-22-secure-storage-performance-hardening-plan]]'
   - '[[2026-08-22-secure-storage-performance-hardening-reference]]'
@@ -49,6 +50,7 @@ related:
   - '[[2026-08-23-secure-storage-performance-hardening-w02-p03-s09-lazy-node-kernel-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-w02-p03-s10-metadata-traversal-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-w02-p03-s11-registration-metadata-review-audit]]'
+  - '[[2026-08-23-secure-storage-performance-hardening-w02-p04-s13-config-demand-loading-review-audit]]'
 ---
 
 # `secure-storage-performance-hardening` feature index
@@ -81,6 +83,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 - `2026-08-23-secure-storage-performance-hardening-w02-p03-s09-lazy-node-kernel-review-audit` - `secure-storage-performance-hardening` audit: `W02.P03.S09 lazy node kernel review`
 - `2026-08-23-secure-storage-performance-hardening-w02-p03-s10-metadata-traversal-review-audit` - `secure-storage-performance-hardening` audit: `W02.P03.S10 metadata traversal review`
 - `2026-08-23-secure-storage-performance-hardening-w02-p03-s11-registration-metadata-review-audit` - `secure-storage-performance-hardening` audit: `W02.P03.S11 registration metadata review`
+- `2026-08-23-secure-storage-performance-hardening-w02-p04-s13-config-demand-loading-review-audit` - `secure-storage-performance-hardening` audit: `w02 p04 s13 config demand loading review`
 
 ### exec
 
@@ -103,6 +106,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 - `2026-08-22-secure-storage-performance-hardening-W02-P03-S10` - Preserve root help, completion, version, error-envelope, and suggestion contracts through metadata-only traversal
 - `2026-08-22-secure-storage-performance-hardening-W02-P03-S11` - Make schema and operator-help discovery consume registration metadata without materializing handler subtrees
 - `2026-08-22-secure-storage-performance-hardening-W02-P03-S12` - Extend lazy import failure coverage across nested groups and leaves for required and optional dependencies
+- `2026-08-22-secure-storage-performance-hardening-W02-P04-S13` - Convert the complete config subtree from eager registrar imports to nested loader references
 
 ### plan
 

@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-performance-hardening'
 date: '2026-08-22'
 modified: '2026-08-23'
-body_hash: 'sha256:61ce8fa71faa7e3c1022d946ca1515de4c2792fdf5537878335c598705f0dbff'
+body_hash: 'sha256:7568b769f6d3344c8f8e3774dd813ce2b083e91e34ef867579c79288bccb60c5'
 tier: L3
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
@@ -14,23 +14,7 @@ related:
 
 # `secure-storage-performance-hardening` plan
 
-## Description
-
-Execute the approved command-scoped loading and pure secure-storage-read
-architecture across the complete installed CLI. Every root, group, leaf, and
-callback reachable from the real command tree is enrolled. Coverage derives
-from the live tree and fails when a new node lacks loader ownership, capability
-classification, import boundaries, side-effect policy, or performance class.
-The plan uses structural registration, a generated census, and parameterized
-real-process gates rather than a frozen verb count; per-path outlier reports
-ensure a cluster Step cannot conceal an individual slow or over-capable leaf.
-Secure-storage listing is the first end-to-end exemplar, not a scope boundary.
-
 ## Steps
-
-The five ordered Waves establish universal measurement, remove eager loading,
-build the pure secure-storage read path, enforce whole-tree budgets, and close
-only after independent structural and honesty audits.
 
 ## Wave `W01` - Measure and classify the complete surface
 
@@ -77,7 +61,7 @@ Generalize lazy loading to nested groups and leaves.
 
 Convert the complete CLI to the shared demand-loaded registration shape.
 
-- [ ] `W02.P04.S13` - Convert the complete config subtree from eager registrar imports to nested loader references; `src/cadrumo/entrypoints/cli/_config/`.
+- [x] `W02.P04.S13` - Convert the complete config subtree from eager registrar imports to nested loader references; `src/cadrumo/entrypoints/cli/_config/`.
 - [ ] `W02.P04.S14` - Convert the complete app subtree including modelo, registry, ledger, live, maintenance, overview, review, diagnostics, and quickfile descendants; `src/cadrumo/entrypoints/cli/`.
 - [ ] `W02.P04.S15` - Split import-heavy payload contracts from handlers so registration imports only option and help metadata; `src/cadrumo/entrypoints/cli/`.
 - [ ] `W02.P04.S16` - Replace hidden first-party function-local coupling with owned lazy public boundaries; `src/cadrumo/entrypoints/cli/`.
@@ -164,33 +148,3 @@ Prove the entire live CLI and secure-storage goal is satisfied.
 - [ ] `W05.P12.S45` - Perform a fresh-context honesty review and open Steps for every remaining gap; `.vault/audit/`.
 - [ ] `W05.P12.S46` - Publish final distributions, import reductions, filesystem effects, populated scaling, and census coverage; `.vault/reference/`.
 - [ ] `W05.P12.S47` - Close only when every live node is classified and gated and no review item remains unactioned; `.vault/exec/2026-08-22-secure-storage-performance-hardening/`.
-
-## Parallelization
-
-W01 is the hard prerequisite because its live census, capability taxonomy, and
-profiler define completion. After P01 and P02 land, P03 and P05 may proceed in
-parallel. Within P04, config and app subtree conversion can run concurrently
-under disjoint directory ownership; S17 joins them. W03 begins after P05 and
-proceeds persistence-first: P06 before P07 before P08. W04 depends on the loader
-contract and summary inventory, while P09 and P10 may run in parallel. W05 begins
-only after W02 through W04 converge. Every lane consumes the same live census;
-no worker may maintain a private verb list.
-
-## Verification
-
-Universal enrollment is proven by materializing the real command tree and
-requiring exact-set coverage for every reachable root, group, leaf, and callback.
-Each node carries loader ownership, capability classification, side-effect
-policy, and a calibrated performance class. Adding a command automatically adds
-a required case; an externally injected unclassified node proves the detector
-bites without hardcoding the current command count.
-
-Fresh-process probes separate bootstrap, resolution, and handler execution and
-report every path. Import-family gates prove ancestor and sibling resolution do
-not load registry or other undeclared authorities. Real persisted profile stores
-prove empty and populated behavior, bounded linear reads, coherent concurrency
-outcomes, zero custody/crypto/repair capability during listing, and zero
-read-only filesystem mutation. Full CLI, custody, persistence, architecture,
-lint, pytest, and Vaultspec gates must pass before the mandated eight-axis audit
-and fresh-context honesty review. The campaign cannot close while any live node
-is unenrolled, any class budget fails, or any review finding remains unactioned.
