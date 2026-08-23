@@ -1782,6 +1782,206 @@ modelo:
               help: null
               label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa
                 (pag. 5A hoja 02). Tokemodszerrel elszamolt entitasok. Egyeb atsorolasok
+            x-agp34c1g6so30c1q60o30d1j:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Az adocsoport entitasainak egyedi adoalapjai osszesen (a hajozasi
+                tarsasagok atalanyadozasa szerinti alapok nelkul) (7A. o.)
+            x-agp34c1g6so30c1q60o30d1n:
+              label: 'A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Szovetkezeti csoportok: szovetkezeti eredmenybol szarmazo egyedi
+                adoalapok osszesen (7A. o.)'
+            x-agp34c1g6so30c1q60o30d1o:
+              label: 'A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Szovetkezeti csoportok: nem szovetkezeti eredmenybol szarmazo
+                egyedi adoalapok osszesen (7A. o.)'
+            x-agp34c1g6so30c1q60o30d1p:
+              label: 'A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Kulonleges rendszerben levo hajozasi tarsasagokat tartalmazo
+                csoportok: tonnatartalom alapjan, atalanyadozassal meghatarozott adoalapok
+                osszesen (7A. o.)(*)'
+            x-agp34c1g6so30c1q60o30dpp:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Az adoalapok osszegenek belso eredmenyek halasztasa miatti korrekcioi
+                osszesen
+            x-agp34c1g6so30c1q60o30e1g:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Egyeb korrekciok az adoalapok osszegehez (**). Az adocsoport
+                belso osztalekainak kiszurese (7D. o.)
+            x-agp34c1g6so30c1q60o30e1i:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Egyeb korrekciok az adoalapok osszegehez (**). Az adocsoport
+                entitasaiban levo sajat toke reszesedesek korabbi idoszakokban kiszurt
+                ertekvesztesenek beszamitasa (7E. o.)
+            x-agp34c1g6so30c1q60o30e1j:
+              label: 'A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Egyeb korrekciok az adoalapok osszegehez (**). Szovetkezeti csoportok:
+                a "csoporton beluli visszateritesek", a "csoporton beluli gazdasagi
+                tamogatasok" es a "csoport vezeto entitasa altal felosztott eredmenyek"
+                kiszurese (1345/1992. RD) (7G. o.)'
+            x-agp34c1g6so30c1q60o30e1l:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Egyeb korrekciok az adoalapok osszegehez (**). Egyeb korrekciok
+                az egyedi adoalapok osszegehez vagy az adocsoport adoalapjahoz (7H.
+                o.)
+            x-agp34c1g6so30c1q60o30e1m:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Egyeb korrekciok az adoalapok osszegehez (**). Egyeb korrekciok
+                osszesen
+            x-agp34c1g6so30c1q60o34chl:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). A csoport eloezetes adoalapja
+            x-agp34c1g6so30c1q60o34e9h:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). A LIS 11.12. cikke szerinti korlat alkalmazasa (LIS 62.1. e)
+                cikk). Csokkenes
+            x-agp34c1g6so30c1q60o36dhi:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). A csoport korabbi idoszaki negativ adoalapjainak beszamitasa
+                (7K. o.)(***)
+            x-agp34c1g6so30c1q60o36dhj:
+              label: 'A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Szovetkezeti csoportok: a csoport korabbi idoszaki negativ adokotelezettsegeinek
+                beszamitasa (7K bis o.)(***)'
+            x-agp34c1g6so30c1q60o36e9o:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). A LIS 11.12. cikke szerinti kepzesek a csoporthoz valo csatlakozas
+                elotti idoszakokbol (LIS 67. d) es 74.3. d) cikk)(***)
+            x-agp34c1g6so30c1q60o3ad1g:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). A LIS 11.12. cikke es a 20/1990. torveny 7. kiegeszito rendelkezese
+                szerinti korlat alkalmazasa. Csokkenes
+            x-agp34c1g6so30c1q60o3ad1h:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). A LIS 11.12. cikke es a 20/1990. torveny 7. kiegeszito rendelkezese
+                szerinti kepzesek az entitas csoporthoz valo csatlakozasa elotti idoszakokbol
+                (***)
+            x-agp34c1g6so30c1q60o3ad1n:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Entitasok negativ adoalapjainak beszamitasa a csoporthoz valo
+                csatlakozas elotti idoszakokbol (LIS 67. e) es 74.3. e) cikk) (7L.
+                o.)(***)
+            x-agp34c1g6so30c1q60o3ad9g:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). A csoport adoalapja a tokesitesi tartalekok alkalmazasa es a
+                korabbi idoszakok negativ adoalapjainak beszamitasa elott
+            x-agp34c1g6so30c1q60o3ad9i:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). A csoport adoalapja
+            x-agp34c1g6so30c1q60o3ad9j:
+              label: 'A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Szovetkezeti csoportok: egyedi adoalapok osszege a kiszuresek
+                levonasa utan, szovetkezeti eredmenybol'
+            x-agp34c1g6so30c1q60o3ad9k:
+              label: 'A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Szovetkezeti csoportok: egyedi adoalapok osszege a kiszuresek
+                levonasa utan, nem szovetkezeti eredmenybol'
+            x-agp34c1g6so30c1q60o3ad9o:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Adokulcs (%)
+            x-agp34c1g6so30c1q60o3adhg:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). A csoport szovetkezeteinek brutto adokotelezettsegei osszesen
+            x-agp34c1g6so30c1q60o3adhh:
+              label: 'A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Szovetkezeti csoportok: entitasok negativ adokotelezettsegeinek
+                beszamitasa a csoporthoz valo csatlakozas elotti idoszakokbol (7L
+                bis o.)(***)'
+            x-agp34c1g6so30c1q60o3adhi:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). A csoport brutto adokotelezettsege
+            x-agp34c1g6so30c1q60oj0chh:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Korabbi idoszakok beszamitott egyedi negativ adoalapjainak osszege
+                (LIS 19. kiegeszito rendelkezes). Altalanos rendszer (7A bis o.)
+            x-agp34c1g6so30c1q60oj4dhj:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Az idoszak egyedi negativ adoalapjai 50%-anak osszege, be nem
+                szamitva (LIS 19. kiegeszito rendelkezes). Altalanos rendszer (7A.
+                o.)
+            x-agp34c1g6so30c1q60oj4dhk:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Az idoszak egyedi negativ adoalapjai 50%-anak osszege, be nem
+                szamitva (LIS 19. kiegeszito rendelkezes). Kanari-szigeteki hajok
+                es hajozasi tarsasagok kulonleges rendszere (7A. o.)
+            x-agp34c1g6so30c1q60ojicpl:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Korabbi idoszakok beszamitott negativ adoalapjainak osszege (LIS
+                19. kiegeszito rendelkezes). Kanari-szigeteki hajok es hajozasi tarsasagok
+                kulonleges rendszere (7A bis o.)
+            x-agp34c1g6so30c1q60p3ad1i:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). A LIS 13.1. cikke szerinti ertekvesztesek es a LIS 11.12. cikke
+                szerinti celtartalekok es raforditasok (LIS 14.1. es 14.2. cikk),
+                valamint a LIS 33.1. atmeneti rendelkezes szerinti kepzesek. Novekedes
+            x-agp34c1g6so30c1q60p3ad1j:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). A LIS 13.1. cikke szerinti ertekvesztesek es a LIS 11.12. cikke
+                szerinti celtartalekok es raforditasok (LIS 14.1. es 14.2. cikk).
+                Csokkenes
+            x-agp34c1g6so30c1q60p3ad1k:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). A LIS 11.12. cikke szerinti korlat alkalmazasa (LIS 62.1. e)
+                cikk). Novekedes
+            x-agp34c1g6so30c1q60p3ad1l:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Kiegyenlitesi tartalek. Novekedes
+            x-agp34c1g6so30c1q60p3ad1m:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Kiegyenlitesi tartalek. Csokkenes
+            x-agp34c1g6so30c1q60p3ad1n:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Entitasok kiegyenlitesi tartaleka a csoporthoz valo csatlakozas
+                elotti idoszakokbol (LIS 67. f) es 74.3. f) cikk)
+            x-agp34c1g6so30c1q60p3ad1o:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). A LIS 13.1. cikke szerinti ertekvesztesek es a LIS 11.12. cikke
+                szerinti celtartalekok es raforditasok. Novekedes (szovetkezetek)
+            x-agp34c1g6so30c1q60p3ad1p:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). A LIS 13.1. cikke szerinti ertekvesztesek es a LIS 11.12. cikke
+                szerinti celtartalekok es raforditasok. Csokkenes (szovetkezetek)
+            x-agp34c1g6so30c1q60p3ge9g:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). A LIS 11.12. cikke es a 20/1990. torveny 7. kiegeszito rendelkezese
+                szerinti korlat alkalmazasa. Novekedes
+            x-agp34c1g6so30c1q60p3ge9h:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Kiegyenlitesi tartalek. Novekedes
+            x-agp34c1g6so30c1q60p3ge9i:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Kiegyenlitesi tartalek. Csokkenes
+            x-agp34c1g6so30c1q60p3ge9j:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Entitasok kiegyenlitesi tartaleka a csoporthoz valo csatlakozas
+                elotti idoszakokbol
+            x-agp34c1g6so30c1q60p3idhj:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Tokesitesi tartalek (***)
+            x-agp34c1g6so30c1q60pj2d1g:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Entitasok tokesitesi tartaleka a csoporthoz valo csatlakozas
+                elotti idoszakokbol, ervenyesitve (LIS 67. c) es 74.3. c) cikk)(***)
+            x-agp34c1g6so30c1q60pj4d1h:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Az adoalapok osszegenek korrekcioi belso eredmenyek halasztasa
+                miatt (**). Belso ugyletek eredmenyenek kiszurese osszesen (7C. o.)
+            x-agp34c1g6so30c1q60pj4d1i:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Az adoalapok osszegenek korrekcioi belso eredmenyek halasztasa
+                miatt (**). Belso ugyletek eredmenyenek beszamitasa osszesen (7C.
+                o.)
+            x-agp34c1g6so30c1qegp34c1g6so30c1e6ss3cb9o60p0:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Adoalap savja 1
+            x-agp34c1g6so30c1qegp34c1g6so30c1e70o36b9o60rg:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Adokulcs savja 1 (harom egesz, ket tizedes)
+            x-agp34c1g6so30c1qegp34c1g6so30c1e70o3gb9o68q0:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Adoalap savja 2
+            x-agp34c1g6so30c1qegp34c1g6so30c1e70p3ab9o68sg:
+              label: A csoport adoalapja es brutto adokotelezettsege (pag. 70 hoja
+                00). Adokulcs savja 2 (harom egesz, ket tizedes)
             x-agp34c1g6t230c1q60o30e1g:
               help: null
               label: 'Egyeb korrekciok az adoalapok osszegehez: az adocsoport nem
