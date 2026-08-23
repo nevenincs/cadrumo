@@ -299,6 +299,13 @@ record.
 ::::{grid} 1 2 2 3
 :gutter: 3
 
+:::{grid-item-card} Connect an agent (MCP)
+:link: connect-an-agent
+:link-type: doc
+
+Expose the toolset to Claude or any MCP client, with the safety boundary intact.
+:::
+
 :::{grid-item-card} Troubleshooting
 :link: troubleshooting
 :link-type: doc

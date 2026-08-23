@@ -10,17 +10,27 @@ msgstr ""
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: ca <LL@li.org>\n"
 "Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "Generated-By: Babel 2.18.0\n"
 
 #: ../../reference/identity-and-naming.md:1
 msgid "Identity and naming"
 msgstr "Identitat i nomenclatura"
+
+#: ../../reference/identity-and-naming.md:3
+msgid ""
+"The Agencia Estatal de Administración Tributaria (AEAT) is the external "
+"tax authority. CLI means command-line interface. MCP means Model Context "
+"Protocol."
+msgstr ""
+"L'Agencia Estatal de Administración Tributaria (AEAT) és l'autoritat "
+"tributària externa. CLI vol dir interfície de línia d'ordres. MCP vol dir"
+" Model Context Protocol."
 
 #: ../../reference/identity-and-naming.md:6
 msgid "Canonical product identity"
@@ -71,6 +81,30 @@ msgid "`nevenincs/cadrumo`"
 msgstr "`nevenincs/cadrumo`"
 
 #: ../../reference/identity-and-naming.md
+msgid "MCP server identity"
+msgstr "Identitat del servidor MCP"
+
+#: ../../reference/identity-and-naming.md
+msgid "MCP executable"
+msgstr "Executable de l'MCP"
+
+#: ../../reference/identity-and-naming.md
+msgid "`cadrumo-mcp`"
+msgstr "`cadrumo-mcp`"
+
+#: ../../reference/identity-and-naming.md
+msgid "MCP tool prefix"
+msgstr "Prefix de les eines MCP"
+
+#: ../../reference/identity-and-naming.md
+msgid "MCP resource scheme"
+msgstr "Esquema de recursos MCP"
+
+#: ../../reference/identity-and-naming.md
+msgid "Plugin identifier"
+msgstr "Identificador del connector"
+
+#: ../../reference/identity-and-naming.md
 msgid "Product environment prefix"
 msgstr "Prefix d'entorn del producte"
 
@@ -96,11 +130,11 @@ msgstr "`cadrumo_data`"
 
 #: ../../reference/identity-and-naming.md:24
 msgid ""
-"These values identify one product. There is no alternate human CLI spelling "
-"or Python import alias."
+"These values identify one product. There is no alternate human CLI "
+"spelling or Python import alias."
 msgstr ""
-"Aquests valors identifiquen un sol producte. No hi ha cap grafia alternativa"
-" de la CLI per a humans ni cap àlies d'importació de Python."
+"Aquests valors identifiquen un sol producte. No hi ha cap grafia "
+"alternativa de la CLI per a humans ni cap àlies d'importació de Python."
 
 #: ../../reference/identity-and-naming.md:27
 msgid "Product and authority names"
@@ -144,20 +178,21 @@ msgstr "`AEAT`"
 
 #: ../../reference/identity-and-naming.md
 msgid ""
-"AEAT portal, AEAT credentials, AEAT official file, AEAT legal source, AEAT "
-"taxonomy"
+"AEAT portal, AEAT credentials, AEAT official file, AEAT legal source, "
+"AEAT taxonomy"
 msgstr ""
 "Portal de l'AEAT, credencials de l'AEAT, fitxer oficial de l'AEAT, font "
 "legal de l'AEAT, taxonomia de l'AEAT"
 
 #: ../../reference/identity-and-naming.md:34
 msgid ""
-"AEAT is an external authority and counterparty, not the application name. "
-"Authority-owned terms such as *modelo*, *casilla*, *justificante*, and "
+"AEAT is an external authority and counterparty, not the application name."
+" Authority-owned terms such as *modelo*, *casilla*, *justificante*, and "
 "official period or classification tokens keep their AEAT meaning inside "
 "Cadrumo."
 msgstr ""
-"L'AEAT és una autoritat externa i una contrapart, no el nom de l'aplicació. "
-"Els termes propietat de l'autoritat, com ara *modelo*, *casilla*, "
-"*justificante*, i els identificadors oficials de període o de classificació "
-"conserven el seu significat de l'AEAT dins de Cadrumo."
+"L'AEAT és una autoritat externa i una contrapart, no el nom de "
+"l'aplicació. Els termes propietat de l'autoritat, com ara *modelo*, "
+"*casilla*, *justificante*, i els identificadors oficials de període o de "
+"classificació conserven el seu significat de l'AEAT dins de Cadrumo."
+

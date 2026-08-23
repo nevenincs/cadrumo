@@ -55,9 +55,11 @@ uv run aeat --version
 
 A version number confirms the install. Then run the full workstation check
 and add the optional extras you want (Google export, the live AEAT browser,
-and OFX/QFX import) by following
+OFX/QFX import, the agent surface) by following
 [Install Cadrumo](workstation-setup.md), which covers the dependency report,
-platform checks, and per-extra install commands.
+platform checks, and per-extra install commands. To let an AI assistant such
+as Claude drive Cadrumo, continue with
+[Connect an agent (MCP)](how-to/connect-an-agent.md).
 
 ## Install channels
 
@@ -85,6 +87,12 @@ command once that channel is live.
 * - macOS (Apple silicon), Linux (x86-64 and arm64)
   - Homebrew formula
   - Release page artifact; Homebrew tap at public launch
+* - Claude Code, Claude Desktop, Claude Cowork
+  - Claude plugin
+  - Release page artifact; neve marketplace listing at public launch
+* - Claude Desktop
+  - Claude Desktop extension (MCPB)
+  - Release page artifact; Claude Desktop extension directory at public launch
 ```
 
 Per-channel install paths:
@@ -100,6 +108,14 @@ The Scoop bucket opens at public launch; until then, install the release-page ar
 **Homebrew formula**: macOS (Apple silicon), Linux (x86-64 and arm64)
 
 The Homebrew tap opens at public launch; until then, install the release-page artifact attached to the latest release.
+
+**Claude plugin**: Claude Code, Claude Desktop, Claude Cowork
+
+The neve marketplace listing opens at public launch; until then, install the release-page artifact attached to the latest release.
+
+**Claude Desktop extension (MCPB)**: Claude Desktop
+
+The Claude Desktop extension directory opens at public launch; until then, install the release-page artifact attached to the latest release.
 
 <div data-cadrumo-downloads hidden></div>
 <!-- vaultspec:generated:end download-matrix -->
@@ -122,4 +138,11 @@ install-and-run checks for that release, and each release's notes in
 Take the shortest path from an empty profile to an exported modelo file.
 :::
 
+:::{grid-item-card} Connect an agent (MCP)
+:link: how-to/connect-an-agent
+:link-type: doc
+:class-card: cadrumo-route-card
+
+Let an AI assistant such as Claude drive Cadrumo with you, on your machine.
+:::
 ::::

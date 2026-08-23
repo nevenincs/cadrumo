@@ -27,8 +27,9 @@ the fastest way to land in the right subpackage.
   implementations: inbound parsers (bank statements, borrador and
   justificante documents) and outbound integrations (the AEAT sede, Google
   Sheets, LLM providers).
-- {doc}`cadrumo.entrypoints <cadrumo.entrypoints>` owns the `aeat`
-  command-line interface.
+- {doc}`cadrumo.entrypoints <cadrumo.entrypoints>` owns the process surfaces:
+  the `aeat` command-line interface and the `cadrumo-mcp` Model Context
+  Protocol server. Both drive the same application services.
 
 ## Where to start
 

@@ -9,9 +9,10 @@
 This is the documentation for Cadrumo and its `aeat` command-line interface
 (CLI). Cadrumo turns your records into checked modelo figures and an export
 file. You upload that file to the Agencia Estatal de Administración Tributaria
-(AEAT) yourself. The source is on
-[GitHub](https://github.com/nevenincs/cadrumo). Cadrumo is in beta; interfaces
-may still change between releases.
+(AEAT) yourself. For what Cadrumo is and who it is for, see the
+[product page](https://cadrumo.neve.md); the source is on
+[GitHub](https://github.com/nevenincs/cadrumo). Cadrumo is in beta -
+interfaces may still change between releases.
 
 ```{important}
 Cadrumo is not tax advice, is not affiliated with AEAT, and does not replace
@@ -121,6 +122,7 @@ Getting started <how-to/index>
 Get Cadrumo <download>
 Install Cadrumo <workstation-setup>
 Quickstart <how-to/quickstart>
+Connect an agent (MCP) <how-to/connect-an-agent>
 First quarterly filing <how-to/first-quarterly-filing>
 The income-tax year <how-to/irpf-lifecycle>
 The IVA year <how-to/iva-lifecycle>

@@ -10,17 +10,27 @@ msgstr ""
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
 "PO-Revision-Date: 2026-07-18 13:20+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
-"Language-Team: hu <LL@li.org>\n"
 "Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "Generated-By: Babel 2.18.0\n"
 
 #: ../../reference/identity-and-naming.md:1
 msgid "Identity and naming"
 msgstr "Azonosság és elnevezés"
+
+#: ../../reference/identity-and-naming.md:3
+msgid ""
+"The Agencia Estatal de Administración Tributaria (AEAT) is the external "
+"tax authority. CLI means command-line interface. MCP means Model Context "
+"Protocol."
+msgstr ""
+"Az Agencia Estatal de Administración Tributaria (AEAT) a külső "
+"adóhatóság. A CLI a parancssori felületet jelenti. Az MCP a Model Context"
+" Protocolt jelenti."
 
 #: ../../reference/identity-and-naming.md:6
 msgid "Canonical product identity"
@@ -71,6 +81,30 @@ msgid "`nevenincs/cadrumo`"
 msgstr "`nevenincs/cadrumo`"
 
 #: ../../reference/identity-and-naming.md
+msgid "MCP server identity"
+msgstr "MCP-kiszolgáló azonossága"
+
+#: ../../reference/identity-and-naming.md
+msgid "MCP executable"
+msgstr "MCP-végrehajtható"
+
+#: ../../reference/identity-and-naming.md
+msgid "`cadrumo-mcp`"
+msgstr "`cadrumo-mcp`"
+
+#: ../../reference/identity-and-naming.md
+msgid "MCP tool prefix"
+msgstr "MCP-eszközelőtag"
+
+#: ../../reference/identity-and-naming.md
+msgid "MCP resource scheme"
+msgstr "MCP-erőforrásséma"
+
+#: ../../reference/identity-and-naming.md
+msgid "Plugin identifier"
+msgstr "Beépülő azonosítója"
+
+#: ../../reference/identity-and-naming.md
 msgid "Product environment prefix"
 msgstr "Termék környezeti előtag"
 
@@ -96,11 +130,11 @@ msgstr "`cadrumo_data`"
 
 #: ../../reference/identity-and-naming.md:24
 msgid ""
-"These values identify one product. There is no alternate human CLI spelling "
-"or Python import alias."
+"These values identify one product. There is no alternate human CLI "
+"spelling or Python import alias."
 msgstr ""
-"Ezek az értékek egyetlen terméket azonosítanak. Nincs alternatív emberi CLI-"
-"írásmód vagy Python-importalias."
+"Ezek az értékek egyetlen terméket azonosítanak. Nincs alternatív emberi "
+"CLI-írásmód vagy Python-importalias."
 
 #: ../../reference/identity-and-naming.md:27
 msgid "Product and authority names"
@@ -131,7 +165,8 @@ msgid ""
 "Cadrumo CLI, Cadrumo profile, `cadrumo` package, "
 "`CADRUMO_LOCAL_STORAGE_ROOT`"
 msgstr ""
-"Cadrumo CLI, Cadrumo-profil, `cadrumo` csomag, `CADRUMO_LOCAL_STORAGE_ROOT`"
+"Cadrumo CLI, Cadrumo-profil, `cadrumo` csomag, "
+"`CADRUMO_LOCAL_STORAGE_ROOT`"
 
 #: ../../reference/identity-and-naming.md
 msgid "Spanish tax authority"
@@ -143,20 +178,21 @@ msgstr "`AEAT`"
 
 #: ../../reference/identity-and-naming.md
 msgid ""
-"AEAT portal, AEAT credentials, AEAT official file, AEAT legal source, AEAT "
-"taxonomy"
+"AEAT portal, AEAT credentials, AEAT official file, AEAT legal source, "
+"AEAT taxonomy"
 msgstr ""
-"AEAT-portál, AEAT-hitelesítő adatok, AEAT hivatalos fájl, AEAT jogforrás, "
-"AEAT-taxonómia"
+"AEAT-portál, AEAT-hitelesítő adatok, AEAT hivatalos fájl, AEAT jogforrás,"
+" AEAT-taxonómia"
 
 #: ../../reference/identity-and-naming.md:34
 msgid ""
-"AEAT is an external authority and counterparty, not the application name. "
-"Authority-owned terms such as *modelo*, *casilla*, *justificante*, and "
+"AEAT is an external authority and counterparty, not the application name."
+" Authority-owned terms such as *modelo*, *casilla*, *justificante*, and "
 "official period or classification tokens keep their AEAT meaning inside "
 "Cadrumo."
 msgstr ""
 "Az AEAT külső hatóság és partner, nem az alkalmazás neve. A hivatal "
-"tulajdonában lévő fogalmak, mint a *modelo*, a *casilla*, a *justificante*, "
-"valamint a hivatalos időszak- vagy osztályozási jelölők a Cadrumón belül "
-"megtartják AEAT-jelentésüket."
+"tulajdonában lévő fogalmak, mint a *modelo*, a *casilla*, a "
+"*justificante*, valamint a hivatalos időszak- vagy osztályozási jelölők a"
+" Cadrumón belül megtartják AEAT-jelentésüket."
+
