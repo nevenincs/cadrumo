@@ -69,8 +69,10 @@ try. Real past gaps: 182 (2007–2023), 187 (2019–2021), 188 (2019–2022), 19
    Check the actual file, the actual count, the actual commit.
 5. **Report honestly.** Progress is a worklist line cleared or a shipped defect proven. A
    fire that added data without either **did not advance** and must say so.
-6. **Record durable findings** in
-   `.vault/audit/2026-08-20-registry-temporal-coverage-casilla-provenance-and-review-blockers-audit`.
+6. **DO NOT WRITE AUDIT PROSE.** The vault holds 180,865 lines of it across 1,330 files and
+   it fixed nothing. A finding is recorded by FIXING IT, or by one line in the commit
+   message of the fix. If you cannot fix it, say it in chat and move on. Never open a new
+   audit document.
 
 ## LESSONS ALREADY PAID FOR
 
