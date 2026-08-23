@@ -15,7 +15,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....application.operator_surface import build_help_document
-from .._config_payloads import ConfigHelpEntryPayload, ConfigHelpSectionPayload, ConfigRootResult
+from .._config_help_payloads import ConfigHelpEntryPayload, ConfigHelpSectionPayload, ConfigRootResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:6853d621782cb42a895100d972af90d70fd3c166a608f8f8e90bb33d5cbe7593'
+body_hash: 'sha256:d72d39fe31a7ea1ea760e0bee0fe716f2f9fc977e40a8f84c0305ed550ae6a43'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
   - "[[2026-08-23-secure-storage-performance-hardening-command-spec-authority-adr]]"
@@ -139,3 +139,22 @@ installed-payload provenance for the MCP server capture, compare every
 and apply the same sealed-wheel binding before any client-row evidence can be
 minted. Add direct-call and CLI-level swapped-capture negatives for Python,
 Scoop, Homebrew, MCPB, Claude plugin, marketplace, and real-client paths.
+
+## Converged final disposition
+
+The operator rejected the client-blind deletion premise that was introduced after this
+review. The harness and MCPB are separate shipped clients of the base CLI, and their
+build, evidence, and deployment lanes must remain. A second fresh independent review
+confirmed that the actual dependency direction is correct: the base package has no
+runtime or published dependency on `cadrumo_harness`; the harness distribution declares
+and exercises its dependency on `cadrumo`; and it consumes production CommandSpec
+authority through the public CLI API without generated runtime JSON.
+
+The stale regression test that required every external-client surface and workflow to
+be absent was the only current shared high-severity finding. It now asserts the real
+boundary instead: no base-to-harness import, an explicit exercised harness-to-base
+dependency, and continued presence of the separate harness shipping workflows. The
+focused dependency, source, distribution, metadata, facade, and boundary review passes
+with no blocking finding. Current census: critical 0, high 0, medium 0, low 0. The
+historical provenance findings above remain useful context but do not authorize deleting
+or folding the protected client product into the base CLI.

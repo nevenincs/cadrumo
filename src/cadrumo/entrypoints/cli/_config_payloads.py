@@ -37,7 +37,6 @@ from ...application.config_reset import (
     ConfigResetPauseReason,
     ConfigResetTargetPhase,
 )
-from ...application.operator_surface import HelpSurface
 from ...application.user_profile import (
     ProfileBundleExportPurpose,
     ProfileBundleExportTransport,
@@ -146,40 +145,6 @@ class ProfileFactPayload(OutputSchema):
 
     path: str
     value: str
-
-
-class ConfigHelpEntryPayload(OutputSchema):
-    """One command row in the curated config help document.
-
-    Field bounds mirror the canonical :class:`~cadrumo.application.operator_surface.HelpEntry`.
-    """
-
-    command: str = Field(min_length=1, max_length=80)
-    description: str = Field(min_length=1, max_length=80)
-
-
-class ConfigHelpSectionPayload(OutputSchema):
-    """One workflow-ordered section in the curated config help document.
-
-    Field bounds mirror the canonical :class:`~cadrumo.application.operator_surface.HelpSection`.
-    """
-
-    title: str = Field(min_length=1, max_length=80)
-    entries: list[ConfigHelpEntryPayload] = Field(min_length=1)
-
-
-class ConfigRootResult(OutputSchema):
-    """JSON envelope for bare ``aeat config`` and ``aeat config --help``.
-
-    Mirrors the canonical :class:`~cadrumo.application.operator_surface.HelpDocument`
-    built by :func:`~cadrumo.application.operator_surface.build_help_document`.
-    """
-
-    surface: HelpSurface
-    heading: str = Field(min_length=1, max_length=120)
-    paragraphs: list[str] = Field(min_length=1)
-    sections: list[ConfigHelpSectionPayload] = Field(min_length=1)
-    footer: str = Field(min_length=1, max_length=120)
 
 
 # P05 — repair verb result schemas

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:c66a7db5f15103d5500938a7fe46868b393f81bb3bd5944e2447e3877a01b220'
+body_hash: 'sha256:699b2f0419f1a2d9ffb4b6639819b33e5febcf0c1edb55b1293ec2606d93a8df'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
   - "[[2026-08-23-secure-storage-performance-hardening-command-spec-authority-adr]]"
@@ -70,3 +70,16 @@ No open recommendation remains for Review A. Retain the recursive AST/token
 prose gate, its independent semantic plants, the universal exact-set and target
 gates, and the production-to-development import boundary as permanent
 regression controls.
+
+## Converged boundary correction
+
+The operator rejected the later client-blind deletion premise. The harness, Claude
+plugin, MCPB, marketplace, and deployment lanes are separate protected products that
+depend on the base CLI; separation does not mean deletion. A fresh independent review
+confirmed zero base-runtime imports of the harness but found `config --help` importing
+the calculation registry and storage through broad help and payload facades. The help
+models and config-help payload now have import-light owners, the operator-surface facade
+is lazy, and metadata rendering bypasses profile notices, action resolution, and sandbox
+discovery. The fresh-process metadata suite passes with zero registry, storage, crypto,
+keyring, harness, or TUI imports. Current census remains critical 0, high 0, medium 0,
+low 0.

@@ -737,6 +737,8 @@ def _emit_envelope(
             The text-mode rendering is unchanged; callers fold the same
             notices into ``lines`` themselves so JSON and text cannot
             drift.
+        metadata_only: Skip profile notices, action resolution, and sandbox
+            discovery for a callback that only renders command metadata.
     """
     metadata_invocation = metadata_only or _is_metadata_invocation(ctx)
     output_format = _format_of(ctx)
