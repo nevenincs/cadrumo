@@ -19307,3 +19307,70 @@ narrowing explicitly, so the row cannot later be read as a completed partition.
 Modelo 200's split -- now the only entry on the spanning set. Modelo 347's
 2008-2009 and 2010 revisions remain unauthored, and need a field-to-field
 reading of AEAT's prose rather than a derivation.
+
+## Tick: modelo 200 narrowed, then reverted when the control disproved it
+
+Modelo 200 was the last entry on the spanning set. The 347 remedy -- narrow the
+revision to the years its design governs -- was applied and then REVERSED,
+because the control that would disprove it fired. The tree is back to its
+pre-tick state.
+
+### Why narrowing looked right
+
+Revision `2024-y-siguientes` claims 2024 onward, cites both the 2024 and 2025
+designs, and its export layout cites `aeat-dr-200-2025` alone. Measured against
+both designs, the casilla set is unambiguously the 2025 one: of 3,427 numbered
+casillas, **246 are boxes only the 2025 diseno carries and ZERO are boxes only
+the 2024 diseno carries**, with 10 absent from 2025. So for ejercicio 2024 it
+would write at 2025 offsets -- 1,140 of 3,194 shared boxes at different
+positions -- declare 246 boxes that did not yet exist, and omit the 142 that did.
+
+The revision's own prose recorded the hazard as LATENT because "this revision
+declares no export layout". That had stopped being true: a layout WAS since
+authored, on the 2025 design. The hazard had already bitten.
+
+### The control that reversed it
+
+`test_modelo_200_2024_ejemplo1_tributacion_minima_manual_worked_example.py`
+grounds the engine against an AEAT manual worked example at `_FILING_YEAR =
+2024`, reproducing the manual's printed cuota integra, cuota liquida minima and
+resultado exactly. Under the narrowing it went to **4 failed**; restored, 4
+passed.
+
+That is the difference between this modelo and 347, and it is the whole ruling:
+modelo 347's pre-2011 ejercicios were CLAIMED but never exercised, so removing
+them cost nothing real. Modelo 200's ejercicio 2024 is exercised AND externally
+grounded against AEAT's own manual. Narrowing would have destroyed a verified
+calculation capability in order to fix a layout defect -- and the two are
+separable, because the boxes that worked example touches are era-stable while
+the 246 additions are elsewhere.
+
+Recorded as the general rule this campaign should carry: before narrowing a
+revision's span, check whether the years being dropped are merely claimed or are
+actually exercised by a grounded test. "Cites the wrong design" and "computes
+nothing real for those years" are different facts and only the second makes
+narrowing free.
+
+### What modelo 200 actually needs, sized
+
+A real `2024` revision. The derivation is better-founded here than for 347 --
+these designs DO print box numbers, so pairing is an AEAT identity rather than a
+similarity judgement -- but the residue is not small: a (length, normalized
+description) alignment carries 6,278 of 6,709 fields (93.6%), unique box number
+resolves 197 more, and what remains is 142 fields whose boxes exist ONLY in 2024
+(each needing its own casilla authored and grounded), 87 ambiguous, and 5
+untagged. Record sets differ 74 vs 76, with both extra records 2025-only.
+
+### Verified
+
+* modelo 200 restored from the parent of the peer commit that captured the
+  rename; the revision loads as `2024-y-siguientes` from 2024-01-01 with 3,462
+  casillas and its layout, and the generated-tree enrolment row is back.
+* the 2024 worked example: 4 passed.
+* registry package: 9 failed, 5348 passed -- the standing declared inventories,
+  unchanged. Authority loads CLEAN.
+
+### Still open
+
+Modelo 200's split, unchanged and now sized. It remains the only entry on the
+spanning set. Modelo 347's 2008-2009 and 2010 revisions remain unauthored.
