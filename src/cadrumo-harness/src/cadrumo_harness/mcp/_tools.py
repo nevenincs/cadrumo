@@ -1,10 +1,10 @@
 """Build the MCP tool descriptors from the Layer 0 capability manifest.
 
-Each operator-callable registry command becomes one SDK-independent
+Each operator-callable graph command becomes one SDK-independent
 :class:`McpToolDescriptor`: a namespaced tool name, a description drawn from the
 family's operator intent, a per-verb input schema derived from the command's own
 click parameters (via :func:`~entrypoints.cli._verb_input_schema.build_verb_input_schemas`),
-the command's registered result model inside the shared CLI envelope as the output
+the command's graph-authored result model inside the shared CLI envelope as the output
 schema, and the mutability annotations. The server shell adapts these into the MCP
 SDK's ``Tool`` / ``ToolAnnotations`` types. This module owns no protocol detail and
 is unit-tested.
@@ -24,8 +24,9 @@ from cadrumo.application.operator_surface import (
     build_operator_surface_manifest,
 )
 from cadrumo.core.errors import ErrorEnvelope
-from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION, SCHEMA_REGISTRY, Notice
+from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION, Notice
 from cadrumo.entrypoints.cli import VerbInputSchema, is_exposable_command
+from cadrumo.entrypoints.cli import command_schema_type
 
 from ._action_capabilities import build_mcp_action_input_schemas
 from ._annotations import McpAnnotations, annotations_for_command
@@ -118,11 +119,11 @@ def _merge_schema_definitions(*definition_sets: dict[str, Any]) -> dict[str, Any
 
 @cache
 def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
-    """Build the exposed MCP tool descriptors from the live manifest + registry.
+    """Build exposed MCP tool descriptors from the immutable command graph.
 
     Built once per process. The descriptor set is a pure function of the loaded
-    command tree, which cannot change while a process runs: the manifest, the
-    registry and the CLI argument vectors are all fixed at import. Profiled, one
+    command graph, which cannot change while a process runs: the manifest,
+    result-schema targets, and CLI argument vectors are fixed. Profiled, one
     build costs 7.7s and renders ~285 output schemas, and the MCP test modules
     were paying it once per test -- 107.3s of a 144s module across 14 rebuilds
     of an identical answer. ``_hitl.py`` also calls it per query.
@@ -133,10 +134,10 @@ def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
     deliberately English rather than localised, so no cached value can pin a
     locale either.
 
-    Reuses the CLI's own payload-discovery so the registry is fully populated, then
-    emits one descriptor per operator-callable command key, skipping group-callback
+    Reads the CLI's graph-derived schema facade, then emits one descriptor per
+    operator-callable command key, skipping group-callback
     help surfaces. The output schema is the shared CLI envelope specialised with
-    the command's registered result model; the input schema is the CLI argument
+    the command's graph-authored result model; the input schema is the CLI argument
     vector.
 
     Returns:
@@ -196,9 +197,7 @@ def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
 
 
 def _output_schema_for(command_key: str) -> dict[str, Any]:
-    schema = SCHEMA_REGISTRY.get(command_key)
-    if schema is None:
-        return {"type": "object"}
+    schema = command_schema_type(command_key)
     # A thinned verb moves its bulk arrays to resource_link URIs, so its result
     # schema drops those properties before being wrapped in the shared envelope.
     # The advertised output and emitted structuredContent therefore stay

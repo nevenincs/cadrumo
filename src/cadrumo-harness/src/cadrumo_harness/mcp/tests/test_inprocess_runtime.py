@@ -110,7 +110,7 @@ def test_parse_cli_envelope_rejects_malformed_success_documents(body: str) -> No
 
 
 def test_parse_cli_envelope_rejects_a_real_registered_result_with_wrong_shape() -> None:
-    """The MCP parser cannot admit a result shape the CLI registry rejects."""
+    """The MCP parser cannot admit a result shape the CLI graph rejects."""
     run = run_cli_in_process(["--format", "json", "app", "registry", "inspect"], acquire_timeout_s=30.0)
     assert run is not None
     document = json.loads(run.stdout)

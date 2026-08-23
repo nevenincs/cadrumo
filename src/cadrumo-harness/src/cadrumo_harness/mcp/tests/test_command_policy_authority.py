@@ -9,10 +9,7 @@ import sys
 from pathlib import Path
 
 import pytest
-import typer
-
 from cadrumo.entrypoints.cli import cli_path_for_command_key, command_execution_policy_for_cli_path
-from cadrumo.entrypoints.cli._command_suggestions import execution_policy_for_cli_path
 
 from .._command_policy import CommandPolicyProjection, policy_projection_is_coherent, project_command_policy
 from .._hitl import ConfirmationPolicy, confirmation_for_policy
@@ -32,18 +29,8 @@ def test_every_exposed_descriptor_carries_its_live_policy_projection() -> None:
 
 
 def test_unknown_and_unclassified_paths_fail_closed() -> None:
-    planted = typer.Typer(name="planted")
-
-    @planted.callback()
-    def root() -> None:
-        pass
-
-    @planted.command("missing")
-    def missing() -> None:
-        pass
-
     with pytest.raises(LookupError, match="no execution policy"):
-        execution_policy_for_cli_path(planted, ("missing",))
+        command_execution_policy_for_cli_path(("missing",))
 
 
 def test_live_write_detector_bites_on_a_planted_policy() -> None:

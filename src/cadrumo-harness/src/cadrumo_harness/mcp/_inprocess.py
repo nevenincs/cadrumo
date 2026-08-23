@@ -225,7 +225,15 @@ def parse_cli_envelope(run: CompletedCliRun) -> tuple[dict[str, object], bool]:
     except json.JSONDecodeError:
         return {"status": "error", "raw": raw}, True
     try:
-        validated = validate_registered_envelope_document(envelope)
+        from cadrumo.entrypoints.cli import command_schema_type
+
+        command = envelope.get("command") if isinstance(envelope, dict) else None
+        schema = (
+            command_schema_type(command)
+            if isinstance(command, str) and envelope.get("status") != "error"
+            else None
+        )
+        validated = validate_registered_envelope_document(envelope, schema)
     except OutputSchemaError:
         return {"status": "error", "raw": raw}, True
     is_error = validated["status"] == "error" or run.returncode != 0

@@ -131,7 +131,7 @@ def _transport_error_envelope(
         ).model_dump(mode="json"),
         "notices": [],
     }
-    return validate_registered_envelope_document(document)
+    return validate_registered_envelope_document(document, None)
 
 
 def _timeout_refusal_envelope(*, command_key: str, tier: CallTier, timeout_s: float) -> dict[str, object]:
