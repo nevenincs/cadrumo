@@ -5696,3 +5696,62 @@ listed. Twenty of the 35 lines carry a raw ligature codepoint.
 
 **9791 of 11603 slots remain**; 1812 modelled, zero orphaned. Corpus re-derivation: **zero
 problems**.
+
+## 2026-08-23 — modelo 222 files with its fiscal group number blank
+
+Found while scoping what it would cost to give modelo 220 a producer vocabulary. It is not
+a gap in an unbuilt modelo; it is a defect in a **shipped, gate-passing** one.
+
+### The chain, each link measured
+
+1. Modelo 222's published export tree declares **30 producer-key fields**, of which **23
+   cite an `m222.*` key** —
+   `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2025-y-siguientes/export/`.
+2. **All 23 are `required = false`.**
+3. The 23 `m222.*` members exist in `src/cadrumo/core/_filing_producer_key.py` and
+   **nowhere else in `src/`** — no resolver, no snapshot field, no test.
+4. `filing_producer_values()` ends by asserting it is exhaustive over the keys owned by
+   `"shared_snapshot"` (`application/filing/_export_producer.py:231-233`), so it returns
+   *only* those. The `m222.*` keys are not among them.
+5. `_header_field_value()` (`application/filing/_record_field_renderer.py:276-282`):
+
+       value = headers.get(field.producer_key)      # None
+       if field.required and (value is None ...):   # required is false
+           raise ...
+       return value                                  # None -> blank
+
+So those 23 fields render **blank, silently**. Among them: `m222.numero_grupo`,
+`m222.entidad_dominante_razon_social`, `m222.entidad_dominante_identificacion`,
+`m222.cnae_actividad_principal`.
+
+**Modelo 222 emits a fiscal-group pago fraccionado with the group number and the parent
+entity blank, and every gate is green.**
+
+### Why every gate is green
+
+The filing-capability gate asks whether a namespace *exists*, not whether anything
+*resolves* it — `_producer_vocabulary_gap` checks that some `FilingProducerKey` is
+namespaced `mNNN.`. Declaring the enum members satisfies it. The renderer then declines to
+enforce, because `required = false` turns a missing producer into a blank rather than a
+refusal.
+
+**`required = false` on a header field is doing two different jobs**: "AEAT permits this to
+be empty" and "we have not built the producer yet". Nothing distinguishes them, so the
+second hides inside the first.
+
+### The trap this sets for the remaining modelos
+
+Modelo 222 is the cheapest precedent available for bringing a new modelo onto the
+generator, and it is the wrong one to copy. Following it for modelo 220 — declare the enum
+members, mark the fields optional, generate — would produce a *fiscal-group corporate tax
+return* that passes every gate and files with its identifying header blank.
+
+The gate's own words are "the producer keys **and the application producers behind them**
+come before the export". For 222 the second half was skipped.
+
+### Not claimed
+
+I did not run a real m222 filing render, so I have not observed the blank output directly;
+the conclusion is read from the four links above. I did not check whether the other
+namespaced modelos (m111, m200, m202, m296, m303, m353, m360) resolve all of theirs —
+m303's clearly do. **That sweep is the obvious next question and has not been done.**

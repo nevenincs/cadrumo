@@ -68,6 +68,18 @@ The six blocker classes, as the gate states them:
    entry is proven acquisition-blocked and recorded as such.
 7. **Record** in `.vault/audit/2026-08-20-registry-temporal-coverage-casilla-provenance-and-review-blockers-audit`.
 
+## AN UNPUBLISHED FUTURE DESIGN IS NOT A BLOCKER
+
+The gate's `_OPEN_ENDED_HORIZON = 2026` makes every open-ended revision claim 2026, so any
+annual return whose design AEAT publishes IN ARREARS shows a permanent phantom uncovered
+year. Modelo 220's ejercicio 2026 is filed in July 2027; the design lands then. That line
+cannot clear and nobody should try.
+
+Split the "design coverage" class before spending a fire on it: 182 (2007-2023), 187
+(2019-2021), 188 (2019-2022), 194 (2019-2022) and 763 (2011) are unevidenced PAST years and
+are real. 220/2025 is next year and is an artefact of the horizon. Take the horizon question
+to whoever owns that gate; never work around it.
+
 ## PROGRESS IS WORKLIST LINES CLEARED — NOTHING ELSE
 
 Not casillas authored, not commits, not "identical FAILED list". An iteration that adds
