@@ -229,6 +229,128 @@ modelo:
             x-agp34c1g6l0j0c9q60o3cd9p:
               label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
                 Egyeb atsorolasok
+            x-agp34c1g6l0j0chq60o36e1j:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Egyeb elszamolt bevetelek es raforditasok
+            x-agp34c1g6l0j0chq60o36e1k:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Ertekesitheto penzugyi eszkozok
+            x-agp34c1g6l0j0chq60o36e1l:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Ertekesitheto penzugyi eszkozok. Ertekelesi nyeresegek es vesztesegek
+            x-agp34c1g6l0j0chq60o36e1m:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Ertekesitheto penzugyi eszkozok. Az eredmenykimutatasba atvezetett
+                osszegek
+            x-agp34c1g6l0j0chq60o36e1n:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Ertekesitheto penzugyi eszkozok. Egyeb atsorolasok
+            x-agp34c1g6l0j0chq60o36e1o:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Cash flow fedezeti ugyletek
+            x-agp34c1g6l0j0chq60o36e1p:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Cash flow fedezeti ugyletek. Ertekelesi nyeresegek es vesztesegek
+            x-agp34c1g6l0j0chq60o36e9g:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Cash flow fedezeti ugyletek. Az eredmenykimutatasba atvezetett osszegek
+            x-agp34c1g6l0j0chq60o36e9h:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Cash flow fedezeti ugyletek. A fedezett tetelek kezdeti ertekebe atvezetett
+                osszegek
+            x-agp34c1g6l0j0chq60o36e9i:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Cash flow fedezeti ugyletek. Egyeb atsorolasok
+            x-agp34c1g6l0j0chq60o36e9j:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Kulfoldi erdekeltsegekbe torteno netto befektetesek fedezese
+            x-agp34c1g6l0j0chq60o36e9k:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Kulfoldi erdekeltsegekbe torteno netto befektetesek fedezese. Ertekelesi
+                nyeresegek es vesztesegek
+            x-agp34c1g6l0j0chq60o36e9l:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Kulfoldi erdekeltsegekbe torteno netto befektetesek fedezese. Az eredmenykimutatasba
+                atvezetett osszegek
+            x-agp34c1g6l0j0chq60o36e9m:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Kulfoldi erdekeltsegekbe torteno netto befektetesek fedezese. Egyeb
+                atsorolasok
+            x-agp34c1g6l0j0chq60o36e9n:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Arfolyam- es atvaltasi kulonbozetek
+            x-agp34c1g6l0j0chq60o36e9o:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Arfolyam- es atvaltasi kulonbozetek. Ertekelesi nyeresegek es vesztesegek
+            x-agp34c1g6l0j0chq60o36e9p:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Arfolyam- es atvaltasi kulonbozetek. Az eredmenykimutatasba atvezetett
+                osszegek
+            x-agp34c1g6l0j0chq60o38c1g:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Arfolyam- es atvaltasi kulonbozetek. Egyeb atsorolasok
+            x-agp34c1g6l0j0chq60o38c1h:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Szamviteli aszimmetriak korrekcioja
+            x-agp34c1g6l0j0chq60o38c1i:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Szamviteli aszimmetriak korrekcioja. Ertekelesi nyeresegek es vesztesegek
+            x-agp34c1g6l0j0chq60o38c1j:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Szamviteli aszimmetriak korrekcioja. Az eredmenykimutatasba atvezetett
+                osszegek
+            x-agp34c1g6l0j0chq60o38c1k:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Szamviteli aszimmetriak korrekcioja. Egyeb atsorolasok
+            x-agp34c1g6l0j0chq60o38c1l:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Ertekesitesre tartott eszkozok
+            x-agp34c1g6l0j0chq60o38c1m:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Ertekesitesre tartott eszkozok. Ertekelesi nyeresegek es vesztesegek
+            x-agp34c1g6l0j0chq60o38c1n:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Ertekesitesre tartott eszkozok. Az eredmenykimutatasba atvezetett
+                osszegek
+            x-agp34c1g6l0j0chq60o38c1o:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Ertekesitesre tartott eszkozok. Egyeb atsorolasok
+            x-agp34c1g6l0j0chq60o38c1p:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Aktuariusi nyereseg / (veszteseg) hosszu tavu munkavallaloi juttatasokon
+            x-agp34c1g6l0j0chq60o38c9g:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Egyeb elszamolt bevetelek es raforditasok (tobbi)
+            x-agp34c1g6l0j0chq60o38c9h:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Nyeresegado
+            x-agp34c1g6l0j0chq60o38c9i:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Az elszamolt konszolidalt bevetelek es raforditasok osszesen
+            x-agp34c1g6l0j0chq60o3ac1g:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Az uzleti ev konszolidalt eredmenye
+            x-agp34c1g6l0j0chq60o3ce9n:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Az elszamolt konszolidalt bevetelek es raforditasok osszesen. Az anyavallalatnak
+                tulajdonitva
+            x-agp34c1g6l0j0chq60o3ce9o:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Az elszamolt konszolidalt bevetelek es raforditasok osszesen. Kulso
+                tagoknak tulajdonitva
+            x-agp34c1g6l0j0chq60o3ecpg:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Tokemodszerrel elszamolt entitasok
+            x-agp34c1g6l0j0chq60o3ecph:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Tokemodszerrel elszamolt entitasok. Ertekelesi nyeresegek es vesztesegek
+            x-agp34c1g6l0j0chq60o3ecpi:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Tokemodszerrel elszamolt entitasok. Az eredmenykimutatasba atvezetett
+                osszegek
+            x-agp34c1g6l0j0chq60o3ecpj:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es raforditaskimutatasa.
+                Tokemodszerrel elszamolt entitasok. Egyeb atsorolasok
             x-agp34c1g6t230c1q60o30e1g:
               label: 'Egyeb korrekciok az adoalapok osszegehez: az adocsoport nem
                 mentes belso osztalekainak kiszurese. Osszesen'

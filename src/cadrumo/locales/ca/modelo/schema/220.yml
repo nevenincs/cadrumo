@@ -234,6 +234,131 @@ modelo:
             x-agp34c1g6l0j0c9q60o3cd9p:
               label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
                 Altres reclassificacions
+            x-agp34c1g6l0j0chq60o36e1j:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Altres ingressos i despeses reconeguts
+            x-agp34c1g6l0j0chq60o36e1k:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Actius financers disponibles per a la venda
+            x-agp34c1g6l0j0chq60o36e1l:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Actius financers disponibles per a la venda. Guanys i perdues per
+                valoracio
+            x-agp34c1g6l0j0chq60o36e1m:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Actius financers disponibles per a la venda. Imports transferits al
+                compte de perdues i guanys
+            x-agp34c1g6l0j0chq60o36e1n:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Actius financers disponibles per a la venda. Altres reclassificacions
+            x-agp34c1g6l0j0chq60o36e1o:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Cobertura dels fluxos d'efectiu
+            x-agp34c1g6l0j0chq60o36e1p:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Cobertura dels fluxos d'efectiu. Guanys i perdues per valoracio
+            x-agp34c1g6l0j0chq60o36e9g:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Cobertura dels fluxos d'efectiu. Imports transferits al compte de
+                perdues i guanys
+            x-agp34c1g6l0j0chq60o36e9h:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Cobertura dels fluxos d'efectiu. Imports transferits al valor inicial
+                de les partides cobertes
+            x-agp34c1g6l0j0chq60o36e9i:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Cobertura dels fluxos d'efectiu. Altres reclassificacions
+            x-agp34c1g6l0j0chq60o36e9j:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Cobertures d'inversions netes en negocis a l'estranger
+            x-agp34c1g6l0j0chq60o36e9k:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Cobertures d'inversions netes en negocis a l'estranger. Guanys i perdues
+                per valoracio
+            x-agp34c1g6l0j0chq60o36e9l:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Cobertures d'inversions netes en negocis a l'estranger. Imports transferits
+                al compte de perdues i guanys
+            x-agp34c1g6l0j0chq60o36e9m:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Cobertures d'inversions netes en negocis a l'estranger. Altres reclassificacions
+            x-agp34c1g6l0j0chq60o36e9n:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Diferencies de canvi i conversio
+            x-agp34c1g6l0j0chq60o36e9o:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Diferencies de canvi i conversio. Guanys i perdues per valoracio
+            x-agp34c1g6l0j0chq60o36e9p:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Diferencies de canvi i conversio. Imports transferits al compte de
+                perdues i guanys
+            x-agp34c1g6l0j0chq60o38c1g:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Diferencies de canvi i conversio. Altres reclassificacions
+            x-agp34c1g6l0j0chq60o38c1h:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Correccio d'asimetries comptables
+            x-agp34c1g6l0j0chq60o38c1i:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Correccio d'asimetries comptables. Guanys i perdues per valoracio
+            x-agp34c1g6l0j0chq60o38c1j:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Correccio d'asimetries comptables. Imports transferits al compte de
+                perdues i guanys
+            x-agp34c1g6l0j0chq60o38c1k:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Correccio d'asimetries comptables. Altres reclassificacions
+            x-agp34c1g6l0j0chq60o38c1l:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Actius mantinguts per a la venda
+            x-agp34c1g6l0j0chq60o38c1m:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Actius mantinguts per a la venda. Guanys i perdues per valoracio
+            x-agp34c1g6l0j0chq60o38c1n:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Actius mantinguts per a la venda. Imports transferits al compte de
+                perdues i guanys
+            x-agp34c1g6l0j0chq60o38c1o:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Actius mantinguts per a la venda. Altres reclassificacions
+            x-agp34c1g6l0j0chq60o38c1p:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Guanys / (perdues) actuarials per retribucions a llarg termini al
+                personal
+            x-agp34c1g6l0j0chq60o38c9g:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Altres ingressos i despeses reconeguts (resta)
+            x-agp34c1g6l0j0chq60o38c9h:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Impost sobre beneficis
+            x-agp34c1g6l0j0chq60o38c9i:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Total d'ingressos i despeses consolidats reconeguts
+            x-agp34c1g6l0j0chq60o3ac1g:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Resultat consolidat de l'exercici
+            x-agp34c1g6l0j0chq60o3ce9n:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Total d'ingressos i despeses consolidats reconeguts. Atribuits a l'entitat
+                dominant
+            x-agp34c1g6l0j0chq60o3ce9o:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Total d'ingressos i despeses consolidats reconeguts. Atribuits a socis
+                externs
+            x-agp34c1g6l0j0chq60o3ecpg:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Entitats valorades per posada en equivalencia
+            x-agp34c1g6l0j0chq60o3ecph:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Entitats valorades per posada en equivalencia. Guanys i perdues per
+                valoracio
+            x-agp34c1g6l0j0chq60o3ecpi:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Entitats valorades per posada en equivalencia. Imports transferits
+                al compte de perdues i guanys
+            x-agp34c1g6l0j0chq60o3ecpj:
+              label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici.
+                Entitats valorades per posada en equivalencia. Altres reclassificacions
             x-agp34c1g6t230c1q60o30e1g:
               label: 'Altres correccions a la suma de bases imposables: eliminacio
                 de dividends interns no exempts del grup fiscal. Total'
