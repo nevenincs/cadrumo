@@ -107,7 +107,7 @@ Run structural assurance, review, and Vault reconciliation before declaring comp
 
 Run focused and broad verification and prove obsolete paths are absent.
 
-- [x] `W04.P08.S17` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and run focused and broad lint, type, import, test, subprocess, metadata, locale, generator, documentation, sequence, Sphinx, obsolete-code census, and Vault gates while recording honest triage for unrelated failures; `feature-scoped source tests generated documentation and Vault records`.
+- [x] `W04.P08.S17` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and run focused and broad lint, type, import, test, subprocess, metadata, locale, generator, documentation, sequence, Sphinx, obsolete-code census, and Vault gates while recording honest triage for unrelated failures; `feature-scoped source tests including src/cadrumo/core/tests/test_persisted_format_enrolment_binding.py generated documentation and Vault records`.
 
 ### Phase `W04.P09` - Independent assurance
 
