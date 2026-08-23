@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:d6e25b0c04380242473d7e9f998c4ecf338d593f7bdfa2ca63bb43f0ff5da3f9'
+body_hash: 'sha256:681e39ae6983b240c1c4742756b825374f572c25cf55c9728a385bf0a005e35d'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -4905,3 +4905,54 @@ first one's premise. What forced the question here was checking the corpus again
 **Obligation carried forward:** the next iteration that finds a loadable authority must run
 the registry suite and diff the FAILED list *before* authoring anything further. Two stamps
 now stand with the suite state recorded as unknown.
+
+## 2026-08-23 — the debt is paid, and T22003B01
+
+### The deferred verification was discharged before anything else
+
+Two stamps stood with this revision's suite state recorded as **unknown**. The authority
+loaded cleanly three times at the start of this iteration, so the suite was run **first,
+before a line was authored**: 9 failed, 5383 passed, and the FAILED list is **identical to
+the last clean baseline** taken before T22003A01/A11 landed.
+
+Those two records introduced nothing. The earlier claim — *"nothing here touches production
+code"* — was an argument; it is now a measurement, and the debt does not carry forward.
+
+Worth noting how close that came to rotting: the obligation was written into a stamp, then
+the next iteration could not discharge it either and had to re-record it. **A deferred
+verification survives exactly as long as someone keeps re-stating it**, and two hops is
+already where it starts to feel like background noise rather than a debt.
+
+### What landed
+
+Record **T22003B01** — the crédito *pasivo*, closing on `00192` TOTAL PASIVO. **42
+casillas**, revision 1732 → **1774**, thirty-five of 137 records. Second suite run after
+authoring: **identical again, zero regressions.**
+
+### The portfolio × instrument shape, a third time
+
+Twenty of the 42 boxes share a label with a sibling, for the same reason as T22003A01: AEAT
+prints the portfolio head on its own row (`00153` mantenidos para negociar, `00162`
+designados a valor razonable, `00169` a coste amortizado) and the instrument rows beneath it
+**without** the portfolio name. Three boxes read `Depósitos`, three `Depósitos. Bancos
+centrales`, three `Valores representativos de deuda emitidos`.
+
+Not derived from position, as on A01 and T22005A01. `00756` and `00757` both read `Pro
+memoria: pasivos subordinados` — one with a trailing period — and belong to different
+portfolios that the design marks nowhere but by position, so they are left sharing a label.
+
+**The translation table is keyed by LINE, not by box**, precisely so two boxes AEAT prints
+identically cannot drift apart in one catalogue. That is the same reasoning that caught the
+Hungarian collapse on T22005A01, applied in advance rather than after.
+
+### The corpus check ran again and stayed clean
+
+1774 casillas across 40 fragments and 33 sheets re-derived from the design with the
+**corrected** number pattern: 1611 numeric box numbers printed by AEAT, none minted; 4
+letter numbers; 64 byte spans resolving exactly; 33 sheets tiling once. **Zero problems.**
+
+### Scale
+
+**9992 of 11603 slots remain** across 99 of 134 numbered records; 1611 modelled, zero
+orphaned. The crédito accounting identity is still not *expressible* — `00152` and `00192`
+exist but T22003C01, the patrimonio neto, is unauthored, so there is no third term.
