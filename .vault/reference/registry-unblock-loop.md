@@ -5,8 +5,8 @@ revision is complete enough to file what it claims).** Nothing else is progress.
 
 ## WHAT IS ACTUALLY BROKEN — measured, not assumed
 
-**395 producer keys across 7 modelos were cited by shipped export layouts and resolved by
-nothing.** They are `required = false`, so `_header_field_value` returns `None` and the
+**112 producer keys on ONE modelo (296) remain.** It began as 395 across 7 modelos; six are
+done. Do not re-target 200, 202, 210, 222, 232 or 353 -- the gate names what is left. They are `required = false`, so `_header_field_value` returns `None` and the
 field renders BLANK instead of refusing. Those returns file with their identifying headers
 empty and every gate stays green.
 
@@ -17,8 +17,7 @@ Modelo 222 is FIXED (commit 198ae6d001) and is the worked pattern:
 4. an `mNNN_producer_values()` resolver in `_export_producer.py`
 5. its keys moved into the `shared` set in `filing_producer_ownership()`
 
-**Remaining, in size order: m200 (132), m296 (112), m210 (104), m202 (18), m353 (5),
-m232 (1).** The gate is
+**Remaining: m296 (112) ONLY.** The gate is
 `src/cadrumo/application/filing/tests/test_export_producer_resolution.py` and it names them
 on every run. Run it with `-m integration`.
 
@@ -106,3 +105,50 @@ builder is missing and would be cheap.**
 
 A fixture demands a filing-grade snapshot for modelo 036, which has no export layout. They
 clear when the blocked modelos get layouts — the same generator work, not a separate defect.
+
+
+## m296 IS BLOCKED ON THE LAYOUT, NOT ON THE KEYS — do not spend a fire "resolving" them
+
+Measured 2026-08-24, from three independent directions:
+
+1. **No generated export tree anywhere declares `repeat`** -- not one, across all 17
+   generated modelos. Modelo 296's perceptor record is `required = true` with NO
+   repetition, so **the layout can hold exactly one perceptor**. A 296 with two payees
+   cannot be expressed at all.
+2. The data exists and mostly matches: `Withholding296Observation` has **38 fields**, and
+   **28 of the 44** perceptor export fields share vocabulary with it. Of the other 16,
+   four are envelope/declarante identity already on the snapshot, and most of the rest are
+   AEAT splitting one amount across an entero and a decimal slot. An earlier note in this
+   campaign called the mapping "44 arbitrary judgements" -- that was WRONG and is corrected
+   here.
+3. The generator's record model supports `repeat: Literal["projection_rows"]` and NOT
+   `binding_rows`, so the mechanism is a projection.
+
+**Every route that clears the 112 keys without fixing the layout puts one payee into a
+one-slot record and silently drops the rest.** That is the under-declaration
+`no-silent-under-declaration` forbids, and it is worse than the blank fields this campaign
+removed. A profile type, or resolving the keys from the observations as header producers,
+both fail this way.
+
+THE ONLY CORRECT ORDER:
+1. `dev/registry/mappings/modelo_296/2024/0001-records.toml` -- the perceptor record
+   declares `repeat = "projection_rows"`.
+2. `0003-perceptor.toml` -- its 44 entries move from `kind = "header"` to
+   `kind = "projection"` with a `projection_ref`. The typed ref already exists:
+   `M296PerceptorProjectionRef` / `M296PerceptorField` in `core/_filing_projection_ref.py`
+   (commit 7097bd997c).
+3. Thread the already-assembled `Withholding296Observation` rows onto
+   `FilingProducerSnapshot`, the way `m303_filing_facts` are threaded. They are built by
+   `assemble_withholding296_observations`
+   (`application/calculations/_row_set_assembly.py:829`) -- this is NOT a second data path.
+4. `build_m296_filing_projection_plan`, and dispatch it in `_projection_plan_for_layout`
+   (`application/filing/_export.py`), which now handles M303 and M200.
+5. Regenerate through `dev/registry/pipeline/` -- never hand-author the tree.
+
+Step 1 is the one that matters. Without it the rest is decoration.
+
+## modelo 036 -- 30 of the 63 filing-test failures
+
+A fixture demands a filing-grade snapshot for modelo 036, which has no export layout and
+no `m036.` producer namespace, and modelo 036 has NO render profile under
+`dev/registry/render_profiles/`. Same generator work; not a separate defect.
