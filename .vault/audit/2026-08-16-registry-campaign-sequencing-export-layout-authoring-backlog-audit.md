@@ -20199,3 +20199,106 @@ among thousands; that reading is now explicit.
 Modelo 200's split and the 104 casilla labels, translation-blocked. Modelo 347's
 earlier revisions, per-field reading. The 78 unproven revision spans, operator-
 side corpus acquisition.
+
+## Tick: the year-coverage gate's 24 lines triaged into two blocked classes, and three dead ends measured shut
+
+Standing registry failures: 8, unchanged. This tick produced triage rather than
+a closure, and the triage is the useful part -- it is what stops the next tick
+re-deriving it.
+
+### The 24 divergences are two problems, not one
+
+Parsed and classified rather than eyeballed. Twelve lines name a revision whose
+claimed EJERCICIOS fall wholly inside its design's window, with only the
+PRESENTATION year outside: modelo 303's `2022` claims ejercicio 2022, presents in
+2023, and cites `aeat-dr-303-2022` whose catalogue window closes 2022-12-31.
+Every one of the twelve has a design window ending at its last ejercicio's
+year-end, so this is systematic: for an arrears-filed return, a window recorded
+on the EJERCICIO axis can never intersect the presentation year.
+
+The gate's own docstring already records that the author corrected this axis once
+and chose to read `revision.deadline_windows`. What remains is upstream of that
+choice: whether a design's `applies_from`/`applies_to` record the ejercicio it
+governs or the calendar span its norm is in force. That is the open
+deadline-window-reach question.
+
+The recommended option -- extend each design's window to cover the presentation
+of its last ejercicio -- was NOT taken, and the reason is concrete rather than
+caution: those windows are what the relayout detector pairs designs by, so
+widening `aeat-dr-303-2022` into 2023 would overlap `aeat-dr-303-2023` and change
+which pairs form. A semantics change to 100+ sources that moves another gate's
+input is an ADR decision, not a reversible part.
+
+The other twelve are a genuine gap on any reading: modelo 126's
+`2019-y-siguientes` claims ejercicio 2019 while citing `aeat-dr-126-2020`, and
+modelo 126 bundles NO earlier design -- checked, as were 128, 181 and 270, each
+of which bundles exactly one design and it is the later one. Operator-side
+acquisition.
+
+Both readings are now recorded in the gate itself so the split does not have to
+be re-derived.
+
+### Three dead ends, each closed by measurement
+
+* **Modelo 390's `2021`** is on the AUTHORABLE worklist but is a stub: 10
+  casillas and 0 bindings against siblings carrying 325+ and 266. Its "layout"
+  work is a full revision build, and modelo 390 is queue item 6's own subject.
+* **The box-parity enrolment is saturated.** Re-measured: the same 13 modelos are
+  exact on every revision, none newly qualifies and none has lapsed.
+* **The straddle enrolment from last tick is consistent.** `_DESCRIPTION_ONLY`
+  marks only the weakest description-keyed signal; straddle is an objective
+  byte-overlap signal and correctly stays unmarked.
+
+### Verified
+
+* registry package: 8 failed, 5,384 passed -- unchanged. Authority loads CLEAN.
+* the year-coverage gate still fails on exactly its prior finding; the docstring
+  addition changes no assertion.
+
+### Still open
+
+Unchanged, and now separated by WHY: 12 year-coverage lines and the 78 unproven
+spans wait on corpus acquisition; 12 more wait on the deadline-window-reach
+ruling; modelo 200's split and the 104 casilla labels wait on translation;
+modelo 347's earlier revisions wait on a per-field reading.
+
+## Tick: the locale move verb proved on the real SPLIT shape, end to end
+
+The capability was checked against the case that actually needs it -- a split
+whose two destinations declare DIFFERENT casilla sets -- rather than only the
+rename it was easiest to demonstrate.
+
+Driving `plan_locale_subtree_move` on modelo 322's real shape (source
+`2008-2023`, destinations `2023` and `2008-2022`), with each destination's
+permitted key set standing in for what its revision declares:
+
+* a casilla only `2023` declares lands only in `2023`;
+* a casilla only `2008-2022` declares -- box `[73]`, the one this campaign
+  authored -- lands only there;
+* a casilla both declare is written to BOTH;
+* nothing is left undistributed.
+
+That is the routing modelo 200's split needs for its 3,219 copyable casillas,
+and it is wired end to end rather than only in the planner: the `move-revision`
+verb derives each destination's permitted keys from the REGISTRY and refuses a
+destination the registry does not declare, so a typo'd revision id fails at the
+CLI instead of silently writing keys nowhere.
+
+### What this leaves on modelo 200
+
+Only the translations. The locale step for the 3,219 casillas the two halves
+share is now one command; the 185 boxes AEAT carries only in 2024 still need
+their `en/ca/hu` leaves, which cannot be grounded here.
+
+### Attribution, checked rather than assumed
+
+`dev/locales` reports 9 failures and none belongs to this work: they cite
+`aggregation.oss_ioss.errors.*` catalogue drift and a `CADRUMO_SECRET_PASSPHRASE`
+help document, both peers' in-flight surfaces. The three new test modules pass in
+isolation, 30 passed.
+
+### Verified
+
+* the split routing, the drift report and both parity directions were each
+  re-derived here rather than read from the agent's report.
+* authority loads CLEAN; registry package unchanged at 8 failures.
