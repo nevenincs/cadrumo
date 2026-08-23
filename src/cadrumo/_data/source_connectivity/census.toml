@@ -45,3 +45,31 @@ action_id = "source-casilla.inventory-grounding"
 owner = "source-connectivity-campaign"
 deadline = 2026-10-31
 completion_criterion = "Accepted official-source adjudication identifies or rejects each inventory destination and authorizes a bounded vertical slice without relying on the obsolete 0155 label."
+
+[[entries]]
+candidate_id = "assets.amortization-ledger"
+disposition = "connect_candidate"
+owner = "source-connectivity-campaign"
+review_condition = "After inventory adjudication, official evidence must settle whether the encrypted asset-amortization ledger is an independent filing source or evidence already consumed through another expense channel, and must identify asset/activity/finca grain, revision window, destination semantic role, basis, rate, temporal proration, caps, sign, rounding, absence semantics, and override policy. It must remain distinct from the finca annual amortization computation and from the general asset register."
+capability_locators = [
+  "src/cadrumo/adapters/persistence/profile/assets.py:227",
+]
+advisory_destination_refs = [
+  "modelo:100:semantic:amortization",
+]
+
+[[entries.grounding]]
+locator_kind = "repository"
+reference = "src/cadrumo/adapters/persistence/profile/assets.py:227"
+summary = "Encrypted FINANCIAL amortization-ledger repository exists without a canonical calculation-source handoff."
+
+[[entries.grounding]]
+locator_kind = "repository"
+reference = "src/cadrumo/domain/fincas/_amortization_ledger.py:92"
+summary = "A separate finca amortization computation exists and is evidence that amortization grains must be adjudicated rather than conflated."
+
+[entries.bounded_follow_up]
+action_id = "source-casilla.assets-amortization-grounding"
+owner = "source-connectivity-campaign"
+deadline = 2026-11-30
+completion_criterion = "Following inventory, an accepted official-source adjudication either authorizes a bounded asset-amortization connection with an exact grain and destination or records why this ledger is duplicate, manual, or not applicable."
