@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:8c96cebf2a6c1aeade7f449a9bda227a44de1ecced4f69389151bfb910b4d32a'
+body_hash: 'sha256:b2c3de3f510f95f362ca5b0c6f20a348886c9489b2fea4c56352e9b8ca2cfbe6'
 related: []
 ---
 
@@ -107,3 +107,21 @@ and only when the existing public Drive-id parser validates the exact terminal t
 Every malformed, lookalike, or secret-bearing reference returns `not-exposed` without
 reflecting any input. New hostile cases cover scheme, host lookalike, user-info, query,
 fragment, extra path, invalid id, and the canonical success form.
+
+## Final independent resolution verification
+
+Corrective commit `612bf519054867124ea25f05ba26ce27ee26b9b5` resolves the high
+finding. `_drive_provider_locator` now parses the URL and exposes a token only for exact
+HTTPS authority `drive.google.com`, without a port or user-info, without query or
+fragment, with exactly `/file/d/{id}` as its path, and only when the shared Drive-id
+parser accepts the complete terminal token. All other inputs return the constant
+`not-exposed`, so rejected references cannot be reflected into review output.
+
+The focused hostile locator suite passed 8 tests. The real Drive review CLI journey
+passed 2 integration tests, and the adjacent Drive resolver plus command-loading
+contracts passed 16 tests. The canonical locator change in folder pull remains accepted
+by the existing resolver, while the manifest-derived queue, explicit confirmation,
+invoice back-link, repeat-pull idempotency, Gmail exclusion, locales, and command policy
+are unchanged.
+
+Final verdict: safe to integrate, and issue #262 can close.
