@@ -6,8 +6,40 @@
   "retrieved_on": "2026-08-23",
   "source_chain": {
     "classification": "third_party_hosted_external_layout_candidate",
-    "host": "fiscalbot.es",
-    "authority_status": "unverified"
+    "host": "fiscalbot.es"
+  },
+  "authority_adjudication": {
+    "artifact_authenticity": {
+      "verdict": "third_party_sample",
+      "evidence_summary": "The committed bytes display FiscalBot's example-only disclaimer and placeholder receipt number, and their iLovePDF producer history confirms that this artifact is not an official BOE or AEAT publication byte."
+    },
+    "official_base_derivation": {
+      "verdict": "verified_official_base_derivative",
+      "official_source": {
+        "authority": "boe",
+        "document_id": "BOE-A-2023-26632 Annex I",
+        "source_url": "https://www.boe.es/boe/dias/2023/12/29/pdfs/BOE-A-2023-26632.pdf",
+        "sha256": "97069814b634a6b87966e0b486956639b5a4dda36f0401c5c7f51fe12726cea3",
+        "page_mapping": [
+          {"candidate_page": 1, "official_page": 19},
+          {"candidate_page": 2, "official_page": 24},
+          {"candidate_page": 3, "official_page": 25},
+          {"candidate_page": 4, "official_page": 26}
+        ]
+      },
+      "comparison_method": "pdf_text_geometry_and_normalized_render",
+      "comparison_summary": "The four mapped pages preserve 401/424 through 658/665 ordered official tokens; affine coordinate fits have R-squared 0.99999-1.00000 with median residuals no greater than 0.32 points horizontally and 0.05 points vertically. This proves derivation from the historical annex layout, not exact official bytes or the replacement 2025 form.",
+      "pair_render": {
+        "counterpart_kind": "fillable",
+        "counterpart_sha256": "5fdcc9ca1bc770c71286a94db3190267bcd2d86224737a56f25382526ed14b82",
+        "comparison_method": "normalized_96_dpi_render_similarity",
+        "comparison_summary": "At 96 dpi, pages 1 through 4 have normalized MAE 0.000357, 0, 0, and 0.001311 respectively. The small overlay differences prevent an exact-render claim."
+      }
+    },
+    "registry_applicability": {
+      "verdict": "historical_layout_without_authored_revision",
+      "revision_id": null
+    }
   },
   "content": {
     "sha256": "27b887171666bc8423cabaa557b2f3ba040079ab73428f9f7f956f9cd7fc519a",

@@ -6,8 +6,37 @@
   "retrieved_on": "2026-08-23",
   "source_chain": {
     "classification": "third_party_hosted_external_layout_candidate",
-    "host": "fiscalbot.es",
-    "authority_status": "unverified"
+    "host": "fiscalbot.es"
+  },
+  "authority_adjudication": {
+    "artifact_authenticity": {
+      "verdict": "third_party_sample",
+      "evidence_summary": "The page visibly states that it is a FiscalBot example without legal validity and prints a sample receipt number; its third-party producer and added empty fields confirm that these are not official publication bytes."
+    },
+    "official_base_derivation": {
+      "verdict": "verified_official_base_derivative",
+      "official_source": {
+        "authority": "boe",
+        "document_id": "BOE-A-2015-1656 Annex I",
+        "source_url": "https://www.boe.es/boe/dias/2015/02/19/pdfs/BOE-A-2015-1656.pdf",
+        "sha256": "f62a61854eac561e96f689ebf11b8b2c75d418a6146a7f972e6e6a404a8063a0",
+        "page_mapping": [
+          {"candidate_page": 1, "official_page": 6}
+        ]
+      },
+      "comparison_method": "pdf_text_geometry_and_normalized_render",
+      "comparison_summary": "The candidate preserves the amended annex's distinctive section order and all 19 numbered boxes; normalized ordered-text similarity is 0.9345. FiscalBot sample content and removed filing elements prevent an exact-byte or filing-validity claim.",
+      "pair_render": {
+        "counterpart_kind": "plain",
+        "counterpart_sha256": "bfe5fb7d63a07660f5b36b63f702b522efa7b21ffa66e3c8bc7ffd17c13e824f",
+        "comparison_method": "exact_96_dpi_render_match",
+        "comparison_summary": "The one-page plain and fillable candidates render pixel-identically at 96 dpi; this member's empty AcroForm fields overlay the unchanged rendered base."
+      }
+    },
+    "registry_applicability": {
+      "verdict": "current_authored_revision",
+      "revision_id": "2019-y-siguientes"
+    }
   },
   "content": {
     "sha256": "cb2440c04f499005a5bb93231b2072d2b585d40283a60eedce7d73d1efed1379",

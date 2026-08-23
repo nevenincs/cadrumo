@@ -6,8 +6,39 @@
   "retrieved_on": "2026-08-23",
   "source_chain": {
     "classification": "third_party_hosted_external_layout_candidate",
-    "host": "fiscalbot.es",
-    "authority_status": "unverified"
+    "host": "fiscalbot.es"
+  },
+  "authority_adjudication": {
+    "artifact_authenticity": {
+      "verdict": "third_party_sample",
+      "evidence_summary": "The committed bytes display FiscalBot's example-only disclaimer and placeholder receipt number, and their third-party authoring history confirms that this artifact is not an official AEAT publication byte."
+    },
+    "official_base_derivation": {
+      "verdict": "verified_official_base_derivative",
+      "official_source": {
+        "authority": "aeat",
+        "document_id": "AEAT IVA 2024 Manual, Chapter 9 Modelo 303 annex",
+        "source_url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/IVA_2024/Imagenes/Cap_9_303_es_es.pdf",
+        "sha256": "fd42e40bd4ddb6f737ce8007e6e72b101465292abcf76a9d2ba01c791539491d",
+        "page_mapping": [
+          {"candidate_page": 1, "official_page": 1},
+          {"candidate_page": 2, "official_page": 3},
+          {"candidate_page": 3, "official_page": 6}
+        ]
+      },
+      "comparison_method": "pdf_text_geometry_and_normalized_render",
+      "comparison_summary": "Mapped pages show 96.4-100% coordinate word agreement and only 0.37-0.73% normalized raster delta against the official annex. Boxes 108, 109, and 111 identify the 2024-late/2025 family; absence of 2026 box 112 prevents current-revision alignment.",
+      "pair_render": {
+        "counterpart_kind": "fillable",
+        "counterpart_sha256": "a0d613fcfbd59b57f071f92ecc6a745fd2a428d5676a00de43e8bb184a44036c",
+        "comparison_method": "exact_96_dpi_render_match",
+        "comparison_summary": "All three plain and fillable pages render pixel-identically at 96 dpi; the fillable member adds empty AcroForm fields without changing the rendered base."
+      }
+    },
+    "registry_applicability": {
+      "verdict": "historical_authored_revision",
+      "revision_id": "2025"
+    }
   },
   "content": {
     "sha256": "bd99c3b277060bdb8577859540bb7c4171aea223f74de9a86302f6da3db66957",

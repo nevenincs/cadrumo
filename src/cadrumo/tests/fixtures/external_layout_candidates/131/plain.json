@@ -6,8 +6,37 @@
   "retrieved_on": "2026-08-23",
   "source_chain": {
     "classification": "third_party_hosted_external_layout_candidate",
-    "host": "fiscalbot.es",
-    "authority_status": "unverified"
+    "host": "fiscalbot.es"
+  },
+  "authority_adjudication": {
+    "artifact_authenticity": {
+      "verdict": "third_party_sample",
+      "evidence_summary": "The page visibly carries FiscalBot's example-only disclaimer, while PDFescape and later third-party producer metadata confirm that this artifact is not an official BOE or AEAT publication byte."
+    },
+    "official_base_derivation": {
+      "verdict": "verified_official_base_derivative",
+      "official_source": {
+        "authority": "boe",
+        "document_id": "BOE-A-2015-1656 Annex II",
+        "source_url": "https://www.boe.es/boe/dias/2015/02/19/pdfs/BOE-A-2015-1656.pdf",
+        "sha256": "f62a61854eac561e96f689ebf11b8b2c75d418a6146a7f972e6e6a404a8063a0",
+        "page_mapping": [
+          {"candidate_page": 1, "official_page": 8}
+        ]
+      },
+      "comparison_method": "pdf_text_geometry_and_normalized_render",
+      "comparison_summary": "The candidate preserves the amended annex's distinctive section order and all 15 numbered boxes; normalized ordered-text similarity is 0.9415. FiscalBot and PDFescape modifications prevent an exact-byte or filing-validity claim.",
+      "pair_render": {
+        "counterpart_kind": "fillable",
+        "counterpart_sha256": "3c271a489d21556d8b69fce20a165e311ba85a1b9ef26632199bfa3d4eadbef4",
+        "comparison_method": "exact_96_dpi_render_match",
+        "comparison_summary": "The one-page plain and fillable candidates render pixel-identically at 96 dpi; the differently authored field sets do not change the rendered base."
+      }
+    },
+    "registry_applicability": {
+      "verdict": "current_authored_revision",
+      "revision_id": "2026"
+    }
   },
   "content": {
     "sha256": "816e33a3452e508a62bd363030901b8d54dea362cc7b3db2c0b58fcd7f992927",

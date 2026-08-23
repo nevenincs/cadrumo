@@ -42,9 +42,6 @@ def _adjudicated_payload() -> dict[str, object]:
     candidate = load_external_layout_candidate(_ROOT / "130" / "plain.json")
     counterpart = load_external_layout_candidate(_ROOT / "130" / "fillable.json")
     payload = candidate.model_dump(mode="python")
-    source_chain = payload["source_chain"]
-    assert isinstance(source_chain, dict)
-    source_chain.pop("authority_status")
     payload["authority_adjudication"] = {
         "artifact_authenticity": {
             "verdict": "third_party_sample",
@@ -124,8 +121,8 @@ def test_external_layout_class_cannot_enrol_as_recognised_or_facsimile_provenanc
     assert frozenset({"real_corpus", "synthetic_generated"}) == RECOGNISED_FIXTURE_PROVENANCES
 
 
-def test_three_axis_adjudication_replaces_the_legacy_unverified_flag() -> None:
-    """A migrated sidecar states three independent verdicts with pinned evidence."""
+def test_three_axis_adjudication_is_required_and_rejects_the_removed_legacy_flag() -> None:
+    """Every sidecar states three independent verdicts and rejects the removed flag."""
     candidate = ExternalLayoutCandidate.model_validate(_adjudicated_payload())
     adjudication = candidate.authority_adjudication
     assert adjudication is not None
@@ -138,7 +135,7 @@ def test_three_axis_adjudication_replaces_the_legacy_unverified_flag() -> None:
     source_chain = conflicting_payload["source_chain"]
     assert isinstance(source_chain, dict)
     source_chain["authority_status"] = "unverified"
-    with pytest.raises(ValidationError, match="exactly one"):
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
         ExternalLayoutCandidate.model_validate(conflicting_payload)
 
 
