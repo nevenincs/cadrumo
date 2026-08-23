@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:d7b21e5cd99868b9b6bbb0add59551f81094df3a0a4cfe07c3be3f82b1d27174'
+body_hash: 'sha256:e86af71c155d34c0ed53da7f363b8b27777cde037f61310b07c4aa6953080440'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7989,3 +7989,40 @@ Custody note: this edit reached HEAD inside a peer's broad commit
 (`a6d3393949 src: source connectivity census and application follow-ups`) before it could be
 committed here -- the THIRD absorption this session. Verified present and intact at HEAD by
 content rather than by assuming the commit was ours.
+
+### The domain is green but for one cause, and the last half needs a lifetime decision
+
+Best reading of this domain in the whole campaign: unit fully GREEN at 1,705, integration down
+to 4, on a quiet tree (one dirty file, HEAD steady across the run). The peer's gate landing
+settled and their own module went green with it.
+
+All four remaining failures are ONE cause -- the envelope's `command` identifier -- across two
+modules (`test_config`, `test_profile_label_ambiguity_refusal`), each asserting
+`config.profile.show` and receiving `None`. The half fixed last entry covered refusals carrying
+a policy projection. These carry none: `config profile show <label>` raises
+`ProfileNotFoundError` (or the ambiguity refusal) straight past the gate, with no projection
+attached anywhere.
+
+The mechanism for why nothing can be recovered at the process boundary is now exact.
+`_common.py:293` DOES preserve the leaf in a `ContextVar` -- and line 294 immediately wires
+`ctx.call_on_close(partial(_REQUESTED_CLI_LEAF_CONTEXT.reset, token))`. The process boundary
+runs AFTER the Click context closes, so by the time `_emit_crash` asks, the var has been reset.
+Measured, not assumed: `current_requested_cli_leaf()` returns `None` there for both failing
+invocations.
+
+**The shape of the fix is clear and it is a design change, not a repair.** The same file already
+solves this exact problem for a sibling value: `_terminal_errors.py:505` captures
+`_INVOCATION_ARGV` at dispatch entry and resets it in a `finally` at line 518, explicitly "so
+parse-time handling can read the operator's `--format` and `--language` tokens even when the
+failure carries no command context". Mirroring that for the requested leaf -- boundary owns the
+lifetime, the preserver writes into it -- would close all four cases. What makes it theirs
+rather than this campaign's is the lifetime question: a var that outlives the Click context
+must not leak a stale leaf into the NEXT invocation, and the cached in-process CLI runner these
+tests use is exactly where such a leak would show up as a wrong command name rather than a
+crash. Choosing where that reset belongs is a kernel decision, and
+`test_pre_resolution_error_envelope_command_stays_null` stands guard over the failure mode:
+a fabricated or stale command name is worse than an honest null.
+
+Handover: `_common.py:293-294` (preserve, currently reset on Click close),
+`_terminal_errors.py:505/518` (the pattern to mirror), `_emit_crash` at :436 (the consumer).
+Both files are clean at HEAD right now.
