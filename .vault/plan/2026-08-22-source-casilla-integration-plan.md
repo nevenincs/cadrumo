@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-23'
 body_schema: body-v1
-body_hash: 'sha256:3e409b83707204e76d0c430c1f1568a2ee7b05b076eaf69a45aaac6aaf679232'
+body_hash: 'sha256:96e07c6cc2cdb25d13fbbf5a59c64a5634f0d58b89437d2a13461f2f46bbd2ec'
 ---
 
 # `source-casilla-integration` plan
@@ -130,7 +130,7 @@ Settle revision coverage, source facts, sign, units, activity grain, absence sem
 - [x] `W02.P06.S32` - adjudicate the mapping from opening stock, purchase movements, and closing stock to 0177, 0181, and 0182; `.vault/adr/2026-08-23-inventory-casilla-mapping-adr.md`.
 - [x] `W02.P06.S33` - decide revision windows, activity aggregation, sign, rounding, missing-ledger behavior, and caller override policy; `.vault/adr/2026-08-23-inventory-casilla-mapping-adr.md`.
 - [x] `W02.P06.S34` - remove or correct the stale Anexo D casilla 0155 intent after adjudication; `src/cadrumo/domain/contribuyente/inventory/__init__.py`.
-- [ ] `W02.P06.S35` - record the adjudicated inventory disposition and re-fetchable evidence; `src/cadrumo/_data/source_connectivity/census.toml`.
+- [x] `W02.P06.S35` - record the adjudicated inventory disposition and re-fetchable evidence; `src/cadrumo/_data/source_connectivity/census.toml`.
 
 ### Phase `W02.P07` - implement the inventory source contract
 
