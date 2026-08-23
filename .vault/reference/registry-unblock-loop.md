@@ -47,20 +47,26 @@ The six blocker classes, as the gate states them:
 
 1. **Re-measure.** Run the worklist gate and read every line. Peers are working; a line may
    have cleared or changed class.
-2. **Pick ONE entry** — the cheapest still-actionable one. Prefer an entry whose render
-   profile exists. Skip the acquisition-blocked pair.
-3. **Dispatch two subagents, at most two, in one message so they run concurrently:**
+2. **CHECK FOR ACTIVE PEER WORK BEFORE CHOOSING A TARGET.** Four other sessions work this
+   tree. Run `git log -3 --format="%h %ad %s" --date=format:"%H:%M" -- <modelo path>` on any
+   candidate. **If a peer committed to that modelo within the last hour, or a branch naming
+   it was just merged, pick a different entry** — do not dispatch a writer into a modelo
+   another session owns. This was learned by dispatching one at modelo 390 forty minutes
+   after a peer merged `issue-604-m390-real-parse` into it.
+3. **Pick ONE entry** — the cheapest still-actionable one that no peer is holding. Prefer an
+   entry whose render profile exists. Skip the acquisition-blocked pair.
+4. **Dispatch two subagents, at most two, in one message so they run concurrently:**
    - **WRITER** — executes the unblock on the chosen entry, end to end. Sole writer.
    - **SCOUT** — *read-only*. Investigates the **next** entry and returns: what its missing
      inputs concretely are, which already exist, and the cheapest first step. Its findings
      go in the audit so the following iteration starts warm.
 
    One writer and one reader cannot collide. **Never run two writers.**
-4. **Verify what the writer claims** against the tree yourself. Sub-agent output is
+5. **Verify what the writer claims** against the tree yourself. Sub-agent output is
    inventory, not gospel.
-5. **Re-run the worklist gate.** The iteration succeeded only if a line is **gone**, or the
+6. **Re-run the worklist gate.** The iteration succeeded only if a line is **gone**, or the
    entry is proven acquisition-blocked and recorded as such.
-6. **Record** in `.vault/audit/2026-08-20-registry-temporal-coverage-casilla-provenance-and-review-blockers-audit`.
+7. **Record** in `.vault/audit/2026-08-20-registry-temporal-coverage-casilla-provenance-and-review-blockers-audit`.
 
 ## PROGRESS IS WORKLIST LINES CLEARED — NOTHING ELSE
 
