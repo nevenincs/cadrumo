@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:85f3a2b7a8f5490cf77840899bc4527195b0d48728c84e1bf12a1b3fcf5426ac'
+body_hash: 'sha256:c7e2f61b06377cd138cdbe459fa7f8d0ba72701615857d72db9b5af869edbd20'
 step_id: 'S13'
 related:
   - "[[2026-08-23-cli-machine-secret-channel-unification-plan]]"
@@ -64,3 +64,6 @@ non-terminal also proves no prompt was reached.
 - The shared worktree contains unrelated in-flight release, registry, S15, and
   terminal-error work. This Step owns only its test module, execution record,
   review audit, plan checkbox, and feature index refresh.
+- Shared-branch serialization carried the production bootstrap and subprocess
+  matrix in `c98f334880`; this Step's scoped close commit carries only its
+  execution record, SOL audit, plan state, and refreshed feature index.
