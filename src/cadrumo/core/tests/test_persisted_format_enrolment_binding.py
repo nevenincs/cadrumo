@@ -113,6 +113,16 @@ CONSTANTS_OUTSIDE_THE_INVENTORY: Final[Mapping[str, str]] = {
     "REGISTRY_TREE_CACHE_SCHEMA_VERSION": "Registry tree cache, rebuilt from the bundled registry tree on any mismatch.",
     "SECURE_OBJECT_SCHEMA_VERSION_V1": "A namespace-registry version token for the enrolled secure_object format, not a second format.",
     "SECURE_OBJECT_SCHEMA_VERSION_V2": "A namespace-registry version token for the enrolled secure_object format, not a second format.",
+    "SECURE_OBJECT_SCHEMA_VERSION_V3": "A namespace-registry version token for the enrolled secure_object format, not a second format.",
+    "SECURE_OBJECT_SCHEMA_VERSION_V4": "A namespace-registry version token for the enrolled secure_object format, not a second format.",
+    "M303_ORDEN_CENSUS_SCHEMA_VERSION": (
+        "Bundled build-generated Modelo 303 census artefact shipped with each release and regenerated "
+        "from the release corpus when absent; it is not operator-owned persisted data."
+    ),
+    "REGISTRY_IDENTITY_SCHEMA_VERSION": (
+        "Build-generated identity stamp for the bundled immutable registry tree; release replacement "
+        "recomputes it from shipped registry content rather than preserving operator data."
+    ),
     "WORKFLOW_RUN_SCHEMA_VERSION_V3": "A namespace-registry version token for an enrolled secure_object namespace, not a second format.",
     "SUPPORTED_BUNDLE_SCHEMA_VERSIONS": "The accepted-version set for the enrolled bundle format, not a format of its own.",
     "UNREADABLE_SCHEMA_VERSION": "A sentinel standing for 'this row's version could not be read', not a format.",

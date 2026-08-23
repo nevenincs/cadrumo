@@ -6,6 +6,7 @@ import base64
 import json
 import os
 import sys
+from dataclasses import FrozenInstanceError
 from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID, uuid4
@@ -15,6 +16,7 @@ import pytest
 from ......core import StorageCategory, scan_directory
 from ......core.config import Settings
 from .. import (
+    PROFILE_CUSTODY_SENTINEL_FILENAME,
     ProfileCustodyCapsuleLabel,
     ProfileCustodyCommit,
     ProfileCustodyEnvelope,
@@ -33,6 +35,7 @@ from .. import (
     export_profile_custody_recovery_artifact,
     import_profile_custody_recovery_artifact,
     list_current_profile_custody_capsule_ids,
+    load_committed_profile_custody_summary_witness,
     load_committed_profile_password_material,
     parse_profile_custody_commit,
     parse_profile_custody_recovery_artifact,
@@ -336,6 +339,68 @@ def test_committed_capsule_is_published_once_with_immutable_marker_and_password_
         dek_epoch=_EPOCH,
         sentinel=password_material.sentinel,
     )
+
+
+def test_capsule_summary_witness_observes_only_validated_commit_and_uuid_bound_label(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    envelope = _password_envelope()
+    sentinel = create_profile_custody_sentinel(envelope=envelope, dek=_DEK)
+    label = ProfileCustodyCapsuleLabel.create(profile_id=_PROFILE_ID, label="Summary profile")
+    capsule = publish_profile_custody_capsule(
+        profile_id=_PROFILE_ID,
+        transaction_id=UUID("60a1e2f8-eeb3-4256-b04d-0aaccc49c43d"),
+        publication_kind="enroll",
+        password_envelope=envelope,
+        sentinel=sentinel,
+        recovery_envelope=None,
+        data_files={"profile-label.v1.json": label.canonical_json_bytes()},
+        settings=settings,
+    )
+    # If the summary path crosses custody or sentinel boundaries, these real
+    # non-regular members make the accidental read fail loudly.
+    (capsule / "custody" / "envelope.v1.json").unlink()
+    (capsule / "custody" / "envelope.v1.json").mkdir()
+    (capsule / "data" / PROFILE_CUSTODY_SENTINEL_FILENAME).unlink()
+    (capsule / "data" / PROFILE_CUSTODY_SENTINEL_FILENAME).mkdir()
+
+    witness = load_committed_profile_custody_summary_witness(_PROFILE_ID, settings=settings)
+
+    assert witness.profile_id == _PROFILE_ID
+    assert witness.capsule_path == capsule
+    assert witness.commit.profile_id == witness.label.profile_id == _PROFILE_ID
+    assert witness.label == label
+    with pytest.raises(FrozenInstanceError):
+        witness.capsule_path = tmp_path / "replacement"  # type: ignore[misc]
+
+
+def test_capsule_summary_witness_refuses_foreign_or_linked_label_provenance(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    envelope = _password_envelope()
+    sentinel = create_profile_custody_sentinel(envelope=envelope, dek=_DEK)
+    label = ProfileCustodyCapsuleLabel.create(profile_id=_PROFILE_ID, label="Summary profile")
+    capsule = publish_profile_custody_capsule(
+        profile_id=_PROFILE_ID,
+        transaction_id=UUID("5f274feb-21c8-4f16-b049-bff720e699c4"),
+        publication_kind="enroll",
+        password_envelope=envelope,
+        sentinel=sentinel,
+        recovery_envelope=None,
+        data_files={"profile-label.v1.json": label.canonical_json_bytes()},
+        settings=settings,
+    )
+    label_path = capsule / "data" / "profile-label.v1.json"
+    label_path.write_bytes(
+        ProfileCustodyCapsuleLabel.create(profile_id=uuid4(), label="Foreign profile").canonical_json_bytes()
+    )
+    with pytest.raises(ProfileCustodyRecordError, match="label UUID differs"):
+        load_committed_profile_custody_summary_witness(_PROFILE_ID, settings=settings)
+
+    label_path.unlink()
+    outside = tmp_path / "outside-label.json"
+    outside.write_bytes(label.canonical_json_bytes())
+    os.symlink(outside, label_path)
+    with pytest.raises(ProfileCustodyRecordError, match=r"regular|reparse|unavailable"):
+        load_committed_profile_custody_summary_witness(_PROFILE_ID, settings=settings)
 
 
 def test_uncommitted_or_identity_mixed_capsules_are_not_usable(tmp_path: Path) -> None:

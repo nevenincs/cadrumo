@@ -116,6 +116,7 @@ def _revision(
     *,
     row_identity: RowSourceIdentity | None = None,
     with_row_materialization: bool = False,
+    target_row_index: int = 1,
 ) -> CalculationRevision:
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
@@ -128,10 +129,10 @@ def _revision(
     row_identities: dict[tuple[str, int], RowSourceIdentity] = (
         {("inventory-operation-0181", 1): row_identity} if row_identity is not None else {}
     )
-    row_casilla_values = {(_ROW_CASILLA, 1): Decimal("120.00")} if with_row_materialization else {}
+    row_casilla_values = {(_ROW_CASILLA, target_row_index): Decimal("120.00")} if with_row_materialization else {}
     row_casilla_provenance = (
         {
-            (_ROW_CASILLA, 1): DirectRowMaterializationProvenance(
+            (_ROW_CASILLA, target_row_index): DirectRowMaterializationProvenance(
                 source_binding_id="inventory-operation-0181",
                 source_row_index=1,
                 source_identity=row_identity,
@@ -197,6 +198,21 @@ def test_row_casilla_materialization_roundtrips_only_through_encrypted_revision(
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
 
     assert repository.load().get(original.calculation_revision_id) == original
+
+
+def test_row_casilla_target_row_must_equal_direct_source_row() -> None:
+    identity = RowSourceIdentity(
+        source_kind=BindingSourceKind.INVENTORY,
+        source_row_identity="reordered-row-refusal",
+        fingerprint="6" * 64,
+    )
+    with pytest.raises(ValidationError, match="row casilla index must match"):
+        _revision(
+            _source_provenance(),
+            row_identity=identity,
+            with_row_materialization=True,
+            target_row_index=2,
+        )
 
 
 def test_row_source_identity_roundtrips_only_through_encrypted_revision(

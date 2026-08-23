@@ -6,6 +6,7 @@ import os
 import stat
 from collections.abc import Callable, Mapping
 from contextlib import ExitStack
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
@@ -169,6 +170,30 @@ from ._sentinel_contract import ProfileCustodySentinelRecord
 
 if TYPE_CHECKING:
     from .....core.config import Settings
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileCustodyCapsuleSummaryWitness:
+    """One coherent, read-only observation of a committed capsule summary.
+
+    Both records have already passed their canonical current-format and digest
+    validation.  The constructor additionally binds their identities together,
+    so callers cannot accidentally combine a commit observation with another
+    capsule's label provenance.
+    """
+
+    capsule_path: Path
+    commit: ProfileCustodyCommit
+    label: ProfileCustodyCapsuleLabel
+
+    def __post_init__(self) -> None:
+        if self.commit.profile_id != self.label.profile_id:
+            raise ProfileCustodyRecordError("profile capsule summary records name different UUIDs")
+
+    @property
+    def profile_id(self) -> UUID:
+        """Return the UUID proven independently by both summary records."""
+        return self.commit.profile_id
 
 
 def inventory_committed_profile_custody_capsule(
@@ -782,6 +807,78 @@ def load_committed_profile_custody_label_record(
     return _load_profile_custody_label_from_verified_capsule(capsule_path, profile_id=profile_id)
 
 
+def load_committed_profile_custody_summary_witness(
+    profile_id: UUID,
+    *,
+    settings: Settings | None = None,
+    root: Path | None = None,
+) -> ProfileCustodyCapsuleSummaryWitness:
+    """Observe one validated commit and UUID-bound label without custody reads.
+
+    The capsule directory stays identity-anchored while both bounded records are
+    read.  This path deliberately never opens the password envelope, sentinel,
+    recovery material, label head, session state, or encrypted profile facts.
+    """
+    marker_path = profile_custody_path(
+        profile_id,
+        StorageCategory.PROFILE_CAPSULE_COMMIT,
+        settings=settings,
+        root=root,
+    )
+    capsule_path = marker_path.parent
+    if not _lexists(capsule_path, trace=[]):
+        raise ProfileCustodyRecordError("profile capsule is not committed")
+    label_path = capsule_path / "data" / PROFILE_CUSTODY_LABEL_FILENAME
+    if os.name != "nt":
+        with _posix_directory_fd(capsule_path) as capsule_fd:
+            if not _posix_child_exists(capsule_fd, marker_path.name, display_path=marker_path):
+                raise ProfileCustodyRecordError("profile capsule is not committed")
+            commit_payload = _read_regular_file_fd(
+                capsule_fd,
+                marker_path.name,
+                display_path=marker_path,
+                maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES,
+                trace=[],
+            )
+            data_fd = _posix_open_child_directory(capsule_fd, "data")
+            try:
+                label_payload = _read_regular_file_fd(
+                    data_fd,
+                    PROFILE_CUSTODY_LABEL_FILENAME,
+                    display_path=label_path,
+                    maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES,
+                    trace=[],
+                )
+            finally:
+                os.close(data_fd)
+    else:
+        with ExitStack() as anchors:
+            _anchor_directory(anchors, capsule_path)
+            _anchor_directory(anchors, capsule_path / "data")
+            if not _lexists(marker_path, trace=[]):
+                raise ProfileCustodyRecordError("profile capsule is not committed")
+            commit_payload = _read_regular_file(
+                marker_path,
+                maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES,
+                trace=[],
+            )
+            label_payload = _read_regular_file(
+                label_path,
+                maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES,
+                trace=[],
+            )
+    try:
+        commit = parse_profile_custody_commit(commit_payload)
+        label = parse_profile_custody_capsule_label(label_payload)
+    except (ProfileCustodyRecordError, ValueError, TypeError) as exc:
+        raise ProfileCustodyRecordError("profile capsule summary witness is invalid") from exc
+    if commit.profile_id != profile_id:
+        raise ProfileCustodyRecordError("profile capsule commit UUID does not match its directory")
+    if label.profile_id != profile_id:
+        raise ProfileCustodyRecordError("profile capsule label UUID differs from its committed capsule")
+    return ProfileCustodyCapsuleSummaryWitness(capsule_path=capsule_path, commit=commit, label=label)
+
+
 def load_committed_profile_custody_data_file(
     profile_id: UUID,
     relative_name: str,
@@ -1059,6 +1156,7 @@ __all__ = [
     "PROFILE_CUSTODY_LABEL_MAX_BYTES",
     "PROFILE_CUSTODY_LAYOUT_VERSION",
     "PROFILE_CUSTODY_PROFILE_RECORD_MAX_BYTES",
+    "ProfileCustodyCapsuleSummaryWitness",
     "ProfileCustodyCommit",
     "ProfileCustodyDeletionMarker",
     "ProfileCustodyInventory",
@@ -1068,6 +1166,7 @@ __all__ = [
     "list_current_profile_custody_capsule_ids",
     "load_committed_profile_custody_data_file",
     "load_committed_profile_custody_label_record",
+    "load_committed_profile_custody_summary_witness",
     "load_committed_profile_password_material",
     "load_staged_profile_custody_label_record",
     "parse_profile_custody_commit",
