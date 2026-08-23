@@ -399,8 +399,8 @@ def extract_runtime_wheelhouse(archive_path: Path, destination: Path) -> Runtime
 
 
 __all__ = [
-    "SUPPORTED_TARGETS",
     "PLATFORM_FLOORS",
+    "SUPPORTED_TARGETS",
     "WHEELHOUSE_MANIFEST",
     "WHEELHOUSE_PREFIX",
     "WHEELHOUSE_SCHEMA",

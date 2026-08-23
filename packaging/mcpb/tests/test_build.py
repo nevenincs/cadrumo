@@ -20,18 +20,8 @@ from types import ModuleType
 from typing import cast
 
 import pytest
-from dev.packaging._smoke_common import (
-    build_companion_wheels,
-    build_sdist,
-    build_wheel,
-    commit_defined_build_root,
-    run_checked,
-)
-from dev.packaging.python_cohort import load_python_cohort
-from dev.packaging.tests._cohort_attestation import (
-    add_test_source_archive,
-    make_test_command_spec_attestation,
-)
+from dev.packaging.python_cohort import build_python_cohort, load_python_cohort
+from dev.packaging.runtime_wheelhouse import load_runtime_wheelhouse
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
@@ -55,94 +45,24 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _write_cohort_manifest(
-    cohort_dir: Path,
-    *,
-    artifacts: dict[str, Path],
-    version: str,
-) -> None:
-    names: dict[str, str] = {}
-    digests: dict[str, str] = {}
-    for label, artifact in artifacts.items():
-        retained = cohort_dir / artifact.name
-        if retained.resolve() != artifact.resolve():
-            shutil.copy2(artifact, retained)
-        names[label] = retained.name
-        digests[label] = _sha256(retained)
+@pytest.fixture(scope="module")
+def real_cohort(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Build the one canonical sealed cohort API consumed by the bundle."""
+    work = tmp_path_factory.mktemp("mcpb-real-cohort")
+    clean_repo = work / "clean-repository"
     git = shutil.which("git")
     assert git is not None
-    source_commit = subprocess.run(  # noqa: S603 - resolved Git with fixed repository argv
-        [git, "rev-parse", "HEAD"],
-        cwd=_REPO_ROOT,
-        check=True,
+    completed = subprocess.run(  # noqa: S603 - resolved Git with fixed local-clone argv.
+        [git, "clone", "--local", "--no-hardlinks", str(_REPO_ROOT), str(clean_repo)],
+        cwd=work,
+        check=False,
         capture_output=True,
         text=True,
         encoding="utf-8",
-    ).stdout.strip()
-    add_test_source_archive(cohort_dir, names, digests)
-    (cohort_dir / "python-cohort.json").write_text(
-        json.dumps(
-            {
-                "artifacts": names,
-                "sha256": digests,
-                "source_commit": source_commit,
-                "version": version,
-                "command_spec_attestation": make_test_command_spec_attestation(
-                    cohort_dir, names, source_commit=source_commit
-                ),
-            },
-            sort_keys=True,
-        ),
-        encoding="utf-8",
     )
-
-
-@pytest.fixture(scope="module")
-def real_cohort(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Build the canonical install archives plus retained source archive consumed by the bundle."""
-    uv = shutil.which("uv")
-    assert uv is not None
-    work = tmp_path_factory.mktemp("mcpb-real-cohort")
+    assert completed.returncode == 0, completed.stderr
     cohort_dir = work / "cohort"
-    cohort_dir.mkdir()
-    # Build from a commit-defined root, not the working tree. In this shared
-    # worktree a peer's uncommitted edit would otherwise ride into the wheels,
-    # and the cohort this bundle binds would describe bytes matching no commit.
-    # On a clean checkout this IS the tree, so CI pays nothing. The wheel build
-    # still takes the real repository too, because its tracked-data queries need
-    # Git and the extract has no ``.git``.
-    build_root = commit_defined_build_root(_REPO_ROOT, work)
-    root_wheel = build_wheel(_REPO_ROOT, work, uv, build_root=build_root)
-    manuals_wheel, official_wheel = build_companion_wheels(work, uv, build_root=build_root)
-    root_sdist = build_sdist(work, uv, build_root=build_root)
-    companion_sdists = work / "companion-sdists"
-    run_checked(
-        [uv, "build", "--sdist", "--out-dir", str(companion_sdists)],
-        cwd=build_root / "packaging" / "cadrumo_data_manuals",
-    )
-    run_checked(
-        [uv, "build", "--sdist", "--out-dir", str(companion_sdists)],
-        cwd=build_root / "packaging" / "cadrumo_data_official",
-    )
-    manuals_sdist = next(companion_sdists.glob("cadrumo_data_manuals-*.tar.gz"))
-    official_sdist = next(companion_sdists.glob("cadrumo_data_official-*.tar.gz"))
-    version = tomllib.loads(
-        (_REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"),
-    )["project"]["version"]
-    assert isinstance(version, str)
-    _write_cohort_manifest(
-        cohort_dir,
-        artifacts={
-            "cadrumo": root_wheel,
-            "cadrumo-sdist": root_sdist,
-            "cadrumo-data-manuals": manuals_wheel,
-            "cadrumo-data-manuals-sdist": manuals_sdist,
-            "cadrumo-data-official": official_wheel,
-            "cadrumo-data-official-sdist": official_sdist,
-        },
-        version=version,
-    )
-    return load_python_cohort(cohort_dir).directory
+    return build_python_cohort(clean_repo, cohort_dir).directory
 
 
 def _copy_cohort(source: Path, destination: Path) -> Path:
@@ -458,6 +378,8 @@ def test_manifest_declares_only_the_bundle_local_python_runtime() -> None:
             "CADRUMO_LOCAL_STORAGE_ROOT": "${user_config.storage_root}",
             "CADRUMO_MCP_PERSONA": "${user_config.persona}",
             "CADRUMO_MCP_SURFACE": "${user_config.surface}",
+            "PYTHONNOUSERSITE": "1",
+            "PYTHONPATH": "",
         },
     }
     assert manifest["user_config"]["storage_root"] == {
@@ -513,17 +435,24 @@ def test_build_contains_exact_wheels_and_canonical_digest_binding(
         cohort.official_wheel.name: cohort.official_wheel,
     }
     with zipfile.ZipFile(bundle) as archive:
-        assert archive.namelist() == [
+        wheelhouse = load_runtime_wheelhouse(cohort.runtime_wheelhouse)
+        expected_members = [
             f"artifacts/{cohort.root_wheel.name}",
             f"artifacts/{cohort.harness_wheel.name}",
             f"artifacts/{cohort.manuals_wheel.name}",
             f"artifacts/{cohort.official_wheel.name}",
+            *(
+                f"artifacts/wheelhouse/{filename}"
+                for filename in sorted(wheelhouse.manifest["wheels"])
+            ),
+            "artifacts/wheelhouse/runtime-wheelhouse.json",
             "constraints.txt",
             "manifest.json",
             "pyproject.toml",
             "src/_serve.py",
             "src/server.py",
         ]
+        assert archive.namelist() == sorted(expected_members)
         for filename, wheel in expected_wheels.items():
             assert archive.read(f"artifacts/{filename}") == wheel.read_bytes()
         manifest = json.loads(archive.read("manifest.json"))
@@ -538,6 +467,7 @@ def test_build_contains_exact_wheels_and_canonical_digest_binding(
         name: cohort.sha256[name]
         for name in (
             "cadrumo",
+            "cadrumo-harness",
             "cadrumo-data-manuals",
             "cadrumo-data-official",
         )

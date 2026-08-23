@@ -126,13 +126,19 @@ _PYTHON_COHORT_WHEELS = (
     "cadrumo-data-official",
 )
 _PLUGIN_COHORT_SCHEMA = "cadrumo.plugin-python-cohort.v1"
-_RUNTIME_WHEELHOUSE_SCHEMA = "cadrumo.runtime-wheelhouse.v1"
+_RUNTIME_WHEELHOUSE_SCHEMA = "cadrumo.runtime-wheelhouse.v2"
 _RUNTIME_WHEELHOUSE_MANIFEST = "runtime-wheelhouse.json"
 _RUNTIME_WHEELHOUSE_PREFIX = "wheels/"
 _RUNTIME_WHEELHOUSE_SUBDIR = "wheelhouse"
 _SUPPORTED_WHEELHOUSE_TARGETS = frozenset(
     {"linux-aarch64", "linux-x86-64", "macos-arm64", "windows-x86-64"}
 )
+_RUNTIME_WHEELHOUSE_FLOORS = {
+    "linux-aarch64": "glibc-2.17",
+    "linux-x86-64": "glibc-2.17",
+    "macos-arm64": "macos-11.0",
+    "windows-x86-64": "windows-10",
+}
 
 # --- Claude marketplace layout --------------------------------------------
 #
@@ -520,6 +526,7 @@ def _extract_runtime_wheelhouse(
         document = json.loads(archive.read(_RUNTIME_WHEELHOUSE_MANIFEST))
         if not isinstance(document, dict) or set(document) != {
             "lock_sha256",
+            "platform_floors",
             "platforms",
             "python",
             "schema",
@@ -530,6 +537,8 @@ def _extract_runtime_wheelhouse(
             raise ValueError("runtime wheelhouse manifest drifted from the validated cohort")
         if document.get("schema") != _RUNTIME_WHEELHOUSE_SCHEMA or document.get("python") != "3.13":
             raise ValueError("runtime wheelhouse identity drifted")
+        if document.get("platform_floors") != _RUNTIME_WHEELHOUSE_FLOORS:
+            raise ValueError("runtime wheelhouse platform support floor drifted")
         platforms = document.get("platforms")
         wheels = document.get("wheels")
         if not isinstance(platforms, dict) or set(platforms) != _SUPPORTED_WHEELHOUSE_TARGETS:
@@ -556,6 +565,19 @@ def _extract_runtime_wheelhouse(
             if len(payload) != record.get("size") or sha256_hex(payload) != record.get("sha256"):
                 raise ValueError(f"runtime wheelhouse wheel bytes drifted: {filename!r}")
             (destination / filename).write_bytes(payload)
+        for target, rows in platforms.items():
+            if not isinstance(rows, dict) or not rows:
+                raise ValueError(f"runtime wheelhouse target closure is empty: {target!r}")
+            for distribution, filename in rows.items():
+                record = wheels.get(filename) if isinstance(filename, str) else None
+                if not isinstance(distribution, str) or not isinstance(record, dict):
+                    raise ValueError(
+                        f"runtime wheelhouse target references an unknown wheel: {target!r}"
+                    )
+                if record.get("distribution") != distribution:
+                    raise ValueError(
+                        f"runtime wheelhouse target swaps distribution bytes: {target!r}/{distribution!r}"
+                    )
     return {str(key): value for key, value in document.items()}
 
 

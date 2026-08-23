@@ -28,15 +28,18 @@ _REPO_ROOT = _HERE.parents[1]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from cadrumo_harness import PRODUCT_AUTHOR_NAME  # noqa: E402
 from dev.packaging.python_cohort import PythonCohort, load_python_cohort  # noqa: E402
+from dev.packaging.runtime_wheelhouse import extract_runtime_wheelhouse  # noqa: E402
 from dev.packaging.uv_constraints import (  # noqa: E402
     export_runtime_constraints,
     render_constraints_file,
 )
 
+from cadrumo.core import PRODUCT_IDENTITY  # noqa: E402
+
 _MANIFEST = _HERE / "manifest.json"
 _UTF_8: Final[str] = "utf-8"
+_PRODUCT_AUTHOR_NAME: Final[str] = f"{PRODUCT_IDENTITY.display_name} tax assistant project"
 _DISTRIBUTIONS: Final[tuple[str, str, str, str]] = (
     "cadrumo",
     "cadrumo-harness",
@@ -194,7 +197,17 @@ def _provision():
         raise SystemExit("uv is required to provision the Cadrumo MCP environment on first launch")
     _require_min_uv(uv)
     result = subprocess.run(
-        [uv, "sync", "--directory", str(_BUNDLE)],
+        [
+            uv,
+            "sync",
+            "--directory",
+            str(_BUNDLE),
+            "--offline",
+            "--no-index",
+            "--find-links",
+            str(_BUNDLE / "artifacts" / "wheelhouse"),
+            "--no-python-downloads",
+        ],
         capture_output=True,
         text=True,
         check=False,
@@ -382,10 +395,10 @@ def load_manifest() -> dict[str, object]:
     if missing:
         raise ManifestError(f"manifest.json missing required fields: {', '.join(missing)}")
     author = data["author"]
-    if not isinstance(author, dict) or author.get("name") != PRODUCT_AUTHOR_NAME:
+    if not isinstance(author, dict) or author.get("name") != _PRODUCT_AUTHOR_NAME:
         observed = author.get("name") if isinstance(author, dict) else author
         raise ManifestError(
-            f"manifest.json author.name must be the derived product author '{PRODUCT_AUTHOR_NAME}', got {observed!r}",
+            f"manifest.json author.name must be the derived product author '{_PRODUCT_AUTHOR_NAME}', got {observed!r}",
         )
     if data["manifest_version"] != "0.4":
         raise ManifestError("manifest.json must use MCPB manifest_version 0.4")
@@ -411,8 +424,14 @@ def load_manifest() -> dict[str, object]:
         _STORAGE_ROOT_ENV,
         "CADRUMO_MCP_PERSONA",
         "CADRUMO_MCP_SURFACE",
+        "PYTHONNOUSERSITE",
+        "PYTHONPATH",
     }:
-        raise ManifestError("the committed manifest env must contain only user-config passthrough")
+        raise ManifestError(
+            "the committed manifest env must contain user-config passthrough and Python isolation"
+        )
+    if env.get("PYTHONNOUSERSITE") != "1" or env.get("PYTHONPATH") != "":
+        raise ManifestError("the committed manifest must neutralize ambient Python imports")
     compatibility = data.get("compatibility")
     if compatibility != {"runtimes": {"python": ">=3.13,<3.14"}}:
         raise ManifestError("manifest compatibility must claim only the tested Python runtime range")
@@ -424,7 +443,7 @@ def stamped_manifest(cohort: PythonCohort) -> dict[str, object]:
     data = load_manifest()
     data["version"] = cohort.version
     author = cast("dict[str, object]", data["author"])
-    author["name"] = PRODUCT_AUTHOR_NAME
+    author["name"] = _PRODUCT_AUTHOR_NAME
     server = cast("dict[str, object]", data["server"])
     mcp_config = cast("dict[str, object]", server["mcp_config"])
     env = cast("dict[str, object]", mcp_config["env"])
@@ -499,6 +518,10 @@ def _stage_bundle(stage: Path, cohort: PythonCohort) -> None:
         shutil.copy2(wheel, destination)
         if not filecmp.cmp(wheel, destination, shallow=False):
             raise ManifestError(f"staged wheel bytes drifted: {wheel}")
+    extract_runtime_wheelhouse(
+        cohort.runtime_wheelhouse,
+        artifacts / "wheelhouse",
+    )
     constraint_lines = export_runtime_constraints(repo_root=_REPO_ROOT)
     (stage / "manifest.json").write_text(
         json.dumps(stamped_manifest(cohort), indent=2, ensure_ascii=False) + "\n",

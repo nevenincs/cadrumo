@@ -39,6 +39,12 @@ def add_test_runtime_wheelhouse(
     rows = {"cadrumo-test-dependency": filename}
     manifest = {
         "lock_sha256": hashlib.sha256(lock).hexdigest(),
+        "platform_floors": {
+            "linux-aarch64": "glibc-2.17",
+            "linux-x86-64": "glibc-2.17",
+            "macos-arm64": "macos-11.0",
+            "windows-x86-64": "windows-10",
+        },
         "platforms": {
             target: rows
             for target in (
@@ -49,7 +55,7 @@ def add_test_runtime_wheelhouse(
             )
         },
         "python": "3.13",
-        "schema": "cadrumo.runtime-wheelhouse.v1",
+        "schema": "cadrumo.runtime-wheelhouse.v2",
         "wheels": {
             filename: {
                 "distribution": "cadrumo-test-dependency",

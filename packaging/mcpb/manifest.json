@@ -18,7 +18,9 @@
       "env": {
         "CADRUMO_LOCAL_STORAGE_ROOT": "${user_config.storage_root}",
         "CADRUMO_MCP_PERSONA": "${user_config.persona}",
-        "CADRUMO_MCP_SURFACE": "${user_config.surface}"
+        "CADRUMO_MCP_SURFACE": "${user_config.surface}",
+        "PYTHONNOUSERSITE": "1",
+        "PYTHONPATH": ""
       }
     }
   },
