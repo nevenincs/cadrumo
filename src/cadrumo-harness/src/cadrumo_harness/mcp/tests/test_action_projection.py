@@ -14,7 +14,6 @@ from cadrumo.application.operator_actions import (
 from cadrumo.application.operator_surface import OperatorSurfaceContractError
 from cadrumo.core.json_contract import Notice
 from cadrumo.entrypoints.cli import (
-    VerbInputSchema,
     build_verb_input_schemas,
     command_schema_refs,
     is_exposable_command,
@@ -193,12 +192,7 @@ def test_mcp_action_projection_refuses_an_ambiguous_live_click_path() -> None:
     overview_schema = live_schemas["overview.status"]
     ambiguous_schemas = {
         **live_schemas,
-        "overview.status": VerbInputSchema(
-            command_key=overview_schema.command_key,
-            cli_path=create_schema.cli_path,
-            parameters=overview_schema.parameters,
-            help=overview_schema.help,
-        ),
+        "overview.status": overview_schema.model_copy(update={"cli_path": create_schema.cli_path}),
     }
     catalogue = build_action_catalogue((_catalogue_entry("operator.profile.create"),))
 

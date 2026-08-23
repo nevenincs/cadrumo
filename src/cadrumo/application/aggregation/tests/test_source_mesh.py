@@ -21,7 +21,7 @@ from .. import (
     storage_degradation_resolution,
 )
 from .._errors import AggregationValidationError
-from .._source_mesh import SourceMeshError, out_of_window_summary_source_diagnostic
+from .._source_mesh import RowSourceIdentity, SourceMeshError, out_of_window_summary_source_diagnostic
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -102,6 +102,92 @@ def test_source_resolution_row_binding_json_replay_restores_serialized_coordinat
         ("modelo-720-asset-row-valuation", 2): Decimal("60000.00"),
     }
     assert replayed.model_dump_json() == raw
+
+
+def _row_identity(
+    identity: str = "opaque-activity-alpha",
+    *,
+    fingerprint: str = "a" * 64,
+) -> RowSourceIdentity:
+    return RowSourceIdentity(
+        source_kind=BindingSourceKind.INVENTORY,
+        source_row_identity=identity,
+        fingerprint=fingerprint,
+    )
+
+
+def test_row_source_identity_is_bijective_sorted_and_json_replayable() -> None:
+    second = ("inventory-operation-z", 2)
+    first = ("inventory-operation-a", 1)
+    resolution = CalculationSourceResolution(
+        resolver_id="inventory",
+        owned_sources=(BindingSourceKind.INVENTORY,),
+        row_binding_values={second: Decimal("2.00"), first: Decimal("1.00")},
+        row_source_identities={
+            second: _row_identity("opaque-activity-z", fingerprint="b" * 64),
+            first: _row_identity(),
+        },
+    )
+
+    dumped = resolution.model_dump(mode="json")["row_source_identities"]
+    assert [(row["binding_id"], row["row_index"]) for row in dumped] == [first, second]
+    replayed = CalculationSourceResolution.model_validate_json(resolution.model_dump_json())
+    assert replayed == resolution
+
+
+@pytest.mark.parametrize(
+    ("values", "identities"),
+    [
+        ({("inventory-operation-a", 1): Decimal("1.00")}, {("inventory-operation-a", 2): _row_identity()}),
+        ({("inventory-operation-a", 1): Decimal("1.00")}, {("inventory-operation-b", 1): _row_identity()}),
+        (
+            {
+                ("inventory-operation-a", 1): Decimal("1.00"),
+                ("inventory-operation-a", 2): Decimal("2.00"),
+            },
+            {("inventory-operation-a", 1): _row_identity()},
+        ),
+    ],
+)
+def test_row_source_identity_refuses_missing_or_orphan_coordinates(
+    values: dict[tuple[str, int], Decimal],
+    identities: dict[tuple[str, int], RowSourceIdentity],
+) -> None:
+    with pytest.raises(ValidationError, match="row_source_identity_coordinate_mismatch"):
+        CalculationSourceResolution(
+            resolver_id="inventory",
+            row_binding_values=values,
+            row_source_identities=identities,
+        )
+
+
+@pytest.mark.parametrize("row_index", [0, -1])
+def test_row_source_identity_refuses_non_positive_indexes(row_index: int) -> None:
+    with pytest.raises(ValidationError, match="row_binding_index_invalid"):
+        CalculationSourceResolution(
+            resolver_id="inventory",
+            row_binding_values={("inventory-operation-a", row_index): Decimal("1.00")},
+            row_source_identities={("inventory-operation-a", row_index): _row_identity()},
+        )
+
+
+@pytest.mark.parametrize("identity", ["", " activity", "activity ", "activity\nsecret"])
+def test_row_source_identity_refuses_noncanonical_opaque_identity(identity: str) -> None:
+    with pytest.raises(ValidationError):
+        _row_identity(identity)
+
+
+def test_row_source_identity_raw_value_is_absent_from_repr() -> None:
+    canary = "opaque-activity-do-not-display"
+    identity = _row_identity(canary)
+    resolution = CalculationSourceResolution(
+        resolver_id="inventory",
+        row_binding_values={("inventory-operation-a", 1): Decimal("1.00")},
+        row_source_identities={("inventory-operation-a", 1): identity},
+    )
+
+    assert canary not in repr(identity)
+    assert canary not in repr(resolution)
 
 
 def test_source_resolution_rejects_serialized_row_binding_index_below_one() -> None:

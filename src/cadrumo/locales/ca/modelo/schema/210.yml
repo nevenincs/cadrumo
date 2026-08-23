@@ -119,71 +119,111 @@ modelo:
         2026-y-siguientes:
           casilla:
             base_imponible:
+              help: Casella 8 del model 210, exercici 2026.
               label: Base imposable
             base_imponible_directa_g:
+              help: Casella 18 del model 210, exercici 2026.
               label: Base imposable (210 G)
             base_imponible_directa_i:
+              help: Casella 4 del model 210, exercici 2026.
               label: Base imposable (210 I)
             base_imponible_ganancias_h:
+              help: Casella 17 del model 210, exercici 2026.
               label: Base imposable ([12]+[16]) (210 H)
             coeficiente_imputacion_inmobiliaria:
+              help: 'Dada del model 210, exercici 2026: Coeficient d''imputació immobiliària.'
               label: Coeficient d'imputació immobiliària
             convenio_indicador:
+              help: Casella 20 del model 210, exercici 2026.
               label: Conveni
             cuota_diferencial:
+              help: Casella 31 del model 210, exercici 2026.
               label: Quota diferencial
             cuota_integra:
+              help: Casella 22 del model 210, exercici 2026.
               label: Quota íntegra
             cuota_integra_reducida:
+              help: Casella 28 del model 210, exercici 2026.
               label: Quota íntegra reduïda ([24]-[27])
             cuota_ley_irnr:
+              help: Casella 24 del model 210, exercici 2026.
               label: Quota Llei IRNR ([22]-[23])
             deduccion_donativos:
+              help: Casella 23 del model 210, exercici 2026.
               label: Deducció per donatius
             dias_imputacion:
+              help: 'Dada del model 210, exercici 2026: Dies d''imputació.'
               label: Dies d'imputació
             exencion_dividendos:
+              help: Casella 6 del model 210, exercici 2026.
               label: Exempció aplicada dividends (límit anual 1.500 euros) (210 R)
             exenciones_ley_irnr_indicador:
+              help: Casella 19 del model 210, exercici 2026.
               label: Exempcions Llei IRNR, excepte dividends (límit anual 1.500 euros)
             ganancia_diferencia:
+              help: Casella 11 del model 210, exercici 2026.
               label: Adquisició. Diferència (210 H)
             ganancia_importe:
+              help: Casella 12 del model 210, exercici 2026.
               label: Adquisició. Guany (210 H)
             ganancia_valor_adquisicion:
+              help: Casella 10 del model 210, exercici 2026.
               label: Adquisició. Valor d'adquisició (actualitzat) (210 H)
             ganancia_valor_transmision:
+              help: Casella 9 del model 210, exercici 2026.
               label: Adquisició. Valor de transmissió (210 H)
             gastos_deducibles:
+              help: Casella 7 del model 210, exercici 2026.
               label: Despeses deduïbles
             ingreso_devolucion_anterior:
+              help: Casella 30 del model 210, exercici 2026.
               label: Ingrés/Devolució anterior (exclusivament autoliquidació complementària)
             limite_convenio:
+              help: Casella 26 del model 210, exercici 2026.
               label: Límit Conveni
             mejora_diferencia:
+              help: Casella 15 del model 210, exercici 2026.
               label: Millora o 2a adquisició. Diferència (210 H)
             mejora_ganancia:
+              help: Casella 16 del model 210, exercici 2026.
               label: Millora o 2a adquisició. Guany (210 H)
             mejora_valor_adquisicion:
+              help: Casella 14 del model 210, exercici 2026.
               label: Millora o 2a adquisició. Valor d'adquisició (actualitzat) (210
                 H)
             mejora_valor_transmision:
+              help: Casella 13 del model 210, exercici 2026.
               label: Millora o 2a adquisició. Valor de transmissió (210 H)
             porcentaje_convenio:
+              help: Casella 25 del model 210, exercici 2026.
               label: Percentatge Conveni (%)
             reduccion_convenio:
+              help: Casella 27 del model 210, exercici 2026.
               label: Reducció per Conveni ([24]-[26])
             rendimientos_integros:
+              help: Casella 5 del model 210, exercici 2026.
               label: Rendiments íntegres
             retencion_practicada:
+              help: Casella 29 del model 210, exercici 2026.
               label: Retenció practicada
             tipo_gravamen:
+              help: Casella 21 del model 210, exercici 2026.
               label: Tipus de gravamen
             tipo_renta:
+              help: 'Dada del model 210, exercici 2026: Tipus de renda.'
               label: Tipus de renda
             valor_adquisicion:
+              help: 'Dada del model 210, exercici 2026: Valor d''adquisició.'
               label: Valor d'adquisició
             valor_catastral:
+              help: 'Dada del model 210, exercici 2026: Valor cadastral.'
               label: Valor cadastral
             valor_comprobado_administracion:
+              help: 'Dada del model 210, exercici 2026: Valor comprovat per l''Administració.'
               label: Valor comprovat per l'Administració
+          construct:
+            m210-irnr-calculation:
+              field:
+                title: Càlcul de l'IRNR del model 210
+          field:
+            label: Exercici 2026 i següents

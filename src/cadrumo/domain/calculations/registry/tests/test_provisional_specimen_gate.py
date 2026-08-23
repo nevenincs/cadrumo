@@ -26,7 +26,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _DATA_ROOT = bundled_path()
 # The validator never derives this path (see test_justificante_corpus_derivation.py,
 # which pins that one-way property); it must be supplied explicitly, exactly as an
-# authoring tool would supply the real fixture tree.
+# authoring tool would supply the committed synthetic fixture tree.
 _JUSTIFICANTE_CORPUS_ROOT = _DATA_ROOT.parent / "tests" / "fixtures" / "justificantes"
 
 
@@ -136,17 +136,17 @@ def test_fixture_present_round_trip_verified_validates(tmp_path: Path) -> None:
     validator.validate_modelo(mutated_modelo)
 
 
-# --- Explicit injection: the real fixture corpus, supplied verbatim -----------
+# --- Explicit injection: the committed synthetic fixture corpus, supplied verbatim --
 
 
 def test_corpus_root_resolves_when_explicitly_supplied() -> None:
-    """The real fixture corpus root is honoured verbatim when explicitly supplied.
+    """The committed synthetic fixture corpus root is honoured verbatim when explicitly supplied.
 
     RegistryValidator never derives justificante_corpus_root from source_root
     (test_justificante_corpus_derivation.py pins that one-way property); an
-    authoring tool that wants the specimen gate to run supplies the real
-    src/cadrumo/tests/fixtures/justificantes tree explicitly, exactly as this
-    test does.
+    authoring tool that wants the specimen gate to run supplies the committed
+    synthetic src/cadrumo/tests/fixtures/justificantes tree explicitly, exactly
+    as this test does.
     """
     _modelo, catalogues = _committed_130()
     validator = _validator(catalogues, justificante_corpus_root=_JUSTIFICANTE_CORPUS_ROOT)
@@ -187,20 +187,20 @@ def test_gate_fires_no_fixture_no_flag(tmp_path: Path) -> None:
         validator.validate_modelo(mutated_modelo)
 
 
-def test_gate_silent_against_the_real_corpus_for_provisional_and_verified_profiles() -> None:
-    """Specimen gate exercises against the real fixture corpus, explicitly injected.
+def test_gate_silent_against_the_committed_synthetic_corpus_for_provisional_and_verified_profiles() -> None:
+    """Specimen gate exercises against the committed synthetic fixture corpus.
 
     NOTE ON COVERAGE BOUNDARY: The specimen gate fires when no corpus fixture exists
     for a model with a declaracion_pdf profile and provisional_pending_specimen=False.
-    All real modelos with declaracion_pdf profiles have at least one real fixture
-    under tests/fixtures/justificantes/, so the specimen-gate "fires" scenario
-    (no fixture + no flag) cannot be triggered against the real corpus without
+    All committed modelos with declaracion_pdf profiles have at least one committed
+    synthetic fixture under tests/fixtures/justificantes/, so the specimen-gate "fires" scenario
+    (no fixture + no flag) cannot be triggered against the committed synthetic corpus without
     swapping in an empty corpus_root.  This is a structural property of the fixture
     inventory, not a gap in the (removed) derivation logic.
 
-    What exercising against the real corpus CAN assert about the specimen gate:
-      - The supplied root resolves to a real directory (guarding against a silent
-        empty corpus going unnoticed).
+    What exercising against the committed synthetic corpus CAN assert about the specimen gate:
+      - The supplied root resolves to the committed synthetic corpus directory
+        (guarding against a silent empty corpus going unnoticed).
       - The gate is silent for M130 when provisional_pending_specimen=True (Scenario B).
       - The gate is silent for M130 when corpus + round_trip_verified satisfies both
         gates (Scenario C), confirming no spurious specimen-gate firing on verified

@@ -18,6 +18,7 @@ import shutil
 import sqlite3
 import subprocess
 import sys
+from contextlib import suppress
 from pathlib import Path
 from typing import Final
 
@@ -30,8 +31,9 @@ __all__ = ["isolated_profile_storage"]
 
 from .... import __version__
 from ....application.operator_surface import build_help_document
-from ....core import PRODUCT_IDENTITY, BucketPointer, write_pointer
+from ....core import PRODUCT_IDENTITY, BucketPointer, OutputLanguage, write_pointer
 from ....core.config import SecretStoreBackend, Settings, load_settings
+from ....core.i18n import tr
 from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.user_profile import register_minimal_profile
@@ -109,6 +111,36 @@ def test_root_help_uses_curated_two_root_shape() -> None:
     assert "aeat --format json config repair" in result.output
     assert "github.com/nevenincs/cadrumo/issues" in result.output
     assert "aeat config bucket" not in result.output
+
+
+@pytest.mark.parametrize("language", tuple(OutputLanguage))
+def test_root_help_projects_both_graph_owned_profile_secret_options_once(language: OutputLanguage) -> None:
+    result = _invoke(["--language", language.value, "--help"])
+
+    assert result.exit_code == 0, result.output
+    assert result.output.count("--profile-secrets-stdin") == 1
+    assert result.output.count("--profile-secrets-fd") == 1
+    assert tr("cli.config.custody.profile_secrets_stdin_help", locale=language) in result.output
+    assert tr("cli.config.custody.profile_secrets_fd_help", locale=language) in result.output
+
+
+def test_root_help_does_not_consume_or_close_a_selected_profile_secret_descriptor() -> None:
+    read_descriptor, write_descriptor = os.pipe()
+    payload = b"help-must-not-read-this"
+    try:
+        os.write(write_descriptor, payload)
+        os.close(write_descriptor)
+        write_descriptor = -1
+
+        result = _invoke(["--profile-secrets-fd", str(read_descriptor), "--help"])
+
+        assert result.exit_code == 0, result.output
+        assert os.read(read_descriptor, len(payload)) == payload
+    finally:
+        if write_descriptor >= 0:
+            os.close(write_descriptor)
+        with suppress(OSError):
+            os.close(read_descriptor)
 
 
 def test_config_and_app_help_use_curated_subtree_shape() -> None:

@@ -1,0 +1,50 @@
+{
+  "modelo": "349",
+  "candidate_kind": "plain",
+  "source_page_url": "https://fiscalbot.es/modelos-tributarios/modelo-349/",
+  "source_pdf_url": "https://fiscalbot.es/assets/pdf/Modelo349.pdf?v=3",
+  "retrieved_on": "2026-08-23",
+  "source_chain": {
+    "classification": "third_party_hosted_external_layout_candidate",
+    "host": "fiscalbot.es",
+    "authority_status": "unverified"
+  },
+  "content": {
+    "sha256": "dc77e58a8eb5b24fb5f7dccf65c51dcfc495debd0b053e1d091c9fca8e6abbed",
+    "size_bytes": 67212
+  },
+  "pdf": {
+    "version": "1.7",
+    "header_version": "1.4",
+    "page_count": 2,
+    "page_sizes_points": [
+      [595.276, 841.89],
+      [595.276, 841.89]
+    ],
+    "encrypted": false,
+    "acroform_top_level_field_count": 0,
+    "acroform_nonempty_value_count": 0,
+    "document_info": {
+      "Author": "AEAT",
+      "Creator": "AEAT",
+      "Keywords": "AEAT, Justificante, Declaracion, Predeclaracion, Vista Previa",
+      "ModDate": "D:20260114152650Z",
+      "Producer": "iLovePDF",
+      "Subject": "Justificante AEAT. CSV=U336UXUN3M4Y29U9",
+      "Title": "Justificante AEAT. CSV=U336UXUN3M4Y29U9"
+    }
+  },
+  "observations": {
+    "text_layer_character_count": 5321,
+    "nif_like_match_count": 0,
+    "iban_like_match_count": 0,
+    "email_like_match_count": 0,
+    "printed_placeholder_justificante_number_present": true,
+    "value_observation": "The PDF has no AcroForm and its extracted text contains the printed placeholder justificante number 1234567890, but no NIF-like, IBAN-like, or email-like token."
+  },
+  "limitations": [
+    "FiscalBot hosts these bytes; document metadata and AEAT branding do not establish AEAT provenance or publication authority.",
+    "The plain variant label describes the link exposed by the source page and does not promote the candidate to an official source class.",
+    "A blank external layout can probe parser behavior but cannot ground populated-value placement or taxpayer-specific output."
+  ]
+}

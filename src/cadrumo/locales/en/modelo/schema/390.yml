@@ -1455,26 +1455,39 @@ modelo:
         '2021':
           casilla:
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
+              help: Box 26 of modelo 390, tax year 2021.
               label: Accrued VAT on intra-Community acquisitions of goods at the 21%
                 rate - VAT amount
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
+              help: 'Modelo 390 entry, tax year 2021: credit balance generated during
+                the year.'
               label: Offset balance generated in the year
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qtbcehkmqrpde1in4qbfchniqe9n:
+              help: Box 97 of modelo 390, tax year 2021.
               label: Amounts to offset from the last settlement period
             x-d5r62bj1dpqm2r1ecdqmut315li6ap3lcdkm4r355lq6ut31dg:
+              help: Box 64 of modelo 390, tax year 2021.
               label: Total deductible VAT amount for the year
             x-d5r62bj1dpqm2r1ecdqmut315li6atj5dpjm2p315lq6ut31dg:
+              help: Box 47 of modelo 390, tax year 2021.
               label: Total accrued VAT amount for the year
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r0:
+              help: Box 06 of modelo 390, tax year 2021.
               label: Output VAT amount at the standard rate (21%)
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
+              help: Box 04 of modelo 390, tax year 2021.
               label: Output VAT amount at the reduced rate (10%)
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
+              help: Box 02 of modelo 390, tax year 2021.
               label: Output VAT amount at the super-reduced rate (4%)
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
+              help: Box 65 of modelo 390, tax year 2021.
               label: General regime result
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
+              help: Box 49 of modelo 390, tax year 2021.
               label: Deductible input VAT on domestic current transactions
+          field:
+            label: Modelo 390 tax year 2021 (Orden EHA/3111/2009)
         '2022':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:

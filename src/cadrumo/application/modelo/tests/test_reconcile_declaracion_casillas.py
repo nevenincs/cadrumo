@@ -245,13 +245,20 @@ def test_provisional_extraction_profile_surfaces_non_blocking_advisory() -> None
     bbox-anchored values as verified (no-silent-under-declaration)."""
     work_unit = _seed_work_unit()
     _persist_filed_revision(work_unit, casilla_values={"03": Decimal("5000.00"), "19": Decimal("900.00")})
+    snapshot = resources().modelos.authority.snapshot(
+        str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+    )
+    profile = snapshot.extraction_profiles["modelo-130-declaracion-pdf"]
+    assert profile.provisional_pending_specimen is True
 
     report = _reconcile(
         work_unit,
         _synthetic_declaracion(
             work_unit,
             values={"03": Decimal("5000.00"), "19": Decimal("900.00")},
-            extraction_profile_provisional=True,
+            extraction_profile_provisional=profile.provisional_pending_specimen,
         ),
     )
 
@@ -261,7 +268,9 @@ def test_provisional_extraction_profile_surfaces_non_blocking_advisory() -> None
     assert len(provisional_advisories) == 1
     advisory = provisional_advisories[0]
     assert advisory.context["modelo"] == str(work_unit.modelo)
-    assert advisory.context["extraction_profile_id"]
+    assert advisory.context["extraction_profile_id"] == profile.id
+    assert "has no real AEAT specimen confirming its printed layout" in advisory.message
+    assert "manually verify the extracted casilla values" in advisory.message
 
 
 def test_filed_declaracion_value_mismatch_is_caught_as_typed_casilla_diff() -> None:

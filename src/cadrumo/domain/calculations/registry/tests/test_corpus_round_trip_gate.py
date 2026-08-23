@@ -2,7 +2,7 @@
 
 The gate enforces that a ``declaracion_pdf`` extraction profile whose corpus
 fixture directory contains at least one PDF file must either set
-``corpus_round_trip_verified = true`` (author asserts a real parametrized
+``corpus_round_trip_verified = true`` (author asserts a committed parametrized
 round-trip test exists) or ``provisional_pending_specimen = true`` (author
 explicitly acknowledges unverified status).  Profiles that have corpus but
 neither flag cause a hard snapshot-build failure.  Profiles without corpus
@@ -28,7 +28,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _DATA_ROOT = bundled_path()
 # The validator never derives this path (see test_justificante_corpus_derivation.py,
 # which pins that one-way property); it must be supplied explicitly, exactly as an
-# authoring tool would supply the real fixture tree.
+# authoring tool would supply the committed synthetic fixture tree.
 _JUSTIFICANTE_CORPUS_ROOT = _DATA_ROOT.parent / "tests" / "fixtures" / "justificantes"
 
 
@@ -66,12 +66,12 @@ def _validator_with_corpus(corpus_root: Path, catalogues: RegistryCatalogues) ->
 
 
 def _validator_from_data_root(catalogues: RegistryCatalogues) -> RegistryValidator:
-    """A validator wired against the real fixture corpus, supplied explicitly.
+    """A validator wired against the committed synthetic fixture corpus, supplied explicitly.
 
     RegistryValidator never derives justificante_corpus_root from source_root
     (test_justificante_corpus_derivation.py pins that one-way property); this
-    helper supplies the real src/cadrumo/tests/fixtures/justificantes tree so
-    the gates below exercise the actual committed fixture inventory rather
+    helper supplies the committed synthetic src/cadrumo/tests/fixtures/justificantes
+    tree so the gates below exercise that committed synthetic fixture inventory rather
     than a synthetic tmp_path corpus.
     """
     return RegistryValidator(
@@ -161,15 +161,15 @@ def test_fixture_exists_provisional_flag_passes(tmp_path: Path) -> None:
     validator.validate_modelo(mutated_modelo)
 
 
-# --- (e) explicit injection: gates exercised against the real fixture corpus --
+# --- (e) explicit injection: gates exercised against the committed synthetic fixture corpus --
 
 
 def test_corpus_root_resolves_when_explicitly_supplied() -> None:
-    """The real fixture corpus root is honoured verbatim when explicitly supplied.
+    """The committed synthetic fixture corpus root is honoured verbatim when explicitly supplied.
 
     Mirrors test_corpus_root_resolves_when_explicitly_supplied in the specimen
     gate. RegistryValidator never derives justificante_corpus_root from
-    source_root; _validator_from_data_root supplies the real fixture tree
+    source_root; _validator_from_data_root supplies the committed synthetic fixture tree
     explicitly.
     """
     _modelo, catalogues = _committed_130()
@@ -182,13 +182,13 @@ def test_corpus_root_resolves_when_explicitly_supplied() -> None:
     assert corpus_root.name == "justificantes"
 
 
-def test_round_trip_gate_fires_against_the_real_corpus() -> None:
-    """Round-trip gate must fire when exercised against the real fixture corpus.
+def test_round_trip_gate_fires_against_the_committed_synthetic_corpus() -> None:
+    """Round-trip gate must fire against the committed synthetic fixture corpus.
 
-    Scenario A: M130 has real corpus fixtures under tests/fixtures/justificantes/130/.
+    Scenario A: M130 has committed synthetic fixtures under tests/fixtures/justificantes/130/.
     A profile with corpus_round_trip_verified=False and
     provisional_pending_specimen=False must raise RegistryValidationError
-    when validated with the real corpus explicitly supplied.
+    when validated with the committed synthetic corpus explicitly supplied.
 
     This test catches the class of bug where the supplied corpus_root is
     silently None (disabling the gate) while unit tests using a synthetic
@@ -207,14 +207,14 @@ def test_round_trip_gate_fires_against_the_real_corpus() -> None:
         validator.validate_modelo(mutated_modelo)
 
 
-def test_round_trip_gate_provisional_flag_silences_against_the_real_corpus() -> None:
+def test_round_trip_gate_provisional_flag_silences_against_the_committed_synthetic_corpus() -> None:
     """Scenario B: provisional_pending_specimen=True must silence the round-trip gate.
 
-    M130 has real corpus fixtures, so the gate would fire for an unverified profile.
+    M130 has committed synthetic corpus fixtures, so the gate would fire for an unverified profile.
     Setting provisional_pending_specimen=True is the explicit opt-out; the gate must
     not raise even when corpus exists and corpus_round_trip_verified=False.
 
-    Exercised against the real corpus, explicitly supplied. A gap where the
+    Exercised against the committed synthetic corpus, explicitly supplied. A gap where the
     supplied corpus_root silently resolved to None would cause the gate to
     pass silently for the wrong reason; the pre-assertion guards against that
     false positive.
@@ -228,22 +228,22 @@ def test_round_trip_gate_provisional_flag_silences_against_the_real_corpus() -> 
         validator,
         missing_message=(
             "explicitly supplied corpus root was not honoured; gate is silently disabled — "
-            "the provisional-flag opt-out cannot be verified against the real corpus"
+            "the provisional-flag opt-out cannot be verified against the committed synthetic corpus"
         ),
     )
     # No exception raised: provisional flag opts out of the round-trip gate
     validator.validate_modelo(mutated_modelo)
 
 
-def test_round_trip_gate_verified_profile_passes_against_the_real_corpus() -> None:
+def test_round_trip_gate_verified_profile_passes_against_the_committed_synthetic_corpus() -> None:
     """Scenario C: corpus_round_trip_verified=True + verification_source set must pass.
 
-    M130 has real corpus fixtures.  A profile declaring corpus_round_trip_verified=True
+    M130 has committed synthetic corpus fixtures. A profile declaring corpus_round_trip_verified=True
     with a valid verification_source satisfies both the round-trip gate and the
     provenance gate.  The validator must not raise.
 
-    Exercised against the real corpus, explicitly supplied. The pre-assertion
-    ensures the real corpus directory was actually supplied so the gate was
+    Exercised against the committed synthetic corpus, explicitly supplied. The pre-assertion
+    ensures that corpus directory was actually supplied so the gate was
     genuinely evaluated, not silently bypassed.
     """
     modelo, catalogues = _committed_130()
@@ -259,7 +259,7 @@ def test_round_trip_gate_verified_profile_passes_against_the_real_corpus() -> No
         validator,
         missing_message=(
             "explicitly supplied corpus root was not honoured; gate is silently disabled — "
-            "the verified-profile pass cannot be confirmed against the real corpus"
+            "the verified-profile pass cannot be confirmed against the committed synthetic corpus"
         ),
     )
     # No exception raised: verified + verification_source satisfies both gates
@@ -342,16 +342,16 @@ def test_corpus_round_trip_verified_with_each_verification_source_passes(
     validator.validate_modelo(mutated_modelo)
 
 
-def test_verification_source_gate_fires_against_the_real_corpus() -> None:
-    """verification_source gate must fire when exercised against the real fixture corpus.
+def test_verification_source_gate_fires_against_the_committed_synthetic_corpus() -> None:
+    """verification_source gate must fire against the committed synthetic fixture corpus.
 
-    M130 has real corpus fixtures.  A profile with corpus_round_trip_verified=True and
+    M130 has committed synthetic corpus fixtures. A profile with corpus_round_trip_verified=True and
     verification_source=None must raise RegistryValidationError when validated with
-    the real corpus explicitly supplied.
+    the committed synthetic corpus explicitly supplied.
 
     This test covers the same class of gap as the one that could silently disable
     the specimen gate: a test using only a synthetic tmp_path corpus passes
-    regardless of whether the real fixture inventory agrees, masking gate failures.
+    regardless of whether the committed synthetic fixture inventory agrees, masking gate failures.
     """
     modelo, catalogues = _committed_130()
     profile = _committed_profile(provisional=False, round_trip_verified=True, verification_source=None)

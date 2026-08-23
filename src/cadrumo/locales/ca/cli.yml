@@ -3446,6 +3446,7 @@ cli:
           només lectura.
         section_command_families: Famílies d'ordres
         section_diagnostics: Diagnòstic
+        section_profile_authentication_options: Opcions d'autenticació del perfil
         section_recovery: Reprendre o recuperar
         section_start_resume: Començar o continuar
         section_workflow: Flux principal

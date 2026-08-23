@@ -546,6 +546,11 @@ modelo:
               label: Activities with differentiated deduction regimes. Deductible
                 VAT. Group 2. Deductible VAT on intra-Community acquisitions. Current
                 goods and services. Deductible tax amount [729]
+            '73':
+              help: Box 73 of modelo 322, tax year 2008.
+              label: Additional information. Transactions not subject to tax or under
+                the reverse charge that give rise to the right to deduct [73] (until
+                30 June, remainder at 0)
             '730':
               help: Box 730 of modelo 322, tax year 2008.
               label: Activities with differentiated deduction regimes. Deductible

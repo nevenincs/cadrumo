@@ -3447,6 +3447,7 @@ cli:
         recovery_repair: Adatmódosítás előtt futtasd ezt a csak olvasható állapotjelentést.
         section_command_families: Parancscsaládok
         section_diagnostics: Diagnosztika
+        section_profile_authentication_options: Profilhitelesítési beállítások
         section_recovery: Folytatás vagy helyreállítás
         section_start_resume: Kezdés vagy folytatás
         section_workflow: Alapvető munkafolyamat

@@ -22,7 +22,7 @@ import sys
 
 os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = sys.argv[1]
 os.environ["CADRUMO_SECRET_STORE_DIR"] = sys.argv[2]
-os.environ["CADRUMO_SECRET_STORE_BACKEND"] = "file"
+os.environ["CADRUMO_SECRET_STORE_BACKEND"] = "unsecured"
 os.environ["CADRUMO_SECRET_PASSPHRASE"] = "s423-selected-language-passphrase"
 sys.argv = ["aeat", *sys.argv[3:]]
 
@@ -43,7 +43,7 @@ import sys
 
 os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = sys.argv[1]
 os.environ["CADRUMO_SECRET_STORE_DIR"] = sys.argv[2]
-os.environ["CADRUMO_SECRET_STORE_BACKEND"] = "file"
+os.environ["CADRUMO_SECRET_STORE_BACKEND"] = "unsecured"
 os.environ["CADRUMO_SECRET_PASSPHRASE"] = "s423-selected-language-passphrase"
 
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository

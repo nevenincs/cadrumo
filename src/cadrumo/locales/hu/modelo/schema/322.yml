@@ -539,6 +539,11 @@ modelo:
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
                 Levonható adóösszeg [729]
+            '73':
+              help: A 322-es modelo 73. rovata, 2008. adóév.
+              label: Kiegészítő információ. Nem adóköteles vagy fordított adózás alá
+                eső, levonási jogot keletkeztető ügyletek [73] (június 30-ig, a többi
+                0)
             '730':
               help: A 322-es modelo 730. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.

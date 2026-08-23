@@ -44,9 +44,8 @@ _UTF_8: Final[str] = UTF_8
 
 # The distributions the promoted Python cohort carries as installable wheels,
 # each keyed by the exact ``python-cohort.json`` digest name. A public
-# reacquisition proves these three, and only these three, byte-for-byte.
-#
-# The independently versioned harness is an exact digest-pinned cohort member.
+# reacquisition proves this closed set, and only this set, byte-for-byte. The
+# independently versioned harness remains an exact digest-pinned member.
 PYTHON_COHORT_WHEEL_NAMES: Final[tuple[str, ...]] = (
     "cadrumo",
     "cadrumo-harness",

@@ -36,61 +36,22 @@
         "json",
         "config",
         "profile",
-        "status"
+        "list"
       ],
       "captures": [],
       "envelope": {
-        "active_profile": null,
-        "command": "config.profile.status",
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.profile.list",
         "notices": [],
         "result": {
-          "active_profile": null,
-          "activity_present": null,
-          "configured": false,
-          "iva_regime": null,
-          "precondition_action": {
-            "action": {
-              "action_id": "operator.profile.login",
-              "cli_path": [
-                "config",
-                "login"
-              ],
-              "target_command_key": "config.login"
-            },
-            "argument_bindings": [
-              {
-                "argument_name": "name",
-                "source": null,
-                "source_evidence_id": null,
-                "source_key": null,
-                "status": "missing",
-                "value": null
-              }
-            ],
-            "conditionality": "requires_arguments",
-            "evidence": [
-              {
-                "condition_id": "profile.active.available",
-                "evidence_id": "profile.active.state",
-                "provenance": "application_state",
-                "values": {
-                  "active_profile_present": false,
-                  "registered_profile_count": 1
-                }
-              }
-            ],
-            "failed_condition_id": "profile.active.available",
-            "missing_argument_names": [
-              "name"
-            ],
-            "no_recovery_outcome": null
-          },
-          "profile_id": null,
-          "profile_record_error": null,
-          "profile_record_present": null,
-          "registered_profile": false,
-          "tax_id_present": null,
-          "tax_residence_ccaa": null
+          "active_profile": "docs-sequence-sandbox",
+          "profiles": [
+            {
+              "active": true,
+              "bucket_id": "<bucket-id>",
+              "name": "docs-sequence-sandbox"
+            }
+          ]
         },
         "schema_version": "2",
         "status": "success"

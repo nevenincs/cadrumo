@@ -121,73 +121,113 @@ modelo:
         2026-y-siguientes:
           casilla:
             base_imponible:
+              help: Box 8 of modelo 210, tax year 2026.
               label: Taxable base
             base_imponible_directa_g:
+              help: Box 18 of modelo 210, tax year 2026.
               label: Taxable base (210 G)
             base_imponible_directa_i:
+              help: Box 4 of modelo 210, tax year 2026.
               label: Taxable base (210 I)
             base_imponible_ganancias_h:
+              help: Box 17 of modelo 210, tax year 2026.
               label: Taxable base ([12]+[16]) (210 H)
             coeficiente_imputacion_inmobiliaria:
+              help: 'Modelo 210 entry, tax year 2026: Real-estate imputed income coefficient.'
               label: Real-estate imputed income coefficient
             convenio_indicador:
+              help: Box 20 of modelo 210, tax year 2026.
               label: Tax treaty
             cuota_diferencial:
+              help: Box 31 of modelo 210, tax year 2026.
               label: Differential tax liability
             cuota_integra:
+              help: Box 22 of modelo 210, tax year 2026.
               label: Gross tax liability
             cuota_integra_reducida:
+              help: Box 28 of modelo 210, tax year 2026.
               label: Reduced gross tax liability ([24]-[27])
             cuota_ley_irnr:
+              help: Box 24 of modelo 210, tax year 2026.
               label: IRNR Law tax liability ([22]-[23])
             deduccion_donativos:
+              help: Box 23 of modelo 210, tax year 2026.
               label: Deduction for donations
             dias_imputacion:
+              help: 'Modelo 210 entry, tax year 2026: Days of imputation.'
               label: Days of imputation
             exencion_dividendos:
+              help: Box 6 of modelo 210, tax year 2026.
               label: Exemption applied to dividends (annual limit EUR 1,500) (210
                 R)
             exenciones_ley_irnr_indicador:
+              help: Box 19 of modelo 210, tax year 2026.
               label: Exemptions under the IRNR Law, except dividends (annual limit
                 EUR 1,500)
             ganancia_diferencia:
+              help: Box 11 of modelo 210, tax year 2026.
               label: Acquisition. Difference (210 H)
             ganancia_importe:
+              help: Box 12 of modelo 210, tax year 2026.
               label: Acquisition. Gain (210 H)
             ganancia_valor_adquisicion:
+              help: Box 10 of modelo 210, tax year 2026.
               label: Acquisition. Acquisition value (updated) (210 H)
             ganancia_valor_transmision:
+              help: Box 9 of modelo 210, tax year 2026.
               label: Acquisition. Transfer value (210 H)
             gastos_deducibles:
+              help: Box 7 of modelo 210, tax year 2026.
               label: Deductible expenses
             ingreso_devolucion_anterior:
+              help: Box 30 of modelo 210, tax year 2026.
               label: Previous payment/refund (supplementary self-assessment only)
             limite_convenio:
+              help: Box 26 of modelo 210, tax year 2026.
               label: Tax treaty limit
             mejora_diferencia:
+              help: Box 15 of modelo 210, tax year 2026.
               label: Improvement or 2nd acquisition. Difference (210 H)
             mejora_ganancia:
+              help: Box 16 of modelo 210, tax year 2026.
               label: Improvement or 2nd acquisition. Gain (210 H)
             mejora_valor_adquisicion:
+              help: Box 14 of modelo 210, tax year 2026.
               label: Improvement or 2nd acquisition. Acquisition value (updated) (210
                 H)
             mejora_valor_transmision:
+              help: Box 13 of modelo 210, tax year 2026.
               label: Improvement or 2nd acquisition. Transfer value (210 H)
             porcentaje_convenio:
+              help: Box 25 of modelo 210, tax year 2026.
               label: Tax treaty percentage (%)
             reduccion_convenio:
+              help: Box 27 of modelo 210, tax year 2026.
               label: Tax treaty reduction ([24]-[26])
             rendimientos_integros:
+              help: Box 5 of modelo 210, tax year 2026.
               label: Gross income
             retencion_practicada:
+              help: Box 29 of modelo 210, tax year 2026.
               label: Withholding applied
             tipo_gravamen:
+              help: Box 21 of modelo 210, tax year 2026.
               label: Tax rate
             tipo_renta:
+              help: 'Modelo 210 entry, tax year 2026: Type of income.'
               label: Type of income
             valor_adquisicion:
+              help: 'Modelo 210 entry, tax year 2026: Acquisition value.'
               label: Acquisition value
             valor_catastral:
+              help: 'Modelo 210 entry, tax year 2026: Cadastral value.'
               label: Cadastral value
             valor_comprobado_administracion:
+              help: 'Modelo 210 entry, tax year 2026: Value assessed by the Tax Administration.'
               label: Value assessed by the Tax Administration
+          construct:
+            m210-irnr-calculation:
+              field:
+                title: Modelo 210 IRNR calculation
+          field:
+            label: Tax year 2026 onwards

@@ -1,0 +1,52 @@
+{
+  "modelo": "303",
+  "candidate_kind": "plain",
+  "source_page_url": "https://fiscalbot.es/modelos-tributarios/modelo-303/",
+  "source_pdf_url": "https://fiscalbot.es/assets/pdf/Modelo303.pdf?v=3",
+  "retrieved_on": "2026-08-23",
+  "source_chain": {
+    "classification": "third_party_hosted_external_layout_candidate",
+    "host": "fiscalbot.es",
+    "authority_status": "unverified"
+  },
+  "content": {
+    "sha256": "bd99c3b277060bdb8577859540bb7c4171aea223f74de9a86302f6da3db66957",
+    "size_bytes": 79291
+  },
+  "pdf": {
+    "version": "1.7",
+    "header_version": "1.4",
+    "page_count": 3,
+    "page_sizes_points": [
+      [595.276, 841.89],
+      [595.276, 841.89],
+      [595.276, 841.89]
+    ],
+    "encrypted": false,
+    "acroform_top_level_field_count": 0,
+    "acroform_nonempty_value_count": 0,
+    "document_info": {
+      "Author": "Miguel\u0000",
+      "CreationDate": "D:20251216165531",
+      "Creator": "Infix PDF Printer",
+      "ICNAppName": "Ashampoo PDF Pro",
+      "ICNAppPlatform": "Win",
+      "ICNAppVersion": "4.0.0",
+      "ModDate": "D:20260114152536Z",
+      "Producer": "iLovePDF"
+    }
+  },
+  "observations": {
+    "text_layer_character_count": 10184,
+    "nif_like_match_count": 0,
+    "iban_like_match_count": 0,
+    "email_like_match_count": 0,
+    "printed_placeholder_justificante_number_present": true,
+    "value_observation": "The text layer contains printed labels and box numbers; no populated taxpayer NIF, IBAN, email address, or AcroForm value was observed."
+  },
+  "limitations": [
+    "Third-party hosting, PDF branding, and document metadata do not establish AEAT provenance.",
+    "The candidate is retained byte-for-byte as downloaded; plain is only the source page's variant label.",
+    "A blank external layout does not ground populated-value placement."
+  ]
+}

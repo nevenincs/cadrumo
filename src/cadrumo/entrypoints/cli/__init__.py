@@ -201,8 +201,42 @@ def _emit_root_help_and_exit(ctx: typer.Context) -> None:
 
     document = build_help_document("root")
     typed_help = _strict_round_trip(RootStatusResult, document)
-    _emit_envelope(ctx, command="root.status", result=typed_help, lines=render_help_text(document).splitlines())
+    lines = render_help_text(document).splitlines()
+    footer = lines.pop()
+    lines.extend((*_root_profile_secret_help_lines(), "", footer))
+    _emit_envelope(ctx, command="root.status", result=typed_help, lines=lines)
     raise typer.Exit()
+
+
+def _root_profile_secret_help_lines() -> tuple[str, ...]:
+    """Project graph-owned root profile-secret options into curated help."""
+    from ...core.i18n import tr
+    from ._command_spec import OptionSpec
+
+    root = _COMMAND_GRAPH.by_key()["root"]
+    options = tuple(
+        parameter
+        for parameter in root.parameters
+        if isinstance(parameter, OptionSpec) and parameter.profile_secret_channel is not None
+    )
+    if len(options) != 2:
+        raise RuntimeError("root help requires exactly two profile-secret channel options")
+    rendered: list[tuple[str, str]] = []
+    for option in options:
+        declaration = option.declarations[0]
+        if not option.is_flag:
+            declaration = f"{declaration} FD"
+        if option.help_key is None:
+            raise RuntimeError("a root profile-secret option lacks localised help")
+        rendered.append((declaration, tr(option.help_key.value)))
+    width = max(len(declaration) for declaration, _ in rendered)
+    return (
+        tr(
+            "cli.operator_surface.help.root.section_profile_authentication_options",
+            default="Profile authentication options",
+        ),
+        *(f"  {declaration.ljust(width)}  {description}" for declaration, description in rendered),
+    )
 
 
 def _normalize_root_active_profile(ctx: typer.Context) -> None:

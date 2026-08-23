@@ -7,9 +7,9 @@ local communication state.
 
 See Also:
     CommandSpec schema authority
-        Central CLI schema registry used for each Modelo 145 operation name.
+        Each operation's CommandSpec owns its lazy public OutputSchema target.
     :mod:`~entrypoints.cli._modelo_m145_cli`
-        Typer command group that emits these payloads.
+        Behavior handlers that emit these payloads.
     :mod:`~entrypoints.cli._modelo_m145_rendering`
         Renderer that converts application results into these payload classes.
     :class:`~application.modelo.M145CommunicationRecord`

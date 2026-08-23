@@ -544,6 +544,11 @@ modelo:
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
                 Grupo 2. IVA deducible en adquisiciones intracomunitarias. Bienes
                 y servicios corrientes.Cuota deducible [729]'
+            '73':
+              help: Casilla 73 del modelo 322, ejercicio 2008.
+              label: Información adicional. Operaciones no sujetas o con inversión
+                del sujeto pasivo que originan el derecho a deducción [73] (hasta
+                30 de junio, resto a 0)
             '730':
               help: Casilla 730 del modelo 322, ejercicio 2008.
               label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:

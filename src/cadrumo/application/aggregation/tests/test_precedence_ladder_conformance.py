@@ -11,8 +11,8 @@ This gate binds the guard's sets to the declaration so the two cannot silently
 diverge: if the policy re-hand-lists a set, or the ladder's tier membership
 drifts from the frozen aggregation-taxonomy behaviour, one of these assertions
 fails. The frozen memberships asserted here are the aggregation-taxonomy
-behaviour this suite preserves (the deterministic ledger / invoice resolvers
-are LOCK; the carry sources — previous_filing, relation_prefill,
+behaviour this suite preserves (the deterministic ledger, invoice, inventory,
+and annual-summary resolvers are LOCK; the carry sources — previous_filing, relation_prefill,
 iva-compensation annual partition, and prorrata regularizacion — are CARRY);
 they are the behavioural anchor, not a restatement of the ladder literal.
 """
@@ -67,8 +67,8 @@ def test_ladder_is_ordered_named_and_covers_both_dispositions() -> None:
 def test_frozen_disposition_membership_matches_aggregation_taxonomy() -> None:
     """Behavioural anchor: the LOCK / CARRY memberships are the frozen sets.
 
-    Deterministic bucket-owned resolvers (the ledger aggregations and the two
-    invoice families) are caller-locked; the three carry sources are
+    Deterministic bucket-owned resolvers (ledger aggregations, invoice
+    families, inventory projection, and annual summary) are caller-locked; carry sources are
     caller-overridable. A membership change here is behavioural drift, not a
     representation change, and must be a conscious, reviewed decision rather
     than an accidental edit.
@@ -85,6 +85,8 @@ def test_frozen_disposition_membership_matches_aggregation_taxonomy() -> None:
                 BindingSourceKind.LEDGER_OSS_AGGREGATION,
                 BindingSourceKind.COLLECTIBLE_INVOICE,
                 BindingSourceKind.PAYABLE_INVOICE,
+                BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY,
+                BindingSourceKind.INVENTORY,
             },
         )
         == BUCKET_AGGREGATION_LOCK_SOURCES

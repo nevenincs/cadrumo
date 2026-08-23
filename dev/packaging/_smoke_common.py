@@ -120,10 +120,8 @@ _DATA_COMPANION_PROJECTS = (
     ("cadrumo-data-manuals", "packaging/cadrumo_data_manuals", "cadrumo_data_manuals-*.whl"),
     ("cadrumo-data-official", "packaging/cadrumo_data_official", "cadrumo_data_official-*.whl"),
 )
-#: The sibling agent-harness distribution. It is versioned independently of
-#: the command/data cohort (never a member of ``PYTHON_COHORT_WHEEL_NAMES``),
-#: so it is built and installed on its own rather than folded into the
-#: three-wheel cohort helpers above.
+#: The independently versioned harness distribution. Release cohorts seal its
+#: wheel and sdist alongside the command and data artifacts.
 _HARNESS_PROJECT_DIR = Path("src") / "cadrumo-harness"
 _HARNESS_WHEEL_GLOB = "cadrumo_harness-*.whl"
 _RENTA_PDF_ALLOW_LIST = {
@@ -290,15 +288,13 @@ def extract_source_commit(repo_root: Path, work_dir: Path, source_commit: str) -
 
 
 def build_harness_wheel(work_dir: Path, uv: str, *, build_root: Path) -> Path:
-    """Build the sibling agent-harness wheel from one immutable source tree.
+    """Build the agent-harness wheel from one immutable source tree.
 
     Mirrors the data companions' build: one ``uv build --project`` per sibling
     distribution, from an extracted source commit rather than the shared
-    worktree, so the artifact corresponds to a commit. The harness is not a
-    member of the retained three-wheel Python cohort (it is versioned
-    independently — see ``dev.packaging._acquire_common.harness_version``), so
-    it is built into its own output directory and never written beside the
-    cohort manifest.
+    worktree, so the artifact corresponds to a commit. The independent output
+    directory prevents accidental worktree reuse; the cohort builder then
+    seals the exact bytes into its closed-world manifest.
     """
     out_dir = work_dir / "harness-wheel"
     run_checked(
@@ -1157,7 +1153,7 @@ def assert_cli_smoke(work_dir: Path, venv_path: Path) -> None:
         # first run on a fresh macOS host). The passphrase-backed file backend is the
         # smoke's posture everywhere, and keeps smoke runs from writing real
         # keys into any host keychain.
-        "CADRUMO_SECRET_STORE_BACKEND": "file",
+        "CADRUMO_SECRET_STORE_BACKEND": "unsecured",
     }
     create = run_checked(
         [

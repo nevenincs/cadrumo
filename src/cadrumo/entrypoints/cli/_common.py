@@ -862,23 +862,23 @@ def _current_operator_surface_input_schemas() -> tuple[
     a graph-declared result schema while its verb is knowingly absent, so the live
     tree walk resolves no leaf for it and it takes part in no live
     reconciliation row. Those keys are dropped from BOTH projections here rather
-    than half-dropped downstream; every OTHER divergence between the registry
+    than half-dropped downstream; every OTHER divergence between the graph
     and the walk is drift and still raises.
     """
     from ._command_schema import command_schema_refs
     from ._verb_input_schema import DECLARED_UNIMPLEMENTED_SURFACES, build_verb_input_schemas
 
-    registered = command_schema_refs()
-    registered_keys = tuple(reference.command for reference in registered)
-    if len(set(registered_keys)) != len(registered_keys):
-        raise ValueError("current result-schema registry has duplicate command identities")
+    graph_references = command_schema_refs()
+    graph_keys = tuple(reference.command for reference in graph_references)
+    if len(set(graph_keys)) != len(graph_keys):
+        raise ValueError("current CommandSpec graph has duplicate command identities")
     schema_references = tuple(
-        reference for reference in registered if reference.command not in DECLARED_UNIMPLEMENTED_SURFACES
+        reference for reference in graph_references if reference.command not in DECLARED_UNIMPLEMENTED_SURFACES
     )
     command_keys = tuple(reference.command for reference in schema_references)
     input_schemas = build_verb_input_schemas(tuple(sorted(command_keys)))
     if set(input_schemas) != set(command_keys):
-        raise ValueError("current input-schema projection does not exactly match the result-schema registry")
+        raise ValueError("current input-schema projection does not exactly match the CommandSpec graph")
     return schema_references, command_keys, input_schemas
 
 

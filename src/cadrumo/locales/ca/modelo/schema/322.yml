@@ -540,6 +540,11 @@ modelo:
               label: Activitats amb règims de deducció diferenciats. IVA deduïble.
                 Grup 2. IVA deduïble en adquisicions intracomunitàries. Béns i serveis
                 corrents. Quota deduïble [729]
+            '73':
+              help: Casella 73 del model 322, exercici 2008.
+              label: Informació addicional. Operacions no subjectes o amb inversió
+                del subjecte passiu que originen el dret a deducció [73] (fins al
+                30 de juny, la resta a 0)
             '730':
               help: Casella 730 del model 322, exercici 2008.
               label: Activitats amb règims de deducció diferenciats. IVA deduïble.

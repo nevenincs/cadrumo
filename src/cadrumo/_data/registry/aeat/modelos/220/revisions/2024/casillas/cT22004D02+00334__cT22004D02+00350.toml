@@ -1,0 +1,315 @@
+# Modelo 220 RECORD T22004D02 -- CUENTA TECNICA DEL SEGURO DE VIDA, otros gastos tecnicos and
+# gastos del inmovilizado material y de las inversiones, in the shape
+# used by entidades aseguradoras, down to the closing subtotal
+# (resultado de la cuenta tecnica del seguro de vida).
+#
+# 21 casillas describe all 31 design fields -- 21 authored and
+# 10 excluded, each excluded field asserted to be envelope, reservado or fin de
+# registro BY ITS OWN TEXT rather than by position.
+#
+# All 21 of this record's numbers carry AEAT's own printed box number (21 are 5-digit).
+# Not one number here is minted.
+#
+# CHILDREN CARRY THEIR PARENT'S NAME INLINE, so every label is distinct on AEAT's own text
+# and no nesting is inferred from position. Where a design does NOT do this the record is
+# authored flat instead -- T22005A01 is the worked example, and the difference between the
+# two treatments is in the data, never in the preference.
+#
+# THIS IS THE SEGURO DE VIDA COUNTERPART OF T22004B02, and the two do NOT nest the
+# same concept the same way. "Participacion en perdidas de entidades puestas en
+# equivalencia" hangs directly off "Gastos del inmovilizado" on the no-vida page
+# ([00710]) and off "Gastos de entidades incluidas en la consolidacion" here ([00716]).
+# Each record's labels follow ITS OWN printed text; nothing is harmonised across the
+# pair, because the design states two different placements and this campaign does not
+# know which AEAT means.
+#
+# FOUR LABELS CARRY AEAT'S SIGN MARKER "(+ o -)", written with the accented o AEAT
+# uses for "or": [00334] otros gastos tecnicos and its three children. Kept verbatim
+# in every catalogue. NOTHING here acts on the convention -- a consumer treating these
+# as unsigned will be wrong. That accented o is also the one token the campaign's
+# Spanish accent repair REFUSES to touch, because "o" and the accented form are
+# different words; here it arrives already correct, straight from the design.
+#
+# AEAT IS INCONSISTENT ABOUT THE SEPARATOR AFTER A HEADING, writing the same one
+# both with and without the space that should follow its period. The heading is derived as
+# the common prefix of every numbered line and the remainder is stripped, so both
+# spellings land on the same heading. 0 parent-child separator
+# repair(s) applied to this record: none needed.
+#
+# THE LIGATURE REPAIR IS GROUNDED IN THE WORKBOOK'S OWN VOCABULARY, and the vocabulary is
+# counted twice so the damage cannot attest itself: once over every token, and once over
+# only those tokens seen where they CANNOT be the left half of a split. 0
+# rejoin(s) applied to this record, 0 distinct: none.
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T22004D02 tiles
+# 1..534 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
+#
+# AEAT DECLARES THIS RECORD'S IDENTITY IN ITS ENVELOPE, as literal constants:
+# pagina 04, letra D, hoja 02. Sibling sector pages in this modelo
+# can share every heading AEAT prints in the BODY -- on the balance-sheet pages two
+# records both head their lines "ACTIVO" and both declare a "Total activo" -- so the
+# envelope is the ONLY non-inferential way to tell such records apart. The operator label
+# carries it for exactly that reason; it claims no sector, which the design does not state.
+#
+# NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
+# pagina-complementaria mechanics; @373+150 RESERVADO PARA LA ADMINISTRACION; and
+# @523+12 Fin de registro.
+#
+# NOT CLAIMED: THIS SUBTOTAL IS NOT COMPUTED. [00350] closes the cuenta tecnica del
+# seguro de vida, and the group heads above it close their own groups; NO formula,
+# construct or binding sums a group into its head or the heads into the subtotal, and
+# nothing carries this subtotal into the cuenta no tecnica or the consolidated result.
+# Every box is a manual input.
+
+# @16+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Otros gastos técnicos (+ ó -). [00334]
+[[revisions."2024".casillas]]
+id = "T22004D02:00334"
+number = "00334"
+segmento = "T22004D02"
+section = ["liquidacion", "cuenta_perdidas_ganancias_tecnica_vida_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @33+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Otros gastos técnicos (+ ó -). Variación del deterioro por insolvencias (+ ó -). [00335]
+[[revisions."2024".casillas]]
+id = "T22004D02:00335"
+number = "00335"
+segmento = "T22004D02"
+section = ["liquidacion", "cuenta_perdidas_ganancias_tecnica_vida_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @50+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Otros gastos técnicos (+ ó -). Variación del deterioro del inmovilizado (+ ó -). [00336]
+[[revisions."2024".casillas]]
+id = "T22004D02:00336"
+number = "00336"
+segmento = "T22004D02"
+section = ["liquidacion", "cuenta_perdidas_ganancias_tecnica_vida_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @67+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Otros gastos técnicos (+ ó -). Otros. [00337]
+[[revisions."2024".casillas]]
+id = "T22004D02:00337"
+number = "00337"
+segmento = "T22004D02"
+section = ["liquidacion", "cuenta_perdidas_ganancias_tecnica_vida_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @84+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. [00338]
+[[revisions."2024".casillas]]
+id = "T22004D02:00338"
+number = "00338"
+segmento = "T22004D02"
+section = ["liquidacion", "cuenta_perdidas_ganancias_tecnica_vida_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @101+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Gastos de gestión del inmovilizado material y de las inversiones. [00339]
+[[revisions."2024".casillas]]
+id = "T22004D02:00339"
+number = "00339"
+segmento = "T22004D02"
+section = ["liquidacion", "cuenta_perdidas_ganancias_tecnica_vida_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @118+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Gastos de gestión del inmovilizado material y de las inversiones. Gastos del inmovilizado material y de las inversiones inmobiliarias. [00340]
+[[revisions."2024".casillas]]
+id = "T22004D02:00340"
+number = "00340"
+segmento = "T22004D02"
+section = ["liquidacion", "cuenta_perdidas_ganancias_tecnica_vida_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @135+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Gastos de gestión del inmovilizado material y de las inversiones. Gastos de inversiones y cuentas financieras. [00341]
+[[revisions."2024".casillas]]
+id = "T22004D02:00341"
+number = "00341"
+segmento = "T22004D02"
+section = ["liquidacion", "cuenta_perdidas_ganancias_tecnica_vida_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @152+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Correcciones de valor del inmovilizado material y de las inversiones. [00342]
+[[revisions."2024".casillas]]
+id = "T22004D02:00342"
+number = "00342"
+segmento = "T22004D02"
+section = ["liquidacion", "cuenta_perdidas_ganancias_tecnica_vida_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @169+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Correcciones de valor del inmovilizado material y de las inversiones. Amortización del inmovilizado material y de las inversiones inmobiliarias. [00343]
+[[revisions."2024".casillas]]
+id = "T22004D02:00343"
+number = "00343"
+segmento = "T22004D02"
+section = ["liquidacion", "cuenta_perdidas_ganancias_tecnica_vida_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @186+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Correcciones de valor del inmovilizado material y de las inversiones. Deterioro del inmovilizado material y de las inversiones inmobiliarias. [00344]
+[[revisions."2024".casillas]]
+id = "T22004D02:00344"
+number = "00344"
+segmento = "T22004D02"
+section = ["liquidacion", "cuenta_perdidas_ganancias_tecnica_vida_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @203+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Correcciones de valor del inmovilizado material y de las inversiones. Deterioro de inversiones financieras. [00345]
+[[revisions."2024".casillas]]
+id = "T22004D02:00345"
+number = "00345"
+segmento = "T22004D02"
+section = ["liquidacion", "cuenta_perdidas_ganancias_tecnica_vida_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @220+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Pérdidas procedentes del inmovilizado material y de las inversiones. [00346]
+[[revisions."2024".casillas]]
+id = "T22004D02:00346"
+number = "00346"
+segmento = "T22004D02"
+section = ["liquidacion", "cuenta_perdidas_ganancias_tecnica_vida_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @237+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Pérdidas procedentes del inmovilizado material y de las inversiones. Del inmovilizado material y de las inversiones inmobiliarias. [00347]
+[[revisions."2024".casillas]]
+id = "T22004D02:00347"
+number = "00347"
+segmento = "T22004D02"
+section = ["liquidacion", "cuenta_perdidas_ganancias_tecnica_vida_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @254+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Pérdidas procedentes del inmovilizado material y de las inversiones. De las inversiones financieras. [00348]
+[[revisions."2024".casillas]]
+id = "T22004D02:00348"
+number = "00348"
+segmento = "T22004D02"
+section = ["liquidacion", "cuenta_perdidas_ganancias_tecnica_vida_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @271+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Gastos de entidades incluidas en la consolidación. [00715]
+[[revisions."2024".casillas]]
+id = "T22004D02:00715"
+number = "00715"
+segmento = "T22004D02"
+section = ["liquidacion", "cuenta_perdidas_ganancias_tecnica_vida_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @288+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Gastos de entidades incluidas en la consolidación. Participación en pérdidas de entidades puestas en equivalencia. [00716]
+[[revisions."2024".casillas]]
+id = "T22004D02:00716"
+number = "00716"
+segmento = "T22004D02"
+section = ["liquidacion", "cuenta_perdidas_ganancias_tecnica_vida_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @305+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Gastos de entidades incluidas en la consolidación. Pérdidas por enajenación de participaciones en sociedades puestas en equivalencia. [00717]
+[[revisions."2024".casillas]]
+id = "T22004D02:00717"
+number = "00717"
+segmento = "T22004D02"
+section = ["liquidacion", "cuenta_perdidas_ganancias_tecnica_vida_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @322+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Pérdidas por la enajenación de participaciones en sociedades consolidadas. [00658]
+[[revisions."2024".casillas]]
+id = "T22004D02:00658"
+number = "00658"
+segmento = "T22004D02"
+section = ["liquidacion", "cuenta_perdidas_ganancias_tecnica_vida_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @339+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos de inversiones afectas a seguros en los que el tomador asume el riesgo de la inversión. [00349]
+[[revisions."2024".casillas]]
+id = "T22004D02:00349"
+number = "00349"
+segmento = "T22004D02"
+section = ["liquidacion", "cuenta_perdidas_ganancias_tecnica_vida_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @356+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Subtotal (Resultado de la cuenta técnica del seguro de vida). [00350]
+[[revisions."2024".casillas]]
+id = "T22004D02:00350"
+number = "00350"
+segmento = "T22004D02"
+section = ["liquidacion", "cuenta_perdidas_ganancias_tecnica_vida_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]

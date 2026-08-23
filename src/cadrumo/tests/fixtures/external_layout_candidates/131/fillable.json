@@ -1,0 +1,46 @@
+{
+  "modelo": "131",
+  "candidate_kind": "fillable",
+  "source_page_url": "https://fiscalbot.es/modelos-tributarios/modelo-131/",
+  "source_pdf_url": "https://fiscalbot.es/assets/pdf/Modelo131_rellenable.pdf?v=3",
+  "retrieved_on": "2026-08-23",
+  "source_chain": {
+    "classification": "third_party_hosted_external_layout_candidate",
+    "host": "fiscalbot.es",
+    "authority_status": "unverified"
+  },
+  "content": {
+    "sha256": "3c271a489d21556d8b69fce20a165e311ba85a1b9ef26632199bfa3d4eadbef4",
+    "size_bytes": 109408
+  },
+  "pdf": {
+    "version": "1.5",
+    "header_version": "1.5",
+    "page_count": 1,
+    "page_sizes_points": [
+      [595.22, 842.0]
+    ],
+    "encrypted": false,
+    "acroform_top_level_field_count": 66,
+    "acroform_nonempty_value_count": 0,
+    "document_info": {
+      "CreationDate": "D:20190725100116+02'00'",
+      "Creator": "PDFescape Online - https://www.pdfescape.com",
+      "ModDate": "D:20251217170225+01'00'",
+      "Producer": "3.0.30 (5.1.14) "
+    }
+  },
+  "observations": {
+    "text_layer_character_count": 4754,
+    "nif_like_match_count": 0,
+    "iban_like_match_count": 0,
+    "email_like_match_count": 0,
+    "printed_placeholder_justificante_number_present": false,
+    "value_observation": "The text layer contains printed labels and box numbers; all observed AcroForm values are empty and no populated taxpayer NIF, IBAN, or email address was observed."
+  },
+  "limitations": [
+    "Third-party hosting, PDF branding, and document metadata do not establish AEAT provenance.",
+    "The candidate is retained byte-for-byte as downloaded; fillable is only the source page's variant label.",
+    "A blank external layout does not ground populated-value placement."
+  ]
+}
