@@ -2,7 +2,7 @@
 
 The candidates are independent parser-adversarial bytes, not authenticated AEAT
 evidence.  This matrix records only what the production extraction primitives do
-with each blank layout and keeps unsupported or unavailable routes visible.
+with each blank layout and keeps unsupported routes visible.
 """
 
 from __future__ import annotations
@@ -14,7 +14,6 @@ import pytest
 
 from .....core import Modelo, RegistryAuthorityGrade
 from .....core.resources import resources
-from .....domain.calculations.registry import RegistrySnapshotError
 from .....tests import FIXTURES_DIR
 from .....tests.fixtures.external_layout_candidates import (
     ExternalLayoutCandidateKind,
@@ -41,7 +40,6 @@ class _OutcomeKind(StrEnum):
 
     BLANK_NO_VALUES = "blank_no_values"
     UNSUPPORTED_LAYOUT = "unsupported_layout"
-    UNAVAILABLE_REGISTRY_SNAPSHOT = "unavailable_registry_snapshot"
 
 
 @dataclass(frozen=True)
@@ -134,8 +132,8 @@ _MATRIX = (
     ),
     *_cases_for_both_variants(
         Modelo.M036,
-        period="01",
-        expected=_MeasuredOutcome(kind=_OutcomeKind.UNAVAILABLE_REGISTRY_SNAPSHOT),
+        period="alta",
+        expected=_MeasuredOutcome(kind=_OutcomeKind.BLANK_NO_VALUES, missing=("decl.event-kind",)),
     ),
     *_cases_for_both_variants(
         Modelo.M349,
@@ -153,15 +151,12 @@ def _measure(case: _CandidateCase) -> _MeasuredOutcome:
     assert candidate.modelo == modelo
     assert candidate.candidate_kind == case.candidate_kind
 
-    try:
-        snapshot = resources().modelos.authority.snapshot(
-            modelo,
-            filing_year=case.filing_year,
-            period=case.period,
-            grade=RegistryAuthorityGrade.APPLICABILITY,
-        )
-    except RegistrySnapshotError:
-        return _MeasuredOutcome(kind=_OutcomeKind.UNAVAILABLE_REGISTRY_SNAPSHOT)
+    snapshot = resources().modelos.authority.snapshot(
+        modelo,
+        filing_year=case.filing_year,
+        period=case.period,
+        grade=RegistryAuthorityGrade.APPLICABILITY,
+    )
 
     profile = _select_extraction_profile(snapshot, extraction_profile_id=None)
     pages = extract_pages_text(candidate_path)

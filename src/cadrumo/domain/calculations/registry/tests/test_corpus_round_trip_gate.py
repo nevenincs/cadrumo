@@ -2,7 +2,7 @@
 
 The gate enforces that a ``declaracion_pdf`` extraction profile whose corpus
 fixture directory contains at least one PDF file must either set
-``corpus_round_trip_verified = true`` (author asserts a real parametrized
+``corpus_round_trip_verified = true`` (author asserts a committed parametrized
 round-trip test exists) or ``provisional_pending_specimen = true`` (author
 explicitly acknowledges unverified status).  Profiles that have corpus but
 neither flag cause a hard snapshot-build failure.  Profiles without corpus
@@ -28,7 +28,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _DATA_ROOT = bundled_path()
 # The validator never derives this path (see test_justificante_corpus_derivation.py,
 # which pins that one-way property); it must be supplied explicitly, exactly as an
-# authoring tool would supply the real fixture tree.
+# authoring tool would supply the committed synthetic fixture tree.
 _JUSTIFICANTE_CORPUS_ROOT = _DATA_ROOT.parent / "tests" / "fixtures" / "justificantes"
 
 
@@ -70,8 +70,8 @@ def _validator_from_data_root(catalogues: RegistryCatalogues) -> RegistryValidat
 
     RegistryValidator never derives justificante_corpus_root from source_root
     (test_justificante_corpus_derivation.py pins that one-way property); this
-    helper supplies the real src/cadrumo/tests/fixtures/justificantes tree so
-    the gates below exercise the actual committed fixture inventory rather
+    helper supplies the committed synthetic src/cadrumo/tests/fixtures/justificantes
+    tree so the gates below exercise that committed synthetic fixture inventory rather
     than a synthetic tmp_path corpus.
     """
     return RegistryValidator(
@@ -169,7 +169,7 @@ def test_corpus_root_resolves_when_explicitly_supplied() -> None:
 
     Mirrors test_corpus_root_resolves_when_explicitly_supplied in the specimen
     gate. RegistryValidator never derives justificante_corpus_root from
-    source_root; _validator_from_data_root supplies the real fixture tree
+    source_root; _validator_from_data_root supplies the committed synthetic fixture tree
     explicitly.
     """
     _modelo, catalogues = _committed_130()
@@ -351,7 +351,7 @@ def test_verification_source_gate_fires_against_the_committed_synthetic_corpus()
 
     This test covers the same class of gap as the one that could silently disable
     the specimen gate: a test using only a synthetic tmp_path corpus passes
-    regardless of whether the real fixture inventory agrees, masking gate failures.
+    regardless of whether the committed synthetic fixture inventory agrees, masking gate failures.
     """
     modelo, catalogues = _committed_130()
     profile = _committed_profile(provisional=False, round_trip_verified=True, verification_source=None)

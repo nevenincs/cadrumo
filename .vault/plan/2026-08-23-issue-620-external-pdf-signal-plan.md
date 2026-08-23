@@ -3,14 +3,14 @@ tags:
   - '#plan'
   - '#issue-620-external-pdf-signal'
 date: '2026-08-23'
+modified: '2026-08-23'
+body_hash: 'sha256:cddeccc555b7b01d3bf23b1e43c12d7c1921e7ff18c55ffdc5034b0bd7bba5ed'
 tier: L1
 related:
   - '[[2026-08-23-issue-620-external-pdf-signal-adr]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-research]]'
   - '[[2026-07-26-declaracion-real-render-verification-adr]]'
   - '[[2026-08-03-declaracion-real-render-verification-specimen-corpus-distribution-research]]'
-modified: '2026-08-23'
-body_hash: 'sha256:9a375ef6313d3a4749b9a0b4a5a106be3b7ffb2d0b6bccfab0b737d74611e5e6'
 ---
 
 # `issue-620-external-pdf-signal` plan
@@ -30,9 +30,9 @@ The accepted real-render verification decision requires render-dependent claims 
 - [x] `S05` - Inventory and fingerprint the externally sourced Modelo 349 plain and fillable PDFs; `src/cadrumo/tests/fixtures/external_layout_candidates/349/`.
 - [x] `S06` - Implement typed source classification and physical-byte validation for external layout candidates; `src/cadrumo/tests/fixtures/external_layout_candidates/`.
 - [x] `S07` - Add Modelo 130 production-parser regressions for printed-box discovery and zero fabricated blank values; `src/cadrumo/adapters/inbound/declaracion/tests/test_parser_boundary_m130_external_layout.py`.
-- [x] `S08` - Add the cross-model external-layout outcome matrix with explicit unsupported and unavailable results; `src/cadrumo/adapters/inbound/declaracion/tests/test_external_layout_candidate_matrix.py`.
+- [x] `S08` - Add the cross-model external-layout outcome matrix with exact blank and unsupported results; `src/cadrumo/adapters/inbound/declaracion/tests/test_external_layout_candidate_matrix.py`.
 - [x] `S09` - Correct Modelo 130 extraction-profile evidence claims and lock the operator advisory; `src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/extraction_profiles/`.
-- [ ] `S10` - Resolve final review findings for the M036 route, exact candidate topology, and synthetic-corpus terminology; `src/cadrumo/adapters/inbound/declaracion/tests/test_external_layout_candidate_matrix.py; src/cadrumo/tests/fixtures/external_layout_candidates/tests/test_candidate_contract.py; src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `S10` - Resolve final review findings for the M036 route, exact candidate topology, and synthetic-corpus terminology; `src/cadrumo/adapters/inbound/declaracion/tests/test_external_layout_candidate_matrix.py; src/cadrumo/tests/fixtures/external_layout_candidates/tests/test_candidate_contract.py; src/cadrumo/domain/calculations/registry/tests/`.
 
 ## Parallelization
 

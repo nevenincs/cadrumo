@@ -6,7 +6,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:de534a553f92f3c400e7eba91ea344e10d39279804e7826525d0a17bf6ff0cdf'
+body_hash: 'sha256:61debcfe8aa1254db4a9d20cdb4c015ff3aa798ccc621fd64edb3a665ae98ed3'
 related:
   - '[[2026-08-23-issue-620-external-pdf-signal-S01]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-S02]]'
@@ -17,6 +17,7 @@ related:
   - '[[2026-08-23-issue-620-external-pdf-signal-S07]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-S08]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-S09]]'
+  - '[[2026-08-23-issue-620-external-pdf-signal-S10]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-adr]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-inventory-review-audit]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-plan]]'
@@ -48,6 +49,7 @@ Auto-generated index of all documents tagged with `#issue-620-external-pdf-signa
 - `2026-08-23-issue-620-external-pdf-signal-S07` - Add Modelo 130 production-parser regressions for printed-box discovery and zero fabricated blank values
 - `2026-08-23-issue-620-external-pdf-signal-S08` - Add the cross-model external-layout outcome matrix with explicit unsupported and unavailable results
 - `2026-08-23-issue-620-external-pdf-signal-S09` - Correct Modelo 130 extraction-profile evidence claims and lock the operator advisory
+- `2026-08-23-issue-620-external-pdf-signal-S10` - Resolve final review findings for the M036 route, exact candidate topology, and synthetic-corpus terminology
 
 ### plan
 

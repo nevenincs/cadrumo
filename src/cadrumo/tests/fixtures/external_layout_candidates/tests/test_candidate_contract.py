@@ -26,14 +26,38 @@ _ROOT = Path(__file__).resolve().parents[1]
 _EXPECTED_IDENTITIES = frozenset(
     (modelo, kind) for modelo in EXTERNAL_LAYOUT_MODELOS for kind in EXTERNAL_LAYOUT_CANDIDATE_KINDS
 )
-_SIDECARS = tuple(sorted(_ROOT.glob("*/*.json")))
+_EXPECTED_CANDIDATE_FILENAMES = frozenset(
+    f"{kind}{suffix}"
+    for kind in EXTERNAL_LAYOUT_CANDIDATE_KINDS
+    for suffix in (".json", ".pdf")
+)
+_SIDECARS = tuple(
+    _ROOT / modelo / f"{kind}.json"
+    for modelo, kind in sorted(_EXPECTED_IDENTITIES)
+)
 
 
 def test_candidate_inventory_is_exactly_five_modelos_by_two_variants() -> None:
-    """A missing or surprise row cannot silently change the evidence matrix."""
+    """Reject surprise paths and either half of an orphaned JSON/PDF pair."""
+    root_files = frozenset(path.name for path in _ROOT.iterdir() if path.is_file())
+    candidate_directories = frozenset(
+        path.name
+        for path in _ROOT.iterdir()
+        if path.is_dir() and path.name not in {"tests", "__pycache__"}
+    )
+
+    assert root_files == frozenset({"__init__.py"})
+    assert candidate_directories == EXTERNAL_LAYOUT_MODELOS
+    for modelo in sorted(EXTERNAL_LAYOUT_MODELOS):
+        entries = frozenset(path.name for path in (_ROOT / modelo).iterdir())
+        assert entries == _EXPECTED_CANDIDATE_FILENAMES, (
+            f"modelo {modelo}: candidate directory must contain exactly the plain/fillable "
+            f"JSON/PDF pairs; found {sorted(entries)}"
+        )
+
     found = frozenset((path.parent.name, path.stem) for path in _SIDECARS)
     assert found == _EXPECTED_IDENTITIES
-    assert len(_SIDECARS) == len(_EXPECTED_IDENTITIES)
+    assert len(_SIDECARS) == 10
 
 
 @pytest.mark.parametrize("sidecar_path", _SIDECARS, ids=lambda path: f"{path.parent.name}-{path.stem}")
