@@ -9,8 +9,11 @@ an operation merely because it needs a latency observation.
 from __future__ import annotations
 
 import argparse
+import copy
+import gzip
 import hashlib
 import json
+import math
 import os
 import platform
 import shutil
@@ -22,7 +25,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime
 from pathlib import Path
 from statistics import median
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
     from cadrumo.entrypoints.cli._command_suggestions import LiveCommandNode
@@ -38,6 +41,8 @@ _SNAPSHOT_DIGEST_ENV = "CADRUMO_BASELINE_SOURCE_DIGEST"
 _SNAPSHOT_ROOT_ENV = "CADRUMO_BASELINE_SOURCE_ROOT"
 _ORIGIN_GIT_ENV = "CADRUMO_BASELINE_ORIGIN_GIT"
 _ORIGIN_DIRTY_ENV = "CADRUMO_BASELINE_ORIGIN_DIRTY_FINGERPRINT"
+_GENERATOR_DIGEST_ENV = "CADRUMO_BASELINE_GENERATOR_DIGEST"
+_LOCK_DIGEST_ENV = "CADRUMO_BASELINE_LOCK_DIGEST"
 
 
 def _command_tokens(node: LiveCommandNode) -> tuple[str, ...]:
@@ -54,11 +59,15 @@ def _observation_payload(profile: CliPerformanceProfile) -> dict[str, Any]:
     phases: dict[str, Any] = {}
     for name in ("resolution", "invocation"):
         observation = getattr(profile, name)
+        module_names = tuple(sorted(observation.imported_modules))
+        storage_calls = dict(sorted(observation.storage_operation_calls.items()))
         phases[name] = {
             "wall_seconds": observation.wall_seconds,
             "imported_module_count": len(observation.imported_modules),
+            "imported_modules": list(module_names),
             "import_families": {
-                family: list(modules) for family, modules in sorted(observation.import_families.items())
+                family: list(sorted(modules))
+                for family, modules in sorted(observation.import_families.items())
             },
             "pydantic_model_constructions": observation.pydantic_model_constructions,
             "filesystem": {
@@ -67,11 +76,57 @@ def _observation_payload(profile: CliPerformanceProfile) -> dict[str, Any]:
                 "deleted": list(observation.filesystem_deleted),
                 "operations": dict(sorted(observation.filesystem_operations.items())),
             },
-            "storage_operation_calls": dict(sorted(observation.storage_operation_calls.items())),
+            "storage_operation_calls": storage_calls,
             "exit_code": observation.exit_code,
             "failure_kind": observation.failure_kind,
         }
     return phases
+
+
+def _string_sequence_digest(values: Sequence[str]) -> str:
+    digest = hashlib.sha256()
+    for value in values:
+        digest.update(value.encode("utf-8"))
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def _compact_storage_calls(calls: Mapping[str, int]) -> dict[str, Any]:
+    canonical = tuple(sorted((str(symbol), int(count)) for symbol, count in calls.items()))
+    encoded = json.dumps(canonical, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
+    top = sorted(canonical, key=lambda item: (-item[1], item[0]))[:20]
+    return {
+        "total_calls": sum(count for _, count in canonical),
+        "distinct_symbols": len(canonical),
+        "calls_digest": hashlib.sha256(encoded).hexdigest(),
+        "top_calls": [{"symbol": symbol, "count": count} for symbol, count in top],
+    }
+
+
+def _compact_existing_observation(observation: dict[str, Any]) -> None:
+    imported_modules = observation.pop("imported_modules", None)
+    if imported_modules is not None:
+        observation["imported_modules_digest"] = _string_sequence_digest(tuple(imported_modules))
+    families = observation["import_families"]
+    if families and isinstance(next(iter(families.values())), list):
+        observation["import_families"] = {
+            family: {"count": len(modules), "modules_digest": _string_sequence_digest(tuple(modules))}
+            for family, modules in sorted(families.items())
+        }
+    calls = observation["storage_operation_calls"]
+    if "total_calls" not in calls:
+        observation["storage_operation_calls"] = _compact_storage_calls(calls)
+
+
+def compact_existing_baseline(payload: dict[str, Any]) -> None:
+    """Mechanically compact raw evidence into its review summary."""
+    for sample in payload["control"]["samples"]:
+        for phase in ("resolution", "invocation"):
+            _compact_existing_observation(sample[phase])
+    for command in payload["commands"].values():
+        for sample in command["samples"]:
+            for phase in ("resolution", "invocation"):
+                _compact_existing_observation(sample[phase])
 
 
 def _median_absolute_deviation(values: Sequence[float]) -> float:
@@ -215,18 +270,25 @@ def _environment_payload() -> dict[str, str]:
         "processor_count": str(os.cpu_count() or "unknown"),
         "uv": _tool_version(("uv", "--version")),
         "source_snapshot_digest": os.environ.get(_SNAPSHOT_DIGEST_ENV, "unfrozen"),
+        "generator_digest": os.environ.get(_GENERATOR_DIGEST_ENV, "unfrozen"),
+        "dependency_lock_digest": os.environ.get(_LOCK_DIGEST_ENV, "unfrozen"),
     }
 
 
+def _source_manifest(root: Path) -> dict[str, str]:
+    return {
+        path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in sorted(item for item in root.rglob("*") if item.is_file())
+    }
+
+
+def _manifest_digest(manifest: Mapping[str, str]) -> str:
+    encoded = json.dumps(dict(sorted(manifest.items())), separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
 def _tree_digest(root: Path) -> str:
-    digest = hashlib.sha256()
-    for path in sorted(item for item in root.rglob("*") if item.is_file()):
-        relative = path.relative_to(root).as_posix()
-        digest.update(relative.encode("utf-8"))
-        digest.update(b"\0")
-        digest.update(path.read_bytes())
-        digest.update(b"\0")
-    return digest.hexdigest()
+    return _manifest_digest(_source_manifest(root))
 
 
 def _copy_source_snapshot(source: Path, snapshot: Path) -> str:
@@ -298,6 +360,48 @@ def _write_json_atomic(path: Path, payload: Mapping[str, Any]) -> None:
     os.replace(temporary, path)
 
 
+def _write_bytes_atomic(path: Path, payload: bytes) -> None:
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_bytes(payload)
+    os.replace(temporary, path)
+
+
+def _publish_raw_and_summary(output: Path, raw_payload: dict[str, Any]) -> dict[str, Any]:
+    canonical_raw = json.dumps(raw_payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    compressed = gzip.compress(canonical_raw, compresslevel=9, mtime=0)
+    raw_path = output.with_name(f"{output.stem}.raw.json.gz")
+    _write_bytes_atomic(raw_path, compressed)
+    summary = copy.deepcopy(raw_payload)
+    compact_existing_baseline(summary)
+    summary["raw_evidence"] = {
+        "filename": raw_path.name,
+        "compressed_sha256": hashlib.sha256(compressed).hexdigest(),
+        "uncompressed_sha256": hashlib.sha256(canonical_raw).hexdigest(),
+        "uncompressed_bytes": len(canonical_raw),
+    }
+    return summary
+
+
+def _load_raw_evidence(payload: Mapping[str, Any], *, baseline_path: Path) -> dict[str, Any]:
+    declaration = payload.get("raw_evidence", {})
+    filename = declaration.get("filename")
+    if not isinstance(filename, str) or Path(filename).name != filename:
+        raise RuntimeError("invalid raw-evidence filename")
+    raw_path = baseline_path.with_name(filename)
+    compressed = raw_path.read_bytes()
+    if hashlib.sha256(compressed).hexdigest() != declaration.get("compressed_sha256"):
+        raise RuntimeError("raw-evidence compressed digest mismatch")
+    canonical_raw = gzip.decompress(compressed)
+    if hashlib.sha256(canonical_raw).hexdigest() != declaration.get("uncompressed_sha256"):
+        raise RuntimeError("raw-evidence content digest mismatch")
+    if len(canonical_raw) != declaration.get("uncompressed_bytes"):
+        raise RuntimeError("raw-evidence byte count mismatch")
+    raw: object = json.loads(canonical_raw)
+    if not isinstance(raw, dict):
+        raise RuntimeError("raw evidence must be a JSON object")
+    return cast("dict[str, Any]", raw)
+
+
 def capture(
     *,
     warmups: int,
@@ -332,6 +436,8 @@ def capture(
         "source_snapshot_digest": os.environ[_SNAPSHOT_DIGEST_ENV],
         "originating_git_revision": os.environ[_ORIGIN_GIT_ENV],
         "originating_dirty_fingerprint": os.environ[_ORIGIN_DIRTY_ENV],
+        "generator_digest": os.environ[_GENERATOR_DIGEST_ENV],
+        "dependency_lock_digest": os.environ[_LOCK_DIGEST_ENV],
     }
 
     commands: dict[str, dict[str, Any]] = {}
@@ -424,6 +530,7 @@ def capture(
     return {
         "schema": SCHEMA,
         "environment": _environment_payload(),
+        "source_snapshot_manifest": _source_manifest(Path(os.environ[_SNAPSHOT_ROOT_ENV]) / "cadrumo"),
         "method": {
             "samples_per_node": samples,
             "warmups_per_node": warmups,
@@ -451,32 +558,135 @@ def capture(
     }
 
 
-def check_baseline(payload: Mapping[str, Any]) -> None:
+def check_baseline(
+    payload: Mapping[str, Any],
+    *,
+    baseline_path: Path = DEFAULT_OUTPUT,
+    require_current_source: bool = False,
+) -> None:
     """Reject stale, incomplete, unranked, or unsafely labelled evidence."""
     from cadrumo.entrypoints.cli import app
     from cadrumo.entrypoints.cli._command_suggestions import walk_live_command_tree
 
     if payload.get("schema") != SCHEMA:
         raise RuntimeError("unsupported or missing CLI baseline schema")
+    environment = payload.get("environment", {})
+    for key in (
+        "source_snapshot_digest",
+        "originating_dirty_fingerprint",
+        "generator_digest",
+        "dependency_lock_digest",
+    ):
+        value = environment.get(key, "")
+        if not isinstance(value, str) or len(value) != 64:
+            raise RuntimeError(f"missing or invalid baseline source identity: {key}")
+    if not environment.get("originating_git_revision"):
+        raise RuntimeError("missing baseline originating Git revision")
+    manifest = payload.get("source_snapshot_manifest", {})
+    if not isinstance(manifest, dict) or not manifest:
+        raise RuntimeError("missing baseline source manifest")
+    if _manifest_digest(manifest) != environment["source_snapshot_digest"]:
+        raise RuntimeError("baseline source manifest disagrees with its digest")
+    if require_current_source:
+        repository_root = Path(__file__).resolve().parents[3]
+        current_manifest = _source_manifest(repository_root / "src" / "cadrumo")
+        if current_manifest != manifest:
+            raise RuntimeError("baseline source snapshot is stale against the current source tree")
     actual = {" ".join(node.path): node for node in walk_live_command_tree(app)}
     recorded = dict(payload.get("commands", {}))
     if set(recorded) != set(actual):
         missing = sorted(set(actual) - set(recorded))
         stale = sorted(set(recorded) - set(actual))
         raise RuntimeError(f"stale CLI baseline: missing={missing}, removed={stale}")
+    method = payload.get("method", {})
+    expected_samples = method.get("samples_per_node")
+    if not isinstance(expected_samples, int) or expected_samples < 3:
+        raise RuntimeError("invalid baseline sample-count declaration")
+    warmups = method.get("warmups_per_node")
+    if not isinstance(warmups, int) or warmups < 1:
+        raise RuntimeError("invalid baseline warmup declaration")
+    control = payload.get("control", {})
+    control_samples = control.get("samples", [])
+    if method.get("control_samples") != len(control_samples) or len(control_samples) < 3:
+        raise RuntimeError("baseline control-count declaration does not match observations")
+    for sample in control_samples:
+        _validate_observation_sample(sample)
+    expected_control_distribution = {
+        phase: _distribution(control_samples, phase) for phase in ("resolution", "invocation")
+    }
+    if control.get("distribution") != expected_control_distribution:
+        raise RuntimeError("stored control distribution disagrees with raw observations")
+    resolution_control = expected_control_distribution["resolution"]["median_seconds"]
+    invocation_control = expected_control_distribution["invocation"]["median_seconds"]
+    if resolution_control <= 0 or invocation_control <= 0:
+        raise RuntimeError("baseline control median must be positive")
+
     for path, node in actual.items():
         entry = recorded[path]
-        if entry["kind"] != node.kind or entry["policy"] != _policy_payload(node):
+        if (
+            entry["kind"] != node.kind
+            or entry["loader_owner"] != node.loader_owner
+            or entry["handler_owner"] != node.handler_owner
+            or entry["policy"] != _policy_payload(node)
+        ):
             raise RuntimeError(f"stale CLI baseline metadata: {path}")
         if entry["invocation_mode"] != "help-render" or entry["invocation_args"] != ["--help"]:
             raise RuntimeError(f"unsafe or dishonest CLI baseline invocation mode: {path}")
         samples = entry.get("samples", [])
-        if len(samples) < 3:
+        if len(samples) != expected_samples:
             raise RuntimeError(f"insufficient CLI baseline samples: {path}")
+        for sample in samples:
+            _validate_observation_sample(sample)
+        expected_distribution = _summarise_samples(
+            samples,
+            control_resolution_median=resolution_control,
+            control_invocation_median=invocation_control,
+        )
+        if entry.get("distribution") != expected_distribution:
+            raise RuntimeError(f"stored CLI distribution disagrees with raw observations: {path}")
     ranked = payload.get("ranked_outliers", {})
-    for key in ("resolution_by_control_ratio", "invocation_by_control_ratio"):
-        if set(ranked.get(key, [])) != set(actual):
-            raise RuntimeError(f"ranked outlier set is not the live census: {key}")
+    for phase in ("resolution", "invocation"):
+        key = f"{phase}_by_control_ratio"
+        expected_order = sorted(
+            recorded,
+            key=lambda path: (-recorded[path]["distribution"][phase]["control_ratio"], path),
+        )
+        if ranked.get(key) != expected_order:
+            raise RuntimeError(f"ranked outlier order is stale or incomplete: {key}")
+    expected_failures = sorted(
+        path
+        for path, entry in recorded.items()
+        if any(
+            observation["failure_kind"] != "none" or observation["exit_code"] != 0
+            for sample in entry["samples"]
+            for observation in (sample["resolution"], sample["invocation"])
+        )
+    )
+    if payload.get("failures_and_timeouts") != expected_failures:
+        raise RuntimeError("failure and timeout index is stale or incomplete")
+    raw = _load_raw_evidence(payload, baseline_path=baseline_path)
+    expected_summary = copy.deepcopy(raw)
+    compact_existing_baseline(expected_summary)
+    expected_summary["raw_evidence"] = payload["raw_evidence"]
+    if expected_summary != payload:
+        raise RuntimeError("compact baseline disagrees with content-addressed raw evidence")
+
+
+def _validate_observation_sample(sample: Mapping[str, Any]) -> None:
+    for phase in ("resolution", "invocation"):
+        observation = sample.get(phase, {})
+        seconds = observation.get("wall_seconds")
+        if not isinstance(seconds, (int, float)) or not math.isfinite(seconds) or seconds < 0:
+            raise RuntimeError(f"invalid {phase} latency observation")
+        if observation.get("failure_kind") not in {
+            "none",
+            "timeout",
+            "missing-envelope",
+            "child-exception",
+        }:
+            raise RuntimeError(f"invalid {phase} failure kind")
+        if not isinstance(observation.get("exit_code"), int):
+            raise RuntimeError(f"invalid {phase} exit code")
 
 
 def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -487,6 +697,7 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--timeout", type=float, default=120.0)
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--check", action="store_true")
+    parser.add_argument("--check-fresh", action="store_true")
     parser.add_argument("--no-resume", action="store_true")
     return parser.parse_args(argv)
 
@@ -522,6 +733,9 @@ def _run_snapshot_worker(args: argparse.Namespace) -> int:
     env[_SNAPSHOT_ROOT_ENV] = str(snapshot_parent / "src")
     env[_ORIGIN_GIT_ENV] = origin_git
     env[_ORIGIN_DIRTY_ENV] = origin_dirty
+    env[_GENERATOR_DIGEST_ENV] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+    lock_path = repository_root / "uv.lock"
+    env[_LOCK_DIGEST_ENV] = hashlib.sha256(lock_path.read_bytes()).hexdigest()
     env["PYTHONPATH"] = os.pathsep.join((str(snapshot_parent / "src"), str(repository_root)))
     env["PYTHONDONTWRITEBYTECODE"] = "1"
     completed = subprocess.run(  # noqa: S603 - fixed interpreter/module; original CLI options only.
@@ -541,13 +755,17 @@ def _run_snapshot_worker(args: argparse.Namespace) -> int:
 def main(argv: Sequence[str] | None = None) -> int:
     """Capture a new baseline or check the committed evidence."""
     args = _parse_args(argv)
-    if args.check:
-        check_baseline(json.loads(args.output.read_text(encoding="utf-8")))
+    if args.check or args.check_fresh:
+        check_baseline(
+            json.loads(args.output.read_text(encoding="utf-8")),
+            baseline_path=args.output,
+            require_current_source=args.check_fresh,
+        )
         return 0
     if os.environ.get(_SNAPSHOT_WORKER_ENV) != "1":
         return _run_snapshot_worker(args)
     checkpoint_path = args.output.with_suffix(".partial.json")
-    payload = capture(
+    raw_payload = capture(
         warmups=args.warmups,
         samples=args.samples,
         timeout=args.timeout,
@@ -556,8 +774,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         resume=not args.no_resume,
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    check_baseline(payload)
+    payload = _publish_raw_and_summary(args.output, raw_payload)
+    _write_json_atomic(args.output, payload)
+    check_baseline(payload, baseline_path=args.output)
     checkpoint_path.unlink(missing_ok=True)
     return 0
 

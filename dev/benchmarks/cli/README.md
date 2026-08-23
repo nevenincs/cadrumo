@@ -31,6 +31,15 @@ purpose-built fixtures for handlers; this evidence never pretends help rendering
 is handler execution.
 
 `--check` compares the artifact with the live census as an exact set and also
-checks kind, execution policy, sample sufficiency, safe invocation mode, and both
-rankings. Adding, removing, or reclassifying any CLI node makes the check fail;
+checks kind, loader and handler ownership, execution policy, sample sufficiency,
+safe invocation mode, failure index, and the exact order of both rankings.
+Adding, removing, re-owning, or reclassifying any CLI node makes the check fail;
 there is no fixed command count to update.
+
+To keep the checked-in JSON reviewable, each observation stores exact import and
+storage-call counts, stable digests of module families and storage call maps,
+and the twenty highest-count storage symbols instead of repeating thousands of
+symbol names in every sample. Latency samples, model constructions, filesystem
+effects, exit status, and failure kind remain unaggregated. The rejected first
+attempt is documented separately; none of its mutable-tree samples appear in
+the accepted baseline.
