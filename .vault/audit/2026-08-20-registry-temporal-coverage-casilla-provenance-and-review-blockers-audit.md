@@ -3897,3 +3897,70 @@ is modelled.** Every step is declared as a box and none is computed.
 
 **10483 of 11605 slots remain** across 124 records; 1122 modelled. T22012A00, T22012A10
 and now T22009001 are held back.
+
+## 2026-08-23 — the two per-entity detail records, and closing the truncation class
+
+### What landed
+
+Records **T22010000** and **T22011000** — the per-entity detail sheets. T22010000 lists
+transparencia fiscal internacional (art. 100.10 LIS) and doble imposicion interna
+intersocietaria entity by entity; T22011000 lists the eight bonificaciones. **22
+casillas**, revision 1205 → **1227**, fifteen of 137 records.
+
+Suite: **10 failures, zero caused by me.** One entry left (the loader-cache parallel
+flake), one arrived — `test_record_design_coordinate_stutter_recovery`, which belongs to a
+peer's uncommitted `_record_design.py` edits.
+
+### The number set decided the casilla set, not the shape
+
+Both records repeat a detail block carrying **no box number**, differing only by a printed
+row index: 44 blocks of 3 fields, 24 blocks of 9. One row is declared per record and a
+layout repeat writes the rest — modelo 720's `binding_record` mechanism. Declaring every
+block would have minted 132 and 216 casillas for 3 and 9 declared values.
+
+**The stride is proven, not assumed.** The run starts at @16 in both; 16 + 43×44 and
+16 + 145×24 land exactly on @1908 and @3496, where the first total begins. Every block was
+compared field-for-field against the first with its index removed: **one distinct shape
+each**. The arithmetic closing is the tell that the decomposition is right — the same
+signal that separated T22008B00's grid from T22008A00's flat list.
+
+### The truncation class is closed, not watched for
+
+Three stamps running recorded the same defect: a table keyed on **transcribed prose**
+carried a silently mistyped key — once from a truncated survey, once from a truncated slug,
+once from a truncated listing. Each time only an assertion in the code caught it, never the
+written lesson.
+
+**This iteration the translation table is keyed by casilla id**, which is generated rather
+than retyped, and it asserts bidirectionally that its id set equals the authored id set.
+The defect can no longer be introduced, rather than being caught after the fact.
+
+That is the shape of the general fix: **when a lesson says "be careful typing X", the
+answer is to stop typing X**, not to be careful. Watching for a defect three times running
+was the signal that the input itself was wrong.
+
+### AEAT's detail row and its total disagree, in both records
+
+`D.I. Interna **inter**societaria al 5/10%` in the detail, `D.I. Interna societaria` in the
+total. `Cap. III **Tít.** VII LIS` accented in the detail, `Tit.` unaccented in the total.
+Both transcribed as printed and both surfaced by **comparing the two column lists in code**
+— neither would have survived reading by eye.
+
+### The coverage denominator moved under the campaign
+
+The previous stamp recorded **11605** numbered slots with 1122 modelled. Today the same
+measurement over the same workbook reports **11570** with **1117** — because a peer changed
+the record-design extractor between the two runs. **Zero authored slots are orphaned**;
+every one is still evidenced. Nothing was lost.
+
+But the lesson is durable: **a coverage figure is only true against the extractor of the day
+it was measured**, and a stamp stating one should say so. Two consecutive stamps reporting
+different totals for an unchanged workbook otherwise reads as an error in one of them.
+
+The same recount corrected an older conflation: 137 is the **sheet** count, but only **133**
+records carry numbers at all.
+
+### Scale
+
+**10453 of 11570 slots remain** across 118 numbered records; 1117 modelled. T22009001,
+T22012A00 and T22012A10 stay held back.
