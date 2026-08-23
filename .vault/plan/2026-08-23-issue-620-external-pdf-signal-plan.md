@@ -3,15 +3,14 @@ tags:
   - '#plan'
   - '#issue-620-external-pdf-signal'
 date: '2026-08-23'
+modified: '2026-08-23'
+body_hash: 'sha256:f653e1915c11b421032a4e04e4233c91b3c939674bd837f65415860693da0a6f'
 tier: L1
 related:
   - '[[2026-08-23-issue-620-external-pdf-signal-adr]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-research]]'
   - '[[2026-07-26-declaracion-real-render-verification-adr]]'
   - '[[2026-08-03-declaracion-real-render-verification-specimen-corpus-distribution-research]]'
-modified: '2026-08-23'
-body_schema: body-v1
-body_hash: 'sha256:4fc68d9168c88c069bc3a939874c7e3cfd93cc3f3791c9a2c5d33961f0c216ea'
 ---
 
 # `issue-620-external-pdf-signal` plan
@@ -27,7 +26,7 @@ The accepted real-render verification decision requires render-dependent claims 
 - [x] `S01` - Inventory and fingerprint the externally sourced Modelo 130 plain and fillable PDFs; `src/cadrumo/tests/fixtures/external_layout_candidates/130/`.
 - [x] `S02` - Inventory and fingerprint the externally sourced Modelo 131 plain and fillable PDFs; `src/cadrumo/tests/fixtures/external_layout_candidates/131/`.
 - [ ] `S03` - Inventory and fingerprint the externally sourced Modelo 303 plain and fillable PDFs; `src/cadrumo/tests/fixtures/external_layout_candidates/303/`.
-- [ ] `S04` - Inventory and fingerprint the externally sourced Modelo 036 plain and fillable PDFs; `src/cadrumo/tests/fixtures/external_layout_candidates/036/`.
+- [x] `S04` - Inventory and fingerprint the externally sourced Modelo 036 plain and fillable PDFs; `src/cadrumo/tests/fixtures/external_layout_candidates/036/`.
 - [ ] `S05` - Inventory and fingerprint the externally sourced Modelo 349 plain and fillable PDFs; `src/cadrumo/tests/fixtures/external_layout_candidates/349/`.
 - [ ] `S06` - Implement typed source classification and physical-byte validation for external layout candidates; `src/cadrumo/tests/fixtures/external_layout_candidates/`.
 - [ ] `S07` - Add Modelo 130 production-parser regressions for printed-box discovery and zero fabricated blank values; `src/cadrumo/adapters/inbound/declaracion/tests/test_parser_boundary_m130_external_layout.py`.
