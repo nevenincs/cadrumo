@@ -66,6 +66,12 @@ def test_refused_cli_non_tty_locale_key_resolves() -> None:
 
 _SECURE_INPUT_REFUSAL_KEYS = (
     "cli.config.custody.errors.non_interactive_secret_required",
+    "cli.config.custody.errors.secrets_channel_conflict",
+    "cli.config.custody.errors.secrets_fd_invalid_json",
+    "cli.config.custody.errors.secrets_fd_missing_fields",
+    "cli.config.custody.errors.secrets_fd_reserved_stream",
+    "cli.config.custody.errors.secrets_fd_too_large",
+    "cli.config.custody.errors.secrets_fd_unreadable",
     "cli.config.custody.errors.secrets_stdin_invalid_json",
     "cli.config.custody.errors.secrets_stdin_missing_fields",
     "cli.config.custody.errors.secrets_stdin_too_large",

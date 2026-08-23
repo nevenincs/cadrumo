@@ -1774,22 +1774,23 @@ cli:
           interactiva; usa --secrets-stdin.
         secrets_channel_conflict: No se puede especificar --secrets-stdin y --secrets-fd
           a la vez.
-        secrets_fd_invalid_json: 'El contenido de --secrets-fd no es un objeto JSON
-          válido. Envíe un objeto con estas claves: {expected_fields}.'
-        secrets_fd_missing_fields: 'Al objeto de --secrets-fd le faltan campos obligatorios
-          o tiene campos inesperados. Envíe exactamente estas claves: {expected_fields}.'
-        secrets_fd_reserved_stream: El descriptor de archivo no puede ser la entrada,
-          salida ni el flujo de error estándar.
-        secrets_fd_too_large: El contenido del secreto de máquina desde el descriptor
-          de archivo excede el tamaño máximo.
-        secrets_fd_unreadable: Error al leer secretos de máquina desde el descriptor
-          de archivo.
-        secrets_stdin_invalid_json: 'El contenido de --secrets-stdin no es un objeto
+        secrets_fd_invalid_json: 'El contenido de secretos de máquina no es un objeto
           JSON válido. Envíe un objeto con estas claves: {expected_fields}.'
-        secrets_stdin_missing_fields: 'Al objeto de --secrets-stdin le faltan campos
+        secrets_fd_missing_fields: 'Al objeto de secretos de máquina le faltan campos
           obligatorios o tiene campos inesperados. Envíe exactamente estas claves:
           {expected_fields}.'
-        secrets_stdin_too_large: El contenido de --secrets-stdin supera el tamaño
+        secrets_fd_reserved_stream: Los descriptores 1 (salida estándar) y 2 (error
+          estándar) están reservados; use el descriptor 0 u otro descriptor legible.
+        secrets_fd_too_large: El contenido de secretos de máquina supera el tamaño
+          máximo permitido.
+        secrets_fd_unreadable: Error al leer secretos de máquina desde el descriptor
+          de archivo.
+        secrets_stdin_invalid_json: 'El contenido de secretos de máquina no es un
+          objeto JSON válido. Envíe un objeto con estas claves: {expected_fields}.'
+        secrets_stdin_missing_fields: 'Al objeto de secretos de máquina le faltan
+          campos obligatorios o tiene campos inesperados. Envíe exactamente estas
+          claves: {expected_fields}.'
+        secrets_stdin_too_large: El contenido de secretos de máquina supera el tamaño
           máximo permitido.
       recovery_words_confirm: Ya la he anotado
       recovery_words_heading: Guarda esta frase de recuperación
@@ -2011,9 +2012,8 @@ cli:
         session_not_persisted: No hay un almacén de claves del sistema utilizable,
           así que la sesión no se puede guardar; este inicio de sesión solo vale para
           el comando actual.
-      passphrase_channel_absent: No hay ningún canal de contraseña disponible. Ejecuta
-        este verbo en un terminal, usa --secrets-stdin o --secrets-fd, o define CADRUMO_SECRET_PASSPHRASE
-        para una ejecución desatendida.
+      passphrase_channel_absent: No hay ningún canal de contraseña disponible. Ejecute
+        este verbo en un terminal o use --secrets-stdin o --secrets-fd.
       passphrase_prompt: 'Contraseña del perfil: '
       refusal:
         abandoned: Se ha cancelado el inicio de sesión; no se ha abierto ningún perfil.
@@ -2121,8 +2121,7 @@ cli:
       create_name_required: Se requiere un nombre de perfil. Ejecuta 'aeat config
         profile create NOMBRE'.
       create_passphrase_channel_absent: No hay ningún canal de contraseña disponible.
-        Ejecuta este verbo en un terminal o define CADRUMO_SECRET_PASSPHRASE para
-        una ejecución desatendida.
+        Ejecute este verbo en un terminal o use --secrets-stdin o --secrets-fd.
       create_passphrase_mismatch: La contraseña y su confirmación no coinciden; no
         se creó ningún perfil.
       create_passphrase_prompt: 'Contraseña del nuevo perfil: '
@@ -3368,8 +3367,8 @@ cli:
         paragraph_durable_state: El estado duradero (perfil, autenticación, libro)
           persiste entre sesiones.
         paragraph_storage_isolation: Para una ejecución aislada desde cero, defina
-          CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_DIR y CADRUMO_SECRET_PASSPHRASE;
-          los logs quedan por defecto bajo ese directorio de almacenamiento.
+          CADRUMO_LOCAL_STORAGE_ROOT y CADRUMO_SECRET_STORE_DIR; los registros quedan
+          por defecto bajo ese directorio de almacenamiento.
         passphrase_change: Cambia la contraseña que protege el perfil activo.
         profile_delete: Elimina un perfil almacenado localmente.
         profile_history: Inspecciona el historial append-only de eventos del perfil.
