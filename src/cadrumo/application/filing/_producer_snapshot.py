@@ -161,6 +161,11 @@ class DeclarationContactFacts(BaseModel):
 
     phone: _NonBlankName | None = None
     full_name: _NonBlankName | None = None
+    #: AEAT reserves a second telephone and an e-mail beside the pair above on the
+    #: informativa header -- modelo 210 cites both. They were absent here, so the layout's
+    #: fields resolved to nothing and rendered blank.
+    secondary_phone: _NonBlankName | None = None
+    email: _NonBlankName | None = None
 
 
 class Modelo111ProfileFacts(BaseModel):

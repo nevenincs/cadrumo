@@ -100,6 +100,8 @@ def filing_producer_ownership() -> dict[FilingProducerKey, str]:
         FilingProducerKey.TAXPAYER_SURNAMES_OR_LEGAL_NAME,
         FilingProducerKey.CONTACT_PERSON_PHONE,
         FilingProducerKey.CONTACT_PERSON_NAME,
+        FilingProducerKey.CONTACT_PERSON_SECONDARY_PHONE,
+        FilingProducerKey.CONTACT_PERSON_EMAIL,
         FilingProducerKey.AMENDMENT_IS_RECTIFICATIVA,
         FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA,
         FilingProducerKey.AMENDMENT_ORIGINAL_AEAT_RECEIPT,
@@ -320,6 +322,8 @@ def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProdu
         # in AEAT's informativa header.
         FilingProducerKey.CONTACT_PERSON_PHONE: snapshot.declaration_contact.phone,
         FilingProducerKey.CONTACT_PERSON_NAME: snapshot.declaration_contact.full_name,
+        FilingProducerKey.CONTACT_PERSON_SECONDARY_PHONE: snapshot.declaration_contact.secondary_phone,
+        FilingProducerKey.CONTACT_PERSON_EMAIL: snapshot.declaration_contact.email,
         FilingProducerKey.AMENDMENT_IS_RECTIFICATIVA: amendment.is_rectificativa if amendment else None,
         FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA: amendment.is_complementaria if amendment else None,
         FilingProducerKey.AMENDMENT_ORIGINAL_AEAT_RECEIPT: amendment.original_aeat_receipt if amendment else None,
