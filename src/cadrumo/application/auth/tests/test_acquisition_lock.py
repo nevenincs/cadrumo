@@ -153,7 +153,20 @@ def test_auth_acquisition_lock_recovers_corrupt_metadata(tmp_path: Path) -> None
     assert not path.exists()
 
 
-def test_auth_acquisition_lock_can_be_cleared_for_manual_recovery(tmp_path: Path) -> None:
+def test_clearing_a_live_holders_lock_is_refused(tmp_path: Path) -> None:
+    """A lock somebody is holding right now is not the operator's to clear.
+
+    This case previously asserted the opposite -- that clearing a HELD lock
+    removed it -- which made `login --reset-lock` delete another process's live
+    record and then issue the second petition itself. Two processes each
+    believing they hold the Cl@ve lock is a duplicate petition, and a duplicate
+    prompt on the taxpayer's phone. The flag promises to clear a STALE lock, so
+    refusing when the lock is not stale is what it already claimed to do.
+
+    The capsule-erase path keeps its clearance through `allow_held`, asserted
+    below, because there the profile is being destroyed wholesale and refusing
+    would strand the reset.
+    """
     settings = _settings(tmp_path)
     path = auth_acquisition_lock_path(settings, AuthProviderKind.CLAVE_MOVIL)
 
@@ -163,14 +176,22 @@ def test_auth_acquisition_lock_can_be_cleared_for_manual_recovery(tmp_path: Path
         ttl_seconds=300,
         operation="test-auth-login",
     ):
+        with pytest.raises(AuthAcquisitionLockedError):
+            clear_auth_acquisition_lock(
+                settings,
+                AuthProviderKind.CLAVE_MOVIL,
+                reason="operator-confirmed-crash",
+            )
+        assert path.exists(), "a refused clear must leave the holder's record in place"
+
         cleared = clear_auth_acquisition_lock(
             settings,
             AuthProviderKind.CLAVE_MOVIL,
-            reason="operator-confirmed-crash",
+            reason="capsule-erase",
+            allow_held=True,
         )
 
     assert cleared.state is AuthAcquisitionLockState.HELD
-    assert cleared.reason == "operator-confirmed-crash"
     assert cleared.recoverable is True
     assert not path.exists()
 
@@ -205,7 +226,7 @@ def test_clear_auth_acquisition_lock_is_target_scoped_across_providers(tmp_path:
     certificate_lock = _write_live_lock(settings, AuthProviderKind.CERTIFICATE, bucket_id="operator", now=now)
     clave_lock = _write_live_lock(settings, AuthProviderKind.CLAVE_MOVIL, bucket_id="operator", now=now)
 
-    cleared = clear_auth_acquisition_lock(settings, AuthProviderKind.CERTIFICATE, bucket_id="operator")
+    cleared = clear_auth_acquisition_lock(settings, AuthProviderKind.CERTIFICATE, bucket_id="operator", allow_held=True)
 
     assert cleared.state is AuthAcquisitionLockState.HELD
     assert not certificate_lock.exists()
@@ -221,7 +242,7 @@ def test_clear_auth_acquisition_lock_is_target_scoped_across_buckets(tmp_path: P
     target_lock = _write_live_lock(settings, AuthProviderKind.CERTIFICATE, bucket_id="bucket-a", now=now)
     other_lock = _write_live_lock(settings, AuthProviderKind.CERTIFICATE, bucket_id="bucket-b", now=now)
 
-    clear_auth_acquisition_lock(settings, AuthProviderKind.CERTIFICATE, bucket_id="bucket-a")
+    clear_auth_acquisition_lock(settings, AuthProviderKind.CERTIFICATE, bucket_id="bucket-a", allow_held=True)
 
     assert not target_lock.exists()
     assert other_lock.exists(), "another bucket's acquisition lock must survive a target-scoped clear"
@@ -235,9 +256,9 @@ def test_clear_auth_acquisition_lock_is_repeatable(tmp_path: Path) -> None:
     now = datetime.now(UTC)
     path = _write_live_lock(settings, AuthProviderKind.CLAVE_MOVIL, bucket_id="operator", now=now)
 
-    first = clear_auth_acquisition_lock(settings, AuthProviderKind.CLAVE_MOVIL, bucket_id="operator", reason="reset-1")
-    second = clear_auth_acquisition_lock(settings, AuthProviderKind.CLAVE_MOVIL, bucket_id="operator", reason="reset-2")
-    third = clear_auth_acquisition_lock(settings, AuthProviderKind.CLAVE_MOVIL, bucket_id="operator", reason="reset-3")
+    first = clear_auth_acquisition_lock(settings, AuthProviderKind.CLAVE_MOVIL, bucket_id="operator", allow_held=True, reason="reset-1")
+    second = clear_auth_acquisition_lock(settings, AuthProviderKind.CLAVE_MOVIL, bucket_id="operator", allow_held=True, reason="reset-2")
+    third = clear_auth_acquisition_lock(settings, AuthProviderKind.CLAVE_MOVIL, bucket_id="operator", allow_held=True, reason="reset-3")
 
     assert first.state is AuthAcquisitionLockState.HELD
     assert first.recoverable is True
