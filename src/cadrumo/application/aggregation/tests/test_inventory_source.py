@@ -50,6 +50,7 @@ from ....domain.transactions import TransactionCatalogue
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ...modelo import _calculation_actions
 from ...modelo._calculation_actions import _resolve_bucket_source_mesh
+from ...modelo._calculation_route import CalculationRouteStage
 from .._inventory import _VALUE_ATTRIBUTE_BY_OPERATION, InventorySourceResolver
 from .._source_mesh import CalculationSourceContext
 
@@ -635,8 +636,8 @@ def test_calculation_mesh_constructs_inventory_once_for_exact_active_bucket(
         repository_objects.append(objects)
         return repository
 
-    def route_guard(stage: str, resolver: object) -> None:
-        real_route_guard(stage, resolver)  # type: ignore[arg-type]
+    def route_guard(stage: CalculationRouteStage, resolver: object) -> None:
+        real_route_guard(stage, resolver)
         if getattr(resolver, "resolver_id", None) == "inventory":
             inventory_route_stages.append(stage)
 
