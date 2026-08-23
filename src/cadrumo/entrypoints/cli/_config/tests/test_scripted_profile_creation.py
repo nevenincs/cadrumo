@@ -105,7 +105,10 @@ def test_scripted_create_persists_the_field_flags_it_was_given(tmp_path: Path) -
         assert created.exit_code == 0, created.output
         assert json.loads(created.stdout)["result"]["status"] == "created"
 
-        shown = invoke_cached_cli(("--format", "json", "config", "profile", "show"))
+        shown = invoke_cached_cli(
+            ("--format", "json", "--profile-secrets-stdin", "config", "profile", "show"),
+            input=json.dumps({"passphrase": _PASSPHRASE}),
+        )
 
     # `show` reports a non-zero code for an INCOMPLETE profile, which this one
     # deliberately is -- a profile is born incomplete and the operator fills in

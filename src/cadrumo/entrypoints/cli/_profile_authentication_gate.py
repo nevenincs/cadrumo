@@ -160,16 +160,16 @@ def preflight_parsed_leaf(
             normalize_ambient_profile(ctx)
     def authenticate(
         bucket: str,
-        selected_root: object,
-        selected_leaf: object | None,
+        selected_root: ProfileSecretSelection,
+        selected_leaf: MachineSecretSelection | None,
         command: CommandSpec,
         parsed: Mapping[str, object],
     ) -> None:
         consume_root_fallback(
             ctx,
             bucket_id=bucket,
-            root=cast(ProfileSecretSelection, selected_root),
-            leaf=cast("MachineSecretSelection | None", selected_leaf),
+            root=selected_root,
+            leaf=selected_leaf,
             spec=command,
             arguments=parsed,
         )
@@ -263,7 +263,9 @@ def consume_root_fallback(
 
         bind_profile_target(ctx, bucket_id=bucket_id)
         if not outcome.session_persisted:
-            cast("dict[str, object]", ctx.find_root().ensure_object(dict))["profile_session_not_persisted"] = True
+            from ._profile_authentication_notice import stage_profile_session_not_persisted_notice
+
+            stage_profile_session_not_persisted_notice()
     finally:
         passphrase = ""
         del payload

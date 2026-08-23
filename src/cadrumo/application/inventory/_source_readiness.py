@@ -1,15 +1,16 @@
 """Readiness facts for the inventory calculation source.
 
-The strict-frozen record and context-independent readiness check describe only
-whether inventory state crosses the canonical secure-storage revision boundary.
-They do not resolve calculation values, adapt or enroll a source, participate
-in the source mesh, or emit diagnostics. Its source identity is the canonical
+The strict-frozen record and context-independent readiness check distinguishes
+the completed encrypted schema-v3 inventory persistence boundary from the still
+missing calculation-source connection. It does not resolve calculation values,
+adapt or enroll a source, participate in the source mesh, or emit diagnostics.
+Its source identity is the canonical
 :attr:`~core.BindingSourceKind.INVENTORY` member.
 
 See Also:
     :class:`~application.inventory.InventoryService`
-        Application service for the inventory state whose persistence is not
-        yet canonical calculation-source state.
+        Application service for encrypted schema-v3 inventory state that is not
+        yet enrolled as canonical calculation-source state.
 """
 
 from __future__ import annotations
@@ -32,8 +33,10 @@ class InventorySourceReadiness(BaseModel):
 def inventory_source_readiness() -> InventorySourceReadiness:
     """Return the context-independent inventory-source readiness fact.
 
-    The result remains not ready because inventory movements and valuations are
-    not persisted through the canonical secure-storage revision boundary.
+    Encrypted schema-v3 persistence is complete for movements, valuation inputs,
+    complete acquisition cost, and closing authority. Readiness remains false
+    until the inventory resolver, source-mesh enrollment, registry bindings,
+    orchestration, and ownership refusal path are connected.
 
     Returns:
         An :class:`~application.inventory.InventorySourceReadiness` with
@@ -43,9 +46,10 @@ def inventory_source_readiness() -> InventorySourceReadiness:
         ready=False,
         source_kind=BindingSourceKind.INVENTORY,
         reason=(
-            "inventory is not yet a calculation source: its movements and "
-            "valuations are not persisted through the canonical secure-storage "
-            "revision boundary"
+            "inventory encrypted schema-v3 persistence is complete for movements, valuation inputs, "
+            "complete acquisition cost, and closing authority; calculation-source readiness remains false "
+            "until the canonical inventory resolver, source-mesh enrollment, registry bindings, "
+            "calculation orchestration, and source-ownership refusal path are connected"
         ),
     )
 

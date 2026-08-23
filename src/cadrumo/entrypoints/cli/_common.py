@@ -704,17 +704,9 @@ def _emit_envelope(
     metadata_invocation = _is_metadata_invocation(ctx)
     output_format = _format_of(ctx)
     supplied_notices = tuple(notices or ())
-    root_state = cast("dict[str, object]", ctx.find_root().ensure_object(dict))
-    root_notices: tuple[Notice, ...] = ()
-    if root_state.pop("profile_session_not_persisted", False):
-        root_notices = (
-            Notice(
-                severity=NoticeSeverity.WARNING,
-                code="config.login.session_not_persisted",
-                message=tr("cli.config.login.notices.session_not_persisted"),
-            ),
-        )
-        supplied_notices = (*supplied_notices, *root_notices)
+    from ._profile_authentication_notice import drain_profile_authentication_notices
+
+    supplied_notices = (*supplied_notices, *drain_profile_authentication_notices())
     resolved_notices = _resolve_notice_actions(supplied_notices)
     if output_format is OutputFormat.JSON:
         if metadata_invocation:

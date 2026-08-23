@@ -687,17 +687,22 @@ def render_error_payload(
     line without reconstructing a command or recovery sentence.
     """
     notice = sandbox_notice_for_error()
+    from ._profile_authentication_notice import drain_profile_authentication_notices
+
+    authentication_notices = drain_profile_authentication_notices()
     if as_json:
         return render_error_json(
             error,
             action=action,
             active_profile=active_profile_label_for_error(),
             command=command,
-            notices=() if notice is None else (notice,),
+            notices=(*(() if notice is None else (notice,)), *authentication_notices),
         )
     text = render_error_text(error)
     if action is not None:
         text = _render_precondition_action_text(text, command=command, action=action)
+    if authentication_notices:
+        text = "\n".join((*[item.message for item in authentication_notices], text))
     if notice is None:
         return text
     from ...application.operator_output import sandbox_banner_line

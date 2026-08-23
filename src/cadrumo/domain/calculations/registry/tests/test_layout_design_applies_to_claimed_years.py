@@ -77,7 +77,7 @@ No count is hardcoded. The divergence set is the finding and it is named in full
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from datetime import date
 
 import pytest
@@ -113,6 +113,34 @@ def _record_design_windows() -> dict[str, tuple[int | None, int | None]]:
             end.year if isinstance(end, date) else None,
         )
     return windows
+
+
+def _ejercicio_scoped_designs() -> frozenset[str]:
+    """Return the designs whose window states an EJERCICIO rather than a legal date.
+
+    ``applies_from``/``applies_to`` carry two different meanings in this catalogue,
+    and the authoring already distinguishes them: a design scoped to the ejercicio
+    it governs is stamped on 1 January, while one scoped to the date its orden took
+    effect carries that real date -- Modelo 720's ``aeat-dr-720`` is stamped
+    2013-02-01, and Orden HAP/72/2013's disposicion final unica states it first
+    applies to the declaracion of ejercicio 2012. Reading the day of the month is
+    therefore reading the authoring's own declaration, not inferring one.
+
+    The distinction decides which axis the coverage comparison may use. Comparing a
+    PRESENTATION year against an ejercicio-scoped window is cross-axis: it clears
+    every design whose ejercicio is one year behind its filing campaign, which is
+    most annual returns. Comparing a presentation year against a legal-effect window
+    is exactly right, because that window is already stated in calendar dates.
+    """
+    _modelos, catalogues = bundled_registry_tree()
+    scoped: set[str] = set()
+    for source_id, source in catalogues.sources.items():
+        if getattr(source, "kind", None) != "record_design":
+            continue
+        start = getattr(source, "applies_from", None)
+        if isinstance(start, date) and (start.month, start.day) == (1, 1):
+            scoped.add(str(source_id))
+    return frozenset(scoped)
 
 
 def _claimed_years(revision: ModeloRevision) -> list[int]:
@@ -193,6 +221,7 @@ def _revision_divergences(
     revision_id: str,
     revision: ModeloRevision,
     windows: Mapping[str, tuple[int | None, int | None]],
+    ejercicio_scoped: Collection[str],
 ) -> tuple[int, list[str]]:
     """Return ``(export layouts compared, divergence messages)`` for one revision.
 
@@ -214,12 +243,21 @@ def _revision_divergences(
         if not claimed:
             continue
         compared += 1
+        # Probe the axis the declared design is actually scoped on. Where every
+        # declared design states an ejercicio, the ejercicio itself is the
+        # comparable year; the presentation shift would clear a design registered
+        # for a LATER ejercicio than the revision claims, which is a real gap.
+        on_ejercicio_axis = all(ref in ejercicio_scoped for ref in declared)
         uncovered = sorted(
             year
             for year in claimed
             if not any(
-                _year_covered_by_any_design(presentation_year, declared, windows)
-                for presentation_year in _presentation_calendar_years(year, windows_by_filing_year)
+                _year_covered_by_any_design(probe_year, declared, windows)
+                for probe_year in (
+                    {year}
+                    if on_ejercicio_axis
+                    else _presentation_calendar_years(year, windows_by_filing_year)
+                )
             )
         )
         if uncovered:
@@ -241,11 +279,13 @@ def _revision_divergences(
                     for presentation_year in _presentation_calendar_years(year, windows_by_filing_year)
                 }
             )
+            axis = "ejercicio" if on_ejercicio_axis else "presentation"
+
             divergences.append(
                 f"modelo {modelo_id} revision {revision_id!r} claims ejercicio(s) "
                 f"{uncovered[0]}-{uncovered[-1]} ({len(uncovered)} year(s)), presented in "
                 f"calendar year(s) {presented[0]}-{presented[-1]}, which fall outside its "
-                f"declared layout design(s) {spans}"
+                f"declared layout design(s) {spans} [compared on the {axis} axis]"
             )
     return compared, divergences
 
@@ -259,11 +299,14 @@ def test_every_claimed_filing_year_is_covered_by_its_declared_layout_design() ->
     the claim so the uncovered years refuse, or by declaring the design that does apply.
     """
     windows = _record_design_windows()
+    ejercicio_scoped = _ejercicio_scoped_designs()
     divergences: list[str] = []
     compared = 0
     for modelo in sorted(_authority().modelos, key=lambda candidate: candidate.id):
         for revision_id, revision in sorted(modelo.revisions.items()):
-            layer_compared, layer_divergences = _revision_divergences(modelo.id, revision_id, revision, windows)
+            layer_compared, layer_divergences = _revision_divergences(
+                modelo.id, revision_id, revision, windows, ejercicio_scoped
+            )
             compared += layer_compared
             divergences.extend(layer_divergences)
     assert compared, (
@@ -313,7 +356,9 @@ def test_modelo_720_ejercicio_2012_is_covered_once_the_presentation_lag_is_read(
     revision_id, revision = next(iter(modelo.revisions.items()))
     windows = _record_design_windows()
 
-    compared, divergences = _revision_divergences(modelo.id, revision_id, revision, windows)
+    compared, divergences = _revision_divergences(
+        modelo.id, revision_id, revision, windows, _ejercicio_scoped_designs()
+    )
 
     assert compared
     assert divergences == []
@@ -336,8 +381,48 @@ def test_a_genuine_presentation_span_violation_is_still_detected() -> None:
     assert start == 2013, "the control assumes the real design starts in 2013; re-check the fixture if this moves"
     shrunk_windows = {**real_windows, "aeat-dr-720": (2014, end)}
 
-    compared, divergences = _revision_divergences(modelo.id, revision_id, revision, shrunk_windows)
+    compared, divergences = _revision_divergences(
+        modelo.id, revision_id, revision, shrunk_windows, _ejercicio_scoped_designs()
+    )
 
     assert compared
     assert divergences
     assert "2012" in divergences[0]
+
+
+def test_modelo_720_design_is_read_as_legal_effect_scoped_not_ejercicio_scoped() -> None:
+    """The named case that proves the classifier reads a declaration, not a convention.
+
+    ``aeat-dr-720`` is stamped 2013-02-01, and Orden HAP/72/2013's disposicion final
+    unica states first application to the declaracion informativa of ejercicio 2012.
+    So its window is the date the orden took effect, one calendar year AHEAD of the
+    earliest ejercicio it governs. Classifying it on the ejercicio axis would compare
+    ejercicio 2012 against a 2013 start and raise the exact false positive
+    :func:`test_modelo_720_ejercicio_2012_is_covered_once_the_presentation_lag_is_read`
+    exists to forbid.
+    """
+    assert "aeat-dr-720" not in _ejercicio_scoped_designs()
+
+    start, _end = _record_design_windows()["aeat-dr-720"]
+    assert start == 2013, "the reasoning above depends on the design starting a year after ejercicio 2012"
+
+
+def test_the_ejercicio_axis_classification_splits_the_catalogue_both_ways() -> None:
+    """Neither bucket may be empty, or the axis distinction decides nothing.
+
+    An all-ejercicio classification would silently restore a whole-catalogue
+    ejercicio comparison and re-raise every legal-effect design's lag; an empty one
+    would restore the whole-catalogue presentation comparison this replaced. Both
+    failures are invisible in the gate's own verdict, because either extreme still
+    produces a plausible-looking divergence list -- so they are asserted here rather
+    than inferred from the list's length.
+    """
+    windows = _record_design_windows()
+    scoped = _ejercicio_scoped_designs()
+
+    assert scoped <= set(windows), "the classifier named a design the window map does not carry"
+    assert scoped, "no design classified as ejercicio-scoped; the comparison collapsed to presentation-only"
+    assert set(windows) - scoped, (
+        "every design classified as ejercicio-scoped; the comparison collapsed to ejercicio-only and "
+        "Modelo 720's legal-effect window would be misread"
+    )

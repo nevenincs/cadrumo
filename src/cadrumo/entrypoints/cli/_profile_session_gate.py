@@ -2,14 +2,31 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from importlib import import_module
-from typing import Any
+from typing import TYPE_CHECKING, Any, Protocol
 
 import typer
 
 from ...core import ProfileSessionRefusalReason
 from ._command_spec import CommandSpec, ProfileAuthenticationPosture
+
+if TYPE_CHECKING:
+    from ._common import RequestedCliLeaf
+    from ._config._secure_input import MachineSecretSelection, ProfileSecretSelection
+
+
+class RootAuthenticator(Protocol):
+    """Exact callback seam from the neutral session gate to root authentication."""
+
+    def __call__(
+        self,
+        bucket_id: str,
+        root_selection: ProfileSecretSelection,
+        leaf_selection: MachineSecretSelection | None,
+        spec: CommandSpec,
+        arguments: Mapping[str, object],
+    ) -> None: ...
 
 CliRefusedBoundaryError = import_module(
     "cadrumo.entrypoints.cli._errors"
@@ -58,14 +75,14 @@ def activate_profile_session(
     ctx: typer.Context,
     *,
     posture: ProfileAuthenticationPosture,
-    root_selection: object | None,
-    leaf_selection: object | None,
+    root_selection: ProfileSecretSelection | None,
+    leaf_selection: MachineSecretSelection | None,
     spec: CommandSpec,
     arguments: Mapping[str, object],
     target_bucket_id: str | None,
     target_profile_label: str | None,
     command_path: tuple[str, ...],
-    authenticate_root: Callable[[str, object, object | None, CommandSpec, Mapping[str, object]], None],
+    authenticate_root: RootAuthenticator,
 ) -> None:
     """Apply write policy and exact-target session proof from parsed authority."""
     from ...adapters.persistence.storage import active_bucket_session_serves
@@ -138,14 +155,14 @@ def _resume_or_authenticate(
     ctx: typer.Context,
     *,
     bucket_id: str,
-    root_selection: object | None,
-    leaf_selection: object | None,
+    root_selection: ProfileSecretSelection | None,
+    leaf_selection: MachineSecretSelection | None,
     spec: CommandSpec,
     arguments: Mapping[str, object],
     bind_exact_target: bool,
-    authenticate_root: Callable[[str, object, object | None, CommandSpec, Mapping[str, object]], None],
+    authenticate_root: RootAuthenticator,
     target_profile_label: str | None,
-    requested_leaf: object,
+    requested_leaf: RequestedCliLeaf,
 ) -> None:
     from ...adapters.persistence.storage import active_bucket_session_serves
     from ...adapters.persistence.storage.errors import KeyringUnavailableError
