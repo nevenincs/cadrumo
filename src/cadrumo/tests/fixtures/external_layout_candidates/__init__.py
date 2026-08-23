@@ -13,6 +13,7 @@ import re
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Annotated, Literal
+from urllib.parse import urlsplit
 
 import pdfplumber
 from pdfminer.pdftypes import resolve1
@@ -92,6 +93,13 @@ class ExternalLayoutOfficialSourceEvidence(_FrozenStrictModel):
         candidate_pages = tuple(mapping.candidate_page for mapping in self.page_mapping)
         if len(candidate_pages) != len(set(candidate_pages)):
             raise ValueError("official page mapping must contain each candidate page once")
+        expected_hosts = (
+            frozenset({"sede.agenciatributaria.gob.es"})
+            if self.authority == "aeat"
+            else frozenset({"boe.es", "www.boe.es"})
+        )
+        if urlsplit(self.source_url).hostname not in expected_hosts:
+            raise ValueError(f"{self.authority} official source URL must use an official host")
         return self
 
 
@@ -219,7 +227,12 @@ class ExternalLayoutCandidate(_FrozenStrictModel):
             raise ValueError("candidate must carry exactly one of legacy authority_status or authority_adjudication")
         if adjudicated:
             assert self.authority_adjudication is not None
-            pair_render = self.authority_adjudication.official_base_derivation.pair_render
+            derivation = self.authority_adjudication.official_base_derivation
+            mapped_pages = frozenset(mapping.candidate_page for mapping in derivation.official_source.page_mapping)
+            expected_pages = frozenset(range(1, self.pdf.page_count + 1))
+            if mapped_pages != expected_pages:
+                raise ValueError("official page mapping must cover every candidate page exactly once")
+            pair_render = derivation.pair_render
             expected_counterpart = "fillable" if self.candidate_kind == "plain" else "plain"
             if pair_render.counterpart_kind != expected_counterpart:
                 raise ValueError(f"pair_render counterpart_kind must be {expected_counterpart!r}")
