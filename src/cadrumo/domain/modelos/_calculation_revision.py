@@ -615,11 +615,12 @@ class CalculationSourceRef(BaseModel):
 
     Attributes:
         resolver_id: Exact canonical resolver identity that produced this row.
-        source_kind: Free-form resolver source token (e.g. ``collectible_invoice``).
-            Always the token the resolver declared for the contributing source.
-        binding_source: The canonical :class:`BindingSourceKind` when
-            ``source_kind`` names a registry binding source; ``None`` for advisory
-            or non-binding provenance rows.
+        resolved_binding_source: Canonical binding source owned by the resolver.
+        contributor_source_kind: Upstream taxonomy token for this source node.
+        contributor_binding_source: Canonical :class:`BindingSourceKind` when
+            ``contributor_source_kind`` belongs to the binding taxonomy; ``None``
+            for an external or non-binding contributor.
+        lineage_role: Whether this row is the resolver-owned primary or supporting contributor.
         source_ref: Stable reference to the contributing source object
             (e.g. ``collectible_invoice:{invoice_id}``).
         fingerprint: Data-dependent digest of the contributing source object when
@@ -656,9 +657,14 @@ class CalculationSourceRef(BaseModel):
             contributor_kind = None
         if self.contributor_binding_source is None:
             if contributor_kind is not None:
-                raise ModeloValidationError("source provenance binding_source is required for a binding source kind")
+                raise ModeloValidationError(
+                    "source provenance contributor_binding_source is required when contributor_source_kind "
+                    "is a binding source kind",
+                )
         elif contributor_kind is not self.contributor_binding_source:
-            raise ModeloValidationError("source provenance binding_source must equal source_kind")
+            raise ModeloValidationError(
+                "source provenance contributor_binding_source must equal contributor_source_kind",
+            )
         if self.lineage_role is CalculationSourceLineageRole.PRIMARY:
             if self.parent_source_ref is not None:
                 raise ModeloValidationError("primary source provenance cannot have a parent")

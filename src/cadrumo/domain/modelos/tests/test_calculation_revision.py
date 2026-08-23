@@ -689,7 +689,7 @@ def test_persisted_source_ref_requires_a_coherent_explicit_binding_axis() -> Non
     }
     with pytest.raises(ValidationError):
         CalculationSourceRef.model_validate(payload)
-    with pytest.raises(ValidationError, match="must equal source_kind"):
+    with pytest.raises(ValidationError, match="must equal contributor_source_kind"):
         CalculationSourceRef.model_validate(
             {**payload, "contributor_binding_source": BindingSourceKind.PAYABLE_INVOICE},
         )

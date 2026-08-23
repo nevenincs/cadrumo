@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-23'
 body_schema: body-v1
-body_hash: 'sha256:d5f17d2442becc9fe9e33e2e9e4ab1ab7226bc918746056febfa0b2c979836d1'
+body_hash: 'sha256:0fdfdf069c57dba667ded3163950290c7b6cd8c20ab810c8c516f417feca3c6c'
 ---
 
 # `source-casilla-integration` plan
@@ -58,6 +58,7 @@ Define the typed candidate identity, evidence, ownership, disposition, expiry, a
 - [x] `W01.P01.S152` - classify the M720 foreign-asset composite as grounding-blocked until a typed unique resolved-asset identity or separately approved uniqueness-enforced key exists; `src/cadrumo/application/aggregation; .vault`.
 - [x] `W01.P01.S153` - make live connectivity authority accept exactly one resolver-matching primary and reject contributor-only, ambiguous, orphaned, drifted, or malformed provenance graphs; `src/cadrumo/application/registry`.
 - [x] `W01.P01.S154` - verify composite and direct provenance identity, encrypted round trips, mutation refusal, wallet lineage, foreign-asset blocking, and semantic sentinel non-duplication; `src/cadrumo`.
+- [x] `W01.P01.S155` - correct composite-provenance documentation and validation language identified by formal review; `src/cadrumo/domain/modelos`.
 - [ ] `W01.P01.S135` - replace the configurable proof fake with real authority and encrypted-revision mutation coverage; `src/cadrumo/application/registry/tests/test_source_connectivity_authority.py`.
 
 ### Phase `W01.P02` - derive the registry-side inventory
