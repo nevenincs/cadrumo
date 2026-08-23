@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:5512512c5597706a06f232eb0e70af113e50b66d819d068580ee4eed4a4cca10'
+body_hash: 'sha256:a9ff6c47e8327d32c5377a876d5b44d340ffbac4a65c59bb526904e3bcd50204'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -16987,3 +16987,80 @@ Three splits, now with their blockers correctly characterised:
 * **347** -- pairing proved, blocked only on the authoring volume above;
 * **322** -- genuinely blocked on a per-box reading of two sheets;
 * **200** -- 3462 casillas, its 2025 side already correct.
+
+## Tick: modelo 347 spans a SECOND re-layout, and the detector cannot see it
+
+Re-measured at tick start: authority CLEAN at `f152cdb075`.
+
+### A correction to last tick's optimism, found by checking the right pair
+
+Last tick proved modelo 347's 2008 and 2010 designs NEST, and concluded the
+split's pairing was unblocked. The proof holds. The conclusion drawn from it was
+too quick, because the revision being split cites the **2011** design, not 2010.
+
+Measured this tick: **2008 versus 2011 straddles** -- five on declarante, four on
+declarado. So the nesting result gives no route to reuse the existing 2011
+semantic mapping, and the chain had to break somewhere.
+
+### Where it breaks, and what that means
+
+Between 2010 and 2011. AEAT widened `IMPORTE TOTAL ANUAL DE LAS OPERACIONES` on
+the declarante from 15 bytes to 16 and shifted everything after it by one, so
+`NUMERO TOTAL DE INMUEBLES` moves 160 -> 161; the declarado shifts identically,
+`IMPORTE PERCIBIDO EN METALICO` moving 100 -> 101. Eleven fields straddle. The
+inmueble record is untouched.
+
+Revision `2008-2024` is valid 2008-01-01 to 2024-12-31 and cites the 2011
+design, so it covers filing years the 2010 design governs and writes them one
+byte out from position 145 onward.
+
+**The relayout gate reports only ONE boundary for this revision.** Its own
+message warns that "splitting at only the ones one signal saw leaves the rest
+live" -- and that is the situation, with the unseen boundary being this one. So
+modelo 347 needs THREE revisions, not the two its tracked row states.
+
+### Why the detector is blind here, stated precisely
+
+Its signals key on box numbers MOVING and on the field SET changing. Modelo
+347's designs print no bracketed box numbers at all -- established last tick --
+so the movement signal has nothing to key on. And a one-byte widening changes no
+description and adds no field, so the set signal sees the same fields before and
+after. The declarante field COUNTS are identical across the two designs.
+
+The module flags this class itself, as "unnumbered slot(s) re-described at an
+unchanged position and width ... INSTRUMENT LIMIT: this is the weakest signal in
+this module". This is that limit reached with a real displacement behind it.
+
+Straddling is the signal the module lacks and it works exactly where the others
+fail: it reads bytes, so it needs neither a box number nor a description change.
+Three ticks have now used it -- 347/2008-2010 (nests), 322/2022-2023 (straddles),
+347/2010-2011 (straddles) -- and it has separated the cases each time.
+
+### What was landed
+
+`test_modelo_347_second_undetected_boundary.py` pins the straddle on the two
+displaced records, the absence of one on the third, the one-byte widening as the
+MECHANISM (with the identical field counts that make a set-difference signal
+blind), and that the revision genuinely covers both designs' years so this is a
+live span rather than an abstract difference.
+
+The split-progress record now carries it beside modelo 347's row, together with
+the explicit correction that the row understates the work.
+
+### Verified
+
+* the new module: 6 passed; 9 passed with the split-progress module after the
+  amendment.
+* it bites: aligning the 2011 design to 2010 reds both straddle assertions and
+  the widening check, while the untouched-record check stays green.
+* authority loads CLEAN; ruff clean on both files.
+
+### Still open
+
+The three splits, and modelo 347's is now larger than recorded: three revisions,
+each needing its own semantic mapping since no two of its designs pair.
+
+The question this raises and does not answer: modelo 322 and modelo 200 were
+never checked for undetected boundaries of this shape. 322's designs DO carry
+box numbers, so its detector is not blind the same way; modelo 200's were not
+measured. Worth a pass before either split is planned.
