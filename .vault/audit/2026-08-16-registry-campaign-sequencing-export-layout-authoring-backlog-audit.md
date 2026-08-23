@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:83e7336303cb365c7717276d4c747a440a78722cf3b5bb22075afd6371653e6b'
+body_hash: 'sha256:0bb65658b18e0c0fbcffb5942fa2bb58e2b9ec66c9ec68e323277d284a0eb70f'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -18298,3 +18298,72 @@ was wrong.
 Nine of the remaining ten failures are the declared inventories; the tenth is
 modelo 220's label gap, still its author's. The run's single ERROR is this
 session's own `-p no:logging` flag, not a defect.
+
+## Tick: the key that will bind casillas to design fields, proved and bounded
+
+Re-measured at tick start: authority CLEAN at `81a1438fdd`.
+
+### What the four authorable layouts actually need
+
+Authoring a fixed-width layout means deciding which design field each casilla
+occupies. The cheap route is description similarity, which the grounding rule
+refuses as a route to box identity. The sound route is AEAT's own printed box
+number: the diseno tags a field `[920]` and the casilla declares
+`number = "920"`.
+
+Measured across the four revisions waiting on a layout, so the next authoring
+tick knows where that key holds:
+
+    modelo 840 / 2003-y-siguientes    108 digit-numbered casillas, 108 matched
+    modelo 390 / 2021                   9                           9
+    modelo 220 / 2024                1065                        1065
+    modelo 036 / 2025-02-03-y-sig.    304                         286
+
+Three are TOTAL. Every numbered casilla on modelo 840, 390/2021 and 220/2024 is
+printed by its own cited design, so their maps can be authored on evidence
+rather than resemblance.
+
+### Modelo 036's eighteen, explained rather than counted
+
+The shortfall is not scattered. It is six sucesor groups of three, and the cause
+is visible in the design: on `Pag. 9` AEAT tags ONLY the N.I.F. of each group --
+`[920]`, `[924]`, `[928]`, `[932]`, `[936]`, `[940]` -- and prints no number on
+that group's apellidos, percentage-of-liquidation or cuota fields. The registry
+numbers those three tagged+1, +2 and +3, uniformly across all six.
+
+The inference is plausible and may well be right: the boxes are consecutive on
+the printed form. It is simply NOT EVIDENCED by the cited diseno, and confirming
+it needs the AEAT form or its instructions rather than the record design. So it
+is recorded, not corrected -- filing-grade box identity this session cannot
+ground from the bundled corpus.
+
+What matters practically is that an authoring pass keying on the box number must
+treat those eighteen differently from the 286 the design prints, instead of
+discovering the gap by writing a layout on top of it.
+
+### Why modelo 840 was not authored this tick
+
+It is the smallest of the four -- 381 design fields, 121 casillas -- and its key
+is total, so it was the natural candidate. It is still multi-tick: no semantic
+map or render profile exists for the modelo, and its revision carries only nine
+sections. It has no bindings, no formulas, no deadline windows, no completeness
+manifest and no verification expectations, and the publication path demands a
+filing-complete revision rather than merely a rendered layout.
+
+### Verified
+
+* the new module: 5 passed -- the key asserted total on three modelos, modelo
+  036's exception pinned as a SHAPE (every missing number sits one, two or three
+  above a printed sucesor N.I.F. box) rather than as a tally, and separately
+  that every inferred number belongs to a `suc-` casilla;
+* it bites: removing one printed number from the design reds both halves by
+  name;
+* authority loads CLEAN, ruff clean.
+
+### Still open
+
+Unchanged in substance: four layouts to author, three splits needing per-box
+semantic mapping, nine worklist entries blocked on corpus or era, and two form
+diagrams needing AEAT acquisition. What moved is that three of the four layouts
+now have a proven, grounded key to author against, and the fourth has its gap
+measured and bounded.
