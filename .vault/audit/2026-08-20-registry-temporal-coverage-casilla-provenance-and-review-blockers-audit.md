@@ -4956,3 +4956,62 @@ letter numbers; 64 byte spans resolving exactly; 33 sheets tiling once. **Zero p
 **9992 of 11603 slots remain** across 99 of 134 numbered records; 1611 modelled, zero
 orphaned. The crédito accounting identity is still not *expressible* — `00152` and `00192`
 exist but T22003C01, the patrimonio neto, is unauthored, so there is no third term.
+
+## 2026-08-23 — T22003C01, and a correction that had not reached its third site
+
+### What landed
+
+Record **T22003C01** — the crédito *patrimonio neto*, closing the crédito balance sheet on
+`00229` TOTAL PATRIMONIO NETO Y PASIVO. **47 casillas**, revision 1774 → **1821**,
+thirty-six of 137 records. Suite: **identical FAILED list, zero regressions.**
+
+### The correction from two iterations ago had not reached the generator
+
+Five boxes here carry a **four-digit** number: `[0638]`–`[0642]`. The flat generator's
+pattern was still `\[(\d{5})\]`, so all five would have been read as *unnumbered* fields and
+then refused as unexplained exclusions.
+
+Two iterations ago the campaign established that AEAT's numbers on this modelo are not all
+five digits, and corrected **the coverage measurement and the corpus verifier** — but not
+the generator, because no record authored since had contained one.
+
+**A correction to how a corpus is read has to reach every place that reads it.** Fixing the
+two sites that happened to be in hand left a third live, and it stayed invisible until a
+record exercised it. The sweep was incomplete and *looked* complete for two iterations.
+
+Worth pairing with the earlier finding it descends from: the original defect was a pattern
+adopted at first contact that silently defined what counted as data. Correcting the pattern
+in the places that surfaced the problem is the natural move and is not the same as
+correcting it everywhere. **After a reading correction, the question is not "did I fix it?"
+but "what else reads this?"**
+
+All nine records already authored through the generator regenerate **byte-identically**
+under the widened pattern — so the change is behaviour-preserving where it does not apply,
+which is the only reason it could be made safely mid-campaign.
+
+### Widening digits did not widen to text
+
+`[parte eficaz]`, `[elemento cubierto]`, `[instrumento de cobertura]`, `[elementos no
+designados]`, `[participaciones no dominantes]` are AEAT's own qualifiers and stay in the
+labels verbatim. Only a bracket whose content is *entirely digits* is read as a number.
+
+### Two complete balance sheets, neither of which balances
+
+`00152` TOTAL ACTIVO and `00229` TOTAL PATRIMONIO NETO Y PASIVO are both declared, and
+nothing relates them — exactly as on the aseguradoras pages, where the same became true
+three iterations ago and nothing has related those either.
+
+The revision now holds **two complete balance sheets and no arithmetic at all**. That gap is
+widening as coverage grows, and it is the same gap every stamp has recorded; it is worth
+naming as a standing consequence rather than a per-record caveat.
+
+### Corpus check after the record landed
+
+1821 casillas, 41 fragments, 34 sheets: 1658 numeric box numbers printed by AEAT and none
+minted, 4 letter numbers, 64 byte spans resolving exactly, 34 sheets tiling once. **Zero
+problems.**
+
+### Scale
+
+**9945 of 11603 slots remain** across 98 of 134 numbered records; 1658 modelled, zero
+orphaned.
