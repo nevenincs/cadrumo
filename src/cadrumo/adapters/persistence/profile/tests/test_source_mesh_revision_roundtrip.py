@@ -24,9 +24,12 @@ See Also:
 
 from __future__ import annotations
 
+import traceback
+from collections.abc import Callable
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Any, Callable
+from pathlib import Path
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -39,6 +42,7 @@ from .....domain.calculations.registry import CasillaObservation
 from .....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
+    CalculationRevisionPersistenceError,
     CalculationRevisionState,
     CalculationSourceRef,
     derive_calculation_revision_id,
@@ -171,6 +175,17 @@ def test_row_source_identity_roundtrips_only_through_encrypted_revision(
 
     assert canary not in original.model_dump_json()
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
+    database_path = Path(str(secure_objects._engine.url.database))
+    wal_path = database_path.with_name(database_path.name + "-wal")
+    at_rest = database_path.read_bytes() + (wal_path.read_bytes() if wal_path.exists() else b"")
+    for plaintext in (
+        canary,
+        "3" * 64,
+        "collectible_invoice:inv-0001",
+        "payable_invoice:inv-0002",
+        "120.00",
+    ):
+        assert plaintext.encode() not in at_rest
     loaded = repository.load().get(original.calculation_revision_id)
 
     assert loaded is not None
@@ -205,6 +220,7 @@ def _duplicate_row_identity(document: dict[str, Any]) -> None:
 def test_row_source_identity_corruption_is_value_free(
     secure_objects: SecureObjectRepository,
     mutate: Callable[[dict[str, Any]], None],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     canary = "opaque-inventory-activity-canary"
     original = _revision(
@@ -223,14 +239,16 @@ def test_row_source_identity_corruption_is_value_free(
         mutate=mutate,
     )
 
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(CalculationRevisionPersistenceError) as exc_info:
         repository.load()
 
     exc = exc_info.value
-    assert type(exc).__name__ == "CalculationRevisionPersistenceError"
     assert exc.__cause__ is None
     assert exc.__context__ is None
-    assert canary not in f"{exc!r} {exc}"
+    rendered = "".join(traceback.format_exception(exc))
+    exposed = f"{exc!r} {exc} {getattr(exc, 'context', None)!r} {rendered} {caplog.text}"
+    for plaintext in (canary, "3" * 64, "120.00", "collectible_invoice:inv-0001"):
+        assert plaintext not in exposed
 
 
 def test_source_provenance_roundtrips_through_encrypted_revision(secure_objects: SecureObjectRepository) -> None:
