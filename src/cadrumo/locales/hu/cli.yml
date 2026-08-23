@@ -3284,7 +3284,6 @@ cli:
       help: Egyetlen főkönyvi tranzakció eseményleszármazásának megjelenítése.
       transaction_id_help: A vizsgálandó főkönyvi tranzakció azonosítója.
     update:
-      actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       amount_help: Új nem negatív összegmagnitúdó (teljes csere).
       counterparty_help: Új szerződő fél leírása.
       currency_help: Új háromjegyű ISO 4217 pénznemkód.

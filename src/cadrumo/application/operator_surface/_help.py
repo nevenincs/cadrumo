@@ -15,7 +15,7 @@ root should render the landing report or the overview status report.
 from __future__ import annotations
 
 from ...core.i18n import tr
-from ._models import HelpDocument, HelpEntry, HelpSection, HelpSurface, RootLandingReport
+from ._help_models import HelpDocument, HelpEntry, HelpSection, HelpSurface, RootLandingReport
 
 
 def build_help_document(surface: HelpSurface | str) -> HelpDocument:

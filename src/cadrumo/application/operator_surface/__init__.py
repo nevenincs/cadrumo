@@ -32,85 +32,12 @@ the consuming distribution, not to the base application.
 
 from __future__ import annotations
 
-from ._action_resolution import (
-    resolve_catalogue_action,
-    resolve_notice_action,
-)
-from ._calculation_workflows import (
-    ModeloCalculationRouteId,
-    SupportedModeloCalculationWorkflow,
-    SupportedModeloCalculationWorkflowCatalogue,
-    build_supported_modelo_calculation_workflow_catalogue,
-)
-from ._contract import (
-    ACCEPTED_ROOTS,
-    MOUNTED_COMMAND_FAMILIES,
-    SOURCE_KIND_ALIASES,
-    build_operator_surface_contract,
-    get_operator_surface_contract,
-    require_accepted_root,
-    resolve_source_kind_alias,
-)
-from ._crud_contract import (
-    CANONICAL_CRUD_VERBS,
-    BucketEventSuffix,
-    CrudContractCatalogue,
-    CrudVerb,
-    KeyValueVerb,
-    LifecycleStateVerb,
-    MutatingNounGroupContract,
-    NounGroupExceptionKind,
-    OrthogonalAxis,
-    event_suffix_for,
-)
-from ._crud_registry import BUILTIN_CRUD_CATALOGUE, get_builtin_catalogue
-from ._errors import OperatorSurfaceContractError
-from ._help import (
-    build_help_document,
-    build_root_landing_report,
-    render_help_text,
-    render_root_landing_text,
-)
-from ._manifest import (
-    CommandSchemaRef,
-    ExplicitExclusionInventoryRow,
-    InputSchemaInventoryRow,
-    LiveLeafInventoryRow,
-    ManifestActionResolution,
-    MountedFamilyInventoryRow,
-    OperatorSurfaceReconciliation,
-    ProfilePolicyInventoryRow,
-    ReconciledOperatorLeaf,
-    ReconciliationSurface,
-    ResolvedCatalogueAction,
-    ResolvedManifestActionProfile,
-    ResultSchemaInventoryRow,
-    SurfaceExposureInventoryRow,
-    reconcile_operator_surface_inventory,
-    resolve_action_catalogue,
-    resolve_manifest_action_profiles,
-)
-from ._models import (
-    FamilyMountState,
-    FilingStatus,
-    HelpDocument,
-    HelpEntry,
-    HelpSection,
-    HelpSurface,
-    LifecycleContract,
-    ManifestActionProfile,
-    ModeloLifecycleStep,
-    MountedCommandDomain,
-    MountedCommandFamily,
-    OperatorMutability,
-    OperatorSurfaceContract,
-    OperatorSurfaceLogFields,
-    RootLandingReport,
-    RootSurface,
-    RootSurfaceName,
-    ServiceOwner,
-    SourceKindAlias,
-)
+from importlib import import_module
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ._help import build_help_document, build_root_landing_report, render_help_text, render_root_landing_text
+    from ._help_models import HelpDocument, HelpEntry, HelpSection, HelpSurface, RootLandingReport
 
 __all__ = [
     "ACCEPTED_ROOTS",
@@ -180,3 +107,106 @@ __all__ = [
     "resolve_notice_action",
     "resolve_source_kind_alias",
 ]
+
+_EXPORT_MODULES = {
+    **dict.fromkeys(("resolve_catalogue_action", "resolve_notice_action"), "._action_resolution"),
+    **dict.fromkeys(
+        (
+            "ModeloCalculationRouteId",
+            "SupportedModeloCalculationWorkflow",
+            "SupportedModeloCalculationWorkflowCatalogue",
+            "build_supported_modelo_calculation_workflow_catalogue",
+        ),
+        "._calculation_workflows",
+    ),
+    **dict.fromkeys(
+        (
+            "ACCEPTED_ROOTS",
+            "MOUNTED_COMMAND_FAMILIES",
+            "SOURCE_KIND_ALIASES",
+            "build_operator_surface_contract",
+            "get_operator_surface_contract",
+            "require_accepted_root",
+            "resolve_source_kind_alias",
+        ),
+        "._contract",
+    ),
+    **dict.fromkeys(
+        (
+            "CANONICAL_CRUD_VERBS",
+            "BucketEventSuffix",
+            "CrudContractCatalogue",
+            "CrudVerb",
+            "KeyValueVerb",
+            "LifecycleStateVerb",
+            "MutatingNounGroupContract",
+            "NounGroupExceptionKind",
+            "OrthogonalAxis",
+            "event_suffix_for",
+        ),
+        "._crud_contract",
+    ),
+    **dict.fromkeys(("BUILTIN_CRUD_CATALOGUE", "get_builtin_catalogue"), "._crud_registry"),
+    "OperatorSurfaceContractError": "._errors",
+    **dict.fromkeys(
+        ("build_help_document", "build_root_landing_report", "render_help_text", "render_root_landing_text"),
+        "._help",
+    ),
+    **dict.fromkeys(("HelpDocument", "HelpEntry", "HelpSection", "HelpSurface", "RootLandingReport"), "._help_models"),
+    **dict.fromkeys(
+        (
+            "CommandSchemaRef",
+            "ExplicitExclusionInventoryRow",
+            "InputSchemaInventoryRow",
+            "LiveLeafInventoryRow",
+            "ManifestActionResolution",
+            "MountedFamilyInventoryRow",
+            "OperatorSurfaceReconciliation",
+            "ProfilePolicyInventoryRow",
+            "ReconciledOperatorLeaf",
+            "ReconciliationSurface",
+            "ResolvedCatalogueAction",
+            "ResolvedManifestActionProfile",
+            "ResultSchemaInventoryRow",
+            "SurfaceExposureInventoryRow",
+            "reconcile_operator_surface_inventory",
+            "resolve_action_catalogue",
+            "resolve_manifest_action_profiles",
+        ),
+        "._manifest",
+    ),
+    **dict.fromkeys(
+        (
+            "FamilyMountState",
+            "FilingStatus",
+            "LifecycleContract",
+            "ManifestActionProfile",
+            "ModeloLifecycleStep",
+            "MountedCommandDomain",
+            "MountedCommandFamily",
+            "OperatorMutability",
+            "OperatorSurfaceContract",
+            "OperatorSurfaceLogFields",
+            "RootSurface",
+            "RootSurfaceName",
+            "ServiceOwner",
+            "SourceKindAlias",
+        ),
+        "._models",
+    ),
+}
+
+
+def __getattr__(name: str) -> object:
+    """Resolve public contracts without importing unrelated operator domains."""
+    module_name = _EXPORT_MODULES.get(name)
+    if module_name is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    value = getattr(import_module(module_name, __name__), name)
+    globals()[name] = value
+    return value
+
+
+def __dir__() -> list[str]:
+    """Report eager and deferred public names."""
+    return sorted(set(__all__) | set(globals()))

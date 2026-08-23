@@ -21,6 +21,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _FORBIDDEN_PREFIXES = (
     "cadrumo.domain.calculations.registry",
     "cadrumo.adapters.persistence.storage",
+    "cadrumo_harness",
+    "cadrumo.entrypoints.tui",
     "cryptography",
     "keyring",
 )
@@ -62,6 +64,7 @@ def _probe(arguments: tuple[str, ...], *, locale: str) -> dict[str, object]:
     ("arguments", "expected_by_locale", "exit_code"),
     (
         (("--help",), {"es": "CADRUMO - flujo local", "en": "CADRUMO - local-first"}, 0),
+        (("config", "--help"), {"es": "aeat config", "en": "aeat config"}, 0),
         (("app", "--help"), {"es": "Operaciones de declaración fiscal", "en": "aeat app - operational tax work"}, 0),
         (("--version",), {"es": "CADRUMO ", "en": "CADRUMO "}, 0),
         (("app", "status"), {"es": "overview status", "en": "overview status"}, 2),
