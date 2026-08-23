@@ -21,7 +21,6 @@ from pydantic import BaseModel, ConfigDict, Field
 from cadrumo.application.operator_surface import (
     CommandSchemaRef,
     OperatorMutability,
-    build_operator_surface_manifest,
 )
 from cadrumo.core.errors import ErrorEnvelope
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION, Notice
@@ -29,6 +28,7 @@ from cadrumo.entrypoints.cli.command_api import VerbInputSchema, command_schema_
 
 from ._action_capabilities import build_mcp_action_input_schemas
 from ._annotations import McpAnnotations, annotations_for_command
+from ._capability_manifest import build_operator_surface_manifest
 from ._command_policy import CommandPolicyProjection, project_command_policy
 from ._dispatch import tool_name_for_command
 from ._result_thinning import thin_output_schema

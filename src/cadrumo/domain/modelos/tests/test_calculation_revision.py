@@ -22,6 +22,7 @@ from ....core import (
 )
 from ....core.resources import resources
 from ....tests.filing_evidence import regimen_simplificado_filing_evidence
+from ...calculations import RowSourceIdentity
 from ...calculations.registry import RelationId, resolve_m303_regimen_simplificado_snapshot
 from ...filing_evidence import FilingEvidenceReference
 from ...iva import (
@@ -150,6 +151,81 @@ def _base_id() -> str:
         filing_instance_evidence=None,
         source_provenance=(),
     )
+
+
+def test_row_source_identity_is_hashed_redacted_and_coordinate_checked() -> None:
+    created = datetime(2026, 8, 23, tzinfo=UTC)
+    key = ("inventory-operation-0181", 1)
+    identity = RowSourceIdentity(
+        source_kind=BindingSourceKind.INVENTORY,
+        source_row_identity="opaque-activity-canary",
+        fingerprint="a" * 64,
+    )
+    revision_id = derive_calculation_revision_id(
+        work_unit_id="a" * 64,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        row_binding_values={key[0]: {"1": "10.00"}},
+        row_source_identities={key: identity},
+        casilla_values={},
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+    revision = CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id="a" * 64,
+        state=CalculationRevisionState.BORRADOR,
+        row_binding_values={key[0]: {"1": "10.00"}},
+        row_source_identities={key: identity},
+        filing_instance_evidence=None,
+        source_provenance=(),
+        created_at=created,
+        updated_at=created,
+    )
+
+    assert "opaque-activity-canary" not in revision.model_dump_json()
+    secure_payload = revision.model_dump(mode="json", context={"secure_calculation_revision": True})
+    assert secure_payload["row_source_identities"] == [
+        {
+            "binding_id": key[0],
+            "row_index": 1,
+            "source_kind": "inventory",
+            "source_row_identity": "opaque-activity-canary",
+            "fingerprint": "a" * 64,
+        },
+    ]
+    changed = identity.model_copy(update={"fingerprint": "b" * 64})
+    assert derive_calculation_revision_id(
+        work_unit_id="a" * 64,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        row_binding_values={key[0]: {"1": "10.00"}},
+        row_source_identities={key: changed},
+        casilla_values={},
+        filing_instance_evidence=None,
+        source_provenance=(),
+    ) != revision_id
+
+    with pytest.raises(ValidationError, match="has no row binding value"):
+        orphan_id = derive_calculation_revision_id(
+            work_unit_id="a" * 64,
+            input_values_by_casilla_id={},
+            binding_overrides={},
+            row_source_identities={key: identity},
+            casilla_values={},
+            filing_instance_evidence=None,
+            source_provenance=(),
+        )
+        CalculationRevision(
+            calculation_revision_id=orphan_id,
+            work_unit_id="a" * 64,
+            state=CalculationRevisionState.BORRADOR,
+            row_source_identities={key: identity},
+            filing_instance_evidence=None,
+            source_provenance=(),
+            created_at=created,
+            updated_at=created,
+        )
 
 
 def test_calculation_revision_requires_explicit_source_provenance_even_when_empty() -> None:

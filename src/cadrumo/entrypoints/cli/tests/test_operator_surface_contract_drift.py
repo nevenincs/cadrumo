@@ -3,7 +3,7 @@
 The companion of :func:`test_every_cli_leaf_has_a_registered_schema`. That gate
 proves every CLI leaf has a registered JSON schema; this one proves the
 :class:`~cadrumo.application.operator_surface.OperatorSurfaceContract` — the source
-the operator capability manifest (and the MCP ``tools/list``) is built from —
+external command inventories are built from —
 declares *exactly* the mounted command families and their sub-verbs.
 
 Without this gate the contract is self-referential: the sibling

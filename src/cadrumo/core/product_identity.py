@@ -44,10 +44,6 @@ class ProductIdentity(NamedTuple):
     distribution: str
     cli_executable: str
     repository: str
-    mcp_server: str
-    mcp_executable: str
-    mcp_tool_prefix: str
-    mcp_resource_scheme: str
     plugin_identifier: str
     environment_prefix: str
     companion_distributions: tuple[str, str]
@@ -109,10 +105,6 @@ PRODUCT_IDENTITY: Final[ProductIdentity] = ProductIdentity(
     distribution="cadrumo",
     cli_executable="aeat",
     repository="nevenincs/cadrumo",
-    mcp_server="cadrumo",
-    mcp_executable="cadrumo-mcp",
-    mcp_tool_prefix="cadrumo",
-    mcp_resource_scheme="cadrumo",
     plugin_identifier="cadrumo",
     environment_prefix="CADRUMO_",
     companion_distributions=("cadrumo-data-manuals", "cadrumo-data-official"),

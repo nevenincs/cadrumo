@@ -69,7 +69,7 @@ def _complete_inventory() -> _ReconciliationInventory:
             ProfilePolicyInventoryRow(
                 subject_leaf_key="app.ledger.list",
                 classification="profile_bound_read",
-                should_expose_via_mcp=True,
+                should_expose_externally=True,
                 provenance="profile policy classification",
             ),
         ),
@@ -77,7 +77,7 @@ def _complete_inventory() -> _ReconciliationInventory:
             SurfaceExposureInventoryRow(
                 subject_leaf_key="app.ledger.list",
                 exposed=True,
-                provenance="MCP tool descriptor inventory",
+                provenance="external surface inventory",
             ),
         ),
         "exclusions": (),
@@ -99,13 +99,13 @@ def test_reconciliation_joins_all_surfaces_by_subject_and_uses_canonical_family_
     assert leaf.input_schema.required_input_names == ("period",)
 
 
-def test_reconciliation_requires_reasoned_authoritative_mcp_exclusion() -> None:
+def test_reconciliation_requires_reasoned_authoritative_external_exclusion() -> None:
     inventory = _complete_inventory()
     inventory["profile_policies"] = (
         ProfilePolicyInventoryRow(
             subject_leaf_key="app.ledger.list",
             classification="operator_only",
-            should_expose_via_mcp=False,
+            should_expose_externally=False,
             provenance="profile policy classification",
         ),
     )
@@ -113,11 +113,11 @@ def test_reconciliation_requires_reasoned_authoritative_mcp_exclusion() -> None:
         SurfaceExposureInventoryRow(
             subject_leaf_key="app.ledger.list",
             exposed=False,
-            provenance="MCP tool descriptor inventory",
+            provenance="external surface inventory",
         ),
     )
 
-    with pytest.raises(OperatorSurfaceContractError, match="silent MCP exclusion"):
+    with pytest.raises(OperatorSurfaceContractError, match="silent external-surface exclusion"):
         reconcile_operator_surface_inventory(**inventory)
 
     inventory["exclusions"] = (
@@ -126,7 +126,7 @@ def test_reconciliation_requires_reasoned_authoritative_mcp_exclusion() -> None:
             surface=ReconciliationSurface.SURFACE_EXPOSURE,
             reason="operator-only policy class",
             authority="profile-policy ADR",
-            provenance="MCP policy projection",
+            provenance="external policy projection",
         ),
     )
     report = reconcile_operator_surface_inventory(**inventory)
@@ -167,7 +167,7 @@ def test_reconciliation_accounts_for_the_root_status_callback_without_a_mounted_
         ProfilePolicyInventoryRow(
             subject_leaf_key="root.status",
             classification="root_status",
-            should_expose_via_mcp=True,
+            should_expose_externally=True,
             provenance="profile policy classification",
         ),
     )
@@ -176,7 +176,7 @@ def test_reconciliation_accounts_for_the_root_status_callback_without_a_mounted_
         SurfaceExposureInventoryRow(
             subject_leaf_key="root.status",
             exposed=True,
-            provenance="MCP tool descriptor inventory",
+            provenance="external surface inventory",
         ),
     )
     inventory["exclusions"] = (
@@ -346,7 +346,7 @@ def test_reconciliation_rejects_silent_missing_surface_and_policy_exposure_contr
         SurfaceExposureInventoryRow(
             subject_leaf_key="app.ledger.list",
             exposed=False,
-            provenance="MCP tool descriptor inventory",
+            provenance="external surface inventory",
         ),
     )
     inventory["exclusions"] = (
@@ -358,7 +358,7 @@ def test_reconciliation_rejects_silent_missing_surface_and_policy_exposure_contr
             provenance="test inventory",
         ),
     )
-    with pytest.raises(OperatorSurfaceContractError, match="MCP exposure contradicts profile policy"):
+    with pytest.raises(OperatorSurfaceContractError, match="external exposure contradicts profile policy"):
         reconcile_operator_surface_inventory(**inventory)
 
 

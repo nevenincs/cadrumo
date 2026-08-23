@@ -1,6 +1,6 @@
 """Runtime corpus-search service: provision the index and run grounding search.
 
-The MCP console tools and resources consume grounding through one service
+External tools and resources consume grounding through one service
 entry, :func:`search_corpus`, so the protocol layer never re-derives the
 retrieval wiring. On first use the lexical index is built once from the
 bundled corpus into an app-controlled cache under the Settings storage root

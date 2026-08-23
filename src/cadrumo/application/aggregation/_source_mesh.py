@@ -43,8 +43,9 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.decimal import coerce_decimal
 from ...core.errors import CoreValidationError
 from ...core.i18n import tr
-from ...core.identity import BucketId, ContentDigest, SnapshotId, WorkUnitId
+from ...core.identity import BucketId, SnapshotId, WorkUnitId
 from ...core.logging import get_logger
+from ...domain.calculations import RowBindingKey, RowSourceIdentity
 from ...domain.calculations.registry import (
     BindingId,
     LegalRefId,
@@ -56,32 +57,9 @@ from ...domain.calculations.registry import (
 from ...domain.modelos import M303RegimenSimplificadoAnnualSummaryHandoff, ModeloDetailRow
 from ._errors import AggregationValidationError, t
 
-RowBindingKey = tuple[BindingId, int]
 RowBindingValue = str | Decimal
 
 _ROW_BINDING_VALUES = TypeAdapter(dict[RowBindingKey, RowBindingValue])
-
-
-class RowSourceIdentity(BaseModel):
-    """Opaque source identity bound to one row-binding coordinate.
-
-    The raw identity is encrypted persistence state and is deliberately omitted
-    from ordinary model representations.  The fingerprint remains visible as
-    the safe correlation handle for diagnostics and review surfaces.
-    """
-
-    model_config = ConfigDict(**{**_STRICT_FROZEN, "hide_input_in_errors": True})
-
-    source_kind: BindingSourceKind
-    source_row_identity: str = Field(min_length=1, max_length=256, repr=False)
-    fingerprint: ContentDigest
-
-    @field_validator("source_row_identity")
-    @classmethod
-    def _source_row_identity_is_canonical(cls, value: str) -> str:
-        if value != value.strip() or any(ord(character) < 32 for character in value):
-            raise SourceMeshError("aggregation.source_mesh.errors.row_source_identity_invalid")
-        return value
 
 
 _ROW_SOURCE_IDENTITIES = TypeAdapter(dict[RowBindingKey, RowSourceIdentity])

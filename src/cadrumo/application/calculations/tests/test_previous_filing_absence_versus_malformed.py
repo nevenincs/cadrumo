@@ -82,14 +82,8 @@ def test_absent_previous_filing_produces_the_same_unsatisfied_result_regardless_
     assert without_unsatisfied == with_unsatisfied
 
 
-def test_a_matched_but_incomplete_previous_filing_observation_still_refuses(tmp_path: Path) -> None:
-    """A FOUND filing missing a required source casilla is malformed, not absent, and still refuses.
-
-    The source-casilla completeness check is genuinely structural: the
-    binding declares four source casillas to sum, and a stored Modelo 100
-    observation carrying only one of them is not the same defect as no
-    observation at all.
-    """
+def test_a_matched_previous_filing_resolves_from_its_applicable_source_casilla(tmp_path: Path) -> None:
+    """The canonical ``y/o`` binding sums whichever applicable M100 source is observed."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         snapshot = _m130_snapshot()
         repository = CalculationObservationRepository()
@@ -103,7 +97,25 @@ def test_a_matched_but_incomplete_previous_filing_observation_still_refuses(tmp_
             repository.prepare_observation_envelope(incomplete_observation, source_kind="app_filing"),
         )
 
-        with pytest.raises(RegistryValidationError, match="requires observed casilla"):
+        report = resolve_bindings_from_local_store(snapshot, repository=repository)
+
+    assert report.binding_values[_BINDING_ID] == Decimal("1")
+
+
+def test_a_matched_previous_filing_with_no_declared_source_casilla_still_refuses(tmp_path: Path) -> None:
+    """Optional candidates cannot turn a structurally unrelated observation into a silent zero."""
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        snapshot = _m130_snapshot()
+        repository = CalculationObservationRepository()
+        unrelated_observation = registry_grounded_modelo_observation(
+            modelo="100",
+            filing_year=_M100_FILING_YEAR,
+            period="0A",
+            casilla_values={validated_casilla_id("0670", surface="test fixture"): Decimal("1")},
+        )
+        repository.save(repository.prepare_observation_envelope(unrelated_observation, source_kind="app_filing"))
+
+        with pytest.raises(RegistryValidationError, match="requires at least one observed source casilla"):
             resolve_bindings_from_local_store(snapshot, repository=repository)
 
 

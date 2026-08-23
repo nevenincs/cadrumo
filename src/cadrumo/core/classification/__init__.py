@@ -136,7 +136,7 @@ class RetentionPolicy(BaseModel):
     simply connect this field to a caller.
 
     The retention that does ship -- LLM usage and run telemetry pruning,
-    MCP session-file pruning -- runs on its own ``Settings`` bounds and
+    external session-file pruning -- runs on its own consumer-owned bounds and
     never consults this policy. Their working retention is not evidence
     that these two fields do anything.
 

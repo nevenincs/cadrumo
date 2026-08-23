@@ -38,6 +38,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from pydantic import ValidationError
+
 from ....core import Modelo
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.identity import SubjectTaxId
@@ -108,6 +110,7 @@ class CalculationRevisionCatalogueRepository:
             definition=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
             model_type=CalculationRevisionCatalogue,
             empty_document=CalculationRevisionCatalogue,
+            serialization_context={"secure_calculation_revision": True},
         )
 
     @property
@@ -186,10 +189,24 @@ class CalculationRevisionCatalogueRepository:
         if record is None:
             return CalculationRevisionCatalogue()
         aggregate_context = self._calculation_revision_aggregate_context()
-        envelope = Envelope[CalculationRevisionCatalogue].model_validate_json(
-            record.payload.decode(UTF_8_ENCODING),
-            context={CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY: aggregate_context},
-        )
+        envelope: Envelope[CalculationRevisionCatalogue] | None = None
+        validation_failed = False
+        try:
+            envelope = Envelope[CalculationRevisionCatalogue].model_validate_json(
+                record.payload.decode(UTF_8_ENCODING),
+                context={
+                    CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY: aggregate_context,
+                    "secure_calculation_revision": True,
+                },
+            )
+        except ValidationError:
+            validation_failed = True
+        if validation_failed or envelope is None:
+            raise CalculationRevisionPersistenceError(
+                "calculation-revision catalogue payload is invalid",
+                translated_message=_CALCULATION_PERSISTENCE_MESSAGE,
+                context={"reason": "invalid_payload"},
+            )
         if not inner_envelope_classification_is_expected(envelope.classification, _CALCULATION_CATALOGUE_SENSITIVITY):
             _LOGGER.error(
                 "calculation-revision catalogue classification mismatch",

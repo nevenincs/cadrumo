@@ -43,7 +43,17 @@ def bootstrap_argv(
         if profile_handle is not None:
             profile_descriptor = descriptor_from_inherited_handle(profile_handle)
         if secrets_handle is not None:
-            leaf_descriptor = descriptor_from_inherited_handle(secrets_handle)
+            # One HANDLE named at both scopes represents one selected backing
+            # channel. Convert it exactly once so parsed dispatch sees the same
+            # CRT descriptor number and can refuse the cross-scope collision
+            # before either scope reads it. Opening ownership over the same
+            # HANDLE twice produces two descriptor numbers and is also an
+            # invalid double-ownership relationship.
+            leaf_descriptor = (
+                profile_descriptor
+                if profile_handle is not None and secrets_handle == profile_handle
+                else descriptor_from_inherited_handle(secrets_handle)
+            )
     except Exception:
         if profile_descriptor is not None:
             os.close(profile_descriptor)
@@ -73,9 +83,11 @@ def main() -> None:
         secrets_handle=parsed.secrets_handle,
         command=command,
     )
-    descriptors = [
-        int(argv[argv.index(option) + 1]) for option in ("--profile-secrets-fd", "--secrets-fd") if option in argv
-    ]
+    descriptors = list(
+        dict.fromkeys(
+            int(argv[argv.index(option) + 1]) for option in ("--profile-secrets-fd", "--secrets-fd") if option in argv
+        )
+    )
     sys.argv[:] = argv
     from .._cli_main import main as cli_main
 

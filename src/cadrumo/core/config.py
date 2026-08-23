@@ -493,10 +493,6 @@ class Settings(CadrumoLlmSettings):
             "(normalised text keyed by content fingerprint)"
         ),
     )
-    cadrumo_mcp_telemetry_dir: Path = Field(
-        default=Path("telemetry"),
-        description=("Directory for MCP session trajectory telemetry (one file per session, pruned by age and count)"),
-    )
     cadrumo_corpus_search_cache_dir: Path = Field(
         default=Path("cache") / "corpus-search",
         description=(
@@ -779,7 +775,7 @@ class Settings(CadrumoLlmSettings):
 
     # ── Remote telemetry: opt-in consent posture ────────────────────────────
     # Default and only-acceptable-for-serious-use posture is fully local: every
-    # existing telemetry primitive (LLM run-timing, MCP session trajectory) is
+    # existing local telemetry primitive is
     # written to encrypted secure storage or a local JSONL file and never
     # contacts a network endpoint. Remote telemetry is a deliberate, narrow,
     # opt-in exception. It shares the evidence gate's shape above -- gestor bar
@@ -1246,7 +1242,6 @@ class Settings(CadrumoLlmSettings):
         "cadrumo_llm_cache_dir",
         "cadrumo_llm_usage_dir",
         "cadrumo_llm_run_telemetry_dir",
-        "cadrumo_mcp_telemetry_dir",
         "cadrumo_submissions_dir",
         "cadrumo_workflow_runs_dir",
         "cadrumo_drafts_dir",
@@ -1305,7 +1300,7 @@ def _active_profile_pointer_fingerprint() -> tuple[object, ...]:
     ``active-profile`` pointer file and derives the bucket's database route
     from it. That makes the pointer a construction INPUT, and it moves
     whenever ``config login``/``logout`` writes it — inside a live process,
-    for a long-running TUI or MCP session.
+    for a long-running interactive or external session.
 
     Holding one settings instance across such a switch would keep serving the
     previous profile's database route, so the pointer's identity is folded

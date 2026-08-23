@@ -29,10 +29,11 @@ from pydantic import BaseModel, ConfigDict
 
 from cadrumo.application.operator_surface import (
     MountedCommandDomain,
-    build_operator_surface_manifest,
 )
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION
 from cadrumo.entrypoints.cli.command_api import is_exposable_command
+
+from ._capability_manifest import build_operator_surface_manifest
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 

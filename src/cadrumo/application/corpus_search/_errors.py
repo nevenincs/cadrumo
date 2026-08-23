@@ -7,7 +7,7 @@ rather than collapsing into the generic ``INTERNAL`` unexpected-boundary path.
 Each class binds one registered ``ErrorCode`` (declared in
 ``core.errors.registry._application_part1``) whose ``message_key`` supplies the
 localized envelope message, and the specifics ride on ``context`` — the same
-contextual detail the MCP tool layer projects onto the envelope (the offending
+contextual detail an external adapter may project onto an envelope (the offending
 query/limit/ref). The condition itself travels as a ``reason`` discriminant
 rather than as a sentence: a free-form constructor message would be preferred
 by ``str(exc)`` over the registered key, so it would reach tracebacks, logs and

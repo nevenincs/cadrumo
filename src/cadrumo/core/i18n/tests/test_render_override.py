@@ -85,13 +85,13 @@ def test_stale_product_identity_normalises_without_corrupting_machine_or_authori
     rendered = normalise_product_identity_references(
         "Cadrumo prepares the draft for AEAT; run cadrumo\n"
         "app modelo work calculate or cadrumo manual fetch. Install cadrumo; "
-        "launch cadrumo-mcp; read cadrumo://status; set CADRUMO_OUTPUT_LANGUAGE.",
+        "launch cadrumo-helper; read cadrumo://status; set CADRUMO_OUTPUT_LANGUAGE.",
     )
 
     assert rendered == (
         "Cadrumo prepares the draft for AEAT; run aeat\n"
         "app modelo work calculate or aeat manual fetch. Install cadrumo; "
-        "launch cadrumo-mcp; read cadrumo://status; set CADRUMO_OUTPUT_LANGUAGE."
+        "launch cadrumo-helper; read cadrumo://status; set CADRUMO_OUTPUT_LANGUAGE."
     )
 
 

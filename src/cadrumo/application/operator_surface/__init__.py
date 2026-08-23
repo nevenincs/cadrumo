@@ -26,19 +26,8 @@ landing surfaces are exposed through :func:`build_help_document`,
 :class:`OperatorSurfaceContractError` path shared with
 :func:`require_accepted_root`.
 
-The agent-facing capability manifest is assembled by
-:func:`build_operator_surface_manifest` from the cached
-:class:`OperatorSurfaceContract` plus CLI-owned JSON schema references. The
-application layer owns the command contract and mutability taxonomy; entrypoint
-adapters own rendering, command-tree traversal, and schema-registry enumeration.
-
-See Also:
-    ``cadrumo_harness.mcp``
-        Tool-exposure entrypoint that consumes the same manifest without
-        duplicating the operator-surface contract.
-    :mod:`core.json_contract`
-        CLI result-schema registry supplied to the manifest by entrypoint
-        adapters.
+Consumer-specific projections of these protocol-neutral contracts belong to
+the consuming distribution, not to the base application.
 """
 
 from __future__ import annotations
@@ -89,7 +78,6 @@ from ._manifest import (
     LiveLeafInventoryRow,
     ManifestActionResolution,
     MountedFamilyInventoryRow,
-    OperatorSurfaceManifest,
     OperatorSurfaceReconciliation,
     ProfilePolicyInventoryRow,
     ReconciledOperatorLeaf,
@@ -98,7 +86,6 @@ from ._manifest import (
     ResolvedManifestActionProfile,
     ResultSchemaInventoryRow,
     SurfaceExposureInventoryRow,
-    build_operator_surface_manifest,
     reconcile_operator_surface_inventory,
     resolve_action_catalogue,
     resolve_manifest_action_profiles,
@@ -160,7 +147,6 @@ __all__ = [
     "OperatorSurfaceContract",
     "OperatorSurfaceContractError",
     "OperatorSurfaceLogFields",
-    "OperatorSurfaceManifest",
     "OperatorSurfaceReconciliation",
     "OrthogonalAxis",
     "ProfilePolicyInventoryRow",
@@ -179,7 +165,6 @@ __all__ = [
     "SurfaceExposureInventoryRow",
     "build_help_document",
     "build_operator_surface_contract",
-    "build_operator_surface_manifest",
     "build_root_landing_report",
     "build_supported_modelo_calculation_workflow_catalogue",
     "event_suffix_for",

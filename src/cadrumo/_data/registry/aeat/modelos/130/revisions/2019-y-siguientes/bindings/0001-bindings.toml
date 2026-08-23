@@ -37,13 +37,14 @@ required_text = [
 # 1T->empty/absent-by-design), bounded by max_year_delta = 0. The
 # prior_pagos_fraccionados aggregation computes
 # SUM max(0, casilla 07_q) - SUM casilla 16_q over those quarters: the
-# per-quarter positive-part (a negative prior 07 contributes 0) and the
-# casilla-16 minoracion are both load-bearing. Casilla 07 = 04 - 05 - 06
-# reads the populated casilla 05 unchanged.
+# per-quarter positive-part (a negative prior 07 contributes 0) and any
+# observed casilla-16 minoracion. The registry presence policy requires 07;
+# an absent 16 is treated as zero and surfaced by the application advisory.
+# Casilla 07 = 04 - 05 - 06 reads the populated casilla 05 unchanged.
 [[revisions."2019-y-siguientes".bindings]]
 id = "modelo-130-pagos-fraccionados-anteriores"
 source = "previous_filing"
-selector = { source_modelo = "130", source_casilla_ids = ["07", "16"], prior_quarter_expanding_span = true, max_year_delta = 0 }
+selector = { source_modelo = "130", source_casilla_ids = ["07", "16"], required_source_casilla_ids = ["07"], prior_quarter_expanding_span = true, max_year_delta = 0 }
 aggregation = { op = "prior_pagos_fraccionados" }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions"]

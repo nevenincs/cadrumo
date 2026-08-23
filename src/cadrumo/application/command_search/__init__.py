@@ -1,6 +1,6 @@
 """Lexical discovery search over the Cadrumo command surface.
 
-The MCP console advertises only an orientation core by default; the
+External command browsers may advertise only an orientation core by default; the
 long-tail verb universe is reached through the ``search`` meta-tool. That
 search must bridge the operator's natural vocabulary to the command's own
 tokens, which a naive token-substring scorer cannot. This package builds a

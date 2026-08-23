@@ -30,7 +30,7 @@ __all__ = ["telemetry_emit_permitted"]
 def telemetry_emit_permitted(settings: Settings, *, acknowledged: bool) -> bool:
     """Whether a remote telemetry emission is permitted for THIS invocation.
 
-    All local telemetry (LLM run-timing, MCP session trajectory) stays
+    All local telemetry stays
     unconditional and unaffected by this gate; it governs only the remote
     exception. A remote emission is permitted only when every one of the
     following holds:

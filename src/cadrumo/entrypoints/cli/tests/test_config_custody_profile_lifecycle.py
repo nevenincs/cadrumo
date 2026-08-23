@@ -363,7 +363,7 @@ def test_root_and_leaf_stdin_collision_refuses_before_fresh_tree_mutation(tmp_pa
 
     output = _combined_output(result)
     assert result.returncode == 2, output
-    assert "collision" in output.lower()
+    assert "cannot carry both" in output.lower()
     assert "json" not in output.lower()
     assert not tmp_path.exists() or tuple(tmp_path.iterdir()) == ()
 

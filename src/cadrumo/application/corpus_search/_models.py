@@ -9,8 +9,8 @@ path, document id, permalink) is contract, not decoration.
 See Also:
     :func:`~application.corpus_search.search_corpus`
         Runtime service that returns :class:`~application.corpus_search.RetrievalResponse`.
-    ``cadrumo_harness.mcp._corpus_tools.corpus_search_payload_from_response``
-        MCP transport mapper that preserves the typed retrieval provenance.
+    External adapters may project this response while preserving its typed
+    retrieval provenance.
 """
 
 from __future__ import annotations

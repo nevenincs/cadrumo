@@ -117,6 +117,10 @@ aggregation:
       unsupported_period: Periodo de modelo no soportado para la agregación del libro.
   oss_ioss:
     errors:
+      exterior_rate_kind_unsupported: El régimen exterior de la ventanilla única sólo
+        admite servicios al tipo general o reducido del Estado miembro de consumo.
+        La observación aportada declara otro tipo de gravamen, que no puede agregarse
+        en este régimen.
       invoice_line_currency_unconverted: Una línea de factura OSS/IOSS está denominada
         en moneda extranjera sin tipo de cambio a euros resuelto, por lo que no puede
         declararse en este modelo.
@@ -198,13 +202,39 @@ aggregation:
         contener tipos de fuente en blanco.
       owned_sources_duplicate: Las fuentes propiedad del mallado de fuentes deben
         ser únicas.
+      provenance_binding_source_mismatch: El tipo de origen declarado en la fila de
+        procedencia no coincide con el origen del vínculo al que dice pertenecer.
+        Los dos deben nombrar el mismo origen para que la trazabilidad sea comprobable.
+      provenance_binding_source_missing: La fila de procedencia declara un tipo de
+        origen de vínculo reconocido pero no indica a qué vínculo corresponde. Un
+        origen reconocible sin vínculo declarado deja el valor sin trazabilidad.
+      provenance_contributor_missing_parent: Una fila de procedencia contribuyente
+        debe declarar la fila primaria de la que procede. Sin ella, la aportación
+        queda desligada del valor al que contribuye.
+      provenance_contributor_parent_missing: Una fila contribuyente señala como fila
+        madre una referencia que no figura entre las filas primarias declaradas. La
+        cadena de procedencia apunta a un origen inexistente.
+      provenance_primary_has_parent: 'Una fila de procedencia primaria no puede declarar
+        una fila madre: la fila primaria es el origen del que dependen las demás.'
+      provenance_primary_ref_ambiguous: Dos filas de procedencia primarias comparten
+        la misma referencia de origen, de modo que una fila contribuyente no puede
+        determinar de cuál de ellas procede.
+      provenance_resolver_mismatch: Alguna fila de procedencia nombra un resolutor
+        distinto del que produjo la resolución. Todas las filas deben atribuirse al
+        mismo resolutor que firma el resultado.
       relation_provenance_incomplete: La procedencia de la relación debe incluir modelo
         origen, ejercicio, periodos, casillas, referencias legales y referencias de
         origen.
+      reserved_composite_resolver_id: El identificador de resolutor indicado está
+        reservado para las resoluciones compuestas y no puede usarse en una resolución
+        simple.
       row_binding_index_invalid: 'Error interno: el índice de fila de la vinculación
         debe ser mayor o igual que 1.'
       row_binding_value_invalid: 'Error interno: el valor decimal de la vinculación
         de fila no es válido.'
+      row_source_identity_coordinate_mismatch: Toda coordenada de identidad de fila
+        debe corresponder a un valor de vínculo presente en la propia fila. Se ha
+        declarado una coordenada que la fila no aporta.
       source_transaction_ids_blank: Los identificadores de transacción del mallado
         de fuentes no pueden contener blancos.
       source_transaction_ids_duplicate: Los identificadores de transacción del mallado

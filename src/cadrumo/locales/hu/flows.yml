@@ -184,6 +184,7 @@ flows:
           donativo_donor: Adományozó
           foreign_asset: Külföldi eszköz
           gasto193_contributor: Adózónkénti költségek (193-as modelo)
+          inventory: Készlet
           iva_compensation_annual_partition: Éves áfakompenzáció
           iva_wallet_decision: Áfaegyenleg-döntés
           ledger_impatriado_income_aggregation: Bevándorló jövedelmek összesítése

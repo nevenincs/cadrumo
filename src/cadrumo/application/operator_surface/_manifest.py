@@ -1,20 +1,4 @@
-"""Operator-surface manifest: the agent-facing capability catalogue.
-
-Projects the backend-owned :class:`OperatorSurfaceContract` together with the
-CLI's registered JSON command-result schema keys into a single machine-readable
-:class:`OperatorSurfaceManifest`. This is the capability catalogue an LLM
-operator reads to learn the two-root command tree, each command family's intent
-and :class:`~application.operator_surface.OperatorMutability`, the modelo
-``CALCULATE -> VERIFY -> FILE`` lifecycle, and the per-command result-schema
-reference. It is also the natural source a tool-exposure server consumes for its
-tool list.
-
-The contract half is owned here in the application layer. The
-``command_schemas`` half is the CLI's own ``--json`` result-schema registry, an
-entrypoint-layer concern; the CLI adapter enumerates it and injects it into
-:func:`build_operator_surface_manifest`, so this module never imports the CLI
-schema registry and the hexagonal direction is preserved.
-"""
+"""Protocol-neutral reconciliation of declared and live command contracts."""
 
 from __future__ import annotations
 
@@ -23,9 +7,8 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ..operator_actions import ActionCatalogue, ActionCatalogueEntry
-from ._contract import get_operator_surface_contract
 from ._errors import OperatorSurfaceContractError
-from ._models import ManifestActionProfile, MountedCommandFamily, OperatorSurfaceContract
+from ._models import ManifestActionProfile, MountedCommandFamily
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -55,7 +38,7 @@ class ReconciliationSurface(StrEnum):
     """A projection that must account for every live command identity.
 
     The values name data feeds, rather than implementation modules, so the
-    application-owned reconciliation stays independent of the Click and MCP
+    application-owned reconciliation stays independent of entrypoint and consumer
     adapters that collect the inventory.
     """
 
@@ -194,13 +177,13 @@ class MountedFamilyInventoryRow(BaseModel):
 
 
 class ProfilePolicyInventoryRow(BaseModel):
-    """One leaf's profile-policy classification and required MCP exposure."""
+    """One leaf's profile-policy classification and external exposure rule."""
 
     model_config = _STRICT_FROZEN
 
     subject_leaf_key: str = Field(min_length=1)
     classification: str = Field(min_length=1)
-    should_expose_via_mcp: bool
+    should_expose_externally: bool
     provenance: str = Field(min_length=1)
 
     @field_validator("classification", "provenance")
@@ -214,8 +197,7 @@ class SurfaceExposureInventoryRow(BaseModel):
 
     Named for the SUBJECT, not for one consumer: the decision is whether this
     CLI leaf may be exposed on an external operator surface at all, computed
-    by ``is_exposable_command`` over cadrumo's own command tree. The MCP
-    harness is one such surface and does not own the question.
+    by the command tree's protocol-neutral exposure policy.
     """
 
     model_config = _STRICT_FROZEN
@@ -616,25 +598,25 @@ def _reconcile_surface_exposure(
     exclusions: dict[tuple[str, ReconciliationSurface], ExplicitExclusionInventoryRow],
     diagnostics: list[str],
 ) -> SurfaceExposureInventoryRow | None:
-    """Require attributable MCP absence and enforce the profile exposure policy."""
-    mcp_exclusion = exclusions.get((subject_leaf_key, ReconciliationSurface.SURFACE_EXPOSURE))
+    """Require attributable absence and enforce the profile exposure policy."""
+    exposure_exclusion = exclusions.get((subject_leaf_key, ReconciliationSurface.SURFACE_EXPOSURE))
     if surface_exposure is None:
-        if mcp_exclusion is None:
+        if exposure_exclusion is None:
             diagnostics.append(
                 f"missing surface_exposure accounting for {subject_leaf_key}; explicit exclusion required"
             )
     elif surface_exposure.exposed:
-        if mcp_exclusion is not None:
+        if exposure_exclusion is not None:
             diagnostics.append(f"surface_exposure is both exposed and excluded for {subject_leaf_key}")
-    elif mcp_exclusion is None:
-        diagnostics.append(f"silent MCP exclusion for {subject_leaf_key}; reason and authority required")
+    elif exposure_exclusion is None:
+        diagnostics.append(f"silent external-surface exclusion for {subject_leaf_key}; reason and authority required")
 
     if isinstance(profile_policy, ProfilePolicyInventoryRow):
         observed_exposure = surface_exposure.exposed if surface_exposure is not None else False
-        if profile_policy.should_expose_via_mcp != observed_exposure:
+        if profile_policy.should_expose_externally != observed_exposure:
             diagnostics.append(
-                f"MCP exposure contradicts profile policy for {subject_leaf_key}: "
-                f"expected {profile_policy.should_expose_via_mcp}, observed {observed_exposure}"
+                f"external exposure contradicts profile policy for {subject_leaf_key}: "
+                f"expected {profile_policy.should_expose_externally}, observed {observed_exposure}"
             )
     return surface_exposure
 
@@ -660,7 +642,7 @@ def _reconcile_live_leaf(
     input_by_subject: dict[str, InputSchemaInventoryRow],
     family_by_identity: dict[tuple[str, str], MountedFamilyInventoryRow],
     policy_by_subject: dict[str, ProfilePolicyInventoryRow],
-    mcp_by_subject: dict[str, SurfaceExposureInventoryRow],
+    exposure_by_subject: dict[str, SurfaceExposureInventoryRow],
     exclusions: dict[tuple[str, ReconciliationSurface], ExplicitExclusionInventoryRow],
     diagnostics: list[str],
 ) -> ReconciledOperatorLeaf:
@@ -698,7 +680,7 @@ def _reconcile_live_leaf(
     surface_exposure = _reconcile_surface_exposure(
         subject_leaf_key=subject_leaf_key,
         profile_policy=profile_policy,
-        surface_exposure=mcp_by_subject.get(subject_leaf_key),
+        surface_exposure=exposure_by_subject.get(subject_leaf_key),
         exclusions=exclusions,
         diagnostics=diagnostics,
     )
@@ -727,7 +709,7 @@ def reconcile_operator_surface_inventory(
 
     This is intentionally a pure application function.  Click traversal, JSON
     result-schema registration, S05 parameter projection, profile policy
-    discovery, and MCP tool enumeration remain adapter concerns.  Their typed
+    discovery and external enumeration remain adapter concerns. Their typed
     rows are joined here so a missing row, orphan, duplicate, path ambiguity,
     silent omission, or policy/exposure conflict is a hard failure rather than
     a hand-maintained hint.
@@ -758,7 +740,7 @@ def reconcile_operator_surface_inventory(
         live_subjects=live_subjects,
         diagnostics=diagnostics,
     )
-    mcp_by_subject = _index_subject_rows(
+    exposure_by_subject = _index_subject_rows(
         surface_exposures,
         source=ReconciliationSurface.SURFACE_EXPOSURE,
         live_subjects=live_subjects,
@@ -783,7 +765,7 @@ def reconcile_operator_surface_inventory(
             input_by_subject=input_by_subject,
             family_by_identity=family_by_identity,
             policy_by_subject=policy_by_subject,
-            mcp_by_subject=mcp_by_subject,
+            exposure_by_subject=exposure_by_subject,
             exclusions=exclusions_by_subject_surface,
             diagnostics=diagnostics,
         )
@@ -913,67 +895,11 @@ class CommandSchemaRef(BaseModel):
 
     ``command`` is a stable command-spec result identity
     (e.g. ``"modelo.calculate"``); ``schema_name`` is the authored
-    :class:`~core.json_contract.OutputSchema` subclass name an operator (or
-    a tool-exposure server) resolves to read the command's result shape.
+    :class:`~core.json_contract.OutputSchema` subclass name an adapter resolves
+    to read the command's result shape.
     """
 
     model_config = _STRICT_FROZEN
 
     command: str = Field(min_length=1)
     schema_name: str = Field(min_length=1)
-
-
-class OperatorSurfaceManifest(BaseModel):
-    """Agent-facing capability catalogue over the operator surface.
-
-    Wraps the immutable :class:`OperatorSurfaceContract` (roots, mounted
-    command families with their mutability and intent, modelo lifecycle,
-    source-kind taxonomy, service owners) and the CLI's registered result-schema
-    references. An LLM operator reads one manifest to discover what the CLI can
-    do, which verbs mutate state, and where each command's result schema lives,
-    instead of scraping ``--help``.
-
-    ``command_schemas`` is the sole inventory of which commands exist: it is
-    projected from the live command tree, and the contract's families carry no
-    parallel command list to disagree with it. Per-family membership is derived
-    from the live CLI paths by
-    :meth:`OperatorSurfaceReconciliation.commands_for_family`, never from the
-    schema-key spelling, whose root segment is not uniform across the two roots.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    manifest_version: str = "1"
-    envelope_schema_version: str = Field(min_length=1)
-    contract: OperatorSurfaceContract
-    command_schemas: tuple[CommandSchemaRef, ...]
-
-
-def build_operator_surface_manifest(
-    *,
-    envelope_schema_version: str,
-    command_schemas: tuple[CommandSchemaRef, ...],
-) -> OperatorSurfaceManifest:
-    """Build the :class:`OperatorSurfaceManifest` from the cached contract.
-
-    The contract is read from
-    :func:`~application.operator_surface.get_operator_surface_contract`.
-    The ``envelope_schema_version`` and ``command_schemas`` are supplied by the
-    CLI adapter, which owns the JSON-contract registry; this keeps the
-    application layer free of any dependency on the entrypoint package.
-
-    Args:
-        envelope_schema_version: The shared CLI envelope contract version
-            (``ENVELOPE_SCHEMA_VERSION``) the manifest documents.
-        command_schemas: The registered command-path to result-schema
-            references, enumerated by the CLI from its schema registry.
-
-    Returns:
-        The validated :class:`OperatorSurfaceManifest`.
-    """
-    contract: OperatorSurfaceContract = get_operator_surface_contract()
-    return OperatorSurfaceManifest(
-        envelope_schema_version=envelope_schema_version,
-        contract=contract,
-        command_schemas=command_schemas,
-    )

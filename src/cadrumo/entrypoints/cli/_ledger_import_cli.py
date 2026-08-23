@@ -45,7 +45,7 @@ def _validate_import_provider(provider: str) -> str:
 
     The ``--provider`` option is typed as the :class:`LedgerProviderID` enum, so
     Typer renders ``Choice([auto, csv, ...])`` and refuses an unrecognised value
-    at parse time with the accepted set (the CLI-boundary rule), and the built MCP
+    at parse time with the accepted set (the CLI-boundary rule), and any external
     input schema surfaces the closed set as a JSON ``enum``. This normaliser keeps
     the strip + lowercase pass and stays a defence-in-depth membership backstop for
     any non-``Choice`` caller.

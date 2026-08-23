@@ -8,6 +8,7 @@ docs:
       donativo_donor: from the donativo donor records
       foreign_asset: from your foreign-asset records
       gasto193_contributor: from the administration and deposit expenses per contribuyente
+      inventory: from your stock inventory
       iva_compensation_annual_partition: from the IVA compensación carried across
         the year
       iva_wallet_decision: from your IVA compensación decision

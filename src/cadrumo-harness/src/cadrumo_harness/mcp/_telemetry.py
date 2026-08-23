@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import contextlib
 import json
+import os
 import re
 import time
 from pathlib import Path
@@ -95,14 +96,11 @@ def content_sha256(text: str) -> str:
 
 
 def telemetry_dir() -> Path:
-    """The workspace-scoped telemetry directory under the local storage root.
-
-    Read from the settings field rather than joined here: a module-local
-    subdirectory literal is invisible to the storage taxonomy, so no
-    environment override could reach it and the tree materialiser could not
-    pre-create it.
-    """
-    return load_settings().cadrumo_mcp_telemetry_dir
+    """Return the harness-owned, workspace-scoped telemetry directory."""
+    configured = os.environ.get("CADRUMO_MCP_TELEMETRY_DIR")
+    if configured:
+        return Path(configured)
+    return load_settings().cadrumo_local_storage_root / "telemetry"
 
 
 def _session_telemetry_path(directory: Path, *, session_id: str) -> Path:

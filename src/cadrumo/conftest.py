@@ -152,7 +152,7 @@ def _evict_test_bound_bucket_session() -> Iterator[None]:
     unscoped ``bind_active_bucket_session`` -- correct for the shipped
     one-process-per-command shape, where the binding must outlive the function
     and process exit reclaims it. A host that runs many commands in one process
-    carries that binding forward instead. The MCP transport already evicts per
+    carries that binding forward instead. An embedding transport evicts per
     request for this reason and the docs-sequence runner adopted the same
     primitive, so this is the third host adopting an existing boundary rather
     than a new policy.

@@ -117,6 +117,7 @@ def previous_filing_observation_requirements(
     """
     binding_ids_by_key: dict[tuple[ModeloId, int, str], set[BindingId]] = {}
     source_casilla_ids_by_key: dict[tuple[ModeloId, int, str], set[CasillaId]] = {}
+    required_source_casilla_ids_by_key: dict[tuple[ModeloId, int, str], set[CasillaId]] = {}
     legal_refs_by_key: dict[tuple[ModeloId, int, str], set[LegalRefId]] = {}
     source_refs_by_key: dict[tuple[ModeloId, int, str], set[SourceRefId]] = {}
     dependency_treatment_by_key: dict[tuple[ModeloId, int, str], str | None] = {}
@@ -134,6 +135,11 @@ def previous_filing_observation_requirements(
             key = (selector.source_modelo, expected_year, required_period)
             binding_ids_by_key.setdefault(key, set()).add(binding.id)
             source_casilla_ids_by_key.setdefault(key, set()).update(_previous_filing_source_ids(selector))
+            required_source_casilla_ids_by_key.setdefault(key, set()).update(
+                _previous_filing_source_ids(selector)
+                if selector.required_source_casilla_ids is None
+                else selector.required_source_casilla_ids
+            )
             legal_refs_by_key.setdefault(key, set()).update(binding.legal_refs)
             source_refs_by_key.setdefault(key, set()).update(binding.source_refs)
             classification = classifications_by_source.get(selector.source_modelo)
@@ -150,38 +156,15 @@ def previous_filing_observation_requirements(
             periods=(required_period,),
             binding_ids=tuple(sorted(binding_ids_by_key[(modelo, expected_year, required_period)])),
             source_casilla_ids=tuple(sorted(source_casilla_ids_by_key[(modelo, expected_year, required_period)])),
+            required_source_casilla_ids=tuple(
+                sorted(required_source_casilla_ids_by_key[(modelo, expected_year, required_period)])
+            ),
             dependency_treatment=dependency_treatment_by_key[(modelo, expected_year, required_period)],
             legal_refs=tuple(sorted(legal_refs_by_key[(modelo, expected_year, required_period)])),
             source_refs=tuple(sorted(source_refs_by_key[(modelo, expected_year, required_period)])),
         )
         for modelo, expected_year, required_period in sorted(binding_ids_by_key)
     )
-
-
-def _optional_source_casilla_ids(
-    binding: DataBindingDefinition,
-    selector: PreviousModeloSelector,
-) -> frozenset[CasillaId]:
-    """Return the source casillas a prior observation may legitimately omit.
-
-    For the ``prior_pagos_fraccionados`` op (AEAT Modelo 130 casilla 05) the
-    minoración casilla (the SECOND declared source casilla, casilla 16) is
-    optional: a prior filing that genuinely lacks any casilla-16 entry
-    ("not captured", distinct from "filed 0") must not hard-fail the carry. The
-    resolver treats the absent minoración as ``Decimal`` zero and the
-    application layer surfaces the not-captured advisory naming the gap, so
-    the minoración is never silently dropped.
-
-    The positive-part casilla (casilla 07) stays REQUIRED: a payment that was
-    never filed cannot be carried, so its absence is a real integrity error.
-    Every other op keeps every source casilla required (empty optional set).
-    """
-    if binding_aggregation_op(binding) != BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS:
-        return frozenset[CasillaId]()
-    source_ids = _previous_filing_source_ids(selector)
-    if len(source_ids) != 2:
-        return frozenset[CasillaId]()
-    return frozenset({source_ids[1]})
 
 
 def _observed_casilla_values(
@@ -191,21 +174,31 @@ def _observed_casilla_values(
     expected_year: int,
     required_period: str,
 ) -> list[Decimal]:
-    optional_ids = _optional_source_casilla_ids(binding, selector)
+    source_ids = _previous_filing_source_ids(selector)
+    required_ids = (
+        frozenset(source_ids)
+        if selector.required_source_casilla_ids is None
+        else frozenset(selector.required_source_casilla_ids)
+    )
     values: list[Decimal] = []
-    for casilla_id in _previous_filing_source_ids(selector):
+    observed_count = 0
+    for casilla_id in source_ids:
         casilla_value = match.casilla_values.get(casilla_id)
         if casilla_value is None:
-            if casilla_id in optional_ids:
-                # Not-captured optional minoración: default to zero and let the
-                # application advisory name the gap rather than dropping the carry.
-                values.append(Decimal("0"))
-                continue
-            raise RegistryValidationError(
-                f"binding {binding.id!r} requires observed casilla {casilla_id!r} "
-                f"from {selector.source_modelo!r}/{expected_year}/{required_period!r}",
-            )
+            if casilla_id in required_ids:
+                raise RegistryValidationError(
+                    f"binding {binding.id!r} requires observed casilla {casilla_id!r} "
+                    f"from {selector.source_modelo!r}/{expected_year}/{required_period!r}",
+                )
+            values.append(Decimal("0"))
+            continue
+        observed_count += 1
         values.append(casilla_value)
+    if source_ids and observed_count == 0:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} requires at least one observed source casilla "
+            f"from {selector.source_modelo!r}/{expected_year}/{required_period!r}",
+        )
     return values
 
 
@@ -404,6 +397,7 @@ class PreviousModeloSelector(BaseModel):
     prior_quarter_expanding_span: bool = False
     source_casilla_ids: tuple[CasillaId, ...] = ()
     source_casilla_id: CasillaId | None = None
+    required_source_casilla_ids: tuple[CasillaId, ...] | None = None
     max_year_delta: int | None = None
     grouping: Literal["per_grupo_member"] | None = None
 
@@ -458,6 +452,16 @@ class PreviousModeloSelector(BaseModel):
     def _source_casilla_ids_unique(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
         if len(set(value)) != len(value):
             raise RegistryValidationError("previous-filing source_casilla_ids entries must be unique")
+        return value
+
+    @field_validator("required_source_casilla_ids")
+    @classmethod
+    def _required_source_casilla_ids_unique(
+        cls,
+        value: tuple[CasillaId, ...] | None,
+    ) -> tuple[CasillaId, ...] | None:
+        if value is not None and len(set(value)) != len(value):
+            raise RegistryValidationError("previous-filing required_source_casilla_ids entries must be unique")
         return value
 
     @model_validator(mode="after")
@@ -536,6 +540,19 @@ class PreviousModeloSelector(BaseModel):
             raise RegistryValidationError(
                 "previous-filing selector cannot declare both source_casilla_ids and source_casilla_id",
             )
+        if self.required_source_casilla_ids is not None:
+            source_ids = frozenset(_previous_filing_source_ids(self))
+            required_ids = frozenset(self.required_source_casilla_ids)
+            if not source_ids:
+                raise RegistryValidationError(
+                    "previous-filing required_source_casilla_ids requires declared source casillas",
+                )
+            if not required_ids <= source_ids:
+                outside = sorted(required_ids - source_ids)
+                raise RegistryValidationError(
+                    "previous-filing required_source_casilla_ids must be a subset of source casillas "
+                    f"(outside: {outside})",
+                )
         return self
 
 

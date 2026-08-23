@@ -108,7 +108,7 @@ class _ModeloWizardAnswers(BaseModel):
 
 _COPY_NAMESPACE = "modelo-work"
 _ACTIVE_RUNS: dict[str, dict[str, str]] = {}
-"Per-run registry-derived copy tables, keyed by an opaque run token.\n\nEach wizard invocation owns one table for its whole lifetime. Every\nreference embeds its run token (``modelo-work:<run-token>:<step-key>:<facet>``),\nso the registered resolver reads only the addressed run's table: two\ninterleaved runs in one process (the ``cadrumo-mcp`` host is exactly such\na host) never clear each other's entries, and each table is dropped at\nits own run end rather than accumulating for the process lifetime. Values\nare the registry snapshot's localized labels and help; the resolver\nreturns ``None`` outside the namespace so other domains' schema-field\nresolvers get their turn.\n"
+"Per-run registry-derived copy tables, keyed by an opaque run token.\n\nEach wizard invocation owns one table for its whole lifetime. Every\nreference embeds its run token (``modelo-work:<run-token>:<step-key>:<facet>``),\nso the registered resolver reads only the addressed run's table: two\ninterleaved runs in one embedding process never clear each other's entries,\nand each table is dropped at its own run end rather than accumulating for the\nprocess lifetime. Values are the registry snapshot's localized labels and\nhelp; the resolver returns ``None`` outside the namespace so other domains'\nschema-field resolvers get their turn.\n"
 
 
 def _resolve_modelo_wizard_copy(ref: str) -> str | None:

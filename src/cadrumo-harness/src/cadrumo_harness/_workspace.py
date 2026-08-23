@@ -27,9 +27,10 @@ from __future__ import annotations
 import filecmp
 import json
 import shutil
+import zipfile
 from collections.abc import Mapping, Sequence
 from importlib.resources.abc import Traversable  # nosem
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -103,9 +104,9 @@ _PLUGIN_SCHEMA = "https://anthropic.com/claude-code/plugin.schema.json"
 # version through ``CADRUMO_MCP_REQUIRED_VERSION`` so a stale, incomplete, or
 # mixed installed cohort refuses before opening the protocol transport.
 _MCP_CONFIG = ".mcp.json"
-_MCP_SERVER_NAME = PRODUCT_IDENTITY.mcp_server
+_MCP_SERVER_NAME = "cadrumo"
 _MCP_LAUNCHER = "uvx"
-_MCP_CONSOLE_SCRIPT = PRODUCT_IDENTITY.mcp_executable
+_MCP_CONSOLE_SCRIPT = "cadrumo-mcp"
 _MCP_PERSONA_ENV = f"{PRODUCT_IDENTITY.environment_prefix}MCP_PERSONA"
 _MCP_PERSONA_INTERPOLATION = "${user_config.persona}"
 # The advertised-tool-surface toggle. ``core`` (default) advertises only the
@@ -125,6 +126,13 @@ _PYTHON_COHORT_WHEELS = (
     "cadrumo-data-official",
 )
 _PLUGIN_COHORT_SCHEMA = "cadrumo.plugin-python-cohort.v1"
+_RUNTIME_WHEELHOUSE_SCHEMA = "cadrumo.runtime-wheelhouse.v1"
+_RUNTIME_WHEELHOUSE_MANIFEST = "runtime-wheelhouse.json"
+_RUNTIME_WHEELHOUSE_PREFIX = "wheels/"
+_RUNTIME_WHEELHOUSE_SUBDIR = "wheelhouse"
+_SUPPORTED_WHEELHOUSE_TARGETS = frozenset(
+    {"linux-aarch64", "linux-x86-64", "macos-arm64", "windows-x86-64"}
+)
 
 # --- Claude marketplace layout --------------------------------------------
 #
@@ -227,6 +235,8 @@ class _PluginPythonCohort(Protocol):
     harness_version: str
     root_wheel: Path
     harness_wheel: Path
+    runtime_wheelhouse: Path
+    runtime_wheelhouse_manifest: Mapping[str, object]
     manuals_wheel: Path
     official_wheel: Path
     sha256: Mapping[str, str]
@@ -429,6 +439,8 @@ def _mcp_args(cohort: _PluginPythonCohort) -> list[str]:
         "--no-sources",
         "--offline",
         "--no-index",
+        "--find-links",
+        f"{root}/{_RUNTIME_WHEELHOUSE_SUBDIR}",
         "--no-python-downloads",
         "--from",
         f"{root}/{wheels['cadrumo-harness'].name}",
@@ -453,6 +465,8 @@ def _mcp_config_document(version: str, cohort: _PluginPythonCohort) -> dict[str,
                     _MCP_REQUIRED_VERSION_ENV: version,
                     _MCP_PERSONA_ENV: _MCP_PERSONA_INTERPOLATION,
                     _MCP_SURFACE_ENV: _MCP_SURFACE_INTERPOLATION,
+                    "PYTHONNOUSERSITE": "1",
+                    "PYTHONPATH": "",
                 },
             },
         },
@@ -471,18 +485,78 @@ def _materialise_plugin_python_cohort(
         raise ValueError("plugin output artifact directory must not overlap the source cohort")
     artifact_dir.mkdir(parents=True)
     retained = _verify_and_copy_cohort_wheels(cohort, artifact_dir)
+    wheelhouse = _extract_runtime_wheelhouse(cohort, artifact_dir / _RUNTIME_WHEELHOUSE_SUBDIR)
     _write_json(
         artifact_dir,
         _PLUGIN_COHORT_MANIFEST,
         {
             "artifacts": retained,
             "harness_version": cohort.harness_version,
+            "runtime_wheelhouse": wheelhouse,
+            "runtime_wheelhouse_sha256": cohort.sha256["runtime-wheelhouse"],
             "schema": _PLUGIN_COHORT_SCHEMA,
             "sha256": {distribution: cohort.sha256[distribution] for distribution in _PYTHON_COHORT_WHEELS},
             "source_commit": cohort.source_commit,
             "version": cohort.version,
         },
     )
+
+
+def _extract_runtime_wheelhouse(
+    cohort: _PluginPythonCohort,
+    destination: Path,
+) -> dict[str, object]:
+    """Extract only the complete, digest-bound lock wheelhouse into the plugin."""
+    archive_digest = sha256_hex(cohort.runtime_wheelhouse.read_bytes())
+    if archive_digest != cohort.sha256["runtime-wheelhouse"]:
+        raise ValueError(
+            "cohort artifact digest mismatch for 'runtime-wheelhouse': "
+            f"expected {cohort.sha256['runtime-wheelhouse']}, got {archive_digest}"
+        )
+    with zipfile.ZipFile(cohort.runtime_wheelhouse) as archive:
+        names = archive.namelist()
+        if names.count(_RUNTIME_WHEELHOUSE_MANIFEST) != 1 or len(names) != len(set(names)):
+            raise ValueError("runtime wheelhouse has a missing or duplicate member")
+        document = json.loads(archive.read(_RUNTIME_WHEELHOUSE_MANIFEST))
+        if not isinstance(document, dict) or set(document) != {
+            "lock_sha256",
+            "platforms",
+            "python",
+            "schema",
+            "wheels",
+        }:
+            raise ValueError("runtime wheelhouse manifest schema drifted")
+        if document != dict(cohort.runtime_wheelhouse_manifest):
+            raise ValueError("runtime wheelhouse manifest drifted from the validated cohort")
+        if document.get("schema") != _RUNTIME_WHEELHOUSE_SCHEMA or document.get("python") != "3.13":
+            raise ValueError("runtime wheelhouse identity drifted")
+        platforms = document.get("platforms")
+        wheels = document.get("wheels")
+        if not isinstance(platforms, dict) or set(platforms) != _SUPPORTED_WHEELHOUSE_TARGETS:
+            raise ValueError("runtime wheelhouse platform closure is incomplete")
+        if not isinstance(wheels, dict) or not wheels:
+            raise ValueError("runtime wheelhouse declares no wheels")
+        expected_members = {
+            _RUNTIME_WHEELHOUSE_MANIFEST,
+            *(f"{_RUNTIME_WHEELHOUSE_PREFIX}{filename}" for filename in wheels),
+        }
+        if set(names) != expected_members:
+            raise ValueError("runtime wheelhouse member inventory drifted")
+        destination.mkdir(parents=True)
+        for filename, record in sorted(wheels.items()):
+            if (
+                not isinstance(filename, str)
+                or PurePosixPath(filename).name != filename
+                or not filename.endswith(".whl")
+                or not isinstance(record, dict)
+                or set(record) != {"distribution", "sha256", "size", "version"}
+            ):
+                raise ValueError(f"runtime wheelhouse record is invalid: {filename!r}")
+            payload = archive.read(f"{_RUNTIME_WHEELHOUSE_PREFIX}{filename}")
+            if len(payload) != record.get("size") or sha256_hex(payload) != record.get("sha256"):
+                raise ValueError(f"runtime wheelhouse wheel bytes drifted: {filename!r}")
+            (destination / filename).write_bytes(payload)
+    return {str(key): value for key, value in document.items()}
 
 
 def _verify_and_copy_cohort_wheels(cohort: _PluginPythonCohort, artifact_dir: Path) -> dict[str, str]:

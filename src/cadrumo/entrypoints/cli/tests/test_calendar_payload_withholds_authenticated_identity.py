@@ -7,7 +7,7 @@ service state — and must never carry ``authenticated_identity``, which is a
 taxpayer NIF.
 
 Nothing previously asserted either direction. The payload is a registered
-``OutputSchema``: it crosses the CLI ``--json`` wire and the MCP tool surface, so
+``OutputSchema``: it crosses the CLI ``--json`` wire and external surfaces, so
 a field added to the source event reaches an operator surface the moment the
 payload mirrors it. The NIF is held out of that projection by ``exclude=True`` on
 the source field, which is a single keyword one refactor away from deletion, and

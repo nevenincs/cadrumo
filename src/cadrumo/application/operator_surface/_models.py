@@ -254,7 +254,7 @@ class MountedCommandFamily(BaseModel):
     It deliberately declares NO command inventory. Which verbs a family contains
     is established solely by the live command tree, projected once as the
     registered command-schema keys the manifest carries; group them with
-    :meth:`OperatorSurfaceManifest.commands_for_family`. A second, hand-authored
+    the live command reconciliation. A second, hand-authored
     inventory here would be a restatement of that authority, and a restatement
     is a thing that can disagree.
     """

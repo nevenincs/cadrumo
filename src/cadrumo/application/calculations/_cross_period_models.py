@@ -246,6 +246,7 @@ class CrossPeriodDependencyRequirement(BaseModel):
     filing_year: int = Field(ge=2000, le=2099)
     period: Period
     source_casilla_ids: tuple[CasillaId, ...] = Field(min_length=1)
+    required_source_casilla_ids: tuple[CasillaId, ...] | None = None
     origin: CrossPeriodDependencyOrigin
     origin_ids: tuple[str, ...] = Field(min_length=1)
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
@@ -255,7 +256,18 @@ class CrossPeriodDependencyRequirement(BaseModel):
     @model_validator(mode="after")
     def _period_matches_filing_year(self) -> Self:
         _require_period_year(self.period, self.filing_year, field_name="period")
+        if self.required_source_casilla_ids is not None and not set(self.required_source_casilla_ids) <= set(
+            self.source_casilla_ids
+        ):
+            raise ValueError("required_source_casilla_ids must be candidate source_casilla_ids")
         return self
+
+    @property
+    def enforced_source_casilla_ids(self) -> tuple[CasillaId, ...]:
+        """Return mandatory source casillas, defaulting to every candidate."""
+        if self.required_source_casilla_ids is None:
+            return self.source_casilla_ids
+        return self.required_source_casilla_ids
 
     @property
     def key(self) -> tuple[str, int, str, CrossPeriodDependencyOrigin, tuple[str, ...]]:

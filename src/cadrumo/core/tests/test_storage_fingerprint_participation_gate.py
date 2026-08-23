@@ -79,10 +79,6 @@ EXPECTED_EXCLUSIONS: Final[tuple[ExclusionExpectation, ...]] = (
         "Run-timing telemetry. It moves on every model call and carries no taxpayer state.",
     ),
     ExclusionExpectation(
-        "cadrumo_mcp_telemetry_dir",
-        "Session telemetry, pruned on retention. It churns per session and holds no taxpayer state.",
-    ),
-    ExclusionExpectation(
         "cadrumo_corpus_text_cache_dir",
         "Regenerable cache keyed by content fingerprint over the finite bundled corpus.",
     ),

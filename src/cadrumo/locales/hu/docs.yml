@@ -8,6 +8,7 @@ docs:
       donativo_donor: a nyilvántartott adományozóiból
       foreign_asset: a külföldi vagyonelemeiből
       gasto193_contributor: az adózónkénti kezelési és letéti költségekből
+      inventory: a készletnyilvántartásából
       iva_compensation_annual_partition: az adóév IVA-kompenzációjából
       iva_wallet_decision: az IVA-kompenzációs döntéséből
       ledger_impatriado_income_aggregation: az impatriado-rendszer szerinti bevételeiből

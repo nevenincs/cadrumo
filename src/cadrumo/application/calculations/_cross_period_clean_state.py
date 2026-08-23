@@ -586,6 +586,7 @@ def _requirements_from_previous_filing(
         filing_year=requirement.filing_year,
         period=Period.from_year_and_code(requirement.filing_year, source_period),
         source_casilla_ids=requirement.source_casilla_ids,
+        required_source_casilla_ids=requirement.required_source_casilla_ids,
         origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
         origin_ids=requirement.binding_ids,
         legal_refs=requirement.legal_refs,
@@ -792,7 +793,7 @@ def _resolve_observation_values(
         if any(item.source_kind is ObservationSourceKind.OPERATOR_MANUAL for item in value_member_payloads):
             blockers.append(CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE)
         for item in value_member_payloads:
-            for casilla_id in requirement.source_casilla_ids:
+            for casilla_id in requirement.enforced_source_casilla_ids:
                 if casilla_id not in item.observation.casilla_values:
                     blockers.append(CrossPeriodCleanStateBlocker.MISSING_OBSERVED_CASILLA)
     elif payload is None:
@@ -802,7 +803,7 @@ def _resolve_observation_values(
         observation_values = dict(payload.observation.casilla_values)
         if payload.source_kind is ObservationSourceKind.OPERATOR_MANUAL:
             blockers.append(CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE)
-        for casilla_id in requirement.source_casilla_ids:
+        for casilla_id in requirement.enforced_source_casilla_ids:
             if casilla_id not in observation_values:
                 blockers.append(CrossPeriodCleanStateBlocker.MISSING_OBSERVED_CASILLA)
     return observation_source_kind, observation_values, blockers

@@ -3,7 +3,7 @@
 Used by: :mod:`~._service` to implement bucket operations.
 
 The contract records sit at the package boundary so a programmatic
-caller (the CLI handler, a future MCP surface) gets the same typed
+caller (a CLI handler or another adapter) gets the same typed
 input + output shape that the service consumes. Closed-value axes are
 typed as their core enums per the architecture-boundaries discipline.
 Every bucket selector is a :class:`BucketId`.
