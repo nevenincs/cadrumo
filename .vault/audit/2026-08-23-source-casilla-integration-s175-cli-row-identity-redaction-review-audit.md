@@ -5,22 +5,18 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:65fed23f9e235f809b5bfef169f0c6a3e576743cfd3c9a7c6da64a05a82a9ef2'
+body_hash: 'sha256:71672b749c4532d0181685400ee2a206fa6e888b6e2b0c03ec2d85732523a42a'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
 
 # `source-casilla-integration` audit: `source-casilla-integration audit: s175 cli row identity redaction review`
 
 ## Scope
 
-
 Independent review of the CLI review allowlist, safe fingerprint projection, output-channel redaction, encrypted failure behavior, and activity-label preservation.
 
 ## Findings
-
 
 ### s175-cli-row-identity-redaction-review | high | resolved implicit application payload inheritance
 
@@ -35,6 +31,5 @@ The first tests called payload helpers directly and later removed the sensitive 
 JSON and text review surfaces expose only safe cohort fingerprints. Raw identity fields refuse without echoing their values, secure serializer contexts cannot bypass the projection, legitimate activity labels survive, and neighboring calculation-revision commands retain their explicit projections. Final review reported zero findings.
 
 ## Recommendations
-
 
 Proceed with S176 using the encrypted identity and safe CLI contracts without adding raw source-row identities to ordinary operator output.

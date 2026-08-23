@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:0d0d461ab5a285c0a0121a8a74bd559c594c3526f9333acac3462f7c94db60ab'
+body_hash: 'sha256:d281126f1752ca0f66aff95546fbe0da3ba142c344f1516cf1a0cd8e5d2b967c'
 related:
   - "[[2026-08-23-cli-machine-secret-channel-unification-plan]]"
 ---
@@ -85,3 +85,7 @@ auditing why this certificate command is the carrier.
 - Close `certificate-handler-proof`: the focused remediation supplies the
   missing handler-level mutation-order, routing, closure, hard-cut, and
   non-disclosure evidence without duplicating the planned subprocess matrix.
+
+## S18 evidence reconciliation
+
+The S10 remediation paragraphs above accurately describe the landing-time near-handler tests, but those patched cases are no longer current evidence. S17 retired them under the feature's no-monkeypatch rule after stronger production-entrypoint coverage existed. The current focused certificate module intentionally owns only strict payload and canonical graph declarations. S13's `test_certificate_write_accepts_every_valid_dual_source_combination` and platform descriptor cases now own successful stdin, descriptor, root-plus-leaf, cleanup, and mutation proof; S14's retired-field and ambiguity cases own refusal-before-mutation and non-disclosure. `certificate-handler-proof` remains closed because S13/S14 supersede the retired implementation-shaped test seam with stronger fresh-process evidence. The historical remediation text remains above solely to preserve review chronology.

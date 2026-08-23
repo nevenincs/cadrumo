@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:db51dca7cdcbfc66332a7c9fc311311ca4107415760914fa07a7a0823a18f42b'
+body_hash: 'sha256:c51f9ccf30fddacf6385723e87a176b0a0e2938feed60938514b6709842e8971'
 step_id: 'S19'
 related:
   - "[[2026-08-23-cli-machine-secret-channel-unification-plan]]"
@@ -40,3 +40,7 @@ Root `--profile-secrets-*` declarations and dispatch-time unused-source refusal 
 Post-landing SOL review found the initial group and leaf policies incorrect, the handler consuming secrets before active-target resolution, stale graph/lifecycle assertions, and insufficient handler-level proof. The remediation classifies the group as state-free and the leaf as encrypted destructive, resolves the exact UUID target before reading, updates the graph truth, and adds real keychain-unavailable subprocess rotation coverage.
 
 That subprocess contract currently exits at the root keychain refusal before the leaf. This is the recorded S21 dependency: root dispatch must consume the parsed `self-authenticating` posture after target normalization and write-route validation. S19 remains open until S21 makes the real two-rotation round trip green.
+
+## S18 lifecycle reconciliation
+
+The final pre-S21 paragraph above is retained as implementation chronology, not as the current completion state. S21 now consumes the parsed `self-authenticating` posture before resume or keychain work while preserving exact-target normalization and write-route validation. On 2026-08-23, the focused real-entrypoint regression `test_config_passphrase_change_self_authenticates_without_a_keychain` passed under `keyring.backends.fail.Keyring`: the first rotation succeeded without disclosure, the retired proof was refused, and a second rotation with the new proof succeeded. S19's recorded dependency is fulfilled, so its checked plan state is consistent with current production behavior.

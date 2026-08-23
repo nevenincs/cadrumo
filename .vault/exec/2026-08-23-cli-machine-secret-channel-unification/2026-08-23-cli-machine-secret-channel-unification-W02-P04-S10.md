@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:3741e8d755eab36649a8d937721054e2eb7a6a36c393951a8716ad3c5c4049ef'
+body_hash: 'sha256:ee869aca82aebb3c69f1f7f4c594433a8a425d763789df8607d29848ccd22fa6'
 step_id: 'S10'
 related:
   - "[[2026-08-23-cli-machine-secret-channel-unification-plan]]"
@@ -39,3 +39,7 @@ Focused unit, certificate boundary, secure-input, metadata, registration-project
 The first pytest invocation used repository-default xdist and a Windows worker crashed before execution; rerunning the focused lane serially produced a complete green result. The broader integration file has two existing command-identity-envelope failures unrelated to certificate input, while its certificate refusal test passes. Full cross-command subprocess proof remains assigned to the later runtime-matrix steps. The formal audit scaffold remains open for the supervising reviewer because all agent slots were occupied before this commit.
 
 fd 0 stays at the canonical reader seam in this unit lane because replacing process-global stdin around a direct handler test would add fragility without proving new certificate wiring. The later subprocess matrix owns the end-to-end fd 0 proof.
+
+## S18 evidence reconciliation
+
+The handler-test outcome above is the historical S10 landing state. S17 subsequently removed the patched near-handler cases under the feature's no-monkeypatch proof rule. Current direct conformance remains in `test_certificate_machine_secret.py`; the behavioral authority moved to the S13/S14 fresh-process matrix, including all valid certificate root/leaf source combinations, platform descriptor transport, descriptor zero, equal-source collision, legacy `secret` refusal, closure, mutation or non-mutation, and secret-free envelopes. This record no longer presents the retired patched cases as current completion evidence.

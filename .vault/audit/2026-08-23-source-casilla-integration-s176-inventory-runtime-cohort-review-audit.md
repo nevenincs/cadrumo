@@ -5,22 +5,18 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:8216dac078176052173c0d58a1175580c80c2ce863ec6474e33d40adedf961e3'
+body_hash: 'sha256:ce2ccaa06d67e35bf90b17b7663865abbc2f58df6111c00324a24d0b2c373f17'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
 
 # `source-casilla-integration` audit: `source-casilla-integration audit: s176 inventory runtime cohort review`
 
 ## Scope
 
-
 Independent review of template cohort completeness, activity ordering, sealed projection reuse, row identity alignment, encrypted repository behavior, failure atomicity, and confidentiality.
 
 ## Findings
-
 
 ### s176-inventory-runtime-cohort-review | high | resolved noncanonical activity identity escape
 
@@ -35,6 +31,5 @@ Early tests used only a repository spy. The final matrix exercises the real encr
 Exactly one template per operation expands over lexically ordered activities. Each activity appears once per operation at the same row index and shares one opaque identity and sealed projection fingerprint across the cohort. No scalar or cross-activity aggregate is emitted, and final review reported zero findings.
 
 ## Recommendations
-
 
 Proceed with downstream inventory binding and persistence work using the typed aligned row cohort; do not reconstruct activity identity from row order or ordinary diagnostics.

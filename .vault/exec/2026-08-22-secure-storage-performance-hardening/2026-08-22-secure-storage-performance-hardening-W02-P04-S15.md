@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:4c1c4440bd416e51c404273bb907bd9eb1ca38ef55807d41eff4cf1ac128bbd1'
+body_hash: 'sha256:1c09f7ca43e2f27ee2e6a6b34a28ba8783aec189af0831ba2c226fb81509f575'
 step_id: 'S15'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
 ---
-
-
-
 
 # Keep distributed CommandSpec modules import-light by splitting heavyweight handler payload and schema implementations behind owned lazy public targets while retaining all structural declarations in production specs
 

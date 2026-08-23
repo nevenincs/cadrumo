@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:a19e23b99117a9be87c44b82f0a493e1b094b17b1edefdfa0842caeba59cda72'
+body_hash: 'sha256:0d436928a855e7be610379acee1a3339190d513f56bb3661b6e0c84dc571158f'
 step_id: 'S06'
 related:
   - "[[2026-08-23-cli-machine-secret-channel-unification-plan]]"
@@ -43,3 +43,7 @@ related:
 Real inherited-descriptor subprocess coverage for all commands remains assigned to W03.P06.S13. This Step establishes that login delegates descriptor reading to the already tested canonical reader.
 
 The plan serializer carried the concurrent S05 and S06 closures in one shared-file delta. Root authorized the S05 commit to land that mechanical plan hash and both checkboxes; the S06 scoped commit therefore intentionally excludes the already-landed plan file while this execution record supplies S06 attribution.
+
+## S18 evidence reconciliation
+
+The focused two-test result above is a historical S06 landing result. S17 later retired patched near-handler cases under the feature's no-monkeypatch proof rule; the current `test_machine_secret_login.py` intentionally retains only the strict payload-model contract. Current end-to-end transport authority is the S13/S14 fresh-process matrix: `test_login_succeeds_through_each_leaf_channel` exercises stdin and the platform descriptor route through the production entrypoint, while the refusal cases cover ambiguity, malformed input, hostile environment non-interference, cleanup, and non-disclosure. The separate `test_profile_login_session_lifecycle.py` statement above remains a real-subprocess lifecycle result. S06 completion therefore depends on the stronger S13/S14 evidence, not on the retired patched cases.

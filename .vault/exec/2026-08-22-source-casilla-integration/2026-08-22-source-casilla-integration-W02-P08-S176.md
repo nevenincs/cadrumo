@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:963bf8eb38c5cd1a5d0eb5392380958113ec87ddadebc02eff4abb11c4450733'
+body_hash: 'sha256:fd1cc5a6d7e6a8ceb111344bdf7e1bede8f990b35a38a2033c9862f22e6ef0b5'
 step_id: 'S176'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # enumerate canonical runtime inventory activities into deterministic atomic three-operation row cohorts
 
@@ -21,7 +18,6 @@ related:
 - `src/cadrumo/application/aggregation/_inventory.py`
 
 ## Description
-
 
 - Validate one complete 0177/0181/0182 inventory row-template cohort before reading storage.
 - Load the encrypted inventory document once and expand complete 2025 activities in canonical lexical order.
@@ -37,6 +33,5 @@ The inventory resolver now expands the registry-owned three-operation template i
 Storage is read exactly once after template validation. Any incomplete cohort or source failure returns no partial values or identities. Independent review reported zero findings; 15 focused resolver tests and the broader 22-test resolver/projection selection passed, with Ruff and ty clean.
 
 ## Notes
-
 
 Scope expanded minimally to the canonical `InventoryLedger` activity identifier because the domain previously admitted whitespace/control identities that the generic row identity correctly refused. S43 registry data and S177 downstream persistence proofs remain untouched.

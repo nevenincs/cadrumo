@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:b67866e8030210696caf0faadc16c5d96572be8ffca20c8bc9f259db2184f4dc'
+body_hash: 'sha256:3eacc265a410f515a90f6b526c35953f61108932d1aa04b10b1d22b2623a9b4d'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
   - "[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]"
@@ -62,6 +62,18 @@ M303 provides a complementary typed-row precedent: runtime activity rows carry d
 
 The alternatives are a literal binding per activity, a wildcard followed by a taxpayer-wide fold, a new inventory-only carrier, or registry templates expanded into the existing row-indexed channel from encrypted ledger activity rows. Literal bindings cannot know taxpayer activity identities at registry-authoring time; wildcard folding violates the official grain; a separate carrier duplicates a source-mesh capability already accepted for M720; and the existing row carrier needs an additional identity association because position is not source identity. Scalar formula consumption is outside the present carrier evidence: the accepted M720 decision limits row values to draft, replay, and export pending separate adjudication.
 
+### Row binding transport does not materialise row casillas or make M100 exportable
+
+The application persists resolved row bindings as a nested `BindingId -> row_index -> value` map and replays that map into the binding-input surface. `CalculationRevision` stores both `row_binding_values` and their source identities, but its computed `casilla_values` remain a separate scalar `CasillaId -> Decimal` map. Evidence: `src/cadrumo/application/modelo/_calculation_resolution.py:250-280`, `src/cadrumo/application/modelo/_revision_persistence.py:244-255`, `src/cadrumo/application/modelo/_revision_persistence.py:359-373`, `src/cadrumo/application/modelo/_revision_replay_inputs.py:98-108`, and `src/cadrumo/domain/modelos/_calculation_revision.py:962-979`.
+
+The registry engine accepts only scalar `binding_values`; `resolve_bound_casilla_values` projects only that scalar map into bound casillas. Row-indexed values are therefore never mapped to casilla coordinates or evaluated as per-row formula inputs. For a bound casilla whose source is not in the special observation-backed set, missing scalar input follows the ordinary `inputs.get(casilla.id, 0)` path, so linking an inventory row binding without row materialisation can yield a zero scalar while the real row values survive only in revision metadata. Evidence: `src/cadrumo/domain/calculations/registry/_formula_runtime.py:340-353`, `src/cadrumo/domain/calculations/registry/_bindings.py:606-640`, and `src/cadrumo/domain/calculations/registry/_formula_initial_values.py:313-351`.
+
+There is also an earlier type failure: filing draft assembly unions every bound-casilla binding into `calculation_binding_ids`, classifies the remainder as decimal, and passes matching inputs to `_decimal_inputs_for_ids`. A ROWS binding linked directly to a bound casilla therefore sends its row-index mapping toward `Decimal(...)` before row preservation can help. Evidence: `src/cadrumo/application/filing/__init__.py:390-413`, `src/cadrumo/application/filing/__init__.py:675-683`, and `src/cadrumo/application/filing/__init__.py:807-818`.
+
+M100 2025 declares one XML-dictionary export layout and no `binding_rows` or activity-row record definition. The generic filing renderer can repeat only a registry record declared with `repeat = "binding_rows"`; otherwise it renders one scalar record occurrence. Evidence: `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/export_layouts/0001-modelo-100-2025-xml-dictionary.toml:1-20`, `src/cadrumo/application/filing/_record_renderer.py:103-127`, and `src/cadrumo/application/filing/_record_renderer.py:159-176`.
+
+The materialisation alternatives are to flatten or sum activity rows into the scalar engine, keep row bindings as review-only metadata, add a typed row-indexed casilla channel, or create an inventory-specific calculation/export bypass. Flattening loses the legally required activity grain; metadata-only transport cannot populate or export the filing; and a source-specific bypass would duplicate registry calculation and layout authority. A row-indexed casilla channel preserves `(CasillaId, row_index)` independently of the binding carrier, but it requires registry-owned direct row-target rules, identity/cohort parity, revision persistence, and a grounded M100 activity export/PDF representation. The inspected evidence supplies neither a per-row formula contract nor a cross-row reduction rule, and the current registry does not establish the exact official XML activity path or PDF row geometry.
+
 This research did not adjudicate production-cost composition, write-model changes, earlier annual revisions, estimation-objective activities, or accounting outside Modelo 100 direct estimation.
 
 ## Sources
@@ -92,5 +104,19 @@ This research did not adjudicate production-cost composition, write-model change
 - `src/cadrumo/domain/prorrata_register/__init__.py:181-198`
 - `src/cadrumo/application/filing/_record_renderer.py:232-243`
 - `src/cadrumo/application/filing/_record_field_renderer.py:157-162`
+- `src/cadrumo/application/modelo/_calculation_resolution.py:250-280`
+- `src/cadrumo/application/modelo/_revision_persistence.py:244-255`
+- `src/cadrumo/application/modelo/_revision_persistence.py:359-373`
+- `src/cadrumo/application/modelo/_revision_replay_inputs.py:98-108`
+- `src/cadrumo/domain/modelos/_calculation_revision.py:962-979`
+- `src/cadrumo/domain/calculations/registry/_formula_runtime.py:340-353`
+- `src/cadrumo/domain/calculations/registry/_bindings.py:606-640`
+- `src/cadrumo/domain/calculations/registry/_formula_initial_values.py:313-351`
+- `src/cadrumo/application/filing/__init__.py:390-413`
+- `src/cadrumo/application/filing/__init__.py:675-683`
+- `src/cadrumo/application/filing/__init__.py:807-818`
+- `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/export_layouts/0001-modelo-100-2025-xml-dictionary.toml:1-20`
+- `src/cadrumo/application/filing/_record_renderer.py:103-127`
+- `src/cadrumo/application/filing/_record_renderer.py:159-176`
 - `2026-07-05-modelo-720-row-carrier-adr`
 - `2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference`

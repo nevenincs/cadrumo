@@ -5,12 +5,10 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:0a573c27018086582fb6cff7a425f63aebee5c9d1dd593bb19c5d808f595724a'
+body_hash: 'sha256:b9976fa9439922acd9f8340af189504b64f5d41f619b311dd24617bb5f08d22b'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
 ---
-
-
 
 # `secure-storage-performance-hardening` audit: `s15 import light command spec review`
 

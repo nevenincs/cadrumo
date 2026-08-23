@@ -4,14 +4,16 @@ tags:
   - "#profile-password-custody"
 date: '2026-08-13'
 related:
-  - "[[2026-08-13-profile-password-custody-research]]"
+  - '[[2026-08-13-profile-password-custody-research]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
+  - '[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]'
+  - '[[2026-08-13-cli-action-envelope-successor-adr]]'
 supersedes:
   - '2026-05-14-secure-backend-passkey-custody-adr'
   - '2026-08-02-adjacent-domain-deduplication-store-scoped-login-throttle-adr'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:21d893b8df1ac7c0f5c8942e2e28939baf12c6ffd7a5a039e06e8adfb89fc8fc'
+body_hash: 'sha256:5ca3835ea2bd71eb63467536fa75620c3c1ed4e5bbac1cbea41fadf0cf56ac76'
 ---
 # `profile-password-custody` adr: `per-profile password custody authority` | (**status:** `accepted`)
 
@@ -67,7 +69,7 @@ Per-profile online backoff and global/cross-process KDF concurrency protect reso
 
 `custody/recovery.v1.json` is a separate optional record with its own schema, generation, `dek_epoch`, KDF, AAD domain, digest chain, and wrapped copy of the same DEK. Password login must not stat, open, parse, digest, or validate this file. Missing, cancelled, inaccessible, malformed, or corrupt recovery cannot affect password login, activation, password rotation, normal backup, or normal restore.
 
-Recovery enrollment occurs after activation. Rotation verifies the candidate before atomic replacement. Password rotation preserves valid recovery because the DEK and epoch do not change. Recovery removal requires current-password authentication. Recovery-based password reset increments the password-envelope generation and preserves the epoch.
+Recovery enrollment occurs after activation. Rotation verifies the candidate before atomic replacement. Password rotation preserves valid recovery because the DEK and epoch do not change. Recovery removal requires current-password authentication. Recovery-based password reset is a separate archive-and-lineage capability deferred by `2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr`; if a successor accepts it later, it must increment the password-envelope generation and preserve the epoch rather than fork the canonical rotation authority.
 
 A portable `profile-recovery-artifact/v1` contains UUID, `dek_epoch`, recovery generation and bounded KDF, recovery wrap, AAD descriptor, and canonical self-digest. It contains no mnemonic, password envelope, data, session, or keyring state. Export requires current-password authentication and exclusive creation. Import requires explicit naming, UUID/epoch agreement, mnemonic unwrap, and sentinel proof; it never overwrites enrolled recovery implicitly. Warnings identify offline-guessing exposure, separate-storage requirements, retained exported copies, and the fact that loss does not harm password login.
 
@@ -85,13 +87,13 @@ The keyring may store only a random session key under service `cadrumo:profile-s
 
 Profile B authenticates into transaction-owned candidate memory and staged session state while profile A remains unchanged. Failure before the active-reference swap destroys B's candidate state and leaves A byte-for-byte and semantically intact. Success atomically swaps the active reference, promotes B's staged session, attempts optional keyring acceleration, cleans candidate artifacts, and only then retires A. Keyring failure leaves a valid process B session.
 
-Headless scalar-secret transport defers to `2026-08-23-cli-machine-secret-channel-unification-adr`: every applicable CLI verb exposes the paired bounded `--secrets-stdin` and `--secrets-fd` channels, and argv and environment secrets remain forbidden. The canonical CLI verbs are `aeat config profile restore`, `aeat config profile restore-recover`, and `aeat config profile delete`. Action-envelope grammar belongs to the CLI successor ADR.
+Headless scalar-secret transport defers to `2026-08-23-cli-machine-secret-channel-unification-adr`: every applicable CLI verb exposes the paired bounded `--secrets-stdin` and `--secrets-fd` channels, and argv and environment secrets remain forbidden. The canonical CLI verbs are `aeat config profile restore` and `aeat config profile delete`; `restore --artifact` selects the explicit recovery-artifact proof door within the single restore grammar. Action-envelope grammar belongs to the CLI successor ADR.
 
 ### Backup, restore, and rollback
 
 The restorative archive's mandatory content root includes the archive header, immutable profile UUID, commit marker, password envelope, complete committed data, and canonical durable inventory. It excludes recovery, sessions, keyring entries, throttles, locks, journals, stages, pointers, caches, and sibling profiles. The profile password restores it on a fresh host without keyring access.
 
-Normal restore is password-only and never discovers or falls back to recovery. `restore-recover` is a distinct explicit grammar requiring a named archive, named recovery artifact, mnemonic, and new password. It validates the original archive root first, verifies artifact, epoch, and sentinel, creates password-envelope generation `+1` with previous-digest lineage, records archive/artifact/new-envelope lineage and an immutable receipt, then publishes the verified capsule.
+Normal restore is password-only and never discovers or falls back to recovery. `restore --artifact` is an explicit recovery proof within the same restore grammar, requiring a named capsule source (directory or sealed archive), named recovery artifact, and mnemonic. It validates the original capsule first, verifies artifact, epoch, and sentinel, and republishes the capsule under its existing password envelope unchanged. This door recovers the data path, not lost-password access; reset with a new password and new-envelope lineage remains deferred to the separate decision named above.
 
 Generation, digest, journal, and compare-and-swap checks detect partial publication and mixed-file replay. They do not claim to detect a coherent offline rollback of the entire capsule and every witness.
 
@@ -111,4 +113,3 @@ The selected model is the only option that makes the supplied profile password i
 
 Every profile carries its own password envelope and DEK proof. Shared master-key and provider-fallback code must be removed rather than retained as compatibility. Recovery becomes optional without weakening disaster recovery. Backup is host-independent. KDF work gains an explicit denial-of-service and supervision boundary. The hard cutover requires destructive reset for current retired stores, DEK rotation remains unavailable, and coherent full-capsule rollback remains outside guarantees without an external witness.
 
-2026-08-18 amendment (campaign-close proof, S24): the canonical verb spelling `restore-recover` was superseded before shipping — HEAD mounts one verb, `restore`, with `--artifact` selecting the recovery door (S16/S15 execution records). This record's references to `restore-recover` are historical and must be read as `restore --artifact`.

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:1975632c37e8a4e21f6c4a752fae7e003cd985db57aaacf6eb05b89ed83b80ce'
+body_hash: 'sha256:67557c4d273074e4fa055130093f3fc30dc4e46b591945dfbf8277c5a325600c'
 related:
   - "[[2026-08-23-cli-machine-secret-channel-unification-plan]]"
   - "[[2026-08-23-cli-machine-secret-channel-unification-W02-P11-S19]]"
@@ -48,3 +48,15 @@ Lifecycle documentation still described the passphrase capability as absent and 
 - Complete S21 by deriving the root-gate self-authentication exemption from the resolved command specification, never from the older bootstrap-exemption inventory.
 - Re-run the forced failing-keychain rotation regression after S21 and close S19 only when its full two-rotation round trip passes.
 - Preserve the corrected state-free/destructive policies, target-before-read order, exact graph assertions, and absence of environment or compatibility secret routes.
+
+## S18 lifecycle resolution
+
+### s19-root-posture-consumption | high | resolved by S21 and reverified on the current tree
+
+The text above records the pre-S21 review state. The current root session gate consumes the resolved command specification's `self-authenticating` posture after exact-target normalization and write-route validation and before persisted-session or keychain work. On 2026-08-23, `uv run --no-sync pytest -q -n 0 -m integration src/cadrumo/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py::test_config_passphrase_change_self_authenticates_without_a_keychain` passed in 53.28 seconds. That fresh-process regression forces `keyring.backends.fail.Keyring`, completes one rotation, refuses the retired passphrase, and completes a second rotation with the new proof. The S21 dependency is therefore satisfied and this HIGH finding is closed.
+
+### s19-runtime-proof | medium | resolved by the same real two-rotation subprocess proof
+
+The formerly red regression is now green against the production entrypoint without a patched handler, session gate, or keychain. S13 and S14 remain the broader real-process transport authorities; this S19 regression is the focused destructive-lifecycle authority. The historical blocked wording remains above to preserve review chronology, but it no longer narrows or reopens S19 completion.
+
+No CRITICAL or HIGH S19 finding remains open after this current-tree verification.

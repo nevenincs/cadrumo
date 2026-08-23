@@ -5,22 +5,18 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:a3eae640fe542970b5d8c4225e21f0b6bee0147649a8208c6042b0599bb97664'
+body_hash: 'sha256:45c262fae2f35eb0d7fe2c42f5ccb902bfc984b2f1e78ab6b7e67d105b68af1d'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
 
 # `source-casilla-integration` audit: `source-casilla-integration audit: s174 row source identity replay review`
 
 ## Scope
 
-
 Independent review of row-source identity propagation, exact replay joins, content-address preservation, review redaction, and unchanged M720 behavior.
 
 ## Findings
-
 
 ### s174-row-source-identity-replay-review | high | resolved coordinate-only identity attachment
 
@@ -35,6 +31,5 @@ The first fingerprint-only projector had no production consumer. The canonical w
 Source-resolution identities persist into calculation revisions, export and workflow draft assembly attach them to exact row values, draft content addressing includes them, M720 unidentified rows remain valid, and public review state exposes only safe fingerprints. Final independent review reported zero findings.
 
 ## Recommendations
-
 
 Proceed with S175 without exposing raw identities through CLI surfaces. S176 may construct inventory cohorts only through the canonical coordinate and replay contracts established here.
