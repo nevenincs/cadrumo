@@ -314,9 +314,7 @@ def test_keychain_free_root_login_notice_survives_a_real_leaf_refusal(tmp_path: 
     assert refused.returncode != 0, output
     envelope = json.loads(refused.stderr)
     assert envelope["command"] == "ledger.view"
-    assert [notice["code"] for notice in envelope["notices"]] == [
-        "config.login.session_not_persisted"
-    ]
+    assert [notice["code"] for notice in envelope["notices"]] == ["config.login.session_not_persisted"]
     assert passphrase not in output
 
 
@@ -347,9 +345,7 @@ def test_keychain_free_root_login_notice_survives_callback_bad_parameter(tmp_pat
     output = _combined_output(refused)
     assert refused.returncode == 2, output
     envelope = json.loads(refused.stderr)
-    assert [notice["code"] for notice in envelope["notices"]] == [
-        "config.login.session_not_persisted"
-    ]
+    assert [notice["code"] for notice in envelope["notices"]] == ["config.login.session_not_persisted"]
     assert passphrase not in output
 
 
@@ -369,9 +365,7 @@ def test_root_and_leaf_stdin_collision_refuses_before_fresh_tree_mutation(tmp_pa
 
 
 @pytest.mark.parametrize("command", [("app",), ("config",), ("app", "diagnostics")])
-def test_terminal_introspection_groups_leave_a_fresh_root_state_free(
-    tmp_path: Path, command: tuple[str, ...]
-) -> None:
+def test_terminal_introspection_groups_leave_a_fresh_root_state_free(tmp_path: Path, command: tuple[str, ...]) -> None:
     result = _run_cadrumo(tmp_path, command)
 
     assert result.returncode in {0, 2}, _combined_output(result)

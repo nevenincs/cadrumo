@@ -6,7 +6,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:d7c57a9fb5feecdaaeb84fdcdcb08882deb87c86522f130469628d534d2d1224'
+body_hash: 'sha256:ba312d6cfd09d69899a4b40b716cc28463d89a560797e219b6237623f2970ce8'
 related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-W01-P01-S01]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-W01-P01-S02]]'
@@ -37,6 +37,7 @@ related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-W03-P07-S16]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-W03-P07-summary]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-W04-P08-S17]]'
+  - '[[2026-08-23-cli-machine-secret-channel-unification-W04-P08-summary]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-foundation-review-audit]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-global-machine-secret-contract-research]]'
@@ -113,6 +114,7 @@ Auto-generated index of all documents tagged with `#cli-machine-secret-channel-u
 - `2026-08-23-cli-machine-secret-channel-unification-W03-P07-S16` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and update operator documentation and sequence sources through canonical generators to describe both leaf channels, the distinct root profile-authentication pair, cross-scope collision rules, caller-owned descriptors, Windows HANDLE bootstrap, repeated keychain-free Argon2 work, bounded-lifetime cleanup, and removed CLI environment fallback
 - `2026-08-23-cli-machine-secret-channel-unification-W03-P07-summary` - `cli-machine-secret-channel-unification` `W03.P07` summary
 - `2026-08-23-cli-machine-secret-channel-unification-W04-P08-S17` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and run focused and broad lint, type, import, test, subprocess, metadata, locale, generator, documentation, sequence, Sphinx, obsolete-code census, and Vault gates while recording honest triage for unrelated failures
+- `2026-08-23-cli-machine-secret-channel-unification-W04-P08-summary` - `cli-machine-secret-channel-unification` `W04.P08` summary
 
 ### plan
 

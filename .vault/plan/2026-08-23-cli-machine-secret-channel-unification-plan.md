@@ -4,7 +4,7 @@ tags:
   - '#cli-machine-secret-channel-unification'
 date: '2026-08-23'
 modified: '2026-08-23'
-body_hash: 'sha256:da2e76f16ccfe94f086b71afdb766d02bd8668816af09562f6440f7183615978'
+body_hash: 'sha256:ee38566529bb48634d7bf8277f27b846fe95da4a270f1d6fe7e67f5609b86b90'
 tier: L3
 related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
@@ -101,7 +101,7 @@ Run structural assurance, review, and Vault reconciliation before declaring comp
 
 Run focused and broad verification and prove obsolete paths are absent.
 
-- [ ] `W04.P08.S17` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and run focused and broad lint, type, import, test, subprocess, metadata, locale, generator, documentation, sequence, Sphinx, obsolete-code census, and Vault gates while recording honest triage for unrelated failures; `feature-scoped source tests generated documentation and Vault records`.
+- [x] `W04.P08.S17` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and run focused and broad lint, type, import, test, subprocess, metadata, locale, generator, documentation, sequence, Sphinx, obsolete-code census, and Vault gates while recording honest triage for unrelated failures; `feature-scoped source tests generated documentation and Vault records`.
 
 ### Phase `W04.P09` - Independent assurance
 
