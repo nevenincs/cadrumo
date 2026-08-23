@@ -427,6 +427,7 @@ if TYPE_CHECKING:
         OBSERVATION_BACKED_BINDING_SOURCE_KINDS,
         AggregationCaptureKind,
         BindingSourceKind,
+        CalculationSourceLineageRole,
         IntracomOperationType,
     )
     from .compatibility_lifecycle import (
@@ -586,6 +587,7 @@ __all__: list[str] = [
     "AuthProviderDescription",
     "AuthProviderKind",
     "BindingSourceKind",
+    "CalculationSourceLineageRole",
     "BucketPointer",
     "CasillaId",
     "CasillaValueKind",

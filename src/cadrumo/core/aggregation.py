@@ -220,6 +220,16 @@ class RowSetGroupingKind(StrEnum):
     WITHHOLDING296 = "withholding296"
 
 
+class CalculationSourceLineageRole(StrEnum):
+    """A persisted source node's role in one resolver-produced provenance graph."""
+
+    PRIMARY = "primary"
+    """Durable resolved economic object whose resolver owns the binding source."""
+
+    CONTRIBUTOR = "contributor"
+    """Upstream fact linked to, but never substituting for, a primary object."""
+
+
 class BindingSourceKind(StrEnum):
     """The single canonical closed set of binding/source-mesh tokens.
 

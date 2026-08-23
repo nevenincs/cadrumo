@@ -1552,7 +1552,7 @@ EXPECTED_CALLBACK_POLICY: dict[str, PolicySignature] = {
         False,
         False,
     ),
-    "cadrumo.entrypoints.cli._config:config_list": (
+    "cadrumo.entrypoints.cli._config._profile_list_cli:config_list": (
         ("profile-custody",),
         ("none",),
         "local-io",
@@ -1561,7 +1561,7 @@ EXPECTED_CALLBACK_POLICY: dict[str, PolicySignature] = {
         False,
         False,
     ),
-    "cadrumo.entrypoints.cli._config:config_root": (
+    "cadrumo.entrypoints.cli._config._root_cli:config_root": (
         ("state-free",),
         ("none",),
         "metadata",
@@ -1570,7 +1570,7 @@ EXPECTED_CALLBACK_POLICY: dict[str, PolicySignature] = {
         False,
         False,
     ),
-    "cadrumo.entrypoints.cli._config:config_status": (
+    "cadrumo.entrypoints.cli._config._profile_status_cli:config_status": (
         ("calculation", "encrypted-facts"),
         ("none",),
         "compute",

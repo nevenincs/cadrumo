@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
-from typing import cast
+from typing import Literal
 
 import typer
+from typer.models import DefaultPlaceholder
 
-from ....core.i18n import output_language, tr
-from .._command_schema import command_registration_metadata
+from ....core.i18n import tr
 from .._command_suggestions import (
     CadrumoTyperGroup,
     LazyFactoryTarget,
@@ -23,13 +22,16 @@ from ._root_cli import config_root
 type ConfigPath = tuple[str, ...]
 
 
-@dataclass(frozen=True, slots=True)
-class _ConfigTarget:
-    path: ConfigPath
-    kind: str
+def _target_factory(path: ConfigPath, kind: str) -> Callable[[], typer.Typer]:
+    """Bind one stable, path-specific target owner for census attribution."""
 
-    def __call__(self) -> typer.Typer:
-        return _group_target(self.path) if self.kind == "group" else _leaf_target(self.path)
+    def _load_config_target() -> typer.Typer:
+        return _group_target(path) if kind == "group" else _leaf_target(path)
+
+    slug = "__".join(path).replace("-", "_")
+    _load_config_target.__name__ = f"load_{slug}"
+    _load_config_target.__qualname__ = f"config_targets.load_{slug}"
+    return _load_config_target
 
 
 _GROUP_HELP_KEYS: dict[ConfigPath, str] = {
@@ -59,89 +61,89 @@ _GROUP_HELP_KEYS: dict[ConfigPath, str] = {
     ("storage",): "cli.config.storage.help",
 }
 
-_LEAF_PATHS: tuple[ConfigPath, ...] = (
-    ("auth", "apoderado", "check"),
-    ("auth", "apoderado", "clear"),
-    ("auth", "apoderado", "configure"),
-    ("auth", "apoderado", "scopes", "list"),
-    ("auth", "apoderado", "status"),
-    ("auth", "certificate", "check"),
-    ("auth", "certificate", "list"),
-    ("auth", "certificate", "register"),
-    ("auth", "certificate", "remove"),
-    ("auth", "certificate", "secret", "remove"),
-    ("auth", "certificate", "secret", "set"),
-    ("auth", "certificate", "select"),
-    ("auth", "configure"),
-    ("auth", "diagnostics", "list"),
-    ("auth", "diagnostics", "report"),
-    ("auth", "diagnostics", "show"),
-    ("auth", "login"),
-    ("auth", "logout"),
-    ("auth", "providers"),
-    ("auth", "reset"),
-    ("auth", "status"),
-    ("auth", "test"),
-    ("check",),
-    ("collab", "recipient", "add"),
-    ("collab", "recipient", "list"),
-    ("collab", "recipient", "remove"),
-    ("google", "credential-source", "set"),
-    ("google", "credential-source", "show"),
-    ("google", "folder", "get"),
-    ("google", "folder", "set"),
-    ("google", "login"),
-    ("google", "logout"),
-    ("google", "register"),
-    ("google", "status"),
-    ("google", "sync", "calc", "compute"),
-    ("google", "sync", "calc", "export"),
-    ("google", "sync", "calc", "pull"),
-    ("google", "sync", "calc", "verify"),
-    ("google", "sync", "probe"),
-    ("google", "sync", "push"),
-    ("login",),
-    ("logout",),
-    ("passphrase", "change"),
-    ("profile", "archive", "export"),
-    ("profile", "archive", "inspect"),
-    ("profile", "capabilities", "set"),
-    ("profile", "capabilities", "show"),
-    ("profile", "censo", "file"),
-    ("profile", "censo", "pull"),
-    ("profile", "complete-setup"),
-    ("profile", "create"),
-    ("profile", "delete"),
-    ("profile", "descendiente", "add"),
-    ("profile", "descendiente", "list"),
-    ("profile", "descendiente", "remove"),
-    ("profile", "edit"),
-    ("profile", "history"),
-    ("profile", "list"),
-    ("profile", "preflight"),
-    ("profile", "restore"),
-    ("profile", "show"),
-    ("profile", "status"),
-    ("profile", "validate"),
-    ("provision", "pull"),
-    ("provision", "report"),
-    ("provision", "verify"),
-    ("repair", "connectivity"),
-    ("repair", "integrity", "objects"),
-    ("repair", "integrity", "registry"),
-    ("repair", "logs"),
-    ("repair", "profile"),
-    ("repair", "quarantine"),
-    ("repair", "reset-progress"),
-    ("reset", "resume"),
-    ("reset", "start"),
-    ("reset", "status"),
-    ("storage", "check"),
-    ("storage", "init"),
-    ("storage", "list"),
-    ("storage", "reclaim"),
-    ("storage", "show"),
-)
+_LEAF_HELP_KEYS: dict[ConfigPath, str] = {
+    ("auth", "apoderado", "check"): "cli.config.auth.apoderado.check_help",
+    ("auth", "apoderado", "clear"): "cli.config.auth.apoderado.clear_help",
+    ("auth", "apoderado", "configure"): "cli.config.auth.apoderado.configure_help",
+    ("auth", "apoderado", "scopes", "list"): "cli.config.auth.apoderado.scopes.list_help",
+    ("auth", "apoderado", "status"): "cli.config.auth.apoderado.status_help",
+    ("auth", "certificate", "check"): "cli.config.auth.certificate.check_help",
+    ("auth", "certificate", "list"): "cli.config.auth.certificate.list_help",
+    ("auth", "certificate", "register"): "cli.config.auth.certificate.register_help",
+    ("auth", "certificate", "remove"): "cli.config.auth.certificate.remove_help",
+    ("auth", "certificate", "secret", "remove"): "cli.config.auth.certificate.secret.remove_help",
+    ("auth", "certificate", "secret", "set"): "cli.config.auth.certificate.secret.set_help",
+    ("auth", "certificate", "select"): "cli.config.auth.certificate.select_help",
+    ("auth", "configure"): "cli.config.auth.configure_help",
+    ("auth", "diagnostics", "list"): "cli.config.auth.diagnostics.list_help",
+    ("auth", "diagnostics", "report"): "cli.config.auth.diagnostics.report_help",
+    ("auth", "diagnostics", "show"): "cli.config.auth.diagnostics.show_help",
+    ("auth", "login"): "cli.config.auth.login_help",
+    ("auth", "logout"): "cli.config.auth.logout_help",
+    ("auth", "providers"): "cli.config.auth.providers_help",
+    ("auth", "reset"): "cli.config.auth.reset_help",
+    ("auth", "status"): "cli.config.auth.status_help",
+    ("auth", "test"): "cli.config.auth.test_help",
+    ("check",): "cli.config.check.help",
+    ("collab", "recipient", "add"): "cli.config.collab.recipient.add_help",
+    ("collab", "recipient", "list"): "cli.config.collab.recipient.list_help",
+    ("collab", "recipient", "remove"): "cli.config.collab.recipient.remove_help",
+    ("google", "credential-source", "set"): "cli.config.google.credential_source.set_help",
+    ("google", "credential-source", "show"): "cli.config.google.credential_source.show_help",
+    ("google", "folder", "get"): "cli.config.google.folder.get_help",
+    ("google", "folder", "set"): "cli.config.google.folder.set_help",
+    ("google", "login"): "cli.config.google.login_help",
+    ("google", "logout"): "cli.config.google.logout_help",
+    ("google", "register"): "cli.config.google.register_help",
+    ("google", "status"): "cli.config.google.status_help",
+    ("google", "sync", "calc", "compute"): "cli.config.google.sync.calc.compute_help",
+    ("google", "sync", "calc", "export"): "cli.config.google.sync.calc.export_help",
+    ("google", "sync", "calc", "pull"): "cli.config.google.sync.calc.pull_help",
+    ("google", "sync", "calc", "verify"): "cli.config.google.sync.calc.verify_help",
+    ("google", "sync", "probe"): "cli.config.google.sync.probe_help",
+    ("google", "sync", "push"): "cli.config.google.sync.push_help",
+    ("login",): "cli.config.login.help",
+    ("logout",): "cli.config.logout.help",
+    ("passphrase", "change"): "cli.config.passphrase.change_help",
+    ("profile", "archive", "export"): "cli.config.profile.archive.export_help",
+    ("profile", "archive", "inspect"): "cli.config.profile.archive.inspect_help",
+    ("profile", "capabilities", "set"): "cli.config.profile.capabilities.set_help",
+    ("profile", "capabilities", "show"): "cli.config.profile.capabilities.show_help",
+    ("profile", "censo", "file"): "cli.config.profile.censo.file_help",
+    ("profile", "censo", "pull"): "cli.config.profile.censo.pull_help",
+    ("profile", "complete-setup"): "cli.config.profile.complete_setup.help",
+    ("profile", "create"): "cli.config.profile.create_help",
+    ("profile", "delete"): "cli.config.profile.delete.help",
+    ("profile", "descendiente", "add"): "cli.config.profile.descendiente.add_help",
+    ("profile", "descendiente", "list"): "cli.config.profile.descendiente.list_help",
+    ("profile", "descendiente", "remove"): "cli.config.profile.descendiente.remove_help",
+    ("profile", "edit"): "cli.config.profile.edit_help",
+    ("profile", "history"): "cli.config.profile.history_help",
+    ("profile", "list"): "cli.config.list.help",
+    ("profile", "preflight"): "cli.config.profile.preflight_help",
+    ("profile", "restore"): "cli.config.profile.restore.help",
+    ("profile", "show"): "cli.config.profile.show_help",
+    ("profile", "status"): "cli.config.status.help",
+    ("profile", "validate"): "cli.config.profile.validate_help",
+    ("provision", "pull"): "cli.config.provision.pull.help",
+    ("provision", "report"): "cli.config.provision.report.help",
+    ("provision", "verify"): "cli.config.provision.verify.help",
+    ("repair", "connectivity"): "cli.config.repair.connectivity_help",
+    ("repair", "integrity", "objects"): "cli.config.repair.integrity.objects_help",
+    ("repair", "integrity", "registry"): "cli.config.repair.integrity.registry_help",
+    ("repair", "logs"): "cli.config.repair.logs_help",
+    ("repair", "profile"): "cli.config.repair.profile_help",
+    ("repair", "quarantine"): "cli.config.repair.quarantine_help",
+    ("repair", "reset-progress"): "cli.config.repair.reset_progress_help",
+    ("reset", "resume"): "cli.config.reset.resume_help",
+    ("reset", "start"): "cli.config.reset.start_help",
+    ("reset", "status"): "cli.config.reset.status_help",
+    ("storage", "check"): "cli.config.storage.check.help",
+    ("storage", "init"): "cli.config.storage.init.help",
+    ("storage", "list"): "cli.config.storage.list.area_help",
+    ("storage", "reclaim"): "cli.config.storage.reclaim.area_help",
+    ("storage", "show"): "cli.config.storage.show.area_help",
+}
 
 
 def _registry_key(path: ConfigPath) -> str:
@@ -173,12 +175,7 @@ def _optional_dependencies() -> frozenset[str]:
 
 
 def _leaf_help(path: ConfigPath) -> str:
-    language = output_language()
-    cli_path = ("config", *path)
-    row = next((row for row in command_registration_metadata() if row.cli_path == cli_path), None)
-    if row is None:
-        raise RuntimeError(f"missing registration metadata for {' '.join(cli_path)!r}")
-    return row.help.get(language) or row.help.get("es") or ""
+    return tr(_LEAF_HELP_KEYS[path])
 
 
 def _register(path: ConfigPath, kind: str, help_text: str) -> None:
@@ -189,7 +186,7 @@ def _register(path: ConfigPath, kind: str, help_text: str) -> None:
         LazySubcommand(
             name,
             LazyFactoryTarget(
-                _ConfigTarget(path, kind),
+                _target_factory(path, kind),
                 optional_dependencies=LazyOptionalDependencyProvider(_optional_dependencies),
             ),
             child_registry_key=_registry_key(path),
@@ -239,11 +236,30 @@ def _leaf_target(path: ConfigPath) -> typer.Typer:
 def _typer_group(root: typer.Typer, path: ConfigPath) -> typer.Typer:
     current = root
     for token in path:
-        group = next((group for group in current.registered_groups if group.name == token), None)
+        group = next(
+            (
+                group
+                for group in current.registered_groups
+                if _mounted_group_name(group) == token
+            ),
+            None,
+        )
         if group is None:
             raise RuntimeError(f"source group is absent at {' '.join(path)!r}")
-        current = cast("typer.models.TyperInfo", group).typer_instance
+        child = group.typer_instance
+        if child is None:
+            raise RuntimeError(f"source group has no Typer instance at {' '.join(path)!r}")
+        current = child
     return current
+
+
+def _mounted_group_name(group: typer.models.TyperInfo) -> str | None:
+    if isinstance(group.name, str):
+        return group.name
+    if group.name is not None and not isinstance(group.name, DefaultPlaceholder):
+        raise TypeError(f"unsupported Typer group name: {type(group.name).__name__}")
+    child = group.typer_instance
+    return None if child is None else child.info.name
 
 
 def _temporary_app(registrar: Callable[[typer.Typer], None]) -> typer.Typer:
@@ -335,7 +351,8 @@ def _source_app(path: ConfigPath) -> tuple[typer.Typer, ConfigPath]:
         name = path[-1]
         help_key = f"cli.config.profile.{name}_help"
         epilog = tr("cli.config.profile.create_epilog") if name == "create" else None
-        return build_wizard_leaf_app(name, cast("object", name), help=tr(help_key), epilog=epilog), (name,)
+        mode = cast_wizard_mode(name)
+        return build_wizard_leaf_app(name, mode, help=tr(help_key), epilog=epilog), (name,)
     if path == ("profile", "delete"):
         from ._profile_delete import register_profile_delete_command
         from ._profile_support import resolve_profile_by_label
@@ -367,7 +384,8 @@ def _source_app(path: ConfigPath) -> tuple[typer.Typer, ConfigPath]:
 
         return _temporary_app(register_provision_commands), path
     if path[:1] == ("repair",):
-        from ._profile_support import read_profile_record, resolve_profile_by_label
+        from ._profile_readiness import _read_profile_record
+        from ._profile_support import resolve_profile_by_label
         from ._repair_cli import register_repair_maintenance_commands
         from ._repair_profile import register_repair_profile_command
 
@@ -376,7 +394,7 @@ def _source_app(path: ConfigPath) -> tuple[typer.Typer, ConfigPath]:
         register_repair_profile_command(
             repair,
             resolve_profile_by_label=resolve_profile_by_label,
-            read_profile_record=read_profile_record,
+            read_profile_record=_read_profile_record,
         )
         return repair, path[1:]
     if path[:1] == ("reset",):
@@ -388,6 +406,13 @@ def _source_app(path: ConfigPath) -> tuple[typer.Typer, ConfigPath]:
 
         return storage_app, path[1:]
     raise RuntimeError(f"unmapped config target: {' '.join(path)!r}")
+
+
+def cast_wizard_mode(name: str) -> Literal["create", "edit"]:
+    """Narrow a manifest token after the explicit path membership guard."""
+    if name not in {"create", "edit"}:
+        raise ValueError(f"unsupported wizard mode: {name!r}")
+    return name
 
 
 app = typer.Typer(
@@ -402,7 +427,7 @@ app.callback()(config_root)
 
 for _path, _help_key in _GROUP_HELP_KEYS.items():
     _register(_path, "group", tr(_help_key))
-for _path in _LEAF_PATHS:
+for _path in _LEAF_HELP_KEYS:
     _register(_path, "leaf", _leaf_help(_path))
 
 __all__ = ["app"]

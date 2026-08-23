@@ -43,9 +43,3 @@ def resolve_active_profile_pointer() -> ProfileBucketPointer | None:
 
     active = resolve_active_bucket_id()
     return None if active is None else read_profile_bucket_by_id(active)
-
-
-def read_profile_record(pointer: ProfileBucketPointer):
-    from ._profile_readiness import _read_profile_record
-
-    return _read_profile_record(pointer)

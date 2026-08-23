@@ -232,22 +232,20 @@ def test_modelo_top_level_verb_roster_matches_canonical_spine() -> None:
 # The append-only event-history verb is the sole operator-facing bucket
 # surface and now mounts under the `config profile` group as
 # `config profile history` (D1 family rename: the operator means their
-# profile, not the storage bucket). This pins that the verb is present on
-# `profile_app` so a regression that drops or re-homes it is caught.
-def test_profile_history_verb_is_mounted_on_profile_app() -> None:
+# profile, not the storage bucket). This pins the live demand-loaded path.
+def test_profile_history_verb_is_reachable_on_the_live_profile_path() -> None:
     """`config profile history` is the only operator-facing event-history verb.
 
     The standalone `config bucket` group was retired; the `history` verb
-    merged into the existing `config profile` group. This asserts the verb
-    is registered on `profile_app` so the merge is not silently undone."""
+    merged into the existing `config profile` group. Resolve the live path so
+    an eager Typer-object assertion cannot bypass the loader contract."""
 
-    from .._config import profile_app
+    from .. import app
+    from .._command_suggestions import resolve_command_path
 
-    registered = frozenset(n for n in (cmd.name for cmd in profile_app.registered_commands) if n)
-    assert "history" in registered, (
-        f"`config profile history` is not mounted on profile_app; registered verbs: {sorted(registered)!r}. "
-        "The D1 family rename merged `history` into the profile group; do not drop or re-home it."
-    )
+    command = resolve_command_path(app, ("config", "profile", "history"))
+
+    assert command.name == "history"
 
 
 def test_profile_history_help_exposes_profile_argument_not_bucket_id() -> None:

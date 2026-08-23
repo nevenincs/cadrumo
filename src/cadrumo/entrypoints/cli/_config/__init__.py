@@ -7,6 +7,7 @@ from importlib import import_module
 from ._lazy_registration import app
 
 _COMPAT_EXPORTS: dict[str, tuple[str, str]] = {
+    "_resolve_preflight_revision_id": ("._profile_inspect", "_resolve_preflight_revision_id"),
     "apoderado_app": ("._apoderado", "apoderado_app"),
     "auth_app": ("._auth", "auth_app"),
     "auth_diagnostics_app": ("._auth_diagnostics", "auth_diagnostics_app"),
