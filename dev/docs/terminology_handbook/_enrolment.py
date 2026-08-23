@@ -207,30 +207,7 @@ def _walk_cli_verbs() -> Iterator[EnrolmentCandidate]:
 
 
 def _cli_leaf_command_paths() -> tuple[tuple[str, ...], ...]:
-    """Return every operator CLI leaf-command path via Typer introspection.
+    """Return every operator leaf path from the immutable command authority."""
+    from cadrumo.entrypoints.cli.command_api import command_spec_nodes
 
-    Mirrors the house tree-walk in ``dev/docs/cli_reference.py``
-    (``typer.main.get_command`` then a recursive group walk) rather than
-    re-inventing command discovery.
-    """
-    import click
-    from typer.main import get_command
-
-    from cadrumo.entrypoints.cli import app
-
-    root = get_command(app)
-    leaves: list[tuple[str, ...]] = []
-
-    def _walk(cmd: object, path: tuple[str, ...]) -> None:
-        if not isinstance(cmd, click.Group):
-            leaves.append(path)
-            return
-        with click.Context(cmd, info_name=cmd.name or None) as ctx:
-            for child_name in cmd.list_commands(ctx):
-                child = cmd.get_command(ctx, child_name)
-                if child is not None:
-                    _walk(child, (*path, child_name))
-
-    root_name = getattr(root, "name", None) or "aeat"
-    _walk(root, (root_name,))
-    return tuple(leaves)
+    return tuple(node.path for node in command_spec_nodes() if node.spec.kind == "leaf")

@@ -3,7 +3,7 @@
 Two tiers, both real, no mocks or skips:
 
 - **Pure-function tier.** The Python tokeniser (``dev/docs/sequences/_tokeniser``)
-  classifies a frame's argv against the live Click tree, and the directive's
+  classifies a frame's argv against the command graph, and the directive's
   render pipeline (``dev/docs/sequence_directive``) projects a parsed sequence
   plus its golden into one payload and renders the static HTML from that single
   source. These assert token classification, the payload shape the frontend

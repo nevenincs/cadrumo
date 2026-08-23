@@ -1,7 +1,6 @@
 """CLI reference generator for the ``aeat`` command tree.
 
-Materialises the full Click command tree from ``typer.main.get_command(app)``,
-walks every group and leaf command (forcing lazy-module imports), and renders
+Projects the immutable production command graph and renders
 the reference organised by major verb group under ``docs/cli/``. Each
 top-level family (``app``, ``config``) gets a landing page
 (``docs/cli/app.rst``) that is navigation only - a grid linking to each major
@@ -25,8 +24,7 @@ introspects the production package from outside rather than being part of the
 
 Language pinning
 ----------------
-Help strings are ``tr()`` values resolved at module-import time and stored as
-plain strings on the Typer objects, so the output language MUST be pinned to
+Help strings are resolved from each authored command specification, so the output language MUST be pinned to
 ``en`` *before* any CLI command module is imported.  Call
 :func:`generate_cli_reference` from a subprocess with
 ``CADRUMO_OUTPUT_LANGUAGE=en`` in its environment (the clean guarantee - mirroring
@@ -54,22 +52,21 @@ from typing import TYPE_CHECKING
 
 from cadrumo.core import scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
-from cadrumo.entrypoints.cli._command_specs import COMMAND_GRAPH
-from cadrumo.entrypoints.schema_surface import normalise_cli_path_to_schema_key
+from cadrumo.entrypoints.cli.command_api import command_spec_for_path, command_spec_nodes
 
 from ._locale_chrome import docs_chrome
 
 if TYPE_CHECKING:
-    import click
+    pass
 
 #: Group-callback emit sites - keys registered under a group callback rather
 #: than a leaf command.  These are excluded from the per-command reference
 #: pages (they are group landing surfaces, not operator-invokable leaves) but
 #: are listed on the output-schema registry page (``schemas.rst``).
 _GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = frozenset(
-    spec.result_schema.identity
-    for spec in COMMAND_GRAPH.specs
-    if spec.kind == "group" and spec.result_schema.identity is not None
+    node.spec.result_schema.identity
+    for node in command_spec_nodes()
+    if node.spec.kind == "group" and node.spec.result_schema.identity is not None
 )
 
 #: Command-path normalisation rules that mirror the conformance-test normaliser
@@ -185,7 +182,13 @@ def _reference_subprocess_environment(storage_root: Path) -> dict[str, str]:
 # ---------------------------------------------------------------------------
 
 
-_normalise_command_path = normalise_cli_path_to_schema_key
+def _normalise_command_path(path: tuple[str, ...]) -> str:
+    """Return the result identity authored for an exact command-graph path."""
+    rooted = path if path[:1] == ("aeat",) else ("aeat", *path)
+    identity = command_spec_for_path(rooted).result_schema.identity
+    if identity is None:
+        raise LookupError(f"command path has no result identity: {path!r}")
+    return identity
 
 
 # ---------------------------------------------------------------------------
@@ -195,466 +198,23 @@ _normalise_command_path = normalise_cli_path_to_schema_key
 
 # TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
 # Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
-def _collect_commands(
-    root: click.Command,  # type: ignore[name-defined]
-    # TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click return-type annotation same as above
-) -> dict[tuple[str, ...], click.Command]:  # type: ignore[name-defined]
-    """Recursively collect every reachable command node keyed by its path tuple.
-
-    The returned mapping includes both groups and leaf commands.  The root
-    command itself is stored at a one-element tuple ``(root.name,)``.
-
-    Args:
-        root: The materialised root Click command (name must be set).
-
-    Returns:
-        A mapping from path tuple to Click command for every reachable node.
-    """
-    import click
-
-    result: dict[tuple[str, ...], click.Command] = {}
-
-    def _walk(cmd: click.Command, path: tuple[str, ...]) -> None:
-        result[path] = cmd
-        if isinstance(cmd, click.Group) or hasattr(cmd, "list_commands"):
-            with click.Context(cmd, info_name=cmd.name or None) as ctx:
-                for child_name in cmd.list_commands(ctx):
-                    child = cmd.get_command(ctx, child_name)
-                    if child is not None:
-                        _walk(child, (*path, child_name))
-
-    root_name = root.name or "aeat"
-    _walk(root, (root_name,))
-    return result
-
-
-# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
-# Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
-def _is_group(cmd: click.Command) -> bool:  # type: ignore[name-defined]
-    """Return whether ``cmd`` dispatches subcommands (a group) rather than being a leaf."""
-    import click
-
-    return isinstance(cmd, click.Group) or hasattr(cmd, "list_commands")
-
-
-# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
-# Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
-def _collect_leaf_paths(
-    root: click.Command,  # type: ignore[name-defined]
-) -> list[tuple[str, ...]]:
-    """Return every leaf-command path reachable from ``root``.
-
-    Args:
-        root: The materialised root Click command (name must be set).
-
-    Returns:
-        A sorted list of path tuples for every leaf (non-group) command.
-    """
-    import click
-
-    all_nodes = _collect_commands(root)
-    leaves = [
-        path for path, cmd in all_nodes.items() if not (isinstance(cmd, click.Group) or hasattr(cmd, "list_commands"))
-    ]
-    return sorted(leaves)
-
-
-# ---------------------------------------------------------------------------
-# Internal helpers - RST rendering
-# ---------------------------------------------------------------------------
-
-
 def _rst_heading(text: str, char: str) -> str:
-    """Return a two-line RST heading.
-
-    Args:
-        text: The heading text.
-        char: The underline character (e.g. ``"="``, ``"-"``).
-
-    Returns:
-        The RST heading string including a trailing newline.
-    """
     return f"{text}\n{char * len(text)}\n"
 
 
-def _rst_code(text: str, language: str = "text") -> str:
-    """Return a RST code block.
+def _render_graph_command(language: OutputLanguage, path: tuple[str, ...], spec: object) -> str:
+    """Render one authored command specification without runtime tree inspection."""
+    from cadrumo.core.i18n import tr
+    from cadrumo.entrypoints.cli.command_api import ArgumentSpec, CommandSpec
 
-    Args:
-        text: The content to display verbatim.
-        language: The Pygments lexer name.
-
-    Returns:
-        The RST ``.. code-block::`` directive string.
-    """
-    indented = textwrap.indent(text, "   ")
-    return f".. code-block:: {language}\n\n{indented}\n"
-
-
-def _rst_field_list(items: list[tuple[str, str]]) -> str:
-    """Return a RST field list.
-
-    Args:
-        items: Sequence of ``(field_name, field_value)`` pairs.
-
-    Returns:
-        The RST field-list string.
-    """
-    lines = []
-    for field, value in items:
-        lines.append(f":{field}: {value}")
-    return "\n".join(lines) + "\n" if lines else ""
-
-
-# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
-# Parameter at this annotation site under the TYPE_CHECKING import guard.
-def _is_click_argument(param: click.Parameter) -> bool:  # type: ignore[name-defined]
-    """Return whether ``param`` is a positional argument.
-
-    Discriminates on Click's ``param_type_name`` rather than ``isinstance`` on
-    ``click.Argument``: Typer wraps positionals in ``TyperArgument``, which is
-    NOT a ``click.Argument`` subclass, so an ``isinstance`` check silently
-    mislabels every Typer positional as an option in the rendered reference.
-    """
-    return getattr(param, "param_type_name", "") == "argument"
-
-
-# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
-# Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
-def _render_param_table(language: OutputLanguage, params: list[click.Parameter]) -> str:  # type: ignore[name-defined]
-    """Render a RST definition-list for command parameters.
-
-    Args:
-        params: The Click parameter list from a command.
-
-    Returns:
-        RST text describing each parameter, or an empty string when there
-        are no parameters.
-    """
-    import click
-
-    sections: list[str] = []
-    for param in params:
-        if isinstance(param, click.Context):
-            continue
-        opts = getattr(param, "opts", None) or [param.name]
-        opt_str = ", ".join(f"``{o}``" for o in opts)
-        required = getattr(param, "required", False)
-        # The kind and its required-ness are ONE authored string per combination,
-        # never two composed fragments: Spanish and Catalan inflect the adjective
-        # for the noun's gender, so "Opción" takes "obligatoria" where
-        # "Argumento" takes "obligatorio". Composing them would produce
-        # agreement errors no English-shaped template can express.
-        #
-        # Each key is spelled out inside its own docs_chrome call rather than
-        # selected into a variable: the locale scanner reads call sites, and a
-        # key it cannot see is one scaffold deletes.
-        if _is_click_argument(param):
-            label = (
-                docs_chrome("docs.cli.param.argument_required", language)
-                if required
-                else docs_chrome("docs.cli.param.argument_optional", language)
-            )
-        else:
-            label = (
-                docs_chrome("docs.cli.param.option_required", language)
-                if required
-                else docs_chrome("docs.cli.param.option_optional", language)
-            )
-        help_text = (param.help or "").strip() or docs_chrome("docs.cli.command.no_description", language)
-        sections.append(f"{opt_str}\n   *{label}* {help_text}\n")
-    return "\n".join(sections) if sections else ""
-
-
-# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
-# Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
-def _captured_help_text(
-    path: tuple[str, ...],
-    cmd: click.Command,  # type: ignore[name-defined]
-) -> str:
-    """Return the real ``--help`` rendering for the group at ``path``.
-
-    Calls Click's base :meth:`~click.Command.format_help` directly on ``cmd`` -
-    bypassing Typer's Rich-based override (``TyperCommand``/``TyperGroup`` both
-    subclass the real ``click.Command`` and override ``format_help`` to render
-    through Rich) - so the captured usage/description/options/commands text is
-    the classic plain-text rendering: deterministic across machines, unlike
-    Rich's box-drawing style, which auto-detects the host console's legacy/VT
-    capability and therefore differs between an interactive terminal and a
-    subprocess with no attached console. This is still the command's genuine
-    ``--help`` content (usage line, description, options, subcommand summary),
-    only without Rich's decorative panel styling.
-
-    Args:
-        path: The full command path tuple including the leading executable
-            token, e.g. ``("aeat", "app", "ledger")``.
-        cmd: The materialised Click command at ``path``.
-
-    Returns:
-        The captured help text, right-stripped of trailing newlines.
-    """
-    import click
-
-    # Both `terminal_width` and `max_content_width` are pinned: Click's
-    # `Context.make_formatter` uses `width=self.terminal_width` verbatim, and an
-    # unset `terminal_width` falls back to `shutil.get_terminal_size()` - which
-    # is itself environment-dependent (a real console vs. a subprocess with none
-    # attached) - so pinning only `max_content_width` (a ceiling) is not enough
-    # to make the wrap width deterministic across machines.
-    ctx = click.Context(
-        cmd,
-        info_name=" ".join(path),
-        terminal_width=_GROUP_HELP_WIDTH,
-        max_content_width=_GROUP_HELP_WIDTH,
-    )
-    formatter = ctx.make_formatter()
-    click.Command.format_help(cmd, ctx, formatter)
-    return formatter.getvalue().rstrip("\n")
-
-
-def _rst_help_block(help_text: str) -> str:
-    """Return a RST code block carrying a captured ``--help`` rendering verbatim."""
-    return _rst_code(help_text, language="text") + "\n"
-
-
-# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
-# Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
-def _render_command_section(
-    language: OutputLanguage,
-    path: tuple[str, ...],
-    # TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click param annotation same as above
-    cmd: click.Command,  # type: ignore[name-defined]
-    schema_registry: dict[str, object],
-    heading_char: str = "~",
-) -> str:
-    """Render the RST section for a single leaf command.
-
-    Args:
-        path: The full command path tuple, e.g. ``("aeat", "app", "modelo", "work", "calculate")``.
-        cmd: The materialised Click command.
-        schema_registry: The process-global schema registry for resolving
-            the output schema, if any.
-        heading_char: The RST underline character for this command's heading,
-            chosen by the caller to match its depth in the surrounding page.
-
-    Returns:
-        A RST string describing the command.
-    """
-    full_path = " ".join(path)
-    registry_key = _normalise_command_path(path)
-    help_text = (cmd.help or "").strip() or docs_chrome("docs.cli.command.no_description_available", language)
-    schema_cls = schema_registry.get(registry_key)
-
-    parts: list[str] = []
-    parts.append(_rst_heading(f"``{full_path}``", heading_char))
-    parts.append(f"{help_text}\n\n")
-    parts.append(f"**{docs_chrome('docs.cli.command.path_label', language)}:** ``{full_path}``\n\n")
-    parts.append(f"**{docs_chrome('docs.cli.command.registry_key_label', language)}:** ``{registry_key}``\n\n")
-
-    param_table = _render_param_table(language, cmd.params)
-    if param_table:
-        parts.append(f"**{docs_chrome('docs.cli.command.parameters_heading', language)}**\n\n")
-        parts.append(param_table)
-        parts.append("\n")
-
-    schema_heading = docs_chrome("docs.cli.command.output_schema_heading", language)
-    if schema_cls is not None:
-        schema_name = f"{schema_cls.__module__}.{schema_cls.__name__}"
-        parts.append(f"**{schema_heading}**\n\n")
-        parts.append(docs_chrome("docs.cli.command.schema_envelope_note", language, schema=schema_name) + "\n\n")
-    else:
-        parts.append(f"**{schema_heading}**\n\n")
-        parts.append(docs_chrome("docs.cli.command.bare_payload_note", language) + "\n\n")
-
-    return "".join(parts)
-
-
-# ---------------------------------------------------------------------------
-# Internal helpers - per-verb-group page rendering
-# ---------------------------------------------------------------------------
-
-
-# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
-# Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
-def _render_group_children(
-    language: OutputLanguage,
-    path: tuple[str, ...],
-    cmd: click.Command,  # type: ignore[name-defined]
-    schema_registry: dict[str, object],
-    depth: int,
-) -> str:
-    """Recursively render every child of the group at ``path``.
-
-    A child that is itself a group gets its own heading plus a captured
-    ``--help`` block, then recurses; a leaf child gets the standard command
-    section. Both are rendered at the SAME heading depth (siblings), because
-    the heading character is chosen from ``depth`` alone
-    (:func:`_heading_char_for_depth`), never from the leaf/group distinction.
-
-    Args:
-        path: The command path tuple of the group being expanded.
-        cmd: The materialised Click group command.
-        schema_registry: The process-global schema registry.
-        depth: The RST heading depth of ``path``'s direct children.
-
-    Returns:
-        RST text for every child of ``cmd``, recursing into nested groups.
-    """
-    import click
-
-    parts: list[str] = []
-    full_path = " ".join(path)
-    with click.Context(cmd, info_name=full_path) as ctx:
-        child_names = sorted(cmd.list_commands(ctx))
-        for name in child_names:
-            child = cmd.get_command(ctx, name)
-            if child is None:
-                continue
-            child_path = (*path, name)
-            if _is_group(child):
-                parts.append(_rst_heading(f"``{' '.join(child_path)}``", _heading_char_for_depth(depth)))
-                parts.append("\n")
-                parts.append(_rst_help_block(_captured_help_text(child_path, child)))
-                parts.append(_render_group_children(language, child_path, child, schema_registry, depth + 1))
-            else:
-                parts.append(
-                    _render_command_section(
-                        language,
-                        child_path,
-                        child,
-                        schema_registry,
-                        heading_char=_heading_char_for_depth(depth),
-                    ),
-                )
-    return "".join(parts)
-
-
-# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
-# Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
-def _render_verb_group_page(
-    language: OutputLanguage,
-    group_path: tuple[str, ...],
-    group_cmd: click.Command,  # type: ignore[name-defined]
-    schema_registry: dict[str, object],
-) -> str:
-    """Render a full RST page for one major verb group (e.g. ``aeat app ledger``).
-
-    The page opens with the group's own rendered ``--help`` output (the exact
-    usage/description/options/commands text an operator sees at the terminal),
-    then walks its subtree: every leaf command gets a full section
-    (description, parameters, output schema), and every nested subgroup (e.g.
-    ``ledger rule``, ``ledger invoice catalogue``) gets its own captured
-    ``--help`` block before its children, recursively.
-
-    Args:
-        group_path: The full command path tuple, e.g. ``("aeat", "app", "ledger")``.
-        group_cmd: The materialised Click group command.
-        schema_registry: The process-global schema registry.
-
-    Returns:
-        The complete RST page content.
-    """
-    full_path = " ".join(group_path)
-    parts: list[str] = []
-    parts.append(_rst_heading(docs_chrome("docs.cli.family.title", language, command=f"``{full_path}``"), "="))
-    parts.append("\n")
-    parts.append(_rst_help_block(_captured_help_text(group_path, group_cmd)))
-    parts.append(_render_group_children(language, group_path, group_cmd, schema_registry, depth=1))
-    return "".join(parts)
-
-
-def _render_family_index_page(
-    language: OutputLanguage,
-    family_name: str,
-    group_names: list[str],
-    direct_leaf_paths: list[tuple[str, ...]],
-    schema_registry: dict[str, object],
-    # TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
-    # Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
-    all_commands: dict[tuple[str, ...], click.Command],  # type: ignore[name-defined]
-) -> str:
-    """Render the landing page for one top-level command family.
-
-    The page is navigation, not a command dump: a grid linking to each major
-    verb group's own page (which leads with that group's rendered ``--help``),
-    plus any commands mounted directly on the family root with no intervening
-    group (``aeat config check``, ``aeat config login``, ...).
-
-    Args:
-        family_name: The family name, e.g. ``"config"`` or ``"app"``.
-        group_names: Ordered verb-group names mounted directly under the family
-            (e.g. ``["overview", "ledger", "live", ...]``).
-        direct_leaf_paths: Command paths mounted directly under the family root
-            with no intervening group.
-        schema_registry: The process-global schema registry.
-        all_commands: Mapping from path tuple to Click command object for
-            every node collected from the tree.
-
-    Returns:
-        The complete RST page content.
-    """
-    title = docs_chrome("docs.cli.family.title", language, command=f"``aeat {family_name}``")
-    parts: list[str] = []
-    parts.append(_rst_heading(title, "="))
-    parts.append("\n")
-    parts.append(docs_chrome("docs.cli.family.intro", language, family=family_name) + "\n\n")
-    parts.append(docs_chrome("docs.cli.index.english_help_note", language) + "\n\n")
-
-    if group_names:
-        parts.append(_rst_heading(docs_chrome("docs.cli.family.choose_group_heading", language), "-"))
-        parts.append("\n")
-        parts.append(".. grid:: 1 1 2 2\n")
-        parts.append("   :gutter: 2\n")
-        parts.append("   :class-container: cadrumo-route-grid\n\n")
-        for group_name in group_names:
-            group_cmd = all_commands.get(("aeat", family_name, group_name))
-            summary = (getattr(group_cmd, "help", None) or "").strip() or docs_chrome(
-                "docs.cli.command.group_fallback", language
-            )
-            parts.append(f"   .. grid-item-card:: ``aeat {family_name} {group_name}``\n")
-            parts.append(f"      :link: {family_name}/{group_name}\n")
-            parts.append("      :link-type: doc\n")
-            parts.append("      :class-card: cadrumo-route-card\n\n")
-            parts.append(f"      {summary}\n\n")
-            parts.append("      +++\n")
-            open_link = docs_chrome(
-                "docs.cli.family.open_group_link",
-                language,
-                family=family_name,
-                group=group_name,
-            )
-            parts.append(f"      {open_link}\n\n")
-
-    if direct_leaf_paths:
-        parts.append(_rst_heading(docs_chrome("docs.cli.family.direct_commands_heading", language), "-"))
-        parts.append("\n")
-        parts.append(docs_chrome("docs.cli.family.direct_commands_intro", language, family=family_name) + "\n\n")
-        for path in direct_leaf_paths:
-            cmd = all_commands.get(path)
-            if cmd is None:
-                continue
-            parts.append(_render_command_section(language, path, cmd, schema_registry, heading_char="^"))
-
-    parts.append(_rst_heading(docs_chrome("docs.cli.index.where_next_heading", language), "-"))
-    parts.append("\n")
-    for group_name in group_names:
-        group_line = docs_chrome(
-            "docs.cli.family.group_link_line",
-            language,
-            target=f"{family_name}/{group_name}",
-            family=family_name,
-            group=group_name,
-        )
-        parts.append(f"* {group_line}\n")
-    parts.append("* " + docs_chrome("docs.cli.family.index_link_line", language) + "\n\n")
-
-    parts.append(".. toctree::\n")
-    parts.append("   :maxdepth: 1\n")
-    parts.append("   :hidden:\n\n")
-    for group_name in group_names:
-        parts.append(f"   {family_name}/{group_name}\n")
-    parts.append("\n")
-
+    if not isinstance(spec, CommandSpec):
+        raise TypeError("CLI reference received a non-CommandSpec node")
+    parts = [_rst_heading(" ".join(path), "-"), "\n", tr(spec.help_key.value), "\n\n"]
+    for parameter in spec.parameters:
+        declaration = parameter.name if isinstance(parameter, ArgumentSpec) else " / ".join(parameter.declarations)
+        required = parameter.default.kind.value == "required"
+        parts.append(f"{declaration}\n   {parameter.help_key.value if parameter.help_key else ''}")
+        parts.append(f" ({'required' if required else 'optional'})\n\n")
     return "".join(parts)
 
 
@@ -818,7 +378,7 @@ def _render_schemas_page(language: OutputLanguage, schema_registry: Mapping[str,
     keep resolving.
 
     Args:
-        schema_registry: The process-global schema registry.
+        schema_registry: The immutable CommandSpec-derived schema projection.
 
     Returns:
         The complete RST page content.
@@ -870,10 +430,9 @@ def _write_text_if_changed(path: Path, content: str) -> None:
 
 
 def generate_cli_reference(docs_root: Path) -> dict[str, str]:
-    """Materialise the CLI tree and render per-family RST pages under ``docs_root/cli/``.
+    """Render graph-authored per-family RST pages under ``docs_root/cli/``.
 
-    Imports :mod:`cadrumo.entrypoints.cli` in the calling process, forces every
-    lazy subcommand to load, asserts no fallback surface is present, then
+    Projects the immutable command graph, then
     renders one RST page per top-level family plus an ``index.rst`` and the
     companion ``automation.rst`` and ``schemas.rst`` pages.
 
@@ -898,129 +457,50 @@ def generate_cli_reference(docs_root: Path) -> dict[str, str]:
 
 
 def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
-    """Render the CLI reference after the caller has pinned output language.
-
-    Two languages are in play and they are not the same one. The CLI's own help
-    text is captured in English, pinned by ``CADRUMO_OUTPUT_LANGUAGE`` before any
-    command module imports, because it is the command surface rendered as
-    evidence. The page's own words follow ``CADRUMO_DOCS_LANGUAGE``, so a Spanish
-    reader gets Spanish headings and labels around that English help, and the
-    page says so.
-    """
-    import click
-
-    from cadrumo.application.operator_surface import ACCEPTED_ROOTS
+    """Render the CLI reference directly from the immutable command graph."""
     from cadrumo.core.i18n._render import clear_output_language_cache
+    from cadrumo.entrypoints.cli.command_api import command_schema_types
 
-    # Function-local: dev.docs.build imports this module, so a module-level
-    # import would close the cycle. The target is the owning module's public
-    # name, read exactly as if it were a top-level import.
     from .build import docs_build_language
 
     language = docs_build_language(os.environ)
-
     clear_output_language_cache()
-
-    from cadrumo.entrypoints.cli import full_command_tree
-    from cadrumo.entrypoints.cli._command_runtime import resolve_deferred_target
-
-    schema_registry = {
-        identity: resolve_deferred_target(spec.result_schema.target)
-        for identity, spec in COMMAND_GRAPH.by_schema_identity().items()
-        if spec.result_schema.target is not None
-    }
-
-    root_cmd = full_command_tree()
-
-    # Collect every command node keyed by its path tuple using _collect_commands,
-    # which builds paths correctly with the root name as the first element.
-    all_nodes = _collect_commands(root_cmd)
-
-    # Determine which top-level families are accepted, and the canonical
-    # verb ordering each root surface declares for its own children.
-    accepted_root_names = {r.name.value for r in ACCEPTED_ROOTS}
-    required_children_by_family = {r.name.value: r.required_children for r in ACCEPTED_ROOTS}
-
-    # Identify leaf paths per family (used only for the top index page's total
-    # leaf count; the per-group pages below walk the tree directly).
-    leaf_paths_by_family: dict[str, list[tuple[str, ...]]] = {}
-    for path, cmd in sorted(all_nodes.items()):
-        if isinstance(cmd, click.Group) or hasattr(cmd, "list_commands"):
-            continue
-        # path = ("aeat", family, ...)
-        if len(path) < 2:
-            continue
-        family = path[1]
-        if family not in accepted_root_names:
-            continue
-        leaf_paths_by_family.setdefault(family, []).append(path)
-
-    # Render pages.
     output_dir = docs_root / "cli"
     output_dir.mkdir(parents=True, exist_ok=True)
-
+    leaves = tuple(node for node in command_spec_nodes() if node.spec.kind == "leaf")
+    families = sorted({node.path[1] for node in leaves})
     rendered: dict[str, str] = {}
-    family_order = sorted(leaf_paths_by_family.keys())
-    total_leaves = sum(len(v) for v in leaf_paths_by_family.values())
-
-    for family in family_order:
-        family_path = ("aeat", family)
-        family_cmd = all_nodes[family_path]
-        with click.Context(family_cmd, info_name=" ".join(family_path)) as family_ctx:
-            child_names = set(family_cmd.list_commands(family_ctx))
-        required_order = required_children_by_family.get(family, ())
-        ordered_names = [name for name in required_order if name in child_names]
-        ordered_names.extend(sorted(child_names - set(ordered_names)))
-
-        group_names: list[str] = []
-        direct_leaf_paths: list[tuple[str, ...]] = []
-        for name in ordered_names:
-            child_path = (*family_path, name)
-            child_cmd = all_nodes[child_path]
-            if _is_group(child_cmd):
-                group_names.append(name)
-            else:
-                direct_leaf_paths.append(child_path)
-
-        group_dir = output_dir / family
-        if group_names:
-            group_dir.mkdir(parents=True, exist_ok=True)
-        for group_name in group_names:
-            group_path = (*family_path, group_name)
-            group_cmd = all_nodes[group_path]
-            group_content = _render_verb_group_page(language, group_path, group_cmd, schema_registry)
-            rel_path = f"{_verb_group_page_stem(family, group_name)}.rst"
-            rendered[rel_path] = group_content
-            _write_text_if_changed(group_dir / f"{group_name}.rst", group_content)
-
-        index_page_content = _render_family_index_page(
-            language,
-            family,
-            group_names,
-            direct_leaf_paths,
-            schema_registry,
-            all_nodes,
-        )
-        rel_path = f"{_family_index_page_stem(family)}.rst"
-        rendered[rel_path] = index_page_content
-        _write_text_if_changed(output_dir / f"{family}.rst", index_page_content)
-
-    index_content = _render_index_page(
-        language,
-        family_names=family_order,
-        total_leaf_count=total_leaves,
-    )
-    rendered["cli/index.rst"] = index_content
-    _write_text_if_changed(output_dir / "index.rst", index_content)
-
-    automation_content = _render_automation_page(language)
-    rendered["cli/automation.rst"] = automation_content
-    _write_text_if_changed(output_dir / "automation.rst", automation_content)
-
-    schemas_content = _render_schemas_page(language, schema_registry)
-    rendered["cli/schemas.rst"] = schemas_content
-    _write_text_if_changed(output_dir / "schemas.rst", schemas_content)
-
+    for family in families:
+        family_nodes = tuple(node for node in leaves if node.path[1] == family)
+        groups = sorted({node.path[2] for node in family_nodes if len(node.path) > 3})
+        direct = tuple(node for node in family_nodes if len(node.path) == 3)
+        family_parts = [_rst_heading(family, "="), "\n"]
+        family_parts.extend(_render_graph_command(language, node.path, node.spec) for node in direct)
+        for group in groups:
+            group_nodes = tuple(node for node in family_nodes if len(node.path) > 3 and node.path[2] == group)
+            content = (
+                _rst_heading(f"{family} {group}", "=")
+                + "\n"
+                + "".join(_render_graph_command(language, node.path, node.spec) for node in group_nodes)
+            )
+            rel = f"cli/{family}/{group}.rst"
+            rendered[rel] = content
+            (output_dir / family).mkdir(parents=True, exist_ok=True)
+            _write_text_if_changed(output_dir / family / f"{group}.rst", content)
+            family_parts.append(f"* :doc:`{group} <{family}/{group}>`\n")
+        family_content = "".join(family_parts)
+        rel = f"cli/{family}.rst"
+        rendered[rel] = family_content
+        _write_text_if_changed(output_dir / f"{family}.rst", family_content)
+    index = _render_index_page(language, family_names=families, total_leaf_count=len(leaves))
+    rendered["cli/index.rst"] = index
+    _write_text_if_changed(output_dir / "index.rst", index)
+    automation = _render_automation_page(language)
+    rendered["cli/automation.rst"] = automation
+    _write_text_if_changed(output_dir / "automation.rst", automation)
+    schemas = _render_schemas_page(language, command_schema_types())
+    rendered["cli/schemas.rst"] = schemas
+    _write_text_if_changed(output_dir / "schemas.rst", schemas)
     return rendered
 
 
@@ -1094,9 +574,9 @@ def collect_live_leaf_paths_in_subprocess() -> list[str]:
     """
     code = textwrap.dedent(
         """
-        from cadrumo.entrypoints.cli._command_specs import COMMAND_GRAPH
+        from cadrumo.entrypoints.cli.command_api import command_spec_nodes
 
-        for node in COMMAND_GRAPH.nodes():
+        for node in command_spec_nodes():
             if node.spec.kind == "leaf":
                 path = node.path[1:] if node.path[:1] == ("aeat",) else node.path
                 print(".".join(path))

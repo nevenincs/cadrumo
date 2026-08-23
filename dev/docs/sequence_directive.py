@@ -3,7 +3,7 @@
 An author writes a backtick-fenced ``{cli-sequence}`` directive; at build time
 this directive parses the body into typed frames, reads the sequence's committed
 golden (it RENDERS from the golden, it never executes — the engine's check/refresh
-CLI owns execution), tokenises each command line against the live Click tree, and
+CLI owns execution), tokenises each command line against the command graph, and
 emits, in document order:
 
 - each reader-facing frame as static HTML — setup scaffolding and expectation

@@ -1,6 +1,6 @@
 """CLI-surface projection compiler for the docs search index.
 
-Projects the live ``aeat`` Typer/Click command tree into strict search
+Projects the immutable production ``aeat`` command graph into strict search
 records the offline docs search and the Ctrl-K command palette surface as
 first-class results: one
 :class:`~dev.docs.terminology._cli_projection.CliSurfaceRecord` per leaf
@@ -18,15 +18,9 @@ so all record kinds serialise to one homogeneous index payload.
 
 House pattern
 -------------
-The command tree is materialised exactly as ``dev/docs/cli_reference.py``
-does -- ``typer.main.get_command(app)`` after forcing every lazy subcommand
-to load -- so the projection is honest about the actual command surface
-rather than any curated contract tuple. CLI help strings are ``tr()``
-values resolved to plain strings at module-import time, so the output
-language must be pinned BEFORE any CLI module is imported. The four-language
-help is therefore gathered by walking the tree four times, once per
-language, each in a fresh subprocess with ``CADRUMO_OUTPUT_LANGUAGE=<lang>``
-(the same clean-interpreter guarantee the CLI reference generator uses).
+The command inventory is projected from the same immutable specifications
+used to compile the runtime. Translation keys are resolved once per language
+in a fresh subprocess with ``CADRUMO_OUTPUT_LANGUAGE=<lang>``.
 """
 
 from __future__ import annotations
@@ -190,49 +184,34 @@ def _command_target(command_path: tuple[str, ...]) -> str:
 _WALK_PROGRAM = textwrap.dedent(
     """
     import json
-    import click
-    from typer.main import get_command as _get_command
-    from cadrumo.entrypoints.cli import app
-    from dev.docs.cli_reference import _force_lazy_imports, _collect_commands
-
-    _force_lazy_imports(app)
-    root = _get_command(app)
-    root.name = app.info.name or "aeat"
-    nodes = _collect_commands(root)
+    from cadrumo.core.i18n import tr
+    from cadrumo.entrypoints.cli.command_api import ArgumentSpec, DefaultKind, command_spec_nodes
 
     commands = []
-    for path, cmd in sorted(nodes.items()):
-        is_group = isinstance(cmd, click.Group) or hasattr(cmd, "list_commands")
-        if is_group or len(path) < 2:
+    for node in command_spec_nodes():
+        if node.spec.kind != "leaf":
             continue
         params = []
-        for param in cmd.params:
-            if isinstance(param, click.Context):
-                continue
-            opts = list(getattr(param, "opts", None) or [param.name])
-            params.append(
-                {
-                    "option_names": opts,
-                    "is_argument": isinstance(param, click.Argument),
-                    "required": bool(getattr(param, "required", False)),
-                    "help": (param.help or "").strip(),
-                }
-            )
-        commands.append(
-            {
-                "path": list(path),
-                "family": path[1],
-                "help": (cmd.help or "").strip(),
-                "params": params,
-            }
-        )
+        for param in node.spec.parameters:
+            params.append({
+                "option_names": [param.name] if isinstance(param, ArgumentSpec) else list(param.declarations),
+                "is_argument": isinstance(param, ArgumentSpec),
+                "required": param.default.kind is DefaultKind.REQUIRED,
+                "help": "" if param.help_key is None else tr(param.help_key.value),
+            })
+        commands.append({
+            "path": list(node.path),
+            "family": node.path[1],
+            "help": tr(node.spec.help_key.value),
+            "params": params,
+        })
     print(json.dumps(commands))
     """,
 )
 
 
 def _walk_tree_for_language(language: OutputLanguage) -> list[_CommandPayload]:
-    """Materialise the CLI tree in one language via a fresh subprocess.
+    """Project the command graph in one language via a fresh subprocess.
 
     Pins ``CADRUMO_OUTPUT_LANGUAGE`` to ``language`` so every ``help=tr(...)``
     call stores that language's string on the Typer objects before any CLI
@@ -365,7 +344,7 @@ def project_cli_search_records() -> tuple[
         command_path = " ".join(path)
         family = entry["family"]
         target = _command_target(path)
-        registry_key = _normalise_path(path)
+        registry_key = ".".join(path[1:] if path[:1] == ("aeat",) else path)
 
         command_help = _command_help_map(path, by_language)
         if len(command_help) == 1:
@@ -404,17 +383,6 @@ def project_cli_search_records() -> tuple[
         commands_untranslated=untranslated_commands,
     )
     return tuple(command_records), tuple(option_records), stats
-
-
-def _normalise_path(path: tuple[str, ...]) -> str:
-    """Project a command path onto the schema-registry key convention.
-
-    Reuses the CLI-reference normaliser so the ``registry_key`` field
-    matches the key the schema-conformance gates use.
-    """
-    from ..cli_reference import _normalise_command_path
-
-    return _normalise_command_path(path)
 
 
 def _command_help_map(
