@@ -10,8 +10,8 @@ related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-global-machine-secret-contract-research]]'
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
   - '[[2026-08-13-cli-action-envelope-successor-adr]]'
+  - '[[2026-08-23-cli-machine-secret-channel-unification-keychain-free-cross-process-machine-operation-research]]'
 ---
-
 # `cli-machine-secret-channel-unification` adr: `Uniform explicit machine-secret channels for every scalar-secret CLI verb` | (**status:** `accepted`)
 
 ## Problem Statement

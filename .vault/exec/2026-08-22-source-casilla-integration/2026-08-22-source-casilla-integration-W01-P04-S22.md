@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:29d5630308ecd4cc6714a5e06ab7df2abe78b3a570587f8b416df547672634e3'
+body_hash: 'sha256:42fa75f6fc40d405db11df2531c89ff5c5fc5fc9df2c1315cea3317a4e4122b4'
 step_id: 'S22'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # classify each of the five deferred row sources as an independent candidate
 

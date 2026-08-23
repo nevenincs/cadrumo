@@ -11,9 +11,6 @@ related:
   - "[[2026-08-23-cli-machine-secret-channel-unification-plan]]"
 ---
 
-
-
-
 # Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and migrate restore to two conditional canonical payload variants and hard-cut the legacy password field in favor of passphrase
 
 ## Scope

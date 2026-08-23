@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:0c5c7762d06409966170b55b856da341ee4ca6b331f71518896c8e9b7c5a58ab'
+body_hash: 'sha256:077ec9aaed5a3b525000882cdf7978fe9cb970d5af61f1f90174652e1256547b'
 step_id: 'S157'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # verify every reviewed capability locator remains re-fetchable and corresponds to its stable capability identity
 

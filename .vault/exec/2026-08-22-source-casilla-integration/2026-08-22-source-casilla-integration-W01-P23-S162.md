@@ -11,9 +11,6 @@ related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
 
-
-
-
 # extend ingress discovery across canonical command-spec declarations and adjudicate the resulting census drift
 
 ## Scope

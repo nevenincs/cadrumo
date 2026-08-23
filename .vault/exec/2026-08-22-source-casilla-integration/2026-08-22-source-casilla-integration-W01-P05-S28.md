@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:d2690a8375ae9caa27ab04293d6edc9a673d1969b605fc5c9e053660f71e4bc5'
+body_hash: 'sha256:d13d51d062210f3af9e202702ce68ca36fade8978cfdd51179ff2b880885c2f0'
 step_id: 'S28'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # prove each ratchet failure mode bites under an external mutation
 

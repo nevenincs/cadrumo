@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:53c53246abdc532258fc48f3cca43e33080eb9b2ccabbc859617f908d8e91eb1'
+body_hash: 'sha256:4f9a6c3b144dabdd4e2c8f0972fcf7ebaebd20c1d83ad8091a2ae03cd39ce758'
 step_id: 'S15'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # emit lexical destination matches as advisory findings only
 

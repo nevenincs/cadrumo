@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:ed05bc543f3c7261460fc4bc303ab5fc652935e6b0b6c6172dedce234726261c'
+body_hash: 'sha256:d45ea2d53b83b24ffa104e2cf58a677756ca3d4b1d7250c389f618162ef3884e'
 step_id: 'S10'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # verify all loaded modelo revisions produce deterministic registry-side census records
 

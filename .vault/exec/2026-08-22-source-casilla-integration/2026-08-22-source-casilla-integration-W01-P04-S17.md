@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:6a3abc37f735ce8ceee904037918113128ad24a99a7fc1c55351bcc844b6282f'
+body_hash: 'sha256:b67fec15579a2dc3d4e6d16d8f9f442f544faae9325d1f78088a30fb9fb93cf7'
 step_id: 'S17'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # define the canonical machine-readable census manifest
 

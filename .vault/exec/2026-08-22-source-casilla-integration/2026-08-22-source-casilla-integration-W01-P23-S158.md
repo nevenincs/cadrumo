@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:f7d2ae49cf61c28a1332d6010e3604dd1d8d59950a145bd12902fa0590f0e8ee'
+body_hash: 'sha256:6043f57685f227da4e5e657a4a31ab86d109e20d6f00c91c435f052d3fb877bc'
 step_id: 'S158'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # emit deterministic per-capability census membership and reviewed disposition evidence for aggregate coverage buckets
 

@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:ad67db6dbd742111ec9a50f5bab21d19e897c31ecf1bfdf67b9484fd3d7273b6'
+body_hash: 'sha256:29dc547bb0f56ed31cd20b02541abc2e68289eb08b9ffd89a1f563959264c437'
 step_id: 'S18'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # load and validate the census against the closed contract
 

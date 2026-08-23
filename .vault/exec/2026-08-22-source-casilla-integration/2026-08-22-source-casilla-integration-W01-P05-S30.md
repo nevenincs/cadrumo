@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:c42d57cb668577ef217a81f3244808598f04696b75fc7b1b8507f658465afc4e'
+body_hash: 'sha256:7d52c94ca0e6ed9d5f79cb0572183bcf48e716d3b7bb4a32748a019043845c08'
 step_id: 'S30'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # conduct a formal code review of the census and ratchet foundation
 

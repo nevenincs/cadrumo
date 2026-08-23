@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:d7eb870f7a139bfc9e1387ab9c0029934280300a26653e56384b66319b07e9be'
+body_hash: 'sha256:39d7350f06bdc318d5de314f3966a6ca1e90a57bc4225305acb78596cf2b7da9'
 step_id: 'S24'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # implement census generation and comparison commands
 

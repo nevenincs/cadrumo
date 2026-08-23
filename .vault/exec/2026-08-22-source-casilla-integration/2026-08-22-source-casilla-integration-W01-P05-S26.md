@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:fa0751a5d0b56f7e88e6781943b855617d79815ca083e21c8b94692cdeee63d7'
+body_hash: 'sha256:7761d7ca2b74d366b24565c6f2b7df4891f74a68256b6968cacb27c466a8a76b'
 step_id: 'S26'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # reject expired blocked rows and unresolved rows without an owner and bounded follow-up
 

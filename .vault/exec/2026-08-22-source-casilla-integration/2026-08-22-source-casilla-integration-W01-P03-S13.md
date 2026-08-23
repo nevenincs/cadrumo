@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:60dcb9c12ec7c2c965220350134b38ff8d1287cfcdf97d9b82e2f58dad446626'
+body_hash: 'sha256:2336f81cd6b608dc0b13c8d82a7bd33147537ce154256568268dee73ee40c8e0'
 step_id: 'S13'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # enumerate exported calculation helpers and explicit readiness declarations
 

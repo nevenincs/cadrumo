@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:923cd2fb93ed4623fc9f4d7bda4d4cdc6040f73014d26ac8c78ca03b78150489'
+body_hash: 'sha256:74e00c21ce0542e674637eb22e9973541c310807a09b830720c7f1a94aa1516e'
 step_id: 'S11'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # enumerate secure typed repositories and their aggregate grains
 

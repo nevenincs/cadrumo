@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:1cd1384952830d5b180fceba88512c33b1e8aaddfafcce27d9acb38fdcf87796'
+body_hash: 'sha256:504a8a069e1f6f4091b715ddb08146c74554a35a2b892f6a8701530a706e80bc'
 step_id: 'S14'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # enumerate typed row assemblers and declared source-disposition ownership
 

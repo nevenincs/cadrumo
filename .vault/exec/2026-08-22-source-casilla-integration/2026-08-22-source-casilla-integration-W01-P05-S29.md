@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:ef35de233e3624760235f4993232dcc6b0537ff7936f4c2c2dc98b36ed80b5f4'
+body_hash: 'sha256:e785e0fc108135820344a5e8faf9fa22f471b1a6e4c5ac98768680f9da236209'
 step_id: 'S29'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # enroll the connectivity check in the repository quality-gate surface
 

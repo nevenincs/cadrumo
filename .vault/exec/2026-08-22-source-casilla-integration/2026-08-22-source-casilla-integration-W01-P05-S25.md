@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:9b1611e4c7fef55cea817d7d794f5f75303814c6b6e664c68615dacf6ff5bf28'
+body_hash: 'sha256:978ce99c2c42d67f0488b03c3bd83f27b89fa028a83a5f5de475a40fb8e601c9'
 step_id: 'S25'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # reject unclassified new source capabilities and unexplained candidate disappearance
 

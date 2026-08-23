@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:15115aa35ab5ee50b3803983feac98a2c7dda69787c028c0046cdcf14126ae0e'
+body_hash: 'sha256:6624acfee0aeb544595e42285d0cef5a064d30a57a024e5d854d22ca81b3af74'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -19840,3 +19840,148 @@ constructs, formulas, verification predicates and expectations reference
 2025-only boxes and need a per-construct reading. Everything mechanical is now
 built and landed. Modelo 347's earlier revisions remain blocked on a per-field
 reading.
+
+## Tick: modelo 200 PUBLISHED both halves -- and reverted, because publication is not the contract
+
+The split reached publication. Both trees published, the AEAT-grounded 2024
+worked example passed against the new revision, and
+`test_no_revision_spans_a_design_relayout` went GREEN -- no revision spans a
+re-layout any more. It was then reverted, because passing the generator is not
+the same as satisfying the registry.
+
+### What it took to publish
+
+Four more layers, each found by being refused, each fixed on the design rather
+than by loosening a gate:
+
+* **construct membership.** 168 references in ONE fragment
+  (`constructs/0005-constructs.toml`) name boxes AEAT added in 2025. Removed on
+  the design itself. Worth recording that the first measurement of this reported
+  hits in eight fragments -- seven of them were the token `"2024"`, the YEAR,
+  matched as if it were a box. The same year-versus-box confusion as before,
+  caught by filtering to tokens that are boxes in the 2025 design.
+* **semantic_role is a KIND, not an instance.** Roles derived from each field's
+  own text are unique per casilla and the validator refuses them. Roles must come
+  from a sibling.
+* **and a role fixes a data_type.** Taking the sibling's role alone produced
+  `role canonical declares data_type 'decimal'` against a `money` casilla; the
+  sibling has to match on the record AND the type.
+* **`export_refs` is a list.** 812 of modelo 200's casillas are routed by more
+  than one field.
+
+Both halves then published cleanly, and the 2024 worked example -- the control
+that reversed the narrowing two ticks ago -- passed against the new revision.
+
+### Why it came back out
+
+The registry package went from 9 failures to **31**. The split satisfies the
+generator and breaks the surrounding contract:
+
+* `test_registry_locales_parity` -- casilla locale keys are revision-scoped, so a
+  new revision needs its own leaves. This is exactly the "26,008 locale leaves
+  (6,502 x es/en/ca/hu)" the revision's own prose predicted before this campaign
+  touched it;
+* `test_casilla_fragment_naming` -- authored fragments must carry canonical names;
+* `test_semantic_role` and the continuidad ratchet -- the role vocabulary and the
+  ungrounded-continuity baseline both move;
+* `test_modelo_200_revision_spans_two_layouts` and
+  `test_modelo_200_ejercicio_2024_resolves` -- modules that assert the PRE-split
+  shape and must be rewritten with it.
+
+Splitting the completed-split tracker also turned two anti-vacuity tests red:
+with no revision spanning, `test_both_occupancy_directions_have_a_positive_case`
+has no live example left. Those tests measure signal liveness over
+REVISION-FORMED design pairs, so a completed split legitimately empties them --
+they need re-pointing at pairs formed independently of revisions.
+
+A peer committed the split mid-flight as `17eb2833130`; it was restored forward
+from that commit's parent rather than by touching history.
+
+### What this establishes
+
+The mechanical half of the modelo 200 split is DONE and reproducible: map,
+render profile, revision surgery, construct membership, and both publish cycles
+all work, end to end. What remains is not generator work at all -- it is the
+locale re-key plus the dependent registry surfaces, which is the ruling the
+revision's prose asked for and which this tick has now priced from the other
+side.
+
+### Verified
+
+* modelo 200 restored to its single `2024-y-siguientes` revision, 3,462
+  casillas; authority loads CLEAN.
+* the epoch-2024 map and render profile remain landed and inert.
+
+### Still open
+
+Modelo 200's split, blocked on the locale re-key and the dependent modules, not
+on the generator. Modelo 347's earlier revisions remain blocked on a per-field
+reading.
+
+## Tick: modelo 200 priced to its terminal blocker, and 377 locale leaves my own splits had orphaned
+
+### Modelo 200's remaining work is translation, not registry work
+
+The locale delta was measured rather than estimated. Casilla locale keys are
+revision-scoped -- `modelo.schema.200.revision.<id>.casilla.<id>.label` -- and
+modelo 200 carries 6,924 leaves per locale, 27,696 across the four. A `2024`
+revision needs its own block: ~27,200 leaves, of which all but 1,480 are the
+SAME casilla with the SAME text under a different revision segment and so are
+mechanically copyable.
+
+The 1,480 are the 185 boxes AEAT carries only in 2024. Their Spanish can be read
+off the diseno; their English, Catalan and Hungarian cannot be grounded here, and
+the honesty ratchet refuses the scaffold placeholder. That is the terminal
+blocker for this campaign's autonomous reach on modelo 200 -- roughly 1,110
+translation leaves -- and it is a translation task, not a registry one.
+
+### A defect of my own, found while pricing it
+
+The Spanish-label coverage gate reported 481 unresolved casilla labels. Every
+single one was in a revision THIS CAMPAIGN created or renamed:
+
+* `322/2023` and `322/2008-2022` -- the split;
+* `347/2011-2024` -- the narrowing;
+* `210/2026-y-siguientes` -- that split.
+
+A revision rename moves the registry id but casilla locale keys are
+revision-scoped, so every label in the new revision resolved to nothing. The
+splits landed the tree and left the catalogues pointing at ids that no longer
+exist. Nothing in the split procedure recorded so far mentions the locale
+catalogues, which is why it happened three times.
+
+Fixed through the catalogue authority rather than by hand: a migration manifest
+applied with `python -m dev.locales set-batch`, 2,880 leaves across all four
+locales, each new key taking the value its own old key held. Unresolved labels
+fell from **481 to 104**.
+
+A measurement of my own was wrong on the way and was discarded rather than
+acted on: a naive YAML walk reported 8,261 missing labels against the gate's
+481, because `resolve_modelo_localization` walks an ordered fallback chain that
+a direct key lookup does not. The gate's own resolver was used instead.
+
+### What the residue is
+
+The 104 are casillas whose OLD revision carried no label either -- pre-existing
+gaps, not split damage. Spanish could be read from the diseno for them, but the
+parity ratchet requires all four locales, so adding Spanish alone would trade a
+red gate for a redder one. Same translation blocker as modelo 200's 185.
+
+**A rule worth carrying: a revision rename is not complete until its locale keys
+move with it.** Add it to the split procedure alongside the enrolment tables,
+the span sets and the dependent test modules.
+
+### Verified
+
+* unresolved Spanish labels: 104, from 481, measured with the gate's own
+  resolver.
+* registry package plus the locale suites: 9 failed, 5,383 passed -- the
+  standing declared inventories, unchanged. Locale PARITY is not among them:
+  every leaf was set in all four catalogues, so the ratchet stayed green.
+* authority loads CLEAN.
+
+### Still open
+
+Modelo 200's split, blocked on ~1,110 translation leaves. The 104 residual
+labels, blocked the same way. Modelo 347's earlier revisions, blocked on a
+per-field reading.

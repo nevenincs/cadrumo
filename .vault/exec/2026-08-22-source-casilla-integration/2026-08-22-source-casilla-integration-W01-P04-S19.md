@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:642811e0291cc65b66ae9c01efbc757f1b183154681cfdd1f7c028dea7a4cbe7'
+body_hash: 'sha256:4fdc6a09b95287e3c19a1ecda92a6f1d2bd275ee897115ff319067849c6b5f2d'
 step_id: 'S19'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # classify inventory as the first adjudication candidate with the obsolete 0155 hazard recorded
 

@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:67f0c4dda40b607a56baf94cf4035af3ac78a4520ebb92f2cc95724923be1066'
+body_hash: 'sha256:c127e74aec35fcdbbd8a563ff12747cb125122d0ee658ef2206b17bd1ec2bc5a'
 step_id: 'S16'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # verify discovery detects a new repository, assembler, helper, and readiness declaration independently
 

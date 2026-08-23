@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:6c4b010b1d1cc39d13c4bdb56f8c8059a39e96bbe48713e948304dbe466f0b56'
+body_hash: 'sha256:60a61a3fb15ae81ccbedc1f2e601df0c710eda88816a1c763a46b86120aa4043'
 step_id: 'S09'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # project relations, formula dependencies, and existing source dispositions
 

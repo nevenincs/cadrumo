@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:1eb02e01779d988b9dec0e21dc3b67a9d75bfa4c823c019ec38901d8cc3acdf7'
+body_hash: 'sha256:55db1909ed10ad1a82af809fcf3e6931246b3d37865ef2e0c657bdc76f2d78fa'
 step_id: 'S12'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # enumerate supported CLI and worksheet ingress surfaces
 

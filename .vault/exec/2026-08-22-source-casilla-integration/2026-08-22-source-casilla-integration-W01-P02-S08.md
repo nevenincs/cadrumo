@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:d6f0a84bbc13f51c734457197c96884a14d126096f13923c5b740fbfc07f7b0b'
+body_hash: 'sha256:ebf1ef2bd7b0404b37d9fb82379b5cd1ded4113339f2ef9232d382063a822438'
 step_id: 'S08'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # project declared bindings, typed selectors, aggregation operations, and target casillas
 

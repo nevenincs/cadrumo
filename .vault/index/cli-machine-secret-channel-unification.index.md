@@ -6,7 +6,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:72ac393e420e987214a994a9b54d9eb5312ef446f40ae46f936555ce203d3f29'
+body_hash: 'sha256:6c62866244ddbe7e867f21018f63063ac1f1e403d6853498dfbfed04eb952fdc'
 related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-W01-P01-S01]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-W01-P01-S02]]'
@@ -23,12 +23,14 @@ related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-foundation-review-audit]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-global-machine-secret-contract-research]]'
+  - '[[2026-08-23-cli-machine-secret-channel-unification-keychain-free-cross-process-machine-operation-research]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-plan]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-s05-conformance-audit]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-s07-profile-creation-review-audit]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-s08-passphrase-rotation-review-audit]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-s09-restore-review-audit]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-s10-certificate-machine-secret-audit]]'
+  - '[[2026-08-23-cli-machine-secret-channel-unification-s11-locale-review-audit]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-s12-obsolete-code-purge-audit]]'
 ---
 
@@ -50,6 +52,7 @@ Auto-generated index of all documents tagged with `#cli-machine-secret-channel-u
 - `2026-08-23-cli-machine-secret-channel-unification-s08-passphrase-rotation-review-audit` - `cli-machine-secret-channel-unification` audit: `S08 passphrase rotation review`
 - `2026-08-23-cli-machine-secret-channel-unification-s09-restore-review-audit` - `cli-machine-secret-channel-unification` audit: `Restore machine-secret channel review`
 - `2026-08-23-cli-machine-secret-channel-unification-s10-certificate-machine-secret-audit` - `cli-machine-secret-channel-unification` audit: `s10 certificate machine secret`
+- `2026-08-23-cli-machine-secret-channel-unification-s11-locale-review-audit` - `cli-machine-secret-channel-unification` audit: `S11 locale alignment review`
 - `2026-08-23-cli-machine-secret-channel-unification-s12-obsolete-code-purge-audit` - `cli-machine-secret-channel-unification` audit: `S12 obsolete-code purge`
 
 ### exec
@@ -74,3 +77,4 @@ Auto-generated index of all documents tagged with `#cli-machine-secret-channel-u
 ### research
 
 - `2026-08-23-cli-machine-secret-channel-unification-global-machine-secret-contract-research` - `cli-machine-secret-channel-unification` research: `Global machine-secret channel contract`
+- `2026-08-23-cli-machine-secret-channel-unification-keychain-free-cross-process-machine-operation-research` - `cli-machine-secret-channel-unification` research: `Keychain-free explicit profile authentication`

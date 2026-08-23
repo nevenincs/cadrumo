@@ -12,9 +12,6 @@ related:
   - "[[2026-08-13-profile-password-custody-rollup-adr]]"
 ---
 
-
-
-
 # `cli-machine-secret-channel-unification` research: `Keychain-free explicit profile authentication`
 
 Removing ambient environment authentication correctly closes an implicit secret route, but it exposes an older custody limitation: when the OS keychain cannot persist the random session key, `config login` authenticates only its own process and every later profile-bound process refuses before reaching its verb. The smallest evidence-backed repair is explicit per-invocation profile authentication at the root gate through a distinct paired stdin/fd payload, used only when session resume fails and never persisted or emitted. It repeats Argon2 work on degraded hosts but reuses the existing login proof and in-process session, adds no durable bearer capability or nested command runner, and preserves fail-closed keychain semantics. This necessarily expands the scalar-secret inventory and therefore requires an ADR amendment and new plan steps before production work resumes.

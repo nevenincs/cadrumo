@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:8d72e115c3d53daff77560585b3678b5808da6463259024c453099aea39099f9'
+body_hash: 'sha256:9cfd32d1ee296f7584c9f1f1d7bbffeb58bc16d65b608cde1bda2498a9afe09f'
 step_id: 'S23'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # verify every discovered capability and accepted destination candidate has exactly one census row
 

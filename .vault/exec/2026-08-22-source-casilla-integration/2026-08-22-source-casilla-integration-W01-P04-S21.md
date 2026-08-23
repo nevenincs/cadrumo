@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:10a5d477439ad3a4cc17b60fe50447597893ccfcf29762fc5918f556fc2cd7db'
+body_hash: 'sha256:f28b62517128f9b3fb8cb99ccb104fa26fba31671cb1163be54a3bf657283b8e'
 step_id: 'S21'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # classify assets and fincas with separate evidence, grain, and substitutability questions
 

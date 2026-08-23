@@ -5,31 +5,12 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:d485114214c218a63ea7937e4251952e0f17032e764eb5558f6b57143c03d223'
+body_hash: 'sha256:9ceb0a267ac92fa72e6f6432715c5af4d081a2af65ae418770df356f865e9b1b'
 related:
   - "[[2026-08-23-cli-machine-secret-channel-unification-plan]]"
   - "[[2026-08-23-cli-machine-secret-channel-unification-adr]]"
   - "[[2026-08-23-cli-machine-secret-channel-unification-W02-P05-S11]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace cli-machine-secret-channel-unification with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `cli-machine-secret-channel-unification` audit: `S11 locale alignment review`
 
@@ -79,3 +60,14 @@ claims to close.
   before S12 is committed. The annotation fix stripped scaffold-owned template
   comments and only refreshed the body hash; it is unrelated peer spillover, not
   a legitimate S11 or S12 semantic change.
+
+## Resolution
+
+Both medium findings are resolved. The four catalogues now name both canonical
+flags in the echo-suppression and non-interactive refusals. A dedicated semantic
+catalogue test loads every shipped locale through the locale manager and proves
+both flags are present without the retired environment route, descriptor zero is
+presented as accepted while descriptors 1 and 2 are reserved, and malformed,
+missing-field, and oversize diagnostics are identical across stdin and descriptor
+channels without naming either flag. The focused remediation suite passed 20 tests
+and Ruff completed cleanly.

@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:4272351998e9a7569b3ca28644b607d49d4e4725225f82924eb314d1d5b7be0b'
+body_hash: 'sha256:d1b3e414ef1c8ec9713c94d441aab831c9a0ca51bf570709d3e2860351b18878'
 step_id: 'S20'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # classify amortization as the mandatory second adjudication candidate
 

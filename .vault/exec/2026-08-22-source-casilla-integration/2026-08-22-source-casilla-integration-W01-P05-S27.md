@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:a4de5f43da2b5f3d7e8792f51af4f4abf5bf2f979c761096f85a80cd61b27988'
+body_hash: 'sha256:5fc4f4bf37eae017cdc4f4200fabed258a688dcb22d5c59fe38b7e7b31ba8c44'
 step_id: 'S27'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # reject connected claims without resolver ownership and encrypted revision proof
 

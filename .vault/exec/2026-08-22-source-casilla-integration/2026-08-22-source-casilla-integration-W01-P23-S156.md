@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:d1e8dd07ddc433dad78ba592e7a942d5ded788a6ee89c8ac3db44f54d831457c'
+body_hash: 'sha256:8a5da71ae0cdf5bd386424bcf7522048e15c1f94ff4c3eb456254f442f8e6f7a'
 step_id: 'S156'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-
-
 
 # replace advisory destination strings with typed registry-resolvable candidate identities and fail on absent or ambiguous destinations
 
