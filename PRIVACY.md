@@ -1,6 +1,6 @@
 # Privacy policy
 
-**Last updated: 12 July 2026**
+**Last updated: 23 August 2026**
 
 This policy covers the Cadrumo `aeat` software and this repository at
 [github.com/nevenincs/cadrumo](https://github.com/nevenincs/cadrumo).
@@ -30,43 +30,19 @@ opt out of, because nothing is sent to us in the first place.**
   - the optional Google Drive / Sheets export goes to your own Google account
     under OAuth scopes you grant;
   - package installation contacts PyPI like any Python tool;
-  - when an AI assistant operates the toolkit, your chosen chat provider sees
-    the conversation and the figures discussed in it — governed by that
-    provider's terms, not by us.
+  - optional cloud classification sends the transaction fields you confirm to
+    the provider you configure, under that provider's terms.
   None of these paths route through infrastructure we operate, and none of
   them reports anything back to us.
 - The software **never files taxes** and never writes to the AEAT.
 
-## The website
-
-- [cadrumo.neve.md](https://cadrumo.neve.md) is a static site. It has no
-  accounts, no forms, no analytics, no advertising, no tracking pixels, and
-  no fingerprinting. Every asset, including fonts, is served first-party from
-  the same domain; visiting the site triggers no third-party requests.
-- One functional first-party cookie, `cadrumo_lang`, is set **only if you
-  explicitly pick a language**, stores that choice for up to one year, and is
-  read by nothing but the site itself. Dismissing the privacy notice bar
-  stores a similar flag (`cadrumo_notice_ack`) in your browser's
-  localStorage. Under Article 22.2 of Spain's LSSI-CE and the AEPD's cookie
-  guidance, such preference cookies set at the user's explicit request are
-  exempt from prior consent; they are disclosed on the site's
-  [legal page](https://cadrumo.neve.md/#/legal) regardless.
-- The site is delivered from Amazon Web Services infrastructure (S3 and
-  CloudFront). Our configuration enables **no access logging**: connection
-  data such as your IP address is processed transiently by that
-  infrastructure only as technically necessary to deliver the page, and we
-  neither enable, receive, nor store access logs.
-
 ## GDPR position
 
-Because neither the software nor the website transmits personal data to us,
-we process no personal data within the meaning of Article 4(1) GDPR and hold
-no records on which data-subject rights (Articles 15–22 GDPR) could operate.
-Data processed locally by the software on your machine, for your own tax
-affairs, is your household/business activity — you are the only controller of
-it. If you believe we hold personal data about you despite the above (for
-example, in a GitHub issue you filed), contact us through the repository and
-we will respond.
+The software does not transmit personal data to us. Data processed locally by
+the software on your machine, for your own tax affairs, remains under your
+control. If you send personal data through a repository service such as a
+GitHub issue, that separate submission is processed under the service's terms;
+contact us through the repository if you need help with data you submitted.
 
 ## Changes
 

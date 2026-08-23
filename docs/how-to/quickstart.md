@@ -27,8 +27,7 @@ with:
 ```
 
 If it is not, [Install Cadrumo](../workstation-setup.md) covers the full
-setup: the package download, the optional integrations, and the AI-assistant
-(MCP) surface.
+setup, including the package download and optional integrations.
 
 ## The master-key passphrase
 

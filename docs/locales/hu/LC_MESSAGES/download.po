@@ -266,13 +266,6 @@ msgid ""
 msgstr ""
 "Tegye meg a legrövidebb utat egy üres profiltól egy exportált modelofájlig."
 
-#: ../../download.md:146
-msgid ""
-"Let an AI assistant such as Claude drive Cadrumo with you, on your machine."
-msgstr ""
-"Hagyja, hogy egy MI-asszisztens, például a Claude, Önnel együtt vezérelje a "
-"Cadrumót a saját gépén."
-
 #~ msgid ""
 #~ "The install is identical on every operating system once Git and uv are "
 #~ "present. Run, in a terminal:"

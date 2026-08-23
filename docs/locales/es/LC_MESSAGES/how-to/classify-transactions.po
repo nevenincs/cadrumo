@@ -423,15 +423,15 @@ msgstr "Usa una sugerencia de un LLM"
 
 #: ../../how-to/classify-transactions.md:181
 msgid ""
-"Cadrumo can use an AI assistant to suggest how to classify each "
-"transaction. The suggestion is a starting point. You must confirm or "
-"correct it. It does not fill in tax amounts such as taxable base, IVA "
-"rate, or IRPF category."
+"Cadrumo can use a configured language model to suggest how to classify each "
+"transaction. The suggestion is a starting point. You must confirm or correct "
+"it. It does not fill in tax amounts such as taxable base, IVA rate, or IRPF "
+"category."
 msgstr ""
-"Cadrumo puede usar un asistente de IA para sugerir cómo clasificar cada "
-"transacción. La sugerencia es un punto de partida. Debes confirmarla o "
-"corregirla. No rellena importes fiscales como la base imponible, el tipo "
-"de IVA o la categoría de IRPF."
+"Cadrumo puede usar un modelo de lenguaje configurado para sugerir cómo "
+"clasificar cada transacción. La sugerencia es un punto de partida. Debes "
+"confirmarla o corregirla. No rellena importes fiscales como la base imponible, "
+"el tipo de IVA o la categoría de IRPF."
 
 #: ../../how-to/classify-transactions.md:185
 msgid ""
@@ -581,4 +581,3 @@ msgstr "[Revisar cálculos con Google Sheets](review-with-google-sheets.md)"
 #: ../../how-to/classify-transactions.md:256
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referencia de la CLI](../cli/index.rst)"
-

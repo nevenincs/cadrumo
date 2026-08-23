@@ -149,7 +149,7 @@ This result demonstrates the workflow, not the correct tax treatment for your ci
 | Understand architecture and boundaries | [Architecture](docs/architecture/index.md) |
 | Diagnose a local problem | [Troubleshooting](docs/how-to/troubleshooting.md) |
 
-The CLI, Python modules, and Model Context Protocol (MCP) server share the same application and calculation services. Assistants guide the workflow; the deterministic engine calculates values.
+The CLI and Python modules use the same deterministic application and calculation services.
 
 ## Protect your data
 

@@ -11,10 +11,6 @@ The currently claimed registry tier publishes the three PyPI distributions and t
 GitHub release cohort. Scoop and Homebrew publication remain conditional until the
 channel descriptor claims them and their prerequisites are met.
 
-The marketing website belongs to the separate `cadrumo-marketing` repository; its
-source, build, tests, deployment, and release lifecycle are not part of this product
-release.
-
 ## Release path
 
 | Stage | Authority | Result |
