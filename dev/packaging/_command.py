@@ -36,6 +36,7 @@ def run_command(
     environment: Mapping[str, str] | None = None,
     timeout_seconds: float | None = None,
     errors: Literal["strict", "replace"] = "strict",
+    input_text: str | None = None,
 ) -> CommandResult:
     """Run one command and retain its actual output, timestamps, and exit status."""
     if isinstance(argv, str):
@@ -55,6 +56,7 @@ def run_command(
         errors=errors,
         check=False,
         timeout=timeout_seconds,
+        input=input_text,
     )
     completed_at = datetime.now(UTC)
     return CommandResult(

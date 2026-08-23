@@ -143,7 +143,6 @@ def _mcp_evidence(cohort: LoadedReleaseCohort, *, client: bool = False) -> Insta
         ),
         invoked_cli_sha256=invoked_cli_sha256,
         invoked_cli_sha256_by_command={
-            "config.profile.create": invoked_cli_sha256,
             "modelo.work.create": invoked_cli_sha256,
             "modelo.work.calculate": invoked_cli_sha256,
             "modelo.work.observations": invoked_cli_sha256,

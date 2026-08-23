@@ -14,6 +14,7 @@ import hashlib
 import json
 import os
 import re
+import secrets
 import shutil
 import sys
 import time
@@ -31,6 +32,7 @@ from pydantic import AnyUrl
 from cadrumo.core import scan_directory
 from dev._paths import UTF_8
 
+from ._command import run_command
 from ._installed_wheel_binding import installed_distribution_payload_sha256
 from .installed_tax_oracle import (
     BINDINGS,
@@ -40,7 +42,6 @@ from .installed_tax_oracle import (
     MODEL,
     PERIOD,
     PROFILE_LABEL,
-    PROFILE_TAX_ID,
     REGISTRY_REVISION,
     RELATIONS,
     TARGET_CASILLA,
@@ -50,6 +51,9 @@ from .installed_tax_oracle import (
     assert_no_diagnostic_notices,
     checkout_imports_removed,
     isolated_product_environment,
+)
+from .installed_tax_oracle import (
+    profile_create_arguments as cli_profile_create_arguments,
 )
 
 _UTF_8: Final[str] = UTF_8
@@ -61,7 +65,6 @@ _WHOAMI_TOOL = "cadrumo_whoami"
 _WORK_CALCULATE_TOOL = "cadrumo_modelo_work_calculate"
 _ATTESTED_COMMAND_KEYS = frozenset(
     {
-        "config.profile.create",
         "modelo.work.create",
         "modelo.work.calculate",
         "modelo.work.observations",
@@ -142,24 +145,6 @@ def isolated_mcp_environment(storage_root: Path) -> dict[str, str]:
                 f"isolated PATH unexpectedly resolves {executable!r}: {resolved}",
             )
     return environment
-
-
-def profile_create_arguments() -> dict[str, object]:
-    """Return named MCP arguments for the installed profile creation."""
-    return {
-        "profile_name": PROFILE_LABEL,
-        "quiet": True,
-        "accept_defaults": True,
-        "entity_type": "legal_entity",
-        "legal_entity_form": "sl",
-        "tax_id": PROFILE_TAX_ID,
-        "legal_name": "Installed Oracle SL",
-        "activity": "software services",
-        "incn_prior_12_months": "500000",
-        "new_entity_first_two_profit_periods": False,
-        "iva_regime": "GENERAL",
-        "tax_residence_ccaa": "madrid",
-    }
 
 
 def work_create_arguments() -> dict[str, object]:
@@ -305,19 +290,6 @@ async def _run_protocol(
             raise InstalledMcpOracleError(
                 f"installed MCP modelo-lifecycle toolset lacks the direct calculation tool: {advertised_tools!r}",
             )
-
-        profile_payload, call = await _execute(
-            session,
-            "config.profile.create",
-            profile_create_arguments(),
-            timeout_seconds=timeout_seconds,
-        )
-        calls.append(call)
-        _assert_envelope(profile_payload, command_key="config.profile.create")
-        _assert_no_diagnostic_notices(
-            profile_payload,
-            command_key="config.profile.create",
-        )
 
         whoami_payload, call = await _call_tool(
             session,
@@ -559,23 +531,13 @@ def run_installed_mcp_oracle(
         raise InstalledMcpOracleError(f"installed MCP server is not a file: {resolved_server}")
     resolved_work_dir = work_dir.resolve()
     resolved_work_dir.mkdir(parents=True, exist_ok=True)
-    evidence = asyncio.run(
-        _run_protocol(
-            resolved_server,
-            server_args=server_args,
-            environment_overrides=environment_overrides or {},
-            storage_root=storage_root,
-            work_dir=resolved_work_dir,
-            timeout_seconds=timeout_seconds,
-        ),
-    )
-    invoked_cli_sha256, invoked_cli_sha256_by_command = _observed_cli_attestation(storage_root)
     runtime_server = resolved_server
     runtime_project_root: str | None = None
+    effective_server_args = tuple(server_args)
     if resolved_server.stem.lower() != "cadrumo-mcp":
         try:
-            project_index = tuple(server_args).index("--project") + 1
-            project = Path(server_args[project_index]).resolve(strict=True)
+            project_index = effective_server_args.index("--project") + 1
+            project = Path(effective_server_args[project_index]).resolve(strict=True)
             runtime_project_root = str(project)
         except (ValueError, IndexError) as exc:
             raise InstalledMcpOracleError(
@@ -584,6 +546,47 @@ def run_installed_mcp_oracle(
         scripts = project / ".venv" / ("Scripts" if os.name == "nt" else "bin")
         runtime_server = (scripts / ("cadrumo-mcp.exe" if os.name == "nt" else "cadrumo-mcp")).resolve(strict=True)
     sibling_cli = runtime_server.with_name("aeat.exe" if runtime_server.suffix.lower() == ".exe" else "aeat")
+
+    passphrase = secrets.token_urlsafe(32)
+    profile = run_command(
+        (
+            str(sibling_cli),
+            "--format",
+            "json",
+            *cli_profile_create_arguments(),
+            "--secrets-stdin",
+        ),
+        cwd=resolved_work_dir,
+        environment=isolated_product_environment(storage_root),
+        timeout_seconds=timeout_seconds,
+        input_text=json.dumps(
+            {"passphrase": passphrase, "passphrase_confirmation": passphrase},
+            separators=(",", ":"),
+        ),
+    )
+    if profile.returncode != 0:
+        raise InstalledMcpOracleError("local machine-secret profile provisioning failed")
+    secret_file = resolved_work_dir / ".cadrumo-mcp-profile-secret.json"
+    secret_file.write_text(
+        json.dumps({"profile_passphrase": passphrase}, separators=(",", ":")),
+        encoding=_UTF_8,
+    )
+    secret_file.chmod(0o600)
+    effective_server_args = (*effective_server_args, "--profile-secrets-file", str(secret_file))
+    try:
+        evidence = asyncio.run(
+            _run_protocol(
+                resolved_server,
+                server_args=effective_server_args,
+                environment_overrides=environment_overrides or {},
+                storage_root=storage_root,
+                work_dir=resolved_work_dir,
+                timeout_seconds=timeout_seconds,
+            ),
+        )
+    finally:
+        secret_file.unlink(missing_ok=True)
+    invoked_cli_sha256, invoked_cli_sha256_by_command = _observed_cli_attestation(storage_root)
     return replace(
         evidence,
         invoked_cli_sha256=invoked_cli_sha256,
@@ -596,9 +599,7 @@ def run_installed_mcp_oracle(
         runtime_server_executable=str(runtime_server),
         runtime_project_root=runtime_project_root,
         installed_cli_payload_sha256=installed_distribution_payload_sha256(sibling_cli, "cadrumo"),
-        installed_harness_payload_sha256=installed_distribution_payload_sha256(
-            runtime_server, "cadrumo-harness"
-        ),
+        installed_harness_payload_sha256=installed_distribution_payload_sha256(runtime_server, "cadrumo-harness"),
     )
 
 

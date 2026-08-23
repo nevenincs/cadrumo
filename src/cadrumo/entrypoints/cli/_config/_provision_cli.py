@@ -150,7 +150,7 @@ def _selected_provision_models(
 
 
 def _provision_result_lines(result: object) -> tuple[str, ...]:
-    """Render the exact registered result DTO without recovery prose.
+    """Render the exact graph-resolved result DTO without recovery prose.
 
     The field names are schema identities, not human-authored guidance. Every
     value comes from the exact object emitted in JSON, so the text path cannot
@@ -171,7 +171,7 @@ def _provision_result_lines(result: object) -> tuple[str, ...]:
         if value is not None:
             action = getattr(result, "precondition_action", None)
             if not isinstance(action, ResolvedPreconditionAction):  # pragma: no cover - defensive boundary guard
-                raise TypeError("provisioning precondition action does not match the registered result DTO")
+                raise TypeError("provisioning precondition action does not match the graph-resolved result DTO")
             lines.extend(precondition_action_lines(action))
     return tuple(lines)
 

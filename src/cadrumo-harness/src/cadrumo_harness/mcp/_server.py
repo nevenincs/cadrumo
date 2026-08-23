@@ -45,6 +45,7 @@ import uuid
 from functools import partial
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as distribution_version
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from cadrumo.adapters.persistence.storage import close_all_live_bucket_sessions
@@ -242,7 +243,7 @@ def _cohort_mismatch_details(missing: list[str], mismatched: dict[str, str]) -> 
     return details
 
 
-def serve() -> None:
+def serve(*, profile_secrets_file: Path | None = None) -> None:
     """Run the ``cadrumo-mcp`` stdio server, or refuse if the SDK is not installed.
 
     Resolves the active persona from ``CADRUMO_MCP_PERSONA`` before touching the
@@ -250,7 +251,11 @@ def serve() -> None:
     :func:`~cadrumo_harness.mcp._persona_scope.active_persona` error
     regardless of whether the optional SDK is installed.
     """
+    from ._profile_secret_channel import clear_profile_secret, load_profile_secret_file
+
     enforce_required_runtime_cohort()
+    if profile_secrets_file is not None:
+        load_profile_secret_file(profile_secrets_file)
     persona = active_persona()
     surface_mode = resolve_surface_mode(os.environ.get(SURFACE_ENV_VAR))
     try:
@@ -258,7 +263,10 @@ def serve() -> None:
     except ModuleNotFoundError:
         emit_missing_sdk_refusal()
         return
-    _run_server(build_tool_descriptors(), persona=persona, surface_mode=surface_mode)
+    try:
+        _run_server(build_tool_descriptors(), persona=persona, surface_mode=surface_mode)
+    finally:
+        clear_profile_secret()
 
 
 def filter_descriptors_for_persona(

@@ -165,6 +165,7 @@ def run_supervised(
     timeout_s: float,
     encoding: str,
     errors: str = "replace",
+    stdin_payload: str | None = None,
 ) -> SupervisedResult:
     """Run ``argv`` with a wall-clock ceiling and process-tree termination.
 
@@ -187,7 +188,7 @@ def run_supervised(
         list(argv),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        stdin=subprocess.DEVNULL,
+        stdin=subprocess.PIPE if stdin_payload is not None else subprocess.DEVNULL,
         text=True,
         encoding=encoding,
         errors=errors,
@@ -195,7 +196,7 @@ def run_supervised(
         start_new_session=start_new_session,
     )
     try:
-        stdout, stderr = process.communicate(timeout=timeout_s)
+        stdout, stderr = process.communicate(input=stdin_payload, timeout=timeout_s)
     except subprocess.TimeoutExpired:
         _terminate_tree(process)
         try:

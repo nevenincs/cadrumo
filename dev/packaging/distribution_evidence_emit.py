@@ -73,7 +73,7 @@ _CLI_EXECUTABLE_NAME: Final[str] = "aeat"
 _MCP_EXECUTABLE_NAME: Final[str] = "cadrumo-mcp"
 _UTF_8: Final[str] = UTF_8
 _MCP_ATTESTED_COMMAND_KEYS: Final[frozenset[str]] = frozenset(
-    {"config.profile.create", "modelo.work.create", "modelo.work.calculate", "modelo.work.observations"}
+    {"modelo.work.create", "modelo.work.calculate", "modelo.work.observations"}
 )
 
 # The client identity an acquire lane declares when it drives the published

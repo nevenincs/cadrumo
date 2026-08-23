@@ -405,7 +405,6 @@ def test_cli_and_mcp_complete_the_same_grounded_oracle_from_that_cohort(
     expected_cli_sha256 = _text_sha256(str(cohort.cli))
     assert mcp_evidence.invoked_cli_sha256 == expected_cli_sha256
     assert mcp_evidence.invoked_cli_sha256_by_command == {
-        "config.profile.create": expected_cli_sha256,
         "modelo.work.calculate": expected_cli_sha256,
         "modelo.work.create": expected_cli_sha256,
         "modelo.work.observations": expected_cli_sha256,
@@ -424,7 +423,6 @@ def test_cli_and_mcp_complete_the_same_grounded_oracle_from_that_cohort(
     retained = json.loads(cohort.evidence_path.read_text(encoding="utf-8"))
     assert retained["mcp_oracle"]["invoked_cli_sha256"] == expected_cli_sha256
     assert retained["mcp_oracle"]["invoked_cli_sha256_by_command"] == {
-        "config.profile.create": expected_cli_sha256,
         "modelo.work.calculate": expected_cli_sha256,
         "modelo.work.create": expected_cli_sha256,
         "modelo.work.observations": expected_cli_sha256,

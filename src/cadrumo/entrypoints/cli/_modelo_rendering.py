@@ -6,7 +6,7 @@ This module turns modelo application/domain records such as
 :class:`~cadrumo.domain.modelos.ModeloRecord`,
 :class:`~cadrumo.domain.modelos.VerificationReport`, and
 :class:`~cadrumo.application.modelo.ModeloWorkDeadlinePosture` into CLI text lines
-and registered JSON payload fragments. The payload side feeds
+and CommandSpec-declared JSON payload fragments. The payload side feeds
 :class:`~cadrumo.entrypoints.cli._modelo_payloads.WorkUnitPayload`,
 :class:`~cadrumo.entrypoints.cli._modelo_payloads.CalculationRevisionPayload`,
 :class:`~cadrumo.entrypoints.cli._modelo_payloads.ModeloRecordPayload`,

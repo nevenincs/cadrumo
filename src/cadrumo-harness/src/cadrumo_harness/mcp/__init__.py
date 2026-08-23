@@ -22,6 +22,9 @@ Live AEAT submission is permanently forbidden: no live-write tool is ever expose
 
 from __future__ import annotations
 
+import argparse
+from pathlib import Path
+
 from ._annotations import McpAnnotations, annotations_for_command
 from ._dispatch import command_key_for_tool, tool_name_for_command, tool_request_argv
 from ._faithfulness import FaithfulnessResult, faithfulness_check
@@ -77,4 +80,7 @@ def main() -> None:
     """
     from ._server import serve
 
-    serve()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--profile-secrets-file", type=Path)
+    args = parser.parse_args()
+    serve(profile_secrets_file=args.profile_secrets_file)

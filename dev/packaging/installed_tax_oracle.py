@@ -154,7 +154,6 @@ def isolated_product_environment(storage_root: Path) -> dict[str, str]:
             "CADRUMO_CLI_REVEAL_IDENTIFIERS": "1",
             "CADRUMO_LOCAL_STORAGE_ROOT": str(resolved_root),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
-            "CADRUMO_SECRET_PASSPHRASE": secrets.token_urlsafe(32),
             # Packaging oracles use an isolated disposable root and explicitly
             # select the non-keychain test posture. This avoids host keyring
             # prompts without reviving the retired file-backend contract.
@@ -241,12 +240,14 @@ def _run(
     cwd: Path,
     env: dict[str, str],
     timeout_seconds: float,
+    input_text: str | None = None,
 ) -> CommandResult:
     result = run_command(
         argv,
         cwd=cwd,
         environment=env,
         timeout_seconds=timeout_seconds,
+        input_text=input_text,
     )
     if result.returncode != 0:
         raise InstalledTaxOracleError(
@@ -389,6 +390,9 @@ def run_installed_tax_oracle(
     resolved_work_dir.mkdir(parents=True, exist_ok=True)
     environment = isolated_product_environment(storage_root)
     base = (str(resolved_cli), "--format", "json")
+    authenticated_base = (*base, "--profile-secrets-stdin")
+    passphrase = secrets.token_urlsafe(32)
+    profile_authentication = json.dumps({"profile_passphrase": passphrase}, separators=(",", ":"))
     commands: list[CommandResult] = []
 
     version = _run(
@@ -400,20 +404,25 @@ def run_installed_tax_oracle(
     commands.append(version)
 
     profile = _run(
-        (*base, *profile_create_arguments()),
+        (*base, *profile_create_arguments(), "--secrets-stdin"),
         cwd=resolved_work_dir,
         env=environment,
         timeout_seconds=timeout_seconds,
+        input_text=json.dumps(
+            {"passphrase": passphrase, "passphrase_confirmation": passphrase},
+            separators=(",", ":"),
+        ),
     )
     commands.append(profile)
     profile_document = _json_envelope(profile, expected_command="config.profile.create")
     _assert_no_diagnostic_notices(profile_document, command="config.profile.create")
 
     create = _run(
-        (*base, *work_create_arguments()),
+        (*authenticated_base, *work_create_arguments()),
         cwd=resolved_work_dir,
         env=environment,
         timeout_seconds=timeout_seconds,
+        input_text=profile_authentication,
     )
     commands.append(create)
     create_document = _json_envelope(create, expected_command="modelo.work.create")
@@ -423,10 +432,11 @@ def run_installed_tax_oracle(
         raise InstalledTaxOracleError(f"work creation returned an invalid work unit id: {work_unit_id!r}")
 
     calculate = _run(
-        (*base, *work_calculate_arguments(work_unit_id)),
+        (*authenticated_base, *work_calculate_arguments(work_unit_id)),
         cwd=resolved_work_dir,
         env=environment,
         timeout_seconds=timeout_seconds,
+        input_text=profile_authentication,
     )
     commands.append(calculate)
     calculate_document = _json_envelope(calculate, expected_command="modelo.work.calculate")
@@ -454,7 +464,7 @@ def run_installed_tax_oracle(
 
     observations = _run(
         (
-            *base,
+            *authenticated_base,
             "app",
             "modelo",
             "work",
@@ -464,6 +474,7 @@ def run_installed_tax_oracle(
         cwd=resolved_work_dir,
         env=environment,
         timeout_seconds=timeout_seconds,
+        input_text=profile_authentication,
     )
     commands.append(observations)
     observations_document = _json_envelope(observations, expected_command="modelo.work.observations")

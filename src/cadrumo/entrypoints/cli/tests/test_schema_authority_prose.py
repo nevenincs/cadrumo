@@ -16,6 +16,8 @@ _CLI_ROOT = Path(__file__).resolve().parents[1]
 _STALE = re.compile(
     r"(?:schema\s+decorator|decorat(?:ed|or).{0,80}commandspec|"
     r"registered\s+(?:result\s+|output\s+|payload\s+)?schemas?|"
+    r"(?:result-?)?schema\s+registr(?:y|ies)|"
+    r"registered\s+result\s+DTO|registered\s+JSON\s+payload|"
     r"schemas?\s+(?:is\s+|are\s+)?registered|registers\s+its\s+own\s+schema|"
     r"(?:schema|result|model|command).{0,80}not\s+registered|"
     r"not\s+registered.{0,80}(?:schema|result|model|command)|"
@@ -51,17 +53,17 @@ def test_stale_schema_authority_detector_rejects_each_retired_mechanism() -> Non
         "# Shared models (not registered)",
         '"""Each subclass registers its own schema."""',
         '"""Typer registration for this command family."""',
+        '"""The central CLI schema registry owns this payload."""',
+        '"""The current result-schema registry is authoritative."""',
+        '"""Render the registered result DTO."""',
+        '"""Convert records into registered JSON payload fragments."""',
     )
     assert all(_stale_blocks(plant) for plant in plants)
 
 
 @pytest.mark.parametrize(
     "path",
-    tuple(
-        path
-        for path in sorted(_CLI_ROOT.rglob("*.py"))
-        if "tests" not in path.relative_to(_CLI_ROOT).parts
-    ),
+    tuple(path for path in sorted(_CLI_ROOT.rglob("*.py")) if "tests" not in path.relative_to(_CLI_ROOT).parts),
     ids=lambda path: path.relative_to(_CLI_ROOT).as_posix(),
 )
 def test_payload_prose_names_only_deferred_commandspec_schema_ownership(path: Path) -> None:

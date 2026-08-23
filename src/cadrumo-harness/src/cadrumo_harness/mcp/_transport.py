@@ -253,8 +253,21 @@ def _run_subprocess_tool(
     timeout_s = timeout_seconds(tier)
     try:
         executable = _installed_cli_executable()
-        argv = [executable, *cli_argv_for(descriptor.verb_schema, arguments)]
-        result = run_supervised(argv, timeout_s=timeout_s, encoding=UTF_8_ENCODING)
+        argv_tail = cli_argv_for(descriptor.verb_schema, arguments)
+        stdin_payload = None
+        if descriptor.verb_schema.profile_authentication != "not-applicable":
+            from ._profile_secret_channel import profile_secret_stdin_payload
+
+            stdin_payload = profile_secret_stdin_payload()
+            if stdin_payload is not None:
+                argv_tail = ["--profile-secrets-stdin", *argv_tail]
+        argv = [executable, *argv_tail]
+        result = run_supervised(
+            argv,
+            timeout_s=timeout_s,
+            encoding=UTF_8_ENCODING,
+            stdin_payload=stdin_payload,
+        )
     except OSError as error:
         return SubprocessToolOutcome(
             envelope=_cli_resolution_refusal_envelope(command_key=descriptor.command_key, error=error),
@@ -513,7 +526,11 @@ def _run_tool(  # pyright: ignore[reportUnusedFunction]
         read_only=descriptor.annotations.read_only_hint,
         open_world=descriptor.annotations.open_world_hint,
     )
-    if not tier_runs_in_process(tier):
+    from ._profile_secret_channel import profile_secret_stdin_payload
+
+    if not tier_runs_in_process(tier) or (
+        descriptor.verb_schema.profile_authentication != "not-applicable" and profile_secret_stdin_payload() is not None
+    ):
         return _run_subprocess_tool(descriptor, arguments)
     mcp_settings = load_mcp_settings()
     wedge_threshold_s = mcp_settings.cadrumo_mcp_wedge_threshold_seconds
