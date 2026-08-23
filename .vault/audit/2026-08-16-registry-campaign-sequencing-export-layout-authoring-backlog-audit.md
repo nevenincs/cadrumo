@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-campaign-sequencing'
 date: '2026-08-16'
-modified: '2026-08-22'
+modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:a9ff6c47e8327d32c5377a876d5b44d340ffbac4a65c59bb526904e3bcd50204'
+body_hash: 'sha256:998db497bb1a144a6ca28e59daa4d9a597c752046fb00763e17148df0ce5b9f2'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -17064,3 +17064,152 @@ The question this raises and does not answer: modelo 322 and modelo 200 were
 never checked for undetected boundaries of this shape. 322's designs DO carry
 box numbers, so its detector is not blind the same way; modelo 200's were not
 measured. Worth a pass before either split is planned.
+
+## Tick: a straddle signal added, and last tick's explanation of the 347 gap corrected
+
+Re-measured at tick start: authority CLEAN at `e2b1344e57`. Last tick's
+backgrounded registry suite also completed and closes the caveat left in that
+report: **15 failed, 5277 passed**, of which two -- both in
+`test_loader_directory_mode.py` -- PASS in isolation (30 passed) and are the
+parallel-run artefact the local-execution rule predicts. The standing set is 13:
+the eight declared inventories plus the five attributed peer surfaces.
+
+### The correction, which is the substance of this tick
+
+Last tick recorded that modelo 347's undetected 2010/2011 boundary is missed
+because the module's signals are blind to it -- box signals having no bracketed
+number to key on, set signals seeing an unchanged field count.
+
+**That explanation is wrong.** Running `_compare_design_pair` directly on the
+two designs returns THREE pieces of evidence, the first being "field SET changed
+at these positions: 18 added". The signals see it perfectly well.
+
+The pair is never compared. A revision's designs are those whose coverage years
+fall inside its span, and coverage is read from filename and title. The 2011
+design is named for its orden and states no ejercicio, so it attributes to no
+year: `_designs_claimed_by("347", revision)` returns the 2008 and 2010 designs
+only, and the 2010 -> 2011 pair never forms.
+
+Its coverage is not unknown. The source catalogue declares `applies_from
+2011-01-01` and `applies_to 2024-12-31` for that exact file. The detector does
+not read the catalogue.
+
+That reframes the unmeasured-design ledger recorded two ticks ago. It is not
+only bookkeeping: **an unattributed design is a hole in boundary detection**,
+and modelo 347's second boundary is what falls through it.
+
+The landed module's docstring and the split-progress annotation have both been
+corrected in place. The ASSERTIONS were unaffected -- straddling, equal field
+counts, the revision covering both years are all still true -- but a green test
+carrying a false explanation misleads exactly the reader who trusts it.
+
+### The signal added anyway, and what it is worth
+
+`_straddle_evidence` is now the SEVENTH signal in `_compare_design_pair`: a
+field displaced so it overlaps another without either containing it. Containment
+is tolerated (a split or merged slot still corresponds byte for byte);
+straddling is evidence.
+
+Honest about its value today: it changes NO verdict. It contributes evidence to
+modelo 200's boundary (454 displaced fields) and modelo 322's (85), both already
+detected by other signals. It fires on no pair that was previously silent, and
+`test_no_unknown_revision_has_started_spanning` still passes, so it introduced no
+false positives -- including on modelo 303's and 490's mid-course halves, which
+a coverage-year sweep DOES flag and which `_designs_claimed_by` correctly
+suppresses.
+
+### The next step, measured rather than guessed
+
+Fifteen bundled designs attribute to no year by title while their source
+catalogue entry declares an `applies_from`. Reading that would close the
+detection hole -- but not blanket-wise: ten of the fifteen declare
+`applies_to = None`, and enumerating an open span invents years for the same
+reason `y-siguientes` is not expanded. Only a CLOSED span is enumerable, which
+is five designs -- modelos 180, 193, 210 (twice) and 347 -- and 347's is the one
+that unblocks its second boundary.
+
+That is a change to a shared detector with real blast radius, so it is recorded
+with its population rather than attempted at the end of a tick.
+
+### Verified
+
+* the corrected module: 6 passed; split-progress: 3 passed after its annotation
+  was rewritten; the relayout gate still reports the same three spanning
+  revisions, now with straddle evidence attached to two of them.
+* authority loads CLEAN; ruff clean on all three touched files.
+
+## Tick: the detection hole closed -- an unattributed design now enters comparison
+
+Re-measured at tick start: authority CLEAN at `f3db6b8c47`.
+
+### What was fixed
+
+Last tick established that modelo 347's second re-layout goes unreported because
+its 2011 design states no ejercicio anywhere, so it attributes to no year and
+the 2010 -> 2011 pair never forms -- even though the revision CITES that design
+and the source catalogue declares its coverage outright.
+
+`_design_coverage_years` now falls back to the source catalogue when the
+document itself says nothing. The result, measured on the gate rather than
+asserted:
+
+    modelo 347 revision '2008-2024' spans 2 re-layout(s) and needs 3 revisions
+
+up from one. Modelo 200 and modelo 322 are unchanged, and
+`test_no_unknown_revision_has_started_spanning` still passes, so the fallback
+introduced no false positive anywhere in the corpus.
+
+### The rule, and why it is checked against dates rather than a list
+
+Admitted ONLY from a span that is CLOSED and EJERCICIO-ALIGNED -- both ends on
+1 January and 31 December. Both conditions carry weight:
+
+* an OPEN span (`applies_to` unset) cannot be enumerated for the same reason
+  `y-siguientes` is not expanded: it would invent every year to the end of time.
+  Ten of the fifteen candidates measured last tick are open and stay out;
+* a span whose ends fall elsewhere is not describing ejercicios. Modelo 180's
+  design runs 2000-11-28 to 2014-09-26 -- promulgation and repeal dates -- and
+  Modelo 210's run 2022-06-01 to 2025-12-31, a DEVENGO span on an axis that is
+  not an ejercicio. Reading either as coverage repeats the
+  update-date-as-governed-period conflation this campaign has twice undone.
+
+Because the test is on the dates themselves, no modelo is named and no allowlist
+exists. The ledger's deliberate entries survive it untouched: the
+non-ejercicio guard still passes, and Modelo 210's two devengo-named designs are
+still reported unattributed, which is the correct outcome for them.
+
+The unmeasured ledger goes from 25 designs to 21. The four admitted are those
+whose catalogue entry states a whole number of ejercicios.
+
+### Verified
+
+* the boundary the fix exists for, proved by removing the fix: with the
+  fallback modelo 347 reports `(2009, 2010)` AND `(2010, 2011)`; with
+  `_catalogue_ejercicio_span` forced empty it reports only `(2009, 2010)`.
+* split-progress and the non-ejercicio guard: 11 passed.
+* ruff clean.
+
+### BLOCKER, and it is not this campaign's
+
+**The bundled authority no longer loads.** Between this tick's start
+(`f3db6b8c47`) and its end (`4083f62727`) a peer landed modelo 220 work, and
+`e992dd6b71` -- "registry(modelo-220): stamp T22012000, and record that a
+derived id needs a uniqueness check" -- leaves revision 2024 with duplicate
+casilla numbers `00282` through `00286`, each pair of bare ids ambiguous:
+
+    registry revision identity is ambiguous:
+      modelo 220 revision 2024: duplicate casilla number '00282'
+      ... '00283' '00284' '00285' '00286'
+
+`bundled_authority()` raises `RegistryValidationError` on it. This is tree-wide:
+every consumer of the bundled authority is affected, not only modelo 220.
+
+NOT FIXED HERE, and the reason is the sanctioned one: modelo 220 is being
+actively authored by another agent as of minutes ago -- three commits in this
+tick alone -- and the commit message shows the uniqueness problem is already
+known to them. Editing their half-landed casilla set would collide with work in
+flight.
+
+The gates touched this tick were re-run after the breakage and still pass, so
+the verification above stands; but a full-suite run is not meaningful until
+modelo 220 loads again.
