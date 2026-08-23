@@ -32,6 +32,11 @@ advisory_destination_refs = [
   "modelo:100:semantic:inventory-purchases",
   "modelo:100:semantic:inventory-decrease",
 ]
+registry_destination_candidates = [
+  { kind = "casilla_semantic_role", modelo_id = "100", semantic_role = "irpf_ed_variacion_existencias_incremento" },
+  { kind = "casilla_semantic_role", modelo_id = "100", semantic_role = "irpf_ed_compra_existencias" },
+  { kind = "casilla_semantic_role", modelo_id = "100", semantic_role = "irpf_ed_variacion_existencias_disminucion" },
+]
 
 [[entries.grounding]]
 locator_kind = "repository"
@@ -159,6 +164,9 @@ capability_locators = [
 ]
 capability_ids = ["row_assembler:per_related_party_operation"]
 advisory_destination_refs = ["modelo:232:rows:related-party-operation"]
+registry_destination_candidates = [
+  { kind = "binding_source", modelo_id = "232", source_kind = "related_party_operation" },
+]
 
 [[entries.grounding]]
 locator_kind = "repository"
@@ -186,6 +194,9 @@ capability_locators = [
 ]
 capability_ids = ["row_assembler:per_refund_operation"]
 advisory_destination_refs = ["modelo:360:rows:refund-operation"]
+registry_destination_candidates = [
+  { kind = "binding_source", modelo_id = "360", source_kind = "refund_operation" },
+]
 
 [[entries.grounding]]
 locator_kind = "repository"
@@ -213,6 +224,9 @@ capability_locators = [
 ]
 capability_ids = ["row_assembler:per_donativo_donor"]
 advisory_destination_refs = ["modelo:182:rows:donativo-donor"]
+registry_destination_candidates = [
+  { kind = "binding_source", modelo_id = "182", source_kind = "donativo_donor" },
+]
 
 [[entries.grounding]]
 locator_kind = "repository"
@@ -240,6 +254,9 @@ capability_locators = [
 ]
 capability_ids = ["row_assembler:per_gasto193_contribuyente"]
 advisory_destination_refs = ["modelo:193:rows:gasto-contributor"]
+registry_destination_candidates = [
+  { kind = "binding_source", modelo_id = "193", source_kind = "gasto193_contributor" },
+]
 
 [[entries.grounding]]
 locator_kind = "repository"

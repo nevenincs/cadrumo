@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-23'
 body_schema: body-v1
-body_hash: 'sha256:32e1be251a143e8e8a0e68f8a66a96523911cc4fba34c5c3a6cfdc01c30a72f3'
+body_hash: 'sha256:83998273eb7bdb47d3a9555e7dc35c3dad7430356430a4957c4993191d417c10'
 ---
 
 # `source-casilla-integration` plan
@@ -105,6 +105,17 @@ Make silent capability drift, stale deferral, and false connection claims fail C
 - [x] `W01.P05.S28` - prove each ratchet failure mode bites under an external mutation; `dev/source_connectivity/tests/test_check.py`.
 - [x] `W01.P05.S29` - enroll the connectivity check in the repository quality-gate surface; `pyproject.toml`.
 - [x] `W01.P05.S30` - conduct a formal code review of the census and ratchet foundation; `.vault/audit/2026-08-22-source-casilla-integration-census-code-review.md`.
+
+### Phase `W01.P23` - remediate census review findings
+
+Close the formal review findings before any source candidate is promoted or inventory behavior changes.
+
+- [x] `W01.P23.S156` - replace advisory destination strings with typed registry-resolvable candidate identities and fail on absent or ambiguous destinations; `src/cadrumo/application/registry/source_connectivity.py`.
+- [ ] `W01.P23.S157` - verify every reviewed capability locator remains re-fetchable and corresponds to its stable capability identity; `dev/source_connectivity/check.py`.
+- [ ] `W01.P23.S158` - emit deterministic per-capability census membership and reviewed disposition evidence for aggregate coverage buckets; `dev/source_connectivity/cli.py`.
+- [ ] `W01.P23.S159` - make the census and ratchet modules clean on their intended static type-check surface; `dev/source_connectivity`.
+- [ ] `W01.P23.S160` - decide and implement the canonical live connected-proof gate composition; `src/cadrumo/application/registry`.
+- [ ] `W01.P23.S161` - re-review the remediated census foundation and close every recorded finding; `.vault/audit/2026-08-22-source-casilla-integration-census-code-review-audit.md`.
 
 ## Wave `W02` - adjudicate and connect inventory first
 

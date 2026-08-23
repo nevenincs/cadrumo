@@ -9,7 +9,7 @@ declarations.
 from __future__ import annotations
 
 import tomllib
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -36,6 +36,7 @@ from ...domain.calculations.registry import (
     InputKind,
     InputKindValue,
     LegalRefId,
+    ModeloDefinition,
     ModeloId,
     RegistrySnapshot,
     RelationConsumptionChannel,
@@ -56,6 +57,7 @@ from ..modelo import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
 __all__ = [
     "ManualCasillaRequirement",
     "RegistryBindingRecord",
+    "RegistryDestinationCandidate",
     "RegistryDestinationRecord",
     "RegistryFormulaRecord",
     "RegistryRelationRecord",
@@ -68,6 +70,7 @@ __all__ = [
     "derive_registry_relation_records",
     "derive_registry_source_disposition_records",
     "load_source_connectivity_census",
+    "validate_census_destination_candidates",
 ]
 
 type ManualCasillaRequirement = Literal["required", "optional"]
@@ -79,6 +82,33 @@ type CapabilityCoverageSelector = Literal[
     "remaining_source_ownership",
     "remaining_source_readiness",
 ]
+type RegistryDestinationCandidateKind = Literal["binding_source", "casilla_semantic_role"]
+
+
+class RegistryDestinationCandidate(BaseModel):
+    """Typed registry-resolvable destination candidate, never a lexical inference."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    kind: RegistryDestinationCandidateKind
+    modelo_id: ModeloId
+    semantic_role: str | None = Field(default=None, min_length=1, max_length=256)
+    source_kind: BindingSourceKind | None = None
+
+    @model_validator(mode="after")
+    def _require_kind_payload(self) -> RegistryDestinationCandidate:
+        if self.kind == "casilla_semantic_role":
+            if self.semantic_role is None or self.source_kind is not None:
+                raise ValueError("semantic-role destination requires only semantic_role")
+        elif self.source_kind is None or self.semantic_role is not None:
+            raise ValueError("binding-source destination requires only source_kind")
+        return self
+
+    @property
+    def identity(self) -> tuple[str, str, str]:
+        """Return the canonical typed identity used for one-owner checks."""
+        token = self.semantic_role if self.semantic_role is not None else self.source_kind.value
+        return self.kind, str(self.modelo_id), token
 
 
 class SourceConnectivityCensusEntry(SourceConnectivityCensusRow):
@@ -92,6 +122,7 @@ class SourceConnectivityCensusEntry(SourceConnectivityCensusRow):
         pattern=r"^sha256:[0-9a-f]{64}$",
     )
     advisory_destination_refs: tuple[str, ...] = ()
+    registry_destination_candidates: tuple[RegistryDestinationCandidate, ...] = ()
 
     @model_validator(mode="after")
     def _coverage_refs_are_unique(self) -> SourceConnectivityCensusEntry:
@@ -99,6 +130,9 @@ class SourceConnectivityCensusEntry(SourceConnectivityCensusRow):
             raise ValueError("connectivity census capability locators must be unique within one entry")
         if len(set(self.advisory_destination_refs)) != len(self.advisory_destination_refs):
             raise ValueError("connectivity census advisory destination refs must be unique within one entry")
+        destination_ids = tuple(candidate.identity for candidate in self.registry_destination_candidates)
+        if len(set(destination_ids)) != len(destination_ids):
+            raise ValueError("connectivity census registry destination candidates must be unique within one entry")
         if len(set(self.capability_ids)) != len(self.capability_ids):
             raise ValueError("connectivity census capability ids must be unique within one entry")
         if self.capability_selector is None:
@@ -123,13 +157,13 @@ class SourceConnectivityCensusManifest(BaseModel):
         candidate_ids = tuple(row.candidate_id for row in self.entries)
         if len(set(candidate_ids)) != len(candidate_ids):
             raise ValueError("source-connectivity census candidate ids must be unique")
-        destination_refs = tuple(
-            destination_ref
+        destination_ids = tuple(
+            candidate.identity
             for row in self.entries
-            for destination_ref in row.advisory_destination_refs
+            for candidate in row.registry_destination_candidates
         )
-        if len(set(destination_refs)) != len(destination_refs):
-            raise ValueError("source-connectivity advisory destinations must have one census owner")
+        if len(set(destination_ids)) != len(destination_ids):
+            raise ValueError("source-connectivity registry destinations must have one census owner")
         return self
 
 
@@ -143,6 +177,49 @@ def load_source_connectivity_census(
     raw = _hydrate_census_tokens(_freeze_toml_arrays(tomllib.loads(census_path.read_text(encoding="utf-8"))))
     context = {} if proof_authority is None else {"source_connectivity_proof_authority": proof_authority}
     return SourceConnectivityCensusManifest.model_validate(raw, context=context)
+
+
+def validate_census_destination_candidates(
+    manifest: SourceConnectivityCensusManifest,
+    modelos: Iterable[ModeloDefinition],
+) -> None:
+    """Resolve every accepted destination candidate against validated registry models."""
+    modelos_by_id = {modelo.id: modelo for modelo in modelos}
+    for entry in manifest.entries:
+        for candidate in entry.registry_destination_candidates:
+            modelo = modelos_by_id.get(candidate.modelo_id)
+            if modelo is None:
+                raise ValueError(
+                    f"census destination references absent modelo {candidate.modelo_id}: {entry.candidate_id}"
+                )
+            if candidate.kind == "casilla_semantic_role":
+                for revision in modelo.revisions.values():
+                    matches = tuple(
+                        casilla for casilla in revision.casillas if casilla.semantic_role == candidate.semantic_role
+                    )
+                    if len(matches) > 1:
+                        raise ValueError(
+                            f"census destination semantic role is ambiguous in {modelo.id}/{revision.id}: "
+                            f"{candidate.semantic_role}"
+                        )
+                if not any(
+                    casilla.semantic_role == candidate.semantic_role
+                    for revision in modelo.revisions.values()
+                    for casilla in revision.casillas
+                ):
+                    raise ValueError(
+                        f"census destination semantic role is absent from modelo {modelo.id}: "
+                        f"{candidate.semantic_role}"
+                    )
+            elif not any(
+                binding.source is candidate.source_kind
+                for revision in modelo.revisions.values()
+                for binding in revision.bindings
+            ):
+                raise ValueError(
+                    f"census destination binding source is absent from modelo {modelo.id}: "
+                    f"{candidate.source_kind.value}"
+                )
 
 
 def _freeze_toml_arrays(value: object) -> object:

@@ -8,12 +8,16 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from cadrumo.application.registry.source_connectivity import load_source_connectivity_census
+from cadrumo.application.registry.source_connectivity import (
+    load_source_connectivity_census,
+    validate_census_destination_candidates,
+)
 from cadrumo.core import (
     SourceConnectivityDisposition,
     SourceConnectivityExpiryPosture,
     SourceConnectivityProofAuthority,
 )
+from cadrumo.core.resources import resources
 
 from .discovery import assign_capabilities_to_census, discovered_source_capability_ids
 
@@ -68,6 +72,10 @@ def check_capability_census(
         manifest = load_source_connectivity_census(proof_authority=proof_authority)
     except ValidationError as error:
         raise SourceConnectivityCheckError(f"census claim failed live proof validation: {error}") from error
+    try:
+        validate_census_destination_candidates(manifest, resources().modelos.authority.modelos)
+    except ValueError as error:
+        raise SourceConnectivityCheckError(str(error)) from error
     check_census_governance(manifest, as_of=as_of or date.today())
     try:
         assignments = assign_capabilities_to_census(capability_ids, manifest)
