@@ -23,14 +23,13 @@ import hashlib
 import json
 import os
 import subprocess
-import tomllib
 from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, NoReturn
 
 from cadrumo.core import scan_directory
-from dev._paths import REPO_ROOT, UTF_8
+from dev._paths import UTF_8
 
 from ._hashing import sha256_path
 from .cohort_manifest import LoadedReleaseCohort
@@ -47,26 +46,16 @@ _UTF_8: Final[str] = UTF_8
 # each keyed by the exact ``python-cohort.json`` digest name. A public
 # reacquisition proves these three, and only these three, byte-for-byte.
 #
-# The sibling ``cadrumo-harness`` distribution (the ``cadrumo-mcp`` launcher)
-# is deliberately NOT a cohort member and carries no digest pin here: the
-# harness is versioned independently of this cohort (see
-# :func:`harness_version`) and is installed pinned to its own declared
-# version rather than to ``cohort.version``. This mirrors the ruling already
-# encoded in the MCPB bundle builder (``packaging/mcpb/build.py``), which
-# reads the harness's own ``pyproject.toml`` version for the same reason. The
-# retired ``cadrumo[agent]`` extra — folded into the core distribution before
-# the harness was severed into its own package — is gone; nothing here may
-# reintroduce it.
+# The independently versioned harness is an exact digest-pinned cohort member.
 PYTHON_COHORT_WHEEL_NAMES: Final[tuple[str, ...]] = (
     "cadrumo",
+    "cadrumo-harness",
     "cadrumo-data-manuals",
     "cadrumo-data-official",
 )
 
-#: The sibling agent-harness distribution name (never a member of
-#: :data:`PYTHON_COHORT_WHEEL_NAMES`).
+#: The sibling agent-harness distribution name.
 HARNESS_DISTRIBUTION: Final[str] = "cadrumo-harness"
-_HARNESS_PYPROJECT_RELATIVE: Final[Path] = Path("src") / "cadrumo-harness" / "pyproject.toml"
 
 # The grounded Modelo 200 cuota íntegra the installed behaviour oracles must
 # reproduce; a divergent value means the acquired bytes are not the promoted
@@ -83,31 +72,6 @@ class AcquisitionError(SystemExit):
     Subclasses :class:`SystemExit` so a script exits non-zero with the rendered
     message, while remaining catchable as a distinct type by callers and tests.
     """
-
-
-def harness_version(repo_root: Path = REPO_ROOT) -> str:
-    """Return the sibling agent-harness distribution's own declared version.
-
-    The harness is versioned independently of the three-wheel Python cohort
-    (:data:`PYTHON_COHORT_WHEEL_NAMES`), so an acquisition script must pin the
-    harness install target to this value, never to ``cohort.version``. Mirrors
-    the equivalent reader in the MCPB bundle builder
-    (``packaging/mcpb/build.py::harness_version``), kept separate rather than
-    imported across that ownership boundary.
-
-    Raises:
-        AcquisitionError: If the harness project file is unreadable or
-            declares no version.
-    """
-    pyproject = repo_root / _HARNESS_PYPROJECT_RELATIVE
-    try:
-        document = tomllib.loads(pyproject.read_text(encoding=_UTF_8))
-    except (OSError, tomllib.TOMLDecodeError) as exc:
-        raise AcquisitionError(f"could not read {HARNESS_DISTRIBUTION} version from {pyproject}: {exc}") from exc
-    version = document.get("project", {}).get("version")
-    if not isinstance(version, str) or not version:
-        raise AcquisitionError(f"{pyproject} declares no project.version")
-    return version
 
 
 def refuse_unavailable(
@@ -268,19 +232,22 @@ def match_downloaded_cohort_wheels(
     """
     resolved: dict[str, Path] = {}
     for distribution in PYTHON_COHORT_WHEEL_NAMES:
-        prefix = _wheel_distribution_prefix(distribution, cohort.version)
+        distribution_version = (
+            cohort.harness_version if distribution == HARNESS_DISTRIBUTION else cohort.version
+        )
+        prefix = _wheel_distribution_prefix(distribution, distribution_version)
         matches = [path for path in scan_directory(download_dir, pattern="*.whl") if path.name.startswith(prefix)]
         if not matches:
             refuse_unavailable(
                 mechanism=mechanism,
                 endpoint=endpoint,
-                version=cohort.version,
-                reason=f"no {distribution}=={cohort.version} wheel was served",
-                next_step=(f"publish {distribution}=={cohort.version} to {endpoint} and rerun this check"),
+                version=distribution_version,
+                reason=f"no {distribution}=={distribution_version} wheel was served",
+                next_step=(f"publish {distribution}=={distribution_version} to {endpoint} and rerun this check"),
             )
         if len(matches) != 1:
             raise AcquisitionError(
-                f"expected one {distribution}=={cohort.version} wheel from {endpoint!r}; "
+                f"expected one {distribution}=={distribution_version} wheel from {endpoint!r}; "
                 f"got {[path.name for path in matches]!r}",
             )
         resolved[distribution] = matches[0]
@@ -556,6 +523,10 @@ def run_installed_behavior_oracles(
         mcp_server,
         storage_root=storage_root / "mcp-state",
         work_dir=work_dir / "mcp-work",
+        cohort_source_commit=cohort.source_commit,
+        cohort_manifest_sha256=sha256_path(cohort.manifest),
+        cohort_root_wheel_sha256=cohort.sha256["cadrumo"],
+        cohort_harness_wheel_sha256=cohort.sha256["cadrumo-harness"],
         timeout_seconds=timeout_seconds,
     )
     if mcp_evidence.target_value != EXPECTED_ORACLE_TARGET_VALUE:
@@ -572,7 +543,6 @@ __all__ = [
     "PYTHON_COHORT_WHEEL_NAMES",
     "AcquisitionError",
     "capture_owned_server_launch",
-    "harness_version",
     "match_downloaded_cohort_wheels",
     "refuse_digest_mismatch",
     "refuse_unavailable",

@@ -13,14 +13,8 @@ installed ``aeat`` and ``cadrumo-mcp`` executables, runs the canonical
 installed CLI and MCP behaviour oracles against them, and emits the record
 through :func:`~dev.packaging.distribution_evidence_emit.emit_installed_oracle_evidence`.
 
-The harness is NOT a member of the retained three-wheel Python cohort — it is
-versioned independently (see
-:func:`dev.packaging._acquire_common.harness_version`), mirroring the ruling
-already encoded in the MCPB bundle builder (``packaging/mcpb/build.py``) — so
-the release cohort carries no embedded harness wheel or digest pin for it.
-This builds the harness wheel fresh from the EXACT immutable source commit the
-cohort itself was built from (never the ambient checkout), so the MCP launcher
-proved here corresponds to the same commit as the cohort under proof.
+The independently versioned harness is an exact digest-pinned cohort member;
+no installed-runtime lane rebuilds or index-resolves it.
 """
 
 from __future__ import annotations
@@ -31,7 +25,7 @@ import subprocess
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT, UTF_8
+from dev._paths import UTF_8
 
 from ._acquire_common import (
     HARNESS_DISTRIBUTION,
@@ -40,7 +34,6 @@ from ._acquire_common import (
     run_installed_behavior_oracles,
     venv_executable,
 )
-from ._smoke_common import build_harness_wheel, extract_source_commit
 from .cohort_manifest import load_release_cohort
 from .distribution_evidence_emit import emit_installed_oracle_evidence
 from .evidence import AcquisitionIdentity, DestinationIdentity
@@ -112,10 +105,7 @@ def run_oracle_emit_cohort(
     wheels = {name: python_cohort.sha256[name] for name in PYTHON_COHORT_WHEEL_NAMES}
     root_wheel = python_cohort.root_wheel
     manuals_wheel, official_wheel = python_cohort.companion_wheels
-    # The harness is not a cohort member and has no embedded wheel here; build
-    # it fresh from the exact commit the cohort was built from.
-    harness_build_root = extract_source_commit(REPO_ROOT, work, cohort.manifest.source.commit)
-    harness_wheel = build_harness_wheel(work, str(uv), build_root=harness_build_root)
+    harness_wheel = python_cohort.harness_wheel
     install = subprocess.run(  # noqa: S603 - resolved uv executable and cohort file paths
         [
             str(uv),

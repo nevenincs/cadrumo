@@ -209,6 +209,7 @@ def run_mcpb_smoke(
     with zipfile.ZipFile(bundle) as archive:
         expected_wheels = {
             cohort.root_wheel.name: cohort.root_wheel,
+            cohort.harness_wheel.name: cohort.harness_wheel,
             cohort.manuals_wheel.name: cohort.manuals_wheel,
             cohort.official_wheel.name: cohort.official_wheel,
         }
@@ -359,6 +360,10 @@ def run_mcpb_smoke(
         environment_overrides=resolved_environment,
         storage_root=storage_root,
         work_dir=work_dir,
+        cohort_source_commit=cohort.source_commit,
+        cohort_manifest_sha256=sha256_path(cohort.manifest),
+        cohort_root_wheel_sha256=cohort.sha256["cadrumo"],
+        cohort_harness_wheel_sha256=cohort.sha256["cadrumo-harness"],
         timeout_seconds=timeout_seconds,
     )
     if not runtime_environment.is_dir():

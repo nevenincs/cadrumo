@@ -111,6 +111,7 @@ class InstalledMcpEvidence:
     cohort_harness_wheel_sha256: str
     server_executable_sha256: str
     runtime_server_executable: str
+    runtime_project_root: str | None
     installed_cli_payload_sha256: str
     installed_harness_payload_sha256: str
     checkout_imports_removed: bool
@@ -492,6 +493,7 @@ async def _run_protocol(
         cohort_harness_wheel_sha256="",
         server_executable_sha256="",
         runtime_server_executable="",
+        runtime_project_root=None,
         installed_cli_payload_sha256="",
         installed_harness_payload_sha256="",
         checkout_imports_removed=imports_removed,
@@ -569,10 +571,12 @@ def run_installed_mcp_oracle(
     )
     invoked_cli_sha256, invoked_cli_sha256_by_command = _observed_cli_attestation(storage_root)
     runtime_server = resolved_server
+    runtime_project_root: str | None = None
     if resolved_server.stem.lower() != "cadrumo-mcp":
         try:
             project_index = tuple(server_args).index("--project") + 1
-            project = Path(server_args[project_index]).resolve(strict=True)
+        project = Path(server_args[project_index]).resolve(strict=True)
+        runtime_project_root = str(project)
         except (ValueError, IndexError) as exc:
             raise InstalledMcpOracleError(
                 "wrapped MCP launch must declare its exact runtime project with --project",
@@ -590,6 +594,7 @@ def run_installed_mcp_oracle(
         cohort_harness_wheel_sha256=cohort_harness_wheel_sha256,
         server_executable_sha256=hashlib.sha256(runtime_server.read_bytes()).hexdigest(),
         runtime_server_executable=str(runtime_server),
+        runtime_project_root=runtime_project_root,
         installed_cli_payload_sha256=installed_distribution_payload_sha256(sibling_cli, "cadrumo"),
         installed_harness_payload_sha256=installed_distribution_payload_sha256(
             runtime_server, "cadrumo-harness"

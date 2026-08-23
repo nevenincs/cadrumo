@@ -1,15 +1,12 @@
 """Reacquire the Cadrumo Python cohort from PyPI and repeat installed tax work.
 
-This post-publication check installs the three-wheel Python cohort (``cadrumo``
-plus both mandatory data distributions) and the sibling ``cadrumo-harness``
-distribution FROM a public package index (no local wheels), proves the
+This post-publication check installs the complete Python cohort (``cadrumo``,
+``cadrumo-harness``, and both mandatory data distributions) FROM a public
+package index (no local wheels), proves the
 cohort's installed wheel bytes match the promoted cohort digest byte-for-byte,
 and then repeats the grounded installed CLI and MCP tax-work oracles from that
-index-only environment. The harness is NOT a cohort member — it is versioned
-independently (see :func:`dev.packaging._acquire_common.harness_version`),
-mirroring the ruling already encoded in the MCPB bundle builder — so it is
-installed pinned to its own declared version and proved only behaviourally,
-through the installed MCP oracle, never digest-verified against the cohort.
+index-only environment. The harness remains independently versioned, but its
+exact wheel bytes and declared version are pinned by the cohort manifest.
 It refuses instructively when the index does not yet serve the promoted
 version (implements post-release-distribution plan row P03.S14).
 """
@@ -29,7 +26,6 @@ from ._acquire_common import (
     HARNESS_DISTRIBUTION,
     PYTHON_COHORT_WHEEL_NAMES,
     AcquisitionError,
-    harness_version,
     require_command_succeeded,
     run_installed_behavior_oracles,
     venv_executable,
@@ -84,6 +80,7 @@ def _download_cohort_wheels(
     """
     download_dir.mkdir(parents=True, exist_ok=True)
     for distribution in PYTHON_COHORT_WHEEL_NAMES:
+        version = cohort.harness_version if distribution == HARNESS_DISTRIBUTION else cohort.version
         completed = _run(
             [
                 str(venv_python),
@@ -96,7 +93,7 @@ def _download_cohort_wheels(
                 index_url,
                 "--dest",
                 str(download_dir),
-                f"{distribution}=={cohort.version}",
+                f"{distribution}=={version}",
             ],
             cwd=run_root,
             log=logs / f"pip-download-{distribution}.log",
@@ -106,8 +103,8 @@ def _download_cohort_wheels(
             stderr=completed.stderr,
             mechanism="pip download",
             endpoint=index_url,
-            version=cohort.version,
-            next_step=f"publish {distribution}=={cohort.version} to {index_url} and rerun",
+            version=version,
+            next_step=f"publish {distribution}=={version} to {index_url} and rerun",
         )
 
 
@@ -182,7 +179,7 @@ def run_pypi_acquisition(
         endpoint=index_url,
     )
 
-    harness_pin = harness_version()
+    harness_pin = cohort.harness_version
     install = _run(
         [
             str(uv),

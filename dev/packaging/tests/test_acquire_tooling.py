@@ -61,6 +61,7 @@ def _make_python_cohort(tmp_path: Path) -> tuple[PythonCohort, Path]:
     download.mkdir()
     wheel_payloads = {
         "cadrumo": (f"cadrumo-{_VERSION}-py3-none-any.whl", b"cadrumo wheel bytes"),
+        "cadrumo-harness": (f"cadrumo_harness-{_VERSION}-py3-none-any.whl", b"harness wheel bytes"),
         "cadrumo-data-manuals": (f"cadrumo_data_manuals-{_VERSION}-py3-none-any.whl", b"manuals wheel bytes"),
         "cadrumo-data-official": (f"cadrumo_data_official-{_VERSION}-py3-none-any.whl", b"official wheel bytes"),
     }
@@ -71,6 +72,7 @@ def _make_python_cohort(tmp_path: Path) -> tuple[PythonCohort, Path]:
     # Sdist digests are not backed by files here; the Homebrew formula check
     # compares declared checksums only, so deterministic placeholders suffice.
     sha256["cadrumo-sdist"] = hashlib.sha256(b"cadrumo sdist").hexdigest()
+    sha256["cadrumo-harness-sdist"] = hashlib.sha256(b"harness sdist").hexdigest()
     sha256["cadrumo-data-manuals-sdist"] = hashlib.sha256(b"manuals sdist").hexdigest()
     sha256["cadrumo-data-official-sdist"] = hashlib.sha256(b"official sdist").hexdigest()
 
@@ -79,9 +81,12 @@ def _make_python_cohort(tmp_path: Path) -> tuple[PythonCohort, Path]:
         manifest=tmp_path / "python-cohort.json",
         source_commit=_COMMIT,
         version=_VERSION,
+        harness_version=_VERSION,
         root_wheel=download / wheel_payloads["cadrumo"][0],
         root_sdist=tmp_path / f"cadrumo-{_VERSION}.tar.gz",
         source_archive=tmp_path / "cadrumo-source.zip",
+        harness_wheel=download / wheel_payloads["cadrumo-harness"][0],
+        harness_sdist=tmp_path / f"cadrumo_harness-{_VERSION}.tar.gz",
         manuals_wheel=download / wheel_payloads["cadrumo-data-manuals"][0],
         manuals_sdist=tmp_path / f"cadrumo_data_manuals-{_VERSION}.tar.gz",
         official_wheel=download / wheel_payloads["cadrumo-data-official"][0],
@@ -102,6 +107,8 @@ def _make_release_cohort(tmp_path: Path) -> tuple[LoadedReleaseCohort, Path]:
         "cadrumo-data-official-wheel": "python/cadrumo_data_official-0.99.0-py3-none-any.whl",
         "cadrumo-sdist": "python/cadrumo-0.99.0.tar.gz",
         "cadrumo-wheel": "python/cadrumo-0.99.0-py3-none-any.whl",
+        "cadrumo-harness-sdist": "python/cadrumo_harness-0.99.0.tar.gz",
+        "cadrumo-harness-wheel": "python/cadrumo_harness-0.99.0-py3-none-any.whl",
         "cadrumo-source-archive": "python/cadrumo-source.zip",
         "claude-marketplace": "claude-marketplace.json",
         "claude-plugin": "claude-plugin.zip",
@@ -241,7 +248,12 @@ def test_verify_python_cohort_download_accepts_matching_wheels(tmp_path: Path) -
         mechanism="pip download",
         endpoint="https://pypi.org/simple",
     )
-    assert set(resolved) == {"cadrumo", "cadrumo-data-manuals", "cadrumo-data-official"}
+    assert set(resolved) == {
+        "cadrumo",
+        "cadrumo-harness",
+        "cadrumo-data-manuals",
+        "cadrumo-data-official",
+    }
 
 
 def test_verify_python_cohort_download_refuses_tampered_wheel(tmp_path: Path) -> None:

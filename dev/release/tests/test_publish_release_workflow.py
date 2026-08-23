@@ -705,10 +705,12 @@ def test_pypi_ships_the_sealed_cohort_not_the_per_os_smoke_build() -> None:
     surface = _run_surface(publish)
     # The per-OS smoke build (cadrumo-python-cohort) is out of the publish chain.
     assert "--name cadrumo-python-cohort" not in surface
-    # Each of the six wheels/sdists is uploaded from RELEASE_COHORT_DIR/python.
+    # Every wheel/sdist is uploaded from RELEASE_COHORT_DIR/python.
     for artifact in (
         'cadrumo-"$VERSION"-py3-none-any.whl',
         'cadrumo-"$VERSION".tar.gz',
+        'cadrumo_harness-"$HARNESS_VERSION"-py3-none-any.whl',
+        'cadrumo_harness-"$HARNESS_VERSION".tar.gz',
         'cadrumo_data_manuals-"$VERSION"-py3-none-any.whl',
         'cadrumo_data_manuals-"$VERSION".tar.gz',
         'cadrumo_data_official-"$VERSION"-py3-none-any.whl',

@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import subprocess
 import sys
+import shutil
+import hashlib
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -20,7 +22,7 @@ from cadrumo.core import scan_directory
 
 from .._command import CommandResult, run_command
 from .._hashing import sha256_path
-from .._installed_wheel_binding import installed_wheel_payload_sha256
+from .._installed_wheel_binding import installed_distribution_payload_sha256, installed_wheel_payload_sha256
 from ..cohort_manifest import LoadedReleaseCohort
 from ..distribution_evidence_emit import (
     build_client_evidence,
@@ -104,11 +106,15 @@ def _tax_evidence(
     )
 
 
-def _mcp_evidence(*, invoked_cli_sha256: str = "0" * 64) -> InstalledMcpEvidence:
+def _mcp_evidence(cohort: LoadedReleaseCohort, *, client: bool = False) -> InstalledMcpEvidence:
     """Build installed-MCP oracle evidence with a real cadrumo-mcp exe stand-in."""
+    server = Path(shutil.which("cadrumo-mcp") or "").resolve(strict=True)
+    cli = server.with_name("aeat.exe" if server.suffix.lower() == ".exe" else "aeat")
+    invoked_cli_sha256 = hashlib.sha256(str(cli).encode("utf-8")).hexdigest()
+    records = {record.name: record for record in cohort.manifest.artifacts}
     return InstalledMcpEvidence(
-        requested_executable=sys.executable,
-        resolved_executable=sys.executable,
+        requested_executable=str(server),
+        resolved_executable=str(server),
         server_name="cadrumo",
         storage_root="mcp-state",
         work_unit_id="f" * 64,
@@ -131,7 +137,23 @@ def _mcp_evidence(*, invoked_cli_sha256: str = "0" * 64) -> InstalledMcpEvidence
             ),
         ),
         invoked_cli_sha256=invoked_cli_sha256,
-        invoked_cli_sha256_by_command={"modelo.work.calculate": invoked_cli_sha256},
+        invoked_cli_sha256_by_command={
+            "config.profile.create": invoked_cli_sha256,
+            "modelo.work.create": invoked_cli_sha256,
+            "modelo.work.calculate": invoked_cli_sha256,
+            "modelo.work.observations": invoked_cli_sha256,
+        },
+        cohort_source_commit=cohort.manifest.source.commit,
+        cohort_manifest_sha256=records["python-cohort-manifest"].sha256,
+        cohort_root_wheel_sha256=records["cadrumo-wheel"].sha256,
+        cohort_harness_wheel_sha256=records["cadrumo-harness-wheel"].sha256,
+        server_executable_sha256=sha256_path(server),
+        runtime_server_executable=str(server),
+        runtime_project_root=str(Path(__file__).resolve().parents[3]) if client else None,
+        installed_cli_payload_sha256=installed_distribution_payload_sha256(cli, "cadrumo"),
+        installed_harness_payload_sha256=installed_distribution_payload_sha256(
+            server, "cadrumo-harness"
+        ),
         checkout_imports_removed=True,
         ambient_product_executables_removed=True,
     )
@@ -153,7 +175,7 @@ def test_build_binds_cohort_and_retains_both_transports(tmp_path: Path) -> None:
     """The record binds the exact cohort and carries CLI transcripts + MCP proof."""
     cohort = _release_cohort(tmp_path / "cohort")
     tax = _tax_evidence(tmp_path, cohort)
-    mcp = _mcp_evidence()
+    mcp = _mcp_evidence(cohort)
 
     evidence = build_installed_oracle_evidence(
         row_id="python-windows-x86-64",
@@ -219,7 +241,7 @@ def test_emit_writes_a_flat_record_both_gates_can_read(tmp_path: Path) -> None:
         row_id="python-linux-x86-64",
         cohort=cohort,
         tax_evidence=_tax_evidence(tmp_path, cohort),
-        mcp_evidence=_mcp_evidence(),
+        mcp_evidence=_mcp_evidence(cohort),
         acquisition=_acquisition(),
         destination=_destination(cohort),
     )

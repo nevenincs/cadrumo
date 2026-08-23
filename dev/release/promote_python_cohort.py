@@ -38,6 +38,7 @@ def _evidence_document(evidence_file: Path, cohort: PythonCohort) -> dict[str, A
         raise SystemExit("installed cohort evidence must be a JSON object")
     expected_hashes = {
         "cadrumo": cohort.sha256["cadrumo"],
+        "cadrumo-harness": cohort.sha256["cadrumo-harness"],
         "cadrumo-data-manuals": cohort.sha256["cadrumo-data-manuals"],
         "cadrumo-data-official": cohort.sha256["cadrumo-data-official"],
     }
@@ -101,10 +102,13 @@ def _write_outputs(path: Path, cohort: PythonCohort) -> None:
     rows = {
         "manuals_sdist": cohort.manuals_sdist,
         "manuals_wheel": cohort.manuals_wheel,
+        "harness_sdist": cohort.harness_sdist,
+        "harness_wheel": cohort.harness_wheel,
         "official_sdist": cohort.official_sdist,
         "official_wheel": cohort.official_wheel,
         "root_sdist": cohort.root_sdist,
         "root_wheel": cohort.root_wheel,
+        "harness_version": cohort.harness_version,
         "source_commit": cohort.source_commit,
         "version": cohort.version,
     }
@@ -125,12 +129,15 @@ def assert_pypi_destinations_absent(cohort: PythonCohort) -> None:
     be asked in isolation, so there is exactly one.
     """
     try:
-        owning = pypi_projects_owning(cohort.version, projects=_PYPI_PROJECTS)
+        owning = (
+            *pypi_projects_owning(cohort.version, projects=_PYPI_PROJECTS),
+            *pypi_projects_owning(cohort.harness_version, projects=("cadrumo-harness",)),
+        )
     except VersionIdentityError as exc:
         raise SystemExit(str(exc)) from exc
     if owning:
         raise SystemExit(
-            f"PyPI already contains {', '.join(owning)} {cohort.version}; refusing overwrite",
+            f"PyPI already contains a cohort artifact version: {', '.join(owning)}; refusing overwrite",
         )
 
 

@@ -359,6 +359,8 @@ def build_from_clean_source(
         artifacts=(
             ("cadrumo-wheel", ArtifactKind.PYTHON_WHEEL, cohort.root_wheel),
             ("cadrumo-sdist", ArtifactKind.PYTHON_SDIST, cohort.root_sdist),
+            ("cadrumo-harness-wheel", ArtifactKind.PYTHON_WHEEL, cohort.harness_wheel),
+            ("cadrumo-harness-sdist", ArtifactKind.PYTHON_SDIST, cohort.harness_sdist),
             (
                 "cadrumo-source-archive",
                 ArtifactKind.PYTHON_SOURCE_ARCHIVE,

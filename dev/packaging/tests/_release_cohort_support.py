@@ -71,8 +71,9 @@ def release_cohort(
     for index, (name, kind) in enumerate(sorted(REQUIRED_ARTIFACT_KINDS.items())):
         path = root / "artifacts" / f"{name}.bin"
         path.parent.mkdir(exist_ok=True)
-        if name == "cadrumo-wheel":
-            distribution = importlib.metadata.distribution("cadrumo")
+        if name in {"cadrumo-wheel", "cadrumo-harness-wheel"}:
+            distribution_name = "cadrumo" if name == "cadrumo-wheel" else "cadrumo-harness"
+            distribution = importlib.metadata.distribution(distribution_name)
             with zipfile.ZipFile(path, "w") as archive:
                 for item in distribution.files or ():
                     if item.name in {"INSTALLER", "RECORD", "direct_url.json", "REQUESTED"}:
@@ -83,7 +84,11 @@ def release_cohort(
                     if source.is_file():
                         archive.write(source, item.as_posix())
                 if payload_suffix:
-                    archive.writestr("cadrumo/_foreign_cohort_plant.py", payload_suffix)
+                    package = "cadrumo" if name == "cadrumo-wheel" else "cadrumo_harness"
+                    archive.writestr(f"{package}/_foreign_cohort_plant.py", payload_suffix)
+        elif name == "mcpb":
+            with zipfile.ZipFile(path, "w"):
+                pass
         else:
             path.write_bytes(f"{index}:{name}:{payload_suffix}\n".encode())
         artifacts.append((name, kind, path))

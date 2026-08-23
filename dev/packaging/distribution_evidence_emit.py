@@ -43,6 +43,7 @@ from dev._paths import UTF_8
 from ._command import CommandResult
 from ._hashing import sha256_path
 from ._installed_wheel_binding import (
+    assert_archive_members_match_extraction,
     installed_distribution_payload_sha256,
     installed_wheel_payload_sha256,
     sealed_wheel_payload_sha256,
@@ -71,6 +72,9 @@ if TYPE_CHECKING:
 _CLI_EXECUTABLE_NAME: Final[str] = "aeat"
 _MCP_EXECUTABLE_NAME: Final[str] = "cadrumo-mcp"
 _UTF_8: Final[str] = UTF_8
+_MCP_ATTESTED_COMMAND_KEYS: Final[frozenset[str]] = frozenset(
+    {"config.profile.create", "modelo.work.create", "modelo.work.calculate", "modelo.work.observations"}
+)
 
 # The client identity an acquire lane declares when it drives the published
 # artifact through the MCP SDK over ``uv``/``uvx`` rather than a real Claude
@@ -223,7 +227,7 @@ def _assert_oracle_bound_to_cohort(
 
 
 def _assert_mcp_oracle_bound_to_cohort(
-    *, cohort: LoadedReleaseCohort, mcp_evidence: InstalledMcpEvidence
+    *, cohort: LoadedReleaseCohort, mcp_evidence: InstalledMcpEvidence, require_mcpb: bool = False
 ) -> None:
     """Bind the observed MCP runtime and its invoked CLI to exact cohort wheels."""
     records = {record.name: record for record in cohort.manifest.artifacts}
@@ -244,6 +248,16 @@ def _assert_mcp_oracle_bound_to_cohort(
             f"installed MCP cohort provenance mismatch: expected {expected!r}, got {observed!r}",
         )
     runtime_server = Path(mcp_evidence.runtime_server_executable).resolve(strict=True)
+    if require_mcpb:
+        if mcp_evidence.runtime_project_root is None:
+            raise EvidenceCohortBindingError("client MCP evidence does not identify its extracted MCPB root")
+        project_root = Path(mcp_evidence.runtime_project_root).resolve(strict=True)
+        if not runtime_server.is_relative_to(project_root):
+            raise EvidenceCohortBindingError("client MCP runtime server escapes the extracted MCPB root")
+        try:
+            assert_archive_members_match_extraction(cohort.artifact("mcpb"), project_root)
+        except RuntimeError as exc:
+            raise EvidenceCohortBindingError(str(exc)) from exc
     sibling_cli = runtime_server.with_name("aeat.exe" if runtime_server.suffix.lower() == ".exe" else "aeat")
     if sha256_path(runtime_server) != mcp_evidence.server_executable_sha256:
         raise EvidenceCohortBindingError("installed MCP runtime executable digest drifted after capture")
@@ -259,9 +273,10 @@ def _assert_mcp_oracle_bound_to_cohort(
     ):
         raise EvidenceCohortBindingError("installed MCP server payload is not the exact sealed harness wheel")
     path_digest = hashlib.sha256(str(sibling_cli).encode(UTF_8)).hexdigest()
-    if not mcp_evidence.invoked_cli_sha256_by_command or set(
-        mcp_evidence.invoked_cli_sha256_by_command.values()
-    ) != {mcp_evidence.invoked_cli_sha256}:
+    if (
+        frozenset(mcp_evidence.invoked_cli_sha256_by_command) != _MCP_ATTESTED_COMMAND_KEYS
+        or set(mcp_evidence.invoked_cli_sha256_by_command.values()) != {mcp_evidence.invoked_cli_sha256}
+    ):
         raise EvidenceCohortBindingError("MCP command telemetry does not converge on one CLI identity")
     if mcp_evidence.invoked_cli_sha256 != path_digest:
         raise EvidenceCohortBindingError("MCP telemetry names a different installed CLI path")
@@ -460,7 +475,7 @@ def build_client_evidence(
         ambient_product_executables_removed=mcp_evidence.ambient_product_executables_removed,
         installed_executables=(_installed_executable(_MCP_EXECUTABLE_NAME, mcp_evidence.resolved_executable),),
     )
-    _assert_mcp_oracle_bound_to_cohort(cohort=cohort, mcp_evidence=mcp_evidence)
+    _assert_mcp_oracle_bound_to_cohort(cohort=cohort, mcp_evidence=mcp_evidence, require_mcpb=True)
     observations: dict[str, Any] = {"mcp_oracle": _mcp_observations(mcp_evidence)}
     if validated_real_client_session is not None:
         observations["real_client_session"] = validated_real_client_session.model_dump(mode="json")
@@ -662,6 +677,7 @@ def _mcp_evidence_from_mapping(data: dict[str, Any]) -> InstalledMcpEvidence:
         cohort_harness_wheel_sha256=data["cohort_harness_wheel_sha256"],
         server_executable_sha256=data["server_executable_sha256"],
         runtime_server_executable=data["runtime_server_executable"],
+        runtime_project_root=data["runtime_project_root"],
         installed_cli_payload_sha256=data["installed_cli_payload_sha256"],
         installed_harness_payload_sha256=data["installed_harness_payload_sha256"],
         checkout_imports_removed=data["checkout_imports_removed"],
