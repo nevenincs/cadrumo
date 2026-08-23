@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-18'
-modified: '2026-08-22'
+modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:d4303545fed7a2c6186c544cb20a53bfd9f89a051b1467d18280194824158ff3'
+body_hash: 'sha256:70a9b0057405010c513567d4675e70ae8ec0208c7b490c25143c7f52079f630e'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6963,3 +6963,39 @@ recipe already does.
 With this, selection-order item 6 is exhausted for this domain: every marker is accounted for,
 every lane's scope is measured, and the one property that protects this domain's own custody
 lane is enforced rather than merely true.
+
+### The serial slice this campaign never ran is green
+
+Both lanes the campaign directive prescribes exclude `serial`, so for its entire length this
+campaign has been verifying a subset of its own domain and reporting it as the domain. There
+are 16 serial-marked integration cases across the three paths -- most of the apoderado
+envelope-contract parity set -- and none had been executed here even once. Run as the lane
+runs them (`-n0`, because serial cases mutate process-global state): 16 passed.
+
+No defect, but the blind spot was real and is worth naming, because a green lane is not a
+green domain and nothing in the two prescribed commands ever said so. The harness itself is
+honest about this in a way worth copying: the run prints "2033 were DESELECTED ... and never
+executed. Green here covers the selected lane only", naming the recipes that cover the rest.
+
+### `UnsecuredMasterKeyProvider` is the guard's discriminator, not residue
+
+The standing lead asked for the two `master_key` exports to be classified before anything is
+deleted, warning that protective code and residue look identical from the name. Answered
+precisely, by consumer rather than by name:
+
+`MasterKeyProvider` has four genuine production consumers outside its own package --
+`blob_store/_blob_store.py`, `crypto/_encrypted_columns.py`, `envelope/_envelope.py`,
+`secret_store/_secret_store.py`. It is the live provider type of the storage substrate.
+
+`UnsecuredMasterKeyProvider` has NO production consumer outside its own module and the two
+facades re-exporting it, which is exactly the shape that reads as dead. It is not. Its own
+module uses it as a TYPE in the live bucket-open path: `open_bucket` refuses when the provider
+is NOT unsecured, directing the operator to `aeat config login` because a secured provider
+yields a key-encryption key rather than the bucket DEK, and it stamps
+`unsecured_backend=isinstance(provider, UnsecuredMasterKeyProvider)` onto the `BucketSession`
+the canary later reads. Delete the class and the guard cannot classify a provider at all.
+
+This is the lead's own warning paying off. A consumer sweep that counts only IMPORTS across
+package boundaries reports this class as unused; the thing keeping it alive is an `isinstance`
+check inside its defining module, which no cross-package import scan can see. Both halves of
+the lead are now closed on evidence, and nothing in `master_key` is deletable.
