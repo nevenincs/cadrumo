@@ -29,6 +29,24 @@ Forbidden, without exception:
 
 The one legitimate way to change this test's result is to build an export layout.
 
+BUILDING THE LAYOUT IS NECESSARY BUT NOT SUFFICIENT, and the reason is not visible in
+the failure message. Every revision currently on this list is ``authority_grade =
+"applicability"`` -- measured across the whole list, with no exception. An applicability
+revision exists to answer whether a taxpayer has an obligation for a period, not how to
+file it, and several say so in their own reviewer notes: modelo 390's 2021 revision
+records "filing layout authority is not claimed". Authoring a fixed-width layout onto
+such a revision without also promoting its grade would make a filing claim that the
+revision's own recorded review disclaims, which is the ratified-absence failure this
+module exists to prevent, arriving from the opposite direction.
+
+So clearing a row takes two things: the layout, AND a grounded decision that this
+application may claim filing authority for that revision's years. The second is an
+authority judgement about what the product asserts it can file, not a mechanical edit,
+and it is the reason a row can be technically authorable -- design bundled, casillas
+declared, extraction self-consistent -- and still not be cleared by an agent working
+alone. Nothing here licenses lowering the bar: a row stays on this list until both are
+done.
+
 See Also:
     :func:`cadrumo.domain.calculations.registry.bundled_authority`
         Loads the registry this worklist is derived from.

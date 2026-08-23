@@ -3,8 +3,8 @@ id = "modelo-130-declaracion-pdf"
 surface = "declaracion_pdf"
 artefact_kind = "declaracion"
 accepted_artefact_kinds = ["declaration_pdf"]
-corpus_round_trip_verified = true
-verification_source = "synthetic_from_aeat_published_text"
+provisional_pending_specimen = true
+corpus_round_trip_verified = false
 parser = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
 # M130 layout: each row prints the label text, then the box number at x0~464 (right column),
 # then the monetary value at x0~533-545 on the same y-row.  Box numbers also appear inline
@@ -33,7 +33,7 @@ target_casillas = [
     {casilla_id = "18", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^18$", value_offset = "right_of_number", anchor_x_min = 450.0, anchor_x_max = 480.0}},
     {casilla_id = "19", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^19$", value_offset = "right_of_number", anchor_x_min = 450.0, anchor_x_max = 480.0}},
 ]
-confidence = "strict"
+confidence = "review_required"
 min_coverage = "0.1052"
 failure_semantics = "fail_hard"
 legal_refs = [

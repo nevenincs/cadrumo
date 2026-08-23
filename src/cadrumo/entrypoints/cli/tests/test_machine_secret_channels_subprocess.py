@@ -40,6 +40,14 @@ _PROFILE_SECRET = "s13-profile-passphrase-that-must-never-escape"  # noqa: S105
 _NEW_PROFILE_SECRET = "s13-new-profile-passphrase-that-must-never-escape"  # noqa: S105
 _CERTIFICATE_SECRET = "s13-certificate-passphrase-that-must-never-escape"  # noqa: S105
 _ALL_SECRETS = (_PROFILE_SECRET, _NEW_PROFILE_SECRET, _CERTIFICATE_SECRET)
+_PROMPTS = (
+    "profile passphrase:",
+    "current profile passphrase:",
+    "new profile passphrase:",
+    "confirm new profile passphrase:",
+    "pkcs#12 passphrase (input hidden):",
+    "recovery phrase (24 words):",
+)
 
 _HARNESS = dedent(
     """
@@ -66,8 +74,56 @@ _HARNESS = dedent(
                 exit_code = int(exc.code or 0)
         finally:
             resume_logging_configuration()
-        descriptor = payload.get("assert_closed_descriptor")
-        if descriptor is not None:
+        for descriptor in payload.get("assert_closed_descriptors", []):
+            try:
+                os.fstat(descriptor)
+            except OSError:
+                print("S13_DESCRIPTOR_CLOSED", file=sys.stderr)
+            else:
+                print("S13_DESCRIPTOR_OPEN", file=sys.stderr)
+                exit_code = exit_code or 97
+    finally:
+        config_module._settings_override.reset(token)
+    raise SystemExit(exit_code)
+    """
+)
+
+_WINDOWS_HANDLE_HARNESS = dedent(
+    """
+    import json
+    import os
+    import sys
+
+    from cadrumo.core import config as config_module
+    from cadrumo.core.config import Settings
+    from cadrumo.core.logging import defer_logging_configuration, resume_logging_configuration
+    from cadrumo.entrypoints.cli._windows_profile_secret_bootstrap import bootstrap_argv
+
+    payload = json.loads(sys.argv[1])
+    settings = Settings(_env_file=None, **payload["settings"])
+    argv = bootstrap_argv(
+        profile_handle=payload.get("profile_handle"),
+        secrets_handle=payload.get("secrets_handle"),
+        command=sys.argv[2:],
+    )
+    descriptors = []
+    for option in ("--profile-secrets-fd", "--secrets-fd"):
+        if option in argv:
+            descriptors.append(int(argv[argv.index(option) + 1]))
+    token = config_module._settings_override.set(settings)
+    exit_code = 0
+    try:
+        sys.argv[:] = argv
+        defer_logging_configuration()
+        try:
+            from cadrumo.entrypoints.cli import main
+            try:
+                main()
+            except SystemExit as exc:
+                exit_code = int(exc.code or 0)
+        finally:
+            resume_logging_configuration()
+        for descriptor in descriptors:
             try:
                 os.fstat(descriptor)
             except OSError:
@@ -98,10 +154,17 @@ def _run(
     stdin: str | None = None,
     inherited_payloads: Sequence[str] = (),
     assert_closed_index: int | None = None,
+    assert_closed_indices: Sequence[int] = (),
+    assert_closed_fd_zero: bool = False,
 ) -> subprocess.CompletedProcess[str]:
     """Run the real CLI, mapping payload pipes to argv ``{fd}`` tokens."""
     if inherited_payloads and os.name == "nt":
-        pytest.skip("numeric CRT descriptor inheritance is POSIX-only; Windows uses the HANDLE bootstrap case")
+        return _run_windows_handles(
+            storage_root,
+            args,
+            stdin=stdin,
+            inherited_payloads=inherited_payloads,
+        )
     readers: list[int] = []
     writers: list[int] = []
     try:
@@ -118,7 +181,11 @@ def _run(
         ]
         payload = {
             "settings": _settings(storage_root),
-            "assert_closed_descriptor": None if assert_closed_index is None else readers[assert_closed_index],
+            "assert_closed_descriptors": [
+                *(() if assert_closed_index is None else (readers[assert_closed_index],)),
+                *(readers[index] for index in assert_closed_indices),
+                *((0,) if assert_closed_fd_zero else ()),
+            ],
         }
         return subprocess.run(  # noqa: S603 - fixed interpreter plus test-owned argv
             [sys.executable, "-c", _HARNESS, json.dumps(payload), *rendered_args],
@@ -142,20 +209,107 @@ def _run(
                 os.close(descriptor)
 
 
+def _run_windows_handles(
+    storage_root: Path,
+    args: Sequence[str],
+    *,
+    stdin: str | None,
+    inherited_payloads: Sequence[str],
+) -> subprocess.CompletedProcess[str]:
+    """Run the shipped bootstrap with an explicit STARTUPINFOEX HANDLE allowlist."""
+    if sys.platform != "win32":
+        raise RuntimeError("Windows HANDLE transport requested on a non-Windows host")
+    import msvcrt
+
+    readers: list[int] = []
+    writers: list[int] = []
+    try:
+        for payload in inherited_payloads:
+            reader, writer = os.pipe()
+            readers.append(reader)
+            writers.append(writer)
+            os.write(writer, payload.encode("utf-8"))
+            os.close(writer)
+            writers.remove(writer)
+
+        command: list[str] = []
+        profile_handle: int | None = None
+        secrets_handle: int | None = None
+        index = 0
+        while index < len(args):
+            value = args[index]
+            if value in {"--profile-secrets-fd", "--secrets-fd"}:
+                placeholder = args[index + 1]
+                descriptor_index = int(placeholder[4:-1])
+                handle = msvcrt.get_osfhandle(readers[descriptor_index])
+                if value == "--profile-secrets-fd":
+                    profile_handle = handle
+                else:
+                    secrets_handle = handle
+                index += 2
+                continue
+            command.append(value)
+            index += 1
+
+        handles = [msvcrt.get_osfhandle(reader) for reader in readers]
+        for handle in handles:
+            os.set_handle_inheritable(handle, True)
+        startup = subprocess.STARTUPINFO()
+        startup.lpAttributeList = {"handle_list": handles}
+        payload = {
+            "settings": _settings(storage_root),
+            "profile_handle": profile_handle,
+            "secrets_handle": secrets_handle,
+        }
+        return subprocess.run(  # noqa: S603 - fixed interpreter and production bootstrap
+            [
+                sys.executable,
+                "-c",
+                _WINDOWS_HANDLE_HARNESS,
+                json.dumps(payload),
+                *command,
+            ],
+            cwd=SRC_CADRUMO,
+            env=subprocess_cli_env(
+                strip_prefixes=("AEAT_", "CADRUMO_", "PYTEST_"),
+                extra={"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring"},
+            ),
+            input=stdin,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            capture_output=True,
+            check=False,
+            timeout=180,
+            close_fds=True,
+            startupinfo=startup,
+        )
+    finally:
+        for descriptor in (*readers, *writers):
+            with suppress(OSError):
+                os.close(descriptor)
+
+
 def _combined(result: subprocess.CompletedProcess[str]) -> str:
     return f"{result.stdout}\n{result.stderr}"
 
 
-def _assert_success(result: subprocess.CompletedProcess[str], storage_root: Path) -> dict[str, Any]:
+def _assert_success(
+    result: subprocess.CompletedProcess[str],
+    storage_root: Path,
+    *,
+    extra_secrets: Sequence[str] = (),
+) -> dict[str, Any]:
     combined = _combined(result)
     assert result.returncode == 0, combined
-    assert "enter passphrase" not in combined.lower()
-    for secret in _ALL_SECRETS:
+    assert not any(prompt in combined.lower() for prompt in _PROMPTS)
+    secrets = (*_ALL_SECRETS, *extra_secrets)
+    for secret in secrets:
         assert secret not in combined
     for path in storage_root.rglob("*"):
         if path.is_file() and "log" in path.name.lower():
             contents = path.read_text(encoding="utf-8", errors="replace")
-            for secret in _ALL_SECRETS:
+            for secret in secrets:
                 assert secret not in contents
     document = json.loads(result.stdout)
     assert isinstance(document, dict)
@@ -303,7 +457,7 @@ def test_both_restore_doors_succeed_through_each_leaf_channel(tmp_path: Path, ch
         if channel == "stdin"
         else _run(root, [*args, "--secrets-fd", "{fd:0}"], inherited_payloads=(payload,), assert_closed_index=0)
     )
-    document = _assert_success(result, root)
+    document = _assert_success(result, root, extra_secrets=(phrase,))
     assert document["result"]["authority"] == ("recovery_artifact" if door == "recovery" else "password")
 
 
@@ -314,8 +468,10 @@ def test_fd_zero_is_a_real_leaf_secret_channel(tmp_path: Path) -> None:
         root,
         ["--format", "json", "config", "login", outcome.profile_id, "--secrets-fd", "0"],
         stdin=json.dumps({"passphrase": _PROFILE_SECRET}),
+        assert_closed_fd_zero=True,
     )
     assert _assert_success(result, root)["command"] == "config.login"
+    assert "S13_DESCRIPTOR_CLOSED" in result.stderr
 
 
 def test_keychain_free_root_auth_succeeds_for_real_read_via_stdin(tmp_path: Path) -> None:
@@ -331,7 +487,6 @@ def test_keychain_free_root_auth_succeeds_for_real_read_via_stdin(tmp_path: Path
     assert [notice["code"] for notice in document["notices"]] == ["config.login.session_not_persisted"]
 
 
-@pytest.mark.skipif(os.name == "nt", reason="POSIX pass_fds is the numeric-descriptor contract")
 @pytest.mark.parametrize(
     "sources", (("profile-fd", "leaf-stdin"), ("profile-stdin", "leaf-fd"), ("profile-fd", "leaf-fd"))
 )
@@ -359,10 +514,18 @@ def test_certificate_write_accepts_every_valid_dual_source_combination(
     else:
         args.append("--secrets-stdin")
         stdin = leaf_payload
-    result = _run(root, args, stdin=stdin, inherited_payloads=inherited)
+    result = _run(
+        root,
+        args,
+        stdin=stdin,
+        inherited_payloads=inherited,
+        assert_closed_indices=tuple(range(len(inherited))),
+    )
     document = _assert_success(result, root)
     assert document["command"] == "config.auth.certificate.secret.set"
     assert document["result"]["has_secret"] is True
+    assert [notice["code"] for notice in document["notices"]] == ["config.login.session_not_persisted"]
+    assert result.stderr.count("S13_DESCRIPTOR_CLOSED") == len(inherited)
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Windows STARTUPINFOEX HANDLE allowlist contract")
@@ -395,7 +558,7 @@ def test_windows_allowlisted_handle_bootstrap_authenticates_real_read(tmp_path: 
                 sys.executable,
                 "-m",
                 "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap",
-                "--handle",
+                "--profile-handle",
                 str(handle),
                 "--",
                 "--format",
@@ -422,6 +585,7 @@ def test_windows_allowlisted_handle_bootstrap_authenticates_real_read(tmp_path: 
         os.close(reader)
     document = _assert_success(result, root)
     assert document["command"] == "config.bucket.history"
+    assert [notice["code"] for notice in document["notices"]] == ["config.login.session_not_persisted"]
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Windows STARTUPINFOEX HANDLE allowlist contract")
@@ -458,7 +622,7 @@ def test_windows_profile_handle_plus_leaf_stdin_performs_real_certificate_write(
                 sys.executable,
                 "-m",
                 "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap",
-                "--handle",
+                "--profile-handle",
                 str(handle),
                 "--",
                 "--format",
@@ -491,3 +655,4 @@ def test_windows_profile_handle_plus_leaf_stdin_performs_real_certificate_write(
     document = _assert_success(result, root)
     assert document["command"] == "config.auth.certificate.secret.set"
     assert document["result"]["has_secret"] is True
+    assert [notice["code"] for notice in document["notices"]] == ["config.login.session_not_persisted"]

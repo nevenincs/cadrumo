@@ -3232,6 +3232,7 @@ cli:
           health report.
         section_command_families: Command families
         section_diagnostics: Diagnostics
+        section_profile_authentication_options: Profile authentication options
         section_recovery: Resume or recover
         section_start_resume: Start or resume
         section_workflow: Core workflow

@@ -3483,6 +3483,7 @@ cli:
           solo lectura.
         section_command_families: Familias de comandos
         section_diagnostics: Diagnóstico
+        section_profile_authentication_options: Opciones de autenticación del perfil
         section_recovery: Reanudar o recuperar
         section_start_resume: Empezar o continuar
         section_workflow: Flujo principal
