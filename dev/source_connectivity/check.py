@@ -10,6 +10,7 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from cadrumo.application.registry.source_connectivity import (
+    SourceConnectivityCensusManifest,
     load_source_connectivity_census,
     validate_census_destination_candidates,
 )
@@ -34,6 +35,8 @@ class SourceConnectivityCheckResult:
     capability_count: int
     census_entry_count: int
     assignment_count: int
+    assignments: tuple[tuple[str, tuple[str, ...]], ...]
+    manifest: SourceConnectivityCensusManifest
 
 
 class SourceConnectivityCheckError(ValueError):
@@ -121,6 +124,8 @@ def check_capability_census(
         capability_count=len(capability_ids),
         census_entry_count=len(manifest.entries),
         assignment_count=sum(len(rows) for rows in assignments.values()),
+        assignments=tuple(sorted(assignments.items())),
+        manifest=manifest,
     )
 
 
