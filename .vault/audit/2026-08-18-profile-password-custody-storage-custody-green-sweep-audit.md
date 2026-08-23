@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:7dd2fa69a8a17b02730abb0aef0de4908930a12a961b6ef8639e73de78aaf1aa'
+body_hash: 'sha256:052fe308ad910bf7ca238a872639e6078f4a1e59c7e8ae109807e411479d4d68'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7905,3 +7905,46 @@ landed a change that stops `test_config.py` collecting at all -- `ValueContract.
 an unexpected keyword argument 'nullable'` -- so the comparison that would separate "unmasked
 by my repair" from "broken by their commit" cannot be made honestly right now. Next tick, on a
 quieter tree.
+
+### Diagnosed: refusals raised at the CLI ROOT lose the envelope's `command` identifier
+
+Two cases in this domain assert the error spine names the failing command and get `None`:
+`test_censo_pull_verb::test_pull_refuses_before_the_read_when_no_profile_is_active` expects
+`config.profile.censo.pull`, and `test_config::test_error_envelope_carries_the_active_command_
+identifier` asserts the same property. Two independent cases, one symptom, so this is a defect
+rather than two stale tests -- and the CLI contract makes `command` part of the uniform spine.
+
+Mechanism, traced and then confirmed directly rather than inferred. `command_error_boundary`
+wraps each callback and sets `_ACTIVE_COMMAND_ID` from the injected Click Context at callback
+ENTRY; `_active_command_identifier()` reads only that context var.
+`_command_identifier_from_path` drops the first path segment (the executable), so the values
+are exactly:
+
+    'aeat'                            -> None
+    'aeat config'                     -> 'config'
+    'aeat config profile censo pull'  -> 'config.profile.censo.pull'
+
+A refusal raised in the ROOT callback therefore yields `None` -- not because the command is
+unknown, but because the root's own path has no segments left after the executable is stripped.
+The docstring's justification for a null ("an argv parse failure raised before any command
+callback runs") does not cover this case: argv parsed fine, the leaf resolved, and a
+precondition refused it. The profile-active guard moving earlier -- recorded in this document
+several entries ago -- is what made root-level refusals common.
+
+The information needed to do better already exists and is simply not consulted at
+error-emission time. `_common.RequestedCliLeaf` carries `subject_leaf_key`, the dotted identity,
+and `current_requested_cli_leaf()` reads it from the Click context; the root refusal path
+already calls `requested_cli_leaf(ctx)` for its policy verdict. So the candidate fix is a
+fallback in `_active_command_identifier()`: when the context var yields `None`, take the
+preserved leaf's `subject_leaf_key`.
+
+NOT implemented here. The fallback depends on the leaf being preserved, which depends on
+`COMMAND_GRAPH.resolve_path` finding a `result_schema.identity` for the path -- structures the
+CLI campaign is actively reshaping this session, and which this campaign could not observe
+cleanly (a probe patching `requested_cli_leaf` reported nothing, because callers bind the
+function at import; the instrument was wrong, not the code). Landing a fallback whose
+precondition cannot currently be verified would be guessing.
+
+Handover: `entrypoints/cli/_errors.py:726` (`_active_command_identifier`) is the one site;
+`_common.current_requested_cli_leaf()` is the alternative source; `_errors.py` has been
+untouched for hours, so the edit is low-collision whenever its owner takes it.
