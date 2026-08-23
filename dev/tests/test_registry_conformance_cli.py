@@ -1490,6 +1490,8 @@ def test_stamp_refuses_an_out_of_vocabulary_status_string_without_touching_the_m
 #: changed the seed pass while the assertion checked the old value.
 _OPERATOR_SIGNATORY = f"{_PERSON_REVIEWER_NAME} (operator)"
 
+_REVIEW_AXIS_KEY = re.compile(r"^(engineered_by|review_status|reviewed_by|reviewed_at) = ")
+
 _OPERATOR_SIGNOFF = f"""engineered_by = "the operator, by hand"
 review_status = "operator_reviewed"
 reviewed_by = "{_OPERATOR_SIGNATORY}"
@@ -1511,19 +1513,26 @@ def operator_signed_copy(registry_copy: Path) -> Path:
     manifest = _manifest_of(registry_copy)
     text = manifest.read_text(encoding=UTF_8_ENCODING)
 
-    # The four scalars belong to the REVISION, so they must be written above the first
-    # table header. Appending them to the end of the file binds them to whichever table
-    # the manifest happens to close in -- today [family_dispositions.relations] -- and
-    # the revision then refuses to compile at all.
+    # The four scalars belong to the revision TABLE. This manifest opens with
+    # [revisions."<id>"] and already carries review_status / reviewed_by / reviewed_at
+    # inside it, so appending to the file binds them to whichever sub-table it closes
+    # in, and writing them above the first header makes them document-level keys the
+    # revision never sees. Both leave the real values standing. They are replaced in
+    # place instead, inside the revision table and above its first sub-table.
     body = text.split("\n")
-    first_table = next((index for index, line in enumerate(body) if line.startswith("[")), len(body))
-    head = "\n".join(body[:first_table]).rstrip("\n")
-    tail = "\n".join(body[first_table:])
-    manifest.write_text(head + "\n" + _OPERATOR_SIGNOFF + tail, encoding=UTF_8_ENCODING)
+    table_end = next(
+        (index for index, line in enumerate(body) if index > 0 and line.startswith("[")),
+        len(body),
+    )
+    head = [line for line in body[:table_end] if not _REVIEW_AXIS_KEY.match(line)]
+    while head and not head[-1].strip():
+        head.pop()
+    seeded_text = "\n".join(head) + "\n" + _OPERATOR_SIGNOFF + "\n" + "\n".join(body[table_end:])
+    manifest.write_text(seeded_text, encoding=UTF_8_ENCODING)
 
-    # Prove the seed landed where it was aimed, before any test reads it.
+    # Prove the seed landed inside the revision table before any test reads it.
     seeded = tomllib.loads(manifest.read_text(encoding=UTF_8_ENCODING))
-    assert seeded["review_status"] == "operator_reviewed"
+    assert seeded["revisions"][_STAMPED_REVISION]["review_status"] == "operator_reviewed"
     revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
     assert revision.review_status is RevisionReviewStatus.OPERATOR_REVIEWED
     assert revision.reviewed_by == _OPERATOR_SIGNATORY
