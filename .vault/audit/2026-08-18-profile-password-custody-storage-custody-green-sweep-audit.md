@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:d6dabd0e8d9968d5e967f503137f5e397eccf800f79f596ce905baf2df75cebf'
+body_hash: 'sha256:8c24d3766b385418a462b42ae85dea9e060707786f21fa116a904e837001c164'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7247,3 +7247,42 @@ and a host momentarily out of memory, and those want opposite advice ("run from 
 desktop session" versus "retry when the machine is quieter"). Writing one sentence that covers
 both would either mislead or say nothing. The message and the `retryable` value are the same
 decision wearing two hats, and both belong to the owner ruling already requested.
+
+### A latent double-import in this domain, exposed by a peer's new guard
+
+The `translated_message` sweep (131 keys, 211 raise sites, all catalogues present, every
+placeholder supplied -- the one apparent gap was a forwarded `exc.context` the scanner could
+not see into, traced to `_operator_scope.py:188` which supplies both) came back clean. The
+lanes did not: six collection errors, `ValueError: duplicate lazy CLI registration:
+'profile' / 'create'`, with `git status --porcelain` reporting ZERO entries. Clean tree means
+HEAD, and this time that reading held up.
+
+The cause is in this domain and is a genuine defect, not peer churn.
+`_config/tests/test_apoderado.py` imported `from ..__init__ import app`. Python resolves that
+as a submodule named `__init__` of the package, entering `cadrumo.entrypoints.cli._config.
+__init__` in `sys.modules` BESIDE `cadrumo.entrypoints.cli._config` and executing the package
+body a second time. The package registers lazy CLI leaves at import, so the leaves registered
+twice.
+
+Proven at the mechanism rather than the symptom: importing the package, then importing
+`...._config.__init__` explicitly, raises the duplicate-registration error in a fresh
+interpreter. The package alone imports clean, which is why this survived -- the double
+execution only happens where both spellings are reached, and one test file was the only place
+that did.
+
+**The defect is old; the guard is new.** `692553aec4 refactor(cli): add reusable lazy node
+kernel` added duplicate detection to `register_lazy_subcommand`. Before it, the second
+registration was tolerated and the CLI carried two identical lazy leaves for `profile create`
+with nothing reporting it. A peer's new guard finding a latent fault in a neighbour's test is
+the gate working exactly as intended, and the fix belongs here rather than to them: the import
+spelling was wrong Python whether or not the kernel tolerated it.
+
+Fixed to `from .. import app`, one line. Collection recovers and the module's 16 cases pass.
+Swept for siblings: the only other explicit-`__init__` import in the package tree is
+`application/filing/tests/test_producer_snapshot.py`, which uses the different
+`from .. import __init__ as filing` form, is another campaign's, and breaks nothing.
+
+Lane state at commit: integration 361 green. Unit shows two CLI-surface failures that are NOT
+this change -- the working tree was clean when this began and now carries peer edits to
+`cli/__init__.py`, `_command_suggestions.py` and `_common.py`, the same lazy-kernel area, made
+while these runs were in progress.
