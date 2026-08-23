@@ -217,6 +217,12 @@ _WIZARD_CREATE_PARAMETERS = (
         default=False,
         flag=True,
     ),
+    _option(
+        "secrets_fd",
+        ("--secrets-fd",),
+        _INT,
+        "cli.config.custody.secrets_fd_help",
+    ),
 )
 
 PROFILE_COMMAND_SPECS = (

@@ -10,6 +10,7 @@ No mocks, no stubs.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -18,6 +19,7 @@ from .....core.config import override_settings
 from .....core.i18n import tr
 from .....tests.cli_runner import invoke_cached_cli
 from ..._verb_input_schema import build_verb_input_schemas
+from .._scripted_registration import resolve_creation_passphrase
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -29,6 +31,10 @@ def _storage_overrides(tmp_path: Path, *, passphrase: str | None) -> dict[str, o
         "cadrumo_local_storage_root": tmp_path / "cadrumo-storage",
         "cadrumo_secret_passphrase": passphrase,
     }
+
+
+def _creation_payload(passphrase: str = _PASSPHRASE) -> str:
+    return json.dumps({"passphrase": passphrase, "passphrase_confirmation": passphrase})
 
 
 def _fact_values(document: dict[str, object]) -> dict[str, str]:
@@ -43,7 +49,10 @@ def _fact_values(document: dict[str, object]) -> dict[str, str]:
 def test_scripted_create_registers_a_real_profile(tmp_path: Path) -> None:
     """``create NAME --quiet`` brings a real, listable profile into existence."""
     with override_settings(**_storage_overrides(tmp_path, passphrase=_PASSPHRASE)):
-        created = invoke_cached_cli(("--format", "json", "config", "profile", "create", "Scripted Operator", "--quiet"))
+        created = invoke_cached_cli(
+            ("--format", "json", "config", "profile", "create", "Scripted Operator", "--quiet", "--secrets-stdin"),
+            input=_creation_payload(),
+        )
 
         assert created.exit_code == 0, created.output
         document = json.loads(created.stdout)
@@ -81,6 +90,7 @@ def test_scripted_create_persists_the_field_flags_it_was_given(tmp_path: Path) -
                 "create",
                 "Flagged Operator",
                 "--quiet",
+                "--secrets-stdin",
                 "--entity-type",
                 "natural_person",
                 "--tax-id",
@@ -90,6 +100,7 @@ def test_scripted_create_persists_the_field_flags_it_was_given(tmp_path: Path) -
                 "--surnames",
                 "Operator",
             ),
+            input=_creation_payload(),
         )
 
         assert created.exit_code == 0, created.output
@@ -134,9 +145,11 @@ def test_scripted_create_refuses_a_foral_ccaa_flag_without_creating_a_profile(tm
                 "create",
                 "Foral Operator",
                 "--quiet",
+                "--secrets-stdin",
                 "--tax-residence-ccaa",
                 "pais_vasco",
             ),
+            input=_creation_payload(),
         )
 
         assert refused.exit_code != 0, refused.output
@@ -159,7 +172,10 @@ def test_a_scripted_profile_warns_that_recovery_was_not_enrolled(tmp_path: Path)
     appear anywhere in the machine output.
     """
     with override_settings(**_storage_overrides(tmp_path, passphrase=_PASSPHRASE)):
-        created = invoke_cached_cli(("--format", "json", "config", "profile", "create", "No Terminal", "--quiet"))
+        created = invoke_cached_cli(
+            ("--format", "json", "config", "profile", "create", "No Terminal", "--quiet", "--secrets-stdin"),
+            input=_creation_payload(),
+        )
 
     assert created.exit_code == 0, created.output
     document = json.loads(created.stdout)
@@ -170,14 +186,14 @@ def test_a_scripted_profile_warns_that_recovery_was_not_enrolled(tmp_path: Path)
     assert "mnemonic" not in created.stdout.lower()
 
 
-def test_scripted_create_refuses_when_no_passphrase_channel_is_available(tmp_path: Path) -> None:
-    """With no console and no configured secret, creation refuses rather than inventing one.
+def test_scripted_create_ignores_configured_passphrase_without_an_explicit_channel(tmp_path: Path) -> None:
+    """A configured secret is not an implicit CLI channel.
 
     The refusal is the whole protection: a profile created under a passphrase
     the operator never chose is unopenable by them and indistinguishable from
     one they did choose.
     """
-    with override_settings(**_storage_overrides(tmp_path, passphrase=None)):
+    with override_settings(**_storage_overrides(tmp_path, passphrase=_PASSPHRASE)):
         result = invoke_cached_cli(("config", "profile", "create", "No Channel", "--quiet"))
 
         assert result.exit_code != 0
@@ -185,6 +201,16 @@ def test_scripted_create_refuses_when_no_passphrase_channel_is_available(tmp_pat
         listed = invoke_cached_cli(("--format", "json", "config", "profile", "list"))
 
     assert json.loads(listed.stdout)["result"]["profiles"] == []
+
+
+def test_creation_passphrase_accepts_the_canonical_descriptor_channel() -> None:
+    reader, writer = os.pipe()
+    os.write(writer, _creation_payload().encode())
+    os.close(writer)
+
+    assert resolve_creation_passphrase(secrets_fd=reader) == _PASSPHRASE
+    with pytest.raises(OSError):
+        os.fstat(reader)
 
 
 def test_scripted_create_localizes_a_typed_password_refusal_without_leaking(tmp_path: Path) -> None:
@@ -284,20 +310,27 @@ def test_scripted_create_rejects_mismatched_confirmation_without_echo(tmp_path: 
     assert json.loads(listed.stdout)["result"]["profiles"] == []
 
 
-def test_lazy_create_help_declares_exactly_one_secret_stdin_option() -> None:
+def test_lazy_create_help_declares_exactly_one_canonical_machine_secret_option_pair() -> None:
     help_result = invoke_cached_cli(("config", "profile", "create", "--help"))
     assert help_result.exit_code == 0, help_result.output
     assert help_result.output.count("--secrets-stdin") == 1
+    assert help_result.output.count("--secrets-fd") == 1
     schema = build_verb_input_schemas(("config.profile.create",))["config.profile.create"]
     parameters = [parameter for parameter in schema.parameters if parameter.name == "secrets_stdin"]
     assert len(parameters) == 1
     assert parameters[0].cli_flag == "--secrets-stdin"
+    descriptor_parameters = [parameter for parameter in schema.parameters if parameter.name == "secrets_fd"]
+    assert len(descriptor_parameters) == 1
+    assert descriptor_parameters[0].cli_flag == "--secrets-fd"
 
 
 def test_scripted_create_refuses_a_blank_name(tmp_path: Path) -> None:
     """A blank subject is refused before any credential is consumed."""
     with override_settings(**_storage_overrides(tmp_path, passphrase=_PASSPHRASE)):
-        result = invoke_cached_cli(("config", "profile", "create", "   ", "--quiet"))
+        result = invoke_cached_cli(
+            ("config", "profile", "create", "   ", "--quiet", "--secrets-stdin"),
+            input=_creation_payload(),
+        )
 
         assert result.exit_code != 0
 
@@ -309,10 +342,16 @@ def test_scripted_create_refuses_a_blank_name(tmp_path: Path) -> None:
 def test_scripted_create_is_refused_for_a_duplicate_label(tmp_path: Path) -> None:
     """The second create under one label refuses and leaves the first intact."""
     with override_settings(**_storage_overrides(tmp_path, passphrase=_PASSPHRASE)):
-        first = invoke_cached_cli(("config", "profile", "create", "Only One", "--quiet"))
+        first = invoke_cached_cli(
+            ("config", "profile", "create", "Only One", "--quiet", "--secrets-stdin"),
+            input=_creation_payload(),
+        )
         assert first.exit_code == 0, first.output
 
-        second = invoke_cached_cli(("config", "profile", "create", "Only One", "--quiet"))
+        second = invoke_cached_cli(
+            ("config", "profile", "create", "Only One", "--quiet", "--secrets-stdin"),
+            input=_creation_payload(),
+        )
         assert second.exit_code != 0
 
         listed = invoke_cached_cli(("--format", "json", "config", "profile", "list"))
