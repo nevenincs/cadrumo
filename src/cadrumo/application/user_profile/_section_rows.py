@@ -14,23 +14,34 @@ facts that fill it -- both derived from the schema's own
 :class:`~cadrumo.domain.user_profile.ProfileSectionDefinition` rather than
 from a path convention restated per caller.
 
-This is deliberately surface-free: it returns
-:class:`~cadrumo.domain.user_profile.UserProfileFact` objects and never
-opens the write door itself, so the manager action and any later command
-addressing the same sections assemble rows identically instead of growing a
-second answer about what a row is.
+The application-owned row mutation below composes those two pure helpers with
+the canonical fact write door. Frontends collect values but never allocate a
+row or publish it themselves.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from ...domain.user_profile import UserProfileFact
+from ...domain.user_profile import ProfileSchemaValidationError, UserProfileFact, UserProfileRecord, load_user_profile_schema
 from ._completeness import profile_section_rows
+from ._fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
+from ._profile_record_repository import ProfileRecordRepository
+from ._projections import record_to_path_values
 
 if TYPE_CHECKING:
     from ...domain.user_profile import ProfileSectionDefinition
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileRepeatableRowMutationOutcome:
+    """The exact encrypted record and row identity produced by one row addition."""
+
+    record: UserProfileRecord
+    section_key: str
+    row_index: int
 
 
 def next_section_row_index(section_key: str, present: Iterable[str]) -> int:
@@ -113,7 +124,38 @@ def section_row_facts(
     return tuple(facts)
 
 
+def add_profile_repeatable_section_row(
+    *,
+    profile_id: str,
+    section_key: str,
+    values: Mapping[str, str],
+) -> ProfileRepeatableRowMutationOutcome:
+    """Allocate and publish one complete repeatable profile row atomically.
+
+    The schema selects the section, the current encrypted record determines the
+    next stable index, and the shared profile-fact writer owns the one atomic
+    publication and bucket event. A frontend must supply only the field-keyed
+    values it collected.
+    """
+    section = load_user_profile_schema().section(section_key)
+    if not section.repeatable:
+        raise ProfileSchemaValidationError("profile row mutation requires a schema-declared repeatable section")
+    current = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
+    row_index = next_section_row_index(section.key, record_to_path_values(current))
+    facts = section_row_facts(section, row_index=row_index, values=values)
+    if not facts:
+        raise ProfileSchemaValidationError("profile row mutation requires at least one populated field")
+    record = apply_profile_fact_changes(
+        profile_id=profile_id,
+        changes=facts,
+        door=ProfileFactWriteDoor.MANAGER_ROW,
+    )
+    return ProfileRepeatableRowMutationOutcome(record=record, section_key=section.key, row_index=row_index)
+
+
 __all__ = [
+    "ProfileRepeatableRowMutationOutcome",
+    "add_profile_repeatable_section_row",
     "next_section_row_index",
     "section_row_facts",
 ]

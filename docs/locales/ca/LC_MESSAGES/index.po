@@ -35,7 +35,7 @@ msgstr "Inici ràpid"
 
 #: ../../index.md:118
 msgid "Connect an agent (MCP)"
-msgstr ""
+msgstr "Connecta un agent (MCP)"
 
 #: ../../index.md:118
 msgid "First quarterly filing"
@@ -222,46 +222,33 @@ msgid "Cadrumo documentation"
 msgstr "Documentació de Cadrumo"
 
 #: ../../index.md:3
-msgid ""
-"Paper tax forms, an envelope, a keyboard, and a calculator arranged on a "
-"desk"
-msgstr ""
-"Formularis fiscals en paper, un sobre, un teclat i una calculadora "
-"disposats sobre un escriptori"
+msgid "Paper tax forms, an envelope, a keyboard, and a calculator arranged on a desk"
+msgstr "Formularis fiscals en paper, un sobre, un teclat i una calculadora disposats sobre un escriptori"
 
 #: ../../index.md:9
-#, fuzzy
 msgid ""
-"This is the documentation for Cadrumo and its `aeat` command-line "
-"interface (CLI). Cadrumo turns your records into checked modelo figures "
-"and an export file. You upload that file to the Agencia Estatal de "
-"Administración Tributaria (AEAT) yourself. For what Cadrumo is and who it"
-" is for, see the [product page](https://cadrumo.neve.md); the source is "
-"on [GitHub](https://github.com/nevenincs/cadrumo). Cadrumo is in beta - "
-"interfaces may still change between releases."
+"This is the documentation for Cadrumo and its `aeat` command-line interface (CLI). Cadrumo turns your records into "
+"checked modelo figures and an export file. You upload that file to the Agencia Estatal de Administración Tributaria "
+"(AEAT) yourself. For what Cadrumo is and who it is for, see the [product page](https://cadrumo.neve.md); the source "
+"is on [GitHub](https://github.com/nevenincs/cadrumo). Cadrumo is in beta - interfaces may still change between "
+"releases."
 msgstr ""
-"Aquesta és la documentació de Cadrumo i de la seva interfície de línia "
-"d'ordres (CLI) `aeat`. Cadrumo converteix els teus registres en xifres de"
-" modelo comprovades i un fitxer d'exportació. Ets tu qui puja aquest "
-"fitxer a l'Agencia Estatal de Administración Tributaria (AEAT). El codi "
-"font és a [GitHub](https://github.com/nevenincs/cadrumo). Cadrumo està en"
-" fase beta; les interfícies encara poden canviar entre versions."
+"Aquesta és la documentació de Cadrumo i de la seva interfície de línia d'ordres (CLI) `aeat`. Cadrumo converteix els "
+"teus registres en xifres de modelo comprovades i un fitxer d'exportació. Ets tu qui puja aquest fitxer a l'Agencia "
+"Estatal de Administración Tributaria (AEAT). El codi font és a [GitHub](https://github.com/nevenincs/cadrumo). "
+"Cadrumo està en fase beta; les interfícies encara poden canviar entre versions."
 
 #: ../../index.md:18
 msgid ""
-"Cadrumo is not tax advice, is not affiliated with AEAT, and does not "
-"replace AEAT's official tools or advice from a qualified professional. It"
-" builds, checks, and exports files locally. You file through official "
-"AEAT channels yourself and remain responsible for every declaration you "
-"submit. Read the [full disclaimer](disclaimer.md) before you rely on "
-"Cadrumo."
+"Cadrumo is not tax advice, is not affiliated with AEAT, and does not replace AEAT's official tools or advice from a "
+"qualified professional. It builds, checks, and exports files locally. You file through official AEAT channels "
+"yourself and remain responsible for every declaration you submit. Read the [full disclaimer](disclaimer.md) before "
+"you rely on Cadrumo."
 msgstr ""
-"Cadrumo no és assessorament fiscal, no està afiliat a l'AEAT i no "
-"substitueix les eines oficials de l'AEAT ni l'assessorament d'un "
-"professional qualificat. Construeix, comprova i exporta fitxers "
-"localment. Ets tu qui presenta pels canals oficials de l'AEAT i continues"
-" sent responsable de cada declaració que presentes. Llegeix l'[avís legal"
-" complet](disclaimer.md) abans de confiar en Cadrumo."
+"Cadrumo no és assessorament fiscal, no està afiliat a l'AEAT i no substitueix les eines oficials de l'AEAT ni "
+"l'assessorament d'un professional qualificat. Construeix, comprova i exporta fitxers localment. Ets tu qui presenta "
+"pels canals oficials de l'AEAT i continues sent responsable de cada declaració que presentes. Llegeix l'[avís legal "
+"complet](disclaimer.md) abans de confiar en Cadrumo."
 
 #: ../../index.md:25
 msgid "Where to start"
@@ -269,17 +256,13 @@ msgstr "Per on començar"
 
 #: ../../index.md:27
 msgid ""
-"These guides cover the whole preparation cycle: setting up a taxpayer "
-"profile, importing and classifying bank records, checking what is due, "
-"and preparing, verifying, and exporting each modelo. The two worked years"
-" - one for income tax, one for IVA - walk the full cycle with real "
-"commands."
+"These guides cover the whole preparation cycle: setting up a taxpayer profile, importing and classifying bank "
+"records, checking what is due, and preparing, verifying, and exporting each modelo. The two worked years - one for "
+"income tax, one for IVA - walk the full cycle with real commands."
 msgstr ""
-"Aquestes guies cobreixen tot el cicle de preparació: configurar un perfil"
-" de contribuent, importar i classificar registres bancaris, comprovar què"
-" s'ha de presentar, i preparar, verificar i exportar cada modelo. Els dos"
-" anys de mostra (un per a l'IRPF i un per a l'IVA) recorren tot el cicle "
-"amb ordres reals."
+"Aquestes guies cobreixen tot el cicle de preparació: configurar un perfil de contribuent, importar i classificar "
+"registres bancaris, comprovar què s'ha de presentar, i preparar, verificar i exportar cada modelo. Els dos anys de "
+"mostra (un per a l'IRPF i un per a l'IVA) recorren tot el cicle amb ordres reals."
 
 #: ../../index.md:37
 msgid "Start from scratch"
@@ -294,12 +277,10 @@ msgid "Run through the income-tax year"
 msgstr "Recorre l'any de l'IRPF"
 
 #: ../../index.md:50
-msgid ""
-"Follow a worked year of Modelo 130 quarters closing into the annual "
-"Modelo 100 Renta declaration, command by command."
+msgid "Follow a worked year of Modelo 130 quarters closing into the annual Modelo 100 Renta declaration, command by command."
 msgstr ""
-"Segueix un any de mostra de trimestres del Modelo 130 que es tanquen en "
-"la declaració anual del Modelo 100 (Renta), ordre per ordre."
+"Segueix un any de mostra de trimestres del Modelo 130 que es tanquen en la declaració anual del Modelo 100 (Renta), "
+"ordre per ordre."
 
 #: ../../index.md:54
 msgid "Run through the IVA year"
@@ -307,43 +288,31 @@ msgstr "Recorre l'any de l'IVA"
 
 #: ../../index.md:59
 msgid ""
-"Follow a worked year of Modelo 303 quarters, the Modelo 349 branch, and "
-"the annual Modelo 390 summary, command by command."
+"Follow a worked year of Modelo 303 quarters, the Modelo 349 branch, and the annual Modelo 390 summary, command by "
+"command."
 msgstr ""
-"Segueix un any de mostra de trimestres del Modelo 303, la branca del "
-"Modelo 349 i el resum anual del Modelo 390, ordre per ordre."
+"Segueix un any de mostra de trimestres del Modelo 303, la branca del Modelo 349 i el resum anual del Modelo 390, "
+"ordre per ordre."
 
 #: ../../index.md:63
 msgid "Set up your taxpayer profile"
 msgstr "Configura el teu perfil de contribuent"
 
 #: ../../index.md:68
-msgid ""
-"Create the taxpayer profile and record the facts that decide which "
-"modelos apply."
-msgstr ""
-"Crea el perfil de contribuent i registra les dades que determinen quins "
-"modelos s'apliquen."
+msgid "Create the taxpayer profile and record the facts that decide which modelos apply."
+msgstr "Crea el perfil de contribuent i registra les dades que determinen quins modelos s'apliquen."
 
 #: ../../index.md:72
 msgid "Import and manage transactions"
 msgstr "Importa i gestiona les transaccions"
 
 #: ../../index.md:77
-msgid ""
-"Import bank statements, review the rows, and attach the evidence behind "
-"them."
-msgstr ""
-"Importa extractes bancaris, revisa les files i adjunta les proves que hi "
-"ha al darrere."
+msgid "Import bank statements, review the rows, and attach the evidence behind them."
+msgstr "Importa extractes bancaris, revisa les files i adjunta les proves que hi ha al darrere."
 
 #: ../../index.md:86
-msgid ""
-"Decide business, personal, or mixed use and set the category and tax "
-"fields on each row."
-msgstr ""
-"Decideix l'ús comercial, personal o mixt i defineix la categoria i els "
-"camps fiscals de cada fila."
+msgid "Decide business, personal, or mixed use and set the category and tax fields on each row."
+msgstr "Decideix l'ús comercial, personal o mixt i defineix la categoria i els camps fiscals de cada fila."
 
 #: ../../index.md:90
 msgid "Plan your filing calendar"
@@ -351,9 +320,7 @@ msgstr "Planifica el teu calendari de presentacions"
 
 #: ../../index.md:95
 msgid "See which modelos are due and which period to prepare next."
-msgstr ""
-"Consulta quins modelos s'han de presentar i quin període has de preparar "
-"tot seguit."
+msgstr "Consulta quins modelos s'han de presentar i quin període has de preparar tot seguit."
 
 #: ../../index.md:98
 msgid "Prepare your filings"
@@ -361,11 +328,11 @@ msgstr "Prepara les teves presentacions"
 
 #: ../../index.md:103
 msgid ""
-"Prepare, verify, export, file at AEAT, and reconcile - with a recipe per "
-"modelo: 036, 100 (Renta), 130, 303, 349, and 390."
+"Prepare, verify, export, file at AEAT, and reconcile - with a recipe per modelo: 036, 100 (Renta), 130, 303, 349, and"
+" 390."
 msgstr ""
-"Prepara, verifica, exporta, presenta a l'AEAT i concilia, amb una recepta"
-" per a cada modelo: 036, 100 (Renta), 130, 303, 349 i 390."
+"Prepara, verifica, exporta, presenta a l'AEAT i concilia, amb una recepta per a cada modelo: 036, 100 (Renta), 130, "
+"303, 349 i 390."
 
 #: ../../index.md:108
 msgid "Search everything"
@@ -374,23 +341,16 @@ msgstr "Cerca-ho tot"
 #: ../../index.md:110
 #, python-brace-format
 msgid ""
-"Press {kbd}`Ctrl+K` ({kbd}`Cmd+K` on macOS) on any page to search tax "
-"concepts, casillas, commands, and guides; exact term matches appear "
-"first. Use the [command-line reference](cli/index.rst) for commands and "
-"options, and [how it works](explanation/index.md) for how records become "
-"modelo figures and what checks run. Use [Import, export, and "
-"evidence](reference/import-export-and-evidence.md) to distinguish source "
-"data, review outputs, AEAT upload files, official filing proof, and audit"
-" packages."
+"Press {kbd}`Ctrl+K` ({kbd}`Cmd+K` on macOS) on any page to search tax concepts, casillas, commands, and guides; exact"
+" term matches appear first. Use the [command-line reference](cli/index.rst) for commands and options, and [how it "
+"works](explanation/index.md) for how records become modelo figures and what checks run. Use [Import, export, and "
+"evidence](reference/import-export-and-evidence.md) to distinguish source data, review outputs, AEAT upload files, "
+"official filing proof, and audit packages."
 msgstr ""
-"Prem {kbd}`Ctrl+K` ({kbd}`Cmd+K` a macOS) a qualsevol pàgina per cercar "
-"conceptes fiscals, caselles, ordres i guies; les coincidències exactes de"
-" terme apareixen primer. Utilitza la [referència de línia "
-"d'ordres](cli/index.rst) per a ordres i opcions, i [com "
-"funciona](explanation/index.md) per veure com els registres es "
-"converteixen en xifres de modelo i quines comprovacions s'executen. "
-"Utilitza [Importació, exportació i proves](reference/import-export-and-"
-"evidence.md) per distingir les dades d'origen, les sortides de revisió, "
-"els fitxers de pujada de l'AEAT, el justificant oficial de presentació i "
-"els paquets d'auditoria."
+"Prem {kbd}`Ctrl+K` ({kbd}`Cmd+K` a macOS) a qualsevol pàgina per cercar conceptes fiscals, caselles, ordres i guies; "
+"les coincidències exactes de terme apareixen primer. Utilitza la [referència de línia d'ordres](cli/index.rst) per a "
+"ordres i opcions, i [com funciona](explanation/index.md) per veure com els registres es converteixen en xifres de "
+"modelo i quines comprovacions s'executen. Utilitza [Importació, exportació i proves](reference/import-export-and-"
+"evidence.md) per distingir les dades d'origen, les sortides de revisió, els fitxers de pujada de l'AEAT, el "
+"justificant oficial de presentació i els paquets d'auditoria."
 

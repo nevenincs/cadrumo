@@ -37,6 +37,7 @@ Submodules
    cadrumo.domain.calculations.registry._counterpart_bindings
    cadrumo.domain.calculations.registry._coverage
    cadrumo.domain.calculations.registry._cross_revision_divergence
+   cadrumo.domain.calculations.registry._deadline_coordinate
    cadrumo.domain.calculations.registry._detail_record_bindings
    cadrumo.domain.calculations.registry._donativo_bindings
    cadrumo.domain.calculations.registry._errors
@@ -153,6 +154,7 @@ Submodules
    cadrumo.domain.calculations.registry._validate_orden_aplicabilidad
    cadrumo.domain.calculations.registry._validate_previous_filing_sources
    cadrumo.domain.calculations.registry._validate_previous_filing_year_coverage
+   cadrumo.domain.calculations.registry._validate_projection_endpoints
    cadrumo.domain.calculations.registry._validate_record_design_epochs
    cadrumo.domain.calculations.registry._validate_record_sections
    cadrumo.domain.calculations.registry._validate_reference_checker

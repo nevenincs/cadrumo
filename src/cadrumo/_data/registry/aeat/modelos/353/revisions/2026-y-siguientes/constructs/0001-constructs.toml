@@ -63,9 +63,6 @@ application_links = [
 ]
 filing_schedules = ["modelo-353-mensual"]
 deadline_windows = [
-    "modelo-353-2025-01",
-    "modelo-353-2025-06",
-    "modelo-353-2025-12",
     "modelo-353-2026-01",
 ]
 

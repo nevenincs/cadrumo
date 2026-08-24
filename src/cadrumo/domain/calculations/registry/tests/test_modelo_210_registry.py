@@ -7,9 +7,9 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import ConvenioOverrideKind, TipoRentaIrnr
+from .....core import ConvenioOverrideKind, ResultDisposition, TipoRentaIrnr
 from .....core.resources import bundled_path
-from .. import load_convenio_authority
+from .. import load_convenio_authority, select_revision
 from .._errors import NoRevisionForPeriodError
 from .._legal import verify_legal_catalogue
 from .._schema import ModeloDefinition, RegistryCatalogues
@@ -129,6 +129,82 @@ def test_modelo_210_snapshot_builds_for_2025_event_and_annual_group_periods() ->
     assert annual_snapshot.revision.id == "2025"
     assert annual_snapshot.filing_period is not None
     assert str(annual_snapshot.filing_period.code) == "0A"
+
+
+def test_modelo_210_deadlines_use_canonical_annual_identity_and_exact_revision_owner() -> None:
+    modelo, _catalogues = _load_modelo_210()
+
+    expected = {
+        2025: {
+            "modelo-210-2025-0a-arrendamiento-ingreso": (
+                ResultDisposition.INGRESO,
+                ("01", "35"),
+                date(2026, 4, 1),
+                date(2026, 4, 20),
+            ),
+            "modelo-210-2025-0a-cuota-cero": (
+                ResultDisposition.NEGATIVA,
+                ("01", "35"),
+                date(2026, 1, 1),
+                date(2026, 1, 20),
+            ),
+            "modelo-210-2025-0a-devolucion": (
+                ResultDisposition.DEVOLUCION,
+                ("01", "35"),
+                date(2026, 2, 1),
+                date(2030, 2, 1),
+            ),
+            "modelo-210-2025-0a-renta-imputada": (
+                None,
+                ("02",),
+                date(2026, 1, 1),
+                date(2026, 12, 31),
+            ),
+        },
+        2026: {
+            "modelo-210-2026-0a-arrendamiento-ingreso": (
+                ResultDisposition.INGRESO,
+                ("01", "35"),
+                date(2027, 4, 1),
+                date(2027, 4, 20),
+            ),
+            "modelo-210-2026-0a-cuota-cero": (
+                ResultDisposition.NEGATIVA,
+                ("01", "35"),
+                date(2027, 1, 1),
+                date(2027, 1, 20),
+            ),
+            "modelo-210-2026-0a-devolucion": (
+                ResultDisposition.DEVOLUCION,
+                ("01", "35"),
+                date(2027, 2, 1),
+                date(2031, 2, 1),
+            ),
+            "modelo-210-2026-0a-renta-imputada": (
+                None,
+                ("02",),
+                date(2027, 4, 1),
+                date(2027, 12, 31),
+            ),
+        },
+    }
+
+    for filing_year, expected_windows in expected.items():
+        owner = select_revision(modelo, filing_year=filing_year, period="0A")
+        assert {window.id for window in owner.deadline_windows} == set(expected_windows)
+        assert all(window.period.registry_token == "0A" for window in owner.deadline_windows)
+        assert all(window.filing_year == filing_year for window in owner.deadline_windows)
+        assert all("-1t" not in window.id and "-2t" not in window.id for window in owner.deadline_windows)
+        for window in owner.deadline_windows:
+            assert (
+                window.resultado_scope,
+                window.tipo_renta_scope,
+                window.opens_on,
+                window.closes_on,
+            ) == expected_windows[window.id]
+
+    assert select_revision(modelo, filing_year=2025, period="0A").id == "2025"
+    assert select_revision(modelo, filing_year=2026, period="0A").id == "2026-y-siguientes"
 
 
 def test_modelo_210_legacy_evento_period_is_not_supported() -> None:

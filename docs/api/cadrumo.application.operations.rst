@@ -23,5 +23,6 @@ Submodules
    cadrumo.application.operations._models
    cadrumo.application.operations._registry
    cadrumo.application.operations._replay
+   cadrumo.application.operations._secret_submission
    cadrumo.application.operations._supervisor
    cadrumo.application.operations._supervisor_lease
