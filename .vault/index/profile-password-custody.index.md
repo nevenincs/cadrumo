@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:21880af536baba02a099a073ce77bd7fc8e70521804c8f60e9d0a99c005db816'
+body_hash: 'sha256:ed1804f8878d9410c1a9324306f795de9cc4d80b678113c6ea70fa4eeaf4bd1f'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -225,6 +225,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W06-P10-S214]]'
   - '[[2026-08-13-profile-password-custody-W06-P10-S215]]'
   - '[[2026-08-13-profile-password-custody-W06-P10-S216]]'
+  - '[[2026-08-13-profile-password-custody-W06-P10-S217]]'
   - '[[2026-08-13-profile-password-custody-plan]]'
   - '[[2026-08-13-profile-password-custody-research]]'
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
@@ -518,6 +519,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W06-P10-S214` - Migrate the scripted CLI creation consumer to the required application recovery handoff while preserving bounded descriptor transfer, collision preflight, verification, and failure atomicity
 - `2026-08-13-profile-password-custody-W06-P10-S215` - Migrate the terminal and TUI creation consumer to the required application recovery handoff while preserving masked exact re-entry and cancellation-before-publication
 - `2026-08-13-profile-password-custody-W06-P10-S216` - Migrate all remaining direct registration callers and their shared test provisioning doors to supply and verify recovery instead of constructing password-only profiles
+- `2026-08-13-profile-password-custody-W06-P10-S217` - Re-author application, CLI, TUI, storage, and harness tests around mandatory recovery handoff, exact possession verification, and rollback on missing, mismatched, cancelled, or failed handoff
 
 ### plan
 

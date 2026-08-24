@@ -90,26 +90,21 @@ def test_a_restore_carries_the_recovery_wrapper_forward(tmp_path: Path) -> None:
         assert carried.read_bytes() == original
 
 
-def test_a_profile_that_never_enrolled_restores_and_says_so(tmp_path: Path) -> None:
-    """Converse control: absence is a legitimate source, reported honestly.
-
-    Without this the sibling test would pass identically if the outcome
-    hardcoded enrolment, and a restore of a never-enrolled profile would
-    claim a door it does not have.
-    """
+def test_password_restore_does_not_require_retained_recovery_words(tmp_path: Path) -> None:
+    """Password restore remains independent from the operator's recovery proof."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _, capsule = _published_capsule(tmp_path)
+        profile_id, capsule = _published_capsule(tmp_path)
 
-        assert not profile_custody_recovery_envelope_path(capsule).exists()
+        assert profile_custody_recovery_envelope_path(capsule).exists()
 
         restored = restore_profile_from_source_with_password(
-            label="Restored without recovery",
+            label="Restored with mandatory recovery",
             source=capsule,
             password=_PASSPHRASE,
-            root=tmp_path / "no-recovery",
+            root=tmp_path / "mandatory-recovery",
         )
 
-        assert restored.recovery_enrolled is False
+        assert restored.profile_id == profile_id
 
 
 def test_a_lost_password_is_recovered_through_the_artifact_and_the_source(tmp_path: Path) -> None:

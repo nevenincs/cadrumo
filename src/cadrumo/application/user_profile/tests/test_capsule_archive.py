@@ -20,6 +20,7 @@ from .. import (
     ProfileCapsuleArchiveError,
     export_profile_capsule_archive,
     inspect_profile_capsule_archive,
+    profile_custody_recovery_envelope_path,
     read_profile_capsule_archive,
     register_profile_with_credentials,
     restore_profile_capsule_with_password,
@@ -101,35 +102,20 @@ def test_the_archive_leaks_no_identifying_field_outside_its_encrypted_members(tm
             assert secret.encode("utf-8") not in expanded, f"{secret!r} appears in the decompressed archive"
 
 
-def test_enrolment_is_not_inferable_from_the_archive_layout(tmp_path: Path) -> None:
-    """Whether a taxpayer keeps a recovery phrase is a fact about them.
-
-    The recovery slot is present and constant-width either way, so an
-    enrolled archive and an unenrolled one differ only in ciphertext the
-    holder cannot read. Comparing the two payload lengths is the direct
-    measurement of that, rather than an assertion that the slot exists.
-    """
+def test_discarding_words_does_not_create_a_password_only_source_profile(tmp_path: Path) -> None:
+    """Not retaining words in a fixture cannot bypass creation enrollment."""
     handed: list[str] = []
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         enrolled_id = _register(handed)
-        enrolled_archive = tmp_path / "enrolled.cadrumo-bucket.tar.gz"
-        export_profile_capsule_archive(profile_id=UUID(enrolled_id), target=enrolled_archive)
-        enrolled_source = read_profile_capsule_archive(enrolled_archive)
+        enrolled = load_committed_profile_password_material(UUID(enrolled_id))
 
     with isolated_profile_storage_root(tmp_path=tmp_path / "second"):
-        plain_id = _register()
-        plain_archive = tmp_path / "plain.cadrumo-bucket.tar.gz"
-        export_profile_capsule_archive(profile_id=UUID(plain_id), target=plain_archive)
-        plain_source = read_profile_capsule_archive(plain_archive)
+        unretained_id = _register()
+        unretained = load_committed_profile_password_material(UUID(unretained_id))
 
-    assert enrolled_source.recovery_envelope is not None
-    assert plain_source.recovery_envelope is None
-    # The slot is the same width in both, so the payloads differ only by the
-    # database and the identity strings -- never by the recovery member.
-    assert len(gzip.decompress(enrolled_archive.read_bytes())) == len(gzip.decompress(plain_archive.read_bytes())), (
-        "archive length differs with enrolment, so the layout signals it"
-    )
+    assert profile_custody_recovery_envelope_path(enrolled.capsule_path).exists()
+    assert profile_custody_recovery_envelope_path(unretained.capsule_path).exists()
 
 
 def test_the_recovery_wrapper_survives_the_archive_and_the_import(tmp_path: Path) -> None:
