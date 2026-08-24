@@ -2,10 +2,10 @@
 tags:
   - '#exec'
   - '#profile-password-custody'
-date: '2026-08-18'
-modified: '2026-08-18'
+date: '2026-08-24'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:4c72dfe97aef641a16cd40fab7114a85c0a416c5fedf03d536910b7ed1054f31'
+body_hash: 'sha256:7783c00a117d1db882f89b497be6081ef10d04b9290a4eb0104e8f662a821dc7'
 step_id: 'S194'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -18,6 +18,8 @@ related:
 - `src/cadrumo/entrypoints/cli/_config/_status_frontend.py and src/cadrumo/application/wizard/_commands.py`
 
 ## Description
+
+Make manager overview degrade on incomplete non-resident facts and replace interpolated descendant command prose with the typed operator-action projection across all four locales.
 
 ## Outcome
 

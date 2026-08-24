@@ -2,10 +2,10 @@
 tags:
   - '#exec'
   - '#profile-password-custody'
-date: '2026-08-18'
-modified: '2026-08-18'
+date: '2026-08-24'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:fc103b8114b1acb3ba3315a3ba8a58d43c699f457dfce99325bfe7b1fa732326'
+body_hash: 'sha256:30303ee1bd81a69fdee13ebbcb8a1ff190211d0cb8b7eadb6b3550c065c89d23'
 step_id: 'S15'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -18,6 +18,8 @@ related:
 - `src/cadrumo/application/bucket_maintenance/ and src/cadrumo/application/user_profile/`
 
 ## Description
+
+Review archive, hostile transport, artifact proof, restore publication, and rollback boundaries against the shipped implementation; retire the producerless browse and disk-usage contracts identified by that review.
 
 ## Outcome
 

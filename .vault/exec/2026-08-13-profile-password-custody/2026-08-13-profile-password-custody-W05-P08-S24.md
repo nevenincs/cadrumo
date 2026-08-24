@@ -2,10 +2,10 @@
 tags:
   - '#exec'
   - '#profile-password-custody'
-date: '2026-08-18'
-modified: '2026-08-18'
+date: '2026-08-24'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:f5e067012754a8232191e0ca215c345ecc9c29355ed6c6b1354783914154e892'
+body_hash: 'sha256:aa1c93bc7bade95ee79c7f9b04a67e8e028f9eae47e221f989b7ce83fec21831'
 step_id: 'S24'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -18,6 +18,8 @@ related:
 - `.vault/audit/`
 
 ## Description
+
+Perform the final independent security and architecture proof against every accepted custody invariant, remediate the identified documentation findings, and verify the structural and real-system matrices.
 
 ## Outcome
 

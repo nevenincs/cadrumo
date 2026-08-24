@@ -2,10 +2,10 @@
 tags:
   - '#exec'
   - '#profile-password-custody'
-date: '2026-08-18'
-modified: '2026-08-18'
+date: '2026-08-24'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:fb8b6b09e12e97b2e00496f16e1a0855d1d1a983935273bcf11d7f4250b998a0'
+body_hash: 'sha256:272c673cf4d428161e9e3689f00ede4fa198bdafd62884c4910da0123f145343'
 step_id: 'S22'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -18,6 +18,8 @@ related:
 - `src/cadrumo/adapters/persistence/storage/custody/tests/`
 
 ## Description
+
+Add real custody isolation, destructive-reset subprocess, and supervision-orphan matrices, reusing rather than duplicating the already-covered lifecycle axes.
 
 ## Outcome
 

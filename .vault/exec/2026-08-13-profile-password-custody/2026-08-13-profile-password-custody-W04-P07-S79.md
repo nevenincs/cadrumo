@@ -2,10 +2,10 @@
 tags:
   - '#exec'
   - '#profile-password-custody'
-date: '2026-08-18'
-modified: '2026-08-18'
+date: '2026-08-24'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:3369c5816966bc98731d92bc51c2d657f0aa80f21b26bc85a08ad880bc4f88a8'
+body_hash: 'sha256:1874bbb62271b0406cd83bf68784fecb16851dc650e5cdd15f5b307d78de6fe1'
 step_id: 'S79'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -18,6 +18,8 @@ related:
 - `dev/quality/error_code_default_recovery_rehoming.py and .vault/plan/`
 
 ## Description
+
+Re-anchor closed-step ownership tokens to the open whole-tree architecture audit, regenerate the ownership ledger, and explicitly route the remaining overlap and zero-disposition findings.
 
 ## Outcome
 

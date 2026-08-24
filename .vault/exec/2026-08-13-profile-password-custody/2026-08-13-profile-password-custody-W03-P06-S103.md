@@ -2,10 +2,10 @@
 tags:
   - '#exec'
   - '#profile-password-custody'
-date: '2026-08-18'
-modified: '2026-08-18'
+date: '2026-08-24'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:618bb8f1433955cfb5492820891c7a786fbb37368f73ec242f46e2d1b5d0abb1'
+body_hash: 'sha256:044f70bbbaa910d1fa5206bc8491ff2af3b52c73d6ea90d69f3678346b1558ab'
 step_id: 'S103'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -18,6 +18,8 @@ related:
 - `src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/domain/modelos/tests/`
 
 ## Description
+
+Classify the fourteen-name profile-helper census as retired-path, canonical, or genuinely distinct, preserving lifecycle and already-published-capsule helpers whose semantics cannot use the canonical registration door.
 
 ## Outcome
 

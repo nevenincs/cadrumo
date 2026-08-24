@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-24'
-body_hash: 'sha256:f8393e4410647059a2ffe7ba7c4f5ec637f5a851b5067cdb7dfd707f7511d646'
+body_hash: 'sha256:fdc728b2041a7a0ef8a45721679279f7ea7c8dffb3e33fa4ef5c6d8f284dd67b'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -323,7 +323,7 @@ Make verified recovery a required application invariant, migrate every creation 
 
 Repair the execution-evidence ledger from real implementation and history, then repeat the security and honesty gates against the reconciled authority.
 
-- [ ] `W06.P11.S220` - Adjudicate every checked execution record that fails the required body schema, preserving genuine evidence where it exists and reopening or formally carrying forward any Step whose completed work cannot be established; `.vault/exec/2026-08-13-profile-password-custody/`.
+- [x] `W06.P11.S220` - Adjudicate every checked execution record that fails the required body schema, preserving genuine evidence where it exists and reopening or formally carrying forward any Step whose completed work cannot be established; `.vault/exec/2026-08-13-profile-password-custody/`.
 - [ ] `W06.P11.S221` - Re-run the complete S206 recovery-enrollment matrix across interactive, TUI, stdin, POSIX descriptor, Windows inherited-handle, mismatch, cancellation, collision, and publication-failure paths and persist the resulting evidence; `src/cadrumo/application/user_profile/tests/test_recovery_enrollment_at_creation.py and src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/adapters/inbound/tui/tests/`.
 - [ ] `W06.P11.S222` - Re-run the S209 supervised-KDF platform gate without weakening exact descriptor attestation, worker isolation, or fail-closed supervision and persist the Windows, POSIX, and WSL evidence; `src/cadrumo/adapters/persistence/storage/custody/ and src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`.
 - [ ] `W06.P11.S223` - Perform a fresh-context campaign-close honesty review covering decision-to-code consistency, Step-to-record evidence, stale recovery prose, S206 and S209 gates, feature-scoped Vaultspec validation, and the historical-close pointer; `.vault/audit/`.

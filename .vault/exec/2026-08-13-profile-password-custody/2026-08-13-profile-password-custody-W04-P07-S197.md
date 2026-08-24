@@ -2,10 +2,10 @@
 tags:
   - '#exec'
   - '#profile-password-custody'
-date: '2026-08-15'
-modified: '2026-08-18'
+date: '2026-08-24'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:3b6dd0f02d7fb4ace6390ca3cec0a1a98846405b0d8ef7ab3783f3061403e9ee'
+body_hash: 'sha256:c1f08ed13a98fbeb9e3a3a0b75692ed2e30de7bb3941b9a5af05d953f474b29a'
 step_id: 'S197'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -18,6 +18,8 @@ related:
 - `dev/packaging/_acquire_common.py and dev/packaging/acquire_pypi.py and dev/packaging/oracle_emit_cohort.py and dev/release/tests/test_readiness.py`
 
 ## Description
+
+Adjudicate the harness cohort exclusion, sweep the owned cohort against the canonical custody door, and retain the documented exclusions whose subjects require distinct lifecycle control.
 
 ## Outcome
 

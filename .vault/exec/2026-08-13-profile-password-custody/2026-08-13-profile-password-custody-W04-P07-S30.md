@@ -2,10 +2,10 @@
 tags:
   - '#exec'
   - '#profile-password-custody'
-date: '2026-08-18'
-modified: '2026-08-18'
+date: '2026-08-24'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:db2ea4156cb0e25d47a82cc6322c920c0ba8b4c6d4591bfdf23a8a2a65f9deea'
+body_hash: 'sha256:9964a8c1447529c93bbdd190e7207788f5f44833de3866d5e1125e09ba9b88cd'
 step_id: 'S30'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -18,6 +18,8 @@ related:
 - `src/cadrumo/application/profile_custody/ and src/cadrumo/application/`
 
 ## Description
+
+Dissolve the forwarding custody port into the user-profile owner, repoint every consumer and dynamic reach, delete the retired package, and re-run the hard-cutover absence gate.
 
 ## Outcome
 

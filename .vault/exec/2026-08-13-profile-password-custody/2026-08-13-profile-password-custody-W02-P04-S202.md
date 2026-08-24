@@ -2,10 +2,10 @@
 tags:
   - '#exec'
   - '#profile-password-custody'
-date: '2026-08-18'
-modified: '2026-08-18'
+date: '2026-08-24'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:569f181b18045d8d479df40dc42bcc1649fb3f296bbf0f5b763c5504e6846221'
+body_hash: 'sha256:9b32b61bf6610e1ff07a69447ce706643bd4c92b0706d5d8328f705476fdb9ae'
 step_id: 'S202'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -18,6 +18,8 @@ related:
 - `src/cadrumo/locales/ and src/cadrumo/_data/registry/`
 
 ## Description
+
+Adjudicate the locale-parity debt against the contemporaneous diagnostics and transfer the enumerated unresolved population to the registry campaign without claiming implementation in this campaign.
 
 ## Outcome
 

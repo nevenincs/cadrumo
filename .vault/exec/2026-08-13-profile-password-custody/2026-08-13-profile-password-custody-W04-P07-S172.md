@@ -2,10 +2,10 @@
 tags:
   - '#exec'
   - '#profile-password-custody'
-date: '2026-08-15'
-modified: '2026-08-15'
+date: '2026-08-24'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:877daf12b46402e21923929cf7dda78912e638b799438b4622b50f4849a494d9'
+body_hash: 'sha256:41996f04f0b1c7dc5d7953e3374fac32b55970991450ef9cc9a7b91bbba5f1d0'
 step_id: 'S172'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -28,6 +28,10 @@ related:
 - Prove each re-root bites by runtime patch from outside the tree.
 - Split the command-event refusal so the event-type half and the timestamp
   half each report themselves.
+
+## Outcome
+
+The five scoped exception classes were re-rooted into the project taxonomy while preserving the builtin ancestry required by the one live catch site, registered under existing truthful four-locale keys, and exercised by forty external bite-proof assertions. The hygiene gate moved from six named bare-root classes to the one out-of-scope operations class. The independent command-event diagnostic was split so invalid event type and invalid timestamp report their own observations. The full M303 authority path remained blocked by the contemporaneous registry sweep; the record, registry-binding, envelope, conversion-arm, and non-authority refusal proofs passed as recorded below.
 
 ## Notes
 

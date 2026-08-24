@@ -2,10 +2,10 @@
 tags:
   - '#exec'
   - '#profile-password-custody'
-date: '2026-08-18'
-modified: '2026-08-18'
+date: '2026-08-24'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:348be78125b10ac5f96c1f9de2f236bf7dbc4cef2a8dcf4cc8dafb9ccc015471'
+body_hash: 'sha256:fe1e3969b623b311aae9adad92694593d16e45dcf82bdf42aec4646ff02d73df'
 step_id: 'S100'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -18,6 +18,8 @@ related:
 - `src/cadrumo/core/identity/ and src/cadrumo/adapters/persistence/storage/custody/_capsule_records.py`
 
 ## Description
+
+Centralize canonical profile-bucket conversion beside `ProfileId`, route custody serialization and keying sites through it, and preserve resolver-owned reverse comparisons.
 
 ## Outcome
 

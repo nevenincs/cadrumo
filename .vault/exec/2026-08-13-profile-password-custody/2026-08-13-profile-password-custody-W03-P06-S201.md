@@ -2,10 +2,10 @@
 tags:
   - '#exec'
   - '#profile-password-custody'
-date: '2026-08-18'
-modified: '2026-08-18'
+date: '2026-08-24'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:b14bf40fc62db0314eab9d7093e370d9afd2cfcbfbfb0390e270ecbcbe4d13d0'
+body_hash: 'sha256:51301689016e4ba7f5506f0fcae1c8bc2a9036eddfcd1803248afffc48af11b3'
 step_id: 'S201'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -19,8 +19,12 @@ related:
 
 ## Description
 
+Retain class-level fallback registry binding, add instance-specific translated messages to the custody refusal, and assign reason-specific four-locale keys at all three live raise sites.
+
 ## Outcome
 
 Ruled AGAINST field-aware registry keying: the registry binds by exception class at class-creation, and the instance `translated_message` channel is the existing per-instance differentiation (resolution precedence: instance translated_message → args[0] → class message_key). `ProfileCustodyRefusedError` now accepts `translated_message` and the three live raise sites carry reason-specific keys (`errors.refused.refused_profile_custody_legacy`, `..._kdf_resource_limit`, `..._kdf_supervision_unavailable`), authored in all four catalogues via the locales CLI. The class registry row stays as fallback.
 
 ## Notes
+
+The contemporaneous execution record reported no additional incident beyond the ruling and implementation evidence retained above.

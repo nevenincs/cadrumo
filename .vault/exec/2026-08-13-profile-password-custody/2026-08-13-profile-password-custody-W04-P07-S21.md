@@ -2,10 +2,10 @@
 tags:
   - '#exec'
   - '#profile-password-custody'
-date: '2026-08-18'
-modified: '2026-08-18'
+date: '2026-08-24'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:c1b6ad639cf8d347b7d1671041cf194ee1c67337fd89e372e0e4626cb446de13'
+body_hash: 'sha256:331148e589285496d47646825671e88bdc930b1952cc3d63e1ec45c1620180b8'
 step_id: 'S21'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -18,6 +18,8 @@ related:
 - `src/cadrumo/`
 
 ## Description
+
+Audit the negative custody architecture against the hard-cutover boundaries, verify the absence gates and ownership split, and correct the two stale prose references found by the audit.
 
 ## Outcome
 

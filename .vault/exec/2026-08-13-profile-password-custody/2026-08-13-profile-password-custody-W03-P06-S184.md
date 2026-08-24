@@ -2,10 +2,10 @@
 tags:
   - '#exec'
   - '#profile-password-custody'
-date: '2026-08-18'
-modified: '2026-08-18'
+date: '2026-08-24'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:a8bd9979be69291b93f0de77a5d58edb19b3783bc78d0a8daf0981f2c06dfb4b'
+body_hash: 'sha256:7ab4ec1b2f4ce20ed1368be644b833a0555844b56811b70c82ac766ebe683ee1'
 step_id: 'S184'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -19,8 +19,12 @@ related:
 
 ## Description
 
+Adjudicate the bucket-history subject widening against the shipped command metadata and update the schema proof to assert the optional live parameter contract.
+
 ## Outcome
 
 Ruled: the bucket-history subject widening was deliberate (part of the d18e37c274 verb rework to bucket-scoped reads with an active-profile fallback; the operator help already documents `[PROFILE]`). The schema test now reads `profile` from the live parameter metadata, asserts `required is False` and `required_inputs == ()`.
 
 ## Notes
+
+The contemporaneous execution record reported no additional incident beyond the ruling and implementation evidence retained above.

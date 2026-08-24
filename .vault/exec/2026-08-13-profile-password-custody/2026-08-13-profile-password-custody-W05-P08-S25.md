@@ -2,10 +2,10 @@
 tags:
   - '#exec'
   - '#profile-password-custody'
-date: '2026-08-18'
-modified: '2026-08-18'
+date: '2026-08-24'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:39d103f6357017e3b01d116ee1794d2252fc6192ffc6f191b997676093536039'
+body_hash: 'sha256:ab2152301b1f57f9990edee190090c442c7e86f2ce459d02555197f141f68f73'
 step_id: 'S25'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -19,6 +19,8 @@ related:
 - `.vault/exec/`
 
 ## Description
+
+Run the explicitly authorized local-only destructive reset through the canonical application authority, capture its journal and receipt evidence, and report the observed zero-target state without inventing retired data.
 
 ## Outcome
 

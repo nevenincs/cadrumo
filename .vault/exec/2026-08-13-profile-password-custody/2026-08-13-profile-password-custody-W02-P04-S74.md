@@ -2,10 +2,10 @@
 tags:
   - '#exec'
   - '#profile-password-custody'
-date: '2026-08-18'
-modified: '2026-08-18'
+date: '2026-08-24'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:82875ee5f01fa3b67cd2852cfadcf8633eedc60a948370e70e15367baf180d24'
+body_hash: 'sha256:88c1f662d1c8e924a5103db50a803a4ef1c0766770436d7d207c97ff0f88bf8a'
 step_id: 'S74'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -18,6 +18,8 @@ related:
 - `src/cadrumo/application/user_profile/_capsule_record.py`
 
 ## Description
+
+Remove the completed-state default from the strict profile record, require every construction site to state setup state, and verify the missing-field refusal and existing round trips.
 
 ## Outcome
 

@@ -2,10 +2,10 @@
 tags:
   - '#exec'
   - '#profile-password-custody'
-date: '2026-08-18'
-modified: '2026-08-18'
+date: '2026-08-24'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:e95deb3965d7656c2f947961ead2754d8d81e0fc261d4bb95161a7b9c129bae0'
+body_hash: 'sha256:2a407957d241f304ea01f8fd2c31cec39c9ad010a3d67fc083e26fd09516cd50'
 step_id: 'S76'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -18,6 +18,8 @@ related:
 - `src/cadrumo/adapters/outbound/aeat/auth/tests/`
 
 ## Description
+
+Correct the stale outbound-auth fixture diagnosis, replace readable bucket identifiers with canonical UUIDv4 identities, and re-run collection and the newly reachable tests.
 
 ## Outcome
 
