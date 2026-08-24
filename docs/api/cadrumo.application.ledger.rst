@@ -21,6 +21,7 @@ Submodules
    cadrumo.application.ledger._actions_manual
    cadrumo.application.ledger._actions_split_merge
    cadrumo.application.ledger._aeat_record_projection
+   cadrumo.application.ledger._attachment_review
    cadrumo.application.ledger._batch_ingest
    cadrumo.application.ledger._classification_assembly
    cadrumo.application.ledger._classifier_inputs

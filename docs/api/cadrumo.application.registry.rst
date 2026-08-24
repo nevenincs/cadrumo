@@ -21,4 +21,7 @@ Submodules
    cadrumo.application.registry._errors
    cadrumo.application.registry._filing_export_authority
    cadrumo.application.registry._filing_export_coverage
+   cadrumo.application.registry._source_connectivity_authority
    cadrumo.application.registry._source_connectivity_coverage
+   cadrumo.application.registry._temporal_coverage
+   cadrumo.application.registry.source_connectivity

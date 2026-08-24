@@ -12,3 +12,5 @@ Submodules
 
 .. toctree::
    :maxdepth: 4
+
+   cadrumo.entrypoints._cli_main
