@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:bb8073052c81d9baf5f9033cec30360ba7a9b8a03c56a677a490b67fab3004e7'
+body_hash: 'sha256:fa9dc4eefae7994e7b0b4c479972727c6d1d984622f08a5b8241f99973a6353b'
 step_id: 'S12'
 related:
   - "[[2026-08-24-deadline-window-revision-authority-plan]]"
@@ -27,12 +27,15 @@ related:
 
 ## Outcome
 
-The owner-normalisation portion is complete. Existing grounded rows now have exactly one containing revision, selected solely by filing year and canonical period token. No new selector, cadence map, horizon, deadline resolver, or inferred row was introduced.
+The owner-normalisation portion is complete. Existing grounded rows now have exactly one containing revision, selected solely by filing year and canonical period token. No new selector, cadence map, horizon, or deadline resolver was introduced.
 
-The Step is deliberately incomplete. Removing future-year copies from revision `2023` exposes its empty deadline family, and the independently known Modelo 322 gap also prevents full-registry construction. The exact-four 2025 engine regression is therefore not currently reachable through the default validated authority.
+Revision `2023` now carries exactly sixteen officially grounded windows: four quarterly and twelve monthly coordinates, one per token in both its period selector and filing schedules. Presentation and direct-debit dates come from the bundled official AEAT 2023 calendar, except the following-January `4T` and `12` coordinates, which come from the bundled official AEAT 2024 calendar. Cold M303 validation passes and the validated authority projects exactly those sixteen rows for filing year 2023.
+
+The Step remains deliberately incomplete because its full acceptance text requires every supported M303 monthly and quarterly row, while the shared supported-year catalogue is not yet available to define that horizon canonically. Current residual sparse coordinates are exact: revision `2022` has only `4T`; the two 2024 owners together lack monthly `02`-`05`, `07`-`11`; revision `2025` lacks monthly `02`-`05`, `07`-`11`; and revision `2026-y-siguientes` lacks monthly `12` for explicitly authored year 2026. Those rows were not derived from cadence arithmetic or extended beyond published evidence.
 
 ## Notes
 
-- Focused canonical-ownership unit tests passed: 4 tests.
-- The engine regression fails closed during registry construction, before scheduling, because Modelo 303 revision `2023` and Modelo 322 revision `2008-2022` still lack deadline-family completion.
-- Complete periodic materialisation remains deferred to the canonical temporal-coverage catalogue owned by `W02.P05.S24`; no filing-year horizon was inferred locally.
+- Vaultspec RAG located the existing `select_revision`, ownership validator, period authority, deadline projection, and tests before editing; the follow-up search found no redeclared selector, resolver, cadence map, or horizon.
+- Focused M303 deadline tests passed: 4 tests. Canonical ownership tests passed: 4 tests. The complete M303 registry test module passed: 50 tests. Ruff passed.
+- Isolated cold construction through `load_registry_tree` plus `RegistryValidator.validate_modelo` passed with sixteen 2023 windows. Full validated-authority construction also passed once the independently owned M322 repair was present, and projected sixteen M303 rows for 2023.
+- Complete periodic materialisation remains deferred to the canonical temporal-coverage catalogue owned by the registry-temporal-coverage campaign; no filing-year horizon was inferred locally.
