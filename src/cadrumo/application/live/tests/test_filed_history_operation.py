@@ -1,13 +1,22 @@
-"""Real supervisor proof for the recorded filed-history executor."""
+"""Canonical conformance proof for the recorded filed-history operation."""
 
 from __future__ import annotations
 
 import asyncio
+import importlib
+import subprocess
+import sys
+import textwrap
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
+from types import ModuleType
 
 import pytest
 
+from ....adapters.outbound.aeat.sede import (
+    FiledDeclarationAvailability,
+    FiledDeclarationAvailabilityReport,
+)
 from ....adapters.persistence.operations import (
     OperationJournalRepository,
     OperationLeaseFilesystemRepository,
@@ -41,14 +50,28 @@ from ...operations import (
     OperationRequest,
     OperationSupervisor,
 )
+from .. import (
+    FILED_HISTORY_OPERATION_DEFINITION_ID as PUBLIC_FILED_HISTORY_OPERATION_DEFINITION_ID,
+)
+from .. import (
+    FiledHistoryOnboardingRun as PublicFiledHistoryOnboardingRun,
+)
+from .. import (
+    FiledHistoryOperationRequest as PublicFiledHistoryOperationRequest,
+)
+from .. import __all__ as public_names
+from .. import (
+    build_filed_history_operation_definition as public_build_filed_history_operation_definition,
+)
 from .._filed_data_capture import (
-    FiledHistoryDiscoveryPair,
+    ExpectedFiledDeclarationGrid,
     FiledHistoryDiscoveryPort,
     FiledHistoryDiscoveryReport,
     FiledHistoryOnboardingRun,
     FiledHistoryPairOutcome,
     _CaptureAccumulator,
     _persisted_bulk_filed_capture_report,
+    filed_history_discovery_report,
     pull_filed_history,
 )
 from .._filed_history_operation import (
@@ -75,7 +98,7 @@ _NOW = datetime(2026, 8, 24, 20, tzinfo=UTC)
 _NAMESPACE = SecureObjectNamespaceDefinition(
     key="filed_history_operation_executor_test",
     namespace="cadrumo-test.live.filed-history-operation",
-    owner="cadrumo.application.live.tests.test_filed_history_operation_executor",
+    owner="cadrumo.application.live.tests.test_filed_history_operation",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=1,
     object_key_grammar="{content_digest}",
@@ -84,14 +107,8 @@ _NAMESPACE = SecureObjectNamespaceDefinition(
 )
 
 
-class _DeterministicFiledHistoryDiscoveryPort:
-    """A strict-model local discovery port with an optional real async boundary.
-
-    The composition deliberately owns one narrow discovery port so it can be
-    exercised without arming an authenticated AEAT session.  This is that port's
-    deterministic implementation: downstream capture, accounting, persistence,
-    and supervisor durability remain the production implementations.
-    """
+class _FixtureBackedFiledHistoryDiscovery:
+    """Resolve one scope through the real register-option parser and models."""
 
     def __init__(
         self,
@@ -113,20 +130,17 @@ class _DeterministicFiledHistoryDiscoveryPort:
             self._entered.set()
         if self._release is not None:
             await self._release.wait()
-        return FiledHistoryDiscoveryReport(
-            pairs=(
-                FiledHistoryDiscoveryPair(
-                    modelo="100",
-                    ejercicio=2000,
-                    signals=(FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,),
-                ),
+        return filed_history_discovery_report(
+            expected=ExpectedFiledDeclarationGrid(),
+            availability=FiledDeclarationAvailabilityReport(
+                items=(FiledDeclarationAvailability(modelo="303", ejercicios=(2025,)),),
+                discovered_at=_NOW,
             ),
-            register_options_read=True,
         )
 
 
 def _local_pull(discover: FiledHistoryDiscoveryPort):
-    """Bind the real canonical composition to its deterministic discovery port."""
+    """Bind the canonical composition to fixture-backed production discovery."""
 
     async def pull(payload, repository, events):
         return await pull_filed_history(
@@ -147,7 +161,7 @@ def test_definition_declares_recorded_non_stoppable_execution(tmp_path: Path) ->
     with isolated_runtime_profile(tmp_path=tmp_path):
         definition = build_filed_history_operation_definition(
             sync_run_repository=SyncRunRecordRepository(),
-            pull=_local_pull(_DeterministicFiledHistoryDiscoveryPort()),
+            pull=_local_pull(_FixtureBackedFiledHistoryDiscovery()),
         )
 
     assert definition.definition_id == FILED_HISTORY_OPERATION_DEFINITION_ID
@@ -164,7 +178,7 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
         definition = build_filed_history_operation_definition(
             sync_run_repository=SyncRunRecordRepository(),
             pull=_local_pull(
-                _DeterministicFiledHistoryDiscoveryPort(
+                _FixtureBackedFiledHistoryDiscovery(
                     entered=discovery_entered,
                     release=release_discovery,
                 ),
@@ -217,11 +231,15 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
                 FILED_HISTORY_PHASE_EXECUTION,
                 FILED_HISTORY_PHASE_DISCOVERY,
             ]
+            with pytest.raises(ValueError, match="operation does not support cancellation"):
+                await supervisor.request_cancel(operation_id)
             release_discovery.set()
             snapshot = await start_task
-            assert snapshot.lifecycle is OperationLifecycle.RUNNING
+            assert snapshot.lifecycle is OperationLifecycle.TERMINAL
             assert snapshot.phase_code == FILED_HISTORY_PHASE_SETTLEMENT
             assert snapshot.effect is OperationEffect.NONE
+            assert snapshot.execution_deadline is None
+            assert snapshot.cleanup_deadline is None
             events = (await supervisor.replay(operation_id, 0, limit=OperationReplayLimit(100))).events
             return snapshot, events
 
@@ -258,7 +276,7 @@ def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         definition = build_filed_history_operation_definition(
             sync_run_repository=SyncRunRecordRepository(),
-            pull=_local_pull(_DeterministicFiledHistoryDiscoveryPort()),
+            pull=_local_pull(_FixtureBackedFiledHistoryDiscovery()),
         )
         journal = OperationJournalRepository(storage_root=tmp_path / "operations")
         supervisor = OperationSupervisor(
@@ -288,16 +306,26 @@ def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path) -> None:
 
         async def run():
             operation_id = await supervisor.submit(request, operation_id="4" * 64)
-            return await supervisor.start(operation_id)
+            snapshot = await supervisor.start(operation_id)
+            events = (await supervisor.replay(operation_id, 0, limit=OperationReplayLimit(100))).events
+            return snapshot, events
 
-        snapshot = asyncio.run(run())
+        snapshot, events = asyncio.run(run())
 
     assert snapshot.effect is OperationEffect.NONE
     assert all(
         event.effect is not OperationEffect.UNKNOWN
-        for event in snapshot.events
+        for event in events
         if isinstance(event, OperationEffectEvent)
     )
+    assert [
+        (event.completed, event.total, event.unit_code)
+        for event in events
+        if isinstance(event, OperationProgressEvent)
+    ] == [
+        (0, 1, FILED_HISTORY_PAIR_PROGRESS_UNIT),
+        (1, 1, FILED_HISTORY_PAIR_PROGRESS_UNIT),
+    ]
 
 
 def test_canonical_writer_reference_resolves_the_exact_encrypted_sync_run(tmp_path: Path) -> None:
@@ -321,7 +349,15 @@ def test_canonical_writer_reference_resolves_the_exact_encrypted_sync_run(tmp_pa
         assert stored is not None
         assert repository.extract_identifier(stored) == reference
         assert stored.bucket_id == profile.bucket_id
-        assert _result_reference(FiledHistoryOnboardingRun(sync_run_ref=reference)) == reference
+        run = FiledHistoryOnboardingRun(sync_run_ref=reference)
+        assert _result_reference(run) == reference
+        assert _settled_effect(run) is OperationEffect.UPDATED
+        assert (
+            _settled_effect(
+                run.model_copy(update={"stage_failures": ("notificaciones: safe local refusal",)}),
+            )
+            is OperationEffect.PARTIAL
+        )
 
 
 @pytest.mark.parametrize(
@@ -360,3 +396,77 @@ def test_settled_effect_classifies_only_committed_units(
 ) -> None:
     """A completed canonical result never leaves normal zero writes unknown."""
     assert _settled_effect(run) is expected
+
+
+def test_filed_history_operation_contract_resolves_from_the_public_facade() -> None:
+    """The facade exposes the request contract and composed definition factory."""
+    live = importlib.import_module("..", package=__package__)
+    definition = public_build_filed_history_operation_definition(
+        sync_run_repository=SyncRunRecordRepository(),
+    )
+
+    assert PUBLIC_FILED_HISTORY_OPERATION_DEFINITION_ID == "live.filed-history.pull"
+    assert definition.definition_id == PUBLIC_FILED_HISTORY_OPERATION_DEFINITION_ID
+    assert definition.request_type is PublicFiledHistoryOperationRequest
+    assert definition.result_type is PublicFiledHistoryOnboardingRun
+    assert definition.executor_factory.request_type is PublicFiledHistoryOperationRequest
+    assert definition.executor_factory.executor_type.__module__.endswith("._filed_history_operation")
+    assert definition.executor_factory.build().__class__.__module__.endswith("._filed_history_operation")
+    assert public_build_filed_history_operation_definition.__module__.endswith("._filed_history_operation")
+    assert PublicFiledHistoryOperationRequest.__module__.endswith("._filed_history_operation")
+    assert live.FILED_HISTORY_OPERATION_DEFINITION_ID is PUBLIC_FILED_HISTORY_OPERATION_DEFINITION_ID
+    assert live.FiledHistoryOperationRequest is PublicFiledHistoryOperationRequest
+    assert live.build_filed_history_operation_definition is public_build_filed_history_operation_definition
+
+
+def test_filed_history_operation_facade_does_not_publish_executor_or_phase_internals() -> None:
+    """The executable implementation and phase codes remain owner-private."""
+    live = importlib.import_module("..", package=__package__)
+
+    assert "FiledHistoryOperationExecutor" not in public_names
+    assert "FiledHistoryPull" not in public_names
+    assert "FILED_HISTORY_PHASE_EXECUTION" not in public_names
+    assert not hasattr(live, "FiledHistoryOperationExecutor")
+    assert not hasattr(live, "FiledHistoryPull")
+    assert not hasattr(live, "FILED_HISTORY_PHASE_EXECUTION")
+
+
+def test_filed_history_operation_public_names_are_unique_and_resolvable() -> None:
+    """Every promised facade member resolves to a value rather than a module."""
+    live = importlib.import_module("..", package=__package__)
+
+    assert len(public_names) == len(set(public_names))
+    assert all(not name.startswith("_") for name in public_names)
+    assert all(hasattr(live, name) for name in public_names)
+    assert all(not isinstance(getattr(live, name), ModuleType) for name in public_names)
+
+    operation_names = [
+        "FILED_HISTORY_OPERATION_DEFINITION_ID",
+        "FiledHistoryOperationRequest",
+        "build_filed_history_operation_definition",
+    ]
+    assert operation_names == sorted(operation_names)
+
+
+def test_importing_live_keeps_filed_history_operation_lazy() -> None:
+    """Importing the live facade does not load the operation implementation."""
+    completed = subprocess.run(  # noqa: S603 - fixed interpreter and inline code under test
+        [
+            sys.executable,
+            "-c",
+            textwrap.dedent(
+                """
+                import sys
+                import cadrumo.application.live
+
+                assert "cadrumo.application.live._filed_history_operation" not in sys.modules
+                """,
+            ),
+        ],
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
