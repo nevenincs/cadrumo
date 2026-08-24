@@ -32,6 +32,18 @@ from ....domain.modelos import (
     validate_m347_threshold,
 )
 from .._modelo_cli_support import parse_row_spec as _parse_row_spec
+from ....core.config import override_settings
+
+
+def _output_language(language: str):
+    """Pin the rendered language for assertions that match message TEXT.
+
+    These refusals ride ``tr()``, so their wording follows the configured output
+    language, which defaults to Spanish. The subject of each test below is WHICH
+    refusal fires, not the language it fires in, so the language is pinned
+    rather than the assertion rewritten in Spanish.
+    """
+    return override_settings(cadrumo_output_language=language)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -59,9 +71,14 @@ class TestParseRowSpecValid:
 
     def test_parse_vinculada_minimal(self) -> None:
         """Minimal vinculada spec parses correctly."""
-        result = _parse_row_spec("vinculada nif=A12345678 importe=50000")
+        # pais is required and deliberately not defaulted: defaulting to Spain
+        # would infer a fact the operator never stated, and would silently
+        # declare a cross-border related-party operation as domestic. So the
+        # minimal spec that parses is one that states the country.
+        result = _parse_row_spec("vinculada nif=A12345678 pais=ES importe=50000")
         assert isinstance(result, Modelo232VinculadaRow)
         assert result.nif == "A12345678"
+        assert result.pais == "ES"
         assert result.importe == Decimal("50000")
 
     def test_parse_vinculada_full_spec(self) -> None:
@@ -91,17 +108,17 @@ class TestParseRowSpecValid:
 class TestParseRowSpecInvalid:
     def test_empty_spec_raises(self) -> None:
         """Empty spec raises BadParameter."""
-        with pytest.raises(typer.BadParameter, match="empty"):
+        with _output_language("en"), pytest.raises(typer.BadParameter, match="empty"):
             _parse_row_spec("   ")
 
     def test_unknown_type_raises(self) -> None:
         """Unknown row type raises BadParameter."""
-        with pytest.raises(typer.BadParameter, match="not recognised"):
+        with _output_language("en"), pytest.raises(typer.BadParameter, match="not recognised"):
             _parse_row_spec("socio nif=X12345678 importe=1000")
 
     def test_missing_equals_in_field_raises(self) -> None:
         """Token without '=' raises BadParameter."""
-        with pytest.raises(typer.BadParameter, match="KEY=VALUE"):
+        with _output_language("en"), pytest.raises(typer.BadParameter, match="KEY=VALUE"):
             _parse_row_spec("miembro nif 12345678A porcentaje=50 importe=0")
 
     def test_empty_key_raises(self) -> None:
