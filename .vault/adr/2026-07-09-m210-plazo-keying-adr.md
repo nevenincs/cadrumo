@@ -10,7 +10,7 @@ related:
   - "[[2026-06-04-m210-irnr-phase-2-engine-research]]"
 ---
 
-# `m210-plazo-keying` adr: `M210 resultado and tipo-dependent plazo keying` | (**status:** `proposed`)
+# `m210-plazo-keying` adr: `M210 resultado and tipo-dependent plazo keying` | (**status:** `accepted`)
 
 ## Problem Statement
 
