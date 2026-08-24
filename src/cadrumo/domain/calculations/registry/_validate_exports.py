@@ -33,6 +33,7 @@ from __future__ import annotations
 
 from collections import Counter
 from collections.abc import Mapping
+from pathlib import Path
 
 from ....core import CasillaId, FilingProjectionRef, filing_projection_ref_casilla_id
 from ....core.aggregation import BindingAggregationOp
@@ -42,14 +43,18 @@ from ._binding_selector_utils import (
     BindingFixedExportSelector,
     binding_export_selector,
 )
+from ._corpus_catalogue import verify_source_file
 from ._errors import RegistryValidationError
 from ._ids import BindingId
 from ._schema import (
+    AuxiliaryEnvelopeHeaderDefinition,
     CasillaDefinition,
     CasillaFieldKind,
     DataBindingDefinition,
     ExportFieldDefinition,
+    ExportLayoutDefinition,
     ExportRecordDefinition,
+    FilingEnvelopeDefinition,
     LegalReference,
     ModeloRevision,
     ProjectionEndpointDeclaration,
@@ -71,6 +76,7 @@ def validate_export_layout_section(
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
+    source_root: Path | None,
 ) -> list[str]:
     """Return export layout, record, and field failures.
 
@@ -87,6 +93,13 @@ def validate_export_layout_section(
         failures.extend(_missing_refs(prefix, owner, layout.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, layout.source_refs, source_refs, "source"))
         failures.extend(evidence.require_source_tier(prefix, owner, layout.source_refs, "layout_authority"))
+        _validate_embedded_envelope_source_authority(
+            failures,
+            prefix=prefix,
+            layout=layout,
+            source_refs=source_refs,
+            source_root=source_root,
+        )
         for record in layout.records:
             _validate_export_record(
                 failures,
@@ -112,6 +125,64 @@ def validate_export_layout_section(
         evidence=evidence,
     )
     return failures
+
+
+def _validate_embedded_envelope_source_authority(
+    failures: list[str],
+    *,
+    prefix: str,
+    layout: ExportLayoutDefinition,
+    source_refs: Mapping[str, SourceReference],
+    source_root: Path | None,
+) -> None:
+    """Bind embedded envelope declarations to a live canonical design source.
+
+    A filing envelope or auxiliary header reproduces source identity and a digest
+    inside a generated layout. Merely checking that its ``source_ref`` appears
+    among ``layout.source_refs`` leaves two paths for provenance to drift: a
+    catalogue entry can be rebound under the same key, or an embedded digest can
+    survive after its authoritative source changed. At registry build, require
+    the key, entry identity, and digest to agree; when a corpus root is supplied,
+    re-hash the exact catalogue entry before composition continues.
+    """
+    declarations: tuple[tuple[str, FilingEnvelopeDefinition | AuxiliaryEnvelopeHeaderDefinition], ...] = tuple(
+        (label, declaration)
+        for label, declaration in (
+            ("filing envelope", layout.filing_envelope),
+            ("auxiliary envelope header", layout.auxiliary_envelope_header),
+        )
+        if declaration is not None
+    )
+    for label, declaration in declarations:
+        owner = f"export layout {layout.id!r} {label}"
+        source = source_refs.get(declaration.source_ref)
+        if source is None:
+            failures.append(
+                f"{prefix}: {owner} source {declaration.source_ref!r} is absent from the canonical source catalogue",
+            )
+            continue
+        if source.id != declaration.source_ref:
+            failures.append(
+                f"{prefix}: {owner} source catalogue key {declaration.source_ref!r} resolves to source id "
+                f"{source.id!r}; embedded source identity must equal its canonical catalogue key",
+            )
+        if source.kind != "record_design":
+            failures.append(
+                f"{prefix}: {owner} source {declaration.source_ref!r} is {source.kind!r}, not a record-design source",
+            )
+        if source.sha256 != declaration.source_sha256:
+            failures.append(
+                f"{prefix}: {owner} source digest {declaration.source_sha256!r} does not match canonical catalogue "
+                f"digest {source.sha256!r} for {declaration.source_ref!r}",
+            )
+        if source_root is None:
+            continue
+        try:
+            verify_source_file(source_root, source)
+        except RegistryValidationError as exc:
+            failures.append(
+                f"{prefix}: {owner} source {declaration.source_ref!r} fails live canonical re-hash: {exc}",
+            )
 
 
 def _validate_generated_projection_layout_bijection(
