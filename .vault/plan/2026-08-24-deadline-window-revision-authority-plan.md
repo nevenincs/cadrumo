@@ -14,7 +14,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
 modified: '2026-08-24'
 body_schema: body-v1
-body_hash: 'sha256:f07655ed3500c44779280ef346f537f7b9388ad44c3da8015fcab31c49103d6e'
+body_hash: 'sha256:9e8951b1d3dfcc4517c94268e4c07218254ea1b76c79c6ed97106a53be7d1a03'
 ---
 
 <!-- RETIRED: P06, P07, P09 -->
@@ -53,7 +53,7 @@ Type deadline identity through existing canonical vocabularies and shared tempor
 
 Fail registry construction on identity, ownership, uniqueness, and periodic completeness defects.
 
-- [ ] `W01.P02.S05` - Enforce equality between deadline filing_year and Period.filing_year while preserving following-calendar-year physical dates; `src/cadrumo/domain/calculations/registry/; src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `W01.P02.S05` - Enforce equality between deadline filing_year and Period.filing_year while preserving following-calendar-year physical dates; `src/cadrumo/domain/calculations/registry/; src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W01.P02.S06` - Enforce globally unique deadline IDs and semantic coordinates across every revision with independent bite tests; `src/cadrumo/domain/calculations/registry/; src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W01.P02.S07` - Enforce exact-one deadline ownership through canonical select_revision including period-sensitive cutovers; `src/cadrumo/domain/calculations/registry/_validate_revision_rules.py; src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W01.P02.S08` - Consume the canonical temporal-coverage supported-year projection to enforce complete periodic deadline cadence without a second horizon or cadence map; `src/cadrumo/domain/calculations/registry/; src/cadrumo/domain/calculations/registry/tests/`.
