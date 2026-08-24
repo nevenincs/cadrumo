@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:ddab81ff8c9d93cf06510081b99a84bb5419fe7828b4e6c9c8bd015ead941fc8'
+body_hash: 'sha256:303364f4da0cf555e68123528ad1a905b497260a2a88fe235feb2bf889a6578c'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -248,6 +248,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W06-P12-S239]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S240]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S241]]'
+  - '[[2026-08-13-profile-password-custody-W06-P12-S242]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S248]]'
   - '[[2026-08-13-profile-password-custody-plan]]'
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -302,6 +303,7 @@ related:
   - '[[2026-08-24-profile-password-custody-s239-path-specific-golden-mask-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s240-result-frame-expectation-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s241-live-docs-authority-review-audit]]'
+  - '[[2026-08-24-profile-password-custody-s242-golden-regeneration-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s248-registry-semantic-role-review-audit]]'
 ---
 
@@ -367,6 +369,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-24-profile-password-custody-s239-path-specific-golden-mask-review-audit` - `profile-password-custody` audit: `s239 path specific golden mask review`
 - `2026-08-24-profile-password-custody-s240-result-frame-expectation-review-audit` - `profile-password-custody` audit: `s240 result frame expectation review`
 - `2026-08-24-profile-password-custody-s241-live-docs-authority-review-audit` - `profile-password-custody` audit: `S241 live documentation authority review`
+- `2026-08-24-profile-password-custody-s242-golden-regeneration-review-audit` - `profile-password-custody` audit: `S242 golden regeneration formal review`
 - `2026-08-24-profile-password-custody-s248-registry-semantic-role-review-audit` - `profile-password-custody` audit: `S248 registry semantic-role review`
 
 ### exec
@@ -611,6 +614,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W06-P12-S239` - Add a central path-specific golden mask for only the profile-delete result fingerprint digest, retain generic digest visibility, and prove the mask is exactly the fresh-sandbox residual through real sequence replay
 - `2026-08-13-profile-password-custody-W06-P12-S240` - Add exact result-payload expectations to every newly enrolled result frame on the nine named documentation pages and tighten the baseline so future unasserted frames fail
 - `2026-08-13-profile-password-custody-W06-P12-S241` - Adjudicate and correct live documentation sequence behavior for mandatory recovery creation, export product identity, registry and ledger evidence, binding counts, and required-casilla expectations against current production authority
+- `2026-08-13-profile-password-custody-W06-P12-S242` - Regenerate every affected documentation sequence golden through the owning CLI after live behavior is adjudicated and reconcile frame counts without hand-authored output
 - `2026-08-13-profile-password-custody-W06-P12-S248` - Reconcile Modelo 303 2026 and Modelo 390 2022-2025 semantic-role constraint signatures against their official record-design authority so the shared-role validator passes without weakening compatibility checks
 
 ### plan
