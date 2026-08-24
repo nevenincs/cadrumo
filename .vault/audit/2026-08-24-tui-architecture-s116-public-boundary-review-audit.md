@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:086a2dacecda46791b6a844717d5db57809e126db064f44c6107dd22cdb70202'
+body_hash: 'sha256:332c8a4fce8dc780eb6549a0abf15cc9fd559b861c47282bb03b431ea17c0d74'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -31,3 +31,17 @@ The DTO family validates each nested record but omits relations that S116 explic
 
 - Reopen or correct S116 before allowing S117 to rely on its DTO boundary. Add public-model validation for the caught-up-anchor, event-revision, progress-phase, declared-interaction/current-revision, and cancellation-availability relationships, with direct refusal witnesses that prove each gate bites.
 - Replace the S116 completion evidence with an attestation from one clean implementation commit, or an explicit ordered implementation-commit tuple plus source-tree digest and scoped command receipts. Keep unrelated document changes out of that attestation.
+
+## Resolution disposition
+
+### s116-public-cross-record-invariants | resolved | Public DTO boundary now rejects every reported impossible state
+
+`OperationPublicEventPageV1` requires a caught-up response to have matching requested, anchor, and next cursors. `OperationObservationSuccessV1` rejects event revisions beyond its projection revision. `OperationPublicProjectionV1` binds progress phase to the current phase, binds every pending interaction to the waiting lifecycle, current revision, and definition-declared interaction kind, and rejects cancellation availability after a request or during settlement. Direct adversarial witnesses prove each gate bites.
+
+### s116-mixed-preimplementation-record | resolved | Execution evidence now distinguishes the original premature record from producing code
+
+The S116 record now carries the explicit ordered `66e4a30d48a694175b9f8e61b75cf340afd400cb -> 1778e2f7285037d68e6c88bf3367d2c0e660a996 -> 4967ef8220080aa4de32ab753f3b7679f37301ee` implementation/remediation tuple, source-file SHA-256 evidence, scoped command receipts, and the reason `7b9085e7b35beb570c9c7a0119d5c7c7a2e754bf` cannot prove code completion. The finalization change is a semantic-preserving type narrowing of the same validator.
+
+## Final disposition
+
+Accepted after a fresh read-only follow-up review of the remediation. The reviewer found no new finding; current focused Ruff, basedpyright, public DTO, observation/projection/facade/registry, and complete operation-package checks are green. S116 may be re-closed, while S120 and later work remain independently owned.

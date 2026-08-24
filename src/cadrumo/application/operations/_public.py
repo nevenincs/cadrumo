@@ -306,17 +306,16 @@ class OperationPublicProjectionV1(BaseModel):
         if terminal and self.cancellable_now:
             raise ValueError("public terminal projection cannot remain cancellable")
         pending = self.pending_interaction
-        if isinstance(pending, OperationReviewAvailableInteractionV1):
-            interaction_kind = OperationInteractionKind.REVIEW
-        elif isinstance(pending, OperationUnsupportedInteractionV1):
-            interaction_kind = pending.interaction_kind
-        else:
-            interaction_kind = None
-        if interaction_kind is not None:
+        if not isinstance(pending, OperationNoPendingInteractionV1):
             if self.lifecycle is not OperationLifecycle.WAITING_FOR_INTERACTION:
                 raise ValueError("public pending interaction requires waiting-for-interaction lifecycle")
             if pending.revision != self.revision:
                 raise ValueError("public pending interaction does not match the current operation revision")
+            interaction_kind = (
+                OperationInteractionKind.REVIEW
+                if isinstance(pending, OperationReviewAvailableInteractionV1)
+                else pending.interaction_kind
+            )
             if interaction_kind not in self.definition_contract.interaction_kinds:
                 raise ValueError("public pending interaction kind is not declared by the definition contract")
         if isinstance(pending, OperationReviewAvailableInteractionV1):
