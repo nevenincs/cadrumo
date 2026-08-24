@@ -8748,3 +8748,29 @@ Not deleted here, and deliberately so: removing it must land atomically across
 all three declaration sites, and two of them (`_command_spec.py`,
 `_command_runtime.py`) are in a peer's live edit set. Handing it over rather
 than splitting the removal across a peer's uncommitted work.
+
+### The output-schema budget has no free bytes, so the deferral is substantiated
+
+Before handing the 36 over-budget verbs on, the cheap remedies were checked and
+ruled out, so the next reader does not repeat the search.
+
+The overage is not a shared-spine shift that one change could reverse: overages
+run from marginal to 84% (33150 chars against an 18000 ceiling), the median verb
+sits at 15164, and 75 verbs occupy the 16000-18000 band. The population is
+simply at the ceiling.
+
+Nor is there redundancy to reclaim. Decomposing the largest schema
+(`modelo.work.runs`) shows its two `oneOf` branches account for about 7000 of
+33150 chars; the remainder is `$defs`. A transitive reachability walk over every
+verb's `$defs` — following `$ref` from the non-`$defs` body and then through the
+definitions themselves — finds **zero unreferenced definitions across all 295
+verbs**, so there are no dead definitions to prune. Of the largest schema, 13772
+chars (41%) is `description`/`title` text, which is the impurity the gate's own
+docstring already names and explicitly refuses to treat as a licence to delete
+documentation.
+
+So the only remaining lever is the one the gate prescribes: reduce what each
+verb RETURNS, verb by verb, which is a domain decision per verb about which
+nested collection to summarise and let the caller fetch per item. That is why
+this stays a handover and not a fix — and specifically why raising the ceiling
+would be weakening a gate to manufacture green rather than removing a real cost.
