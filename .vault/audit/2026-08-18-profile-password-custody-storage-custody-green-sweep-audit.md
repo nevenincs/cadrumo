@@ -8716,3 +8716,35 @@ Four failing, 317 passing. None is mine to close alone:
   weakening a gate to manufacture green.
 - `test_server_loop_responsiveness` x2 — profile creation over MCP refuses
   without the secrets channel, the surface the peer is actively rewriting.
+
+### Legacy sweep: the scanners are clean, one dead deprecation path found
+
+Against the standing "no legacy, shims or reexports; delete old code, do not
+leave support-only facades" directive, the repository's own instruments report
+clean. `dev/quality/facade_export_scan` walks 5161 modules and 259 facades with
+zero forward breaks and zero mirror breaks, so there are no standing
+non-`__init__` re-export bridge modules. `dev/quality/import_hygiene_scan` could
+not complete: it raises `TuiMigrationManifestError: legacy TUI identity has no
+accepted disposition: cadrumo.adapters.inbound.tui._recovery_words_screen` — a
+peer's brand-new TUI module not yet registered in the migration manifest, so
+that scan is blocked on their in-flight work rather than reporting anything.
+
+A marker sweep of production source found ten files, nine of them false
+positives worth naming so the next sweep does not re-investigate them: the
+terminology handbook's `deprecated` concept-lifecycle state (which the
+documentation rule positively REQUIRES for machinery concepts), a portal
+redirect for URLs AEAT itself deprecated (external-world variability, explicitly
+not our legacy), click's own deprecated `protected_args` property, and a
+"compatibility comparison" that is a signature equality helper.
+
+The one real finding: **a CLI deprecation path that nothing uses.**
+`CommandSpec.invocation.deprecated_key` (`_command_spec.py:543`) is projected
+through `_command_schema.py:168,305` and `_command_runtime.py:237 _deprecated`,
+and is set by NO command spec anywhere and covered by no test. It is dead
+capacity for marking a verb deprecated — a deprecation affordance in a codebase
+whose rules forbid deprecation paths outright.
+
+Not deleted here, and deliberately so: removing it must land atomically across
+all three declaration sites, and two of them (`_command_spec.py`,
+`_command_runtime.py`) are in a peer's live edit set. Handing it over rather
+than splitting the removal across a peer's uncommitted work.
