@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:2415d327ea3c5dafe91572ad08a8ef1ad7ea7747d5c0a4eff8d56afb940cb2b6'
+body_hash: 'sha256:b75c9797767a4fe9e87d217bf07425e6db2ef1b9f9f5d2db39353ab40720c0a2'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -96,7 +96,7 @@ Adjudicate every live non-emitting revision separately against official evidence
 Classify each of the fourteen live filing gaps independently so missing authority remains a refusal and authorable gaps receive an exact owner and reconsideration condition.
 
 - [x] `W02.P03.S12` - Adjudicate Modelo 036 revision 2025-02-03-y-siguientes producer vocabulary and official filing authority; `.vault/reference/`.
-- [ ] `W02.P03.S13` - Adjudicate Modelo 038 revision 2002-y-siguientes design extraction trust and fileability; `.vault/reference/`.
+- [x] `W02.P03.S13` - Adjudicate Modelo 038 revision 2002-y-siguientes design extraction trust and fileability; `.vault/reference/`.
 - [ ] `W02.P03.S14` - Adjudicate Modelo 136 revision 2026 record-design availability and supported filing boundary; `.vault/reference/`.
 - [ ] `W02.P03.S15` - Adjudicate Modelo 182 revision 2007-y-siguientes design-era coverage and donor-row prerequisites; `.vault/reference/`.
 - [ ] `W02.P03.S16` - Adjudicate Modelo 185 revision 2003-2025 exact historical design authority; `.vault/reference/`.
