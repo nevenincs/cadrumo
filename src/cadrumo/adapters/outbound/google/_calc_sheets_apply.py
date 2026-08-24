@@ -41,10 +41,12 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from decimal import Decimal
+from enum import StrEnum
 from typing import Any, Final
 
 from pydantic import BaseModel, Field
 
+from ....application.operator_actions import ConditionEvidence, PreconditionVerdict
 from ....application.storage.calc_sheets import (
     ROLE_STYLES,
     STYLED_RANGE_VERTICAL_ALIGN,
@@ -60,8 +62,9 @@ from ....application.storage.calc_sheets import (
     TabName,
     hex_to_rgb_floats,
 )
-from ....core import STRICT_FROZEN_CONFIG
+from ....core import STRICT_FROZEN_CONFIG, ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ..storage import (
+    OutboundStorageError,
     OutboundStorageNetworkError,
     OutboundStorageValidationError,
 )
@@ -93,6 +96,42 @@ from ._drive_entries import (
 
 _FOLDER_MIME: Final[str] = "application/vnd.google-apps.folder"
 _SPREADSHEET_MIME: Final[str] = "application/vnd.google-apps.spreadsheet"
+
+
+class CalcSheetsApplyPreconditionCondition(StrEnum):
+    """Closed terminal conditions owned by the calculation-sheet apply adapter."""
+
+    API_CLIENT_AVAILABLE = "google.calc_sheets.apply.api_client_available"
+
+
+def _calc_sheets_apply_terminal_refusal(
+    error: OutboundStorageError,
+    condition: CalcSheetsApplyPreconditionCondition,
+    *,
+    facts: Mapping[str, str | int | bool],
+    outcome: NoRecoveryOutcome,
+) -> OutboundStorageError:
+    """Return ``error`` with this adapter's fact-only terminal verdict."""
+    condition_id = condition.value
+    verdict = PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            ConditionEvidence(
+                condition_id=condition_id,
+                evidence_id=f"{condition_id}.observation",
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                values=facts,
+            ),
+        ),
+        conditionality=ActionConditionality.NOT_APPLICABLE,
+        no_recovery_outcome=outcome,
+    )
+    return type(error)(
+        error.args[0] if error.args else None,
+        context=error.context,
+        translated_message=error.translated_message,
+        precondition_verdict=verdict,
+    )
 
 
 def _vault_folder_name() -> str:
@@ -182,9 +221,20 @@ def _google_service(credentials: object, service_name: str, version: str) -> Any
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:
-        raise OutboundStorageNetworkError(
+        error = OutboundStorageNetworkError(
             f"googleapiclient not importable: {exc}",
             translated_message="adapters.google.calc_sheets.errors.googleapiclient_not_importable",
+        )
+        raise _calc_sheets_apply_terminal_refusal(
+            error,
+            CalcSheetsApplyPreconditionCondition.API_CLIENT_AVAILABLE,
+            facts={
+                "client_available": False,
+                "dependency": "google_api_python_client",
+                "service_name": service_name,
+                "service_version": version,
+            },
+            outcome=NoRecoveryOutcome.SAFETY,
         ) from exc
     return build(service_name, version, credentials=credentials, cache_discovery=False)
 

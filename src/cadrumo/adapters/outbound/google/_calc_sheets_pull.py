@@ -59,6 +59,7 @@ if TYPE_CHECKING:
 
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
+from ....application.operator_actions import ConditionEvidence, PreconditionVerdict
 from ....application.storage.calc_sheets import (
     CALC_SHEETS_ENGINE_VERSION,
     OperatorInput,
@@ -71,7 +72,7 @@ from ....application.storage.calc_sheets import (
     registry_sha,
 )
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core import CasillaId, Period
+from ....core import ActionConditionality, ActionEvidenceProvenance, CasillaId, NoRecoveryOutcome, Period
 from ....core.decimal import coerce_decimal, coerce_finite_european_decimal
 from ....core.time import coerce_utc_aware
 from ....domain.calculations.registry import (
@@ -92,6 +93,7 @@ from ....domain.calculations.registry import (
 from ....domain.period import calculation_filing_date
 from ..storage import (
     OutboundStorageConflictError,
+    OutboundStorageError,
     OutboundStorageNetworkError,
     OutboundStorageValidationError,
 )
@@ -112,6 +114,50 @@ _DUPLICATE_SENSITIVE_METADATA_KEYS: Final[frozenset[str]] = frozenset(
 )
 _LEGAL_REFS_ADAPTER = TypeAdapter(tuple[LegalRefId, ...])
 _SOURCE_REFS_ADAPTER = TypeAdapter(tuple[SourceRefId, ...])
+
+
+class CalcSheetsPullPreconditionCondition(StrEnum):
+    """Closed terminal conditions owned by the calculation-sheet pull adapter."""
+
+    API_CLIENT_AVAILABLE = "google.calc_sheets.pull.api_client_available"
+    OWNERSHIP_METADATA_VALID = "google.calc_sheets.pull.ownership_metadata_valid"
+    OWNERSHIP_ALIGNED = "google.calc_sheets.pull.ownership_aligned"
+    DEVELOPER_METADATA_LIST_VALID = "google.calc_sheets.pull.developer_metadata_list_valid"
+    DEVELOPER_METADATA_ENTRY_VALID = "google.calc_sheets.pull.developer_metadata_entry_valid"
+    DEVELOPER_METADATA_CONSISTENT = "google.calc_sheets.pull.developer_metadata_consistent"
+    SNAPSHOT_ALIGNED = "google.calc_sheets.pull.snapshot_aligned"
+    RELATION_LEGAL_REFS_VALID = "google.calc_sheets.pull.relation_legal_refs_valid"
+    RELATION_SOURCE_REFS_VALID = "google.calc_sheets.pull.relation_source_refs_valid"
+
+
+def _calc_sheets_pull_terminal_refusal(
+    error: OutboundStorageError,
+    condition: CalcSheetsPullPreconditionCondition,
+    *,
+    facts: Mapping[str, str | int | bool],
+    outcome: NoRecoveryOutcome,
+) -> OutboundStorageError:
+    """Return ``error`` with this adapter's fact-only terminal verdict."""
+    condition_id = condition.value
+    verdict = PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            ConditionEvidence(
+                condition_id=condition_id,
+                evidence_id=f"{condition_id}.observation",
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                values=facts,
+            ),
+        ),
+        conditionality=ActionConditionality.NOT_APPLICABLE,
+        no_recovery_outcome=outcome,
+    )
+    return type(error)(
+        error.args[0] if error.args else None,
+        context=error.context,
+        translated_message=error.translated_message,
+        precondition_verdict=verdict,
+    )
 
 # A single batch-get value-range entry from the Sheets API.
 # Shape: {"range": str, "values": list[list[object]]}
@@ -338,9 +384,20 @@ def _drive_service(credentials: object) -> _GoogleResource:
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:
-        raise OutboundStorageNetworkError(
+        error = OutboundStorageNetworkError(
             f"googleapiclient not importable: {exc}",
             translated_message="adapters.google.calc_sheets.errors.googleapiclient_not_importable",
+        )
+        raise _calc_sheets_pull_terminal_refusal(
+            error,
+            CalcSheetsPullPreconditionCondition.API_CLIENT_AVAILABLE,
+            facts={
+                "client_available": False,
+                "dependency": "google_api_python_client",
+                "service_name": "drive",
+                "service_version": "v3",
+            },
+            outcome=NoRecoveryOutcome.SAFETY,
         ) from exc
     return build("drive", "v3", credentials=credentials, cache_discovery=False)
 
@@ -349,9 +406,20 @@ def _sheets_service(credentials: object) -> _GoogleResource:
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:
-        raise OutboundStorageNetworkError(
+        error = OutboundStorageNetworkError(
             f"googleapiclient not importable: {exc}",
             translated_message="adapters.google.calc_sheets.errors.googleapiclient_not_importable",
+        )
+        raise _calc_sheets_pull_terminal_refusal(
+            error,
+            CalcSheetsPullPreconditionCondition.API_CLIENT_AVAILABLE,
+            facts={
+                "client_available": False,
+                "dependency": "google_api_python_client",
+                "service_name": "sheets",
+                "service_version": "v4",
+            },
+            outcome=NoRecoveryOutcome.SAFETY,
         ) from exc
     return build("sheets", "v4", credentials=credentials, cache_discovery=False)
 
@@ -370,13 +438,32 @@ def _verify_ownership(drive_service: Any, spreadsheet_id: str) -> None:
         ),
         action="drive.files.get.appProperties",
     )
-    app_properties = file_meta.get("appProperties") or {}
+    raw_app_properties = file_meta.get("appProperties")
+    if raw_app_properties is not None and not isinstance(raw_app_properties, Mapping):
+        error = OutboundStorageValidationError(
+            "spreadsheet appProperties must be a mapping when present",
+            context={"spreadsheet_id": spreadsheet_id, "app_properties_type": type(raw_app_properties).__name__},
+            translated_message="adapters.google.calc_sheets.errors.ownership_metadata_invalid",
+        )
+        raise _calc_sheets_pull_terminal_refusal(
+            error,
+            CalcSheetsPullPreconditionCondition.OWNERSHIP_METADATA_VALID,
+            facts={"spreadsheet_id": spreadsheet_id, "ownership_metadata_mapping": False},
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        )
+    app_properties = raw_app_properties or {}
     if app_properties.get(_OWNERSHIP_KEY) != _OWNERSHIP_VALUE:
-        raise OutboundStorageConflictError(
+        error = OutboundStorageConflictError(
             f"spreadsheet {spreadsheet_id!r} is not marked as app-owned; refusing "
             f"to read operator edits from a foreign Drive file",
             context={"spreadsheet_id": spreadsheet_id, "name": file_meta.get("name", "")},
             translated_message="adapters.google.calc_sheets.errors.foreign_spreadsheet_not_owned",
+        )
+        raise _calc_sheets_pull_terminal_refusal(
+            error,
+            CalcSheetsPullPreconditionCondition.OWNERSHIP_ALIGNED,
+            facts={"spreadsheet_id": spreadsheet_id, "ownership_aligned": False},
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
         )
 
 
@@ -397,7 +484,22 @@ def _read_developer_metadata(
         ),
         action="sheets.spreadsheets.get.developerMetadata",
     )
-    return _merge_developer_metadata_entries(spreadsheet.get("developerMetadata", []) or [])
+    raw_entries = spreadsheet.get("developerMetadata")
+    if raw_entries is None:
+        return _merge_developer_metadata_entries(())
+    if not isinstance(raw_entries, list):
+        error = OutboundStorageValidationError(
+            "spreadsheet developerMetadata must be a list when present",
+            context={"spreadsheet_id": spreadsheet_id, "developer_metadata_type": type(raw_entries).__name__},
+            translated_message="adapters.google.calc_sheets.errors.developer_metadata_invalid",
+        )
+        raise _calc_sheets_pull_terminal_refusal(
+            error,
+            CalcSheetsPullPreconditionCondition.DEVELOPER_METADATA_LIST_VALID,
+            facts={"spreadsheet_id": spreadsheet_id, "developer_metadata_list_valid": False},
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        )
+    return _merge_developer_metadata_entries(raw_entries)
 
 
 def _duplicate_metadata_must_match(key: str) -> bool:
@@ -419,7 +521,19 @@ def _merge_developer_metadata_entries(entries: Iterable[Mapping[str, Any]]) -> d
     """
     pairs: dict[str, str] = {}
     conflicting_keys: set[str] = set()
-    for entry in entries:
+    for entry_index, entry in enumerate(entries):
+        if not isinstance(entry, Mapping):
+            error = OutboundStorageValidationError(
+                "spreadsheet developer metadata entry must be a mapping",
+                context={"metadata_entry_index": entry_index, "entry_type": type(entry).__name__},
+                translated_message="adapters.google.calc_sheets.errors.developer_metadata_invalid",
+            )
+            raise _calc_sheets_pull_terminal_refusal(
+                error,
+                CalcSheetsPullPreconditionCondition.DEVELOPER_METADATA_ENTRY_VALID,
+                facts={"metadata_entry_index": entry_index, "metadata_entry_mapping": False},
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            )
         key = entry.get("metadataKey")
         value = entry.get("metadataValue")
         if isinstance(key, str) and isinstance(value, str):
@@ -428,10 +542,16 @@ def _merge_developer_metadata_entries(entries: Iterable[Mapping[str, Any]]) -> d
                 conflicting_keys.add(key)
             pairs[key] = value
     if conflicting_keys:
-        raise OutboundStorageConflictError(
+        error = OutboundStorageConflictError(
             "spreadsheet carries conflicting duplicate Cadrumo developer metadata; refusing order-dependent pull",
             context={"conflicting_metadata_keys": sorted(conflicting_keys)},
             translated_message="adapters.google.calc_sheets.errors.conflicting_duplicate_metadata",
+        )
+        raise _calc_sheets_pull_terminal_refusal(
+            error,
+            CalcSheetsPullPreconditionCondition.DEVELOPER_METADATA_CONSISTENT,
+            facts={"conflicting_metadata_key_count": len(conflicting_keys), "metadata_consistent": False},
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
         )
     return pairs
 
@@ -509,7 +629,7 @@ def _require_matching_metadata(
     )
     if metadata_match is MetadataMatchState.MATCHES and metadata_binds_snapshot:
         return
-    raise OutboundStorageConflictError(
+    error = OutboundStorageConflictError(
         "refusing to read: "
         f"workbook metadata_match={metadata_match!r} does not bind to the supplied snapshot and layout",
         context={
@@ -525,6 +645,16 @@ def _require_matching_metadata(
             "snapshot_registry_sha": registry_sha(snapshot),
         },
         translated_message="adapters.google.calc_sheets.errors.workbook_snapshot_mismatch",
+    )
+    raise _calc_sheets_pull_terminal_refusal(
+        error,
+        CalcSheetsPullPreconditionCondition.SNAPSHOT_ALIGNED,
+        facts={
+            "spreadsheet_id": spreadsheet_id,
+            "metadata_match": metadata_match.value,
+            "snapshot_aligned": False,
+        },
+        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
     )
 
 
@@ -913,9 +1043,15 @@ def _validated_relation_legal_refs(raw: str) -> tuple[LegalRefId, ...]:
     try:
         return _LEGAL_REFS_ADAPTER.validate_python(_relation_ref_tokens(raw))
     except ValidationError as exc:
-        raise OutboundStorageValidationError(
+        error = OutboundStorageValidationError(
             "relation metadata legal_refs contains malformed registry legal reference ids",
             context={"metadata_key": "legal_refs", "metadata_value": raw},
+        )
+        raise _calc_sheets_pull_terminal_refusal(
+            error,
+            CalcSheetsPullPreconditionCondition.RELATION_LEGAL_REFS_VALID,
+            facts={"legal_refs_valid": False, "metadata_key": "legal_refs", "metadata_value": raw},
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
         ) from exc
 
 
@@ -923,9 +1059,15 @@ def _validated_relation_source_refs(raw: str) -> tuple[SourceRefId, ...]:
     try:
         return _SOURCE_REFS_ADAPTER.validate_python(_relation_ref_tokens(raw))
     except ValidationError as exc:
-        raise OutboundStorageValidationError(
+        error = OutboundStorageValidationError(
             "relation metadata source_refs contains malformed registry source reference ids",
             context={"metadata_key": "source_refs", "metadata_value": raw},
+        )
+        raise _calc_sheets_pull_terminal_refusal(
+            error,
+            CalcSheetsPullPreconditionCondition.RELATION_SOURCE_REFS_VALID,
+            facts={"metadata_key": "source_refs", "metadata_value": raw, "source_refs_valid": False},
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
         ) from exc
 
 
