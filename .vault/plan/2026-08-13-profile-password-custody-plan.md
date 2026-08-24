@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#profile-password-custody'
 date: '2026-08-13'
+modified: '2026-08-24'
+body_hash: 'sha256:30c56f7b19850d8ab6dad04ddb20cc2f5d4bb83c517a55888150065e1b461f9f'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -18,8 +20,6 @@ related:
   - '[[2026-08-13-recovery-mnemonic-presentation-successor-adr]]'
   - '[[2026-08-13-sealed-archive-transport-successor-adr]]'
   - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
-modified: '2026-08-24'
-body_hash: 'sha256:2aa2d7539fd38400031a7a302798ae4236132ec7b55b355c5eb0cd0b34f254b8'
 ---
 
 # `profile-password-custody` plan
@@ -356,3 +356,4 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 - [ ] `W06.P12.S245` - Migrate harness warm-runtime profile provisioning to the mandatory verified recovery handoff and prove real runtime startup succeeds; `src/cadrumo-harness/`.
 - [ ] `W06.P12.S246` - Repair the harness serial watchdog kill-switch and disarm lifecycle so the full integration suite terminates cleanly without weakening timeout enforcement; `src/cadrumo-harness/`.
 - [ ] `W06.P12.S247` - Resolve changed-surface Ruff import order and partition every remaining type diagnostic to its owning implementation or fixture until the scoped global proof is clean; `src/cadrumo/ and src/cadrumo-harness/ and dev/`.
+- [ ] `W06.P12.S248` - Reconcile Modelo 303 2026 and Modelo 390 2022-2025 semantic-role constraint signatures against their official record-design authority so the shared-role validator passes without weakening compatibility checks; `src/cadrumo/_data/registry/aeat/modelos/303/ and src/cadrumo/_data/registry/aeat/modelos/390/ and src/cadrumo/domain/calculations/registry/tests/`.
