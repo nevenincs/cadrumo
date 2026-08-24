@@ -11,7 +11,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-22-source-casilla-integration-plan]]'
 modified: '2026-08-24'
-body_hash: 'sha256:46adfe2f1e6b92e3d9c47e14285d11c7179e1f3c5b0dd339c060ff2b9a8e8381'
+body_hash: 'sha256:dd80c0eda9582162c77e9f6f1ffa4ca16d6237d8851bd0a5f41c3fe06641fd6a'
 ---
 
 # `registry-completeness-closure` plan
@@ -108,7 +108,7 @@ Classify each of the fourteen live filing gaps independently so missing authorit
 - [x] `W02.P03.S22` - Adjudicate Modelo 390 revision 2021 casilla surface and exact annual filing authority; `.vault/reference/`.
 - [x] `W02.P03.S23` - Adjudicate Modelo 721 revision 2023-y-siguientes record-design availability and supported filing boundary; `.vault/reference/`.
 - [x] `W02.P03.S24` - Adjudicate Modelo 763 revision 2011-y-siguientes design-era coverage; `.vault/reference/`.
-- [ ] `W02.P03.S25` - Adjudicate Modelo 840 revision 2003-y-siguientes record-terminator semantics and official extent; `.vault/reference/`.
+- [x] `W02.P03.S25` - Adjudicate Modelo 840 revision 2003-y-siguientes record-terminator semantics and official extent; `.vault/reference/`.
 
 ### Phase `W02.P04` - predecessor owner enrollment
 

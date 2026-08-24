@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:9a17ffe2f2147a39a5baf73fa7cf79142b28961cf162967522022b03c54864d0'
+body_hash: 'sha256:68972f77740cb1933f704af51704b3136a02bb7c54ffa9da867b912bdef6f80f'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -66,6 +66,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W02-P03-S22]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P03-S23]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P03-S24]]'
+  - '[[2026-08-24-registry-completeness-closure-W02-P03-S25]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-audit]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-036-2025-filing-authority-reference]]'
@@ -81,6 +82,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-modelo-390-2021-casilla-and-filing-authority-reference]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-721-structured-message-design-and-filing-boundary-reference]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-763-design-era-and-filing-boundary-reference]]'
+  - '[[2026-08-24-registry-completeness-closure-modelo-840-record-terminator-and-design-extent-reference]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-redeclaration-rag-audit]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
@@ -104,6 +106,8 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s19-modelo-194-design-era-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s21-modelo-220-2025-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s22-independent-post-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s23-independent-post-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s24-independent-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s41-cache-key-type-review-audit]]'
@@ -178,6 +182,8 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s19-modelo-194-design-era-review-audit` - `registry-completeness-closure` audit: `s19 modelo 194 design-era review`
 - `2026-08-24-registry-completeness-closure-s21-modelo-220-2025-post-review-audit` - `registry-completeness-closure` audit: `S21 Modelo 220 2025 post-review`
 - `2026-08-24-registry-completeness-closure-s22-independent-post-review-audit` - `registry-completeness-closure` audit: `S22 independent Modelo 390 2021 post-review`
+- `2026-08-24-registry-completeness-closure-s23-independent-post-review-audit` - `registry-completeness-closure` audit: `S23 independent Modelo 721 structured-message post-review`
+- `2026-08-24-registry-completeness-closure-s24-independent-post-review-audit` - `registry-completeness-closure` audit: `S24 Modelo 763 independent post-review`
 - `2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot authority-grade enforcement review`
 - `2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot-grade enforcement review`
 - `2026-08-24-registry-completeness-closure-s41-cache-key-type-review-audit` - `registry-completeness-closure` audit: `S41 cache-key type review`
@@ -277,6 +283,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W02-P03-S22` - Adjudicate Modelo 390 revision 2021 casilla surface and exact annual filing authority
 - `2026-08-24-registry-completeness-closure-W02-P03-S23` - Adjudicate Modelo 721 revision 2023-y-siguientes record-design availability and supported filing boundary
 - `2026-08-24-registry-completeness-closure-W02-P03-S24` - Adjudicate Modelo 763 revision 2011-y-siguientes design-era coverage
+- `2026-08-24-registry-completeness-closure-W02-P03-S25` - Adjudicate Modelo 840 revision 2003-y-siguientes record-terminator semantics and official extent
 
 ### plan
 
@@ -297,6 +304,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-modelo-390-2021-casilla-and-filing-authority-reference` - `registry-completeness-closure` reference: `Modelo 390 2021 casilla and filing authority`
 - `2026-08-24-registry-completeness-closure-modelo-721-structured-message-design-and-filing-boundary-reference` - `registry-completeness-closure` reference: `Modelo 721 structured message design and filing boundary`
 - `2026-08-24-registry-completeness-closure-modelo-763-design-era-and-filing-boundary-reference` - `registry-completeness-closure` reference: `Modelo 763 design-era and filing boundary`
+- `2026-08-24-registry-completeness-closure-modelo-840-record-terminator-and-design-extent-reference` - `registry-completeness-closure` reference: `Modelo 840 record terminator and official design extent`
 
 ### research
 
