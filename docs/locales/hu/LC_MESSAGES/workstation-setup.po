@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 19:58+0200\n"
+"POT-Creation-Date: 2026-08-24 17:19+0200\n"
 "PO-Revision-Date: 2026-07-19 10:00+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -215,20 +215,10 @@ msgid ""
 msgstr ""
 
 #: ../../workstation-setup.md:109
-msgid "Materialize the agent harness in a project workspace"
-msgstr ""
-
-#: ../../workstation-setup.md:111
-msgid ""
-"To place the harness (rules, personas, skills, and a `CLAUDE.md`) "
-"directly into a project directory, materialize it with the CLI:"
-msgstr ""
-
-#: ../../workstation-setup.md:118
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../workstation-setup.md:120
+#: ../../workstation-setup.md:111
 msgid ""
 "[Quickstart](how-to/quickstart.md) - from an empty profile to an exported"
 " modelo file."
@@ -236,7 +226,7 @@ msgstr ""
 "[Gyorsindító](how-to/quickstart.md) - az üres profiltól az exportált "
 "modelo fájlig."
 
-#: ../../workstation-setup.md:122
+#: ../../workstation-setup.md:113
 msgid ""
 "[Set up a profile](how-to/profile-setup.md) - including the per-profile "
 "service capabilities (Google export, LLM vision, cloud evidence upload)."
@@ -245,11 +235,11 @@ msgstr ""
 "szolgáltatásképességeket (Google export, LLM-alapú képfeldolgozás, "
 "felhőbeli bizonyítékfeltöltés)."
 
-#: ../../workstation-setup.md:124
+#: ../../workstation-setup.md:115
 msgid "[Connect an agent](how-to/connect-an-agent.md)"
 msgstr ""
 
-#: ../../workstation-setup.md:125
+#: ../../workstation-setup.md:116
 msgid "[Troubleshooting](how-to/troubleshooting.md)"
 msgstr "[Hibaelhárítás](how-to/troubleshooting.md)"
 
@@ -326,7 +316,7 @@ msgstr "[Hibaelhárítás](how-to/troubleshooting.md)"
 #~ "nem tehet meg az ügynök."
 
 #~ msgid "Materialize the agent harness in a project workspace"
-#~ msgstr "Az ügynökkeret létrehozása egy projekt-munkaterületen"
+#~ msgstr ""
 
 #~ msgid ""
 #~ "To place the harness (rules, personas,"
@@ -334,10 +324,6 @@ msgstr "[Hibaelhárítás](how-to/troubleshooting.md)"
 #~ "into a project directory, materialize it"
 #~ " with the CLI:"
 #~ msgstr ""
-#~ "Ahhoz, hogy a keretet (szabályokat, "
-#~ "személyiségeket, képességeket és egy "
-#~ "`CLAUDE.md`-t) közvetlenül egy projektkönyvtárba "
-#~ "helyezze, hozza létre a CLI-vel:"
 
 #~ msgid "[Connect an agent](how-to/connect-an-agent.md)"
 #~ msgstr "[Ügynök csatlakoztatása](how-to/connect-an-agent.md)"

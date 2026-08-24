@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-24 14:46+0200\n"
+"POT-Creation-Date: 2026-08-24 17:19+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -906,14 +906,13 @@ msgstr ""
 #: ../../how-to/profile-setup.md:375
 #, fuzzy
 msgid ""
-"Delete a profile for good with `aeat config profile delete NAME --yes`. "
-"If the deleted profile was active, Cadrumo clears the active-profile "
-"pointer."
+"Delete a profile for good. If the deleted profile was active, Cadrumo "
+"clears the active-profile pointer:"
 msgstr ""
 "**Delete** elimina un perfil per sempre. Si el perfil eliminat era "
 "l'actiu, Cadrumo esborra el punter del perfil actiu."
 
-#: ../../how-to/profile-setup.md:378
+#: ../../how-to/profile-setup.md:382
 #, fuzzy
 msgid ""
 "A sealed archive contains taxpayer data, including the tax identifier, "
@@ -926,7 +925,7 @@ msgstr ""
 "local. Desa'l com a dada tributària sensible i no l'adjuntis a una "
 "sol·licitud d'ajuda tret que n'hagis eliminat les dades personals."
 
-#: ../../how-to/profile-setup.md:383
+#: ../../how-to/profile-setup.md:387
 msgid ""
 "Sign out without deleting the profile using `aeat config logout`. Logout "
 "closes the active storage session, discards its in-memory keys, disposes "
@@ -937,11 +936,11 @@ msgstr ""
 " seves claus en memòria, elimina els motors de bucket i esborra el punter"
 " local del perfil actiu:"
 
-#: ../../how-to/profile-setup.md:391
+#: ../../how-to/profile-setup.md:395
 msgid "Choose your service capabilities"
 msgstr "Tria les capacitats de servei"
 
-#: ../../how-to/profile-setup.md:393
+#: ../../how-to/profile-setup.md:397
 msgid ""
 "Each profile carries its own opt-in for three optional services. The "
 "setup wizard asks these questions when you create or edit a profile, and "
@@ -954,11 +953,11 @@ msgstr ""
 "la postura actual, desactiven una capacitat i tornen a mostrar la "
 "postura:"
 
-#: ../../how-to/profile-setup.md:402
+#: ../../how-to/profile-setup.md:406
 msgid "The three capabilities are:"
 msgstr "Les tres capacitats són:"
 
-#: ../../how-to/profile-setup.md:404
+#: ../../how-to/profile-setup.md:408
 msgid ""
 "`cloud_evidence_upload` - allow sending sensitive evidence to a cloud LLM"
 " provider. Off by default. Barred for gestor profiles."
@@ -966,17 +965,17 @@ msgstr ""
 "`cloud_evidence_upload` - permet enviar evidència sensible a un proveïdor"
 " d'LLM al núvol. Desactivat per defecte. Vedat per als perfils de gestor."
 
-#: ../../how-to/profile-setup.md:406
+#: ../../how-to/profile-setup.md:410
 msgid "`llm_vision` - read invoices with the on-host vision model. On by default."
 msgstr ""
 "`llm_vision` - llegeix factures amb el model de visió local. Activat per "
 "defecte."
 
-#: ../../how-to/profile-setup.md:407
+#: ../../how-to/profile-setup.md:411
 msgid "`google_export` - export calculations to Google Sheets. On by default."
 msgstr "`google_export` - exporta càlculs a Google Sheets. Activat per defecte."
 
-#: ../../how-to/profile-setup.md:409
+#: ../../how-to/profile-setup.md:413
 msgid ""
 "Turn any capability on or off with `aeat config profile capabilities "
 "set`. The example turns `llm_vision` off. Pass `cloud_evidence_upload on`"
@@ -989,11 +988,11 @@ msgstr ""
 "de paquet que faltin produeixen l'ordre d'instal·lació exacta. Consulta "
 "[Instal·la Cadrumo](../workstation-setup.md) per als extres."
 
-#: ../../how-to/profile-setup.md:414
+#: ../../how-to/profile-setup.md:418
 msgid "See what changed"
 msgstr "Mira què ha canviat"
 
-#: ../../how-to/profile-setup.md:416
+#: ../../how-to/profile-setup.md:420
 #, fuzzy
 msgid ""
 "Every change to a profile - creation, edits, imports, classifications, "
@@ -1009,7 +1008,7 @@ msgstr ""
 "hi primer després de tancar la sessió. L'exemple crea, canvia de nom i "
 "edita un perfil abans de navegar i filtrar el seu historial:"
 
-#: ../../how-to/profile-setup.md:426
+#: ../../how-to/profile-setup.md:430
 msgid ""
 "Repeat `--event-type` to include several types. An unknown type is "
 "refused with the full accepted list, so an empty value is a quick way to "
@@ -1019,7 +1018,7 @@ msgstr ""
 "es rebutja amb la llista acceptada completa, de manera que un valor buit "
 "és una manera ràpida de descobrir el vocabulari."
 
-#: ../../how-to/profile-setup.md:430
+#: ../../how-to/profile-setup.md:434
 msgid ""
 "A rename appears as two events on purpose: `profile.renamed` records that"
 " the data changed, and `bucket.renamed` records that you ran the rename "
@@ -1030,11 +1029,11 @@ msgstr ""
 "registra que has executat l'acció de canvi de nom. L'un respon «què ha "
 "canviat» i l'altre «què s'ha fet»."
 
-#: ../../how-to/profile-setup.md:434
+#: ../../how-to/profile-setup.md:438
 msgid "If setup looks wrong"
 msgstr "Si la configuració sembla incorrecta"
 
-#: ../../how-to/profile-setup.md:436
+#: ../../how-to/profile-setup.md:440
 msgid ""
 "If a command reports no active profile, an invalid field value, or that "
 "you're working under the wrong profile, see [Diagnose and repair your "
@@ -1044,7 +1043,7 @@ msgstr ""
 " vàlid, o que estàs treballant sota el perfil incorrecte, consulta "
 "[Diagnostica i repara la teva configuració local](troubleshooting.md)."
 
-#: ../../how-to/profile-setup.md:440
+#: ../../how-to/profile-setup.md:444
 msgid ""
 "When the troubleshooting steps don't resolve it, follow [Prepare a "
 "privacy-safe support request](troubleshooting.md#prepare-a-privacy-safe-"
@@ -1058,27 +1057,27 @@ msgstr ""
 "deixar fora abans de portar el problema al seguidor d'incidències del "
 "projecte."
 
-#: ../../how-to/profile-setup.md:446
+#: ../../how-to/profile-setup.md:450
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/profile-setup.md:448
+#: ../../how-to/profile-setup.md:452
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Importa i gestiona transaccions](import-bank-statements.md)"
 
-#: ../../how-to/profile-setup.md:449
+#: ../../how-to/profile-setup.md:453
 msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
 msgstr "[Mantén les dades censals del Modelo 036 al teu perfil](censo-update.md)"
 
-#: ../../how-to/profile-setup.md:450
+#: ../../how-to/profile-setup.md:454
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Planifica el teu calendari de presentacions](filing-calendar.md)"
 
-#: ../../how-to/profile-setup.md:451
+#: ../../how-to/profile-setup.md:455
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisa i aporta entrades de càlcul](review-calculation-values.md)"
 
-#: ../../how-to/profile-setup.md:452
+#: ../../how-to/profile-setup.md:456
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referència de la CLI](../cli/index.rst)"
 

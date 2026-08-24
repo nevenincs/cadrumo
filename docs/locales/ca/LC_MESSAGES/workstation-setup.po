@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 19:58+0200\n"
+"POT-Creation-Date: 2026-08-24 17:19+0200\n"
 "PO-Revision-Date: 2026-07-18 14:00+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -214,20 +214,10 @@ msgid ""
 msgstr ""
 
 #: ../../workstation-setup.md:109
-msgid "Materialize the agent harness in a project workspace"
-msgstr ""
-
-#: ../../workstation-setup.md:111
-msgid ""
-"To place the harness (rules, personas, skills, and a `CLAUDE.md`) "
-"directly into a project directory, materialize it with the CLI:"
-msgstr ""
-
-#: ../../workstation-setup.md:118
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../workstation-setup.md:120
+#: ../../workstation-setup.md:111
 msgid ""
 "[Quickstart](how-to/quickstart.md) - from an empty profile to an exported"
 " modelo file."
@@ -235,7 +225,7 @@ msgstr ""
 "[Inici ràpid](how-to/quickstart.md) - d'un perfil buit a un fitxer de "
 "modelo exportat."
 
-#: ../../workstation-setup.md:122
+#: ../../workstation-setup.md:113
 msgid ""
 "[Set up a profile](how-to/profile-setup.md) - including the per-profile "
 "service capabilities (Google export, LLM vision, cloud evidence upload)."
@@ -244,11 +234,11 @@ msgstr ""
 "capacitats de servei per perfil (exportació a Google, visió LLM, pujada "
 "de proves al núvol)."
 
-#: ../../workstation-setup.md:124
+#: ../../workstation-setup.md:115
 msgid "[Connect an agent](how-to/connect-an-agent.md)"
 msgstr ""
 
-#: ../../workstation-setup.md:125
+#: ../../workstation-setup.md:116
 msgid "[Troubleshooting](how-to/troubleshooting.md)"
 msgstr "[Resolució de problemes](how-to/troubleshooting.md)"
 
@@ -328,7 +318,7 @@ msgstr "[Resolució de problemes](how-to/troubleshooting.md)"
 #~ "fer l'agent."
 
 #~ msgid "Materialize the agent harness in a project workspace"
-#~ msgstr "Materialitza l'arnès d'agent en un espai de treball de projecte"
+#~ msgstr ""
 
 #~ msgid ""
 #~ "To place the harness (rules, personas,"
@@ -336,10 +326,6 @@ msgstr "[Resolució de problemes](how-to/troubleshooting.md)"
 #~ "into a project directory, materialize it"
 #~ " with the CLI:"
 #~ msgstr ""
-#~ "Per col·locar l'arnès (regles, perfils, "
-#~ "habilitats i un `CLAUDE.md`) directament "
-#~ "en un directori de projecte, "
-#~ "materialitza'l amb la CLI:"
 
 #~ msgid "[Connect an agent](how-to/connect-an-agent.md)"
 #~ msgstr "[Connecta un agent](how-to/connect-an-agent.md)"

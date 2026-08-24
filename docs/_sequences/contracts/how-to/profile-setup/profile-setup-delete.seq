@@ -1,0 +1,4 @@
+@step Delete the active profile after confirming the irreversible operation.
+@result aeat --format json config profile delete docs-sequence-sandbox --yes
+@expect status == "success"
+@expect exit_code == 0

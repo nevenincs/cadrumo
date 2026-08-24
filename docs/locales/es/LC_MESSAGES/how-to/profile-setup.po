@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-24 14:46+0200\n"
+"POT-Creation-Date: 2026-08-24 17:19+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -907,14 +907,13 @@ msgstr ""
 #: ../../how-to/profile-setup.md:375
 #, fuzzy
 msgid ""
-"Delete a profile for good with `aeat config profile delete NAME --yes`. "
-"If the deleted profile was active, Cadrumo clears the active-profile "
-"pointer."
+"Delete a profile for good. If the deleted profile was active, Cadrumo "
+"clears the active-profile pointer:"
 msgstr ""
 "**Delete** elimina un perfil para siempre. Si el perfil eliminado era el "
 "activo, Cadrumo borra el puntero del perfil activo."
 
-#: ../../how-to/profile-setup.md:378
+#: ../../how-to/profile-setup.md:382
 #, fuzzy
 msgid ""
 "A sealed archive contains taxpayer data, including the tax identifier, "
@@ -927,7 +926,7 @@ msgstr ""
 "local. Guárdalo como datos fiscales sensibles y no lo adjunte a una "
 "solicitud de soporte salvo que haya eliminado los datos personales."
 
-#: ../../how-to/profile-setup.md:383
+#: ../../how-to/profile-setup.md:387
 msgid ""
 "Sign out without deleting the profile using `aeat config logout`. Logout "
 "closes the active storage session, discards its in-memory keys, disposes "
@@ -938,11 +937,11 @@ msgstr ""
 " claves en memoria, libera los motores de bucket y borra el puntero local"
 " del perfil activo:"
 
-#: ../../how-to/profile-setup.md:391
+#: ../../how-to/profile-setup.md:395
 msgid "Choose your service capabilities"
 msgstr "Elige las capacidades de servicio"
 
-#: ../../how-to/profile-setup.md:393
+#: ../../how-to/profile-setup.md:397
 msgid ""
 "Each profile carries its own opt-in for three optional services. The "
 "setup wizard asks these questions when you create or edit a profile, and "
@@ -954,11 +953,11 @@ msgstr ""
 "perfil, y puede cambiarlas en cualquier momento. Estos pasos muestran la "
 "postura actual, desactivan una capacidad y muestran de nuevo la postura:"
 
-#: ../../how-to/profile-setup.md:402
+#: ../../how-to/profile-setup.md:406
 msgid "The three capabilities are:"
 msgstr "Las tres capacidades son:"
 
-#: ../../how-to/profile-setup.md:404
+#: ../../how-to/profile-setup.md:408
 msgid ""
 "`cloud_evidence_upload` - allow sending sensitive evidence to a cloud LLM"
 " provider. Off by default. Barred for gestor profiles."
@@ -967,19 +966,19 @@ msgstr ""
 " de LLM en la nube. Desactivada por defecto. Vedada para los perfiles de "
 "gestor."
 
-#: ../../how-to/profile-setup.md:406
+#: ../../how-to/profile-setup.md:410
 msgid "`llm_vision` - read invoices with the on-host vision model. On by default."
 msgstr ""
 "`llm_vision`: lee las facturas con el modelo de visión en el equipo. "
 "Activada por defecto."
 
-#: ../../how-to/profile-setup.md:407
+#: ../../how-to/profile-setup.md:411
 msgid "`google_export` - export calculations to Google Sheets. On by default."
 msgstr ""
 "`google_export`: exporta los cálculos a Google Sheets. Activada por "
 "defecto."
 
-#: ../../how-to/profile-setup.md:409
+#: ../../how-to/profile-setup.md:413
 msgid ""
 "Turn any capability on or off with `aeat config profile capabilities "
 "set`. The example turns `llm_vision` off. Pass `cloud_evidence_upload on`"
@@ -992,11 +991,11 @@ msgstr ""
 " de paquete que falten producen el comando de instalación exacto. "
 "Consulta [Instala Cadrumo](../workstation-setup.md) para los extras."
 
-#: ../../how-to/profile-setup.md:414
+#: ../../how-to/profile-setup.md:418
 msgid "See what changed"
 msgstr "Ve qué cambió"
 
-#: ../../how-to/profile-setup.md:416
+#: ../../how-to/profile-setup.md:420
 #, fuzzy
 msgid ""
 "Every change to a profile - creation, edits, imports, classifications, "
@@ -1012,7 +1011,7 @@ msgstr ""
 "cambia a él primero tras el cierre de sesión. El ejemplo crea, renombra y"
 " edita un perfil antes de recorrer y filtrar su historial:"
 
-#: ../../how-to/profile-setup.md:426
+#: ../../how-to/profile-setup.md:430
 msgid ""
 "Repeat `--event-type` to include several types. An unknown type is "
 "refused with the full accepted list, so an empty value is a quick way to "
@@ -1022,7 +1021,7 @@ msgstr ""
 "rechaza con la lista completa de admitidos, así que un valor vacío es una"
 " forma rápida de descubrir el vocabulario."
 
-#: ../../how-to/profile-setup.md:430
+#: ../../how-to/profile-setup.md:434
 msgid ""
 "A rename appears as two events on purpose: `profile.renamed` records that"
 " the data changed, and `bucket.renamed` records that you ran the rename "
@@ -1033,11 +1032,11 @@ msgstr ""
 "registra que ejecutaste la acción de renombrar. Uno responde a «qué "
 "cambió», el otro a «qué se hizo»."
 
-#: ../../how-to/profile-setup.md:434
+#: ../../how-to/profile-setup.md:438
 msgid "If setup looks wrong"
 msgstr "Si la configuración parece incorrecta"
 
-#: ../../how-to/profile-setup.md:436
+#: ../../how-to/profile-setup.md:440
 msgid ""
 "If a command reports no active profile, an invalid field value, or that "
 "you're working under the wrong profile, see [Diagnose and repair your "
@@ -1047,7 +1046,7 @@ msgstr ""
 "no válido o de que estás trabajando bajo el perfil equivocado, consulta "
 "[Diagnostica y repara tu configuración local](troubleshooting.md)."
 
-#: ../../how-to/profile-setup.md:440
+#: ../../how-to/profile-setup.md:444
 msgid ""
 "When the troubleshooting steps don't resolve it, follow [Prepare a "
 "privacy-safe support request](troubleshooting.md#prepare-a-privacy-safe-"
@@ -1060,27 +1059,27 @@ msgstr ""
 "Nombra las salidas que incluir y los datos personales que dejar fuera "
 "antes de llevar el problema al gestor de incidencias del proyecto."
 
-#: ../../how-to/profile-setup.md:446
+#: ../../how-to/profile-setup.md:450
 msgid "Next steps"
 msgstr "Pasos siguientes"
 
-#: ../../how-to/profile-setup.md:448
+#: ../../how-to/profile-setup.md:452
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Importa y gestiona los movimientos](import-bank-statements.md)"
 
-#: ../../how-to/profile-setup.md:449
+#: ../../how-to/profile-setup.md:453
 msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
 msgstr "[Mantén los datos censales del Modelo 036 en tu perfil](censo-update.md)"
 
-#: ../../how-to/profile-setup.md:450
+#: ../../how-to/profile-setup.md:454
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Planifica tu calendario de presentaciones](filing-calendar.md)"
 
-#: ../../how-to/profile-setup.md:451
+#: ../../how-to/profile-setup.md:455
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisa y aporta las entradas de cálculo](review-calculation-values.md)"
 
-#: ../../how-to/profile-setup.md:452
+#: ../../how-to/profile-setup.md:456
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referencia de la CLI](../cli/index.rst)"
 

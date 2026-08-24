@@ -106,15 +106,6 @@ uv run cadrumo-mcp --help
 [Connect an agent](how-to/connect-an-agent.md) shows the source-checkout
 registration and explains what the agent can and cannot do.
 
-### Materialize the agent harness in a project workspace
-
-To place the harness (rules, personas, skills, and a `CLAUDE.md`) directly
-into a project directory, materialize it with the CLI:
-
-```{cli-sequence} install-agent-harness
-:verify: Confirm the operator harness materializes into the chosen workspace.
-```
-
 ## Next steps
 
 - [Quickstart](how-to/quickstart.md) - from an empty profile to an exported
