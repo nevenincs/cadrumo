@@ -62,7 +62,7 @@ def test_import_filing_carries_external_evidence_metadata(repos: _Repos) -> None
     evidence = outcome.filing.external_evidence
     assert evidence is not None
     assert evidence.kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
-    assert evidence.reference_id == "JUST-2026-303-Q1-OPERATOR1"
+    assert evidence.reference_id == "JUST2026303Q1OPERATOR1"
     assert evidence.imported_at == _T1
 
 
@@ -133,7 +133,7 @@ def test_import_emits_single_modelo_filing_imported_event(repos: _Repos) -> None
 
 _IMPORTED_EVENT_PAYLOAD_EXPECTATIONS = (
     ("evidence_kind", "aeat_justificante_pdf"),
-    ("evidence_reference_id", "JUST-2026-303-Q1-OPERATOR1"),
+    ("evidence_reference_id", "JUST2026303Q1OPERATOR1"),
     ("supersedes_filing_record_id", ""),
     ("casilla_count", "2"),
 )
@@ -159,7 +159,7 @@ def test_import_supersedes_prior_current_filing(repos: _Repos) -> None:
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
     _persist_matching_justificante(
-        "JUST-FIRST",
+        "JUSTFIRST01",
         work_unit,
         captured_at=_T1,
     )
@@ -167,13 +167,13 @@ def test_import_supersedes_prior_current_filing(repos: _Repos) -> None:
         repos,
         work_unit,
         casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
-        evidence_reference_id="JUST-FIRST",
+        evidence_reference_id="JUSTFIRST01",
         expected_tax_id=_TAX_ID,
         clock=_T1,
     )
 
     _persist_matching_justificante(
-        "CSV-SECOND",
+        "CSVSECOND01",
         work_unit,
         captured_at=_T2,
     )
@@ -182,7 +182,7 @@ def test_import_supersedes_prior_current_filing(repos: _Repos) -> None:
         work_unit,
         casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1600")},
         evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
-        evidence_reference_id="CSV-SECOND",
+        evidence_reference_id="CSVSECOND01",
         expected_tax_id=_TAX_ID,
         clock=_T2,
     )
@@ -217,7 +217,7 @@ def test_import_then_amend_unlocks_amendment_path(repos: _Repos) -> None:
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
     _persist_matching_justificante(
-        "JUST-BASELINE",
+        "JUSTBASELINE1",
         work_unit,
         captured_at=_T1,
     )
@@ -226,7 +226,7 @@ def test_import_then_amend_unlocks_amendment_path(repos: _Repos) -> None:
         repos,
         work_unit,
         casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500"), _IMPORT_EXPENSE_CASILLA: Decimal("300")},
-        evidence_reference_id="JUST-BASELINE",
+        evidence_reference_id="JUSTBASELINE1",
         expected_tax_id=_TAX_ID,
         clock=_T1,
     )

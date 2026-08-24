@@ -2181,7 +2181,9 @@ cli:
           que aquest descendent es un fill, o indiqueu la relacio real amb RELACION=.
         help: Declara descendents per al mínim per descendents de l'art. 58/61 LIRPF.
         index_out_of_range: Índex %{index} fora de rang; el perfil té %{total} descendent(s).
-        invalid_flag: El valor de --descendiente no és vàlid.
+        invalid_flag: El valor de --descendiente no és vàlid. Cada fila ha de declarar
+          NACIMIENTO=YYYY-MM-DD; altres claus com RELACION, DISCAPACIDAD o CONVIVENCIA
+          són opcionals.
         list_help: Llista els descendents declarats al perfil actiu.
         remove_help: Elimina un descendent per índex (base 0) del perfil actiu.
         remove_index_help: Índex (base 0) del descendent a eliminar.
@@ -3212,7 +3214,6 @@ cli:
         text o direction
       header: SESSIÓ DE REVISIÓ DEL LLIBRE COMPTABLE
       help: Revisió interactiva i validació d'entrades del llibre
-      id_help: Identificador de l'entrada específica a revisar
       no_rows: No hi ha entrades del llibre pendents de revisió
       verbose_help: Mostrar informació detallada durant la revisió
     split:

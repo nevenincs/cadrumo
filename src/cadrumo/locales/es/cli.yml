@@ -2206,7 +2206,9 @@ cli:
           LIRPF.
         index_out_of_range: Índice %{index} fuera de rango; el perfil tiene %{total}
           descendiente(s).
-        invalid_flag: El valor de --descendiente no es válido.
+        invalid_flag: El valor de --descendiente no es válido. Cada fila debe declarar
+          NACIMIENTO=YYYY-MM-DD; otras claves como RELACION, DISCAPACIDAD o CONVIVENCIA
+          son opcionales.
         list_help: Listar los descendientes declarados en el perfil activo.
         remove_help: Eliminar un descendiente por índice (base 0) del perfil activo.
         remove_index_help: Índice (base 0) del descendiente a eliminar.
@@ -3241,7 +3243,6 @@ cli:
         text o direction
       header: SESIÓN DE REVISIÓN DEL LIBRO CONTABLE
       help: Revisión interactiva y validación de entradas del libro
-      id_help: Identificador de la entrada específica a revisar
       no_rows: No hay entradas del libro pendientes de revisión
       verbose_help: Mostrar información detallada durante la revisión
     split:

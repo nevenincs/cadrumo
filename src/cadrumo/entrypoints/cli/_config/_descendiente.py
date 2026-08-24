@@ -493,14 +493,25 @@ def descendiente_add(
         try:
             new_rows.append(parse_descendiente_flag(raw))
         except ProfileAnswerTypeError as exc:
+            # The exception CLASS NAME is not operator-facing vocabulary: putting it
+            # in context leaks "ValidationError" into the envelope the operator
+            # reads. The translated message carries what they can act on.
             raise _CliRefusedBoundaryError(
                 translated_message="cli.config.profile.descendiente.invalid_flag",
-                context={"error_type": type(exc).__name__},
             ) from exc
         except ValidationError as exc:
+            # Name the FIELDS that conflict, never the exception class. The class
+            # name leaks "ValidationError" into the envelope the operator reads and
+            # tells them nothing; the field paths are exactly what they can act on.
             raise _CliRefusedBoundaryError(
                 translated_message="cli.config.profile.descendiente.invalid_flag",
-                context={"error_type": type(exc).__name__},
+                context={
+                    # The coherence rules are MODEL-level validators, so `loc` is
+                    # empty and the conflicting field is named in the message. Take
+                    # the messages, never str(exc): that appends the pydantic help
+                    # URL and the exception class the operator must never see.
+                    "detail": "; ".join(str(error["msg"]) for error in exc.errors()),
+                },
             ) from exc
 
     combined = (*existing, *new_rows)

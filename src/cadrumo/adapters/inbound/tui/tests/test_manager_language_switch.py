@@ -24,6 +24,7 @@ from textual.widgets import DataTable, OptionList
 from textual.widgets._footer import FooterKey
 
 from .....application.user_profile import (
+    login_profile,
     build_profile_overview,
     register_profile_with_credentials,
 )
@@ -93,7 +94,17 @@ def _register_in(language: str) -> None:
     )
 
 
+def _ensure_logged_in() -> None:
+    """Unlock the registered profile so the capsule will serve its record.
+
+    Registration closes its own session and the custody capsule is the sole
+    profile authority, so a read here meets a locked capsule without one.
+    """
+    login_profile(name=_LABEL, passphrase_callback=lambda: _PASSWORD)
+
+
 def _manager() -> ProfileManagerApp:
+    _ensure_logged_in()
     record = load_test_profile_record(require_active_bucket_id())
     return ProfileManagerApp(
         build_profile_overview(record, label=_LABEL),
@@ -241,6 +252,8 @@ async def test_choosing_a_language_rewords_the_page_through_the_ordinary_door(tm
                 f"the footer must be rewritten too, but showed {settled}"
             )
             app.exit(None)
+
+        _ensure_logged_in()
 
         record = load_test_profile_record(require_active_bucket_id())
         stored = {fact.path: fact.value for fact in record.facts}

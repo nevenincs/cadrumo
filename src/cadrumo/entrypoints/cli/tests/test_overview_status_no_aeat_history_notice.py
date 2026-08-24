@@ -78,7 +78,7 @@ def test_a_fresh_natural_person_profile_gets_the_history_notice_with_the_sweep_a
     assert notice["severity"] == "info"
     action = notice.get("action")
     assert isinstance(action, dict)
-    assert action["action"]["action_id"] == "operator.live.filed.pull_all"
+    assert action["action"]["action"]["action_id"] == "operator.live.filed.pull_all"
 
 
 def test_a_fresh_sociedades_profile_gets_the_history_notice_with_no_action() -> None:

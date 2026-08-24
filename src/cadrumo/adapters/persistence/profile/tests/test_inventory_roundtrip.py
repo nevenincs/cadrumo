@@ -26,6 +26,7 @@ from sqlalchemy import select
 
 from .....domain.contribuyente.inventory import (
     INVENTORY_SCHEMA_VERSION,
+    InventoryLedgerError,
     InventoryAcquisitionCompleteness,
     InventoryAcquisitionCost,
     InventoryAcquisitionEvidence,
@@ -334,7 +335,12 @@ def test_inventory_acquisition_corruption_fails_closed_at_encrypted_load(
             mutate=mutate,
         )
 
-        with pytest.raises(pydantic.ValidationError):
+        # The loader converts the decrypted validation failure into a safe public
+        # error and raises it `from None`, deliberately, so the decrypted payload
+        # is not retained as __context__ on an error that crosses the boundary.
+        # Corruption is still detected -- a load that SUCCEEDED here would fail
+        # this assertion, which is the property the case exists to hold.
+        with pytest.raises(InventoryLedgerError):
             repo.load()
 
 
@@ -406,5 +412,10 @@ def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(
 
         mutate_encrypted_secure_object_json(engine, row_statement=stmt, mutate=mutate)
 
-        with pytest.raises(pydantic.ValidationError, match="opening_stock must equal the value of opening_layers"):
+        # The invariant's own sentence is no longer assertable: it is derived from
+        # decrypted content, and the loader refuses to carry that across the
+        # boundary. What still holds -- and what a regression would break -- is
+        # that a dropped layer balance fails the load closed rather than loading a
+        # ledger whose declared aggregate disagrees with its layers.
+        with pytest.raises(InventoryLedgerError):
             repo.load()

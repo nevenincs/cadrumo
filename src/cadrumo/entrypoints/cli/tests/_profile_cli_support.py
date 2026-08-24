@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 from click.testing import Result
 
 from ....tests.cli_runner import invoke_cached_cli
@@ -20,6 +22,13 @@ def seed_profile(name: str, **facts: str) -> str:
 
 
 def create_quiet_profile(name: str, *options: str) -> Result:
+    # `create` MINTS a custody envelope, so it needs the operator passphrase and
+    # its confirmation -- unlike `edit`, which opens an existing one and refuses a
+    # payload carrying the confirmation field. A test runner is not a terminal, so
+    # the bounded strict-JSON channel is the only one either verb accepts.
+    from ....core.config import load_settings
+
+    secret = load_settings().cadrumo_dev_test_database_password.get_secret_value()
     return invoke_cached_cli(
         (
             "config",
@@ -30,11 +39,17 @@ def create_quiet_profile(name: str, *options: str) -> Result:
             "--accept-defaults",
             *_filing_identity_defaults(name, options),
             *options,
+            "--secrets-stdin",
         ),
+        input=json.dumps({"passphrase": secret, "passphrase_confirmation": secret}),
     )
 
 
 def edit_quiet_profile(name: str, *options: str) -> Result:
+    # No credential channel here on purpose: `config profile edit` declares no
+    # --secrets-stdin option, so passing one is refused as an unknown option. Edit
+    # works against the session an earlier login opened rather than taking a
+    # passphrase of its own.
     return invoke_cached_cli(("config", "profile", "edit", name, "--quiet", *options))
 
 

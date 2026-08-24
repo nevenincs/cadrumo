@@ -238,8 +238,8 @@ def test_work_create_not_applicable_m130_wins_over_pre_activity_for_irnr_profile
             "identity.name": "Non Resident",
             "identity.surnames": "Readiness",
             "activities.description": "design",
-            "fiscal_residency.status": "non_resident_irnr",
-            "fiscal_residency.country": "FR",
+            "taxpayer_type.fiscal_residency": "non_resident_irnr",
+            "taxpayer_type.country_of_fiscal_residence": "FR",
             "censo.activity_start_date": "2026-07-15",
         },
     )

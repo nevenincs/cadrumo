@@ -55,7 +55,7 @@ def _create_complete_pipeline_profile() -> None:
             "censo.activity_start_date": "2025-10-01",
             "taxpayer_type.irpf_income_categories": "actividad_economica",
             "irpf.estimation_regime": "directa_normal",
-            "fiscal_residency.status": "resident_irpf",
+            "taxpayer_type.fiscal_residency": "resident_irpf",
             "tax_residence.ccaa": "madrid",
             "tax_residence.jurisdiction_scope": "common_regime",
             "iva.regime": "GENERAL",

@@ -87,8 +87,8 @@ def _create_non_resident_irnr_natural_person() -> None:
             "taxpayer_type.entity_type": "natural_person",
             "taxpayer_type.irpf_income_categories": "actividad_economica",
             "irpf.estimation_regime": "directa_normal",
-            "fiscal_residency.status": "non_resident_irnr",
-            "fiscal_residency.country": "FR",
+            "taxpayer_type.fiscal_residency": "non_resident_irnr",
+            "taxpayer_type.country_of_fiscal_residence": "FR",
         },
     )
 

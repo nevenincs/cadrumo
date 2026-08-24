@@ -265,6 +265,249 @@ class Modelo353ProfileFacts(BaseModel):
     grupo_normativa_foral: _XOrBlankMark | None = None
 
 
+_M296SupportType = Annotated[str, StringConstraints(pattern=r"^[TC]$")]
+_M296AmendmentMark = Annotated[str, StringConstraints(min_length=1, max_length=2)]
+_FourDigitYear = Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
+_DigitString9 = Annotated[str, StringConstraints(pattern=r"^\d{1,9}$")]
+
+
+class Modelo296PerceptorRow(BaseModel):
+    """One Modelo 296 perceptor: the payee, the renta and the retencion practicada.
+
+    The Tipo 2 record is emitted once per payee, so this row is the unit AEAT repeats.
+    Members are ``M296PerceptorField``'s values verbatim and are generated from that enum,
+    which keeps the projection reference and the row that answers it in lock-step: a field
+    the reference can name is a field this row has.
+
+    Every member is optional and rendered as text. The record design's own per-field width,
+    padding, justification and data type are what shape the bytes, and they live in the
+    published layout; duplicating them as constraints here would be a second copy of the
+    design that is free to disagree with it.
+
+    These rows are NOT yet fed from the withholding substrate. The values already exist in
+    the registry as ``Withholding296Observation`` -- perceptor tax id, legal name, naturaleza,
+    clave, subclave, base and retencion among them -- and the snapshot assembler should
+    project them from there rather than take them as operator entry. Until it does, a caller
+    that populates these by hand can state a figure the ledger disagrees with.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    apellidos_y_nombre_razon_social_o_deno: str | None = None
+    base_retenciones_e_ingresos_a_cuenta: str | None = None
+    ciudad: str | None = None
+    clave: str | None = None
+    clave_de_mercado: str | None = None
+    codigo: str | None = None
+    codigo_bic_del_perceptor_mediador: str | None = None
+    codigo_cuenta_valores: str | None = None
+    codigo_emisor: str | None = None
+    codigo_lei_del_perceptor: str | None = None
+    codigo_pais: str | None = None
+    decimal: str | None = None
+    decimal_numerico_parte_decimal: str | None = None
+    decimal_numerico_parte_decimal_2: str | None = None
+    decimal_numerico_parte_decimal_3: str | None = None
+    declarante: str | None = None
+    direccion_del_perceptor: str | None = None
+    ejercicio: str | None = None
+    ejercicio_devengo: str | None = None
+    entero: str | None = None
+    entero_numerico_parte_entera: str | None = None
+    entero_numerico_parte_entera_2: str | None = None
+    entero_numerico_parte_entera_3: str | None = None
+    f_j: str | None = None
+    fecha_de_devengo: str | None = None
+    fecha_de_inicio_del_prestamo: str | None = None
+    fecha_de_nacimiento: str | None = None
+    fecha_de_vencimiento_del_prestamo: str | None = None
+    identificador_de_registro_o_numero_de: str | None = None
+    ingresos_a_cuenta_repercutidos: str | None = None
+    naturaleza: str | None = None
+    nif_del_declarante: str | None = None
+    nif_del_pagador_anterior: str | None = None
+    nif_del_perceptor: str | None = None
+    nif_del_representante_legal: str | None = None
+    nif_en_el_pais_de_residencia_fiscal: str | None = None
+    pais_o_territorio_de_residencia_fiscal: str | None = None
+    parte_decimal_del_importe_de_las_reten: str | None = None
+    parte_entera_del_importe_de_las_retenc: str | None = None
+    pendiente: str | None = None
+    perceptor_mediador: str | None = None
+    procedimiento_especial_de_retenciones: str | None = None
+    subclave: str | None = None
+    tipo_codigo: str | None = None
+
+
+class Modelo296PerceptorInteresesRow(BaseModel):
+    """One Modelo 296 perceptor of the intereses hoja.
+
+    Members are ``M296PerceptorInteresesField``'s values verbatim and are generated from that
+    enum, so a field the projection reference can name is a field this row has. Every member
+    is optional and rendered as text: the per-field width, padding, justification and data
+    type belong to the published layout, and a second copy of them here would be free to
+    disagree with the design.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    apellidos_y_nombre_razon_social_o_deno: str | None = None
+    ejercicio: str | None = None
+    f_j: str | None = None
+    identificador_de_registro_o_numero_de: str | None = None
+    nif_del_declarante: str | None = None
+    nif_del_perceptor: str | None = None
+    nif_del_representante_legal: str | None = None
+    retenciones_e_ingresos_a_cuenta_ingres: str | None = None
+
+
+class Modelo296AnexoPagoRow(BaseModel):
+    """One Modelo 296 pago a contribuyente.
+
+    Members are ``M296AnexoPagoField``'s values verbatim and are generated from that
+    enum, so a field the projection reference can name is a field this row has. Every member
+    is optional and rendered as text: the per-field width, padding, justification and data
+    type belong to the published layout, and a second copy of them here would be free to
+    disagree with the design.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    apellidos_y_nombre_razon_social_o_deno: str | None = None
+    apellidos_y_nombre_razon_social_o_deno_2: str | None = None
+    ciudad: str | None = None
+    clave_de_personalidad_del_contribuyent: str | None = None
+    codigo_isin: str | None = None
+    codigo_lei_del_contribuyente: str | None = None
+    codigo_pais: str | None = None
+    direccion_del_contribuyente: str | None = None
+    ejercicio: str | None = None
+    f_j: str | None = None
+    fecha_de_devengo: str | None = None
+    fecha_de_nacimiento_del_contribuyente: str | None = None
+    identificador_de_registro_o_numero_de: str | None = None
+    importe_del_pago_al_contribuyente: str | None = None
+    nif_del_contribuyente: str | None = None
+    nif_del_declarante: str | None = None
+    nif_del_perceptor: str | None = None
+    nif_del_representante_legal: str | None = None
+    nif_en_el_pais_de_residencia_fiscal_de: str | None = None
+    numero_de_justificante_del_modelo_210: str | None = None
+    pais_o_territorio_de_residencia_fiscal: str | None = None
+    porcentaje_de_retencion: str | None = None
+    retenciones: str | None = None
+
+
+class Modelo296AnexoCertificadoRow(BaseModel):
+    """One Modelo 296 certificado de pago.
+
+    Members are ``M296AnexoCertificadoField``'s values verbatim and are generated from that
+    enum, so a field the projection reference can name is a field this row has. Every member
+    is optional and rendered as text: the per-field width, padding, justification and data
+    type belong to the published layout, and a second copy of them here would be free to
+    disagree with the design.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    apellidos_y_nombre_razon_social_o_deno: str | None = None
+    apellidos_y_nombre_razon_social_o_deno_2: str | None = None
+    codigo_cuenta_valores_del_certificado: str | None = None
+    codigo_isin_del_certificado: str | None = None
+    codigo_lei_del_titular_registral: str | None = None
+    decimal: str | None = None
+    decimal_2: str | None = None
+    decimal_3: str | None = None
+    ejercicio: str | None = None
+    entero: str | None = None
+    entero_2: str | None = None
+    entero_3: str | None = None
+    f_j: str | None = None
+    fecha_de_pago: str | None = None
+    fecha_de_presentacion_del_modelo_210: str | None = None
+    identificador_de_registro_o_numero_de: str | None = None
+    nif_del_declarante: str | None = None
+    nif_del_perceptor: str | None = None
+    nif_del_representante_legal: str | None = None
+    numero_de_justificante_del_modelo_210: str | None = None
+    parte_decimal_del_numero_de_titulos: str | None = None
+    parte_decimal_del_numero_de_titulos_2: str | None = None
+    parte_entera_del_numero_de_titulos: str | None = None
+    parte_entera_del_numero_de_titulos_2: str | None = None
+    titular_registral_de_la_cuenta_de_valo: str | None = None
+
+
+class Modelo296ProfileFacts(BaseModel):
+    """Declarant identity the Modelo 296 tipo-1 record declares.
+
+    Modelo 296 is the IRNR annual summary of retenciones e ingresos a cuenta on rentas
+    obtained by non-residents without permanent establishment (TRLIRNR art. 24, Orden
+    EHA/3290/2008 art. 6). Its first record identifies who is declaring, for which
+    ejercicio, and how many perceptores the file carries.
+
+    All twelve ``m296.dec.*`` keys were declared in the vocabulary and produced by nothing,
+    so every one of them rendered blank: the ejercicio at offset 5, the declarante NIF at
+    offset 9 and the razon social at offset 18 among them. A 296 emitted that way names
+    nobody.
+
+    Field names are the AEAT key tails verbatim, including two the source design truncated:
+    ``apellidos_y_nombre`` is *persona con quien relacionarse* (design ordinal 7, the
+    49-byte contact block AEAT splits into a 9-byte telefono and a 40-byte name), and ``n``
+    is ``N.I.F. DEL REPRESENTANTE LEGAL.`` (design ordinal 16, offset 391) -- the slug
+    stopped at the first period in the label. Renaming either would change a published
+    layout, so the name stays and the meaning is recorded here.
+
+    ``ejercicio`` restates a year the draft already knows. The structurally better home is
+    a ``draft`` field carrying ``ExportDraftAttribute.FILING_YEAR``, which cannot disagree
+    with the draft; that is a layout change and is not made here. Until it is, a snapshot
+    builder must populate this from the draft's own filing year rather than from an
+    independently entered value.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    #: Ejercicio -- design offset 5, length 4, four-digit year.
+    ejercicio: _FourDigitYear
+    #: NIF del declarante -- design offset 9, length 9.
+    nif_del_declarante: _NonBlankName
+    #: Apellidos y nombre o razon social del declarante -- design offset 18, length 40.
+    apellidos_y_nombre_o_razon_social_del: _NonBlankName
+    #: Tipo de soporte -- design offset 58, length 1, alfabetico.
+    tipo_de_soporte: _M296SupportType | None = None
+    #: Persona con quien relacionarse, telefono -- design offset 59, length 9.
+    telefono: _DigitString9 | None = None
+    #: Persona con quien relacionarse, apellidos y nombre -- design offset 68, length 40.
+    apellidos_y_nombre: _NonBlankName | None = None
+    #: Numero identificativo de la declaracion -- design offset 108, length 13.
+    numero_identificativo_de_la_declaracio: _AeatReceiptNumber | None = None
+    #: Declaracion complementaria o sustitutiva -- design offset 121, length 2.
+    declaracion_complementaria_o_sustituti: _M296AmendmentMark | None = None
+    #: Numero identificativo de la declaracion anterior -- design offset 123, length 13.
+    numero_identificativo_de_la_declaracio_2: _AeatReceiptNumber | None = None
+    #: Numero total de perceptores -- design offset 136, length 9.
+    #:
+    #: An operator-supplied count that the perceptor rows themselves determine. It is
+    #: optional here deliberately: once the perceptor record repeats its rows, the count is
+    #: derived from them, and a value stated here that disagrees with the rows is a defect
+    #: rather than a fact.
+    numero_total_de_perceptores: _DigitString9 | None = None
+    #: N.I.F. del representante legal -- design offset 391, length 9. See the class note on
+    #: why the key tail is ``n``.
+    n: _NonBlankName | None = None
+    #: Sello electronico -- design offset 488, length 13.
+    sello_electronico: str | None = None
+    #: One entry per payee. Empty emits no perceptor record at all, which is what AEAT
+    #: expects of a declaration with nothing to report; whether that absence is admissible
+    #: is the record's own required flag, checked by the renderer.
+    perceptor_rows: tuple[Modelo296PerceptorRow, ...] = ()
+    #: One entry per perceptor of the intereses hoja. Empty emits no row of this record at all.
+    perceptor_intereses_rows: tuple[Modelo296PerceptorInteresesRow, ...] = ()
+    #: One entry per pago a contribuyente. Empty emits no row of this record at all.
+    anexo_pago_rows: tuple[Modelo296AnexoPagoRow, ...] = ()
+    #: One entry per certificado de pago. Empty emits no row of this record at all.
+    anexo_certificado_rows: tuple[Modelo296AnexoCertificadoRow, ...] = ()
+
+
 class Modelo210ContribuyenteFacts(BaseModel):
     """Modelo 210 contribuyente facts, flat members named from the AEAT component vocabulary."""
 
@@ -486,6 +729,397 @@ class Modelo210ProfileFacts(BaseModel):
     renta: Modelo210RentaFacts | None = None
     representante: Modelo210RepresentanteFacts | None = None
     sin_ingreso_ni_devolucion: Modelo210SinIngresoNiDevolucionFacts | None = None
+
+class Modelo200AdministradorRow(BaseModel):
+    """One administrador row, projected into modelo 200's layout at slot 1..5."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    nif: str | None = None
+    forma_juridica: str | None = None
+    representante: str | None = None
+    apellidos_nombre_razon_social: str | None = None
+    domicilio_fiscal: str | None = None
+    codigo_provincia: str | None = None
+
+
+class Modelo200EntidadMenorDependienteRow(BaseModel):
+    """One entidad menor dependiente row, projected into modelo 200's layout at slot 1..10."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    nif: str | None = None
+    nombre_o_razon_social: str | None = None
+
+
+class Modelo200EntidadParticipadaRow(BaseModel):
+    """One entidad participada row, projected into modelo 200's layout at slot 1..3."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    nif: str | None = None
+    nombre_o_razon_social: str | None = None
+    codigo_provincia_pais: str | None = None
+    tipo_agrupacion_interes_economico_espanola: str | None = None
+    tipo_agrupacion_europea_interes_economico: str | None = None
+    tipo_union_temporal_empresas: str | None = None
+    tipo_colaboracion_extranjera_analoga: str | None = None
+    criterio_imputacion_fin_periodo: str | None = None
+    criterio_imputacion_siguiente_periodo: str | None = None
+    valoracion_participacion_inicio: str | None = None
+    valoracion_participacion_final: str | None = None
+    ingresos_financieros_participacion: str | None = None
+    resultado_contable_imputado: str | None = None
+    gastos_financieros_netos_imputados: str | None = None
+    reserva_capitalizacion_no_aplicada_imputada: str | None = None
+    base_imponible_imputada: str | None = None
+    deduccion_doble_imposicion_bases_imputadas: str | None = None
+    bonificacion_bases_imputadas: str | None = None
+    deduccion_activos_fijos_canarias: str | None = None
+    deduccion_idi_canarias: str | None = None
+    deduccion_produccion_espectaculos_canarias: str | None = None
+    deduccion_resto_inversion_canarias: str | None = None
+    deduccion_idi_bases_imputadas: str | None = None
+    deduccion_produccion_espectaculos_bases_imputadas: str | None = None
+    deduccion_resto_incentivar_actividades: str | None = None
+    deduccion_resto_no_mencionadas: str | None = None
+    retenciones_ingresos_a_cuenta_imputados: str | None = None
+    dividendos_ejercicios_anteriores: str | None = None
+    dividendos_ejercicios_posteriores: str | None = None
+
+
+class Modelo200EstablecimientoPermanenteRow(BaseModel):
+    """One establecimiento permanente row, projected into modelo 200's layout at slot 1..18."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    identificacion: str | None = None
+    pais_residencia_fiscal: str | None = None
+    volumen_operaciones: str | None = None
+    beneficio_o_perdida: str | None = None
+    suma_ajustes_resultado_contable: str | None = None
+    suma_deducciones_di_internacional_anteriores: str | None = None
+
+
+class Modelo200IncnGrupoSociedadRow(BaseModel):
+    """One incn grupo sociedad row, projected into modelo 200's layout at slot 1..12."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    nif_entidad_grupo: str | None = None
+    codigo_pais: str | None = None
+
+
+class Modelo200OperacionReestructuracionRow(BaseModel):
+    """One operacion reestructuracion row, projected into modelo 200's layout at slot 1..5."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    tipo_operacion: str | None = None
+    transmitente_nif: str | None = None
+    transmitente_denominacion_social: str | None = None
+    adquirente_nif: str | None = None
+    adquirente_denominacion_social: str | None = None
+    fecha_inscripcion_registro_mercantil: str | None = None
+    fecha_comunicacion_operacion: str | None = None
+    valor_acciones_entregadas: str | None = None
+    valor_acciones_recibidas: str | None = None
+    importe_rentas_no_integradas: str | None = None
+
+
+class Modelo200ParticipacionDirectaRow(BaseModel):
+    """One participacion directa row, projected into modelo 200's layout at slot 1..3."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    nif: str | None = None
+    nombre_o_razon_social: str | None = None
+    codigo_provincia_pais: str | None = None
+    porcentaje_participacion: str | None = None
+    valor_nominal_total: str | None = None
+    valor_en_libros: str | None = None
+    ingresos_por_dividendos: str | None = None
+    correccion_valor_perdidas_ganancias: str | None = None
+    reversion_perdidas_deterioro_valores: str | None = None
+    eliminacion_deterioro_contable: str | None = None
+    eliminacion_deterioro_valores_participacion: str | None = None
+    ajuste_valor_razonable: str | None = None
+    efecto_correccion_valorativa_base_imponible: str | None = None
+    saldo_correcciones_fiscales_pendientes: str | None = None
+    capital: str | None = None
+    reservas_y_otras_partidas_fondos_propios: str | None = None
+    otras_partidas_patrimonio_neto: str | None = None
+    resultado_ultimo_ejercicio: str | None = None
+
+
+class Modelo200ParticipacionSocioRow(BaseModel):
+    """One participacion socio row, projected into modelo 200's layout at slot 1..6."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    nif: str | None = None
+    representante: str | None = None
+    forma_juridica: str | None = None
+    apellidos_nombre_razon_social: str | None = None
+    codigo_provincia_pais: str | None = None
+    nominal: str | None = None
+    porcentaje_participacion: str | None = None
+
+
+class Modelo200ParticipeAieUteRow(BaseModel):
+    """One participe aie ute row, projected into modelo 200's layout at slot 1..10."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    nif: str | None = None
+    representante: str | None = None
+    forma_juridica: str | None = None
+    residencia: str | None = None
+    apellidos_nombre_razon_social: str | None = None
+    codigo_provincia_pais: str | None = None
+    base_imponible: str | None = None
+    porcentaje_participacion: str | None = None
+
+
+class Modelo200RepresentanteLegalRow(BaseModel):
+    """One representante legal row, projected into modelo 200's layout at slot 1..3."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    apellidos_y_nombre: str | None = None
+    nif: str | None = None
+    fecha_poder: str | None = None
+    notaria_otros: str | None = None
+
+
+class Modelo200SecretarioConsejoRow(BaseModel):
+    """One secretario consejo row, projected into modelo 200's layout at slot 1..1."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    apellidos_y_nombre: str | None = None
+    nif: str | None = None
+
+
+class Modelo200SocioSicavDisolucionRow(BaseModel):
+    """One socio sicav disolucion row, projected into modelo 200's layout at slot 1..5."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    nif_sociedad_disuelta: str | None = None
+    nif_iic_reinversion: str | None = None
+
+
+class Modelo200TransparenciaFiscalInternacionalRow(BaseModel):
+    """One transparencia fiscal internacional row, projected into modelo 200's layout at slot 1..6."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    nombre_o_razon_social: str | None = None
+    domicilio_social: str | None = None
+    clave_pais_territorio: str | None = None
+    importe_renta: str | None = None
+    administradores_linea_1: str | None = None
+    administradores_linea_2: str | None = None
+    administradores_linea_3: str | None = None
+    administradores_linea_4: str | None = None
+    administradores_linea_5: str | None = None
+
+
+class Modelo200ProjectionRows(BaseModel):
+    """The repeated party, holding and establishment rows modelo 200's layout projects.
+
+    Modelo 200's generated layout carries 578 projection-kind fields across fourteen
+    kinds, and ``_projection_plan_for_layout`` built a plan for M303 alone -- so every one
+    of them raised "requires a snapshot-owned render context" and the Impuesto sobre
+    Sociedades return could not export at all. It failed CLOSED, so no wrong bytes were
+    ever emitted, but it did not file.
+
+    Unlike modelo 296's perceptores, whose data already exists as
+    ``Withholding296Observation``, these rows are genuinely operator-supplied: the app
+    holds no administrador, representante or participada register anywhere else. So they
+    are declared here rather than projected from an existing substrate.
+
+    Every family defaults to empty. An absent family emits no record occurrence, which is
+    what AEAT expects of a page a filer has nothing to put on -- it is not the same as a
+    filer who has rows and supplied none, and only the caller knows which it is.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    administrador: tuple[Modelo200AdministradorRow, ...] = ()
+    entidad_menor_dependiente: tuple[Modelo200EntidadMenorDependienteRow, ...] = ()
+    entidad_participada: tuple[Modelo200EntidadParticipadaRow, ...] = ()
+    establecimiento_permanente: tuple[Modelo200EstablecimientoPermanenteRow, ...] = ()
+    incn_grupo_sociedad: tuple[Modelo200IncnGrupoSociedadRow, ...] = ()
+    operacion_reestructuracion: tuple[Modelo200OperacionReestructuracionRow, ...] = ()
+    participacion_directa: tuple[Modelo200ParticipacionDirectaRow, ...] = ()
+    participacion_socio: tuple[Modelo200ParticipacionSocioRow, ...] = ()
+    participe_aie_ute: tuple[Modelo200ParticipeAieUteRow, ...] = ()
+    representante_legal: tuple[Modelo200RepresentanteLegalRow, ...] = ()
+    secretario_consejo: tuple[Modelo200SecretarioConsejoRow, ...] = ()
+    socio_sicav_disolucion: tuple[Modelo200SocioSicavDisolucionRow, ...] = ()
+    transparencia_fiscal_internacional: tuple[Modelo200TransparenciaFiscalInternacionalRow, ...] = ()
+
+
+class Modelo200ProfileFacts(BaseModel):
+    """The header facts modelo 200's export layout cites as operator-supplied.
+
+    All 132 ``m200.*`` producer keys resolved to nothing, so every one of these fields
+    rendered blank on a filed Impuesto sobre Sociedades return.
+
+    Two groups inside them are worth naming, because they are not operator facts at all
+    and the categorisation belongs to the layout rather than to this type. SIX are
+    ``identificador_de_fin_de_registro*`` at length 12 -- the record terminator, envelope
+    mechanics. TWENTY-ONE are period and date components the snapshot's :class:`Period`
+    and the draft's filing year already determine. Both are declared here because the
+    layout cites them as header producers; correcting that belongs in the semantic map.
+
+    Six field names carry an ``apartado_`` prefix because AEAT numbers those apartados and
+    the key tail begins with a digit, which is not a legal Python identifier. The prefix
+    is added rather than the name changed, so the field still reads as the key it resolves.
+
+    Every field is optional and absent stays absent -- AEAT writes an empty alphanumeric
+    header field to blancos.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    #: The repeated rows modelo 200's layout projects; see Modelo200ProjectionRows.
+    projection_rows: Modelo200ProjectionRows = Modelo200ProjectionRows()
+    apartado_6_deduc_evitar_doble_imposicion_participacio: str | None = None
+    apartado_6_deduc_evitar_doble_imposicion_participacio_2: str | None = None
+    apartado_6_deduc_evitar_doble_imposicion_participacio_3: str | None = None
+    apartado_6_deduc_evitar_doble_imposicion_participacio_4: str | None = None
+    apartado_6_deduc_evitar_doble_imposicion_participacio_5: str | None = None
+    apartado_6_deduc_evitar_doble_imposicion_participacio_6: str | None = None
+    abono_compensacion_abono_por_conversion_de_a: str | None = None
+    abono_compensacion_compensacion_por_conversi: str | None = None
+    apellidos_y_nombre: str | None = None
+    b_2_suma_de_porcentajes_de_participacion_de: str | None = None
+    b_2_suma_de_porcentajes_de_participaciones_e: str | None = None
+    balance_0_no_consta_1_mod_normal_2_mod_abrev: str | None = None
+    codigo_cnae_2025_actividad_principal: str | None = None
+    codigo_pais_country_code: str | None = None
+    como_consecuencia_de_la_presentacion_de_la_a: str | None = None
+    cuenta_bancaria_banco_bank_name: str | None = None
+    cuenta_bancaria_ciudad_city: str | None = None
+    cuenta_bancaria_codigo_swift_bic: str | None = None
+    cuenta_bancaria_marca_sepa: str | None = None
+    cuenta_corriente_tributaria: str | None = None
+    datos_de_la_sociedad_matriz_ultima_nif: str | None = None
+    datos_de_la_sociedad_matriz_ultima_nombre_de: str | None = None
+    datos_de_la_sociedad_matriz_ultima_razon_soc: str | None = None
+    deduccion_resto_del_grupo: str | None = None
+    deduccion_resto_del_grupo_10: str | None = None
+    deduccion_resto_del_grupo_11: str | None = None
+    deduccion_resto_del_grupo_12: str | None = None
+    deduccion_resto_del_grupo_13: str | None = None
+    deduccion_resto_del_grupo_14: str | None = None
+    deduccion_resto_del_grupo_15: str | None = None
+    deduccion_resto_del_grupo_16: str | None = None
+    deduccion_resto_del_grupo_17: str | None = None
+    deduccion_resto_del_grupo_18: str | None = None
+    deduccion_resto_del_grupo_19: str | None = None
+    deduccion_resto_del_grupo_2: str | None = None
+    deduccion_resto_del_grupo_20: str | None = None
+    deduccion_resto_del_grupo_21: str | None = None
+    deduccion_resto_del_grupo_22: str | None = None
+    deduccion_resto_del_grupo_23: str | None = None
+    deduccion_resto_del_grupo_24: str | None = None
+    deduccion_resto_del_grupo_25: str | None = None
+    deduccion_resto_del_grupo_26: str | None = None
+    deduccion_resto_del_grupo_3: str | None = None
+    deduccion_resto_del_grupo_4: str | None = None
+    deduccion_resto_del_grupo_5: str | None = None
+    deduccion_resto_del_grupo_6: str | None = None
+    deduccion_resto_del_grupo_7: str | None = None
+    deduccion_resto_del_grupo_8: str | None = None
+    deduccion_resto_del_grupo_9: str | None = None
+    direccion_de_correo_electronico_para_inciden: str | None = None
+    direccion_del_banco_bank_address: str | None = None
+    ecpn_0_no_consta_1_mod_normal_2_mod_abreviad: str | None = None
+    ejercicio: str | None = None
+    entidad_cuyo_importe_neto_de_la_cifra_de_neg: str | None = None
+    entidad_sin_obligacion_de_identificar_el_tit: str | None = None
+    f_identificacion_del_titular_real_de_la_enti: str | None = None
+    fecha_de_nacimiento: str | None = None
+    identificacion_ejercicio: str | None = None
+    identificacion_tipo_de_ejercicio: str | None = None
+    identificador_de_fin_de_registro: str | None = None
+    identificador_de_fin_de_registro_2: str | None = None
+    identificador_de_fin_de_registro_3: str | None = None
+    identificador_de_fin_de_registro_4: str | None = None
+    identificador_de_fin_de_registro_5: str | None = None
+    identificador_de_fin_de_registro_6: str | None = None
+    importe_a_devolver: str | None = None
+    importe_a_ingresar: str | None = None
+    importe_neto_de_la_cifra_de_negocios_de_los: str | None = None
+    importe_neto_de_la_cifra_de_negocios_de_los_2: str | None = None
+    importe_neto_de_la_cifra_de_negocios_de_los_3: str | None = None
+    informacion_adicional_producciones_cinematog: str | None = None
+    informacion_adicional_producciones_cinematog_2: str | None = None
+    informacion_adicional_producciones_cinematog_3: str | None = None
+    informacion_adicional_producciones_cinematog_4: str | None = None
+    informacion_adicional_producciones_cinematog_5: str | None = None
+    informacion_adicional_producciones_cinematog_6: str | None = None
+    inoperatividad_del_orden_de_cumplimentacion: str | None = None
+    inversiones_en_producciones_cinematograficas: str | None = None
+    inversiones_en_producciones_cinematograficas_2: str | None = None
+    inversiones_en_producciones_cinematograficas_3: str | None = None
+    inversiones_en_producciones_cinematograficas_4: str | None = None
+    inversiones_en_producciones_cinematograficas_5: str | None = None
+    inversiones_en_producciones_cinematograficas_6: str | None = None
+    modalidad_de_ingreso_uno_de_los_siguientes_v: str | None = None
+    modelo_de_estados_contables_que_se_va_a_cump: str | None = None
+    n_i_f_de_la_sociedad_representante_dominante: str | None = None
+    nif_codigo_de_identificacion_extranjero: str | None = None
+    nif_en_el_pais_de_residencia_tin: str | None = None
+    no_identificacion_de_la_sociedad_dominante_e: str | None = None
+    no_residentes_mas_de_un_establecimiento_perm: str | None = None
+    nombre_y_apellidos_de_la_persona_de_contacto: str | None = None
+    numero_de_cuenta_iban: str | None = None
+    numero_de_cuenta_iban_2: str | None = None
+    numero_de_periodo_impositivo: str | None = None
+    pais_de_expedicion_del_documento_de_identifi: str | None = None
+    pais_de_residencia: str | None = None
+    pais_de_residencia_2: str | None = None
+    parte_de_la_base_imponible_del_periodo_impos: str | None = None
+    parte_de_la_base_imponible_del_periodo_impos_2: str | None = None
+    perdidas_y_ganancias_0_no_consta_1_mod_norma: str | None = None
+    periodo: str | None = None
+    periodo_impositivo: str | None = None
+    periodo_impositivo_ano_final: str | None = None
+    periodo_impositivo_ano_inicio: str | None = None
+    periodo_impositivo_dia_final: str | None = None
+    periodo_impositivo_dia_inicio: str | None = None
+    periodo_impositivo_fin_ano: str | None = None
+    periodo_impositivo_fin_dia: str | None = None
+    periodo_impositivo_fin_mes: str | None = None
+    periodo_impositivo_inicio_ano: str | None = None
+    periodo_impositivo_inicio_dia: str | None = None
+    periodo_impositivo_inicio_mes: str | None = None
+    periodo_impositivo_mes_final: str | None = None
+    periodo_impositivo_mes_inicio: str | None = None
+    presentacion_de_documentacion_previa_en_la_s: str | None = None
+    presentacion_de_documentacion_previa_en_la_s_2: str | None = None
+    presentacion_de_documentacion_previa_en_la_s_3: str | None = None
+    presentacion_de_documentacion_previa_en_la_s_4: str | None = None
+    presentacion_de_documentacion_previa_en_la_s_5: str | None = None
+    presentacion_de_documentacion_previa_en_la_s_6: str | None = None
+    presentacion_de_documentacion_previa_en_la_s_7: str | None = None
+    presentacion_de_documentacion_previa_en_la_s_8: str | None = None
+    realiza_actividades_agricolas_y_o_ganaderas: str | None = None
+    reg_entidades_navieras_en_funcion_del_tonela: str | None = None
+    renuncia_o_por_transferencia: str | None = None
+    resultado_a_ingresar_correspondiente_a_la_an: str | None = None
+    resultado_a_ingresar_correspondiente_a_la_an_2: str | None = None
+    resultado_cero: str | None = None
+    socimis_regimen_fiscal_de_entrada_salida_ren: str | None = None
+    tipo_de_declaracion_ver_nota: str | None = None
+    tipo_de_ejercicio: str | None = None
+    tipo_documento_identificativo: str | None = None
+
 
 class GeneralFilingProfileFacts(BaseModel):
     """Explicit absence of modelo-specific producer facts for a layout."""
@@ -721,8 +1355,10 @@ type FilingModelProfileFacts = (
     GeneralFilingProfileFacts
     | Modelo111ProfileFacts
     | Modelo202ProducerProfile
+    | Modelo200ProfileFacts
     | Modelo210ProfileFacts
     | Modelo222ProfileFacts
+    | Modelo296ProfileFacts
     | Modelo353ProfileFacts
     | ModeloIVAProfile
 )
@@ -777,10 +1413,19 @@ def _validate_snapshot_model_profile(snapshot: FilingProducerSnapshot) -> None:
     if snapshot.modelo is Modelo.M303:
         _validate_modelo_303_snapshot(snapshot)
         return
+    if snapshot.modelo is Modelo.M296:
+        _validate_modelo_296_snapshot(snapshot)
+        return
     if snapshot.modelo is Modelo.M353:
         _validate_modelo_353_snapshot(snapshot)
         return
     _validate_general_modelo_snapshot(snapshot)
+
+
+def _validate_modelo_296_snapshot(snapshot: FilingProducerSnapshot) -> None:
+    """Modelo 296 identifies a declarante and an ejercicio; it cannot be filed without them."""
+    if not isinstance(snapshot.model_profile, Modelo296ProfileFacts):
+        raise ValueError("modelo 296 requires Modelo296ProfileFacts")
 
 
 def _validate_modelo_353_snapshot(snapshot: FilingProducerSnapshot) -> None:

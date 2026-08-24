@@ -19,6 +19,7 @@ from ....core.resources import resources
 from ....domain.calculations.registry import RegistryModeloObservation
 from ....domain.modelos import (
     CalculationRevision,
+    CalculationRevisionAmendmentIdentity,
     CalculationRevisionAmendmentKind,
     CalculationRevisionState,
     ExternalEvidence,
@@ -104,6 +105,18 @@ def _revision(
     amendment_kind: CalculationRevisionAmendmentKind | None,
     baseline_filing_record_id: str | None = None,
 ) -> CalculationRevision:
+    # Built once and fed to BOTH the deriver and the revision: the id is content
+    # addressed over the amendment identity, so deriving without it produces an id
+    # the revision then rejects as not matching its own content.
+    amendment_identity = (
+        None
+        if amendment_kind is None
+        else CalculationRevisionAmendmentIdentity(
+            kind=amendment_kind,
+            amends_filing_record_id=baseline_filing_record_id,
+            m303_rectificativa_motive=None,
+        )
+    )
     return CalculationRevision(
         calculation_revision_id=derive_calculation_revision_id(
             work_unit_id=work_unit.work_unit_id,
@@ -112,13 +125,13 @@ def _revision(
             casilla_values={},
             filing_instance_evidence=None,
             source_provenance=(),
+            amendment_identity=amendment_identity,
         ),
         work_unit_id=work_unit.work_unit_id,
         state=CalculationRevisionState.BORRADOR,
         created_at=_WHEN,
         updated_at=_WHEN,
-        amendment_kind=amendment_kind,
-        amends_filing_record_id=baseline_filing_record_id,
+        amendment_identity=amendment_identity,
         amendment_reason="correct prior direct-debit election" if amendment_kind is not None else None,
         filing_instance_evidence=None,
         source_provenance=(),

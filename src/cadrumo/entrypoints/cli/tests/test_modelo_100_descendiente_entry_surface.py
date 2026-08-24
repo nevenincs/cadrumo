@@ -34,6 +34,7 @@ import pytest
 
 from ....domain.calculations.registry import RegistrySnapshot, resolve_parameter
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile import load_user_profile_schema
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
@@ -100,7 +101,10 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
     """Seed the minimum facts an M100 work-unit applicability guard requires."""
     record = UserProfileRecord(
         schema_id="cadrumo.user_profile",
-        schema_version=1,
+        # Sourced from the schema, never pinned: a literal here goes stale the
+        # moment the profile schema is revised, and the record then refuses to
+        # validate against its own canonical version.
+        schema_version=load_user_profile_schema().version,
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
@@ -235,11 +239,12 @@ def test_undeclared_descendientes_advisory_fires_when_0513_is_zero(
         and n.get("context", {}).get("source_kind") == "minimo_descendientes_undeclared"
     ]
     assert len(fired) == 1, f"expected exactly one undeclared-descendientes advisory; got notices={notices}"
-    # The entry command rides on `suggestion`, the notice channel's documented
-    # home for a next step, rather than inside the message prose. Asserted on
-    # that field specifically: it is what keeps the remedy out of the message's
-    # length budget, so a regression that folds it back in must fail here.
-    assert "descendiente add" in (fired[0]["suggestion"] or "")
+    # The entry command rides on the notice context's `remedy`, which is where
+    # non-command remediation is projected; Notice.action stays reserved for
+    # executable command identity. Asserted on that field specifically: it keeps
+    # the remedy out of the message's length budget, so a regression that folds
+    # it back into the prose must fail here.
+    assert "descendiente add" in (fired[0].get("context", {}).get("remedy") or "")
 
 
 def test_declared_but_ineligible_descendant_does_not_fire_the_advisory(
@@ -497,7 +502,7 @@ def test_an_annual_only_figure_in_the_turning_three_period_is_disclosed_not_sile
         if n.get("context", {}).get("source_kind") == "guarderia_spend_needs_monthly_detail"
     ]
     assert len(fired) == 1, f"the shape advisory must reach the operator; notices were {fired}"
-    assert "GASTOS_GUARDERIA_MENSUAL" in (fired[0]["suggestion"] or "")
+    assert "GASTOS_GUARDERIA_MENSUAL" in (fired[0].get("context", {}).get("remedy") or "")
 
 
 def test_the_manual_worked_guarderia_case_reaches_casilla_0613(
@@ -617,7 +622,7 @@ def test_declared_spend_without_the_mothers_months_is_disclosed_not_silent(
         if n.get("context", {}).get("source_kind") == "guarderia_madre_meses_undeclared"
     ]
     assert len(fired) == 1, f"the zero must be explained to the operator; notices were {fired}"
-    assert "MESES_TRABAJO" in (fired[0]["suggestion"] or "")
+    assert "MESES_TRABAJO" in (fired[0].get("context", {}).get("remedy") or "")
 
 
 def test_a_partial_overlap_takes_only_the_months_shared_end_to_end(

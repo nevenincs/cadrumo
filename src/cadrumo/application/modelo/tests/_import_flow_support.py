@@ -189,7 +189,7 @@ def _drive_import_persists_filing(repos: _Repos) -> _ImportOutcome:
     wu_repo, _, _, _, _ = repos
     work_unit = _seed_work_unit(wu_repo)
     _persist_matching_justificante(
-        "JUST-2026-303-Q1-OPERATOR1",
+        "JUST2026303Q1OPERATOR1",
         work_unit,
         captured_at=_T1,
     )
@@ -197,7 +197,7 @@ def _drive_import_persists_filing(repos: _Repos) -> _ImportOutcome:
         repos,
         work_unit,
         casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500"), _IMPORT_EXPENSE_CASILLA: Decimal("300")},
-        evidence_reference_id="JUST-2026-303-Q1-OPERATOR1",
+        evidence_reference_id="JUST2026303Q1OPERATOR1",
         expected_tax_id=_TAX_ID,
     )
     return _ImportOutcome(work_unit=work_unit, filing=filing)

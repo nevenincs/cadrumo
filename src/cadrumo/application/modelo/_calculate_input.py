@@ -915,8 +915,8 @@ def _maternidad_ambiguous_relacion_advisory(
             "deducción por maternidad under the unstated relación. The manual grants the mínimo but "
             "excludes the deducción for a grandchild/other consanguinidad descendant, or a minor "
             "under judicial guarda y custodia -- the stored fact cannot distinguish either from a "
-            "true hijo. Confirm this descendant is a hijo, or correct it with `aeat config profile "
-            "descendiente remove <index>` then `add`."
+            "true hijo. Confirm this descendant is a hijo, or restate its relación on the "
+            "descendiente record."
         ),
         casilla_id=casilla_id,
     )
@@ -961,8 +961,7 @@ def _maternidad_meses_withheld_advisory(
             "Art. 81.1 deducción por maternidad, which reaches a child under three OR one inside the "
             "adopción/acogimiento entry-date window. An over-three adopción/acogimiento with no entry "
             "date is withheld for a missing INSCRIPCION or ACOGIMIENTO, not a birth date. Restate the "
-            "row with `aeat config profile descendiente remove <index>` then `add`, or correct "
-            "cohabitation or rentas."
+            "row on the descendiente record, or correct cohabitation or rentas."
         ),
         casilla_id=casilla_id,
     )

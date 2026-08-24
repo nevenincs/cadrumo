@@ -18,6 +18,7 @@ import pytest
 from textual.widgets import Input
 
 from .....application.user_profile import (
+    login_profile,
     build_profile_overview,
     register_profile_with_credentials,
 )
@@ -44,17 +45,30 @@ _OPTIONAL_PATH = "identity.name"
 _MALFORMED_PATH = "auth.fecha_validez"
 
 
+def _ensure_logged_in() -> None:
+    """Unlock the registered profile so the capsule will serve its record.
+
+    Registration closes its own session and the custody capsule is the sole
+    profile authority, so every read or write door below needs an authenticated
+    session. Logging in derives the same DEK the capsule was sealed under.
+    """
+    login_profile(name=_LABEL, passphrase_callback=lambda: _PASSWORD)
+
+
 def _live_overview(label: str = _LABEL):
+    _ensure_logged_in()
     record = load_test_profile_record(require_active_bucket_id())
     return build_profile_overview(record, label=label)
 
 
 def _persist(path: str, value: str):
     """The production write door, so an edit here travels the real path."""
+    _ensure_logged_in()
     return persist_active_profile_field(path, value, label=_LABEL)
 
 
 def _stored() -> dict[str, object | None]:
+    _ensure_logged_in()
     reloaded = load_test_profile_record(require_active_bucket_id())
     return {fact.path: fact.value for fact in reloaded.facts}
 

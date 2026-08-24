@@ -23,7 +23,7 @@ class TestDeclaredPeriodTokensAutocomplete:
 
     def test_empty_modelo_returns_empty_tuple(self) -> None:
         """Empty and whitespace-only modelo strings return () without error."""
-        from .._modelo import _declared_period_tokens
+        from .._modelo_behavior_support import _declared_period_tokens
 
         assert _declared_period_tokens("") == ()
         assert _declared_period_tokens("   ") == ()
@@ -36,7 +36,7 @@ class TestDeclaredPeriodTokensAutocomplete:
         unknown modelos. The narrowed except arm catches it and returns (),
         matching the autocomplete contract.
         """
-        from .._modelo import _declared_period_tokens
+        from .._modelo_behavior_support import _declared_period_tokens
 
         # "XXXXXX" is guaranteed unregistered; the real authority raises
         # RegistryValidationError which is an CadrumoError subtype.
@@ -50,7 +50,7 @@ class TestDeclaredPeriodTokensAutocomplete:
         the authority resolves the definition, and the period set is returned.
         Modelo 303 is a known quarterly modelo; its tokens include quarterly markers.
         """
-        from .._modelo import _declared_period_tokens
+        from .._modelo_behavior_support import _declared_period_tokens
 
         result = _declared_period_tokens("303")
         # Modelo 303 is quarterly; at minimum the four quarterly tokens are present.
@@ -92,7 +92,7 @@ class TestDeclaredPeriodTokensAutocomplete:
         # dependencies.
         with caplog.at_level(logging.DEBUG, logger="cadrumo.entrypoints.cli._modelo"):
             # The unknown modelo exercises the CadrumoError arm — no DEBUG record.
-            from .._modelo import _declared_period_tokens
+            from .._modelo_behavior_support import _declared_period_tokens
 
             _declared_period_tokens("XXXXXX")
 
@@ -111,7 +111,7 @@ class TestDeclaredPeriodTokensAutocomplete:
         the function returns () rather than propagating the error to Click.
         """
         from ....core.errors import CadrumoError
-        from .._modelo import _declared_period_tokens
+        from .._modelo_behavior_support import _declared_period_tokens
 
         # Both the "totally unknown" and the "empty" paths return () silently.
         # The unknown modelo exercises the real CadrumoError arm.

@@ -39,6 +39,8 @@ is live coverage rather than a leftover.
 
 from __future__ import annotations
 
+import json
+
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -47,6 +49,7 @@ from click.testing import Result
 
 from ....core.i18n import tr
 from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
+from ....core.config import load_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.profile_storage_root_fixture import profile_storage_root_fixture
@@ -71,6 +74,46 @@ def _isolated_backend(profile_storage_root: Path) -> Path:
 
 def _invoke_config(args: Sequence[str]) -> Result:
     return invoke_cached_cli(("config", *args))
+
+
+def _dev_passphrase() -> str:
+    """The secret the seeded custody envelopes were created with."""
+    return load_settings().cadrumo_dev_test_database_password.get_secret_value()
+
+
+def _invoke_profile_with_secret(args: Sequence[str]) -> Result:
+    """Run a `config profile` verb that mints custody, over the secrets channel.
+
+    Creating a profile derives a custody envelope, so the verb needs the
+    operator passphrase. A test runner is not a TTY and the secret is
+    resolvable from neither settings nor the environment, so without this the
+    verb refuses for want of a channel and never reaches the behaviour under
+    test.
+    """
+    return invoke_cached_cli(
+        ("config", "profile", *args, "--secrets-stdin"),
+        input=json.dumps(
+            # `create` mints custody rather than opening it, so it requires the
+            # confirmation field too and refuses a payload carrying only one.
+            {"passphrase": _dev_passphrase(), "passphrase_confirmation": _dev_passphrase()},
+        ),
+    )
+
+
+def _login(name: str) -> Result:
+    """Unlock ``name`` over the only channel ``config login`` still accepts.
+
+    The passphrase is not resolvable from settings or the environment, and a
+    test runner is not a TTY, so the verb refuses outright unless the secret
+    arrives on the bounded strict-JSON channel. The value is the one the seeded
+    custody envelope was created with, or it would not open.
+    """
+    return invoke_cached_cli(
+        ("config", "login", name, "--secrets-stdin"),
+        input=json.dumps(
+            {"passphrase": load_settings().cadrumo_dev_test_database_password.get_secret_value()},
+        ),
+    )
 
 
 def _invoke_profile(args: Sequence[str]) -> Result:
@@ -144,15 +187,19 @@ def test_registering_a_second_profile_uses_its_own_identity_while_the_first_is_a
 
 
 def test_config_login_activates_existing_profile() -> None:
-    seed("operator")
-    seed("spouse")
-    result = _invoke_config(("login", "operator"))
+    # Registered through the real credential door, not ``seed``: that helper
+    # provisions a raw session key rather than a passphrase-backed custody
+    # envelope, so there is no operator passphrase for ``config login`` to
+    # accept and the verb can only ever refuse.
+    register_cli_profile(label="operator")
+    register_cli_profile(label="spouse")
+    result = _login("operator")
     assert result.exit_code == 0, result.output
     assert "active_profile\toperator" in result.output
 
 
 def test_config_login_refuses_unknown_profile() -> None:
-    result = _invoke_config(("login", "ghost"))
+    result = _login("ghost")
     assert result.exit_code != 0
 
 
@@ -173,7 +220,7 @@ def test_config_profile_create_refuses_existing_profile() -> None:
     seed("operator")
 
     # Invoke through the root CLI so the error boundary renders CadrumoError to output.
-    result = _invoke_profile(
+    result = _invoke_profile_with_secret(
         (
             "create",
             "operator",
@@ -191,7 +238,11 @@ def test_config_profile_create_refuses_existing_profile() -> None:
     )
 
     assert result.exit_code != 0
-    assert "already exists" in result.output
+    # Asserted on the profile the refusal names rather than on an English
+    # phrase: the envelope is localised, so pinning "already exists" pins the
+    # catalogue this suite happens to render in.
+    assert "operator" in result.output
+    assert "login" in result.output
 
 
 def test_config_profile_edit_refuses_missing_profile_without_creating_bucket() -> None:
@@ -230,10 +281,13 @@ def test_config_login_emits_profile_activated_event() -> None:
     from ....application.workflow import read_profile_bucket
     from ....domain.buckets import BucketEventType
 
-    seed("operator")
+    # Registered through the real credential door: ``seed`` provisions a raw
+    # session key, not a passphrase-backed custody envelope, so ``config login``
+    # has no operator passphrase to accept.
+    register_cli_profile(label="operator")
     pointer = read_profile_bucket("operator")
     assert pointer is not None
-    result = _invoke_config(("login", "operator"))
+    result = _login("operator")
     assert result.exit_code == 0, result.output
 
     # The bucket-event-history catalogue is encrypted; reading it requires an
@@ -251,7 +305,10 @@ def test_config_login_emits_profile_activated_event() -> None:
 
 
 def test_config_profile_show_emits_active_profile_facts() -> None:
-    seed("operator", tax_id="00000000T")
+    # Registered and logged in rather than seeded: `seed` opens a session that
+    # closes with its context, so the verb runs with no active profile.
+    register_cli_profile(label="operator", facts={"identity.tax_id": "00000000T"})
+    assert _login("operator").exit_code == 0
     result = _invoke_profile(("show",))
     assert result.exit_code == 0, result.output
     assert f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
@@ -264,7 +321,10 @@ def test_config_profile_show_emits_active_profile_facts() -> None:
 
 
 def test_config_profile_show_named_profile_includes_canonical_facts() -> None:
-    seed("operator", tax_id="00000001R")
+    # Registered and logged in: `seed` opens a session that closes with its
+    # context, leaving the verb with no active profile.
+    register_cli_profile(label="operator", facts={"identity.tax_id": "00000001R"})
+    assert _login("operator").exit_code == 0
     seed("spouse", tax_id="00000000T")
     result = _invoke_profile(("show", "spouse"))
     assert result.exit_code == 0, result.output
@@ -286,7 +346,9 @@ def test_config_profile_delete_requires_yes() -> None:
 
 
 def test_config_profile_delete_tombstones_with_yes() -> None:
-    seed("operator")
+    # Registered but deliberately NOT activated: deleting the ACTIVE profile is
+    # refused, so a login here would block the verb under test.
+    register_cli_profile(label="operator")
     result = _invoke_profile_app(("delete", "operator", "--yes"))
     assert result.exit_code == 0, result.output
     assert "status\ttombstoned" in result.output
@@ -302,7 +364,9 @@ def test_config_profile_list_excludes_a_tombstoned_profile() -> None:
     listing, indistinguishable from a live one.
     """
 
-    seed("operator")
+    # Registered but deliberately NOT activated: deleting the ACTIVE profile is
+    # refused, so a login here would block the verb under test.
+    register_cli_profile(label="operator")
     assert _invoke_profile_app(("delete", "operator", "--yes")).exit_code == 0
     result = _invoke_profile(("list",))
     assert result.exit_code == 0, result.output
@@ -319,9 +383,12 @@ def test_config_login_refuses_a_tombstoned_profile() -> None:
 
     from ....core import resolve_active_bucket_id
 
-    seed("operator")
+    # Registered through the real credential door: ``seed`` provisions a raw
+    # session key, not a passphrase-backed custody envelope, so ``config login``
+    # has no operator passphrase to accept.
+    register_cli_profile(label="operator")
     assert _invoke_profile_app(("delete", "operator", "--yes")).exit_code == 0
-    result = _invoke_config(("login", "operator"))
+    result = _login("operator")
     assert result.exit_code != 0, result.output
     # The tombstoned profile was not made active.
     assert resolve_active_bucket_id() is None
@@ -334,7 +401,9 @@ def test_config_profile_show_reports_a_tombstoned_profile_as_tombstoned() -> Non
     ``record_validity valid issues=0`` directly above ``status tombstoned``.
     """
 
-    seed("operator")
+    # Registered but deliberately NOT activated: deleting the ACTIVE profile is
+    # refused, so a login here would block the verb under test.
+    register_cli_profile(label="operator")
     assert _invoke_profile_app(("delete", "operator", "--yes")).exit_code == 0
     result = _invoke_profile(("show", "operator"))
     assert result.exit_code == 0, result.output
@@ -348,7 +417,9 @@ def test_config_profile_show_inspects_a_tombstoned_profile_by_label_and_uuid() -
 
     from ....application.workflow import read_profile_bucket
 
-    seed("operator")
+    # Registered but deliberately NOT activated: deleting the ACTIVE profile is
+    # refused, so a login here would block the verb under test.
+    register_cli_profile(label="operator")
     pointer = read_profile_bucket("operator")
     assert pointer is not None
     tombstoned_uuid = pointer.bucket_id
@@ -365,7 +436,10 @@ def test_config_profile_show_inspects_a_tombstoned_profile_by_label_and_uuid() -
 
 
 def test_config_profile_show_runs_validation_inline() -> None:
-    seed("operator")
+    # Registered and logged in: `seed` opens a session that closes with its
+    # context, leaving the verb with no active profile.
+    register_cli_profile(label="operator")
+    assert _login("operator").exit_code == 0
     result = _invoke_profile(("show",))
     assert result.exit_code == 0, result.output
     assert f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output

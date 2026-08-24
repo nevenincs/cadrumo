@@ -441,7 +441,7 @@ def test_installed_console_honors_isolated_storage_env(tmp_path: Path) -> None:
                 "contact.postcode": "28015",
                 "censo.activity_start_date": "2025-01-01",
                 "tax_residence.ccaa": "madrid",
-                "iva.regime": "general",
+                "iva.regime": "GENERAL",
                 "irpf.estimation_regime": "directa_simplificada",
             },
         )

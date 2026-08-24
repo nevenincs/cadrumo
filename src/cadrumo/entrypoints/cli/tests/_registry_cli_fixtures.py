@@ -26,6 +26,7 @@ import pytest
 from ....adapters.persistence.storage.master_key import BucketSession, activate_session
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core.config import override_settings
+from ....tests.user_profile import register_minimal_profile
 from ....tests.secure_sql import dev_test_database_password, isolated_runtime_profile
 from ._registry_cli_support import _BUCKET_ID, _clear_cli_env, _set_cli_env
 
@@ -64,6 +65,10 @@ def _isolated_secure_backend(tmp_path: Path) -> Iterator[None]:
         activate_session(_session()),
     ):
         dispose_engine(settings)
+        # A bucket exists only once its profile capsule is published: opening an
+        # engine against a bare session now refuses rather than materialising a
+        # directory for a profile that was never registered.
+        register_minimal_profile(profile_id=_BUCKET_ID)
         try:
             yield
         finally:

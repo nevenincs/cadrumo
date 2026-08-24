@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile import load_user_profile_schema, ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
@@ -57,7 +57,10 @@ def _seed_profile(runtime_profile: TestRuntimeProfile) -> None:
 
     record = UserProfileRecord(
         schema_id="cadrumo.user_profile",
-        schema_version=1,
+        # Sourced from the schema, never pinned: a literal goes stale the moment
+        # the profile schema is revised, and the record then refuses to validate
+        # against its own canonical version.
+        schema_version=load_user_profile_schema().version,
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(

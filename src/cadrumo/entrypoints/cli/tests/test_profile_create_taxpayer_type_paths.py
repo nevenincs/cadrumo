@@ -88,6 +88,11 @@ _M303_IVA_FACT_ARGS = (
 )
 
 
+def _dev_secret() -> str:
+    """The secret the isolated backend seeds custody envelopes with."""
+    from ....core.config import load_settings
+
+    return load_settings().cadrumo_dev_test_database_password.get_secret_value()
 def _registered_profile_exists(name: str) -> bool:
     from ....application.workflow import read_profile_bucket
 
@@ -293,6 +298,16 @@ def test_profile_create_foral_refusal_renders_localized_error_document_in_json_m
             "traductora",
             "--tax-residence-ccaa",
             "pais_vasco",
+            "--secrets-stdin",
+        ),
+        # The foral refusal this case asserts lives BEHIND the credential channel:
+        # create mints custody, so without the passphrase and its confirmation the
+        # verb refuses for the channel instead and never evaluates the regime.
+        input=json.dumps(
+            {
+                "passphrase": _dev_secret(),
+                "passphrase_confirmation": _dev_secret(),
+            }
         ),
     )
 

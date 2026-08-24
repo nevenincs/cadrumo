@@ -20,6 +20,7 @@ from textual.widget import Widget
 from textual.widgets import DataTable, Input, Static
 
 from .....application.user_profile import (
+    login_profile,
     build_profile_overview,
     register_profile_with_credentials,
 )
@@ -42,10 +43,14 @@ _EDITED_PATH = "identity.name"
 
 
 def _live_overview(label: str = "Manager Subject"):
-    """Build the overview from whatever the store currently holds."""
+    # Registration closes its own session, so a freshly registered profile is
+    # LOCKED and the capsule -- the sole profile authority -- will not yield its
+    # record. Logging in with the passphrase derives the SAME DEK the capsule was
+    # sealed under; synthesising a session instead gives a different key and the
+    # capsule refuses it as a row addressed to another object key.
+    login_profile(name=label, passphrase_callback=lambda: _PASSWORD)
     record = load_test_profile_record(require_active_bucket_id())
     return build_profile_overview(record, label=label)
-
 
 def _persist(path: str, value: str):
     """The production write door, so an edit here travels the real path."""

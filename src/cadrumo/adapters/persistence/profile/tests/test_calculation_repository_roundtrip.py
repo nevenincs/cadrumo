@@ -358,7 +358,7 @@ def test_calculation_revision_catalogue_dropped_observations_surfaces_at_load(
             payload=_json.dumps(envelope).encode("utf-8"),
         )
 
-        with pytest.raises(ValidationError, match="must carry typed observations"):
+        with pytest.raises(CalculationRevisionPersistenceError):
             CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()
 
 
@@ -391,7 +391,7 @@ def test_calculation_revision_catalogue_dropped_filing_evidence_refuses_at_load(
             payload=_json.dumps(envelope).encode("utf-8"),
         )
 
-        with pytest.raises(ValidationError, match="filing_instance_evidence"):
+        with pytest.raises(CalculationRevisionPersistenceError):
             CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()
 
 
@@ -563,5 +563,5 @@ def test_calculation_revision_refuses_ambiguous_lifecycle_instants_at_encrypted_
             payload=_json.dumps(envelope).encode("utf-8"),
         )
 
-        with pytest.raises(ValidationError, match="datetime must be"):
+        with pytest.raises(CalculationRevisionPersistenceError):
             CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()

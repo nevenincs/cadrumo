@@ -32,6 +32,7 @@ from textual.widgets import Button, DataTable, Input, Static
 
 from .....application.flows import CopyRef, FlowDefinition, FlowPage, FlowSection
 from .....application.user_profile import (
+    login_profile,
     build_profile_overview,
     register_profile_with_credentials,
 )
@@ -151,6 +152,11 @@ def _manager(tmp_path: Path) -> Iterator[ProfileManagerApp]:
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(label=_VISUAL_LABEL, passphrase=_VISUAL_PASSWORD)
+        # Registration closes its own session, leaving the profile LOCKED. The
+        # custody capsule is the sole profile authority, so the overview builder
+        # and the write door below both need an authenticated one; logging in
+        # derives the same DEK the capsule was sealed under.
+        login_profile(name=_VISUAL_LABEL, passphrase_callback=lambda: _VISUAL_PASSWORD)
         yield ProfileManagerApp(
             build_active_profile_overview(),
             persist=persist_active_profile_field,
@@ -250,6 +256,10 @@ def _manager_populated(tmp_path: Path) -> Iterator[ProfileManagerApp]:
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(label=_VISUAL_LABEL, passphrase=_VISUAL_PASSWORD)
+        # Same locked-capsule reason as the plain manager fixture: seeding facts
+        # and building the overview both go through the capsule, which serves
+        # neither without an authenticated session.
+        login_profile(name=_VISUAL_LABEL, passphrase_callback=lambda: _VISUAL_PASSWORD)
         schema = load_user_profile_schema()
         section = next(item for item in schema.sections if item.key == "activities")
         facts = section_row_facts(
@@ -642,11 +652,17 @@ async def test_a_focused_button_is_painted_differently_from_an_unfocused_one(
             target, other = buttons[0], buttons[1]
             app.screen.set_focus(other)
             await pilot.pause()
-            unfocused = app.screen.get_style_at(target.region.x + 1, target.region.y + 1)
+            # Sample INSIDE the button. Buttons are one cell tall in this theme, so a
+            # y + 1 probe reads the row BELOW the widget, which is unaffected by focus
+            # and therefore identical in both states -- the assertion below would then
+            # fail no matter how visible focus actually is.
+            probe_x = target.region.x + min(1, max(target.region.width - 1, 0))
+            probe_y = target.region.y + target.region.height // 2
+            unfocused = app.screen.get_style_at(probe_x, probe_y)
 
             app.screen.set_focus(target)
             await pilot.pause()
-            focused = app.screen.get_style_at(target.region.x + 1, target.region.y + 1)
+            focused = app.screen.get_style_at(probe_x, probe_y)
 
             assert (focused.bgcolor, focused.color, focused.bold) != (
                 unfocused.bgcolor,

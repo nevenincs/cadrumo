@@ -8,6 +8,7 @@ order = 4
 encoding = 'latin-1'
 line_ending = 'crlf'
 required = true
+repeat = 'projection_rows'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f001'
@@ -47,8 +48,7 @@ source_refs = ['aeat-dr-296-2024']
 id = 'm296-2024.anexo-b-certificados.f003'
 offset = 5
 length = 4
-kind = 'header'
-producer_key = 'm296.anb.ejercicio'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -61,12 +61,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_certificado'
+field = 'ejercicio'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f004'
 offset = 9
 length = 9
-kind = 'header'
-producer_key = 'm296.anb.nif_del_declarante'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -77,13 +80,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_certificado'
+field = 'nif_del_declarante'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f005'
 offset = 18
 length = 9
-kind = 'header'
-producer_key = 'm296.anb.nif_del_perceptor'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -94,13 +100,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_certificado'
+field = 'nif_del_perceptor'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f006'
 offset = 27
 length = 9
-kind = 'header'
-producer_key = 'm296.anb.nif_del_representante_legal'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -111,13 +120,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_certificado'
+field = 'nif_del_representante_legal'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f007'
 offset = 36
 length = 1
-kind = 'header'
-producer_key = 'm296.anb.f_j'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -128,13 +140,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_certificado'
+field = 'f_j'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f008'
 offset = 37
 length = 40
-kind = 'header'
-producer_key = 'm296.anb.apellidos_y_nombre_razon_social_o_deno'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -145,13 +160,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_certificado'
+field = 'apellidos_y_nombre_razon_social_o_deno'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f009'
 offset = 77
 length = 8
-kind = 'header'
-producer_key = 'm296.anb.identificador_de_registro_o_numero_de'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -162,13 +180,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_certificado'
+field = 'identificador_de_registro_o_numero_de'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f010'
 offset = 85
 length = 40
-kind = 'header'
-producer_key = 'm296.anb.apellidos_y_nombre_razon_social_o_deno_2'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -179,13 +200,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_certificado'
+field = 'apellidos_y_nombre_razon_social_o_deno_2'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f011'
 offset = 125
 length = 12
-kind = 'header'
-producer_key = 'm296.anb.codigo_isin_del_certificado'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -196,13 +220,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_certificado'
+field = 'codigo_isin_del_certificado'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f012'
 offset = 137
 length = 20
-kind = 'header'
-producer_key = 'm296.anb.codigo_cuenta_valores_del_certificado'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -213,13 +240,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_certificado'
+field = 'codigo_cuenta_valores_del_certificado'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f013'
 offset = 157
 length = 20
-kind = 'header'
-producer_key = 'm296.anb.codigo_lei_del_titular_registral'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -230,13 +260,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_certificado'
+field = 'codigo_lei_del_titular_registral'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f014'
 offset = 177
 length = 40
-kind = 'header'
-producer_key = 'm296.anb.titular_registral_de_la_cuenta_de_valo'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -248,12 +281,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_certificado'
+field = 'titular_registral_de_la_cuenta_de_valo'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f015'
 offset = 217
 length = 11
-kind = 'header'
-producer_key = 'm296.anb.parte_entera_del_numero_de_titulos'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -265,13 +301,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_certificado'
+field = 'parte_entera_del_numero_de_titulos'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f016'
 offset = 228
 length = 6
-kind = 'header'
-producer_key = 'm296.anb.parte_decimal_del_numero_de_titulos'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -284,12 +323,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_certificado'
+field = 'parte_decimal_del_numero_de_titulos'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f017'
 offset = 234
 length = 11
-kind = 'header'
-producer_key = 'm296.anb.parte_entera_del_numero_de_titulos_2'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -302,12 +344,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_certificado'
+field = 'parte_entera_del_numero_de_titulos_2'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f018'
 offset = 245
 length = 6
-kind = 'header'
-producer_key = 'm296.anb.parte_decimal_del_numero_de_titulos_2'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -320,12 +365,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_certificado'
+field = 'parte_decimal_del_numero_de_titulos_2'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f019'
 offset = 251
 length = 8
-kind = 'header'
-producer_key = 'm296.anb.fecha_de_pago'
+kind = 'projection'
 data_type = 'date'
 required = false
 padding = 'none'
@@ -339,12 +387,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_certificado'
+field = 'fecha_de_pago'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f020'
 offset = 259
 length = 11
-kind = 'header'
-producer_key = 'm296.anb.entero'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -356,13 +407,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_certificado'
+field = 'entero'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f021'
 offset = 270
 length = 2
-kind = 'header'
-producer_key = 'm296.anb.decimal'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -374,13 +428,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_certificado'
+field = 'decimal'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f022'
 offset = 272
 length = 11
-kind = 'header'
-producer_key = 'm296.anb.entero_2'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -392,13 +449,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_certificado'
+field = 'entero_2'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f023'
 offset = 283
 length = 2
-kind = 'header'
-producer_key = 'm296.anb.decimal_2'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -411,12 +471,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_certificado'
+field = 'decimal_2'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f024'
 offset = 285
 length = 2
-kind = 'header'
-producer_key = 'm296.anb.entero_3'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -429,12 +492,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_certificado'
+field = 'entero_3'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f025'
 offset = 287
 length = 2
-kind = 'header'
-producer_key = 'm296.anb.decimal_3'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -447,12 +513,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_certificado'
+field = 'decimal_3'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f026'
 offset = 289
 length = 13
-kind = 'header'
-producer_key = 'm296.anb.numero_de_justificante_del_modelo_210'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'none'
@@ -465,12 +534,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_certificado'
+field = 'numero_de_justificante_del_modelo_210'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f027'
 offset = 302
 length = 8
-kind = 'header'
-producer_key = 'm296.anb.fecha_de_presentacion_del_modelo_210'
+kind = 'projection'
 data_type = 'date'
 required = false
 padding = 'none'
@@ -483,6 +555,10 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_certificado'
+field = 'fecha_de_presentacion_del_modelo_210'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-b-certificados.f028'

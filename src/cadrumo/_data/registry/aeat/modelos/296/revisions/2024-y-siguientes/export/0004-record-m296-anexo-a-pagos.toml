@@ -8,6 +8,7 @@ order = 3
 encoding = 'latin-1'
 line_ending = 'crlf'
 required = true
+repeat = 'projection_rows'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-a-pagos.f001'
@@ -47,8 +48,7 @@ source_refs = ['aeat-dr-296-2024']
 id = 'm296-2024.anexo-a-pagos.f003'
 offset = 5
 length = 4
-kind = 'header'
-producer_key = 'm296.ana.ejercicio'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -61,12 +61,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_pago'
+field = 'ejercicio'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-a-pagos.f004'
 offset = 9
 length = 9
-kind = 'header'
-producer_key = 'm296.ana.nif_del_declarante'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -77,13 +80,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_pago'
+field = 'nif_del_declarante'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-a-pagos.f005'
 offset = 18
 length = 9
-kind = 'header'
-producer_key = 'm296.ana.nif_del_perceptor'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -94,13 +100,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_pago'
+field = 'nif_del_perceptor'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-a-pagos.f006'
 offset = 27
 length = 9
-kind = 'header'
-producer_key = 'm296.ana.nif_del_representante_legal'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -111,13 +120,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_pago'
+field = 'nif_del_representante_legal'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-a-pagos.f007'
 offset = 36
 length = 1
-kind = 'header'
-producer_key = 'm296.ana.f_j'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -128,13 +140,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_pago'
+field = 'f_j'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-a-pagos.f008'
 offset = 37
 length = 40
-kind = 'header'
-producer_key = 'm296.ana.apellidos_y_nombre_razon_social_o_deno'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -145,13 +160,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_pago'
+field = 'apellidos_y_nombre_razon_social_o_deno'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-a-pagos.f009'
 offset = 77
 length = 8
-kind = 'header'
-producer_key = 'm296.ana.identificador_de_registro_o_numero_de'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -162,13 +180,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_pago'
+field = 'identificador_de_registro_o_numero_de'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-a-pagos.f010'
 offset = 85
 length = 12
-kind = 'header'
-producer_key = 'm296.ana.codigo_isin'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -180,12 +201,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_pago'
+field = 'codigo_isin'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-a-pagos.f011'
 offset = 97
 length = 8
-kind = 'header'
-producer_key = 'm296.ana.fecha_de_devengo'
+kind = 'projection'
 data_type = 'date'
 required = false
 padding = 'none'
@@ -199,12 +223,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_pago'
+field = 'fecha_de_devengo'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-a-pagos.f012'
 offset = 105
 length = 1
-kind = 'header'
-producer_key = 'm296.ana.clave_de_personalidad_del_contribuyent'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -215,13 +242,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_pago'
+field = 'clave_de_personalidad_del_contribuyent'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-a-pagos.f013'
 offset = 106
 length = 9
-kind = 'header'
-producer_key = 'm296.ana.nif_del_contribuyente'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -232,13 +262,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_pago'
+field = 'nif_del_contribuyente'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-a-pagos.f014'
 offset = 115
 length = 20
-kind = 'header'
-producer_key = 'm296.ana.codigo_lei_del_contribuyente'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -249,13 +282,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_pago'
+field = 'codigo_lei_del_contribuyente'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-a-pagos.f015'
 offset = 135
 length = 40
-kind = 'header'
-producer_key = 'm296.ana.apellidos_y_nombre_razon_social_o_deno_2'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -267,12 +303,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_pago'
+field = 'apellidos_y_nombre_razon_social_o_deno_2'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-a-pagos.f016'
 offset = 175
 length = 13
-kind = 'header'
-producer_key = 'm296.ana.importe_del_pago_al_contribuyente'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -285,12 +324,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_pago'
+field = 'importe_del_pago_al_contribuyente'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-a-pagos.f017'
 offset = 188
 length = 4
-kind = 'header'
-producer_key = 'm296.ana.porcentaje_de_retencion'
+kind = 'projection'
 data_type = 'decimal'
 required = false
 padding = 'left_zero'
@@ -304,12 +346,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_pago'
+field = 'porcentaje_de_retencion'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-a-pagos.f018'
 offset = 192
 length = 13
-kind = 'header'
-producer_key = 'm296.ana.retenciones'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -322,12 +367,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_pago'
+field = 'retenciones'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-a-pagos.f019'
 offset = 205
 length = 212
-kind = 'header'
-producer_key = 'm296.ana.direccion_del_contribuyente'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -339,12 +387,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_pago'
+field = 'direccion_del_contribuyente'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-a-pagos.f020'
 offset = 417
 length = 13
-kind = 'header'
-producer_key = 'm296.ana.numero_de_justificante_del_modelo_210'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'none'
@@ -356,6 +407,10 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_pago'
+field = 'numero_de_justificante_del_modelo_210'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-a-pagos.f021'
@@ -377,8 +432,7 @@ source_refs = ['aeat-dr-296-2024']
 id = 'm296-2024.anexo-a-pagos.f022'
 offset = 433
 length = 20
-kind = 'header'
-producer_key = 'm296.ana.nif_en_el_pais_de_residencia_fiscal_de'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -390,12 +444,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_pago'
+field = 'nif_en_el_pais_de_residencia_fiscal_de'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-a-pagos.f023'
 offset = 453
 length = 8
-kind = 'header'
-producer_key = 'm296.ana.fecha_de_nacimiento_del_contribuyente'
+kind = 'projection'
 data_type = 'date'
 required = false
 padding = 'none'
@@ -409,12 +466,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_pago'
+field = 'fecha_de_nacimiento_del_contribuyente'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-a-pagos.f024'
 offset = 461
 length = 35
-kind = 'header'
-producer_key = 'm296.ana.ciudad'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -427,12 +487,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_pago'
+field = 'ciudad'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-a-pagos.f025'
 offset = 496
 length = 2
-kind = 'header'
-producer_key = 'm296.ana.codigo_pais'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'none'
@@ -445,12 +508,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_pago'
+field = 'codigo_pais'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-a-pagos.f026'
 offset = 498
 length = 2
-kind = 'header'
-producer_key = 'm296.ana.pais_o_territorio_de_residencia_fiscal'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -461,6 +527,10 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_anexo_pago'
+field = 'pais_o_territorio_de_residencia_fiscal'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.anexo-a-pagos.f027'

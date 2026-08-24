@@ -335,7 +335,7 @@ class TestFailClosedRefusals:
         document = json.loads(json_text)
         action = document["error"]["action"]
         assert document["active_profile"] == _LABEL
-        assert action["action"]["action_id"] == "operator.profile.login"
+        assert action["action"]["action"]["action_id"] == "operator.profile.login"
         assert action["evidence"][0]["values"]["profile_name"] == _LABEL
         assert action["argument_bindings"] == [
             {

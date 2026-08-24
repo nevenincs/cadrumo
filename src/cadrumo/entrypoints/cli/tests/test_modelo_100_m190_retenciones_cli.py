@@ -12,7 +12,7 @@ import pytest
 from ....application.calculations import CalculationObservationRepository
 from ....application.modelo import APP_FILING_SOURCE_KIND
 from ....domain.calculations.registry import RegistryModeloObservation
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile import load_user_profile_schema, ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
@@ -39,7 +39,10 @@ def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 def _seed_m100_2025_profile(runtime_profile: TestRuntimeProfile) -> None:
     record = UserProfileRecord(
         schema_id="cadrumo.user_profile",
-        schema_version=1,
+        # Sourced from the schema, never pinned: a literal goes stale the moment
+        # the profile schema is revised, and the record then refuses to validate
+        # against its own canonical version.
+        schema_version=load_user_profile_schema().version,
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(

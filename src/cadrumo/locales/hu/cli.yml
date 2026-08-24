@@ -2183,7 +2183,9 @@ cli:
         help: Leszármazottak megadása a LIRPF 58/61. cikk szerinti leszármazotti minimumhoz.
         index_out_of_range: A(z) %{index} index tartományon kívül esik; a profilon
           %{total} leszármazott van.
-        invalid_flag: A --descendiente értéke érvénytelen.
+        invalid_flag: A --descendiente értéke érvénytelen. Minden sornak tartalmaznia
+          kell a NACIMIENTO=YYYY-MM-DD mezőt; a többi kulcs, például RELACION, DISCAPACIDAD
+          vagy CONVIVENCIA, opcionális.
         list_help: Az aktív profilon megadott leszármazottak listázása.
         remove_help: Egy leszármazott eltávolítása 0-alapú index szerint az aktív
           profilról.
@@ -3205,7 +3207,6 @@ cli:
         szerint
       header: KÖNYVELÉSI FŐKÖNYVI FELÜLVIZSGÁLATI MUNKAMENET
       help: Főkönyvi bejegyzések interaktív felülvizsgálata és érvényesítése.
-      id_help: A felülvizsgálandó bejegyzés azonosítója.
       no_rows: Nincs felülvizsgálatra váró főkönyvi bejegyzés.
       verbose_help: Részletes információ megjelenítése felülvizsgálat közben.
     split:

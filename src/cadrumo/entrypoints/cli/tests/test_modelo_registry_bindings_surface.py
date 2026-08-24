@@ -13,14 +13,29 @@ from ....tests.cli_runner import invoke_cached_cli
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
+def _invoke_in_english(args, **kwargs):
+    """Invoke the CLI with the output language pinned to English.
+
+    Several columns rendered by this surface are catalogue text, so asserting an
+    English phrase against the Spanish default fails on correct behaviour.
+    """
+    from ....core.config import override_settings
+
+    with override_settings(cadrumo_output_language="en"):
+        return invoke_cached_cli(args, **kwargs)
+
+
 def test_bindings_list_emits_readiness_and_borrador_columns_per_row() -> None:
     """``bindings list`` enriches each binding row with a readiness
     category from the closed set (ledger source / profile fact /
     prior filed revision / live observation / bucket / waiver /
     blocking finding / casilla), and reports the ``borrador_capable``
     flag per binding so callers can identify AEAT-prefilled casillas."""
+    # The readiness column is catalogue text -- the payload field is built with
+    # tr() -- and the default output language is Spanish, so the language is
+    # pinned rather than assumed.
 
-    result = invoke_cached_cli(
+    result = _invoke_in_english(
         ["app", "modelo", "bindings", "list", "--modelo", "303", "--year", "2026", "--period", "1T"],
     )
     assert result.exit_code == 0, result.output
@@ -621,8 +636,11 @@ def test_bindings_list_typed_payload_carries_relation_inputs_before_calculate() 
     (``RelationDefinition.target_binding``), not a per-form table, so it
     generalises to every modelo.
     """
+    # The readiness column is catalogue text -- the payload field is built with
+    # tr() -- and the default output language is Spanish, so the language is
+    # pinned rather than assumed.
     scope = ["--modelo", "200", "--year", "2025", "--period", "0A"]
-    result = invoke_cached_cli(["--format", "json", "app", "modelo", "bindings", "list", *scope])
+    result = _invoke_in_english(["--format", "json", "app", "modelo", "bindings", "list", *scope])
     assert result.exit_code == 0, result.output
     rows = {row["binding_id"]: row for row in _payload(result.output)["bindings"]}
 

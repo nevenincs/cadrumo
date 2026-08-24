@@ -41,6 +41,7 @@ from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
+from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
 from ....tests.profile_capsule import seed_test_profile_record
@@ -321,7 +322,10 @@ def test_months_declared_for_a_child_over_three_are_withheld_and_disclosed(
     # The remedy must name an editing route the paged door refuses on a piped
     # host and `descendiente add` (append-only) cannot perform: removing the
     # row and re-adding it.
-    assert "descendiente remove" in messages[0]
+    # The advisory names the record to restate, not the command that does it:
+    # Notice reserves executable command identity for the typed action
+    # projection and refuses a message carrying raw `aeat ...` prose.
+    assert "descendiente record" in messages[0]
 
 
 def test_an_eligible_child_does_not_raise_the_withheld_advisory(
@@ -474,7 +478,12 @@ def test_direct_casilla_0611_cannot_bypass_or_overwrite_the_profile_producer(
     _seed_natural_person_profile(runtime_profile)
     _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=1-12")
 
-    exit_code, output = _calculate("--casilla", f"{_MATERNIDAD_CASILLA_ID}={attempted_value}")
+    # The word asserted below is catalogue text and the default output language
+    # is Spanish, so the language is pinned rather than assumed: the refusal
+    # otherwise says "casillas calculadas" and the assertion fails on a
+    # correctly-rendered envelope.
+    with override_settings(cadrumo_output_language="en"):
+        exit_code, output = _calculate("--casilla", f"{_MATERNIDAD_CASILLA_ID}={attempted_value}")
 
     assert exit_code != 0, output
     assert _MATERNIDAD_CASILLA_ID in output
@@ -514,7 +523,10 @@ def test_a_contributing_descendant_under_the_default_relacion_is_disclosed(
     assert messages, "the ambiguous-relación advisory must carry a rendered message"
     assert "grandchild" in messages[0] or "consanguinidad" in messages[0]
     assert "guarda y custodia" in messages[0]
-    assert "descendiente remove" in messages[0]
+    # The advisory names the record to restate, not the command that does it:
+    # Notice reserves executable command identity for the typed action
+    # projection and refuses a message carrying raw `aeat ...` prose.
+    assert "descendiente record" in messages[0]
 
 
 def test_the_advisory_names_every_contributing_descendant_under_the_default(
