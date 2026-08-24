@@ -204,12 +204,11 @@ def test_review_record_round_trips_through_registered_schema_envelope(
         round_tripped = envelope_cls.model_validate_json(envelope.model_dump_json())
 
         assert command_schema_types()[_COMMAND] is WorkReviewResult
-        assert result.review.model_dump(mode="json") == review.model_dump(mode="json")
+        assert result.review.casilla_count == len(review.casillas)
+        assert result.review.row_source_fingerprint_count == len(review.row_source_fingerprints)
         assert round_tripped == envelope
         assert round_tripped.status is EnvelopeStatus.WARNING
-        casilla_document = document["result"]["review"]["casillas"][0]
-        assert casilla_document["estado_casilla_oficial"] in {member.value for member in EstadoCasillaOficial}
-        assert "official_box_" + "status" not in casilla_document
+        assert "casillas" not in document["result"]["review"]
         blocker = round_tripped.result.review.blockers[0]
         notice = round_tripped.notices[0]
         assert blocker.axis is OperatorActionAxis.SUPPLY_MANUAL_INPUT
@@ -218,17 +217,10 @@ def test_review_record_round_trips_through_registered_schema_envelope(
         assert notice.context is not None
         assert notice.context["kind"] == blocker.native_code
         assert notice.context["casilla_id"] == blocker.facts["casilla_id"]
-        assert document["result"]["review"]["row_source_fingerprints"] == [
-            {
-                "binding_id": _ROW_BINDING_ID,
-                "row_index": 1,
-                "source_kind": "inventory",
-                "fingerprint": _ROW_FINGERPRINT,
-            },
-        ]
+        assert document["result"]["review"]["row_source_fingerprint_count"] == 1
         rendered = f"{document!r} {envelope.model_dump_json()} {_review_lines(result)!r} {result!r}"
         assert _RAW_ROW_IDENTITY not in rendered
-        assert _ROW_FINGERPRINT in rendered
+        assert _ROW_FINGERPRINT not in rendered
         secure_context_dump = result.model_dump(
             mode="json",
             context={"secure_calculation_revision": True, "secure_modelo_binding_value": True},
@@ -242,7 +234,7 @@ def test_review_record_round_trips_through_registered_schema_envelope(
         assert command.exit_code == 0, command.output
         command_surface = f"{command.stdout} {command.stderr} {command.exception!r}"
         assert _RAW_ROW_IDENTITY not in command_surface
-        assert _ROW_FINGERPRINT in command.stdout
+        assert _ROW_FINGERPRINT not in command.stdout
         assert _RAW_ROW_IDENTITY not in caplog.text
 
         mutate_encrypted_secure_object_json(
@@ -267,18 +259,7 @@ def test_review_record_round_trips_through_registered_schema_envelope(
 
 def test_review_payload_refuses_raw_identity_fields_without_echoing_value(tmp_path: Path) -> None:
     with _persist_blocked_review(tmp_path) as (review, _, _):
-        labelled_review = review.model_copy(
-            update={
-                "casillas": (
-                    review.casillas[0].model_copy(update={"label": "Actividad económica ordinaria"}),
-                    *review.casillas[1:],
-                ),
-            },
-        )
-        safe_labelled = WorkReviewPayload.from_review(labelled_review)
-        assert safe_labelled.casillas[0].label == "Actividad económica ordinaria"
-
-        payload = review.model_dump(mode="python")
+        payload = WorkReviewPayload.from_review(review).model_dump(mode="python")
         payload["row_source_identity"] = _RAW_ROW_IDENTITY
 
         with pytest.raises(ValidationError) as exc_info:
