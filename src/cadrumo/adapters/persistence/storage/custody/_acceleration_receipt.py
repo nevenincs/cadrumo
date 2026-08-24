@@ -94,6 +94,7 @@ from ._filesystem import (
     compare_and_replace_profile_custody_local_record,
     ensure_profile_custody_local_directory,
     profile_custody_local_lock,
+    profile_custody_root_lock,
     read_optional_profile_custody_local_record,
 )
 from ._zeroise import zeroise as _zeroise
@@ -861,6 +862,15 @@ class AccelerationReceiptRevocationError(StorageError):
 
 
 def delete_profile_session(*, storage_root: Path, profile_id: UUID) -> None:
+    """Revoke a profile receipt under the custody-wide session lifecycle lock."""
+    try:
+        with profile_custody_root_lock(storage_root):
+            _delete_profile_session(storage_root=storage_root, profile_id=profile_id)
+    except ProfileCustodyRecordError as exc:
+        _log.debug("profile-session receipt deletion refused error_type=%s", type(exc).__name__)
+
+
+def _delete_profile_session(*, storage_root: Path, profile_id: UUID) -> None:
     """Revoke only receipts whose exact bytes/name were safely observed.
 
     Raises:
@@ -912,6 +922,41 @@ def mint_profile_session(
     idle_minutes: int,
     absolute_minutes: int,
 ) -> PersistedProfileSession:
+    """Mint a profile receipt under the custody-wide session lifecycle lock.
+
+    Validate a caller's time window before opening the custody root.  A
+    rejected bootstrap call must not provision a durable lock leaf merely to
+    report an invalid window.
+    """
+    if idle_minutes <= 0:
+        raise StorageValidationError("idle_minutes must be a strict positive integer")
+    if absolute_minutes <= 0:
+        raise StorageValidationError("absolute_minutes must be a strict positive integer")
+    now = validate_utc_aware(now)
+    with profile_custody_root_lock(storage_root):
+        return _mint_profile_session(
+            storage_root=storage_root,
+            profile_id=profile_id,
+            custody_generation=custody_generation,
+            dek_epoch=dek_epoch,
+            dek=dek,
+            now=now,
+            idle_minutes=idle_minutes,
+            absolute_minutes=absolute_minutes,
+        )
+
+
+def _mint_profile_session(
+    *,
+    storage_root: Path,
+    profile_id: UUID,
+    custody_generation: int,
+    dek_epoch: str,
+    dek: bytes,
+    now: datetime,
+    idle_minutes: int,
+    absolute_minutes: int,
+) -> PersistedProfileSession:
     """Mint the persisted session for a freshly-authenticated login.
 
     Generates the ephemeral session key, wraps ``dek`` under it with the
@@ -940,11 +985,6 @@ def mint_profile_session(
         KeyringUnavailableError: When the OS keychain cannot custody the
             session key.
     """
-    if idle_minutes <= 0:
-        raise StorageValidationError("idle_minutes must be a strict positive integer")
-    if absolute_minutes <= 0:
-        raise StorageValidationError("absolute_minutes must be a strict positive integer")
-    now = validate_utc_aware(now)
     absolute_deadline = now + timedelta(minutes=absolute_minutes)
     idle_deadline = min(now + timedelta(minutes=idle_minutes), absolute_deadline)
 
@@ -1044,6 +1084,37 @@ def resume_profile_session(
     dek_epoch: str,
     now: datetime,
 ) -> tuple[ProfileSessionResumeOutcome, bytearray | None]:
+    """Evaluate a provisioned profile receipt under the custody-wide lifecycle lock.
+
+    The active-profile transaction provisions the root lock before a profile
+    can reach this resume path.  A raw first call against an unprovisioned
+    storage root is therefore bootstrap work, not an observational refusal;
+    established logged-out profiles take the lock without changing their
+    session or retirement leaves.
+    """
+    now = validate_utc_aware(now)
+    try:
+        with profile_custody_root_lock(storage_root):
+            return _resume_profile_session(
+                storage_root=storage_root,
+                profile_id=profile_id,
+                custody_generation=custody_generation,
+                dek_epoch=dek_epoch,
+                now=now,
+            )
+    except (ProfileCustodyRecordError, StorageValidationError, ValueError, ValidationError) as exc:
+        _log.debug("profile-session receipt access refused error_type=%s", type(exc).__name__)
+        return _refusal(ProfileSessionRefusalReason.MALFORMED)
+
+
+def _resume_profile_session(
+    *,
+    storage_root: Path,
+    profile_id: UUID,
+    custody_generation: int,
+    dek_epoch: str,
+    now: datetime,
+) -> tuple[ProfileSessionResumeOutcome, bytearray | None]:
     """Fail-closed evaluation of one current profile acceleration receipt.
 
     The recovered key is a WIPEABLE ``bytearray``, and the annotation says so:
@@ -1086,7 +1157,6 @@ def resume_profile_session(
         KeyringUnavailableError: When the keychain backend is unusable (the
             caller decides between refusal and the no-persistence path).
     """
-    now = validate_utc_aware(now)
     path = profile_session_path(storage_root=storage_root, profile_id=profile_id)
     retirement_path = _profile_session_retirement_path(storage_root=storage_root, profile_id=profile_id)
     try:
@@ -1188,9 +1258,26 @@ def advance_persisted_profile_session_idle_deadline(
     record: PersistedProfileSession,
     new_idle_deadline: datetime,
 ) -> PersistedProfileSession:
-    """Advance an already-resumed receipt without exposing its key upstream."""
+    """Advance a profile receipt under the custody-wide session lifecycle lock."""
     if record.profile_id != profile_id:
         raise StorageValidationError("persisted session record belongs to another profile")
+    with profile_custody_root_lock(storage_root):
+        return _advance_persisted_profile_session_idle_deadline(
+            storage_root=storage_root,
+            profile_id=profile_id,
+            record=record,
+            new_idle_deadline=new_idle_deadline,
+        )
+
+
+def _advance_persisted_profile_session_idle_deadline(
+    *,
+    storage_root: Path,
+    profile_id: UUID,
+    record: PersistedProfileSession,
+    new_idle_deadline: datetime,
+) -> PersistedProfileSession:
+    """Advance an already-resumed receipt without exposing its key upstream."""
     path = profile_session_path(storage_root=storage_root, profile_id=profile_id)
     _ensure_profile_session_directory(path)
     with profile_custody_local_lock(_profile_session_lock_path(path)):

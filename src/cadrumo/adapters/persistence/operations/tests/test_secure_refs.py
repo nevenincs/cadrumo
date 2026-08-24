@@ -11,31 +11,22 @@ from pydantic import BaseModel, Field
 
 from .....core.classification import SensitivityClass
 from .....core.hashing import sha256_hex
-from .....tests.secure_namespace_registration import registered_objects as _registered_objects
 from .....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from ...storage import (
-    SecureObjectNamespaceDefinition,
+    STORAGE_NAMESPACE_REGISTRY,
     StorageCustodyDisposition,
     StorageNamespaceScope,
 )
 from ...storage.errors import RepositoryError
-from .. import OperationSecureReferenceRepository
+from .. import (
+    OPERATION_SECURE_REFERENCE_NAMESPACE,
+    OperationSecureReferenceRepository,
+    operation_secure_reference_repository,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 _WRITTEN_AT = datetime(2026, 8, 14, 14, tzinfo=UTC)
-_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="operation_secure_reference_test",
-    namespace="cadrumo-test.operations.secure-references",
-    owner="cadrumo.adapters.persistence.operations.tests.test_secure_refs",
-    sensitivity=SensitivityClass.FINANCIAL,
-    schema_version=1,
-    object_key_grammar="{content_digest}",
-    scope=StorageNamespaceScope.BUCKET_LOCAL,
-    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
-)
-
-
 class _Operand(BaseModel):
     subject: str = Field(min_length=1)
     amount: int = Field(ge=0)
@@ -49,9 +40,7 @@ def test_secure_reference_round_trip_is_content_addressed_and_encrypted(tmp_path
     """Typed operands deduplicate by exact JSON bytes and never reach disk plaintext."""
     operand = _Operand(subject="taxpayer-private", amount=73)
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        store = OperationSecureReferenceRepository(
-            objects=_registered_objects(profile.repository, _NAMESPACE), namespace=_NAMESPACE
-        )
+        store = operation_secure_reference_repository(objects=profile.repository)
         reference = asyncio.run(store.put(operand, written_at=_WRITTEN_AT))
         repeated = asyncio.run(store.put(operand, written_at=_WRITTEN_AT))
 
@@ -66,8 +55,8 @@ def test_secure_reference_refuses_absent_wrong_type_and_digest_corruption(tmp_pa
     """An addressed object must exist, match its bytes, and hydrate the requested type."""
     operand = _Operand(subject="integrity-subject", amount=12)
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        objects = _registered_objects(profile.repository, _NAMESPACE)
-        store = OperationSecureReferenceRepository(objects=objects, namespace=_NAMESPACE)
+        objects = profile.repository
+        store = operation_secure_reference_repository(objects=objects)
         with pytest.raises(RepositoryError, match="absent"):
             asyncio.run(store.resolve("a" * 64, _Operand))
 
@@ -76,10 +65,10 @@ def test_secure_reference_refuses_absent_wrong_type_and_digest_corruption(tmp_pa
             asyncio.run(store.resolve(reference, _OtherOperand))
 
         objects.save(
-            namespace=_NAMESPACE.namespace,
+            namespace=OPERATION_SECURE_REFERENCE_NAMESPACE.namespace,
             object_key=reference,
-            classification=_NAMESPACE.sensitivity,
-            schema_version=_NAMESPACE.schema_version,
+            classification=OPERATION_SECURE_REFERENCE_NAMESPACE.sensitivity,
+            schema_version=OPERATION_SECURE_REFERENCE_NAMESPACE.schema_version,
             written_at=_WRITTEN_AT,
             payload=_Operand(subject="substituted", amount=99).model_dump_json().encode("utf-8"),
         )
@@ -89,10 +78,26 @@ def test_secure_reference_refuses_absent_wrong_type_and_digest_corruption(tmp_pa
 
 def test_secure_reference_constructor_refuses_plaintext_or_non_digest_namespace(tmp_path: Path) -> None:
     """The adapter accepts only a ciphertext-required content-addressed namespace."""
-    plaintext_namespace = _NAMESPACE.model_copy(update={"sensitivity": SensitivityClass.OPERATIONAL})
-    wrong_key_namespace = _NAMESPACE.model_copy(update={"object_key_grammar": "operand:{content_digest}"})
+    plaintext_namespace = OPERATION_SECURE_REFERENCE_NAMESPACE.model_copy(
+        update={"sensitivity": SensitivityClass.OPERATIONAL}
+    )
+    wrong_key_namespace = OPERATION_SECURE_REFERENCE_NAMESPACE.model_copy(
+        update={"object_key_grammar": "operand:{content_digest}"}
+    )
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         with pytest.raises(ValueError, match="unsuitable sensitivity"):
             OperationSecureReferenceRepository(objects=profile.repository, namespace=plaintext_namespace)
         with pytest.raises(ValueError, match="keyed by"):
             OperationSecureReferenceRepository(objects=profile.repository, namespace=wrong_key_namespace)
+
+
+def test_canonical_namespace_is_registered_once_and_exposed_by_operations_facade() -> None:
+    """The global operation-reference home is unique, registered, and facade-owned."""
+    namespace = OPERATION_SECURE_REFERENCE_NAMESPACE
+
+    assert STORAGE_NAMESPACE_REGISTRY.namespace_by_key(namespace.key) is namespace
+    assert STORAGE_NAMESPACE_REGISTRY.namespace_by_value(namespace.namespace) is namespace
+    assert namespace.owner == "cadrumo.adapters.persistence.operations"
+    assert namespace.object_key_grammar == "{content_digest}"
+    assert namespace.scope is StorageNamespaceScope.BUCKET_LOCAL
+    assert namespace.custody_disposition is StorageCustodyDisposition.PROCESS_LOCAL

@@ -12,6 +12,7 @@ import os
 import secrets
 import subprocess
 import sys
+import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import UUID, uuid4
@@ -24,12 +25,14 @@ from ......core.errors import CoreValidationError
 from ...custody import (
     compare_and_replace_profile_custody_local_record,
     ensure_profile_custody_local_directory,
+    profile_custody_root_lock,
 )
 from ...errors import DecryptionError, EncryptionError, KeyringUnavailableError, StorageValidationError
 from .. import (
     PROFILE_SESSION_KEYCHAIN_SERVICE,
     PROFILE_SESSION_SCHEMA_VERSION,
     PersistedProfileSession,
+    advance_persisted_profile_session_idle_deadline,
     delete_profile_session,
     mint_profile_session,
     profile_session_path,
@@ -196,6 +199,17 @@ class TestAnchoredReceiptBoundary:
         profile_id = _profile_id()
         path = self._path(tmp_path, profile_id)
         lock_path = _profile_session_lock_path(path)
+        # The active-profile transaction has already provisioned this root
+        # leaf before an established profile reaches resume.  Establish that
+        # lifecycle precondition, so this is an exact before/after probe of
+        # the logged-out refusal path rather than a first-root bootstrap test.
+        with profile_custody_root_lock(tmp_path):
+            pass
+        before = {
+            candidate.relative_to(tmp_path).as_posix(): candidate.read_bytes()
+            for candidate in tmp_path.rglob("*")
+            if candidate.is_file()
+        }
         assert not path.exists()
         assert not lock_path.exists()
 
@@ -211,6 +225,108 @@ class TestAnchoredReceiptBoundary:
         assert dek is None
         assert not path.exists()
         assert not lock_path.exists()
+        assert {
+            candidate.relative_to(tmp_path).as_posix(): candidate.read_bytes()
+            for candidate in tmp_path.rglob("*")
+            if candidate.is_file()
+        } == before
+
+    def test_independent_resume_observes_concurrent_mint_after_root_lock_release(self, tmp_path: Path) -> None:
+        """An independent resume is linearized with a concurrent real mint.
+
+        The child enters the production resume path and announces immediately
+        before it requests the root lock.  The parent keeps that lock, mints
+        through the production writer, then releases it.  Thus a successful
+        mint must be visible to the child resume; it cannot race between an
+        unlocked absence observation and the refusal return.
+        """
+        profile_id = _profile_id()
+        started = tmp_path / "resume-started"
+        finished = tmp_path / "resume-finished"
+        script = """
+from datetime import UTC, datetime
+from pathlib import Path
+from uuid import UUID
+
+from cadrumo.adapters.persistence.storage.custody import (
+    resume_profile_session,
+)
+
+root = Path(__import__("sys").argv[1])
+profile_id = UUID(__import__("sys").argv[2])
+started = Path(__import__("sys").argv[3])
+finished = Path(__import__("sys").argv[4])
+started.write_text("ready", encoding="utf-8")
+outcome, dek = resume_profile_session(
+    storage_root=root,
+    profile_id=profile_id,
+    custody_generation=1,
+    dek_epoch="test-dek-epoch-1",
+    now=datetime(2026, 8, 14, 12, 0, 0, tzinfo=UTC),
+)
+try:
+    finished.write_text("resumed" if outcome.resumed else "refused", encoding="utf-8")
+finally:
+    if dek is not None:
+        dek.clear()
+"""
+        child: subprocess.Popen[str] | None = None
+        minted = False
+        try:
+            with profile_custody_root_lock(tmp_path):
+                child = subprocess.Popen(  # noqa: S603 - fixed interpreter and production mint driver
+                    [
+                        sys.executable,
+                        "-c",
+                        script,
+                        str(tmp_path),
+                        str(profile_id),
+                        str(started),
+                        str(finished),
+                    ],
+                    cwd=Path.cwd(),
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                )
+                deadline = time.monotonic() + 30.0
+                while not started.exists() and time.monotonic() < deadline:
+                    assert child.poll() is None, "independent production resume exited before its call"
+                    time.sleep(0.01)
+                assert started.exists(), "independent production resume did not reach its call"
+                time.sleep(0.1)
+                assert not finished.exists(), "independent production resume bypassed the custody-root lock"
+
+                try:
+                    mint_profile_session(
+                        storage_root=tmp_path,
+                        profile_id=profile_id,
+                        custody_generation=1,
+                        dek_epoch=_EPOCH,
+                        dek=secrets.token_bytes(32),
+                        now=_NOW,
+                        idle_minutes=_IDLE_MINUTES,
+                        absolute_minutes=_ABSOLUTE_MINUTES,
+                    )
+                except KeyringUnavailableError:
+                    pass
+                else:
+                    minted = True
+                assert not finished.exists(), "independent resume crossed the custody-root lock before mint completed"
+        finally:
+            if child is not None:
+                try:
+                    stdout, stderr = child.communicate(timeout=60)
+                except subprocess.TimeoutExpired:
+                    child.kill()
+                    stdout, stderr = child.communicate(timeout=60)
+                    raise AssertionError(
+                        "independent production resume did not finish after root-lock release"
+                    ) from None
+                assert child.returncode == 0, f"independent production resume failed: {stdout}\n{stderr}"
+        assert finished.read_text(encoding="utf-8") == ("resumed" if minted else "refused")
+        if minted:
+            delete_profile_session(storage_root=tmp_path, profile_id=profile_id)
 
     def test_oversize_leaf_is_refused_before_any_keychain_operation(self, tmp_path: Path) -> None:
         profile_id = _profile_id()
@@ -620,6 +736,21 @@ class TestProfileSessionAcceleration:
                 absolute_minutes=_ABSOLUTE_MINUTES,
             )
         assert not profile_session_path(storage_root=tmp_path, profile_id=profile_id).exists()
+        assert not (tmp_path / ".profile-custody-root.lock").exists()
+        assert not any(tmp_path.iterdir())
+
+    def test_foreign_idle_renewal_refuses_before_custody_root_provisioning(self, tmp_path: Path) -> None:
+        """A caller cannot materialise a root lock with another profile's receipt."""
+        record = _wrap(session_key=secrets.token_bytes(32), dek=secrets.token_bytes(32), profile_id=_profile_id())
+        with pytest.raises(StorageValidationError, match="belongs to another profile"):
+            advance_persisted_profile_session_idle_deadline(
+                storage_root=tmp_path,
+                profile_id=_profile_id(),
+                record=record,
+                new_idle_deadline=_NOW + timedelta(minutes=30),
+            )
+        assert not (tmp_path / ".profile-custody-root.lock").exists()
+        assert not any(tmp_path.iterdir())
 
 
 @pytest.mark.os_keychain

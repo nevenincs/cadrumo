@@ -294,6 +294,22 @@ WORKFLOW_RUN_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
+OPERATION_SECURE_REFERENCE_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="operation_secure_references",
+    namespace="cadrumo.application.operations.secure_references",
+    owner="cadrumo.adapters.persistence.operations",
+    # The supervisor carries the validated request and result types for every
+    # operation family. Financial is the conservative shared classification for
+    # that cross-domain envelope: it preserves ciphertext-at-rest treatment for
+    # identifier-bearing profile requests without inventing one namespace per
+    # operation definition. The rows are process-local operational state, not
+    # portable profile data, so bundle custody accounts for but never carries it.
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{content_digest}",
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
+)
 USER_PROFILE_VALUE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="user_profile_value",
     namespace="cadrumo.application.user_profile.value",
@@ -1182,6 +1198,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
     namespaces=(
         WORKFLOW_STATE_NAMESPACE,
         WORKFLOW_RUN_NAMESPACE,
+        OPERATION_SECURE_REFERENCE_NAMESPACE,
         USER_PROFILE_VALUE_NAMESPACE,
         USER_PROFILE_SNAPSHOT_NAMESPACE,
         PROFILE_INVENTORY_LEDGER_NAMESPACE,
@@ -1288,6 +1305,7 @@ __all__ = [
     "MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE",
     "MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE",
     "MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE",
+    "OPERATION_SECURE_REFERENCE_NAMESPACE",
     "PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE",
     "PROFILE_ASSETS_LEDGER_NAMESPACE",
     "PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE",
