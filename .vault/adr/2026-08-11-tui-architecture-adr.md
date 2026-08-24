@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:ccb2670aed7866750bcb595e97fde73702a03256c6ed1c42b652bde0c74aa750'
+body_hash: 'sha256:398114214e216dc5de9730c44cb0d3f4d20afdb38536ada3aa22bc7340b6b7f8'
 related:
   - '[[2026-08-11-tui-architecture-research]]'
   - '[[2026-08-11-tui-interface-research]]'
@@ -16,6 +16,8 @@ related:
   - '[[2026-07-25-censal-profile-autofill-adr]]'
   - '[[2026-08-08-sync-control-surface-adr]]'
   - '[[2026-08-24-tui-architecture-censo-operation-authority-reconciliation-research]]'
+  - '[[2026-08-24-tui-architecture-pre-custody-login-secret-submission-research]]'
+  - '[[2026-08-24-tui-architecture-pre-custody-login-secret-submission-reference]]'
 ---
 
 # `tui-architecture` adr: `Application-owned operation envelope and supervisor API` | (**status:** `accepted`)
@@ -216,6 +218,45 @@ enters `SETTLING` after execution and reaches `TERMINAL` only after resources
 are released or cleanup failure is recorded. Closing a frontend detaches its
 projection; it does not assert that the operation stopped.
 
+### D3a - Credential-free request identity and ephemeral secret submission
+
+The supervisor has two explicit, mutually exclusive request-storage policies.
+`SECURE_REFERENCE` retains the current encrypted content-addressed operand
+path. `CREDENTIAL_FREE_JOURNAL` is allowed only for a registry-validated,
+strict, safe request model and is atomically recorded with the lifecycle
+snapshot; its canonical content digest binds idempotency. It is not a fallback
+encrypted store and may never hold a secret, reversible secret derivative,
+callback, frontend identity, or transport bearer. This policy supplies the
+durable exact target for an operation that must obtain a secret before a DEK
+exists; no executor may reconstruct a special request from its subject as an
+alternative persistence path.
+
+The application operation facade exposes one `EphemeralSecretSubmission` port,
+owned by the same supervisor that owns the operation. A definition that declares
+the capability supplies a durable, credential-free secret requirement containing
+only the operation identity, definition, subject, interaction identity and
+revision, secret kind, and expiry. The port accepts a runtime-only secret input
+only when that exact requirement is live; it refuses mismatch, stale revision,
+expiry, duplicate submission, or an already-consumed requirement. The broker
+retains the input only in process memory, binds it to that requirement, consumes
+it once for the registered executor, and zeroises it on consume, expiry,
+cancellation, terminal settlement, supervisor shutdown, and owner cleanup.
+Neither the input nor a digest or callback derived from it enters an envelope,
+journal, event, receipt, diagnostic, response, projection, trace, or retained
+frontend state.
+
+A created secret-wait is a pre-effect state. If restart reconciliation proves
+that no runtime broker secret survives and no executor entry was recorded, the
+supervisor settles it `INTERRUPTED` with effect `NONE`; it does not resume,
+re-prompt, derive, or retain the secret. Once executor entry is recorded, the
+ordinary owner-loss rule remains `UNKNOWN` unless the executor's authoritative
+domain receipt proves a narrower effect. Requirement expiry and pre-entry
+cancellation clear the broker and settle with effect `NONE`; expiry is a secret
+submission bound, not an aggregate execution deadline. This is a generic
+supervisor capability, not a profile-login exception. Its conformance suite
+must prove exact binding, single consumption, every refusal, cleanup,
+non-retention, pre-entry restart interruption, and post-entry uncertainty.
+
 ### D4 - Typed interaction and exact approval binding
 
 Operator interaction is a discriminated application contract, not a frontend
@@ -288,8 +329,9 @@ Cancellation and deadline settlement follow these rules:
 
 One application registry, keyed by `OperationDefinitionId`, binds request and
 result schemas, executor factory, phase and interaction families, approval and
-baseline policy, capabilities, effect and idempotency semantics, reconciliation
-policy, and permitted frontend projections. It does not extend or duplicate the
+baseline policy, request-storage and ephemeral-secret-submission policy,
+capabilities, effect and idempotency semantics, reconciliation policy, and
+permitted frontend projections. It does not extend or duplicate the
 operator-action catalogue. An optional join table maps an existing
 `ActionReference` to an operation definition only where a validated recovery
 action launches that operation.
@@ -484,6 +526,7 @@ cadrumo/application/operations/
   _executor.py         # executor context and protocol
   _registry.py         # operation definitions and fixed-point catalogue
   _supervisor.py       # submit/start/observe/respond/cancel/settle/reconcile
+  _secret_submission.py # runtime-only supervisor-owned one-shot secret broker port
   _journal.py          # journal and lock ports only
 ```
 
@@ -685,6 +728,13 @@ the separate accepted recovery-action census remaining green, and deletion of
 Implementation is governed by one canonical `tui-architecture` roll-up plan.
 Related frontend work may have its own information-architecture plan, but it
 MUST NOT duplicate this plan's operation platform or package migration.
+
+Before S39 registers profile login, the roll-up plan must add and close the
+generic `EphemeralSecretSubmission` prerequisite: credential-free request
+storage, the supervisor-owned one-shot broker, restart and cleanup semantics,
+and real non-retention conformance. S39 then composes that public capability and
+the existing profile-login authority exactly once; it must not introduce a
+per-login callback, persistence exception, or shadow authentication path.
 
 The roll-up plan schedules foundations upward: structural census and dependency
 gates; core operation axes and application contracts; registry, supervisor,

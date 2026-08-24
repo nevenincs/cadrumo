@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:87c0f81ea1d87faa6dddc8eda1dbc2bfa49a0ab6f0027569a2290297e6e0fdde'
+body_hash: 'sha256:525187e863e3a90c448d30d2984ba15564b32c7cf48bfb88db048dc294955cca'
 related:
   - "[[2026-08-11-tui-interface-adr]]"
   - "[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]"
@@ -171,13 +171,13 @@ Each visual action needs an application-projected stable action reference,
 registered operation definition reference, capability disposition, refusal or
 reconsideration condition, interaction kind, and result destination. A control
 is enabled only when the projection says the capability is available. Refused,
-not-applicable, unavailable, and unmeasured are distinct visible states; an
+not-applicable, and unmeasured are distinct visible states; an
 unexplained disabled control is not sufficient. Canonical application error and
 action envelopes remain the sources for top-level failure and recovery actions.
 
 The lifecycle action inventory must be explicit per cohort. Read destinations
 may offer refresh and inspect actions before mutation exists. Calculate or
-recalculate is the first editor submit action. Verify, reject, file, export,
+recalculate is the first editor submit action. Verify, file, export,
 discard, rename, and similar lifecycle actions cannot appear merely because a
 CLI command exists; each requires its own enrolled operation, projected
 capability, interaction classification, terminal refresh mapping, and acceptance

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:9895da6706c0aa0efd1a6e8df4e057e7ffff98642e4d0930a65794f604bf9aba'
+body_hash: 'sha256:f1090ee6669ca58201f011e299027484949d8cfc2fdc3b61c01440b559230282'
 related:
   - '[[2026-08-11-tui-architecture-W01-P01-S01]]'
   - '[[2026-08-11-tui-architecture-W01-P01-S02]]'
@@ -54,6 +54,7 @@ related:
   - '[[2026-08-11-tui-architecture-W03-P07-S36]]'
   - '[[2026-08-11-tui-architecture-W03-P07-S37]]'
   - '[[2026-08-11-tui-architecture-W03-P07-S38]]'
+  - '[[2026-08-11-tui-architecture-W03-P08-S39]]'
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-11-tui-architecture-plan]]'
   - '[[2026-08-11-tui-architecture-research]]'
@@ -89,6 +90,8 @@ related:
   - '[[2026-08-24-tui-architecture-command-enrollment-honesty-review-audit]]'
   - '[[2026-08-24-tui-architecture-command-enrollment-parity-reference]]'
   - '[[2026-08-24-tui-architecture-invocation-policy-review-audit]]'
+  - '[[2026-08-24-tui-architecture-pre-custody-login-secret-submission-reference]]'
+  - '[[2026-08-24-tui-architecture-pre-custody-login-secret-submission-research]]'
   - '[[2026-08-24-tui-architecture-s113-continuation-review-audit]]'
   - '[[2026-08-24-tui-architecture-s28-recovery-review-audit]]'
   - '[[2026-08-24-tui-architecture-s29-censal-executor-review-audit]]'
@@ -206,6 +209,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W03-P07-S36` - Emit ordered safe stage and unit progress with scoped refusals and truthful none, updated, partial, or unknown effects
 - `2026-08-11-tui-architecture-W03-P07-S37` - Export the filed-history operation definition through the live application facade
 - `2026-08-11-tui-architecture-W03-P07-S38` - Prove dry-run parity, committed-unit accounting, child provenance references, unsupported cancellation and deadline claims, and cleanup before settlement
+- `2026-08-11-tui-architecture-W03-P08-S39` - Register login, provider configuration, credential acquisition, passphrase rotation, and auth teardown as application-owned operations
 
 ### plan
 
@@ -214,8 +218,10 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 ### reference
 
 - `2026-08-24-tui-architecture-command-enrollment-parity-reference` - `tui-architecture` reference: `TUI command enrollment parity`
+- `2026-08-24-tui-architecture-pre-custody-login-secret-submission-reference` - `tui-architecture` reference: `pre custody login secret submission`
 
 ### research
 
 - `2026-08-11-tui-architecture-research` - `tui-architecture` research: `Canonical operation envelope and supervisor API`
 - `2026-08-24-tui-architecture-censo-operation-authority-reconciliation-research` - `tui-architecture` research: `Censo operation authority reconciliation`
+- `2026-08-24-tui-architecture-pre-custody-login-secret-submission-research` - `tui-architecture` research: `pre custody login secret submission`

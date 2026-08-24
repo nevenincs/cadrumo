@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:3be645dd82ecc1a9a69ae280a144fe3e971eb15506d9ef952cfec444d03a2de5'
+body_hash: 'sha256:b7401f0a0dbe15d41bd1472398e74555098a9ea38b910eb2553c6b3e5adb3452'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-research]]"
   - "[[2026-08-11-tui-interface-adr]]"
@@ -214,7 +214,7 @@ One workspace load establishes an immutable `ModeloWorkspaceReadSession` with
 the visible and exact resolved address, selected registry revision, workspace
 contract version, schema fingerprint/version, projection baseline, resolved
 locale, and destination summaries. Every later section page, repeated-row page,
-provenance expansion or action refresh carries those
+provenance expansion, or action refresh carries those
 coordinates and must echo the same consistency identity.
 
 A mismatched baseline, selected revision, schema fingerprint, or contract
@@ -244,9 +244,13 @@ identity, edit baseline, visible/exact address, contract and schema identity,
 base semantic references, canonical staged values, ordered row intents, dirty
 addresses, addressable validation, and state. Its state machine is:
 
-`CLEAN -> DIRTY -> VALIDATING -> READY -> SUBMITTING -> SETTLED`, with
-`STALE_CONFLICT` reachable from any pre-settlement refresh or submission check,
-and `ABANDONED` reachable only through explicit discard of staged edits.
+`CLEAN` enters `DIRTY` on the first edit. Preflight moves `DIRTY` to
+`VALIDATING`, then back to `DIRTY` with findings or to `READY`; further edits
+move `READY` back to `DIRTY`. Submit moves `READY` to `SUBMITTING`. Confirmed
+effect plus refresh moves it to `SETTLED`; proven no effect with a current edit
+baseline returns it to `READY`. A consistency conflict or unknown effect enters
+`STALE_CONFLICT`. `ABANDONED` is reachable only through explicit discard of
+staged edits.
 
 The absence of an intent means `UNCHANGED`. Scalar intents are closed and
 distinct: `SET_TYPED_VALUE`, `CLEAR_DECLARED_VALUE`, and `REMOVE_OVERRIDE`.
@@ -279,17 +283,18 @@ edit baseline and ordered typed intents. The Workspace read baseline remains a
 consistency coordinate and is not promoted into a mutation precondition. The
 TUI does not reconstruct a complete calculation bundle or call a writer. The
 edit port performs authoritative preflight and hands the sealed financial
-operand to the enrolled operation
-through a single-consumer memory-only channel. The durable operation envelope
+operand to the enrolled operation through a single-consumer memory-only
+channel. The durable operation envelope
 contains only safe identifiers, an opaque one-shot operand reference or digest,
 the edit baseline, and operation metadata; journal replay can settle or refuse
-the operation but cannot reconstruct financial inputs. The payload is cleared from
+the operation but cannot reconstruct financial inputs. The payload is cleared
 the handoff after executor acknowledgement, while the TUI retains its session
 until settlement and refresh prove the authoritative result. C3 cannot open
 until the operation authority accepts and proves this non-journaled handoff.
-An unconsumed payload expires and is cleared on cancellation, deadline, or
-process loss; replay without the payload settles as a typed no-effect refusal
-and never guesses, reloads, or logs the operand.
+An unconsumed payload expires and is cleared on cancellation or deadline. On
+process loss, a recorded unconsumed state may settle as no effect; a consumed
+state is `UNKNOWN` unless an idempotent writer or durable result receipt proves
+`NONE` or `UPDATED`. Recovery never guesses, reloads, or logs the operand.
 
 ### D5 — Repeated-row semantics
 
@@ -348,9 +353,9 @@ authoritative state. `NONE` preserves the workspace and presents the canonical
 notice or refusal. Failed or cancelled no-effect settlement keeps the edit
 session only when the operation projection proves no effect and both the read
 and edit baselines remain current. Unknown or partial effect invalidates the
-session and requires a fresh read before any further action. Refresh failure retains the terminal
-operation result and offers a canonical retry; it never presents the old view as
-settled truth.
+session and requires a fresh read before any further action. Refresh failure
+retains the terminal operation result and offers a canonical retry; it never
+presents the old view as settled truth.
 
 ### D7 — Capability, refusal, and action presentation
 
@@ -442,7 +447,7 @@ not substitute mocks for an unmet earlier receipt:
 | C0 — operation foundation | accepted operation architecture | public operation observation version; ordered event fold through terminal settlement; interaction, cancellation, effect, and recovery conformance; production DI smoke |
 | C1 — bounded review | accepted interface migration lane and canonical `ModeloWorkReview` | root-route relocation, locale parity, bounded review snapshots, keyboard/geometry proof, and no legacy production import |
 | C2 — complex read workspace | this ADR accepted, accepted Workspace V1, accepted or reconciled authority-grade decision, C1 | destination/factory census, projection-to-view-model coverage, baseline-consistent facet tests, typed refusal states, current-registry scale fixtures, and production composition |
-| C3 — staged editor | this ADR accepted, C0 and C2, public application edit-admission/input/preflight port, enrolled create and calculate operations | read-baseline/edit-baseline separation; edit/row state-machine model tests; review-only submit; stale refusal; result refresh; locale switch; non-journaled operand and sensitive non-retention proof |
+| C3 — staged editor | this ADR accepted, C0 and C2, public application edit-admission/input/preflight port, enrolled create and calculate operations | read-baseline/edit-baseline separation; edit/row state-machine and crash-window effect tests; review-only submit; stale refusal; result refresh; locale switch; non-journaled operand and sensitive non-retention proof |
 | C4 — lifecycle actions | C3 plus each owning domain capability and operation definition | fixed-point action/operation/capability inventory; exact interaction; terminal-effect refresh; rename, discard, verify, file, and export receipts independently |
 | C5 — visual closure | all intended C1-C4 actions declared | four-locale, three-geometry, two-theme, keyboard, non-colour, large-schema/row, refusal/conflict, route/action anti-vacuity, and installed root-app receipts |
 
@@ -491,9 +496,9 @@ operation, concurrency, custody, and accessibility receipts exist.
   automatic merge, or silent rebase. Operators must explicitly abandon stale
   edits until a future accepted merge decision exists.
 - Every mutation needs a registered operation, projected capability,
-  non-journaled operand path where values are sensitive, edit-baseline check, result
-  mapping, and independent receipt. Existing CLI coverage does not satisfy that
-  obligation.
+  non-journaled operand path where values are sensitive, edit-baseline check,
+  result mapping, and independent receipt. Existing CLI coverage does not
+  satisfy that obligation.
 - Unsupported schema kinds, projection versions, capability states, and
   renderers become visible refusals and failing coverage rather than generic
   fallback behavior.
