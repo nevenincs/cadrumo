@@ -11,7 +11,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-22-source-casilla-integration-plan]]'
 modified: '2026-08-24'
-body_hash: 'sha256:dd80c0eda9582162c77e9f6f1ffa4ca16d6237d8851bd0a5f41c3fe06641fd6a'
+body_hash: 'sha256:0bfac3673d4b13104116b2c61881e99737df0a888e4fe5e08abd6d3283b87b73'
 ---
 
 # `registry-completeness-closure` plan
@@ -124,7 +124,7 @@ Add or reconcile the adjudicated remedies in each existing owning plan and prove
 - [ ] `W02.P04.S76` - Correct the aggregate filing-capability worklist assertion and report so terminal no-authority refusals such as Modelo 136 are never described as requiring an authorable layout, retain named owners for authorable gaps, and pass the terminal-versus-owner distinction to S29.; `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py; .vault/reference/`.
 - [ ] `W02.P04.S77` - Correct Modelo 182 statutory filer-population wording and reconsideration scope so recipients, political parties, and protected-estate holders or administrators remain distinct from donor detail rows.; `.vault/reference/2026-08-24-registry-completeness-closure-modelo-182-design-era-and-donor-row-reference.md; .vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W02-P03-S15.md`.
 - [ ] `W02.P04.S78` - Correct Modelo 187 Article-2 filer-population wording to include the separate Article 42 RGAT obligated-person/entity limb, update its prerequisite, reconsideration, and existing owner routes, and re-attest the reference and execution record.; `.vault/reference/2026-08-24-registry-completeness-closure-modelo-187-design-era-coverage-reference.md; .vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W02-P03-S17.md`.
-- [ ] `W02.P04.S79` - Correct Modelo 220/2024 reviewer-stamp record-design counts against the hash-verified parser measurement and re-attest the unchanged applicability-grade, non-fileable disposition.; `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/revision.toml; .vault/exec/2026-08-24-registry-completeness-closure/`.
+- [x] `W02.P04.S79` - Correct Modelo 220/2024 reviewer-stamp record-design counts against the hash-verified parser measurement and re-attest the unchanged applicability-grade, non-fileable disposition.; `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/revision.toml; .vault/exec/2026-08-24-registry-completeness-closure/`.
 - [ ] `W02.P04.S80` - Reconcile Modelo 721 structured-message filing authority with the positional-only export predicate: obtain the required ADR decision and enroll source taxonomy, authority-grade gate, canonical exporter, and local emitted-payload proof under the existing export plan while preserving Modelo 136 terminal refusal.; `.vault/adr/; .vault/reference/; .vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md; src/cadrumo/domain/calculations/registry/_validate_export_exemption.py; src/cadrumo/domain/calculations/registry/tests/test_export_exemption_declared.py`.
 
 ## Wave `W03` - semantic proof and predecessor closure

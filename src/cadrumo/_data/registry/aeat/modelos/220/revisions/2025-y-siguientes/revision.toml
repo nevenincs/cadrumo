@@ -14,7 +14,7 @@ authority_grade = "applicability"
 # CORRECTED REASON. This previously read "deferred until an authoritative Modelo
 # 220 diseño de registro is bundled". FOUR are bundled and all four load through
 # the real record-design IR -- aeat-dr-220-2022 (124 sheets / 14,851 fields),
-# -2023 (127 / 15,648), -2024 (136 / 16,066) and -2025 (140 / 16,707) -- and the
+# -2023 (127 / 15,648), -2024 (137 / 16,079) and -2025 (140 / 16,707) -- and the
 # 2024 and 2025 ones are named in this revision's own source_refs above. Design
 # availability is not what blocks the casillas.
 #
