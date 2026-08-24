@@ -34,6 +34,55 @@ need." Modelo 220 (fiscal-group IS consolidation) outranks 036 (censal; its own
 `revision.toml` says this application reads the censal declaration through censo
 synchronisation rather than producing it, and its `authority_grade` is `applicability`).
 
+## THE DESIGN-COVERAGE ROWS — verified against AEAT, 2026-08-24
+
+Six worklist rows say "ejercicios X-Y fall outside every cited design's era". Two obvious
+cheap fixes were tested against AEAT's own pages and **both are wrong**. Do not retry them.
+
+**Not a citation gap.** Every one of these revisions already cites every design registered
+for its modelo. Checked by loading the authority and diffing `source_refs` against the
+catalogue.
+
+**Not an unregistered-corpus gap.** The corpus holds exactly what is registered for 182,
+185, 187, 188, 194 and 763 — no bundled-but-unregistered design exists for any of them.
+(The 40 unregistered bundled designs are all on 200, 202, 100, 036, 123, 111, 604, 130,
+115, 349, 345 — none of which is on this worklist.)
+
+**Not a mis-derived `applies_from` either.** The filenames read "actualizado en 2022",
+which is an UPDATE year, so pinning `applies_from` to it looked like the error. AEAT's own
+pages refute that: the current design for modelo 187 is published as *"Orden EHA/3021/2007
+(actualizado por Orden HFP/823/2022 **para el Ejercicio 2022**)"*. AEAT scopes it to 2022
+explicitly. Widening it back to 2019 would put a claim in the catalogue that AEAT's own
+page contradicts.
+
+**What is actually true:** AEAT publishes the missing designs on the *ejercicios
+anteriores* pages and this corpus never fetched them. Verbatim from
+`ejercicios-anteriores-modelos-100-199.html` on 2026-08-24:
+
+- **182** — "Orden EHA/3021/2007 (incluye correccion de errores por BOE de 2 de noviembre
+  de 2007)"; "(actualizado por Orden HAP/2250/2015)"; "(actualizado por Orden
+  HFP/1351/2021, de 1 de diciembre)"; "(actualizado por Orden HAC/1504/2024, de 26 de
+  diciembre)". Bundled: 2024 and 2025 only.
+- **187** — "Orden HAP/1608/2014 (Ejercicio 2017)"; "(actualizado por Orden HAC/1417/2018
+  para el Ejercicio 2018)". Bundled: the 2022 one only.
+- **188** — "Orden EHA/3021/2007 (Ejercicio 2017)"; "(actualizados por Orden
+  HAP/2118/2015)". Bundled: the 2023 one only.
+- **194** — "Orden de 18 de enero de 1999 (actualizado por Orden HAC/1276/2019)";
+  "(actualizado por Orden HFP/1284/2023)"; "18 de Febrero de 2014 - Version 1.0".
+  Bundled: 2023 and 2024 only.
+
+**And acquisition alone does not close them.** AEAT names 187's designs "para el Ejercicio
+2018" and then "para el Ejercicio 2022", and publishes nothing for 2019-2021. Whether the
+2018 design governs those three years is a judgement AEAT does not state. Per
+`aeat-calculation-grounding` that is a TAX REVIEW against official sources recording honest
+reviewer provenance — the orden's BOE text decides it — not something a fire may assert to
+clear a gate. Acquire the artefacts first; then review the era boundaries against the
+ordenes; only then register.
+
+**220/2025-y-siguientes is descoped, not blocked.** Its revision is open-ended and the 2025
+design ends 2025-12-31, so the "gap" is ejercicio 2026, whose design AEAT has not published
+yet. That is the operator's "not yet published is not a blocker" ruling.
+
 ## THE WORKED PATTERN — producer vocabulary
 
 Seven modelos were completed this way. For a modelo whose non-casilla fields have no
