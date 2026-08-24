@@ -182,6 +182,10 @@ def _set_export_profile_name() -> None:
             UserProfileFact(path="identity.name", value="Ana"),
             UserProfileFact(path="identity.surnames", value="Export Test"),
             UserProfileFact(path="activities.description", value="Consulting"),
+            # Modelo 111 declares whether the withholder is a colegio
+            # concertado in its own header field; the producer refuses an
+            # undeclared value rather than assume one.
+            UserProfileFact(path="withholding.colegio_concertado", value=False),
         ),
     )
 
@@ -194,6 +198,7 @@ def _set_emilio_legal_entity_export_profile() -> None:
             UserProfileFact(path="identity.surnames", value="Corporate Persona"),
             UserProfileFact(path="identity.legal_name", value="Emilio Consulting Sociedad Limitada"),
             UserProfileFact(path="activities.description", value="Consulting"),
+            UserProfileFact(path="withholding.colegio_concertado", value=False),
             UserProfileFact(path="iva.regime", value="GENERAL"),
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="iva.m303_regime_composition", value="general"),

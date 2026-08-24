@@ -242,6 +242,10 @@ SETUP_ANSWER_FIELDS: Mapping[str, SetupFieldSpec] = {
     "fiscal_residency": SetupFieldSpec("taxpayer_type.fiscal_residency", str, "resident_irpf"),
     "google_export": SetupFieldSpec("capabilities.google_export", bool, "true"),
     "has_employees": SetupFieldSpec("withholding.has_employees", bool, "false"),
+    # No default: the Modelo 111 producer refuses an undeclared value rather
+    # than assert "not a concerted school" on the operator's behalf, so an
+    # unanswered question must stay unanswered here.
+    "colegio_concertado": SetupFieldSpec("withholding.colegio_concertado", bool),
     "incn_prior_12_months": SetupFieldSpec("taxpayer_type.incn_prior_12_months", str),
     "irpf_estimation_regime": SetupFieldSpec("irpf.estimation_regime", str),
     "irpf_activity_kind": SetupFieldSpec("irpf.activity_kind", str),
@@ -552,6 +556,7 @@ class SetupAnswers(BaseModel):
 
     # ── retencion / modelo obligation booleans ───────────────────────────
     has_employees: bool = False
+    colegio_concertado: Any = ""
     pays_professionals_with_retencion: bool = False
     professional_income_withholding_ge_70pct: bool = False
     art109_activity_income_withholding_ge_70pct: bool = False
@@ -622,6 +627,7 @@ class SetupAnswers(BaseModel):
         raise ProfileAnswerTypeError("iva_regime must be an IVARegime member or string token")
 
     @field_validator(
+        "colegio_concertado",
         "iva_roi_enrolled",
         "iva_oss_enrolled",
         "iva_group_member_enrolled",

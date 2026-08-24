@@ -597,6 +597,11 @@ class TaxpayerProfile(BaseModel):
         iva_regime: The IVA regime the taxpayer files under.
         has_employees: Whether the taxpayer pays salaries with
             retención.
+        colegio_concertado: Whether the withholder is a colegio concertado,
+            which Modelo 111 declares in its own header field. ``None`` when
+            undeclared: the producer refuses to file the modelo on an
+            undeclared value rather than assert "not a concerted school" on
+            the operator's behalf.
         pays_professionals_with_retencion: Whether the taxpayer pays
             professional fees subject to retención.
         professional_income_withholding_ge_70pct: Whether at least 70%
@@ -682,6 +687,7 @@ class TaxpayerProfile(BaseModel):
     irpf_activity_kind: IrpfActivityKind | None = None
     iva_regime: IVARegime
     has_employees: bool = False
+    colegio_concertado: bool | None = None
     pays_professionals_with_retencion: bool = False
     professional_income_withholding_ge_70pct: bool = False
     art109_activity_income_withholding_ge_70pct: bool = False

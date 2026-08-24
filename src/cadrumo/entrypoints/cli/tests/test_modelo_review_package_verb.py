@@ -48,6 +48,10 @@ def _set_export_profile_name() -> None:
             UserProfileFact(path="identity.name", value="Ana"),
             UserProfileFact(path="identity.surnames", value="Review Package Test"),
             UserProfileFact(path="activities.description", value="Consulting"),
+            # Modelo 111 declares whether the withholder is a colegio
+            # concertado in its own header field, and the producer refuses an
+            # undeclared value rather than assume one.
+            UserProfileFact(path="withholding.colegio_concertado", value=False),
         ),
     )
 

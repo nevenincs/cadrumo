@@ -1117,6 +1117,15 @@ model_selectors = ["has_employees"]
 schedule_predicates = ["has_employees"]
 
 [[sections.fields]]
+key = "colegio_concertado"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the withholder is a colegio concertado, which Modelo 111 declares in its own header field."
+model_selectors = ["colegio_concertado"]
+
+[[sections.fields]]
 key = "pays_professionals_with_retencion"
 type = "boolean"
 required = false

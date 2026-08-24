@@ -86,6 +86,7 @@ def taxpayer_profile_from_mapping(
         irpf_activity_kind=activity_kind,
         iva_regime=iva_regime,
         has_employees=typed.has_employees,
+        colegio_concertado=(typed.colegio_concertado if isinstance(typed.colegio_concertado, bool) else None),
         pays_professionals_with_retencion=typed.pays_professionals_with_retencion,
         professional_income_withholding_ge_70pct=typed.professional_income_withholding_ge_70pct,
         art109_activity_income_withholding_ge_70pct=typed.art109_activity_income_withholding_ge_70pct,
@@ -191,6 +192,7 @@ def _canonicalize_and_pad(
     # descriptor's project_answers picks them up.
     for bare, canonical_key in (
         ("has_employees", "withholding.has_employees"),
+        ("colegio_concertado", "withholding.colegio_concertado"),
         ("pays_professionals_with_retencion", "withholding.pays_professionals_with_retencion"),
         ("art109_activity_income_withholding_ge_70pct", "irpf.art109_activity_income_withholding_ge_70pct"),
         ("pays_rent_with_retencion", "withholding.pays_rent_with_retencion"),
