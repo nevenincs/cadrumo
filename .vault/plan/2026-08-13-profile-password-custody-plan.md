@@ -19,7 +19,7 @@ related:
   - '[[2026-08-13-sealed-archive-transport-successor-adr]]'
   - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
 modified: '2026-08-24'
-body_hash: 'sha256:0eeb66d2cabe7994e5782ae6ba9368cfef2098d24e4a1be8e8929104d0c9a28d'
+body_hash: 'sha256:faa8ba4fee2cca995de0fa16ef857e6dc99b9175a031623bed849c8b3e43748a'
 ---
 
 # `profile-password-custody` plan
@@ -338,7 +338,7 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 - [x] `W06.P12.S227` - Retire the unsupported workstation agent-materialisation sequence and stale agent-extra claims while preserving the separately owned harness and MCP guidance; `docs/workstation-setup.md and docs/_sequences/contracts/workstation-setup/`.
 - [x] `W06.P12.S228` - Replace the inline profile-delete command and false active-delete claim with a terminal real-execution sequence that logs out and deletes only its sandbox profile; `docs/how-to/profile-setup.md and docs/_sequences/contracts/how-to/`.
 - [x] `W06.P12.S229` - Resynchronize the Spanish, Catalan, and Hungarian Sphinx gettext catalogues from stable English sources and retire the generated-page environment-overrides orphans; `docs/locales/es/LC_MESSAGES/ and docs/locales/ca/LC_MESSAGES/ and docs/locales/hu/LC_MESSAGES/`.
-- [ ] `W06.P12.S230` - Complete every blank or fuzzy Spanish user-page translation and correct download command-list punctuation without English fallback; `docs/locales/es/LC_MESSAGES/`.
+- [x] `W06.P12.S230` - Complete every blank or fuzzy Spanish user-page translation and correct download command-list punctuation without English fallback; `docs/locales/es/LC_MESSAGES/`.
 - [ ] `W06.P12.S231` - Complete every blank or fuzzy Catalan user-page translation and correct download command-list punctuation without English fallback; `docs/locales/ca/LC_MESSAGES/`.
 - [ ] `W06.P12.S232` - Complete every blank or fuzzy Hungarian user-page translation and correct download command-list punctuation without English fallback; `docs/locales/hu/LC_MESSAGES/`.
 - [ ] `W06.P12.S233` - Run the complete documented-command, catalogue-drift, locale-completeness, localized-build, no-skip, native Windows, and WSL proof suite and persist fresh global evidence; `dev/docs/tests/ and dev/tests/test_no_skip_xfail.py and src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`.
