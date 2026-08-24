@@ -18,6 +18,7 @@ from .._capabilities import (
     OperationConflictScope,
     OperationOwnedResource,
     OperationReplayPolicy,
+    OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
 
@@ -31,6 +32,7 @@ def _recorded_capabilities() -> dict[str, object]:
         "deadline": OperationDeadline.ABSENT,
         "replay": OperationReplayPolicy.IDEMPOTENT_SUBMIT,
         "baseline": OperationBaselinePolicy.REQUEST_BOUND,
+        "request_storage": OperationRequestStoragePolicy.SECURE_REFERENCE,
         "sensitive_input": OperationSensitiveInputPolicy.SECURE_REFERENCE,
         "conflict_scope": OperationConflictScope.DEFINITION_SUBJECT,
         "owned_resources": frozenset(),
@@ -103,6 +105,7 @@ def test_resumable_contained_operation_declares_exact_resources_and_policies() -
         deadline=OperationDeadline.ENFORCED,
         replay=OperationReplayPolicy.RESUMABLE,
         baseline=OperationBaselinePolicy.EXACT_APPROVAL,
+        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
         sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
         conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
         owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK, OperationOwnedResource.PROCESS}),

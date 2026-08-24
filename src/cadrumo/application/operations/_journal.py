@@ -16,6 +16,7 @@ from ...core import (
 )
 from ...core.identity import ContentDigest
 from ...core.time import validate_utc_aware
+from ._capabilities import OperationRequestStoragePolicy
 from ._events import OperationEvent, OperationEventCode, OperationPhaseEvent, OperationTerminalEvent
 from ._interactions import OperationConsumedInteraction, OperationPendingInteraction
 from ._leases import (
@@ -32,6 +33,7 @@ from ._models import (
     OperationTerminalReceipt,
 )
 from ._replay import OperationEventCursor, OperationReplayLimit, OperationReplayPage
+from ._secret_submission import OperationSecretRequirement
 
 
 class OperationPersistedSnapshot(BaseModel):
@@ -44,9 +46,13 @@ class OperationPersistedSnapshot(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    schema_version: Literal[3] = 3
+    schema_version: Literal[4] = 4
     identity: OperationIdentity
+    request_storage: OperationRequestStoragePolicy
     request_reference: ContentDigest
+    credential_free_request_json: str | None = None
+    secret_requirement: OperationSecretRequirement | None = None
+    executor_entered_at: datetime | None = None
     revision: OperationRevision
     lifecycle: OperationLifecycle
     terminal_condition: OperationTerminalCondition | None = None
@@ -77,10 +83,48 @@ class OperationPersistedSnapshot(BaseModel):
         if self.updated_at < self.started_at:
             raise ValueError("persisted operation snapshot cannot update before it starts")
         _validate_deadline_and_cancellation_state(self)
+        _validate_request_storage(self)
+        _validate_secret_state(self)
         _validate_terminal_state(self)
         _validate_checkpoint_state(self)
         _validate_events(self)
         return self
+
+
+def _validate_request_storage(snapshot: OperationPersistedSnapshot) -> None:
+    journal_request = snapshot.credential_free_request_json
+    if snapshot.request_storage is OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL:
+        if journal_request is None or not journal_request:
+            raise ValueError("credential-free request storage requires an inline canonical request")
+    elif journal_request is not None:
+        raise ValueError("secure-reference request storage forbids an inline journal request")
+
+
+def _validate_secret_state(snapshot: OperationPersistedSnapshot) -> None:
+    requirement = snapshot.secret_requirement
+    entered_at = snapshot.executor_entered_at
+    if entered_at is not None:
+        validate_utc_aware(entered_at)
+        if entered_at < snapshot.started_at or entered_at > snapshot.updated_at:
+            raise ValueError("executor entry must fall within the persisted operation timeline")
+        if snapshot.lifecycle in {OperationLifecycle.CREATED, OperationLifecycle.QUEUED}:
+            raise ValueError("created or queued operation cannot record executor entry")
+    if requirement is None:
+        return
+    if snapshot.request_storage is not OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL:
+        raise ValueError("ephemeral secret requirement requires credential-free request storage")
+    if requirement.identity != snapshot.identity:
+        raise ValueError("ephemeral secret requirement does not match operation identity")
+    if requirement.revision != 0:
+        raise ValueError("ephemeral secret requirement must bind the initial operation revision")
+    if requirement.expires_at <= snapshot.started_at:
+        raise ValueError("ephemeral secret requirement must expire after operation creation")
+    if (
+        snapshot.lifecycle is OperationLifecycle.TERMINAL
+        and entered_at is None
+        and snapshot.effect is not OperationEffect.NONE
+    ):
+        raise ValueError("pre-entry ephemeral secret settlement must retain none effect")
 
 
 def _validate_deadline_and_cancellation_state(snapshot: OperationPersistedSnapshot) -> None:

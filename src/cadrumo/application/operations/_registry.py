@@ -6,14 +6,48 @@ from collections.abc import Callable
 from enum import StrEnum
 from typing import cast
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, PydanticInvalidForJsonSchema, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, OperationDurability, OperationEffect, OperationInteractionKind
 from ..operator_actions import ActionReference
-from ._capabilities import OperationCapabilities
+from ._capabilities import OperationCapabilities, OperationRequestStoragePolicy
 from ._events import OperationEventCode
 from ._executor import OperationExecutor, OperationResumableExecutor
-from ._models import OperationDefinitionId, OperationIdentity, OperationRequest, OperationSnapshot
+from ._models import (
+    CredentialFreeOperationRequest,
+    OperationDefinitionId,
+    OperationIdentity,
+    OperationRequest,
+    OperationSnapshot,
+)
+from ._secret_submission import OperationEphemeralSecretDeclaration
+
+_FORBIDDEN_CREDENTIAL_FREE_FIELD_PARTS = frozenset(
+    {
+        "auth",
+        "bearer",
+        "callback",
+        "cookie",
+        "credential",
+        "ciphertext",
+        "digest",
+        "encrypted",
+        "frontend",
+        "hash",
+        "key",
+        "passphrase",
+        "password",
+        "proof",
+        "secret",
+        "session",
+        "signature",
+        "token",
+        "transport",
+        "verifier",
+        "wrapped",
+    }
+)
+_FORBIDDEN_CREDENTIAL_FREE_SCHEMA_FORMATS = frozenset({"binary", "byte", "password"})
 
 
 class _OperationRequestResolutionHeader(BaseModel):
@@ -103,6 +137,7 @@ class OperationDefinition(BaseModel):
     reconciliation_policy: OperationReconciliationPolicy
     permitted_frontends: frozenset[OperationFrontendProjection] = Field(min_length=1)
     action_reference: ActionReference | None = None
+    ephemeral_secret: OperationEphemeralSecretDeclaration | None = None
 
     @field_validator("phase_codes")
     @classmethod
@@ -115,6 +150,8 @@ class OperationDefinition(BaseModel):
     def _validate_factory_request_type(self) -> OperationDefinition:
         if self.executor_factory.request_type is not self.request_type:
             raise ValueError("operation executor factory request type must match the definition request type")
+        self._validate_request_storage()
+        self._validate_ephemeral_secret()
         if (
             self.capabilities.durability is not OperationDurability.EPHEMERAL
             and OperationEffect.UNKNOWN not in self.capabilities.permitted_effects
@@ -128,6 +165,36 @@ class OperationDefinition(BaseModel):
             if not issubclass(self.executor_factory.executor_type, OperationResumableExecutor):
                 raise ValueError("checkpoint reconciliation requires a resumable executor")
         return self
+
+    def _validate_request_storage(self) -> None:
+        if self.capabilities.request_storage is not OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL:
+            return
+        if not issubclass(self.request_type, CredentialFreeOperationRequest):
+            raise ValueError(
+                "credential-free journal request type must explicitly inherit CredentialFreeOperationRequest"
+            )
+        config = self.request_type.model_config
+        if config.get("strict") is not True or config.get("frozen") is not True or config.get("extra") != "forbid":
+            raise ValueError("credential-free journal request type must be strict, frozen, and forbid extra fields")
+        if self.request_type.__private_attributes__:
+            raise ValueError("credential-free journal request type must not declare private state")
+        try:
+            schema = self.request_type.model_json_schema()
+        except PydanticInvalidForJsonSchema as error:
+            raise ValueError("credential-free journal request type must have a closed JSON schema") from error
+        _validate_credential_free_schema(schema)
+
+    def _validate_ephemeral_secret(self) -> None:
+        if self.ephemeral_secret is None:
+            return
+        if self.capabilities.request_storage is not OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL:
+            raise ValueError("ephemeral secret operations require credential-free journal request storage")
+        if self.capabilities.durability is not OperationDurability.RECORDED:
+            raise ValueError("ephemeral secret operations require recorded durability")
+        if self.reconciliation_policy is not OperationReconciliationPolicy.INTERRUPT:
+            raise ValueError("ephemeral secret operations cannot resume after owner loss")
+        if OperationEffect.NONE not in self.capabilities.permitted_effects:
+            raise ValueError("ephemeral secret operations must permit a pre-entry none effect")
 
 
 class OperationRegistry(BaseModel):
@@ -173,6 +240,37 @@ class OperationRegistry(BaseModel):
         header = _OperationSnapshotResolutionHeader.model_validate_json(raw)
         request_type = self.lookup(header.identity.definition_id).request_type
         return _specialize_snapshot_model(request_type).model_validate_json(raw)
+
+    def resolve_credential_free_payload(self, definition_id: str, raw: str | bytes) -> BaseModel:
+        """Hydrate a journal-safe payload only for its exact registered definition."""
+        definition = self.lookup(definition_id)
+        if definition.capabilities.request_storage is not OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL:
+            raise ValueError("operation definition does not use credential-free journal request storage")
+        return definition.request_type.model_validate_json(raw)
+
+
+def _validate_credential_free_schema(schema: object) -> None:
+    """Reject request schemas capable of carrying credentials or opaque transports."""
+    if isinstance(schema, list):
+        for item in cast(list[object], schema):
+            _validate_credential_free_schema(item)
+        return
+    if not isinstance(schema, dict):
+        return
+    mapping = cast(dict[str, object], schema)
+    schema_format = mapping.get("format")
+    if schema_format in _FORBIDDEN_CREDENTIAL_FREE_SCHEMA_FORMATS:
+        raise ValueError("credential-free journal request schema contains a secret-capable format")
+    properties = mapping.get("properties")
+    if isinstance(properties, dict):
+        for field_name in cast(dict[str, object], properties):
+            parts = set(field_name.lower().replace("-", "_").split("_"))
+            if parts & _FORBIDDEN_CREDENTIAL_FREE_FIELD_PARTS:
+                raise ValueError(
+                    f"credential-free journal request field {field_name!r} has a forbidden security meaning"
+                )
+    for value in mapping.values():
+        _validate_credential_free_schema(value)
 
 
 __all__ = [

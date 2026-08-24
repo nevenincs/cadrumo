@@ -25,6 +25,7 @@ from ._interactions import (
     OperationResponseToken,
 )
 from ._models import OperationIdentity, OperationReference, OperationRequest, OperationRevision
+from ._secret_submission import OperationEphemeralSecretAccess
 
 
 @runtime_checkable
@@ -181,6 +182,11 @@ class OperationExecutorContext(Protocol):
     @property
     def operands(self) -> OperationSecureOperandLookup:
         """Secure lookup boundary for digest-addressed confidential operands."""
+        ...
+
+    @property
+    def ephemeral_secret(self) -> OperationEphemeralSecretAccess:
+        """One-shot scoped secret access declared for this operation."""
         ...
 
     @property

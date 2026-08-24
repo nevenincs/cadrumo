@@ -22,6 +22,7 @@ from .....application.operations import (
     OperationPersistedSnapshot,
     OperationPhaseEvent,
     OperationReplayStatus,
+    OperationRequestStoragePolicy,
     operation_conflict_scope_reference,
 )
 from .....core import OperationEffect, OperationLifecycle, scan_directory
@@ -70,6 +71,7 @@ def _snapshot(*, revision: int, sequence: int, updated_at: datetime) -> Operatio
     )
     return OperationPersistedSnapshot(
         identity=_IDENTITY,
+        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
         request_reference=_REQUEST_REFERENCE,
         revision=revision,
         lifecycle=OperationLifecycle.RUNNING,
@@ -160,8 +162,8 @@ def test_public_persistence_facades_commit_replay_and_reload_credential_free_his
     assert raw_text.count(_REQUEST_REFERENCE) == 1
     assert owner.owner_id not in raw_text
     assert owner.token not in raw_text
-    assert "credential" not in raw_text
-    assert "secret" not in raw_text
+    assert raw_document["snapshot"]["credential_free_request_json"] is None
+    assert raw_document["snapshot"]["secret_requirement"] is None
     assert journal_path.parent == tmp_path / "operation-journals"
     assert journal_path.resolve(strict=True).parent.parent == tmp_path.resolve(strict=True)
     assert not journal_path.is_symlink()

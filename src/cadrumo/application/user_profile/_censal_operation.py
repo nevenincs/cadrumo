@@ -40,6 +40,7 @@ from ..operations import (
     OperationReconciliationPolicy,
     OperationReplayPolicy,
     OperationRequest,
+    OperationRequestStoragePolicy,
     OperationResponseIntent,
     OperationSensitiveInputPolicy,
 )
@@ -395,6 +396,7 @@ CENSAL_OPERATION_DEFINITION = OperationDefinition(
         deadline=OperationDeadline.COOPERATIVE,
         replay=OperationReplayPolicy.RESUMABLE,
         baseline=OperationBaselinePolicy.EXACT_APPROVAL,
+        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
         sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
         conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
         owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK}),

@@ -28,6 +28,7 @@ from .. import (
     OperationReplayPage,
     OperationReplayStatus,
     OperationRequest,
+    OperationRequestStoragePolicy,
     OperationSecureReferenceStore,
     OperationSnapshot,
     OperationTerminalEvent,
@@ -74,6 +75,7 @@ def _persisted_snapshot() -> OperationPersistedSnapshot:
     )
     return OperationPersistedSnapshot(
         identity=runtime.identity,
+        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
         request_reference="d" * 64,
         revision=runtime.revision,
         lifecycle=runtime.lifecycle,
@@ -111,6 +113,7 @@ def _terminal_persisted_snapshot() -> OperationPersistedSnapshot:
     )
     return OperationPersistedSnapshot(
         identity=identity,
+        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
         request_reference="d" * 64,
         revision=receipt.revision,
         lifecycle=OperationLifecycle.TERMINAL,

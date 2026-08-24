@@ -30,6 +30,7 @@ from .. import (
     OperationRegistry,
     OperationReplayPolicy,
     OperationRequest,
+    OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
     OperationSnapshot,
 )
@@ -79,6 +80,7 @@ def capabilities() -> OperationCapabilities:
         deadline=OperationDeadline.COOPERATIVE,
         replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
         baseline=OperationBaselinePolicy.REQUEST_BOUND,
+        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
         sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
         conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
         owned_resources=frozenset(),
@@ -213,6 +215,7 @@ def test_definition_allows_ephemeral_none_effect_without_owner_loss_unknown_effe
         "deadline": OperationDeadline.ABSENT,
         "replay": OperationReplayPolicy.NONE,
         "baseline": OperationBaselinePolicy.NONE,
+        "request_storage": OperationRequestStoragePolicy.SECURE_REFERENCE,
         "sensitive_input": OperationSensitiveInputPolicy.NONE,
         "conflict_scope": OperationConflictScope.NONE,
         "permitted_effects": frozenset({OperationEffect.NONE}),

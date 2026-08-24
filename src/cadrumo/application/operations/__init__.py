@@ -18,6 +18,7 @@ from ._capabilities import (
     OperationConflictScope,
     OperationOwnedResource,
     OperationReplayPolicy,
+    OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
 from ._events import (
@@ -78,6 +79,7 @@ from ._leases import (
     operation_conflict_scope_reference,
 )
 from ._models import (
+    CredentialFreeOperationRequest,
     OperationDefinitionId,
     OperationId,
     OperationIdempotencyClaim,
@@ -98,9 +100,18 @@ from ._registry import (
     OperationRegistry,
 )
 from ._replay import OperationEventCursor, OperationReplayLimit, OperationReplayPage, OperationReplayStatus
+from ._secret_submission import (
+    EphemeralSecretSubmission,
+    OperationEphemeralSecretAccess,
+    OperationEphemeralSecretDeclaration,
+    OperationSecretKind,
+    OperationSecretRequirement,
+)
 from ._supervisor import OperationSupervisor
 
 __all__ = [
+    "CredentialFreeOperationRequest",
+    "EphemeralSecretSubmission",
     "JournalRepositoryBase",
     "OperationActorReference",
     "OperationApplyResponse",
@@ -123,6 +134,8 @@ __all__ = [
     "OperationDurability",
     "OperationEffect",
     "OperationEffectEvent",
+    "OperationEphemeralSecretAccess",
+    "OperationEphemeralSecretDeclaration",
     "OperationEvent",
     "OperationEventCode",
     "OperationEventCursor",
@@ -171,10 +184,13 @@ __all__ = [
     "OperationReplayPolicy",
     "OperationReplayStatus",
     "OperationRequest",
+    "OperationRequestStoragePolicy",
     "OperationResponseIntent",
     "OperationResponseToken",
     "OperationResumableExecutor",
     "OperationRevision",
+    "OperationSecretKind",
+    "OperationSecretRequirement",
     "OperationSecureOperandLookup",
     "OperationSecureReferenceStore",
     "OperationSensitiveInputPolicy",

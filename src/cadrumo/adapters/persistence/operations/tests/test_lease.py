@@ -20,6 +20,7 @@ from .....application.operations import (
     OperationOwnerLease,
     OperationPersistedSnapshot,
     OperationPhaseEvent,
+    OperationRequestStoragePolicy,
     operation_conflict_scope_reference,
 )
 from .....core import OperationEffect, OperationLifecycle, exclusive_file_lock
@@ -66,6 +67,7 @@ def _snapshot(*, revision: int) -> OperationPersistedSnapshot:
     )
     return OperationPersistedSnapshot(
         identity=identity,
+        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
         request_reference="d" * 64,
         revision=revision,
         lifecycle=OperationLifecycle.RUNNING,

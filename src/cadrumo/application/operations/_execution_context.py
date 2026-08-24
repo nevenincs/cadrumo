@@ -100,7 +100,7 @@ class DefinitionBoundContext:
         *,
         snapshot: OperationPersistedSnapshot,
         registry: OperationRegistry,
-        operands: OperationSecureReferenceStore,
+        operands: OperationSecureReferenceStore | None,
         clock: Callable[[], datetime],
         resources: dict[OperationId, list[AsyncCloseable]],
         advance: Callable[..., Awaitable[OperationPersistedSnapshot]],

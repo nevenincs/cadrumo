@@ -69,5 +69,6 @@ def test_facade_does_not_import_frontend_or_adapter_modules() -> None:
         "_models",
         "_replay",
         "_registry",
+        "_secret_submission",
         "_supervisor",
     }

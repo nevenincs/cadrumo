@@ -32,6 +32,7 @@ from ..operations import (
     OperationReconciliationPolicy,
     OperationReplayPolicy,
     OperationRequest,
+    OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
 from ..storage.sync_runs import SyncRunRecordRepositoryProtocol
@@ -210,6 +211,7 @@ def build_filed_history_operation_definition(
             deadline=OperationDeadline.ABSENT,
             replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
             baseline=OperationBaselinePolicy.NONE,
+            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
             sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
             conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
             owned_resources=frozenset(),

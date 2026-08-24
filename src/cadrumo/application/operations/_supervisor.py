@@ -20,6 +20,7 @@ from ...core import (
 )
 from ...core.async_cleanup import AsyncCloseable, close_async_resources
 from ...core.errors import ErrorCategory, get_registered_error_code
+from ._capabilities import OperationRequestStoragePolicy
 from ._events import (
     OperationDiagnosticEvent,
     OperationEvent,
@@ -64,6 +65,12 @@ from ._models import (
 )
 from ._registry import OperationDefinition, OperationReconciliationPolicy, OperationRegistry
 from ._replay import OperationEventCursor, OperationReplayLimit, OperationReplayPage
+from ._secret_submission import (
+    BoundEphemeralSecretAccess,
+    EphemeralSecretBroker,
+    OperationSecretRequirement,
+    zeroize_secret_buffer,
+)
 from ._supervisor_lease import OperationSupervisorLeaseMixin
 
 _AWAIT_TERMINAL_INITIAL_BACKOFF_SECONDS = 0.025
@@ -78,7 +85,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         journal: OperationJournal,
         event_stream: OperationEventStream,
         leases: OperationLeaseRepository,
-        operands: OperationSecureReferenceStore,
+        operands: OperationSecureReferenceStore | None,
         owner_id: Hex64Str,
         lease_token_factory: Callable[[], OperationLeaseToken],
         clock: Callable[[], datetime],
@@ -106,6 +113,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         self._continuation_tasks: dict[OperationId, asyncio.Task[OperationPersistedSnapshot]] = {}
         self._durable_change_events: dict[OperationId, asyncio.Event] = {}
         self._durable_revisions: dict[OperationId, int] = {}
+        self._ephemeral_secrets = EphemeralSecretBroker()
 
         if lease_duration <= timedelta():
             raise ValueError("operation lease duration must be positive")
@@ -115,6 +123,10 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         ):
             if duration is not None and duration <= timedelta():
                 raise ValueError(f"{name} must be positive when configured")
+        for definition in registry.definitions:
+            declaration = definition.ephemeral_secret
+            if declaration is not None and declaration.lifetime >= lease_duration:
+                raise ValueError("ephemeral secret lifetime must be shorter than the owner lease")
 
     async def submit(
         self, request: OperationRequest[BaseModel], *, operation_id: OperationId | None = None
@@ -122,11 +134,37 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         definition = self._registry.lookup(request.definition_id)
         self._validate_request_payload(request, definition.request_type)
         now = self._clock()
-        ref = await self._operands.put(request.payload, written_at=now)
         identity = OperationIdentity(
             operation_id=operation_id or new_operation_id(),
             definition_id=request.definition_id,
             subject_ref=request.subject_ref,
+        )
+        request_storage = definition.capabilities.request_storage
+        if request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE:
+            if self._operands is None:
+                raise ValueError("secure-reference request storage requires an operand store")
+            ref = await self._operands.put(request.payload, written_at=now)
+            credential_free_request_json = None
+        else:
+            credential_free_request_json = request.payload.model_dump_json()
+            ref = content_hash_hex(request.payload.model_dump(mode="json"))
+        secret_requirement = (
+            OperationSecretRequirement(
+                identity=identity,
+                interaction_id=content_hash_hex(
+                    {
+                        "schema_version": 1,
+                        "identity": identity.model_dump(mode="json"),
+                        "revision": 0,
+                        "secret_kind": definition.ephemeral_secret.secret_kind,
+                    }
+                ),
+                revision=0,
+                secret_kind=definition.ephemeral_secret.secret_kind,
+                expires_at=now + definition.ephemeral_secret.lifetime,
+            )
+            if definition.ephemeral_secret is not None
+            else None
         )
         claim = (
             OperationIdempotencyClaim.bind(
@@ -145,7 +183,10 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         self._leases_by_operation[identity.operation_id] = lease
         snapshot = OperationPersistedSnapshot(
             identity=identity,
+            request_storage=request_storage,
             request_reference=ref,
+            credential_free_request_json=credential_free_request_json,
+            secret_requirement=secret_requirement,
             revision=0,
             lifecycle=OperationLifecycle.CREATED,
             started_at=now,
@@ -171,14 +212,22 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             raise ValueError("request payload does not match definition")
 
     async def start(self, operation_id: OperationId) -> OperationPersistedSnapshot:
-        """Start one owned registered executor from its durable secure operand."""
+        """Start one owned registered executor from its declared request storage."""
         snapshot = await self.inspect(operation_id)
         if snapshot.lifecycle is not OperationLifecycle.CREATED:
             raise ValueError("only a created operation may be started")
         definition = self._registry.lookup(snapshot.identity.definition_id)
         execution_deadline = self._execution_deadline_for(definition.capabilities.deadline)
         self._require_cleanup_timeout(definition.capabilities.cancellation)
-        payload = await self._operands.resolve(snapshot.request_reference, definition.request_type)
+        requirement = snapshot.secret_requirement
+        now = self._clock()
+        if requirement is not None:
+            if now >= requirement.expires_at:
+                self._ephemeral_secrets.discard(operation_id)
+                return await self._settle_pre_entry_secret_wait(snapshot, OperationTerminalCondition.INTERRUPTED)
+            if not self._ephemeral_secrets.has_exact(requirement, observed_at=now):
+                raise ValueError("ephemeral secret requirement has no exact live submission")
+        payload = await self._resolve_request_payload(snapshot, definition)
         request = OperationRequest(
             definition_id=snapshot.identity.definition_id,
             subject_ref=snapshot.identity.subject_ref,
@@ -198,11 +247,17 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             lifecycle=OperationLifecycle.RUNNING,
             events=(started,),
             execution_deadline=execution_deadline,
+            executor_entered_at=now,
         )
         context = self._build_context(running)
         executor_context = _SupervisorExecutorContext(
             context=context,
             operands=self._operands,
+            ephemeral_secret=BoundEphemeralSecretAccess(
+                requirement=requirement,
+                broker=self._ephemeral_secrets,
+                clock=self._clock,
+            ),
             clock=self._clock,
         )
         self._contexts[operation_id] = context
@@ -218,6 +273,66 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         except Exception as error:
             return await self._settle_executor_failure(context.snapshot, error)
         return await self._settle_returned_result(context.snapshot, result_ref)
+
+    async def submit_ephemeral_secret(
+        self,
+        requirement: OperationSecretRequirement,
+        secret: bytearray,
+    ) -> None:
+        """Accept one exact-bound mutable secret without serializing or digesting it."""
+        try:
+            snapshot = await self.inspect(requirement.identity.operation_id)
+            if snapshot.secret_requirement != requirement:
+                raise ValueError("ephemeral secret submission does not match the durable requirement")
+            if snapshot.lifecycle is not OperationLifecycle.CREATED or snapshot.executor_entered_at is not None:
+                raise ValueError("ephemeral secret requirement is no longer awaiting submission")
+            if self._clock() >= requirement.expires_at:
+                self._ephemeral_secrets.discard(requirement.identity.operation_id)
+                await self._settle_pre_entry_secret_wait(snapshot, OperationTerminalCondition.INTERRUPTED)
+                raise ValueError("ephemeral secret requirement is expired")
+            self._ephemeral_secrets.submit(requirement, secret, observed_at=self._clock())
+        except BaseException:
+            zeroize_secret_buffer(secret)
+            raise
+
+    async def _resolve_request_payload(
+        self,
+        snapshot: OperationPersistedSnapshot,
+        definition: OperationDefinition,
+    ) -> BaseModel:
+        if snapshot.request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE:
+            if self._operands is None:
+                raise ValueError("secure-reference request storage requires an operand store")
+            return await self._operands.resolve(snapshot.request_reference, definition.request_type)
+        raw = snapshot.credential_free_request_json
+        if raw is None:
+            raise ValueError("credential-free operation request is absent")
+        payload = self._registry.resolve_credential_free_payload(definition.definition_id, raw)
+        if content_hash_hex(payload.model_dump(mode="json")) != snapshot.request_reference:
+            raise ValueError("credential-free operation request digest does not match durable content")
+        return payload
+
+    async def _settle_pre_entry_secret_wait(
+        self,
+        snapshot: OperationPersistedSnapshot,
+        condition: OperationTerminalCondition,
+    ) -> OperationPersistedSnapshot:
+        if snapshot.executor_entered_at is not None:
+            raise ValueError("pre-entry secret settlement cannot follow executor entry")
+        return await self.settle(
+            snapshot.identity.operation_id,
+            OperationTerminalReceipt(
+                identity=snapshot.identity,
+                revision=snapshot.revision + 1,
+                condition=condition,
+                effect=OperationEffect.NONE,
+                settled_at=self._clock(),
+            ),
+        )
+
+    async def shutdown(self) -> None:
+        """Wipe every runtime-only secret retained by this supervisor instance."""
+        self._ephemeral_secrets.close()
 
     async def _settle_executor_failure(
         self,
@@ -420,6 +535,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         cleanup_deadline: datetime | None = None,
         cancellation_requested_at: datetime | None = None,
         cancellation_acknowledged_at: datetime | None = None,
+        executor_entered_at: datetime | None = None,
     ) -> OperationPersistedSnapshot:
         now = self._clock()
         async with self._lease_lock(snapshot.identity.operation_id):
@@ -456,6 +572,9 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
                         snapshot.cancellation_acknowledged_at
                         if cancellation_acknowledged_at is None
                         else cancellation_acknowledged_at
+                    ),
+                    "executor_entered_at": (
+                        snapshot.executor_entered_at if executor_entered_at is None else executor_entered_at
                     ),
                 }
             )
@@ -519,6 +638,26 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
 
     async def request_cancel(self, operation_id: OperationId) -> OperationPersistedSnapshot:
         snapshot = await self.inspect(operation_id)
+        if snapshot.secret_requirement is not None and snapshot.executor_entered_at is None:
+            self._ephemeral_secrets.discard(operation_id)
+            requested_at = self._clock()
+            event = OperationNoticeEvent(
+                identity=snapshot.identity,
+                revision=0,
+                sequence=1,
+                timestamp=requested_at,
+                code="operation.secret.cancelled",
+                notice_code="operation.secret.cancelled",
+            )
+            acknowledged = await self._advance(
+                snapshot,
+                lifecycle=OperationLifecycle.SETTLING,
+                events=(event,),
+                cleanup_deadline=requested_at + self._lease_duration,
+                cancellation_requested_at=requested_at,
+                cancellation_acknowledged_at=requested_at,
+            )
+            return await self._settle_pre_entry_secret_wait(acknowledged, OperationTerminalCondition.CANCELLED)
         cancellation = self._registry.lookup(snapshot.identity.definition_id).capabilities.cancellation
         if cancellation is OperationCancellation.UNSUPPORTED:
             raise ValueError("operation does not support cancellation")
@@ -646,6 +785,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         self._executor_tasks.pop(operation_id, None)
         self._cleanup_tasks.pop(operation_id, None)
         self._continuation_tasks.pop(operation_id, None)
+        self._ephemeral_secrets.discard(operation_id)
         self._notify_durable_change(successor)
         return successor
 
@@ -655,7 +795,10 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         condition: OperationTerminalCondition,
     ) -> None:
         """Require local stop proof before a terminal condition claims work is over."""
-        if snapshot.lifecycle in {OperationLifecycle.CREATED, OperationLifecycle.QUEUED}:
+        if snapshot.executor_entered_at is None or snapshot.lifecycle in {
+            OperationLifecycle.CREATED,
+            OperationLifecycle.QUEUED,
+        }:
             return
         executor_task = self._executor_tasks.get(snapshot.identity.operation_id)
         if executor_task is None or not executor_task.done():
@@ -718,6 +861,11 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
                 snapshot,
                 outcome=OperationReconciliationOutcome.ORPHANED,
                 lease_evidence_ref=acquired.evidence_ref,
+                effect=(
+                    OperationEffect.NONE
+                    if snapshot.secret_requirement is not None and snapshot.executor_entered_at is None
+                    else OperationEffect.UNKNOWN
+                ),
             )
         if observed.disposition is not OperationLeaseObservationDisposition.EXPIRED or observed.current is None:
             raise ValueError("operation lease observation cannot establish startup reconciliation ownership")
@@ -743,6 +891,13 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
                 lease_evidence_ref=taken_over.evidence_ref,
             )
         if snapshot.lifecycle is OperationLifecycle.CREATED:
+            if snapshot.secret_requirement is not None and snapshot.executor_entered_at is None:
+                return await self._interrupt_reconciliation(
+                    snapshot,
+                    outcome=OperationReconciliationOutcome.INTERRUPTED,
+                    lease_evidence_ref=taken_over.evidence_ref,
+                    effect=OperationEffect.NONE,
+                )
             return await self._record_reconciliation(
                 snapshot,
                 outcome=OperationReconciliationOutcome.RECOVERED,
@@ -814,7 +969,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         if not isinstance(executor, OperationResumableExecutor):
             raise ValueError("checkpoint reconciliation executor is not resumable")
         resumable_executor = cast(OperationResumableExecutor[BaseModel], executor)
-        payload = await self._operands.resolve(snapshot.request_reference, definition.request_type)
+        payload = await self._resolve_request_payload(snapshot, definition)
         request = OperationRequest(
             definition_id=snapshot.identity.definition_id,
             subject_ref=snapshot.identity.subject_ref,
@@ -825,6 +980,11 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         executor_context = _SupervisorExecutorContext(
             context=context,
             operands=self._operands,
+            ephemeral_secret=BoundEphemeralSecretAccess(
+                requirement=snapshot.secret_requirement,
+                broker=self._ephemeral_secrets,
+                clock=self._clock,
+            ),
             clock=self._clock,
         )
         self._contexts[snapshot.identity.operation_id] = context
@@ -885,6 +1045,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         *,
         outcome: OperationReconciliationOutcome,
         lease_evidence_ref: str,
+        effect: OperationEffect = OperationEffect.UNKNOWN,
     ) -> OperationPersistedSnapshot:
         classified = await self._record_reconciliation(
             snapshot,
@@ -895,7 +1056,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             identity=classified.identity,
             revision=classified.revision + 1,
             condition=OperationTerminalCondition.INTERRUPTED,
-            effect=OperationEffect.UNKNOWN,
+            effect=effect,
             settled_at=self._clock(),
         )
         return await self.settle(classified.identity.operation_id, receipt)
@@ -908,7 +1069,7 @@ class _SupervisorInteractionAccess:
         self,
         *,
         request_pending: Callable[[OperationPendingInteraction], Awaitable[None]],
-        operands: OperationSecureReferenceStore,
+        operands: OperationSecureReferenceStore | None,
         clock: Callable[[], datetime],
     ) -> None:
         self._request_pending = request_pending
@@ -927,6 +1088,8 @@ class _SupervisorInteractionAccess:
         baseline_digest: str | None = None,
         proposed_effect_digest: str | None = None,
     ) -> OperationPendingInteraction:
+        if self._operands is None:
+            raise ValueError("secure review publication requires an operand store")
         reference = await self._operands.put(reviewed_operand, written_at=self._clock())
         pending = OperationPendingInteraction.bind(
             request=request,
@@ -946,14 +1109,16 @@ class _SupervisorExecutorContext:
         self,
         *,
         context: DefinitionBoundContext,
-        operands: OperationSecureReferenceStore,
+        operands: OperationSecureReferenceStore | None,
+        ephemeral_secret: BoundEphemeralSecretAccess,
         clock: Callable[[], datetime],
     ) -> None:
         self.identity = context.identity
         self.cancellation = context.cancellation
         self.deadlines = context.deadlines
         self.events = context.events
-        self.operands = operands
+        self._operands = operands
+        self.ephemeral_secret = ephemeral_secret
         self.cleanup = context.cleanup
         self.interactions = _SupervisorInteractionAccess(
             request_pending=context.interactions.request,
@@ -961,6 +1126,13 @@ class _SupervisorExecutorContext:
             clock=clock,
         )
         self._context = context
+
+    @property
+    def operands(self) -> OperationSecureReferenceStore:
+        """Expose secure storage only when the composition root supplied it."""
+        if self._operands is None:
+            raise ValueError("operation definition has no secure operand store")
+        return self._operands
 
     @property
     def revision(self) -> int:

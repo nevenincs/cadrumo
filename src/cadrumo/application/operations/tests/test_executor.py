@@ -18,6 +18,7 @@ from .. import (
     OperationCleanupOwner,
     OperationDeadlineAccess,
     OperationEffect,
+    OperationEphemeralSecretAccess,
     OperationEventEmitter,
     OperationExecutor,
     OperationExecutorContext,
@@ -112,6 +113,20 @@ class InteractionAccess:
     ) -> OperationPendingInteraction: ...
 
 
+class EphemeralSecretAccess:
+    requirement = None
+
+    @asynccontextmanager
+    async def consume(self) -> AsyncGenerator[memoryview]:
+        value = bytearray(b"transient")
+        view = memoryview(value)
+        try:
+            yield view
+        finally:
+            view.release()
+            value[:] = b"\x00" * len(value)
+
+
 class ExecutorContext:
     def __init__(self) -> None:
         self.identity = OperationIdentity(operation_id="a" * 64, definition_id="profile.sync", subject_ref="profile:1")
@@ -120,6 +135,7 @@ class ExecutorContext:
         self.deadlines = DeadlineAccess()
         self.events = EventEmitter()
         self.operands = SecureOperandLookup()
+        self.ephemeral_secret = EphemeralSecretAccess()
         self.cleanup = CleanupOwner()
         self.interactions = InteractionAccess()
 
@@ -136,6 +152,7 @@ def test_public_protocols_accept_complete_structural_implementations() -> None:
     assert isinstance(context.deadlines, OperationDeadlineAccess)
     assert isinstance(context.events, OperationEventEmitter)
     assert isinstance(context.operands, OperationSecureOperandLookup)
+    assert isinstance(context.ephemeral_secret, OperationEphemeralSecretAccess)
     assert isinstance(context.cleanup, OperationCleanupOwner)
     assert isinstance(context.interactions, OperationInteractionAccess)
     assert isinstance(context, OperationExecutorContext)
