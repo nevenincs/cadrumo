@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:8dc337f007fababce0b4cc50a079d680cdb5f22d0b533ef7b3409e68e8bb59ed'
+body_hash: 'sha256:5271e703c8a2d4ab598b50216584ab8e4a0aede5dd8800a8ae8b7f84b600c93b'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -131,6 +131,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s27-source-owner-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s28-export-owner-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s29-s83-remediation-post-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s31-continuity-semantic-linkage-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s41-cache-key-type-review-audit]]'
@@ -224,6 +225,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s27-source-owner-review-audit` - `registry-completeness-closure` audit: `S27 source-owner enrollment review`
 - `2026-08-24-registry-completeness-closure-s28-export-owner-post-review-audit` - `registry-completeness-closure` audit: `S28 export predecessor owner independent post-review`
 - `2026-08-24-registry-completeness-closure-s29-s83-remediation-post-review-audit` - `registry-completeness-closure` audit: `S29 and S83 remediation post review`
+- `2026-08-24-registry-completeness-closure-s31-continuity-semantic-linkage-post-review-audit` - `registry-completeness-closure` audit: `S31 continuity semantic-linkage post-review`
 - `2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot authority-grade enforcement review`
 - `2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot-grade enforcement review`
 - `2026-08-24-registry-completeness-closure-s41-cache-key-type-review-audit` - `registry-completeness-closure` audit: `S41 cache-key type review`
