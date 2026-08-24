@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:af1221a8bb2ad7046ce4c11f27630269bfb12ac4519b1a0e0409a594f86c9669'
+body_hash: 'sha256:849220bbdce2c780768b855e03f549238ab9b240972b2d192c5649ae6ad5d71a'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -57,11 +57,13 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W02-P03-S13]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P03-S14]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P03-S15]]'
+  - '[[2026-08-24-registry-completeness-closure-W02-P03-S16]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-036-2025-filing-authority-reference]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-038-design-extraction-reference]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-136-2026-filing-boundary-reference]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-182-design-era-and-donor-row-reference]]'
+  - '[[2026-08-24-registry-completeness-closure-modelo-185-historical-design-authority-reference]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
   - '[[2026-08-24-registry-completeness-closure-s01-schema-family-coverage-review-audit]]'
@@ -234,6 +236,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W02-P03-S13` - Adjudicate Modelo 038 revision 2002-y-siguientes design extraction trust and fileability
 - `2026-08-24-registry-completeness-closure-W02-P03-S14` - Adjudicate Modelo 136 revision 2026 record-design availability and supported filing boundary
 - `2026-08-24-registry-completeness-closure-W02-P03-S15` - Adjudicate Modelo 182 revision 2007-y-siguientes design-era coverage and donor-row prerequisites
+- `2026-08-24-registry-completeness-closure-W02-P03-S16` - Adjudicate Modelo 185 revision 2003-2025 exact historical design authority
 
 ### plan
 
@@ -245,6 +248,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-modelo-038-design-extraction-reference` - `registry-completeness-closure` reference: `modelo 038 design extraction`
 - `2026-08-24-registry-completeness-closure-modelo-136-2026-filing-boundary-reference` - `registry-completeness-closure` reference: `modelo 136 2026 filing boundary`
 - `2026-08-24-registry-completeness-closure-modelo-182-design-era-and-donor-row-reference` - `registry-completeness-closure` reference: `Modelo 182 design-era and donor-row filing boundary`
+- `2026-08-24-registry-completeness-closure-modelo-185-historical-design-authority-reference` - `registry-completeness-closure` reference: `Modelo 185 historical design and filing boundary`
 
 ### research
 
