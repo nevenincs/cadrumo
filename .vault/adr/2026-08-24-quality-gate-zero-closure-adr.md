@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:6a75fd9e73550f1f35fad7e79eac3c1d857981fb43b11cc4bce9411899bd235b'
+body_hash: 'sha256:7bb0445113f2194a9b1424093169e0997a4256fdcd8375530dcdd6f2a13555ad'
 related:
   - "[[2026-08-24-quality-gate-zero-closure-static-gate-matrix-research]]"
   - "[[2026-08-24-quality-gate-zero-closure-failure-cluster-topology-reference]]"
@@ -13,7 +13,7 @@ related:
   - "[[2026-06-09-quality-hardening-campaign-adr]]"
   - "[[2026-06-04-repo-health-triage-adr]]"
 ---
-# `quality-gate-zero-closure` adr: `Exact zero closure protocol for static gates and Vault health` | (**status:** `proposed`)
+# `quality-gate-zero-closure` adr: `Exact zero closure protocol for static gates and Vault health` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -31,11 +31,11 @@ The decision is grounded by `2026-08-24-quality-gate-zero-closure-static-gate-ma
 
 ## Considered options
 
-- **O1 — One coordinator edits every failing path in a repository-wide sweep.** Rejected: it makes peer WIP indistinguishable from campaign work, creates modify/modify collisions, and weakens ownership and provenance.
-- **O2 — Owner-coordinated remediation with a joined zero-closure predicate.** Chosen: the coordinator owns the evidence matrix, sequencing, and handoffs; active plans retain authority for their paths and repair each root cause with their own behavior proof.
-- **O3 — Establish a threshold, diagnostic baseline, new exclusion, skip/xfail, suppression, or allowlist for the known-red set.** Rejected: it changes the signal instead of repairing the defect and contradicts the standing honesty and quality-gate decisions.
-- **O4 — Leave every red row to its active plan without a coordinating closure protocol.** Rejected: it preserves local ownership but leaves no joined evidence standard or final predicate, so the repository can remain red indefinitely with incompatible measurements.
-- **O5 — Order type work by checker totals or largest files alone.** Rejected: totals and file size are useful discovery signals but do not identify the shared production boundary that caused a family of diagnostics.
+- **O1 - One coordinator edits every failing path in a repository-wide sweep.** Rejected: it makes peer WIP indistinguishable from campaign work, creates modify/modify collisions, and weakens ownership and provenance.
+- **O2 - Owner-coordinated remediation with a joined zero-closure predicate.** Chosen: the coordinator owns the evidence matrix, sequencing, and handoffs; active plans retain authority for their paths and repair each root cause with their own behavior proof.
+- **O3 - Establish a threshold, diagnostic baseline, new exclusion, skip/xfail, suppression, or allowlist for the known-red set.** Rejected: it changes the signal instead of repairing the defect and contradicts the standing honesty and quality-gate decisions.
+- **O4 - Leave every red row to its active plan without a coordinating closure protocol.** Rejected: it preserves local ownership but leaves no joined evidence standard or final predicate, so the repository can remain red indefinitely with incompatible measurements.
+- **O5 - Order type work by checker totals or largest files alone.** Rejected: totals and file size are useful discovery signals but do not identify the shared production boundary that caused a family of diagnostics.
 
 ## Constraints
 
