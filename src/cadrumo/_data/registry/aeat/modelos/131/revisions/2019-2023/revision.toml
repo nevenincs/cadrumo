@@ -18,6 +18,8 @@ legal_refs = [
 source_refs = [
     "aeat-dr-131-2019-2023-v101",
     "aeat-modelo-131-instructions",
+    "aeat-calendario-contribuyente-2022",
+    "aeat-calendario-contribuyente-2023",
     "boe-modelo-131-2007-form",
 ]
 review_status = "agent_reviewed"

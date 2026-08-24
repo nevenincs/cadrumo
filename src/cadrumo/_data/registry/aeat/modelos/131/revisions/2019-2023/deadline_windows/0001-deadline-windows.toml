@@ -1,4 +1,4 @@
-# Filing year 2023 only, with close dates READ from AEAT's own Calendario del
+# Filing years 2022 and 2023, with dates READ from AEAT's own Calendario del
 # Contribuyente rather than derived from the statutory rule: RIRPF art. 111 fixes
 # the plazo ("Los tres primeros trimestres, entre el dia 1 y el 20 de los meses
 # de abril, julio y octubre" / "Cuarto trimestre, entre el dia 1 y el 30 del mes
@@ -8,11 +8,10 @@
 # Estimacion objetiva: 131" and the 2024 calendar "Hasta el 30 de enero --
 # Estimacion objetiva: 131".
 #
-# Filing years 2019 to 2022 are NOT declared: AEAT's calendars are bundled from
-# 2023 onward only, so their close dates cannot be read from any source this
-# repository holds. A window per governed year is not required -- modelo 115's
-# open-ended revision declares 2026 alone -- so this family carries what is
-# grounded rather than guessed dates for the four earlier years.
+# Filing years 2019 to 2021 are not supported by the shared filing-year
+# catalogue and are not declared. The 2022 calendar is bundled authority for
+# the first three 2022 quarters; the following January is stated by the 2023
+# calendar. No dates are derived from the statutory pattern.
 [[revisions."2019-2023".deadline_windows]]
 id = "modelo-131-2023-1t"
 filing_year = 2023

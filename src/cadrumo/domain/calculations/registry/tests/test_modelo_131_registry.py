@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+from datetime import date
 from typing import Any
 
 import pytest
 
 from .....core import normalise_corpus_text
 from .....core.resources import bundled_path
-from .. import LegalRefId, ModeloDefinition, RegistryCatalogues, build_snapshot
+from .. import LegalRefId, ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot
+from .._authority import bundled_authority
+from .._temporal import select_revision
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -75,6 +78,48 @@ def _refs_by_id(items: tuple[Any, ...]) -> dict[str, tuple[LegalRefId, ...]]:
 @pytest.fixture(scope="module")
 def modelo_131_registry():
     return _committed_modelo("131")
+
+
+def test_modelo_131_supported_year_2022_deadline_census_dates_sources_and_ownership(
+    modelo_131_registry: tuple[ModeloDefinition, RegistryCatalogues],
+) -> None:
+    modelo, catalogues = modelo_131_registry
+    revision = modelo.revisions["2019-2023"]
+    windows = {(window.filing_year, window.period.registry_token): window for window in revision.deadline_windows}
+    expected_2022 = {
+        "1T": (date(2022, 4, 1), date(2022, 4, 20), date(2022, 4, 15), "aeat-calendario-contribuyente-2022"),
+        "2T": (date(2022, 7, 1), date(2022, 7, 20), date(2022, 7, 15), "aeat-calendario-contribuyente-2022"),
+        "3T": (date(2022, 10, 1), date(2022, 10, 20), date(2022, 10, 15), "aeat-calendario-contribuyente-2022"),
+        "4T": (date(2023, 1, 1), date(2023, 1, 30), date(2023, 1, 25), "aeat-calendario-contribuyente-2023"),
+    }
+
+    assert len(revision.deadline_windows) == len(windows) == 8
+    assert set(revision.constructs[0].deadline_windows) == {window.id for window in revision.deadline_windows}
+    assert {period for year, period in windows if year == 2022} == set(expected_2022)
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+
+    for source_ref in {"aeat-calendario-contribuyente-2022", "aeat-calendario-contribuyente-2023"}:
+        source = catalogues.sources[source_ref]
+        assert (source.authority, source.evidence_tier) == ("aeat", "official_source_guidance")
+        assert source_ref in revision.source_refs
+        assert source_ref in revision.constructs[0].source_refs
+        assert (bundled_path() / source.corpus_path).is_file()
+
+    projected = bundled_authority().deadline_windows(2022, modelos=("131",))
+    assert len(projected) == 4
+    assert {window.period.registry_token for _, _, window in projected} == set(expected_2022)
+
+    for period, (opens_on, closes_on, payment_cutoff_on, calendar_ref) in expected_2022.items():
+        window = windows[(2022, period)]
+        assert select_revision(modelo, filing_year=2022, period=period) is revision
+        assert window.id == f"modelo-131-2022-{period.lower()}"
+        assert window.filing_year == window.period.filing_year == 2022
+        assert (window.opens_on, window.closes_on, window.payment_cutoff_on) == (
+            opens_on,
+            closes_on,
+            payment_cutoff_on,
+        )
+        assert set(window.source_refs) == {"aeat-modelo-131-instructions", calendar_ref}
 
 
 def test_modelo_131_guidance_and_layout_sources_are_separated(
