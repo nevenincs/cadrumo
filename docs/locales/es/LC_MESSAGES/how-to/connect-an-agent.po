@@ -43,17 +43,17 @@ msgid "What the agent connection is"
 msgstr "Qué es la conexión del agente"
 
 #: ../../how-to/connect-an-agent.md:12
-#, fuzzy
 msgid ""
 "The separate `cadrumo-harness` distribution ships an MCP (Model Context "
 "Protocol) server, `cadrumo-mcp`, for the `aeat` command. MCP is an open "
 "standard that lets assistants call tools. Any MCP-capable client can "
 "connect; Claude is one such client."
 msgstr ""
-"Cadrumo incluye un servidor MCP (Model Context Protocol), `cadrumo-mcp`, "
-"junto a la orden `aeat`. MCP es un estándar abierto que permite a los "
-"asistentes invocar herramientas. Cualquier cliente compatible con MCP "
-"puede conectarse; Claude es uno de esos clientes."
+"La distribución independiente `cadrumo-harness` incluye un servidor MCP "
+"(Model Context Protocol), `cadrumo-mcp`, para el comando `aeat`. MCP es un "
+"estándar abierto que permite a los asistentes invocar herramientas. "
+"Cualquier cliente compatible con MCP puede conectarse; Claude es uno de "
+"esos clientes."
 
 #: ../../how-to/connect-an-agent.md:17
 msgid ""
@@ -88,15 +88,14 @@ msgid "Register the source server"
 msgstr "Registrar el servidor de código fuente"
 
 #: ../../how-to/connect-an-agent.md:37
-#, fuzzy
 msgid ""
 "Register `uv run --package cadrumo-harness cadrumo-mcp` as a stdio server"
 " and set the checkout as the working directory. In clients that accept a "
 "JSON server definition:"
 msgstr ""
-"Registra `uv run cadrumo-mcp` como un servidor stdio y establece la copia"
-" de trabajo como el directorio de trabajo. En clientes que aceptan una "
-"definición de servidor en JSON:"
+"Registra `uv run --package cadrumo-harness cadrumo-mcp` como un servidor "
+"stdio y establece la copia del repositorio como directorio de trabajo. En "
+"clientes que aceptan una definición de servidor en JSON:"
 
 #: ../../how-to/connect-an-agent.md:53
 msgid ""
@@ -165,4 +164,3 @@ msgstr ""
 #~ "Los artefactos generados de complemento "
 #~ "y extensión son candidatos de versión,"
 #~ " no canales públicos de instalación."
-
