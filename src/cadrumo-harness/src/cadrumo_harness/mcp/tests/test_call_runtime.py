@@ -35,6 +35,15 @@ def _typed_error_envelope(envelope: dict[str, object]) -> dict[str, object]:
     return {key: value for key, value in error.items() if isinstance(key, str)}
 
 
+def _wire_action(error: dict[str, object]) -> dict[str, object]:
+    """Validate a native error projection and return its explicit wire form."""
+    from cadrumo.core.errors import ErrorEnvelope
+
+    action = ErrorEnvelope.model_validate(error).action
+    assert action is not None
+    return action.model_dump(mode="json")
+
+
 def test_tier_is_derived_from_annotations() -> None:
     assert tier_for(read_only=True, open_world=False) is CallTier.READ
     assert tier_for(read_only=False, open_world=False) is CallTier.MUTATE
@@ -110,7 +119,7 @@ def test_timeout_refusal_is_localized_and_names_the_tier() -> None:
     error = _typed_error_envelope(validated)
     assert error["code"] == "mcp.transport.timeout"
     assert error["context"] == {"tier": "live", "timeout_seconds": "420", "timed_out": "true"}
-    assert error["action"] == {
+    assert _wire_action(error) == {
         "failed_condition_id": "mcp.transport.call_completed",
         "evidence": [
             {
@@ -148,7 +157,7 @@ def test_timeout_refusal_is_localized_and_names_the_tier() -> None:
     installation_error = _typed_error_envelope(validated_installation)
     assert installation_error["code"] == "mcp.transport.installation_incomplete"
     assert installation_error["context"] == {"installation_incomplete": "true"}
-    assert installation_error["action"] == {
+    assert _wire_action(installation_error) == {
         "failed_condition_id": "mcp.transport.cli_available",
         "evidence": [
             {
