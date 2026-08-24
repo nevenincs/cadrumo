@@ -22,6 +22,7 @@ from googleapiclient.errors import HttpError
 from googleapiclient.http import HttpRequest
 from googleapiclient.model import JsonModel
 
+from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...storage import (
     OutboundStorageNetworkError,
     OutboundStorageNotFoundError,
@@ -33,6 +34,26 @@ from .._api import GoogleApiResponseBody, _ExecutableRequest, execute_request
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 PostProcessor = Callable[[httplib2.Response, bytes], GoogleApiResponseBody]
+
+
+def _assert_verdict(
+    exc: BaseException,
+    condition_id: str,
+    outcome: NoRecoveryOutcome,
+    expected_facts: dict[str, object],
+) -> None:
+    verdict = exc.terminal_precondition_verdict
+    assert verdict.failed_condition_id == condition_id
+    assert verdict.action is None
+    assert verdict.argument_bindings == ()
+    assert verdict.conditionality is ActionConditionality.NOT_APPLICABLE
+    assert verdict.no_recovery_outcome is outcome
+    assert len(verdict.evidence) == 1
+    evidence = verdict.evidence[0]
+    assert evidence.condition_id == condition_id
+    assert evidence.evidence_id == f"{condition_id}.observation"
+    assert evidence.provenance is ActionEvidenceProvenance.RUNTIME_OBSERVATION
+    assert dict(evidence.values) == expected_facts
 
 
 @contextmanager
@@ -127,6 +148,12 @@ def test_execute_request_refuses_non_mapping_success_responses(payload: object) 
         pytest.raises(OutboundStorageNetworkError, match="non-mapping response body") as excinfo,
     ):
         execute_request(req, action="drive.files.list")
+    _assert_verdict(
+        excinfo.value,
+        "google.api.response_not_mapping",
+        NoRecoveryOutcome.SAFETY,
+        {"operation": "drive.files.list", "response_type": type(payload).__name__},
+    )
 
     assert excinfo.value.context == {"action": "drive.files.list", "response_type": type(payload).__name__}
 
@@ -172,8 +199,14 @@ def _request_raising(exc: BaseException) -> AbstractContextManager[tuple[HttpReq
 
 @pytest.mark.parametrize("status", (401, 403), ids=("unauthorized", "forbidden"))
 def test_permission_http_errors_translate_to_permission_error(status: int) -> None:
-    with _request_raising(_make_http_error(status)) as (req, _paths), pytest.raises(OutboundStoragePermissionError):
+    with _request_raising(_make_http_error(status)) as (req, _paths), pytest.raises(OutboundStoragePermissionError) as raised:
         execute_request(req, action="drive.files.get")
+    _assert_verdict(
+        raised.value,
+        "google.api.permission_denied",
+        NoRecoveryOutcome.SAFETY,
+        {"operation": "drive.files.get", "status": status},
+    )
 
 
 def test_http_403_rate_limit_translates_to_quota_error() -> None:
@@ -185,29 +218,59 @@ def test_http_403_rate_limit_translates_to_quota_error() -> None:
         _request_raising(_make_http_error(403, content=content)) as (req, _paths),
         pytest.raises(
             OutboundStorageQuotaError,
-        ),
+        ) as raised,
     ):
         execute_request(req, action="sheets.spreadsheets.get")
+    _assert_verdict(
+        raised.value,
+        "google.api.quota_exhausted",
+        NoRecoveryOutcome.SAFETY,
+        {"operation": "sheets.spreadsheets.get", "status": 403, "quota_marker": "RESOURCE_EXHAUSTED"},
+    )
 
 
 def test_http_429_translates_to_quota_error() -> None:
-    with _request_raising(_make_http_error(429)) as (req, _paths), pytest.raises(OutboundStorageQuotaError):
+    with _request_raising(_make_http_error(429)) as (req, _paths), pytest.raises(OutboundStorageQuotaError) as raised:
         execute_request(req, action="sheets.spreadsheets.get")
+    _assert_verdict(
+        raised.value,
+        "google.api.quota_exhausted",
+        NoRecoveryOutcome.SAFETY,
+        {"operation": "sheets.spreadsheets.get", "status": 429, "quota_marker": "HTTP_429"},
+    )
 
 
 def test_http_404_translates_to_not_found_error() -> None:
-    with _request_raising(_make_http_error(404)) as (req, _paths), pytest.raises(OutboundStorageNotFoundError):
+    with _request_raising(_make_http_error(404)) as (req, _paths), pytest.raises(OutboundStorageNotFoundError) as raised:
         execute_request(req, action="drive.files.get")
+    _assert_verdict(
+        raised.value,
+        "google.api.target_not_found",
+        NoRecoveryOutcome.OPERATOR_DECISION,
+        {"operation": "drive.files.get"},
+    )
 
 
 def test_http_500_translates_to_network_error() -> None:
-    with _request_raising(_make_http_error(500)) as (req, _paths), pytest.raises(OutboundStorageNetworkError):
+    with _request_raising(_make_http_error(500)) as (req, _paths), pytest.raises(OutboundStorageNetworkError) as raised:
         execute_request(req, action="drive.files.get")
+    _assert_verdict(
+        raised.value,
+        "google.api.transport_unavailable",
+        NoRecoveryOutcome.SAFETY,
+        {"operation": "drive.files.get"},
+    )
 
 
 def test_generic_exception_translates_to_network_error() -> None:
-    with _request_raising(ConnectionError("timeout")) as (req, _paths), pytest.raises(OutboundStorageNetworkError):
+    with _request_raising(ConnectionError("timeout")) as (req, _paths), pytest.raises(OutboundStorageNetworkError) as raised:
         execute_request(req, action="sheets.values.batchGet")
+    _assert_verdict(
+        raised.value,
+        "google.api.transport_unavailable",
+        NoRecoveryOutcome.SAFETY,
+        {"operation": "sheets.values.batchGet"},
+    )
 
 
 # ---------------------------------------------------------------------------

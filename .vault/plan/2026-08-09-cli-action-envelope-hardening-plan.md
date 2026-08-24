@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-24'
-body_hash: 'sha256:6f7e59791a33504fabe3cce098a6c33d0522ca8ba5032ac446302b3770e0d73d'
+body_hash: 'sha256:ecdd188462d46988af262756ae360e9f3aa88aee7a584401b3a2aaac7538428b'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -239,7 +239,7 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [x] `W05.P10.S114` - Unify shared CLI callback and terminal emitters around one typed projection mapping MissingOptionalExtraError and malformed aeat.pre303 CoreValidationError to exact machine-fact no-recovery outcomes through the CLI exception-precondition owner with no raw message matching or terminal bypass; `src/cadrumo/application/cli_exception_preconditions.py; src/cadrumo/entrypoints/cli/_common.py; src/cadrumo/entrypoints/cli/_errors.py; src/cadrumo/entrypoints/cli/_terminal_errors.py`.
 - [x] `W05.P10.S115` - Migrate the active-session diagnostics recovery producer to typed conditions and canonical action or explicit no-recovery outcome; `src/cadrumo/application/diagnostics.py`.
 - [x] `W05.P10.S117` - Replace financial OFX optional-extra forwarding and notice consumers with typed machine facts and explicit no-recovery outcomes preserving capability classification without raw installation prose or wrapper compatibility; `src/cadrumo/adapters/inbound/financial/providers/_ofx.py`.
-- [ ] `W05.P10.S121` - Migrate Google API transport failures to typed external-system safety outcomes, adjudicating remote not-found recovery only where the caller owns creation; `src/cadrumo/adapters/outbound/google/_api.py; src/cadrumo/adapters/outbound/google/tests`.
+- [x] `W05.P10.S121` - Migrate Google API transport failures to typed external-system safety outcomes, adjudicating remote not-found recovery only where the caller owns creation; `src/cadrumo/adapters/outbound/google/_api.py; src/cadrumo/adapters/outbound/google/tests`.
 - [ ] `W05.P10.S122` - Migrate Google Drive and document-resolution network, permission, and conflict refusals to typed safety or operator-review outcomes and classify unreachable validation invariants explicitly; `src/cadrumo/adapters/outbound/google/_document_link_resolver.py; src/cadrumo/adapters/outbound/google/_drive_entries.py; src/cadrumo/adapters/outbound/google/tests`.
 - [ ] `W05.P10.S123` - Migrate Google calculation-sheet apply and pull transport and synchronization refusals to typed safety or state-divergence outcomes and classify provider-contract validation invariants explicitly; `src/cadrumo/adapters/outbound/google/_calc_sheets_apply.py; src/cadrumo/adapters/outbound/google/_calc_sheets_pull.py; src/cadrumo/adapters/outbound/google/tests`.
 

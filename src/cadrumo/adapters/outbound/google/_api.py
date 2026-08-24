@@ -20,6 +20,8 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING, Any, Protocol, TypedDict
 
+from ....application.operator_actions import ConditionEvidence, PreconditionVerdict
+from ....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ..storage import (
     OutboundStorageError,
     OutboundStorageNetworkError,
@@ -39,6 +41,31 @@ _RATE_LIMIT_MARKERS = {
     "RATE_LIMIT_EXCEEDED",
     "RESOURCE_EXHAUSTED",
 }
+
+
+def _external_verdict(condition_id: str, **facts: object) -> PreconditionVerdict:
+    """Build one API-owned terminal verdict."""
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            ConditionEvidence(
+                condition_id=condition_id,
+                evidence_id=f"{condition_id}.observation",
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                values={
+                    ("operation" if key == "action" else key): value
+                    for key, value in facts.items()
+                    if isinstance(value, (str, int, bool))
+                },
+            ),
+        ),
+        conditionality=ActionConditionality.NOT_APPLICABLE,
+        no_recovery_outcome=(
+            NoRecoveryOutcome.SAFETY
+            if condition_id != "google.api.target_not_found"
+            else NoRecoveryOutcome.OPERATOR_DECISION
+        ),
+    )
 
 
 class _ExecutableRequest(Protocol):
@@ -187,6 +214,9 @@ def execute_request(request: _ExecutableRequest, *, action: str) -> GoogleApiRes
                 f"Google {action} returned a non-mapping response body",
                 context={"action": action, "response_type": type(result).__name__},
                 translated_message="adapters.google.calc_sheets.errors.api_call_failed",
+                precondition_verdict=_external_verdict(
+                    "google.api.response_not_mapping", action=action, response_type=type(result).__name__
+                ),
             )
         return result
     except OutboundStorageError:
@@ -197,6 +227,7 @@ def execute_request(request: _ExecutableRequest, *, action: str) -> GoogleApiRes
             f"Google {action} failed: {exc}",
             context={"action": action},
             translated_message="adapters.google.calc_sheets.errors.api_call_failed",
+            precondition_verdict=_external_verdict("google.api.transport_unavailable", action=action),
         ) from exc
 
 
@@ -217,18 +248,26 @@ def _raise_mapped_google_http_error(exc: Exception, *, action: str) -> None:
             f"Google {action} exhausted quota (HTTP {status}): {exc}",
             context={"action": action, "status": status, "quota_marker": quota_marker or "HTTP_429"},
             translated_message="errors.refused.refused_outbound_storage_quota",
+            precondition_verdict=_external_verdict(
+                "google.api.quota_exhausted",
+                action=action,
+                status=status,
+                quota_marker=quota_marker or "HTTP_429",
+            ),
         ) from exc
     if status in (401, 403):
         raise OutboundStoragePermissionError(
             f"Google {action} refused (HTTP {status}): {exc}",
             context={"action": action, "status": status},
             translated_message="adapters.google.calc_sheets.errors.api_call_refused",
+            precondition_verdict=_external_verdict("google.api.permission_denied", action=action, status=status),
         ) from exc
     if status == 404:
         raise OutboundStorageNotFoundError(
             f"Google {action} target not found (HTTP 404): {exc}",
             context={"action": action},
             translated_message="adapters.google.calc_sheets.errors.api_target_not_found",
+            precondition_verdict=_external_verdict("google.api.target_not_found", action=action),
         ) from exc
 
 

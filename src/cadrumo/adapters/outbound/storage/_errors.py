@@ -26,10 +26,10 @@ See Also:
 
 from __future__ import annotations
 
-from ....core.errors import CadrumoError, CoreError
+from ....core.errors import CadrumoError, CoreError, TerminalPreconditionErrorMixin
 
 
-class OutboundStorageError(CadrumoError):
+class OutboundStorageError(TerminalPreconditionErrorMixin, CadrumoError):
     """Base class for every outbound storage-provider failure."""
 
 
@@ -39,6 +39,14 @@ class OutboundStorageValidationError(OutboundStorageError, ValueError):
     Inherits from :class:`ValueError` to remain compatible with pydantic
     validators while staying catchable as :class:`OutboundStorageError`.
     """
+
+    def __init__(self, message: str | None = None, *, context=None, translated_message=None, precondition_verdict=None):
+        super().__init__(
+            message,
+            context=context,
+            translated_message=translated_message,
+            precondition_verdict=precondition_verdict,
+        )
 
 
 class OutboundStorageNotFoundError(OutboundStorageError):
