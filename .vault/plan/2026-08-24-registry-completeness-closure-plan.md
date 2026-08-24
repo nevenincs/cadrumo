@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:5bb98f18eec2c743af08afb62d73ccbde888dc9e815c9483c9d5de59444efa26'
+body_hash: 'sha256:109777745367be922eacb318bac01ea82196a64685274ef99eced75f806e0c48'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -68,7 +68,7 @@ Compose one typed cross-authority report from validated registry coverage, sourc
 - [x] `W01.P02.S52` - Remove the recorded source-connectivity composer trailing whitespace and prove the committed surface is whitespace-clean; `src/cadrumo/application/registry/_source_connectivity_coverage.py`.
 - [x] `W01.P02.S53` - Correct the S52 execution record repair provenance and EOF whitespace, then re-attest the clean Step-surface diff check.; `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S52.md`.
 - [ ] `W01.P02.S54` - Drive a generic ValueError through live connected-proof revalidation and prove the closure composer maps the fallback cause to a fail-closed missing-evidence refusal with a mutation bite.; `src/cadrumo/application/registry/tests/; src/cadrumo/core/tests/`.
-- [ ] `W01.P02.S55` - Repair W01.P02.S51 execution-record Description, Outcome, and Notes through the canonical execution-document flow and re-attest its scoped checks.; `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S51.md`.
+- [x] `W01.P02.S55` - Repair W01.P02.S51 execution-record Description, Outcome, and Notes through the canonical execution-document flow and re-attest its scoped checks.; `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S51.md`.
 
 ## Wave `W02` - filing-gap adjudication and owner routing
 
