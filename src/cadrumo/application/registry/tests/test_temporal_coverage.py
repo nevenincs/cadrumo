@@ -75,6 +75,121 @@ def test_temporal_coverage_row_refuses_a_claim_without_its_required_evidence() -
 
 
 @pytest.mark.parametrize(
+    ("failure_code", "selected_revision", "declared_authority_grade"),
+    [
+        ("law_selection_refused", None, RegistryAuthorityGrade.APPLICABILITY),
+        ("selected_revision_mismatch", "2024-01-01-a-2024-12-31", None),
+        ("undeclared_authority_grade", "2025-02-03-y-siguientes", None),
+        (
+            "declared_grade_snapshot_refused",
+            "2025-02-03-y-siguientes",
+            RegistryAuthorityGrade.APPLICABILITY,
+        ),
+        (
+            "snapshot_revision_mismatch",
+            "2024-01-01-a-2024-12-31",
+            RegistryAuthorityGrade.APPLICABILITY,
+        ),
+    ],
+)
+def test_temporal_coverage_row_constructs_only_real_refusal_branch_shapes(
+    failure_code: str,
+    selected_revision: str | None,
+    declared_authority_grade: RegistryAuthorityGrade | None,
+) -> None:
+    row = TemporalRevisionCoverage(
+        **_temporal_refusal_payload(
+            failure_code=failure_code,
+            selected_revision=selected_revision,
+            declared_authority_grade=declared_authority_grade,
+        ),
+    )
+
+    assert row.status == "refused"
+    assert row.failure_code == failure_code
+    assert row.selected_revision == selected_revision
+    assert row.declared_authority_grade == declared_authority_grade
+
+
+@pytest.mark.parametrize(
+    ("failure_code", "mutation", "message"),
+    [
+        (
+            "selected_revision_mismatch",
+            {"selected_revision": None},
+            "selected-revision mismatch requires",
+        ),
+        (
+            "snapshot_revision_mismatch",
+            {"selected_revision": None},
+            "snapshot-revision mismatch requires",
+        ),
+        (
+            "declared_grade_snapshot_refused",
+            {"selected_revision": None},
+            "declared-grade snapshot refusal requires the registered",
+        ),
+        (
+            "declared_grade_snapshot_refused",
+            {"declared_authority_grade": None},
+            "declared-grade snapshot refusal requires a declared",
+        ),
+    ],
+)
+def test_temporal_coverage_row_refuses_impossible_branch_evidence_at_construction(
+    failure_code: str,
+    mutation: dict[str, str | RegistryAuthorityGrade | None],
+    message: str,
+) -> None:
+    with pytest.raises(ValidationError, match=message):
+        TemporalRevisionCoverage(
+            **(_temporal_refusal_payload(failure_code=failure_code) | mutation),
+        )
+
+
+@pytest.mark.parametrize(
+    ("failure_code", "mutation", "message"),
+    [
+        (
+            "law_selection_refused",
+            {"selected_revision": "2025-02-03-y-siguientes"},
+            "law-selection refusal cannot retain",
+        ),
+        (
+            "selected_revision_mismatch",
+            {"selected_revision": None},
+            "selected-revision mismatch requires",
+        ),
+        (
+            "undeclared_authority_grade",
+            {"selected_revision": None},
+            "undeclared-grade refusal requires",
+        ),
+        (
+            "declared_grade_snapshot_refused",
+            {"declared_authority_grade": None},
+            "declared-grade snapshot refusal requires a declared",
+        ),
+        (
+            "snapshot_revision_mismatch",
+            {"selected_revision": "2025-02-03-y-siguientes"},
+            "snapshot-revision mismatch requires",
+        ),
+    ],
+)
+def test_temporal_coverage_validator_bites_each_refusal_branch_mutation(
+    failure_code: str,
+    mutation: dict[str, str | RegistryAuthorityGrade | None],
+    message: str,
+) -> None:
+    row = TemporalRevisionCoverage(**_temporal_refusal_payload(failure_code=failure_code))
+    mutated_row = row.model_copy(update=mutation)
+
+    with pytest.raises(ValidationError, match=message):
+        TemporalRevisionCoverage.model_validate(mutated_row.model_dump())
+
+
+@pytest.mark.parametrize(
     ("field", "value", "message"),
     [
         ("modelo", "not a modelo", "String should match pattern"),
@@ -224,3 +339,32 @@ def _single_refusal(report, expected_failure_code: str) -> TemporalRevisionCover
     assert row.failure_code == expected_failure_code
     assert row.failure_detail
     return row
+
+
+def _temporal_refusal_payload(
+    *,
+    failure_code: str,
+    selected_revision: str | None = None,
+    declared_authority_grade: RegistryAuthorityGrade | None = RegistryAuthorityGrade.APPLICABILITY,
+) -> dict[str, str | RegistryAuthorityGrade | None]:
+    """Return one direct-construction payload shaped like a composer refusal branch."""
+    revision = "2025-02-03-y-siguientes"
+    if failure_code == "selected_revision_mismatch":
+        selected_revision = "2024-01-01-a-2024-12-31" if selected_revision is None else selected_revision
+    elif failure_code in {"undeclared_authority_grade", "declared_grade_snapshot_refused"}:
+        selected_revision = revision if selected_revision is None else selected_revision
+    elif failure_code == "snapshot_revision_mismatch":
+        selected_revision = "2024-01-01-a-2024-12-31" if selected_revision is None else selected_revision
+    if failure_code == "undeclared_authority_grade":
+        declared_authority_grade = None
+    return {
+        "modelo": "036",
+        "revision": revision,
+        "filing_year": 2025,
+        "period": "alta",
+        "selected_revision": selected_revision,
+        "declared_authority_grade": declared_authority_grade,
+        "status": "refused",
+        "failure_code": failure_code,
+        "failure_detail": "the derived temporal boundary refused this revision",
+    }

@@ -67,10 +67,31 @@ class TemporalRevisionCoverage(BaseModel):
             return self
         if self.failure_code is None or self.failure_detail is None:
             raise ValueError("refused temporal coverage requires a typed failure code and detail")
-        if self.failure_code == "selected_revision_mismatch" and self.selected_revision == self.revision:
-            raise ValueError("selected-revision mismatch must retain the conflicting selected revision")
-        if self.failure_code == "undeclared_authority_grade" and self.declared_authority_grade is not None:
-            raise ValueError("undeclared-grade refusal cannot carry a declared authority grade")
+        if self.failure_code == "law_selection_refused":
+            if self.selected_revision is not None:
+                raise ValueError("law-selection refusal cannot retain a selected revision")
+            return self
+        if self.failure_code == "selected_revision_mismatch":
+            if self.selected_revision is None or self.selected_revision == self.revision:
+                raise ValueError("selected-revision mismatch requires a conflicting selected revision")
+            return self
+        if self.failure_code == "undeclared_authority_grade":
+            if self.selected_revision != self.revision:
+                raise ValueError("undeclared-grade refusal requires the registered selected revision")
+            if self.declared_authority_grade is not None:
+                raise ValueError("undeclared-grade refusal cannot carry a declared authority grade")
+            return self
+        if self.failure_code == "declared_grade_snapshot_refused":
+            if self.selected_revision != self.revision:
+                raise ValueError("declared-grade snapshot refusal requires the registered selected revision")
+            if self.declared_authority_grade is None:
+                raise ValueError("declared-grade snapshot refusal requires a declared authority grade")
+            return self
+        if self.failure_code == "snapshot_revision_mismatch":
+            if self.selected_revision is None or self.selected_revision == self.revision:
+                raise ValueError("snapshot-revision mismatch requires a conflicting snapshot revision")
+            if self.declared_authority_grade is None:
+                raise ValueError("snapshot-revision mismatch requires a declared authority grade")
         return self
 
 
