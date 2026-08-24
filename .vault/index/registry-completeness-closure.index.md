@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:9765bf29b0ba4eb94224434081261ba7b3b4bb87f1b414f3c6b9dd982ec10702'
+body_hash: 'sha256:5be9679601c10e8a14cdf1b3d44d89b0f97e56b9de8166b43064cc192bb59f97'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -49,6 +49,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S66]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S67]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S68]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S69]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S70]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S71]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -202,6 +203,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P02-S66` - Repair S65 execution-record EOF whitespace and distinguish its scoped diff assertion from commit-wide git show --check, then re-attest both checks.
 - `2026-08-24-registry-completeness-closure-W01-P02-S67` - Normalize S65/S66 execution-record endings and S66 template annotations through canonical vault edits, then re-attest scoped markdown and annotations checks.
 - `2026-08-24-registry-completeness-closure-W01-P02-S68` - Repair deferred S64/S65 audit-record hygiene through canonical vault edits, then re-attest markdown, annotations, and body fingerprints.
+- `2026-08-24-registry-completeness-closure-W01-P02-S69` - Prove complete, refused, stale-evidence, below-filing-grade, and cross-limb-disagreement outcomes through real composed authority limbs and guard-weakening bites.
 - `2026-08-24-registry-completeness-closure-W01-P02-S70` - Correct S11 evidence and independent-review claims after successor proof passes, then re-attest the records.
 - `2026-08-24-registry-completeness-closure-W01-P02-S71` - Replace the stale fixed completion-step total with a current-plan-derived closure criterion that remains valid as Steps are added
 
