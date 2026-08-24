@@ -6,13 +6,14 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:2b1d8b7901837d90253073e0b20d7ff4f743b8ab346849b05a3c2b89d592bdb7'
+body_hash: 'sha256:883b469a558fc729cbe1eed7d5b2e7270c1a759138a1c1de88a41b33a8cc94d5'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S03]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S04]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S40]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P01-S41]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
@@ -46,6 +47,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P01-S03` - Author the missing temporal-coverage W01.P01.S03 execution record from verified authority-grade ladder evidence
 - `2026-08-24-registry-completeness-closure-W01-P01-S04` - Independently review the authority-grade ladder and its registry-build enrollment against W01.P01.S03
 - `2026-08-24-registry-completeness-closure-W01-P01-S40` - Enforce requested authority grade at the selected-revision snapshot boundary and prove lower-grade escalation refuses
+- `2026-08-24-registry-completeness-closure-W01-P01-S41` - Align the authority snapshot cache-key type with its grade-separated runtime key
 
 ### plan
 
