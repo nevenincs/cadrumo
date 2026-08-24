@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:a17d39c66a192d5bf0bb474c0358dcf433fe45389994b7fb1d483bd4770e382d'
+body_hash: 'sha256:67def73af8e5582ecb81a11f1a362cc73b8597fb8e8cca5fa245bebd8bfb2e66'
 related:
   - '[[2026-08-11-tui-architecture-W01-P01-S01]]'
   - '[[2026-08-11-tui-architecture-W01-P01-S02]]'
@@ -45,6 +45,8 @@ related:
   - '[[2026-08-11-tui-architecture-W02-P18-S112]]'
   - '[[2026-08-11-tui-architecture-W02-P19-S115]]'
   - '[[2026-08-11-tui-architecture-W02-P19-S116]]'
+  - '[[2026-08-11-tui-architecture-W02-P19-S117]]'
+  - '[[2026-08-11-tui-architecture-W02-P19-S118]]'
   - '[[2026-08-11-tui-architecture-W03-P06-S113]]'
   - '[[2026-08-11-tui-architecture-W03-P06-S29]]'
   - '[[2026-08-11-tui-architecture-W03-P06-S30]]'
@@ -99,6 +101,7 @@ related:
   - '[[2026-08-24-tui-architecture-pre-custody-login-secret-submission-research]]'
   - '[[2026-08-24-tui-architecture-s113-continuation-review-audit]]'
   - '[[2026-08-24-tui-architecture-s115-registry-review-audit]]'
+  - '[[2026-08-24-tui-architecture-s118-observation-read-audit]]'
   - '[[2026-08-24-tui-architecture-s28-recovery-review-audit]]'
   - '[[2026-08-24-tui-architecture-s29-censal-executor-review-audit]]'
   - '[[2026-08-24-tui-architecture-s30-operand-review-audit]]'
@@ -158,6 +161,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-24-tui-architecture-invocation-policy-review-audit` - `tui-architecture` audit: `invocation policy review`
 - `2026-08-24-tui-architecture-s113-continuation-review-audit` - `tui-architecture` audit: `S113 durable continuation safety review`
 - `2026-08-24-tui-architecture-s115-registry-review-audit` - `tui-architecture` audit: `W02.P19.S115 public registry review`
+- `2026-08-24-tui-architecture-s118-observation-read-audit` - `tui-architecture` audit: `S118 observation read`
 - `2026-08-24-tui-architecture-s28-recovery-review-audit` - `tui-architecture` audit: `S28 recovery review`
 - `2026-08-24-tui-architecture-s29-censal-executor-review-audit` - `tui-architecture` audit: `S29 resumable censal executor review`
 - `2026-08-24-tui-architecture-s30-operand-review-audit` - `tui-architecture` audit: `S30 censal reviewed operand review`
@@ -211,6 +215,8 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W02-P18-S112` - Reconcile the accepted availability decision with the still-open dedicated-entrypoint migration and complete a fresh honesty review
 - `2026-08-11-tui-architecture-W02-P19-S115` - Extend the immutable operation registry with OperationSchemaIdentityV1, OperationPublicDefinitionContractV1, OperationPublicContractSetV1, exact strict-model fingerprints, registered REVIEW and refresh adapters, deterministic definition digests, and contract-set fixed-point validation
 - `2026-08-11-tui-architecture-W02-P19-S116` - Define the strict current-only operation observation, public projection, event-page, REVIEW-projection, response-control, cancellation, detach, and Workspace-refresh request, success, and typed refusal DTO families with independent V1 dispatch axes
+- `2026-08-11-tui-architecture-W02-P19-S117` - Pin each definition_contract_digest atomically with invocation identity and define one application-owned observation materialization port binding the current snapshot, anchor cursor, bounded history, progress-fold input, and resynchronization checkpoint
+- `2026-08-11-tui-architecture-W02-P19-S118` - Implement the observation-read port over one locked journal-record read so snapshot, history page, progress checkpoint, replay status, and restart cursor share one authoritative anchor under interleaved transitions
 - `2026-08-11-tui-architecture-W03-P06-S113` - Implement supervisor-owned post-submission secure checkpoint publication, durable response continuation scheduling, and restart recovery without reacquisition
 - `2026-08-11-tui-architecture-W03-P06-S29` - Implement the resumable census executor across preflight, Clave device wait, remote read, proposal construction, interaction wait, exact apply, and settlement
 - `2026-08-11-tui-architecture-W03-P06-S30` - Persist the encrypted reviewed observation, baseline revision and digest, field intents, and proposed-effect digest behind a secure reference

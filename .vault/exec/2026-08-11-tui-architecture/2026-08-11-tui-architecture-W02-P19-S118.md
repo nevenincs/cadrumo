@@ -5,57 +5,46 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:d1a2158658fdc45081d28a69fa9b2877dcd7c114075eb7e007e4a576d75ae079'
+body_hash: 'sha256:f27b6dd4344b69f2f27d2e6d3c263773335aa5665eed8d61a8944ad60302f277'
 step_id: 'S118'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S118 and 2026-08-11-tui-architecture-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Implement the observation-read port over one locked journal-record read so snapshot, history page, progress checkpoint, replay status, and restart cursor share one authoritative anchor under interleaved transitions and ## Scope
-
-- `src/cadrumo/adapters/persistence/operations/_journal.py and src/cadrumo/adapters/persistence/operations/_journal_validation.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Implement the observation-read port over one locked journal-record read so snapshot, history page, progress checkpoint, replay status, and restart cursor share one authoritative anchor under interleaved transitions
 
 ## Scope
 
-- `src/cadrumo/adapters/persistence/operations/_journal.py and src/cadrumo/adapters/persistence/operations/_journal_validation.py`
+- `src/cadrumo/adapters/persistence/operations/_journal.py`
+- `src/cadrumo/application/operations/_journal.py`
+- `src/cadrumo/application/operations/__init__.py`
+- `src/cadrumo/adapters/persistence/operations/tests/test_journal.py`
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Implemented the `OperationObservationReader` port on the filesystem operation-journal adapter.
+- Derived the snapshot, bounded replay page, authoritative cursor, and complete progress-fold input from one parsed `OperationJournalRecord` while the canonical journal lock is held.
+- Extracted the retained-history page builder from `read_after` so replay and atomic observation use one canonical record-to-page implementation.
+- Added narrow application-owned errors for an absent operation and a cursor beyond the locked anchor, leaving corrupt persistence bytes as adapter errors.
+- Validated an existing journal root before lock-sidecar access and refused absent or redirected roots without filesystem mutation.
+- Proved atomicity with real multiprocessing, entry into the production lock context, a writer transition, and replay shapes that distinguish the two durable generations.
 
 ## Outcome
 
+- `OperationJournalRepository` now provides the sole concrete observation-reader implementation.
+- No frontend or application projection joins separate snapshot and replay reads.
+- The observation materialization carries the full retained progress suffix independently of the bounded replay page.
+- Public operation consumers can distinguish missing-operation and cursor-ahead port states without importing persistence errors.
+
+## Verification
+
+- `uv run --no-sync pytest -q src/cadrumo/adapters/persistence/operations/tests/test_journal.py` â€” 20 passed.
+- `uv run --no-sync pytest -q src/cadrumo/application/operations/tests/test_journal.py src/cadrumo/application/operations/tests/test_facade.py src/cadrumo/adapters/persistence/operations/tests/test_journal.py` â€” 38 passed.
+- `uv run --no-sync ruff check` over changed application and persistence modules â€” passed.
+- `uv run --no-sync ty check` over changed application and persistence modules â€” passed.
+- Post-edit semantic and exact discovery converged on one concrete observation reader, one record-to-page helper, and no snapshot/replay join.
+- Independent review initially found root-sidecar mutation and weak atomicity witnesses; both were corrected and the remediation re-review approved with no remaining findings.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+- The broader operation-platform suite has one known unrelated persistence-facade export-inventory failure caused by concurrent secure-reference namespace work. The focused S118 tests and all touched-module static checks pass.
+- The plan step remains open for the parent executor to sequence its closure with the surrounding operation-platform work.

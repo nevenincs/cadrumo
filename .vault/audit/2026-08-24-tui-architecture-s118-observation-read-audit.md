@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:d6cee5bbb4c5e4e968166b5c32e15ae48e7a4dc17fb220bbe69357ef6f7a0937'
+body_hash: 'sha256:7444c274b93a53fa1437f29ce740b5bb2cbc38b0c8963cd8827d8bb66dfa4086'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -35,3 +35,11 @@ No other findings. The current adapter derives snapshot, bounded replay, and ful
 ## Recommendations
 
 Resolve `root-validation-before-lock` before S118 closes. Strengthen both atomicity witnesses, then rerun the focused journal suite. No other production implementation change is indicated.
+
+## Remediation re-review
+
+Approved. `src/cadrumo/adapters/persistence/operations/_journal.py:124` now validates the existing root before the first lock-sidecar access. `src/cadrumo/adapters/persistence/operations/tests/test_journal.py:488` proves an absent root remains absent after the typed unknown-operation disposition and a symlink or junction root is refused without creating a sidecar in its target.
+
+The interleaving witness now traces entry to the production `exclusive_file_lock` call at `src/cadrumo/adapters/persistence/operations/tests/test_journal.py:237`, waits for that trace while the canonical lock remains held at `src/cadrumo/adapters/persistence/operations/tests/test_journal.py:441`, and uses a replay limit of three. Its accepted shapes at `src/cadrumo/adapters/persistence/operations/tests/test_journal.py:463` bind the replay page and cursor to the same initial or successor anchor. The previously recorded high and low findings are remediated; no remaining findings.
+
+Focused validation: `uv run --no-sync pytest -q src/cadrumo/adapters/persistence/operations/tests/test_journal.py` passed 20 tests and `uv run --no-sync ruff check` passed for the remediated adapter and test module.
