@@ -49,7 +49,7 @@ def _validation_verdict(condition: str, facts: Mapping[str, str | bool]):
         condition_id=condition,
         facts=facts,
         provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-        outcome=NoRecoveryOutcome.SAFETY,
+        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
     )
 
 
@@ -94,7 +94,10 @@ def assert_admissible_object_key_hmac(object_key_hmac: str, *, backend: str) -> 
         raise OutboundStorageValidationError(
             "object_key_hmac must not be blank",
             translated_message=f"{_MESSAGE_ROOT}.{backend}.errors.object_key_hmac_blank",
-            precondition_verdict=_validation_verdict("storage.key.present", {"present": False, "backend": backend}),
+            precondition_verdict=_validation_verdict(
+                "storage.key.present",
+                {"backend": backend, "field": "object_key_hmac", "valid": False},
+            ),
         )
     if not all(character.isalnum() or character in "-_" for character in cleaned):
         raise OutboundStorageValidationError(
@@ -102,7 +105,8 @@ def assert_admissible_object_key_hmac(object_key_hmac: str, *, backend: str) -> 
             context={"object_key_hmac": object_key_hmac},
             translated_message=f"{_MESSAGE_ROOT}.{backend}.errors.object_key_hmac_forbidden_characters",
             precondition_verdict=_validation_verdict(
-                "storage.key.admissible", {"admissible": False, "backend": backend}
+                "storage.key.admissible",
+                {"backend": backend, "field": "object_key_hmac", "valid": False},
             ),
         )
     return cleaned

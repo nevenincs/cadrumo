@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-24'
-body_hash: 'sha256:56fdd777161970daf867d9e960abcb271db18d8befbe9bbabc67ee9f02587de5'
+body_hash: 'sha256:1e88aa9020c84b3f56c88e4c22fdc7143bf23c4e5d4c4e04f21c0f35e41548ef'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -246,7 +246,7 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [x] `W05.P10.S125` - Eliminate semantically identical fact-only terminal-verdict builders introduced or exposed by this campaign by routing them through one application-owned constructor and retaining local helpers only when they own distinct policy; `src/cadrumo/application/operator_actions; src/cadrumo/application/aggregation/_preconditions.py; src/cadrumo/application/ledger/_preconditions.py; src/cadrumo/application/cli_exception_preconditions.py; src/cadrumo/application/_provisioning_contracts.py; src/cadrumo/application/calculations/_errors.py; src/cadrumo/application/live/_errors.py; src/cadrumo/application/bucket_maintenance/_service.py; src/cadrumo/application/operator_surface/_errors.py; src/cadrumo/application/diagnostics.py; src/cadrumo/application/auth/_diagnostics.py; src/cadrumo/application/auth/_operator.py; src/cadrumo/application/auth/_acquisition_lock.py; src/cadrumo/application/profile_preconditions.py; src/cadrumo/application/workflow; src/cadrumo/application/storage_write_policy.py; src/cadrumo/application/repair_integrity.py; src/cadrumo/llm/_preconditions.py; tests`.
 - [ ] `W05.P10.S126` - Migrate the Google Drive storage-provider network, validation, conflict, not-found, integrity, and translated HTTP failures to typed external-system outcomes, excluding the S121-owned Google API boundary; `src/cadrumo/adapters/outbound/storage/_google_drive.py; src/cadrumo/adapters/outbound/storage/tests`.
 - [x] `W05.P10.S127` - Migrate outbound-storage integrity and mirror-manifest mismatch, malformed-schema, and corruption failures to typed safety or validation outcomes; `src/cadrumo/adapters/outbound/storage/_integrity.py; src/cadrumo/adapters/outbound/storage/_mirror_manifest.py; src/cadrumo/adapters/outbound/storage/tests`.
-- [ ] `W05.P10.S128` - Classify outbound-storage provider selection, key, path, and configuration validation carriers and attach typed no-recovery facts only where they are reachable from operator input; `src/cadrumo/adapters/outbound/storage/_key_validation.py; src/cadrumo/adapters/outbound/storage/_factory.py; src/cadrumo/adapters/outbound/storage/_local.py; src/cadrumo/adapters/outbound/storage/_google_drive.py; src/cadrumo/adapters/outbound/storage/tests`.
+- [x] `W05.P10.S128` - Classify outbound-storage provider selection, key, path, and configuration validation carriers and attach typed no-recovery facts only where they are reachable from operator input; `src/cadrumo/adapters/outbound/storage/_key_validation.py; src/cadrumo/adapters/outbound/storage/_factory.py; src/cadrumo/adapters/outbound/storage/_local.py; src/cadrumo/adapters/outbound/storage/_google_drive.py; src/cadrumo/adapters/outbound/storage/tests`.
 - [x] `W05.P10.S129` - Migrate outbound-storage Drive pagination transport failures to typed external-system safety outcomes without local retry guidance; `src/cadrumo/adapters/outbound/storage/_drive_pagination.py; src/cadrumo/adapters/outbound/storage/tests`.
 
 ## Wave `W06` - Prove action chains and close honestly

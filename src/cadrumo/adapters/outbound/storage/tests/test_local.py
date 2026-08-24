@@ -68,6 +68,9 @@ def _assert_local_verdict(
 
 
 _LOCAL_FAILURE_CONTRACTS: tuple[tuple[str, str, dict[str, str | int | bool], NoRecoveryOutcome], ...] = (
+    ("namespace-blank", "storage.local.namespace.valid", {"backend": "local", "field": "namespace", "valid": False}, NoRecoveryOutcome.OPERATOR_DECISION),
+    ("namespace-forbidden", "storage.local.namespace.valid", {"backend": "local", "field": "namespace", "valid": False}, NoRecoveryOutcome.OPERATOR_DECISION),
+    ("content-hash-blank", "storage.local.content_hash.present", {"backend": "local", "field": "content_hash", "valid": False}, NoRecoveryOutcome.OPERATOR_DECISION),
     ("byte-length-type", "storage.local.sidecar.byte_length_valid", {"field": "byte_length", "valid": False}, NoRecoveryOutcome.SAFETY),
     ("byte-length-format", "storage.local.sidecar.byte_length_valid", {"field": "byte_length", "valid": False}, NoRecoveryOutcome.SAFETY),
     ("byte-length-negative", "storage.local.sidecar.byte_length_valid", {"field": "byte_length", "valid": False}, NoRecoveryOutcome.SAFETY),
@@ -470,12 +473,16 @@ class _PutKwargs(TypedDict):
     content_hash: str
 
 
-_INVALID_STORAGE_KEY_CASES: tuple[tuple[_PutKwargs, str, str, dict[str, str] | None], ...] = (
+_INVALID_STORAGE_KEY_CASES: tuple[
+    tuple[_PutKwargs, str, str, dict[str, str] | None, str, dict[str, str | bool]], ...
+] = (
     (
         {"namespace": "", "object_key_hmac": "abcdef0123456789", "payload": b"x", "content_hash": "sha256-x"},
         "namespace must not be blank",
         "adapters.outbound.storage.local.errors.namespace_blank",
         None,
+        "storage.local.namespace.valid",
+        {"backend": "local", "field": "namespace", "valid": False},
     ),
     (
         {
@@ -487,6 +494,8 @@ _INVALID_STORAGE_KEY_CASES: tuple[tuple[_PutKwargs, str, str, dict[str, str] | N
         "forbidden characters",
         "adapters.outbound.storage.local.errors.namespace_forbidden_characters",
         {"namespace": "with/slash"},
+        "storage.local.namespace.valid",
+        {"backend": "local", "field": "namespace", "valid": False},
     ),
     (
         {
@@ -498,12 +507,14 @@ _INVALID_STORAGE_KEY_CASES: tuple[tuple[_PutKwargs, str, str, dict[str, str] | N
         "content_hash",
         "adapters.outbound.storage.local.errors.content_hash_blank",
         None,
+        "storage.local.content_hash.present",
+        {"backend": "local", "field": "content_hash", "valid": False},
     ),
 )
 
 
 @pytest.mark.parametrize(
-    ("put_kwargs", "match", "message", "context"),
+    ("put_kwargs", "match", "message", "context", "condition_id", "facts"),
     _INVALID_STORAGE_KEY_CASES,
     ids=("blank-namespace", "forbidden-namespace", "blank-content-hash"),
 )
@@ -513,6 +524,8 @@ def test_put_rejects_invalid_storage_keys(
     match: str,
     message: str,
     context: dict[str, str] | None,
+    condition_id: str,
+    facts: dict[str, str | bool],
 ) -> None:
     with pytest.raises(OutboundStorageValidationError, match=match) as raised:
         provider.put(**put_kwargs, label="x")
@@ -521,6 +534,12 @@ def test_put_rejects_invalid_storage_keys(
         pytest.fail("expected a translated_message on the raised error")
     assert translated_message == message
     assert raised.value.context == context
+    _assert_local_verdict(
+        raised.value,
+        condition_id,
+        NoRecoveryOutcome.OPERATOR_DECISION,
+        facts,
+    )
     assert resolve_error_message(raised.value) == tr(translated_message, **(raised.value.context or {}))
 
 

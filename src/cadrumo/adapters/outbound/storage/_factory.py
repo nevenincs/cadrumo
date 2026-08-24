@@ -46,11 +46,29 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials
 
-from ....core import GoogleCredentialSourceKind
+from ....application.operator_actions import no_action_precondition_verdict
+from ....core import ActionEvidenceProvenance, GoogleCredentialSourceKind, NoRecoveryOutcome
 from ....core.config import Settings, load_settings
 from ._errors import OutboundStorageError, OutboundStorageValidationError
 from ._protocol import StorageProvider
 from ._records import ProviderKind
+
+
+def _configuration_validation_verdict(
+    condition_id: str,
+    *,
+    field: str,
+    backend: str | None = None,
+):
+    facts: dict[str, str | bool] = {"field": field, "valid": False}
+    if backend is not None:
+        facts["backend"] = backend
+    return no_action_precondition_verdict(
+        condition_id=condition_id,
+        facts=facts,
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+    )
 
 
 def _parse_kind(raw: str) -> ProviderKind:
@@ -60,6 +78,10 @@ def _parse_kind(raw: str) -> ProviderKind:
             "cadrumo_storage_provider_kind is empty",
             context={"value": raw},
             translated_message="adapters.outbound.storage.factory.errors.kind_empty",
+            precondition_verdict=_configuration_validation_verdict(
+                "storage.factory.provider_kind.valid",
+                field="cadrumo_storage_provider_kind",
+            ),
         )
     try:
         return ProviderKind(cleaned)
@@ -69,6 +91,10 @@ def _parse_kind(raw: str) -> ProviderKind:
             "cadrumo_storage_provider_kind is not a recognised ProviderKind",
             context={"value": raw, "expected": ", ".join(valid)},
             translated_message="adapters.outbound.storage.factory.errors.kind_unknown",
+            precondition_verdict=_configuration_validation_verdict(
+                "storage.factory.provider_kind.valid",
+                field="cadrumo_storage_provider_kind",
+            ),
         ) from exc
 
 
@@ -135,6 +161,11 @@ def _build_oauth_desktop_credentials(*, profile: str) -> Credentials:
             "no Google OAuth client registered for this profile",
             context={"profile": profile},
             translated_message="adapters.outbound.storage.factory.errors.google_client_missing",
+            precondition_verdict=_configuration_validation_verdict(
+                "storage.factory.google_oauth_client.present",
+                field="google_oauth_client",
+                backend="google_drive",
+            ),
         )
     token = load_token(profile)
     if token is None:
@@ -142,6 +173,11 @@ def _build_oauth_desktop_credentials(*, profile: str) -> Credentials:
             "no Google OAuth token persisted for this profile",
             context={"profile": profile},
             translated_message="adapters.outbound.storage.factory.errors.google_token_missing",
+            precondition_verdict=_configuration_validation_verdict(
+                "storage.factory.google_oauth_token.present",
+                field="google_oauth_token",
+                backend="google_drive",
+            ),
         )
     try:
         from google.oauth2.credentials import Credentials
@@ -237,6 +273,11 @@ def get_storage_provider(
                 "no Drive root folder id is configured for this profile",
                 context={"profile": profile},
                 translated_message="adapters.outbound.storage.factory.errors.drive_root_missing",
+                precondition_verdict=_configuration_validation_verdict(
+                    "storage.factory.google_drive_root_folder_id.present",
+                    field="google_drive_root_folder_id",
+                    backend="google_drive",
+                ),
             )
         credentials = build_google_credentials(profile=profile)
         return GoogleDriveProvider(

@@ -38,6 +38,8 @@ from collections.abc import Iterator, Mapping
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
+from ....application.operator_actions import no_action_precondition_verdict
+from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.config import FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME, load_settings
 from ....core.errors import CoreValidationError
 from ....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
@@ -78,18 +80,42 @@ _OWNERSHIP_VALUE = "cadrumo"
 _LOG = get_logger(__name__)
 
 
+def _drive_validation_verdict(
+    condition_id: str,
+    *,
+    field: str,
+    provenance: ActionEvidenceProvenance,
+):
+    return no_action_precondition_verdict(
+        condition_id=condition_id,
+        facts={"backend": "google_drive", "field": field, "valid": False},
+        provenance=provenance,
+        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+    )
+
+
 def _validate_namespace(namespace: str) -> str:
     cleaned = namespace.strip()
     if not cleaned:
         raise OutboundStorageValidationError(
             "namespace must not be blank",
             translated_message="adapters.outbound.storage.google_drive.errors.namespace_blank",
+            precondition_verdict=_drive_validation_verdict(
+                "storage.google_drive.namespace.valid",
+                field="namespace",
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            ),
         )
     if "/" in cleaned or "\\" in cleaned:
         raise OutboundStorageValidationError(
             "namespace contains forbidden characters",
             context={"namespace": namespace},
             translated_message="adapters.outbound.storage.google_drive.errors.namespace_forbidden_characters",
+            precondition_verdict=_drive_validation_verdict(
+                "storage.google_drive.namespace.valid",
+                field="namespace",
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            ),
         )
     return cleaned
 
@@ -212,6 +238,11 @@ class GoogleDriveProvider:
                 "root_folder_id must not be blank for GoogleDriveProvider",
                 context={"root_folder_id": root_folder_id},
                 translated_message="adapters.outbound.storage.google_drive.errors.root_folder_id_blank",
+                precondition_verdict=_drive_validation_verdict(
+                    "storage.google_drive.root_folder_id.present",
+                    field="root_folder_id",
+                    provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                ),
             )
         vault_folder_name_resolved = (
             vault_folder_name
@@ -222,12 +253,30 @@ class GoogleDriveProvider:
             raise OutboundStorageValidationError(
                 "vault_folder_name must not be blank for GoogleDriveProvider",
                 translated_message="adapters.outbound.storage.google_drive.errors.vault_folder_name_blank",
+                precondition_verdict=_drive_validation_verdict(
+                    "storage.google_drive.vault_folder_name.valid",
+                    field="vault_folder_name",
+                    provenance=(
+                        ActionEvidenceProvenance.RUNTIME_OBSERVATION
+                        if vault_folder_name is not None
+                        else ActionEvidenceProvenance.APPLICATION_STATE
+                    ),
+                ),
             )
         if vault_folder_name_resolved.casefold() == FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME:
             raise OutboundStorageValidationError(
                 "the former product Google Drive vault folder is not supported",
                 context={"vault_folder_name": vault_folder_name_resolved},
                 translated_message="adapters.outbound.storage.google_drive.errors.former_vault_folder",
+                precondition_verdict=_drive_validation_verdict(
+                    "storage.google_drive.vault_folder_name.valid",
+                    field="vault_folder_name",
+                    provenance=(
+                        ActionEvidenceProvenance.RUNTIME_OBSERVATION
+                        if vault_folder_name is not None
+                        else ActionEvidenceProvenance.APPLICATION_STATE
+                    ),
+                ),
             )
         self._credentials = credentials
         self._root_folder_id = root_folder_id.strip()
@@ -310,6 +359,11 @@ class GoogleDriveProvider:
                         "configured Drive root contains a vault-name entry that is not a folder",
                         context={"root_folder_id": self._root_folder_id, "vault_folder_name": self._vault_folder_name},
                         translated_message="adapters.outbound.storage.google_drive.errors.vault_entry_not_folder",
+                        precondition_verdict=_drive_validation_verdict(
+                            "storage.google_drive.vault_entry.folder",
+                            field="vault_folder_entry",
+                            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                        ),
                     )
                 self._verify_ownership_or_adopt(entry, kind=self._vault_folder_name)
                 self._vault_folder_id = str(entry["id"])
@@ -537,6 +591,11 @@ class GoogleDriveProvider:
             raise OutboundStorageValidationError(
                 "content_hash must not be blank",
                 translated_message="adapters.outbound.storage.google_drive.errors.content_hash_blank",
+                precondition_verdict=_drive_validation_verdict(
+                    "storage.google_drive.content_hash.present",
+                    field="content_hash",
+                    provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                ),
             )
         label_clean = sanitize_provider_object_label(label)
 

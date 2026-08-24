@@ -74,12 +74,22 @@ def _validate_namespace(namespace: str) -> str:
         raise OutboundStorageValidationError(
             "namespace must not be blank",
             translated_message="adapters.outbound.storage.local.errors.namespace_blank",
+            precondition_verdict=_local_failure_verdict(
+                "storage.local.namespace.valid",
+                facts={"backend": "local", "field": "namespace", "valid": False},
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            ),
         )
     if "/" in cleaned or "\\" in cleaned or cleaned.startswith("."):
         raise OutboundStorageValidationError(
             f"namespace {namespace!r} contains forbidden characters",
             context={"namespace": namespace},
             translated_message="adapters.outbound.storage.local.errors.namespace_forbidden_characters",
+            precondition_verdict=_local_failure_verdict(
+                "storage.local.namespace.valid",
+                facts={"backend": "local", "field": "namespace", "valid": False},
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            ),
         )
     return cleaned
 
@@ -339,6 +349,11 @@ class LocalFileSystemProvider:
             raise OutboundStorageValidationError(
                 "content_hash must not be blank",
                 translated_message="adapters.outbound.storage.local.errors.content_hash_blank",
+                precondition_verdict=_local_failure_verdict(
+                    "storage.local.content_hash.present",
+                    facts={"backend": "local", "field": "content_hash", "valid": False},
+                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                ),
             )
 
         namespace_dir = self._ensure_namespace_dir(namespace_clean)
