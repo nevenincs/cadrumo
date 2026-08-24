@@ -46,9 +46,9 @@ authority_grade = "filing"
 # remainder means further era revisions at the 2023 and 2024 boundaries, which
 # the reviewed applies_from/applies_to on aeat-dr-322-2022 and
 # aeat-dr-322-2024-2025 already ground.
-valid_from = 2008-01-01
+valid_from = 2022-01-01
 valid_to = 2022-12-31
-period_selector = { year_from = 2008, year_to = 2022, periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] }
+period_selector = { years = [2022], periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] }
 legal_refs = [
     "orden-eha-3434-2007:art-1",
     "orden-eha-3434-2007:art-8",

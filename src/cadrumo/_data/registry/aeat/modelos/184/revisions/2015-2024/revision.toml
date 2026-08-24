@@ -3,9 +3,9 @@ authority_grade = "filing"
 # valid_from is canonicalised to the ejercicio-start convention (January 1 of
 # period_selector.year_from), not the orden's own effective date -- that fact
 # already has its home on orden-hap-2250-2015:art-1's legal.effective_from.
-valid_from = 2015-01-01
+valid_from = 2023-01-01
 valid_to = 2024-12-31
-period_selector = { year_from = 2015, year_to = 2024, periods = ["0A"] }
+period_selector = { year_from = 2023, year_to = 2024, periods = ["0A"] }
 legal_refs = [
     "orden-hap-2250-2015:art-1",
     "orden-hap-2250-2015:art-2",

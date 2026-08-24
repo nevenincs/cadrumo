@@ -952,7 +952,7 @@ def _source_reference_by_id() -> dict[str, object]:
     return dict(catalogues.sources)
 
 
-def _layout_authority_receipts(revision) -> tuple[object, ...]:
+def _layout_authority_receipts(modelo_id: str, revision) -> tuple[object, ...]:
     """Layout-authority sources explicitly cited by a revision.
 
     Fixed-width modelos normally cite ``record_design`` sources.  Modelo 100
@@ -964,7 +964,9 @@ def _layout_authority_receipts(revision) -> tuple[object, ...]:
     return tuple(
         source
         for ref in revision.source_refs
-        if (source := sources.get(str(ref))) is not None and source.evidence_tier == "layout_authority"
+        if (source := sources.get(str(ref))) is not None
+        and source.evidence_tier == "layout_authority"
+        and f"/modelo_{modelo_id}/" in f"/{str(source.corpus_path).replace('\\', '/')}"
     )
 
 
@@ -977,7 +979,7 @@ def _receipt_covers_year(source, year: int) -> bool:
     return source.applies_to is None or source.applies_to.year >= year
 
 
-def _source_epoch_proves_revision_span(revision) -> tuple[bool, str]:
+def _source_epoch_proves_revision_span(modelo_id: str, revision) -> tuple[bool, str]:
     """Whether cited record-design receipts cover the revision's declared year span.
 
     An open revision needs an open receipt; a closed revision needs every claimed
@@ -985,7 +987,7 @@ def _source_epoch_proves_revision_span(revision) -> tuple[bool, str]:
     extra annual designs merely to reach a count. Corpus-detected relayouts are
     checked first by the caller and therefore always override this positive proof.
     """
-    receipts = _layout_authority_receipts(revision)
+    receipts = _layout_authority_receipts(modelo_id, revision)
     if not receipts:
         return False, "revision cites no layout-authority source receipt"
     selector = revision.period_selector
@@ -2539,7 +2541,7 @@ def test_a_bundled_design_whose_coverage_cannot_be_read_is_reported_unmeasured()
     cited_design_sources = {
         str(source.corpus_path): source
         for _modelo, _revision_id, revision in filing_revisions
-        for source in _layout_authority_receipts(revision)
+        for source in _layout_authority_receipts(_modelo.id, revision)
         if source.kind == "record_design"
     }
     design_root = bundled_path(*_DESIGN_ROOT_PARTS)
@@ -2913,7 +2915,7 @@ def test_every_modelo_revision_span_is_corpus_proven() -> None:
                 )
             continue
 
-        receipt_proven, _receipt_detail = _source_epoch_proves_revision_span(revision)
+        receipt_proven, _receipt_detail = _source_epoch_proves_revision_span(modelo.id, revision)
         if receipt_proven:
             # The revision cites an authoritative record-design dependency whose
             # declared epoch covers its entire span. Requiring duplicate annual

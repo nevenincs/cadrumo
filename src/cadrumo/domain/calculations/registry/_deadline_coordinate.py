@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import NamedTuple
 
-from ....core import M210_TIPO_RENTA_CODE_PROJECTION, Period, ResultDisposition, registry_period_kind
+from ....core import M210_TIPO_RENTA_CODE_PROJECTION, Modelo, Period, ResultDisposition, registry_period_kind
 from ._schema import DeadlineWindowDefinition
 
 
@@ -67,7 +67,7 @@ def deadline_window_semantic_coordinates(
     tipos: tuple[str | None, ...]
     if window.tipo_renta_scope is not None:
         tipos = tuple(sorted(window.tipo_renta_scope))
-    elif modelo == "210":
+    elif modelo == Modelo.M210:
         tipos = (None, *tuple(sorted(M210_TIPO_RENTA_CODE_PROJECTION)))
     else:
         tipos = (None,)
