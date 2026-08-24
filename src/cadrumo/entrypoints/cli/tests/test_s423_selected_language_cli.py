@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 import textwrap
@@ -59,14 +60,35 @@ print(json.dumps({"report": report.model_dump(mode="json"), "report_count": len(
 """
 
 
-def _run_cli(storage_root: Path, args: list[str]) -> subprocess.CompletedProcess[str]:
+_OPERATOR_PASSPHRASE = "s423-selected-language-secret"  # noqa: S105 - synthetic test credential
+
+
+def _run_cli(
+    storage_root: Path, args: list[str], *, stdin_payload: str | None = None
+) -> subprocess.CompletedProcess[str]:
+    # `config profile create` mints a custody envelope, so it needs the operator
+    # passphrase, and a subprocess is not a terminal -- the bounded strict-JSON
+    # channel on stdin is the only one it accepts. Supplied here rather than at
+    # each call site so a new create invocation cannot forget it.
+    if "profile" in args and "create" in args and "--secrets-stdin" not in args:
+        args = [*args, "--secrets-stdin"]
+        stdin_payload = stdin_payload or _CREATE_SECRETS
     return run_subprocess_cli_harness(
         textwrap.dedent(_CLI_HARNESS),
         [str(storage_root), str(storage_root / "fallback-store"), *args],
         env_strip_prefixes=("AEAT_",),
         cwd=Path.cwd(),
+        stdin_payload=stdin_payload,
         timeout=120.0,
     )
+
+
+#: `config profile create` mints a custody envelope, so it needs the operator
+#: passphrase AND its confirmation. A subprocess is not a terminal, so the only
+#: channel it accepts is the bounded strict-JSON one on stdin.
+_CREATE_SECRETS = json.dumps(
+    {"passphrase": _OPERATOR_PASSPHRASE, "passphrase_confirmation": _OPERATOR_PASSPHRASE}
+)
 
 
 def _combined_output(result: subprocess.CompletedProcess[str]) -> str:
