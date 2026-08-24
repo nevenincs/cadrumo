@@ -8,24 +8,24 @@ from typing import override
 
 from pydantic import BaseModel
 
-from ....application.operations import (
-    JournalRepositoryBase,
-    OperationEventCursor,
+from ....application import JournalRepositoryBase
+from ....application.operations._journal import (
     OperationEventStream,
-    OperationIdempotencyClaim,
     OperationJournal,
     OperationObservationCursorAheadError,
     OperationObservationMaterialization,
     OperationObservationReader,
     OperationObservationUnknownOperationError,
-    OperationOwnerLease,
     OperationPersistedSnapshot,
     OperationProgressFoldInput,
+)
+from ....application.operations._leases import OperationOwnerLease, operation_conflict_scope_reference
+from ....application.operations._models import OperationIdempotencyClaim, OperationRevision
+from ....application.operations._replay import (
+    OperationEventCursor,
     OperationReplayLimit,
     OperationReplayPage,
     OperationReplayStatus,
-    OperationRevision,
-    operation_conflict_scope_reference,
 )
 from ....core import (
     STRICT_FROZEN_CONFIG,

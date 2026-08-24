@@ -14,12 +14,11 @@ from ....core import OperationEffect, OperationLifecycle, OperationTerminalCondi
 from ....domain.buckets import BucketEventType
 from ....tests import FIXTURES_DIR
 from ...operations import (
-    OperationApplyResponse,
-    OperationRejectResponse,
     OperationRequest,
     OperationTerminalReceipt,
-    operation_conflict_scope_reference,
 )
+from ...operations._interactions import OperationApplyResponse, OperationRejectResponse
+from ...operations._leases import operation_conflict_scope_reference
 from .._capsule_record import ProfileRecordStore
 from .._censal_operation import (
     CENSAL_OPERATION_DEFINITION,

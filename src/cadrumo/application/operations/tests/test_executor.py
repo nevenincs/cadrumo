@@ -24,12 +24,11 @@ from .. import (
     OperationExecutorContext,
     OperationIdentity,
     OperationInteractionAccess,
-    OperationInteractionRequest,
-    OperationLogSeverity,
     OperationOwnedResource,
-    OperationPendingInteraction,
     OperationSecureOperandLookup,
 )
+from .._events import OperationLogSeverity
+from .._interactions import OperationInteractionRequest, OperationPendingInteraction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

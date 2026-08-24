@@ -11,15 +11,11 @@ import pytest
 
 from .. import (
     OperationCapabilities,
+    OperationEventCursor,
     OperationExecutorContext,
-    OperationInteractionRequest,
-    OperationLeaseObservation,
-    OperationLeaseObservationDisposition,
     OperationObservationService,
-    OperationPersistedSnapshot,
     OperationPublicProjectionV1,
     OperationRegistry,
-    OperationReplayPage,
     OperationRequest,
     OperationReviewProjectionService,
     OperationSupervisor,
@@ -41,21 +37,35 @@ def test_facade_exports_only_declared_public_generic_symbols() -> None:
 
 def test_representative_contracts_resolve_from_public_facade() -> None:
     assert OperationCapabilities.__module__.endswith("._capabilities")
+    assert str(OperationEventCursor).startswith("typing.Annotated")
     assert OperationRequest.__module__.endswith("._models")
-    assert OperationPersistedSnapshot.__module__.endswith("._journal")
     assert OperationPublicProjectionV1.__module__.endswith("._public")
-    assert OperationLeaseObservation.__module__.endswith("._leases")
-    assert OperationLeaseObservationDisposition.__module__.endswith("._leases")
-    assert OperationReplayPage.__module__.endswith("._replay")
-    assert "OperationEvent" in public_names
     assert OperationExecutorContext.__module__.endswith("._executor")
-    assert OperationInteractionRequest.__module__.endswith("._interactions")
     assert OperationRegistry.__module__.endswith("._registry")
     assert OperationObservationService.__module__.endswith("._observation")
     assert OperationReviewProjectionService.__module__.endswith("._projection_services")
     assert callable(OperationRegistry.resolve_request_json)
     assert callable(OperationRegistry.resolve_snapshot_json)
     assert OperationSupervisor.__module__.endswith("._supervisor")
+
+
+def test_facade_does_not_export_persistence_or_response_bearer_internals() -> None:
+    operations = importlib.import_module("..", package=__package__)
+    forbidden = {
+        "BoundOperationSecureResponseAuthority",
+        "OperationConsumedInteraction",
+        "OperationEvent",
+        "OperationJournal",
+        "OperationLeaseObservation",
+        "OperationPendingInteraction",
+        "OperationPersistedSnapshot",
+        "OperationReplayPage",
+        "OperationResponseToken",
+        "OperationSnapshot",
+    }
+
+    assert forbidden.isdisjoint(public_names)
+    assert all(not hasattr(operations, name) for name in forbidden)
 
 
 def test_facade_does_not_import_frontend_or_adapter_modules() -> None:
@@ -70,8 +80,6 @@ def test_facade_does_not_import_frontend_or_adapter_modules() -> None:
         "_execution_context",
         "_executor",
         "_interactions",
-        "_journal",
-        "_leases",
         "_models",
         "_observation",
         "_public",

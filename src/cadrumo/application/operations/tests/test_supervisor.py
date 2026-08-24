@@ -29,17 +29,14 @@ from ....core.errors import CoreError, get_registered_error_code
 from ....tests.aeat_literal_fixtures import REDACTION_TOKEN_QUERY_URL_CANARY
 from ....tests.secure_sql import isolated_ephemeral_secure_sql, isolated_runtime_profile
 from .. import (
-    OperationApplyResponse,
     OperationBaselinePolicy,
     OperationCancellation,
     OperationCapabilities,
     OperationClosePolicy,
     OperationConflictScope,
-    OperationConsumedInteraction,
     OperationDeadline,
     OperationDeclarationError,
     OperationDefinition,
-    OperationDiagnosticEvent,
     OperationDurability,
     OperationEffect,
     OperationExecutor,
@@ -48,35 +45,39 @@ from .. import (
     OperationFrontendProjection,
     OperationIdentity,
     OperationInteractionKind,
-    OperationInteractionRequest,
-    OperationLeaseDisposition,
     OperationLifecycle,
-    OperationNoticeEvent,
     OperationObservationRequestV1,
     OperationObservationService,
     OperationObservationSuccessV1,
     OperationOwnedResource,
-    OperationOwnerLease,
-    OperationPendingInteraction,
-    OperationPersistedSnapshot,
     OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationEvent,
     OperationReconciliationOutcome,
     OperationReconciliationPolicy,
     OperationRegistry,
-    OperationRejectResponse,
     OperationReplayPolicy,
     OperationRequest,
     OperationRequestStoragePolicy,
     OperationSchemaBindingV1,
-    OperationSecureReferenceStore,
     OperationSensitiveInputPolicy,
     OperationSupervisor,
     OperationTerminalCondition,
-    OperationTerminalEvent,
     OperationTerminalReceipt,
-    operation_conflict_scope_reference,
 )
+from .._events import (
+    OperationDiagnosticEvent,
+    OperationNoticeEvent,
+    OperationReconciliationEvent,
+    OperationTerminalEvent,
+)
+from .._interactions import (
+    OperationApplyResponse,
+    OperationConsumedInteraction,
+    OperationInteractionRequest,
+    OperationPendingInteraction,
+    OperationRejectResponse,
+)
+from .._journal import OperationPersistedSnapshot, OperationSecureReferenceStore
+from .._leases import OperationLeaseDisposition, OperationOwnerLease, operation_conflict_scope_reference
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

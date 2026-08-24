@@ -46,7 +46,6 @@ from .. import (
     OperationFrontendProjection,
     OperationIdentity,
     OperationInteractionKind,
-    OperationInteractionRequest,
     OperationOwnedResource,
     OperationPublicContractSetV1,
     OperationPublicDefinitionContractV1,
@@ -59,9 +58,10 @@ from .. import (
     OperationSchemaBindingV1,
     OperationSchemaIdentityV1,
     OperationSensitiveInputPolicy,
-    OperationSnapshot,
     OperationTerminalReceipt,
 )
+from .._interactions import OperationInteractionRequest
+from .._models import OperationSnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

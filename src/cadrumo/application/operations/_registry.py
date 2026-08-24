@@ -454,6 +454,24 @@ class OperationPublicDefinitionRegistrationV1(BaseModel):
         return self
 
     @classmethod
+    def compose_request_only(
+        cls,
+        *,
+        definition: OperationDefinition,
+        request_schema_id: OperationPublicSchemaId,
+        request_schema_version: int = 1,
+    ) -> OperationPublicDefinitionRegistrationV1:
+        """Bind the common operation shape with no public result or projection."""
+        return cls.compose(
+            definition=definition,
+            request_schema=OperationSchemaBindingV1.bind(
+                schema_id=request_schema_id,
+                schema_version=request_schema_version,
+                model_type=definition.request_type,
+            ),
+        )
+
+    @classmethod
     def compose(
         cls,
         *,
@@ -574,10 +592,10 @@ class OperationRegistry(BaseModel):
             if contract.result_schema is not None:
                 raise ValueError("result-less operation definition cannot declare a public result schema")
         elif (
-            contract.result_schema is None
-            or bindings[_schema_identity_key(contract.result_schema)] is not definition.result_type
+            contract.result_schema is not None
+            and bindings[_schema_identity_key(contract.result_schema)] is not definition.result_type
         ):
-            raise ValueError("public operation result schema must bind the definition result type")
+            raise ValueError("declared public operation result schema must bind the definition result type")
         declares_review = OperationInteractionKind.REVIEW in definition.interaction_kinds
         if declares_review != (contract.review_projection_schema is not None):
             raise ValueError("REVIEW operation definitions require one public review schema")

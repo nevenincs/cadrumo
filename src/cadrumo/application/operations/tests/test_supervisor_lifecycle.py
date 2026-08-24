@@ -37,7 +37,6 @@ from .. import (
     OperationFrontendProjection,
     OperationLifecycle,
     OperationOwnedResource,
-    OperationPersistedSnapshot,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
@@ -48,9 +47,10 @@ from .. import (
     OperationSensitiveInputPolicy,
     OperationSupervisor,
     OperationTerminalCondition,
-    OperationTerminalEvent,
     OperationTerminalReceipt,
 )
+from .._events import OperationTerminalEvent
+from .._journal import OperationPersistedSnapshot
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

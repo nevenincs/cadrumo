@@ -26,14 +26,13 @@ from ....domain.user_profile import UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...operations import (
-    OperationApplyResponse,
     OperationExecutorFactory,
     OperationRegistry,
-    OperationRejectResponse,
     OperationRequest,
     OperationSupervisor,
     operation_public_schema_reference,
 )
+from ...operations._interactions import OperationApplyResponse, OperationRejectResponse
 from .._capsule_record import ProfileRecordSession, ProfileRecordStore
 from .._censal_observation import CensalObservation, CensalObservationAddress, CensalObservationIdentity
 from .._censal_operation import (
@@ -46,6 +45,7 @@ from .._censal_operation import (
     CensalProfileBaseline,
     CensalReviewedFieldIntent,
     CensalReviewedOperand,
+    build_censal_operation_registration,
 )
 from .._cotejo_apply import apply_cotejo
 from .._custody_ports import profile_custody_secure_object_repository
@@ -57,6 +57,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 _NOW = datetime(2026, 8, 24, 18, tzinfo=UTC)
 _PASSPHRASE = "censal-operation-executor-passphrase"  # noqa: S105 - synthetic fixture
 _RESPONSE_TOKEN = "a" * 64
+
+
 @contextmanager
 def _subject(tmp_path: Path) -> Generator[tuple[str, object, ProfileRecordSession]]:
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
@@ -137,7 +139,10 @@ def _supervisor(
     )
     journal = OperationJournalRepository(storage_root=root)
     return OperationSupervisor(
-        registry=OperationRegistry(definitions=(definition,)),
+        registry=OperationRegistry(
+            definitions=(definition,),
+            public_registrations=(build_censal_operation_registration(definition),),
+        ),
         journal=journal,
         event_stream=journal,
         leases=OperationLeaseFilesystemRepository(storage_root=root),

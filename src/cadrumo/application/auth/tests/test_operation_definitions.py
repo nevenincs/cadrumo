@@ -46,6 +46,7 @@ from .._operation_definitions import (
     AuthTeardownOperationRequest,
     ProfileLoginOperationRequest,
     ProfilePassphraseRotationOperationRequest,
+    build_auth_operation_registrations,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -67,7 +68,10 @@ def _supervisor(
         else operation_secure_reference_repository(objects=profile_objects)  # type: ignore[arg-type]
     )
     return OperationSupervisor(
-        registry=OperationRegistry(definitions=AUTH_OPERATION_DEFINITIONS),
+        registry=OperationRegistry(
+            definitions=AUTH_OPERATION_DEFINITIONS,
+            public_registrations=build_auth_operation_registrations(AUTH_OPERATION_DEFINITIONS),
+        ),
         journal=journal,
         event_stream=journal,
         leases=OperationLeaseFilesystemRepository(storage_root=root),

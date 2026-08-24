@@ -19,6 +19,7 @@ from ...core import (
     require_active_bucket_id,
 )
 from ...core.identity import ContentDigest
+from ...core.time import now
 from ..operations import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -33,7 +34,6 @@ from ..operations import (
     OperationReplayPolicy,
     OperationRequest,
     OperationRequestStoragePolicy,
-    OperationSchemaBindingV1,
     OperationSensitiveInputPolicy,
 )
 from ._bundle_export import (
@@ -169,7 +169,9 @@ def _profile_subject(profile_id: UUID) -> str:
     return f"profile:{profile_id}"
 
 
-def _require_active_profile_subject(request: OperationRequest[BaseModel], profile_id: UUID) -> None:
+def _require_active_profile_subject[PayloadT: BaseModel](
+    request: OperationRequest[PayloadT], profile_id: UUID
+) -> None:
     """Bind every active-profile authority to exactly its secure operation subject."""
     if request.subject_ref != _profile_subject(profile_id):
         raise ValueError("user-profile operation subject does not match its exact profile")
@@ -179,7 +181,7 @@ def _require_active_profile_subject(request: OperationRequest[BaseModel], profil
 
 async def _result_reference(result: BaseModel, context: OperationExecutorContext) -> str:
     """Persist a post-mutation result through the supervisor's encrypted operand store."""
-    return await context.operands.put(result, written_at=context.snapshot.updated_at)
+    return await context.operands.put(result, written_at=now())
 
 
 class ProfileFieldMutationOperationExecutor:
@@ -381,24 +383,16 @@ def build_user_profile_operation_registrations(
 ) -> tuple[OperationPublicDefinitionRegistrationV1, ...]:
     """Bind profile-maintenance definitions to their stable public schemas."""
     return tuple(
-        OperationPublicDefinitionRegistrationV1.compose(
-            definition=definition,
-            request_schema=OperationSchemaBindingV1.bind(
-                schema_id=f"{definition.definition_id}.request",
-                schema_version=1,
-                model_type=definition.request_type,
-            ),
-            result_schema=(
-                None
-                if definition.result_type is None
-                else OperationSchemaBindingV1.bind(
-                    schema_id=f"{definition.definition_id}.result",
-                    schema_version=1,
-                    model_type=definition.result_type,
+        sorted(
+            (
+                OperationPublicDefinitionRegistrationV1.compose_request_only(
+                    definition=definition,
+                    request_schema_id=f"{definition.definition_id}.request",
                 )
+                for definition in definitions
             ),
+            key=lambda item: item.contract.definition_id,
         )
-        for definition in definitions
     )
 
 

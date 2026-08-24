@@ -33,14 +33,14 @@ from .. import (
     OperationReconciliationPolicy,
     OperationRegistry,
     OperationReplayPolicy,
-    OperationReplayStatus,
     OperationRequest,
     OperationRequestStoragePolicy,
     OperationSchemaBindingV1,
-    OperationSecureReferenceStore,
     OperationSensitiveInputPolicy,
     OperationSupervisor,
 )
+from .._journal import OperationSecureReferenceStore
+from .._replay import OperationReplayStatus
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

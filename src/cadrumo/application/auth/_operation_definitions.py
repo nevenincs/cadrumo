@@ -7,7 +7,7 @@ from datetime import timedelta
 from pathlib import Path
 from uuid import UUID
 
-from pydantic import BaseModel, SecretStr
+from pydantic import BaseModel, ConfigDict, SecretStr
 
 from ...core import (
     STRICT_FROZEN_CONFIG,
@@ -19,6 +19,7 @@ from ...core import (
     OperationInteractionKind,
     require_active_bucket_id,
 )
+from ...core.time import now
 from ..operations import (
     CredentialFreeOperationRequest,
     OperationBaselinePolicy,
@@ -29,12 +30,11 @@ from ..operations import (
     OperationExecutorContext,
     OperationExecutorFactory,
     OperationFrontendProjection,
+    OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationReplayPolicy,
     OperationRequest,
     OperationRequestStoragePolicy,
-    OperationPublicDefinitionRegistrationV1,
-    OperationSchemaBindingV1,
     OperationSensitiveInputPolicy,
 )
 from ..user_profile import (
@@ -52,6 +52,7 @@ AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID = "auth.session.acquire"
 AUTH_LOGOUT_OPERATION_DEFINITION_ID = "auth.session.logout"
 AUTH_RESET_OPERATION_DEFINITION_ID = "auth.session.reset"
 PROFILE_PASSPHRASE_ROTATION_OPERATION_DEFINITION_ID = "auth.profile.passphrase-rotate"  # noqa: S105
+_PUBLIC_REQUEST_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
 
 class ProfileLoginOperationRequest(CredentialFreeOperationRequest):
@@ -59,14 +60,14 @@ class ProfileLoginOperationRequest(CredentialFreeOperationRequest):
 
 
 class AuthConfigureOperationRequest(BaseModel):
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = _PUBLIC_REQUEST_CONFIG
 
     provider: str
     certificate_path: Path | None = None
 
 
 class AuthSessionAcquireOperationRequest(BaseModel):
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = _PUBLIC_REQUEST_CONFIG
 
     provider: str | None = None
     fresh: bool = False
@@ -74,7 +75,7 @@ class AuthSessionAcquireOperationRequest(BaseModel):
 
 
 class AuthTeardownOperationRequest(BaseModel):
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = _PUBLIC_REQUEST_CONFIG
 
     provider: str | None = None
     all_providers: bool = False
@@ -100,12 +101,12 @@ def _profile_subject(profile_id: UUID) -> str:
     return f"profile:{profile_id}"
 
 
-def _require_profile_subject(request: OperationRequest[BaseModel], profile_id: UUID) -> None:
+def _require_profile_subject[PayloadT: BaseModel](request: OperationRequest[PayloadT], profile_id: UUID) -> None:
     if request.subject_ref != _profile_subject(profile_id):
         raise ValueError("auth operation subject does not match its exact profile")
 
 
-def _require_active_profile_subject(request: OperationRequest[BaseModel]) -> str:
+def _require_active_profile_subject[PayloadT: BaseModel](request: OperationRequest[PayloadT]) -> str:
     """Bind active-profile authorities to the operation's exact profile subject."""
     try:
         profile_id = UUID(request.subject_ref.removeprefix("profile:"))
@@ -125,7 +126,7 @@ async def _result_reference(result: BaseModel, context: OperationExecutorContext
         PROFILE_PASSPHRASE_ROTATION_OPERATION_DEFINITION_ID,
     }:
         return context.identity.subject_ref
-    return await context.operands.put(result, written_at=context.snapshot.updated_at)
+    return await context.operands.put(result, written_at=now())
 
 
 class ProfileLoginOperationExecutor:
@@ -376,24 +377,16 @@ def build_auth_operation_registrations(
 ) -> tuple[OperationPublicDefinitionRegistrationV1, ...]:
     """Bind the auth-owned definitions to their stable public schemas."""
     return tuple(
-        OperationPublicDefinitionRegistrationV1.compose(
-            definition=definition,
-            request_schema=OperationSchemaBindingV1.bind(
-                schema_id=f"{definition.definition_id}.request",
-                schema_version=1,
-                model_type=definition.request_type,
-            ),
-            result_schema=(
-                None
-                if definition.result_type is None
-                else OperationSchemaBindingV1.bind(
-                    schema_id=f"{definition.definition_id}.result",
-                    schema_version=1,
-                    model_type=definition.result_type,
+        sorted(
+            (
+                OperationPublicDefinitionRegistrationV1.compose_request_only(
+                    definition=definition,
+                    request_schema_id=f"{definition.definition_id}.request",
                 )
+                for definition in definitions
             ),
+            key=lambda item: item.contract.definition_id,
         )
-        for definition in definitions
     )
 
 

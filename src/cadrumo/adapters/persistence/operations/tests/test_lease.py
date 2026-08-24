@@ -15,12 +15,14 @@ import pytest
 
 from .....application.operations import (
     OperationIdentity,
+    OperationRequestStoragePolicy,
+)
+from .....application.operations._events import OperationPhaseEvent
+from .....application.operations._journal import OperationPersistedSnapshot
+from .....application.operations._leases import (
     OperationLeaseDisposition,
     OperationLeaseObservationDisposition,
     OperationOwnerLease,
-    OperationPersistedSnapshot,
-    OperationPhaseEvent,
-    OperationRequestStoragePolicy,
     operation_conflict_scope_reference,
 )
 from .....core import OperationEffect, OperationLifecycle, exclusive_file_lock

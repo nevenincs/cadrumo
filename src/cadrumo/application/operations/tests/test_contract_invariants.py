@@ -9,14 +9,12 @@ import pytest
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
 from .. import (
-    OperationApplyResponse,
     OperationBaselinePolicy,
     OperationCancellation,
     OperationCapabilities,
     OperationClosePolicy,
     OperationConflictScope,
     OperationDeadline,
-    OperationDiagnosticEvent,
     OperationDurability,
     OperationEffect,
     OperationIdentity,
@@ -25,10 +23,12 @@ from .. import (
     OperationRequest,
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
-    OperationSnapshot,
     OperationTerminalCondition,
     OperationTerminalReceipt,
 )
+from .._events import OperationDiagnosticEvent
+from .._interactions import OperationApplyResponse
+from .._models import OperationSnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

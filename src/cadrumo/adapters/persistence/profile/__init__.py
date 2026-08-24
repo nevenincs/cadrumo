@@ -34,7 +34,9 @@ Every other repository is consumed from its own child module directly:
 """
 
 from ._secure_model_document import ProfileBareModelSecurePersistence
+from .sync_runs import SyncRunRecordRepository
 
 __all__: list[str] = [
     "ProfileBareModelSecurePersistence",
+    "SyncRunRecordRepository",
 ]

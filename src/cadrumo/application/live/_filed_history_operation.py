@@ -6,10 +6,9 @@ from collections.abc import Awaitable, Callable
 from datetime import date
 from pathlib import Path
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from ...core import (
-    STRICT_FROZEN_CONFIG,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -29,6 +28,7 @@ from ..operations import (
     OperationExecutorContext,
     OperationExecutorFactory,
     OperationFrontendProjection,
+    OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationReplayPolicy,
     OperationRequest,
@@ -85,30 +85,50 @@ _FILED_HISTORY_PHASES = (
 class FiledHistoryOperationRequest(BaseModel):
     """Immutable scope submitted to one recorded filed-history pull."""
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
     output_root: Path
-    profile: TaxpayerProfile | None = None
     today: date | None = None
     limit: int | None = Field(default=None, ge=1)
     dry_run: bool = False
 
 
 type FiledHistoryPull = Callable[
-    [FiledHistoryOperationRequest, SyncRunRecordRepositoryProtocol, OperationEventEmitter],
+    [
+        FiledHistoryOperationRequest,
+        TaxpayerProfile | None,
+        SyncRunRecordRepositoryProtocol,
+        OperationEventEmitter,
+    ],
     Awaitable[FiledHistoryOnboardingRun],
 ]
+type FiledHistoryProfileResolver = Callable[[], TaxpayerProfile | None]
+type FiledHistorySyncRunRepositoryFactory = Callable[[], SyncRunRecordRepositoryProtocol]
+
+
+def _resolve_active_filed_history_profile() -> TaxpayerProfile | None:
+    """Load the selected profile through its canonical internal projection."""
+    from ..wizard import WizardStatusError, load_active_taxpayer_profile
+    from ..workflow import workflow_state_repository
+
+    try:
+        return load_active_taxpayer_profile(workflow_state_repository().load())
+    except WizardStatusError:
+        # Filed history still has a truthful AEAT register-options path when the
+        # active profile has not declared sufficient taxpayer facts yet.
+        return None
 
 
 async def _pull_recorded_filed_history(
     payload: FiledHistoryOperationRequest,
+    profile: TaxpayerProfile | None,
     repository: SyncRunRecordRepositoryProtocol,
     events: OperationEventEmitter,
 ) -> FiledHistoryOnboardingRun:
     """Delegate every domain stage and write to the existing composition."""
     return await pull_filed_history(
         output_root=payload.output_root,
-        profile=payload.profile,
+        profile=profile,
         today=payload.today,
         limit=payload.limit,
         dry_run=payload.dry_run,
@@ -158,9 +178,11 @@ class FiledHistoryOperationExecutor:
         *,
         sync_run_repository: SyncRunRecordRepositoryProtocol,
         pull: FiledHistoryPull = _pull_recorded_filed_history,
+        profile_resolver: FiledHistoryProfileResolver = _resolve_active_filed_history_profile,
     ) -> None:
         self._sync_run_repository = sync_run_repository
         self._pull = pull
+        self._profile_resolver = profile_resolver
 
     async def execute(
         self,
@@ -169,6 +191,7 @@ class FiledHistoryOperationExecutor:
     ) -> str | None:
         if require_active_bucket_id() != request.subject_ref:
             raise ValueError("filed-history operation subject must identify the active profile")
+        profile = self._profile_resolver()
         await context.events.phase(FILED_HISTORY_PHASE_PREFLIGHT)
         await context.events.phase(FILED_HISTORY_PHASE_EXECUTION)
         # The delegated service contains several atomic secure writes. Until it
@@ -176,7 +199,7 @@ class FiledHistoryOperationExecutor:
         # whether none or some of those writes committed.
         if not request.payload.dry_run:
             await context.events.effect(OperationEffect.UNKNOWN)
-        run = await self._pull(request.payload, self._sync_run_repository, context.events)
+        run = await self._pull(request.payload, profile, self._sync_run_repository, context.events)
         await context.events.phase(FILED_HISTORY_PHASE_RESULT)
         await context.events.phase(FILED_HISTORY_PHASE_CLEANUP)
         await context.events.effect(_settled_effect(run))
@@ -186,13 +209,18 @@ class FiledHistoryOperationExecutor:
 
 def build_filed_history_operation_definition(
     *,
-    sync_run_repository: SyncRunRecordRepositoryProtocol,
+    sync_run_repository_factory: FiledHistorySyncRunRepositoryFactory,
     pull: FiledHistoryPull = _pull_recorded_filed_history,
+    profile_resolver: FiledHistoryProfileResolver = _resolve_active_filed_history_profile,
 ) -> OperationDefinition:
     """Bind entrypoint-owned persistence to the canonical operation contract."""
 
     def build() -> FiledHistoryOperationExecutor:
-        return FiledHistoryOperationExecutor(sync_run_repository=sync_run_repository, pull=pull)
+        return FiledHistoryOperationExecutor(
+            sync_run_repository=sync_run_repository_factory(),
+            pull=pull,
+            profile_resolver=profile_resolver,
+        )
 
     return OperationDefinition(
         definition_id=FILED_HISTORY_OPERATION_DEFINITION_ID,
@@ -230,6 +258,16 @@ def build_filed_history_operation_definition(
     )
 
 
+def build_filed_history_operation_registration(
+    definition: OperationDefinition,
+) -> OperationPublicDefinitionRegistrationV1:
+    """Bind the filed-history definition to its stable public schemas."""
+    return OperationPublicDefinitionRegistrationV1.compose_request_only(
+        definition=definition,
+        request_schema_id="live.filed-history.pull.request",
+    )
+
+
 __all__ = [
     "FILED_HISTORY_DECLARATION_PROGRESS_UNIT",
     "FILED_HISTORY_DECLARATION_REFUSAL_CODE",
@@ -257,5 +295,7 @@ __all__ = [
     "FiledHistoryOperationExecutor",
     "FiledHistoryOperationRequest",
     "FiledHistoryPull",
+    "FiledHistorySyncRunRepositoryFactory",
     "build_filed_history_operation_definition",
+    "build_filed_history_operation_registration",
 ]

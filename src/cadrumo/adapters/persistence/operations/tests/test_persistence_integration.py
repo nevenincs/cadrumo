@@ -16,15 +16,17 @@ import pytest
 
 from .....application.operations import (
     OperationIdentity,
+    OperationRequestStoragePolicy,
+)
+from .....application.operations._events import OperationPhaseEvent
+from .....application.operations._journal import OperationPersistedSnapshot
+from .....application.operations._leases import (
     OperationLeaseDisposition,
     OperationLeaseObservationDisposition,
     OperationOwnerLease,
-    OperationPersistedSnapshot,
-    OperationPhaseEvent,
-    OperationReplayStatus,
-    OperationRequestStoragePolicy,
     operation_conflict_scope_reference,
 )
+from .....application.operations._replay import OperationReplayStatus
 from .....core import OperationEffect, OperationLifecycle, scan_directory
 from ...storage import RepositoryError
 from .. import OperationJournalRepository, OperationLeaseFilesystemRepository
