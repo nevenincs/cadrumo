@@ -4,8 +4,8 @@
 :class:`EvasionStrategy` after creating each Playwright ``BrowserContext`` and
 before returning it to auth providers or Sede readers. The default
 :class:`PlaywrightStealthEvasion` delegates to the optional
-``playwright-stealth`` package and raises :class:`BrowserEvasionError` with the
-browser-extra install hint when that package is unavailable.
+``playwright-stealth`` package and raises :class:`BrowserEvasionError` with a
+typed terminal outcome when that package is unavailable.
 
 See Also:
     :meth:`adapters.outbound.aeat.browser.BrowserSession.create_context`
@@ -23,8 +23,14 @@ if TYPE_CHECKING:
     # playwright is the optional `browser` extra; this type is annotation-only.
     from playwright.async_api import BrowserContext
 
+from .....core import NoRecoveryOutcome
 from .....core.logging import get_logger
-from ._errors import BrowserEvasionError
+from ._errors import (
+    BrowserEvasionError,
+    BrowserFailureMode,
+    BrowserPreconditionCondition,
+    browser_no_action_verdict,
+)
 
 logger = get_logger(__name__)
 
@@ -67,7 +73,13 @@ class PlaywrightStealthEvasion:
         except ImportError as e:
             logger.error("playwright-stealth is not installed; evasion failed", exc_info=True)
             raise BrowserEvasionError(
-                "playwright-stealth is required for this evasion strategy.",
+                "Browser evasion support is unavailable",
+                failure_mode=BrowserFailureMode.EVASION_FAILED,
+                precondition_verdict=browser_no_action_verdict(
+                    condition=BrowserPreconditionCondition.EVASION_SUPPORT_AVAILABLE,
+                    facts={"browser_evasion_support_available": False},
+                    outcome=NoRecoveryOutcome.SAFETY,
+                ),
             ) from e
 
         await Stealth().apply_stealth_async(context)

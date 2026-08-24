@@ -33,10 +33,12 @@ from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, Final
 
+from .....core import NoRecoveryOutcome
 from .....core.async_cleanup import (
     close_async_resources,
 )
 from .....core.logging import get_logger
+from ._errors import BrowserError, BrowserFailureMode, BrowserPreconditionCondition, browser_no_action_verdict
 from .profile import Profile
 from .session import BrowserSession
 
@@ -77,7 +79,19 @@ class _SharedPlaywrightRuntimeOwner:
         async with self._close_lock:
             if self._stopped:
                 return
-            await self.playwright.stop()
+            try:
+                await self.playwright.stop()
+            except Exception as exc:
+                raise BrowserError(
+                    "Playwright runtime stop failed",
+                    failure_mode=BrowserFailureMode.PLAYWRIGHT_RUNTIME_STOP_FAILED,
+                    context={"cause_type": type(exc).__name__},
+                    precondition_verdict=browser_no_action_verdict(
+                        condition=BrowserPreconditionCondition.RUNTIME_STOPPABLE,
+                        facts={"playwright_runtime_stoppable": False},
+                        outcome=NoRecoveryOutcome.SAFETY,
+                    ),
+                ) from exc
             self._stopped = True
 
 
@@ -189,7 +203,16 @@ class DefaultBrowserSession:
                 exc=exc,
                 warning=True,
             )
-            return exc
+            return BrowserError(
+                "Playwright runtime stop failed",
+                failure_mode=BrowserFailureMode.PLAYWRIGHT_RUNTIME_STOP_FAILED,
+                context={"cause_type": type(exc).__name__},
+                precondition_verdict=browser_no_action_verdict(
+                    condition=BrowserPreconditionCondition.RUNTIME_STOPPABLE,
+                    facts={"playwright_runtime_stoppable": False},
+                    outcome=NoRecoveryOutcome.SAFETY,
+                ),
+            )
         self._playwright_stopped = True
         # A stopped Playwright runtime has reaped every browser it
         # owns even when Browser.close() raised first.
@@ -311,20 +334,38 @@ async def _start_playwright() -> Playwright:
     """Start the single browser-base Playwright runtime.
 
     The single runtime chokepoint every browser session funnels through. Guard
-    the optional ``browser`` extra here so a missing playwright is an instructive
+    the optional ``browser`` extra here so a missing playwright is a typed
     :class:`BrowserError`, not a raw ``ModuleNotFoundError`` from the import below.
     """
     from .....core import BROWSER_EXTRA, MissingOptionalExtraError, require_optional_extra
-    from ._errors import BrowserError
-
     try:
         require_optional_extra(BROWSER_EXTRA)
     except MissingOptionalExtraError as exc:
-        raise BrowserError(message=str(exc)) from exc
-    from playwright.async_api import async_playwright
+        raise BrowserError(
+            "Browser optional extra is unavailable",
+            failure_mode=BrowserFailureMode.OPTIONAL_EXTRA_UNAVAILABLE,
+            precondition_verdict=browser_no_action_verdict(
+                condition=BrowserPreconditionCondition.OPTIONAL_EXTRA_AVAILABLE,
+                facts={"browser_extra_available": False},
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
+        ) from exc
+    try:
+        from playwright.async_api import async_playwright
 
-    playwright_manager = async_playwright()
-    return await playwright_manager.start()
+        playwright_manager = async_playwright()
+        return await playwright_manager.start()
+    except Exception as exc:
+        raise BrowserError(
+            "Playwright runtime start failed",
+            failure_mode=BrowserFailureMode.PLAYWRIGHT_RUNTIME_START_FAILED,
+            context={"cause_type": type(exc).__name__},
+            precondition_verdict=browser_no_action_verdict(
+                condition=BrowserPreconditionCondition.RUNTIME_STARTABLE,
+                facts={"playwright_runtime_startable": False},
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
+        ) from exc
 
 
 __all__ = [
