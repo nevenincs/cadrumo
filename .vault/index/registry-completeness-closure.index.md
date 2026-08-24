@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:06632fddfdb348127d3d1f0a93e7272ec3eab655a3425f8149f4d92cf2980477'
+body_hash: 'sha256:c4f2f94071e8d0312645296f47296a472a6d3022d0c7192e33bf0e44d5a2956e'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -67,12 +67,21 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W02-P03-S23]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P03-S24]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P03-S25]]'
+  - '[[2026-08-24-registry-completeness-closure-W02-P04-S26]]'
+  - '[[2026-08-24-registry-completeness-closure-W02-P04-S27]]'
+  - '[[2026-08-24-registry-completeness-closure-W02-P04-S28]]'
+  - '[[2026-08-24-registry-completeness-closure-W02-P04-S29]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P04-S73]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P04-S74]]'
+  - '[[2026-08-24-registry-completeness-closure-W02-P04-S75]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P04-S76]]'
+  - '[[2026-08-24-registry-completeness-closure-W02-P04-S77]]'
+  - '[[2026-08-24-registry-completeness-closure-W02-P04-S78]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P04-S79]]'
+  - '[[2026-08-24-registry-completeness-closure-W02-P04-S80]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P04-S81]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P04-S82]]'
+  - '[[2026-08-24-registry-completeness-closure-W02-P04-S83]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-audit]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-036-2025-filing-authority-reference]]'
@@ -116,6 +125,10 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s23-independent-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s24-independent-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s25-independent-post-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s26-temporal-owner-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s27-source-owner-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s28-export-owner-post-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s29-s83-remediation-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s41-cache-key-type-review-audit]]'
@@ -156,8 +169,14 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s72-grade-scoping-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s73-manual-source-evidence-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s74-post-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s75-exec-record-mapping-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s75-modelo-038-owner-route-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s76-post-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s77-post-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s78-modelo-187-article-42-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s79-modelo-220-count-reconciliation-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s80-correction-rereview-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s80-structured-message-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s81-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s82-source-evidence-post-review-audit]]'
 ---
@@ -199,6 +218,10 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s23-independent-post-review-audit` - `registry-completeness-closure` audit: `S23 independent Modelo 721 structured-message post-review`
 - `2026-08-24-registry-completeness-closure-s24-independent-post-review-audit` - `registry-completeness-closure` audit: `S24 Modelo 763 independent post-review`
 - `2026-08-24-registry-completeness-closure-s25-independent-post-review-audit` - `registry-completeness-closure` audit: `S25 Modelo 840 independent post-review`
+- `2026-08-24-registry-completeness-closure-s26-temporal-owner-audit` - `registry-completeness-closure` audit: `S26 temporal owner enrollment independent review`
+- `2026-08-24-registry-completeness-closure-s27-source-owner-review-audit` - `registry-completeness-closure` audit: `S27 source-owner enrollment review`
+- `2026-08-24-registry-completeness-closure-s28-export-owner-post-review-audit` - `registry-completeness-closure` audit: `S28 export predecessor owner independent post-review`
+- `2026-08-24-registry-completeness-closure-s29-s83-remediation-post-review-audit` - `registry-completeness-closure` audit: `S29 and S83 remediation post review`
 - `2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot authority-grade enforcement review`
 - `2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot-grade enforcement review`
 - `2026-08-24-registry-completeness-closure-s41-cache-key-type-review-audit` - `registry-completeness-closure` audit: `S41 cache-key type review`
@@ -239,8 +262,14 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s72-grade-scoping-post-review-audit` - `registry-completeness-closure` audit: `S72 filing-grade scoping independent post-review`
 - `2026-08-24-registry-completeness-closure-s73-manual-source-evidence-post-review-audit` - `registry-completeness-closure` audit: `S73 Modelo 036 manual-source evidence independent post-review`
 - `2026-08-24-registry-completeness-closure-s74-post-review-audit` - `registry-completeness-closure` audit: `S74 Modelo 036 filing-route post-review`
+- `2026-08-24-registry-completeness-closure-s75-exec-record-mapping-audit` - `registry-completeness-closure` audit: `S75 Modelo 038 execution-record mapping review`
 - `2026-08-24-registry-completeness-closure-s75-modelo-038-owner-route-audit` - `registry-completeness-closure` audit: `S75 Modelo 038 owner-route post-review`
+- `2026-08-24-registry-completeness-closure-s76-post-review-audit` - `registry-completeness-closure` audit: `S76 terminal filing disposition post-review`
+- `2026-08-24-registry-completeness-closure-s77-post-review-audit` - `registry-completeness-closure` audit: `W02.P04.S77 independent review`
+- `2026-08-24-registry-completeness-closure-s78-modelo-187-article-42-review-audit` - `registry-completeness-closure` audit: `Modelo 187 Article 42 filer-limb review`
 - `2026-08-24-registry-completeness-closure-s79-modelo-220-count-reconciliation-review-audit` - `registry-completeness-closure` audit: `S79 Modelo 220 count reconciliation independent post-review`
+- `2026-08-24-registry-completeness-closure-s80-correction-rereview-audit` - `registry-completeness-closure` audit: `S80 correction independent re-review`
+- `2026-08-24-registry-completeness-closure-s80-structured-message-post-review-audit` - `registry-completeness-closure` audit: `S80 structured-message authority post-review`
 - `2026-08-24-registry-completeness-closure-s81-post-review-audit` - `registry-completeness-closure` audit: `Modelo 036 filing-route docstrings post-review`
 - `2026-08-24-registry-completeness-closure-s82-source-evidence-post-review-audit` - `registry-completeness-closure` audit: `S82 source evidence independent post-review`
 
@@ -305,12 +334,21 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W02-P03-S23` - Adjudicate Modelo 721 revision 2023-y-siguientes record-design availability and supported filing boundary
 - `2026-08-24-registry-completeness-closure-W02-P03-S24` - Adjudicate Modelo 763 revision 2011-y-siguientes design-era coverage
 - `2026-08-24-registry-completeness-closure-W02-P03-S25` - Adjudicate Modelo 840 revision 2003-y-siguientes record-terminator semantics and official extent
+- `2026-08-24-registry-completeness-closure-W02-P04-S26` - Enroll every temporal-window and authority-grade remedy in registry-temporal-coverage without duplicating closed work
+- `2026-08-24-registry-completeness-closure-W02-P04-S27` - Enroll every source and casilla remedy in source-casilla-integration without duplicating closed work
+- `2026-08-24-registry-completeness-closure-W02-P04-S28` - Enroll every official-layout and emitted-byte remedy in aeat-export-fragment-generator-authority without duplicating closed work
+- `2026-08-24-registry-completeness-closure-W02-P04-S29` - Prove every live filing gap has exactly one terminal refusal or one existing-plan owner and reconsideration condition
 - `2026-08-24-registry-completeness-closure-W02-P04-S73` - Adjudicate real below-filing source-connectivity participation and evidence for candidate revisions starting with Modelo 036, route accepted evidence or an ADR-authorized disposition into source-casilla-integration, and return the canonical proof to S72 and S11 without treating an empty candidate set as satisfied
 - `2026-08-24-registry-completeness-closure-W02-P04-S74` - Correct Modelo 036 human-filing wording and route its source and export reconsideration paths exactly.
+- `2026-08-24-registry-completeness-closure-W02-P04-S75` - Repair S13 Modelo 038 evidence handoff and EOF hygiene, correct its 2024-design-versus-2002 source-scope route, enroll exact temporal and export predecessor-plan owners for scope correction and trusted-layout acquisition, and retain the refusal until both routes close.
 - `2026-08-24-registry-completeness-closure-W02-P04-S76` - Correct the aggregate filing-capability worklist assertion and report so terminal no-authority refusals such as Modelo 136 are never described as requiring an authorable layout, retain named owners for authorable gaps, and pass the terminal-versus-owner distinction to S29.
+- `2026-08-24-registry-completeness-closure-W02-P04-S77` - Correct Modelo 182 statutory filer-population wording and reconsideration scope
+- `2026-08-24-registry-completeness-closure-W02-P04-S78` - Correct Modelo 187 Article-2 filer-population wording to include the separate Article 42 RGAT obligated-person/entity limb, update its prerequisite, reconsideration, and existing owner routes, and re-attest the reference and execution record.
 - `2026-08-24-registry-completeness-closure-W02-P04-S79` - Correct Modelo 220/2024 reviewer-stamp record-design counts against the hash-verified parser measurement and re-attest the unchanged applicability-grade, non-fileable disposition.
+- `2026-08-24-registry-completeness-closure-W02-P04-S80` - Reconcile Modelo 721 structured-message filing authority with the positional-only export predicate: obtain the required ADR decision and enroll source taxonomy, authority-grade gate, canonical exporter, and local emitted-payload proof under the existing export plan while preserving Modelo 136 terminal refusal.
 - `2026-08-24-registry-completeness-closure-W02-P04-S81` - Correct Modelo 036 public lifecycle and CLI Sede-only docstrings to state Sede-or-competent-AEAT-office recording, retain optional electronic justificante semantics, and preserve the no-local-filing boundary.
 - `2026-08-24-registry-completeness-closure-W02-P04-S82` - Make terminal manual source evidence live-resolvable and revision-scoped, bind censo event coordinates to canonical Modelo 036, and retain property-based exact-one census proof.
+- `2026-08-24-registry-completeness-closure-W02-P04-S83` - Adjudicate the Modelo 036 product boundary through an accepted ADR, choose its canonical non-filing disposition, then align the capability worklist and S28 record with mutation proof without authoring an M036 exporter.
 
 ### plan
 
