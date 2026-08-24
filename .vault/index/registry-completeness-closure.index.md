@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:c608412e7e5417075d76b5e93a345fdd8c687276a677139e2219fb5f9d21f38d'
+body_hash: 'sha256:6753be3c3cf8f55a5fd9030bab938bd0cd109203360acbfa1fad43b0844dcd56'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -24,7 +24,9 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S44]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S45]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S46]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S47]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S48]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S50]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
@@ -41,6 +43,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s44-temporal-refusal-invariants-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s45-connected-proof-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s46-terminal-expiry-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s47-exact-scope-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s48-undeclared-grade-guard-review-audit]]'
 ---
 
@@ -69,6 +72,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s44-temporal-refusal-invariants-review-audit` - `registry-completeness-closure` audit: `s44 temporal refusal invariants review`
 - `2026-08-24-registry-completeness-closure-s45-connected-proof-review-audit` - `registry-completeness-closure` audit: `S45 connected proof revalidation review`
 - `2026-08-24-registry-completeness-closure-s46-terminal-expiry-review-audit` - `registry-completeness-closure` audit: `S46 terminal expiry review`
+- `2026-08-24-registry-completeness-closure-s47-exact-scope-review-audit` - `registry-completeness-closure` audit: `S47 exact source scope review`
 - `2026-08-24-registry-completeness-closure-s48-undeclared-grade-guard-review-audit` - `registry-completeness-closure` audit: `S48 undeclared-grade guard review`
 
 ### exec
@@ -89,7 +93,9 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P02-S44` - Encode branch-specific TemporalRevisionCoverage refusal invariants and add construction and mutation-bite tests.
 - `2026-08-24-registry-completeness-closure-W01-P02-S45` - Revalidate connected census claims through live source proof authority at composition time and refuse proof loss or digest mismatch.
 - `2026-08-24-registry-completeness-closure-W01-P02-S46` - Apply expiry semantics to every scoped census disposition and refuse expired terminal evidence, with mutation-bite tests.
+- `2026-08-24-registry-completeness-closure-W01-P02-S47` - Add revision filing-year and period scope to census destinations and require exact scoped source mapping with Modelo 100 and 193 cross-satisfaction regressions.
 - `2026-08-24-registry-completeness-closure-W01-P02-S48` - Prove undeclared-grade refusals reject a non-null declared grade through direct construction and revalidated mutation.
+- `2026-08-24-registry-completeness-closure-W01-P02-S50` - Parameterize undeclared-grade refusal contradictions across every authority grade and prove weakened-guard regression refusal.
 
 ### plan
 

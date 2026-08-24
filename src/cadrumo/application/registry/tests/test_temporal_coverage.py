@@ -134,11 +134,6 @@ def test_temporal_coverage_row_constructs_only_real_refusal_branch_shapes(
             {"declared_authority_grade": None},
             "declared-grade snapshot refusal requires a declared",
         ),
-        (
-            "undeclared_authority_grade",
-            {"declared_authority_grade": RegistryAuthorityGrade.APPLICABILITY},
-            "undeclared-grade refusal cannot carry a declared authority grade",
-        ),
     ],
 )
 def test_temporal_coverage_row_refuses_impossible_branch_evidence_at_construction(
@@ -149,6 +144,20 @@ def test_temporal_coverage_row_refuses_impossible_branch_evidence_at_constructio
     with pytest.raises(ValidationError, match=message):
         TemporalRevisionCoverage(
             **(_temporal_refusal_payload(failure_code=failure_code) | mutation),
+        )
+
+
+@pytest.mark.parametrize("declared_authority_grade", tuple(RegistryAuthorityGrade))
+def test_undeclared_grade_refusal_rejects_every_non_null_grade_at_construction(
+    declared_authority_grade: RegistryAuthorityGrade,
+) -> None:
+    """Every declared ladder rung contradicts an undeclared-grade refusal."""
+    with pytest.raises(ValidationError, match="undeclared-grade refusal cannot carry a declared authority grade"):
+        TemporalRevisionCoverage(
+            **(
+                _temporal_refusal_payload(failure_code="undeclared_authority_grade")
+                | {"declared_authority_grade": declared_authority_grade}
+            ),
         )
 
 
@@ -171,11 +180,6 @@ def test_temporal_coverage_row_refuses_impossible_branch_evidence_at_constructio
             "undeclared-grade refusal requires",
         ),
         (
-            "undeclared_authority_grade",
-            {"declared_authority_grade": RegistryAuthorityGrade.APPLICABILITY},
-            "undeclared-grade refusal cannot carry a declared authority grade",
-        ),
-        (
             "declared_grade_snapshot_refused",
             {"declared_authority_grade": None},
             "declared-grade snapshot refusal requires a declared",
@@ -196,6 +200,18 @@ def test_temporal_coverage_validator_bites_each_refusal_branch_mutation(
     mutated_row = row.model_copy(update=mutation)
 
     with pytest.raises(ValidationError, match=message):
+        TemporalRevisionCoverage.model_validate(mutated_row.model_dump())
+
+
+@pytest.mark.parametrize("declared_authority_grade", tuple(RegistryAuthorityGrade))
+def test_undeclared_grade_refusal_revalidates_every_non_null_grade_contradiction(
+    declared_authority_grade: RegistryAuthorityGrade,
+) -> None:
+    """Frozen-row mutation must not evade the all-rungs contradiction guard."""
+    row = TemporalRevisionCoverage(**_temporal_refusal_payload(failure_code="undeclared_authority_grade"))
+    mutated_row = row.model_copy(update={"declared_authority_grade": declared_authority_grade})
+
+    with pytest.raises(ValidationError, match="undeclared-grade refusal cannot carry a declared authority grade"):
         TemporalRevisionCoverage.model_validate(mutated_row.model_dump())
 
 
