@@ -14,7 +14,7 @@ from ....application.calculations import CalculationObservationRepository, resol
 from ....core import Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile import load_user_profile_schema, ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session, seed_test_profile_record
@@ -41,7 +41,10 @@ def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
     record = UserProfileRecord(
         schema_id="cadrumo.user_profile",
-        schema_version=1,
+        # Sourced from the schema, never pinned: a literal goes stale the moment
+        # the profile schema is revised, and the record then refuses to validate
+        # against its own canonical version.
+        schema_version=load_user_profile_schema().version,
         profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
