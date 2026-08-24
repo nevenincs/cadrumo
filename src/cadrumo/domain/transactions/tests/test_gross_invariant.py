@@ -228,7 +228,7 @@ def test_rent_expense_paid_net_of_withholding_validates() -> None:
 
 def test_rent_expense_paid_net_requires_irpf_category() -> None:
     """Rent expense net-cash relaxation requires an explicit withholding axis."""
-    with pytest.raises(ValidationError, match="set irpf_category"):
+    with pytest.raises(ValidationError, match=r"taxable_base \+ iva_amount") as raised:
         Transaction.model_validate(
             {
                 "raw": _raw(amount=Decimal("1020.00")),
@@ -242,11 +242,12 @@ def test_rent_expense_paid_net_requires_irpf_category() -> None:
                 "iva_amount": Decimal("210.00"),
             },
         )
+    assert all(fragment not in str(raised.value).lower() for fragment in ("aeat", "irpf_category", "ledger categories"))
 
 
 def test_rent_expense_paid_net_requires_rental_irpf_category() -> None:
     """An unrelated non-work IRPF tag must not relax outgoing rent gross drift."""
-    with pytest.raises(ValidationError, match="rental withholding category"):
+    with pytest.raises(ValidationError, match=r"taxable_base \+ iva_amount") as raised:
         Transaction.model_validate(
             {
                 "raw": _raw(amount=Decimal("1020.00")),
@@ -261,6 +262,7 @@ def test_rent_expense_paid_net_requires_rental_irpf_category() -> None:
                 "irpf_category": "actividad_economica",
             },
         )
+    assert all(fragment not in str(raised.value).lower() for fragment in ("aeat", "irpf_category", "ledger categories"))
 
 
 def test_outgoing_irpf_category_does_not_relax_non_rent_expense_gross() -> None:
@@ -303,7 +305,7 @@ def test_activity_irpf_category_does_not_relax_non_professional_expense_gross() 
 
 def test_invoice_gross_above_cash_without_irpf_category_is_rejected() -> None:
     """The net-cash relaxation requires an explicit IRPF category."""
-    with pytest.raises(ValidationError, match="set irpf_category"):
+    with pytest.raises(ValidationError, match=r"taxable_base \+ iva_amount") as raised:
         Transaction.model_validate(
             {
                 "raw": _raw(amount=Decimal("2120.00")),
@@ -316,6 +318,7 @@ def test_invoice_gross_above_cash_without_irpf_category_is_rejected() -> None:
                 "iva_amount": Decimal("420.00"),
             },
         )
+    assert all(fragment not in str(raised.value).lower() for fragment in ("aeat", "irpf_category", "ledger categories"))
 
 
 def test_work_irpf_category_does_not_relax_professional_invoice_gross() -> None:

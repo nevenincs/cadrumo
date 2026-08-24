@@ -48,10 +48,8 @@ from ..iva import (
 from ._enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ._errors import TransactionValidationError
 from ._irpf_categories import (
-    IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,
     PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING,
     RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING,
-    format_irpf_category_ids,
     has_activity_irpf_category,
     has_non_work_irpf_category,
     has_rent_irpf_category,
@@ -1064,28 +1062,12 @@ def _gross_mismatch_detail(
         return ""
     if direction == TransactionDirection.OUTGOING:
         if category_id in RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING:
-            rent_irpf_ids = format_irpf_category_ids(RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING)
-            return (
-                " If this is rent paid net of withholding, set irpf_category "
-                f"to the matching rental withholding category ({rent_irpf_ids}) so the invoice "
-                "base and IVA can be kept. Run `aeat app ledger categories` to list public "
-                "IRPF category ids."
-            )
+            return ""
         if category_id in PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING:
-            return (
-                " If this is a professional service invoice paid net of withholding, "
-                f"set irpf_category={IRPF_CATEGORY_ACTIVIDAD_ECONOMICA} so the invoice "
-                "base and IVA can be kept. Run `aeat app ledger categories` to list "
-                "public IRPF category ids."
-            )
+            return ""
         return ""
     if direction == TransactionDirection.INCOMING:
-        return (
-            " If this is an income receipt paid net of IRPF withholding, "
-            f"set irpf_category={IRPF_CATEGORY_ACTIVIDAD_ECONOMICA} for professional invoices "
-            "so the invoice base and IVA can be kept. Run `aeat app ledger categories` "
-            "to list public IRPF category ids."
-        )
+        return ""
     return ""
 
 

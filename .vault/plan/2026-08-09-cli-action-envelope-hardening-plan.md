@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-24'
-body_hash: 'sha256:04970de567cd66fc24795f180b7c9b624dadc2e8317aff6ffdb195000704729c'
+body_hash: 'sha256:a7272f766a55fb9eb92f2f39e7e9eecb8e80ef51b10c0475ba8281a049b7fb8e'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -220,7 +220,7 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [x] `W05.P10.S83` - Migrate authorization-domain recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/auth`.
 - [ ] `W05.P10.S84` - Migrate calculation-registry recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/calculations`.
 - [x] `W05.P10.S85` - Migrate taxpayer-domain recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/contribuyente`.
-- [ ] `W05.P10.S86` - Replace the remaining transaction-model free-form recovery hints and ledger-category command prose with typed conditions and canonical actions or explicit no-recovery outcomes; `src/cadrumo/domain/transactions/_models.py; src/cadrumo/domain/transactions/tests`.
+- [x] `W05.P10.S86` - Replace the remaining transaction-model free-form recovery hints and ledger-category command prose with typed conditions and canonical actions or explicit no-recovery outcomes; `src/cadrumo/domain/transactions/_models.py; src/cadrumo/domain/transactions/tests`.
 - [x] `W05.P10.S87` - Migrate user-profile-domain recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/user_profile`.
 - [ ] `W05.P10.S88` - Migrate root lazy-import optional-extra placeholders and help to use machine identity with localized rendering and the resolved error envelope alongside residual root live and portal CLI producers with no raw feature or package-command compatibility; `src/cadrumo/entrypoints/cli/__init__.py; src/cadrumo/entrypoints/cli/_log_levels.py; src/cadrumo/entrypoints/cli/_app_diagnostics.py; src/cadrumo/entrypoints/cli/_app_diagnostics_telemetry.py; src/cadrumo/entrypoints/cli/_app_maintenance.py; src/cadrumo/entrypoints/cli/_tty.py; src/cadrumo/entrypoints/cli/_app_live.py; src/cadrumo/entrypoints/cli/_app_live_portals_cli.py`.
 - [x] `W05.P10.S89` - Complete the consumer half of the atomic S33/S89 provisioning cutover by replacing config-check and provision payload and renderer free-form detail and remediation forwarding plus raw Google package prose with the exact S33 typed projection and resolved action or no-recovery rendering, never hardcoding command or English text; `src/cadrumo/entrypoints/cli/_config`.
