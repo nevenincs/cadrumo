@@ -9117,3 +9117,47 @@ redaction at the source for one run — the `except` block already holds `exc`,
 so adding it to the context temporarily, or catching narrower, names the field
 immediately. Do it as a deliberate, announced edit to a tracked file, revert it
 in the same session, and take the reading from a healthy environment.
+
+### Modelo 111 cannot be exported by anyone, and the tests were reporting it
+
+Widening the redaction for a single announced run (reverted in the same turn,
+file verified byte-identical to HEAD) names the cause the envelope hides:
+
+    Value error, Modelo 111 colegio_concertado must be explicitly declared
+
+This is not a fixture problem. It is a complete, user-facing blocker:
+
+- `Modelo111ProfileFacts.colegio_concertado` is `bool | None`, and
+  `_producer_snapshot.py:1446` refuses `None` — deliberately, in the
+  no-silent-under-declaration spirit: whether the withholder is a colegio
+  concertado is a fact the operator must state, not one the application infers.
+- The registry export layout for the modelo carries the field
+  (`modelo-111-page-01-colegio-concertado`, `producer_key =
+  "m111.colegio_concertado"`), so the fichero has a slot expecting a real value.
+- The filing layer's own tests supply it explicitly (`colegio_concertado=False`)
+  and one asserts the refusal fires on `None`, so the guard is covered and
+  intended.
+- **But the only production supplier is `_export.py:1011`, which returns
+  `Modelo111ProfileFacts(colegio_concertado=None)` unconditionally.** No
+  taxpayer-profile field, wizard question, CLI option, or filing election stores
+  the answer anywhere in the tree.
+
+So every modelo 111 export refuses, for every operator, with a message that
+names an internal field and no way to satisfy it. Thirteen-plus failing tests
+across `test_modelo_review_package_verb` and `test_modelo_export_verb` were
+faithfully reporting a real defect the whole time — the reason it read as test
+noise is that the refusal redacts its own cause to `cause_type`.
+
+The missing piece is a SOURCE for the declaration, and choosing it is a product
+decision rather than a repair: the model is named `...ProfileFacts`, which
+points at a taxpayer-profile question (with a wizard field, a CLI option, and
+real values in all four catalogues), while the "must be explicitly declared"
+framing would also fit a per-filing election beside `result_disposition`.
+Inventing either silently — or defaulting to `False`, which declares "not a
+concerted school" on the operator's behalf — is precisely the inference the
+guard exists to prevent, so it is not taken here.
+
+Worth generalising: a refusal that redacts its cause to a type name turns a real
+product defect into what looks like flaky test noise, and cost several rounds of
+indirect probing to recover. The guard is right to refuse; the envelope should
+carry enough for the operator to act.
