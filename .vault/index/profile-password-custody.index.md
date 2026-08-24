@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:55c35f69ffa1ec75767563719c1a38b05f3faf0c7848165c3f556a6f012e6d77'
+body_hash: 'sha256:1b9929ecb7e9112a7fa47ed4e82b758680e31ebf07847bd1b896a0146d23ccdc'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -219,6 +219,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W05-P08-S24]]'
   - '[[2026-08-13-profile-password-custody-W05-P08-S25]]'
   - '[[2026-08-13-profile-password-custody-W06-P09-S210]]'
+  - '[[2026-08-13-profile-password-custody-W06-P09-S211]]'
   - '[[2026-08-13-profile-password-custody-plan]]'
   - '[[2026-08-13-profile-password-custody-research]]'
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
@@ -506,6 +507,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W03-P06-S195` - Have Sol Medium confirm the restored setup-incomplete anti-tautology case green once the registry authority loads again, since that single case is the only one in its module that builds a real calendar and therefore the only one that needs the authority, it has never been observed passing while the concurrent authority-grade sweep leaves the registry refusing tree-wide, and an anti-tautology case never seen to pass is not yet evidence of anything
 - `2026-08-13-profile-password-custody-W03-P06-summary` - `profile-password-custody` `W03.P06` summary
 - `2026-08-13-profile-password-custody-W06-P09-S210` - Persist the approved in-place amendment requiring verified recovery enrollment at every profile creation, mandatory application-level recovery handoff, password-login independence, and restore-only recovery artifacts
+- `2026-08-13-profile-password-custody-W06-P09-S211` - Add the accepted machine-secret channel decision to the plan's governing related set and regenerate the feature index
 
 ### plan
 

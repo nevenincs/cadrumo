@@ -4,13 +4,14 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-24'
-body_hash: 'sha256:878b4a422c2c85f1206de5a64a44c01ad1e9bdf45f328b051386d972831b5cb8'
+body_hash: 'sha256:1a121f1d9ebdefd03494b7767a21009a6c8261471accc8279ec2a3f6d1fbc47f'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
   - '[[2026-08-13-auth-certificate-lifecycle-successor-adr]]'
   - '[[2026-08-13-cli-action-envelope-successor-adr]]'
+  - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
   - '[[2026-08-13-profile-bucket-lifecycle-successor-adr]]'
   - '[[2026-08-13-profile-disaster-operations-successor-adr]]'
   - '[[2026-08-13-profile-portability-successor-adr]]'
@@ -303,7 +304,7 @@ Reconcile the accepted custody authority with mandatory verified recovery, enfor
 Persist the approved recovery amendment and complete the plan's governing-decision chain before implementation changes are judged.
 
 - [x] `W06.P09.S210` - Persist the approved in-place amendment requiring verified recovery enrollment at every profile creation, mandatory application-level recovery handoff, password-login independence, and restore-only recovery artifacts; `.vault/adr/2026-08-13-profile-password-custody-rollup-adr.md`.
-- [ ] `W06.P09.S211` - Add the accepted machine-secret channel decision to the plan's governing related set and regenerate the feature index; `.vault/plan/2026-08-13-profile-password-custody-plan.md`.
+- [x] `W06.P09.S211` - Add the accepted machine-secret channel decision to the plan's governing related set and regenerate the feature index; `.vault/plan/2026-08-13-profile-password-custody-plan.md`.
 - [ ] `W06.P09.S212` - Mark the 2026-08-18 campaign close as historical without rewriting its measurements or dispositions, and point readers to the current reconciliation and successor honesty review; `.vault/audit/2026-08-18-profile-password-custody-campaign-close-audit.md`.
 
 ### Phase `W06.P10` - mandatory creation recovery
