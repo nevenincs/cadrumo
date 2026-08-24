@@ -8774,3 +8774,47 @@ verb RETURNS, verb by verb, which is a domain decision per verb about which
 nested collection to summarise and let the caller fetch per item. That is why
 this stays a handover and not a fix — and specifically why raising the ceiling
 would be weakening a gate to manufacture green rather than removing a real cost.
+
+### The schema budget is 29 parts one constant and 7 parts real payload
+
+The earlier entry recorded this as "36 verbs each need a decision about what
+they RETURN". That framing was wrong, and the correction matters because it
+changes the work from thirty-six domain decisions into one contract decision
+plus seven.
+
+Decomposing every verb's `$defs` by how many verbs share each definition shows
+the notice **action** machinery inlined identically into all 295 schemas:
+`ResolvedPreconditionAction` (1166B), `ResolvedActionArgument` (1030B),
+`ActionConditionEvidence` (902B), `ResolvedActionReference` (826B),
+`ResolvedNoticeAction` (739B), `NoticeSeverity` (379B), `ActionArgumentSource`
+(212B), `ActionEvidenceProvenance` (200B), `ActionConditionality` (164B) and
+`NoRecoveryOutcome` (151B). That is **5769 bytes in every verb, identical, min
+equals max**, and 1701855 bytes across the whole listing.
+
+It consumes 32% of the 18000-char budget before a verb has described anything of
+its own. Subtract it and the over-budget count falls from **36 to 7**. Twenty-nine
+verbs are over not because of what they return but because of a fixed constant
+they cannot influence — so asking their owners to summarise a nested collection
+would be asking them to pay down someone else's cost.
+
+The seven genuinely over on their own payload, with the shared machinery removed:
+
+| verb | own payload |
+|---|---|
+| `modelo.work.runs` | 27381 |
+| `app.quickfile` | 27240 |
+| `modelo.work.review` | 25513 |
+| `overview.calendar` | 21230 |
+| `modelo.work.wizard` | 18866 |
+| `modelo.work.calculate` | 18725 |
+| `modelo.work.revisions` | 18400 |
+
+Those seven are the real per-verb remediation the gate's docstring describes.
+
+The twenty-nine are one decision, and it is an envelope-contract decision rather
+than a payload one: whether every verb's advertised output schema must expand the
+resolved-action tree in full, or whether the action channel can be described more
+compactly. That is owned by whoever owns the notice contract in
+`aeat-cli-contract`, because it trades client-side schema fidelity for listing
+cost on every session. Not taken unilaterally here; recorded so it is decided
+once rather than relitigated thirty-six times.
