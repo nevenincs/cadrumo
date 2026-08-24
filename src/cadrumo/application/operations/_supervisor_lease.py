@@ -131,7 +131,7 @@ class OperationSupervisorLeaseMixin:
         *,
         identity: OperationIdentity,
         executor: Coroutine[Any, Any, object],
-    ) -> None:
+    ) -> object:
         """Join one executor while renewing its exact durable lease on schedule."""
         executor_task = asyncio.create_task(executor, name=f"operation-executor-{identity.operation_id}")
         try:
@@ -143,7 +143,7 @@ class OperationSupervisorLeaseMixin:
                 if executor_task in done or not pending:
                     break
                 await self._require_owned_lease(identity, self._clock())
-            await executor_task
+            return await executor_task
         finally:
             if not executor_task.done():
                 executor_task.cancel()

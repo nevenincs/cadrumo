@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import json
+import os
+import threading
+from contextlib import suppress
 
 from click.testing import Result
 
@@ -14,9 +17,8 @@ def seed_profile(name: str, **facts: str) -> str:
     """Seed one profile through the credential registration door, and return its id.
 
     Use this wherever a test needs a profile to EXIST. ``create_quiet_profile``
-    below still drives the CLI ``create`` verb, which refuses unconditionally;
-    it survives only for the handful of tests whose subject is a refusal that
-    fires ahead of that check.
+    below instead drives the real scripted CLI creation lane with its bounded
+    credential and paired recovery channels.
     """
     return register_cli_profile(label=name, facts=facts)
 
@@ -29,20 +31,50 @@ def create_quiet_profile(name: str, *options: str) -> Result:
     from ....core.config import load_settings
 
     secret = load_settings().cadrumo_dev_test_database_password.get_secret_value()
-    return invoke_cached_cli(
-        (
-            "config",
-            "profile",
-            "create",
-            name,
-            "--quiet",
-            "--accept-defaults",
-            *_filing_identity_defaults(name, options),
-            *options,
-            "--secrets-stdin",
-        ),
-        input=json.dumps({"passphrase": secret, "passphrase_confirmation": secret}),
-    )
+    handoff_reader, handoff_writer = os.pipe()
+    verification_reader, verification_writer = os.pipe()
+
+    def supervise_recovery() -> None:
+        payload = bytearray()
+        try:
+            while chunk := os.read(handoff_reader, 8193 - len(payload)):
+                payload.extend(chunk)
+            if payload:
+                os.write(verification_writer, payload)
+        finally:
+            payload[:] = b"\x00" * len(payload)
+            for descriptor in (handoff_reader, verification_writer):
+                with suppress(OSError):
+                    os.close(descriptor)
+
+    supervisor = threading.Thread(target=supervise_recovery, daemon=True)
+    supervisor.start()
+    try:
+        return invoke_cached_cli(
+            (
+                "config",
+                "profile",
+                "create",
+                name,
+                "--quiet",
+                "--accept-defaults",
+                *_filing_identity_defaults(name, options),
+                *options,
+                "--secrets-stdin",
+                "--recovery-handoff-fd",
+                str(handoff_writer),
+                "--recovery-verification-fd",
+                str(verification_reader),
+            ),
+            input=json.dumps({"passphrase": secret, "passphrase_confirmation": secret}),
+        )
+    finally:
+        for descriptor in (handoff_writer, verification_reader):
+            with suppress(OSError):
+                os.close(descriptor)
+        supervisor.join(timeout=5)
+        if supervisor.is_alive():
+            raise RuntimeError("profile recovery handoff supervisor did not terminate")
 
 
 def edit_quiet_profile(name: str, *options: str) -> Result:

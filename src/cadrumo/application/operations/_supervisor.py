@@ -101,7 +101,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         self._lease_locks: dict[OperationId, asyncio.Lock] = {}
         self._resources: dict[OperationId, list[AsyncCloseable]] = {}
         self._contexts: dict[OperationId, DefinitionBoundContext] = {}
-        self._executor_tasks: dict[OperationId, asyncio.Task[None]] = {}
+        self._executor_tasks: dict[OperationId, asyncio.Task[object]] = {}
         self._cleanup_tasks: dict[OperationId, asyncio.Task[None]] = {}
         self._continuation_tasks: dict[OperationId, asyncio.Task[OperationPersistedSnapshot]] = {}
         self._durable_change_events: dict[OperationId, asyncio.Event] = {}
@@ -208,7 +208,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         self._contexts[operation_id] = context
         executor = definition.executor_factory.create()
         try:
-            await self._execute_with_deadlines(
+            result_ref = await self._execute_with_deadlines(
                 identity=running.identity,
                 context=context,
                 executor=executor.execute(request, executor_context),
@@ -217,7 +217,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             raise
         except Exception as error:
             return await self._settle_executor_failure(context.snapshot, error)
-        return context.snapshot
+        return await self._settle_returned_result(context.snapshot, result_ref)
 
     async def _settle_executor_failure(
         self,
@@ -299,7 +299,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         identity: OperationIdentity,
         context: DefinitionBoundContext,
         executor: Coroutine[object, object, object],
-    ) -> None:
+    ) -> object:
         """Await executor completion while aggregate and cleanup deadlines remain supervisor-owned."""
         executor_task = asyncio.create_task(
             self._renew_while_executing(identity=identity, executor=executor),
@@ -327,11 +327,35 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             if cleanup_deadline is None:
                 raise ValueError("durable cancellation request is missing its cleanup deadline")
             await self._wait_for_executor_or_deadline(executor_task, cleanup_deadline, now)
-        await executor_task
+        return await executor_task
+
+    async def _settle_returned_result(
+        self,
+        snapshot: OperationPersistedSnapshot,
+        result_ref: object,
+    ) -> OperationPersistedSnapshot:
+        """Join an executor's domain result to successful settlement after it stops."""
+        if result_ref is None:
+            return snapshot
+        if not isinstance(result_ref, str):
+            raise OperationDeclarationError("operation executor returned a non-reference result")
+        if snapshot.lifecycle is not OperationLifecycle.RUNNING:
+            raise OperationDeclarationError("operation executor returned a result outside running lifecycle")
+        return await self.settle(
+            snapshot.identity.operation_id,
+            OperationTerminalReceipt(
+                identity=snapshot.identity,
+                revision=snapshot.revision + 1,
+                condition=OperationTerminalCondition.SUCCEEDED,
+                effect=snapshot.effect,
+                settled_at=self._clock(),
+                result_ref=result_ref,
+            ),
+        )
 
     @staticmethod
     async def _wait_for_executor_or_deadline(
-        executor_task: asyncio.Task[None],
+        executor_task: asyncio.Task[object],
         deadline: datetime,
         now: datetime,
     ) -> None:
@@ -805,7 +829,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         )
         self._contexts[snapshot.identity.operation_id] = context
         try:
-            await self._execute_with_deadlines(
+            result_ref = await self._execute_with_deadlines(
                 identity=snapshot.identity,
                 context=context,
                 executor=resumable_executor.resume(request, checkpoint, executor_context),
@@ -814,7 +838,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             raise
         except Exception as error:
             return await self._settle_executor_failure(context.snapshot, error)
-        return context.snapshot
+        return await self._settle_returned_result(context.snapshot, result_ref)
 
     def _build_context(self, snapshot: OperationPersistedSnapshot) -> DefinitionBoundContext:
         return DefinitionBoundContext(
