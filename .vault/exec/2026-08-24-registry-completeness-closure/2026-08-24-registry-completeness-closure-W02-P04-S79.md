@@ -39,4 +39,3 @@ Vaultspec-RAG found the canonical parser and the existing capability-worklist
 measurement; exact `rg` then located two stale textual copies in the sibling
 revision metadata. The correction is deliberately declarative-only. Focused
 registry and parser checks are recorded with this Step's commit.
-
