@@ -5,11 +5,10 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:9399d67e44f3c4ae61e555dc3c449737d164051efd62b98113e2365adb307135'
+body_hash: 'sha256:199f6ee0466cbd3fb65c36d0a94c3d369a755791dd3cd2eb7ab0d3d70c680d1d'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
 ---
-
 # `registry-completeness-closure` audit: `Modelo 187 Article 42 filer-limb review`
 
 ## Scope
@@ -29,7 +28,7 @@ Modelo 187 export or legal-filer authority.
 
 No findings. `f8abe74abb` is safe to close.
 
-The official BOE text for Orden HAC/1417/2018, artículo primero, replaces
+The official BOE text for Orden HAC/1417/2018, articulo primero, replaces
 Modelo 187 Article 2 and expressly adds the persons or entities in RGAT Article
 42 as a second filer limb. The live BOE text and its bundled official corpus
 agree. RGAT Article 42 identifies the relevant IIC managers, distributors,
