@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from collections import Counter
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
@@ -179,7 +180,7 @@ def _fact_containers_with_enclosing_function(
 
 
 def test_every_claimed_current_iva_profile_has_the_canonical_required_axes() -> None:
-    incomplete_fact_containers: set[tuple[str, str | None]] = set()
+    incomplete_fact_containers: Counter[tuple[str, str | None]] = Counter()
     incomplete_modelo_iva_constructors: list[tuple[str, int, frozenset[str]]] = []
     incomplete_literal_maps: set[tuple[str, str | None]] = set()
 
@@ -195,7 +196,7 @@ def test_every_claimed_current_iva_profile_has_the_canonical_required_axes() -> 
         for fact_container, enclosing_function in _fact_containers_with_enclosing_function(module):
             fact_paths = _profile_fact_paths(fact_container)
             if _IVA_REGIME_PATH in fact_paths and _REQUIRED_IVA_FACT_PATHS - fact_paths:
-                incomplete_fact_containers.add((relative_path, enclosing_function))
+                incomplete_fact_containers[(relative_path, enclosing_function)] += 1
 
         for dict_node, enclosing_function in _dicts_with_enclosing_function(module):
             literal_paths = frozenset(
@@ -204,8 +205,8 @@ def test_every_claimed_current_iva_profile_has_the_canonical_required_axes() -> 
             if _IVA_REGIME_PATH in literal_paths and _REQUIRED_IVA_FACT_PATHS - literal_paths:
                 incomplete_literal_maps.add((relative_path, enclosing_function))
 
-    assert incomplete_fact_containers == {
+    assert incomplete_fact_containers == Counter(
         (entry.path, entry.function) for entry in _FACT_CONTAINER_NON_PROFILE_EXCLUSIONS
-    }
+    )
     assert incomplete_modelo_iva_constructors == []
     assert incomplete_literal_maps == {(entry.path, entry.function) for entry in _LITERAL_NON_PROFILE_EXCLUSIONS}

@@ -74,7 +74,6 @@ def _validate_producer_inventory(prefix: str, revision: ModeloRevision) -> list[
     inventory = revision.producer_inventory()
     casilla_by_id = {casilla.id: casilla for casilla in revision.casillas}
     failures: list[str] = []
-
     for casilla_id, formula_ids in sorted(inventory.formula_ids_by_casilla.items()):
         casilla = casilla_by_id.get(casilla_id)
         if casilla is None or casilla.input_kind == InputKind.COMPUTED:
