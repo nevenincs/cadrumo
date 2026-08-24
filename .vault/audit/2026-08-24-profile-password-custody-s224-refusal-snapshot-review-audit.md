@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:9464078feaab8e3386591248d3e8695221c4e080dc7e6c323989773167b764e0'
+body_hash: 'sha256:cc2046242938be8b2e04dbd1d1af64643b900196a6f82a6f390fcd5881b4aed1'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -75,3 +75,7 @@ profile-setup page materialization command is currently blocked before
 sequence evaluation by independently owned Modelo 303/322 registry semantic
 conflicts; that external registry residue is recorded in the S223 closure
 record and is not presented as an S224 pass.
+
+## Recommendations
+
+Keep lock artifacts inside durable refusal snapshots. Future lifecycle changes must preserve the root-to-leaf ordering and rerun the real cross-process witness.

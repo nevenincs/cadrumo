@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:092b1fca7bf8465e074c78bb2914e9072334d969952f9ab97f239eb3c9532fec'
+body_hash: 'sha256:553f30d08fa87d066c7523874c3bfd70538c99ea67cf7131049b5b7ed17a3f49'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
   - "[[2026-08-13-profile-password-custody-rollup-adr]]"
@@ -17,34 +17,88 @@ related:
   - "[[2026-08-24-profile-password-custody-s219-docs-audit]]"
   - "[[2026-08-24-profile-password-custody-s222-platform-gate-audit]]"
 ---
-# profile-password-custody audit: fresh-context campaign-close honesty review
+# `profile-password-custody` audit: `S223 campaign-close remediation and honesty review`
 
 ## Scope
 
-Bounded fresh-context review at current HEAD fb38015559bd1961bb7897a1ca6dfefb4f8cd95b, restricted to the five named carry-forwards from S219-S222: the remaining global no-skip sites, the S222 session/receipt refusal-snapshot gap, S220 committed annotation warnings, the two documented-command failures, and global locale drift. The existing S206/S209/S221/S222 records and feature-scoped Vaultspec results were read as recorded evidence. This review made no production, test, or user-documentation edits and does not ratify the peer S223 closure already present in the shared branch.
+Fresh review of every finding recorded by the prior S223 close audit: the two
+no-skip sites, refusal-state snapshot coverage, documented command
+conformance, Spanish/Catalan/Hungarian catalogue drift, redeclaration risk,
+and the honest campaign-close boundary.
 
 ## Findings
 
-### global-no-skip-sites | medium | The canonical no-skip gate remains red at two sites
+### s223-global-gates | resolved | Original no-skip, command, and locale failures are closed
 
-The recorded current run of uv run --no-sync pytest -q -n 0 dev/tests/test_no_skip_xfail.py reported 23 passed and 2 failed. The custody carry-forward is src/cadrumo/application/user_profile/tests/test_capsule_source_reads_are_anchored.py:85, where pytest.skip is used when symlink construction is unavailable. The same gate also reports dev/packaging/tests/test_distribution_evidence_emit.py:245, a separate packaging/release-owner skip for a non-Windows launcher case. S222 named only the custody site, but both violations keep the global ratchet red. The custody owner must replace the platform skip with a deterministic supported refusal fixture or centrally governed live gate; the packaging owner must resolve its own skip. Do not count the S222 platform matrices as closing either global violation.
+The canonical no-skip gate moved from **23 passed, 2 failed** to **25 passed**
+using real filesystem/platform behavior. The documented-command module moved
+from **347 passed, 2 failed** to **349 passed** after the unsupported agent
+sequence was retired through its owning source and profile deletion prose was
+materialized correctly. The locale gate moved from nine failing language
+checks to **10 passed**: each of es, ca, and hu went from 30 incomplete
+catalogues and 253 untranslated/fuzzy entries to complete truthful
+translations; dash violations and orphan environment-overrides catalogues were
+removed without a baseline or allowlist change.
 
-### session-receipt-refusal-snapshot | low | Refusal witnesses omit session and receipt artifacts
+### s223-refusal-snapshot-and-lock-lifecycle | resolved | The witness caught and closed a real mutation
 
-The S222 LOW finding remains present in src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py:454-495. The storage snapshot excludes names containing session or receipt, and the refusal assertion compares that filtered snapshot. A refusal-path regression could therefore create or alter one of those artifacts without failing the equality witness. Existing S222 source review and focused refusal evidence found no current production mutation, so this is a bounded test-witness gap rather than a demonstrated custody defect. Extend the exact same-scope, cross-scope, descriptor-refusal, and root/leaf-inapplicability witnesses to include these artifacts or assert their absence separately. Carry it forward as LOW until the test-only witness is repaired.
+The snapshot now excludes only diagnostic logs and retains every lock, receipt,
+retirement, and session artifact. It revealed the empty session-lock mutation
+on absent resume. The final lifecycle implementation serializes mint, resume,
+delete, and idle renewal through the existing re-entrant custody root lock and
+then the profile leaf. Established logged-out profiles remain byte-for-byte
+unchanged by the absent probe; a raw unprovisioned root is documented as
+bootstrap work rather than a refusal path.
 
-### s220-annotation-warnings | low | The committed S220 warning set is resolved
+Deterministic mint and renewal validation now occurs before root-lock
+provisioning. Cold-root tests cover invalid v4 identity, generation, epoch,
+DEK length, windows, ownership, and UTC deadline. An independent child resume
+and real parent mint prove cross-process ordering. The KeyringUnavailable
+branch is deliberately limited to serialization and honest-refusal evidence;
+it does not claim successful post-mint visibility on a host with no keychain.
 
-The S220 repair commit a287297827a removed the committed template annotations and corrected the two provenance findings. The recorded feature-scoped commands vaultspec-core vault check annotations --feature profile-password-custody --json, body-sections, and exec-mapping returned empty diagnostics, and the subsequent feature-scoped check all was clean. No S220 annotation carry-forward remains. The only later annotation source was the S223 scaffold itself; this body edit removes that scaffold content through the owning Vaultspec edit verb.
+### s223-redeclaration-audit | resolved | Canonical authorities are reused
 
-### documented-command-failures | medium | Both S219 command-conformance failures remain actionable
+Semantic `vaultspec-rag` searches covered anchored capsule source refusal,
+platform virtual-environment launcher resolution, durable refusal snapshots,
+session/receipt lifecycle, and documentation materialization/profile deletion.
+The packaging test now uses canonical `venv_bin_dir`; generated Windows and
+portable harnesses share one durable snapshot source; the host helper is an
+irreducible runtime-boundary counterpart matching its policy. The custody root
+lock is the existing canonical primitive, not a new lock authority. No true
+post-remediation redeclaration remains; behaviorally different candidates were
+classified as constraints or runtime-boundary counterparts.
 
-The recorded command uv run --no-sync pytest -q -n 0 -m integration src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py reported 347 passed and 2 failed. The first failure is docs/_sequences/contracts/workstation-setup/install-agent-harness.seq:2, whose result frame cites aeat --format json app agent --output ./operator-workspace even though agent is not an aeat app subcommand and --output is not an option there. The second is docs/how-to/profile-setup.md:375, whose inline aeat config profile delete NAME --yes span violates the mandatory cli-sequence or static-frame display rule. Route each to its owning sequence/documentation owner and rerun the complete conformance module before closure. A passing target sequence check does not close these failures.
+### s223-page-materialization | medium, external | Registry integrity blocks the page-level sequence command
 
-### global-locale-drift | medium | The whole-corpus locale gate remains red
+`python -m dev.docs.sequences check --page how-to/profile-setup` currently
+fails before materializing the S223 page due to independently owned registry
+conflicts: duplicate Modelo 303 deadline semantic coordinates across revisions
+and Modelo 322 filing authority with unresolved `deadline_windows`. The
+profile-specific command conformance gate is green, but this full page command
+is not represented as green. This residue belongs to the registry closure
+owners and keeps the broader campaign-close decision open.
 
-The recorded command uv run --no-sync pytest -q -n 0 dev/docs/tests/test_docs_localization.py reported 9 failures: each of es, ca, and hu has 30 of 57 incomplete page catalogues, each has three download.md dash-policy violations, and each has the orphan reference/environment-overrides.po catalogue. These are global documentation-campaign findings, not S206/S209 custody failures, but they remain a red gate and must have explicit owning teams and dispositions. Reconcile the incomplete/fuzzy catalogues, remove or restore the orphan, and correct the dash-policy translations before claiming the global locale gate green.
+## Evidence
+
+- `pytest -q -n 0 dev/tests/test_no_skip_xfail.py`: **25 passed**.
+- `pytest -q -n 0 -m integration ...test_documented_command_conformance.py`:
+  **349 passed**.
+- `pytest -q -n 0 dev/docs/tests/test_docs_localization.py`: **10 passed**.
+- Receipt/race/validation focus: **9 passed**; Ruff and targeted `ty` clean.
+- Final machine-secret integration: **70 passed in 497.07s**.
+- Feature and full `vault check all`: clean before the final record edits;
+  final feature check is rerun after these authoritative records are written.
+- Fresh independent review: PASS, with no lock exclusion/deletion, writer
+  bypass, inverse lock ordering, regression, or remaining S224 blocker.
+
+## Final disposition
+
+S223 remediation and its evidence program are complete. Do not mark the wider
+campaign close as approved while the page-level registry conflict remains red.
+The audit is intentionally a truthful handoff: all S223-owned failures are
+closed, and the external registry blocker is named rather than hidden.
 
 ## Recommendations
 
-Do not ratify the existing S223 checkbox or its committed no-blocker outcome while the two no-skip sites, two documented-command failures, and three-locale drift remain red. Preserve the S220 resolved disposition and the S206/S209 positive matrix evidence recorded in S221/S222; retain the S222 snapshot gap as an explicit LOW carry-forward. The feature-scoped Vaultspec check all was clean in the recorded run and the custody-owned tree has not changed since that evidence, but structural Vaultspec cleanliness does not override the red application and documentation gates. Reopen or supersede S223 only through the owning plan/exec CLI workflow after these carry-forwards have owners and fresh gate evidence. No full S206/S209 platform rerun was performed in this bounded review.
+Resolve the named Modelo 303/322 registry integrity findings, then rerun the page-level profile-setup sequence command before approving the wider campaign close. Separately triage the current global Vault errors and warnings under their own historical-record owners; the profile-password-custody feature check is clean.
