@@ -11,9 +11,6 @@ related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
 ---
 
-
-
-
 # Verify every shipped modelo and revision localization key across supported output locales
 
 ## Scope

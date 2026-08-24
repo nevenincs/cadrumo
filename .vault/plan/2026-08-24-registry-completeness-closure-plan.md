@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#registry-completeness-closure'
 date: '2026-08-24'
+modified: '2026-08-24'
+body_hash: 'sha256:510c7aab697368cd86503f2c59e6f3c02e74c8214ecfa805881d6ace14daf0aa'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -10,8 +12,6 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-22-source-casilla-integration-plan]]'
-modified: '2026-08-24'
-body_hash: 'sha256:26827542a91c598e9fa7aeca834ab18aca9087ea3ab8be771bbca18395cf31e7'
 ---
 
 # `registry-completeness-closure` plan
@@ -139,7 +139,7 @@ Prove localization, binding, continuity, calculation, and export semantics acros
 Exercise the supported revision umbrella through localization, casilla continuity, binding and calculation resolution, and official export layout semantics.
 
 - [ ] `W03.P05.S30` - Verify every shipped modelo and revision localization key across supported output locales; `dev/locales/`.
-- [ ] `W03.P05.S31` - Verify casilla identity, semantic linkage, and continuity chains across every supported revision boundary; `src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `W03.P05.S31` - Verify casilla identity, semantic linkage, and continuity chains across every supported revision boundary; `src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W03.P05.S32` - Verify binding selectors, resolver enrollment, calculation paths, and provenance for every filing-grade revision; `src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W03.P05.S33` - Verify official export layout selection, mapped semantic owners, and emitted-byte offsets for every filing-grade revision; `src/cadrumo/application/filing/tests/`.
 

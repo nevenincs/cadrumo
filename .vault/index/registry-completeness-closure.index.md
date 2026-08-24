@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:c4f2f94071e8d0312645296f47296a472a6d3022d0c7192e33bf0e44d5a2956e'
+body_hash: 'sha256:8dc337f007fababce0b4cc50a079d680cdb5f22d0b533ef7b3409e68e8bb59ed'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -82,6 +82,8 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W02-P04-S81]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P04-S82]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P04-S83]]'
+  - '[[2026-08-24-registry-completeness-closure-W03-P05-S30]]'
+  - '[[2026-08-24-registry-completeness-closure-W03-P05-S31]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-audit]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-036-2025-filing-authority-reference]]'
@@ -349,6 +351,8 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W02-P04-S81` - Correct Modelo 036 public lifecycle and CLI Sede-only docstrings to state Sede-or-competent-AEAT-office recording, retain optional electronic justificante semantics, and preserve the no-local-filing boundary.
 - `2026-08-24-registry-completeness-closure-W02-P04-S82` - Make terminal manual source evidence live-resolvable and revision-scoped, bind censo event coordinates to canonical Modelo 036, and retain property-based exact-one census proof.
 - `2026-08-24-registry-completeness-closure-W02-P04-S83` - Adjudicate the Modelo 036 product boundary through an accepted ADR, choose its canonical non-filing disposition, then align the capability worklist and S28 record with mutation proof without authoring an M036 exporter.
+- `2026-08-24-registry-completeness-closure-W03-P05-S30` - Verify every shipped modelo and revision localization key across supported output locales
+- `2026-08-24-registry-completeness-closure-W03-P05-S31` - Verify casilla identity, semantic linkage, and continuity chains across every supported revision boundary
 
 ### plan
 
