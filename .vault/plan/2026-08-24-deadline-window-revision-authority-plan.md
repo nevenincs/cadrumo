@@ -14,7 +14,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
 modified: '2026-08-24'
 body_schema: body-v1
-body_hash: 'sha256:87db71d62b8f0dc8ab656dffd61921d16378c2ed4a3cd2dd66c4aea316f8ce80'
+body_hash: 'sha256:ffce91f43ed81fa051c2e241252bf464d73ee36a790ba5f54f1d308fc24b55b9'
 ---
 
 <!-- RETIRED: P06, P07, P09 -->
@@ -105,7 +105,7 @@ Correct the authority projection without runtime deduplication.
 Extend the existing resolver for exact-one qualified matching.
 
 - [x] `W03.P10.S23` - Extend resolve_filing_window with optional ResultDisposition and official tipo-code context using one exact matcher and ambiguity refusal; `src/cadrumo/domain/deadlines/_plazo.py`.
-- [ ] `W03.P10.S24` - Keep resolve_filing_closes_on as the unqualified convenience and route post-calculation M210 plazo through the same matcher; `src/cadrumo/domain/deadlines/_plazo.py`.
+- [x] `W03.P10.S24` - Keep resolve_filing_closes_on as the unqualified convenience and route post-calculation M210 plazo through the same matcher; `src/cadrumo/domain/deadlines/_plazo.py`.
 - [ ] `W03.P10.S25` - Prove qualified resolution wildcard and exact scopes, official-code distinction, ambiguity refusal, and no year borrowing; `src/cadrumo/domain/deadlines/tests/`.
 
 ### Phase `W03.P11` - engine and M210 projection
