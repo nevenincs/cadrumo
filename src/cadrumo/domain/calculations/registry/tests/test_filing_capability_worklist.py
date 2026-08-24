@@ -56,8 +56,10 @@ See Also:
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import date
+from pathlib import Path
 from typing import Literal
 
 import pytest
@@ -97,15 +99,92 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _TERMINATOR_IS_A_NUMBERED_FIELD = "aeat-dr-840"
 
 
-_OwnerRoute = Literal[
-    "W02.P04.S26 registry-temporal-coverage",
-    "W02.P04.S27 source-casilla-integration",
-    "W02.P04.S28 aeat-export-fragment-generator-authority",
-]
+type _OwnerRoute = str
 
-_TEMPORAL_OWNER: _OwnerRoute = "W02.P04.S26 registry-temporal-coverage"
-_SOURCE_CASILLA_OWNER: _OwnerRoute = "W02.P04.S27 source-casilla-integration"
-_EXPORT_OWNER: _OwnerRoute = "W02.P04.S28 aeat-export-fragment-generator-authority"
+
+def _owner_route(feature: str, step: str) -> _OwnerRoute:
+    """Render one namespace-qualified existing-plan route for the worklist.
+
+    This is reporting data for the derived test worklist, not a second registry
+    declaration: the plans remain the only home for the actual work.  Prefixing
+    a Step with its feature prevents coincident Step numbers (notably the two
+    distinct ``S100`` rows for Modelo 182) from silently resolving to the wrong
+    predecessor.
+    """
+    return f"{feature}:{step}"
+
+
+# These three legacy enrollment labels are deliberately retained only for the
+# unresolved Modelo 036 product-boundary diagnosis.  S29's loaded-worklist
+# proof rejects them for every other authorable revision, so an unreviewed
+# umbrella label cannot become an accepted owner by accident.
+_TEMPORAL_ENROLLMENT: _OwnerRoute = "W02.P04.S26 registry-temporal-coverage"
+_SOURCE_CASILLA_ENROLLMENT: _OwnerRoute = "W02.P04.S27 source-casilla-integration"
+_EXPORT_ENROLLMENT: _OwnerRoute = "W02.P04.S28 aeat-export-fragment-generator-authority"
+
+_M038_OWNERS = (
+    _owner_route("registry-temporal-coverage", "W02.P05.S43"),
+    _owner_route("aeat-export-fragment-generator-authority", "W04.P07.S96"),
+)
+_M182_OWNERS = (
+    _owner_route("registry-temporal-coverage", "W02.P05.S44"),
+    _owner_route("source-casilla-integration", "W05.P17.S100-S103"),
+    _owner_route("aeat-export-fragment-generator-authority", "W04.P07.S100"),
+)
+_M185_OWNERS = (_owner_route("aeat-export-fragment-generator-authority", "W04.P07.S101"),)
+_M187_OWNERS = (
+    _owner_route("registry-temporal-coverage", "W02.P05.S45"),
+    _owner_route("source-casilla-integration", "W06.P20.S226"),
+    _owner_route("aeat-export-fragment-generator-authority", "W04.P07.S102"),
+)
+_M188_OWNERS = (
+    _owner_route("registry-temporal-coverage", "W02.P05.S46"),
+    _owner_route("source-casilla-integration", "W06.P20.S232"),
+    _owner_route("aeat-export-fragment-generator-authority", "W04.P07.S103"),
+)
+_M194_OWNERS = (
+    _owner_route("registry-temporal-coverage", "W02.P05.S47"),
+    _owner_route("source-casilla-integration", "W06.P20.S233"),
+    _owner_route("aeat-export-fragment-generator-authority", "W04.P07.S104"),
+)
+_M220_2024_OWNERS = (
+    _owner_route("source-casilla-integration", "W06.P20.S227"),
+    _owner_route("aeat-export-fragment-generator-authority", "W04.P07.S105"),
+)
+_M220_2025_OWNERS = (
+    _owner_route("registry-temporal-coverage", "W02.P05.S48"),
+    *_M220_2024_OWNERS,
+)
+_M390_OWNERS = (
+    _owner_route("source-casilla-integration", "W06.P20.S228"),
+    _owner_route("aeat-export-fragment-generator-authority", "W04.P07.S106"),
+)
+_M721_OWNERS = (
+    _owner_route("registry-temporal-coverage", "W02.P05.S49"),
+    _owner_route("source-casilla-integration", "W06.P20.S229"),
+    _owner_route("aeat-export-fragment-generator-authority", "W04.P07.S97-S99"),
+)
+_M763_OWNERS = (
+    _owner_route("registry-temporal-coverage", "W02.P05.S50"),
+    _owner_route("source-casilla-integration", "W06.P20.S230"),
+    _owner_route("aeat-export-fragment-generator-authority", "W04.P07.S107"),
+)
+_M840_OWNERS = (
+    _owner_route("source-casilla-integration", "W06.P20.S231"),
+    _owner_route("aeat-export-fragment-generator-authority", "W04.P07.S108"),
+)
+
+_PROJECT_ROOT = Path(__file__).resolve().parents[6]
+_PREDECESSOR_PLAN_PATHS = {
+    "registry-temporal-coverage": _PROJECT_ROOT / ".vault/plan/2026-08-14-registry-temporal-coverage-plan.md",
+    "source-casilla-integration": _PROJECT_ROOT / ".vault/plan/2026-08-22-source-casilla-integration-plan.md",
+    "aeat-export-fragment-generator-authority": (
+        _PROJECT_ROOT / ".vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md"
+    ),
+}
+_OWNER_ROUTE_RE = re.compile(
+    r"^(?P<feature>[a-z-]+):(?P<phase>W\d{2}\.P\d{2})\.S(?P<first>\d+)(?:-S(?P<last>\d+))?$",
+)
 
 
 @dataclass(frozen=True)
@@ -199,7 +278,8 @@ def _terminal_no_authority(
         ),
         reconsideration=(
             "AEAT publishes a hash-pinned, revision-scoped machine-readable contract and "
-            f"{_EXPORT_OWNER} enrolls the semantic map, render profile, generated tree, and emitted-byte proof"
+            "the export plan receives an accepted, exact predecessor route for the semantic map, render profile, "
+            "generated tree, and emitted-byte proof"
         ),
     )
 
@@ -312,8 +392,15 @@ def _blocker(modelo: object, revision: object, sources: object) -> _FilingCapabi
     if modelo.id == Modelo.M136 and _modelo_136_has_machine_contract(revision, sources):
         return _authorable(
             "a machine-readable Modelo 136 contract is cited, but its semantic map and emitted-byte proof are absent",
-            owners=(_EXPORT_OWNER,),
-            reconsideration="the export owner lands the reviewed map, render profile, generated tree, and emitted-byte proof",
+            # No current predecessor route may be claimed for a machine contract
+            # that does not yet exist.  The classifier must be re-adjudicated
+            # when the authority condition changes instead of borrowing S28's
+            # completed enrollment label.
+            owners=(_EXPORT_ENROLLMENT,),
+            reconsideration=(
+                "an accepted export-plan route lands the reviewed map, render profile, generated tree, and "
+                "emitted-byte proof"
+            ),
         )
     designs = _bundled_designs(modelo_id)
     registered = tuple(
@@ -329,9 +416,18 @@ def _blocker(modelo: object, revision: object, sources: object) -> _FilingCapabi
         if (source := sources.get(str(ref))) is not None and getattr(source, "kind", None) == "record_design"
     )
     if not designs:
+        if modelo.id == Modelo.M721:
+            return _authorable(
+                "no positional record design is bundled because the exact structured-message contract remains unacquired",
+                owners=_M721_OWNERS,
+                reconsideration=(
+                    "the three accepted predecessor routes acquire exact contract eras, value lifecycles, and the "
+                    "canonical locally-proven serializer"
+                ),
+            )
         return _authorable(
             "no record design is bundled for this modelo",
-            owners=(_TEMPORAL_OWNER, _SOURCE_CASILLA_OWNER, _EXPORT_OWNER),
+            owners=(_TEMPORAL_ENROLLMENT, _SOURCE_CASILLA_ENROLLMENT, _EXPORT_ENROLLMENT),
             reconsideration=(
                 "the exact official technical authority is acquired with a bounded era, its complete value "
                 "surface has canonical owners, and the export owner proves the authorized payload"
@@ -340,13 +436,25 @@ def _blocker(modelo: object, revision: object, sources: object) -> _FilingCapabi
     if not registered:
         return _authorable(
             f"{len(designs)} design(s) are bundled but none is registered; the era each governs is not grounded",
-            owners=(_TEMPORAL_OWNER,),
+            owners=(_TEMPORAL_ENROLLMENT,),
             reconsideration="the temporal owner registers the official source with exact applicability before it becomes a source_ref",
         )
     if not cited:
+        if modelo.id == Modelo.M185:
+            return _authorable(
+                (
+                    "the registered 2026 record design is outside this historical revision; the 2003-2025 Annex-I "
+                    "authority has not yet been acquired and registered"
+                ),
+                owners=_M185_OWNERS,
+                reconsideration=(
+                    "the exact export predecessor acquires the historic Annex-I source, registers its bounded scope, "
+                    "then maps only its 120-position record types"
+                ),
+            )
         return _authorable(
             f"{len(registered)} record design(s) are registered for this modelo, but none is cited by this revision",
-            owners=(_TEMPORAL_OWNER,),
+            owners=(_TEMPORAL_ENROLLMENT,),
             reconsideration="the temporal owner proves and cites the design governing this revision's exact window",
         )
 
@@ -356,8 +464,11 @@ def _blocker(modelo: object, revision: object, sources: object) -> _FilingCapabi
                 f"cites {_KNOWN_SELF_CONTRADICTING_DESIGN}, whose extraction places fields across bytes; "
                 "the bundled artefact is a form diagram rather than a trustworthy field table"
             ),
-            owners=(_TEMPORAL_OWNER, _EXPORT_OWNER),
-            reconsideration="the temporal and export owners acquire exact authority and a trustworthy layout before mapping bytes",
+            owners=_M038_OWNERS,
+            reconsideration=(
+                "the accepted temporal and export predecessors acquire exact authority and a trustworthy layout before "
+                "mapping bytes"
+            ),
         )
 
     if _TERMINATOR_IS_A_NUMBERED_FIELD in cited:
@@ -366,8 +477,11 @@ def _blocker(modelo: object, revision: object, sources: object) -> _FilingCapabi
                 f"{_TERMINATOR_IS_A_NUMBERED_FIELD} numbers the line break inside the record extent, while "
                 "the current renderer puts it on the transport; no current entry kind renders that field"
             ),
-            owners=(_EXPORT_OWNER,),
-            reconsideration="the export owner models the official terminator semantics and proves the emitted bytes",
+            owners=_M840_OWNERS,
+            reconsideration=(
+                "the accepted source and export predecessors model the generic terminator bridge, value lifecycle, and "
+                "emitted bytes"
+            ),
         )
 
     uncovered = _uncovered_claimed_years(revision, cited, sources)
@@ -378,8 +492,11 @@ def _blocker(modelo: object, revision: object, sources: object) -> _FilingCapabi
                 f"cites {cited[0]}, but ejercicio(s) {span} ({len(uncovered)} year(s)) fall outside every "
                 "cited design era"
             ),
-            owners=(_TEMPORAL_OWNER, _EXPORT_OWNER),
-            reconsideration="the temporal owner resolves the exact window and the export owner maps only evidenced offsets",
+            owners=_uncovered_design_owners(modelo),
+            reconsideration=(
+                "the accepted temporal, source, and export predecessors resolve the exact window and map only "
+                "evidenced values and offsets"
+            ),
         )
     short = _casilla_surface_shortfall(modelo, revision)
     if short is not None:
@@ -392,7 +509,7 @@ def _blocker(modelo: object, revision: object, sources: object) -> _FilingCapabi
             f"cites {cited[0]} and declares {len(revision.casillas or ())} casilla(s); it needs its semantic "
             "map and authorized export form after the design extraction is checked for partial overlap"
         ),
-        owners=(_EXPORT_OWNER,),
+        owners=(_EXPORT_ENROLLMENT,),
         reconsideration="the export owner lands and reviews the semantic map, render profile, generated tree, and emitted-byte proof",
     )
 
@@ -427,13 +544,17 @@ def _producer_vocabulary_gap(modelo: object) -> _FilingCapabilityBlocker | None:
     prefix = f"m{modelo.id}."
     if any(member.value.startswith(prefix) for member in FilingProducerKey):
         return None
+    owners = _M220_2024_OWNERS if modelo.id == Modelo.M220 else (_SOURCE_CASILLA_ENROLLMENT, _EXPORT_ENROLLMENT)
     return _authorable(
         (
             f"no FilingProducerKey is namespaced {prefix!r}, so non-casilla design fields have no canonical "
             "identity or application producer"
         ),
-        owners=(_SOURCE_CASILLA_OWNER, _EXPORT_OWNER),
-        reconsideration="the source/casilla owner supplies provenance-carrying producers before the export owner maps them",
+        owners=owners,
+        reconsideration=(
+            "the accepted source/casilla predecessor supplies provenance-carrying producers before the export "
+            "predecessor maps them"
+        ),
     )
 
 
@@ -463,13 +584,17 @@ def _casilla_surface_shortfall(modelo: object, revision: object) -> _FilingCapab
     ]
     if not peers or declared >= min(peers):
         return None
+    owners = _M390_OWNERS if modelo.id == Modelo.M390 else (_SOURCE_CASILLA_ENROLLMENT, _EXPORT_ENROLLMENT)
     return _authorable(
         (
             f"declares {declared} casilla(s) while every filing-grade sibling declares at least {min(peers)}; "
             "the cited era matches but the current surface cannot represent the declaration"
         ),
-        owners=(_SOURCE_CASILLA_OWNER, _EXPORT_OWNER),
-        reconsideration="the source/casilla owner completes the grounded surface before the export owner maps it",
+        owners=owners,
+        reconsideration=(
+            "the accepted source/casilla predecessor completes the grounded surface before the export predecessor "
+            "maps it"
+        ),
     )
 
 
@@ -477,6 +602,31 @@ def _casilla_surface_shortfall(modelo: object, revision: object) -> _FilingCapab
 #: :mod:`test_layout_design_applies_to_claimed_years`, which asks the same
 #: question about revisions that already declare a layout.
 _OPEN_ENDED_HORIZON = 2026
+
+
+def _uncovered_design_owners(modelo: object) -> tuple[_OwnerRoute, ...]:
+    """Return the accepted route bundle for a live design-era shortfall.
+
+    The condition is derived from the loaded revision and source catalogue.
+    These route bundles only point to the predecessor rows that the three plans
+    already accepted for each distinct evidence gap; they do not create a
+    parallel temporal, source, or export authority.
+    """
+    if modelo.id == Modelo.M182:
+        return _M182_OWNERS
+    if modelo.id == Modelo.M187:
+        return _M187_OWNERS
+    if modelo.id == Modelo.M188:
+        return _M188_OWNERS
+    if modelo.id == Modelo.M194:
+        return _M194_OWNERS
+    if modelo.id == Modelo.M220:
+        return _M220_2025_OWNERS
+    if modelo.id == Modelo.M763:
+        return _M763_OWNERS
+    # A new live shortfall must stay visibly unrouted until its own predecessor
+    # row is accepted; it may not inherit one of the reviewed Modelo routes.
+    return (_TEMPORAL_ENROLLMENT, _EXPORT_ENROLLMENT)
 
 
 def _uncovered_claimed_years(revision: object, cited: tuple[str, ...], sources: object) -> list[int]:
@@ -536,6 +686,79 @@ def test_every_registry_revision_can_produce_a_filing_artifact() -> None:
     )
 
 
+def _assert_open_predecessor_owner_route(
+    owner: _OwnerRoute,
+    *,
+    plan_text: str | None = None,
+) -> None:
+    """Require every namespace-qualified route to name open real plan rows."""
+    match = _OWNER_ROUTE_RE.fullmatch(owner)
+    assert match is not None, f"owner route {owner!r} does not name an existing-plan feature and Step"
+    feature = match.group("feature")
+    plan_path = _PREDECESSOR_PLAN_PATHS.get(feature)
+    assert plan_path is not None, f"owner route {owner!r} names no registered predecessor plan"
+    text = plan_path.read_text(encoding="utf-8") if plan_text is None else plan_text
+    first_text = match.group("first")
+    first = int(first_text)
+    last = int(match.group("last") or first_text)
+    width = len(first_text)
+    for number in range(first, last + 1):
+        step = f"{match.group('phase')}.S{number:0{width}d}"
+        assert f"- [ ] `{step}`" in text, f"owner route {owner!r} requires open predecessor {step!r}"
+
+
+def test_loaded_worklist_routes_every_resolved_gap_to_open_predecessor_steps() -> None:
+    """Every decided live row uses one exact route per owning predecessor plan.
+
+    Modelo 036 is deliberately the single exception.  It still exposes the
+    completed enrollment labels while the record's product-boundary terminal
+    claim awaits an accepted decision.  Keeping that exception explicit makes
+    the aggregate proof fail closed without silently relabelling Modelo 036 or
+    letting the same stale labels survive on another live filing gap.
+    """
+    unable = _revisions_that_cannot_emit()
+    unresolved: list[tuple[str, str, tuple[_OwnerRoute, ...]]] = []
+
+    for modelo, revision, blocker in unable:
+        if blocker.disposition == "terminal_no_authority":
+            assert blocker.owners == ()
+            continue
+        if (modelo, revision) == (Modelo.M036.value, "2025-02-03-y-siguientes"):
+            unresolved.append((modelo, revision, blocker.owners))
+            continue
+        assert len(blocker.owners) == len(set(blocker.owners)), (
+            f"{modelo}/{revision} repeats a predecessor owner instead of keeping one route per plan"
+        )
+        for owner in blocker.owners:
+            _assert_open_predecessor_owner_route(owner)
+
+    assert unresolved == [
+        (
+            Modelo.M036.value,
+            "2025-02-03-y-siguientes",
+            (_SOURCE_CASILLA_ENROLLMENT, _EXPORT_ENROLLMENT),
+        ),
+    ], "a newly unresolved product boundary must receive an accepted disposition before S29 can close"
+
+    by_revision = {(modelo, revision): blocker for modelo, revision, blocker in unable}
+    modelo_185 = by_revision[(Modelo.M185.value, "2003-2025")]
+    assert modelo_185.owners == _M185_OWNERS
+    assert "Annex-I authority" in modelo_185.finding
+
+
+def test_owner_route_gate_bites_when_an_open_predecessor_step_is_closed() -> None:
+    """MUTATION: closing Modelo 185's live export owner makes the route refuse."""
+    owner = _M185_OWNERS[0]
+    plan_path = _PREDECESSOR_PLAN_PATHS["aeat-export-fragment-generator-authority"]
+    plan_text = plan_path.read_text(encoding="utf-8")
+    open_row = "- [ ] `W04.P07.S101`"
+    assert open_row in plan_text
+    closed_text = plan_text.replace(open_row, "- [x] `W04.P07.S101`", 1)
+
+    with pytest.raises(AssertionError, match="requires open predecessor"):
+        _assert_open_predecessor_owner_route(owner, plan_text=closed_text)
+
+
 def test_worklist_keeps_terminal_refusal_separate_from_owner_routed_gaps() -> None:
     """Modelo 136 cannot be relabelled as an authorable layout backlog.
 
@@ -577,4 +800,4 @@ def test_modelo_136_terminal_refusal_becomes_owner_routed_when_machine_authority
     assert _terminal_no_authority(modelo, revision, upgraded) is None
     blocker = _blocker(modelo, revision, upgraded)
     assert blocker.disposition == "authorable_gap"
-    assert blocker.owners == (_EXPORT_OWNER,)
+    assert blocker.owners == (_EXPORT_ENROLLMENT,)
