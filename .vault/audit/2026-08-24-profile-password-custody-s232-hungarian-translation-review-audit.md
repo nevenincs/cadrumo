@@ -5,28 +5,9 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:db2c2d4a79386185af962981b9c216d2300cc4e4664024ee4d0ba055cdda58dd'
+body_hash: 'sha256:fe1ee0cb71129b3b291049087fd93a92c8afa9b409aa0128276141d8fdc3fc1b'
 related: []
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace profile-password-custody with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `profile-password-custody` audit: `s232 hungarian translation review`
 

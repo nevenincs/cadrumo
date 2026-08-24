@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:c3e5723f761a1e1a0acd225e3618d475bc678727491f3fc8ebdc3262f08cb7f7'
+body_hash: 'sha256:b6a1892de1eee3f728b3cd39df4e3cd57e7b1240ed8f3145f6439e7e1513fd00'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
 ---

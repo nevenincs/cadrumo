@@ -4,7 +4,7 @@ tags:
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
 modified: '2026-08-24'
-body_hash: 'sha256:4d62c70cc2f463251a802a86d17d71d5ea8f2a0cc0ad5708ff46129aadce3660'
+body_hash: 'sha256:4082440c3ffb96db7f7319a0a398ec409aaa8a835955a4d7f0adc3b9009db7f9'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -87,7 +87,6 @@ Cover every authority boundary with positive and negative real-behavior tests.
 ### Phase `W03.P06` - repository and byte gates
 
 Verify generated layouts as loadable complete structures and as real emitted filing bytes.
-
 
 ## Wave `W04` - regenerate and release relayout waves
 

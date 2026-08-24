@@ -5,28 +5,9 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:2637813992bd5c9b085a493414f3663ddf1581e091da6950be7422c89a1390c2'
+body_hash: 'sha256:5a2ea883652c32cd23e54308d386037279e28074d5b12fe91ee449f2a5ffdd4f'
 related: []
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace deadline-window-revision-authority with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `deadline-window-revision-authority` audit: `m216 s43 review`
 

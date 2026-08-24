@@ -5,44 +5,11 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:20d98f5b3f2e46be3abe707d3aaf0e3b0c4f17aa45e10ef6c7565d3c1506a297'
+body_hash: 'sha256:c72af5353138aa98ede4383a175b8af2dddc0dd1dcc690bff0e73b95c027d411'
 step_id: 'S231'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace profile-password-custody with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S231 and 2026-08-13-profile-password-custody-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Complete every blank or fuzzy Catalan user-page translation and correct download command-list punctuation without English fallback and ## Scope
-
-- `docs/locales/ca/LC_MESSAGES/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Complete every blank or fuzzy Catalan user-page translation and correct download command-list punctuation without English fallback
 
