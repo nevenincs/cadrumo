@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#registry-completeness-closure'
 date: '2026-08-24'
+modified: '2026-08-24'
+body_hash: 'sha256:619430ba6a6a09aab00f3eca457c0bf6b7e1d14e0d420e63cd38b1eb9a37f6dc'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -10,8 +12,6 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-22-source-casilla-integration-plan]]'
-modified: '2026-08-24'
-body_hash: 'sha256:b949c3f4bc36967e7bfb32484012c513328ebf15799b3dd29ce55a2a3c828e6d'
 ---
 
 # `registry-completeness-closure` plan
@@ -127,6 +127,7 @@ Add or reconcile the adjudicated remedies in each existing owning plan and prove
 - [x] `W02.P04.S79` - Correct Modelo 220/2024 reviewer-stamp record-design counts against the hash-verified parser measurement and re-attest the unchanged applicability-grade, non-fileable disposition.; `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/revision.toml; .vault/exec/2026-08-24-registry-completeness-closure/`.
 - [ ] `W02.P04.S80` - Reconcile Modelo 721 structured-message filing authority with the positional-only export predicate: obtain the required ADR decision and enroll source taxonomy, authority-grade gate, canonical exporter, and local emitted-payload proof under the existing export plan while preserving Modelo 136 terminal refusal.; `.vault/adr/; .vault/reference/; .vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md; src/cadrumo/domain/calculations/registry/_validate_export_exemption.py; src/cadrumo/domain/calculations/registry/tests/test_export_exemption_declared.py`.
 - [ ] `W02.P04.S81` - Correct Modelo 036 public lifecycle and CLI Sede-only docstrings to state Sede-or-competent-AEAT-office recording, retain optional electronic justificante semantics, and preserve the no-local-filing boundary.; `src/cadrumo/application/modelo/_m036_lifecycle.py; src/cadrumo/entrypoints/cli/_modelo_m036_cli.py; src/cadrumo/application/modelo/tests/; src/cadrumo/entrypoints/cli/tests/`.
+- [ ] `W02.P04.S82` - Make terminal manual source evidence live-resolvable and revision-scoped, bind censo event coordinates to canonical Modelo 036, and retain property-based exact-one census proof.; `src/cadrumo/application/registry/source_connectivity.py; dev/source_connectivity/check.py; dev/source_connectivity/tests/test_census_completeness.py; .vault/reference/2026-08-24-registry-completeness-closure-modelo-036-source-connectivity-reference.md`.
 
 ## Wave `W03` - semantic proof and predecessor closure
 
