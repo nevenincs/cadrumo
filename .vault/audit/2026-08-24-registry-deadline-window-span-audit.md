@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:226b7eae07be5860a59f59ebff4b7f6fe7dc750768d94637f14624341f5308a1'
+body_hash: 'sha256:3012a759731a45170e4a833d45f5dff54838e02a0f1ed30a390ed63d65c864e6'
 related: []
 ---
 
@@ -426,10 +426,22 @@ the filing rung's assertion that every family resolves is already satisfied by
 the data. Unlike modelo 322, where the equivalent refusal exposed a genuine
 absence of deadline windows, there is no data gap here to close first.
 
-So the attestation is a stamp, not a work item, and it recovers **50 tests in
-those two packages alone** -- whole modules such as
-`test_export_implicit_decimal_slots` are 13 failures of nothing but this
-refusal.
+So the attestation is a stamp, not a work item.
+
+**Corrected, and the correction is large.** The 50 figure counted only the
+filing and modelo packages. The domain layer refuses the same way at
+`_snapshot.py:386`, and 50 of its 84 failures are modelo 200 modules. Measured
+the same way -- raise the grade, run the layer, restore:
+
+| layer | at `calculation` | at `filing` |
+|---|---|---|
+| domain | 84 failed, 8757 passed | **33 failed, 8809 passed** |
+| filing + modelo | 280 failed, 2086 passed | **230 failed, 2136 passed** |
+
+That is **roughly 101 tests from one stamp**, about a sixth of every failure
+left in the tree, and whole modules are nothing but this refusal --
+`test_export_implicit_decimal_slots` is 13, `test_modelo_200_tipo_gravamen_dispatch`
+is 20.
 
 What it is NOT is a stamp anyone should apply casually. The revision carries
 `review_status = "agent_reviewed"` and
