@@ -88,10 +88,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: Excluding it in the reader was tried and measured: it drops the record below its
 #: declared total and every sheet then reports a contiguity hole.
 #:
-#: So this waits on a terminator concept the export pipeline does not have -- a field a
-#: map may name and the renderer resolves to the transport's line ending. Recorded here
-#: rather than worked around, because each workaround corrupts the last two bytes of
-#: every record in the file.
+#: So this waits only on the missing generic semantic-map bridge: it must retain the
+#: official terminal-row anchor while delegating the one emitted CRLF to the existing
+#: record ``line_ending`` transport authority.  The canonical renderer already emits
+#: that transport terminator; a second table or Modelo-840-specific writer would
+#: redeclare it.  Recorded here rather than worked around, because each workaround
+#: corrupts the last two bytes of every record in the file.
 _TERMINATOR_IS_A_NUMBERED_FIELD = "aeat-dr-840"
 
 
