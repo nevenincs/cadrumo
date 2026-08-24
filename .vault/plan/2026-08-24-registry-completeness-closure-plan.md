@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:e067734c8bd6527b9b514bd31c0d354ae3ebe367d9377e833f0fa3ad7b661649'
+body_hash: 'sha256:1a19843aa56475aa8dc6fdf501521f866b0ba9c7ada24891e71ed5c5b2b4cb66'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -77,6 +77,7 @@ Compose one typed cross-authority report from validated registry coverage, sourc
 - [x] `W01.P02.S61` - Require distinct official offset-probe identities and emitted byte positions in live filing-export acceptance, and prove duplicate probes cannot inflate checked-offset evidence with a mutation bite.; `dev/registry/filing_export_proof.py; dev/registry/tests/test_filing_export_live_proof.py`.
 - [x] `W01.P02.S62` - Remove the S60 audit and execution-record EOF blank lines and re-attest the committed Step surface with the scoped diff check.; `.vault/audit/2026-08-24-registry-completeness-closure-s60-live-export-proof-review-audit.md; .vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S60.md`.
 - [x] `W01.P02.S63` - Wire canonical live source-connectivity and filing-export proof authorities into the registry-conformance closure CLI, retain an explicit offline no-proof mode, type both injection ports precisely, and prove complete-live versus offline-refusal CLI outcomes.; `dev/registry/conformance/; dev/source_connectivity/; src/cadrumo/application/registry/; dev/registry/conformance/tests/`.
+- [ ] `W01.P02.S64` - Remove fabricated strict proof authorities and digests from closure CLI tests, exercise the actual CLI with canonical live loaders and real evidence only, prove live-versus-offline refusal distinctions, keep eligibility unreachable until durable filing proof exists, prevent injected claims from bypassing the gate, and add a mutation bite rejecting canned proof; `dev/registry/conformance/; dev/source_connectivity/; dev/registry/; src/cadrumo/application/registry/`.
 
 ## Wave `W02` - filing-gap adjudication and owner routing
 

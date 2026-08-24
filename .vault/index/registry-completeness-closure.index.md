@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:bfc5698fdd7a13822b480535ded501c9b37fdd2b5688191c6543ba5d13412ca5'
+body_hash: 'sha256:cb763ddd7e2999e0bda85fb2282236ca9619d907761334eafdc41b525da37d08'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -81,6 +81,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s60-live-export-proof-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s61-distinct-offset-probes-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s62-post-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s63-independent-post-review-audit]]'
 ---
 
 # `registry-completeness-closure` feature index
@@ -130,6 +131,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s60-live-export-proof-review-audit` - `registry-completeness-closure` audit: `S60 live export proof review`
 - `2026-08-24-registry-completeness-closure-s61-distinct-offset-probes-audit` - `registry-completeness-closure` audit: `S61 distinct offset probes`
 - `2026-08-24-registry-completeness-closure-s62-post-review-audit` - `registry-completeness-closure` audit: `S62 post review`
+- `2026-08-24-registry-completeness-closure-s63-independent-post-review-audit` - `registry-completeness-closure` audit: `S63 live closure authority wiring independent post-review`
 
 ### exec
 
