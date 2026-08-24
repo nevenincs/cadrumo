@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#registry-completeness-closure'
 date: '2026-08-24'
+modified: '2026-08-24'
+body_hash: 'sha256:0c7bc902a59eef4955f0578048b6168a786523411b613cabdfd90537b2a7d5b8'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -10,8 +12,6 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-22-source-casilla-integration-plan]]'
-modified: '2026-08-24'
-body_hash: 'sha256:e674a19004c53d60e20d0009c7d3bc10ffae9fbaac644e66a8b78df204f8db88'
 ---
 
 # `registry-completeness-closure` plan
@@ -81,7 +81,7 @@ Compose one typed cross-authority report from validated registry coverage, sourc
 - [x] `W01.P02.S65` - Add a hostile RegistryClosureAuthorities CLI context backed by eligible real protocol implementations, prove the shipped command ignores it, restore the exact former find_object authority branch for a mutation bite, and retain non-CLI loader injection; `dev/registry/conformance/tests/test_closure.py; dev/registry/conformance/cli.py; dev/registry/conformance/authorities.py; dev/registry/conformance/closure.py`.
 - [x] `W01.P02.S66` - Repair S65 execution-record EOF whitespace and distinguish its scoped diff assertion from commit-wide git show --check, then re-attest both checks.; `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S65.md`.
 - [x] `W01.P02.S67` - Normalize S65/S66 execution-record endings and S66 template annotations through canonical vault edits, then re-attest scoped markdown and annotations checks.; `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S65.md; .vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S66.md`.
-- [ ] `W01.P02.S68` - Repair deferred S64/S65 audit-record hygiene through canonical vault edits, then re-attest markdown, annotations, and body fingerprints.; `.vault/audit/2026-08-24-registry-completeness-closure-s64-independent-post-review-audit.md; .vault/audit/2026-08-24-registry-completeness-closure-s65-context-authority-review-audit.md`.
+- [x] `W01.P02.S68` - Repair deferred S64/S65 audit-record hygiene through canonical vault edits, then re-attest markdown, annotations, and body fingerprints.; `.vault/audit/2026-08-24-registry-completeness-closure-s64-independent-post-review-audit.md; .vault/audit/2026-08-24-registry-completeness-closure-s65-context-authority-review-audit.md`.
 
 ## Wave `W02` - filing-gap adjudication and owner routing
 

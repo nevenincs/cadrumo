@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:99650f57e64f5c78757d6922afb1c8cc7cbf7a28ccca6d7bdf8e09da357fadfa'
+body_hash: 'sha256:222d0225d17ee1ee8e025ef53e8ff64fc2d3225df6bc218cb68e824b05e7066a'
 related:
   - '[[2026-08-11-tui-architecture-W01-P01-S01]]'
   - '[[2026-08-11-tui-architecture-W01-P01-S02]]'
@@ -52,6 +52,7 @@ related:
   - '[[2026-08-11-tui-architecture-W03-P07-S34]]'
   - '[[2026-08-11-tui-architecture-W03-P07-S35]]'
   - '[[2026-08-11-tui-architecture-W03-P07-S36]]'
+  - '[[2026-08-11-tui-architecture-W03-P07-S37]]'
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-11-tui-architecture-plan]]'
   - '[[2026-08-11-tui-architecture-research]]'
@@ -97,6 +98,7 @@ related:
   - '[[2026-08-24-tui-architecture-s34-filed-history-executor-review-audit]]'
   - '[[2026-08-24-tui-architecture-s35-filed-history-dry-run-review-audit]]'
   - '[[2026-08-24-tui-architecture-s36-filed-history-progress-review-audit]]'
+  - '[[2026-08-24-tui-architecture-s37-live-facade-audit]]'
 ---
 
 # `tui-architecture` feature index
@@ -151,6 +153,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-24-tui-architecture-s34-filed-history-executor-review-audit` - `tui-architecture` audit: `S34 filed-history executor review`
 - `2026-08-24-tui-architecture-s35-filed-history-dry-run-review-audit` - `tui-architecture` audit: `S35 filed-history dry-run review`
 - `2026-08-24-tui-architecture-s36-filed-history-progress-review-audit` - `tui-architecture` audit: `s36 filed history progress review`
+- `2026-08-24-tui-architecture-s37-live-facade-audit` - `tui-architecture` audit: `S37 live facade review`
 
 ### exec
 
@@ -197,7 +200,8 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W03-P06-S33` - Prove the complete censal operation lifecycle and effect boundaries
 - `2026-08-11-tui-architecture-W03-P07-S34` - Implement the recorded filed-history executor across discovery, register access, pair walk, capture, persistence, finalization, provenance, wallet, notifications, and settlement
 - `2026-08-11-tui-architecture-W03-P07-S35` - Expose dry-run on the composed filed-history operation with identical discovery scope and effect none
-- `2026-08-11-tui-architecture-W03-P07-S36` - 2026-08-11-tui-architecture-W03-P07-S36
+- `2026-08-11-tui-architecture-W03-P07-S36` - Emit ordered safe stage and unit progress with scoped refusals and truthful none, updated, partial, or unknown effects
+- `2026-08-11-tui-architecture-W03-P07-S37` - Export the filed-history operation definition through the live application facade
 
 ### plan
 

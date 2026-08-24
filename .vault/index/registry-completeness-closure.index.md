@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:fae4f165fb9e6214ec0be3378291b098e610126aed55eb1d90fe6d835240ce8d'
+body_hash: 'sha256:ae67aa11e0137832f545ceb017016f6034d5251ddffe851e8379dad5724e9969'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -21,6 +21,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S08]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S09]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S10]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S11]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S42]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S43]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S44]]'
@@ -47,6 +48,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S65]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S66]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S67]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S68]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
@@ -58,6 +60,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s09-filing-export-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s09-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s10-live-proof-cli-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s11-source-connectivity-ratchet-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s41-cache-key-type-review-audit]]'
@@ -113,6 +116,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s09-filing-export-audit` - `registry-completeness-closure` audit: `s09 filing export`
 - `2026-08-24-registry-completeness-closure-s09-post-review-audit` - `registry-completeness-closure` audit: `s09 post review`
 - `2026-08-24-registry-completeness-closure-s10-live-proof-cli-review-audit` - `registry-completeness-closure` audit: `S10 live proof CLI review`
+- `2026-08-24-registry-completeness-closure-s11-source-connectivity-ratchet-audit` - `registry-completeness-closure` audit: `s11 source connectivity ratchet`
 - `2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot authority-grade enforcement review`
 - `2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot-grade enforcement review`
 - `2026-08-24-registry-completeness-closure-s41-cache-key-type-review-audit` - `registry-completeness-closure` audit: `S41 cache-key type review`
@@ -162,6 +166,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P02-S08` - Compose the source-connectivity limb from the canonical evidence-backed census authority
 - `2026-08-24-registry-completeness-closure-W01-P02-S09` - Compose the filing-export limb from exact layout capability and official-byte evidence
 - `2026-08-24-registry-completeness-closure-W01-P02-S10` - Publish the derived cross-authority closure report and blocking release predicate through registry conformance
+- `2026-08-24-registry-completeness-closure-W01-P02-S11` - Prove complete, refused, stale-evidence, below-filing-grade, and cross-limb disagreement outcomes with mutation tests
 - `2026-08-24-registry-completeness-closure-W01-P02-S42` - Constrain temporal evidence identity, period, and filing-year fields to registry semantics and add mutation proof for every composer refusal outcome
 - `2026-08-24-registry-completeness-closure-W01-P02-S43` - Reject resolved owner dispositions on active closure refusals and prove the contradiction fails validation
 - `2026-08-24-registry-completeness-closure-W01-P02-S44` - Encode branch-specific TemporalRevisionCoverage refusal invariants and add construction and mutation-bite tests.
@@ -188,6 +193,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P02-S65` - Add a hostile RegistryClosureAuthorities CLI context backed by eligible real protocol implementations, prove the shipped command ignores it, restore the exact former find_object authority branch for a mutation bite, and retain non-CLI loader injection
 - `2026-08-24-registry-completeness-closure-W01-P02-S66` - Repair S65 execution-record EOF whitespace and distinguish its scoped diff assertion from commit-wide git show --check, then re-attest both checks.
 - `2026-08-24-registry-completeness-closure-W01-P02-S67` - Normalize S65/S66 execution-record endings and S66 template annotations through canonical vault edits, then re-attest scoped markdown and annotations checks.
+- `2026-08-24-registry-completeness-closure-W01-P02-S68` - Repair deferred S64/S65 audit-record hygiene through canonical vault edits, then re-attest markdown, annotations, and body fingerprints.
 
 ### plan
 
