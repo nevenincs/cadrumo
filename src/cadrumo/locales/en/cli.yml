@@ -2039,7 +2039,9 @@ cli:
         help: Declare descendants for the Art. 58/61 LIRPF minimo por descendientes.
         index_out_of_range: Index %{index} is out of range; the profile has %{total}
           descendant(s).
-        invalid_flag: The --descendiente value is invalid.
+        invalid_flag: The --descendiente value is invalid. Every row must declare
+          NACIMIENTO=YYYY-MM-DD; other keys such as RELACION, DISCAPACIDAD or CONVIVENCIA
+          are optional.
         list_help: List descendants declared on the active profile.
         remove_help: Remove one descendant by 0-based index from the active profile.
         remove_index_help: 0-based index of the descendant to remove.
@@ -3005,7 +3007,6 @@ cli:
         plus year (e.g. year=2026), issue, import, classification, text, or direction
       header: ACCOUNTING LEDGER REVIEW SESSION
       help: Interactive review and validation of ledger entries
-      id_help: Identifier of the specific entry to review
       no_rows: No ledger entries pending review
       verbose_help: Show detailed information during review
     split:
