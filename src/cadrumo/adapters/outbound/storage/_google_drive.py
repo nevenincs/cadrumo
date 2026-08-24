@@ -36,6 +36,7 @@ from __future__ import annotations
 import io
 from collections.abc import Iterator, Mapping
 from datetime import datetime
+from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
 from ....application.operator_actions import no_action_precondition_verdict
@@ -78,6 +79,42 @@ _PROBE_NAMESPACE = "_probe"
 _OWNERSHIP_KEY = "cadrumo_vault_app"
 _OWNERSHIP_VALUE = "cadrumo"
 _LOG = get_logger(__name__)
+
+
+class DriveStoragePreconditionCondition(StrEnum):
+    """Closed terminal conditions for observed Google Drive provider failures."""
+
+    API_CLIENT_AVAILABLE = "storage.google_drive.api_client.available"
+    REQUEST_AUTHORIZED = "storage.google_drive.request.authorized"
+    TARGET_PRESENT = "storage.google_drive.target.present"
+    REQUEST_CONFLICT_FREE = "storage.google_drive.request.conflict_free"
+    REQUEST_WITHIN_QUOTA = "storage.google_drive.request.within_quota"
+    REQUEST_AVAILABLE = "storage.google_drive.request.available"
+    REQUEST_TRANSPORT_AVAILABLE = "storage.google_drive.request.transport_available"
+    RESPONSE_IDENTIFIER_PRESENT = "storage.google_drive.response.identifier_present"
+    OWNERSHIP_ALIGNED = "storage.google_drive.ownership.aligned"
+    RESPONSE_MAPPING = "storage.google_drive.response.mapping"
+    NAMESPACE_PRESENT = "storage.google_drive.namespace.present"
+    OBJECT_PRESENT = "storage.google_drive.object.present"
+    MEDIA_PAYLOAD_BYTES = "storage.google_drive.media.payload_bytes"
+    METADATA_SIZE_VALID = "storage.google_drive.metadata.size_valid"
+    METADATA_MODIFIED_TIME_VALID = "storage.google_drive.metadata.modified_time_valid"
+    METADATA_APP_PROPERTIES_VALID = "storage.google_drive.metadata.app_properties_valid"
+
+
+def _drive_external_verdict(
+    condition: DriveStoragePreconditionCondition,
+    *,
+    facts: Mapping[str, str | bool],
+    outcome: NoRecoveryOutcome,
+):
+    """Project an observed Drive-provider refusal through the public no-action authority."""
+    return no_action_precondition_verdict(
+        condition_id=condition.value,
+        facts=facts,
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        outcome=outcome,
+    )
 
 
 def _drive_validation_verdict(
@@ -144,35 +181,65 @@ def _translate_http_error(error: Exception, *, action: str) -> OutboundStorageEr
             detail,
             context=context,
             translated_message="adapters.outbound.storage.google_drive.errors.request_failed",
+            precondition_verdict=_drive_external_verdict(
+                DriveStoragePreconditionCondition.REQUEST_AUTHORIZED,
+                facts={"operation": action, "status": context["status"], "authorization_sufficient": False},
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         )
     if status == 404:
         return OutboundStorageNotFoundError(
             detail,
             context=context,
             translated_message="adapters.outbound.storage.google_drive.errors.request_failed",
+            precondition_verdict=_drive_external_verdict(
+                DriveStoragePreconditionCondition.TARGET_PRESENT,
+                facts={"operation": action, "status": context["status"], "target_present": False},
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            ),
         )
     if status == 409:
         return OutboundStorageConflictError(
             detail,
             context=context,
             translated_message="adapters.outbound.storage.google_drive.errors.request_failed",
+            precondition_verdict=_drive_external_verdict(
+                DriveStoragePreconditionCondition.REQUEST_CONFLICT_FREE,
+                facts={"operation": action, "status": context["status"], "conflict_detected": True},
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            ),
         )
     if status == 429:
         return OutboundStorageQuotaError(
             detail,
             context=context,
             translated_message="adapters.outbound.storage.google_drive.errors.request_failed",
+            precondition_verdict=_drive_external_verdict(
+                DriveStoragePreconditionCondition.REQUEST_WITHIN_QUOTA,
+                facts={"operation": action, "status": context["status"], "quota_available": False},
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         )
     if status is not None and 500 <= int(status) < 600:
         return OutboundStorageUnavailableError(
             detail,
             context=context,
             translated_message="adapters.outbound.storage.google_drive.errors.request_failed",
+            precondition_verdict=_drive_external_verdict(
+                DriveStoragePreconditionCondition.REQUEST_AVAILABLE,
+                facts={"operation": action, "status": context["status"], "available": False},
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         )
     return OutboundStorageNetworkError(
         detail,
         context=context,
         translated_message="adapters.outbound.storage.google_drive.errors.request_failed",
+        precondition_verdict=_drive_external_verdict(
+            DriveStoragePreconditionCondition.REQUEST_TRANSPORT_AVAILABLE,
+            facts={"operation": action, "status": context["status"], "transport_available": False},
+            outcome=NoRecoveryOutcome.SAFETY,
+        ),
     )
 
 
@@ -188,6 +255,11 @@ def _service_factory(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE
             "googleapiclient is not importable",
             context={"dependency": "google-api-python-client"},
             translated_message="adapters.outbound.storage.google_drive.errors.googleapiclient_import_failed",
+            precondition_verdict=_drive_external_verdict(
+                DriveStoragePreconditionCondition.API_CLIENT_AVAILABLE,
+                facts={"component": "discovery", "client_available": False},
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         ) from exc
     return build("drive", "v3", credentials=credentials, cache_discovery=False)
 
@@ -322,6 +394,11 @@ class GoogleDriveProvider:
             "drive request failed without translated error",
             context={"action": action, "status": "unknown"},
             translated_message="adapters.outbound.storage.google_drive.errors.request_failed",
+            precondition_verdict=_drive_external_verdict(
+                DriveStoragePreconditionCondition.REQUEST_TRANSPORT_AVAILABLE,
+                facts={"operation": action, "status": "unknown", "transport_available": False},
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         )
 
     def _resolve_vault_folder(self) -> str:
@@ -391,6 +468,15 @@ class GoogleDriveProvider:
                 "drive create_vault_folder returned no id",
                 context={"response": str(created)},
                 translated_message="adapters.outbound.storage.google_drive.errors.create_vault_folder_no_id",
+                precondition_verdict=_drive_external_verdict(
+                    DriveStoragePreconditionCondition.RESPONSE_IDENTIFIER_PRESENT,
+                    facts={
+                        "operation": "create_vault_folder",
+                        "response_mapping": isinstance(created, dict),
+                        "identifier_present": isinstance(created, dict) and "id" in created,
+                    },
+                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                ),
             )
         self._vault_folder_id = str(created["id"])
         return self._vault_folder_id
@@ -438,6 +524,11 @@ class GoogleDriveProvider:
                 "ownership_value": _OWNERSHIP_VALUE,
             },
             translated_message="adapters.outbound.storage.google_drive.errors.folder_not_owned",
+            precondition_verdict=_drive_external_verdict(
+                DriveStoragePreconditionCondition.OWNERSHIP_ALIGNED,
+                facts={"ownership_aligned": False},
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            ),
         )
 
     def _resolve_namespace_folder(self, namespace: str, *, create: bool = True) -> str | None:
@@ -494,6 +585,15 @@ class GoogleDriveProvider:
                 f"drive create_namespace_{namespace} returned no id",
                 context={"response": str(created)},
                 translated_message="adapters.outbound.storage.google_drive.errors.create_namespace_no_id",
+                precondition_verdict=_drive_external_verdict(
+                    DriveStoragePreconditionCondition.RESPONSE_IDENTIFIER_PRESENT,
+                    facts={
+                        "operation": "create_namespace",
+                        "response_mapping": isinstance(created, dict),
+                        "identifier_present": isinstance(created, dict) and "id" in created,
+                    },
+                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                ),
             )
         folder_id = str(created["id"])
         self._namespace_folder_ids[namespace] = folder_id
@@ -651,6 +751,11 @@ class GoogleDriveProvider:
                 "drive write returned non-dict response",
                 context={"action": action, "response": str(response)},
                 translated_message="adapters.outbound.storage.google_drive.errors.write_non_dict_response",
+                precondition_verdict=_drive_external_verdict(
+                    DriveStoragePreconditionCondition.RESPONSE_MAPPING,
+                    facts={"operation": action, "response_mapping": False},
+                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                ),
             )
 
         return _metadata_from_drive_entry(response, namespace=namespace_clean, object_key_hmac=hmac_clean)
@@ -696,6 +801,11 @@ class GoogleDriveProvider:
                 "namespace is not present in Drive",
                 context={"namespace": namespace_clean},
                 translated_message="adapters.outbound.storage.google_drive.errors.namespace_not_found",
+                precondition_verdict=_drive_external_verdict(
+                    DriveStoragePreconditionCondition.NAMESPACE_PRESENT,
+                    facts={"operation": "get", "namespace_present": False},
+                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                ),
             )
         entry = self._find_file(namespace_folder_id, hmac_clean)
         if entry is None:
@@ -703,6 +813,11 @@ class GoogleDriveProvider:
                 "object is not present in Drive namespace",
                 context={"namespace": namespace_clean, "object_key_hmac": hmac_clean},
                 translated_message="adapters.outbound.storage.google_drive.errors.object_not_found",
+                precondition_verdict=_drive_external_verdict(
+                    DriveStoragePreconditionCondition.OBJECT_PRESENT,
+                    facts={"operation": "get", "object_present": False},
+                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                ),
             )
 
         request = service.files().get_media(fileId=entry["id"])
@@ -727,6 +842,15 @@ class GoogleDriveProvider:
                 "drive files.get_media returned non-bytes payload",
                 context={"payload_type": type(payload).__name__},
                 translated_message="adapters.outbound.storage.google_drive.errors.media_non_bytes",
+                precondition_verdict=_drive_external_verdict(
+                    DriveStoragePreconditionCondition.MEDIA_PAYLOAD_BYTES,
+                    facts={
+                        "operation": "files.get_media",
+                        "payload_bytes": False,
+                        "payload_type": type(payload).__name__,
+                    },
+                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                ),
             )
 
         stored_hash = _drive_storage_content_hash(entry)
@@ -870,6 +994,11 @@ class GoogleDriveProvider:
                 "namespace is not present in Drive",
                 context={"namespace": namespace_clean},
                 translated_message="adapters.outbound.storage.google_drive.errors.namespace_not_found",
+                precondition_verdict=_drive_external_verdict(
+                    DriveStoragePreconditionCondition.NAMESPACE_PRESENT,
+                    facts={"operation": "iter_objects", "namespace_present": False},
+                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                ),
             )
         query = f"'{namespace_folder_id}' in parents and trashed=false"
         page_token: str | None = None
@@ -1035,6 +1164,11 @@ def _build_media_body(payload: bytes) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-DRI
             "googleapiclient.http is not importable",
             context={"dependency": "google-api-python-client"},
             translated_message="adapters.outbound.storage.google_drive.errors.googleapiclient_import_failed",
+            precondition_verdict=_drive_external_verdict(
+                DriveStoragePreconditionCondition.API_CLIENT_AVAILABLE,
+                facts={"component": "media_upload", "client_available": False},
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         ) from exc
     return MediaIoBaseUpload(io.BytesIO(payload), mimetype=_BINARY_MIME_TYPE, resumable=False)
 
@@ -1068,6 +1202,11 @@ def _parse_drive_size(value: object, *, provider_object_id: str) -> int:
             "drive object metadata carries no usable size",
             context={"provider_object_id": provider_object_id, "actual_value": repr(value)},
             translated_message="adapters.outbound.storage.google_drive.errors.size_invalid",
+            precondition_verdict=_drive_external_verdict(
+                DriveStoragePreconditionCondition.METADATA_SIZE_VALID,
+                facts={"field": "size", "valid": False},
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         )
     try:
         byte_length = int(value)
@@ -1076,12 +1215,22 @@ def _parse_drive_size(value: object, *, provider_object_id: str) -> int:
             "drive object size is not an integer",
             context={"provider_object_id": provider_object_id, "actual_value": str(value)},
             translated_message="adapters.outbound.storage.google_drive.errors.size_invalid",
+            precondition_verdict=_drive_external_verdict(
+                DriveStoragePreconditionCondition.METADATA_SIZE_VALID,
+                facts={"field": "size", "valid": False},
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         ) from None
     if byte_length < 0:
         raise OutboundStorageIntegrityError(
             "drive object size is negative",
             context={"provider_object_id": provider_object_id, "actual_value": str(value)},
             translated_message="adapters.outbound.storage.google_drive.errors.size_invalid",
+            precondition_verdict=_drive_external_verdict(
+                DriveStoragePreconditionCondition.METADATA_SIZE_VALID,
+                facts={"field": "size", "valid": False},
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         )
     return byte_length
 
@@ -1114,6 +1263,11 @@ def _parse_drive_modified_time(value: object, *, provider_object_id: str) -> dat
             "drive object metadata carries no modifiedTime",
             context={"provider_object_id": provider_object_id, "actual_value": repr(value)},
             translated_message="adapters.outbound.storage.google_drive.errors.modified_time_invalid",
+            precondition_verdict=_drive_external_verdict(
+                DriveStoragePreconditionCondition.METADATA_MODIFIED_TIME_VALID,
+                facts={"field": "modifiedTime", "valid": False},
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         )
     try:
         written_at = parse_iso_datetime(value)
@@ -1122,6 +1276,11 @@ def _parse_drive_modified_time(value: object, *, provider_object_id: str) -> dat
             "drive object modifiedTime is not an RFC 3339 instant",
             context={"provider_object_id": provider_object_id, "actual_value": value},
             translated_message="adapters.outbound.storage.google_drive.errors.modified_time_invalid",
+            precondition_verdict=_drive_external_verdict(
+                DriveStoragePreconditionCondition.METADATA_MODIFIED_TIME_VALID,
+                facts={"field": "modifiedTime", "valid": False},
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         ) from None
     try:
         validate_utc_aware(written_at)
@@ -1130,6 +1289,11 @@ def _parse_drive_modified_time(value: object, *, provider_object_id: str) -> dat
             "drive object modifiedTime carries no timezone",
             context={"provider_object_id": provider_object_id, "actual_value": value},
             translated_message="adapters.outbound.storage.google_drive.errors.modified_time_invalid",
+            precondition_verdict=_drive_external_verdict(
+                DriveStoragePreconditionCondition.METADATA_MODIFIED_TIME_VALID,
+                facts={"field": "modifiedTime", "valid": False},
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         ) from None
     return written_at
 
@@ -1179,6 +1343,11 @@ def _drive_storage_app_properties(entry: dict[str, Any]) -> DriveAppProperties:
             "drive object appProperties do not match the storage metadata contract",
             context={"provider_object_id": str(entry.get("id", ""))},
             translated_message="adapters.outbound.storage.google_drive.errors.content_hash_mismatch",
+            precondition_verdict=_drive_external_verdict(
+                DriveStoragePreconditionCondition.METADATA_APP_PROPERTIES_VALID,
+                facts={"field": "appProperties", "valid": False},
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         ) from exc
 
 

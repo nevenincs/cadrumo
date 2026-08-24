@@ -195,6 +195,23 @@ class OperationObservationMaterialization(BaseModel):
             raise ValueError("progress fold must cover every event after its checkpoint through the anchor")
 
 
+class OperationObservationUnknownOperationError(LookupError):
+    """The locked observation read found no journal for the requested operation."""
+
+    def __init__(self, operation_id: OperationId) -> None:
+        self.operation_id = operation_id
+        super().__init__("operation observation requires an existing operation")
+
+
+class OperationObservationCursorAheadError(ValueError):
+    """The caller cursor is beyond the authoritative anchor read under the journal lock."""
+
+    def __init__(self, *, requested_cursor: OperationEventCursor, anchor_cursor: OperationEventCursor) -> None:
+        self.requested_cursor = requested_cursor
+        self.anchor_cursor = anchor_cursor
+        super().__init__("operation observation cursor exceeds its authoritative anchor")
+
+
 def _validate_request_storage(snapshot: OperationPersistedSnapshot) -> None:
     journal_request = snapshot.credential_free_request_json
     if snapshot.request_storage is OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL:
@@ -443,7 +460,11 @@ class OperationEventStream(Protocol):
 
 @runtime_checkable
 class OperationObservationReader(Protocol):
-    """Read one internally consistent operation observation from persistence."""
+    """Read one internally consistent operation observation from persistence.
+
+    A missing operation raises :class:`OperationObservationUnknownOperationError`.
+    A cursor beyond the read anchor raises :class:`OperationObservationCursorAheadError`.
+    """
 
     async def read_observation(
         self,
@@ -500,8 +521,10 @@ __all__ = [
     "OperationEventStream",
     "OperationJournal",
     "OperationLeaseRepository",
+    "OperationObservationCursorAheadError",
     "OperationObservationMaterialization",
     "OperationObservationReader",
+    "OperationObservationUnknownOperationError",
     "OperationPersistedSnapshot",
     "OperationProgressFoldCheckpoint",
     "OperationProgressFoldInput",

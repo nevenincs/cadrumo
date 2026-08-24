@@ -4,8 +4,12 @@ from __future__ import annotations
 
 import asyncio
 import json
+import multiprocessing
 from datetime import UTC, datetime, timedelta
+from multiprocessing.queues import Queue
+from multiprocessing.synchronize import Event
 from pathlib import Path
+from queue import Empty
 
 import pytest
 
@@ -16,10 +20,14 @@ from .....application.operations import (
     OperationIdentity,
     OperationInteractionRequest,
     OperationLeaseDisposition,
+    OperationObservationCursorAheadError,
+    OperationObservationMaterialization,
+    OperationObservationUnknownOperationError,
     OperationOwnerLease,
     OperationPendingInteraction,
     OperationPersistedSnapshot,
     OperationPhaseEvent,
+    OperationProgressEvent,
     OperationReplayStatus,
     OperationRequestStoragePolicy,
     OperationTerminalEvent,
@@ -31,11 +39,12 @@ from .....core import (
     OperationInteractionKind,
     OperationLifecycle,
     OperationTerminalCondition,
+    exclusive_file_lock,
     scan_directory,
 )
 from ...storage import RepositoryError
 from .._journal import OperationJournalRepository
-from .._lease import OperationLeaseFilesystemRepository
+from .._lease import OperationLeaseFilesystemRepository, OperationLeaseStorage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -80,6 +89,39 @@ def _lease(operation_id: str = "a" * 64) -> OperationOwnerLease:
         token="c" * 64,
         acquired_at=_STARTED,
         expires_at=_STARTED + timedelta(hours=1),
+    )
+
+
+def _progress_snapshot() -> OperationPersistedSnapshot:
+    """Build a successor that retains its phase while publishing progress."""
+    identity = OperationIdentity(operation_id="a" * 64, definition_id="test.operation", subject_ref="subject")
+    updated_at = _STARTED + timedelta(minutes=1)
+    event = OperationProgressEvent(
+        identity=identity,
+        revision=1,
+        sequence=2,
+        timestamp=updated_at,
+        code="progress.1",
+        completed=1,
+        total=2,
+        unit_code="items",
+    )
+    return OperationPersistedSnapshot(
+        identity=identity,
+        definition_contract_digest="c" * 64,
+        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
+        request_reference="d" * 64,
+        revision=1,
+        lifecycle=OperationLifecycle.RUNNING,
+        phase_code="phase.0",
+        started_at=_STARTED,
+        updated_at=updated_at,
+        execution_deadline=None,
+        cleanup_deadline=None,
+        cancellation_requested_at=None,
+        cancellation_acknowledged_at=None,
+        event_cursor=event.sequence,
+        events=(event,),
     )
 
 
@@ -155,6 +197,51 @@ def _consumed_interaction() -> OperationConsumedInteraction:
             proposed_effect_digest="5" * 64,
         )
     )
+
+
+def _commit_in_process(
+    storage_root: str,
+    snapshot_payload: str,
+    lease_payload: str,
+    attempting: Event,
+    results: Queue[str],
+) -> None:
+    """Advance one real journal transition after announcing the lock attempt."""
+    attempting.set()
+    snapshot = OperationPersistedSnapshot.model_validate_json(snapshot_payload)
+    lease = OperationOwnerLease.model_validate_json(lease_payload)
+    try:
+        asyncio.run(
+            OperationJournalRepository(storage_root=Path(storage_root)).commit(
+                snapshot,
+                expected_revision=snapshot.revision - 1,
+                lease=lease,
+            )
+        )
+    except RepositoryError as exc:
+        results.put(f"error:{exc}")
+        return
+    results.put("committed")
+
+
+def _observe_in_process(
+    storage_root: str,
+    operation_id: str,
+    after_cursor: int,
+    limit: int,
+    attempting: Event,
+    results: Queue[str],
+) -> None:
+    """Read one real observation after announcing the same lock attempt."""
+    attempting.set()
+    materialization = asyncio.run(
+        OperationJournalRepository(storage_root=Path(storage_root)).read_observation(
+            operation_id,
+            after_cursor,
+            limit=limit,
+        )
+    )
+    results.put(materialization.model_dump_json())
 
 
 def test_operation_journal_commits_cas_transitions_and_refuses_mutations(tmp_path: Path) -> None:
@@ -310,6 +397,101 @@ def test_operation_journal_replays_full_history_by_exclusive_bounded_cursor(tmp_
     assert caught_up.status is OperationReplayStatus.CAUGHT_UP
     assert caught_up.events == ()
     assert caught_up.next_cursor == second_page.next_cursor
+
+
+def test_operation_observation_is_one_locked_record_under_a_real_interleaved_transition(tmp_path: Path) -> None:
+    """Snapshot, page, and progress input are all one complete journal generation."""
+    _repository, snapshots = _create_history(tmp_path)
+    initial = snapshots[-1]
+    successor = _snapshot(revision=3, sequence=4)
+    storage = OperationLeaseStorage(storage_root=tmp_path)
+    assert storage.lock_target == tmp_path / "operation-journals" / ".repository"
+
+    context = multiprocessing.get_context("spawn")
+    commit_attempting = context.Event()
+    observe_attempting = context.Event()
+    commit_results: Queue[str] = context.Queue()
+    observe_results: Queue[str] = context.Queue()
+    committer = context.Process(
+        target=_commit_in_process,
+        args=(
+            str(tmp_path),
+            successor.model_dump_json(),
+            _lease().model_dump_json(),
+            commit_attempting,
+            commit_results,
+        ),
+    )
+    observer = context.Process(
+        target=_observe_in_process,
+        args=(str(tmp_path), initial.operation_id, 1, 2, observe_attempting, observe_results),
+    )
+    with exclusive_file_lock(storage.lock_target):
+        committer.start()
+        assert commit_attempting.wait(timeout=15)
+        observer.start()
+        assert observe_attempting.wait(timeout=15)
+        with pytest.raises(Empty):
+            commit_results.get(timeout=0.3)
+        with pytest.raises(Empty):
+            observe_results.get(timeout=0.3)
+
+    assert commit_results.get(timeout=15) == "committed"
+    materialization = OperationObservationMaterialization.model_validate_json(observe_results.get(timeout=15))
+    for process in (committer, observer):
+        process.join(timeout=15)
+        assert process.exitcode == 0
+
+    observation_shape = (
+        materialization.snapshot.revision,
+        materialization.anchor_cursor,
+        tuple(event.sequence for event in materialization.replay.events),
+        tuple(event.sequence for event in materialization.progress_fold.events),
+    )
+    assert observation_shape in {
+        (initial.revision, initial.event_cursor, (2, 3), (1, 2, 3)),
+        (successor.revision, successor.event_cursor, (2, 3), (1, 2, 3, 4)),
+    }
+    assert materialization.anchor_cursor == materialization.snapshot.event_cursor
+    assert materialization.replay.status is OperationReplayStatus.PAGE
+    assert materialization.replay.requested_cursor == 1
+    assert materialization.replay.next_cursor == 3
+
+
+def test_operation_observation_has_exact_unknown_and_cursor_ahead_dispositions(tmp_path: Path) -> None:
+    """The success-only materialization refuses both states before public projection."""
+    repository, snapshots = _create_history(tmp_path)
+    operation_id = snapshots[-1].operation_id
+
+    with pytest.raises(OperationObservationUnknownOperationError) as unknown:
+        asyncio.run(repository.read_observation("e" * 64, 0, limit=2))
+    assert unknown.value.operation_id == "e" * 64
+
+    with pytest.raises(OperationObservationCursorAheadError) as ahead:
+        asyncio.run(repository.read_observation(operation_id, snapshots[-1].event_cursor + 1, limit=2))
+    assert ahead.value.requested_cursor == snapshots[-1].event_cursor + 1
+    assert ahead.value.anchor_cursor == snapshots[-1].event_cursor
+
+
+def test_operation_observation_carries_the_complete_progress_fold_separately_from_its_bounded_page(
+    tmp_path: Path,
+) -> None:
+    """A bounded replay never truncates the progress fold needed through the anchor."""
+    repository = OperationJournalRepository(storage_root=tmp_path)
+    initial = _snapshot(revision=0, sequence=1)
+    successor = _progress_snapshot()
+    _claim_lease(tmp_path, _lease())
+    asyncio.run(repository.create(initial, lease=_lease()))
+    asyncio.run(repository.commit(successor, expected_revision=0, lease=_lease()))
+
+    materialization = asyncio.run(repository.read_observation(initial.operation_id, 0, limit=1))
+
+    assert materialization.snapshot == successor
+    assert materialization.anchor_cursor == successor.event_cursor
+    assert materialization.replay.events == (initial.events[0],)
+    assert materialization.progress_fold.checkpoint is None
+    assert materialization.progress_fold.events == (initial.events[0], successor.events[0])
+    assert isinstance(materialization.progress_fold.events[-1], OperationProgressEvent)
 
 
 @pytest.mark.parametrize(
