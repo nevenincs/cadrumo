@@ -18,6 +18,7 @@ orden_aplicabilidad = [
 source_refs = [
     "aeat-dr-202-2019",
     "aeat-modelo-202-instructions-2018-2022",
+    "aeat-calendario-contribuyente-2022",
     "boe-modelo-202-base-order",
     "boe-modelo-202-2018-amendment",
 ]
@@ -56,9 +57,3 @@ a real 202 declaracion prints. Bundling a filed or AEAT-published 202 specimen i
 legal_refs = ["ley-27-2014:art-40", "orden-hfp-227-2017:art-1"]
 source_refs = ["aeat-dr-202-2019"]
 
-[revisions."2019-2022".family_dispositions.deadline_windows]
-reason = """
-The pagos fraccionados of LIS art. 40.3 open on the 1st and run to the 20th of April, October and December, and AEAT publishes the exact close for each year in its Calendario del Contribuyente because the day moves for weekends and holidays. Those calendars are bundled for 2023 onward, but the close date sits under a 'Hasta el N' heading that this pass could not read back from the PDF reliably, and a filing deadline written from memory rather than from the source is a filing-grade harm. The \
-windows are REAL and this family is deliberately empty rather than guessed: extracting the headings from the bundled calendars is the named unblocker, and for 2019-2022 it additionally requires bundling those years' calendars, which are not present."""
-legal_refs = ["ley-27-2014:art-40", "orden-hfp-227-2017:art-1"]
-source_refs = ["aeat-dr-202-2019"]

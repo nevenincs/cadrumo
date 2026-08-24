@@ -11,6 +11,7 @@ legal_refs = [
 source_refs = [
     "aeat-dr-202-2019",
     "aeat-modelo-202-instructions-2018-2022",
+    "aeat-calendario-contribuyente-2022",
     "boe-modelo-202-base-order",
     "boe-modelo-202-2018-amendment",
 ]
@@ -42,4 +43,5 @@ application_links = [
     "modelo-202-2019-2022-reconciliation",
     "modelo-202-2019-2022-export",
     "modelo-202-2019-2022-workflow",
+    "modelo-202-2019-2022-deadline",
 ]
