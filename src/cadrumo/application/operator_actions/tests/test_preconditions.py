@@ -26,3 +26,15 @@ def test_no_action_precondition_verdict_preserves_caller_owned_terminal_facts() 
     assert verdict.evidence[0].evidence_id == "test.operator_actions.remote_contract_valid.observation"
     assert verdict.evidence[0].provenance is ActionEvidenceProvenance.RUNTIME_OBSERVATION
     assert verdict.evidence[0].values == {"remote_contract_valid": False, "response_type": "str"}
+
+
+def test_no_action_precondition_verdict_preserves_caller_owned_evidence_id() -> None:
+    verdict = no_action_precondition_verdict(
+        condition_id="test.operator_actions.remote_contract_valid",
+        evidence_id="test.operator_actions.remote_contract.observation",
+        facts={"remote_contract_valid": False},
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        outcome=NoRecoveryOutcome.SAFETY,
+    )
+
+    assert verdict.evidence[0].evidence_id == "test.operator_actions.remote_contract.observation"

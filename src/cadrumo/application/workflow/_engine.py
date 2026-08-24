@@ -46,6 +46,7 @@ from ..operator_actions import (
     ActionReference,
     ConditionEvidence,
     PreconditionVerdict,
+    no_action_precondition_verdict,
 )
 from ._deadline_stage import abort_missing_deadline_obligation, resolve_deadline_stage_obligation
 from ._engine_helpers import (
@@ -108,18 +109,12 @@ def _no_recovery_verdict(
     outcome: NoRecoveryOutcome,
 ) -> PreconditionVerdict:
     """Build one closed non-actionable workflow precondition outcome."""
-    return PreconditionVerdict(
-        failed_condition_id=condition_id,
-        evidence=(
-            ConditionEvidence(
-                condition_id=condition_id,
-                evidence_id=evidence_id,
-                provenance=provenance,
-                values=values,
-            ),
-        ),
-        conditionality=ActionConditionality.NOT_APPLICABLE,
-        no_recovery_outcome=outcome,
+    return no_action_precondition_verdict(
+        condition_id=condition_id,
+        evidence_id=evidence_id,
+        facts=values,
+        provenance=provenance,
+        outcome=outcome,
     )
 
 

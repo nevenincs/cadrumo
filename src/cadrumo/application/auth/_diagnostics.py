@@ -29,12 +29,12 @@ from ...adapters.persistence.storage import (
     secure_object_repository_for_active_bucket,
 )
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.errors import CoreValidationError
 from ...core.external_constants import UTF_8_ENCODING, load_external_constants
 from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...core.time import now, validate_utc_aware
-from ..operator_actions import ConditionEvidence, PreconditionVerdict
+from ..operator_actions import PreconditionVerdict, no_action_precondition_verdict
 from ._errors import AuthDiagnosticPayloadError, AuthDiagnosticPhoneStateError
 
 _DIAGNOSTIC_NAMESPACE = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace
@@ -224,18 +224,11 @@ def load_auth_diagnostic(diagnostic_id: str) -> AuthDiagnosticDetail | None:
             **_detail_fingerprints_from_payload(payload),
             "html_excerpt": excerpt,
             "operator_report_verdict": (
-                PreconditionVerdict(
-                    failed_condition_id="auth.diagnostics.phone_state_recorded",
-                    evidence=(
-                        ConditionEvidence(
-                            condition_id="auth.diagnostics.phone_state_recorded",
-                            evidence_id="auth.diagnostics.phone_state_recorded.observation",
-                            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-                            values={"diagnostic_available": True, "phone_state_observed": False},
-                        ),
-                    ),
-                    conditionality=ActionConditionality.NOT_APPLICABLE,
-                    no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                no_action_precondition_verdict(
+                    condition_id="auth.diagnostics.phone_state_recorded",
+                    facts={"diagnostic_available": True, "phone_state_observed": False},
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
                 )
                 if summary.phone_state is None
                 else None

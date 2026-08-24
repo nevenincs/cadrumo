@@ -14,10 +14,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.errors import CadrumoError, TerminalPreconditionErrorMixin
 from ...core.i18n import tr
-from ..operator_actions import ConditionEvidence, PreconditionVerdict
+from ..operator_actions import PreconditionVerdict, no_action_precondition_verdict
 
 
 def operator_surface_contract_verdict(
@@ -26,18 +26,11 @@ def operator_surface_contract_verdict(
     facts: Mapping[str, str | bool | int],
 ) -> PreconditionVerdict:
     """Build the terminal verdict for an invalid operator-surface contract request."""
-    return PreconditionVerdict(
-        failed_condition_id=condition_id,
-        evidence=(
-            ConditionEvidence(
-                condition_id=condition_id,
-                evidence_id=f"{condition_id}.observation",
-                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-                values=facts,
-            ),
-        ),
-        conditionality=ActionConditionality.NOT_APPLICABLE,
-        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    return no_action_precondition_verdict(
+        condition_id=condition_id,
+        facts=facts,
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        outcome=NoRecoveryOutcome.TERMINAL,
     )
 
 

@@ -6,15 +6,8 @@ from collections.abc import Callable, Mapping
 from enum import StrEnum
 from typing import cast
 
-from ...core import (
-    ActionConditionality,
-    ActionEvidenceProvenance,
-    NoRecoveryOutcome,
-)
-from ..operator_actions import (
-    ConditionEvidence,
-    PreconditionVerdict,
-)
+from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ..operator_actions import PreconditionVerdict, no_action_precondition_verdict
 
 
 class LedgerPreconditionCondition(StrEnum):
@@ -76,19 +69,11 @@ def ledger_no_recovery_verdict(
     safe executable action from those facts.  Keeping the result typed makes
     that boundary explicit without retaining a copy-paste command string.
     """
-    condition_id = condition.value
-    return PreconditionVerdict(
-        failed_condition_id=condition_id,
-        evidence=(
-            ConditionEvidence(
-                condition_id=condition_id,
-                evidence_id=f"{condition_id}.observation",
-                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-                values=facts,
-            ),
-        ),
-        conditionality=ActionConditionality.NOT_APPLICABLE,
-        no_recovery_outcome=outcome,
+    return no_action_precondition_verdict(
+        condition_id=condition.value,
+        facts=facts,
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        outcome=outcome,
     )
 
 

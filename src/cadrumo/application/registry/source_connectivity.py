@@ -20,6 +20,7 @@ from ...core import (
     STRICT_FROZEN_CONFIG,
     BindingSourceKind,
     CasillaId,
+    Modelo,
     ModeloCalculationRouteId,
     Period,
     SourceConnectivityCensusRow,
@@ -39,6 +40,7 @@ from ...domain.calculations.registry import (
     InputKindValue,
     LegalRefId,
     ModeloId,
+    ModeloRevision,
     RegistrySnapshot,
     RelationConsumptionChannel,
     RelationDefinition,
@@ -106,6 +108,8 @@ class RegistryDestinationCandidate(BaseModel):
     def _require_kind_payload(self) -> RegistryDestinationCandidate:
         if isinstance(self.period, Period) and self.period.filing_year != self.filing_year:
             raise ValueError("registry destination period must carry its declared filing_year")
+        if isinstance(self.period, CensoModeloEventKind) and self.modelo_id != Modelo.M036:
+            raise ValueError("censo event destination coordinates are reserved for canonical Modelo 036")
         if self.kind == "casilla_semantic_role":
             if self.semantic_role is None or self.source_kind is not None:
                 raise ValueError("semantic-role destination requires only semantic_role")
@@ -240,6 +244,12 @@ def validate_census_destination_candidates(
                     f"selected {candidate.modelo_id}/{revision.id} for "
                     f"{candidate.filing_year}/{candidate.period_token}: {entry.candidate_id}"
                 )
+            _validate_source_reference_groundings(
+                entry,
+                modelo_id=modelo.id,
+                revision=revision,
+                authority=authority,
+            )
             if candidate.kind == "casilla_semantic_role":
                 matches = tuple(
                     casilla for casilla in revision.casillas if casilla.semantic_role == candidate.semantic_role
@@ -259,6 +269,39 @@ def validate_census_destination_candidates(
                     f"census destination binding source is absent from {modelo.id}/{revision.id}: "
                     f"{candidate.source_kind.value}"
                 )
+
+
+def _validate_source_reference_groundings(
+    entry: SourceConnectivityCensusEntry,
+    *,
+    modelo_id: ModeloId,
+    revision: ModeloRevision,
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """Require manual census source evidence to resolve within its selected revision.
+
+    The registry authority already owns catalogue admission and law-selected
+    revision resolution.  This check intentionally reuses those two facts: a
+    source-reference grounding cannot certify a terminal census disposition
+    unless it resolves from the authority's live source catalogue and the
+    exact selected revision cites it directly.
+    """
+    revision_source_refs = set(revision.source_refs)
+    for grounding in entry.grounding:
+        if grounding.locator_kind is not SourceConnectivityGroundingLocatorKind.SOURCE_REFERENCE:
+            continue
+        reference = grounding.reference
+        source = authority.catalogues.sources.get(reference)
+        if source is None or source.id != reference:
+            raise ValueError(
+                "census source-reference grounding is absent from the validated source catalogue: "
+                f"{reference!r} for {modelo_id}/{revision.id}: {entry.candidate_id}"
+            )
+        if reference not in revision_source_refs:
+            raise ValueError(
+                "census source-reference grounding is outside its exact selected revision source scope: "
+                f"{reference!r} for {modelo_id}/{revision.id}: {entry.candidate_id}"
+            )
 
 
 def _freeze_toml_arrays(value: object) -> object:

@@ -25,12 +25,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import NoReturn
 
-from ...core import (
-    ActionConditionality,
-    ActionEvidenceProvenance,
-    NoRecoveryOutcome,
-    Period,
-)
+from ...core import ActionEvidenceProvenance, NoRecoveryOutcome, Period
 from ...core.time import now as _utcnow
 from ...domain.deadlines import (
     ModeloDeadline,
@@ -40,10 +35,7 @@ from ...domain.deadlines import (
     compute_obligation_schedule,
     next_deadline,
 )
-from ..operator_actions import (
-    ConditionEvidence,
-    PreconditionVerdict,
-)
+from ..operator_actions import no_action_precondition_verdict
 from ._errors import WorkflowAbortSignalError
 from ._protocols import DeadlineEngineProtocol
 from ._run_models import WorkflowAbortReason, WorkflowPurpose, WorkflowStage, WorkflowStep
@@ -101,18 +93,12 @@ def abort_missing_deadline_obligation(
             ended_at=_utcnow(),
             success=False,
             summary_locale_key="application.workflow.steps.deadline_missing",
-            precondition_verdict=PreconditionVerdict(
-                failed_condition_id="workflow.deadline.filing_window_open",
-                evidence=(
-                    ConditionEvidence(
-                        condition_id="workflow.deadline.filing_window_open",
-                        evidence_id="workflow.deadline.window",
-                        provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
-                        values={"filing_window_open": False},
-                    ),
-                ),
-                conditionality=ActionConditionality.NOT_APPLICABLE,
-                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            precondition_verdict=no_action_precondition_verdict(
+                condition_id="workflow.deadline.filing_window_open",
+                evidence_id="workflow.deadline.window",
+                facts={"filing_window_open": False},
+                provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+                outcome=NoRecoveryOutcome.TERMINAL,
             ),
         ),
     )

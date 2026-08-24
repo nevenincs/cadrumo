@@ -6,15 +6,8 @@ from collections.abc import Mapping
 from decimal import Decimal
 from enum import StrEnum
 
-from ...core import (
-    ActionConditionality,
-    ActionEvidenceProvenance,
-    NoRecoveryOutcome,
-)
-from ..operator_actions import (
-    ConditionEvidence,
-    PreconditionVerdict,
-)
+from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ..operator_actions import PreconditionVerdict, no_action_precondition_verdict
 
 
 class AggregationPreconditionCondition(StrEnum):
@@ -38,19 +31,11 @@ def aggregation_no_recovery_verdict(
     terminal verdict keeps that boundary machine-readable without retaining
     presentation recovery prose.
     """
-    condition_id = condition.value
-    return PreconditionVerdict(
-        failed_condition_id=condition_id,
-        evidence=(
-            ConditionEvidence(
-                condition_id=condition_id,
-                evidence_id=f"{condition_id}.observation",
-                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-                values=facts,
-            ),
-        ),
-        conditionality=ActionConditionality.NOT_APPLICABLE,
-        no_recovery_outcome=outcome,
+    return no_action_precondition_verdict(
+        condition_id=condition.value,
+        facts=facts,
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        outcome=outcome,
     )
 
 

@@ -33,7 +33,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 
 from ...core import (
-    ActionConditionality,
     ActionEvidenceProvenance,
     AuthProviderKind,
     NoRecoveryOutcome,
@@ -47,8 +46,8 @@ from .._workflow_auth_models import (
 )
 from ..auth_credentials import ActiveCertificateCredentials
 from ..operator_actions import (
-    ConditionEvidence,
     PreconditionVerdict,
+    no_action_precondition_verdict,
 )
 from ._actions import update_auth
 from ._catalogue import AuthProviderListing, get_auth_provider, list_auth_providers
@@ -379,36 +378,29 @@ def _incomplete_auth_configuration_verdict(
     """
     if provider == AuthProviderKind.CERTIFICATE.value:
         condition_id = "auth.certificate.file_ready"
-        evidence = ConditionEvidence(
-            condition_id=condition_id,
-            evidence_id="auth.configure.certificate.file_readiness",
-            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-            values={
-                "certificate_file_provided": certificate_path is not None,
-                "certificate_file_resolves": False,
-                "provider": provider,
-            },
-        )
+        evidence_id = "auth.configure.certificate.file_readiness"
+        facts = {
+            "certificate_file_provided": certificate_path is not None,
+            "certificate_file_resolves": False,
+            "provider": provider,
+        }
     elif provider == AuthProviderKind.CLAVE_MOVIL.value:
         condition_id = "auth.clave_movil.identity_aligned"
-        evidence = ConditionEvidence(
-            condition_id=condition_id,
-            evidence_id="auth.configure.clave_movil.identity_alignment",
-            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-            values={
-                "identity_alignment": identity_alignment,
-                "profile_tax_id_present": profile_tax_id_present,
-                "provider": provider,
-                "provider_identity_present": provider_identity_present,
-            },
-        )
+        evidence_id = "auth.configure.clave_movil.identity_alignment"
+        facts = {
+            "identity_alignment": identity_alignment,
+            "profile_tax_id_present": profile_tax_id_present,
+            "provider": provider,
+            "provider_identity_present": provider_identity_present,
+        }
     else:
         raise RuntimeError(f"unsupported incomplete auth provider: {provider}")
-    return PreconditionVerdict(
-        failed_condition_id=condition_id,
-        evidence=(evidence,),
-        conditionality=ActionConditionality.NOT_APPLICABLE,
-        no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+    return no_action_precondition_verdict(
+        condition_id=condition_id,
+        evidence_id=evidence_id,
+        facts=facts,
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
     )
 
 
