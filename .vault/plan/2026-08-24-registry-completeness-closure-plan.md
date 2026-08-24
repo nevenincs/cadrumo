@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:e4a829fe9a8013a931603a7d6e3ca09116ff99277ee3efa8cba5f804a6478290'
+body_hash: 'sha256:5d9449db071f61032843da0b33b382838f2a0285200c04da3ed484b9ce26da0d'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -58,7 +58,7 @@ Compose one typed cross-authority report from validated registry coverage, sourc
 - [x] `W01.P02.S42` - Constrain temporal evidence identity, period, and filing-year fields to registry semantics and add mutation proof for every composer refusal outcome; `src/cadrumo/application/registry/`.
 - [x] `W01.P02.S43` - Reject resolved owner dispositions on active closure refusals and prove the contradiction fails validation; `src/cadrumo/application/registry/`.
 - [x] `W01.P02.S44` - Encode branch-specific TemporalRevisionCoverage refusal invariants and add construction and mutation-bite tests.; `src/cadrumo/application/registry/`.
-- [ ] `W01.P02.S45` - Revalidate connected census claims through live source proof authority at composition time and refuse proof loss or digest mismatch.; `src/cadrumo/application/registry/`.
+- [x] `W01.P02.S45` - Revalidate connected census claims through live source proof authority at composition time and refuse proof loss or digest mismatch.; `src/cadrumo/application/registry/`.
 - [x] `W01.P02.S46` - Apply expiry semantics to every scoped census disposition and refuse expired terminal evidence, with mutation-bite tests.; `src/cadrumo/application/registry/`.
 - [ ] `W01.P02.S47` - Add revision filing-year and period scope to census destinations and require exact scoped source mapping with Modelo 100 and 193 cross-satisfaction regressions.; `src/cadrumo/application/registry/`.
 - [ ] `W01.P02.S48` - Prove undeclared-grade refusals reject a non-null declared grade through direct construction and revalidated mutation.; `src/cadrumo/application/registry/tests/`.

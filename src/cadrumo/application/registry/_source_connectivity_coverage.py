@@ -8,11 +8,17 @@ because the census has no candidate scoped to it.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date
 
-from pydantic import BaseModel, Field, computed_field, model_validator
+from pydantic import BaseModel, Field, ValidationError, computed_field, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, SourceConnectivityDisposition, SourceConnectivityExpiryPosture
+from ...core import (
+    STRICT_FROZEN_CONFIG,
+    SourceConnectivityDisposition,
+    SourceConnectivityExpiryPosture,
+    SourceConnectivityProofAuthority,
+)
 from ...domain.calculations.registry import ModeloRevision, ValidatedRegistryAuthority
 from ._closure import (
     RegistryClosureEvidence,
@@ -49,6 +55,14 @@ _BLOCKED_DISPOSITIONS = frozenset(
 )
 
 
+@dataclass(frozen=True, slots=True)
+class _ConnectedProofFailure:
+    """One connected claim that no longer passes current live proof."""
+
+    entry: SourceConnectivityCensusEntry
+    detail: str
+
+
 class SourceConnectivityCoverageReport(BaseModel):
     """Complete source-connectivity closure projection for one registry authority."""
 
@@ -83,23 +97,27 @@ def compose_source_connectivity_coverage(
     authority: ValidatedRegistryAuthority,
     census: SourceConnectivityCensusManifest,
     as_of: date,
+    proof_authority: SourceConnectivityProofAuthority | None = None,
 ) -> SourceConnectivityCoverageReport:
     """Project canonical census dispositions onto every loaded registry revision.
 
     ``census`` is the strict manifest returned by
-    :func:`load_source_connectivity_census`; connected claims have consequently
-    passed its live proof authority before this composer receives them.  The
-    projection uses only validated registry declarations to decide whether a
-    census destination applies to a particular revision.
+    :func:`load_source_connectivity_census`.  Every connected claim is
+    revalidated through ``proof_authority`` here, rather than letting a
+    previously successful parse certify a later closure report.  The projection
+    uses only validated registry declarations to decide whether a census
+    destination applies to a particular revision.
     """
     authority.validate_registry()
     validate_census_destination_candidates(census, authority.modelos)
+    proof_failures = _connected_proof_failures(census, proof_authority=proof_authority)
     limbs = tuple(
         _compose_revision_limb(
             census=census,
             modelo_id=modelo.id,
             revision=revision,
             as_of=as_of,
+            proof_failures=proof_failures,
         )
         for modelo in sorted(authority.modelos, key=lambda item: item.id)
         for revision in sorted(modelo.revisions.values(), key=lambda item: item.id)
@@ -113,6 +131,7 @@ def _compose_revision_limb(
     modelo_id,
     revision: ModeloRevision,
     as_of: date,
+    proof_failures: dict[str, _ConnectedProofFailure],
 ) -> RegistryClosureLimb:
     """Compose one fail-closed source limb from entries scoped to this revision."""
     entries = tuple(
@@ -143,8 +162,20 @@ def _compose_revision_limb(
                     ),
                 ),
             ),
-        )
+    )
     evidence = _entry_evidence(census, entries)
+    failed_connected = next(
+        (proof_failures[entry.candidate_id] for entry in entries if entry.candidate_id in proof_failures),
+        None,
+    )
+    if failed_connected is not None:
+        return _refused_connected_claim_limb(
+            census=census,
+            modelo_id=modelo_id,
+            revision=revision,
+            evidence=evidence,
+            failure=failed_connected,
+        )
     expired = tuple(
         entry
         for entry in entries
@@ -195,6 +226,35 @@ def _compose_revision_limb(
     )
 
 
+def _connected_proof_failures(
+    census: SourceConnectivityCensusManifest,
+    *,
+    proof_authority: SourceConnectivityProofAuthority | None,
+) -> dict[str, _ConnectedProofFailure]:
+    """Revalidate every connected claim at the closure-report boundary."""
+    failures: dict[str, _ConnectedProofFailure] = {}
+    for entry in census.entries:
+        if entry.disposition is not SourceConnectivityDisposition.CONNECTED:
+            continue
+        if proof_authority is None:
+            failures[entry.candidate_id] = _ConnectedProofFailure(
+                entry=entry,
+                detail="no live source-connectivity proof authority was supplied",
+            )
+            continue
+        try:
+            SourceConnectivityCensusEntry.validate_with_authority(
+                entry.model_dump(mode="python"),
+                authority=proof_authority,
+            )
+        except ValidationError as error:
+            failures[entry.candidate_id] = _ConnectedProofFailure(
+                entry=entry,
+                detail=error.errors(include_url=False)[0]["msg"],
+            )
+    return failures
+
+
 def _candidate_applies_to_revision(
     candidate: RegistryDestinationCandidate,
     *,
@@ -221,6 +281,43 @@ def _entry_evidence(
         )
         for entry in entries
         for grounding in entry.grounding
+    )
+
+
+def _refused_connected_claim_limb(
+    *,
+    census: SourceConnectivityCensusManifest,
+    modelo_id,
+    revision: ModeloRevision,
+    evidence: tuple[RegistryClosureEvidence, ...],
+    failure: _ConnectedProofFailure,
+) -> RegistryClosureLimb:
+    """Refuse a connected claim whose current proof cannot support closure."""
+    reason = "conflicting_evidence" if "changed" in failure.detail.lower() else "missing_evidence"
+    entry = failure.entry
+    return RegistryClosureLimb(
+        modelo=modelo_id,
+        revision=revision.id,
+        name="source_connectivity",
+        outcome="refused",
+        evidence=evidence,
+        refusal=RegistryClosureRefusal(
+            reason=reason,
+            detail=(
+                "connected source claim does not pass current live proof authority: "
+                f"{entry.candidate_id}; {failure.detail}"
+            ),
+            disposition=RegistryClosureOwnerDisposition(
+                limb="source_connectivity",
+                state="blocked",
+                owner=entry.owner,
+                work_item=f"{census.census_id}:{entry.candidate_id}:live-proof",
+                reconsideration_condition=(
+                    "Restore the exact enrolled source, supported operator workflow, encrypted provenance, "
+                    "and executable evidence, then revalidate the connected claim."
+                ),
+            ),
+        ),
     )
 
 

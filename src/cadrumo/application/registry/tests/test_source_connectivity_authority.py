@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from hashlib import sha256
 from pathlib import Path
 
@@ -46,6 +46,8 @@ from .. import (
     LiveSourceConnectivityProofExpectation,
     RepositoryRootEvidenceDigestVerifier,
     build_calculation_route_source_ownership_catalogue,
+    compose_source_connectivity_coverage,
+    load_source_connectivity_census,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -392,6 +394,50 @@ def test_real_live_authority_refuses_changed_missing_and_wrong_role_evidence(
         SourceConnectivityOperatorReachabilityProof.model_validate(
             proof.operator_reachability.model_dump() | {"evidence": (wrong_role,)},
         )
+
+
+def test_coverage_composer_refuses_connected_claim_when_live_digest_changes(
+    tmp_path: Path,
+    secure_objects: SecureObjectRepository,
+    registry_authority,
+) -> None:
+    """A connected census row must pass its live proof again for every closure report."""
+    authority, connection, proof, root = _composition(tmp_path, secure_objects)
+    census = load_source_connectivity_census()
+    inventory = next(entry for entry in census.entries if entry.candidate_id == "inventory.stock-valuation")
+    connected = inventory.model_copy(
+        update={
+            "candidate_id": connection.candidate_id,
+            "disposition": SourceConnectivityDisposition.CONNECTED,
+            "connected_proof": proof,
+            "review_condition": None,
+            "bounded_follow_up": None,
+        },
+    )
+    connected_census = census.model_copy(update={"entries": (connected, *census.entries[1:])})
+
+    before_drift = compose_source_connectivity_coverage(
+        authority=registry_authority,
+        census=connected_census,
+        as_of=date(2026, 8, 24),
+        proof_authority=authority,
+    )
+    before_limb = next(limb for limb in before_drift.limbs if (limb.modelo, limb.revision) == ("100", "2025"))
+    assert (before_limb.outcome, before_limb.refusal) == ("satisfied", None)
+
+    evidence = proof.operator_reachability.evidence[0]
+    (root / evidence.locator.reference).write_bytes(b"changed after initial census validation")
+
+    after_drift = compose_source_connectivity_coverage(
+        authority=registry_authority,
+        census=connected_census,
+        as_of=date(2026, 8, 24),
+        proof_authority=authority,
+    )
+    after_limb = next(limb for limb in after_drift.limbs if (limb.modelo, limb.revision) == ("100", "2025"))
+
+    assert (after_limb.outcome, after_limb.refusal.reason) == ("refused", "conflicting_evidence")
+    assert "executable evidence is absent or changed" in after_limb.refusal.detail
 
 
 def test_real_live_authority_refuses_deferred_reserved_and_missing_revision(
