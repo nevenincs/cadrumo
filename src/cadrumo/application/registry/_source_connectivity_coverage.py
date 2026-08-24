@@ -18,6 +18,7 @@ from ...core import (
     SourceConnectivityDisposition,
     SourceConnectivityExpiryPosture,
     SourceConnectivityProofAuthority,
+    SourceConnectivityProofFailureCause,
 )
 from ...domain.calculations.registry import ModeloRevision, ValidatedRegistryAuthority
 from ._closure import (
@@ -60,6 +61,7 @@ class _ConnectedProofFailure:
     """One connected claim that no longer passes current live proof."""
 
     entry: SourceConnectivityCensusEntry
+    cause: SourceConnectivityProofFailureCause
     detail: str
 
 
@@ -239,6 +241,7 @@ def _connected_proof_failures(
         if proof_authority is None:
             failures[entry.candidate_id] = _ConnectedProofFailure(
                 entry=entry,
+                cause=SourceConnectivityProofFailureCause.LIVE_AUTHORITY_UNAVAILABLE,
                 detail="no live source-connectivity proof authority was supplied",
             )
             continue
@@ -250,6 +253,9 @@ def _connected_proof_failures(
         except ValidationError as error:
             failures[entry.candidate_id] = _ConnectedProofFailure(
                 entry=entry,
+                cause=SourceConnectivityProofFailureCause.from_validation_error_type(
+                    error.errors(include_url=False)[0]["type"],
+                ),
                 detail=error.errors(include_url=False)[0]["msg"],
             )
     return failures
@@ -295,7 +301,11 @@ def _refused_connected_claim_limb(
     failure: _ConnectedProofFailure,
 ) -> RegistryClosureLimb:
     """Refuse a connected claim whose current proof cannot support closure."""
-    reason = "conflicting_evidence" if "changed" in failure.detail.lower() else "missing_evidence"
+    reason = (
+        "conflicting_evidence"
+        if failure.cause is SourceConnectivityProofFailureCause.EXECUTABLE_EVIDENCE_DIGEST_MISMATCH
+        else "missing_evidence"
+    )
     entry = failure.entry
     return RegistryClosureLimb(
         modelo=modelo_id,

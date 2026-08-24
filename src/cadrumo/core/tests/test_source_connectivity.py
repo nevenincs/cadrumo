@@ -212,6 +212,7 @@ def test_core_facade_exposes_every_connectivity_owner() -> None:
         "SourceConnectivityGroundingLocatorKind",
         "SourceConnectivityOperatorReachabilityProof",
         "SourceConnectivityProofAuthority",
+        "SourceConnectivityProofFailureCause",
         "SourceConnectivityResolverOwnershipProof",
     }
     assert expected <= set(dir(core))
@@ -570,7 +571,7 @@ def test_authority_refuses_missing_or_changed_executable_evidence() -> None:
         connection,
         operator_reference="src/cadrumo/fake/tests/test_does_not_exist.py:999",
     )
-    with pytest.raises(ValidationError, match="absent or changed"):
+    with pytest.raises(ValidationError) as missing_error:
         core.SourceConnectivityCensusRow.validate_with_authority(
             _connected_payload(connection=connection, proof=missing_proof),
             authority=_CoreProtocolTestAuthority(
@@ -580,7 +581,10 @@ def test_authority_refuses_missing_or_changed_executable_evidence() -> None:
                 },
             ),
         )
-    with pytest.raises(ValidationError, match="absent or changed"):
+    assert missing_error.value.errors(include_url=False)[0]["type"] == (
+        core.SourceConnectivityProofFailureCause.EXECUTABLE_EVIDENCE_MISSING.value
+    )
+    with pytest.raises(ValidationError) as digest_mismatch_error:
         core.SourceConnectivityCensusRow.validate_with_authority(
             _connected_payload(connection=connection),
             authority=_CoreProtocolTestAuthority(
@@ -591,6 +595,12 @@ def test_authority_refuses_missing_or_changed_executable_evidence() -> None:
                 },
             ),
         )
+    assert digest_mismatch_error.value.errors(include_url=False)[0]["type"] == (
+        core.SourceConnectivityProofFailureCause.EXECUTABLE_EVIDENCE_DIGEST_MISMATCH.value
+    )
+    assert core.SourceConnectivityProofFailureCause.from_validation_error_type(
+        digest_mismatch_error.value.errors(include_url=False)[0]["type"],
+    ) is core.SourceConnectivityProofFailureCause.EXECUTABLE_EVIDENCE_DIGEST_MISMATCH
 
 
 def test_connected_proof_rejects_non_test_executable_evidence_shape() -> None:

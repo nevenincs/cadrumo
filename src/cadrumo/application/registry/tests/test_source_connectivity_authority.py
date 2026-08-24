@@ -26,6 +26,7 @@ from ....core import (
     SourceConnectivityGrounding,
     SourceConnectivityGroundingLocatorKind,
     SourceConnectivityOperatorReachabilityProof,
+    SourceConnectivityProofFailureCause,
     SourceConnectivityResolverOwnershipProof,
 )
 from ....domain.modelos import (
@@ -377,19 +378,28 @@ def test_real_live_authority_refuses_changed_missing_and_wrong_role_evidence(
     evidence = proof.operator_reachability.evidence[0]
     wrong_digest = evidence.model_copy(update={"content_digest": "e" * 64})
     changed_operator = proof.operator_reachability.model_copy(update={"evidence": (wrong_digest,)})
-    with pytest.raises(ValidationError, match="absent or changed"):
+    with pytest.raises(ValidationError) as wrong_digest_error:
         SourceConnectivityCensusRow.validate_with_authority(
             _payload(connection, proof.model_copy(update={"operator_reachability": changed_operator})),
             authority=authority,
         )
+    assert wrong_digest_error.value.errors(include_url=False)[0]["type"] == (
+        SourceConnectivityProofFailureCause.EXECUTABLE_EVIDENCE_DIGEST_MISMATCH.value
+    )
 
     (root / evidence.locator.reference).write_bytes(b"changed after proof")
-    with pytest.raises(ValidationError, match="absent or changed"):
+    with pytest.raises(ValidationError) as drift_error:
         SourceConnectivityCensusRow.validate_with_authority(_payload(connection, proof), authority=authority)
+    assert drift_error.value.errors(include_url=False)[0]["type"] == (
+        SourceConnectivityProofFailureCause.EXECUTABLE_EVIDENCE_DIGEST_MISMATCH.value
+    )
 
     (root / evidence.locator.reference).unlink()
-    with pytest.raises(ValidationError, match="absent or changed"):
+    with pytest.raises(ValidationError) as deletion_error:
         SourceConnectivityCensusRow.validate_with_authority(_payload(connection, proof), authority=authority)
+    assert deletion_error.value.errors(include_url=False)[0]["type"] == (
+        SourceConnectivityProofFailureCause.EXECUTABLE_EVIDENCE_MISSING.value
+    )
 
     wrong_role = evidence.model_copy(update={"role": SourceConnectivityExecutableEvidenceRole.ENCRYPTED_REVISION})
     with pytest.raises(ValidationError, match="must carry role"):
@@ -398,12 +408,22 @@ def test_real_live_authority_refuses_changed_missing_and_wrong_role_evidence(
         )
 
 
-def test_coverage_composer_refuses_connected_claim_when_live_digest_changes(
+@pytest.mark.parametrize(
+    ("mutation", "expected_reason", "expected_detail"),
+    (
+        ("digest_drift", "conflicting_evidence", "digest does not match"),
+        ("evidence_deletion", "missing_evidence", "evidence is missing"),
+    ),
+)
+def test_coverage_composer_classifies_live_executable_evidence_failures(
     tmp_path: Path,
     secure_objects: SecureObjectRepository,
     registry_authority,
+    mutation: str,
+    expected_reason: str,
+    expected_detail: str,
 ) -> None:
-    """A connected census row must pass its live proof again for every closure report."""
+    """Live proof deletion and digest drift must refuse through different closed causes."""
     authority, connection, proof, root = _composition(tmp_path, secure_objects)
     census = load_source_connectivity_census()
     inventory = next(entry for entry in census.entries if entry.candidate_id == "inventory.stock-valuation")
@@ -428,7 +448,11 @@ def test_coverage_composer_refuses_connected_claim_when_live_digest_changes(
     assert (before_limb.outcome, before_limb.refusal) == ("satisfied", None)
 
     evidence = proof.operator_reachability.evidence[0]
-    (root / evidence.locator.reference).write_bytes(b"changed after initial census validation")
+    evidence_path = root / evidence.locator.reference
+    if mutation == "digest_drift":
+        evidence_path.write_bytes(b"changed after initial census validation")
+    else:
+        evidence_path.unlink()
 
     after_drift = compose_source_connectivity_coverage(
         authority=registry_authority,
@@ -438,8 +462,8 @@ def test_coverage_composer_refuses_connected_claim_when_live_digest_changes(
     )
     after_limb = next(limb for limb in after_drift.limbs if (limb.modelo, limb.revision) == ("100", "2025"))
 
-    assert (after_limb.outcome, after_limb.refusal.reason) == ("refused", "conflicting_evidence")
-    assert "executable evidence is absent or changed" in after_limb.refusal.detail
+    assert (after_limb.outcome, after_limb.refusal.reason) == ("refused", expected_reason)
+    assert expected_detail in after_limb.refusal.detail
 
 
 def test_real_live_authority_refuses_deferred_reserved_and_missing_revision(

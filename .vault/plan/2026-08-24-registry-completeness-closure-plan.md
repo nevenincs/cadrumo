@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:67d77f1c816099c1360e5b40056f8e75dbc98c479f748658cb30bb124c9dc62d'
+body_hash: 'sha256:7e1fb67559d2449c847fba4df873fee2768d5fba1dd6a93c4cd5d296293f1a59'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -62,7 +62,7 @@ Compose one typed cross-authority report from validated registry coverage, sourc
 - [x] `W01.P02.S46` - Apply expiry semantics to every scoped census disposition and refuse expired terminal evidence, with mutation-bite tests.; `src/cadrumo/application/registry/`.
 - [x] `W01.P02.S47` - Add revision filing-year and period scope to census destinations and require exact scoped source mapping with Modelo 100 and 193 cross-satisfaction regressions.; `src/cadrumo/application/registry/`.
 - [x] `W01.P02.S48` - Prove undeclared-grade refusals reject a non-null declared grade through direct construction and revalidated mutation.; `src/cadrumo/application/registry/tests/`.
-- [ ] `W01.P02.S49` - Replace substring-based connected-proof failure taxonomy with structured cause mapping that distinguishes missing proof from digest conflict, with real deletion and drift composer regressions.; `src/cadrumo/application/registry/`.
+- [x] `W01.P02.S49` - Replace substring-based connected-proof failure taxonomy with structured cause mapping that distinguishes missing proof from digest conflict, with real deletion and drift composer regressions.; `src/cadrumo/application/registry/`.
 - [x] `W01.P02.S50` - Parameterize undeclared-grade refusal contradictions across every authority grade and prove weakened-guard regression refusal.; `src/cadrumo/application/registry/tests/`.
 
 ## Wave `W02` - filing-gap adjudication and owner routing

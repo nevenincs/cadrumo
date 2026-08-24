@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:24eadac0b9f488f65193b16e5c265902912dfbf026ec9a5a1220b6d22ac84783'
+body_hash: 'sha256:714c03337de9a193740027dbfb9fcde6536cda98e679cec7b429396707b21901'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -26,6 +26,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S46]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S47]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S48]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S49]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S50]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
@@ -97,6 +98,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P02-S46` - Apply expiry semantics to every scoped census disposition and refuse expired terminal evidence, with mutation-bite tests.
 - `2026-08-24-registry-completeness-closure-W01-P02-S47` - Add revision filing-year and period scope to census destinations and require exact scoped source mapping with Modelo 100 and 193 cross-satisfaction regressions.
 - `2026-08-24-registry-completeness-closure-W01-P02-S48` - Prove undeclared-grade refusals reject a non-null declared grade through direct construction and revalidated mutation.
+- `2026-08-24-registry-completeness-closure-W01-P02-S49` - Replace substring-based connected-proof failure taxonomy with structured cause mapping that distinguishes missing proof from digest conflict, with real deletion and drift composer regressions.
 - `2026-08-24-registry-completeness-closure-W01-P02-S50` - Parameterize undeclared-grade refusal contradictions across every authority grade and prove weakened-guard regression refusal.
 
 ### plan
