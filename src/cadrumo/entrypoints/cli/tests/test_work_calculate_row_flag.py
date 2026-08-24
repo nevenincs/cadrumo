@@ -417,6 +417,9 @@ class TestValidateM347Threshold:
 # ---------------------------------------------------------------------------
 
 
+_ROW_FLAG_PASSPHRASE = "row-flag-revision-view-passphrase"  # noqa: S105 - synthetic test credential
+
+
 class TestRevisionViewSurfacesDetailRows:
     """Persisted ``detail_rows`` must render in the ``work revision`` view.
 
@@ -429,16 +432,35 @@ class TestRevisionViewSurfacesDetailRows:
 
     @staticmethod
     def _run_cli(storage_root: Path, argv: list[str]) -> subprocess.CompletedProcess[str]:
+        import json
         import subprocess
         import sys
         import textwrap
+
+        # `config profile create` mints custody, so it needs the operator passphrase
+        # and its confirmation. CADRUMO_SECRET_PASSPHRASE below no longer unlocks
+        # anything -- the machine-secret rule refuses an environment fallback for a
+        # caller-supplied secret -- so it arrives on the bounded strict-JSON channel.
+        stdin_payload: str | None = None
+        creating_profile = "profile" in argv and "create" in argv
+        if creating_profile and "--secrets-stdin" not in argv:
+            argv = [*argv, "--secrets-stdin"]
+            stdin_payload = json.dumps(
+                {
+                    "passphrase": _ROW_FLAG_PASSPHRASE,
+                    "passphrase_confirmation": _ROW_FLAG_PASSPHRASE,
+                }
+            )
+        elif "login" in argv and "--secrets-stdin" not in argv:
+            argv = [*argv, "--secrets-stdin"]
+            stdin_payload = json.dumps({"passphrase": _ROW_FLAG_PASSPHRASE})
 
         code = f"""
             import os, sys
             os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = {str(storage_root)!r}
             os.environ["CADRUMO_SECRET_STORE_BACKEND"] = "unsecured"
             os.environ["CADRUMO_SECRET_STORE_DIR"] = {str(storage_root / "fallback-store")!r}
-            os.environ["CADRUMO_SECRET_PASSPHRASE"] = "row-flag-revision-view-passphrase"
+            os.environ["CADRUMO_SECRET_PASSPHRASE"] = {_ROW_FLAG_PASSPHRASE!r}
             sys.argv = ["cadrumo", *{argv!r}]
             from cadrumo.entrypoints.cli import main
 
@@ -447,15 +469,23 @@ class TestRevisionViewSurfacesDetailRows:
             except SystemExit as exit_:
                 raise SystemExit(exit_.code)
             """
-        return subprocess.run(
+        completed = subprocess.run(
             [sys.executable, "-c", textwrap.dedent(code)],
             capture_output=True,
             encoding="utf-8",
             errors="replace",
             text=True,
+            input=stdin_payload,
             timeout=300,
             check=False,
         )
+        if creating_profile and completed.returncode == 0:
+            # Creation closes its own session, so every verb after it would refuse
+            # with "you are not logged in". The storage root is shared across these
+            # subprocesses, so unlocking here persists into the next invocation.
+            label = argv[argv.index("create") + 1]
+            TestRevisionViewSurfacesDetailRows._run_cli(storage_root, ["config", "login", label])
+        return completed
 
     def test_work_calculate_help_documents_quoted_m349_legal_name(self, tmp_path: Path) -> None:
         """The real CLI help shows the shell-safe M349 spaced-name row contract."""
