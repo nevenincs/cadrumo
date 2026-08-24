@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:29ab57bcf538e5efa233473bc961922536c03f1e24a3ca8273095f03aa5fcdaa'
+body_hash: 'sha256:cfc391ca82586d9e728ba5ee6c2783241d47352d41f3b32caeda10a244b1ab65'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -118,6 +118,7 @@ Add or reconcile the adjudicated remedies in each existing owning plan and prove
 - [ ] `W02.P04.S27` - Enroll every source and casilla remedy in source-casilla-integration without duplicating closed work; `.vault/plan/2026-08-22-source-casilla-integration-plan.md`.
 - [ ] `W02.P04.S28` - Enroll every official-layout and emitted-byte remedy in aeat-export-fragment-generator-authority without duplicating closed work; `.vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md`.
 - [ ] `W02.P04.S29` - Prove every live filing gap has exactly one terminal refusal or one existing-plan owner and reconsideration condition; `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py`.
+- [ ] `W02.P04.S73` - Adjudicate real below-filing source-connectivity participation and evidence for candidate revisions starting with Modelo 036, route accepted evidence or an ADR-authorized disposition into source-casilla-integration, and return the canonical proof to S72 and S11 without treating an empty candidate set as satisfied; `.vault/reference/; .vault/adr/; .vault/plan/2026-08-22-source-casilla-integration-plan.md; src/cadrumo/_data/source_connectivity/census.toml`.
 
 ## Wave `W03` - semantic proof and predecessor closure
 

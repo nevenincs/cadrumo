@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:8475eee6a23306a11d17bc10deee751a9dc926cca83086c5b0b72382160c1637'
+body_hash: 'sha256:25047d791cc2ecaaf7efa338ca1aac7d4ff615dd59e60c8ca59208e2cc521fa4'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -103,6 +103,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s69-independent-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s70-evidence-reconciliation-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s71-independent-post-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s72-grade-scoping-post-review-audit]]'
 ---
 
 # `registry-completeness-closure` feature index
@@ -164,6 +165,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s69-independent-post-review-audit` - `registry-completeness-closure` audit: `S69 real closure outcome proof`
 - `2026-08-24-registry-completeness-closure-s70-evidence-reconciliation-post-review-audit` - `registry-completeness-closure` audit: `S70 evidence reconciliation post review`
 - `2026-08-24-registry-completeness-closure-s71-independent-post-review-audit` - `registry-completeness-closure` audit: `verify plan-derived closure criterion and tracking state`
+- `2026-08-24-registry-completeness-closure-s72-grade-scoping-post-review-audit` - `registry-completeness-closure` audit: `S72 filing-grade scoping independent post-review`
 
 ### exec
 
