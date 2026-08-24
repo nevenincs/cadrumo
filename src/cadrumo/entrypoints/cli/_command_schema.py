@@ -165,7 +165,6 @@ class CommandRegistrationMetadata:
     parameters_by_language: tuple[tuple[str, tuple[CommandParameterMetadata, ...] | None], ...]
     help_by_language: tuple[tuple[str, str], ...]
     hidden: bool | None
-    deprecated: bool | str | None
     policy: CommandPolicyMetadata | None
     handler_owner: str | None
     source_sha256: str | None
@@ -302,7 +301,6 @@ def _command_registration_projection(language: str) -> CommandRegistrationProjec
                 ((language, parameters),),
                 ((language, tr(spec.help_key.value)),),
                 spec.invocation.hidden,
-                None if spec.invocation.deprecated_key is None else tr(spec.invocation.deprecated_key.value),
                 policy,
                 owner,
                 None,

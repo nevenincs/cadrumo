@@ -540,7 +540,6 @@ class InvocationSpec:
     add_help_option: bool = True
     add_completion: bool = False
     hidden: bool = False
-    deprecated_key: TranslationKey | None = None
     context_parameter: str | None = None
     terminal_behavior: Literal["introspection", "executable"] | None = None
 

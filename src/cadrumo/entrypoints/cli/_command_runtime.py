@@ -231,11 +231,6 @@ def _behavior_wrapper(spec: CommandSpec) -> Callable[..., object]:
     return invoke
 
 
-def _deprecated(spec: CommandSpec) -> bool | str:
-    key = spec.invocation.deprecated_key
-    return False if key is None else tr(key.value)
-
-
 class _SpecNodeFactory:
     """Stable callable identity for one lazily materialized spec node."""
 
@@ -264,7 +259,6 @@ def _lazy_children(graph: CommandSpecGraph, parent: CommandSpec) -> tuple[LazySu
                 help=tr(child.help_key.value),
                 short_help=None if child.short_help_key is None else tr(child.short_help_key.value),
                 hidden=child.invocation.hidden,
-                deprecated=_deprecated(child),
             )
         for child in children
     )
@@ -283,7 +277,6 @@ def _node_app(graph: CommandSpecGraph, key: str) -> typer.Typer:
             help=tr(spec.help_key.value),
             short_help=None if spec.short_help_key is None else tr(spec.short_help_key.value),
             hidden=spec.invocation.hidden,
-            deprecated=_deprecated(spec),
         )(_behavior_wrapper(spec))
         return app
 

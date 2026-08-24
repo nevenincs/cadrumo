@@ -195,7 +195,6 @@ class LazySubcommand:
     __slots__ = (
         "_command",
         "_decorate",
-        "_deprecated",
         "_help",
         "_hidden",
         "_optional_unavailable",
@@ -216,7 +215,6 @@ class LazySubcommand:
         help: str | None = None,
         hidden: bool = False,
         short_help: str | None = None,
-        deprecated: bool | str = False,
     ) -> None:
         if not name:
             raise ValueError("a lazy command requires an operator-facing name")
@@ -228,7 +226,6 @@ class LazySubcommand:
         self._help = help
         self._hidden = hidden
         self._short_help = short_help
-        self._deprecated = deprecated
         self._command: TyCommand | None = None
 
     def load(self) -> TyCommand:
@@ -296,11 +293,6 @@ class LazySubcommand:
         """Return the immutable explicit short-help metadata, if any."""
         return self._short_help
 
-    @property
-    def deprecated(self) -> bool | str:
-        """Return the immutable Click deprecation metadata."""
-        return self._deprecated
-
     def get_short_help_str(self, limit: int = 45) -> str:
         """Render short help with the same rules as Click ``Command``."""
         if self._short_help:
@@ -309,9 +301,6 @@ class LazySubcommand:
             text = make_default_short_help(self._help, limit)
         else:
             text = ""
-        if self._deprecated:
-            marker = f"(DEPRECATED: {self._deprecated})" if isinstance(self._deprecated, str) else "(DEPRECATED)"
-            text = f"{text} {marker}"
         return text.strip()
 
 
