@@ -178,9 +178,11 @@ def test_an_artifact_restore_warns_that_the_credential_did_not_come_back(tmp_pat
         captured: list[ProfileRecoveryEnrollment] = []
         phrases: list[str] = []
 
-        def _hand_over(enrollment: ProfileRecoveryEnrollment) -> None:
-            phrases.append(str(enrollment.recovery_key.mnemonic))
+        def _hand_over(enrollment: ProfileRecoveryEnrollment) -> str:
+            mnemonic = str(enrollment.recovery_key.mnemonic)
+            phrases.append(mnemonic)
             captured.append(enrollment)
+            return mnemonic
 
         outcome = register_profile_with_credentials(
             label="artifact-subject",

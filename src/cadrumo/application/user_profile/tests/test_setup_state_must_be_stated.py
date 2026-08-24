@@ -55,7 +55,9 @@ def test_a_record_loaded_from_disk_is_never_refused(tmp_path: Path) -> None:
     when it validates a payload.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        outcome = register_profile_with_credentials(label=_LABEL, passphrase=_PASSPHRASE)
+        outcome = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSPHRASE
+        )
         login_profile(name=outcome.label, passphrase_callback=lambda: _PASSPHRASE)
 
         loaded = _live_store(outcome.profile_id).load().record

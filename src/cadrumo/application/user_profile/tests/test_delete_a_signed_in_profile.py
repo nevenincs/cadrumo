@@ -43,7 +43,9 @@ def test_a_freshly_registered_profile_passes_the_deletion_preflight(tmp_path: Pa
     the narrowest proof that registration supplies it.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        outcome = register_profile_with_credentials(label=_LABEL, passphrase=_PASSPHRASE)
+        outcome = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSPHRASE
+        )
 
         journal = ProfileCapsuleLifecycle().prepare_delete(profile_id=UUID(outcome.profile_id))
 
@@ -63,7 +65,9 @@ def test_the_profile_the_operator_is_signed_into_can_be_deleted(tmp_path: Path) 
     with no session close in between.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        outcome = register_profile_with_credentials(label=_LABEL, passphrase=_PASSPHRASE)
+        outcome = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSPHRASE
+        )
         login_profile(name=outcome.label, passphrase_callback=lambda: _PASSPHRASE)
         lifecycle = ProfileCapsuleLifecycle()
 

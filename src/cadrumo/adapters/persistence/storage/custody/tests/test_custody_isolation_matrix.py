@@ -45,7 +45,9 @@ _PASSPHRASE_B = "isolation-subject-b-operator-secret"  # noqa: S105 - synthetic 
 
 
 def _register(label: str, passphrase: str) -> UUID:
-    outcome = register_profile_with_credentials(label=label, passphrase=passphrase)
+    outcome = register_profile_with_credentials(
+        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=label, passphrase=passphrase
+    )
     return UUID(outcome.profile_id)
 
 

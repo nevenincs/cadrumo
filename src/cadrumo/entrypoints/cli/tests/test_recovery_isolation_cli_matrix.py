@@ -56,13 +56,21 @@ def test_a_foreign_archive_restores_its_own_profile_without_touching_the_active_
     selected profile and A's capsule lands beside it under A's own identity.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path / "a-root"):
-        register_profile_with_credentials(label="Isolation CLI A", passphrase=_test_passphrase())
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Isolation CLI A",
+            passphrase=_test_passphrase(),
+        )
         archive_path = tmp_path / "a.cadrumo-bucket.tar.gz"
         r_export = _archive_export("Isolation CLI A", archive_path)
         assert r_export.exit_code == 0, r_export.output
 
     with isolated_profile_storage_root(tmp_path=tmp_path / "b-root"):
-        register_profile_with_credentials(label="Isolation CLI B", passphrase=_PASSPHRASE_B)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Isolation CLI B",
+            passphrase=_PASSPHRASE_B,
+        )
         r_restore = _restore_from(archive_path, label="Isolation CLI A restored")
         assert r_restore.exit_code == 0, r_restore.output
 
@@ -77,12 +85,20 @@ def test_the_active_profiles_passphrase_cannot_open_the_restored_profile(
 ) -> None:
     """B's passphrase refuses at A's login — the CLI door holds the boundary."""
     with isolated_profile_storage_root(tmp_path=tmp_path / "a-root"):
-        register_profile_with_credentials(label="Isolation CLI A", passphrase=_test_passphrase())
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Isolation CLI A",
+            passphrase=_test_passphrase(),
+        )
         archive_path = tmp_path / "a.cadrumo-bucket.tar.gz"
         assert _archive_export("Isolation CLI A", archive_path).exit_code == 0
 
     with isolated_profile_storage_root(tmp_path=tmp_path / "b-root"):
-        register_profile_with_credentials(label="Isolation CLI B", passphrase=_PASSPHRASE_B)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Isolation CLI B",
+            passphrase=_PASSPHRASE_B,
+        )
         assert _restore_from(archive_path, label="Isolation CLI A restored").exit_code == 0
 
         refused = _invoke(

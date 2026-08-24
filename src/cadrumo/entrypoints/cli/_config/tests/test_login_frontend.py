@@ -132,7 +132,7 @@ def _a_profile_exists() -> None:
     from .._manager_frontend import attempt_registration
 
     attempt = attempt_registration(
-        "Routing Subject", "routing-frontend-operator-secret", "en", lambda _enrollment: None
+        "Routing Subject", "routing-frontend-operator-secret", "en", lambda enrollment: enrollment.recovery_key.mnemonic
     )
     assert attempt.outcome is not None, f"the fixture profile must exist, but: {attempt.refusal}"
     # Registration leaves the profile unlocked, and the session is
@@ -252,8 +252,8 @@ def test_authenticated_profile_replaces_the_invocations_stale_storage_route(tmp_
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         operator_secret = "routing-handover-operator-secret"  # noqa: S105 - synthetic test fixture
-        first = attempt_registration("First routing subject", operator_secret, "en", lambda _enrollment: None)
-        second = attempt_registration("Second routing subject", operator_secret, "en", lambda _enrollment: None)
+        first = attempt_registration("First routing subject", operator_secret, "en", lambda enrollment: enrollment.recovery_key.mnemonic)
+        second = attempt_registration("Second routing subject", operator_secret, "en", lambda enrollment: enrollment.recovery_key.mnemonic)
         assert first.outcome is not None, first.refusal
         assert second.outcome is not None, second.refusal
 

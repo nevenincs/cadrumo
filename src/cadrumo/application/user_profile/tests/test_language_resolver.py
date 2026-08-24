@@ -37,6 +37,7 @@ def isolated_language_state(tmp_path: Path) -> Iterator[str]:
         isolated_profile_storage_root(tmp_path=tmp_path),
     ):
         outcome = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Output language resolver",
             passphrase=test_value,
         )

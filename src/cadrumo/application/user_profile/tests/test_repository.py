@@ -84,6 +84,7 @@ def _registered_record_session(
     """Register a real capsule and bind its unlocked record session."""
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Current record repository subject",
             passphrase=_PROFILE_PASSPHRASE,
             facts=facts,
@@ -130,6 +131,7 @@ def test_profile_record_repository_reads_the_current_record_through_bound_sessio
 def test_profile_record_repository_requires_an_authenticated_record_session(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Unauthenticated record subject",
             passphrase=_PROFILE_PASSPHRASE,
         )

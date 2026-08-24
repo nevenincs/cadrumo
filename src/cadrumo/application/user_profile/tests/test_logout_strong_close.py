@@ -54,7 +54,9 @@ def _close_live_login() -> None:
 
 def _register_and_login(storage_root: Path) -> str:
     """Register one real profile and leave it authenticated in this process."""
-    outcome = register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+    outcome = register_profile_with_credentials(
+        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+    )
     login_profile(name=outcome.profile_id, passphrase_callback=lambda: _PASSWORD)
     assert master_key.current_active_bucket_session() is not None
     assert read_pointer(storage_root) is not None

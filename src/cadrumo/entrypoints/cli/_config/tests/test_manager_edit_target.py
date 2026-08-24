@@ -70,7 +70,7 @@ def _register(label: str) -> str:
     """
     from .._manager_frontend import attempt_registration
 
-    attempt = attempt_registration(label, _OPERATOR_SECRET, "en", lambda _enrollment: None)
+    attempt = attempt_registration(label, _OPERATOR_SECRET, "en", lambda enrollment: enrollment.recovery_key.mnemonic)
     assert attempt.outcome is not None, f"the fixture profile must exist, but: {attempt.refusal}"
     return attempt.outcome.bucket_id
 

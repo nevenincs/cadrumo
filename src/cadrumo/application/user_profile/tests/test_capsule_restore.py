@@ -37,7 +37,10 @@ def _published_capsule(tmp_path: Path, handed: list[str] | None = None) -> tuple
     outcome = register_profile_with_credentials(
         label=_LABEL,
         passphrase=_PASSPHRASE,
-        recovery_handover=None if handed is None else (lambda e: handed.append(e.recovery_key.mnemonic)),
+        recovery_handover=lambda enrollment: (
+            (handed.append(enrollment.recovery_key.mnemonic) if handed is not None else None)
+            or enrollment.recovery_key.mnemonic
+        ),
     )
     material = load_committed_profile_password_material(UUID(outcome.profile_id))
     return outcome.profile_id, material.capsule_path

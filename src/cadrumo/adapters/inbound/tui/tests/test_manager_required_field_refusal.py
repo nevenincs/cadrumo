@@ -18,8 +18,8 @@ import pytest
 from textual.widgets import Input
 
 from .....application.user_profile import (
-    login_profile,
     build_profile_overview,
+    login_profile,
     register_profile_with_credentials,
 )
 from .....core import require_active_bucket_id
@@ -95,7 +95,9 @@ async def _submit(app, pilot, path: str, value: str) -> None:
 async def test_a_blank_submission_on_a_required_field_does_not_clear_it(tmp_path) -> None:
     """The value on the record must be exactly what it was before the edit."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
         _persist(_REQUIRED_PATH, "12345678Z")
         assert _stored().get(_REQUIRED_PATH) == "12345678Z", "fixture must start with a value to lose"
 
@@ -113,7 +115,9 @@ async def test_a_blank_submission_on_a_required_field_does_not_clear_it(tmp_path
 async def test_a_whitespace_only_submission_on_a_required_field_does_not_clear_it(tmp_path) -> None:
     """Spaces are blank to every reader, so they must not delete the value either."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
         _persist(_REQUIRED_PATH, "12345678Z")
 
         app = ProfileManagerApp(_live_overview(), persist=_persist)
@@ -134,7 +138,9 @@ async def test_a_blank_submission_on_an_optional_field_still_clears_it(tmp_path)
     narrow rather than merely present.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
         _persist(_OPTIONAL_PATH, "Ada Lovelace")
         assert _stored().get(_OPTIONAL_PATH) == "Ada Lovelace"
 
@@ -159,7 +165,9 @@ async def test_a_write_door_refusal_is_reported_rather_than_taking_the_screen_do
     on the profile's lifecycle state.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
 
         app = ProfileManagerApp(_live_overview(), persist=_persist)
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:

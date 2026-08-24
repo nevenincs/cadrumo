@@ -59,6 +59,7 @@ def _base_interpreter_pythonpath() -> str:
     """Preserve the active environment's imports without launching its stub."""
     return os.pathsep.join(entry for entry in sys.path if entry)
 
+
 _HARNESS = dedent(
     """
     import json
@@ -525,15 +526,18 @@ def _register(
     captured: list[ProfileRecoveryEnrollment] = []
     phrases: list[str] = []
 
-    def handover(enrollment: ProfileRecoveryEnrollment) -> None:
-        phrases.append(str(enrollment.recovery_key.mnemonic))
-        captured.append(enrollment)
+    def handover(enrollment: ProfileRecoveryEnrollment) -> str:
+        mnemonic = str(enrollment.recovery_key.mnemonic)
+        if recovery:
+            phrases.append(mnemonic)
+            captured.append(enrollment)
+        return mnemonic
 
     with override_settings(cadrumo_local_storage_root=storage_root):
         outcome = register_profile_with_credentials(
             label=label,
             passphrase=_PROFILE_SECRET,
-            recovery_handover=handover if recovery else None,
+            recovery_handover=handover,
         )
         close_active_bucket_session()
     return outcome, captured, phrases
@@ -641,22 +645,42 @@ def _run_profile_create_with_recovery(root: Path, *, channel: str, payload: str)
                 "recovery_handoff_handle": handles[0],
                 "recovery_verification_handle": handles[1],
             }
-            args = [*command, *(('--secrets-stdin',) if channel == 'stdin' else ())]
+            args = [*command, *(("--secrets-stdin",) if channel == "stdin" else ())]
             result = subprocess.run(  # noqa: S603 - fixed interpreter and test-owned command
                 [bootstrap_interpreter(), "-c", _WINDOWS_HANDLE_HARNESS, json.dumps(harness_payload), *args],
-                cwd=SRC_CADRUMO, env=env, input=payload if channel == "stdin" else None,
-                text=True, encoding="utf-8", capture_output=True, check=False, timeout=45,
-                close_fds=True, startupinfo=startup,
+                cwd=SRC_CADRUMO,
+                env=env,
+                input=payload if channel == "stdin" else None,
+                text=True,
+                encoding="utf-8",
+                capture_output=True,
+                check=False,
+                timeout=45,
+                close_fds=True,
+                startupinfo=startup,
             )
         else:
             descriptors = [handoff_writer, verification_reader, *(() if channel == "stdin" else (passphrase_reader,))]
-            args = [*command, *(('--secrets-stdin',) if channel == 'stdin' else ('--secrets-fd', str(passphrase_reader))),
-                    '--recovery-handoff-fd', str(handoff_writer), '--recovery-verification-fd', str(verification_reader)]
+            args = [
+                *command,
+                *(("--secrets-stdin",) if channel == "stdin" else ("--secrets-fd", str(passphrase_reader))),
+                "--recovery-handoff-fd",
+                str(handoff_writer),
+                "--recovery-verification-fd",
+                str(verification_reader),
+            ]
             harness_payload = {"settings": settings, "assert_closed_descriptors": descriptors}
             result = subprocess.run(  # noqa: S603 - fixed interpreter and test-owned command
-                [sys.executable, "-c", _HARNESS, json.dumps(harness_payload), *args], cwd=SRC_CADRUMO, env=env,
-                input=payload if channel == "stdin" else None, text=True, encoding="utf-8", capture_output=True,
-                check=False, timeout=45, pass_fds=tuple(descriptors),
+                [sys.executable, "-c", _HARNESS, json.dumps(harness_payload), *args],
+                cwd=SRC_CADRUMO,
+                env=env,
+                input=payload if channel == "stdin" else None,
+                text=True,
+                encoding="utf-8",
+                capture_output=True,
+                check=False,
+                timeout=45,
+                pass_fds=tuple(descriptors),
             )
     finally:
         for descriptor in (handoff_writer, verification_reader, passphrase_reader, passphrase_writer):

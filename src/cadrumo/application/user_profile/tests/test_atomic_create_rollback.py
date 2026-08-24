@@ -68,6 +68,7 @@ _PASSPHRASE = "atomic-create-rollback-operator-secret"  # noqa: S105 - synthetic
 def _register(label: str, *, facts: Mapping[str, str]) -> None:
     """Run the real create door for ``label`` against ``facts``."""
     register_profile_with_credentials(
+        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label=label,
         passphrase=_PASSPHRASE,
         facts=tuple(UserProfileFact(path=path, value=value) for path, value in facts.items()),

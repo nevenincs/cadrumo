@@ -19,13 +19,13 @@ from textual.widgets import Input
 
 from .....adapters.persistence.storage.custody import ProfileCustodyRefusedError
 from .....application.user_profile import (
+    login_profile,
     logout_active_profile,
     register_profile_with_credentials,
     restore_profile_from_source_with_password,
 )
-from .....entrypoints.cli._config._login_frontend import attempt_login
 from .....tests.secure_sql import isolated_profile_storage_root
-from .. import LoginApp, LoginChoice
+from .. import LoginApp, LoginAttempt, LoginChoice
 
 pytestmark = [
     pytest.mark.integration,
@@ -36,8 +36,13 @@ _TERMINAL_SIZE = (140, 60)
 _PASSWORD = "login-restored-operator-secret"  # noqa: S105 - synthetic test fixture
 
 
+def _authenticate(profile_id: str, passphrase: str) -> LoginAttempt:
+    """Drive the public login door through the adapter's injected contract."""
+    return LoginAttempt(outcome=login_profile(name=profile_id, passphrase_callback=lambda: passphrase))
+
+
 def _screen(choices: list[LoginChoice]) -> LoginApp:
-    return LoginApp(choices=choices, authenticate=attempt_login)
+    return LoginApp(choices=choices, authenticate=_authenticate)
 
 
 async def _unlock_with(pilot, password: str) -> None:
@@ -63,7 +68,11 @@ async def test_a_restored_profile_presents_and_unlocks_on_the_login_screen(
     """A profile that arrives by restore (not registration) is a login citizen."""
 
     with isolated_profile_storage_root(tmp_path=tmp_path / "source-root") as source_root:
-        outcome = register_profile_with_credentials(label="Restore-born", passphrase=_PASSWORD)
+        outcome = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Restore-born",
+            passphrase=_PASSWORD,
+        )
         capsule = source_root / "buckets" / outcome.profile_id
         restored = restore_profile_from_source_with_password(
             label="Restore-born",

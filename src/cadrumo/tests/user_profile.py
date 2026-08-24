@@ -14,9 +14,12 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from ..application.user_profile import conditional_profile_missing_required
-from ..application.user_profile._lifecycle import ProfileCapsuleLifecycle
-from ..application.user_profile._validation import COMPLETENESS_ISSUE_CODES, ProfileValidationService
+from ..application.user_profile import (
+    COMPLETENESS_ISSUE_CODES,
+    ProfileCapsuleLifecycle,
+    ProfileValidationService,
+    conditional_profile_missing_required,
+)
 from ..core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ..core.hashing import sha256_hex
 from ..core.identity import nif_check_letter
@@ -242,6 +245,7 @@ def register_cli_profile(*, label: str, facts: Mapping[str, str] | None = None, 
     # nothing here can hide a calibration regression.
     with override_settings(cadrumo_profile_kdf_measure_calibration=False):
         outcome = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=label,
             passphrase=passphrase,
             facts=tuple(UserProfileFact(path=path, value=value) for path, value in merged.items() if value),

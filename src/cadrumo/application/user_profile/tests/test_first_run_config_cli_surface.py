@@ -70,7 +70,11 @@ def test_setup_profile_roundtrip(tmp_path: Path) -> None:
     """
     label = "operator"
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=label, passphrase=dev_test_database_password())
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=label,
+            passphrase=dev_test_database_password(),
+        )
 
         show = invoke_cached_cli(["--format", "json", "config", "profile", "list"])
 

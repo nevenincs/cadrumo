@@ -24,6 +24,7 @@ from uuid import UUID
 import anyio
 import pytest
 
+from cadrumo.adapters.persistence.storage import master_key
 from cadrumo.adapters.persistence.storage.custody import (
     load_committed_profile_password_material,
     unlock_profile_custody,
@@ -32,7 +33,6 @@ from cadrumo.application.user_profile import (
     profile_bind_bucket_session,
     register_profile_with_credentials,
 )
-from cadrumo.adapters.persistence.storage import master_key
 from cadrumo.domain.user_profile import UserProfileFact
 
 from ... import iter_operator_rules, iter_personas, iter_skill_documents, operator_rules_text
@@ -299,7 +299,12 @@ def test_whoami_identity_resolves_the_active_profile_label(tmp_path: Any) -> Non
     from cadrumo.tests.secure_sql import isolated_profile_storage_root
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        outcome = register_profile_with_credentials(label="Erika", passphrase=_PROFILE_PASSPHRASE, facts=_READY_FACTS)
+        outcome = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Erika",
+            passphrase=_PROFILE_PASSPHRASE,
+            facts=_READY_FACTS,
+        )
         with _authenticated_current_profile(
             profile_id=outcome.profile_id,
             passphrase=_PROFILE_PASSPHRASE,
@@ -381,7 +386,12 @@ def test_whoami_tool_call_returns_the_active_profile_label(tmp_path: Any) -> Non
         return
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        outcome = register_profile_with_credentials(label="Erika", passphrase=_PROFILE_PASSPHRASE, facts=_READY_FACTS)
+        outcome = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Erika",
+            passphrase=_PROFILE_PASSPHRASE,
+            facts=_READY_FACTS,
+        )
         with _authenticated_current_profile(
             profile_id=outcome.profile_id,
             passphrase=_PROFILE_PASSPHRASE,
@@ -417,7 +427,12 @@ def test_floor_response_carries_the_active_identity_block(tmp_path: Any) -> None
         return
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        outcome = register_profile_with_credentials(label="Erika", passphrase=_PROFILE_PASSPHRASE, facts=_READY_FACTS)
+        outcome = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Erika",
+            passphrase=_PROFILE_PASSPHRASE,
+            facts=_READY_FACTS,
+        )
         with _authenticated_current_profile(
             profile_id=outcome.profile_id,
             passphrase=_PROFILE_PASSPHRASE,

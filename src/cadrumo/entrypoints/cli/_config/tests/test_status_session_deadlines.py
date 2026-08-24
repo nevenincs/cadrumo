@@ -36,7 +36,11 @@ _TERMINAL_SIZE = (140, 60)
 def test_an_authenticated_registered_profile_carries_both_real_deadlines(tmp_path) -> None:
     """Only login creates the real session whose deadlines status projects."""
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        registered = register_profile_with_credentials(label=_LABEL, passphrase=_TEST_CREDENTIAL)
+        registered = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=_LABEL,
+            passphrase=_TEST_CREDENTIAL,
+        )
         try:
             login_profile(name=registered.profile_id, passphrase_callback=lambda: _TEST_CREDENTIAL)
             data = build_status_page_data()
@@ -62,7 +66,11 @@ def test_no_active_session_reports_no_deadlines(tmp_path) -> None:
 async def test_the_real_deadlines_paint_on_the_running_status_surface(tmp_path) -> None:
     """The last mile: what the real session carries is what the auth panel shows."""
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        registered = register_profile_with_credentials(label=_LABEL, passphrase=_TEST_CREDENTIAL)
+        registered = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=_LABEL,
+            passphrase=_TEST_CREDENTIAL,
+        )
         try:
             login_profile(name=registered.profile_id, passphrase_callback=lambda: _TEST_CREDENTIAL)
             data = build_status_page_data()

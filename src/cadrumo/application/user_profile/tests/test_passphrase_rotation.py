@@ -65,11 +65,14 @@ _REFUSAL_MESSAGES = {
 
 
 def _register(handed: list[str] | None = None):
-    """Create the subject profile, optionally enrolling recovery."""
+    """Create the subject profile, optionally retaining its recovery words."""
     return register_profile_with_credentials(
         label=_LABEL,
         passphrase=_CURRENT,
-        recovery_handover=None if handed is None else (lambda e: handed.append(e.recovery_key.mnemonic)),
+        recovery_handover=lambda enrollment: (
+            (handed.append(enrollment.recovery_key.mnemonic) if handed is not None else None)
+            or enrollment.recovery_key.mnemonic
+        ),
     )
 
 
@@ -248,7 +251,7 @@ def test_a_new_passphrase_below_the_verifier_minimum_refuses(tmp_path: Path) -> 
 @pytest.mark.parametrize(
     ("candidate", "reason"),
     (
-        ("a" * 14, ProfilePasswordRefusalReason.TOO_FEW_SCALARS),
+        ("a" * 7, ProfilePasswordRefusalReason.TOO_FEW_SCALARS),
         ("a" * (PROFILE_PASSWORD_MAX_SCALARS + 1), ProfilePasswordRefusalReason.TOO_MANY_SCALARS),
         ("\U0001f600" * 256 + "a", ProfilePasswordRefusalReason.TOO_MANY_UTF8_BYTES),
         ("\ud800" + "a" * 14, ProfilePasswordRefusalReason.CONTAINS_SURROGATE),
@@ -287,7 +290,7 @@ def test_every_replacement_password_refusal_is_typed_safe_and_changes_nothing(
         if reason is not ProfilePasswordRefusalReason.CONTAINS_SURROGATE:
             expected_context["utf8_byte_count"] = len(candidate.encode("utf-8"))
         if reason is ProfilePasswordRefusalReason.TOO_FEW_SCALARS:
-            expected_context["minimum_scalars"] = 15
+            expected_context["minimum_scalars"] = 8
         elif reason is ProfilePasswordRefusalReason.TOO_MANY_SCALARS:
             expected_context["maximum_scalars"] = 256
         elif reason is ProfilePasswordRefusalReason.TOO_MANY_UTF8_BYTES:
@@ -316,8 +319,8 @@ def test_rotation_refusal_bites_before_root_lock_load_unwrap_rehead_and_publicat
         rotate_profile_passphrase(
             profile_id=UUID(int=0),
             current_passphrase=_CURRENT,
-            new_passphrase="a" * 14,
-            new_passphrase_confirmation="a" * 14,
+            new_passphrase="a" * 7,
+            new_passphrase_confirmation="a" * 7,
         )
 
 

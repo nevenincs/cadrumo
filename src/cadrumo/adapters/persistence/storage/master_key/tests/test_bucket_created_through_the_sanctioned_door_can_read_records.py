@@ -57,7 +57,9 @@ _NOT_READY = "errors.storage.runtime.not_ready"
 def test_bucket_created_through_the_sanctioned_door_can_read_records(tmp_path: Path) -> None:
     """Create, authenticate, then decrypt the profile rows written at creation."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        outcome = register_profile_with_credentials(label=_LABEL, passphrase=_PASSPHRASE)
+        outcome = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSPHRASE
+        )
         assert outcome.setup_state is ProfileSetupState.INCOMPLETE
 
         login_profile(name=_LABEL, passphrase_callback=lambda: _PASSPHRASE)
@@ -85,7 +87,9 @@ def test_the_same_reads_refuse_before_authentication(tmp_path: Path) -> None:
     lock rather than evidence about key material.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSPHRASE)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSPHRASE
+        )
 
         with pytest.raises(StorageValidationError, match=_NOT_READY):
             secure_object_repository_for_active_bucket()
@@ -105,7 +109,9 @@ def test_readback_depends_on_the_on_disk_custody_envelope(tmp_path: Path) -> Non
     the wrap is not the thing gating access.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        outcome = register_profile_with_credentials(label=_LABEL, passphrase=_PASSPHRASE)
+        outcome = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSPHRASE
+        )
 
         envelope = storage_root / "buckets" / outcome.bucket_id / "custody" / "envelope.v1.json"
         assert envelope.is_file()

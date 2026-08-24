@@ -28,11 +28,11 @@ import pytest
 from textual.widgets import Button, Input, OptionList
 
 from .....application.user_profile import (
-    login_profile,
     MASKED_PLACEHOLDER,
     ProfileFieldChoice,
     ProfileFieldView,
     build_profile_overview,
+    login_profile,
     register_profile_with_credentials,
 )
 from .....core import require_active_bucket_id
@@ -107,7 +107,9 @@ async def test_the_masked_field_under_test_really_is_masked_and_optional(tmp_pat
     tests stop proving anything and must be pointed at one that is.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
         _persist(_MASKED_PATH, _MASKED_VALUE)
 
         field = next(
@@ -128,7 +130,9 @@ async def test_saving_a_masked_field_without_typing_does_not_clear_it(tmp_path) 
     warning of any kind.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
         _persist(_MASKED_PATH, _MASKED_VALUE)
         assert _stored().get(_MASKED_PATH) == _MASKED_VALUE, "fixture must start with a value to lose"
 
@@ -156,7 +160,9 @@ async def test_pressing_enter_in_an_untouched_masked_box_does_not_clear_it(tmp_p
     look rather than to edit.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
         _persist(_MASKED_PATH, _MASKED_VALUE)
 
         app = ProfileManagerApp(_live_overview(), persist=_persist)
@@ -175,7 +181,9 @@ async def test_pressing_enter_in_an_untouched_masked_box_does_not_clear_it(tmp_p
 async def test_whitespace_typed_into_a_masked_box_does_not_clear_it(tmp_path) -> None:
     """Spaces read as blank everywhere else, so they must not delete here either."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
         _persist(_MASKED_PATH, _MASKED_VALUE)
 
         app = ProfileManagerApp(_live_overview(), persist=_persist)
@@ -200,7 +208,9 @@ async def test_a_masked_field_can_still_be_deliberately_cleared(tmp_path) -> Non
     removed and every test above would still pass.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
         _persist(_MASKED_PATH, _MASKED_VALUE)
         assert _stored().get(_MASKED_PATH) == _MASKED_VALUE
 
@@ -227,7 +237,9 @@ async def test_the_clear_gesture_is_offered_only_where_the_box_cannot_express_it
     with nothing to delete.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
         _persist(_PLAIN_PATH, "Ada Lovelace")
 
         app = ProfileManagerApp(_live_overview(), persist=_persist)
@@ -259,7 +271,9 @@ async def test_an_unmasked_field_is_still_cleared_by_emptying_its_box(tmp_path) 
     the opposite failure and just as surprising.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
         _persist(_PLAIN_PATH, "Ada Lovelace")
         assert _stored().get(_PLAIN_PATH) == "Ada Lovelace"
 
@@ -285,7 +299,9 @@ async def test_the_clear_button_is_not_the_one_enter_reaches(tmp_path) -> None:
     removes, the fix would have moved the accident rather than closed it.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
         _persist(_MASKED_PATH, _MASKED_VALUE)
 
         app = ProfileManagerApp(_live_overview(), persist=_persist)
@@ -315,7 +331,9 @@ async def test_an_enum_dialog_pre_selects_nothing_it_cannot_confirm_is_current(t
     operator reads it the same way.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
 
         app = ProfileManagerApp(_live_overview(), persist=_persist)
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
@@ -345,7 +363,9 @@ async def test_an_enum_dialog_still_pre_selects_the_token_the_field_holds(tmp_pa
     by never highlighting anything.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
         _persist(_ENUM_PATH, "M")
 
         app = ProfileManagerApp(_live_overview(), persist=_persist)
@@ -388,7 +408,9 @@ async def test_a_masked_enum_pre_selects_nothing_so_enter_cannot_overwrite_it(tm
         ),
     )
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
 
         app = ProfileManagerApp(_live_overview(), persist=_persist)
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:

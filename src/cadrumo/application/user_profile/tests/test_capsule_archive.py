@@ -48,7 +48,10 @@ def _register(handed: list[str] | None = None) -> str:
             UserProfileFact(path="identity.name", value=_NAME),
             UserProfileFact(path="identity.surnames", value=_SURNAMES),
         ),
-        recovery_handover=None if handed is None else (lambda e: handed.append(e.recovery_key.mnemonic)),
+        recovery_handover=lambda enrollment: (
+            (handed.append(enrollment.recovery_key.mnemonic) if handed is not None else None)
+            or enrollment.recovery_key.mnemonic
+        ),
     )
     return outcome.profile_id
 

@@ -83,7 +83,9 @@ def _register_with_a_live_process_secret(storage_root: Path) -> tuple[UUID, Buck
     a process holding the target's DEK -- without entangling this proof with
     the inventory's treatment of transient database sidecars.
     """
-    outcome = register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+    outcome = register_profile_with_credentials(
+        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+    )
     profile_id = UUID(outcome.profile_id)
     session = BucketSession.open(
         bucket_id=outcome.profile_id,
@@ -134,7 +136,11 @@ def test_destroying_a_profile_clears_its_durable_failed_login_backoff(tmp_path: 
     """
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         try:
-            outcome = register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+            outcome = register_profile_with_credentials(
+                recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+                label=_LABEL,
+                passphrase=_PASSWORD,
+            )
             profile_id = UUID(outcome.profile_id)
             _authorise_clear_hold(storage_root, profile_id)
             master_key.record_login_failure(storage_root=storage_root, bucket_id=outcome.profile_id, now=_now())
