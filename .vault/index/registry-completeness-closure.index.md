@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:66d1d289fd2f6b00a55d47082ccfc3be2423ce3e0a0bb240df6553a229e05696'
+body_hash: 'sha256:444301120b6fdb44c54a61cefe758c7bfda3bd519afb657f8e9be2171e77a487'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -44,6 +44,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S62]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S63]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S64]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S65]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
@@ -176,6 +177,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P02-S62` - Remove the S60 audit and execution-record EOF blank lines and re-attest the committed Step surface with the scoped diff check.
 - `2026-08-24-registry-completeness-closure-W01-P02-S63` - Wire canonical live source-connectivity and filing-export proof authorities into the registry-conformance closure CLI, retain an explicit offline no-proof mode, type both injection ports precisely, and prove complete-live versus offline-refusal CLI outcomes.
 - `2026-08-24-registry-completeness-closure-W01-P02-S64` - Remove fabricated strict proof authorities and digests from closure CLI tests, exercise the actual CLI with canonical live loaders and real evidence only, prove live-versus-offline refusal distinctions, keep eligibility unreachable until durable filing proof exists, prevent injected claims from bypassing the gate, and add a mutation bite rejecting canned proof
+- `2026-08-24-registry-completeness-closure-W01-P02-S65` - Add a hostile RegistryClosureAuthorities CLI context backed by eligible real protocol implementations, prove the shipped command ignores it, restore the exact former find_object authority branch for a mutation bite, and retain non-CLI loader injection
 
 ### plan
 

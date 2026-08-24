@@ -16,8 +16,16 @@ from cadrumo.application.registry import (
     TemporalCoverageReport,
     TemporalRevisionCoverage,
 )
-from cadrumo.core import RegistryAuthorityGrade
+from cadrumo.core import (
+    RegistryAuthorityGrade,
+    SourceConnectivityEncryptedRevisionProof,
+    SourceConnectivityExecutableEvidence,
+    SourceConnectivityOperatorReachabilityProof,
+)
+from cadrumo.core.source_connectivity import SourceConnectivityConnectionIdentity
+from cadrumo.domain.calculations.registry import ModeloId, RevisionId, bundled_authority
 
+from ..authorities import RegistryClosureAuthorities
 from ..cli import app
 from ..closure import (
     build_registry_closure_report,
@@ -28,6 +36,50 @@ from ..closure import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _AS_OF = date(2026, 8, 24)
+
+
+class _HostileSourceConnectivityAuthority:
+    """Protocol-complete context authority that must never be consumed by the CLI."""
+
+    def __init__(self) -> None:
+        self.calls: list[str] = []
+
+    def source_is_enrolled(self, connection: SourceConnectivityConnectionIdentity) -> bool:
+        self._reject("source_is_enrolled")
+
+    def operator_workflow_reaches_source(
+        self,
+        connection: SourceConnectivityConnectionIdentity,
+        proof: SourceConnectivityOperatorReachabilityProof,
+    ) -> bool:
+        self._reject("operator_workflow_reaches_source")
+
+    def encrypted_revision_matches(self, proof: SourceConnectivityEncryptedRevisionProof) -> bool:
+        self._reject("encrypted_revision_matches")
+
+    def executable_evidence_digest(self, evidence: SourceConnectivityExecutableEvidence) -> str | None:
+        self._reject("executable_evidence_digest")
+
+    def _reject(self, port: str) -> None:
+        self.calls.append(port)
+        raise AssertionError(f"hostile closure context invoked {port}")
+
+
+class _HostileFilingExportAuthority:
+    """Protocol-complete context authority with no invented filing-proof success."""
+
+    def __init__(self) -> None:
+        self.calls: list[str] = []
+
+    def proof_for(
+        self,
+        *,
+        modelo: ModeloId,
+        revision: RevisionId,
+        layout_ids: tuple[str, ...],
+    ) -> None:
+        self.calls.append(f"{modelo}/{revision}/{','.join(layout_ids)}")
+        raise AssertionError("hostile closure context invoked proof_for")
 
 
 def _temporal(*, modelo: str = "303", revision: str = "2026", refused: bool = False) -> TemporalRevisionCoverage:
@@ -212,3 +264,33 @@ def test_actual_cli_ignores_a_precomposed_eligible_context_claim() -> None:
     assert result.exit_code == 1, result.output
     assert "release_eligible=false" in result.output
     assert "closure as_of=2026-08-24 registry_validated=true release_eligible=false" in result.output
+
+
+def test_actual_cli_ignores_exact_hostile_authority_context() -> None:
+    """Only canonical live authorities may compose the public closure command.
+
+    The context has the precise ``RegistryClosureAuthorities`` shape that the
+    removed branch accepted.  Its protocol-complete ports are tripwires, not
+    substitute proof: consuming either proves that command context has regained
+    authority-selection power.  The real registry has no durably enrolled
+    filing proof, so the intact command must remain ineligible.
+    """
+    source = _HostileSourceConnectivityAuthority()
+    filing = _HostileFilingExportAuthority()
+    hostile = RegistryClosureAuthorities(
+        registry=bundled_authority(),
+        source_connectivity=source,
+        filing_export=filing,
+    )
+
+    result = CliRunner().invoke(
+        app,
+        ["closure", "--check", "--as-of", _AS_OF.isoformat()],
+        obj=hostile,
+    )
+
+    assert result.exit_code == 1, result.output
+    assert "release_eligible=false" in result.output
+    assert "canonical generation or successful production emitted-byte evidence is absent" in result.output
+    assert source.calls == []
+    assert filing.calls == []
