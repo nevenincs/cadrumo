@@ -7,7 +7,7 @@ from typing import cast
 
 import pytest
 
-from cadrumo.core import Period, ResultDisposition
+from cadrumo.core import M210_TIPO_RENTA_CODE_PROJECTION, Period, ResultDisposition
 from cadrumo.domain.calculations.registry import DeadlineWindowDefinition, ModeloRevision
 
 from .._errors import DeadlineValidationError
@@ -20,12 +20,17 @@ _PERIOD = Period.from_year_and_code(_YEAR, "0A")
 _PROVENANCE = cast(ModeloRevision, object())
 
 
-def _window(identifier: str, **qualifiers: object) -> DeadlineWindowDefinition:
+def _window(
+    identifier: str,
+    *,
+    period: Period = _PERIOD,
+    **qualifiers: object,
+) -> DeadlineWindowDefinition:
     return DeadlineWindowDefinition.model_validate(
         {
             "id": identifier,
-            "filing_year": _YEAR,
-            "period": _PERIOD,
+            "filing_year": period.filing_year,
+            "period": period,
             "period_kind": "annual",
             "opens_on": date(2026, 1, 1),
             "closes_on": date(2026, 1, 20),
@@ -58,6 +63,45 @@ def test_qualified_resolution_reuses_atomic_coordinate_scope_expansion() -> None
     )
 
     assert resolved is ingreso_rent
+
+
+def test_official_codes_with_a_shared_rate_concept_remain_distinct_coordinates() -> None:
+    assert M210_TIPO_RENTA_CODE_PROJECTION["01"] is M210_TIPO_RENTA_CODE_PROJECTION["35"]
+
+    arrendamiento = _window(
+        "arrendamiento",
+        resultado_scope=ResultDisposition.INGRESO,
+        tipo_renta_scope=("01",),
+    )
+    arrendamiento_alternativo = _window(
+        "arrendamiento-alternativo",
+        resultado_scope=ResultDisposition.INGRESO,
+        tipo_renta_scope=("35",),
+    )
+    projection = _projection(arrendamiento, arrendamiento_alternativo)
+
+    assert (
+        _resolve_projected_filing_window(
+            projection,
+            modelo="210",
+            filing_year=_YEAR,
+            period=_PERIOD,
+            resultado=ResultDisposition.INGRESO,
+            tipo_renta_code="01",
+        )
+        is arrendamiento
+    )
+    assert (
+        _resolve_projected_filing_window(
+            projection,
+            modelo="210",
+            filing_year=_YEAR,
+            period=_PERIOD,
+            resultado=ResultDisposition.INGRESO,
+            tipo_renta_code="35",
+        )
+        is arrendamiento_alternativo
+    )
 
 
 def test_unqualified_window_is_the_canonical_wildcard_for_a_typed_request() -> None:
@@ -112,6 +156,25 @@ def test_none_is_reserved_for_an_exact_absence_without_year_borrowing() -> None:
             period=_PERIOD,
             resultado=ResultDisposition.INGRESO,
             tipo_renta_code="03",
+        )
+        is None
+    )
+
+
+def test_resolution_never_borrows_a_following_or_future_filing_year_window() -> None:
+    following_period = Period.from_year_and_code(_YEAR + 1, "0A")
+    future_period = Period.from_year_and_code(_YEAR + 2, "0A")
+    following = _window("following", period=following_period)
+    future = _window("future", period=future_period)
+
+    assert (
+        _resolve_projected_filing_window(
+            _projection(following, future),
+            modelo="210",
+            filing_year=_YEAR,
+            period=_PERIOD,
+            resultado=None,
+            tipo_renta_code=None,
         )
         is None
     )

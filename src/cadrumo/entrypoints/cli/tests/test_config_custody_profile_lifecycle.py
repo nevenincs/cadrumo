@@ -29,6 +29,7 @@ import pytest
 
 from ....core import DirectoryEntryKind, scan_directory
 from ....core.config import load_settings, override_settings
+from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests import REPO_ROOT
 from ....tests.subprocess_cli import run_cadrumo_subprocess
 from ....tests.user_profile import register_cli_profile
@@ -81,7 +82,63 @@ def _register_profile(storage_root: Path, label: str, **facts: str) -> str:
         cadrumo_secret_passphrase=load_settings().cadrumo_dev_test_database_password,
         cadrumo_active_profile=None,
     ):
-        return register_cli_profile(label=label, facts=facts)
+        profile_id = register_cli_profile(label=label, facts=facts)
+        # The seed runs in this pytest process, while the behaviour under test
+        # runs in a child. Release the parent's real SQLite engine so Windows
+        # observes the same process boundary as an operator's completed create
+        # command and can rename the capsule during deletion.
+        from ....adapters.persistence.storage.sql import dispose_engines_for_bucket
+
+        dispose_engines_for_bucket(profile_id)
+        return profile_id
+
+
+def test_logged_out_inactive_profile_delete_succeeds_through_real_root(tmp_path: Path) -> None:
+    """The real root admits exact inactive deletion after strong-close logout."""
+    _register_profile(tmp_path, "delete-after-logout")
+
+    logged_out = _run_cadrumo(tmp_path, ("config", "logout"))
+    assert logged_out.returncode == 0, _combined_output(logged_out)
+
+    deleted = _run_cadrumo(
+        tmp_path,
+        ("--format", "json", "config", "profile", "delete", "delete-after-logout", "--yes"),
+    )
+    assert deleted.returncode == 0, _combined_output(deleted)
+    envelope = json.loads(deleted.stdout)
+    assert envelope["status"] == "success"
+    assert envelope["result"]["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
+    assert envelope["result"]["display_name"] == "delete-after-logout"
+    assert envelope["result"]["deleted"] is True
+
+    listed = _run_cadrumo(tmp_path, ("--format", "json", "config", "profile", "list"))
+    assert listed.returncode == 0, _combined_output(listed)
+    assert json.loads(listed.stdout)["result"]["profiles"] == []
+
+
+def test_active_profile_delete_still_refuses_through_real_root(tmp_path: Path) -> None:
+    """The leaf exemption never bypasses the exact active-pointer refusal."""
+    _register_profile(tmp_path, "keep-active")
+
+    deleted = _run_cadrumo(
+        tmp_path,
+        ("--format", "json", "config", "profile", "delete", "keep-active", "--yes"),
+    )
+    assert deleted.returncode != 0, _combined_output(deleted)
+    envelope = json.loads(deleted.stderr)
+    assert envelope["status"] == "error"
+    assert envelope["error"]["code"] == "REFUSED_CLI_BOUNDARY"
+    assert envelope["error"]["context"] == {
+        "name": "keep-active",
+        "profile_id": CLI_PROFILE_ID_PLACEHOLDER,
+    }
+
+    listed = _run_cadrumo(tmp_path, ("--format", "json", "config", "profile", "list"))
+    assert listed.returncode == 0, _combined_output(listed)
+    profiles = json.loads(listed.stdout)["result"]["profiles"]
+    assert [(profile["bucket_id"], profile["name"], profile["active"]) for profile in profiles] == [
+        ("<bucket-id>", "keep-active", True)
+    ]
 
 
 @pytest.mark.os_keychain  # cross-process resumption needs a minted acceleration receipt

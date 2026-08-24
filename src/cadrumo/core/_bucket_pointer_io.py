@@ -73,9 +73,53 @@ A peer's handle on the pointer lives microseconds; a denying ACL does not
 clear at all. As in :mod:`core._lockfile_unlink`, the budget is the
 discriminator rather than the error code -- and here it has to be, because the
 read side carries no ``winerror`` to test.
+
+The budget bounds ONE contention window, not the whole wait. A peer switching
+profile in a loop emits an unbroken sequence of microsecond-long handles, so a
+reader can lose every race in turn while no single refusal is anomalous; on a
+loaded machine that starved a fixed budget and raised out of the ``Settings()``
+bootstrap. The budget therefore restarts whenever the pointer's directory entry
+is seen to change, and :data:`_POINTER_READ_MAX_WAIT_SECONDS` bounds the total.
 """
 
 _POINTER_READ_POLL_SECONDS = 0.02
+
+_POINTER_READ_MAX_WAIT_SECONDS = 15.0
+"""Absolute ceiling on waiting out a writer, however active it stays.
+
+The per-refusal budget above restarts whenever the pointer's directory entry
+changes, so a writer that keeps churning keeps the read waiting. This ceiling
+is what still guarantees the call returns: without it, an endlessly rewriting
+peer would block a starting process forever.
+"""
+
+
+def _pointer_entry_signature(target: Path) -> tuple[str, int, int] | None:
+    """Fingerprint the pointer's directory entry, or ``None`` when it is gone.
+
+    Windows answers ``stat`` from the directory entry, so this succeeds while a
+    sharing violation is refusing the open -- which is what makes it usable as
+    evidence that a writer is working rather than that access is denied. A
+    vanished pointer is itself such evidence, so absence answers ``None``
+    rather than propagating.
+
+    Args:
+        target: The pointer file to fingerprint.
+
+    Returns:
+        :func:`~core.paths.path_stat_fingerprint` of the entry, or ``None``
+        when it cannot be stat'd at all.
+    """
+    # Deferred for the reason ``pointer_path`` defers its taxonomy import: this
+    # module is reached while ``core`` is still executing its own body, and
+    # ``paths`` pulls the config-state-root chain in behind it.
+    from .paths import path_stat_fingerprint
+
+    try:
+        return path_stat_fingerprint(target)
+    except OSError:
+        return None
+
 
 _POINTER_WRITE_RETRY_SECONDS = 1.0
 """Budget for a write or removal a foreign reader's handle is blocking."""
@@ -112,14 +156,29 @@ def _read_pointer_bytes(target: Path) -> bytes | None:
         OSError: For any read failure that is not a concurrent writer, and for
             a refusal that outlasts :data:`_POINTER_READ_RETRY_SECONDS`.
     """
-    deadline = time.monotonic() + (_POINTER_READ_RETRY_SECONDS if sys.platform == "win32" else 0.0)
+    if sys.platform != "win32":
+        try:
+            return target.read_bytes()
+        except FileNotFoundError:
+            return None
+    started = time.monotonic()
+    deadline = started + _POINTER_READ_RETRY_SECONDS
+    ceiling = started + _POINTER_READ_MAX_WAIT_SECONDS
+    signature = _pointer_entry_signature(target)
     while True:
         try:
             return target.read_bytes()
         except FileNotFoundError:
             return None
         except PermissionError:
-            if sys.platform != "win32" or time.monotonic() >= deadline:
+            now = time.monotonic()
+            current = _pointer_entry_signature(target)
+            if current != signature:
+                # The entry moved, so a writer is working rather than an ACL
+                # denying: the refusal is contention and the budget restarts.
+                signature = current
+                deadline = now + _POINTER_READ_RETRY_SECONDS
+            if now >= deadline or now >= ceiling:
                 raise
             time.sleep(_POINTER_READ_POLL_SECONDS)
 

@@ -41,6 +41,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from decimal import Decimal
+from enum import StrEnum
 from typing import Any, Final
 
 from pydantic import BaseModel, Field
@@ -60,11 +61,8 @@ from ....application.storage.calc_sheets import (
     TabName,
     hex_to_rgb_floats,
 )
-from ....core import STRICT_FROZEN_CONFIG
-from ..storage import (
-    OutboundStorageNetworkError,
-    OutboundStorageValidationError,
-)
+from ....core import STRICT_FROZEN_CONFIG, ActionEvidenceProvenance, NoRecoveryOutcome
+from ..storage import OutboundStorageError, OutboundStorageNetworkError, OutboundStorageValidationError
 from ._api import execute_request
 from ._calc_sheets_apply_values import (
     _build_evidence_value_data,
@@ -90,9 +88,50 @@ from ._drive_entries import (
     find_owned_drive_entry,
     require_drive_entry_id,
 )
+from ._preconditions import google_terminal_refusal
 
 _FOLDER_MIME: Final[str] = "application/vnd.google-apps.folder"
 _SPREADSHEET_MIME: Final[str] = "application/vnd.google-apps.spreadsheet"
+
+
+class CalcSheetsApplyPreconditionCondition(StrEnum):
+    """Closed terminal conditions owned by the calculation-sheet apply adapter."""
+
+    API_CLIENT_AVAILABLE = "google.calc_sheets.apply.api_client_available"
+    ROOT_FOLDER_ID_VALID = "google.calc_sheets.apply.root_folder_id_valid"
+
+
+def _calc_sheets_apply_terminal_refusal(
+    error: OutboundStorageError,
+    condition: CalcSheetsApplyPreconditionCondition,
+    *,
+    facts: Mapping[str, str | int | bool],
+    outcome: NoRecoveryOutcome,
+) -> OutboundStorageError:
+    """Return ``error`` with this adapter's fact-only terminal verdict."""
+    return google_terminal_refusal(
+        error,
+        condition_id=condition.value,
+        facts=facts,
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        outcome=outcome,
+    )
+
+
+def _require_root_folder_id(root_folder_id: str) -> None:
+    """Refuse an empty operator-supplied Drive root before any Google call."""
+    if root_folder_id.strip():
+        return
+    error = OutboundStorageValidationError(
+        "root_folder_id must not be blank",
+        context={"root_folder_id": root_folder_id},
+    )
+    raise _calc_sheets_apply_terminal_refusal(
+        error,
+        CalcSheetsApplyPreconditionCondition.ROOT_FOLDER_ID_VALID,
+        facts={"root_folder_id_present": False},
+        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+    )
 
 
 def _vault_folder_name() -> str:
@@ -182,9 +221,20 @@ def _google_service(credentials: object, service_name: str, version: str) -> Any
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:
-        raise OutboundStorageNetworkError(
+        error = OutboundStorageNetworkError(
             f"googleapiclient not importable: {exc}",
             translated_message="adapters.google.calc_sheets.errors.googleapiclient_not_importable",
+        )
+        raise _calc_sheets_apply_terminal_refusal(
+            error,
+            CalcSheetsApplyPreconditionCondition.API_CLIENT_AVAILABLE,
+            facts={
+                "client_available": False,
+                "dependency": "google_api_python_client",
+                "service_name": service_name,
+                "service_version": version,
+            },
+            outcome=NoRecoveryOutcome.SAFETY,
         ) from exc
     return build(service_name, version, credentials=credentials, cache_discovery=False)
 
@@ -1402,11 +1452,7 @@ def apply_export_plan(
             Drive or Sheets rejects the request, quota is exhausted, the target
             is missing, or the adapter refuses foreign Drive content.
     """
-    if not root_folder_id.strip():
-        raise OutboundStorageValidationError(
-            "root_folder_id must not be blank",
-            context={"root_folder_id": root_folder_id},
-        )
+    _require_root_folder_id(root_folder_id)
 
     drive = _drive_service(credentials)
     sheets = _sheets_service(credentials)
@@ -1524,11 +1570,7 @@ def preview_export_plan(
             Drive entry that is not app-owned — the same refusal a real apply
             would raise at the same lookup.
     """
-    if not root_folder_id.strip():
-        raise OutboundStorageValidationError(
-            "root_folder_id must not be blank",
-            context={"root_folder_id": root_folder_id},
-        )
+    _require_root_folder_id(root_folder_id)
 
     drive = _drive_service(credentials)
     sheets = _sheets_service(credentials)

@@ -372,11 +372,12 @@ What each step does:
   `aeat config profile restore`, and read a sealed archive's header without
   decrypting it using `aeat config profile archive inspect`.
 
-Delete a profile for good only while a different profile is active. Cadrumo
-refuses to delete the active profile, so switch to another profile first and
-then confirm the irreversible deletion:
+Delete a profile for good only after closing its active session. Cadrumo refuses
+to delete the active profile, so log out first and then confirm the irreversible
+deletion of that exact named profile:
 
 ```{cli-sequence} profile-setup-delete
+:verify: Confirm logout makes the sandbox profile inactive before deleting only that exact profile.
 ```
 
 A sealed archive contains taxpayer data, including the tax identifier, activity,

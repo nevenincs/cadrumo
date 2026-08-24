@@ -930,6 +930,7 @@ def _delete_targets(
         journal = lifecycle.prepare_delete(
             profile_id=UUID(target.bucket_id),
             retention_override=_custody_retention_override(target),
+            requires_inactive_target=False,
         )
         confirmation = lifecycle.confirm_delete(journal)
         result = lifecycle.delete(confirmation)

@@ -212,6 +212,7 @@ class ProfileCapsuleLifecycle:
         *,
         profile_id: UUID,
         retention_override: ProfileCustodyRetentionOverride | None = None,
+        requires_inactive_target: bool = False,
     ) -> ProfileCustodyTransactionJournal:
         """Prepare one local deletion, carrying any operator retention authorisation.
 
@@ -223,6 +224,7 @@ class ProfileCapsuleLifecycle:
         return self._transactions.prepare_delete(
             profile_id=profile_id,
             retention_override=retention_override,
+            requires_inactive_target=requires_inactive_target,
         )
 
     def confirm_delete(self, journal: ProfileCustodyTransactionJournal) -> ProfileCustodyDeleteConfirmation:

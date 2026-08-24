@@ -2,9 +2,11 @@
 
 Provides a profile-free function to ask "when does the plazo voluntario
 close for this modelo + filing year + period?" directly from the registry
-deadline windows.  The result feeds the extemporaneidad detection surface
-in :mod:`cadrumo.application.modelo._work_plazo` and in the anti-tautology
-test suite.
+deadline windows.  The result feeds the pre-calculation extemporaneidad
+surface in :mod:`cadrumo.application.modelo._work_plazo`.  Post-calculation
+consumers that know resultado or Modelo 210 tipo-renta context call the sibling
+``resolve_filing_window`` entry point; both paths therefore share the same
+canonical matcher.
 """
 
 from __future__ import annotations
@@ -25,8 +27,14 @@ if TYPE_CHECKING:
 def resolve_filing_closes_on(modelo: str, filing_year: int, period: Period) -> date | None:
     """Return the close date of the plazo voluntario for a modelo+year+period.
 
-    Queries the validated registry authority for ``filing_year`` and
-    returns the ``closes_on`` of the first matching
+    Queries the validated registry authority for ``filing_year`` through
+    :func:`resolve_filing_window` and returns the ``closes_on`` of its unique
+    unqualified match. This function deliberately accepts no resultado or
+    Modelo 210 tipo-renta context: it is the pre-calculation convenience, while
+    post-calculation callers use ``resolve_filing_window`` directly rather than
+    owning another matcher.
+
+    The resolved value belongs to the matching
     :class:`~cadrumo.domain.calculations.registry.DeadlineWindowDefinition`.
 
     Matching rule: the registry window period must carry the same

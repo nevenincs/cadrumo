@@ -15,6 +15,7 @@ from ....adapters.persistence.storage import (
     SecureObjectRepository,
     SensitivityClass,
 )
+from ....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....core.external_constants import UTF_8_ENCODING, load_external_constants
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
@@ -150,12 +151,19 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
         assert detail.nie_soporte_fingerprint == "sha256:support"
         assert detail.certificate_path_fingerprint == "sha256:certpath"
         assert "certificate_backend" not in detail.model_dump()
-        assert detail.operator_report_commands == (
-            "aeat config auth diagnostics report diag-new --phone-state app_prompted_and_accepted",
-            "aeat config auth diagnostics report diag-new --phone-state app_prompted_not_accepted",
-            "aeat config auth diagnostics report diag-new --phone-state app_did_not_prompt",
-            "aeat config auth diagnostics report diag-new --phone-state operator_did_not_check",
-        )
+        verdict = detail.operator_report_verdict
+        assert verdict is not None
+        assert verdict.failed_condition_id == "auth.diagnostics.phone_state_recorded"
+        assert verdict.action is None
+        assert verdict.argument_bindings == ()
+        assert verdict.conditionality is ActionConditionality.NOT_APPLICABLE
+        assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+        assert len(verdict.evidence) == 1
+        evidence = verdict.evidence[0]
+        assert evidence.condition_id == "auth.diagnostics.phone_state_recorded"
+        assert evidence.evidence_id == "auth.diagnostics.phone_state_recorded.observation"
+        assert evidence.provenance is ActionEvidenceProvenance.APPLICATION_STATE
+        assert evidence.values == {"diagnostic_available": True, "phone_state_observed": False}
         assert detail.html_excerpt == "[redacted html captured: 72 chars]"
         assert "sensitive form fields" not in detail.html_excerpt
         report = record_auth_diagnostic_phone_state("diag-new", "app_did_not_prompt")
@@ -165,6 +173,7 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
         assert report.phone_state == "app_did_not_prompt"
         assert reported_detail is not None
         assert reported_detail.phone_state == "app_did_not_prompt"
+        assert reported_detail.operator_report_verdict is None
         assert reported_detail.phone_state_reported_at == report.reported_at
         assert relisted.rows[0].phone_state == "app_did_not_prompt"
         assert relisted.rows[0].phone_state_reported_at == report.reported_at

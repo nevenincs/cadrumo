@@ -403,6 +403,57 @@ def test_modelo_303_quarterly_deadlines_match_orden_eha_3786_2008_art_7() -> Non
         assert current_windows[window_id].closes_on == closes
 
 
+def test_modelo_303_2023_deadlines_exactly_cover_declared_quarterly_and_monthly_schedules() -> None:
+    """The 2023 owner carries one AEAT-grounded row per declared period token."""
+    modelo, _ = _load_modelo_303()
+    revision = modelo.revisions["2023"]
+    windows_by_period = {window.period.registry_token: window for window in revision.deadline_windows}
+    expected = {
+        "1T": (date(2023, 4, 1), date(2023, 4, 20), date(2023, 4, 15)),
+        "2T": (date(2023, 7, 1), date(2023, 7, 20), date(2023, 7, 15)),
+        "3T": (date(2023, 10, 1), date(2023, 10, 20), date(2023, 10, 15)),
+        "4T": (date(2024, 1, 1), date(2024, 1, 30), date(2024, 1, 25)),
+        "01": (date(2023, 2, 1), date(2023, 2, 28), date(2023, 2, 23)),
+        "02": (date(2023, 3, 1), date(2023, 3, 30), date(2023, 3, 25)),
+        "03": (date(2023, 4, 1), date(2023, 5, 2), date(2023, 4, 25)),
+        "04": (date(2023, 5, 1), date(2023, 5, 30), date(2023, 5, 25)),
+        "05": (date(2023, 6, 1), date(2023, 6, 30), date(2023, 6, 25)),
+        "06": (date(2023, 7, 1), date(2023, 7, 31), date(2023, 7, 26)),
+        "07": (date(2023, 8, 1), date(2023, 8, 30), date(2023, 8, 25)),
+        "08": (date(2023, 9, 1), date(2023, 10, 2), date(2023, 9, 27)),
+        "09": (date(2023, 10, 1), date(2023, 10, 30), date(2023, 10, 25)),
+        "10": (date(2023, 11, 1), date(2023, 11, 30), date(2023, 11, 25)),
+        "11": (date(2023, 12, 1), date(2024, 1, 2), date(2023, 12, 26)),
+        "12": (date(2024, 1, 1), date(2024, 1, 30), date(2024, 1, 25)),
+    }
+
+    assert len(revision.deadline_windows) == len(expected) == 16
+    assert set(windows_by_period) == set(expected)
+    assert set(windows_by_period) == set(revision.period_selector.periods)
+    for period, dates in expected.items():
+        window = windows_by_period[period]
+        assert (window.opens_on, window.closes_on, window.payment_cutoff_on) == dates
+        assert window.filing_year == window.period.filing_year == 2023
+        assert window.id == f"modelo-303-2023-{period.lower()}{'-mensual' if period.isdigit() else ''}"
+        calendar_source = "aeat-calendario-contribuyente-2024" if period in {"4T", "12"} else "aeat-calendario-contribuyente-2023"
+        assert calendar_source in window.source_refs
+
+
+def test_modelo_303_2023_deadline_coordinates_have_only_the_canonical_2023_owner() -> None:
+    modelo, _ = _load_modelo_303()
+    expected_periods = set(modelo.revisions["2023"].period_selector.periods)
+    owners_by_period = {
+        period: [
+            revision.id
+            for revision in modelo.revisions.values()
+            if any(window.filing_year == 2023 and window.period.registry_token == period for window in revision.deadline_windows)
+        ]
+        for period in expected_periods
+    }
+
+    assert owners_by_period == {period: ["2023"] for period in expected_periods}
+
+
 def test_modelo_303_sii_2026_monthly_deadlines_use_aeat_2026_calendar() -> None:
     """Monthly IVA windows for 2026 periods 01-11 match the AEAT 2026 calendar."""
     modelo, _ = _load_modelo_303()

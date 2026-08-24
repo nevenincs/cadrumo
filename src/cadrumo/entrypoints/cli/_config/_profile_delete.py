@@ -116,29 +116,32 @@ def _refuse_erase_inside_the_retention_floor(assessment: BucketDeletionAssessmen
     )
 
 
-def _destroy(bucket_id: str) -> str:
-    """Destroy one capsule under its target lock; return the completion instant.
+def _destroy(bucket_id: str, *, label: str) -> str:
+    """Destroy one capsule through the journalled custody owner.
 
     Delegates to the journalled, crash-resumable custody primitives rather than
     re-implementing a write path: ``prepare_delete`` opens the transaction,
     ``confirm_delete`` produces the confirmation it will only accept, and
-    ``delete`` executes it. The target lock is held across all three so a
-    concurrent maintenance reader cannot observe a half-removed capsule.
+    ``delete`` executes it. Each custody transition holds the canonical external
+    transaction lock and revalidates the immutable inventory witness. Do not
+    hold the bucket's own ``.lock`` across execution: on Windows that live file
+    handle makes the authenticated capsule directory impossible to rename to
+    its transaction-owned deletion tombstone.
     """
     from uuid import UUID
 
-    from ....application.bucket_maintenance import BucketMaintenanceService
-    from ....application.user_profile import ProfileCapsuleLifecycle
-    from ....core.config import load_settings
+    from ....application.user_profile import ProfileCapsuleLifecycle, active_profile_pointer_transaction
 
-    settings = load_settings()
-    with BucketMaintenanceService().deletion_target_locks(
-        root=settings.cadrumo_local_storage_root,
-        bucket_ids=(bucket_id,),
-        wait_seconds=settings.cadrumo_file_lock_timeout_s,
-    ):
+    with active_profile_pointer_transaction():
+        # Revalidate under the canonical root/pointer lock and retain it until
+        # every journalled owner effect completes. A concurrent login cannot
+        # activate the target between this decision and tombstone removal.
+        _refuse_deleting_the_active_profile(bucket_id=bucket_id, label=label)
         lifecycle = ProfileCapsuleLifecycle()
-        journal = lifecycle.prepare_delete(profile_id=UUID(bucket_id))
+        journal = lifecycle.prepare_delete(
+            profile_id=UUID(bucket_id),
+            requires_inactive_target=True,
+        )
         confirmation = lifecycle.confirm_delete(journal)
         receipt = lifecycle.delete(confirmation)
     return receipt.completed_at.isoformat()
@@ -201,7 +204,7 @@ def config_profile_delete(
     _refuse_deleting_the_active_profile(bucket_id=pointer.bucket_id, label=pointer.label)
     assessment = _assess(pointer.bucket_id)
     _refuse_erase_inside_the_retention_floor(assessment)
-    completed_at = _destroy(pointer.bucket_id) if yes else None
+    completed_at = _destroy(pointer.bucket_id, label=pointer.label) if yes else None
     result, lines, notices = _result_and_lines(
         assessment,
         label=pointer.label,

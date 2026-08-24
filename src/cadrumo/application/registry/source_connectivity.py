@@ -31,6 +31,7 @@ from ...core import (
 from ...core.resources import bundled_path
 from ...domain.calculations.registry import (
     BindingId,
+    CensoModeloEventKind,
     DataBindingDefinition,
     FormulaDefinition,
     FormulaId,
@@ -85,6 +86,7 @@ type CapabilityCoverageSelector = Literal[
     "remaining_source_readiness",
 ]
 type RegistryDestinationCandidateKind = Literal["binding_source", "casilla_semantic_role"]
+type RegistryDestinationPeriod = Period | CensoModeloEventKind
 
 
 class RegistryDestinationCandidate(BaseModel):
@@ -96,13 +98,13 @@ class RegistryDestinationCandidate(BaseModel):
     modelo_id: ModeloId
     revision_id: RevisionId
     filing_year: int = Field(ge=1980, le=2200)
-    period: Period
+    period: RegistryDestinationPeriod
     semantic_role: str | None = Field(default=None, min_length=1, max_length=256)
     source_kind: BindingSourceKind | None = None
 
     @model_validator(mode="after")
     def _require_kind_payload(self) -> RegistryDestinationCandidate:
-        if self.period.filing_year != self.filing_year:
+        if isinstance(self.period, Period) and self.period.filing_year != self.filing_year:
             raise ValueError("registry destination period must carry its declared filing_year")
         if self.kind == "casilla_semantic_role":
             if self.semantic_role is None or self.source_kind is not None:
@@ -110,6 +112,18 @@ class RegistryDestinationCandidate(BaseModel):
         elif self.source_kind is None or self.semantic_role is not None:
             raise ValueError("binding-source destination requires only source_kind")
         return self
+
+    @property
+    def period_token(self) -> str:
+        """Return the exact registry selector token for this destination scope.
+
+        Ordinary filing coordinates retain their typed :class:`Period`; Modelo
+        036's legally declared censo events retain the existing closed event
+        vocabulary instead of being misrepresented as an ad-hoc filing period.
+        """
+        if isinstance(self.period, Period):
+            return self.period.registry_token
+        return self.period.value
 
     @property
     def identity(self) -> tuple[str, str, str, str, str, str]:
@@ -120,7 +134,7 @@ class RegistryDestinationCandidate(BaseModel):
             str(self.modelo_id),
             str(self.revision_id),
             str(self.filing_year),
-            self.period.registry_token,
+            self.period_token,
             token,
         )
 
@@ -211,12 +225,12 @@ def validate_census_destination_candidates(
                 revision = select_revision(
                     modelo,
                     filing_year=candidate.filing_year,
-                    period=candidate.period.registry_token,
+                    period=candidate.period_token,
                 )
             except ValueError as error:
                 raise ValueError(
                     "census destination filing coordinate is not law-selectable: "
-                    f"{candidate.modelo_id}/{candidate.filing_year}/{candidate.period.registry_token}: "
+                    f"{candidate.modelo_id}/{candidate.filing_year}/{candidate.period_token}: "
                     f"{entry.candidate_id}"
                 ) from error
             if revision.id != candidate.revision_id:
@@ -224,7 +238,7 @@ def validate_census_destination_candidates(
                     "census destination revision does not match its law-selected filing coordinate: "
                     f"declared {candidate.modelo_id}/{candidate.revision_id}, "
                     f"selected {candidate.modelo_id}/{revision.id} for "
-                    f"{candidate.filing_year}/{candidate.period.registry_token}: {entry.candidate_id}"
+                    f"{candidate.filing_year}/{candidate.period_token}: {entry.candidate_id}"
                 )
             if candidate.kind == "casilla_semantic_role":
                 matches = tuple(
@@ -268,7 +282,10 @@ _CENSUS_TOKEN_TYPES = {
 def _hydrate_census_tokens(value: object, *, field_name: str | None = None) -> object:
     """Hydrate TOML strings into the census contract's strict closed enums."""
     if field_name == "period" and isinstance(value, str):
-        return Period.from_string(value)
+        try:
+            return Period.from_string(value)
+        except ValueError:
+            return CensoModeloEventKind(value)
     token_type = _CENSUS_TOKEN_TYPES.get(field_name or "")
     if token_type is not None and isinstance(value, str):
         return token_type(value)

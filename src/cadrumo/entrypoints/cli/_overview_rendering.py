@@ -800,8 +800,7 @@ def _work_units_line(report: OverviewStatusReport) -> str:
             "cli.overview.status.work_units_present_with_discarded",
             default=(
                 "%{count} active modelo work unit(s) (%{discarded} discarded) "
-                "in this local storage - your active modelo work is saved; "
-                "resume it with `aeat app modelo work list`."
+                "in this local storage - your active modelo work is saved."
             ),
             count=report.work_units,
             discarded=report.discarded_work_units,
@@ -810,7 +809,7 @@ def _work_units_line(report: OverviewStatusReport) -> str:
         "cli.overview.status.work_units_present",
         default=(
             "%{count} modelo work unit(s) are in progress in this local storage "
-            "- your modelo work is saved; resume it with `aeat app modelo work list`."
+            "- your modelo work is saved."
         ),
         count=report.work_units,
     )

@@ -26,12 +26,12 @@ from ...core import (
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
-from ...core.errors import CadrumoError
+from ...core.errors import CadrumoError, TerminalPreconditionErrorMixin
+from ..operator_actions import PreconditionVerdict
 
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.auth import ClaveMovilApprovalTimeoutError
     from ...adapters.outbound.aeat.sede import SedeError
-    from ..operator_actions import PreconditionVerdict
 
 
 class LiveIvaAcquisitionFailureMode(StrEnum):
@@ -67,6 +67,7 @@ class LiveReadPrecondition(StrEnum):
     JUSTIFICANTE_FILING_IDENTITY_RESOLVED = "live.justificante.filing_identity_resolved"
     NOTIFICATION_DOCUMENT_MATCHES_ROW = "live.notifications.document_matches_row"
     FILED_OBSERVATION_ACTIVE = "live.filed_observations.observation_active"
+    SURFACE_COMPLETED = "live.iva.surface.completed"
 
 
 def live_read_no_recovery_verdict(
@@ -111,7 +112,7 @@ def live_read_no_recovery_verdict(
     )
 
 
-class LiveApplicationError(CadrumoError):
+class LiveApplicationError(TerminalPreconditionErrorMixin, CadrumoError):
     """Raised when live AEAT read orchestration fails.
 
     Accepts an optional ``precondition_verdict`` so a raise site that has
@@ -128,13 +129,12 @@ class LiveApplicationError(CadrumoError):
         translated_message: str | None = None,
         precondition_verdict: PreconditionVerdict | None = None,
     ) -> None:
-        super().__init__(message, context=context, translated_message=translated_message)
-        self._terminal_precondition_verdict = precondition_verdict
-
-    @property
-    def terminal_precondition_verdict(self) -> PreconditionVerdict | None:
-        """Return the explicit no-recovery verdict, when the raise site declared one."""
-        return self._terminal_precondition_verdict
+        super().__init__(
+            message,
+            context=context,
+            translated_message=translated_message,
+            precondition_verdict=precondition_verdict,
+        )
 
 
 class LiveApplicationInputError(LiveApplicationError):
@@ -159,6 +159,14 @@ class LiveIvaSurfaceTimeoutError(LiveApplicationError):
             message,
             context=context,
             translated_message="errors.error.error_application_live_iva_surface_timeout",
+            precondition_verdict=live_read_no_recovery_verdict(
+                LiveReadPrecondition.SURFACE_COMPLETED,
+                facts={
+                    "surface": surface,
+                    "timeout_ms": timeout_ms,
+                    "progress_observed": bool(progress_context),
+                },
+            ),
         )
         self.surface = surface
         self.timeout_ms = timeout_ms

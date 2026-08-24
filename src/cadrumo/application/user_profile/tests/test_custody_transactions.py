@@ -343,6 +343,33 @@ def test_confirmed_local_delete_is_atomic_receipted_and_idempotent(tmp_path: Pat
     assert service._repository.load_receipt(journal.transaction_id) == receipt
 
 
+def test_inactive_only_delete_revalidates_policy_after_prepare_and_before_effects(tmp_path: Path) -> None:
+    """A resumed single-target delete refuses a profile activated after prepare."""
+    capsule = _committed_capsule(tmp_path)
+    service = ProfileCustodyTransactionService(root=tmp_path)
+    _authorise_clear_hold(service)
+
+    journal = service.prepare_delete(
+        profile_id=_PROFILE_ID,
+        requires_inactive_target=True,
+        now=_INSTANT,
+    )
+    assert journal.requires_inactive_target is True
+    confirmation = service.confirmation_for(journal)
+
+    # This is the durable crash/resume boundary: another canonical login may
+    # publish the pointer after preparation and before a later executor resumes.
+    active_bytes = BucketPointer(bucket_id=str(_PROFILE_ID), schema_version=1).to_toml().encode("utf-8")
+    restore_pointer(tmp_path, active_bytes)
+
+    with pytest.raises(ProfileCustodyTransactionRefusalError, match="active profile"):
+        service.execute_delete(confirmation, now=_INSTANT + timedelta(seconds=1))
+
+    assert capsule.is_dir()
+    assert capture_pointer(tmp_path) == active_bytes
+    assert service._repository.load_journal(journal.transaction_id).state is ProfileCustodyTransactionState.DELETE_PREPARED
+
+
 def test_delete_completes_when_preflight_and_execution_fall_at_different_instants(tmp_path: Path) -> None:
     """The reproduction: a real delete takes time between confirm and execute.
 

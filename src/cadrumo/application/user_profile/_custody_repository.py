@@ -185,10 +185,15 @@ def profile_custody_transaction_lock(root: Path, profile_id: UUID) -> Generator[
     It stays because the ORDER is the deadlock-safety rule: a future path that
     takes both must take them this way round.
     """
+    from ._profile_pointer_transaction import active_profile_pointer_transaction
+
     adapters = custody
     storage_root = effective_storage_root(root)
     capsules_root = storage_root / storage_location(StorageCategory.BUCKETS).relative_path()
-    with adapters.profile_custody_root_lock(storage_root):
+    # Use the application pointer transaction rather than reacquiring the raw
+    # non-reentrant sidecar. A caller may already hold the canonical root lock
+    # to bind an inactive-target decision across the complete custody delete.
+    with active_profile_pointer_transaction(storage_root):
         try:
             adapters.ensure_profile_custody_local_directory(capsules_root)
         except Exception as exc:
@@ -205,18 +210,15 @@ def compare_and_swap_profile_pointer(
     replacement: bytes | None,
 ) -> None:
     """Replace or clear the pointer only while its exact captured bytes still match."""
-    adapters = custody
+    from ._profile_pointer_transaction import active_profile_pointer_transaction
+
     storage_root = effective_storage_root(root)
-    with adapters.profile_custody_root_lock(storage_root):
-        current = ProfileCustodyPointerSnapshot.capture(storage_root)
-        if current != expected:
+    with active_profile_pointer_transaction(storage_root) as pointer:
+        current = pointer.capture()
+        if current != expected.captured_bytes():
             raise ProfileCustodyTransactionConflictError("active profile pointer changed after custody preflight")
-        target = storage_root / storage_location(StorageCategory.ACTIVE_PROFILE_POINTER).relative_path()
         try:
-            if replacement is None:
-                adapters.clear_profile_custody_local_record(target)
-            else:
-                adapters.write_profile_custody_local_record(target, replacement, publish_once=False)
+            pointer.restore(replacement)
         except Exception as exc:
             raise ProfileCustodyTransactionCorruptError(
                 "active profile pointer cannot be atomically compared and swapped"
