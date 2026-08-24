@@ -5,57 +5,43 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:8f08625cd820100cf189610a2e0e48e90fce63be052bef89a23fcfa35eaa3e60'
+body_hash: 'sha256:1e7d64ade799cb8f17cf6a7884ff11fc705fb7321fed9e576b88937d770ea29f'
 step_id: 'S116'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S116 and 2026-08-11-tui-architecture-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Define the strict current-only operation observation, public projection, event-page, REVIEW-projection, response-control, cancellation, detach, and Workspace-refresh request, success, and typed refusal DTO families with independent V1 dispatch axes and ## Scope
-
-- `src/cadrumo/application/operations/_public.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Define the strict current-only operation observation, public projection, event-page, REVIEW-projection, response-control, cancellation, detach, and Workspace-refresh request, success, and typed refusal DTO families with independent V1 dispatch axes
 
 ## Scope
 
 - `src/cadrumo/application/operations/_public.py`
+- `src/cadrumo/application/operations/_registry.py`
+- `src/cadrumo/application/operations/_models.py`
+- `src/cadrumo/application/operations/__init__.py`
+- `src/cadrumo/application/operations/tests/test_public_contracts.py`
+- `src/cadrumo/application/operations/tests/test_facade.py`
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Ground the DTO boundary in accepted D0, D2, D7, and D10 clauses and the live S115 schema-contract implementation.
+- Define strict unspecialized endpoint version headers plus current-only request, success, and closed typed-refusal families for observation, safe REVIEW projection, response-control availability, cancellation, detach, and Workspace refresh.
+- Define a renderer-neutral anchored public projection, safe event-row union, bounded event page, progress record, and closed pending-interaction union.
+- Keep endpoint version axes independent and exclude response bearers, private interaction checkpoints, custody material, raw journal records, raw events, lease evidence, callbacks, and frontend types.
+- Enforce terminal, pending-interaction, cancellation, deadline, contract-declaration, progress, replay, and resynchronization consistency at the DTO boundary.
+- Remove serializer-driven digest normalization from the S115 public definition contract and preserve deterministic digests through one explicit canonical value builder, allowing validation and serialization schemas to remain identical.
+- Reuse the canonical terminal result/refusal invariant from `_models.py` instead of redeclaring it in the public terminal event.
+- Export the DTO family only through the canonical `cadrumo.application.operations` facade and extend its topology gate.
+- Construct public projection fixtures only through a real immutable operation registry, public definition registration, schema bindings, and contract set; exercise anchor, lifecycle-terminal-pending, timeline, deadline, cancellation, and contract-axis refusals adversarially.
+- Run post-edit semantic and exact-symbol censuses for shadow observation, REVIEW, response-control, cancellation, detach, refresh, terminal, and digest authorities.
 
 ## Outcome
 
+The sole canonical public DTO home is `_public.py`. Its closed unions preserve independent lifecycle, terminal-condition, and effect truth; bind observation pages to one anchor; enforce contiguous replay and resynchronization cursors; specialize REVIEW and refresh successes by exact registered models; and expose response availability without a bearer. Minimal headers support endpoint-specific unsupported-version dispatch without accepting retired exact request shapes. The facade remains the only public import path.
+
+Every exported S116 Pydantic model, including the full projection, nested pending interactions, and every safe event variant, now passes the strict frozen closed-model graph and exact schema fingerprint gates. S115 contract digests remain deterministic without a field serializer or a second normalization authority. Projection conformance uses no direct test `model_construct` path.
+
+Verification passed: 255 selected unit tests and 61 integration tests across the complete operation package, Ruff, basedpyright, Python compilation, and the repository import-hygiene scanner. Semantic fixed-point censuses and exact symbol sweeps found no second production declaration of any new DTO family; the one duplicated terminal invariant they exposed was deleted in favor of the canonical `_models.py` function.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+The existing facade still exports private supervisor-era snapshots, raw events, replay records, interactions, journal ports, and lease contracts. They remain live implementation authorities in this step and are mandatory S121/S122 cutover/deletion work; S116 does not create aliases for them or widen into service deletion. Supervisor aliases and direct manager execution doors remain mapped to S119-S122, S76-S78, and S157. The import-hygiene scan also reports unrelated standing tree findings outside this step; it exited successfully and found no new production cross-package private import or re-export bridge from S116.
