@@ -5,11 +5,10 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:c5448433f05343813acb274576b4bb0d999a25b4397044c64ecb6b04d2819c8e'
+body_hash: 'sha256:c2e1a3ada9e75544bd8efa9ba4f22a6421c6357c7bb82eba5db8b4b0be809208'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
 ---
-
 # `registry-completeness-closure` reference: `Modelo 036 2025 filing authority adjudication`
 
 ## Summary
@@ -29,11 +28,11 @@ new beneficial-owner data. Its authoritative text is
 effective-date clauses at paragraphs 95-152.
 
 AEAT's live procedure page identifies Modelo 036 as a census alta,
-modificacion, and baja procedure, exposes electronic handling, and identifies
-AEAT as responsible. `https://sede.agenciatributaria.gob.es/Sede/procedimientos/G322.shtml`
-records the electronic channel and identification requirements. The AEAT record-design
-index separately publishes “Diseño de Registro del modelo M036 (03-02-2025 y
-siguientes)” at
+modificacion, and baja procedure, exposes electronic handling, identifies AEAT
+as responsible, and records that the declaration may also be presented in
+paper at the competent AEAT office. `https://sede.agenciatributaria.gob.es/Sede/procedimientos/G322.shtml`
+records the channels and identification requirements. The AEAT record-design
+index separately publishes its 2025 M036 document at
 `https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99.html`.
 
 The bundled source `aeat-dr-036-2025` pins that exact XLSX by URL, SHA-256, and
@@ -57,9 +56,12 @@ and its regression expects no filing portal for `036`. See
 `src/cadrumo/domain/portals/_entries/portal_m036_censal.py:18-32`,
 `src/cadrumo/domain/portals/_registry.py:270-276`, and
 `src/cadrumo/domain/portals/tests/test_registry.py:128-131`.
-`record_m036_declaration` records an operator's Sede filing only and explicitly
-prohibits any local filing action in `src/cadrumo/application/modelo/_m036_lifecycle.py:1-31`
-and `:315-350`.
+`record_m036_declaration` records an operator-declared filing made through Sede
+or in person at an AEAT office; it does not create, render, submit, or dispatch
+an M036 artifact. Its `sede_justificante` field is optional: it records an
+electronic receipt when the operator has one, and its absence does not negate
+an office filing or otherwise prevent the local lifecycle record. See
+`src/cadrumo/application/modelo/_m036_lifecycle.py:1-31` and `:90-145`.
 
 `FilingProducerKey` contains no member whose value starts `m036.`. A direct
 enumeration on 2026-08-24 returned `m036 producer keys: ()`. This is correct:
@@ -79,20 +81,28 @@ not evidence that the official 2025 model or its record design is absent. The
 revision must not be promoted, receive a semantic map, or receive a producer
 namespace merely to reduce a worklist.
 
-The live delivery owner for a future change is `W02.P04.S28` of
+The source-participation route is `W02.P04.S73` of
+`2026-08-24-registry-completeness-closure-plan`. It begins with Modelo 036 and
+must decide from real evidence whether the below-filing revision participates in
+the source-connectivity census; it must route any accepted evidence or
+ADR-authorized disposition through the existing
+`2026-08-22-source-casilla-integration-plan`. An empty candidate set is not
+proof of participation or of closure. That source decision is separate from
+filing-artifact scope.
+
+The live delivery owner for a future filing artifact is `W02.P04.S28` of
 `2026-08-24-registry-completeness-closure-plan`: it must enroll one bounded
 remedy in the existing `2026-08-10-aeat-export-fragment-generator-authority-plan`,
 not create a parallel writer. The grade/horizon aspect remains with
-`2026-08-14-registry-temporal-coverage-plan`; censo source facts remain with
-`2026-08-22-source-casilla-integration-plan` if the approved scope requires
-them.
+`2026-08-14-registry-temporal-coverage-plan`. Neither the source route nor
+the filed-at-Sede-or-office lifecycle record authorizes a filing layout.
 
-Reconsider only after an accepted ADR explicitly expands the product from
-recording a human-filed censo declaration to preparing an M036 filing artifact.
-That decision must first name typed authoritative owners for every required
-non-casilla and repeated-record value, then require the exact 2025 source hash,
-complete semantic map and render profile, applicable source/casilla paths,
-filing-grade promotion, generated-tree validation, and emitted-byte proof.
-It must continue to prohibit remote AEAT submission. Until every prerequisite is
-landed and independently reviewed, the non-filing boundary remains terminal for
-the shipped revision.
+Reconsider filing artifacts only after an accepted ADR explicitly expands the
+product from recording a human-filed censo declaration to preparing an M036
+filing artifact. That decision must first name typed authoritative owners for
+every required non-casilla and repeated-record value, then require the exact
+2025 source hash, complete semantic map and render profile, applicable
+source/casilla paths, filing-grade promotion, generated-tree validation, and
+emitted-byte proof. It must continue to prohibit remote AEAT submission. Until
+every prerequisite is landed and independently reviewed, the non-filing
+boundary remains terminal for the shipped revision.

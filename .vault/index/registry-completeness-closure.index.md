@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:68972f77740cb1933f704af51704b3136a02bb7c54ffa9da867b912bdef6f80f'
+body_hash: 'sha256:d1f851df16da3cbbc004b44f84cbc2fc9451bfb1e78705e228ef751a4e58f92b'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -67,6 +67,8 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W02-P03-S23]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P03-S24]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P03-S25]]'
+  - '[[2026-08-24-registry-completeness-closure-W02-P04-S74]]'
+  - '[[2026-08-24-registry-completeness-closure-W02-P04-S79]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-audit]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-036-2025-filing-authority-reference]]'
@@ -108,6 +110,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s22-independent-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s23-independent-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s24-independent-post-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s25-independent-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s41-cache-key-type-review-audit]]'
@@ -146,6 +149,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s70-evidence-reconciliation-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s71-independent-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s72-grade-scoping-post-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s79-modelo-220-count-reconciliation-review-audit]]'
 ---
 
 # `registry-completeness-closure` feature index
@@ -184,6 +188,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s22-independent-post-review-audit` - `registry-completeness-closure` audit: `S22 independent Modelo 390 2021 post-review`
 - `2026-08-24-registry-completeness-closure-s23-independent-post-review-audit` - `registry-completeness-closure` audit: `S23 independent Modelo 721 structured-message post-review`
 - `2026-08-24-registry-completeness-closure-s24-independent-post-review-audit` - `registry-completeness-closure` audit: `S24 Modelo 763 independent post-review`
+- `2026-08-24-registry-completeness-closure-s25-independent-post-review-audit` - `registry-completeness-closure` audit: `S25 Modelo 840 independent post-review`
 - `2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot authority-grade enforcement review`
 - `2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot-grade enforcement review`
 - `2026-08-24-registry-completeness-closure-s41-cache-key-type-review-audit` - `registry-completeness-closure` audit: `S41 cache-key type review`
@@ -222,6 +227,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s70-evidence-reconciliation-post-review-audit` - `registry-completeness-closure` audit: `S70 evidence reconciliation post review`
 - `2026-08-24-registry-completeness-closure-s71-independent-post-review-audit` - `registry-completeness-closure` audit: `verify plan-derived closure criterion and tracking state`
 - `2026-08-24-registry-completeness-closure-s72-grade-scoping-post-review-audit` - `registry-completeness-closure` audit: `S72 filing-grade scoping independent post-review`
+- `2026-08-24-registry-completeness-closure-s79-modelo-220-count-reconciliation-review-audit` - `registry-completeness-closure` audit: `S79 Modelo 220 count reconciliation independent post-review`
 
 ### exec
 
@@ -284,6 +290,8 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W02-P03-S23` - Adjudicate Modelo 721 revision 2023-y-siguientes record-design availability and supported filing boundary
 - `2026-08-24-registry-completeness-closure-W02-P03-S24` - Adjudicate Modelo 763 revision 2011-y-siguientes design-era coverage
 - `2026-08-24-registry-completeness-closure-W02-P03-S25` - Adjudicate Modelo 840 revision 2003-y-siguientes record-terminator semantics and official extent
+- `2026-08-24-registry-completeness-closure-W02-P04-S74` - Correct Modelo 036 human-filing wording and route its source and export reconsideration paths exactly.
+- `2026-08-24-registry-completeness-closure-W02-P04-S79` - Correct Modelo 220/2024 reviewer-stamp record-design counts against the hash-verified parser measurement and re-attest the unchanged applicability-grade, non-fileable disposition.
 
 ### plan
 
