@@ -247,7 +247,21 @@ def test_exact_path_foreign_launcher_is_refused(tmp_path: Path) -> None:
     scripts = venv_bin_dir(copied_venv)
     copied_server = scripts / server.name
     copied_server.unlink()
-    shutil.copy2(scripts / ("aeat.exe" if server.suffix.lower() == ".exe" else "aeat"), copied_server)
+    peer_cli = scripts / ("aeat.exe" if server.suffix.lower() == ".exe" else "aeat")
+    if server.suffix.lower() == ".exe":
+        shutil.copy2(peer_cli, copied_server)
+    else:
+        original_shebang, separator, script_body = peer_cli.read_bytes().partition(b"\n")
+        assert separator, "the real installed POSIX peer launcher must carry a shebang"
+        assert original_shebang.startswith(b"#!"), "the real installed POSIX peer launcher must name Python"
+        original_interpreter_path = Path(original_shebang[2:].decode("utf-8"))
+        assert original_interpreter_path.is_absolute(), "the installed peer shebang must be absolute"
+        original_interpreter = original_interpreter_path.resolve(strict=True)
+        source_python = (server.parent / "python").resolve(strict=True)
+        assert original_interpreter == source_python, "the peer launcher must belong to the source environment"
+        copied_python = (scripts / "python").resolve(strict=True)
+        copied_server.write_bytes(f"#!{copied_python}\n".encode() + script_body)
+        shutil.copymode(peer_cli, copied_server)
     with pytest.raises(RuntimeError, match="launcher semantics drifted"):
         assert_installed_console_entry_point(
             copied_server,

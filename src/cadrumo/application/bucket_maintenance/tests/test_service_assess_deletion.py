@@ -36,7 +36,8 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Generator, Mapping
+import os
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
@@ -44,6 +45,7 @@ from uuid import UUID
 
 import pytest
 
+from ....core import ActionConditionality, NoRecoveryOutcome
 from ....domain.buckets import BucketDeleteRefusedError
 from ....domain.modelos import ModeloRecord
 from ....tests.profile_capsule import open_test_profile_session
@@ -116,15 +118,27 @@ def _assess() -> BucketDeletionAssessment:
     )
 
 
-def _refusal_context(error: BucketDeleteRefusedError) -> Mapping[str, object]:
-    """Return the refusal's structured context, proving it carries one.
+def _refusal_verdict(error: BucketDeleteRefusedError):
+    """Return the typed safety refusal without a hand-authored recovery hint."""
+    verdict = error.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.conditionality is ActionConditionality.NOT_APPLICABLE
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.SAFETY
+    assert verdict.action is None
+    assert verdict.argument_bindings == ()
+    assert error.context == {"bucket_id": _PROFILE_ID}
+    assert error.translated_message == "errors.error.error_storage_bucket"
+    assert str(error) == "errors.error.error_storage_bucket"
+    return verdict
 
-    A refusal with no context names nothing an operator can act on, so the
-    absence of context is itself a failure rather than a typing inconvenience.
-    """
-    context = error.context
-    assert context is not None
-    return context
+
+def _remove_snapshot(root: Path) -> None:
+    """Make the filing owner's otherwise-normal empty snapshot truly absent."""
+    from ...filing import FilingRetentionAuthority
+
+    snapshot_path = FilingRetentionAuthority(root=root).path(UUID(_PROFILE_ID))
+    assert snapshot_path.exists()
+    snapshot_path.unlink()
 
 
 def test_a_recorded_empty_snapshot_answers_while_an_absent_one_refuses(tmp_path: Path) -> None:
@@ -135,10 +149,16 @@ def test_a_recorded_empty_snapshot_answers_while_an_absent_one_refuses(tmp_path:
     resulting fail-open erases taxpayer records nobody proved were erasable.
     """
     with _published_profile(tmp_path) as root:
+        _remove_snapshot(root)
         with pytest.raises(BucketDeleteRefusedError) as refused:
             _assess()
-        assert _refusal_context(refused.value)["retention_snapshot"] == "absent"
-        assert _refusal_context(refused.value)["unassessable"] == "filing_retention_floor"
+        verdict = _refusal_verdict(refused.value)
+        assert verdict.failed_condition_id == "bucket_maintenance.filing.retention_snapshot_assessable"
+        assert verdict.evidence[0].values == {
+            "bucket_id": _PROFILE_ID,
+            "retention_snapshot_present": False,
+            "retention_snapshot_readable": False,
+        }
 
         _record_snapshot(root)
 
@@ -195,11 +215,94 @@ def test_a_snapshot_that_cannot_be_authenticated_refuses_distinctly(tmp_path: Pa
         snapshot_path.write_bytes(intact.replace(b'"filing_records"', b'"filing_recordz"'))
         with pytest.raises(BucketDeleteRefusedError) as refused:
             _assess()
-        assert _refusal_context(refused.value)["retention_snapshot"] == "unreadable"
-        assert _refusal_context(refused.value)["unassessable"] == "filing_retention_floor"
+        verdict = _refusal_verdict(refused.value)
+        assert verdict.failed_condition_id == "bucket_maintenance.filing.retention_snapshot_assessable"
+        assert verdict.evidence[0].values == {
+            "bucket_id": _PROFILE_ID,
+            "retention_snapshot_present": True,
+            "retention_snapshot_readable": False,
+        }
 
         snapshot_path.write_bytes(intact)
         assert _assess().retention is not None
+
+
+def test_a_linked_custody_target_refuses_with_its_exact_safety_verdict(tmp_path: Path) -> None:
+    """The preflight must not follow a redirected capsule directory."""
+    from ....adapters.persistence.storage.bucket import bucket_paths
+
+    with _published_profile(tmp_path) as root:
+        paths = bucket_paths(root, _PROFILE_ID)
+        redirected = tmp_path / "redirected-capsule"
+        paths.bucket_dir.rename(redirected)
+        os.symlink(redirected, paths.bucket_dir, target_is_directory=True)
+        try:
+            with pytest.raises(BucketDeleteRefusedError) as refused:
+                _assess()
+            verdict = _refusal_verdict(refused.value)
+            assert verdict.failed_condition_id == "bucket_maintenance.custody.target_unlinked"
+            assert verdict.evidence[0].values == {
+                "bucket_id": _PROFILE_ID,
+                "custody_target_unlinked": False,
+            }
+        finally:
+            paths.bucket_dir.unlink()
+            redirected.rename(paths.bucket_dir)
+
+
+def test_a_missing_label_projection_refuses_with_its_exact_safety_verdict(tmp_path: Path) -> None:
+    """A present capsule without a committed projection is not a deletable target."""
+    from ....adapters.persistence.storage.custody import profile_custody_path
+    from ....core import StorageCategory
+
+    with _published_profile(tmp_path) as root:
+        commit_path = profile_custody_path(
+            UUID(_PROFILE_ID),
+            StorageCategory.PROFILE_CAPSULE_COMMIT,
+            root=root,
+        )
+        commit = commit_path.read_bytes()
+        commit_path.unlink()
+        try:
+            with pytest.raises(BucketDeleteRefusedError) as refused:
+                _assess()
+            verdict = _refusal_verdict(refused.value)
+            assert verdict.failed_condition_id == "bucket_maintenance.custody.label_projection_present"
+            assert verdict.evidence[0].values == {
+                "bucket_id": _PROFILE_ID,
+                "custody_record_present": False,
+            }
+        finally:
+            commit_path.write_bytes(commit)
+
+
+def test_an_unreadable_capsule_inventory_refuses_with_its_exact_safety_verdict(tmp_path: Path) -> None:
+    """A linked capsule member makes the deletion fingerprint untrustworthy."""
+    from ....adapters.persistence.storage.custody import profile_custody_path
+    from ....core import StorageCategory
+
+    with _published_profile(tmp_path) as root:
+        _record_snapshot(root)
+        capsule_path = profile_custody_path(
+            UUID(_PROFILE_ID),
+            StorageCategory.PROFILE_CAPSULE_COMMIT,
+            root=root,
+        ).parent
+        external = tmp_path / "outside-capsule"
+        external.write_bytes(b"outside custody")
+        linked_member = capsule_path / "data" / "outside-capsule"
+        os.symlink(external, linked_member)
+        try:
+            with pytest.raises(BucketDeleteRefusedError) as refused:
+                _assess()
+            verdict = _refusal_verdict(refused.value)
+            assert verdict.failed_condition_id == "bucket_maintenance.custody.capsule_inventory_readable"
+            assert verdict.evidence[0].values == {
+                "bucket_id": _PROFILE_ID,
+                "capsule_inventory_readable": False,
+            }
+        finally:
+            linked_member.unlink()
 
 
 def test_the_fingerprint_folds_the_real_capsule_and_moves_with_it(tmp_path: Path) -> None:

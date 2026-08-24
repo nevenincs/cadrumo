@@ -752,6 +752,53 @@ class TestProfileSessionAcceleration:
         assert not (tmp_path / ".profile-custody-root.lock").exists()
         assert not any(tmp_path.iterdir())
 
+    def test_naive_idle_renewal_refuses_before_custody_root_provisioning(self, tmp_path: Path) -> None:
+        """A malformed renewal deadline cannot materialise a root lock."""
+        profile_id = _profile_id()
+        record = _wrap(session_key=secrets.token_bytes(32), dek=secrets.token_bytes(32), profile_id=profile_id)
+        with pytest.raises(ValueError, match="timezone-aware UTC"):
+            advance_persisted_profile_session_idle_deadline(
+                storage_root=tmp_path,
+                profile_id=profile_id,
+                record=record,
+                new_idle_deadline=datetime(2026, 8, 14, 12, 30, 0),
+            )
+        assert not (tmp_path / ".profile-custody-root.lock").exists()
+        assert not any(tmp_path.iterdir())
+
+    @pytest.mark.parametrize(
+        ("profile_id", "custody_generation", "dek_epoch", "dek"),
+        (
+            (UUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8"), 1, _EPOCH, secrets.token_bytes(32)),
+            (_profile_id(), 0, _EPOCH, secrets.token_bytes(32)),
+            (_profile_id(), 1, "", secrets.token_bytes(32)),
+            (_profile_id(), 1, _EPOCH, secrets.token_bytes(31)),
+        ),
+        ids=("non-v4-profile", "nonpositive-generation", "empty-epoch", "wrong-dek-length"),
+    )
+    def test_malformed_mint_refuses_before_custody_root_provisioning(
+        self,
+        tmp_path: Path,
+        profile_id: UUID,
+        custody_generation: int,
+        dek_epoch: str,
+        dek: bytes,
+    ) -> None:
+        """Malformed mint input cannot create a durable custody coordination leaf."""
+        with pytest.raises((EncryptionError, ValueError)):
+            mint_profile_session(
+                storage_root=tmp_path,
+                profile_id=profile_id,
+                custody_generation=custody_generation,
+                dek_epoch=dek_epoch,
+                dek=dek,
+                now=_NOW,
+                idle_minutes=_IDLE_MINUTES,
+                absolute_minutes=_ABSOLUTE_MINUTES,
+            )
+        assert not (tmp_path / ".profile-custody-root.lock").exists()
+        assert not any(tmp_path.iterdir())
+
 
 @pytest.mark.os_keychain
 def test_revocation_refuses_when_the_receipt_survives_the_clear(tmp_path: Path) -> None:
