@@ -14,7 +14,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
 modified: '2026-08-24'
 body_schema: body-v1
-body_hash: 'sha256:f57b1497aaaa1a4b0ba50f276642a63388af82e15395b401dec9f359200649bd'
+body_hash: 'sha256:b44a1c26c6c3e5f9db10584a9d55579bcbc7a06d628407ac56521a0d670c9034'
 ---
 
 <!-- RETIRED: P06, P07, P09 -->
@@ -44,8 +44,8 @@ Establish deadline semantic identity, exact-one revision ownership, and supporte
 
 Type deadline identity through existing canonical vocabularies and shared temporal coverage.
 
-- [ ] `W01.P01.S01` - Record the canonical shared temporal-coverage dependency in the approved deadline architecture; `.vault/adr/2026-08-24-deadline-window-revision-authority-adr.md`.
-- [ ] `W01.P01.S02` - Add optional typed deadline qualifiers reusing ResultDisposition and official M210 tipo-renta code authority without a lossy TipoRentaIrnr projection; `src/cadrumo/domain/calculations/registry/_schema.py`.
+- [x] `W01.P01.S01` - Record the canonical shared temporal-coverage dependency in the approved deadline architecture; `.vault/adr/2026-08-24-deadline-window-revision-authority-adr.md`.
+- [x] `W01.P01.S02` - Add optional typed deadline qualifiers reusing ResultDisposition and official M210 tipo-renta code authority without a lossy TipoRentaIrnr projection; `src/cadrumo/domain/calculations/registry/_schema.py`.
 - [ ] `W01.P01.S03` - Define the canonical deadline semantic coordinate from modelo, Period, ResultDisposition, and official tipo-renta code scope using existing period authorities; `src/cadrumo/domain/calculations/registry/`.
 - [ ] `W01.P01.S04` - Extend deadline-window loading and serialization for typed qualifiers while preserving unqualified rows and fragmented authoring ownership; `src/cadrumo/domain/calculations/registry/_loader.py; src/cadrumo/domain/calculations/registry/tests/`.
 
