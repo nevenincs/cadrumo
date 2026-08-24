@@ -9,7 +9,7 @@ import pytest
 
 from .....core import ConvenioOverrideKind, ResultDisposition, TipoRentaIrnr
 from .....core.resources import bundled_path
-from .. import load_convenio_authority, select_revision
+from .. import load_convenio_authority, load_modelo_directory, select_revision
 from .._errors import NoRevisionForPeriodError
 from .._legal import verify_legal_catalogue
 from .._schema import ModeloDefinition, RegistryCatalogues
@@ -21,6 +21,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _M210_FORM_ORDER_REF = "orden-eha-3316-2010:art-1"
 _M210_AGRUPACION_ORDER_REF = "orden-eha-3316-2010:art-2"
+_ANNUAL_PERIOD = "0A"
 
 
 def _load_modelo_210() -> tuple[ModeloDefinition, RegistryCatalogues]:
@@ -132,7 +133,7 @@ def test_modelo_210_snapshot_builds_for_2025_event_and_annual_group_periods() ->
 
 
 def test_modelo_210_deadlines_use_canonical_annual_identity_and_exact_revision_owner() -> None:
-    modelo, _catalogues = _load_modelo_210()
+    modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "210"))
 
     expected = {
         2025: {
@@ -190,9 +191,9 @@ def test_modelo_210_deadlines_use_canonical_annual_identity_and_exact_revision_o
     }
 
     for filing_year, expected_windows in expected.items():
-        owner = select_revision(modelo, filing_year=filing_year, period="0A")
+        owner = select_revision(modelo, filing_year=filing_year, period=_ANNUAL_PERIOD)
         assert {window.id for window in owner.deadline_windows} == set(expected_windows)
-        assert all(window.period.registry_token == "0A" for window in owner.deadline_windows)
+        assert all(window.period.registry_token == _ANNUAL_PERIOD for window in owner.deadline_windows)
         assert all(window.filing_year == filing_year for window in owner.deadline_windows)
         assert all("-1t" not in window.id and "-2t" not in window.id for window in owner.deadline_windows)
         for window in owner.deadline_windows:
@@ -203,8 +204,8 @@ def test_modelo_210_deadlines_use_canonical_annual_identity_and_exact_revision_o
                 window.closes_on,
             ) == expected_windows[window.id]
 
-    assert select_revision(modelo, filing_year=2025, period="0A").id == "2025"
-    assert select_revision(modelo, filing_year=2026, period="0A").id == "2026-y-siguientes"
+    assert select_revision(modelo, filing_year=2025, period=_ANNUAL_PERIOD).id == "2025"
+    assert select_revision(modelo, filing_year=2026, period=_ANNUAL_PERIOD).id == "2026-y-siguientes"
 
 
 def test_modelo_210_legacy_evento_period_is_not_supported() -> None:
