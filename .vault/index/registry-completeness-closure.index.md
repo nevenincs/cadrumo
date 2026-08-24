@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:4f39eb65a8dd87609722ff9ccbc06093a98075701670437c098877ec7ebcf32c'
+body_hash: 'sha256:64c752414c08e94e0b9cc429459d4e3968c739f5472ce30028ed652b91b079cc'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -18,6 +18,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-summary]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S06]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S07]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S42]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S43]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
@@ -29,6 +30,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s41-cache-key-type-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s43-active-refusal-disposition-review-audit]]'
 ---
 
 # `registry-completeness-closure` feature index
@@ -50,6 +52,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot authority-grade enforcement review`
 - `2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot-grade enforcement review`
 - `2026-08-24-registry-completeness-closure-s41-cache-key-type-review-audit` - `registry-completeness-closure` audit: `S41 cache-key type review`
+- `2026-08-24-registry-completeness-closure-s43-active-refusal-disposition-review-audit` - `registry-completeness-closure` audit: `S43 active-refusal disposition review`
 
 ### exec
 
@@ -63,6 +66,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P01-summary` - `registry-completeness-closure` `W01.P01` summary
 - `2026-08-24-registry-completeness-closure-W01-P02-S06` - Define strict typed per-revision closure-limb and refusal models on the application registry boundary
 - `2026-08-24-registry-completeness-closure-W01-P02-S07` - Compose the temporal coverage and authority-grade limb from validated law-selected registry revisions
+- `2026-08-24-registry-completeness-closure-W01-P02-S42` - Constrain temporal evidence identity, period, and filing-year fields to registry semantics and add mutation proof for every composer refusal outcome
 - `2026-08-24-registry-completeness-closure-W01-P02-S43` - Reject resolved owner dispositions on active closure refusals and prove the contradiction fails validation
 
 ### plan
