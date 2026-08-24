@@ -15,11 +15,14 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ....application.user_profile import CapabilitySource, register_profile_with_credentials
+from ....application.user_profile import login_profile, CapabilitySource, register_profile_with_credentials
 from ....core import ServiceCapability
 from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+
+_LABEL = "Capability test profile"
+_PASSPHRASE = "capability-test-passphrase"  # noqa: S105 - synthetic test credential
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -31,9 +34,13 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         isolated_profile_storage_root(tmp_path=tmp_path),
     ):
         register_profile_with_credentials(
-            label="Capability test profile",
-            passphrase="capability-test-passphrase",  # noqa: S106 - synthetic test credential
+            label=_LABEL,
+            passphrase=_PASSPHRASE,
         )
+        # Registration closes its own session, so the profile is LOCKED and every
+        # verb below refuses with "you are not logged in". Logging in derives the
+        # DEK the capsule was sealed under.
+        login_profile(name=_LABEL, passphrase_callback=lambda: _PASSPHRASE)
         yield
 
 
@@ -46,10 +53,13 @@ def _show() -> dict[str, Any]:
 
 def test_show_reports_every_capability_with_default_posture() -> None:
     rows = _show()
-    assert set(rows) == {"llm_vision", "google_export"}
+    # Every declared capability, not a subset: the set is asserted whole so a new
+    # one cannot be added without a decision about its default posture here.
+    assert set(rows) == {"llm_vision", "google_export", "cloud_evidence_upload"}
     # Defaults: cloud off (global), vision/google on (default).
     assert rows["llm_vision"]["enabled"] is True
     assert rows["google_export"]["enabled"] is True
+    assert rows["cloud_evidence_upload"]["enabled"] is False
 
 
 @pytest.mark.parametrize(
