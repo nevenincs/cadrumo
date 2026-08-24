@@ -17,7 +17,13 @@ import pytest
 
 from ....application.state_projection import build_pending_obligations
 from ....core.errors import ErrorCategory, build_error_envelope
-from ....domain.deadlines import DeadlineEngine, IVARegime, TaxpayerProfile, compute_obligation_schedule
+from ....domain.deadlines import (
+    DeadlineEngine,
+    IVARegime,
+    ScheduleComputationError,
+    TaxpayerProfile,
+    compute_obligation_schedule,
+)
 from .. import _deadline_stage as deadline_stage_module
 from .. import _engine as engine_module
 from .. import _engine_recording as engine_recording_module
@@ -192,6 +198,35 @@ def test_workflow_deadline_gate_and_projection_share_the_production_schedule() -
 
     assert authority_rows
     assert projection_rows == authority_rows
+
+
+def test_workflow_target_selection_refuses_duplicate_canonical_schedule_rows() -> None:
+    """A consumer must not hide an upstream duplicate by choosing its first row."""
+    profile = TaxpayerProfile(
+        tax_id="X1234567L",
+        iva_regime=IVARegime.GENERAL,
+        has_employees=False,
+        pays_rent_with_retencion=False,
+        does_intracomunitario=False,
+        bienes_extranjero_above_threshold=False,
+    )
+    schedule = compute_obligation_schedule(DeadlineEngine(), profile, today=date(2026, 4, 12))
+    obligation = schedule.obligations[0]
+    duplicate_schedule = schedule.model_copy(update={"obligations": (*schedule.obligations, obligation)})
+
+    with pytest.raises(ScheduleComputationError) as raised:
+        deadline_stage_module._target_obligation_from_schedule(
+            duplicate_schedule,
+            target_modelo=obligation.modelo,
+            target_period=obligation.period,
+        )
+
+    assert raised.value.context == {
+        "modelo": obligation.modelo,
+        "filing_year": str(obligation.period.filing_year),
+        "period": obligation.period.registry_token,
+        "match_count": "2",
+    }
 
 
 @pytest.mark.parametrize(

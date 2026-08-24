@@ -32,6 +32,7 @@ from ....core import (
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
+    CalculationRevisionPersistenceError,
     CalculationRevisionState,
     CalculationSourceRef,
     derive_calculation_revision_id,
@@ -311,8 +312,9 @@ def test_real_live_authority_encrypted_payload_roundtrip_and_raw_lineage_deletio
         payload=json.dumps(envelope).encode("utf-8"),
     )
 
-    with pytest.raises(ValidationError, match="lineage_role"):
+    with pytest.raises(CalculationRevisionPersistenceError, match="payload is invalid") as error:
         repository.load()
+    assert error.value.context == {"reason": "invalid_payload"}
 
 
 @pytest.mark.parametrize(
@@ -437,7 +439,13 @@ def test_coverage_composer_classifies_live_executable_evidence_failures(
             "bounded_follow_up": None,
         },
     )
-    connected_census = census.model_copy(update={"entries": (connected, *census.entries[1:])})
+    connected_census = census.model_copy(
+        update={
+            "entries": tuple(
+                connected if entry.candidate_id == inventory.candidate_id else entry for entry in census.entries
+            ),
+        },
+    )
 
     before_drift = compose_source_connectivity_coverage(
         authority=registry_authority,
@@ -524,7 +532,13 @@ def test_coverage_composer_classifies_structured_live_proof_failures(
             "bounded_follow_up": None,
         },
     )
-    connected_census = census.model_copy(update={"entries": (connected, *census.entries[1:])})
+    connected_census = census.model_copy(
+        update={
+            "entries": tuple(
+                connected if entry.candidate_id == inventory.candidate_id else entry for entry in census.entries
+            ),
+        },
+    )
 
     report = compose_source_connectivity_coverage(
         authority=registry_authority,
@@ -579,7 +593,13 @@ def test_coverage_composer_fails_closed_on_generic_live_proof_validation_error(
         is SourceConnectivityProofFailureCause.LIVE_PROOF_VALIDATION_FAILED
     )
 
-    connected_census = census.model_copy(update={"entries": (connected, *census.entries[1:])})
+    connected_census = census.model_copy(
+        update={
+            "entries": tuple(
+                connected if entry.candidate_id == inventory.candidate_id else entry for entry in census.entries
+            ),
+        },
+    )
     report = compose_source_connectivity_coverage(
         authority=registry_authority,
         census=connected_census,

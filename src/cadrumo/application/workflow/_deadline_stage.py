@@ -31,6 +31,7 @@ from ...domain.deadlines import (
     ModeloDeadline,
     NoDeadlineWindowsError,
     Schedule,
+    ScheduleComputationError,
     TaxpayerProfile,
     compute_obligation_schedule,
     next_deadline,
@@ -75,9 +76,43 @@ def resolve_deadline_stage_obligation(
         purpose=purpose,
     )
     if target_modelo is not None and target_period is not None:
-        matches = [o for o in schedule.obligations if o.modelo == target_modelo and o.period == target_period]
-        return matches[0] if matches else None
+        return _target_obligation_from_schedule(
+            schedule,
+            target_modelo=target_modelo,
+            target_period=target_period,
+        )
     return next_deadline(schedule, today=today)
+
+
+def _target_obligation_from_schedule(
+    schedule: Schedule,
+    *,
+    target_modelo: str,
+    target_period: Period,
+) -> ModeloDeadline | None:
+    """Select an exact workflow target without masking schedule multiplicity.
+
+    Deadline identity and matching remain owned by the registry authority and
+    deadline engine.  This application boundary only narrows their canonical
+    schedule to the work-unit target.  More than one row is therefore an
+    upstream integrity failure, never a choice this consumer may arbitrate.
+    """
+    matches = tuple(
+        obligation
+        for obligation in schedule.obligations
+        if obligation.modelo == target_modelo and obligation.period == target_period
+    )
+    if len(matches) > 1:
+        raise ScheduleComputationError(
+            "canonical deadline schedule contains multiple obligations for one workflow target",
+            context={
+                "modelo": target_modelo,
+                "filing_year": str(target_period.filing_year),
+                "period": target_period.registry_token,
+                "match_count": str(len(matches)),
+            },
+        )
+    return matches[0] if matches else None
 
 
 def abort_missing_deadline_obligation(
