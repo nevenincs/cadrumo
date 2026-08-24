@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:cdd37e6454fc98cbb7dc091f762f226ec04a892c5f2c3c8bd23f60aac201b81e'
+body_hash: 'sha256:8ad8e9eacdbec1bebd2c4105e9e20aa83403b66c1f6180145be500dcdc35cf9e'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -37,7 +37,7 @@ Establish the one derived release predicate, reconcile already-landed coverage w
 
 Independently review the landed schema-family and authority-grade contract, restore missing execution evidence, and reconcile its owning temporal-plan rows through canonical plan verbs.
 
-- [ ] `W01.P01.S01` - Independently review the landed schema-family coverage manifest against W01.P01.S02 and record every still-live finding; `.vault/audit/`.
+- [x] `W01.P01.S01` - Independently review the landed schema-family coverage manifest against W01.P01.S02 and record every still-live finding; `.vault/audit/`.
 - [ ] `W01.P01.S02` - Reconcile temporal-coverage W01.P01.S02 through its existing execution record and canonical plan state after review passes; `.vault/plan/2026-08-14-registry-temporal-coverage-plan.md`.
 - [ ] `W01.P01.S03` - Author the missing temporal-coverage W01.P01.S03 execution record from verified authority-grade ladder evidence; `.vault/exec/2026-08-14-registry-temporal-coverage/`.
 - [ ] `W01.P01.S04` - Independently review the authority-grade ladder and its registry-build enrollment against W01.P01.S03; `.vault/audit/`.
