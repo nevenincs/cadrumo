@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:c9a107487e3f5c6d4a20f81b3f3a71ac32a8b5a22414f45ff6651ae8adb2e205'
+body_hash: 'sha256:b1de7b6462709d785d5697462f5f86bc76bf5723ae3967df52df5ba05b3b3b6f'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
@@ -37,6 +37,10 @@ The final independent review verified the hardened implementation and its advers
 ### s115-redeclaration-audit | resolved | Fresh semantic and exact-symbol census confirms one authority per S115 concern
 
 A fresh Vaultspec RAG audit covered strict schema identities and fingerprints, public definition and contract-set fixed points, REVIEW and refresh registration, digest producers, and facade ownership. Its exact-symbol census finds all three V1 public types, runtime registrations, strict-schema validation, and both contract-digest producers only in `_registry.py`; the public facade only re-exports those types. The recursive strict operation-model graph validator exists only in `_model_contract.py`, and digesting reuses the pre-existing `content_hash_hex` authority. No duplicate or competing S115 authority was found.
+
+### s115-coercive-validator-witnesses | resolved | The final validator-mode evidence covers before, plain, and wrap paths
+
+The last review confirmed that the centralized validator rule correctly rejects every coercive Pydantic field/model validator mode, but requested missing `plain` and `wrap` witnesses. Both were added beside the `before` and model-level witnesses and exercised through `OperationSchemaIdentityV1`. The final independent review accepted the complete evidence set with no blocker.
 
 ## Recommendations
 
