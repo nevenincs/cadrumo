@@ -14,6 +14,7 @@ from collections.abc import Collection, Iterable
 from datetime import date, timedelta
 
 from ....core import M210_TIPO_RENTA_CODE_PROJECTION
+from ._deadline_coordinate import DeadlineSemanticCoordinate, deadline_window_semantic_coordinates
 from ._schema import DatedValue, InputKind, ModeloDefinition, ModeloRevision, ParameterDefinition
 from ._validate_relation_sources import period_selectors_overlap
 
@@ -35,6 +36,49 @@ def validate_revision_windows(modelo: ModeloDefinition) -> list[str]:
                 failures.append(
                     f"modelo {modelo.id}: revisions {earlier.id!r} and {later.id!r} overlap on period selector",
                 )
+    return failures
+
+
+def validate_deadline_window_uniqueness(modelo: ModeloDefinition) -> list[str]:
+    """Reject deadline identities repeated anywhere in one modelo's revisions.
+
+    Deadline rows are revision-owned law facts, so neither an authored id nor
+    an atomic request coordinate may have more than one owner.  The plural
+    coordinate projection deliberately expands qualifier bundles and wildcard
+    scopes before this pass compares them; this makes overlaps visible without
+    teaching the validator a second set of deadline matching rules.
+    """
+    failures: list[str] = []
+    id_owner: dict[str, str] = {}
+    coordinate_owner: dict[DeadlineSemanticCoordinate, tuple[str, str]] = {}
+    duplicate_ids: set[str] = set()
+    duplicate_coordinates: set[DeadlineSemanticCoordinate] = set()
+
+    for revision in modelo.revisions.values():
+        for window in revision.deadline_windows:
+            previous_revision = id_owner.get(window.id)
+            if previous_revision is None:
+                id_owner[window.id] = revision.id
+            elif window.id not in duplicate_ids:
+                failures.append(
+                    f"modelo {modelo.id}: deadline window id {window.id!r} is declared more than once "
+                    f"across revisions {previous_revision!r} and {revision.id!r}",
+                )
+                duplicate_ids.add(window.id)
+
+            for coordinate in deadline_window_semantic_coordinates(modelo.id, window):
+                previous_owner = coordinate_owner.get(coordinate)
+                if previous_owner is None:
+                    coordinate_owner[coordinate] = (revision.id, window.id)
+                    continue
+                if coordinate in duplicate_coordinates:
+                    continue
+                failures.append(
+                    f"modelo {modelo.id}: deadline semantic coordinate {coordinate!r} is declared more than once "
+                    f"by revision/window {previous_owner!r} and {(revision.id, window.id)!r}",
+                )
+                duplicate_coordinates.add(coordinate)
+
     return failures
 
 
