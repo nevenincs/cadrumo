@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-24'
-body_hash: 'sha256:4c24e83742956b80b57b225214159bb2bee52448bd8e0a58bba2c9a0f00e9488'
+body_hash: 'sha256:f8c9a5376f8196681e9ad8576bb083595ce3a86b33feb0be1b16651790c73dab'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -346,3 +346,4 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 - [ ] `W06.P12.S235` - Repeat the fresh-context campaign-close honesty review against every corrected finding and close the campaign only with no unresolved CRITICAL, HIGH, or MEDIUM result; `.vault/audit/`.
 - [ ] `W06.P12.S236` - Correct the S227 review audit into the canonical Scope, Findings, and Recommendations body schema without changing its substantive verdict; `.vault/audit/2026-08-24-profile-password-custody-s227-workstation-docs-review-audit.md`.
 - [ ] `W06.P12.S237` - Remove the retired cadrumo agent-extra installation claim from live harness docstrings and install hints while preserving the sibling cadrumo-harness distribution boundary; `src/cadrumo-harness/src/cadrumo_harness/`.
+- [ ] `W06.P12.S238` - Remove inactive profile deletion from the root login gate while preserving active-profile refusal, explicit confirmation, custody preflight, and exact target binding in real subprocess execution; `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py and src/cadrumo/entrypoints/cli/_config/_profile_delete.py and src/cadrumo/entrypoints/cli/tests/`.
