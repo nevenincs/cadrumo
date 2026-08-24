@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:f7ebe03d83fb3b06c7f0855b44f92d42f9d33c3f29339291e4b557595f12bafe'
+body_hash: 'sha256:e50afb2cc816f22854f84e0e92513e79781c70f5fe7ccf6537904f98a00da7d7'
 step_id: 'S36'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -14,23 +14,24 @@ related:
 
 ## Scope
 
+- `src/cadrumo/application/live/_filed_data_capture.py`
 - `src/cadrumo/application/live/_filed_history_operation.py`
 - `src/cadrumo/application/live/tests/test_filed_history_operation_executor.py`
 
 ## Description
 
-- Publish the result-construction phase and bounded pair and declaration progress through the canonical operation event emitter.
-- Emit only scope-only refusal log codes for pair, discovery, IVA-wallet, notification, or otherwise unclassified stage failure; keep sensitive failure text out of the event stream.
-- Keep the canonical `pull_filed_history` composition and every existing writer as the only source of discovery, capture, persistence, provenance, wallet, and notification facts.
-- Set the settled effect to `NONE` after a completed, proved zero-write run; retain pre-accounting `UNKNOWN` for a normal write run until its canonical accounting returns, and derive `UPDATED` or `PARTIAL` only from committed result facts.
-- Replay the real durable supervisor event stream to verify phase order, pair progress, refusal scopes, and effect transitions.
+- Thread the existing presentation-neutral operation event emitter from the recorded executor into the canonical filed-history composition without adding a second discovery, capture, persistence, provenance, wallet, or notification writer.
+- Publish declared discovery, register-access, pair-walk, declaration-capture, persistence, finalization, provenance, IVA-wallet, notification, result, cleanup, and settlement stages only at their real composition boundaries.
+- Publish safe pair and declaration counters as each canonical unit becomes known; record only stable scoped refusal codes and never exception text, filing identity, paths, or URLs.
+- Settle effects from completed canonical accounting: retain non-preview `UNKNOWN` during uncertain work, then derive `NONE`, `UPDATED`, or `PARTIAL` from proved committed facts; retain `NONE` for dry-run.
+- Replay the real durable supervisor stream while the deterministic narrow discovery port is actively blocked, bounded by one second, to prove in-flight visibility before later-stage settlement.
 
 ## Outcome
 
-The recorded filed-history operation now has an ordered, presentation-neutral event trail. The stream carries only safe progress totals and stable refusal scopes, so it cannot turn a refused pair into an empty result or persist failure prose. Normal zero-write outcomes settle at `NONE`; committed clean and degraded outcomes settle at `UPDATED` and `PARTIAL`; `UNKNOWN` remains the truthful in-flight effect while a non-preview composition may cross its existing atomic write boundaries.
+The recorded filed-history operation now emits ordered, live, presentation-neutral progress through the one canonical composition. Refusals remain scoped and redacted, and normal zero-write completion truthfully settles at `NONE` rather than retaining `UNKNOWN`.
 
-Focused formatting, lint, BasedPyright, and the eight-case real-supervisor integration suite pass. The plan row remains deliberately open at coordinator direction.
+Ruff format and lint, BasedPyright, the focused recorded-supervisor integration suite (`8 passed`), and the focused canonical-composition unit suite (`5 passed`) pass. Independent remediation review passes after confirming bounded active-operation replay and single-writer ownership.
 
 ## Notes
 
-No plan-state mutation was made. No duplicate orchestration, writer, frontend formatting, mock, fake, patch, skip, or xfail was introduced.
+No plan-state mutation was made; the coordinator-directed plan row remains open. No duplicate orchestration, writer, frontend formatting, mock, fake, patch, skip, or xfail was introduced.

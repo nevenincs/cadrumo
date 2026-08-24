@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:070dd0ba49410940804ea5d9732f6afef89772395191f4d59e7e743e9cf0cd06'
+body_hash: 'sha256:99650f57e64f5c78757d6922afb1c8cc7cbf7a28ccca6d7bdf8e09da357fadfa'
 related:
   - '[[2026-08-11-tui-architecture-W01-P01-S01]]'
   - '[[2026-08-11-tui-architecture-W01-P01-S02]]'
@@ -51,6 +51,7 @@ related:
   - '[[2026-08-11-tui-architecture-W03-P06-S33]]'
   - '[[2026-08-11-tui-architecture-W03-P07-S34]]'
   - '[[2026-08-11-tui-architecture-W03-P07-S35]]'
+  - '[[2026-08-11-tui-architecture-W03-P07-S36]]'
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-11-tui-architecture-plan]]'
   - '[[2026-08-11-tui-architecture-research]]'
@@ -95,6 +96,7 @@ related:
   - '[[2026-08-24-tui-architecture-s33-conformance-review-audit]]'
   - '[[2026-08-24-tui-architecture-s34-filed-history-executor-review-audit]]'
   - '[[2026-08-24-tui-architecture-s35-filed-history-dry-run-review-audit]]'
+  - '[[2026-08-24-tui-architecture-s36-filed-history-progress-review-audit]]'
 ---
 
 # `tui-architecture` feature index
@@ -148,6 +150,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-24-tui-architecture-s33-conformance-review-audit` - `tui-architecture` audit: `S33 censal lifecycle conformance review`
 - `2026-08-24-tui-architecture-s34-filed-history-executor-review-audit` - `tui-architecture` audit: `S34 filed-history executor review`
 - `2026-08-24-tui-architecture-s35-filed-history-dry-run-review-audit` - `tui-architecture` audit: `S35 filed-history dry-run review`
+- `2026-08-24-tui-architecture-s36-filed-history-progress-review-audit` - `tui-architecture` audit: `s36 filed history progress review`
 
 ### exec
 
@@ -194,6 +197,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W03-P06-S33` - Prove the complete censal operation lifecycle and effect boundaries
 - `2026-08-11-tui-architecture-W03-P07-S34` - Implement the recorded filed-history executor across discovery, register access, pair walk, capture, persistence, finalization, provenance, wallet, notifications, and settlement
 - `2026-08-11-tui-architecture-W03-P07-S35` - Expose dry-run on the composed filed-history operation with identical discovery scope and effect none
+- `2026-08-11-tui-architecture-W03-P07-S36` - 2026-08-11-tui-architecture-W03-P07-S36
 
 ### plan
 
