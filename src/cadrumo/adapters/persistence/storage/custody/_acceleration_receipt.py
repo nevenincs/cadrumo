@@ -139,6 +139,29 @@ def _encryption_error(message: str) -> EncryptionError:
     return EncryptionError(message, translated_message=_STORAGE_ENCRYPTION_MESSAGE_KEY)
 
 
+def _validate_profile_session_metadata(
+    *,
+    profile_id: UUID,
+    custody_generation: int,
+    dek_epoch: str,
+    issued_at: datetime,
+) -> datetime:
+    """Validate the immutable receipt metadata before any durable coordination.
+
+    The wrapper and public mint entry point share this exact boundary.  It
+    deliberately asks the canonical profile identity helper to validate the
+    UUID spelling and version even though the public type is ``UUID``: runtime
+    callers are not protected by a type annotation, and an invalid request
+    must not provision a custody lock merely to fail later in receipt writing.
+    """
+    canonical_profile_bucket_id(profile_id)
+    if custody_generation < 1:
+        raise _encryption_error("custody_generation must be a strict positive integer")
+    if not dek_epoch:
+        raise _encryption_error("dek_epoch must be non-empty")
+    return validate_utc_aware(issued_at)
+
+
 class PersistedProfileSession(BaseModel):
     """Frozen session-wrapped-DEK record for one bucket's profile session.
 
@@ -294,11 +317,12 @@ def wrap_profile_session_dek(
         raise _encryption_error(f"session_key must be exactly {_SESSION_KEY_BYTES} bytes")
     if len(dek) != KEY_SIZE:
         raise _encryption_error(f"dek must be exactly {KEY_SIZE} bytes")
-    if custody_generation < 1:
-        raise _encryption_error("custody_generation must be a strict positive integer")
-    if not dek_epoch:
-        raise _encryption_error("dek_epoch must be non-empty")
-    issued_at = validate_utc_aware(issued_at)
+    issued_at = _validate_profile_session_metadata(
+        profile_id=profile_id,
+        custody_generation=custody_generation,
+        dek_epoch=dek_epoch,
+        issued_at=issued_at,
+    )
     idle_deadline = validate_utc_aware(idle_deadline)
     absolute_deadline = validate_utc_aware(absolute_deadline)
     if idle_deadline > absolute_deadline:
@@ -924,15 +948,22 @@ def mint_profile_session(
 ) -> PersistedProfileSession:
     """Mint a profile receipt under the custody-wide session lifecycle lock.
 
-    Validate a caller's time window before opening the custody root.  A
-    rejected bootstrap call must not provision a durable lock leaf merely to
-    report an invalid window.
+    Validate all deterministic receipt inputs before opening the custody root.
+    A rejected bootstrap call must not provision a durable lock leaf merely
+    to report malformed identity, metadata, key material, or time windows.
     """
     if idle_minutes <= 0:
         raise StorageValidationError("idle_minutes must be a strict positive integer")
     if absolute_minutes <= 0:
         raise StorageValidationError("absolute_minutes must be a strict positive integer")
-    now = validate_utc_aware(now)
+    if len(dek) != KEY_SIZE:
+        raise _encryption_error(f"dek must be exactly {KEY_SIZE} bytes")
+    now = _validate_profile_session_metadata(
+        profile_id=profile_id,
+        custody_generation=custody_generation,
+        dek_epoch=dek_epoch,
+        issued_at=now,
+    )
     with profile_custody_root_lock(storage_root):
         return _mint_profile_session(
             storage_root=storage_root,
@@ -1261,6 +1292,7 @@ def advance_persisted_profile_session_idle_deadline(
     """Advance a profile receipt under the custody-wide session lifecycle lock."""
     if record.profile_id != profile_id:
         raise StorageValidationError("persisted session record belongs to another profile")
+    new_idle_deadline = validate_utc_aware(new_idle_deadline)
     with profile_custody_root_lock(storage_root):
         return _advance_persisted_profile_session_idle_deadline(
             storage_root=storage_root,
