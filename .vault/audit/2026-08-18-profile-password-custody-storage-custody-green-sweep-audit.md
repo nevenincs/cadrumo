@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:7c1e7934a3ec8242ad73bf477a3ec5e60323a62f310db40921c791c4526f4e12'
+body_hash: 'sha256:0d23544689783d128e8692d526eaddb8f4377c89060506cccf33696483c2bb20'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -9200,3 +9200,47 @@ emitter fails validating its own payload, which means the message reported to
 the operator is the SECOND failure and the first is still unnamed. Start by
 making the crash path survive its own payload, then re-read the log for the
 original.
+
+### Core, bottom-up: 11 red to 3, and why the last ones do not close
+
+Working the layers bottom-up on the operator's instruction — core before
+anything above it — took core from 11 failing to 3, with 2230 passing. Closed:
+the clock seam (nine bare wall-clock reads routed through the deterministic
+seam), the last four bare modelo codes, four exception classes rooting at
+builtin bases, the combined-period grammar, the IVA-rate constant gate, the TOML
+parity anchors and the format-durability enrolment.
+
+Two of those were not scanner-appeasement but real defects. The M130 refusal
+told operators in all four languages that a quarterly period looks like
+``2024Q1`` — the exact grammar the period authority rejects, so an operator
+following the hint is refused a second time. And modelo 111 could not be
+exported by anyone (recorded above).
+
+**Two measurement facts matter more than the count.**
+
+*Phantom failures.* A full core run caught a peer's test file mid-keystroke with
+an unclosed parenthesis. Every gate that parses production sources choked on it
+and reported a failure: seven "new" core failures appeared that had nothing to
+do with any commit, and all seven passed untouched once the edit completed. HEAD
+parsed correctly throughout. In a shared worktree the honest subject of a
+measurement is HEAD, not the working tree — a run that reports a source file as
+unparseable is reporting a colleague, not the product. Check `git status` and
+parse the tree before believing a scanner.
+
+*The target moves.* Twenty peer commits landed in forty-five minutes, roughly
+one every two minutes, interleaved with six of mine. The route-literal gate
+illustrates the effect exactly: fixing the source-mesh literal exposed one in a
+closure-model test committed minutes earlier; fixing that exposed a third in an
+untracked test file being written as I measured. Each fix was correct and each
+was immediately overtaken.
+
+So "core is green" is not a state this tree can hold while another writer is
+landing changes that have not been run against these gates. The remaining three
+failures are all inside that writer's live work — an untracked module authoring
+a literal version, a stale entry in the gate file they currently have open, and
+a route literal in an untracked test. Editing any of them means editing a file
+someone is typing in.
+
+The durable fix is not another sweep: it is that these gates run before a change
+lands, so a violation never reaches the tree. Until then a sweep can only ever
+report the instantaneous count, and the count is a function of when it ran.
