@@ -4,7 +4,7 @@ tags:
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:fcc16114c137d59f9dbd690656ad31f12ff2b32cad5179599fe9886e8a4bdd26'
+body_hash: 'sha256:d39744e111831a237b4b03e12a22daaee4ecf89786d7b7d23b493c6387642445'
 tier: L3
 related:
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
@@ -73,7 +73,7 @@ Correct following-January annual identity without altering physical filing dates
 Remove stale copies and complete every officially supported periodic schedule.
 
 - [ ] `W02.P04.S12` - Re-adjudicate Modelo 303 deadlines for every supported filing year 2022-2026, remove every non-owner copy, preserve the 2024 cutover, and materialise all 22 measured missing monthly and quarterly cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/303/`.
-- [x] `W02.P04.S13` - Re-adjudicate Modelo 322 deadlines for every supported filing year 2022-2026, remove stale copies, and materialise all 42 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/322/`.
+- [ ] `W02.P04.S13` - Re-adjudicate Modelo 322 deadlines for every supported filing year 2022-2026, remove stale copies, and materialise all 42 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/322/`.
 - [ ] `W02.P04.S14` - Re-adjudicate Modelo 353 deadlines for every supported filing year 2022-2026, remove stale copies, and materialise all 37 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/353/`.
 - [x] `W02.P04.S15` - Re-adjudicate Modelo 369 deadlines for every supported filing year 2022-2026 and materialise all 60 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no modelo-specific selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/369/`.
 - [ ] `W02.P04.S16` - Generate an auditable 559-cell before-and-after census for supported filing years 2022-2026 that accounts for all 294 measured missing cells and every removed, corrected, retained, materialised, or still-blocked deadline coordinate with its official source, reconciling M369 60, M111 48, M322 42, M353 37, M349 32, M303 22, M115 16, M123 12, M202 9, M130 8, M131 4, and M216 4 exactly; `dev/; .vault/audit/`.

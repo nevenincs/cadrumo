@@ -150,7 +150,10 @@ def test_modelo_322_2022_deadlines_have_one_canonical_owner_and_projection() -> 
         owners = [
             revision.id
             for revision in modelo.revisions.values()
-            if any(window.filing_year == 2022 and window.period.registry_token == period for window in revision.deadline_windows)
+            if any(
+                window.filing_year == 2022 and window.period.registry_token == period
+                for window in revision.deadline_windows
+            )
         ]
         assert selected.id == "2008-2022"
         assert owners == [selected.id]
@@ -159,6 +162,99 @@ def test_modelo_322_2022_deadlines_have_one_canonical_owner_and_projection() -> 
     assert len(projected) == 12
     assert tuple(window.period.registry_token for _, _, window in projected) == expected_periods
     assert {revision.id for _, revision, _ in projected} == {"2008-2022"}
+
+
+def test_modelo_322_supported_deadlines_are_exact_complete_and_canonically_owned() -> None:
+    modelo, _ = _load_modelo_322()
+    expected_rows = (
+        (2023, "01", "2023-02-01", "2023-02-28", 2023),
+        (2023, "02", "2023-03-01", "2023-03-30", 2023),
+        (2023, "03", "2023-04-01", "2023-05-02", 2023),
+        (2023, "04", "2023-05-01", "2023-05-30", 2023),
+        (2023, "05", "2023-06-01", "2023-06-30", 2023),
+        (2023, "06", "2023-07-01", "2023-07-31", 2023),
+        (2023, "07", "2023-08-01", "2023-08-30", 2023),
+        (2023, "08", "2023-09-01", "2023-10-02", 2023),
+        (2023, "09", "2023-10-01", "2023-10-30", 2023),
+        (2023, "10", "2023-11-01", "2023-11-30", 2023),
+        (2023, "11", "2023-12-01", "2024-01-02", 2023),
+        (2023, "12", "2024-01-01", "2024-01-30", 2024),
+        (2024, "01", "2024-02-01", "2024-02-29", 2024),
+        (2024, "02", "2024-03-01", "2024-04-01", 2024),
+        (2024, "03", "2024-04-01", "2024-04-30", 2024),
+        (2024, "04", "2024-05-01", "2024-05-30", 2024),
+        (2024, "05", "2024-06-01", "2024-07-01", 2024),
+        (2024, "06", "2024-07-01", "2024-07-30", 2024),
+        (2024, "07", "2024-08-01", "2024-08-30", 2024),
+        (2024, "08", "2024-09-01", "2024-09-30", 2024),
+        (2024, "09", "2024-10-01", "2024-10-30", 2024),
+        (2024, "10", "2024-11-01", "2024-12-02", 2024),
+        (2024, "11", "2024-12-01", "2024-12-30", 2024),
+        (2024, "12", "2025-01-01", "2025-01-30", 2025),
+        (2025, "01", "2025-02-01", "2025-02-28", 2025),
+        (2025, "02", "2025-03-01", "2025-03-31", 2025),
+        (2025, "03", "2025-04-01", "2025-04-30", 2025),
+        (2025, "04", "2025-05-01", "2025-05-30", 2025),
+        (2025, "05", "2025-06-01", "2025-06-30", 2025),
+        (2025, "06", "2025-07-01", "2025-07-30", 2025),
+        (2025, "07", "2025-08-01", "2025-09-01", 2025),
+        (2025, "08", "2025-09-01", "2025-09-30", 2025),
+        (2025, "09", "2025-10-01", "2025-10-30", 2025),
+        (2025, "10", "2025-11-01", "2025-12-01", 2025),
+        (2025, "11", "2025-12-01", "2025-12-30", 2025),
+        (2025, "12", "2026-01-01", "2026-01-30", 2026),
+        (2026, "01", "2026-02-01", "2026-03-02", 2026),
+        (2026, "02", "2026-03-01", "2026-03-30", 2026),
+        (2026, "03", "2026-04-01", "2026-04-30", 2026),
+        (2026, "04", "2026-05-01", "2026-06-01", 2026),
+        (2026, "05", "2026-06-01", "2026-06-30", 2026),
+        (2026, "06", "2026-07-01", "2026-07-30", 2026),
+        (2026, "07", "2026-08-01", "2026-08-31", 2026),
+        (2026, "08", "2026-09-01", "2026-09-30", 2026),
+        (2026, "09", "2026-10-01", "2026-10-30", 2026),
+        (2026, "10", "2026-11-01", "2026-11-30", 2026),
+        (2026, "11", "2026-12-01", "2026-12-30", 2026),
+    )
+    expected = {
+        (year, period): (date.fromisoformat(opens), date.fromisoformat(closes), source_year)
+        for year, period, opens, closes, source_year in expected_rows
+    }
+    authored = {
+        (window.filing_year, window.period.registry_token): (revision, window)
+        for revision in modelo.revisions.values()
+        for window in revision.deadline_windows
+        if 2023 <= window.filing_year <= 2026
+    }
+
+    assert set(authored) == set(expected)
+    assert (2026, "12") not in authored
+    for coordinate, (opens_on, closes_on, source_year) in expected.items():
+        revision, window = authored[coordinate]
+        year, period = coordinate
+        assert window.id == f"modelo-322-{year}-{period}"
+        assert window.filing_year == window.period.filing_year == year
+        assert window.period_kind == "monthly"
+        assert (window.opens_on, window.closes_on, window.payment_cutoff_on) == (opens_on, closes_on, None)
+        assert f"aeat-calendario-contribuyente-{source_year}" in window.source_refs
+        assert select_revision(modelo, filing_year=year, period=period) is revision
+
+    for year in range(2023, 2027):
+        projected = bundled_authority().deadline_windows(year, modelos=("322",))
+        expected_count = 11 if year == 2026 else 12
+        assert len(projected) == expected_count
+        assert len({window.semantic_coordinate for _, _, window in projected}) == expected_count
+
+
+def test_modelo_322_deadline_sources_and_construct_links_are_closed() -> None:
+    modelo, _ = _load_modelo_322()
+    for revision in modelo.revisions.values():
+        if revision.valid_from.year < 2023:
+            continue
+        construct = next(item for item in revision.constructs if item.id == "modelo-322-iva-grupo-individual")
+        assert set(construct.deadline_windows) == {window.id for window in revision.deadline_windows}
+        assert {source_ref for window in revision.deadline_windows for source_ref in window.source_refs}.issubset(
+            set(construct.source_refs)
+        )
 
 
 def test_modelo_322_live_cross_references_forbid_writes() -> None:
