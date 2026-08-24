@@ -71,7 +71,7 @@ from typing import Annotated
 import typer
 
 from ._stamp import StampableReviewStatus, StampError, bundled_registry_root, stamp_revision
-from .authorities import RegistryClosureAuthorities, canonical_live_registry_closure_authorities
+from .authorities import canonical_live_registry_closure_authorities
 from .closure import (
     RegistryClosureReport,
     check_registry_closure_release,
@@ -156,7 +156,6 @@ def coverage(as_json: _AsJson = False, no_validate: _NoValidate = False) -> None
 
 @app.command("closure")
 def closure(
-    context: typer.Context,
     check: Annotated[
         bool,
         typer.Option(
@@ -187,6 +186,7 @@ def closure(
 
     The default report derives temporal, source, and filing facts through the
     canonical live authorities. ``--offline`` is the explicit no-proof mode.
+    Command context cannot replace either authority with pre-authorized claims.
     Neither mode treats absent proof as a pass: the affected limb remains an
     owned refusal, and ``--check`` blocks the release claim.
     """
@@ -194,16 +194,8 @@ def closure(
         as_of_date = None if as_of is None else date.fromisoformat(as_of)
     except ValueError as error:
         raise typer.BadParameter("must be an ISO calendar date (YYYY-MM-DD)") from error
-    injected = context.find_object(RegistryClosureAuthorities)
     if offline:
         report = load_registry_closure_report(as_of=as_of_date)
-    elif injected is not None:
-        report = load_registry_closure_report(
-            as_of=as_of_date,
-            registry_authority=injected.registry,
-            source_proof_authority=injected.source_connectivity,
-            filing_proof_authority=injected.filing_export,
-        )
     else:
         repository_root = Path(__file__).resolve().parents[3]
         with canonical_live_registry_closure_authorities(repository_root) as authorities:

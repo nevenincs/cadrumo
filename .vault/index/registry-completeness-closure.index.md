@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:cb763ddd7e2999e0bda85fb2282236ca9619d907761334eafdc41b525da37d08'
+body_hash: 'sha256:7f1872927af10044943263789d1fbe03e1c6dc8db1370b86324b78adb51e11b8'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -43,6 +43,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S61]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S62]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S63]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S64]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
@@ -82,6 +83,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s61-distinct-offset-probes-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s62-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s63-independent-post-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s64-real-cli-proof-review-audit]]'
 ---
 
 # `registry-completeness-closure` feature index
@@ -132,6 +134,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s61-distinct-offset-probes-audit` - `registry-completeness-closure` audit: `S61 distinct offset probes`
 - `2026-08-24-registry-completeness-closure-s62-post-review-audit` - `registry-completeness-closure` audit: `S62 post review`
 - `2026-08-24-registry-completeness-closure-s63-independent-post-review-audit` - `registry-completeness-closure` audit: `S63 live closure authority wiring independent post-review`
+- `2026-08-24-registry-completeness-closure-s64-real-cli-proof-review-audit` - `registry-completeness-closure` audit: `S64 real CLI proof review`
 
 ### exec
 
@@ -170,6 +173,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P02-S61` - Require distinct official offset-probe identities and emitted byte positions in live filing-export acceptance, and prove duplicate probes cannot inflate checked-offset evidence with a mutation bite.
 - `2026-08-24-registry-completeness-closure-W01-P02-S62` - Remove the S60 audit and execution-record EOF blank lines and re-attest the committed Step surface with the scoped diff check.
 - `2026-08-24-registry-completeness-closure-W01-P02-S63` - Wire canonical live source-connectivity and filing-export proof authorities into the registry-conformance closure CLI, retain an explicit offline no-proof mode, type both injection ports precisely, and prove complete-live versus offline-refusal CLI outcomes.
+- `2026-08-24-registry-completeness-closure-W01-P02-S64` - Remove fabricated strict proof authorities and digests from closure CLI tests, exercise the actual CLI with canonical live loaders and real evidence only, prove live-versus-offline refusal distinctions, keep eligibility unreachable until durable filing proof exists, prevent injected claims from bypassing the gate, and add a mutation bite rejecting canned proof
 
 ### plan
 
