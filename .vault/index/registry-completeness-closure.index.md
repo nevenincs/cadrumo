@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:e7a4cdec0d5ccc3d9c317fc9c2769020181f5b368774765d09ca427521c4a860'
+body_hash: 'sha256:2b1d8b7901837d90253073e0b20d7ff4f743b8ab346849b05a3c2b89d592bdb7'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -19,6 +19,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s01-schema-family-coverage-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s04-authority-grade-ladder-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit]]'
 ---
 
 # `registry-completeness-closure` feature index
@@ -36,6 +37,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s01-schema-family-coverage-review-audit` - `registry-completeness-closure` audit: `S01 schema-family coverage review`
 - `2026-08-24-registry-completeness-closure-s04-authority-grade-ladder-review-audit` - `registry-completeness-closure` audit: `S04 authority-grade ladder review`
 - `2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot authority-grade enforcement review`
+- `2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot-grade enforcement review`
 
 ### exec
 

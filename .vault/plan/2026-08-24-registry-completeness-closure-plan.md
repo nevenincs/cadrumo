@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#registry-completeness-closure'
 date: '2026-08-24'
+modified: '2026-08-24'
+body_hash: 'sha256:aa374dabafdc9b38d69f14dbcb4aef5b3e3da7c4308116fbf31123628a8e20b7'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -10,8 +12,6 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-22-source-casilla-integration-plan]]'
-modified: '2026-08-24'
-body_hash: 'sha256:d9419b9b16bb957d002d6f75d9fe8c49d187014b383ac8640ec0ea9b30788d41'
 ---
 
 # `registry-completeness-closure` plan
@@ -43,6 +43,7 @@ Independently review the landed schema-family and authority-grade contract, rest
 - [x] `W01.P01.S04` - Independently review the authority-grade ladder and its registry-build enrollment against W01.P01.S03; `.vault/audit/`.
 - [ ] `W01.P01.S05` - Reconcile temporal-coverage W01.P01.S03 through canonical plan state after its record and review pass; `.vault/plan/2026-08-14-registry-temporal-coverage-plan.md`.
 - [x] `W01.P01.S40` - Enforce requested authority grade at the selected-revision snapshot boundary and prove lower-grade escalation refuses; `src/cadrumo/domain/calculations/registry/`.
+- [ ] `W01.P01.S41` - Align the authority snapshot cache-key type with its grade-separated runtime key; `src/cadrumo/domain/calculations/registry/_authority.py`.
 
 ### Phase `W01.P02` - derived closure report
 
