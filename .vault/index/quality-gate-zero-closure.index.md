@@ -14,7 +14,6 @@ related:
   - '[[2026-08-24-quality-gate-zero-closure-failure-cluster-topology-reference]]'
   - '[[2026-08-24-quality-gate-zero-closure-live-rag-redeclaration-audit]]'
   - '[[2026-08-24-quality-gate-zero-closure-plan]]'
-  - '[[2026-08-24-quality-gate-zero-closure-s94-rag-canonical-home-redeclaration-audit]]'
   - '[[2026-08-24-quality-gate-zero-closure-static-gate-matrix-research]]'
 ---
 

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:66680050e44b63fea83a36f2663c60d9cc7d138ae2bd9a76a0271b06e0f6afde'
+body_hash: 'sha256:06632fddfdb348127d3d1f0a93e7272ec3eab655a3425f8149f4d92cf2980477'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -69,7 +69,10 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W02-P03-S25]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P04-S73]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P04-S74]]'
+  - '[[2026-08-24-registry-completeness-closure-W02-P04-S76]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P04-S79]]'
+  - '[[2026-08-24-registry-completeness-closure-W02-P04-S81]]'
+  - '[[2026-08-24-registry-completeness-closure-W02-P04-S82]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-audit]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-036-2025-filing-authority-reference]]'
@@ -151,8 +154,12 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s70-evidence-reconciliation-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s71-independent-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s72-grade-scoping-post-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s73-manual-source-evidence-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s74-post-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s75-modelo-038-owner-route-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s79-modelo-220-count-reconciliation-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s81-post-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s82-source-evidence-post-review-audit]]'
 ---
 
 # `registry-completeness-closure` feature index
@@ -230,8 +237,12 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s70-evidence-reconciliation-post-review-audit` - `registry-completeness-closure` audit: `S70 evidence reconciliation post review`
 - `2026-08-24-registry-completeness-closure-s71-independent-post-review-audit` - `registry-completeness-closure` audit: `verify plan-derived closure criterion and tracking state`
 - `2026-08-24-registry-completeness-closure-s72-grade-scoping-post-review-audit` - `registry-completeness-closure` audit: `S72 filing-grade scoping independent post-review`
+- `2026-08-24-registry-completeness-closure-s73-manual-source-evidence-post-review-audit` - `registry-completeness-closure` audit: `S73 Modelo 036 manual-source evidence independent post-review`
 - `2026-08-24-registry-completeness-closure-s74-post-review-audit` - `registry-completeness-closure` audit: `S74 Modelo 036 filing-route post-review`
+- `2026-08-24-registry-completeness-closure-s75-modelo-038-owner-route-audit` - `registry-completeness-closure` audit: `S75 Modelo 038 owner-route post-review`
 - `2026-08-24-registry-completeness-closure-s79-modelo-220-count-reconciliation-review-audit` - `registry-completeness-closure` audit: `S79 Modelo 220 count reconciliation independent post-review`
+- `2026-08-24-registry-completeness-closure-s81-post-review-audit` - `registry-completeness-closure` audit: `Modelo 036 filing-route docstrings post-review`
+- `2026-08-24-registry-completeness-closure-s82-source-evidence-post-review-audit` - `registry-completeness-closure` audit: `S82 source evidence independent post-review`
 
 ### exec
 
@@ -296,7 +307,10 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W02-P03-S25` - Adjudicate Modelo 840 revision 2003-y-siguientes record-terminator semantics and official extent
 - `2026-08-24-registry-completeness-closure-W02-P04-S73` - Adjudicate real below-filing source-connectivity participation and evidence for candidate revisions starting with Modelo 036, route accepted evidence or an ADR-authorized disposition into source-casilla-integration, and return the canonical proof to S72 and S11 without treating an empty candidate set as satisfied
 - `2026-08-24-registry-completeness-closure-W02-P04-S74` - Correct Modelo 036 human-filing wording and route its source and export reconsideration paths exactly.
+- `2026-08-24-registry-completeness-closure-W02-P04-S76` - Correct the aggregate filing-capability worklist assertion and report so terminal no-authority refusals such as Modelo 136 are never described as requiring an authorable layout, retain named owners for authorable gaps, and pass the terminal-versus-owner distinction to S29.
 - `2026-08-24-registry-completeness-closure-W02-P04-S79` - Correct Modelo 220/2024 reviewer-stamp record-design counts against the hash-verified parser measurement and re-attest the unchanged applicability-grade, non-fileable disposition.
+- `2026-08-24-registry-completeness-closure-W02-P04-S81` - Correct Modelo 036 public lifecycle and CLI Sede-only docstrings to state Sede-or-competent-AEAT-office recording, retain optional electronic justificante semantics, and preserve the no-local-filing boundary.
+- `2026-08-24-registry-completeness-closure-W02-P04-S82` - Make terminal manual source evidence live-resolvable and revision-scoped, bind censo event coordinates to canonical Modelo 036, and retain property-based exact-one census proof.
 
 ### plan
 

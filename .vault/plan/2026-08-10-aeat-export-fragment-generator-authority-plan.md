@@ -9,7 +9,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-source-authority-research]]'
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
 modified: '2026-08-24'
-body_hash: 'sha256:3747e5eb208b645fe94b800144ee0c615cfa02ba9ae75359a900bf5f97e90ac0'
+body_hash: 'sha256:97a69c8555174279b5269ee2026eae8df76c921426d44288a64e1d87515773cb'
 ---
 
 <!-- RETIRED: S19, S26, S65, S93 -->
