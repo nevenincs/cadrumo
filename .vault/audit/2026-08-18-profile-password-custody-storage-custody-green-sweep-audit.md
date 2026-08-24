@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:0d6d0734c6989f8cfbc533ff53e1258906a829b3f982766a4b5568881cadead6'
+body_hash: 'sha256:409337806696431fc7bc595f30a8eb08bcfd0e362496398d5e1a649ed46fb92d'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -9346,3 +9346,29 @@ incompatible answers landing in the same tree.
 What remains useful from this sweep's side is the invariant it exposed, offered
 rather than imposed: a revision's declared window years should lie within its
 period selector's span. Only the 2022 revision of M303 satisfies it today.
+
+### Every handed-off cluster is owned elsewhere -- do not re-investigate
+
+The operator has briefed out every cluster this sweep raised. They are no longer
+open items here, and the tests reporting them stay red ON PURPOSE until their
+owners land the decisions:
+
+Authority claims -- grade attestation for modelos 117/126/128/136; the two
+legal-catalogue entries (`orden-hac-242-2025:modelo-303`,
+`rd-1624-1992:art-68-bis`); the corpus-evidence revision-span proofs; and the
+deadline-window/M303 duplicate-obligation defect. Product decisions -- where the
+M111 `colegio_concertado` declaration is asked; the seven over-budget verbs
+(read verb FIRST, then trim the listing); and whether the notice action tree
+must expand into all 295 advertised schemas. Campaign collisions -- the
+`iva.m303_regime_composition` gate conflict. Hygiene -- the `_validate.py`
+line-count ratchet; wiring the core gates into prek/just check-all; and the
+recurring virtualenv corruption.
+
+**The standing instruction for every future iteration: leave them alone.** Do
+not re-diagnose them, do not soften the assertions that report them, and do not
+implement a guess at the answer. Two incompatible answers landing in one tree is
+worse than one unanswered question, and a red test that is CORRECT is doing its
+job.
+
+What remains in scope here is ordinary repair: failures whose fix is a fact
+about this codebase rather than a claim about what AEAT authorises.
