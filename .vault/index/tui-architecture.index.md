@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:222d0225d17ee1ee8e025ef53e8ff64fc2d3225df6bc218cb68e824b05e7066a'
+body_hash: 'sha256:acfab0fdd01523159d17ac9af4d28310f44e074273abbaa5e6becfdef58f494e'
 related:
   - '[[2026-08-11-tui-architecture-W01-P01-S01]]'
   - '[[2026-08-11-tui-architecture-W01-P01-S02]]'
@@ -53,6 +53,7 @@ related:
   - '[[2026-08-11-tui-architecture-W03-P07-S35]]'
   - '[[2026-08-11-tui-architecture-W03-P07-S36]]'
   - '[[2026-08-11-tui-architecture-W03-P07-S37]]'
+  - '[[2026-08-11-tui-architecture-W03-P07-S38]]'
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-11-tui-architecture-plan]]'
   - '[[2026-08-11-tui-architecture-research]]'
@@ -202,6 +203,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W03-P07-S35` - Expose dry-run on the composed filed-history operation with identical discovery scope and effect none
 - `2026-08-11-tui-architecture-W03-P07-S36` - Emit ordered safe stage and unit progress with scoped refusals and truthful none, updated, partial, or unknown effects
 - `2026-08-11-tui-architecture-W03-P07-S37` - Export the filed-history operation definition through the live application facade
+- `2026-08-11-tui-architecture-W03-P07-S38` - Prove dry-run parity, committed-unit accounting, child provenance references, unsupported cancellation and deadline claims, and cleanup before settlement
 
 ### plan
 
