@@ -101,7 +101,7 @@ class TestUnknownPortalRendersItsKey:
     def test_rejected_identifier_travels_as_a_fact_not_as_prose(self) -> None:
         error = UnknownPortalError("portal_that_does_not_exist")
 
-        assert error.context == {"portal": "portal_that_does_not_exist"}
+        assert error.context == {"portal": "portal_that_does_not_exist", "portal_registered": False}
         assert error.portal == "portal_that_does_not_exist"
         assert "portal_that_does_not_exist" not in str(error)
 

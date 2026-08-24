@@ -12,9 +12,8 @@ from typing import TypedDict
 
 import typer
 
-from ...core.errors import resolve_error_message
 from ...core.i18n import tr
-from ...domain.portals import PortalCategory
+from ...domain.portals import PortalCategory, PortalRegistryError
 from ._common import _emit_envelope
 
 
@@ -28,6 +27,22 @@ class _PortalRow(TypedDict):
     label: str
     purpose: str
     active: bool
+
+
+def _project_portal_refusal(error: PortalRegistryError) -> PortalRegistryError:
+    """Attach the application-owned no-action projection to one domain refusal."""
+    from ...application.operator_actions import no_action_precondition_verdict
+    from ._common import attach_cli_policy_verdict
+
+    failure = error.portal_failure
+    assert failure is not None, "portal registry refusals must carry a closed domain classification"
+    verdict = no_action_precondition_verdict(
+        condition_id=failure.condition.value,
+        facts=failure.facts,
+        provenance=failure.provenance,
+        outcome=failure.outcome,
+    )
+    return attach_cli_policy_verdict(error, verdict=verdict)
 
 
 def _portal_row(metadata) -> _PortalRow:
@@ -62,16 +77,19 @@ def portals_list(
     All rows are :class:`PortalEntryPayload` projections emitted through
     :class:`PortalsListResult`.
     """
-    from ...domain.portals import PORTAL_REGISTRY, portals_by_category, portals_for_modelo
+    try:
+        from ...domain.portals import PORTAL_REGISTRY, portals_by_category, portals_for_modelo
 
-    if category and modelo:
-        raise typer.BadParameter(tr("cli.app.live.portals.category_modelo_exclusive"))
-    if category:
-        entries = portals_by_category(category)
-    elif modelo:
-        entries = portals_for_modelo(modelo)
-    else:
-        entries = tuple(PORTAL_REGISTRY.values())
+        if category and modelo:
+            raise typer.BadParameter(tr("cli.app.live.portals.category_modelo_exclusive"))
+        if category:
+            entries = portals_by_category(category)
+        elif modelo:
+            entries = portals_for_modelo(modelo)
+        else:
+            entries = tuple(PORTAL_REGISTRY.values())
+    except PortalRegistryError as exc:
+        raise _project_portal_refusal(exc) from exc
 
     rows = [_portal_row(m) for m in entries]
     from ._app_live_payloads import PortalEntryPayload, PortalsListResult
@@ -95,12 +113,12 @@ def portals_show(
     The id resolves through :func:`get_portal` and emits the local
     :class:`PortalEntryPayload` projection as :class:`PortalsViewResult`.
     """
-    from ...domain.portals import UnknownPortalError, get_portal
-
     try:
+        from ...domain.portals import get_portal
+
         metadata = get_portal(portal_id)
-    except UnknownPortalError as exc:
-        raise typer.BadParameter(resolve_error_message(exc)) from exc
+    except PortalRegistryError as exc:
+        raise _project_portal_refusal(exc) from exc
     payload = _portal_row(metadata)
     from ._app_live_payloads import PortalsViewResult
 
