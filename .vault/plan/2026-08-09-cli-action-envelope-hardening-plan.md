@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-24'
-body_hash: 'sha256:b47c8b5e07672c18e9576a81bbeef63832ad7eb83d63b9312dd12b16f66d8d8a'
+body_hash: 'sha256:6f7e59791a33504fabe3cce098a6c33d0522ca8ba5032ac446302b3770e0d73d'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -180,10 +180,10 @@ Convert registered defaults and exception-level action overrides into catalogue 
 
 Migrate high-density operational guidance and prove blank-state and readiness recovery.
 
-- [ ] `W05.P09.S31` - Migrate overview next-step producers and blank-state advisories to typed actions; `src/cadrumo/application/overview`.
+- [x] `W05.P09.S31` - Migrate overview next-step producers and blank-state advisories to typed actions; `src/cadrumo/application/overview`.
 - [x] `W05.P09.S32` - Migrate diagnostic remediation records to resolved actions or explicit no-recovery outcomes; `src/cadrumo/application/diagnostics.py`.
 - [x] `W05.P09.S33` - Replace every provisioning free-form detail and remediation record (DependencyStatus, ModelSelection, ContentionSnapshot, UnloadOutcome, PullOutcome, ReadinessOutcome, and RemoveOutcome) with locale-neutral typed failed-condition facts and explicit no-recovery outcomes without inventing actions, preserve the two local-model directions, and hand only the changed typed projection to S89; `src/cadrumo/application/provisioning.py`.
-- [ ] `W05.P09.S34` - Render overview text and JSON from one typed action projection; `src/cadrumo/entrypoints/cli/_overview.py`.
+- [x] `W05.P09.S34` - Render overview text and JSON from one typed action projection; `src/cadrumo/entrypoints/cli/_overview.py`.
 - [x] `W05.P09.S35` - Create the missing end-to-end negative JSON and text locale and recovery-retry proof for overview and provisioning action or no-recovery journeys, deriving each action against the live schema and rejecting raw command prose; `src/cadrumo/entrypoints/cli/tests/test_overview_provisioning_action_recovery.py`.
 - [x] `W05.P09.S66` - Migrate preflight remediation producers to typed conditions and canonical actions; `src/cadrumo/application/preflight.py`.
 
@@ -213,7 +213,7 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [x] `W05.P10.S76` - Migrate inventory recovery producers to typed conditions and canonical actions; `src/cadrumo/application/inventory`.
 - [x] `W05.P10.S77` - Replace operator-output suggestion producers with resolved typed action projections; `src/cadrumo/application/operator_output`.
 - [x] `W05.P10.S78` - Migrate residual operator-surface action producers outside the manifest and model owners; `src/cadrumo/application/operator_surface/_contract.py; src/cadrumo/application/operator_surface/_errors.py`.
-- [ ] `W05.P10.S79` - Migrate portal recovery producers to typed conditions and canonical actions; `src/cadrumo/application/portals`.
+- [x] `W05.P10.S79` - Migrate portal recovery producers to typed conditions and canonical actions; `src/cadrumo/application/portals`.
 - [x] `W05.P10.S80` - Migrate integrity-repair continuation producers to typed conditions and canonical actions; `src/cadrumo/application/repair_integrity.py`.
 - [x] `W05.P10.S81` - Migrate review action producers to typed conditions and canonical actions; `src/cadrumo/application/review`.
 - [x] `W05.P10.S82` - Migrate storage-management recovery producers to typed conditions and canonical actions; `src/cadrumo/application/storage_management`.
@@ -221,7 +221,7 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [ ] `W05.P10.S84` - Migrate calculation-registry recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/calculations`.
 - [x] `W05.P10.S85` - Migrate taxpayer-domain recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/contribuyente`.
 - [ ] `W05.P10.S86` - Migrate transaction-domain recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/transactions`.
-- [ ] `W05.P10.S87` - Migrate user-profile-domain recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/user_profile`.
+- [x] `W05.P10.S87` - Migrate user-profile-domain recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/user_profile`.
 - [ ] `W05.P10.S88` - Migrate root lazy-import optional-extra placeholders and help to use machine identity with localized rendering and the resolved error envelope alongside residual root live and portal CLI producers with no raw feature or package-command compatibility; `src/cadrumo/entrypoints/cli/__init__.py; src/cadrumo/entrypoints/cli/_log_levels.py; src/cadrumo/entrypoints/cli/_app_diagnostics.py; src/cadrumo/entrypoints/cli/_app_diagnostics_telemetry.py; src/cadrumo/entrypoints/cli/_app_maintenance.py; src/cadrumo/entrypoints/cli/_tty.py; src/cadrumo/entrypoints/cli/_app_live.py; src/cadrumo/entrypoints/cli/_app_live_portals_cli.py`.
 - [x] `W05.P10.S89` - Complete the consumer half of the atomic S33/S89 provisioning cutover by replacing config-check and provision payload and renderer free-form detail and remediation forwarding plus raw Google package prose with the exact S33 typed projection and resolved action or no-recovery rendering, never hardcoding command or English text; `src/cadrumo/entrypoints/cli/_config`.
 - [ ] `W05.P10.S90` - Migrate ledger CLI action producers and co-located renderers without independently authored command prose, including direct PurchaseInvoiceEvidenceInputError consumer migration in _ledger_llm_cli.py and _ledger_lifecycle_cli.py so S38 reader-unavailability verdicts reach the shared envelope intact.; `src/cadrumo/entrypoints/cli/_ledger.py; src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py; src/cadrumo/entrypoints/cli/_ledger_classify_cli.py; src/cadrumo/entrypoints/cli/_ledger_evidence_batch_cli.py; src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py; src/cadrumo/entrypoints/cli/_ledger_evidence_review_cli.py; src/cadrumo/entrypoints/cli/_ledger_import_cli.py; src/cadrumo/entrypoints/cli/_ledger_lifecycle_cli.py; src/cadrumo/entrypoints/cli/_ledger_llm_cli.py; src/cadrumo/entrypoints/cli/_ledger_read_cli.py; src/cadrumo/entrypoints/cli/_ledger_rules_cli.py; src/cadrumo/entrypoints/cli/_ledger_counterparty_cli.py; src/cadrumo/entrypoints/cli/_ledger_ratios_cli.py; src/cadrumo/entrypoints/cli/_ledger_review_cli.py; src/cadrumo/entrypoints/cli/_ledger_support.py`.
@@ -231,13 +231,13 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [x] `W05.P10.S94` - Migrate LLM optional-extra wrappers and continuations to preserve machine identities or application-owned typed outcomes, including the src/cadrumo/llm/tests/test_llm_vision_classifier.py consumer proof for S38 reader-unavailability verdicts, with no raw installation prose or compatibility.; `src/cadrumo/llm`.
 - [ ] `W05.P10.S98` - Migrate application-registry exception recovery producers and forwarding to the retired-error boundary and canonical typed actions; `src/cadrumo/application/registry/_diff.py; src/cadrumo/application/registry/__init__.py; src/cadrumo/application/registry/_conformance.py; src/cadrumo/application/registry/_corpus.py; src/cadrumo/application/registry/_corpus_manual_helpers.py`.
 - [x] `W05.P10.S107` - Migrate bucket-maintenance recovery producers to typed conditions and canonical actions; `src/cadrumo/application/bucket_maintenance/_service.py; src/cadrumo/application/bucket_maintenance/_contracts.py; src/cadrumo/application/bucket_maintenance/tests`.
-- [ ] `W05.P10.S108` - Migrate application invoice-lifecycle recovery producers to typed conditions and canonical actions; `src/cadrumo/application/invoices/_lifecycle.py`.
+- [x] `W05.P10.S108` - Migrate application invoice-lifecycle recovery producers to typed conditions and canonical actions; `src/cadrumo/application/invoices/_lifecycle.py`.
 - [ ] `W05.P10.S110` - Migrate application state-projection recovery producers to typed conditions and canonical actions; `src/cadrumo/application/state_projection.py`.
-- [ ] `W05.P10.S111` - Migrate core output-rendering recovery producers to typed conditions and canonical actions; `src/cadrumo/core/output_rendering.py`.
+- [x] `W05.P10.S111` - Migrate core output-rendering recovery producers to typed conditions and canonical actions; `src/cadrumo/core/output_rendering.py`.
 - [x] `W05.P10.S112` - Migrate core topics recovery producers to typed conditions and canonical actions; `src/cadrumo/core/topics/__init__.py`.
 - [x] `W05.P10.S113` - Migrate domain-bucket recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/buckets/_errors.py`.
 - [x] `W05.P10.S114` - Unify shared CLI callback and terminal emitters around one typed projection mapping MissingOptionalExtraError and malformed aeat.pre303 CoreValidationError to exact machine-fact no-recovery outcomes through the CLI exception-precondition owner with no raw message matching or terminal bypass; `src/cadrumo/application/cli_exception_preconditions.py; src/cadrumo/entrypoints/cli/_common.py; src/cadrumo/entrypoints/cli/_errors.py; src/cadrumo/entrypoints/cli/_terminal_errors.py`.
-- [ ] `W05.P10.S115` - Migrate the active-session diagnostics recovery producer to typed conditions and canonical action or explicit no-recovery outcome; `src/cadrumo/application/diagnostics.py`.
+- [x] `W05.P10.S115` - Migrate the active-session diagnostics recovery producer to typed conditions and canonical action or explicit no-recovery outcome; `src/cadrumo/application/diagnostics.py`.
 - [x] `W05.P10.S117` - Replace financial OFX optional-extra forwarding and notice consumers with typed machine facts and explicit no-recovery outcomes preserving capability classification without raw installation prose or wrapper compatibility; `src/cadrumo/adapters/inbound/financial/providers/_ofx.py`.
 - [ ] `W05.P10.S121` - Migrate Google API transport failures to typed external-system safety outcomes, adjudicating remote not-found recovery only where the caller owns creation; `src/cadrumo/adapters/outbound/google/_api.py; src/cadrumo/adapters/outbound/google/tests`.
 - [ ] `W05.P10.S122` - Migrate Google Drive and document-resolution network, permission, and conflict refusals to typed safety or operator-review outcomes and classify unreachable validation invariants explicitly; `src/cadrumo/adapters/outbound/google/_document_link_resolver.py; src/cadrumo/adapters/outbound/google/_drive_entries.py; src/cadrumo/adapters/outbound/google/tests`.
