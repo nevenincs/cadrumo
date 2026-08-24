@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from ....tests.aeat_literal_fixtures import aeat_url
 from .. import (
     RegistryClosureEvidence,
     RegistryClosureLimb,
@@ -18,7 +19,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def _evidence() -> RegistryClosureEvidence:
     return RegistryClosureEvidence(
         authority="AEAT approved record design",
-        locator="https://www.agenciatributaria.es/record-design",
+        locator=aeat_url("aeat_gob", "/record-design"),
     )
 
 
@@ -150,7 +151,7 @@ def test_evidence_and_models_are_strict_and_immutable() -> None:
     with pytest.raises(ValidationError, match="Extra inputs"):
         RegistryClosureEvidence(
             authority="AEAT approved record design",
-            locator="https://www.agenciatributaria.es/record-design",
+            locator=aeat_url("aeat_gob", "/record-design"),
             guessed_layout=True,
         )
     with pytest.raises(ValidationError, match="unique"):
