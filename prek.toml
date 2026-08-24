@@ -70,6 +70,17 @@ entry = "uv run --no-sync python -m dev.quality.types"
 pass_filenames = false
 types = ["python"]
 
+# ── Core architecture (verify-only) ─────────────────────────────────────────
+[[repos]]
+repo = "local"
+
+[[repos.hooks]]
+id = "core-architecture"
+name = "core architecture gates"
+language = "system"
+entry = "uv run --no-sync pytest -q -n0 dev/tests/test_import_hygiene_gate.py dev/tests/test_import_edge_integrity_gate.py dev/tests/test_facade_export_gate.py"
+pass_filenames = false
+
 # ── Locale co-landing (verify-only) ─────────────────────────────────────────
 # The only locale gate here that compares a CHANGE rather than a state. Every
 # other one -- `dev.locales audit`, the parity suites -- asks whether the tree is

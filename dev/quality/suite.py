@@ -56,6 +56,19 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
             r".*[\\/]tests[\\/].*",
         ),
     ),
+    (
+        "check-architecture",
+        (
+            sys.executable,
+            "-m",
+            "pytest",
+            "-q",
+            "-n0",
+            "dev/tests/test_import_hygiene_gate.py",
+            "dev/tests/test_import_edge_integrity_gate.py",
+            "dev/tests/test_facade_export_gate.py",
+        ),
+    ),
 )
 
 
