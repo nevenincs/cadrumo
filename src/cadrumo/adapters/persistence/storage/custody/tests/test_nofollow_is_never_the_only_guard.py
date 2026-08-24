@@ -74,7 +74,9 @@ def _is_platform_test(test: ast.expr) -> bool:
     if not isinstance(test, ast.Compare):
         return False
     left = test.left
-    return isinstance(left, ast.Attribute) and left.attr == "name" and getattr(left.value, "id", None) == "os"
+    if not isinstance(left, ast.Attribute) or left.attr != "name":
+        return False
+    return isinstance(left.value, ast.Name) and left.value.id == "os"
 
 
 def _posix_gated(scope: ast.FunctionDef | ast.AsyncFunctionDef, function_name: str) -> bool:

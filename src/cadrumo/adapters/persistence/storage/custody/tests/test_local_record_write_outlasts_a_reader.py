@@ -67,19 +67,24 @@ def test_a_write_outlasts_a_reader_that_releases_its_handle(tmp_path: Path) -> N
     assert read_optional_profile_custody_local_record(path, maximum_bytes=_LIMIT) == _SECOND
 
 
-@pytest.mark.skipif(
-    os.name != "nt",
-    reason="POSIX replaces a file that is held open, so there is no block to outlast or refuse",
-)
-def test_a_permanently_held_handle_is_still_refused(tmp_path: Path) -> None:
-    """ANTI-TAUTOLOGY: the budget must be bounded, not merely generous.
+def test_a_permanent_native_write_block_is_still_refused(tmp_path: Path) -> None:
+    """ANTI-TAUTOLOGY: every platform refuses a durable write barrier.
 
-    Raising the budget must not drift into waiting forever. A denial that never
-    clears is indistinguishable from a reader by error code, so the write has to
-    give up and report rather than block the login indefinitely.
+    Windows holds the destination open, the native permanent blocker that its
+    retry budget must eventually refuse. POSIX permits replacement of an open
+    reader, so it instead presents a real directory at the destination and
+    proves the no-follow atomic replacement refuses rather than overwriting it.
     """
     path = tmp_path / "handover-journal"
     write_profile_custody_local_record(path, _FIRST, publish_once=True)
+
+    if os.name != "nt":
+        path.unlink()
+        path.mkdir()
+        with pytest.raises(ProfileCustodyRecordError, match="cannot be atomically written"):
+            write_profile_custody_local_record(path, _SECOND, publish_once=False)
+        assert path.is_dir()
+        return
 
     handle = path.open("rb")
     try:

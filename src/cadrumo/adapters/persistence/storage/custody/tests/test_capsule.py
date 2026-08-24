@@ -35,7 +35,6 @@ from .. import (
     export_profile_custody_recovery_artifact,
     import_profile_custody_recovery_artifact,
     list_current_profile_custody_capsule_ids,
-    load_committed_profile_custody_summary_witness,
     load_committed_profile_password_material,
     parse_profile_custody_commit,
     parse_profile_custody_recovery_artifact,
@@ -48,6 +47,7 @@ from .. import (
     unlock_profile_custody_recovery,
     verify_profile_custody_sentinel,
 )
+from .._capsule import load_committed_profile_custody_summary_witness
 from .._recovery import PROFILE_CUSTODY_RECOVERY_ARTIFACT_MAX_BYTES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -370,7 +370,7 @@ def test_capsule_summary_witness_observes_only_validated_commit_and_uuid_bound_l
     assert witness.commit.profile_id == witness.label.profile_id == _PROFILE_ID
     assert witness.label == label
     with pytest.raises(FrozenInstanceError):
-        witness.capsule_path = tmp_path / "replacement"  # type: ignore[misc]
+        type(witness).__setattr__(witness, "capsule_path", tmp_path / "replacement")
 
 
 def test_capsule_summary_witness_refuses_foreign_or_linked_label_provenance(tmp_path: Path) -> None:
