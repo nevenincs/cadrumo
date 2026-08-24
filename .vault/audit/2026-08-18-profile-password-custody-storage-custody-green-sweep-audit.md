@@ -8637,3 +8637,82 @@ surface `quickfile` for outcome phrasing), two `test_closed_value_axis_gate`
 (unpinned bare enum axes plus exemptions that no longer describe a real axis),
 one `test_localization_boundary`, one `test_result_size_budget` (36-plus verb
 output schemas over the size budget, the largest at 19513).
+
+### The harness was mostly stale premises, not broken product
+
+Nineteen harness failures reduced to four, and the striking part is how few were
+product defects. Six were gates asserting against a subject that had moved:
+
+- the responsiveness probe measuring a warm-served local verb as if it were a
+  slow subprocess call (both gap tests);
+- both handshake tests pinning `registry.inspect` in `tools/list`, written when
+  the surface was flat — CORE now advertises a 16-tool orientation slice and
+  everything else is discovered, not listed. `registry.inspect` is still exposed
+  and still callable by name; it is simply not advertised;
+- both ranking goldens testing exact membership of `"quickfile"` in a list of
+  command keys, when the verb is keyed `app.quickfile`. The ranker returns
+  `app.quickfile` FIRST for "file my quarterly VAT" — the assertion was reading a
+  rename as a ranking regression.
+
+Every one of those accused the product in confident, specific language. The
+count that matters is six false accusations against three real defects (the
+unaddressable tool names, the reserved notice key, and the unscanned locale
+root). A test suite drifting this way is worse than one simply failing, because
+each red reads as a regression report and costs a full investigation to refute.
+
+Where a fix repointed a subject, it also pinned the premise so the drift cannot
+recur silently: the probe now refuses a warm-served verb outright, and the
+handshake exclusion is paired with a descriptor-set assertion so it cannot pass
+vacuously if the verb leaves the surface for real.
+
+### The dead scan root: fifteen untranslated operator strings
+
+`dev/locales/_paths.py` defined `HARNESS_SRC_DIR`, documented at length why the
+key scan must reach past `src/cadrumo` to cover the harness, and then no module
+ever consumed it — `DOCS_SRC_DIR` was wired into all five call sites beside it
+and the harness root was not. The parity gate therefore never saw one harness
+`tr()` key, and all fifteen were missing from all four catalogues while
+`scaffold --check` reported `ok` on every locale.
+
+Each fell back to its English default, so a Spanish-configured operator read
+English at the confirmation boundary — the prompt asking a human to approve
+producing a filing-grade artefact — and at the off-host privacy notice, which is
+the consent surface for what leaves the machine.
+
+Supplying the translations then exposed a second constraint no fallback could:
+the elicitation gate pins the literal product token `Cadrumo CLI` and forbids
+`aeat CLI`. Natural Spanish and Catalan word order ("la CLI de Cadrumo") drops
+it. While the key was absent the English default satisfied the gate, so the
+constraint was invisible. **A missing translation hides every constraint on the
+translated string.**
+
+### Committing into a co-owned catalogue
+
+The catalogue shards were co-owned mid-edit: a peer's uncommitted `recovery_*`
+translations sat in the same YAML files as my keys, and the `set` verb's reflow
+made the working-tree diff 413 added lines where only ~54 were mine. Committing
+those files would have captured their work; reverting would have destroyed it.
+
+The blobs were therefore rebuilt from HEAD plus my keys in a scratch tree and
+committed through an isolated index, leaving the working tree untouched. That
+isolated cleanly to four files — the other eight in the working diff were
+entirely theirs. Verified after the fact: zero peer keys in the committed
+shards, peer keys still present in the working tree, my keys committed.
+
+### Harness state at close
+
+Four failing, 317 passing. None is mine to close alone:
+
+- `test_closed_value_axis_gate` — twelve bare enum axes across
+  `config.profile.create` / `edit`. The owning `_profile_command_specs.py` is in
+  the peer's live edit set, and their half-finished `recovery_handoff` work
+  currently crashes `scaffold --check` with a `_leaf()` signature `TypeError`
+  present in the working tree and absent from HEAD.
+- `test_result_size_budget` — 36 verbs over the 18000-char ceiling, the largest
+  84% over at 33150. Not a shared-spine shift: the median is 15164 with 75 verbs
+  in the 16000-18000 band, so the population sits at the ceiling and 36 have
+  crossed. Each needs a decision about what that verb RETURNS, which is the
+  remediation the gate's own docstring prescribes. Raising the budget would be
+  weakening a gate to manufacture green.
+- `test_server_loop_responsiveness` x2 — profile creation over MCP refuses
+  without the secrets channel, the surface the peer is actively rewriting.
