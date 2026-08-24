@@ -11,8 +11,9 @@ Run via ``python -m dev.registry.conformance``:
 
 * ``report [--json]`` — every conformance axis, one row per modelo revision.
 * ``coverage [--json]`` — per-axis measured counts against real populations.
-* ``audit [--check]`` — the ratchet comparison; ``--check`` is the only gating
-  exit in the whole surface.
+* ``audit [--check]`` — the ratchet comparison.
+* ``closure [--check]`` — the derived temporal, source, and filing release
+  predicate; its check exit blocks an incomplete shipped-registry claim.
 * ``stamp`` — write a revision's declared governance scalars.
 
 ``report`` and ``coverage`` always exit 0, deliberately: they show a picture
@@ -33,13 +34,24 @@ See Also:
     :func:`~application.registry.audit_bundled_registry_conformance`
         Shipped composer this package renders.
     :mod:`~dev.registry.conformance.cli`
-        Typer surface for the four verbs.
+        Typer surface for the five governance verbs.
     :func:`~domain.calculations.registry.build_support_matrix`
         Shipped per-modelo capability authority the report's support probe reads.
 """
 
 from __future__ import annotations
 
+from .closure import (
+    RegistryClosureJoinDisagreement,
+    RegistryClosurePredicateRefusal,
+    RegistryClosureReleaseResult,
+    RegistryClosureReport,
+    RegistryClosureRevisionReport,
+    build_registry_closure_report,
+    check_registry_closure_release,
+    load_registry_closure_report,
+    render_registry_closure_report,
+)
 from .manager import (
     AUDITED_LOCALES,
     NOT_MEASURED,
@@ -65,13 +77,22 @@ __all__ = [
     "ConformanceBaseline",
     "ConformanceReport",
     "CoverageReport",
+    "RegistryClosureJoinDisagreement",
+    "RegistryClosurePredicateRefusal",
+    "RegistryClosureReleaseResult",
+    "RegistryClosureReport",
+    "RegistryClosureRevisionReport",
     "build_conformance_report",
     "build_coverage_report",
+    "build_registry_closure_report",
     "check_conformance_ratchet",
+    "check_registry_closure_release",
     "load_baseline",
     "load_conformance_report",
+    "load_registry_closure_report",
     "render_audit",
     "render_coverage",
+    "render_registry_closure_report",
     "render_report",
     "reset_conformance_cache",
 ]

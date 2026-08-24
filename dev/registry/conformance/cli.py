@@ -12,7 +12,10 @@ Verbs:
 * ``report`` -- every conformance axis, one row per modelo revision.
 * ``coverage`` -- per-axis measured counts against their real populations.
 * ``audit [--check]`` -- the shrink-only ratchet against the committed
-  baseline. ``--check`` is the ONLY gating exit in this whole surface.
+  baseline.
+* ``closure [--check]`` -- the derived temporal, source, and filing release
+  predicate. ``--check`` blocks a shipped-completeness claim while any limb is
+  refused or the three denominators disagree.
 * ``stamp`` -- write a revision's DECLARED governance provenance. It cannot
   write ``operator_reviewed``: this CLI is agent-driven, and an agent recording
   an operator's signoff is the exact dishonesty the feature exists to detect.
@@ -23,9 +26,10 @@ Verbs:
 is currently a bad one — ninety unreviewed revisions, five dead schema axes, an
 independent-check coverage under five per cent — and a screen that refused to
 render would leave that backlog unread while teaching every peer to route
-around the tool. A fact earns a gating exit when its worklist empties, which is
-what ``audit --check`` is for: it does not demand the backlog be clean, only
-that it not GROW.
+around the tool. ``audit --check`` protects the monotonic conformance ratchet
+without demanding that the current backlog be clean; ``closure --check``
+instead gates the separate, explicit completeness claim and therefore blocks
+while any release limb remains refused.
 
 Reading the output
 ------------------
@@ -60,13 +64,18 @@ See Also:
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Annotated
 
 import typer
 
 from ._stamp import StampableReviewStatus, StampError, bundled_registry_root, stamp_revision
+from .closure import (
+    check_registry_closure_release,
+    load_registry_closure_report,
+    render_registry_closure_report,
+)
 from .manager import (
     ConformanceReport,
     build_coverage_report,
@@ -141,6 +150,48 @@ def coverage(as_json: _AsJson = False, no_validate: _NoValidate = False) -> None
         return
     typer.echo(render_coverage(projected))
     _warn_if_vacuous(composed)
+
+
+@app.command("closure")
+def closure(
+    check: Annotated[
+        bool,
+        typer.Option(
+            "--check",
+            help=(
+                "Gate: exit 1 unless every law-selectable revision satisfies temporal coverage, "
+                "source connectivity, and filing export with no join disagreement."
+            ),
+        ),
+    ] = False,
+    as_of: Annotated[
+        str | None,
+        typer.Option(
+            "--as-of",
+            help="Date used to evaluate expiring source-connectivity evidence; defaults to today.",
+        ),
+    ] = None,
+    as_json: _AsJson = False,
+) -> None:
+    """Render the derived cross-authority release report and optional blocking gate.
+
+    The report derives its temporal, source, and filing facts through the
+    shipped application authorities.  It never treats absent live proof as a
+    pass: the affected limb remains an owned refusal, and ``--check`` blocks
+    the release claim.
+    """
+    try:
+        as_of_date = None if as_of is None else date.fromisoformat(as_of)
+    except ValueError as error:
+        raise typer.BadParameter("must be an ISO calendar date (YYYY-MM-DD)") from error
+    report = load_registry_closure_report(as_of=as_of_date)
+    result = check_registry_closure_release(report)
+    if as_json:
+        typer.echo(report.model_dump_json(indent=2))
+    else:
+        typer.echo(render_registry_closure_report(report))
+    if check and not result.passed:
+        raise typer.Exit(code=1)
 
 
 @app.command("audit")
