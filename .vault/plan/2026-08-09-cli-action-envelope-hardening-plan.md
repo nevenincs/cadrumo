@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-24'
-body_hash: 'sha256:56f1773f48d31199f2b7048bc664b4cfcfba7854d270648540dd522b02c70cfe'
+body_hash: 'sha256:510acd3f88034f46bd8427813442cb6e34d87cd27b17e94de6d07a10eae6ab08'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -203,7 +203,7 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [x] `W05.P10.S61` - Migrate shipped agent harness action citations to canonical action identities; `src/cadrumo/_data/agent`.
 - [x] `W05.P10.S67` - Migrate inbound censo parse-refusal action producers to typed conditions and canonical actions; `src/cadrumo/adapters/inbound/censo/_parser.py`.
 - [ ] `W05.P10.S68` - Migrate Google profile, OAuth, and impersonation refusals to typed recoverable actions or explicit operator-decision and safety outcomes; `src/cadrumo/adapters/outbound/google/_active_profile.py; src/cadrumo/adapters/outbound/google/_oauth_flow.py; src/cadrumo/adapters/outbound/google/_impersonation.py; src/cadrumo/adapters/outbound/google/tests`.
-- [ ] `W05.P10.S69` - Migrate local outbound-storage provider permission, path, conflict, not-found, and integrity failures to typed safety or operator-decision outcomes without inventing caller-owned recovery; `src/cadrumo/adapters/outbound/storage/_errors.py; src/cadrumo/adapters/outbound/storage/_local.py; src/cadrumo/adapters/outbound/storage/tests`.
+- [x] `W05.P10.S69` - Migrate local outbound-storage provider permission, path, conflict, not-found, and integrity failures to typed safety or operator-decision outcomes without inventing caller-owned recovery; `src/cadrumo/adapters/outbound/storage/_errors.py; src/cadrumo/adapters/outbound/storage/_local.py; src/cadrumo/adapters/outbound/storage/tests`.
 - [ ] `W05.P10.S70` - Migrate persistence adapter recovery producers to current typed actions and delete recovery-hint fields; `src/cadrumo/adapters/persistence`.
 - [ ] `W05.P10.S71` - Migrate aggregation recovery producers to typed conditions and canonical actions; `src/cadrumo/application/aggregation`.
 - [ ] `W05.P10.S72` - Migrate calculation recovery producers to typed conditions and canonical actions; `src/cadrumo/application/calculations`.

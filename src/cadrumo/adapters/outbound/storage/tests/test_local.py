@@ -9,17 +9,19 @@ against both, but separating them keeps failures clearly localised.
 
 from __future__ import annotations
 
+import ast
 import hashlib
 import json
 import os
 import stat
+from collections import Counter
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, TypedDict
 
 import pytest
 
-from .....core import ActionConditionality, NoRecoveryOutcome, iter_directory, scan_directory
+from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome, iter_directory, scan_directory
 from .....core.atomic_write import atomic_write_text
 from .....core.errors import ERROR_REGISTRY, build_error_envelope, resolve_error_message
 from .....core.i18n import tr
@@ -34,7 +36,7 @@ from .. import (
     StorageProvider,
 )
 from .._errors import OutboundStoragePermissionError
-from .._local import LocalFileSystemProvider
+from .._local import LocalFileSystemProvider, _local_failure_verdict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -43,13 +45,115 @@ def _hash(payload: bytes) -> str:
     return f"sha256-{hashlib.sha256(payload).hexdigest()}"
 
 
-def _assert_local_verdict(error: BaseException, condition_id: str, outcome: NoRecoveryOutcome) -> None:
+def _assert_local_verdict(
+    error: BaseException,
+    condition_id: str,
+    outcome: NoRecoveryOutcome,
+    expected_facts: Mapping[str, str | int | bool],
+) -> None:
     verdict = error.terminal_precondition_verdict
+    assert verdict is not None
     assert verdict.failed_condition_id == condition_id
     assert verdict.conditionality is ActionConditionality.NOT_APPLICABLE
     assert verdict.action is None
+    assert verdict.argument_bindings == ()
     assert verdict.no_recovery_outcome is outcome
     assert len(verdict.evidence) == 1
+    evidence = verdict.evidence[0]
+    assert evidence.condition_id == verdict.failed_condition_id
+    assert evidence.evidence_id == f"{condition_id}.observation"
+    assert evidence.provenance is ActionEvidenceProvenance.RUNTIME_OBSERVATION
+    assert dict(evidence.values) == dict(expected_facts)
+    assert verdict.missing_argument_names == ()
+
+
+_LOCAL_FAILURE_CONTRACTS: tuple[tuple[str, str, dict[str, str | int | bool], NoRecoveryOutcome], ...] = (
+    ("byte-length-type", "storage.local.sidecar.byte_length_valid", {"field": "byte_length", "valid": False}, NoRecoveryOutcome.SAFETY),
+    ("byte-length-format", "storage.local.sidecar.byte_length_valid", {"field": "byte_length", "valid": False}, NoRecoveryOutcome.SAFETY),
+    ("byte-length-negative", "storage.local.sidecar.byte_length_valid", {"field": "byte_length", "valid": False}, NoRecoveryOutcome.SAFETY),
+    ("written-at-type", "storage.local.sidecar.written_at_valid", {"field": "written_at", "valid": False}, NoRecoveryOutcome.SAFETY),
+    ("written-at-format", "storage.local.sidecar.written_at_valid", {"field": "written_at", "valid": False}, NoRecoveryOutcome.SAFETY),
+    ("written-at-timezone", "storage.local.sidecar.written_at_valid", {"field": "written_at", "valid": False}, NoRecoveryOutcome.SAFETY),
+    ("namespace-create-permission", "storage.local.namespace.writable", {"operation": "create_namespace"}, NoRecoveryOutcome.SAFETY),
+    ("namespace-create-path", "storage.local.path.within_limit", {"operation": "create_namespace"}, NoRecoveryOutcome.SAFETY),
+    ("hmac-prefix-collision", "storage.local.sidecar.identity_matches", {"operation": "resolve_object", "prefix_collision": True}, NoRecoveryOutcome.SAFETY),
+    ("sidecar-malformed", "storage.local.sidecar.schema_valid", {"sidecar_valid": False}, NoRecoveryOutcome.SAFETY),
+    ("sidecar-not-object", "storage.local.sidecar.schema_valid", {"sidecar_valid": False}, NoRecoveryOutcome.SAFETY),
+    ("payload-write-permission", "storage.local.payload.writable", {"operation": "put", "writable": False}, NoRecoveryOutcome.SAFETY),
+    ("payload-write-path", "storage.local.path.within_limit", {"operation": "put_payload", "within_limit": False}, NoRecoveryOutcome.SAFETY),
+    ("payload-write-conflict", "storage.local.payload.commit_succeeded", {"operation": "put", "committed": False}, NoRecoveryOutcome.OPERATOR_DECISION),
+    ("sidecar-write-path", "storage.local.path.within_limit", {"operation": "put_sidecar", "within_limit": False}, NoRecoveryOutcome.SAFETY),
+    ("sidecar-write-permission", "storage.local.sidecar.writable", {"operation": "put_sidecar", "writable": False}, NoRecoveryOutcome.SAFETY),
+    ("object-not-found", "storage.local.object.present", {"operation": "get", "object_present": False}, NoRecoveryOutcome.OPERATOR_DECISION),
+    ("sidecar-missing", "storage.local.sidecar.present", {"operation": "get", "sidecar_present": False}, NoRecoveryOutcome.SAFETY),
+    ("payload-read-permission", "storage.local.payload.readable", {"operation": "get", "readable": False}, NoRecoveryOutcome.SAFETY),
+    ("sidecar-hash-missing", "storage.local.sidecar.digest_present", {"operation": "get", "content_hash_present": False}, NoRecoveryOutcome.SAFETY),
+    ("delete-sidecar-read", "storage.local.sidecar.readable", {"operation": "delete", "readable": False}, NoRecoveryOutcome.SAFETY),
+    ("delete-sidecar", "storage.local.sidecar.deletable", {"operation": "delete", "deletable": False}, NoRecoveryOutcome.SAFETY),
+    ("delete-payload", "storage.local.payload.deletable", {"operation": "delete", "deletable": False}, NoRecoveryOutcome.SAFETY),
+    ("namespace-not-found", "storage.local.namespace.present", {"operation": "iter_objects", "namespace_present": False}, NoRecoveryOutcome.OPERATOR_DECISION),
+)
+
+
+def _local_failure_contract_key(
+    condition_id: str,
+    facts: Mapping[str, str | int | bool],
+    outcome: NoRecoveryOutcome,
+) -> tuple[str, tuple[tuple[str, str | int | bool], ...], NoRecoveryOutcome]:
+    return condition_id, tuple(sorted(facts.items())), outcome
+
+
+@pytest.mark.parametrize(
+    ("_case", "condition_id", "facts", "outcome"),
+    _LOCAL_FAILURE_CONTRACTS,
+    ids=tuple(contract[0] for contract in _LOCAL_FAILURE_CONTRACTS),
+)
+def test_local_failure_verdict_contracts_are_exact(
+    _case: str,
+    condition_id: str,
+    facts: dict[str, str | int | bool],
+    outcome: NoRecoveryOutcome,
+) -> None:
+    error = StorageCorruptionError(
+        "local provider refusal",
+        precondition_verdict=_local_failure_verdict(condition_id, facts=facts, outcome=outcome),
+    )
+
+    _assert_local_verdict(error, condition_id, outcome, facts)
+
+
+def test_local_failure_verdict_contracts_cover_every_local_provider_failure_site() -> None:
+    """Each local refusal site must retain its declared no-action verdict contract."""
+    source = (Path(__file__).resolve().parent.parent / "_local.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    observed: Counter[tuple[str, tuple[tuple[str, str | int | bool], ...], NoRecoveryOutcome]] = Counter()
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Name) or node.func.id != "_local_failure_verdict":
+            continue
+        assert node.args and isinstance(node.args[0], ast.Constant) and isinstance(node.args[0].value, str)
+        keywords = {keyword.arg: keyword.value for keyword in node.keywords}
+        facts_node = keywords.get("facts")
+        assert facts_node is not None
+        facts = ast.literal_eval(facts_node)
+        assert isinstance(facts, dict)
+        assert all(isinstance(key, str) and isinstance(value, str | int | bool) for key, value in facts.items())
+        outcome_node = keywords.get("outcome")
+        outcome = NoRecoveryOutcome.SAFETY
+        if outcome_node is not None:
+            assert (
+                isinstance(outcome_node, ast.Attribute)
+                and isinstance(outcome_node.value, ast.Name)
+                and outcome_node.value.id == "NoRecoveryOutcome"
+            )
+            outcome = NoRecoveryOutcome[outcome_node.attr]
+        observed[_local_failure_contract_key(node.args[0].value, facts, outcome)] += 1
+
+    expected = Counter(
+        _local_failure_contract_key(condition_id, facts, outcome)
+        for _case, condition_id, facts, outcome in _LOCAL_FAILURE_CONTRACTS
+    )
+    assert observed == expected
 
 
 def test_local_provider_satisfies_runtime_protocol(provider: LocalFileSystemProvider) -> None:
@@ -189,8 +293,10 @@ def test_get_round_trips_payload(provider: LocalFileSystemProvider) -> None:
     assert metadata.byte_length == len(payload)
 
 
+@pytest.mark.parametrize("operation", ("put", "get", "delete"))
 def test_hmac_prefix_collision_refuses_every_operation_and_preserves_original(
     provider: LocalFileSystemProvider,
+    operation: str,
 ) -> None:
     """A real local collision cannot overwrite, read, or delete the first object."""
     namespace = "ledger_transaction"
@@ -200,12 +306,19 @@ def test_hmac_prefix_collision_refuses_every_operation_and_preserves_original(
     payload_b = b"payload-b"
     provider.put(namespace, key_a, payload_a, content_hash=_hash(payload_a), label="first")
 
-    with pytest.raises(OutboundStorageIntegrityError, match="HMAC prefix collision"):
-        provider.put(namespace, key_b, payload_b, content_hash=_hash(payload_b), label="second")
-    with pytest.raises(OutboundStorageIntegrityError, match="HMAC prefix collision"):
-        provider.get(namespace, key_b)
-    with pytest.raises(OutboundStorageIntegrityError, match="HMAC prefix collision"):
-        provider.delete(namespace, key_b)
+    with pytest.raises(OutboundStorageIntegrityError, match="HMAC prefix collision") as raised:
+        if operation == "put":
+            provider.put(namespace, key_b, payload_b, content_hash=_hash(payload_b), label="second")
+        elif operation == "get":
+            provider.get(namespace, key_b)
+        else:
+            provider.delete(namespace, key_b)
+    _assert_local_verdict(
+        raised.value,
+        "storage.local.sidecar.identity_matches",
+        NoRecoveryOutcome.SAFETY,
+        {"operation": "resolve_object", "prefix_collision": True},
+    )
 
     fetched, metadata = provider.get(namespace, key_a)
     assert fetched == payload_a
@@ -223,7 +336,12 @@ def test_get_raises_storage_not_found_for_missing_object(provider: LocalFileSyst
     )
     with pytest.raises(OutboundStorageNotFoundError) as raised:
         provider.get("ledger_transaction", "0000000000000000")
-    _assert_local_verdict(raised.value, "storage.local.object.present", NoRecoveryOutcome.OPERATOR_DECISION)
+    _assert_local_verdict(
+        raised.value,
+        "storage.local.object.present",
+        NoRecoveryOutcome.OPERATOR_DECISION,
+        {"operation": "get", "object_present": False},
+    )
 
 
 def test_get_raises_storage_integrity_on_payload_tamper(provider: LocalFileSystemProvider) -> None:
@@ -238,7 +356,16 @@ def test_get_raises_storage_integrity_on_payload_tamper(provider: LocalFileSyste
     Path(metadata.provider_object_id).write_bytes(b"tampered")
     with pytest.raises(OutboundStorageIntegrityError) as raised:
         provider.get("ledger_transaction", "fedcba9876543210")
-    _assert_local_verdict(raised.value, "storage.integrity.content_hash_matches", NoRecoveryOutcome.SAFETY)
+    _assert_local_verdict(
+        raised.value,
+        "storage.integrity.content_hash_matches",
+        NoRecoveryOutcome.SAFETY,
+        {
+            "path": str(metadata.provider_object_id),
+            "stored_hash": _hash(payload),
+            "actual_sha256": hashlib.sha256(b"tampered").hexdigest(),
+        },
+    )
 
 
 def test_delete_returns_true_when_object_existed(provider: LocalFileSystemProvider) -> None:
@@ -280,7 +407,12 @@ def test_iter_objects_yields_metadata_for_every_object(provider: LocalFileSystem
 def test_iter_objects_raises_for_missing_namespace(provider: LocalFileSystemProvider) -> None:
     with pytest.raises(OutboundStorageNotFoundError) as raised:
         list(provider.iter_objects("never_seen"))
-    _assert_local_verdict(raised.value, "storage.local.namespace.present", NoRecoveryOutcome.OPERATOR_DECISION)
+    _assert_local_verdict(
+        raised.value,
+        "storage.local.namespace.present",
+        NoRecoveryOutcome.OPERATOR_DECISION,
+        {"operation": "iter_objects", "namespace_present": False},
+    )
 
 
 def test_probe_read_only_does_not_touch_filesystem(tmp_path: Path) -> None:
@@ -392,7 +524,19 @@ def test_put_rejects_invalid_storage_keys(
     assert resolve_error_message(raised.value) == tr(translated_message, **(raised.value.context or {}))
 
 
-def test_get_rejects_non_object_sidecar_with_localized_integrity_error(provider: LocalFileSystemProvider) -> None:
+@pytest.mark.parametrize(
+    ("sidecar_contents", "translated_message"),
+    (
+        (b"{malformed", "adapters.outbound.storage.local.errors.sidecar_malformed"),
+        (json.dumps(["not", "an", "object"]).encode("utf-8"), "adapters.outbound.storage.local.errors.sidecar_not_object"),
+    ),
+    ids=("malformed", "not-object"),
+)
+def test_get_rejects_malformed_or_non_object_sidecar_with_localized_integrity_error(
+    provider: LocalFileSystemProvider,
+    sidecar_contents: bytes,
+    translated_message: str,
+) -> None:
     payload = b"sidecar-shape"
     metadata = provider.put(
         "ledger_transaction",
@@ -403,14 +547,49 @@ def test_get_rejects_non_object_sidecar_with_localized_integrity_error(provider:
     )
     obj_path = Path(metadata.provider_object_id)
     sidecar_path = obj_path.with_name(obj_path.stem + ".meta.json")
-    sidecar_path.write_text(json.dumps(["not", "an", "object"]), encoding="utf-8")
+    sidecar_path.write_bytes(sidecar_contents)
 
     with pytest.raises(OutboundStorageIntegrityError) as raised:
         provider.get("ledger_transaction", "11223344aabbccdd")
 
-    assert raised.value.translated_message == "adapters.outbound.storage.local.errors.sidecar_not_object"
+    assert raised.value.translated_message == translated_message
     assert raised.value.context == {"sidecar_path": str(sidecar_path)}
     assert resolve_error_message(raised.value) == tr(raised.value.translated_message, **(raised.value.context or {}))
+    _assert_local_verdict(
+        raised.value,
+        "storage.local.sidecar.schema_valid",
+        NoRecoveryOutcome.SAFETY,
+        {"sidecar_valid": False},
+    )
+
+
+@pytest.mark.parametrize("corruption", ("sidecar", "hash"))
+def test_get_refuses_missing_sidecar_or_hash(provider: LocalFileSystemProvider, corruption: str) -> None:
+    payload = b"missing-sidecar-or-hash"
+    metadata = provider.put(
+        "ledger_transaction",
+        "11223344aabbccdd",
+        payload,
+        content_hash=_hash(payload),
+        label="missing-sidecar-or-hash",
+    )
+    object_path = Path(metadata.provider_object_id)
+    sidecar_path = object_path.with_name(object_path.stem + ".meta.json")
+    if corruption == "sidecar":
+        sidecar_path.unlink()
+        condition_id = "storage.local.sidecar.present"
+        expected_facts = {"operation": "get", "sidecar_present": False}
+    else:
+        sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+        sidecar.pop("content_hash")
+        sidecar_path.write_text(json.dumps(sidecar), encoding="utf-8")
+        condition_id = "storage.local.sidecar.digest_present"
+        expected_facts = {"operation": "get", "content_hash_present": False}
+
+    with pytest.raises(OutboundStorageIntegrityError) as raised:
+        provider.get("ledger_transaction", "11223344aabbccdd")
+
+    _assert_local_verdict(raised.value, condition_id, NoRecoveryOutcome.SAFETY, expected_facts)
 
 
 # ---------------------------------------------------------------------------
@@ -435,11 +614,16 @@ def test_storage_corruption_error_round_trips_through_build_error_envelope() -> 
     assert "actual_type" in (envelope.context or {})
 
 
-def test_get_raises_storage_corruption_error_when_sidecar_byte_length_is_wrong_type(
+@pytest.mark.parametrize(
+    "byte_length",
+    ([42], True, "not-an-integer", -1),
+    ids=("list", "bool", "non-integer", "negative"),
+)
+def test_get_raises_storage_corruption_error_for_every_invalid_sidecar_byte_length(
     provider: LocalFileSystemProvider,
-    tmp_path: Path,
+    byte_length: object,
 ) -> None:
-    """The real read path must raise StorageCorruptionError when byte_length is a list."""
+    """The real read path rejects every sidecar byte-length corruption family."""
     payload = b"corruption-test-payload"
     metadata = provider.put(
         "ledger_transaction",
@@ -448,17 +632,57 @@ def test_get_raises_storage_corruption_error_when_sidecar_byte_length_is_wrong_t
         content_hash=_hash(payload),
         label="corruption",
     )
-    # Locate and corrupt the sidecar: replace byte_length int with a list.
     obj_path = Path(metadata.provider_object_id)
     sidecar_path = obj_path.with_name(obj_path.stem + ".meta.json")
     sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
-    sidecar["byte_length"] = [42]  # unexpected type: list
+    sidecar["byte_length"] = byte_length
     sidecar_path.write_text(json.dumps(sidecar), encoding="utf-8")
 
     with pytest.raises(StorageCorruptionError) as raised:
         provider.get("ledger_transaction", "aabbccdd00112233")
     assert raised.value.translated_message == "adapters.outbound.storage.local.errors.byte_length_invalid"
     assert resolve_error_message(raised.value) == tr(raised.value.translated_message, **(raised.value.context or {}))
+    _assert_local_verdict(
+        raised.value,
+        "storage.local.sidecar.byte_length_valid",
+        NoRecoveryOutcome.SAFETY,
+        {"field": "byte_length", "valid": False},
+    )
+
+
+@pytest.mark.parametrize(
+    "written_at",
+    (None, "", "not-an-instant", "2026-08-24T12:00:00"),
+    ids=("missing", "blank", "malformed", "timezone-naive"),
+)
+def test_get_raises_storage_corruption_error_for_every_invalid_sidecar_written_at(
+    provider: LocalFileSystemProvider,
+    written_at: object,
+) -> None:
+    payload = b"written-at-corruption"
+    metadata = provider.put(
+        "ledger_transaction",
+        "bbaa998877665544",
+        payload,
+        content_hash=_hash(payload),
+        label="written-at-corruption",
+    )
+    object_path = Path(metadata.provider_object_id)
+    sidecar_path = object_path.with_name(object_path.stem + ".meta.json")
+    sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+    sidecar["written_at"] = written_at
+    sidecar_path.write_text(json.dumps(sidecar), encoding="utf-8")
+
+    with pytest.raises(StorageCorruptionError) as raised:
+        provider.get("ledger_transaction", "bbaa998877665544")
+
+    assert raised.value.translated_message == "adapters.outbound.storage.local.errors.written_at_invalid"
+    _assert_local_verdict(
+        raised.value,
+        "storage.local.sidecar.written_at_valid",
+        NoRecoveryOutcome.SAFETY,
+        {"field": "written_at", "valid": False},
+    )
 
 
 def test_get_refuses_sidecar_byte_length_that_disagrees_with_payload(
@@ -486,6 +710,16 @@ def test_get_refuses_sidecar_byte_length_that_disagrees_with_payload(
     assert raised.value.context is not None
     assert raised.value.context["stored_byte_length"] == str(len(payload) + 1)
     assert raised.value.context["actual_byte_length"] == str(len(payload))
+    _assert_local_verdict(
+        raised.value,
+        "storage.integrity.payload_byte_length_matches",
+        NoRecoveryOutcome.SAFETY,
+        {
+            "path": str(object_path),
+            "stored_byte_length": str(len(payload) + 1),
+            "actual_byte_length": str(len(payload)),
+        },
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -544,3 +778,35 @@ def test_put_still_raises_conflict_for_a_real_non_long_path_oserror(
         provider.put("ledger_transaction", hmac, payload, content_hash=_hash(payload), label=label)
     assert not isinstance(raised.value, OutboundStoragePathTooLongError)
     assert raised.value.translated_message == "adapters.outbound.storage.local.errors.sidecar_write_failed"
+    _assert_local_verdict(
+        raised.value,
+        "storage.local.sidecar.writable",
+        NoRecoveryOutcome.SAFETY,
+        {"operation": "put_sidecar", "writable": False},
+    )
+
+
+def test_delete_refuses_an_obstructed_sidecar_before_removing_the_payload(
+    provider: LocalFileSystemProvider,
+) -> None:
+    payload = b"sidecar-delete-obstruction"
+    metadata = provider.put(
+        "ledger_transaction",
+        "8899aabbccddeeff",
+        payload,
+        content_hash=_hash(payload),
+        label="sidecar-delete-obstruction",
+    )
+    object_path = Path(metadata.provider_object_id)
+    sidecar_path = object_path.with_name(object_path.stem + ".meta.json")
+
+    with obstructed_path(sidecar_path), pytest.raises(OutboundStoragePermissionError) as raised:
+        provider.delete("ledger_transaction", "8899aabbccddeeff")
+
+    _assert_local_verdict(
+        raised.value,
+        "storage.local.sidecar.deletable",
+        NoRecoveryOutcome.SAFETY,
+        {"operation": "delete", "deletable": False},
+    )
+    assert object_path.is_file()
