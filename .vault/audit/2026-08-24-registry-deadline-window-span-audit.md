@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:982c0f7f908d7c470e3166873f79ff338767d46dd9bca3436d9a40a4218ec6bf'
+body_hash: 'sha256:2495d0eaeef813609ef78e7c6f5e1c97539172c9a96d4035f657fff1288f68e6'
 related: []
 ---
 
@@ -376,6 +376,20 @@ COMMITTED registry validates:
   filing records, justificantes and registry snapshots, then
   `model_validate(..., context={CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY:
   context})`. Nine of these sit in `test_prior_domiciliation_election`.
+
+  **This is not a mechanical fixture edit, and should not be attempted as one.**
+  For an M303 rectificativa `validate_calculation_revision_aggregate` also calls
+  `_require_m303_filing_evidence(revision)`, so the REVISION must itself carry
+  M303 filing evidence whose coordinate resolves a record design, whose design
+  authority the snapshot must attest, and whose motive and target receipt must
+  both exist -- the receipt carrying a presentation_id and matching the
+  taxpayer and filing coordinate. `test_prior_domiciliation_election` builds its
+  revisions with `filing_instance_evidence=None`, so satisfying the validator
+  means reconstructing that whole evidence chain inside a module whose subject is
+  direct-debit election refusals. Whoever owns the M303 rectificativa evidence
+  chain should decide whether these tests need real rectificativa revisions at
+  all, or whether their subject is reachable without one. Guessing a fixture
+  here risks encoding a defect as the contract.
 - **~5, source provenance id.** Fixtures use a placeholder
   `calculation_revision_id` of sixty-four `a` characters that no longer matches
   the content-addressed derivation.
