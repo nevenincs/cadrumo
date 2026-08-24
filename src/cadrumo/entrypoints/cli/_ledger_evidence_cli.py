@@ -6,8 +6,8 @@ from collections.abc import Iterable
 from typing import Protocol, TypedDict, cast
 
 import typer
+from pydantic import ValidationError
 
-from ...application.cli_exception_preconditions import CliExceptionPrecondition
 from ...application.ledger import (
     FindingResolution,
     InvoiceConfirmationResult,
@@ -52,7 +52,7 @@ from ._ledger_payloads import (
     EvidenceUpdateResult,
     EvidenceViewResult,
 )
-from ._ledger_support import _ledger_cli_no_recovery
+from ._ledger_support import _ledger_invoice_validation_no_recovery
 
 
 class _InvoiceClassKwarg(TypedDict, total=False):
@@ -508,12 +508,10 @@ def _run_evidence_confirm(
             notes=notes,
             resolutions=resolutions,
         )
-    except InvoiceValidationError as exc:
-        raise _ledger_cli_no_recovery(
-            exc,
-            condition=CliExceptionPrecondition.LEDGER_INVOICE_VALID,
-            facts={"error_type": type(exc).__name__},
-        ) from None
+    except (InvoiceValidationError, ValidationError) as exc:
+        if (refusal := _ledger_invoice_validation_no_recovery(exc)) is not None:
+            raise refusal from None
+        raise
 
     invoice = result.invoice
     payload = {

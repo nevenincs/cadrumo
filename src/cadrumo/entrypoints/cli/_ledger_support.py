@@ -9,7 +9,7 @@ id resolution. Mutation emitters validate their result through the supplied
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from typing import Protocol
 
@@ -32,6 +32,7 @@ from ...core.json_contract import Notice, OutputSchema
 from ...domain.categories import SpendingCategory
 from ...domain.contribuyente import FiscalResidency
 from ...domain.deadlines import IrpfSpecialRegime
+from ...domain.invoices import InvoiceValidationError
 from ...domain.transactions import Transaction, TransactionIdPrefixError, TransactionValidationError
 from ._common import (
     _bad,
@@ -336,6 +337,54 @@ def _ledger_transaction_validation_no_recovery(error: TransactionValidationError
         condition=CliExceptionPrecondition.LEDGER_TRANSACTION_VALID,
         facts={"error_type": type(error).__name__},
     )
+
+
+def _ledger_invoice_validation_no_recovery(
+    error: InvoiceValidationError | ValidationError,
+) -> CadrumoError | None:
+    """Project an operator invoice refusal without flattening other validation owners.
+
+    Pydantic preserves an invoice validator's exception in ``ctx.error``.  A
+    ledger command may therefore receive either the direct domain error or its
+    pydantic transport wrapper.  Catalogue deserialisation also uses pydantic,
+    but its corruption remains a persistence failure rather than an operator
+    invoice-input refusal, so only an ``Invoice`` or ``InvoiceLine`` wrapper
+    structurally carrying the invoice family is admitted here.
+    """
+    if isinstance(error, InvoiceValidationError):
+        terminal_error: CadrumoError = error
+    elif _is_pydantic_invoice_validation(error):
+        from ._errors import CliValidationBoundaryError
+
+        terminal_error = CliValidationBoundaryError(error)
+    else:
+        return None
+    return _ledger_cli_no_recovery(
+        terminal_error,
+        condition=CliExceptionPrecondition.LEDGER_INVOICE_VALID,
+        facts={"invoice_valid": False},
+    )
+
+
+def _is_pydantic_invoice_validation(error: ValidationError) -> bool:
+    """Return whether a validation wrapper carries an ``InvoiceValidationError``.
+
+    The title admits the two model records the ledger commands construct; every
+    detail must carry the nested domain error rather than an ordinary pydantic
+    coercion refusal.  An invoice catalogue or envelope must retain its
+    persistence owner even if it contains an invoice error.
+    """
+    if error.title not in {"Invoice", "InvoiceLine"}:
+        return False
+    details = error.errors(include_url=False)
+    if not details:
+        return False
+    for detail in details:
+        context = detail.get("ctx")
+        nested = context.get("error") if isinstance(context, Mapping) else None
+        if not isinstance(nested, InvoiceValidationError):
+            return False
+    return True
 
 
 def _format_validation_error(item: ErrorDetails) -> str:

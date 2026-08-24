@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-24'
-body_hash: 'sha256:f9e1a8eb7f7b4f9bbb0782ea60d6536485ba1c32ab57e8790af0a4e4e391f415'
+body_hash: 'sha256:3e89e7f477e60d2f8dff1c27e5f5a292e9d780f75468f03d888163f04513954a'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -175,7 +175,7 @@ Convert registered defaults and exception-level action overrides into catalogue 
 - [x] `W05.P08.S105` - Finish portal exception taxonomy and preserve operator-reachable portal refusals as canonical typed outcomes instead of BadParameter or authored integrity prose; `src/cadrumo/domain/portals/_errors.py; src/cadrumo/domain/portals/_registry.py; src/cadrumo/domain/portals/tests; src/cadrumo/entrypoints/cli/_app_live_portals_cli.py; src/cadrumo/entrypoints/cli/tests`.
 - [x] `W05.P08.S106` - Migrate config-reset exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/_config_reset_repository.py; src/cadrumo/application/config_reset.py`.
 - [x] `W05.P08.S116` - Replace runtime pkgutil result-schema discovery with one canonical schema-module declaration reconciled bidirectionally to the live command and result-schema surface; `src/cadrumo/entrypoints/cli/_app_contract.py; src/cadrumo/entrypoints/schema_surface.py; src/cadrumo/entrypoints/cli/tests/test_app_contract_resilience.py; src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py`.
-- [ ] `W05.P08.S130` - Publish the exact invoice and IVA validation owner census and route direct or Pydantic-wrapped operator invoice refusals through one canonical ledger terminal projection; `src/cadrumo/domain/invoices/_models.py; src/cadrumo/domain/iva/_classification.py; src/cadrumo/entrypoints/cli/_ledger_support.py; src/cadrumo/entrypoints/cli/_ledger*.py; src/cadrumo/entrypoints/cli/tests; dev/tests/test_invoice_iva_validation_owner_census.py [new]`.
+- [x] `W05.P08.S130` - Publish the exact invoice and IVA validation owner census and route direct or Pydantic-wrapped operator invoice refusals through one canonical ledger terminal projection; `src/cadrumo/domain/invoices/_models.py; src/cadrumo/domain/iva/_classification.py; src/cadrumo/entrypoints/cli/_ledger_support.py; src/cadrumo/entrypoints/cli/_ledger*.py; src/cadrumo/entrypoints/cli/tests; dev/tests/test_invoice_iva_validation_owner_census.py [new]`.
 
 ### Phase `W05.P09` - Diagnostics overview and provisioning
 
