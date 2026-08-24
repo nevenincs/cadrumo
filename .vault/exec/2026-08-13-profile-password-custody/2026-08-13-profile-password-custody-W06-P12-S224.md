@@ -5,31 +5,53 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:cc02981484538d3b64b62fe30a1ef73cb8585a981e32d6e86e12e9baf6a94105'
+body_hash: 'sha256:183011344e06ff77da406868c0c5cc5ee97bcc20dd587427d624c5f32c105dd3'
 step_id: 'S224'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
-
 # Extend every machine-secret refusal and dispatch-state snapshot to include session and receipt artifacts while preserving unread-channel and cross-platform harness evidence
 
 ## Scope
 
 - `src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`
+- `src/cadrumo/adapters/persistence/storage/custody/_acceleration_receipt.py`
 
 ## Description
 
-- Centralize the embedded durable-snapshot predicate shared by the portable/POSIX and Windows inherited-HANDLE harnesses.
-- Include session and receipt payloads in every refusal and dispatch-state snapshot while excluding diagnostic logs and ephemeral lock files only.
-- Preserve unread-stdin, unread-descriptor, descriptor-closure, Windows HANDLE bootstrap, and POSIX inherited-descriptor witnesses.
-- Bite-prove the tightened predicate against real session-lock churn, then retain only the precise `.lock` exclusion required by the observed filesystem behavior.
+- Keep the generated portable/POSIX and Windows HANDLE harnesses on one
+  logs-only durable snapshot predicate.
+- Include session, receipt, retirement, root, and lock artifacts in every
+  refusal and dispatch-state equality witness.
+- Repair the lifecycle mutation that the retained lock witness exposes without
+  a test-only cleanup or lock deletion.
+- Preserve unread-channel, descriptor closure, HANDLE bootstrap, and POSIX
+  inherited-descriptor behavior.
 
 ## Outcome
 
-The complete native Windows matrix passed 70 tests in 510.95 seconds against the final predicate. The complete WSL/POSIX matrix passed 68 of 70 cases; two late cases encountered a transient `SyntaxError` in a concurrently edited peer-owned acceleration-receipt module rather than an S224 assertion failure. After that peer file stabilized and compiled, all eight descriptor-refusal cases containing both interrupted cases passed natively in 43.49 seconds and under WSL in 128.46 seconds. Ruff and ty passed on the Step-owned module.
+The previous `.lock` exclusion was not an acceptable fix: it hid a real
+empty-session-lock mutation. Corrective commit `5e51632799` retains every lock
+artifact in both generated harnesses and the host-side snapshot helper, while
+excluding only diagnostic logs. The witness then exposed and verified the
+production repair: session mint, resume, delete, and idle renewal now share
+the re-entrant root-to-leaf lock order, so an established logged-out resume
+observes absence without creating the per-session lock.
 
-The initial stronger snapshot deliberately failed fifteen refusal cases because authentication probing leaves empty `.session.v2.json.lock` synchronization files. Narrowing the exclusion to the `.lock` suffix kept durable session and receipt JSON inside the equality witness. A subsequent current-HEAD targeted run reproduced the failure when a concurrent commit dropped that exclusion, confirming the gate bites; restoring it returned both platform subsets to green.
+Commit `a26f609f2e` also moves deterministic malformed mint and renewal input
+validation before root locking and adds cold-root no-artifact regressions. The
+independent-process resume/mint case proves ordering; on a keychain-less host
+it proves serialization and honest refusal rather than claiming successful
+resume visibility.
+
+The final authoritative Windows machine-secret integration run passed **70
+passed in 497.07s**. Focused receipt/race/validation tests passed **9**, and
+Ruff plus targeted ty were clean. No mocks, patches, skips, xfails, lock-file
+deletions, or snapshot exclusions were introduced.
 
 ## Notes
 
-Two concurrent commits touched the same test module during execution. The final source and evidence were re-read and rerun after each overwrite. The embedded snapshot predicate is now one shared source fragment consumed by both subprocess harnesses, reducing their prior duplication; the host-side helper remains a separate implementation because it executes in the parent test process rather than in generated child-interpreter source. No production mechanism, compatibility path, mock, skip, or xfail was added.
+The page-level profile-setup materialization command remains blocked before
+sequence evaluation by independently owned Modelo 303/322 registry conflicts.
+This is a registry residue, not an S224 witness exception, and is recorded in
+the S223 close review.

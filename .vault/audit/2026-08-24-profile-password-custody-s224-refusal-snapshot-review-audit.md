@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:1c5ad7c5dd790f417d57020aab716a714440a34c14d99af268b9acb2aa1db70e'
+body_hash: 'sha256:9464078feaab8e3386591248d3e8695221c4e080dc7e6c323989773167b764e0'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -13,25 +13,65 @@ related:
 
 ## Scope
 
-Formal review of `W06.P12.S224` against the accepted custody decision, the approved Step, and the corrected campaign-close finding. The review inspected all three durable-state snapshot call sites in `test_machine_secret_channels_subprocess.py`: the shared subprocess source used by the POSIX and native Windows HANDLE harnesses, plus the in-process `_storage_snapshot` helper. It also reconciled the claimed native and WSL matrices and static checks with the exact uncommitted diff.
+Independent re-review of the S224 refusal-snapshot witness and its related
+session-lifecycle repair. It covers the shared generated snapshot source for
+the portable/POSIX and native Windows HANDLE harnesses, the host-side
+`_storage_snapshot`, and the real receipt lifecycle that the strengthened
+witness exposed.
 
 ## Findings
 
-### s224-snapshot-implementation | high | The reviewed diff does not implement the required lock-safe durable snapshot
+### s224-lock-artifact-witness | resolved | Lock artifacts must remain visible
 
-The uncommitted diff is formatting-only. Both subprocess harnesses still receive the same pre-existing `durable_snapshot` implementation through `_DURABLE_SNAPSHOT_SOURCE`, and `_storage_snapshot` retains the same pre-existing predicate. Each predicate includes session and receipt files incidentally because it excludes only filenames containing `log`; however, none excludes `.lock` debris. This directly conflicts with the supplied evidence that the tightened suite first detected `.session.v2.json.lock` churn and then passed after a precise `.lock` exclusion. The claimed resolving implementation is absent from the reviewed worktree, so the 70-test native and 70-test WSL results cannot attest the current diff as described. The broad substring check for `log` is also not a precise expression of the permitted diagnostic-log exclusion.
+The earlier S224 record incorrectly treated `.lock` exclusion as the resolving
+predicate. That would hide the exact durable session-lock churn the refusal
+witness exists to detect. Corrective commit `5e51632799` removes both suffix
+exclusions: the two generated harnesses share one logs-only predicate and the
+host helper has the same logs-only policy. Session, receipt, retirement, root,
+and lock files are all compared byte-for-byte; no test or production path
+unlinks a lock leaf.
 
-The two subprocess harnesses deliberately share one source string, so the formatting adjustment does not create divergence between native Windows HANDLE and POSIX/WSL behavior. The separate in-process helper remains pre-existing semantic duplication, but this diff neither introduces nor worsens it. It also does not create a competing secret-channel or snapshot mechanism. The blocking defect is instead that no semantic S224 change is present across either implementation path.
+### s224-real-lifecycle-root-cause | resolved | Refusal had materialised a session lock
 
-## Recommendations
+The retained lock witness exposed a real production mutation: an absent
+`resume_profile_session` acquired the per-profile session lock, creating an
+empty `.session.v2.json.lock` before a root-secret refusal. The repair routes
+all current session lifecycle operations (mint, resume, delete, idle renewal)
+through the existing re-entrant custody root lock before the per-profile leaf.
+For established profiles, the absent receipt/journal observation is therefore
+race-free against cooperating writers and does not materialise a session lock.
+A raw unprovisioned root remains explicit bootstrap work, not an observational
+refusal.
 
-Do not approve or close S224. Apply the same explicit durable-file predicate to `_DURABLE_SNAPSHOT_SOURCE` and `_storage_snapshot`: include session and receipt artifacts, and exclude only precisely identified diagnostic logs and `.lock` debris. Then rerun the exact native Windows and WSL matrices, Ruff, and ty against that saved diff and repeat this focused review. Preserve the shared subprocess implementation so unread-channel, native HANDLE, and POSIX/WSL harness behavior cannot drift.
-### s224-snapshot-implementation-resolved | high | The lock-safe durable snapshot is now present and the blocker is resolved
+### s224-validation-and-race-review | resolved | Invalid calls and cross-process ordering are witnessed
 
-Re-review confirmed that `_DURABLE_SNAPSHOT_SOURCE`, shared by the ordinary subprocess harness and native Windows HANDLE harness, now excludes `.lock` suffixes while continuing to include session and receipt artifacts. The local `_storage_snapshot` applies the matching predicate across the host/runtime boundary. Diagnostic logs and lock debris are the only excluded categories; custody, session, and receipt state remains observable. Centralizing the two embedded implementations in one source reduces the earlier risk of harness drift. The local helper remains necessarily separate because it executes in the host test runtime, but it matches the embedded predicate and is not a competing production mechanism.
+Commit `a26f609f2e` validates profile identity, custody generation, epoch, DEK
+length, mint windows, UTC instants, renewal ownership, and renewal deadline
+before it opens the root lock. Cold-root regressions prove malformed mint and
+renewal input creates no custody coordination artifact. The independent child
+resume versus real parent mint regression establishes cross-process root-lock
+linearization: on a usable keychain the child resumes the newly minted record;
+on a keychain-less host it proves blocking/serialization and an honest
+refusal only, not successful visibility.
 
-The final implementation is supported by the complete native matrix at 70 passed, the WSL matrix reaching 68 passed before two tests were interrupted by a transient syntax error in a concurrently edited peer module, and the exact affected descriptor subset subsequently passing 8 of 8 on both native Windows and WSL after that peer module compiled again. Ruff and ty are clean. The transient peer syntax error is outside the reviewed file and does not challenge unread-channel, HANDLE inheritance, POSIX descriptor, or durable-snapshot semantics. The original HIGH is resolved; no unresolved CRITICAL, HIGH, MEDIUM, or LOW finding remains in S224 scope.
+## Evidence
+
+- Global no-skip: `23 passed, 2 failed` before; final `25 passed`.
+- Documented-command conformance: `347 passed, 2 failed` before; final `349 passed`.
+- Locales: 30 incomplete catalogues and 253 untranslated/fuzzy entries in each
+  of es, ca, and hu before; final localization gate `10 passed`.
+- Receipt/race/validation focus: `9 passed`; Ruff and targeted `ty` clean.
+- Authoritative machine-secret integration matrix after the final validation
+  change: `70 passed in 497.07s`.
+- Independent review: PASS. It found no lifecycle writer bypass, inverse
+  root-to-leaf ordering, new redeclaration, lock exclusion, or remaining S224
+  blocker.
 
 ## Final disposition
 
-Approve S224. The reviewed diff closes the refusal-snapshot witness gap without changing production secret-channel behavior or creating a parallel authority. The Step may be closed using the stated native, WSL, subset, and static evidence.
+Approve S224's corrected witness and the related session lifecycle repair.
+The evidence retains lock files rather than excluding them. The wider
+profile-setup page materialization command is currently blocked before
+sequence evaluation by independently owned Modelo 303/322 registry semantic
+conflicts; that external registry residue is recorded in the S223 closure
+record and is not presented as an S224 pass.
