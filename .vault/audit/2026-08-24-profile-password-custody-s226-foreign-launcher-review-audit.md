@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:66c373c917d2ada9a76691f738da7795aea06a3d3111cd0095c0f0a4925ab3d0'
+body_hash: 'sha256:be5a41f4006e5fcc4c558ef242ba4ace04ce2899feceef808312ccbc2a54c371'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -28,3 +28,11 @@ The POSIX branch binds `_original_shebang` but never inspects it, and `assert se
 ## Recommendations
 
 Before closing S226 without a carry-forward, assert that `_original_shebang` begins with `#!`, resolves to the source environment's real Python, and is absolute, then retain the existing exact Windows and WSL/POSIX proofs. No production change is indicated. Subject to that LOW witness fix, the platform-neutral launcher swap is a PASS with no critical, high, or medium findings.
+
+## Resolution
+
+### posix-source-shebang-proof-resolved | low | The source shebang proof now binds the real peer launcher to its environment
+
+Resolved in the current S226 diff. The POSIX branch now proves the first line exists, begins with `#!`, decodes to an absolute path, resolves strictly, and equals the source `cadrumo-mcp` environment's resolved Python before replacing only that line with the copied environment's resolved Python. The real installed `aeat` body and mode remain unchanged. This closes the anti-tautology gap without weakening the production semantic-drift assertion.
+
+Final recorded validation after the resolution is one exact native Windows pass in 90.69 seconds, one exact WSL/POSIX pass in 4.12 seconds, and clean Ruff and ty results. Final disposition: PASS. No critical, high, medium, or unresolved low findings remain for S226.

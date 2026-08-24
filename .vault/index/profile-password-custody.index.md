@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:03be8e5f4d2f858dff665a42b9f5e538223a07ce7d1aafc6b04d030e77ea50d3'
+body_hash: 'sha256:0090e1047dc712bcda171d94380cb03b770a5f9aa4284480460e299dcb6b0d27'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -234,6 +234,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W06-P11-S223]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S224]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S225]]'
+  - '[[2026-08-13-profile-password-custody-W06-P12-S226]]'
   - '[[2026-08-13-profile-password-custody-plan]]'
   - '[[2026-08-13-profile-password-custody-research]]'
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
@@ -273,6 +274,7 @@ related:
   - '[[2026-08-24-profile-password-custody-s223-campaign-close-honesty-audit]]'
   - '[[2026-08-24-profile-password-custody-s224-refusal-snapshot-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s225-capsule-source-anchor-review-audit]]'
+  - '[[2026-08-24-profile-password-custody-s226-foreign-launcher-review-audit]]'
 ---
 
 # `profile-password-custody` feature index
@@ -320,9 +322,10 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-24-profile-password-custody-s221-recovery-matrix-audit` - `profile-password-custody` audit: `S221 recovery matrix review`
 - `2026-08-24-profile-password-custody-s221-recovery-matrix-review-audit` - `profile-password-custody` audit: `S221 recovery-enrollment matrix review`
 - `2026-08-24-profile-password-custody-s222-platform-gate-audit` - `profile-password-custody` audit: `S222 platform gate review`
-- `2026-08-24-profile-password-custody-s223-campaign-close-honesty-audit` - profile-password-custody audit: fresh-context campaign-close honesty review
+- `2026-08-24-profile-password-custody-s223-campaign-close-honesty-audit` - `profile-password-custody` audit: `S223 campaign-close remediation and honesty review`
 - `2026-08-24-profile-password-custody-s224-refusal-snapshot-review-audit` - `profile-password-custody` audit: `S224 refusal snapshot review`
 - `2026-08-24-profile-password-custody-s225-capsule-source-anchor-review-audit` - `profile-password-custody` audit: `S225 capsule source anchor review`
+- `2026-08-24-profile-password-custody-s226-foreign-launcher-review-audit` - `profile-password-custody` audit: `S226 foreign launcher review`
 
 ### exec
 
@@ -549,9 +552,10 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W06-P11-S220` - Adjudicate every checked execution record that fails the required body schema, preserving genuine evidence where it exists and reopening or formally carrying forward any Step whose completed work cannot be established
 - `2026-08-13-profile-password-custody-W06-P11-S221` - Re-run the complete S206 recovery-enrollment matrix across interactive, TUI, stdin, POSIX descriptor, Windows inherited-handle, mismatch, cancellation, collision, and publication-failure paths and persist the resulting evidence
 - `2026-08-13-profile-password-custody-W06-P11-S222` - Re-run the S209 supervised-KDF platform gate without weakening exact descriptor attestation, worker isolation, or fail-closed supervision and persist the Windows, POSIX, and WSL evidence
-- `2026-08-13-profile-password-custody-W06-P11-S223` - Perform a fresh-context campaign-close honesty review covering decision-to-code consistency, Step-to-record evidence, stale recovery prose, S206 and S209 gates, feature-scoped Vaultspec validation, and the historical-close pointer
+- `2026-08-13-profile-password-custody-W06-P11-S223` - Perform a fresh-context campaign-close honesty review and action every verified carry-forward
 - `2026-08-13-profile-password-custody-W06-P12-S224` - Extend every machine-secret refusal and dispatch-state snapshot to include session and receipt artifacts while preserving unread-channel and cross-platform harness evidence
 - `2026-08-13-profile-password-custody-W06-P12-S225` - Replace the capsule-source symlink platform skip with a deterministic real-filesystem reparse-point-or-directory refusal witness while retaining linked-content non-adoption where symlinks are supported
+- `2026-08-13-profile-password-custody-W06-P12-S226` - Replace the Windows-only foreign-launcher plant with a platform-neutral real confined-venv launcher swap and prove the canonical path rejects a peer entry point on Windows and POSIX
 
 ### plan
 

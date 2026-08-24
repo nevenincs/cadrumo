@@ -19,7 +19,7 @@ related:
   - '[[2026-08-13-sealed-archive-transport-successor-adr]]'
   - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
 modified: '2026-08-24'
-body_hash: 'sha256:44534c8eb2d46d79bab4cfa39988419fec3eb2272940bb645b42bc003ca37996'
+body_hash: 'sha256:88b072ba333af41b116db81017732228b85e80786b62842f1f34a70118685c2b'
 ---
 
 # `profile-password-custody` plan
@@ -334,7 +334,7 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 
 - [x] `W06.P12.S224` - Extend every machine-secret refusal and dispatch-state snapshot to include session and receipt artifacts while preserving unread-channel and cross-platform harness evidence; `src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`.
 - [x] `W06.P12.S225` - Replace the capsule-source symlink platform skip with a deterministic real-filesystem reparse-point-or-directory refusal witness while retaining linked-content non-adoption where symlinks are supported; `src/cadrumo/application/user_profile/tests/test_capsule_source_reads_are_anchored.py`.
-- [ ] `W06.P12.S226` - Replace the Windows-only foreign-launcher plant with a platform-neutral real confined-venv launcher swap and prove the canonical path rejects a peer entry point on Windows and POSIX; `dev/packaging/tests/test_distribution_evidence_emit.py`.
+- [x] `W06.P12.S226` - Replace the Windows-only foreign-launcher plant with a platform-neutral real confined-venv launcher swap and prove the canonical path rejects a peer entry point on Windows and POSIX; `dev/packaging/tests/test_distribution_evidence_emit.py`.
 - [ ] `W06.P12.S227` - Retire the unsupported workstation agent-materialisation sequence and stale agent-extra claims while preserving the separately owned harness and MCP guidance; `docs/workstation-setup.md and docs/_sequences/contracts/workstation-setup/`.
 - [ ] `W06.P12.S228` - Replace the inline profile-delete command and false active-delete claim with a terminal real-execution sequence that logs out and deletes only its sandbox profile; `docs/how-to/profile-setup.md and docs/_sequences/contracts/how-to/`.
 - [ ] `W06.P12.S229` - Resynchronize the Spanish, Catalan, and Hungarian Sphinx gettext catalogues from stable English sources and retire the generated-page environment-overrides orphans; `docs/locales/es/LC_MESSAGES/ and docs/locales/ca/LC_MESSAGES/ and docs/locales/hu/LC_MESSAGES/`.
