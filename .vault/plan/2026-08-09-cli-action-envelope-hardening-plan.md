@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-24'
-body_hash: 'sha256:5cfd84bf714f9d1dc0127dbaa200f6b109f066690781767614ba07248f0635f1'
+body_hash: 'sha256:b47c8b5e07672c18e9576a81bbeef63832ad7eb83d63b9312dd12b16f66d8d8a'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -202,7 +202,7 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [x] `W05.P10.S60` - Migrate TUI recovery rendering to the shared resolved action projection; `src/cadrumo/adapters/inbound/tui`.
 - [x] `W05.P10.S61` - Migrate shipped agent harness action citations to canonical action identities; `src/cadrumo/_data/agent`.
 - [x] `W05.P10.S67` - Migrate inbound censo parse-refusal action producers to typed conditions and canonical actions; `src/cadrumo/adapters/inbound/censo/_parser.py`.
-- [ ] `W05.P10.S68` - Migrate Google adapter recovery producers to canonical actions with external-system safety outcomes; `src/cadrumo/adapters/outbound/google`.
+- [ ] `W05.P10.S68` - Migrate Google profile, OAuth, and impersonation refusals to typed recoverable actions or explicit operator-decision and safety outcomes; `src/cadrumo/adapters/outbound/google/_active_profile.py; src/cadrumo/adapters/outbound/google/_oauth_flow.py; src/cadrumo/adapters/outbound/google/_impersonation.py; src/cadrumo/adapters/outbound/google/tests`.
 - [ ] `W05.P10.S69` - Migrate outbound storage adapter recovery producers to canonical actions or explicit no-recovery outcomes; `src/cadrumo/adapters/outbound/storage`.
 - [ ] `W05.P10.S70` - Migrate persistence adapter recovery producers to current typed actions and delete recovery-hint fields; `src/cadrumo/adapters/persistence`.
 - [ ] `W05.P10.S71` - Migrate aggregation recovery producers to typed conditions and canonical actions; `src/cadrumo/application/aggregation`.
@@ -239,6 +239,9 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [x] `W05.P10.S114` - Unify shared CLI callback and terminal emitters around one typed projection mapping MissingOptionalExtraError and malformed aeat.pre303 CoreValidationError to exact machine-fact no-recovery outcomes through the CLI exception-precondition owner with no raw message matching or terminal bypass; `src/cadrumo/application/cli_exception_preconditions.py; src/cadrumo/entrypoints/cli/_common.py; src/cadrumo/entrypoints/cli/_errors.py; src/cadrumo/entrypoints/cli/_terminal_errors.py`.
 - [ ] `W05.P10.S115` - Migrate the active-session diagnostics recovery producer to typed conditions and canonical action or explicit no-recovery outcome; `src/cadrumo/application/diagnostics.py`.
 - [x] `W05.P10.S117` - Replace financial OFX optional-extra forwarding and notice consumers with typed machine facts and explicit no-recovery outcomes preserving capability classification without raw installation prose or wrapper compatibility; `src/cadrumo/adapters/inbound/financial/providers/_ofx.py`.
+- [ ] `W05.P10.S121` - Migrate Google API transport failures to typed external-system safety outcomes, adjudicating remote not-found recovery only where the caller owns creation; `src/cadrumo/adapters/outbound/google/_api.py; src/cadrumo/adapters/outbound/google/tests`.
+- [ ] `W05.P10.S122` - Migrate Google Drive and document-resolution network, permission, and conflict refusals to typed safety or operator-review outcomes and classify unreachable validation invariants explicitly; `src/cadrumo/adapters/outbound/google/_document_link_resolver.py; src/cadrumo/adapters/outbound/google/_drive_entries.py; src/cadrumo/adapters/outbound/google/tests`.
+- [ ] `W05.P10.S123` - Migrate Google calculation-sheet apply and pull transport and synchronization refusals to typed safety or state-divergence outcomes and classify provider-contract validation invariants explicitly; `src/cadrumo/adapters/outbound/google/_calc_sheets_apply.py; src/cadrumo/adapters/outbound/google/_calc_sheets_pull.py; src/cadrumo/adapters/outbound/google/tests`.
 
 ## Wave `W06` - Prove action chains and close honestly
 
