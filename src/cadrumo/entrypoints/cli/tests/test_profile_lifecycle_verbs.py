@@ -305,7 +305,10 @@ def test_config_login_emits_profile_activated_event() -> None:
 
 
 def test_config_profile_show_emits_active_profile_facts() -> None:
-    seed("operator", tax_id="00000000T")
+    # Registered and logged in rather than seeded: `seed` opens a session that
+    # closes with its context, so the verb runs with no active profile.
+    register_cli_profile(label="operator", facts={"identity.tax_id": "00000000T"})
+    assert _login("operator").exit_code == 0
     result = _invoke_profile(("show",))
     assert result.exit_code == 0, result.output
     assert f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
@@ -318,7 +321,10 @@ def test_config_profile_show_emits_active_profile_facts() -> None:
 
 
 def test_config_profile_show_named_profile_includes_canonical_facts() -> None:
-    seed("operator", tax_id="00000001R")
+    # Registered and logged in: `seed` opens a session that closes with its
+    # context, leaving the verb with no active profile.
+    register_cli_profile(label="operator", facts={"identity.tax_id": "00000001R"})
+    assert _login("operator").exit_code == 0
     seed("spouse", tax_id="00000000T")
     result = _invoke_profile(("show", "spouse"))
     assert result.exit_code == 0, result.output
@@ -340,7 +346,9 @@ def test_config_profile_delete_requires_yes() -> None:
 
 
 def test_config_profile_delete_tombstones_with_yes() -> None:
-    seed("operator")
+    # Registered but deliberately NOT activated: deleting the ACTIVE profile is
+    # refused, so a login here would block the verb under test.
+    register_cli_profile(label="operator")
     result = _invoke_profile_app(("delete", "operator", "--yes"))
     assert result.exit_code == 0, result.output
     assert "status\ttombstoned" in result.output
@@ -356,7 +364,9 @@ def test_config_profile_list_excludes_a_tombstoned_profile() -> None:
     listing, indistinguishable from a live one.
     """
 
-    seed("operator")
+    # Registered but deliberately NOT activated: deleting the ACTIVE profile is
+    # refused, so a login here would block the verb under test.
+    register_cli_profile(label="operator")
     assert _invoke_profile_app(("delete", "operator", "--yes")).exit_code == 0
     result = _invoke_profile(("list",))
     assert result.exit_code == 0, result.output
@@ -391,7 +401,9 @@ def test_config_profile_show_reports_a_tombstoned_profile_as_tombstoned() -> Non
     ``record_validity valid issues=0`` directly above ``status tombstoned``.
     """
 
-    seed("operator")
+    # Registered but deliberately NOT activated: deleting the ACTIVE profile is
+    # refused, so a login here would block the verb under test.
+    register_cli_profile(label="operator")
     assert _invoke_profile_app(("delete", "operator", "--yes")).exit_code == 0
     result = _invoke_profile(("show", "operator"))
     assert result.exit_code == 0, result.output
@@ -405,7 +417,9 @@ def test_config_profile_show_inspects_a_tombstoned_profile_by_label_and_uuid() -
 
     from ....application.workflow import read_profile_bucket
 
-    seed("operator")
+    # Registered but deliberately NOT activated: deleting the ACTIVE profile is
+    # refused, so a login here would block the verb under test.
+    register_cli_profile(label="operator")
     pointer = read_profile_bucket("operator")
     assert pointer is not None
     tombstoned_uuid = pointer.bucket_id
@@ -422,7 +436,10 @@ def test_config_profile_show_inspects_a_tombstoned_profile_by_label_and_uuid() -
 
 
 def test_config_profile_show_runs_validation_inline() -> None:
-    seed("operator")
+    # Registered and logged in: `seed` opens a session that closes with its
+    # context, leaving the verb with no active profile.
+    register_cli_profile(label="operator")
+    assert _login("operator").exit_code == 0
     result = _invoke_profile(("show",))
     assert result.exit_code == 0, result.output
     assert f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
