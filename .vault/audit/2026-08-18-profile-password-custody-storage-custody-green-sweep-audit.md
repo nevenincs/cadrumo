@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:6f55d0fb25dafd9013666a7af13953a444699fb5214a10972ffa79aaf8fe28d7'
+body_hash: 'sha256:7c1e7934a3ec8242ad73bf477a3ec5e60323a62f310db40921c791c4526f4e12'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -9161,3 +9161,42 @@ Worth generalising: a refusal that redacts its cause to a type name turns a real
 product defect into what looks like flaky test noise, and cost several rounds of
 indirect probing to recover. The guard is right to refuse; the envelope should
 carry enough for the operator to act.
+
+### Read the log the boundary already writes, instead of probing it
+
+The prorrata cluster (8 in `test_prorrata_register_cli`) refuses with the
+generic "La entrada del comando no superó la validación", whose envelope carries
+`context: null` on purpose. Two rounds of plugin probing were wasted before
+noticing that `_errors.py:1043` ALREADY logs the raw payload:
+
+    command_error_boundary: pydantic ValidationError in %s: %s
+
+Running the test with `--log-cli-level=ERROR` prints it immediately, no source
+edit and no plugin:
+
+    ValidationError in _emit_crash: [{'type': 'is_instance_of',
+      'loc': ('especial_transition', 'kind'),
+      'msg': 'Input should be an instance of ProrrataEspecialTransitionKind',
+      'input': 'opcion'}]
+
+That is the generalisable lesson, and it would have saved the M111 hunt too:
+**before widening a redaction or writing a diagnostic plugin, check whether the
+boundary already logs what the envelope withholds.** This one does, deliberately
+— its docstring says the log line "holds the raw errors() payload, including the
+input values the envelope deliberately withholds, which is what an engineer
+triaging a failing surface needs".
+
+What the reading rules out: the enum class identity is NOT the problem (the
+handler's `ProrrataEspecialTransitionKind` and the model's aliased
+`_ProrrataEspecialTransitionKind` are verified to be the same object, same
+module), and the handler passes a real member rather than a token. The `loc`
+shows an OUTER model validating a nested mapping, so the evidence was flattened
+to a dict somewhere between construction and re-validation under a strict
+config that then refuses the plain string.
+
+The remaining lead, unfollowed: the failure surfaces inside `_emit_crash`, the
+handler for errors that escaped dispatch. So a first error escapes and the crash
+emitter fails validating its own payload, which means the message reported to
+the operator is the SECOND failure and the first is still unnamed. Start by
+making the crash path survive its own payload, then re-read the log for the
+original.
