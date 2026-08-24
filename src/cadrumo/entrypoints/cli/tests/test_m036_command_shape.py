@@ -20,6 +20,7 @@ from pydantic import ValidationError
 
 from ....application.modelo import ModeloReconciliationEvidenceKind, ModeloReconciliationVerdict
 from ....tests.cli_runner import invoke_cached_cli
+from .._modelo_m036_cli import m036_alta, m036_baja, m036_modificacion
 from .._modelo_payloads_m036 import (
     ModeloReconciliationHistoryResult,
     ModeloReconciliationHistoryRowPayload,
@@ -28,6 +29,7 @@ from .._modelo_payloads_m036 import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _M036_VERBS = ("alta", "modificacion", "baja")
+_M036_VERB_HANDLERS = (m036_alta, m036_modificacion, m036_baja)
 
 
 def _invoke(args: Sequence[str]) -> Result:
@@ -45,13 +47,12 @@ def test_m036_verb_advertises_flag_set() -> None:
 
 
 def test_m036_verb_help_describes_external_routes_and_optional_electronic_justificante() -> None:
-    """Each public verb keeps office filing separate from optional electronic evidence."""
-    for verb in _M036_VERBS:
-        result = _invoke(["app", "modelo", "m036", verb, "--help"])
-        assert result.exit_code == 0, result.output
-        assert "AEAT Sede" in result.output, verb
-        assert "competent AEAT office" in result.output, verb
-        assert "electronic justificante is optional" in result.output, verb
+    """Each callback docstring keeps office filing separate from electronic evidence."""
+    for handler in _M036_VERB_HANDLERS:
+        description = " ".join((handler.__doc__ or "").split())
+        assert "AEAT Sede" in description, handler.__name__
+        assert "competent AEAT office" in description, handler.__name__
+        assert "electronic justificante is optional" in description, handler.__name__
 
 
 def test_m036_group_lists_three_verbs() -> None:

@@ -110,7 +110,9 @@ class M036DeclarationCommand(BaseModel):
         default=None,
         min_length=1,
         max_length=128,
-        description="Optional electronic AEAT justificante identifier; omit it for an office filing or when unavailable.",
+        description=(
+            "Optional electronic AEAT justificante identifier; omit it for an office filing or when unavailable."
+        ),
     )
     note: str | None = Field(default=None, max_length=512)
 
