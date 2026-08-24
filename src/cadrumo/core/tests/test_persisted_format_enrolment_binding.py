@@ -40,7 +40,7 @@ from typing import Final
 
 import pytest
 
-from ...tests._inventory import SRC_CADRUMO, module_name, production_ast_items
+from ...tests import SRC_CADRUMO, module_name, production_ast_items
 from ..compatibility_lifecycle import PERSISTED_FORMATS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -99,6 +99,12 @@ was deleted look identical from here, and only one of them is fine.
 """
 
 CONSTANTS_OUTSIDE_THE_INVENTORY: Final[Mapping[str, str]] = {
+    "AUXILIARY_ENVELOPE_HEADER_SCHEMA_VERSION": (
+        "Registry export-layout DECLARATION, not an instance payload. It compiles from bundled "
+        "TOML that ships inside the wheel and is replaced wholesale on upgrade, and no persistence "
+        "adapter references the model at all, which was checked rather than assumed. The bytes an "
+        "operator produces here are the rendered fichero, and they carry no copy of this number."
+    ),
     "MANUAL_CORPUS_TEXT_SCHEMA_VERSION": (
         "Bundled corpus sidecar. Ships inside the wheel, is versioned with the code and replaced "
         "wholesale on upgrade, and nothing under src/ writes one -- only a dev extraction tool "
