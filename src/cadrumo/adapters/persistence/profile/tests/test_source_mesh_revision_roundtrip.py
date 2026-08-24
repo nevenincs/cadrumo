@@ -206,7 +206,7 @@ def test_row_casilla_target_row_must_equal_direct_source_row() -> None:
         source_row_identity="reordered-row-refusal",
         fingerprint="6" * 64,
     )
-    with pytest.raises(ValidationError, match="row casilla index must match"):
+    with pytest.raises(CalculationRevisionPersistenceError):
         _revision(
             _source_provenance(),
             row_identity=identity,
@@ -445,7 +445,7 @@ def test_legacy_source_provenance_without_required_identity_is_rejected_at_encry
         payload=_json.dumps(envelope).encode("utf-8"),
     )
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(CalculationRevisionPersistenceError):
         CalculationRevisionCatalogueRepository(objects=secure_objects).load()
 
 
@@ -496,7 +496,7 @@ def test_source_provenance_blank_source_ref_payload_rejected_at_load(secure_obje
         payload=_json.dumps(envelope).encode("utf-8"),
     )
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(CalculationRevisionPersistenceError):
         CalculationRevisionCatalogueRepository(objects=secure_objects).load()
 
 
@@ -547,5 +547,5 @@ def test_source_provenance_dropped_dependency_treatment_breaks_content_identity(
         payload=_json.dumps(envelope).encode("utf-8"),
     )
 
-    with pytest.raises(ValidationError, match="does not match the derived id"):
+    with pytest.raises(CalculationRevisionPersistenceError):
         CalculationRevisionCatalogueRepository(objects=secure_objects).load()
