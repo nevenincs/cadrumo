@@ -8966,3 +8966,74 @@ A large share of the remaining failures is fallout from the peer's in-flight
 mandatory-recovery work, which they are actively migrating — the dirty-file
 count went from 87 to 139 during this session. Racing them through the
 credential surface would collide; the productive ground is everywhere else.
+
+### A corrupted virtualenv, and why it must not be read as product failure
+
+Mid-session every storage and crypto path began failing with
+`ModuleNotFoundError: No module named 'cryptography.exceptions'`. The package
+directory held 7 entries where a full install has many: `exceptions.py` and
+`fernet.py` were listed in the dist-info `RECORD` but absent from disk. An
+install had been interrupted part-way.
+
+The mechanism is worth recording because it will recur on this machine: a
+reinstall attempt fails with `Access is denied` on
+`cryptography/hazmat/bindings/_rust.pyd`, because a running Python process holds
+the native extension open. The remover deletes the pure-Python files, hits the
+locked `.pyd`, and aborts — leaving a half-installed package. My own
+`uv pip install --reinstall-package` attempt repeated exactly that and removed
+the dist-info `RECORD` as well, making it worse before it got better.
+
+The repair that works without touching the locked file, and without stopping a
+peer's processes: copy the missing files out of uv's unpacked cache archive
+(`<uv cache dir>/archive-v0/<hash>/`) into site-packages, adding only what is
+absent. 56 files restored, zero locked, `cryptography` imports again, and a
+sweep of the other key imports confirmed nothing else was damaged.
+
+**Any measurement taken while this was broken is void**, and a suite run against
+it would read as a catastrophic product regression. The sequential 314-failure
+confirmation completed BEFORE the corruption (the package directory's mtime is
+later than that run), so it stands; a module re-run taken during the window did
+not, and was repeated afterwards.
+
+### The unsupported-modelo refusal: the guard is early, the gate is earlier
+
+This was carried for a long time as "the unsupported-modelo guard ordering",
+which turns out to describe the symptom and not the mechanism.
+
+`guard_unsupported_work_modelo` is NOT late. It sits fifth in `work_create`,
+ahead of `require_active_profile()`, and `modelo_work_create_refusal_locale_key`
+correctly returns a refusal key for all eight stub-only modelos (151, 210, 600,
+620, 650, 660, 714, 721). The policy surface is right and the handler order is
+right.
+
+The refusal never reaches it. Reproduced outside pytest:
+
+    aeat app modelo work create --modelo 650 --year 2024 --period 0A
+    Rechazado. No hay un perfil activo...
+      action.failed_condition_id: "profile.active"
+
+`profile.active` is a `StorageWritePolicyCondition` owned by
+`application/storage_write_policy.py`, and the CLI root converts a refusing
+write-policy decision into a `CliRefusedBoundaryError` BEFORE dispatch reaches
+the handler. So for any write verb, the profile-bound write gate is evaluated
+ahead of every in-handler guard, and an unsupported modelo can never be refused
+on its own terms without a profile.
+
+The ten tests assert the better behaviour, and their docstring says so
+explicitly: "refuses before active-profile resolution and names its legal
+route". They are right. Modelo 650 is ISD, ceded to the autonomous communities
+and never supported here; sending the operator to create a profile first, only
+to refuse the modelo afterwards, is a wasted journey created by gate ordering
+rather than by policy.
+
+The fix is a real design change and is NOT the in-handler guard: the
+unsupported-modelo refusal has to be evaluated ahead of the write-policy gate —
+as an ordered precondition on the spec, since it depends only on the modelo
+argument and no profile state. Not taken here because it lands in the CLI root
+dispatch path while `_config/_root_cli.py` is in the peer's live edit set.
+
+Two diagnostic notes for whoever takes it. Patching
+`_no_active_profile_refusal` at module level proves nothing — callers bind it
+with `from ._common import ...`, so they hold the original reference. And
+`invoke_cached_cli` caches the Click command TREE, not results, so a stale
+cached outcome is not an explanation for anything.
