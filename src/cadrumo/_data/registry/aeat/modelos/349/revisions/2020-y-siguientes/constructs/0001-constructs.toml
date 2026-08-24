@@ -27,6 +27,11 @@ source_refs = [
     "aeat-modelo-349-instructions",
     "aeat-modelo-349-procedure",
     "boe-modelo-349-form-2010",
+    "aeat-calendario-contribuyente-2022",
+    "aeat-calendario-contribuyente-2023",
+    "aeat-calendario-contribuyente-2024",
+    "aeat-calendario-contribuyente-2025",
+    "aeat-calendario-contribuyente-2026",
 ]
 bindings = [
     "iva-349-declarante-numero-operadores",
@@ -110,6 +115,38 @@ application_links = [
 ]
 filing_schedules = ["modelo-349-trimestral", "modelo-349-mensual"]
 deadline_windows = [
+    "modelo-349-2022-01",
+    "modelo-349-2022-02",
+    "modelo-349-2022-03",
+    "modelo-349-2022-04",
+    "modelo-349-2022-05",
+    "modelo-349-2022-06",
+    "modelo-349-2022-07",
+    "modelo-349-2022-08",
+    "modelo-349-2022-09",
+    "modelo-349-2022-10",
+    "modelo-349-2022-11",
+    "modelo-349-2022-12",
+    "modelo-349-2022-1t",
+    "modelo-349-2022-2t",
+    "modelo-349-2022-3t",
+    "modelo-349-2022-4t",
+    "modelo-349-2023-01",
+    "modelo-349-2023-02",
+    "modelo-349-2023-03",
+    "modelo-349-2023-04",
+    "modelo-349-2023-05",
+    "modelo-349-2023-06",
+    "modelo-349-2023-07",
+    "modelo-349-2023-08",
+    "modelo-349-2023-09",
+    "modelo-349-2023-10",
+    "modelo-349-2023-11",
+    "modelo-349-2023-12",
+    "modelo-349-2023-1t",
+    "modelo-349-2023-2t",
+    "modelo-349-2023-3t",
+    "modelo-349-2023-4t",
     "modelo-349-2024-01",
     "modelo-349-2024-02",
     "modelo-349-2024-03",
@@ -159,5 +196,4 @@ deadline_windows = [
     "modelo-349-2026-3t",
     "modelo-349-2026-4t",
 ]
-# --- Deadline windows (2024-2026 monthly + quarterly periods) ---
-
+# --- Deadline windows (2022-2026 monthly + quarterly periods) ---
