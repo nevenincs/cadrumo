@@ -610,6 +610,11 @@ class DeadlineWindowDefinition(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_window(self) -> DeadlineWindowDefinition:
+        if self.filing_year != self.period.filing_year:
+            raise RegistryValidationError(
+                f"deadline window {self.id!r} filing_year {self.filing_year} must match "
+                f"period filing_year {self.period.filing_year}",
+            )
         if self.opens_on > self.closes_on:
             raise RegistryValidationError(f"deadline window {self.id!r} opens_on must not be after closes_on")
         if self.payment_cutoff_on is not None and self.payment_cutoff_on > self.closes_on:

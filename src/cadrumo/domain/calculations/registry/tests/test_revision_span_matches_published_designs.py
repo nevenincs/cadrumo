@@ -898,6 +898,15 @@ def _filing_revisions() -> list[tuple[ModeloDefinition, str, object]]:
     ]
 
 
+def _declared_revisions() -> list[tuple[ModeloDefinition, str, object]]:
+    """Every revision, for detector anti-vacuity controls outside support policy."""
+    return [
+        (modelo, revision_id, revision)
+        for modelo in _authority().modelos
+        for revision_id, revision in modelo.revisions.items()
+    ]
+
+
 def _filing_supported_revisions() -> list[tuple[ModeloDefinition, str, object]]:
     """Every revision that explicitly claims filing support.
 
@@ -943,23 +952,29 @@ def _source_reference_by_id() -> dict[str, object]:
     return dict(catalogues.sources)
 
 
-def _record_design_receipts(revision) -> tuple[object, ...]:
-    """Record-design sources explicitly cited by this revision, never inferred by modelo."""
+def _layout_authority_receipts(revision) -> tuple[object, ...]:
+    """Layout-authority sources explicitly cited by a revision.
+
+    Fixed-width modelos normally cite ``record_design`` sources.  Modelo 100
+    is filed from AEAT's published dictionaries and XSD instead; those sources
+    carry the same ``layout_authority`` tier and must not be mistaken for an
+    absent design merely because their transport grammar is not a workbook.
+    """
     sources = _source_reference_by_id()
     return tuple(
         source
         for ref in revision.source_refs
-        if (source := sources.get(str(ref))) is not None and source.kind == "record_design"
+        if (source := sources.get(str(ref))) is not None and source.evidence_tier == "layout_authority"
     )
 
 
 def _receipt_covers_year(source, year: int) -> bool:
+    selector = source.period_selector
+    if selector is not None:
+        return selector.includes_year(year)
     if source.applies_from is None or source.applies_from.year > year:
         return False
-    if source.applies_to is not None and source.applies_to.year < year:
-        return False
-    selector = source.period_selector
-    return selector is None or selector.includes_year(year)
+    return source.applies_to is None or source.applies_to.year >= year
 
 
 def _source_epoch_proves_revision_span(revision) -> tuple[bool, str]:
@@ -970,9 +985,9 @@ def _source_epoch_proves_revision_span(revision) -> tuple[bool, str]:
     extra annual designs merely to reach a count. Corpus-detected relayouts are
     checked first by the caller and therefore always override this positive proof.
     """
-    receipts = _record_design_receipts(revision)
+    receipts = _layout_authority_receipts(revision)
     if not receipts:
-        return False, "revision cites no record-design source receipt"
+        return False, "revision cites no layout-authority source receipt"
     selector = revision.period_selector
     if selector.years:
         years = set(selector.years)
@@ -982,19 +997,29 @@ def _source_epoch_proves_revision_span(revision) -> tuple[bool, str]:
         open_receipts = tuple(
             source
             for source in receipts
-            if source.applies_from is not None
-            and source.applies_from.year <= selector.year_from
-            and source.applies_to is None
-            and (source.period_selector is None or source.period_selector.includes_year(selector.year_from))
+            if source.applies_to is None
+            and (
+                (
+                    source.period_selector is not None
+                    and source.period_selector.year_from is not None
+                    and source.period_selector.year_from <= selector.year_from
+                    and source.period_selector.year_to is None
+                )
+                or (
+                    source.period_selector is None
+                    and source.applies_from is not None
+                    and source.applies_from.year <= selector.year_from
+                )
+            )
         )
         if open_receipts:
             return True, f"open source epoch(s) {[source.id for source in open_receipts]!r}"
-        return False, "open revision has no cited open-ended record-design receipt"
+        return False, "open revision has no cited open-ended layout-authority receipt"
     else:
         return False, "revision declares no filing-year span"
     missing = sorted(year for year in years if not any(_receipt_covers_year(source, year) for source in receipts))
     if missing:
-        return False, f"cited record-design receipts do not cover filing year(s) {missing!r}"
+        return False, f"cited layout-authority receipts do not cover filing year(s) {missing!r}"
     return True, f"bounded source epoch receipt(s) {[source.id for source in receipts]!r}"
 
 
@@ -1691,7 +1716,7 @@ def test_both_occupancy_directions_have_a_positive_case_in_the_corpus() -> None:
     """
     retired_seen: list[str] = []
     revived_seen: list[str] = []
-    for modelo, _revision_id, revision in _filing_revisions():
+    for modelo, _revision_id, revision in _declared_revisions():
         sources = dict(_sources_by_year(modelo.id))
         for earlier, later in pairwise(sorted(_claimed_years(revision, set(sources)))):
             before, after = _occupancy(sources[earlier]), _occupancy(sources[later])
@@ -1828,7 +1853,7 @@ def test_a_boundary_only_the_description_pass_sees_is_reported_and_marked_for_re
     """
     positive: list[str] = []
     alone: list[tuple[str, str, tuple[int, int]]] = []
-    for modelo, revision_id, revision in _filing_revisions():
+    for modelo, revision_id, revision in _declared_revisions():
         for earlier, later in pairwise(_designs_claimed_by(modelo.id, revision)):
             if _description_flip_evidence(earlier, later):
                 positive.append(f"modelo {modelo.id} {_boundary_label(earlier, later)}")
@@ -1845,7 +1870,7 @@ def test_a_boundary_only_the_description_pass_sees_is_reported_and_marked_for_re
     for modelo_id, revision_id, key in alone:
         modelo, revision = next(
             (candidate, current)
-            for candidate, current_id, current in _filing_revisions()
+            for candidate, current_id, current in _declared_revisions()
             if candidate.id == modelo_id and current_id == revision_id
         )
         boundaries = _boundaries_for(modelo.id, revision)
@@ -2514,7 +2539,8 @@ def test_a_bundled_design_whose_coverage_cannot_be_read_is_reported_unmeasured()
     cited_design_sources = {
         str(source.corpus_path): source
         for _modelo, _revision_id, revision in filing_revisions
-        for source in _record_design_receipts(revision)
+        for source in _layout_authority_receipts(revision)
+        if source.kind == "record_design"
     }
     design_root = bundled_path(*_DESIGN_ROOT_PARTS)
     for directory in scan_directory(design_root, pattern="modelo_*", select=DirectoryEntryKind.DIRECTORIES):

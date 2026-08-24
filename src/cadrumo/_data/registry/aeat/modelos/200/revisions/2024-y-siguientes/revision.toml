@@ -17,7 +17,10 @@
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
-authority_grade = "filing"
+# This revision cannot safely back filing while it spans the incompatible 2024
+# and 2025 AEAT layouts.  Keep its calculation authority available, but make
+# the filing boundary refuse until separate, layout-correct revisions exist.
+authority_grade = "calculation"
 # valid_from tracks the ejercicio this revision computes (2024), matching the
 # registry-wide convention (holds for 44/52 annual-cadence revisions) and its
 # own sibling M220 (identical orden, byte-identical deadline windows), not

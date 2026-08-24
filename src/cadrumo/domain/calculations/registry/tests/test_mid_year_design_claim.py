@@ -29,6 +29,7 @@ import pytest
 
 from .test_revision_span_matches_published_designs import (
     _boundaries_for,
+    _declared_revisions,
     _filing_revisions,
     _mid_year_span,
 )
@@ -57,8 +58,12 @@ def test_a_half_year_revision_reports_no_boundary_inside_its_own_year() -> None:
 
 
 def test_the_genuine_cross_year_spans_still_report() -> None:
-    """The control. A narrowing that silenced these would be hiding the gate's whole purpose."""
-    silent = {subject for subject in _CROSS_YEAR_SPANS if not _by_subject().get(subject)}
+    """The detector control is independent of whether a revision claims filing support."""
+    all_subjects = {
+        (modelo.id, rid): _boundaries_for(modelo.id, revision)
+        for modelo, rid, revision in _declared_revisions()
+    }
+    silent = {subject for subject in _CROSS_YEAR_SPANS if not all_subjects.get(subject)}
 
     assert not silent, sorted(silent)
 
@@ -67,7 +72,9 @@ def test_only_a_partial_span_inside_one_year_is_narrowed() -> None:
     """Full-year, multi-year and open-ended revisions are untouched by construction."""
     spans = {(modelo.id, rid): _mid_year_span(revision) for modelo, rid, revision in _filing_revisions()}
 
-    for subject in _MID_YEAR_HALVES:
+    # This is a filing-support gate.  Historical/inspection-only halves remain
+    # useful registry data, but are intentionally outside this cohort.
+    for subject in _MID_YEAR_HALVES & spans.keys():
         assert spans[subject] is not None, subject
-    for subject in _CROSS_YEAR_SPANS:
+    for subject in _CROSS_YEAR_SPANS & spans.keys():
         assert spans[subject] is None, subject
