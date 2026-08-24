@@ -5,29 +5,10 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:7aa0c5e88717716623204a7626aff74c44015fb5369a15c2ad4c907231e5dc34'
+body_hash: 'sha256:c9a107487e3f5c6d4a20f81b3f3a71ac32a8b5a22414f45ff6651ae8adb2e205'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `tui-architecture` audit: `W02.P19.S115 public registry review`
 
@@ -60,4 +41,3 @@ A fresh Vaultspec RAG audit covered strict schema identities and fingerprints, p
 ## Recommendations
 
 - No open S115 remediation remains. Preserve the focused refusal witnesses and canonical ownership boundaries when evolving public schema admission or adapter registration.
-
