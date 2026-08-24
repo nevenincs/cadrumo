@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-24'
-body_hash: 'sha256:d1e4764ee2dd45cb8e5c4935d8821160519e873c2024d3ea24aa7e6b791f578b'
+body_hash: 'sha256:6d9bb6c8196bcbc9f7dbe1603ec1408bc7f5049738017a9b74a823052bf02922'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -242,7 +242,8 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [x] `W05.P10.S121` - Migrate Google API transport failures to typed external-system safety outcomes, adjudicating remote not-found recovery only where the caller owns creation; `src/cadrumo/adapters/outbound/google/_api.py; src/cadrumo/adapters/outbound/google/tests`.
 - [x] `W05.P10.S122` - Migrate Google Drive and document-resolution network, permission, and conflict refusals to typed safety or operator-review outcomes and classify unreachable validation invariants explicitly; `src/cadrumo/adapters/outbound/google/_document_link_resolver.py; src/cadrumo/adapters/outbound/google/_drive_entries.py; src/cadrumo/adapters/outbound/google/tests`.
 - [ ] `W05.P10.S123` - Migrate Google calculation-sheet apply and pull transport and synchronization refusals to typed safety or state-divergence outcomes and classify provider-contract validation invariants explicitly; `src/cadrumo/adapters/outbound/google/_calc_sheets_apply.py; src/cadrumo/adapters/outbound/google/_calc_sheets_pull.py; src/cadrumo/adapters/outbound/google/tests`.
-- [ ] `W05.P10.S124` - Centralize Google adapter terminal-verdict construction in one shared helper and prohibit module-local PreconditionVerdict redeclarations while preserving caller-owned condition and outcome policy; `src/cadrumo/adapters/outbound/google/_preconditions.py [new]; src/cadrumo/adapters/outbound/google/_api.py; src/cadrumo/adapters/outbound/google/_document_link_resolver.py; src/cadrumo/adapters/outbound/google/_drive_entries.py; src/cadrumo/adapters/outbound/google/_calc_sheets_apply.py; src/cadrumo/adapters/outbound/google/_calc_sheets_pull.py; src/cadrumo/adapters/outbound/google/tests`.
+- [ ] `W05.P10.S124` - Centralize Google adapter terminal-verdict construction through the canonical application-owned fact-only verdict builder and prohibit module-local PreconditionVerdict construction while preserving caller-owned condition and outcome policy; `src/cadrumo/application/operator_actions; src/cadrumo/adapters/outbound/google/_preconditions.py [new]; src/cadrumo/adapters/outbound/google/_api.py; src/cadrumo/adapters/outbound/google/_document_link_resolver.py; src/cadrumo/adapters/outbound/google/_drive_entries.py; src/cadrumo/adapters/outbound/google/_calc_sheets_apply.py; src/cadrumo/adapters/outbound/google/_calc_sheets_pull.py; src/cadrumo/adapters/outbound/google/tests`.
+- [ ] `W05.P10.S125` - Eliminate semantically identical fact-only terminal-verdict builders introduced or exposed by this campaign by routing them through one application-owned constructor and retaining local helpers only when they own distinct policy; `src/cadrumo/application/operator_actions; src/cadrumo/application/auth/_diagnostics.py; src/cadrumo/application/bucket_maintenance/_service.py; src/cadrumo/application/operator_surface/_errors.py; src/cadrumo/application/live/_errors.py; src/cadrumo/application/diagnostics.py; src/cadrumo/application/calculations/_errors.py; src/cadrumo/application/aggregation/_preconditions.py; src/cadrumo/llm/_preconditions.py; tests`.
 
 ## Wave `W06` - Prove action chains and close honestly
 
