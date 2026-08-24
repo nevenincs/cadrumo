@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:8a142efd29440da205997b8d834c1e3fcf0b107811ae90de3b366125a6016bf2'
+body_hash: 'sha256:275b1ae4b34c70ce4965d1a18644b1329c77f190a6ac5ad3e6f6f31218368e43'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
 ---
@@ -27,12 +27,15 @@ would produce a structurally false declaration.
 
 BOE-A-2007-18192 approves the Modelo 182 record design and requires
 computer-readable supports to conform to its physical and logical designs
-(article 2). Article 3 identifies the declarants as recipient entities that
-issue the donation certificate, plus the named political-party cases. A donor
+(article 2). Article 3 is the single legal authority for the filing population:
+recipient entities that issue the donation certificate, the named
+political-party cases, and the holder of a protected estate or its administrator
+in the article's stated case. The 2025 AEAT design preserves that third class at
+type-1 position 160 as nature `3`; when the declarant is the administrator, the
+type-2 record requires the protected-estate holder's NIF and name. A donor
 claiming a deduction is not, merely by being the donor, the Modelo 182 filer.
-Accordingly a filing feature would need an explicit product scope for an
-eligible recipient entity; donor-deduction data alone cannot justify a filing
-claim.
+The donor detail row therefore cannot be used to represent any filer class or
+to narrow the statutory population.
 
 The shipped source catalogue has two authentic, hash-pinned AEAT PDFs:
 `aeat-dr-182-2024`, 413,403 bytes, SHA-256
@@ -61,8 +64,10 @@ applicable, representative identity, province, operation key, in-kind marker,
 autonomous-deduction fields, declared-person nature, revocation and its year,
 asset identification, and protected-estate fields. The type-1 record also
 requires the declarant's identity and declaration-level control, count, total,
-and nature fields. No current Cadrumo producer owns or validates that complete
-set.
+and nature fields. That header must select from every Article-3 filer class,
+including protected-estate nature `3`; an administrator also needs the separate
+holder identifiers in the type-2 record. No current Cadrumo producer owns or
+validates that complete set.
 
 The current `DonativoDonorObservation` and its five row bindings are useful
 input scaffolding, not an export contract. `donativo_donor` remains in
@@ -91,17 +96,18 @@ source diagnostic. This is a mixed refusal:
 
 - 2007--2023 and 2026 onward lack a selected exact record-design source in the
   shipped corpus.
-- 2024 and 2025 have official source material but lack an approved recipient-
-  entity filing scope, complete source lifecycle, a complete schema/producer
-  projection, and the governed export proof.
+- 2024 and 2025 have official source material but lack an approved filing scope
+  covering every Article-3 filer class, a complete source lifecycle, a complete
+  schema/producer projection, and the governed export proof.
 
 The existing source owner is `2026-08-22-source-casilla-integration-plan`,
-Phase `W05.P17`: `S100` adjudicates recipient/donor-row ownership, `S101`
-enrolls the resolver, `S102` proves persistence, diagnostics, provenance,
-replay, review, and export, and `S103` closes the census disposition. It is the
-only legitimate home for live donor-row evidence and must not be bypassed by
-manual bindings or an export-only writer. `W02.P04.S26` of the closure plan
-must route the exact era split and source scopes to
+Phase `W05.P17`: `S100` adjudicates statutory-filer and donor-row ownership,
+`S101` enrolls the resolver, `S102` proves persistence, diagnostics,
+provenance, replay, review, and export, and `S103` closes the census
+disposition. It is the only legitimate home for live donor-row evidence and
+must not be bypassed by manual bindings or an export-only writer. The Article-3
+population remains a type-1/type-2 product and producer prerequisite, not a
+second donor-row source. `W02.P04.S26` of the closure plan must route the exact era split and source scopes to
 `2026-08-14-registry-temporal-coverage-plan`; `W02.P04.S28` must route any
 eventual layout, semantic map, generated-tree, and emitted-byte work to
 `2026-08-10-aeat-export-fragment-generator-authority-plan`.
@@ -111,8 +117,12 @@ landed and reviewed:
 
 1. The revision is split or otherwise bounded to exact, hash-pinned designs for
    every claimed exercise, including the 2025 recurrence amendment.
-2. An accepted product decision names eligible recipient entities as the filing
-   population and assigns typed owners for every type-1 and type-2 value.
+2. An accepted product decision covers every Article-3 filer class: eligible
+   recipient entities, the named political-party cases, and protected-estate
+   holders or administrators (type-1 nature `3`). It assigns typed owners for
+   every type-1 and type-2 value, including the protected-estate holder
+   identifiers required when an administrator files, without treating either
+   as a donor detail row.
 3. `W05.P17` supplies the durable donor-row source, resolver, provenance,
    diagnostics, and record-cardinality preservation; in particular it cannot
    merge different rate or in-kind records.

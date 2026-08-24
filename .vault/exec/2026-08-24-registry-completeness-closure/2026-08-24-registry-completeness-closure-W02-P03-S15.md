@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:b99e90d87b4cc1d241fdd51cedd9ca32e9625325a4387ca80d3971f0cd2c63d8'
+body_hash: 'sha256:2175094c9304722daf7b3f24f99678f2d306ffe593bc3258afdf0463281e7283'
 step_id: 'S15'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
@@ -21,8 +21,9 @@ related:
 
 - Re-fetch the primary BOE authorities and AEAT Modelo 182 procedure and 2025
   record design.
-- Compare the two hash-pinned bundled designs, revision/source scopes, current
-  donor bindings, deferred source disposition, row fold, and export boundary.
+- Compare the two hash-pinned bundled designs, revision/source scopes, all
+  Article-3 filer classes, current donor bindings, deferred source disposition,
+  row fold, and export boundary.
 - Record the exact non-filing decision, owners, and reconsideration criteria
   without modifying registry, source, or export production data.
 
@@ -30,10 +31,13 @@ related:
 
 No Modelo 182 filing capability is authorized. The 2007-onward revision has
 layout evidence only for 2024 and 2025, and the 2025 design changes a type-2
-field. The five deferred donor-row bindings do not supply the complete
-declarant/type-2 data lifecycle and their current fold would lose official
-record distinctions. The revision remains applicability-grade, with no export
-layout.
+field. Article 3's filing population includes recipient entities, the named
+political-party cases, and protected-estate holders or administrators; the 2025
+design represents the latter at type-1 nature `3` and requires holder identity
+in the type-2 record for an administrator. The five deferred donor-row bindings
+do not supply that filer/header lifecycle or the complete type-2 data lifecycle,
+and their current fold would lose official record distinctions. The revision
+remains applicability-grade, with no export layout.
 
 The existing `source-casilla-integration` W05.P17 owns donor-row resolution;
 the closure plan's W02.P04.S26 and S28 own enrollment of the separately required
@@ -46,6 +50,9 @@ temporal and export remedies. No parallel writer was created.
   `test_detail_record_modelo_coverage.py`, and
   `test_legal_review_authority_scope.py` were selected as the live registry
   boundary evidence; no test or production behavior was altered by this Step.
+- The S77 regression mutates a donor observation with type-1 declarant nature
+  `3` and proves strict schema refusal: a protected-estate filer class cannot
+  be silently redeclared as donor-row data.
 - The aggregate filing-capability worklist is intentionally red while the
   registry has non-fileable revisions. This Step preserves the Modelo 182
   refusal rather than hiding it.
