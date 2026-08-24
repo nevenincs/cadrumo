@@ -3,13 +3,13 @@ tags:
   - '#plan'
   - '#registry-temporal-coverage'
 date: '2026-08-14'
-modified: '2026-08-14'
-body_hash: 'sha256:7a1ab215739107a1c52907516131e1791a146094b077828622b6e8ed37b76ebd'
 tier: L3
 related:
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-load-topology-reference]]'
   - '[[2026-08-14-registry-temporal-coverage-research]]'
+modified: '2026-08-24'
+body_hash: 'sha256:8b57399ddf236f54b5bde9194a9b67e86ec4b13ee290622a42be8e4a9b843873'
 ---
 
 <!-- RETIRED: S31 -->
@@ -37,7 +37,7 @@ Defines the typed grade and coverage contract on the undiverged revision surface
 Type the grade axis, derive family enrollment and dispositions, and validate the disposition-conditional ladder at registry build.
 
 - [x] `W01.P01.S01` - Add the RegistryAuthorityGrade enum to core and an optional manifest-only authority_grade on ModeloRevision with a fail-closed ungraded default, hydrated at the loader boundary and refused in any fragment, proving a fragment-declared grade reds registry load while the untouched corpus loads green; `src/cadrumo/core/; src/cadrumo/domain/calculations/registry/_schema.py; src/cadrumo/domain/calculations/registry/_loader.py; src/cadrumo/domain/calculations/registry/tests/`.
-- [ ] `W01.P01.S02` - Derive schema-family enrollment from ModeloRevision field markers and project the per-revision coverage manifest with populated, not_applicable and blocked_pending_evidence dispositions, proving a field added without a marker reds the enrollment-completeness check; `src/cadrumo/domain/calculations/registry/_schema.py; src/cadrumo/domain/calculations/registry/_coverage.py; src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `W01.P01.S02` - Derive schema-family enrollment from ModeloRevision field markers and project the per-revision coverage manifest with populated, not_applicable and blocked_pending_evidence dispositions, proving a field added without a marker reds the enrollment-completeness check; `src/cadrumo/domain/calculations/registry/_schema.py; src/cadrumo/domain/calculations/registry/_coverage.py; src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W01.P01.S03` - Enforce the disposition-conditional grade ladder in registry build validation, registered in the family dispatch table: a calculation claim with an empty applicable formula family refuses and an informative revision at filing grade with a reasoned not_applicable formula family passes; `src/cadrumo/domain/calculations/registry/; src/cadrumo/domain/calculations/registry/tests/`.
 
 ### Phase `W01.P02` - snapshot schema divergence removal
