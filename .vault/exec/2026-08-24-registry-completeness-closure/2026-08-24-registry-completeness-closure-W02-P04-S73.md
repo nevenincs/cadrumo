@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:d485917f0f5d007b89a5cf404d09dff6861d39701c68da750c579f7d67e648d0'
+body_hash: 'sha256:f64ab2ed194146a7161a95e584de23817e53d045f1293eb1f14bba398c653a15'
 step_id: 'S73'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
@@ -22,6 +22,7 @@ related:
 ## Description
 
 - Locate the existing source-connectivity authority with Vaultspec-RAG, then read its census, projection, proof, and M036 source/lifecycle files in full.
+- Record the no-redeclaration evidence: the RAG discovery for canonical registry connectivity and M036 lifecycle located `RegistryDestinationCandidate`, `ProfileSourceResolver`, the M036 binding/casilla declarations, and the human-filing lifecycle; whole-file reads confirmed their types and authority boundaries; targeted `rg` confirmed no existing alternative event-coordinate, resolver, or CLI handler authority was being duplicated.
 - Confirm the M036 profile binding, exact bound casilla, event vocabulary, resolver ownership, human-filing record boundary, and absence of local filing capability.
 - Extend the existing registry destination coordinate only enough to retain the pre-existing censo event selector, and record the reviewed manual-by-design census evidence.
 - Repair the pre-existing AST discovery evaluator failure that prevented exact-one census validation of current command specifications, without changing CLI behavior.
