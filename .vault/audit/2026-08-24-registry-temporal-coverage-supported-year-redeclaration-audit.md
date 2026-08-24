@@ -33,21 +33,50 @@ related:
 
 ## Scope
 
-<!-- What was audited and why -->
+Audit the production tree and governing decisions before S24 introduced a
+supported-filing-year declaration. Discovery led with four Vaultspec RAG
+queries covering the runtime horizon, catalogue compilation, M303 annual Orden
+support, and the governing temporal-coverage decision. The returned epicentres
+were read whole, then exact `rg` sweeps covered production constants, year-set
+spellings, catalogue constructors, temporal selectors, cadence derivation, and
+all M303 imports.
 
 ## Findings
 
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
+### supported-year-python-authority | high | one production year tuple duplicated registry authority
 
-       ### supported filing year canonical-home and redeclaration audit | {level} | {summary}
+`SUPPORTED_EJERCICIOS` in `_m303_orden_constants` declared 2022 through 2026
+and was consumed by both manifest generation and projection validation. No
+other production Python constant or collection declared a product-supported
+filing-year set. Test-local ranges describe their own fixture matrices and are
+not runtime authorities.
 
-     followed by a paragraph carrying the detail. supported filing year canonical-home and redeclaration audit is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
+### canonical-catalogue-home | low | the shared catalogue compiler is the existing home
+
+`RegistryCatalogues`, `load_catalogue_file`, and
+`_load_shared_catalogue_files` already form the fingerprinted, typed,
+duplicate-refusing shared registry catalogue boundary. S24 extends that owner;
+it does not add another loader, horizon resolver, selector, cadence table, or
+period parser.
+
+### canonical-resolution-reuse | low | coverage can be derived entirely from existing authorities
+
+The audit uses `ModeloRevision.period_selector` for the expected period
+denominator, `select_revision` for law ownership,
+`selector_period_matches_request` for source-period scope, and the existing
+source applicability dates for evidence. The resulting advisory contains the
+required modelo, filing year, period, and missing prerequisite coordinate.
+
+### post-edit-redeclaration-sweep | low | no production redeclaration remains
+
+The final exact sweep finds no `SUPPORTED_EJERCICIOS` definition or import and
+no alternate supported-filing-year collection in production Python. The sole
+declaration is the authoring-tree `supported_filing_years` table; production
+M303 compilation receives its typed years from `RegistryCatalogues`.
 
 ## Recommendations
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
+- Keep the authoring-tree catalogue as the only writable declaration.
+- Keep the S24 projection advisory until the already named S20 enforcement
+  flip; do not create an interim boolean, allowlist, or second horizon.
+- Continue exact redeclaration sweeps whenever a new year is admitted.
