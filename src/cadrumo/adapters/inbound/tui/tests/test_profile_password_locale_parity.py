@@ -10,7 +10,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 _LOCALES = ("en", "es", "ca", "hu")
 _CASES = (
-    ("profile_password_too_few_scalars", {"minimum_scalars": 15, "scalar_count": 14}),
+    ("profile_password_too_few_scalars", {"minimum_scalars": 8, "scalar_count": 7}),
     ("profile_password_too_many_scalars", {"maximum_scalars": 256, "scalar_count": 257}),
     ("profile_password_too_many_utf8_bytes", {"maximum_utf8_bytes": 1024, "utf8_byte_count": 1025}),
     ("profile_password_contains_surrogate", {}),

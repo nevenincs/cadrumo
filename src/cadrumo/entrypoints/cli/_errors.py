@@ -458,6 +458,16 @@ class CliRefusedBoundaryError(CadrumoError):
     """
 
 
+class CliTuiNotImplementedError(CadrumoError):
+    """Raised when an explicit TUI request has no enrolled command route."""
+
+    def __init__(self, *, command: str) -> None:
+        super().__init__(
+            translated_message="errors.refused.refused_tui_not_implemented",
+            context={"command": command},
+        )
+
+
 def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
     """Wrap ``callback`` so :class:`CadrumoError` emits the structured stderr form.
 

@@ -82,11 +82,14 @@ from ...domain.calculations.registry import (
     select_revision,
     verification_tolerance_or_exact,
 )
+from ..operations import OperationEventEmitter, OperationLogSeverity
 from ..storage.sync_runs import (
+    SyncRunRecordReference,
     SyncRunRecordRepositoryProtocol,
     bounded_scope_description,
     coverage_of,
     record_sync_run,
+    sync_run_record_key,
 )
 from ._errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError
 from ._filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
@@ -116,6 +119,49 @@ if TYPE_CHECKING:
 
     from ...domain.deadlines import TaxpayerProfile
     from ..calculations import CalculationObservationRepository
+
+
+FILED_HISTORY_PHASE_DISCOVERY = "filed-history.discovery"
+FILED_HISTORY_PHASE_REGISTER_ACCESS = "filed-history.register-access"
+FILED_HISTORY_PHASE_PAIR_WALK = "filed-history.pair-walk"
+FILED_HISTORY_PHASE_DECLARATION_CAPTURE = "filed-history.declaration-capture"
+FILED_HISTORY_PHASE_PERSISTENCE = "filed-history.persistence"
+FILED_HISTORY_PHASE_FINALIZATION = "filed-history.finalization"
+FILED_HISTORY_PHASE_PROVENANCE = "filed-history.provenance"
+FILED_HISTORY_PHASE_IVA_WALLET = "filed-history.iva-wallet"
+FILED_HISTORY_PHASE_NOTIFICATIONS = "filed-history.notifications"
+FILED_HISTORY_PAIR_PROGRESS_UNIT = "filed-history.pair"
+FILED_HISTORY_DECLARATION_PROGRESS_UNIT = "filed-history.declaration"
+FILED_HISTORY_PAIR_REFUSAL_CODE = "filed-history.refusal.pair"
+FILED_HISTORY_DECLARATION_REFUSAL_CODE = "filed-history.refusal.declaration"
+FILED_HISTORY_DISCOVERY_REFUSAL_CODE = "filed-history.refusal.discovery"
+FILED_HISTORY_IVA_WALLET_REFUSAL_CODE = "filed-history.refusal.iva-wallet"
+FILED_HISTORY_NOTIFICATIONS_REFUSAL_CODE = "filed-history.refusal.notifications"
+FILED_HISTORY_STAGE_REFUSAL_CODE = "filed-history.refusal.stage"
+
+
+async def _emit_filed_history_phase(events: OperationEventEmitter | None, phase: str) -> None:
+    """Publish one operation-declared phase when the composed pull is supervised."""
+    if events is not None:
+        await events.phase(phase)
+
+
+async def _emit_filed_history_progress(
+    events: OperationEventEmitter | None,
+    *,
+    completed: int,
+    total: int,
+    unit_code: str,
+) -> None:
+    """Publish one bounded safe unit counter without retaining filing identity."""
+    if events is not None:
+        await events.progress(completed=completed, total=total, unit_code=unit_code)
+
+
+async def _emit_filed_history_refusal(events: OperationEventEmitter | None, code: str) -> None:
+    """Publish only a stable failure scope, never local exception prose."""
+    if events is not None:
+        await events.log(code=code, severity=OperationLogSeverity.WARNING)
 
 
 def filed_data_capture_failure_row(
@@ -723,6 +769,7 @@ async def _absorb_declarations(
     modelo: str,
     year: int,
     failures: list[FiledDataCaptureFailureRow],
+    events: OperationEventEmitter | None = None,
 ) -> None:
     """Capture and absorb one batch, recording a per-declaration failure as a row.
 
@@ -730,11 +777,20 @@ async def _absorb_declarations(
     continues: a single unreadable expediente must not abandon the rest of the
     sweep.
     """
-    for declaration in declarations:
+    declaration_total = len(declarations)
+    if not declaration_total:
+        return
+    await _emit_filed_history_progress(
+        events,
+        completed=0,
+        total=declaration_total,
+        unit_code=FILED_HISTORY_DECLARATION_PROGRESS_UNIT,
+    )
+    for declaration_completed, declaration in enumerate(declarations, start=1):
         try:
             observation = await opened_register.capture_observation(
                 declaration,
-                artefact_sink=store.persist_artefact,
+                artefact_sink=None if dry_run else store.persist_artefact,
             )
         except Exception as exc:
             failures.append(
@@ -745,13 +801,20 @@ async def _absorb_declarations(
                     error=exc,
                 ),
             )
-            continue
-        accumulator.absorb(
-            observation,
-            store=store,
-            bucket_id=bucket_id,
-            output_root=output_root,
-            dry_run=dry_run,
+            await _emit_filed_history_refusal(events, FILED_HISTORY_DECLARATION_REFUSAL_CODE)
+        else:
+            accumulator.absorb(
+                observation,
+                store=store,
+                bucket_id=bucket_id,
+                output_root=output_root,
+                dry_run=dry_run,
+            )
+        await _emit_filed_history_progress(
+            events,
+            completed=declaration_completed,
+            total=declaration_total,
+            unit_code=FILED_HISTORY_DECLARATION_PROGRESS_UNIT,
         )
 
 
@@ -798,8 +861,16 @@ async def _capture_filed_data_query_pairs(
     limit: int | None,
     dry_run: bool,
     failures: list[FiledDataCaptureFailureRow],
-) -> None:
+    events: OperationEventEmitter | None = None,
+    pair_completed: int = 0,
+    pair_total: int | None = None,
+) -> int:
     """Walk, cap, and absorb every queryable pair in canonical sweep order."""
+    total = pair_total if pair_total is not None else len(query_pairs)
+    await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_REGISTER_ACCESS)
+    await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_PAIR_WALK)
+    declaration_capture_started = False
+    persistence_started = False
     async with _resolved_declarations_register(register, operation="live-expedientes-read") as (
         opened_register,
         walk_timeout_ms,
@@ -812,6 +883,15 @@ async def _capture_filed_data_query_pairs(
                 timeout_ms=walk_timeout_ms,
                 failures=failures,
             )
+            pair_completed += 1
+            if declarations is None:
+                await _emit_filed_history_refusal(events, FILED_HISTORY_PAIR_REFUSAL_CODE)
+            await _emit_filed_history_progress(
+                events,
+                completed=pair_completed,
+                total=total,
+                unit_code=FILED_HISTORY_PAIR_PROGRESS_UNIT,
+            )
             if declarations is None:
                 continue
             within_limit = _declarations_within_limit(
@@ -820,7 +900,14 @@ async def _capture_filed_data_query_pairs(
                 reached_count=accumulator.reached_count,
             )
             if within_limit is None:
-                return
+                return pair_completed
+            if within_limit:
+                if not declaration_capture_started:
+                    await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_DECLARATION_CAPTURE)
+                    declaration_capture_started = True
+                if not dry_run and not persistence_started:
+                    await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_PERSISTENCE)
+                    persistence_started = True
             await _absorb_declarations(
                 within_limit,
                 opened_register=opened_register,
@@ -832,9 +919,11 @@ async def _capture_filed_data_query_pairs(
                 modelo=code,
                 year=year,
                 failures=failures,
+                events=events,
             )
             if limit is not None and accumulator.reached_count >= limit:
-                return
+                return pair_completed
+    return pair_completed
 
 
 def _dry_run_bulk_filed_capture_report(
@@ -881,7 +970,7 @@ def _persisted_bulk_filed_capture_report(
     )
     calculation_observation_keys = finalization.calculation_observation_keys
     failures.extend(finalization.failures)
-    record_sync_run(
+    sync_run = record_sync_run(
         bucket_id=bucket_id,
         surface=SyncSurface.FILED_DECLARATIONS,
         resolved_scope=bounded_scope_description(tuple(modelos), suffix=f"{year_from}-{year_to}"),
@@ -896,6 +985,10 @@ def _persisted_bulk_filed_capture_report(
         year_from=year_from,
         year_to=year_to,
         failed_count=len(failures),
+        sync_run_ref=sync_run_record_key(
+            surface=sync_run.surface,
+            bucket_event_id=sync_run.bucket_event_id,
+        ),
         **accumulator.capture_report_fields(),
         calculation_observation_count=len(calculation_observation_keys),
         calculation_observation_keys=tuple(calculation_observation_keys),
@@ -915,6 +1008,7 @@ async def capture_filed_data_bulk(
     register: DeclaracionesRegisterSession | None = None,
     dry_run: bool = False,
     sync_run_repository: SyncRunRecordRepositoryProtocol | None = None,
+    events: OperationEventEmitter | None = None,
 ) -> BulkFiledDataCaptureReport:
     """Capture filed declarations across a year range and return a :class:`BulkFiledDataCaptureReport`.
 
@@ -940,6 +1034,9 @@ async def capture_filed_data_bulk(
         sync_run_repository: Persistence port for the completed-run provenance
             record. Required for a non-preview capture that reaches a supported
             query pair; the outer entrypoint composes the concrete adapter.
+        events: Optional operation event emitter. The composed filed-history
+            pull supplies it to publish phase, safe unit-count, and refusal-scope
+            facts at the canonical workflow boundaries.
     """
     if year_from > year_to:
         raise LiveApplicationInputError(
@@ -950,6 +1047,23 @@ async def capture_filed_data_bulk(
     store = FiledDeclaracionObservationStore(output_root)
     accumulator = _CaptureAccumulator()
     query_pairs, failures = _plan_filed_capture_queries(resolved_modelos, year_from=year_from, year_to=year_to)
+    pair_total = len(query_pairs) + len(failures)
+    if pair_total:
+        await _emit_filed_history_progress(
+            events,
+            completed=0,
+            total=pair_total,
+            unit_code=FILED_HISTORY_PAIR_PROGRESS_UNIT,
+        )
+    for _failure in failures:
+        await _emit_filed_history_refusal(events, FILED_HISTORY_PAIR_REFUSAL_CODE)
+    if failures:
+        await _emit_filed_history_progress(
+            events,
+            completed=len(failures),
+            total=pair_total,
+            unit_code=FILED_HISTORY_PAIR_PROGRESS_UNIT,
+        )
 
     if not query_pairs:
         return _empty_bulk_filed_capture_report(
@@ -978,6 +1092,9 @@ async def capture_filed_data_bulk(
         limit=limit,
         dry_run=dry_run,
         failures=failures,
+        events=events,
+        pair_completed=len(failures),
+        pair_total=pair_total,
     )
 
     if dry_run:
@@ -994,6 +1111,8 @@ async def capture_filed_data_bulk(
             translated_message="application.live.filed_data.errors.sync_run_repository_required",
             context={"dry_run": dry_run, "sync_run_repository_present": False},
         )
+    await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_FINALIZATION)
+    await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_PROVENANCE)
     return _persisted_bulk_filed_capture_report(
         output_root=output_root,
         modelos=resolved_modelos,
@@ -1526,7 +1645,10 @@ def casillas_a_recapture_would_change(
             # reachable failure here: a non-numeric casilla never reaches the
             # conversion, so its own refusal cannot arrive.
             continue
-        if abs(fresh_value - stored_values[casilla_id]) > tolerance:
+        stored_value = stored_values[casilla_id]
+        if not isinstance(stored_value, Decimal):
+            continue
+        if abs(fresh_value - stored_value) > tolerance:
             changed.add(casilla_id)
     return tuple(sorted(changed))
 
@@ -1679,6 +1801,7 @@ class FiledHistoryOnboardingRun(BaseModel):
 
     pairs: tuple[FiledHistoryPairOutcome, ...] = ()
     selection_rows: tuple[FiledPeriodSelectionRow, ...] = ()
+    dry_run: bool = False
     captured_count: int = Field(default=0, ge=0)
     #: Units this sweep REACHED, from the accumulator tally counted in every
     #: mode. Carried separately from ``captured_count`` because that one is
@@ -1694,6 +1817,7 @@ class FiledHistoryOnboardingRun(BaseModel):
     notificaciones_status: str = Field(default="not_attempted", min_length=1, max_length=64)
     notificaciones_row_count: int = Field(default=0, ge=0)
     stage_failures: tuple[str, ...] = ()
+    sync_run_ref: SyncRunRecordReference | None = None
     evidence_notices: tuple[Notice, ...] = ()
     #: One advisory per re-captured filing whose casilla values this sweep
     #: changed, forwarded from the capture that read them before its upsert.
@@ -1952,7 +2076,9 @@ async def _capture_discovered_filed_history(
     *,
     output_root: Path,
     limit: int | None,
+    dry_run: bool,
     sync_run_repository: SyncRunRecordRepositoryProtocol | None,
+    events: OperationEventEmitter | None = None,
 ) -> BulkFiledDataCaptureReport:
     """Capture the discovered grid with its original modelo order and year span."""
     modelos = tuple(dict.fromkeys(modelo for modelo, _year in walk_pairs))
@@ -1963,7 +2089,9 @@ async def _capture_discovered_filed_history(
         output_root=output_root,
         modelos=modelos,
         limit=limit,
+        dry_run=dry_run,
         sync_run_repository=sync_run_repository,
+        events=events,
     )
 
 
@@ -1979,6 +2107,7 @@ async def _capture_filed_history_iva_wallet(
     *,
     resolved_today: date,
     output_root: Path,
+    events: OperationEventEmitter | None = None,
 ) -> _FiledHistoryIvaWalletStage:
     """Capture the independent IVA wallet stage, retaining its typed partial-failure boundary."""
     try:
@@ -1990,6 +2119,7 @@ async def _capture_filed_history_iva_wallet(
             output_root=output_root,
         )
     except Exception as exc:
+        await _emit_filed_history_refusal(events, FILED_HISTORY_IVA_WALLET_REFUSAL_CODE)
         return _FiledHistoryIvaWalletStage(
             status="failed",
             divergence=None,
@@ -2010,13 +2140,17 @@ class _FiledHistoryNotificationsStage:
     failure: str | None = None
 
 
-async def _capture_filed_history_notifications() -> _FiledHistoryNotificationsStage:
+async def _capture_filed_history_notifications(
+    *,
+    events: OperationEventEmitter | None = None,
+) -> _FiledHistoryNotificationsStage:
     """Capture notifications without allowing an independent failure to erase filed history."""
     try:
         from . import capture_notifications
 
         snapshot = await capture_notifications(bucket_id=require_active_bucket_id())
     except Exception as exc:
+        await _emit_filed_history_refusal(events, FILED_HISTORY_NOTIFICATIONS_REFUSAL_CODE)
         return _FiledHistoryNotificationsStage(
             status="failed",
             row_count=0,
@@ -2034,8 +2168,10 @@ async def pull_filed_history(
     profile: TaxpayerProfile | None = None,
     today: date | None = None,
     limit: int | None = None,
+    dry_run: bool = False,
     discover: FiledHistoryDiscoveryPort = discover_filed_history,
     sync_run_repository: SyncRunRecordRepositoryProtocol | None = None,
+    events: OperationEventEmitter | None = None,
 ) -> FiledHistoryOnboardingRun:
     """Sequence discovery, bulk filed capture, IVA wallet and notificaciones.
 
@@ -2059,11 +2195,17 @@ async def pull_filed_history(
             denominator, reported as such.
         today: Reference date for applicability and the year span.
         limit: Optional cap on captured declaraciones, forwarded unchanged.
+        dry_run: Read the discovered filed-declaration scope without persisting
+            observations, evidence, calculation observations, or a sync-run
+            provenance record. IVA-wallet and notification captures are omitted
+            because they are separate persisted remote-state stages.
         discover: The discovery step to sequence, defaulting to
             :func:`discover_filed_history`. Injected so the composition itself is
             reachable without an authenticated session; production never passes it.
         sync_run_repository: Completed-run persistence port forwarded to the
             bulk capture after discovery finds a supported pair.
+        events: Optional operation event emitter that receives only stable stage
+            identifiers, safe unit counters, and stable refusal scopes.
 
     Returns:
         The composed :class:`FiledHistoryOnboardingRun`.
@@ -2071,11 +2213,14 @@ async def pull_filed_history(
     from ...core.time import today_madrid
 
     resolved_today = today or today_madrid()
+    await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_DISCOVERY)
     discovery = await discover(profile=profile, today=resolved_today)
     walk_pairs = discovery.walk_pairs
     if not walk_pairs:
+        await _emit_filed_history_refusal(events, FILED_HISTORY_DISCOVERY_REFUSAL_CODE)
         return FiledHistoryOnboardingRun(
             pairs=(),
+            dry_run=dry_run,
             carries_a_taxpayer_specific_denominator=discovery.carries_a_taxpayer_specific_denominator,
             scoping_signal=RegisterScopingSignal.INCONCLUSIVE,
             stage_failures=("discovery: no modelo/ejercicio pair to walk",),
@@ -2085,19 +2230,31 @@ async def pull_filed_history(
         walk_pairs,
         output_root=output_root,
         limit=limit,
+        dry_run=dry_run,
         sync_run_repository=sync_run_repository,
+        events=events,
     )
     pairs = _filed_history_pair_outcomes(discovery, capture)
-    iva_wallet = (
-        await _capture_filed_history_iva_wallet(resolved_today=resolved_today, output_root=output_root)
-        if profile is not None
-        else _FiledHistoryIvaWalletStage(status="not_attempted", divergence=None, blocked=False)
-    )
-    notifications = await _capture_filed_history_notifications()
+    if dry_run:
+        iva_wallet = _FiledHistoryIvaWalletStage(status="not_attempted", divergence=None, blocked=False)
+        notifications = _FiledHistoryNotificationsStage(status="not_attempted", row_count=0)
+    else:
+        if profile is not None:
+            await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_IVA_WALLET)
+            iva_wallet = await _capture_filed_history_iva_wallet(
+                resolved_today=resolved_today,
+                output_root=output_root,
+                events=events,
+            )
+        else:
+            iva_wallet = _FiledHistoryIvaWalletStage(status="not_attempted", divergence=None, blocked=False)
+        await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_NOTIFICATIONS)
+        notifications = await _capture_filed_history_notifications(events=events)
     stage_failures = tuple(failure for failure in (iva_wallet.failure, notifications.failure) if failure is not None)
 
     return FiledHistoryOnboardingRun(
         pairs=pairs,
+        dry_run=dry_run,
         captured_count=capture.captured_count,
         reached_count=capture.reached_count,
         scoping_signal=RegisterScopingSignal.INCONCLUSIVE,
@@ -2108,6 +2265,7 @@ async def pull_filed_history(
         notificaciones_status=notifications.status,
         notificaciones_row_count=notifications.row_count,
         stage_failures=stage_failures,
+        sync_run_ref=capture.sync_run_ref,
         evidence_notices=capture.evidence_notices,
         recapture_notices=capture.recapture_notices,
     )

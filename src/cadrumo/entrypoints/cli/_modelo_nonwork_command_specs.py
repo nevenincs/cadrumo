@@ -17,6 +17,7 @@ from ._command_spec import (
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
+    TuiCapability,
     ValueContract,
 )
 
@@ -2411,6 +2412,7 @@ MODELO_NONWORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             DeferredTarget("cadrumo.entrypoints.cli._modelo_amend_wizard_payloads", "WorkAmendWizardResult"),
             identity="modelo.work.amend_wizard",
         ),
+        tui_capability=TuiCapability.AVAILABLE,
     ),
     CommandSpec(
         key="app_modelo_review_package_build",

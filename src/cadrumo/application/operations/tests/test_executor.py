@@ -23,6 +23,7 @@ from .. import (
     OperationExecutorContext,
     OperationIdentity,
     OperationInteractionAccess,
+    OperationInteractionRequest,
     OperationLogSeverity,
     OperationOwnedResource,
     OperationPendingInteraction,
@@ -76,6 +77,10 @@ class EventEmitter:
 
 
 class SecureOperandLookup:
+    async def put(self, operand: BaseModel, *, written_at: datetime) -> str:
+        del written_at
+        return operand.model_dump_json()
+
     async def resolve(self, reference: str, operand_type: type[Operand]) -> Operand:
         return Operand(value=reference)
 
@@ -96,10 +101,21 @@ class CleanupOwner:
 class InteractionAccess:
     async def request(self, pending: OperationPendingInteraction) -> None: ...
 
+    async def publish_review(
+        self,
+        *,
+        request: OperationInteractionRequest,
+        response_token: str,
+        reviewed_operand: BaseModel,
+        baseline_digest: str | None = None,
+        proposed_effect_digest: str | None = None,
+    ) -> OperationPendingInteraction: ...
+
 
 class ExecutorContext:
     def __init__(self) -> None:
         self.identity = OperationIdentity(operation_id="a" * 64, definition_id="profile.sync", subject_ref="profile:1")
+        self.revision = 0
         self.cancellation = CancellationScope()
         self.deadlines = DeadlineAccess()
         self.events = EventEmitter()
@@ -123,6 +139,7 @@ def test_public_protocols_accept_complete_structural_implementations() -> None:
     assert isinstance(context.cleanup, OperationCleanupOwner)
     assert isinstance(context.interactions, OperationInteractionAccess)
     assert isinstance(context, OperationExecutorContext)
+    assert context.revision == 0
     assert isinstance(Executor(), OperationExecutor)
 
     asyncio.run(context.cancellation.acknowledge_cancellation())
@@ -154,6 +171,19 @@ def test_public_callable_parameters_retain_semantic_keyword_names() -> None:
         "self",
         "reference",
         "operand_type",
+    )
+    assert tuple(inspect.signature(OperationSecureOperandLookup.put).parameters) == (
+        "self",
+        "operand",
+        "written_at",
+    )
+    assert tuple(inspect.signature(OperationInteractionAccess.publish_review).parameters) == (
+        "self",
+        "request",
+        "response_token",
+        "reviewed_operand",
+        "baseline_digest",
+        "proposed_effect_digest",
     )
 
 

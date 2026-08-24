@@ -505,7 +505,7 @@ async def pull_censal_datos():
     point at a third party.
 
     Returns:
-        The parsed :class:`CensalDatosResult`. Nothing is persisted; the
+        The parsed application-owned censal observation. Nothing is persisted; the
         caller decides what to adopt.
     """
     from ...adapters.outbound.aeat.sede import fetch_censal_datos

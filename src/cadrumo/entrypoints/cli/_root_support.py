@@ -51,7 +51,7 @@ def _emit_root_help_and_exit(ctx: typer.Context) -> None:
     typed_help = _strict_round_trip(RootStatusResult, document)
     lines = render_help_text(document).splitlines()
     footer = lines.pop()
-    lines.extend((*_root_profile_secret_help_lines(), "", footer))
+    lines.extend((*_root_profile_secret_help_lines(), "", *_root_tui_help_lines(), "", footer))
     _emit_envelope(ctx, command="root.status", result=typed_help, lines=lines)
     raise typer.Exit()
 
@@ -84,6 +84,25 @@ def _root_profile_secret_help_lines() -> tuple[str, ...]:
             default="Profile authentication options",
         ),
         *(f"  {declaration.ljust(width)}  {description}" for declaration, description in rendered),
+    )
+
+
+def _root_tui_help_lines() -> tuple[str, ...]:
+    """Project the graph-owned global TUI request into curated root help."""
+    from ...core.i18n import tr
+    from ._command_spec import OptionSpec
+
+    root = _COMMAND_GRAPH.by_key()["root"]
+    option = next(
+        parameter
+        for parameter in root.parameters
+        if isinstance(parameter, OptionSpec) and parameter.name == "tui"
+    )
+    if option.help_key is None:
+        raise RuntimeError("the root TUI option lacks localised help")
+    return (
+        tr("cli.operator_surface.help.root.section_frontend_options"),
+        f"  --tui  {tr(option.help_key.value)}",
     )
 
 

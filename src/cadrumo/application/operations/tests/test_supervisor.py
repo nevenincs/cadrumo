@@ -39,6 +39,7 @@ from .. import (
     OperationCapabilities,
     OperationClosePolicy,
     OperationConflictScope,
+    OperationConsumedInteraction,
     OperationDeadline,
     OperationDeclarationError,
     OperationDefinition,
@@ -113,6 +114,76 @@ class SupervisorResult(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     reference: str = Field(min_length=1)
+
+
+class ReviewedOperand(BaseModel):
+    """Typed confidential result produced after initial operation submission."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    observation: str = Field(min_length=1)
+
+
+class DurableContinuationExecutor:
+    """Publish and resume one real secure review continuation."""
+
+    acquisitions = 0
+    resumed: asyncio.Event
+    hold_first_resume: asyncio.Event
+    resume_checkpoints: list[OperationPendingInteraction | OperationConsumedInteraction]
+
+    def __init__(self) -> None:
+        if not hasattr(type(self), "resumed"):
+            type(self).resumed = asyncio.Event()
+            type(self).hold_first_resume = asyncio.Event()
+            type(self).resume_checkpoints = []
+
+    @classmethod
+    def reset(cls) -> None:
+        cls.acquisitions = 0
+        cls.resumed = asyncio.Event()
+        cls.hold_first_resume = asyncio.Event()
+        cls.resume_checkpoints = []
+
+    async def execute(
+        self,
+        request: OperationRequest[BaseModel],
+        context: OperationExecutorContext,
+    ) -> str | None:
+        del request
+        type(self).acquisitions += 1
+        interaction = OperationInteractionRequest(
+            interaction_id="f" * 64,
+            identity=context.identity,
+            revision=context.revision + 1,
+            kind=OperationInteractionKind.REVIEW,
+            presentation_code="operation.review.ready",
+            response_schema_ref="schema:operation-review",
+            continuation_digest=_CONTINUATION_DIGEST,
+        )
+        await context.interactions.publish_review(
+            request=interaction,
+            response_token=_RESPONSE_TOKEN,
+            reviewed_operand=ReviewedOperand(observation="encrypted post-submission observation"),
+            baseline_digest=_BASELINE_DIGEST,
+            proposed_effect_digest=_PROPOSED_EFFECT_DIGEST,
+        )
+        return None
+
+    async def resume(
+        self,
+        request: OperationRequest[BaseModel],
+        checkpoint: OperationPendingInteraction | OperationConsumedInteraction,
+        context: OperationExecutorContext,
+    ) -> str | None:
+        del request
+        type(self).resume_checkpoints.append(checkpoint)
+        if len(type(self).resume_checkpoints) == 1:
+            type(self).resumed.set()
+            await type(self).hold_first_resume.wait()
+            return None
+        await context.events.phase("operation.phase.declared")
+        return None
 
 
 class IdleExecutor:
@@ -2293,6 +2364,84 @@ def test_reconcile_classifies_absent_lease_as_orphan_before_unknown_interruption
     assert tuple(event.outcome for event in replayed.events if isinstance(event, OperationReconciliationEvent)) == (
         OperationReconciliationOutcome.ORPHANED,
     )
+
+
+def test_secure_review_publication_and_consumed_continuation_recover_without_reacquisition(
+    tmp_path: Path,
+) -> None:
+    """A consumed secure review resumes after restart without repeating initial acquisition."""
+    DurableContinuationExecutor.reset()
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        storage_root = tmp_path / "durable-state"
+        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        registry = _registry(
+            executor_type=DurableContinuationExecutor,
+            build=DurableContinuationExecutor,
+            capabilities=_capabilities(
+                durability=OperationDurability.RESUMABLE,
+                replay=OperationReplayPolicy.RESUMABLE,
+            ),
+            interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
+            reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
+        )
+        owner = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+            lease_duration=timedelta(minutes=1),
+        )
+
+        async def publish_consume_and_schedule() -> tuple[str, OperationConsumedInteraction]:
+            operation_id = await owner.submit(_request(), operation_id="3" * 64)
+            waiting = await owner.start(operation_id)
+            pending = waiting.pending_interaction
+            assert pending is not None
+            secured = await operands.resolve(pending.reviewed_proposal_digest, ReviewedOperand)
+            assert secured == ReviewedOperand(observation="encrypted post-submission observation")
+            consumed = await owner.respond(
+                OperationApplyResponse(
+                    interaction_id=pending.request.interaction_id,
+                    operation_id=operation_id,
+                    revision=pending.request.revision,
+                    response_token=_RESPONSE_TOKEN,
+                    continuation_digest=pending.request.continuation_digest,
+                    reviewed_proposal_digest=pending.reviewed_proposal_digest,
+                    actor_ref="operator:integration",
+                    responded_at=_NOW,
+                    baseline_digest=_BASELINE_DIGEST,
+                    proposed_effect_digest=_PROPOSED_EFFECT_DIGEST,
+                )
+            )
+            await DurableContinuationExecutor.resumed.wait()
+            return operation_id, consumed
+
+        operation_id, consumed = asyncio.run(publish_consume_and_schedule())
+        persisted = asyncio.run(journal.load(operation_id))
+        recovery = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="4" * 64,
+            token="5" * 64,
+            clock=lambda: _NOW + timedelta(minutes=2),
+        )
+        resumed = asyncio.run(recovery.reconcile(operation_id))
+
+    assert persisted.pending_interaction is None
+    assert persisted.consumed_interactions == (consumed,)
+    assert consumed.intent.value == "apply"
+    assert (
+        consumed.checkpoint.reviewed_proposal_digest
+        == persisted.consumed_interactions[0].checkpoint.reviewed_proposal_digest
+    )
+    assert DurableContinuationExecutor.acquisitions == 1
+    assert DurableContinuationExecutor.resume_checkpoints == [consumed, consumed]
+    assert resumed.lifecycle is OperationLifecycle.RUNNING
+    assert resumed.phase_code == "operation.phase.declared"
 
 
 def test_reconcile_refuses_active_or_corrupt_lease_without_journal_mutation(tmp_path: Path) -> None:

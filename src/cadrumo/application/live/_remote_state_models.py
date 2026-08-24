@@ -23,6 +23,7 @@ from ...core import IvaCompensationStateProvenance, Period
 from ...core.identity import AeatExpedienteId, BucketId
 from ...core.json_contract import Notice
 from ...domain.iva_compensation import IvaCompensationDecisionReason
+from ..storage.sync_runs import SyncRunRecordReference
 from ._errors import LiveIvaAcquisitionFailureMode
 
 
@@ -123,6 +124,7 @@ class BulkFiledDataCaptureReport(FiledCaptureEvidenceTally):
     year_from: int
     year_to: int
     failed_count: int
+    sync_run_ref: SyncRunRecordReference | None = None
     failures: tuple[FiledDataCaptureFailureRow, ...] = ()
     skipped_casillas: tuple[FiledCasillaSkipRow, ...] = ()
     #: One advisory per re-captured filing whose casilla values this sweep

@@ -1055,6 +1055,8 @@ errors:
       el ennél a modelónál vagy pillanatképnél.
     refused_topic_catalogue_empty: A beépített témakatalógus egyetlen témát sem tartalmaz.
     refused_topic_not_found: A kért téma nem található.
+    refused_tui_not_implemented: 'A teljes képernyős felület még nincs megvalósítva
+      ehhez a parancshoz: {command}.'
     refused_user_profile_validation: Egy felhasználói profil értéke érvénytelen. Javítsa
       a megjelenített mezőt.
     refused_wizard_answer_type: A varázsló egy mező válasza nem várt típust kapott

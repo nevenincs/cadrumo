@@ -40,6 +40,7 @@ from ....core import (
 from ....core.config import override_settings
 from ....core.errors import NoActiveProfileError, get_registered_error_code
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import mint_test_profile_recovery_envelope
 from ... import wizard as _wizard  # noqa: F401
 from .._profile_bucket_scan import resolve_profile_bucket
 from .._profile_health import assess_active_profile_health, repair_active_profile_pointer
@@ -80,6 +81,9 @@ def _current_profile_session(profile_id: str, *, root: Path, label: str) -> Prof
         password_envelope=envelope,
         sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_PROFILE_DEK),
         data_files={},
+        recovery_envelope=mint_test_profile_recovery_envelope(
+            identity, dek=_PROFILE_DEK, dek_epoch=envelope.dek_epoch
+        ),
         initial_record=UserProfileRecord(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=str(identity),

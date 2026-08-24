@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
+from collections.abc import Awaitable, Callable, Coroutine
 from datetime import datetime, timedelta
 from typing import cast
 
@@ -34,8 +34,10 @@ from ._executor import OperationResumableExecutor
 from ._interactions import (
     OperationApplyResponse,
     OperationConsumedInteraction,
+    OperationInteractionRequest,
     OperationPendingInteraction,
     OperationRejectResponse,
+    OperationResponseToken,
 )
 from ._journal import (
     OperationEventStream,
@@ -101,6 +103,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         self._contexts: dict[OperationId, DefinitionBoundContext] = {}
         self._executor_tasks: dict[OperationId, asyncio.Task[None]] = {}
         self._cleanup_tasks: dict[OperationId, asyncio.Task[None]] = {}
+        self._continuation_tasks: dict[OperationId, asyncio.Task[OperationPersistedSnapshot]] = {}
         self._durable_change_events: dict[OperationId, asyncio.Event] = {}
         self._durable_revisions: dict[OperationId, int] = {}
 
@@ -196,14 +199,11 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             events=(started,),
             execution_deadline=execution_deadline,
         )
-        context = DefinitionBoundContext(
-            snapshot=running,
-            registry=self._registry,
+        context = self._build_context(running)
+        executor_context = _SupervisorExecutorContext(
+            context=context,
             operands=self._operands,
             clock=self._clock,
-            resources=self._resources,
-            advance=self._advance,
-            acknowledge_cancellation=self._acknowledge_cancellation,
         )
         self._contexts[operation_id] = context
         executor = definition.executor_factory.create()
@@ -211,7 +211,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             await self._execute_with_deadlines(
                 identity=running.identity,
                 context=context,
-                executor=executor.execute(request, context),
+                executor=executor.execute(request, executor_context),
             )
         except OperationDeclarationError:
             raise
@@ -455,13 +455,40 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             code="operation.interaction.consumed",
             interaction_id=consumed.interaction_id,
         )
-        await self._advance(
+        successor = await self._advance(
             snapshot,
             lifecycle=OperationLifecycle.RUNNING,
             events=(event,),
             consumed=(*snapshot.consumed_interactions, consumed),
         )
+        definition = self._registry.lookup(snapshot.identity.definition_id)
+        if definition.reconciliation_policy is OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT:
+            self._schedule_continuation(successor, definition, consumed)
         return consumed
+
+    def _schedule_continuation(
+        self,
+        snapshot: OperationPersistedSnapshot,
+        definition: OperationDefinition,
+        continuation: OperationConsumedInteraction,
+    ) -> None:
+        """Schedule one durably recorded response without weakening restart recovery."""
+        operation_id = snapshot.identity.operation_id
+        current = self._continuation_tasks.get(operation_id)
+        if current is not None and not current.done():
+            raise ValueError("operation continuation is already scheduled")
+        task = asyncio.create_task(
+            self._resume_from_checkpoint(snapshot, definition, continuation),
+            name=f"operation-continuation-{operation_id}",
+        )
+        self._continuation_tasks[operation_id] = task
+        task.add_done_callback(self._continuation_completed)
+
+    def _continuation_completed(self, task: asyncio.Task[OperationPersistedSnapshot]) -> None:
+        """Observe scheduled completion so task failures are never orphaned by asyncio."""
+        if task.cancelled():
+            return
+        task.exception()
 
     async def reject(self, response: OperationRejectResponse) -> OperationConsumedInteraction:
         return await self.respond(response)
@@ -594,6 +621,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         self._contexts.pop(operation_id, None)
         self._executor_tasks.pop(operation_id, None)
         self._cleanup_tasks.pop(operation_id, None)
+        self._continuation_tasks.pop(operation_id, None)
         self._notify_durable_change(successor)
         return successor
 
@@ -670,9 +698,14 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         if observed.disposition is not OperationLeaseObservationDisposition.EXPIRED or observed.current is None:
             raise ValueError("operation lease observation cannot establish startup reconciliation ownership")
         checkpoint = snapshot.pending_interaction
-        may_resume = (
+        continuation = snapshot.consumed_interactions[-1] if snapshot.consumed_interactions else None
+        may_resume_checkpoint = (
             definition.reconciliation_policy is OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT
             and self._is_valid_resume_checkpoint(snapshot, checkpoint, definition)
+        )
+        may_resume_continuation = (
+            definition.reconciliation_policy is OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT
+            and self._is_valid_resume_continuation(snapshot, continuation, definition)
         )
         takeover = self._candidate(snapshot.identity, now)
         taken_over = await self._leases.compare_and_swap(observed.current, takeover, observed_at=now)
@@ -691,7 +724,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
                 outcome=OperationReconciliationOutcome.RECOVERED,
                 lease_evidence_ref=taken_over.evidence_ref,
             )
-        if may_resume:
+        if may_resume_checkpoint:
             assert checkpoint is not None
             resumed = await self._record_reconciliation(
                 snapshot,
@@ -699,6 +732,14 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
                 lease_evidence_ref=taken_over.evidence_ref,
             )
             return await self._resume_from_checkpoint(resumed, definition, checkpoint)
+        if may_resume_continuation:
+            assert continuation is not None
+            resumed = await self._record_reconciliation(
+                snapshot,
+                outcome=OperationReconciliationOutcome.RESUMED,
+                lease_evidence_ref=taken_over.evidence_ref,
+            )
+            return await self._resume_from_checkpoint(resumed, definition, continuation)
         return await self._interrupt_reconciliation(
             snapshot,
             outcome=OperationReconciliationOutcome.INTERRUPTED,
@@ -722,11 +763,27 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             and checkpoint.request.kind in definition.interaction_kinds
         )
 
+    @staticmethod
+    def _is_valid_resume_continuation(
+        snapshot: OperationPersistedSnapshot,
+        continuation: OperationConsumedInteraction | None,
+        definition: OperationDefinition,
+    ) -> bool:
+        """Accept only the latest consumed-but-unsettled durable continuation."""
+        return (
+            snapshot.lifecycle is OperationLifecycle.RUNNING
+            and snapshot.pending_interaction is None
+            and continuation is not None
+            and continuation.checkpoint.request.identity == snapshot.identity
+            and continuation.checkpoint.request.interaction_id == continuation.interaction_id
+            and continuation.checkpoint.request.kind in definition.interaction_kinds
+        )
+
     async def _resume_from_checkpoint(
         self,
         snapshot: OperationPersistedSnapshot,
         definition: OperationDefinition,
-        checkpoint: OperationPendingInteraction,
+        checkpoint: OperationPendingInteraction | OperationConsumedInteraction,
     ) -> OperationPersistedSnapshot:
         """Re-enter one registered executor from its declared durable checkpoint."""
         executor = definition.executor_factory.create()
@@ -740,7 +797,27 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             payload=payload,
             idempotency_key=None,
         )
-        context = DefinitionBoundContext(
+        context = self._build_context(snapshot)
+        executor_context = _SupervisorExecutorContext(
+            context=context,
+            operands=self._operands,
+            clock=self._clock,
+        )
+        self._contexts[snapshot.identity.operation_id] = context
+        try:
+            await self._execute_with_deadlines(
+                identity=snapshot.identity,
+                context=context,
+                executor=resumable_executor.resume(request, checkpoint, executor_context),
+            )
+        except OperationDeclarationError:
+            raise
+        except Exception as error:
+            return await self._settle_executor_failure(context.snapshot, error)
+        return context.snapshot
+
+    def _build_context(self, snapshot: OperationPersistedSnapshot) -> DefinitionBoundContext:
+        return DefinitionBoundContext(
             snapshot=snapshot,
             registry=self._registry,
             operands=self._operands,
@@ -749,18 +826,6 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             advance=self._advance,
             acknowledge_cancellation=self._acknowledge_cancellation,
         )
-        self._contexts[snapshot.identity.operation_id] = context
-        try:
-            await self._execute_with_deadlines(
-                identity=snapshot.identity,
-                context=context,
-                executor=resumable_executor.resume(request, checkpoint, context),
-            )
-        except OperationDeclarationError:
-            raise
-        except Exception as error:
-            return await self._settle_executor_failure(context.snapshot, error)
-        return context.snapshot
 
     async def _record_reconciliation(
         self,
@@ -778,7 +843,17 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             outcome=outcome,
             lease_evidence_ref=lease_evidence_ref,
         )
-        return await self._advance(snapshot, lifecycle=snapshot.lifecycle, events=(event,))
+        pending = snapshot.pending_interaction
+        if pending is not None:
+            pending = pending.model_copy(
+                update={"request": pending.request.model_copy(update={"revision": snapshot.revision + 1})}
+            )
+        return await self._advance(
+            snapshot,
+            lifecycle=snapshot.lifecycle,
+            events=(event,),
+            pending=pending,
+        )
 
     async def _interrupt_reconciliation(
         self,
@@ -800,3 +875,75 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             settled_at=self._clock(),
         )
         return await self.settle(classified.identity.operation_id, receipt)
+
+
+class _SupervisorInteractionAccess:
+    """Publish reviewed operands through secure storage before journal visibility."""
+
+    def __init__(
+        self,
+        *,
+        request_pending: Callable[[OperationPendingInteraction], Awaitable[None]],
+        operands: OperationSecureReferenceStore,
+        clock: Callable[[], datetime],
+    ) -> None:
+        self._request_pending = request_pending
+        self._operands = operands
+        self._clock = clock
+
+    async def request(self, pending: OperationPendingInteraction) -> None:
+        await self._request_pending(pending)
+
+    async def publish_review(
+        self,
+        *,
+        request: OperationInteractionRequest,
+        response_token: OperationResponseToken,
+        reviewed_operand: BaseModel,
+        baseline_digest: str | None = None,
+        proposed_effect_digest: str | None = None,
+    ) -> OperationPendingInteraction:
+        reference = await self._operands.put(reviewed_operand, written_at=self._clock())
+        pending = OperationPendingInteraction.bind(
+            request=request,
+            response_token=response_token,
+            reviewed_proposal_digest=reference,
+            baseline_digest=baseline_digest,
+            proposed_effect_digest=proposed_effect_digest,
+        )
+        await self._request_pending(pending)
+        return pending
+
+
+class _SupervisorExecutorContext:
+    """Delegate definition checks while adding supervisor-owned secure publication."""
+
+    def __init__(
+        self,
+        *,
+        context: DefinitionBoundContext,
+        operands: OperationSecureReferenceStore,
+        clock: Callable[[], datetime],
+    ) -> None:
+        self.identity = context.identity
+        self.cancellation = context.cancellation
+        self.deadlines = context.deadlines
+        self.events = context.events
+        self.operands = operands
+        self.cleanup = context.cleanup
+        self.interactions = _SupervisorInteractionAccess(
+            request_pending=context.interactions.request,
+            operands=operands,
+            clock=clock,
+        )
+        self._context = context
+
+    @property
+    def revision(self) -> int:
+        """Return the current durable revision without exposing journal state."""
+        return self._context.snapshot.revision
+
+    @property
+    def snapshot(self) -> OperationPersistedSnapshot:
+        """Expose the current durable view retained by the definition-bound context."""
+        return self._context.snapshot

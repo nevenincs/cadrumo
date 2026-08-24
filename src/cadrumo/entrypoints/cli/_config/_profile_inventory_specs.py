@@ -12,6 +12,7 @@ from .._command_spec import (
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
+    TuiCapability,
     ValueContract,
 )
 from ._spec_policies import CALCULATION_READ, PROFILE_READ
@@ -65,6 +66,7 @@ PROFILE_INVENTORY_COMMAND_SPECS = (
             identity="config.profile.status",
         ),
         allow_unregistered_profile_diagnostic=True,
+        tui_capability=TuiCapability.AVAILABLE,
     ),
 )
 

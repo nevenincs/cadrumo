@@ -428,7 +428,7 @@ def _resolve_cli_precondition_action_reference(
     resolution = resolve_catalogue_action(
         action=action,
         catalogue=OPERATOR_ACTION_CATALOGUE,
-        reconciliation=_current_operator_surface_reconciliation(),
+        reconciliation=current_operator_surface_reconciliation(),
     )
     declaration = resolution.declaration
     if resolution.target_leaf.input_schema is None:
@@ -808,7 +808,7 @@ def resolve_notice_action(
         action=action,
         argument_bindings=argument_bindings,
         catalogue=OPERATOR_ACTION_CATALOGUE,
-        reconciliation=_current_operator_surface_reconciliation(),
+        reconciliation=current_operator_surface_reconciliation(),
     )
     schema = _live_action_input_schema(resolved.action.target_command_key)
     return resolved.model_copy(
@@ -1063,7 +1063,7 @@ def _current_operator_surface_exclusions() -> tuple[ExplicitExclusionInventoryRo
     )
 
 
-def _current_operator_surface_reconciliation() -> OperatorSurfaceReconciliation:
+def current_operator_surface_reconciliation() -> OperatorSurfaceReconciliation:
     """Return one complete live-surface reconciliation per CLI invocation.
 
     Click and Typer share their context ``meta`` mapping across every nested

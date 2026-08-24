@@ -1034,6 +1034,8 @@ errors:
       be performed for this modelo or snapshot.
     refused_topic_catalogue_empty: The bundled topic catalogue contains no topics.
     refused_topic_not_found: The requested topic was not found.
+    refused_tui_not_implemented: The full-screen interface is not implemented for
+      {command} yet.
     refused_user_profile_validation: A user profile value is not valid. Correct the
       field shown.
     refused_wizard_answer_type: A wizard answer field received an unexpected type

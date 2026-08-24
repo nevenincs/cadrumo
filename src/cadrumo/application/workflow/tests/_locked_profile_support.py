@@ -25,6 +25,7 @@ from ....adapters.persistence.storage.custody import (
 )
 from ....core import BucketPointer, write_pointer
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import mint_test_profile_recovery_envelope
 
 PROFILE_ID = "31313131-3131-4313-8313-313131313131"
 PROFILE_LABEL = "Operator"
@@ -87,6 +88,9 @@ def publish_capsule_and_pointer(root: Path) -> None:
             password_envelope=envelope,
             sentinel=create_profile_custody_sentinel(envelope=envelope, dek=DEK),
             data_files={},
+            recovery_envelope=mint_test_profile_recovery_envelope(
+                UUID(PROFILE_ID), dek=DEK, dek_epoch=envelope.dek_epoch
+            ),
             initial_record=UserProfileRecord(
                 setup_state=ProfileSetupState.COMPLETE, profile_id=PROFILE_ID, facts=READY_FACTS
             ),

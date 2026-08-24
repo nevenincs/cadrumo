@@ -79,11 +79,12 @@ def _pair(modelo: str = "100", *, ejercicio: int = _UNSERVED_YEAR) -> FiledHisto
     )
 
 
-def _run(*pairs: FiledHistoryDiscoveryPair, tmp_path: Path):
+def _run(*pairs: FiledHistoryDiscoveryPair, tmp_path: Path, dry_run: bool = False):
     return asyncio.run(
         pull_filed_history(
             output_root=tmp_path,
             today=_TODAY,
+            dry_run=dry_run,
             discover=_discovery_returning(*pairs),
         ),
     )
@@ -133,6 +134,22 @@ def test_every_discovered_pair_survives_the_join(tmp_path: Path) -> None:
         ("100", _UNSERVED_YEAR),
         ("303", _UNSERVED_YEAR),
     ]
+
+
+def test_dry_run_preserves_the_composed_discovery_scope_without_provenance(tmp_path: Path) -> None:
+    """Preview walks the same discovered pairs and retains no sync-run identity."""
+    pairs = (_pair("100"), _pair("303"))
+
+    normal = _run(*pairs, tmp_path=tmp_path)
+    preview = _run(*pairs, tmp_path=tmp_path, dry_run=True)
+
+    assert [(pair.modelo, pair.ejercicio) for pair in preview.pairs] == [
+        (pair.modelo, pair.ejercicio) for pair in normal.pairs
+    ]
+    assert preview.dry_run is True
+    assert preview.sync_run_ref is None
+    assert preview.iva_wallet_status == "not_attempted"
+    assert preview.notificaciones_status == "not_attempted"
 
 
 def test_no_discovered_pair_short_circuits_before_the_capture(tmp_path: Path) -> None:
