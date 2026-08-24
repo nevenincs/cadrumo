@@ -23,7 +23,7 @@ from typing import Any
 
 import pytest
 
-from .....core import ActionConditionality, NoRecoveryOutcome
+from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....outbound.storage import OutboundStorageConflictError, OutboundStorageValidationError
 from .._calc_sheets_apply import _ensure_folder, _find_folder, _find_spreadsheet
 from .._drive_entries import (
@@ -48,8 +48,14 @@ def _assert_closed_operator_review(
 ) -> None:
     """Assert a fact-only state/validation refusal has no invented recovery action."""
     verdict = error.terminal_precondition_verdict
+    assert verdict is not None
     assert verdict.failed_condition_id == condition_id
-    assert verdict.evidence[0].values == facts
+    assert len(verdict.evidence) == 1
+    evidence = verdict.evidence[0]
+    assert evidence.condition_id == condition_id
+    assert evidence.evidence_id == f"{condition_id}.observation"
+    assert evidence.provenance is ActionEvidenceProvenance.RUNTIME_OBSERVATION
+    assert evidence.values == facts
     assert verdict.action is None
     assert verdict.argument_bindings == ()
     assert verdict.missing_argument_names == ()

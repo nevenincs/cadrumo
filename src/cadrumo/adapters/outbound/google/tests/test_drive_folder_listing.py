@@ -20,8 +20,8 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import ActionConditionality, NoRecoveryOutcome
-from ...storage import OutboundStorageNetworkError, OutboundStoragePermissionError, OutboundStorageValidationError
+from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ...storage import OutboundStoragePermissionError, OutboundStorageValidationError
 from .._document_link_resolver import list_drive_folder_documents
 from ._drive_media_server import drive_files_list_endpoint
 
@@ -39,8 +39,14 @@ def _assert_closed_outcome(
 ) -> None:
     """Assert a fact-only refusal whose no-recovery contract is explicit."""
     verdict = error.terminal_precondition_verdict
+    assert verdict is not None
     assert verdict.failed_condition_id == condition_id
-    assert verdict.evidence[0].values == facts
+    assert len(verdict.evidence) == 1
+    evidence = verdict.evidence[0]
+    assert evidence.condition_id == condition_id
+    assert evidence.evidence_id == f"{condition_id}.observation"
+    assert evidence.provenance is ActionEvidenceProvenance.RUNTIME_OBSERVATION
+    assert evidence.values == facts
     assert verdict.action is None
     assert verdict.argument_bindings == ()
     assert verdict.missing_argument_names == ()
@@ -106,10 +112,41 @@ def test_repeated_page_token_refuses_before_an_unbounded_drive_sweep() -> None:
     repeated_page = {"files": [], "nextPageToken": "again"}
     with (
         drive_files_list_endpoint(pages=[repeated_page, repeated_page]) as endpoint,
-        pytest.raises(OutboundStorageNetworkError, match="repeated nextPageToken"),
+        pytest.raises(OutboundStorageValidationError, match="invalid nextPageToken") as excinfo,
     ):
         list_drive_folder_documents(folder_id=_FOLDER_ID, credentials=None, service=endpoint.service)
     assert len(endpoint.requested_queries) == 2
+    assert excinfo.value.context == {
+        "action": "drive.files.list",
+        "folder_id": _FOLDER_ID,
+        "page_token_state": "repeated",
+    }
+    _assert_closed_outcome(
+        excinfo.value,
+        condition_id="google.document_link.folder_pagination_valid",
+        facts={"folder_id": _FOLDER_ID, "page_token_state": "repeated", "page_token_valid": False},
+        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+    )
+
+
+def test_non_string_page_token_is_a_validation_outcome() -> None:
+    with (
+        drive_files_list_endpoint(pages=[{"files": [], "nextPageToken": 42}]) as endpoint,
+        pytest.raises(OutboundStorageValidationError, match="invalid nextPageToken") as excinfo,
+    ):
+        list_drive_folder_documents(folder_id=_FOLDER_ID, credentials=None, service=endpoint.service)
+
+    assert excinfo.value.context == {
+        "action": "drive.files.list",
+        "folder_id": _FOLDER_ID,
+        "page_token_state": "non_string",
+    }
+    _assert_closed_outcome(
+        excinfo.value,
+        condition_id="google.document_link.folder_pagination_valid",
+        facts={"folder_id": _FOLDER_ID, "page_token_state": "non_string", "page_token_valid": False},
+        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+    )
 
 
 @pytest.mark.parametrize(

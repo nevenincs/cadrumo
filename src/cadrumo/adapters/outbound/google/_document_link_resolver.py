@@ -81,7 +81,7 @@ class DocumentLinkPreconditionCondition(StrEnum):
     FOLDER_SCOPE_SUFFICIENT = "google.document_link.folder_scope_sufficient"
     FOLDER_FILES_LIST_VALID = "google.document_link.folder_files_list_valid"
     FOLDER_ENTRY_VALID = "google.document_link.folder_entry_valid"
-    FOLDER_PAGE_TOKEN_VALID = "google.document_link.folder_page_token_valid"
+    FOLDER_PAGINATION_VALID = "google.document_link.folder_pagination_valid"
 
 
 def _document_link_terminal_refusal(
@@ -475,7 +475,7 @@ def _iter_drive_folder_files(drive_service: _DriveService, *, folder_id: str) ->
                         "page_token_state": token_state,
                     },
                 ),
-                DocumentLinkPreconditionCondition.FOLDER_PAGE_TOKEN_VALID,
+                DocumentLinkPreconditionCondition.FOLDER_PAGINATION_VALID,
                 facts={"folder_id": folder_id, "page_token_state": token_state, "page_token_valid": False},
                 outcome=NoRecoveryOutcome.OPERATOR_DECISION,
             ) from exc

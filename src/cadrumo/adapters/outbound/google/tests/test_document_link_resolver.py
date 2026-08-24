@@ -13,9 +13,13 @@ scope. This gate locks the resolver's contract offline, with no network:
 
 from __future__ import annotations
 
+import json
+import subprocess
+import sys
+
 import pytest
 
-from .....core import ActionConditionality, NoRecoveryOutcome
+from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....domain.attachments import AttachmentSource
 from ...storage import (
     OutboundStorageNetworkError,
@@ -39,8 +43,14 @@ def _assert_closed_outcome(
 ) -> None:
     """Assert the adapter emitted one fact-only, non-actionable terminal verdict."""
     verdict = error.terminal_precondition_verdict
+    assert verdict is not None
     assert verdict.failed_condition_id == condition_id
-    assert verdict.evidence[0].values == facts
+    assert len(verdict.evidence) == 1
+    evidence = verdict.evidence[0]
+    assert evidence.condition_id == condition_id
+    assert evidence.evidence_id == f"{condition_id}.observation"
+    assert evidence.provenance is ActionEvidenceProvenance.RUNTIME_OBSERVATION
+    assert evidence.values == facts
     assert verdict.action is None
     assert verdict.argument_bindings == ()
     assert verdict.missing_argument_names == ()
@@ -112,6 +122,68 @@ def test_non_resolvable_inputs_are_validation_errors() -> None:
             facts=facts,
             outcome=NoRecoveryOutcome.OPERATOR_DECISION,
         )
+
+
+def test_missing_google_api_client_is_a_closed_safety_outcome() -> None:
+    """A fresh interpreter proves the optional-client import refusal without a patch seam."""
+    script = """
+import importlib.abc
+import json
+import sys
+
+from cadrumo.adapters.outbound.google._document_link_resolver import _drive_service
+from cadrumo.adapters.outbound.storage import OutboundStorageNetworkError
+
+
+class _MissingGoogleApiFinder(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, path=None, target=None):
+        if fullname == \"googleapiclient\" or fullname.startswith(\"googleapiclient.\"):
+            raise ModuleNotFoundError(fullname)
+        return None
+
+
+finder = _MissingGoogleApiFinder()
+sys.meta_path.insert(0, finder)
+try:
+    _drive_service(None)
+except OutboundStorageNetworkError as error:
+    verdict = error.terminal_precondition_verdict
+else:
+    raise AssertionError(\"the unavailable client did not refuse\")
+finally:
+    sys.meta_path.remove(finder)
+
+assert verdict is not None
+assert len(verdict.evidence) == 1
+evidence = verdict.evidence[0]
+print(json.dumps({
+    \"condition_id\": verdict.failed_condition_id,
+    \"evidence_condition_id\": evidence.condition_id,
+    \"evidence_id\": evidence.evidence_id,
+    \"provenance\": evidence.provenance.value,
+    \"values\": dict(evidence.values),
+    \"action\": verdict.action,
+    \"conditionality\": verdict.conditionality.value,
+    \"outcome\": verdict.no_recovery_outcome.value,
+}))
+"""
+    completed = subprocess.run(
+        (sys.executable, "-c", script),
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    assert json.loads(completed.stdout) == {
+        "condition_id": "google.document_link.api_client_available",
+        "evidence_condition_id": "google.document_link.api_client_available",
+        "evidence_id": "google.document_link.api_client_available.observation",
+        "provenance": "runtime_observation",
+        "values": {"client_available": False, "dependency": "google_api_python_client"},
+        "action": None,
+        "conditionality": "not_applicable",
+        "outcome": "safety",
+    }
 
 
 def test_drive_download_preserves_google_media_bytes() -> None:
