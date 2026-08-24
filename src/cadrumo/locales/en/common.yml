@@ -180,7 +180,8 @@ aggregation:
       duplicate_row_binding_owner: 'Internal error: duplicate row-binding owner in
         the source mesh.'
       duplicate_row_casilla_coordinate: 'Internal error: duplicate row-casilla coordinate.'
-      duplicate_row_casilla_owner: 'Internal error: duplicate row-casilla owner in the source mesh.'
+      duplicate_row_casilla_owner: 'Internal error: duplicate row-casilla owner in
+        the source mesh.'
       out_of_window_summary_date_span_invalid: An out-of-window summary's maximum
         filing date must not precede its minimum filing date.
       out_of_window_summary_incomplete: An out-of-window summary must set the count,
@@ -216,13 +217,20 @@ aggregation:
         1 or greater.'
       row_binding_value_invalid: 'Internal error: the row-binding decimal value is
         not valid.'
-      row_casilla_index_invalid: 'Internal error: the row-casilla row index must be 1 or greater.'
-      row_casilla_provenance_coordinate_mismatch: Every row-casilla value must have exactly one provenance row.
-      row_casilla_row_index_mismatch: A row-casilla and its source binding must use the same row index.
-      row_casilla_source_coordinate_missing: A row-casilla source binding value or identity is missing.
-      row_casilla_source_identity_mismatch: A row-casilla provenance identity differs from its source identity.
-      row_casilla_source_value_mismatch: A row-casilla value differs from its source binding value.
-      row_casilla_value_invalid: 'Internal error: the row-casilla decimal value is not valid.'
+      row_casilla_index_invalid: 'Internal error: the row-casilla row index must be
+        1 or greater.'
+      row_casilla_provenance_coordinate_mismatch: Every row-casilla value must have
+        exactly one provenance row.
+      row_casilla_row_index_mismatch: A row-casilla and its source binding must use
+        the same row index.
+      row_casilla_source_coordinate_missing: A row-casilla source binding value or
+        identity is missing.
+      row_casilla_source_identity_mismatch: A row-casilla provenance identity differs
+        from its source identity.
+      row_casilla_source_value_mismatch: A row-casilla value differs from its source
+        binding value.
+      row_casilla_value_invalid: 'Internal error: the row-casilla decimal value is
+        not valid.'
       row_source_identity_coordinate_mismatch: Every row source identity coordinate
         must correspond to a binding value present on the row itself. A coordinate
         was declared that the row does not carry.
@@ -622,6 +630,59 @@ llm:
         acknowledgement.'
       mint_refused: 'Refused: off-host reading of taxpayer evidence is not permitted
         for this invocation.'
+mcp:
+  call:
+    timeout: '''{command}'' exceeded the {tier}-tier time limit ({seconds}s) and was
+      cancelled. Retry, or run the equivalent Cadrumo command directly in a terminal
+      for a long operation.'
+    timeout_may_complete: '''{command}'' exceeded its time limit; the operation may
+      still be completing in the background. Re-run it with the same idempotency key
+      to check - the idempotency guard makes the retry safe and never double-writes.'
+  elicitation:
+    confirm:
+      consequence_handoff: This produces the filing-grade artefact the taxpayer will
+        file with AEAT themselves. Nothing is submitted anywhere by confirming.
+      consequence_local: This changes local data for the active taxpayer profile.
+      declined: '''{command}'' was not confirmed by the user ({outcome}); nothing
+        was run.'
+      field_description: Run '{command}' now?
+      message: Confirm running '{command}'. {consequence} Answer yes to proceed or
+        no to stop.
+    refusal:
+      blocked: '''{command}'' is permanently blocked: live submission to AEAT is forbidden
+        by design. Export locally; the taxpayer files themselves.'
+      no_channel: '''{command}'' needs a human confirmation, and this client does
+        not support elicitation. Run it from a client that can ask you questions,
+        or run the equivalent Cadrumo CLI command directly in a terminal.'
+  faithfulness:
+    advisory: 'FAITHFULNESS ADVISORY: the call''s arguments cite amount(s) [{values}]
+      that no tool result in this session produced. Verify the figure against a calculate/revision
+      read before relying on it.'
+  harness:
+    off_host_consent: 'Privacy notice - read before continuing. This console is operated
+      by an AI assistant running on your chosen LLM provider. Your words, and the
+      figures the assistant works with (amounts, casilla values, obligations), are
+      sent to that provider to operate the console. Your SOURCE DOCUMENTS - invoices,
+      bank statements, and any evidence bytes - NEVER leave your machine: they stay
+      in encrypted local storage and are never transmitted. If you are acting for
+      a third party (a gestor or professional), confirm this is acceptable before
+      you proceed.'
+  identity_gate:
+    elicitation_echo: 'Acting as the taxpayer profile: %{label}.'
+    first_mutation_refused: 'Refused: confirm the active taxpayer before the first
+      change of this session. A filing or edit must never run under the wrong identity.
+      Call whoami (or ''config profile status'' / ''overview status'') to see which
+      taxpayer is active, then retry - one identity read clears this for the session
+      until you switch profiles.'
+  persona:
+    handoff_denied: '''{command}'' is the irreversible filing-handoff boundary, owned
+      by the ''{owner}'' persona; the ''{persona}'' persona is structurally denied
+      it. Hand the verified work unit to the verifier session to produce the export
+      or record marker.'
+  serving:
+    warm_degraded: '''{command}'' was served through the subprocess transport because
+      the warm in-process runtime was {reason}; the result is identical, only slower.
+      Warm serving resumes once the slow call clears.'
 overview:
   no_aeat_history: This profile holds no filing evidence AEAT confirmed.
   no_aeat_history_sociedades: This profile holds no filing evidence AEAT confirmed.

@@ -193,8 +193,10 @@ aggregation:
         en la malla de fuentes.'
       duplicate_row_binding_owner: 'Error interno: propietario de vinculación de fila
         duplicado en la malla de fuentes.'
-      duplicate_row_casilla_coordinate: 'Error interno: coordenada de casilla de fila duplicada.'
-      duplicate_row_casilla_owner: 'Error interno: propietario de casilla de fila duplicado en la malla de fuentes.'
+      duplicate_row_casilla_coordinate: 'Error interno: coordenada de casilla de fila
+        duplicada.'
+      duplicate_row_casilla_owner: 'Error interno: propietario de casilla de fila
+        duplicado en la malla de fuentes.'
       out_of_window_summary_date_span_invalid: La fecha máxima de presentación de
         un resumen fuera de ventana no puede ser anterior a su fecha mínima.
       out_of_window_summary_incomplete: Un resumen fuera de ventana debe establecer
@@ -234,13 +236,20 @@ aggregation:
         debe ser mayor o igual que 1.'
       row_binding_value_invalid: 'Error interno: el valor decimal de la vinculación
         de fila no es válido.'
-      row_casilla_index_invalid: 'Error interno: el índice de casilla de fila debe ser mayor o igual que 1.'
-      row_casilla_provenance_coordinate_mismatch: Cada valor de casilla de fila debe tener exactamente una procedencia.
-      row_casilla_row_index_mismatch: La casilla de fila y su vinculación de origen deben usar el mismo índice.
-      row_casilla_source_coordinate_missing: Falta el valor o la identidad de la vinculación de origen de una casilla de fila.
-      row_casilla_source_identity_mismatch: La identidad de procedencia de la casilla de fila difiere de su identidad de origen.
-      row_casilla_source_value_mismatch: El valor de la casilla de fila difiere del valor de su vinculación de origen.
-      row_casilla_value_invalid: 'Error interno: el valor decimal de la casilla de fila no es válido.'
+      row_casilla_index_invalid: 'Error interno: el índice de casilla de fila debe
+        ser mayor o igual que 1.'
+      row_casilla_provenance_coordinate_mismatch: Cada valor de casilla de fila debe
+        tener exactamente una procedencia.
+      row_casilla_row_index_mismatch: La casilla de fila y su vinculación de origen
+        deben usar el mismo índice.
+      row_casilla_source_coordinate_missing: Falta el valor o la identidad de la vinculación
+        de origen de una casilla de fila.
+      row_casilla_source_identity_mismatch: La identidad de procedencia de la casilla
+        de fila difiere de su identidad de origen.
+      row_casilla_source_value_mismatch: El valor de la casilla de fila difiere del
+        valor de su vinculación de origen.
+      row_casilla_value_invalid: 'Error interno: el valor decimal de la casilla de
+        fila no es válido.'
       row_source_identity_coordinate_mismatch: Toda coordenada de identidad de fila
         debe corresponder a un valor de vínculo presente en la propia fila. Se ha
         declarado una coordenada que la fila no aporta.
@@ -646,6 +655,63 @@ llm:
         para esta invocación.'
       mint_refused: 'Rechazado: la lectura externa de documentos del contribuyente
         no está permitida para esta invocación.'
+mcp:
+  call:
+    timeout: '''{command}'' superó el límite de tiempo del nivel {tier} ({seconds}s)
+      y se canceló. Reinténtalo o ejecuta el comando equivalente de Cadrumo directamente
+      en un terminal si la operación es larga.'
+    timeout_may_complete: '''{command}'' superó su límite de tiempo; la operación
+      puede seguir completándose en segundo plano. Vuelve a ejecutarla con la misma
+      clave de idempotencia para comprobarlo: la garantía de idempotencia hace que
+      el reintento sea seguro y nunca escriba dos veces.'
+  elicitation:
+    confirm:
+      consequence_handoff: Esto genera el archivo definitivo que el contribuyente
+        presentará ante la AEAT por su cuenta. Al confirmar no se envía nada a ningún
+        sitio.
+      consequence_local: Esto modifica datos locales del perfil de contribuyente activo.
+      declined: El usuario no confirmó '{command}' ({outcome}); no se ejecutó nada.
+      field_description: ¿Ejecutar '{command}' ahora?
+      message: Confirma la ejecución de '{command}'. {consequence} Responde sí para
+        continuar o no para detener.
+    refusal:
+      blocked: '''{command}'' está bloqueado de forma permanente: el envío en directo
+        a la AEAT está prohibido por diseño. Exporta en local; el contribuyente presenta
+        por su cuenta.'
+      no_channel: '''{command}'' necesita una confirmación humana y este cliente no
+        admite solicitudes interactivas. Ejecútalo desde un cliente que pueda hacerte
+        preguntas o ejecuta el comando equivalente de la CLI de Cadrumo directamente
+        en un terminal.'
+  faithfulness:
+    advisory: 'AVISO DE FIDELIDAD: los argumentos de la llamada citan importes [{values}]
+      que ningún resultado de herramienta de esta sesión ha producido. Verifica la
+      cifra con una lectura de cálculo o revisión antes de confiar en ella.'
+  harness:
+    off_host_consent: 'Aviso de privacidad: léelo antes de continuar. Esta consola
+      la maneja un asistente de IA que se ejecuta en el proveedor de LLM que hayas
+      elegido. Tus palabras y las cifras con las que trabaja el asistente (importes,
+      valores de casilla, obligaciones) se envían a ese proveedor para operar la consola.
+      Tus DOCUMENTOS DE ORIGEN (facturas, extractos bancarios y cualquier byte de
+      evidencia) NUNCA salen de tu equipo: permanecen en almacenamiento local cifrado
+      y no se transmiten nunca. Si actúas por cuenta de un tercero (un gestor o profesional),
+      confirma que esto es aceptable antes de continuar.'
+  identity_gate:
+    elicitation_echo: 'Actuando como el perfil de contribuyente: %{label}.'
+    first_mutation_refused: 'Rechazado: confirma el contribuyente activo antes del
+      primer cambio de esta sesión. Una presentación o edición nunca debe ejecutarse
+      con la identidad equivocada. Llama a whoami (o ''config profile status'' / ''overview
+      status'') para ver qué contribuyente está activo y reinténtalo: una sola lectura
+      de identidad libera esto durante la sesión hasta que cambies de perfil.'
+  persona:
+    handoff_denied: '''{command}'' es el límite irreversible de entrega para presentación,
+      propiedad del rol ''{owner}''; al rol ''{persona}'' se le deniega estructuralmente.
+      Entrega la unidad de trabajo verificada a la sesión verificadora para generar
+      la exportación o el marcador de registro.'
+  serving:
+    warm_degraded: '''{command}'' se atendió mediante el transporte de subproceso
+      porque el entorno de ejecución en caliente estaba {reason}; el resultado es
+      idéntico, solo más lento. La atención en caliente se reanuda cuando termina
+      la llamada lenta.'
 overview:
   no_aeat_history: Este perfil no tiene ninguna presentación confirmada por la AEAT.
   no_aeat_history_sociedades: Este perfil no tiene ninguna presentación confirmada

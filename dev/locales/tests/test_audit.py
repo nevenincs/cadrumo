@@ -13,7 +13,7 @@ from cadrumo.core.i18n import extract_placeholders
 from cadrumo.core.product_identity import AEAT_AUTHORITY_SHORT_NAME, PRODUCT_IDENTITY
 from cadrumo.tests.cli_runner import invoke_typer_app
 
-from .._paths import DOCS_SRC_DIR, LOCALES_DIR, SRC_DIR
+from .._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, SRC_DIR
 from ..cli import app
 from ..manager import LocaleError, LocaleManager, _flatten_leaf_values, locale_catalogue_source
 
@@ -327,7 +327,7 @@ def test_audit_accepts_matching_conversions_escaped_and_literal_braces(tmp_path:
 
 def test_committed_catalogues_pass_production_audit() -> None:
     """The shipped four-language catalogue is accepted by the real validator."""
-    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR,))
+    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR, HARNESS_SRC_DIR))
 
     result = manager.audit()
 
@@ -336,7 +336,7 @@ def test_committed_catalogues_pass_production_audit() -> None:
 
 def test_committed_catalogues_follow_contextual_product_identity_contract() -> None:
     """Shipped locale values preserve prose, identity, CLI, machine, and authority referents."""
-    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR,))
+    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR, HARNESS_SRC_DIR))
 
     assert PRODUCT_IDENTITY.prose_name == "Cadrumo"
     assert PRODUCT_IDENTITY.display_name == "CADRUMO"

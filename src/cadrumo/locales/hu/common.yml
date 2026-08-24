@@ -213,11 +213,16 @@ aggregation:
       row_binding_index_invalid: 'Belső hiba: a sor-binding sorindexének 1-nek vagy
         nagyobbnak kell lennie.'
       row_binding_value_invalid: 'Belső hiba: a sor-binding decimális értéke érvénytelen.'
-      row_casilla_index_invalid: 'Belső hiba: a sor-mező indexének 1-nek vagy nagyobbnak kell lennie.'
-      row_casilla_provenance_coordinate_mismatch: Minden sor-mező értékhez pontosan egy származási sor szükséges.
-      row_casilla_row_index_mismatch: A sor-mezőnek és forráskötésének ugyanazt a sorindexet kell használnia.
-      row_casilla_source_coordinate_missing: Hiányzik egy sor-mező forráskötési értéke vagy azonossága.
-      row_casilla_source_identity_mismatch: A sor-mező származási azonossága eltér a forrás azonosságától.
+      row_casilla_index_invalid: 'Belső hiba: a sor-mező indexének 1-nek vagy nagyobbnak
+        kell lennie.'
+      row_casilla_provenance_coordinate_mismatch: Minden sor-mező értékhez pontosan
+        egy származási sor szükséges.
+      row_casilla_row_index_mismatch: A sor-mezőnek és forráskötésének ugyanazt a
+        sorindexet kell használnia.
+      row_casilla_source_coordinate_missing: Hiányzik egy sor-mező forráskötési értéke
+        vagy azonossága.
+      row_casilla_source_identity_mismatch: A sor-mező származási azonossága eltér
+        a forrás azonosságától.
       row_casilla_source_value_mismatch: A sor-mező értéke eltér a forráskötés értékétől.
       row_casilla_value_invalid: 'Belső hiba: a sor-mező decimális értéke érvénytelen.'
       row_source_identity_coordinate_mismatch: Minden sorazonosító-koordinátának a
@@ -634,6 +639,61 @@ llm:
         kifejezett hozzájárulás nélkül.'
       mint_refused: 'Elutasítva: az adózó bizonylatainak gépen kívüli olvasása ehhez
         a híváshoz nem engedélyezett.'
+mcp:
+  call:
+    timeout: A(z) '{command}' túllépte a {tier} szint időkorlátját ({seconds} s),
+      ezért megszakadt. Próbáld újra, vagy hosszú művelet esetén futtasd a megfelelő
+      Cadrumo parancsot közvetlenül a terminálban.
+    timeout_may_complete: A(z) '{command}' túllépte az időkorlátját; a művelet a háttérben
+      még befejeződhet. Futtasd újra ugyanazzal az idempotencia-kulccsal az ellenőrzéshez
+      - az idempotencia-védelem biztonságossá teszi az újrapróbálást, és soha nem
+      ír kétszer.
+  elicitation:
+    confirm:
+      consequence_handoff: Ez létrehozza a benyújtásra kész állományt, amelyet az
+        adózó maga ad be az AEAT-nak. A jóváhagyás semmit nem küld el sehová.
+      consequence_local: Ez az aktív adózói profil helyi adatait módosítja.
+      declined: A felhasználó nem hagyta jóvá a(z) '{command}' műveletet ({outcome});
+        semmi nem futott le.
+      field_description: Futtatod most a(z) '{command}' műveletet?
+      message: Hagyd jóvá a(z) '{command}' futtatását. {consequence} Válaszolj igennel
+        a folytatáshoz vagy nemmel a leállításhoz.
+    refusal:
+      blocked: 'A(z) ''{command}'' véglegesen tiltott: az AEAT-hoz való élő benyújtás
+        tervezetten nem engedélyezett. Exportálj helyben; az adózó maga adja be.'
+      no_channel: A(z) '{command}' emberi jóváhagyást igényel, és ez a kliens nem
+        támogatja az interaktív kérdéseket. Futtasd olyan kliensből, amely kérdezni
+        tud, vagy futtasd a megfelelő Cadrumo CLI-parancsot közvetlenül a terminálban.
+  faithfulness:
+    advisory: 'HITELESSÉGI FIGYELMEZTETÉS: a hívás argumentumai olyan összeget idéznek
+      [{values}], amelyet ebben a munkamenetben egyetlen eszközeredmény sem állított
+      elő. Ellenőrizd az értéket egy számítás- vagy revízióolvasással, mielőtt támaszkodsz
+      rá.'
+  harness:
+    off_host_consent: 'Adatvédelmi tájékoztató - olvasd el a folytatás előtt. Ezt
+      a konzolt egy AI-asszisztens működteti az általad választott LLM-szolgáltatón.
+      A szavaid és az asszisztens által használt számadatok (összegek, casilla-értékek,
+      kötelezettségek) elküldésre kerülnek ehhez a szolgáltatóhoz a konzol működtetéséhez.
+      A FORRÁSDOKUMENTUMAID - számlák, bankkivonatok és bármilyen bizonyítékbájt -
+      SOHA nem hagyják el a gépedet: titkosított helyi tárolóban maradnak, és soha
+      nem kerülnek átvitelre. Ha harmadik fél (könyvelő vagy szakember) nevében jársz
+      el, a folytatás előtt győződj meg róla, hogy ez elfogadható.'
+  identity_gate:
+    elicitation_echo: 'A következő adózói profilként jársz el: %{label}.'
+    first_mutation_refused: 'Elutasítva: a munkamenet első módosítása előtt igazold
+      vissza az aktív adózót. Benyújtás vagy szerkesztés soha nem futhat téves identitással.
+      Hívd meg a whoami-t (vagy a ''config profile status'' / ''overview status''
+      parancsot), hogy lásd, melyik adózó aktív, majd próbáld újra - egyetlen identitásolvasás
+      feloldja ezt a munkamenetre, amíg nem váltasz profilt.'
+  persona:
+    handoff_denied: A(z) '{command}' a visszafordíthatatlan benyújtási átadási határ,
+      amely a(z) '{owner}' szerepkörhöz tartozik; a(z) '{persona}' szerepkör szerkezetileg
+      el van tiltva tőle. Add át az ellenőrzött munkaegységet az ellenőrző munkamenetnek
+      az export vagy a rekordjelölő előállításához.
+  serving:
+    warm_degraded: A(z) '{command}' az alfolyamat-átvitelen keresztül lett kiszolgálva,
+      mert a meleg, folyamaton belüli futtatókörnyezet {reason} volt; az eredmény
+      azonos, csak lassabb. A meleg kiszolgálás folytatódik, amint a lassú hívás befejeződik.
 overview:
   no_aeat_history: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.
   no_aeat_history_sociedades: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.

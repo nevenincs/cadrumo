@@ -220,10 +220,10 @@ def test_every_docs_chrome_key_is_visible_to_the_locale_scanner() -> None:
     each time caught only because a human measured before running scaffold.
     Reaching zero here is what makes scaffold safe to run.
     """
-    from ...locales import DOCS_SRC_DIR, LOCALES_DIR, SRC_DIR, LocaleManager
+    from ...locales import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, SRC_DIR, LocaleManager
     from ...locales.manager import locale_catalogue_source
 
-    manager = LocaleManager(SRC_DIR, LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR,))
+    manager = LocaleManager(SRC_DIR, LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR, HARNESS_SRC_DIR))
     # Resolve the catalogue's shipped shape rather than hardcoding the flat
     # file: addressing `es.yml` raised once the tree was resharded, and a gate
     # that raises has stopped checking.

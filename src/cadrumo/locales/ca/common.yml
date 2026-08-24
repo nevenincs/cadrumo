@@ -189,8 +189,10 @@ aggregation:
         malla de fonts.'
       duplicate_row_binding_owner: 'Error intern: propietari de vinculació de fila
         duplicat a la malla de fonts.'
-      duplicate_row_casilla_coordinate: 'Error intern: coordenada de casella de fila duplicada.'
-      duplicate_row_casilla_owner: 'Error intern: propietari de casella de fila duplicat a la malla de fonts.'
+      duplicate_row_casilla_coordinate: 'Error intern: coordenada de casella de fila
+        duplicada.'
+      duplicate_row_casilla_owner: 'Error intern: propietari de casella de fila duplicat
+        a la malla de fonts.'
       out_of_window_summary_date_span_invalid: La data màxima de presentació d'un
         resum fora de finestra no pot ser anterior a la seva data mínima.
       out_of_window_summary_incomplete: Un resum fora de finestra ha d'establir conjuntament
@@ -227,13 +229,20 @@ aggregation:
         ha de ser 1 o superior.'
       row_binding_value_invalid: 'Error intern: el valor decimal de la vinculació
         de fila no és vàlid.'
-      row_casilla_index_invalid: 'Error intern: l''índex de casella de fila ha de ser 1 o superior.'
-      row_casilla_provenance_coordinate_mismatch: Cada valor de casella de fila ha de tenir exactament una procedència.
-      row_casilla_row_index_mismatch: La casella de fila i la vinculació d'origen han d'usar el mateix índex.
-      row_casilla_source_coordinate_missing: Falta el valor o la identitat de la vinculació d'origen d'una casella de fila.
-      row_casilla_source_identity_mismatch: La identitat de procedència de la casella de fila difereix de la identitat d'origen.
-      row_casilla_source_value_mismatch: El valor de la casella de fila difereix del valor de la vinculació d'origen.
-      row_casilla_value_invalid: 'Error intern: el valor decimal de la casella de fila no és vàlid.'
+      row_casilla_index_invalid: 'Error intern: l''índex de casella de fila ha de
+        ser 1 o superior.'
+      row_casilla_provenance_coordinate_mismatch: Cada valor de casella de fila ha
+        de tenir exactament una procedència.
+      row_casilla_row_index_mismatch: La casella de fila i la vinculació d'origen
+        han d'usar el mateix índex.
+      row_casilla_source_coordinate_missing: Falta el valor o la identitat de la vinculació
+        d'origen d'una casella de fila.
+      row_casilla_source_identity_mismatch: La identitat de procedència de la casella
+        de fila difereix de la identitat d'origen.
+      row_casilla_source_value_mismatch: El valor de la casella de fila difereix del
+        valor de la vinculació d'origen.
+      row_casilla_value_invalid: 'Error intern: el valor decimal de la casella de
+        fila no és vàlid.'
       row_source_identity_coordinate_mismatch: Tota coordenada d'identitat de fila
         ha de correspondre a un valor de vincle present a la mateixa fila. S'ha declarat
         una coordenada que la fila no aporta.
@@ -637,6 +646,62 @@ llm:
         per a aquesta invocació.'
       mint_refused: 'Rebutjat: la lectura externa de documents del contribuent no
         està permesa per a aquesta invocació.'
+mcp:
+  call:
+    timeout: '''{command}'' ha superat el límit de temps del nivell {tier} ({seconds}s)
+      i s''ha cancel·lat. Torna-ho a provar o executa l''ordre equivalent de Cadrumo
+      directament en un terminal si l''operació és llarga.'
+    timeout_may_complete: '''{command}'' ha superat el seu límit de temps; l''operació
+      encara pot estar completant-se en segon pla. Torna a executar-la amb la mateixa
+      clau d''idempotència per comprovar-ho: la garantia d''idempotència fa que el
+      reintent sigui segur i mai no escriu dues vegades.'
+  elicitation:
+    confirm:
+      consequence_handoff: Això genera l'arxiu definitiu que el contribuent presentarà
+        davant l'AEAT pel seu compte. En confirmar no s'envia res a cap lloc.
+      consequence_local: Això modifica dades locals del perfil de contribuent actiu.
+      declined: L'usuari no ha confirmat '{command}' ({outcome}); no s'ha executat
+        res.
+      field_description: Vols executar '{command}' ara?
+      message: Confirma l'execució de '{command}'. {consequence} Respon sí per continuar
+        o no per aturar.
+    refusal:
+      blocked: '''{command}'' està bloquejat de manera permanent: l''enviament en
+        directe a l''AEAT està prohibit per disseny. Exporta en local; el contribuent
+        presenta pel seu compte.'
+      no_channel: '''{command}'' necessita una confirmació humana i aquest client
+        no admet sol·licituds interactives. Executa''l des d''un client que pugui
+        fer-te preguntes o executa l''ordre equivalent de la CLI de Cadrumo directament
+        en un terminal.'
+  faithfulness:
+    advisory: 'AVÍS DE FIDELITAT: els arguments de la crida citen imports [{values}]
+      que cap resultat d''eina d''aquesta sessió ha produït. Verifica la xifra amb
+      una lectura de càlcul o revisió abans de confiar-hi.'
+  harness:
+    off_host_consent: 'Avís de privadesa: llegeix-lo abans de continuar. Aquesta consola
+      la maneja un assistent d''IA que s''executa en el proveïdor de LLM que hagis
+      triat. Les teves paraules i les xifres amb què treballa l''assistent (imports,
+      valors de casilla, obligacions) s''envien a aquest proveïdor per operar la consola.
+      Els teus DOCUMENTS D''ORIGEN (factures, extractes bancaris i qualsevol byte
+      d''evidència) MAI no surten del teu equip: es queden en emmagatzematge local
+      xifrat i no es transmeten mai. Si actues per compte d''un tercer (un gestor
+      o professional), confirma que això és acceptable abans de continuar.'
+  identity_gate:
+    elicitation_echo: 'Actuant com el perfil de contribuent: %{label}.'
+    first_mutation_refused: 'Rebutjat: confirma el contribuent actiu abans del primer
+      canvi d''aquesta sessió. Una presentació o edició mai no s''ha d''executar amb
+      la identitat equivocada. Crida whoami (o ''config profile status'' / ''overview
+      status'') per veure quin contribuent està actiu i torna-ho a provar: una sola
+      lectura d''identitat allibera això durant la sessió fins que canviïs de perfil.'
+  persona:
+    handoff_denied: '''{command}'' és el límit irreversible de lliurament per a la
+      presentació, propietat del rol ''{owner}''; al rol ''{persona}'' se li denega
+      estructuralment. Lliura la unitat de treball verificada a la sessió verificadora
+      per generar l''exportació o el marcador de registre.'
+  serving:
+    warm_degraded: '''{command}'' s''ha atès mitjançant el transport de subprocés
+      perquè l''entorn d''execució en calent estava {reason}; el resultat és idèntic,
+      només més lent. L''atenció en calent es reprèn quan acaba la crida lenta.'
 overview:
   no_aeat_history: Aquest perfil no té cap presentació confirmada per l'AEAT.
   no_aeat_history_sociedades: Aquest perfil no té cap presentació confirmada per l'AEAT.
