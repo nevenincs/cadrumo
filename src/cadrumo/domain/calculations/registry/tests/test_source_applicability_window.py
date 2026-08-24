@@ -394,6 +394,69 @@ def test_a_deadline_window_source_is_validated_against_the_window_not_the_revisi
     assert snapshot.revision.id == _DEADLINE_REVISION
 
 
+def test_construct_deadline_closure_does_not_reclassify_its_calendar_as_a_generic_source() -> None:
+    """Construct aggregation preserves the member deadline's presentation axis."""
+    modelo, catalogues = _committed_modelo(_DEADLINE_MODELO)
+    revision = modelo.revisions[_DEADLINE_REVISION]
+    window = next(item for item in revision.deadline_windows if item.id.endswith("2023-4t"))
+    construct = revision.constructs[0]
+    closed_construct = construct.model_copy(
+        update={
+            "deadline_windows": (window.id,),
+            "legal_refs": tuple(dict.fromkeys((*construct.legal_refs, *window.legal_refs))),
+            "source_refs": tuple(dict.fromkeys((*construct.source_refs, *window.source_refs))),
+        },
+    )
+    closed_revision = revision.model_copy(
+        update={"constructs": (closed_construct, *revision.constructs[1:])},
+    )
+    closed_modelo = modelo.model_copy(
+        update={"revisions": {**modelo.revisions, revision.id: closed_revision}},
+    )
+
+    snapshot = build_snapshot(
+        closed_modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=_DEADLINE_FILING_YEAR,
+        period=_DEADLINE_PERIOD,
+    )
+
+    assert snapshot.revision.constructs[0].deadline_windows == (window.id,)
+
+
+def test_construct_owned_source_without_deadline_member_provenance_keeps_revision_axis() -> None:
+    """A construct-only source cannot borrow an unrelated deadline member's axis."""
+    modelo, catalogues = _committed_modelo(_DEADLINE_MODELO)
+    revision = modelo.revisions[_DEADLINE_REVISION]
+    construct = revision.constructs[0]
+    stale_id = "aeat-calendario-contribuyente-2026"
+    stale_source = catalogues.sources[stale_id].model_copy(
+        update={"applies_from": date(2030, 1, 1), "applies_to": date(2030, 12, 31)},
+    )
+    catalogues = catalogues.model_copy(
+        update={"sources": {**catalogues.sources, stale_id: stale_source}},
+    )
+    stale_construct = construct.model_copy(
+        update={"source_refs": (*construct.source_refs, stale_id)},
+    )
+    stale_revision = revision.model_copy(
+        update={"constructs": (stale_construct, *revision.constructs[1:])},
+    )
+    stale_modelo = modelo.model_copy(
+        update={"revisions": {**modelo.revisions, revision.id: stale_revision}},
+    )
+
+    with pytest.raises(RegistryValidationError, match=stale_id):
+        build_snapshot(
+            stale_modelo,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=_DEADLINE_FILING_YEAR,
+            period=_DEADLINE_PERIOD,
+        )
+
+
 def test_a_deadline_source_outside_both_the_revision_and_its_window_still_refuses() -> None:
     """The window axis is a real bound, not a blanket exemption for deadline refs."""
     with pytest.raises(RegistryValidationError, match=_NEXT_YEAR_CALENDARIO):

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:51b6b09edaa9a3bf84ef9111984151f7dc26be416af3c70d92c98feed54375dc'
+body_hash: 'sha256:9b1acba4c7eb497f03cbd9a6082f4a238f76e25a94b2293c35d48ecc5df489a3'
 related:
   - '[[2026-08-24-deadline-window-revision-authority-W01-P01-S01]]'
   - '[[2026-08-24-deadline-window-revision-authority-W01-P01-S02]]'
@@ -26,6 +26,11 @@ related:
   - '[[2026-08-24-deadline-window-revision-authority-W02-P05-S18]]'
   - '[[2026-08-24-deadline-window-revision-authority-W02-P05-S19]]'
   - '[[2026-08-24-deadline-window-revision-authority-W02-P05-S20]]'
+  - '[[2026-08-24-deadline-window-revision-authority-W02-P14-S37]]'
+  - '[[2026-08-24-deadline-window-revision-authority-W02-P14-S38]]'
+  - '[[2026-08-24-deadline-window-revision-authority-W02-P14-S39]]'
+  - '[[2026-08-24-deadline-window-revision-authority-W02-P14-S40]]'
+  - '[[2026-08-24-deadline-window-revision-authority-W02-P14-S41]]'
   - '[[2026-08-24-deadline-window-revision-authority-W03-P08-S21]]'
   - '[[2026-08-24-deadline-window-revision-authority-W03-P10-S23]]'
   - '[[2026-08-24-deadline-window-revision-authority-W03-P10-S24]]'
@@ -45,6 +50,11 @@ related:
   - '[[2026-08-24-deadline-window-revision-authority-s21-authority-projection-review-audit]]'
   - '[[2026-08-24-deadline-window-revision-authority-s23-qualified-resolver-review-audit]]'
   - '[[2026-08-24-deadline-window-revision-authority-s25-qualified-resolution-tests-review-audit]]'
+  - '[[2026-08-24-deadline-window-revision-authority-s37-m111-audit]]'
+  - '[[2026-08-24-deadline-window-revision-authority-s38-m115-audit]]'
+  - '[[2026-08-24-deadline-window-revision-authority-s39-m123-audit]]'
+  - '[[2026-08-24-deadline-window-revision-authority-s40-m130-audit]]'
+  - '[[2026-08-24-deadline-window-revision-authority-s41-m131-audit]]'
 ---
 
 # `deadline-window-revision-authority` feature index
@@ -70,6 +80,11 @@ Auto-generated index of all documents tagged with `#deadline-window-revision-aut
 - `2026-08-24-deadline-window-revision-authority-s21-authority-projection-review-audit` - `deadline-window-revision-authority` audit: `s21 authority projection review`
 - `2026-08-24-deadline-window-revision-authority-s23-qualified-resolver-review-audit` - `deadline-window-revision-authority` audit: `s23 qualified resolver review`
 - `2026-08-24-deadline-window-revision-authority-s25-qualified-resolution-tests-review-audit` - `deadline-window-revision-authority` audit: `s25 qualified resolution tests review`
+- `2026-08-24-deadline-window-revision-authority-s37-m111-audit` - `deadline-window-revision-authority` audit: `s37 m111`
+- `2026-08-24-deadline-window-revision-authority-s38-m115-audit` - `deadline-window-revision-authority` audit: `S38 Modelo 115 deadline corpus`
+- `2026-08-24-deadline-window-revision-authority-s39-m123-audit` - `deadline-window-revision-authority` audit: `S39 Modelo 123 deadline corpus`
+- `2026-08-24-deadline-window-revision-authority-s40-m130-audit` - `deadline-window-revision-authority` audit: `S40 Modelo 130 deadline corpus`
+- `2026-08-24-deadline-window-revision-authority-s41-m131-audit` - `deadline-window-revision-authority` audit: `s41 m131`
 
 ### exec
 
@@ -91,6 +106,11 @@ Auto-generated index of all documents tagged with `#deadline-window-revision-aut
 - `2026-08-24-deadline-window-revision-authority-W02-P05-S18` - Replace invalid M210 quarter identities with canonical EVENT-N or 0A identities and author ResultDisposition plus official-code-qualified variants
 - `2026-08-24-deadline-window-revision-authority-W02-P05-S19` - Keep M210 tipo 28 event-shaped without a numeric offset until RD 1776/2004 article 14 is bundled and verified
 - `2026-08-24-deadline-window-revision-authority-W02-P05-S20` - Prove M210 qualifiers accept canonical ResultDisposition and official codes while rejecting lossy conceptual tipo authoring
+- `2026-08-24-deadline-window-revision-authority-W02-P14-S37` - Re-adjudicate Modelo 111 deadlines for supported filing years 2022-2026 and materialise all 48 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date
+- `2026-08-24-deadline-window-revision-authority-W02-P14-S38` - Re-adjudicate Modelo 115 deadlines for supported filing years 2022-2026 and materialise all 16 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date
+- `2026-08-24-deadline-window-revision-authority-W02-P14-S39` - Re-adjudicate Modelo 123 deadlines for supported filing years 2022-2026 and materialise all 12 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date
+- `2026-08-24-deadline-window-revision-authority-W02-P14-S40` - Re-adjudicate Modelo 130 deadlines for supported filing years 2022-2026 and materialise all 8 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date
+- `2026-08-24-deadline-window-revision-authority-W02-P14-S41` - Re-adjudicate Modelo 131 deadlines for supported filing years 2022-2026 and materialise all 4 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date
 - `2026-08-24-deadline-window-revision-authority-W03-P08-S21` - Rewrite ValidatedRegistryAuthority.deadline_windows to project canonical owners through select_revision with deterministic qualifier-aware ordering and no deduplication
 - `2026-08-24-deadline-window-revision-authority-W03-P10-S23` - Extend resolve_filing_window with optional ResultDisposition and official tipo-code context using one exact matcher and ambiguity refusal
 - `2026-08-24-deadline-window-revision-authority-W03-P10-S24` - Keep resolve_filing_closes_on as the unqualified convenience and route post-calculation M210 plazo through the same matcher
