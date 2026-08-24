@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:d4da122b17222e58cbb651289125551467dff2f9269bd6eff15c0ff05cc7e0ce'
+body_hash: 'sha256:b968ea43b407938d9e7663e3fc613365ff5c391c4f404cfb505b629146185331'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -114,7 +114,7 @@ Classify each of the fourteen live filing gaps independently so missing authorit
 
 Add or reconcile the adjudicated remedies in each existing owning plan and prove no gap is orphaned, duplicated, or tracked only by the roll-up.
 
-- [ ] `W02.P04.S26` - Enroll every temporal-window and authority-grade remedy in registry-temporal-coverage without duplicating closed work; `.vault/plan/2026-08-14-registry-temporal-coverage-plan.md`.
+- [x] `W02.P04.S26` - Enroll every temporal-window and authority-grade remedy in registry-temporal-coverage without duplicating closed work; `.vault/plan/2026-08-14-registry-temporal-coverage-plan.md`.
 - [ ] `W02.P04.S27` - Enroll every source and casilla remedy in source-casilla-integration without duplicating closed work; `.vault/plan/2026-08-22-source-casilla-integration-plan.md`.
 - [ ] `W02.P04.S28` - Enroll every official-layout and emitted-byte remedy in aeat-export-fragment-generator-authority without duplicating closed work; `.vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md`.
 - [ ] `W02.P04.S29` - Prove every live filing gap has exactly one terminal refusal or one existing-plan owner and reconsideration condition; `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py`.
