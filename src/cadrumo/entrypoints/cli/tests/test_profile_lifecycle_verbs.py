@@ -76,6 +76,30 @@ def _invoke_config(args: Sequence[str]) -> Result:
     return invoke_cached_cli(("config", *args))
 
 
+def _dev_passphrase() -> str:
+    """The secret the seeded custody envelopes were created with."""
+    return load_settings().cadrumo_dev_test_database_password.get_secret_value()
+
+
+def _invoke_profile_with_secret(args: Sequence[str]) -> Result:
+    """Run a `config profile` verb that mints custody, over the secrets channel.
+
+    Creating a profile derives a custody envelope, so the verb needs the
+    operator passphrase. A test runner is not a TTY and the secret is
+    resolvable from neither settings nor the environment, so without this the
+    verb refuses for want of a channel and never reaches the behaviour under
+    test.
+    """
+    return invoke_cached_cli(
+        ("config", "profile", *args, "--secrets-stdin"),
+        input=json.dumps(
+            # `create` mints custody rather than opening it, so it requires the
+            # confirmation field too and refuses a payload carrying only one.
+            {"passphrase": _dev_passphrase(), "passphrase_confirmation": _dev_passphrase()},
+        ),
+    )
+
+
 def _login(name: str) -> Result:
     """Unlock ``name`` over the only channel ``config login`` still accepts.
 
@@ -196,7 +220,7 @@ def test_config_profile_create_refuses_existing_profile() -> None:
     seed("operator")
 
     # Invoke through the root CLI so the error boundary renders CadrumoError to output.
-    result = _invoke_profile(
+    result = _invoke_profile_with_secret(
         (
             "create",
             "operator",
@@ -214,7 +238,11 @@ def test_config_profile_create_refuses_existing_profile() -> None:
     )
 
     assert result.exit_code != 0
-    assert "already exists" in result.output
+    # Asserted on the profile the refusal names rather than on an English
+    # phrase: the envelope is localised, so pinning "already exists" pins the
+    # catalogue this suite happens to render in.
+    assert "operator" in result.output
+    assert "login" in result.output
 
 
 def test_config_profile_edit_refuses_missing_profile_without_creating_bucket() -> None:
