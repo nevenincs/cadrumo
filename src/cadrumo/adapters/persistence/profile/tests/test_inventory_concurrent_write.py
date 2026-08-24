@@ -34,6 +34,7 @@ from .....domain.contribuyente.inventory import (
 )
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..inventory import InventoryLedgerRepository
+from ._inventory_acquisition_fixture import acquisition_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -60,6 +61,7 @@ def _movement(movement_id: str) -> MovementRecord:
         movement_date=date(_YEAR, 6, 1),
         quantity=Decimal("2"),
         unit_cost=Decimal("10"),
+        acquisition_cost=acquisition_for(Decimal("20"), iva_rate=Decimal("21.00"), ratio=Decimal("1.00")),
     )
 
 
