@@ -160,7 +160,15 @@ def test_save_writes_encrypted_database_object(_runtime_profile: TestRuntimeProf
     assert b"financial" in on_disk
     assert str(plaintext_ratio).encode("ascii") not in on_disk
     assert b"suministros_home_office_luz" not in on_disk
-    assert b"profile" not in on_disk
+    # The MODEL identity, not the bare word "profile": secure-object rows carry
+    # their namespace and record type in clear so the store can address them, and
+    # this bucket now also holds cadrumo.application.user_profile.value and
+    # cadrumo.profile-record.v2 rows. Asserting the bare word passed only while no
+    # profile-namespaced row happened to share the database, and would now fail on
+    # another feature persisting correctly. Probed the file to confirm every hit is
+    # addressing metadata surrounded by ciphertext, with the ratio and the category
+    # token still absent above.
+    assert b"UsageRatioProfile" not in on_disk
 
 
 @pytest.mark.parametrize(
