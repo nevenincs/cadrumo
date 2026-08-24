@@ -7,7 +7,7 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core import ResultDisposition
+from cadrumo.core import M210_TIPO_RENTA_CODE_PROJECTION, ResultDisposition, TipoRentaIrnr
 
 from .. import DeadlineWindowDefinition, RegistryValidationError
 
@@ -37,6 +37,28 @@ def test_deadline_window_qualifiers_are_optional_and_typed() -> None:
 
     assert qualified.resultado_scope is ResultDisposition.INGRESO
     assert qualified.tipo_renta_scope == ("01", "35")
+
+
+@pytest.mark.parametrize("disposition", tuple(ResultDisposition))
+def test_deadline_window_accepts_canonical_result_disposition_members(disposition: ResultDisposition) -> None:
+    qualified = _window(resultado_scope=disposition)
+
+    assert qualified.resultado_scope is disposition
+
+
+def test_deadline_window_preserves_official_codes_that_share_one_rate_concept() -> None:
+    assert M210_TIPO_RENTA_CODE_PROJECTION["01"] is TipoRentaIrnr.GENERAL
+    assert M210_TIPO_RENTA_CODE_PROJECTION["03"] is TipoRentaIrnr.GENERAL
+
+    qualified = _window(tipo_renta_scope=("01", "03"))
+
+    assert qualified.tipo_renta_scope == ("01", "03")
+
+
+@pytest.mark.parametrize("conceptual_key", [TipoRentaIrnr.GENERAL, TipoRentaIrnr.GENERAL.value])
+def test_deadline_window_rejects_lossy_conceptual_tipo_authoring(conceptual_key: object) -> None:
+    with pytest.raises((RegistryValidationError, ValidationError), match="unknown official Modelo 210 codes"):
+        _window(tipo_renta_scope=(conceptual_key,))
 
 
 @pytest.mark.parametrize("tipo_renta_scope", [(), ("01", "01"), ("1",), ("99",)])

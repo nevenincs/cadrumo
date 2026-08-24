@@ -14,7 +14,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
 modified: '2026-08-24'
 body_schema: body-v1
-body_hash: 'sha256:dc35807aafaae9ddc9a60a66ae21384184eb2b678cca79b2506387e33427fec8'
+body_hash: 'sha256:63d2131d7f01e721fc5bf0ade418822bc23c9704ec486b1b981807d42184adab'
 ---
 
 <!-- RETIRED: P06, P07, P09 -->
@@ -87,7 +87,7 @@ Complete M210 using canonical periods, ResultDisposition, and official tipo-rent
 - [x] `W02.P05.S17` - Re-adjudicate every Modelo 210 plazo case against bundled Orden EHA 3316/2010 article 5 and official authority including presentation versus domiciliacion; `src/cadrumo/_data/registry/aeat/modelos/210/`.
 - [x] `W02.P05.S18` - Replace invalid M210 quarter identities with canonical EVENT-N or 0A identities and author ResultDisposition plus official-code-qualified variants; `src/cadrumo/_data/registry/aeat/modelos/210/revisions/`.
 - [x] `W02.P05.S19` - Keep M210 tipo 28 event-shaped without a numeric offset until RD 1776/2004 article 14 is bundled and verified; `src/cadrumo/_data/registry/aeat/modelos/210/; src/cadrumo/_data/registry/aeat/legal/`.
-- [ ] `W02.P05.S20` - Prove M210 qualifiers accept canonical ResultDisposition and official codes while rejecting lossy conceptual tipo authoring; `src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `W02.P05.S20` - Prove M210 qualifiers accept canonical ResultDisposition and official codes while rejecting lossy conceptual tipo authoring; `src/cadrumo/domain/calculations/registry/tests/`.
 
 ## Wave `W03` - canonical projection and resolution
 
