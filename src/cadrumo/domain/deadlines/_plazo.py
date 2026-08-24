@@ -15,7 +15,7 @@ from datetime import date
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
-from ...core import M210_TIPO_RENTA_CODE_PROJECTION, Modelo, Period, ResultDisposition
+from ...core import M210_TIPO_RENTA_CODE_PROJECTION, Modelo, Period, PeriodKind, ResultDisposition
 from ._errors import DeadlineValidationError
 
 if TYPE_CHECKING:
@@ -168,12 +168,32 @@ def _resolve_projected_filing_window(
     if requested.filing_year != filing_year:
         return None
 
-    matches = tuple(
-        window
-        for projected_modelo, _revision, window in windows
-        if projected_modelo == modelo
-        and requested in deadline_window_semantic_coordinates(projected_modelo, window)
+    qualified_m210_event = (
+        modelo == Modelo.M210
+        and period.kind is PeriodKind.EXTENDED
+        and (resultado is not None or tipo_renta_code is not None)
     )
+    matches: tuple[DeadlineWindowDefinition, ...]
+    if qualified_m210_event:
+        matches = tuple(
+            window
+            for projected_modelo, _revision, window in windows
+            if projected_modelo == modelo
+            and window.period.kind is PeriodKind.ANNUAL
+            and any(
+                coordinate.filing_year == filing_year
+                and coordinate.resultado_scope == resultado
+                and coordinate.tipo_renta_code == tipo_renta_code
+                for coordinate in deadline_window_semantic_coordinates(projected_modelo, window)
+            )
+        )
+    else:
+        matches = tuple(
+            window
+            for projected_modelo, _revision, window in windows
+            if projected_modelo == modelo
+            and requested in deadline_window_semantic_coordinates(projected_modelo, window)
+        )
     if not matches:
         return None
     if len(matches) > 1:

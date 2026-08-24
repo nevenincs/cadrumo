@@ -134,6 +134,55 @@ def test_ambiguous_atomic_resolution_refuses_instead_of_returning_first() -> Non
         )
 
 
+def test_qualified_m210_event_work_resolves_the_annual_window_without_synthesizing_a_period() -> None:
+    event_period = Period.from_year_and_code(_YEAR, "EVENT-1")
+    annual = _window("imputadas", tipo_renta_scope=("02",))
+
+    assert (
+        _resolve_projected_filing_window(
+            _projection(annual),
+            modelo="210",
+            filing_year=_YEAR,
+            period=event_period,
+            resultado=ResultDisposition.INGRESO,
+            tipo_renta_code="02",
+        )
+        is annual
+    )
+
+
+def test_qualified_m210_event_to_annual_resolution_refuses_ambiguity() -> None:
+    event_period = Period.from_year_and_code(_YEAR, "EVENT-1")
+    first = _window("first", tipo_renta_scope=("02",))
+    second = _window("second", resultado_scope=ResultDisposition.INGRESO, tipo_renta_scope=("02",))
+
+    with pytest.raises(DeadlineValidationError, match=r"ambiguous.*first.*second"):
+        _resolve_projected_filing_window(
+            _projection(first, second),
+            modelo="210",
+            filing_year=_YEAR,
+            period=event_period,
+            resultado=ResultDisposition.INGRESO,
+            tipo_renta_code="02",
+        )
+
+
+def test_unqualified_m210_event_resolution_does_not_borrow_an_annual_window() -> None:
+    event_period = Period.from_year_and_code(_YEAR, "EVENT-1")
+
+    assert (
+        _resolve_projected_filing_window(
+            _projection(_window("annual")),
+            modelo="210",
+            filing_year=_YEAR,
+            period=event_period,
+            resultado=None,
+            tipo_renta_code=None,
+        )
+        is None
+    )
+
+
 def test_none_is_reserved_for_an_exact_absence_without_year_borrowing() -> None:
     exact = _window("exact", resultado_scope=ResultDisposition.INGRESO, tipo_renta_scope=("01",))
 
