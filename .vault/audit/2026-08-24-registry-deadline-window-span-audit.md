@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:5cd1047cb54d436858e7590ed4e88ea74a077944387e1c3094121141762e33ee'
+body_hash: 'sha256:226b7eae07be5860a59f59ebff4b7f6fe7dc750768d94637f14624341f5308a1'
 related: []
 ---
 
@@ -443,6 +443,54 @@ data work and the benefit is 50 tests, and the judgement of whether modelo 200's
 
 The same question applies to modelo 036 revision `2025-02-03-y-siguientes`,
 which refuses the same way at `applicability` grade (34 failures).
+
+## Re-measured at `1a82cab2fd`: 660 -> 604
+
+The same five-layer sweep, same method, same isolated worktree, at a later
+commit whose registry validates:
+
+| layer | was | now | delta |
+|---|---|---|---|
+| core | 0 | 1 | +1 |
+| domain | 97 | 84 | -13 |
+| application | 514 | 462 | -52 |
+| adapters | 34 | 36 | +2 |
+| entrypoints | 15 | 21 | +6 |
+| **total** | **660** | **604** | **-56** |
+
+Pass rate 97.45% -> 97.67%.
+
+### A frozen baseline goes stale, and that is a second failure mode
+
+Before re-measuring I was about to work the twenty `modelo 390: no revision for
+year=2026` failures. They no longer exist: peers landed modelo 390 and 369
+deadline work after the baseline was taken, and `test_agenda` passes. An hour
+would have gone into a cluster the tree had already fixed.
+
+The isolated worktree solved CONTAMINATION -- a run whose tree moves underneath
+it. It does not solve STALENESS -- a frozen baseline aging out as real fixes
+land elsewhere. Both need the same discipline: re-measure immediately before
+acting on a cluster, not only before reporting one.
+
+### Core regressed from green, and it is not the layer's own doing
+
+`test_production_exception_classes_do_not_introduce_unregistered_builtin_roots`
+now fails on two classes added by the operations work:
+
+- `application.operations._observation._DefinitionContractMismatchError(RuntimeError)`
+  is caught by name inside its own module at `_observation.py:120`, so it is a
+  pure internal control-flow signal and the sanctioned fix is a
+  `__bare_base_rationale__` declaration.
+- `application.operations._journal.OperationObservationCursorAheadError(ValueError)`
+  is raised in the persistence adapter and nothing catches it, so it escapes to
+  its callers. The gate's other sanctioned route -- derive from `CadrumoError`
+  so the class binds to the error registry -- is the fitting one, and it needs a
+  registered error code.
+
+Which code, and whether that error is meant to reach an operator at all, are
+decisions inside the operations feature, which has been landing in stages
+throughout this campaign. Left for its owner with both routes named. Note that
+fixing only the first leaves the gate red, so this is one item, not two.
 
 ## Durable lesson
 
