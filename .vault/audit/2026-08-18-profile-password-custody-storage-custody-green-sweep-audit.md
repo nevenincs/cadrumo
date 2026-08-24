@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-18'
-modified: '2026-08-23'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:c5af1e7ea7ca14ebd5302392deb1a315ea8d79932c54400ea2f0a8a865d69dff'
+body_hash: 'sha256:6f55d0fb25dafd9013666a7af13953a444699fb5214a10972ffa79aaf8fe28d7'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -8540,3 +8540,28 @@ the check; deleting the control removes the proof the check ever bit.
 This needs an owner decision, not a repair from here: either the envelope contract is
 re-gated against the command-spec kernel that replaced the registry, or the rule stops
 naming gates that no longer exist. Both are cheap; neither is mine to pick.
+
+### The same trap, quantified: 277 to 298 was neither a regression nor real
+
+A CLI-area re-measurement went the wrong way -- 277 failed to 298 -- immediately after a
+run of fixes. Diffing the two failing SETS rather than reading the totals: 24 newly
+failing, 3 newly passing, and not one of the 24 attributable to the work.
+
+Nine were `test_profile_password_inbound_matrix`, which appears in no earlier measurement
+at all. The working tree carries 26 dirty PRODUCTION files at that moment, including
+`core/_credentials.py` and `core/errors/registry/_entrypoints.py`, beside a modified
+`2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr`.
+A peer is mid-change on precisely the credential surface those cases assert. The failure
+even reads as one: a refusal whose `context` is None where the case expects
+`reason=too_few_scalars, minimum_scalars=8`.
+
+Fourteen were `test_modelo_registry_bindings_surface`, which reports 15 failures under
+xdist and **1 failed / 17 passed** run sequentially -- the same module, the same commit,
+minutes apart. That is the parallel inflation the local-execution rule warns about, now
+measured: a fifteen-fold overstatement in one module.
+
+What made the difference was not running more tests. It was checking my own last eight
+commits first (all test-only, no production `context=` touched, so they could not
+possibly change a refusal's context), then diffing the failing sets, then re-running
+sequentially. Totals alone would have sent me hunting a regression that does not exist,
+in someone else's half-finished work.
