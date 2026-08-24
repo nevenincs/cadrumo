@@ -284,7 +284,7 @@ def _validate_source_reference_groundings(
     revision resolution.  This check intentionally reuses those two facts: a
     source-reference grounding cannot certify a terminal census disposition
     unless it resolves from the authority's live source catalogue and the
-    exact selected revision cites it directly.
+    exact selected :class:`ModeloRevision` cites it directly.
     """
     revision_source_refs = set(revision.source_refs)
     for grounding in entry.grounding:
