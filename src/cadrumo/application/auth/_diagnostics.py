@@ -29,10 +29,12 @@ from ...adapters.persistence.storage import (
     secure_object_repository_for_active_bucket,
 )
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.errors import CoreValidationError
 from ...core.external_constants import UTF_8_ENCODING, load_external_constants
 from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...core.time import now, validate_utc_aware
+from ..operator_actions import ConditionEvidence, PreconditionVerdict
 from ._errors import AuthDiagnosticPayloadError, AuthDiagnosticPhoneStateError
 
 _DIAGNOSTIC_NAMESPACE = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace
@@ -135,7 +137,7 @@ class AuthDiagnosticDetail(AuthDiagnosticSummary):
     dni_fecha_fingerprint: str = ""
     nie_soporte_fingerprint: str = ""
     certificate_path_fingerprint: str = ""
-    operator_report_commands: tuple[str, ...] = ()
+    operator_report_verdict: PreconditionVerdict | None = None
 
 
 class AuthDiagnosticReportResult(BaseModel):
@@ -221,8 +223,22 @@ def load_auth_diagnostic(diagnostic_id: str) -> AuthDiagnosticDetail | None:
             **summary.model_dump(),
             **_detail_fingerprints_from_payload(payload),
             "html_excerpt": excerpt,
-            "operator_report_commands": (
-                _operator_report_commands(summary.diagnostic_id or diagnostic_id) if summary.phone_state is None else ()
+            "operator_report_verdict": (
+                PreconditionVerdict(
+                    failed_condition_id="auth.diagnostics.phone_state_recorded",
+                    evidence=(
+                        ConditionEvidence(
+                            condition_id="auth.diagnostics.phone_state_recorded",
+                            evidence_id="auth.diagnostics.phone_state_recorded.observation",
+                            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                            values={"diagnostic_available": True, "phone_state_observed": False},
+                        ),
+                    ),
+                    conditionality=ActionConditionality.NOT_APPLICABLE,
+                    no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                )
+                if summary.phone_state is None
+                else None
             ),
         },
     )
@@ -478,13 +494,6 @@ def _detail_fingerprints_from_payload(payload: _DiagnosticPayload) -> dict[str, 
         "certificate_path_fingerprint",
     )
     return {key: str(auth_attempt.get(key) or "") for key in keys}
-
-
-def _operator_report_commands(diagnostic_id: str) -> tuple[str, ...]:
-    return tuple(
-        f"aeat config auth diagnostics report {diagnostic_id} --phone-state {phone_state}"
-        for phone_state in AUTH_DIAGNOSTIC_PHONE_STATES
-    )
 
 
 def _redacted_url_summary(value: str) -> str:

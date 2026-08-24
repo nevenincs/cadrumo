@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-24'
-body_hash: 'sha256:6202e223944f15cbf3770cd52023767631fd00ac59d7508a3880b3063087f6ec'
+body_hash: 'sha256:d11b66acd156538d5e275b7e0c55ad50017db339f87aa367dd4d895e6ddd1557'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -191,7 +191,7 @@ Migrate high-density operational guidance and prove blank-state and readiness re
 
 Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale slices named by the census.
 
-- [ ] `W05.P10.S36` - Replace the remaining authentication diagnostics report command literal with a typed action projection or explicit non-action classification; `src/cadrumo/application/auth/_diagnostics.py; src/cadrumo/application/auth/tests`.
+- [x] `W05.P10.S36` - Replace the remaining authentication diagnostics report command literal with a typed action projection or explicit non-action classification; `src/cadrumo/application/auth/_diagnostics.py; src/cadrumo/application/auth/tests`.
 - [ ] `W05.P10.S37` - Migrate wizard status, next-step, and missing-input refusal producers to typed failed-condition verdicts with live input bindings or explicit no-recovery outcomes, and prove profile-create recovery rejection.; `src/cadrumo/application/wizard`.
 - [x] `W05.P10.S38` - Consume the S33 typed reader-availability facts at _batch_ingest.py and _llm_classification.py within the exclusive ledger area, retain no MissingOptionalExtraError prose or compatibility bridge, and preserve only explicit typed reader-availability verdicts; `src/cadrumo/application/ledger`.
 - [ ] `W05.P10.S39` - Replace the remaining DeadlineRecovery.next_command transport and its overview projection with typed recovery actions; `src/cadrumo/domain/deadlines/_models.py; src/cadrumo/domain/deadlines/_recargo.py; src/cadrumo/domain/deadlines/tests/test_extemporaneidad.py; src/cadrumo/domain/deadlines/tests/test_recargo.py; src/cadrumo/application/overview; src/cadrumo/entrypoints/cli/_overview.py`.
