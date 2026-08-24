@@ -54,7 +54,8 @@ from cadrumo.tests import temporary_env
 
 from .._dispatch import tool_name_for_command
 from .._harness_tools import WHOAMI_TOOL
-from .._inprocess import parse_cli_envelope, run_cli_in_process
+from .._call_runtime import tier_for
+from .._inprocess import parse_cli_envelope, run_cli_in_process, tier_runs_in_process
 from .._server import build_server
 from .._tools import build_tool_descriptors
 from ._session import connected_server_and_client_session as connect
@@ -69,11 +70,36 @@ _MIN_CONCURRENCY_GAP_SECONDS = 1.0
 #: An open-world (AEAT-sede) verb: it stays on the supervised subprocess transport
 #: and, called with no active profile, refuses at the CLI boundary without any
 #: network round-trip while still paying the multi-second subprocess startup.
-_SUBPROCESS_PROBE_KEY = "app.live.expedientes.list"
+#: It must be a ``pull``: within the live family only the fetch-from-AEAT verbs are
+#: open-world, while ``list``/``view``/``latest`` read the local store and so serve
+#: warm in-process in milliseconds -- too fast to overlap the mid-call probe, which
+#: collapses the gap to zero and makes this gate read a free loop as a blocked one.
+#: :func:`_assert_probe_stays_on_the_subprocess_transport` holds that premise.
+_SUBPROCESS_PROBE_KEY = "app.live.expedientes.pull"
+
+
+def _assert_probe_stays_on_the_subprocess_transport() -> None:
+    """Refuse a probe verb the transport would serve warm in-process.
+
+    The gap this module measures only means "the loop stayed free" while the probe
+    is genuinely slow. A warm-served probe returns before the mid-call list is even
+    issued, so the gap goes to zero and the assertion reports a blocked loop that
+    is not blocked. The premise is therefore asserted, not assumed.
+    """
+    descriptor = next(d for d in build_tool_descriptors() if d.command_key == _SUBPROCESS_PROBE_KEY)
+    tier = tier_for(
+        read_only=descriptor.annotations.read_only_hint,
+        open_world=descriptor.annotations.open_world_hint,
+    )
+    assert not tier_runs_in_process(tier), (
+        f"{_SUBPROCESS_PROBE_KEY} is served warm in-process (tier {tier}), so it cannot "
+        "produce the slow call this gate measures; pick an open-world verb"
+    )
 
 
 async def _list_mid_call_gap(tool_name: str, arguments: dict[str, object]) -> float:
     """Return seconds between the mid-call tools/list completing and the call completing."""
+    _assert_probe_stays_on_the_subprocess_transport()
     server = build_server(build_tool_descriptors())
     async with connect(server) as session:
         # Clear the first-change identity gate with a real console identity read
