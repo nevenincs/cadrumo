@@ -9,7 +9,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-load-topology-reference]]'
   - '[[2026-08-14-registry-temporal-coverage-research]]'
 modified: '2026-08-24'
-body_hash: 'sha256:8b57399ddf236f54b5bde9194a9b67e86ec4b13ee290622a42be8e4a9b843873'
+body_hash: 'sha256:33ccf2b1669fd7aac38dedf0f70b414067bd6b959b2409162194c2542e53520d'
 ---
 
 <!-- RETIRED: S31 -->
@@ -38,7 +38,7 @@ Type the grade axis, derive family enrollment and dispositions, and validate the
 
 - [x] `W01.P01.S01` - Add the RegistryAuthorityGrade enum to core and an optional manifest-only authority_grade on ModeloRevision with a fail-closed ungraded default, hydrated at the loader boundary and refused in any fragment, proving a fragment-declared grade reds registry load while the untouched corpus loads green; `src/cadrumo/core/; src/cadrumo/domain/calculations/registry/_schema.py; src/cadrumo/domain/calculations/registry/_loader.py; src/cadrumo/domain/calculations/registry/tests/`.
 - [x] `W01.P01.S02` - Derive schema-family enrollment from ModeloRevision field markers and project the per-revision coverage manifest with populated, not_applicable and blocked_pending_evidence dispositions, proving a field added without a marker reds the enrollment-completeness check; `src/cadrumo/domain/calculations/registry/_schema.py; src/cadrumo/domain/calculations/registry/_coverage.py; src/cadrumo/domain/calculations/registry/tests/`.
-- [ ] `W01.P01.S03` - Enforce the disposition-conditional grade ladder in registry build validation, registered in the family dispatch table: a calculation claim with an empty applicable formula family refuses and an informative revision at filing grade with a reasoned not_applicable formula family passes; `src/cadrumo/domain/calculations/registry/; src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `W01.P01.S03` - Enforce the disposition-conditional grade ladder in registry build validation, registered in the family dispatch table: a calculation claim with an empty applicable formula family refuses and an informative revision at filing grade with a reasoned not_applicable formula family passes; `src/cadrumo/domain/calculations/registry/; src/cadrumo/domain/calculations/registry/tests/`.
 
 ### Phase `W01.P02` - snapshot schema divergence removal
 
