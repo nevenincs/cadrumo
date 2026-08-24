@@ -101,7 +101,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.calculate\ncalculation_revision_id\tb4da713fdcb3b5168826d63811fcd03af638d60a0499a2d8c36db3e7aae3827f\nwork_unit_id\tca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204\nstate\tdraft\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nresult summary  Modelo 130 2026 1T\nrole\tcasilla\tvalue\tlabel\nkey_figure\t03\t1000.00\tNet yield\nkey_figure\t04\t200.00\tFractional payment amount\nkey_figure\t07\t200.00\tPartial result of Section I\nkey_figure\t09\t0.00\tFractional payment amount\nkey_figure\t11\t0.00\tPartial result of Section II\nkey_figure\t12\t200.00\tSum of partial results\nkey_figure\t13\t100.00\tReduction for net yields\nkey_figure\t14\t100.00\tNet amount after reduction\nkey_figure\t17\t100.00\tDifference\nkey_figure\t19\t100.00\tFinal result\ncasilla\t01\t1000\ncasilla\t02\t0\ncasilla\t03\t1000.00\tsubtract(01, 02) = subtract(1000, 0) = 1000.00\ncasilla\t04\t200.00\tmaximum(03, irpf.direct_estimation_fractional_payment_rate) = maximum(1000.00, 20) = 200.00\ncasilla\t05\t0\ncasilla\t06\t0\ncasilla\t07\t200.00\tsubtract(04, 05, 06) = subtract(200.00, 0, 0) = 200.00\ncasilla\t08\t0\ncasilla\t09\t0.00\tpercentage(08, irpf.agriculture_fractional_payment_rate) = percentage(0, 2) = 0.00\ncasilla\t10\t0\ncasilla\t11\t0.00\tsubtract(09, 10) = subtract(0.00, 0) = 0.00\ncasilla\t12\t200.00\tmaximum(07, 11) = maximum(200.00, 0.00) = 200.00\ncasilla\t13\t100.00\tconditional(irpf.previous_year_economic_activity_net_income) = conditional(0) = 100.00\ncasilla\t14\t100.00\tsubtract(12, 13) = subtract(200.00, 100.00) = 100.00\ncasilla\t15\t0.00\tminimum(modelo-130-resultados-negativos-anteriores, 14) = minimum(0, 100.00) = 0.00\ncasilla\t16\t0\ncasilla\t17\t100.00\tsubtract(14, 15, 16) = subtract(100.00, 0.00, 0) = 100.00\ncasilla\t18\t0\ncasilla\t19\t100.00\tsubtract(17, 18) = subtract(100.00, 0) = 100.00\ncasilla\tsaldo-negativo-fin-periodo\t0.00\tmaximum(17) = maximum(100.00) = 0.00\nplazo_closes_on\t2026-04-20\ndays_remaining\t19\nSaved as draft calculation revision b4da713fdcb3b5168826d63811fcd03af638d60a0499a2d8c36db3e7aae3827f (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision b4da713fdcb3b5168826d63811fcd03af638d60a0499a2d8c36db3e7aae3827f`.\n"
+      "text": "operation\tmodelo.work.calculate\ncalculation_revision_id\t160d553eb5c11d9c34f44d287be24f2265dfd70c5ff36c4166ae060ecbfbc456\nwork_unit_id\tca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204\nstate\tdraft\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nresult summary  Modelo 130 2026 1T\nrole\tcasilla\tvalue\tlabel\nkey_figure\t03\t1000.00\tNet yield\nkey_figure\t04\t200.00\tFractional payment amount\nkey_figure\t07\t200.00\tPartial result of Section I\nkey_figure\t09\t0.00\tFractional payment amount\nkey_figure\t11\t0.00\tPartial result of Section II\nkey_figure\t12\t200.00\tSum of partial results\nkey_figure\t13\t100.00\tReduction for net yields\nkey_figure\t14\t100.00\tNet amount after reduction\nkey_figure\t17\t100.00\tDifference\nkey_figure\t19\t100.00\tFinal result\ncasilla\t01\t1000\ncasilla\t02\t0\ncasilla\t03\t1000.00\tsubtract(01, 02) = subtract(1000, 0) = 1000.00\ncasilla\t04\t200.00\tmaximum(03, irpf.direct_estimation_fractional_payment_rate) = maximum(1000.00, 20) = 200.00\ncasilla\t05\t0\ncasilla\t06\t0\ncasilla\t07\t200.00\tsubtract(04, 05, 06) = subtract(200.00, 0, 0) = 200.00\ncasilla\t08\t0\ncasilla\t09\t0.00\tpercentage(08, irpf.agriculture_fractional_payment_rate) = percentage(0, 2) = 0.00\ncasilla\t10\t0\ncasilla\t11\t0.00\tsubtract(09, 10) = subtract(0.00, 0) = 0.00\ncasilla\t12\t200.00\tmaximum(07, 11) = maximum(200.00, 0.00) = 200.00\ncasilla\t13\t100.00\tconditional(irpf.previous_year_economic_activity_net_income) = conditional(0) = 100.00\ncasilla\t14\t100.00\tsubtract(12, 13) = subtract(200.00, 100.00) = 100.00\ncasilla\t15\t0.00\tminimum(modelo-130-resultados-negativos-anteriores, 14) = minimum(0, 100.00) = 0.00\ncasilla\t16\t0\ncasilla\t17\t100.00\tsubtract(14, 15, 16) = subtract(100.00, 0.00, 0) = 100.00\ncasilla\t18\t0\ncasilla\t19\t100.00\tsubtract(17, 18) = subtract(100.00, 0) = 100.00\ncasilla\tsaldo-negativo-fin-periodo\t0.00\tmaximum(17) = maximum(100.00) = 0.00\nplazo_closes_on\t2026-04-20\ndays_remaining\t19\nSaved as draft calculation revision 160d553eb5c11d9c34f44d287be24f2265dfd70c5ff36c4166ae060ecbfbc456 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 160d553eb5c11d9c34f44d287be24f2265dfd70c5ff36c4166ae060ecbfbc456`.\n"
     },
     {
       "argv": [
@@ -123,7 +123,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.verify\nverification_report_id\t14fe8c9fee118e4f38a47465b97ba0de12b4c34330c78eae11eb939d397a3cd9\ncalculation_revision_id\tb4da713fdcb3b5168826d63811fcd03af638d60a0499a2d8c36db3e7aae3827f\ncompleteness_status\tcomplete\ngranted_verificado_completo\ttrue\nrun_at\t2026-04-01T09:00:00+00:00\nverified_by\tdocs-sequence-sandbox\nresolved_casilla_id_count\t0\nmissing_required_casilla_id_count\t0\nfinding_count\t2\nfinding\tadvisory\twarning\t\tModelo 100 2025 0A is suppressed by operator declaration (previous_filing_binding).\tnull\nfinding_legal_refs\t\trd-1065-2007:art-9\nfinding_source_refs\t\taeat-dr-130-2019-v12, aeat-modelo-130-instructions\nfinding\tadvisory\twarning\t\tAn output transaction has no supporting evidence.\tnull\nfinding_legal_refs\t\tley-37-1992:art-97, rd-1619-2012:art-2\nfinding_source_refs\t\taeat-dr-130-2019-v12, aeat-modelo-130-instructions\n"
+      "text": "operation\tmodelo.work.verify\nverification_report_id\tb30d9805ccb3ce9c0ab9d18a2720ff1ab3e9fdfc317f2aebec0e968af3515009\ncalculation_revision_id\t160d553eb5c11d9c34f44d287be24f2265dfd70c5ff36c4166ae060ecbfbc456\ncompleteness_status\tcomplete\ngranted_verificado_completo\ttrue\nrun_at\t2026-04-01T09:00:00+00:00\nverified_by\tdocs-sequence-sandbox\nresolved_casilla_id_count\t0\nmissing_required_casilla_id_count\t0\nfinding_count\t2\nfinding\tadvisory\twarning\t\tModelo 100 2025 0A is suppressed by operator declaration (previous_filing_binding).\tnull\nfinding_legal_refs\t\trd-1065-2007:art-9\nfinding_source_refs\t\taeat-dr-130-2019-v12, aeat-modelo-130-instructions\nfinding\tadvisory\twarning\t\tAn output transaction has no supporting evidence.\tnull\nfinding_legal_refs\t\tley-37-1992:art-97, rd-1619-2012:art-2\nfinding_source_refs\t\taeat-dr-130-2019-v12, aeat-modelo-130-instructions\nnotice\tmodelo.work.verify.finding.advisory\tModelo 100 2025 0A is suppressed by operator declaration (previous_filing_binding).\nnotice\tmodelo.work.verify.finding.advisory\tAn output transaction has no supporting evidence.\n"
     },
     {
       "argv": [
@@ -145,7 +145,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.file\nfiling_record_id\t12629c23ef38f77cabc1ca2d1fbe84b88b576aaf062df1d443ba127e3952f098\nwork_unit_id\tca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204\ncalculation_revision_id\tb4da713fdcb3b5168826d63811fcd03af638d60a0499a2d8c36db3e7aae3827f\nbucket_id\t<bucket-id>\nmodelo\t130\nfiling_year\t2026\nperiod\t1T\nfiled_at\t2026-04-01T09:00:00+00:00\nfiled_by\tdocs-sequence-sandbox\nstatus\tvigente\naeat_accepted\tfalse\nkind\tinternal_filing\nlive_submission\tfalse\nfiling_disambiguation\tThis filing is internal only and is not submitted to the AEAT.\n"
+      "text": "operation\tmodelo.work.file\nfiling_record_id\t39bac6d06697ccd9418c9fd7619cf1ba6b4b4d0a8e3b31e4ecfda429cfbfe727\nwork_unit_id\tca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204\ncalculation_revision_id\t160d553eb5c11d9c34f44d287be24f2265dfd70c5ff36c4166ae060ecbfbc456\nbucket_id\t<bucket-id>\nmodelo\t130\nfiling_year\t2026\nperiod\t1T\nfiled_at\t2026-04-01T09:00:00+00:00\nfiled_by\tdocs-sequence-sandbox\nstatus\tvigente\naeat_accepted\tfalse\nkind\tinternal_filing\nlive_submission\tfalse\nfiling_disambiguation\tThis filing is internal only and is not submitted to the AEAT.\n"
     },
     {
       "argv": [
@@ -559,7 +559,7 @@
             "modelo-130-pagos-fraccionados-anteriores": "200",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "b486424b0b9a5570218d31e6296ac1fc29b9e8323f39fb1f0c7f5747bdd4be55",
+          "calculation_revision_id": "c97c307e79ce8785f905a5fb480909cac7e386820f1ff04c6e206eed3b0e5c00",
           "casilla_values": {
             "01": "4000",
             "02": "250",
@@ -1174,58 +1174,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision b486424b0b9a5570218d31e6296ac1fc29b9e8323f39fb1f0c7f5747bdd4be55 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 2T` and re-inspect this one with `aeat app modelo work revision b486424b0b9a5570218d31e6296ac1fc29b9e8323f39fb1f0c7f5747bdd4be55`.",
-          "source_provenance": [
-            {
-              "binding_source": "ledger_renta_income_aggregation",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "source_kind": "ledger_renta_income_aggregation",
-              "source_ref": "transaction:32ecfd70d4feaa1dc4abe5c9e7b4a0b6b699fc23e2e83436be83780d3cc1469e"
-            },
-            {
-              "binding_source": "ledger_renta_income_aggregation",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "source_kind": "ledger_renta_income_aggregation",
-              "source_ref": "transaction:41922f71722d942a709837a264846035827bf65e470ef805e4978f5bfdd71beb"
-            },
-            {
-              "binding_source": "ledger_renta_income_aggregation",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "source_kind": "ledger_renta_income_aggregation",
-              "source_ref": "transaction:4432506b527db6047d42beb91b7d07a64752d99f54605ca04a3755cef582bb68"
-            },
-            {
-              "binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "source_kind": "ledger_renta_gastos_pago_fraccionado_aggregation",
-              "source_ref": "transaction:bbc1fb4bc721992b722306cf673aa136a6b4d177d6f83d77c9e4d3026e77205a"
-            },
-            {
-              "binding_source": "previous_filing",
-              "dependency_treatment": "direct_annual_settlement",
-              "fingerprint": null,
-              "source_kind": "previous_filing",
-              "source_ref": "130:2026:1T:modelo-130-resultados-negativos-anteriores"
-            },
-            {
-              "binding_source": "previous_filing",
-              "dependency_treatment": "direct_annual_settlement",
-              "fingerprint": null,
-              "source_kind": "previous_filing",
-              "source_ref": "130:2026:1T:modelo-130-pagos-fraccionados-anteriores"
-            },
-            {
-              "binding_source": "previous_filing",
-              "dependency_treatment": "factual_evidence",
-              "fingerprint": null,
-              "source_kind": "previous_filing",
-              "source_ref": "100:2025:0A:irpf.previous_year_economic_activity_net_income"
-            }
-          ],
+          "saved_confirmation": "Saved as draft calculation revision c97c307e79ce8785f905a5fb480909cac7e386820f1ff04c6e206eed3b0e5c00 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 2T` and re-inspect this one with `aeat app modelo work revision c97c307e79ce8785f905a5fb480909cac7e386820f1ff04c6e206eed3b0e5c00`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
@@ -1343,7 +1292,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "b486424b0b9a5570218d31e6296ac1fc29b9e8323f39fb1f0c7f5747bdd4be55",
+          "calculation_revision_id": "c97c307e79ce8785f905a5fb480909cac7e386820f1ff04c6e206eed3b0e5c00",
           "completeness_status": "complete",
           "findings": [
             {
@@ -1434,7 +1383,7 @@
           "operation": "modelo.work.verify",
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "d67a4e813859e74f7877df3183f54798143ff5613767e5986b0c98c4c9db6c0c",
+          "verification_report_id": "f994cee4629747fa91179b32118c52b462a1c198c6873b6f0b35d53d6ac86273",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -1466,26 +1415,53 @@
       "captures": [],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
-        "command": "app.modelo.export",
-        "error": {
-          "action": null,
-          "category": "REFUSED",
-          "code": "REFUSED_MODELO_EXPORT_UNSUPPORTED",
-          "context": {
-            "modelo": "130",
-            "reason": "the registry snapshot has no complete export_layouts definition"
+        "command": "modelo.export",
+        "notices": [
+          {
+            "action": null,
+            "code": "modelo.export.local_export_not_official_evidence",
+            "context": {
+              "evidence_status": "local_export_not_official_aeat_filing_evidence",
+              "filing_year": "2026",
+              "modelo": "130",
+              "period": "2T"
+            },
+            "message": "The local export is not official filing evidence.",
+            "severity": "warning"
+          }
+        ],
+        "result": {
+          "bucket_event_id": "2d5841941e7e2601bed3b00a357f2366ad4e0e7c1bd39429522bf61b318f7d8d",
+          "bucket_id": "<bucket-id>",
+          "byte_size": 928,
+          "calculation_revision_id": "c97c307e79ce8785f905a5fb480909cac7e386820f1ff04c6e206eed3b0e5c00",
+          "file_sha256": "8f04ff99ce07ef5c43bcaab207d758ad13aeacb39ced8c8ed2c71c99b4ae014e",
+          "filing_year": 2026,
+          "format": "fichero-boe",
+          "modelo": "130",
+          "operation": "modelo.export",
+          "output_path": "modelo-130-2026-2T.boe",
+          "payment_election": "ingreso",
+          "period": {
+            "code": "2T",
+            "filing_year": 2026
           },
-          "message": "Modelo 130 cannot be exported to fichero-BOE because the registry snapshot has no complete export_layouts definition. Calculation, verification, and local filing records may still exist, but this command cannot produce an AEAT upload file for this modelo and does not certify BOE/export correctness.",
-          "retryable": false,
-          "runbook_id": null,
-          "trace_id": null
+          "prior_domiciliation_election": {
+            "baseline_evidence_reference_id": null,
+            "baseline_filing_record_id": null,
+            "baseline_result_disposition": null,
+            "baseline_source_header_locator": null,
+            "election": "keep"
+          },
+          "refund_election": null,
+          "resolved_result_disposition": "I",
+          "work_unit_id": "aea64c0c7dea1b79e865a6472819fa461e44f1bed91bf5b062c59d90cccb8735"
         },
-        "notices": [],
         "schema_version": "2",
-        "status": "error"
+        "status": "warning"
       },
-      "envelope_source": "stderr",
-      "exit_code": 2,
+      "envelope_source": "stdout",
+      "exit_code": 0,
       "kind": "result",
       "stderr_text": null,
       "text": null

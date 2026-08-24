@@ -33,10 +33,10 @@
             "action": null,
             "code": "modelo.requires.unbucketed_binding_source",
             "context": {
-              "binding_ids": "renta-2025-certificado-trabajo-retenciones",
-              "casilla_ids": "0596",
+              "binding_ids": "renta-2025-certificado-trabajo-retenciones, renta-2025-inventory-activity-acquisition-cost-0181, renta-2025-inventory-activity-closing-decrease-0182, renta-2025-inventory-activity-closing-increase-0177",
+              "casilla_ids": "0177, 0181, 0182, 0596",
               "modelo": "100",
-              "source_kinds": "manual_input"
+              "source_kinds": "inventory, manual_input"
             },
             "message": "Some declared binding sources do not belong to a modelo.requires data-inventory bucket. They are reported without a suggested repair because their source semantics require review.",
             "severity": "warning"
@@ -987,20 +987,6 @@
                 "ley-35-2006:da-60"
               ],
               "number": "0058",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "aeat-renta-2025-manual-parte1"
-              ]
-            },
-            {
-              "binding_id": null,
-              "binding_source": null,
-              "casilla_id": "0059",
-              "label": "Exempt INSS maternity/paternity benefits (art. 7.h LIRPF). Gross amount received from Social Security",
-              "legal_refs": [
-                "ley-35-2006:art-7-h"
-              ],
-              "number": "0059",
               "source_refs": [
                 "aeat-dr-100-2025-dictionary",
                 "aeat-renta-2025-manual-parte1"
@@ -3143,24 +3129,6 @@
             {
               "binding_id": null,
               "binding_source": null,
-              "casilla_id": "0177",
-              "label": "Change in inventory due to an increase in closing stock",
-              "legal_refs": [
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30",
-                "ley-35-2006:art-31",
-                "ley-35-2006:art-32"
-              ],
-              "number": "0177",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "aeat-renta-2025-manual-parte1"
-              ]
-            },
-            {
-              "binding_id": null,
-              "binding_source": null,
               "casilla_id": "0178",
               "label": "Other income",
               "legal_refs": [
@@ -3189,42 +3157,6 @@
                 "ley-35-2006:art-32"
               ],
               "number": "0179",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "aeat-renta-2025-manual-parte1"
-              ]
-            },
-            {
-              "binding_id": null,
-              "binding_source": null,
-              "casilla_id": "0181",
-              "label": "Purchase of inventory",
-              "legal_refs": [
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30",
-                "ley-35-2006:art-31",
-                "ley-35-2006:art-32"
-              ],
-              "number": "0181",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "aeat-renta-2025-manual-parte1"
-              ]
-            },
-            {
-              "binding_id": null,
-              "binding_source": null,
-              "casilla_id": "0182",
-              "label": "Change in inventory due to a decrease in closing stock",
-              "legal_refs": [
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30",
-                "ley-35-2006:art-31",
-                "ley-35-2006:art-32"
-              ],
-              "number": "0182",
               "source_refs": [
                 "aeat-dr-100-2025-dictionary",
                 "aeat-renta-2025-manual-parte1"
@@ -41969,6 +41901,24 @@
             {
               "binding_id": null,
               "binding_source": null,
+              "casilla_id": "A",
+              "label": "Investment qualifying for the deduction: acquisition and/or construction of the habitual residence",
+              "legal_refs": [
+                "ley-35-2006:dt-18",
+                "orden-hac-277-2026:art-3"
+              ],
+              "number": "A",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure"
+              ]
+            },
+            {
+              "binding_id": null,
+              "binding_source": null,
               "casilla_id": "AJ",
               "label": "Young-farmers reduction (sixth additional provision of the Tax Law) (Yes/No)",
               "legal_refs": [
@@ -41985,12 +41935,187 @@
             {
               "binding_id": null,
               "binding_source": null,
+              "casilla_id": "C",
+              "label": "Investment qualifying for the deduction: refurbishment or extension of the habitual residence",
+              "legal_refs": [
+                "ley-35-2006:dt-18",
+                "orden-hac-277-2026:art-3"
+              ],
+              "number": "C",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure"
+              ]
+            },
+            {
+              "binding_id": null,
+              "binding_source": null,
+              "casilla_id": "D",
+              "label": "Deduction base (maximum limit: EUR 100,000): total amount of the deduction for investments in new or recently created companies",
+              "legal_refs": [
+                "ley-35-2006:art-68",
+                "orden-hac-277-2026:art-3"
+              ],
+              "number": "D",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure"
+              ]
+            },
+            {
+              "binding_id": null,
+              "binding_source": null,
+              "casilla_id": "E",
+              "label": "Amounts paid qualifying for the deduction",
+              "legal_refs": [
+                "ley-35-2006:dt-18",
+                "orden-hac-277-2026:art-3"
+              ],
+              "number": "E",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure"
+              ]
+            },
+            {
+              "binding_id": null,
+              "binding_source": null,
               "casilla_id": "eo-agraria-reduccion-irregularidad-base",
               "label": "Net income from agricultural, livestock, or forestry activity with a generation period exceeding two years, or classed by regulation as obtained in a markedly irregular manner over time, imputed to this single tax period (the base to which the 30% reduction of article 32.1 of the Tax Law applies; amount declared by the filer - see box [1554])",
               "legal_refs": [
                 "ley-35-2006:art-32"
               ],
               "number": "eo-agraria-reduccion-irregularidad-base",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1"
+              ]
+            },
+            {
+              "binding_id": null,
+              "binding_source": null,
+              "casilla_id": "F",
+              "label": "Amounts paid qualifying for the deduction",
+              "legal_refs": [
+                "ley-35-2006:dt-15",
+                "orden-hac-277-2026:art-3"
+              ],
+              "number": "F",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure"
+              ]
+            },
+            {
+              "binding_id": null,
+              "binding_source": null,
+              "casilla_id": "G",
+              "label": "Amount qualifying for the deduction (*): contributions to priority patronage activities, capped at 15% of the taxable base",
+              "legal_refs": [
+                "ley-49-2002:art-19",
+                "orden-hac-277-2026:art-3"
+              ],
+              "number": "G",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure"
+              ]
+            },
+            {
+              "binding_id": null,
+              "binding_source": null,
+              "casilla_id": "H",
+              "label": "Amount qualifying for the deduction (**): donations to entities governed by Law 49/2002 of 23 December",
+              "legal_refs": [
+                "ley-49-2002:art-19",
+                "orden-hac-277-2026:art-3"
+              ],
+              "number": "H",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure"
+              ]
+            },
+            {
+              "binding_id": null,
+              "binding_source": null,
+              "casilla_id": "I",
+              "label": "Amounts qualifying for the deduction (*): investments and expenses for the protection and dissemination of the Spanish Historical Heritage and of the cities, ensembles and assets located in Spain declared World Heritage by UNESCO",
+              "legal_refs": [
+                "ley-35-2006:art-68",
+                "orden-hac-277-2026:art-3"
+              ],
+              "number": "I",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure"
+              ]
+            },
+            {
+              "binding_id": null,
+              "binding_source": null,
+              "casilla_id": "J",
+              "label": "Amount qualifying for the deduction (**): donations to foundations and public-benefit associations not covered by Law 49/2002 of 23 December",
+              "legal_refs": [
+                "ley-49-2002:art-19",
+                "orden-hac-277-2026:art-3"
+              ],
+              "number": "J",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure"
+              ]
+            },
+            {
+              "binding_id": null,
+              "binding_source": null,
+              "casilla_id": "M",
+              "label": "Amount qualifying for the deduction (maximum limit EUR 600) (**): membership fees and contributions to political parties, federations, coalitions or electoral groupings",
+              "legal_refs": [
+                "ley-35-2006:art-68",
+                "orden-hac-277-2026:art-3"
+              ],
+              "number": "M",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure"
+              ]
+            },
+            {
+              "binding_id": null,
+              "binding_source": null,
+              "casilla_id": "prestacion-inss-maternidad-paternidad-exenta",
+              "label": "Tax-exempt INSS public maternity and paternity benefits",
+              "legal_refs": [
+                "ley-35-2006:art-7-h"
+              ],
+              "number": "prestacion-inss-maternidad-paternidad-exenta",
               "source_refs": [
                 "aeat-renta-2025-manual-parte1"
               ]
@@ -42604,6 +42729,60 @@
           "required_manual": [],
           "revision": "2025",
           "unbucketed_sources": [
+            {
+              "binding_id": "renta-2025-inventory-activity-closing-increase-0177",
+              "binding_source": "inventory",
+              "casilla_id": "0177",
+              "label": "Change in inventory due to an increase in closing stock",
+              "legal_refs": [
+                "ley-35-2006:art-27",
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30",
+                "ley-35-2006:art-31",
+                "ley-35-2006:art-32"
+              ],
+              "number": "0177",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-renta-2025-manual-parte1"
+              ]
+            },
+            {
+              "binding_id": "renta-2025-inventory-activity-acquisition-cost-0181",
+              "binding_source": "inventory",
+              "casilla_id": "0181",
+              "label": "Purchase of inventory",
+              "legal_refs": [
+                "ley-35-2006:art-27",
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30",
+                "ley-35-2006:art-31",
+                "ley-35-2006:art-32"
+              ],
+              "number": "0181",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-renta-2025-manual-parte1"
+              ]
+            },
+            {
+              "binding_id": "renta-2025-inventory-activity-closing-decrease-0182",
+              "binding_source": "inventory",
+              "casilla_id": "0182",
+              "label": "Change in inventory due to a decrease in closing stock",
+              "legal_refs": [
+                "ley-35-2006:art-27",
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30",
+                "ley-35-2006:art-31",
+                "ley-35-2006:art-32"
+              ],
+              "number": "0182",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-renta-2025-manual-parte1"
+              ]
+            },
             {
               "binding_id": "renta-2025-certificado-trabajo-retenciones",
               "binding_source": "manual_input",

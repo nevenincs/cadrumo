@@ -27,7 +27,7 @@
         {
           "json_path": "result.evidence_id",
           "name": "evidence_id",
-          "value": "40241ba7308fb7df"
+          "value": "4fbeef4e52f5c0a8"
         }
       ],
       "envelope": {
@@ -37,11 +37,11 @@
         "result": {
           "attachment_id": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
           "bucket_event_ids": [
-            "3ee96ff2afb02165595e4be02afe076c40ff0efc12fa40c7f713ecb0f4eaddcd"
+            "d5baea11f0b9580be35d100c7e676ffed105b1cd1947d0b3299c5cbf13d4b520"
           ],
           "bucket_id": "<bucket-id>",
           "created_at": "2026-04-01T09:00:00Z",
-          "evidence_id": "40241ba7308fb7df",
+          "evidence_id": "4fbeef4e52f5c0a8",
           "invoice_date": "2026-03-10",
           "invoice_number": "2026-0142",
           "iva_amount": "21.00",
@@ -70,7 +70,7 @@
         "ledger",
         "evidence",
         "remove",
-        "40241ba7308fb7df",
+        "4fbeef4e52f5c0a8",
         "--yes"
       ],
       "captures": [],
@@ -79,7 +79,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "evidence_id\t40241ba7308fb7df\nbucket_id\t<bucket-id>\nsource_path\tfixtures/factura-material-oficina.pdf\nsource_sha256\t725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16\nmedia_kind\tpdf\nsupplier\tPapelería Sol SL\ninvoice_number\t2026-0142\ninvoice_date\t2026-03-10\ntaxable_base\t100.00\niva_rate\t21\niva_amount\t21.00\nnotes\t-\ncreated_at\t2026-04-01T09:00:00Z\nupdated_at\t2026-04-01T09:00:00Z\nbucket_event_ids\t967f67942dd4c8203820afcefdf1b5074577a211ee3ee726920c167bc33453f8\n"
+      "text": "evidence_id\t4fbeef4e52f5c0a8\nbucket_id\t<bucket-id>\nsource_path\tfixtures/factura-material-oficina.pdf\nsource_sha256\t725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16\nmedia_kind\tpdf\nsupplier\tPapelería Sol SL\ninvoice_number\t2026-0142\ninvoice_date\t2026-03-10\ntaxable_base\t100.00\niva_rate\t21\niva_amount\t21.00\nnotes\t-\ncreated_at\t2026-04-01T09:00:00Z\nupdated_at\t2026-04-01T09:00:00Z\nbucket_event_ids\te0cd1c6d0c07c20521672f7d19db3f8a22429bba593e3b33876e52d429a53c13\n"
     },
     {
       "argv": [
@@ -89,23 +89,46 @@
         "app",
         "ledger",
         "evidence",
-        "list"
+        "view",
+        "4fbeef4e52f5c0a8"
       ],
       "captures": [],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.evidence.list",
-        "notices": [],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "count": 0,
-          "rows": []
+        "command": "ledger.evidence.view",
+        "error": {
+          "action": {
+            "action": null,
+            "argument_bindings": [],
+            "conditionality": "not_applicable",
+            "evidence": [
+              {
+                "condition_id": "ledger.evidence.reference_resolves",
+                "evidence_id": "ledger.evidence.reference_resolves.observation",
+                "provenance": "application_state",
+                "values": {
+                  "evidence_record_present": false
+                }
+              }
+            ],
+            "failed_condition_id": "ledger.evidence.reference_resolves",
+            "missing_argument_names": [],
+            "no_recovery_outcome": "operator_decision"
+          },
+          "category": "REFUSED",
+          "code": "REFUSED_LEDGER_EVIDENCE_NOT_FOUND",
+          "context": null,
+          "message": "No purchase-invoice evidence exists with the identifier provided.",
+          "retryable": false,
+          "runbook_id": null,
+          "trace_id": null
         },
+        "notices": [],
         "schema_version": "2",
-        "status": "success"
+        "status": "error"
       },
-      "envelope_source": "stdout",
-      "exit_code": 0,
+      "envelope_source": "stderr",
+      "exit_code": 2,
       "kind": "result",
       "stderr_text": null,
       "text": null

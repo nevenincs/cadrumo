@@ -22,7 +22,7 @@
         "command": "modelo.bindings.list",
         "notices": [],
         "result": {
-          "binding_count": 64,
+          "binding_count": 67,
           "bindings": [
             {
               "binding_id": "renta-2025-modelo-100-estimacion-directa-es-normal",
@@ -1487,6 +1487,66 @@
               "relation_inputs": [],
               "revision": "2025",
               "source": "profile",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-inventory-activity-closing-increase-0177",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-30"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "inventory stock schedule",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "inventory",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-inventory-activity-acquisition-cost-0181",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-30"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "inventory stock schedule",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "inventory",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-inventory-activity-closing-decrease-0182",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-30"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "inventory stock schedule",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "inventory",
               "source_refs": [
                 "aeat-renta-2025-manual-parte1"
               ],
