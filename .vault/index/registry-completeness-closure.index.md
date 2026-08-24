@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:81474894d954fabde26491e71f73fb8be43af261e403893cc156e9d5886b4368'
+body_hash: 'sha256:5e92ef56d16b44ee2b6206ee578380c6532082d54ed4acdbcc08b3702d4be6ad'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -49,6 +49,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S66]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S67]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S68]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S70]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
@@ -198,6 +199,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P02-S66` - Repair S65 execution-record EOF whitespace and distinguish its scoped diff assertion from commit-wide git show --check, then re-attest both checks.
 - `2026-08-24-registry-completeness-closure-W01-P02-S67` - Normalize S65/S66 execution-record endings and S66 template annotations through canonical vault edits, then re-attest scoped markdown and annotations checks.
 - `2026-08-24-registry-completeness-closure-W01-P02-S68` - Repair deferred S64/S65 audit-record hygiene through canonical vault edits, then re-attest markdown, annotations, and body fingerprints.
+- `2026-08-24-registry-completeness-closure-W01-P02-S70` - Correct S11 evidence and independent-review claims after successor proof passes, then re-attest the records.
 
 ### plan
 
