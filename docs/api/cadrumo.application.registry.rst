@@ -13,6 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.application.registry._closure
    cadrumo.application.registry._conformance
    cadrumo.application.registry._corpus
    cadrumo.application.registry._corpus_manual_helpers

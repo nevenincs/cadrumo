@@ -101,6 +101,15 @@ from ...domain.calculations.registry import undeclared_casilla_ids as _undeclare
 from ...domain.calculations.registry import verification_tolerance_or_exact as _verification_tolerance_or_exact
 from ...domain.calculations.registry import verify_legal_catalogue as _verify_legal_catalogue
 from ...domain.period import calculation_filing_date as _calculation_filing_date
+from ._closure import (
+    RegistryClosureEvidence,
+    RegistryClosureLimb,
+    RegistryClosureLimbName,
+    RegistryClosureLimbOutcome,
+    RegistryClosureOwnerDisposition,
+    RegistryClosureRefusal,
+    RegistryClosureRefusalReason,
+)
 from ._conformance import (
     AnnualCasillaPopulationComparison,
     CoverageAuthorityScope,
@@ -601,6 +610,13 @@ __all__ = [
     "RegistryCitationsListCommand",
     "RegistryCitationsListReport",
     "RegistryCitationsVerificationReport",
+    "RegistryClosureEvidence",
+    "RegistryClosureLimb",
+    "RegistryClosureLimbName",
+    "RegistryClosureLimbOutcome",
+    "RegistryClosureOwnerDisposition",
+    "RegistryClosureRefusal",
+    "RegistryClosureRefusalReason",
     "RegistryConformanceProfile",
     "RegistryCorpusIssueProjection",
     "RegistryDestinationCandidate",

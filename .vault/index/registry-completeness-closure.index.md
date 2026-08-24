@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:c81389c4648b52091cb6f519ce70600d924075dc830a9a794e62565a4761f33f'
+body_hash: 'sha256:9cb4065224f28d7af9948e796768137bd841abaa860016b983df41dd3cd467ac'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -16,6 +16,8 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S40]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S41]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-summary]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S06]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S07]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
@@ -54,6 +56,8 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P01-S40` - Enforce requested authority grade at the selected-revision snapshot boundary and prove lower-grade escalation refuses
 - `2026-08-24-registry-completeness-closure-W01-P01-S41` - Align the authority snapshot cache-key type with its grade-separated runtime key
 - `2026-08-24-registry-completeness-closure-W01-P01-summary` - `registry-completeness-closure` `W01.P01` summary
+- `2026-08-24-registry-completeness-closure-W01-P02-S06` - Define strict typed per-revision closure-limb and refusal models on the application registry boundary
+- `2026-08-24-registry-completeness-closure-W01-P02-S07` - Compose the temporal coverage and authority-grade limb from validated law-selected registry revisions
 
 ### plan
 
