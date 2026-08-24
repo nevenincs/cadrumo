@@ -13,6 +13,7 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import RegistryCatalogues, RegistryValidationError, build_snapshot
+from .._validate_exports import _validate_embedded_envelope_source_authority
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -120,6 +121,52 @@ def test_embedded_envelope_refuses_a_rebound_catalogue_identity(
 
     with pytest.raises(RegistryValidationError, match="embedded source identity must equal its canonical catalogue key"):
         _build(modelo, rebound_catalogues, filing_year=filing_year, period=period)
+
+
+def test_embedded_envelope_refuses_a_catalogue_source_that_is_not_a_record_design(
+    embedded_envelope_case: tuple[str, int, str, str],
+) -> None:
+    """An embedded envelope may not treat a non-design source as layout authority."""
+    modelo, _revision, layout, catalogues = _case_modelo_and_revision(embedded_envelope_case)
+    _modelo_id, filing_year, period, declaration_name = embedded_envelope_case
+    declaration = _embedded_declaration(layout, declaration_name)
+    source = catalogues.sources[declaration.source_ref]
+    non_design_catalogues = _catalogues_with(
+        catalogues,
+        declaration.source_ref,
+        source.model_copy(update={"kind": "manual_pdf"}),
+    )
+
+    with pytest.raises(RegistryValidationError, match="not a record-design source"):
+        _build(modelo, non_design_catalogues, filing_year=filing_year, period=period)
+
+
+def test_embedded_envelope_source_kind_guard_reports_each_non_design_catalogue_source(
+    embedded_envelope_case: tuple[str, int, str, str],
+) -> None:
+    """The envelope-specific guard must identify the wrong catalogue kind itself."""
+    modelo, revision, layout, catalogues = _case_modelo_and_revision(embedded_envelope_case)
+    _modelo_id, _filing_year, _period, declaration_name = embedded_envelope_case
+    declaration = _embedded_declaration(layout, declaration_name)
+    source = catalogues.sources[declaration.source_ref]
+    non_design_catalogues = _catalogues_with(
+        catalogues,
+        declaration.source_ref,
+        source.model_copy(update={"kind": "manual_pdf"}),
+    )
+    failures: list[str] = []
+
+    _validate_embedded_envelope_source_authority(
+        failures,
+        prefix=f"modelo {modelo.id} revision {revision.id}",
+        layout=layout,
+        source_refs=non_design_catalogues.sources,
+        source_root=bundled_path(),
+    )
+
+    assert any(
+        declaration.source_ref in failure and "not a record-design source" in failure for failure in failures
+    )
 
 
 def test_embedded_envelope_refuses_a_digest_that_disagrees_with_its_catalogue(

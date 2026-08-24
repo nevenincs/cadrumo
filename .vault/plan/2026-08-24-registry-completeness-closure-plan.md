@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:be7e1f1589d886585d25a435a05e50f05617f5a29286eb2c46d291973c8aca7a'
+body_hash: 'sha256:2e5b25b45086101e04fcd8575013b7025593f6fab16adc800f58c7534025cd53'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -72,7 +72,7 @@ Compose one typed cross-authority report from validated registry coverage, sourc
 - [x] `W01.P02.S56` - Reconcile S51's checked state and execution record with independently reviewed S54 live fallback evidence, closing the S55 high tracking finding without rewriting history.; `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S51.md; .vault/plan/2026-08-24-registry-completeness-closure-plan.md; .vault/audit/`.
 - [x] `W01.P02.S57` - Require canonical generator provenance, exact semantic-map and render-profile identities, generated-fragment integrity, and successful emitted-byte evidence before filing-export closure can satisfy, with a Modelo 111 refusal regression; `src/cadrumo/application/registry/; dev/registry/; src/cadrumo/application/filing/tests/`.
 - [x] `W01.P02.S58` - Validate and live-rehash filing-envelope and auxiliary-envelope-header source identities and digests against the catalogue, with missing, mismatched, and stale-digest mutation proof; `src/cadrumo/domain/calculations/registry/; src/cadrumo/application/registry/`.
-- [ ] `W01.P02.S59` - Mutate filing-envelope and auxiliary-header catalogue source kinds away from record_design and prove snapshot refusal plus a weakened-guard mutation bite.; `src/cadrumo/domain/calculations/registry/tests/test_embedded_envelope_source_authority.py`.
+- [x] `W01.P02.S59` - Mutate filing-envelope and auxiliary-header catalogue source kinds away from record_design and prove snapshot refusal plus a weakened-guard mutation bite.; `src/cadrumo/domain/calculations/registry/tests/test_embedded_envelope_source_authority.py`.
 - [ ] `W01.P02.S60` - Replace the passive filing-export proof catalogue with a live fail-closed authority that re-hashes canonical manifest, semantic-map, render-profile, loader-semantic, generated-output, and emitted-payload evidence and verifies production export_draft offsets and execution at composition time, with fabricated and stale catalogue mutation regressions including Modelo 111; `src/cadrumo/application/registry/; dev/registry/; src/cadrumo/application/filing/tests/`.
 
 ## Wave `W02` - filing-gap adjudication and owner routing

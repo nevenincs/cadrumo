@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:0392ccf6344b77e5b5e2ae09ded3127c6a302d81cc7621703a0d9f5951a2c8a0'
+body_hash: 'sha256:2f36b3ebe6c866eadabb0eb28c39f8a9e86575abba8f027854be46c2c068156c'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -37,6 +37,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S56]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S57]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S58]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S59]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
@@ -144,6 +145,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P02-S56` - Reconcile S51's checked state and execution record with independently reviewed S54 live fallback evidence, closing the S55 high tracking finding without rewriting history.
 - `2026-08-24-registry-completeness-closure-W01-P02-S57` - Require canonical generator provenance, exact semantic-map and render-profile identities, generated-fragment integrity, and successful emitted-byte evidence before filing-export closure can satisfy, with a Modelo 111 refusal regression
 - `2026-08-24-registry-completeness-closure-W01-P02-S58` - Validate and live-rehash filing-envelope and auxiliary-envelope-header source identities and digests against the catalogue, with missing, mismatched, and stale-digest mutation proof
+- `2026-08-24-registry-completeness-closure-W01-P02-S59` - Mutate filing-envelope and auxiliary-header catalogue source kinds away from record_design and prove snapshot refusal plus a weakened-guard mutation bite.
 
 ### plan
 
