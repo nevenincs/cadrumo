@@ -53,7 +53,13 @@ import typer._click.types
 from pydantic import BaseModel, ValidationError
 from pydantic_core import ErrorDetails
 
-from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, Modelo
+from ...core import (
+    OBJECT_TUPLE_ADAPTER,
+    STR_KEYED_MAPPING_ADAPTER,
+    ActionEvidenceProvenance,
+    Modelo,
+    NoRecoveryOutcome,
+)
 from ...core.flows import CheckpointAvailability, FlowMode
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ..flows import (
@@ -71,7 +77,12 @@ from ..flows import (
 from ._catalogue import SETUP_FLOW
 from ._checkpoint_store import ProfileFactsCheckpointStore
 from ._descendant_group import attach_descendant_group
-from ._errors import WizardMissingFlagError, WizardValidationError
+from ._errors import (
+    WizardMissingFlagError,
+    WizardPreconditionCondition,
+    WizardValidationError,
+    wizard_no_action_verdict,
+)
 from ._format_hints import attach_format_hints
 from ._models import WizardFlow, WizardQuestion, WizardWidget
 from ._persistence import WizardPersistMode
@@ -1065,6 +1076,15 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
                 "missing": missing_baseline,
                 "missing_flags": _format_missing_flags(missing_baseline),
             },
+            precondition_verdict=wizard_no_action_verdict(
+                condition=WizardPreconditionCondition.FILING_BASELINE_COMPLETE,
+                facts={
+                    "filing_baseline_complete": False,
+                    "missing_flag_count": len(missing_baseline),
+                },
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            ),
         )
     apply_profile_fact_changes(
         profile_id=profile_id,
@@ -1139,6 +1159,15 @@ def _run_full_flow(
                     "missing": missing,
                     "missing_flags": missing_flags,
                 },
+                precondition_verdict=wizard_no_action_verdict(
+                    condition=WizardPreconditionCondition.REQUIRED_FLAGS_SUPPLIED,
+                    facts={
+                        "required_flags_supplied": False,
+                        "missing_flag_count": len(missing),
+                    },
+                    provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                ),
             )
         answers = _run_scripted_walk(
             flow,
@@ -1165,9 +1194,21 @@ def _run_full_flow(
             raise WizardEditUnsupportedConsoleError(
                 translated_message="wizard.errors.unsupported_console_edit",
                 context={"profile_name": profile_name},
+                precondition_verdict=wizard_no_action_verdict(
+                    condition=WizardPreconditionCondition.INTERACTIVE_CONSOLE_AVAILABLE,
+                    facts={"interactive_console_available": False},
+                    provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                    outcome=NoRecoveryOutcome.SAFETY,
+                ),
             )
         raise WizardUnsupportedConsoleError(
             translated_message="wizard.errors.unsupported_console",
+            precondition_verdict=wizard_no_action_verdict(
+                condition=WizardPreconditionCondition.INTERACTIVE_CONSOLE_AVAILABLE,
+                facts={"interactive_console_available": False},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         )
 
     # `create` writes the full answer set. An interactive `edit` writes a
@@ -1187,6 +1228,15 @@ def _run_full_flow(
                 "missing": missing_baseline,
                 "missing_flags": _format_missing_flags(missing_baseline),
             },
+            precondition_verdict=wizard_no_action_verdict(
+                condition=WizardPreconditionCondition.FILING_BASELINE_COMPLETE,
+                facts={
+                    "filing_baseline_complete": False,
+                    "missing_flag_count": len(missing_baseline),
+                },
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            ),
         )
     from ...domain.deadlines import taxpayer_profile_from_mapping
 
@@ -1227,6 +1277,12 @@ def _require_profile_name(flow: WizardFlow, raw_profile_name: object) -> str:
     raise WizardMissingFlagError(
         translated_message="application.wizard.errors.profile_flag_required",
         context={"flow_id": flow.id, "missing": ("profile_name",)},
+        precondition_verdict=wizard_no_action_verdict(
+            condition=WizardPreconditionCondition.PROFILE_NAME_SUPPLIED,
+            facts={"profile_name_supplied": False},
+            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        ),
     )
 
 
@@ -1252,6 +1308,12 @@ def _resolve_profile_id_for_mode(flow: WizardFlow, mode: WizardPersistMode, prof
             raise WizardValidationError(
                 translated_message="application.wizard.errors.profile_label_taken",
                 context={"flow_id": flow.id, "label": profile_name},
+                precondition_verdict=wizard_no_action_verdict(
+                    condition=WizardPreconditionCondition.PROFILE_LABEL_AVAILABLE,
+                    facts={"profile_label_available": False},
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                ),
             )
         return new_profile_id()
 
@@ -1261,6 +1323,12 @@ def _resolve_profile_id_for_mode(flow: WizardFlow, mode: WizardPersistMode, prof
     raise WizardMissingFlagError(
         translated_message="application.wizard.errors.profile_flag_required",
         context={"flow_id": flow.id, "missing": ("profile_name",)},
+        precondition_verdict=wizard_no_action_verdict(
+            condition=WizardPreconditionCondition.PROFILE_NAME_SUPPLIED,
+            facts={"profile_name_supplied": False},
+            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        ),
     )
 
 

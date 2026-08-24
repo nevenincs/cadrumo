@@ -63,7 +63,7 @@ def test_unknown_provider_value_is_never_echoed_back() -> None:
     report = build_wizard_status(_state_with_auth("bogus"))
 
     assert "bogus" not in report.auth_provider
-    assert "bogus" not in report.next_action
+    assert report.next_action is None
 
 
 def test_a_certificate_selection_without_a_certificate_is_not_ready() -> None:
@@ -85,9 +85,10 @@ def test_wizard_auth_fields_match_the_canonical_projection(provider: str | None)
     assert report.login_ready is canonical.authenticated, provider
 
 
-def test_no_auth_state_still_directs_the_operator_to_configure() -> None:
-    """The unconfigured path keeps its setup-specific next action."""
+def test_no_auth_state_omits_an_unaddressable_configuration_action() -> None:
+    """The status projection has no certificate file to materialise a command."""
     report = build_wizard_status(WorkflowState())
 
     assert report.auth_provider == ""
     assert report.login_ready is False
+    assert report.next_action is None

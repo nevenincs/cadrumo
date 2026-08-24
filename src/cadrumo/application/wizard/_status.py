@@ -11,8 +11,9 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG, resolve_active_bucket_id
+from ...core import ActionEvidenceProvenance, NoRecoveryOutcome, STRICT_FROZEN_CONFIG, resolve_active_bucket_id
 from ...domain.deadlines import TaxpayerProfile
+from ..operator_actions import DeclaredNextAction
 from ..state_projection import build_auth_readiness
 from ..user_profile import (
     iva_regime_required,
@@ -23,7 +24,7 @@ from ..user_profile import (
 )
 from ..workflow import WorkflowState
 from ._compiler import ensure_profile_keys_registered
-from ._errors import WizardError
+from ._errors import WizardError, WizardPreconditionCondition, wizard_no_action_verdict
 
 ensure_profile_keys_registered()
 
@@ -42,8 +43,9 @@ class WizardStatusReport(BaseModel):
     Surfaces both the structural readiness (identity-required keys
     present) and the enrolment readiness (IVA regime declared) so the
     config repair's profile + auth checks can render a precise
-    ``next_action`` for the operator. The semantic shape is the
-    contract that the repair renderer reads from.
+    ``next_action`` for a fully-addressable operator continuation. A status
+    row carries no executable action when its next step needs new operator
+    input or custody has made the old interactive create path unavailable.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -58,7 +60,7 @@ class WizardStatusReport(BaseModel):
     profile_total_keys: int
     auth_provider: str
     login_ready: bool
-    next_action: str
+    next_action: DeclaredNextAction | None = None
 
 
 class WizardStatusError(WizardError):
@@ -143,18 +145,27 @@ def _next_wizard_action(
     missing_enrolment: tuple[str, ...],
     auth_provider: str,
     login_ready: bool,
-) -> str:
+) -> DeclaredNextAction | None:
+    """Declare only a fully-addressable canonical continuation.
+
+    The status projection does not know a new profile label, an edit target
+    label, or an authentication file. Current custody also makes interactive
+    profile creation unavailable. These branches therefore expose no
+    executable action rather than retaining a placeholder CLI string.
+    """
     if not has_profile:
-        return "aeat config profile create NAME"
+        return None
     if missing_required:
-        return "aeat config profile edit NAME"
+        return None
     if missing_enrolment:
-        return "aeat config profile edit NAME"
+        return None
     if not auth_provider:
-        return "aeat config auth configure --provider certificate --file PATH"
+        return None
     if not login_ready:
-        return f"aeat config auth test --provider {auth_provider}"
-    return "aeat app overview status"
+        from ..overview._next_actions import declare_next_action
+
+        return declare_next_action("operator.auth.login", provider=auth_provider)
+    return None
 
 
 def load_active_taxpayer_profile(state: WorkflowState) -> TaxpayerProfile:
@@ -182,6 +193,12 @@ def load_active_taxpayer_profile(state: WorkflowState) -> TaxpayerProfile:
         raise WizardStatusError(
             translated_message="application.wizard.status.errors.no_active_profile",
             context={"workflow_state": "no_active_profile"},
+            precondition_verdict=wizard_no_action_verdict(
+                condition=WizardPreconditionCondition.ACTIVE_PROFILE_AVAILABLE,
+                facts={"active_profile_record_available": False},
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            ),
         )
     values: dict[str, str] = dict(record_to_path_values(record))
     if not values.get(_TAX_ID_PATH):
@@ -191,6 +208,12 @@ def load_active_taxpayer_profile(state: WorkflowState) -> TaxpayerProfile:
                 "active_profile": resolve_active_bucket_id(),
                 "requirements": _grounded_tax_id_requirement(),
             },
+            precondition_verdict=wizard_no_action_verdict(
+                condition=WizardPreconditionCondition.ACTIVE_PROFILE_TAX_ID_DECLARED,
+                facts={"active_profile_tax_id_declared": False},
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            ),
         )
     return projection_for_taxpayer(record)
 
