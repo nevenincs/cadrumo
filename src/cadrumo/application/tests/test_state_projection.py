@@ -64,11 +64,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_registry_readiness_refusals_have_no_authored_describe_command() -> None:
     request = ModeloReadinessRequest(modelo="303", revision_id="rev", filing_year=2025)
-    period = "2025A"
-    first = _registry_readiness_refusal(request, period_token=period, exc=RuntimeError("missing"))
+    quarter = "4T"
+    first = _registry_readiness_refusal(request, period_token=quarter, exc=RuntimeError("missing"))
     second = _registry_readiness_revision_mismatch_refusal(
         request,
-        period_token=period,
+        period_token=quarter,
         resolved_revision_id="resolved",
     )
     for refusal in (first, second):
