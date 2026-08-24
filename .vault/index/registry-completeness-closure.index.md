@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:51f666d2c0e3ac849c764ec7ddf8c39207425c2f3bf382138bcfcfdf5f9b95c9'
+body_hash: 'sha256:6c6edc8aa5ffd1e41b1ccfc9b6158fa90d01b6c508f202dd0131f2cbca5729a9'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -88,6 +88,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s64-independent-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s64-real-cli-proof-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s65-context-authority-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s66-post-review-audit]]'
 ---
 
 # `registry-completeness-closure` feature index
@@ -141,6 +142,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s64-independent-post-review-audit` - `registry-completeness-closure` audit: `S64 independent post-review`
 - `2026-08-24-registry-completeness-closure-s64-real-cli-proof-review-audit` - `registry-completeness-closure` audit: `S64 real CLI proof review`
 - `2026-08-24-registry-completeness-closure-s65-context-authority-review-audit` - `registry-completeness-closure` audit: `Review S65 context-authority bypass guard`
+- `2026-08-24-registry-completeness-closure-s66-post-review-audit` - `registry-completeness-closure` audit: `S66 execution-record hygiene`
 
 ### exec
 
