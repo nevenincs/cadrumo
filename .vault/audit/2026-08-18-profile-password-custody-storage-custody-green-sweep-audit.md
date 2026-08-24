@@ -9037,3 +9037,38 @@ Two diagnostic notes for whoever takes it. Patching
 with `from ._common import ...`, so they hold the original reference. And
 `invoke_cached_cli` caches the Click command TREE, not results, so a stale
 cached outcome is not an explanation for anything.
+
+### The virtualenv is being corrupted repeatedly, and it poisons every measurement
+
+The `cryptography` breakage recorded above was not a one-off. Auditing every
+installed distribution against its own `RECORD` — the manifest each wheel ships
+listing what it installed — found **7 damaged distributions missing 38 files**:
+`pywin32` (21), `google_api_python_client_stubs` (10), `types_pywin32` (3), and
+one file each from `charset_normalizer`, `coverage`, `google_api_python_client`
+and `tomli`.
+
+The mechanism repeats: an install removes a package's files, cannot replace a
+native extension because a running process holds it open, aborts, and leaves the
+distribution half-present. It then imports *partially* — `import
+charset_normalizer` succeeds while `charset_normalizer.api` does not — so the
+failure surfaces deep inside unrelated test modules as a collection error, and
+reads as a catastrophic product regression.
+
+All 38 files were restored by copying only ABSENT files out of uv's unpacked
+cache archives, with nothing deleted and nothing locked touched, so it is safe
+to run while peers are using the environment. Zero distributions remained
+damaged afterwards and every previously-broken import resolves.
+
+**The measurement consequence is the important part.** The English-pinned
+diagnostic (265 failing) ran while `charset_normalizer` was broken, so it is not
+trustworthy and is being re-taken on the repaired environment. More generally:
+on this machine a suite result is only meaningful if the environment was intact
+for its whole duration, and that is now a cheap thing to establish — audit
+RECORD against disk before believing a bad number. A run that reports a module
+missing a submodule of a third-party package is reporting the environment, not
+the product.
+
+The audit and repair are a scratch tool rather than a committed one: the
+underlying fault is whatever keeps racing installs against live processes, and
+a repair script in the repository would institutionalise working around it
+instead of fixing it.
