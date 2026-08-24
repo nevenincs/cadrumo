@@ -58,7 +58,7 @@ def _create_first_year_activity_profile() -> None:
             "taxpayer_type.irpf_income_categories": "actividad_economica",
             "irpf.estimation_regime": "directa_simplificada",
             "iva.regime": "GENERAL",
-            "fiscal_residency.status": "resident_irpf",
+            "taxpayer_type.fiscal_residency": "resident_irpf",
             "tax_residence.ccaa": "madrid",
         },
     )
@@ -77,7 +77,7 @@ def _create_autonoma_2024_activity_profile() -> None:
             "taxpayer_type.irpf_income_categories": "actividad_economica",
             "irpf.estimation_regime": "directa_simplificada",
             "iva.regime": "GENERAL",
-            "fiscal_residency.status": "resident_irpf",
+            "taxpayer_type.fiscal_residency": "resident_irpf",
             "tax_residence.ccaa": "madrid",
         },
     )
