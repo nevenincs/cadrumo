@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:dfbc7049bd295a5d02f8b9941f5263e5648e747f0895d4f72009a8e68acdf91a'
+body_hash: 'sha256:95e18250e380d434b83f861ef25f6a04481f07925dc1ec0ce76876b16130f143'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -79,6 +79,7 @@ Compose one typed cross-authority report from validated registry coverage, sourc
 - [x] `W01.P02.S63` - Wire canonical live source-connectivity and filing-export proof authorities into the registry-conformance closure CLI, retain an explicit offline no-proof mode, type both injection ports precisely, and prove complete-live versus offline-refusal CLI outcomes.; `dev/registry/conformance/; dev/source_connectivity/; src/cadrumo/application/registry/; dev/registry/conformance/tests/`.
 - [x] `W01.P02.S64` - Remove fabricated strict proof authorities and digests from closure CLI tests, exercise the actual CLI with canonical live loaders and real evidence only, prove live-versus-offline refusal distinctions, keep eligibility unreachable until durable filing proof exists, prevent injected claims from bypassing the gate, and add a mutation bite rejecting canned proof; `dev/registry/conformance/; dev/source_connectivity/; dev/registry/; src/cadrumo/application/registry/`.
 - [x] `W01.P02.S65` - Add a hostile RegistryClosureAuthorities CLI context backed by eligible real protocol implementations, prove the shipped command ignores it, restore the exact former find_object authority branch for a mutation bite, and retain non-CLI loader injection; `dev/registry/conformance/tests/test_closure.py; dev/registry/conformance/cli.py; dev/registry/conformance/authorities.py; dev/registry/conformance/closure.py`.
+- [ ] `W01.P02.S66` - Repair S65 execution-record EOF whitespace and distinguish its scoped diff assertion from commit-wide git show --check, then re-attest both checks.; `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S65.md`.
 
 ## Wave `W02` - filing-gap adjudication and owner routing
 
