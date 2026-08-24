@@ -109,6 +109,7 @@ type _OwnerRoute = Literal[
 _TEMPORAL_OWNER: _OwnerRoute = "registry-temporal-coverage"
 _SOURCE_CASILLA_OWNER: _OwnerRoute = "source-casilla-integration"
 _EXPORT_OWNER: _OwnerRoute = "aeat-export-fragment-generator-authority"
+_EXISTING_OWNER_DOMAINS = frozenset({_TEMPORAL_OWNER, _SOURCE_CASILLA_OWNER, _EXPORT_OWNER})
 
 _M038_OWNERS = (
     _TEMPORAL_OWNER,
@@ -186,6 +187,8 @@ class _FilingCapabilityBlocker:
             raise ValueError("a terminal filing refusal must not claim an authorable owner")
         if self.disposition == "authorable_gap" and not self.owners:
             raise ValueError("an authorable filing gap must name at least one existing-plan owner")
+        if self.disposition == "authorable_gap" and not set(self.owners) <= _EXISTING_OWNER_DOMAINS:
+            raise ValueError("an authorable filing gap must name only an existing-plan owner domain")
 
     def report(self) -> str:
         if self.disposition == "terminal_no_authority":
@@ -781,3 +784,14 @@ def test_modelo_036_product_scope_terminal_is_exact_to_the_reviewed_revision() -
     wrong_revision = reviewed_revision.model_copy(update={"id": "2025-02-04-y-siguientes"})
     assert _terminal_product_scope(modelo_036, wrong_revision) is None
     assert _terminal_product_scope(modelo_038, other_revision) is None
+
+
+def test_authorable_gap_rejects_an_unowned_domain() -> None:
+    """MUTATION: a fourth, undeclared owner domain cannot enter the worklist."""
+    with pytest.raises(ValueError, match="only an existing-plan owner domain"):
+        _FilingCapabilityBlocker(
+            disposition="authorable_gap",
+            finding="mutation-only finding",
+            reconsideration="mutation-only condition",
+            owners=("unowned-owner-domain",),
+        )
