@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:917c95cf38f4fdee05a0e4be105579797a68e57164e4fad847f050839bd84e55'
+body_hash: 'sha256:d983fb5f0ab1482bc877f1edbc86800693a1f5e9ff479a726f677dc70d2cf09a'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -223,6 +223,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W06-P09-S212]]'
   - '[[2026-08-13-profile-password-custody-W06-P10-S213]]'
   - '[[2026-08-13-profile-password-custody-W06-P10-S214]]'
+  - '[[2026-08-13-profile-password-custody-W06-P10-S215]]'
   - '[[2026-08-13-profile-password-custody-plan]]'
   - '[[2026-08-13-profile-password-custody-research]]'
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
@@ -514,6 +515,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W06-P09-S212` - Mark the 2026-08-18 campaign close as historical without rewriting its measurements or dispositions, and point readers to the current reconciliation and successor honesty review
 - `2026-08-13-profile-password-custody-W06-P10-S213` - Require register_profile_with_credentials to receive a recovery handoff and publish a profile only after exact possession verification succeeds, with refusal or cancellation leaving no profile behind
 - `2026-08-13-profile-password-custody-W06-P10-S214` - Migrate the scripted CLI creation consumer to the required application recovery handoff while preserving bounded descriptor transfer, collision preflight, verification, and failure atomicity
+- `2026-08-13-profile-password-custody-W06-P10-S215` - Migrate the terminal and TUI creation consumer to the required application recovery handoff while preserving masked exact re-entry and cancellation-before-publication
 
 ### plan
 

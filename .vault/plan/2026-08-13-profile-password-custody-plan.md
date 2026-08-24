@@ -19,7 +19,7 @@ related:
   - '[[2026-08-13-sealed-archive-transport-successor-adr]]'
   - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
 modified: '2026-08-24'
-body_hash: 'sha256:e335656b6bbed54c9248a0166aca7766d76e516e3b1f0049c0f01359200606b4'
+body_hash: 'sha256:94228b06b41453dbe9d50d6f38ed6bac9460d8ffee1231175d91714cf5cc4baf'
 ---
 
 # `profile-password-custody` plan
@@ -313,7 +313,7 @@ Make verified recovery a required application invariant, migrate every creation 
 
 - [x] `W06.P10.S213` - Require register_profile_with_credentials to receive a recovery handoff and publish a profile only after exact possession verification succeeds, with refusal or cancellation leaving no profile behind; `src/cadrumo/application/user_profile/_registration.py and src/cadrumo/application/user_profile/_custody_service.py`.
 - [x] `W06.P10.S214` - Migrate the scripted CLI creation consumer to the required application recovery handoff while preserving bounded descriptor transfer, collision preflight, verification, and failure atomicity; `src/cadrumo/entrypoints/cli/_config/_scripted_registration.py and src/cadrumo/entrypoints/cli/_config/_profile_command_specs.py`.
-- [ ] `W06.P10.S215` - Migrate the terminal and TUI creation consumer to the required application recovery handoff while preserving masked exact re-entry and cancellation-before-publication; `src/cadrumo/entrypoints/cli/_config/_manager_frontend.py and src/cadrumo/adapters/inbound/tui/`.
+- [x] `W06.P10.S215` - Migrate the terminal and TUI creation consumer to the required application recovery handoff while preserving masked exact re-entry and cancellation-before-publication; `src/cadrumo/entrypoints/cli/_config/_manager_frontend.py and src/cadrumo/adapters/inbound/tui/`.
 - [ ] `W06.P10.S216` - Migrate all remaining direct registration callers and their shared test provisioning doors to supply and verify recovery instead of constructing password-only profiles; `src/cadrumo/tests/ and src/cadrumo-harness/src/cadrumo_harness/`.
 - [ ] `W06.P10.S217` - Re-author application, CLI, TUI, storage, and harness tests around mandatory recovery handoff, exact possession verification, and rollback on missing, mismatched, cancelled, or failed handoff; `src/cadrumo/application/user_profile/tests/ and src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/adapters/inbound/tui/tests/ and src/cadrumo/adapters/persistence/storage/`.
 - [ ] `W06.P10.S218` - Confirm recovery artifacts remain external restore proofs only, remove any API or prose that permits later enrollment or treats a missing creation wrapper as current-format success, and retain password login without recovery reads; `src/cadrumo/application/user_profile/_recovery_custody.py and src/cadrumo/application/user_profile/_capsule_restore.py and src/cadrumo/application/user_profile/_custody_ports.py and src/cadrumo/adapters/persistence/storage/custody/`.

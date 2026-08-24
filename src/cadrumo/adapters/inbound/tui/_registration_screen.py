@@ -64,6 +64,8 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from ....application.user_profile import ProfileRecoveryEnrollment, ProfileRegistrationOutcome
+    from ....core import ProfilePasswordAssessment
+    from ._credential_screen import CredentialAttempt
 
 
 class ProfilePasswordVerdict(Protocol):
@@ -149,7 +151,7 @@ def assessment_refusal(assessment: ProfilePasswordVerdict) -> RegistrationRefusa
     """Project a canonical verdict through the application presentation authority."""
     from ....application.user_profile import prospective_profile_password_refusal
 
-    refusal = prospective_profile_password_refusal(assessment)
+    refusal = prospective_profile_password_refusal(cast("ProfilePasswordAssessment", assessment))
     if refusal is None:
         return None
     return RegistrationRefusal(
@@ -230,7 +232,7 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
         *,
         assess: Callable[[str], ProfilePasswordVerdict],
         register: Callable[
-            [str, str, str, Callable[[ProfileRecoveryEnrollment], None]],
+            [str, str, str, Callable[[ProfileRecoveryEnrollment], str]],
             RegistrationAttempt,
         ],
         suggested_name: str | None = None,
@@ -475,7 +477,7 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
         registration_context = copy_context()
         password_buffer = bytearray(password, UTF_8_ENCODING)
 
-        def _register() -> RegistrationAttempt:
+        def _register() -> CredentialAttempt[ProfileRegistrationOutcome]:
             try:
                 attempt = registration_context.run(
                     self._create_profile,
@@ -486,7 +488,7 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
                 )
             finally:
                 password_buffer[:] = b"\x00" * len(password_buffer)
-            return attempt
+            return cast("CredentialAttempt[ProfileRegistrationOutcome]", attempt)
 
         self.start_attempt(_register)
 
@@ -498,15 +500,15 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
     def progress_message(self) -> str:
         return tr("flows.registration.create_button")
 
-    def _confirm_recovery_possession(self, enrollment: ProfileRecoveryEnrollment) -> None:
-        """Show words on the message thread and block publication until confirmed."""
+    def _confirm_recovery_possession(self, enrollment: ProfileRecoveryEnrollment) -> str:
+        """Show words, block for confirmation, and return exact proof."""
         resolved = Event()
         self._pending_recovery_handoffs.add(resolved)
-        accepted = False
+        supplied_proof: str | None = None
 
-        def _accept() -> None:
-            nonlocal accepted
-            accepted = True
+        def _accept(proof: str) -> None:
+            nonlocal supplied_proof
+            supplied_proof = proof
             resolved.set()
 
         def _refuse() -> None:
@@ -527,8 +529,9 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
             self.call_from_thread(_show)
             # Shutdown explicitly releases this event in ``on_unmount``; the
             # bound is a final guard for a failed message-loop lifecycle.
-            if not resolved.wait(timeout=30.0) or not accepted:
+            if not resolved.wait(timeout=30.0) or supplied_proof is None:
                 raise RecoveryHandoverCancelledError
+            return supplied_proof
         finally:
             self._pending_recovery_handoffs.discard(resolved)
 
@@ -565,7 +568,7 @@ def run_registration_tui(
     *,
     assess: Callable[[str], ProfilePasswordVerdict],
     register: Callable[
-        [str, str, str, Callable[[ProfileRecoveryEnrollment], None]],
+        [str, str, str, Callable[[ProfileRecoveryEnrollment], str]],
         RegistrationAttempt,
     ],
     suggested_name: str | None = None,

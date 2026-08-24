@@ -52,7 +52,12 @@ actually meet would prove something weaker."""
 
 def _register(label: str) -> str:
     """Create one real profile through the real door and return its id."""
-    attempt = attempt_registration(label, _PASSWORD, "en")
+    attempt = attempt_registration(
+        label,
+        _PASSWORD,
+        "en",
+        lambda enrollment: enrollment.recovery_key.mnemonic,
+    )
     assert attempt.outcome is not None, f"the fixture profile must exist, but: {attempt.refusal}"
     # Registration leaves the new profile unlocked. The screen under test
     # exists for a LOCKED machine, so the session is closed again here;

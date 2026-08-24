@@ -437,7 +437,7 @@ def attempt_registration(
     label: str,
     passphrase: str,
     output_language: str,
-    recovery_handover: Callable[[ProfileRecoveryEnrollment], None],
+    recovery_handover: Callable[[ProfileRecoveryEnrollment], str],
 ) -> RegistrationAttempt:
     """Create one profile, reporting a refusal as text rather than raising.
 

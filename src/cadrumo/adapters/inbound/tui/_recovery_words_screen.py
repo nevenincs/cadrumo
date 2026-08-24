@@ -4,18 +4,18 @@ The terminal-direct channel the scripted door uses cannot render inside a
 full-screen application without corrupting the display, so this screen is
 the full-screen door's channel: the 24 words render here, on the screen
 only, and are never written to a file, an envelope, or a log. The operator
-confirms they have written them down; the confirmation is what releases
-the flow, and the wipeable container is zeroised at that moment — the
-earliest the flow allows, per the enrollment's own contract.
+confirms they have written them down; the confirmation returns the exact
+proof to the application publication gate, which zeroises the wipeable
+container as soon as that comparison completes.
 
 The secret never enters a widget value or a Textual state that outlives
 the screen: the mnemonic is read from the wipeable buffer once, into the
-rendered markup, and the buffer is zeroised on confirm.
+rendered markup. The masked re-entry is cleared before the screen closes.
 """
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from textual import on
 from textual.app import ComposeResult
@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 
 
 class RecoveryWordsScreen(Screen[None]):
-    """Show the mnemonic once, wipe on the operator's confirmation."""
+    """Show the mnemonic once and return masked exact re-entry proof."""
 
     DEFAULT_CSS = """
     RecoveryWordsScreen {
@@ -54,15 +54,16 @@ class RecoveryWordsScreen(Screen[None]):
         self,
         *,
         enrollment: ProfileRecoveryEnrollment,
-        on_confirm: Callable[[], None],
+        on_confirm: Callable[[str], None],
         on_cancel: Callable[[], None],
     ) -> None:
         super().__init__()
         self._enrollment = enrollment
         self._on_confirm = on_confirm
         self._on_cancel = on_cancel
-        self._wiped = False
+        self._resolved = False
 
+    @override
     def compose(self) -> ComposeResult:
         with Container(id="words-panel"):
             yield Static(tr("cli.config.custody.recovery_words_heading"), id="words-heading")
@@ -79,7 +80,7 @@ class RecoveryWordsScreen(Screen[None]):
 
     @on(Button.Pressed, "#btn-confirm-words")
     def _confirm(self) -> None:
-        if self._wiped:
+        if self._resolved:
             return
         supplied = self.query_one("#field-recovery-verification", Input).value
         expected = self._enrollment.recovery_key.mnemonic
@@ -90,12 +91,10 @@ class RecoveryWordsScreen(Screen[None]):
                 return
         finally:
             self.query_one("#field-recovery-verification", Input).value = ""
-            del supplied
             del expected
-        self._wiped = True
-        self._enrollment.recovery_key.wipe()
+        self._resolved = True
         self.dismiss(None)
-        self._on_confirm()
+        self._on_confirm(supplied)
 
     @on(Button.Pressed, "#btn-cancel-words")
     def _cancel(self) -> None:
@@ -107,8 +106,8 @@ class RecoveryWordsScreen(Screen[None]):
         self._refuse_once()
 
     def _refuse_once(self) -> None:
-        if self._wiped:
+        if self._resolved:
             return
-        self._wiped = True
+        self._resolved = True
         self._enrollment.recovery_key.wipe()
         self._on_cancel()
