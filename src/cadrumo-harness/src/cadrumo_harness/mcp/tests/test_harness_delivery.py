@@ -30,10 +30,9 @@ from cadrumo.adapters.persistence.storage.custody import (
 )
 from cadrumo.application.user_profile import (
     profile_bind_bucket_session,
-    profile_bucket_session_open_resumed,
-    profile_close_bucket_session,
     register_profile_with_credentials,
 )
+from cadrumo.adapters.persistence.storage import master_key
 from cadrumo.domain.user_profile import UserProfileFact
 
 from ... import iter_operator_rules, iter_personas, iter_skill_documents, operator_rules_text
@@ -87,7 +86,10 @@ def _authenticated_current_profile(*, profile_id: str, passphrase: str, storage_
     material = load_committed_profile_password_material(UUID(profile_id), root=storage_root)
     unlocked = unlock_profile_custody(material.envelope, passphrase, sentinel=material.sentinel)
     instant = datetime.now(UTC)
-    session = profile_bucket_session_open_resumed(
+    # `profile_bucket_session_open_resumed` was removed with the session-resume
+    # forwards; the product repointed its own callers to this class method in the
+    # same commit, so the harness follows the same door rather than a shim.
+    session = master_key.BucketSession.open_resumed(
         bucket_id=profile_id,
         dek=unlocked.dek,
         idle_minutes=15,
@@ -100,7 +102,7 @@ def _authenticated_current_profile(*, profile_id: str, passphrase: str, storage_
     try:
         yield
     finally:
-        profile_close_bucket_session()
+        master_key.close_active_bucket_session()
 
 
 def _shipped_skill_names() -> set[str]:
