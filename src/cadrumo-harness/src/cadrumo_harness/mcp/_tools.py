@@ -85,17 +85,6 @@ def _family_intent(command_key: str, family_map_intent: dict[str, str]) -> str:
     return family_map_intent.get(family_token, "")
 
 
-def _cli_form(verb_schema: VerbInputSchema) -> str:
-    """Render the model-facing ``aeat ...`` invocation for a resolved verb.
-
-    Built from ``verb_schema.cli_path`` - the command's REAL resolved root
-    (``config`` or ``app``) - never re-derived from the dotted command key,
-    which would silently hardcode the ``app`` root for every family including
-    ``config.*`` verbs.
-    """
-    return "aeat " + " ".join(verb_schema.cli_path)
-
-
 def _schema_definitions(value: object) -> dict[str, Any]:
     """Return one JSON Schema definitions mapping, or no definitions."""
     if not isinstance(value, Mapping):
@@ -160,14 +149,11 @@ def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
     for key in exposable_keys:
         mutability = _mutability_for_key(key, family_map)
         verb_schema = verb_schemas[key]
-        cli_form = _cli_form(verb_schema)
         intent = _family_intent(key, intent_map)
-        # The model-facing description stays English: the CLI form carries the
-        # verb path and the shared family intent follows. The command's own
-        # (Spanish) per-verb help is NOT put here - it feeds the search index
-        # instead, so discovery gains the verb vocabulary without a Spanish
-        # string on the model-facing surface.
-        description = f"Run `{cli_form}`." + (f" {intent}." if intent else "")
+        # MCP itself is the executable surface.  Its descriptor advertises the
+        # operator intent, while every executable identity is carried only by
+        # the resolver-backed capability projection on ``verb_schema``.
+        description = intent or f"Cadrumo tool for {key}."
         from cadrumo.entrypoints.cli import command_execution_policy_for_cli_path
 
         execution_policy = project_command_policy(
@@ -177,7 +163,7 @@ def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
         annotations = annotations_for_command(
             command_key=key,
             mutability=mutability,
-            title=cli_form,
+            title=f"Cadrumo: {key}",
             policy=execution_policy,
         )
         descriptors.append(

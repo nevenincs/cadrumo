@@ -110,6 +110,27 @@ def test_timeout_refusal_is_localized_and_names_the_tier() -> None:
     error = _typed_error_envelope(validated)
     assert error["code"] == "mcp.transport.timeout"
     assert error["context"] == {"tier": "live", "timeout_seconds": "420", "timed_out": "true"}
+    assert error["action"] == {
+        "failed_condition_id": "mcp.transport.call_completed",
+        "evidence": [
+            {
+                "condition_id": "mcp.transport.call_completed",
+                "evidence_id": "mcp.transport.call_completed.observation",
+                "provenance": "runtime_observation",
+                "values": {
+                    "call_completed": False,
+                    "tier": "live",
+                    "timed_out": True,
+                    "timeout_seconds": 420,
+                },
+            },
+        ],
+        "action": None,
+        "argument_bindings": [],
+        "missing_argument_names": [],
+        "conditionality": "not_applicable",
+        "no_recovery_outcome": "operator_decision",
+    }
     refusal = error["message"]
     assert isinstance(refusal, str)
     # The refusal names the command, the tier, and the ceiling.
@@ -127,6 +148,80 @@ def test_timeout_refusal_is_localized_and_names_the_tier() -> None:
     installation_error = _typed_error_envelope(validated_installation)
     assert installation_error["code"] == "mcp.transport.installation_incomplete"
     assert installation_error["context"] == {"installation_incomplete": "true"}
+    assert installation_error["action"] == {
+        "failed_condition_id": "mcp.transport.cli_available",
+        "evidence": [
+            {
+                "condition_id": "mcp.transport.cli_available",
+                "evidence_id": "mcp.transport.cli_available.observation",
+                "provenance": "runtime_observation",
+                "values": {
+                    "cli_available": False,
+                    "error_type": "FileNotFoundError",
+                    "errno_present": False,
+                },
+            },
+        ],
+        "action": None,
+        "argument_bindings": [],
+        "missing_argument_names": [],
+        "conditionality": "not_applicable",
+        "no_recovery_outcome": "operator_decision",
+    }
+
+
+def test_transport_notices_carry_exact_terminal_projections() -> None:
+    from .._transport import _inprocess_timeout_notice, _warm_degradation_notice
+
+    timeout_notice = _inprocess_timeout_notice(
+        command_key="ledger.add",
+        worker_stack="worker.py:42:write",
+    )
+    assert timeout_notice.action is not None
+    assert timeout_notice.action.model_dump(mode="json") == {
+        "failed_condition_id": "mcp.transport.call_completed",
+        "evidence": [
+            {
+                "condition_id": "mcp.transport.call_completed",
+                "evidence_id": "mcp.transport.call_completed.observation",
+                "provenance": "runtime_observation",
+                "values": {
+                    "call_completed": False,
+                    "inprocess": True,
+                    "idempotency_guard": True,
+                    "may_complete": True,
+                    "timed_out": True,
+                },
+            },
+        ],
+        "action": None,
+        "argument_bindings": [],
+        "missing_argument_names": [],
+        "conditionality": "not_applicable",
+        "no_recovery_outcome": "safety",
+    }
+
+    degraded_notice = _warm_degradation_notice(command_key="registry.inspect", wedged=True)
+    assert degraded_notice.action is not None
+    assert degraded_notice.action.model_dump(mode="json") == {
+        "failed_condition_id": "mcp.transport.warm_available",
+        "evidence": [
+            {
+                "condition_id": "mcp.transport.warm_available",
+                "evidence_id": "mcp.transport.warm_available.observation",
+                "provenance": "runtime_observation",
+                "values": {
+                    "warm_available": False,
+                    "warm_state": "wedged",
+                },
+            },
+        ],
+        "action": None,
+        "argument_bindings": [],
+        "missing_argument_names": [],
+        "conditionality": "not_applicable",
+        "no_recovery_outcome": "terminal",
+    }
 
 
 def test_serving_limiter_is_a_settings_sized_singleton() -> None:
@@ -244,6 +339,19 @@ def test_transport_error_context_keys_stay_transport_level() -> None:
         "WITHOUT redaction, so a new key carrying operator- or taxpayer-derived data is a disclosure, not a "
         f"documentation lapse. Found {found}, declared {_TRANSPORT_ERROR_CONTEXT_CONTRACT}."
     )
+
+
+def test_transport_messages_do_not_author_recovery_instructions() -> None:
+    """Terminal MCP transport messages report state; action projection owns recovery."""
+    from pathlib import Path
+
+    source = (Path(__file__).resolve().parent.parent / "_transport.py").read_text(encoding="utf-8")
+    for phrase in (
+        "Retry, or run the equivalent Cadrumo command directly",
+        "Reinstall the package, then retry",
+        "Re-run it with the same idempotency key",
+    ):
+        assert phrase not in source
 
 
 def test_cli_resolution_refusal_does_not_leak_the_installation_path() -> None:

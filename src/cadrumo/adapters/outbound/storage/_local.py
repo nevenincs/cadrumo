@@ -21,7 +21,8 @@ from collections.abc import Iterator, Mapping
 from datetime import datetime
 from pathlib import Path
 
-from ....core import iter_directory, scan_directory
+from ....application.operator_actions._preconditions import no_action_precondition_verdict
+from ....core import ActionEvidenceProvenance, NoRecoveryOutcome, iter_directory, scan_directory
 from ....core.atomic_write import DurableWriteBatch, atomic_write_hardened_bytes, atomic_write_text
 from ....core.errors import CoreValidationError
 from ....core.external_constants import UTF_8_ENCODING
@@ -48,6 +49,21 @@ _logger = get_logger(__name__)
 _FILE_EXTENSION = ".bin"
 _SIDECAR_EXTENSION = ".meta.json"
 _PROBE_NAMESPACE = "_probe"
+
+
+def _local_failure_verdict(
+    condition_id: str,
+    *,
+    facts: Mapping[str, str | int | bool],
+    outcome: NoRecoveryOutcome = NoRecoveryOutcome.SAFETY,
+):
+    """Project an observed local-provider failure through the shared policy."""
+    return no_action_precondition_verdict(
+        condition_id=condition_id,
+        facts=facts,
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        outcome=outcome,
+    )
 
 
 def _validate_namespace(namespace: str) -> str:
@@ -172,6 +188,9 @@ class LocalFileSystemProvider:
                 f"cannot create namespace directory {target}: {exc}",
                 context={"namespace": namespace, "path": str(target)},
                 translated_message="adapters.outbound.storage.local.errors.namespace_create_permission",
+                precondition_verdict=_local_failure_verdict(
+                    "storage.local.namespace.writable", facts={"operation": "create_namespace"}
+                ),
             ) from None
         except OSError as exc:
             if is_windows_long_path_error(exc):
@@ -179,6 +198,9 @@ class LocalFileSystemProvider:
                     f"cannot create namespace directory {target}: path exceeds the Windows MAX_PATH ceiling ({exc})",
                     context={"namespace": namespace, "path": str(target)},
                     translated_message="adapters.outbound.storage.local.errors.namespace_create_path_too_long",
+                    precondition_verdict=_local_failure_verdict(
+                        "storage.local.path.within_limit", facts={"operation": "create_namespace"}
+                    ),
                 ) from None
             raise
         return target
@@ -220,6 +242,10 @@ class LocalFileSystemProvider:
                         "sidecar_object_key_hmac": repr(sidecar_hmac),
                         "sidecar_path": str(sidecar_path),
                     },
+                    precondition_verdict=_local_failure_verdict(
+                        "storage.local.sidecar.identity_matches",
+                        facts={"operation": "resolve_object", "prefix_collision": True},
+                    ),
                 )
             resolved_path = entry
         return resolved_path
@@ -421,6 +447,11 @@ class LocalFileSystemProvider:
                 f"object {hmac_clean!r} not found in namespace {namespace_clean!r}",
                 context={"namespace": namespace_clean, "object_key_hmac": hmac_clean},
                 translated_message="adapters.outbound.storage.local.errors.object_not_found",
+                precondition_verdict=_local_failure_verdict(
+                    "storage.local.object.present",
+                    facts={"operation": "get", "object_present": False},
+                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                ),
             )
         sidecar_path = target_path.with_name(target_path.stem + _SIDECAR_EXTENSION)
         if not sidecar_path.is_file():
@@ -428,6 +459,9 @@ class LocalFileSystemProvider:
                 f"object {target_path.name} has no sidecar; storage corrupt",
                 context={"path": str(target_path)},
                 translated_message="adapters.outbound.storage.local.errors.sidecar_missing",
+                precondition_verdict=_local_failure_verdict(
+                    "storage.local.sidecar.present", facts={"operation": "get", "sidecar_present": False}
+                ),
             )
         sidecar = self._load_sidecar(sidecar_path)
 
@@ -438,6 +472,9 @@ class LocalFileSystemProvider:
                 f"cannot read object payload from {target_path}: {exc}",
                 context={"path": str(target_path)},
                 translated_message="adapters.outbound.storage.local.errors.payload_read_permission",
+                precondition_verdict=_local_failure_verdict(
+                    "storage.local.payload.readable", facts={"operation": "get", "readable": False}
+                ),
             ) from None
 
         actual_hash = sha256_hex(payload)
@@ -455,6 +492,9 @@ class LocalFileSystemProvider:
                 f"sidecar {sidecar_path} carries no content_hash; storage corrupt",
                 context={"sidecar_path": str(sidecar_path), "path": str(target_path)},
                 translated_message="adapters.outbound.storage.local.errors.sidecar_malformed",
+                precondition_verdict=_local_failure_verdict(
+                    "storage.local.sidecar.digest_present", facts={"operation": "get", "content_hash_present": False}
+                ),
             )
         # The stored hash may be a vendor-prefixed string ("sha256-XXX")
         # or a bare hex digest; we accept either as long as the digest
@@ -634,6 +674,11 @@ class LocalFileSystemProvider:
                 f"namespace {namespace_clean!r} does not exist",
                 context={"namespace": namespace_clean},
                 translated_message="adapters.outbound.storage.local.errors.namespace_not_found",
+                precondition_verdict=_local_failure_verdict(
+                    "storage.local.namespace.present",
+                    facts={"operation": "iter_objects", "namespace_present": False},
+                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                ),
             )
         for entry in scan_directory(namespace_dir):
             if not entry.is_file() or entry.suffix != _FILE_EXTENSION:

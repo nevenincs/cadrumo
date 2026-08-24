@@ -129,7 +129,6 @@ class ProfileCustodyPasswordMaterialPort(Protocol):
         """The committed password envelope for this profile."""
         ...
 
-
     @property
     def sentinel(self) -> ProfileCustodySentinelPort:
         """The committed DEK sentinel proving an unwrap succeeded."""
@@ -1028,15 +1027,6 @@ def unlock_profile_custody_password(
     )
 
 
-def load_profile_custody_password_material(
-    profile_id: UUID,
-    *,
-    root: Path | None = None,
-) -> ProfileCustodyPasswordMaterialPort:
-    """Load one committed password-proof bundle through the custody boundary."""
-    return custody.load_committed_profile_password_material(profile_id, root=root)
-
-
 def replace_profile_custody_password_envelope(
     *,
     profile_id: UUID,
@@ -1245,7 +1235,6 @@ __all__ = [
     "default_profile_secure_object_inventory",
     "ensure_profile_custody_owner_root",
     "export_profile_recovery_artifact",
-    "load_profile_custody_password_material",
     "map_profile_authentication_proof_failure",
     "profile_advance_session_idle_deadline",
     "profile_bind_bucket_session",

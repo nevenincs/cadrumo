@@ -19,7 +19,7 @@ from typing import Any, TypedDict
 
 import pytest
 
-from .....core import iter_directory, scan_directory
+from .....core import ActionConditionality, NoRecoveryOutcome, iter_directory, scan_directory
 from .....core.atomic_write import atomic_write_text
 from .....core.errors import ERROR_REGISTRY, build_error_envelope, resolve_error_message
 from .....core.i18n import tr
@@ -41,6 +41,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 def _hash(payload: bytes) -> str:
     return f"sha256-{hashlib.sha256(payload).hexdigest()}"
+
+
+def _assert_local_verdict(error: BaseException, condition_id: str, outcome: NoRecoveryOutcome) -> None:
+    verdict = error.terminal_precondition_verdict
+    assert verdict.failed_condition_id == condition_id
+    assert verdict.conditionality is ActionConditionality.NOT_APPLICABLE
+    assert verdict.action is None
+    assert verdict.no_recovery_outcome is outcome
+    assert len(verdict.evidence) == 1
 
 
 def test_local_provider_satisfies_runtime_protocol(provider: LocalFileSystemProvider) -> None:
@@ -212,8 +221,9 @@ def test_get_raises_storage_not_found_for_missing_object(provider: LocalFileSyst
         content_hash=_hash(b"x"),
         label="x",
     )
-    with pytest.raises(OutboundStorageNotFoundError):
+    with pytest.raises(OutboundStorageNotFoundError) as raised:
         provider.get("ledger_transaction", "0000000000000000")
+    _assert_local_verdict(raised.value, "storage.local.object.present", NoRecoveryOutcome.OPERATOR_DECISION)
 
 
 def test_get_raises_storage_integrity_on_payload_tamper(provider: LocalFileSystemProvider) -> None:
@@ -226,8 +236,9 @@ def test_get_raises_storage_integrity_on_payload_tamper(provider: LocalFileSyste
         label="tamper",
     )
     Path(metadata.provider_object_id).write_bytes(b"tampered")
-    with pytest.raises(OutboundStorageIntegrityError):
+    with pytest.raises(OutboundStorageIntegrityError) as raised:
         provider.get("ledger_transaction", "fedcba9876543210")
+    _assert_local_verdict(raised.value, "storage.integrity.content_hash_matches", NoRecoveryOutcome.SAFETY)
 
 
 def test_delete_returns_true_when_object_existed(provider: LocalFileSystemProvider) -> None:
@@ -267,8 +278,9 @@ def test_iter_objects_yields_metadata_for_every_object(provider: LocalFileSystem
 
 
 def test_iter_objects_raises_for_missing_namespace(provider: LocalFileSystemProvider) -> None:
-    with pytest.raises(OutboundStorageNotFoundError):
+    with pytest.raises(OutboundStorageNotFoundError) as raised:
         list(provider.iter_objects("never_seen"))
+    _assert_local_verdict(raised.value, "storage.local.namespace.present", NoRecoveryOutcome.OPERATOR_DECISION)
 
 
 def test_probe_read_only_does_not_touch_filesystem(tmp_path: Path) -> None:
