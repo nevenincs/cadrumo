@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:3dceea826f44ab4fecc0bbac5999776431be7659512b2032aef2083c9ea9c004'
+body_hash: 'sha256:f05c6a389381c910aa765d473b420c5f0d68a1dd40f3bcbf2197dc49ef2c720a'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -231,6 +231,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W06-P11-S220]]'
   - '[[2026-08-13-profile-password-custody-W06-P11-S221]]'
   - '[[2026-08-13-profile-password-custody-W06-P11-S222]]'
+  - '[[2026-08-13-profile-password-custody-W06-P11-S223]]'
   - '[[2026-08-13-profile-password-custody-plan]]'
   - '[[2026-08-13-profile-password-custody-research]]'
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
@@ -267,6 +268,7 @@ related:
   - '[[2026-08-24-profile-password-custody-s221-recovery-matrix-audit]]'
   - '[[2026-08-24-profile-password-custody-s221-recovery-matrix-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s222-platform-gate-audit]]'
+  - '[[2026-08-24-profile-password-custody-s223-campaign-close-honesty-audit]]'
 ---
 
 # `profile-password-custody` feature index
@@ -314,6 +316,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-24-profile-password-custody-s221-recovery-matrix-audit` - `profile-password-custody` audit: `S221 recovery matrix review`
 - `2026-08-24-profile-password-custody-s221-recovery-matrix-review-audit` - `profile-password-custody` audit: `S221 recovery-enrollment matrix review`
 - `2026-08-24-profile-password-custody-s222-platform-gate-audit` - `profile-password-custody` audit: `S222 platform gate review`
+- `2026-08-24-profile-password-custody-s223-campaign-close-honesty-audit` - `profile-password-custody` audit: `fresh-context campaign-close honesty review`
 
 ### exec
 
@@ -540,6 +543,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W06-P11-S220` - Adjudicate every checked execution record that fails the required body schema, preserving genuine evidence where it exists and reopening or formally carrying forward any Step whose completed work cannot be established
 - `2026-08-13-profile-password-custody-W06-P11-S221` - Re-run the complete S206 recovery-enrollment matrix across interactive, TUI, stdin, POSIX descriptor, Windows inherited-handle, mismatch, cancellation, collision, and publication-failure paths and persist the resulting evidence
 - `2026-08-13-profile-password-custody-W06-P11-S222` - Re-run the S209 supervised-KDF platform gate without weakening exact descriptor attestation, worker isolation, or fail-closed supervision and persist the Windows, POSIX, and WSL evidence
+- `2026-08-13-profile-password-custody-W06-P11-S223` - Perform a fresh-context campaign-close honesty review covering decision-to-code consistency, Step-to-record evidence, stale recovery prose, S206 and S209 gates, feature-scoped Vaultspec validation, and the historical-close pointer
 
 ### plan
 

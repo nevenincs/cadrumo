@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-24'
-body_hash: 'sha256:fa98e7c43bad958b156d34330312b79785d9e9d79db8c6eeeed195b134887c65'
+body_hash: 'sha256:a2424b21ae94cee62003db7fa396344824bbd07a3936135512decd30b9ecf034'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -326,4 +326,4 @@ Repair the execution-evidence ledger from real implementation and history, then 
 - [x] `W06.P11.S220` - Adjudicate every checked execution record that fails the required body schema, preserving genuine evidence where it exists and reopening or formally carrying forward any Step whose completed work cannot be established; `.vault/exec/2026-08-13-profile-password-custody/`.
 - [x] `W06.P11.S221` - Re-run the complete S206 recovery-enrollment matrix across interactive, TUI, stdin, POSIX descriptor, Windows inherited-handle, mismatch, cancellation, collision, and publication-failure paths and persist the resulting evidence; `src/cadrumo/application/user_profile/tests/test_recovery_enrollment_at_creation.py and src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/adapters/inbound/tui/tests/`.
 - [x] `W06.P11.S222` - Re-run the S209 supervised-KDF platform gate without weakening exact descriptor attestation, worker isolation, or fail-closed supervision and persist the Windows, POSIX, and WSL evidence; `src/cadrumo/adapters/persistence/storage/custody/ and src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`.
-- [ ] `W06.P11.S223` - Perform a fresh-context campaign-close honesty review covering decision-to-code consistency, Step-to-record evidence, stale recovery prose, S206 and S209 gates, feature-scoped Vaultspec validation, and the historical-close pointer; `.vault/audit/`.
+- [x] `W06.P11.S223` - Perform a fresh-context campaign-close honesty review covering decision-to-code consistency, Step-to-record evidence, stale recovery prose, S206 and S209 gates, feature-scoped Vaultspec validation, and the historical-close pointer; `.vault/audit/`.
