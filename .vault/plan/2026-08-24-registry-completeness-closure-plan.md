@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:2ba70948f00a3916ade5c120b3cb43dfb1d8ab142565f711a19f96ef16aff315'
+body_hash: 'sha256:ba6ed3120f99fe54d5c0fcc1c1ac178ee4fc3c547a59b9d68e470bd175fcdae4'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -63,6 +63,7 @@ Compose one typed cross-authority report from validated registry coverage, sourc
 - [ ] `W01.P02.S47` - Add revision filing-year and period scope to census destinations and require exact scoped source mapping with Modelo 100 and 193 cross-satisfaction regressions.; `src/cadrumo/application/registry/`.
 - [x] `W01.P02.S48` - Prove undeclared-grade refusals reject a non-null declared grade through direct construction and revalidated mutation.; `src/cadrumo/application/registry/tests/`.
 - [ ] `W01.P02.S49` - Replace substring-based connected-proof failure taxonomy with structured cause mapping that distinguishes missing proof from digest conflict, with real deletion and drift composer regressions.; `src/cadrumo/application/registry/`.
+- [ ] `W01.P02.S50` - Parameterize undeclared-grade refusal contradictions across every authority grade and prove weakened-guard regression refusal.; `src/cadrumo/application/registry/tests/`.
 
 ## Wave `W02` - filing-gap adjudication and owner routing
 
