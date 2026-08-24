@@ -13,8 +13,15 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, computed_field, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, RegistryAuthorityGrade
-from ...domain.calculations.registry import ModeloRevision, RegistryValidationError, ValidatedRegistryAuthority
+from ...core import STRICT_FROZEN_CONFIG, RegistryAuthorityGrade, RegistrySelectorPeriodCode
+from ...domain.calculations.registry import (
+    ModeloId,
+    ModeloRevision,
+    RegistrySnapshotError,
+    RegistryValidationError,
+    RevisionId,
+    ValidatedRegistryAuthority,
+)
 
 TemporalCoverageStatus = Literal["validated", "refused"]
 TemporalCoverageFailureCode = Literal[
@@ -38,11 +45,11 @@ class TemporalRevisionCoverage(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    modelo: str = Field(min_length=1)
-    revision: str = Field(min_length=1)
-    filing_year: int = Field(ge=1)
-    period: str = Field(min_length=1)
-    selected_revision: str | None = Field(default=None, min_length=1)
+    modelo: ModeloId
+    revision: RevisionId
+    filing_year: int = Field(ge=2000, le=2099)
+    period: RegistrySelectorPeriodCode
+    selected_revision: RevisionId | None = None
     declared_authority_grade: RegistryAuthorityGrade | None = None
     status: TemporalCoverageStatus
     failure_code: TemporalCoverageFailureCode | None = None
@@ -122,7 +129,7 @@ def compose_temporal_coverage(*, authority: ValidatedRegistryAuthority) -> Tempo
     return TemporalCoverageReport(rows=tuple(rows))
 
 
-def _law_selection_coordinate(revision: ModeloRevision) -> tuple[int, str]:
+def _law_selection_coordinate(revision: ModeloRevision) -> tuple[int, RegistrySelectorPeriodCode]:
     """Return one coordinate declared by a revision's temporal selector.
 
     The authoritative registry has already validated every selector before this
@@ -139,10 +146,10 @@ def _law_selection_coordinate(revision: ModeloRevision) -> tuple[int, str]:
 def _compose_revision_temporal_coverage(
     *,
     authority: ValidatedRegistryAuthority,
-    modelo_id: str,
-    revision_id: str,
+    modelo_id: ModeloId,
+    revision_id: RevisionId,
     filing_year: int,
-    period: str,
+    period: RegistrySelectorPeriodCode,
     declared_authority_grade: RegistryAuthorityGrade | None,
 ) -> TemporalRevisionCoverage:
     """Build one row, preserving an explicit refusal at each authority boundary."""
@@ -155,7 +162,7 @@ def _compose_revision_temporal_coverage(
     }
     try:
         inspection = authority.inspect_revision(modelo_id, filing_year=filing_year, period=period)
-    except RegistryValidationError as exc:
+    except (RegistrySnapshotError, RegistryValidationError) as exc:
         return TemporalRevisionCoverage(
             **base,
             status="refused",
@@ -216,7 +223,7 @@ def _compose_revision_temporal_coverage(
     )
 
 
-def _failure_detail(error: RegistryValidationError) -> str:
+def _failure_detail(error: RegistrySnapshotError | RegistryValidationError) -> str:
     """Keep the first refusal line bounded and stable for report consumers."""
     return str(error).splitlines()[0][:1024]
 
