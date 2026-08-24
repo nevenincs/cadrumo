@@ -16,10 +16,10 @@
       ]
     },
     "vaultspec-core": {
-      "command": "uv",
+      "command": "uvx",
       "args": [
-        "run",
-        "--no-sync",
+        "--from",
+        "vaultspec-core",
         "python",
         "-m",
         "vaultspec_core.mcp_server.app"
