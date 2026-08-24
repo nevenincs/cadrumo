@@ -11,7 +11,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-22-source-casilla-integration-plan]]'
 modified: '2026-08-24'
-body_hash: 'sha256:5df53d61e307f233b8cbc9cd4393f332d4017f7f4eee8cd24b4994f07f5c3feb'
+body_hash: 'sha256:ccf59afa2a7688b77ae8e2710aa0654d576c5959c6e537ed675a8662e37e7439'
 ---
 
 # `registry-completeness-closure` plan
@@ -128,6 +128,7 @@ Add or reconcile the adjudicated remedies in each existing owning plan and prove
 - [x] `W02.P04.S80` - Reconcile Modelo 721 structured-message filing authority with the positional-only export predicate: obtain the required ADR decision and enroll source taxonomy, authority-grade gate, canonical exporter, and local emitted-payload proof under the existing export plan while preserving Modelo 136 terminal refusal.; `.vault/adr/; .vault/reference/; .vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md; src/cadrumo/domain/calculations/registry/_validate_export_exemption.py; src/cadrumo/domain/calculations/registry/tests/test_export_exemption_declared.py`.
 - [x] `W02.P04.S81` - Correct Modelo 036 public lifecycle and CLI Sede-only docstrings to state Sede-or-competent-AEAT-office recording, retain optional electronic justificante semantics, and preserve the no-local-filing boundary.; `src/cadrumo/application/modelo/_m036_lifecycle.py; src/cadrumo/entrypoints/cli/_modelo_m036_cli.py; src/cadrumo/application/modelo/tests/; src/cadrumo/entrypoints/cli/tests/`.
 - [x] `W02.P04.S82` - Make terminal manual source evidence live-resolvable and revision-scoped, bind censo event coordinates to canonical Modelo 036, and retain property-based exact-one census proof.; `src/cadrumo/application/registry/source_connectivity.py; dev/source_connectivity/check.py; dev/source_connectivity/tests/test_census_completeness.py; .vault/reference/2026-08-24-registry-completeness-closure-modelo-036-source-connectivity-reference.md`.
+- [ ] `W02.P04.S83` - Adjudicate the Modelo 036 product boundary through an accepted ADR, choose its canonical non-filing disposition, then align the capability worklist and S28 record with mutation proof without authoring an M036 exporter.; `.vault/adr/; .vault/reference/; .vault/plan/2026-08-24-registry-completeness-closure-plan.md; .vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W02-P04-S28.md; src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py`.
 
 ## Wave `W03` - semantic proof and predecessor closure
 

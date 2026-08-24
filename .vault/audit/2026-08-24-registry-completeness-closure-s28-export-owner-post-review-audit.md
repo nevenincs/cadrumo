@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:6c0540baba08a171daa31b4596671ef9948cbf876ace76ad6b9b4380c6a600ae'
+body_hash: 'sha256:54f6e33ebd740143c8b907b99d92108aab87d8ff9f4e28e0623df553ff4cc189'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
@@ -50,9 +50,9 @@ redeclared.
 
 ## Recommendations
 
-For `modelo-036-disposition`, reconcile the S28 execution record with the
-canonical classifier before S29 closes. Either preserve M036 as the routed
-authorable gap and state that its exporter is blocked by an accepted
-product-scope decision, or record a separately approved product-boundary
-terminal disposition in the classifier with an evidence-backed mutation gate.
-Do not leave the two authorities to describe different exact-one outcomes.
+`W02.P04.S83` now owns `modelo-036-disposition`. It must obtain the accepted
+product-boundary decision, then reconcile the S28 execution record and the
+canonical classifier with mutation proof. It may preserve M036 as a routed
+authorable gap blocked by product scope, or add a separately approved
+product-boundary terminal disposition; it must not leave the two authorities to
+describe different exact-one outcomes or author an M036 exporter.
