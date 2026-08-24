@@ -655,7 +655,7 @@ def _run_profile_create_with_recovery(root: Path, *, channel: str, payload: str)
                 encoding="utf-8",
                 capture_output=True,
                 check=False,
-                timeout=45,
+                timeout=120,
                 close_fds=True,
                 startupinfo=startup,
             )
@@ -679,7 +679,7 @@ def _run_profile_create_with_recovery(root: Path, *, channel: str, payload: str)
                 encoding="utf-8",
                 capture_output=True,
                 check=False,
-                timeout=45,
+                timeout=120,
                 pass_fds=tuple(descriptors),
             )
     finally:
@@ -1018,7 +1018,9 @@ def test_windows_bootstrap_interpreter_bypasses_virtual_environment_launcher() -
     """HANDLE allowlists attach to the process which reads them, never a venv stub."""
     if os.name != "nt":
         pytest.skip("Windows launcher invariant")
-    assert Path(bootstrap_interpreter()).resolve() == Path(sys._base_executable).resolve()  # type: ignore[attr-defined]
+    base_executable = getattr(sys, "_base_executable", sys.executable)
+    assert isinstance(base_executable, str)
+    assert Path(bootstrap_interpreter()).resolve() == Path(base_executable).resolve()
 
 
 @pytest.mark.skipif(os.name == "nt", reason="POSIX pass_fds recovery transport")

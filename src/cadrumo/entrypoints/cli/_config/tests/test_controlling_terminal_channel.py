@@ -97,18 +97,25 @@ def test_a_detached_child_refuses_rather_than_falling_back(tmp_path: Path) -> No
     transcript = tmp_path / "detached.txt"
     script = _REFUSAL_PROBE.format(path=str(outcome_path))
 
-    detach: dict[str, object] = (
-        {"creationflags": 0x00000008} if sys.platform == "win32" else {"start_new_session": True}
-    )
     with transcript.open("w", encoding="utf-8") as handle:
-        subprocess.run(  # noqa: S603
-            [sys.executable, "-c", script],
-            stdout=handle,
-            stderr=handle,
-            stdin=subprocess.DEVNULL,
-            check=False,
-            **detach,  # type: ignore[arg-type]  # reason: TYPE-IGNORE-RATIONALE-PLATFORM-DETACH: the two platforms take different, mutually exclusive detach keywords.
-        )
+        if sys.platform == "win32":
+            subprocess.run(  # noqa: S603
+                [sys.executable, "-c", script],
+                stdout=handle,
+                stderr=handle,
+                stdin=subprocess.DEVNULL,
+                check=False,
+                creationflags=0x00000008,
+            )
+        else:
+            subprocess.run(  # noqa: S603
+                [sys.executable, "-c", script],
+                stdout=handle,
+                stderr=handle,
+                stdin=subprocess.DEVNULL,
+                check=False,
+                start_new_session=True,
+            )
 
     assert outcome_path.read_text(encoding="utf-8") == "refused"
     assert _SECRET not in transcript.read_text(encoding="utf-8")

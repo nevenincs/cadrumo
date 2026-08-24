@@ -35,6 +35,7 @@ from ....core import (
     OperationDurability,
     OperationEffect,
     OperationLifecycle,
+    OperationTerminalCondition,
 )
 from ....core.classification import SensitivityClass
 from ....domain.deadlines import TaxpayerProfile
@@ -49,6 +50,8 @@ from ...operations import (
     OperationReplayLimit,
     OperationRequest,
     OperationSupervisor,
+    OperationTerminalEvent,
+    operation_conflict_scope_reference,
 )
 from .. import (
     FILED_HISTORY_OPERATION_DEFINITION_ID as PUBLIC_FILED_HISTORY_OPERATION_DEFINITION_ID,
@@ -133,7 +136,7 @@ class _FixtureBackedFiledHistoryDiscovery:
         return filed_history_discovery_report(
             expected=ExpectedFiledDeclarationGrid(),
             availability=FiledDeclarationAvailabilityReport(
-                items=(FiledDeclarationAvailability(modelo="303", ejercicios=(2025,)),),
+                items=(FiledDeclarationAvailability(modelo="100", ejercicios=(2000,)),),
                 discovered_at=_NOW,
             ),
         )
@@ -175,14 +178,15 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         discovery_entered = asyncio.Event()
         release_discovery = asyncio.Event()
+        pull = _local_pull(
+            _FixtureBackedFiledHistoryDiscovery(
+                entered=discovery_entered,
+                release=release_discovery,
+            ),
+        )
         definition = build_filed_history_operation_definition(
             sync_run_repository=SyncRunRecordRepository(),
-            pull=_local_pull(
-                _FixtureBackedFiledHistoryDiscovery(
-                    entered=discovery_entered,
-                    release=release_discovery,
-                ),
-            ),
+            pull=pull,
         )
         journal = OperationJournalRepository(storage_root=tmp_path / "operations")
         supervisor = OperationSupervisor(
@@ -226,16 +230,18 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
                     timeout=1,
                 )
             ).events
-            assert [event.phase_code for event in in_flight_events if isinstance(event, OperationPhaseEvent)] == [
-                FILED_HISTORY_PHASE_PREFLIGHT,
-                FILED_HISTORY_PHASE_EXECUTION,
-                FILED_HISTORY_PHASE_DISCOVERY,
-            ]
-            with pytest.raises(ValueError, match="operation does not support cancellation"):
-                await supervisor.request_cancel(operation_id)
-            release_discovery.set()
+            try:
+                assert [event.phase_code for event in in_flight_events if isinstance(event, OperationPhaseEvent)] == [
+                    FILED_HISTORY_PHASE_PREFLIGHT,
+                    FILED_HISTORY_PHASE_EXECUTION,
+                    FILED_HISTORY_PHASE_DISCOVERY,
+                ]
+                with pytest.raises(ValueError, match="operation does not support cancellation"):
+                    await supervisor.request_cancel(operation_id)
+            finally:
+                release_discovery.set()
             snapshot = await start_task
-            assert snapshot.lifecycle is OperationLifecycle.TERMINAL
+            assert snapshot.lifecycle is OperationLifecycle.RUNNING
             assert snapshot.phase_code == FILED_HISTORY_PHASE_SETTLEMENT
             assert snapshot.effect is OperationEffect.NONE
             assert snapshot.execution_deadline is None
@@ -314,14 +320,10 @@ def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path) -> None:
 
     assert snapshot.effect is OperationEffect.NONE
     assert all(
-        event.effect is not OperationEffect.UNKNOWN
-        for event in events
-        if isinstance(event, OperationEffectEvent)
+        event.effect is not OperationEffect.UNKNOWN for event in events if isinstance(event, OperationEffectEvent)
     )
     assert [
-        (event.completed, event.total, event.unit_code)
-        for event in events
-        if isinstance(event, OperationProgressEvent)
+        (event.completed, event.total, event.unit_code) for event in events if isinstance(event, OperationProgressEvent)
     ] == [
         (0, 1, FILED_HISTORY_PAIR_PROGRESS_UNIT),
         (1, 1, FILED_HISTORY_PAIR_PROGRESS_UNIT),
@@ -358,6 +360,90 @@ def test_canonical_writer_reference_resolves_the_exact_encrypted_sync_run(tmp_pa
             )
             is OperationEffect.PARTIAL
         )
+
+
+def test_supervisor_receipt_joins_the_exact_encrypted_child_and_releases_its_lease(tmp_path: Path) -> None:
+    """Successful settlement preserves the writer-owned child identity end to end."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        repository = SyncRunRecordRepository()
+
+        async def persisted_pull(payload, sync_runs, events):
+            del events
+            report = _persisted_bulk_filed_capture_report(
+                output_root=payload.output_root,
+                modelos=("303",),
+                year_from=2025,
+                year_to=2025,
+                accumulator=_CaptureAccumulator(),
+                failures=[],
+                bucket_id=profile.bucket_id,
+                sync_run_repository=sync_runs,
+            )
+            return FiledHistoryOnboardingRun(sync_run_ref=report.sync_run_ref)
+
+        definition = build_filed_history_operation_definition(
+            sync_run_repository=repository,
+            pull=persisted_pull,
+        )
+        durable_root = tmp_path / "terminal-operations"
+        journal = OperationJournalRepository(storage_root=durable_root)
+        leases = OperationLeaseFilesystemRepository(storage_root=durable_root)
+        supervisor = OperationSupervisor(
+            registry=OperationRegistry(definitions=(definition,)),
+            journal=journal,
+            event_stream=journal,
+            leases=leases,
+            operands=OperationSecureReferenceRepository(
+                objects=registered_objects(profile.repository, _NAMESPACE),
+                namespace=_NAMESPACE,
+            ),
+            owner_id="5" * 64,
+            lease_token_factory=lambda: "6" * 64,
+            clock=lambda: _NOW,
+            lease_duration=timedelta(minutes=5),
+        )
+        request = OperationRequest(
+            definition_id=definition.definition_id,
+            subject_ref=profile.bucket_id,
+            payload=FiledHistoryOperationRequest(output_root=tmp_path / "terminal-filed"),
+        )
+
+        async def run():
+            operation_id = await supervisor.submit(request, operation_id="7" * 64)
+            terminal = await supervisor.start(operation_id)
+            reloaded = await journal.load(operation_id)
+            replay = await journal.read_after(operation_id, 0, limit=OperationReplayLimit(100))
+            lease = await leases.inspect(
+                operation_conflict_scope_reference(
+                    definition_id=definition.definition_id,
+                    subject_ref=profile.bucket_id,
+                ),
+                operation_id,
+                observed_at=_NOW,
+            )
+            return terminal, reloaded, replay.events, lease
+
+        terminal, reloaded, events, lease = asyncio.run(run())
+
+        receipt = terminal.terminal_receipt
+        assert receipt is not None
+        reference = receipt.result_ref
+        assert reference is not None
+        stored = repository.load(reference)
+        assert stored is not None
+        assert repository.extract_identifier(stored) == reference
+        assert stored.bucket_id == profile.bucket_id
+        assert terminal.lifecycle is OperationLifecycle.TERMINAL
+        assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+        assert terminal.effect is OperationEffect.UPDATED
+        assert reloaded == terminal
+        assert lease.current is None
+        phases = [event for event in events if isinstance(event, OperationPhaseEvent)]
+        cleanup = next(event for event in phases if event.phase_code == FILED_HISTORY_PHASE_CLEANUP)
+        settlement = next(event for event in phases if event.phase_code == FILED_HISTORY_PHASE_SETTLEMENT)
+        terminal_event = next(event for event in events if isinstance(event, OperationTerminalEvent))
+        assert cleanup.sequence < settlement.sequence < terminal_event.sequence
+        assert terminal_event.receipt.result_ref == reference
 
 
 @pytest.mark.parametrize(

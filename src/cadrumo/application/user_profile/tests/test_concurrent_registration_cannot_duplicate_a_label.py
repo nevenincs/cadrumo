@@ -39,6 +39,7 @@ import pytest
 
 if TYPE_CHECKING:
     from multiprocessing.queues import Queue
+    from multiprocessing.synchronize import Barrier
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -46,7 +47,7 @@ _LABEL = "Contended Registration Subject"
 _PASSPHRASE = "concurrent-registration-operator-secret"  # noqa: S105 - synthetic test credential
 
 
-def _register_in_sibling(tmp_path_text: str, barrier, results: Queue) -> None:
+def _register_in_sibling(tmp_path_text: str, barrier: Barrier, results: Queue[tuple[str, str]]) -> None:
     """Register the shared label from a separate process, reporting the outcome."""
     from pathlib import Path as _Path
 
@@ -79,7 +80,7 @@ def test_two_processes_registering_one_label_produce_one_capsule(tmp_path: Path)
 
     context = get_context("spawn")
     barrier = context.Barrier(2)
-    results: Queue = context.Queue()
+    results: Queue[tuple[str, str]] = context.Queue()
     workers = [context.Process(target=_register_in_sibling, args=(str(tmp_path), barrier, results)) for _ in range(2)]
     for worker in workers:
         worker.start()
@@ -113,7 +114,7 @@ def test_the_race_actually_reached_the_registration_path(tmp_path: Path) -> None
     """
     context = get_context("spawn")
     barrier = context.Barrier(2)
-    results: Queue = context.Queue()
+    results: Queue[tuple[str, str]] = context.Queue()
     workers = [context.Process(target=_register_in_sibling, args=(str(tmp_path), barrier, results)) for _ in range(2)]
     for worker in workers:
         worker.start()

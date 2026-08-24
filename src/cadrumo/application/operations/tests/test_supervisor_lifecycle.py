@@ -155,6 +155,7 @@ class LifecycleExecutor:
         await_cancellation: bool,
         resource_type: type[JournalObservedFileResource] = JournalObservedFileResource,
         hold_cleanup: bool = True,
+        result_ref: str | None = None,
     ) -> None:
         self._journal = journal
         self._resource_root = resource_root
@@ -162,6 +163,7 @@ class LifecycleExecutor:
         self._await_cancellation = await_cancellation
         self._resource_type = resource_type
         self._hold_cleanup = hold_cleanup
+        self._result_ref = result_ref
         self.started = asyncio.Event()
         self.resource: JournalObservedFileResource | None = None
 
@@ -185,7 +187,7 @@ class LifecycleExecutor:
             while not context.cancellation.cancellation_requested:
                 await asyncio.sleep(0)
             await context.cancellation.acknowledge_cancellation()
-        return None
+        return self._result_ref
 
 
 @dataclass(frozen=True)
@@ -380,6 +382,44 @@ def test_every_terminal_condition_waits_for_owned_file_cleanup_and_preserves_eff
             assert replay.events[-1].receipt == terminal.terminal_receipt
 
         asyncio.run(settle_after_observed_cleanup())
+
+
+def test_executor_result_reference_settles_successfully_after_owned_cleanup(tmp_path: Path) -> None:
+    """A domain result is joined to the receipt only after the real resource closes."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        storage_root = tmp_path / "durable-result-state"
+        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        result_ref = "sync-run:filed-declarations:child-provenance"
+        executor = LifecycleExecutor(
+            journal=journal,
+            resource_root=tmp_path / "owned-result-files",
+            effect=OperationEffect.UPDATED,
+            await_cancellation=False,
+            hold_cleanup=False,
+            result_ref=result_ref,
+        )
+        supervisor = _supervisor(journal=journal, leases=leases, operands=operands, executor=executor)
+
+        async def run() -> None:
+            operation_id = "2" * 64
+            await supervisor.submit(_request(subject_ref="subject:returned-result"), operation_id=operation_id)
+            terminal = await supervisor.start(operation_id)
+            resource = executor.resource
+            assert resource is not None
+
+            assert resource.is_closed
+            assert resource.close_calls == 1
+            assert resource.lifecycle_at_close is OperationLifecycle.RUNNING
+            assert terminal.lifecycle is OperationLifecycle.TERMINAL
+            assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+            assert terminal.effect is OperationEffect.UPDATED
+            assert terminal.terminal_receipt is not None
+            assert terminal.terminal_receipt.result_ref == result_ref
+            replay = await journal.read_after(operation_id, 0, limit=20)
+            assert isinstance(replay.events[-1], OperationTerminalEvent)
+            assert replay.events[-1].receipt.result_ref == result_ref
+
+        asyncio.run(run())
 
 
 def test_cleanup_failure_refuses_terminal_journal_persistence(tmp_path: Path) -> None:

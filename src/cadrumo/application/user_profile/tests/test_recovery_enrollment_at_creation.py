@@ -10,7 +10,8 @@ the wrapper were never written.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from collections.abc import Callable
+from typing import TYPE_CHECKING, NoReturn
 from uuid import UUID
 
 import pytest
@@ -37,6 +38,11 @@ _LABEL = "Recovery Enrollment Subject"
 _PASSPHRASE = "recovery-enrollment-at-creation-operator-secret"  # noqa: S105 - synthetic test credential
 
 _BIP39_WORD_COUNT = 24
+
+
+def _invoke_without_recovery_handover(callback: Callable[..., object]) -> object:
+    """Exercise the runtime boundary when a dynamic caller omits the required callback."""
+    return callback(label=_LABEL, passphrase=_PASSPHRASE)
 
 
 def _recovery_envelope_path(profile_id: str) -> Path:
@@ -109,7 +115,7 @@ def test_registration_requires_a_recovery_handover_contract(tmp_path: Path) -> N
     """The application door cannot be called into a password-only profile."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
         with pytest.raises(TypeError, match="recovery_handover"):
-            register_profile_with_credentials(label=_LABEL, passphrase=_PASSPHRASE)  # type: ignore[call-arg]
+            _invoke_without_recovery_handover(register_profile_with_credentials)
 
         assert not any(view.label == _LABEL for view in CommittedProfileRepository().list())
 
@@ -178,7 +184,7 @@ def test_a_channel_that_cannot_deliver_the_words_creates_no_profile(tmp_path: Pa
     """
     retained: list[ProfileRecoveryEnrollment] = []
 
-    def _refuse(enrollment: ProfileRecoveryEnrollment) -> None:
+    def _refuse(enrollment: ProfileRecoveryEnrollment) -> NoReturn:
         retained.append(enrollment)
         raise RuntimeError("no interactive terminal to display the recovery words on")
 
