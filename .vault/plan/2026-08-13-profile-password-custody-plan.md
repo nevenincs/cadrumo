@@ -19,7 +19,7 @@ related:
   - '[[2026-08-13-sealed-archive-transport-successor-adr]]'
   - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
 modified: '2026-08-24'
-body_hash: 'sha256:6c13b3880601caaf93b7fba2dd9ac10e501565c5da48eb22189eecdcf670d969'
+body_hash: 'sha256:69b695dba994a49434265e9c1f214f671456f1a2116f4bc989c8f021368cad47'
 ---
 
 # `profile-password-custody` plan
@@ -349,7 +349,7 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 - [x] `W06.P12.S238` - Remove inactive profile deletion from the root login gate while preserving active-profile refusal, explicit confirmation, custody preflight, and exact target binding in real subprocess execution; `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py and src/cadrumo/entrypoints/cli/_config/_profile_delete.py and src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/application/config_reset.py and src/cadrumo/application/user_profile/_custody_repository.py and src/cadrumo/application/user_profile/_custody_service.py and src/cadrumo/application/user_profile/_custody_transactions.py and src/cadrumo/application/user_profile/_lifecycle.py and src/cadrumo/application/user_profile/tests/test_custody_transactions.py`.
 - [x] `W06.P12.S239` - Add a central path-specific golden mask for only the profile-delete result fingerprint digest, retain generic digest visibility, and prove the mask is exactly the fresh-sandbox residual through real sequence replay; `src/cadrumo/core/observability/ and dev/docs/sequences/ and dev/docs/tests/test_sequence_goldens.py`.
 - [x] `W06.P12.S240` - Add exact result-payload expectations to every newly enrolled result frame on the nine named documentation pages and tighten the baseline so future unasserted frames fail; `docs/_sequences/contracts/ and dev/docs/tests/test_documented_command_conformance.py`.
-- [ ] `W06.P12.S241` - Adjudicate and correct live documentation sequence behavior for mandatory recovery creation, export product identity, registry and ledger evidence, binding counts, and required-casilla expectations against current production authority; `docs/_sequences/contracts/ and docs/how-to/ and docs/quickstart.md and dev/docs/sequences/_compare.py and dev/docs/sequences/tests/test_compare.py`.
+- [x] `W06.P12.S241` - Adjudicate and correct live documentation sequence behavior for mandatory recovery creation, export product identity, registry and ledger evidence, binding counts, and required-casilla expectations against current production authority; `docs/_sequences/contracts/ and docs/how-to/ and docs/quickstart.md and dev/docs/sequences/_compare.py and dev/docs/sequences/tests/test_compare.py`.
 - [ ] `W06.P12.S242` - Regenerate every affected documentation sequence golden through the owning CLI after live behavior is adjudicated and reconcile frame counts without hand-authored output; `docs/_sequences/`.
 - [ ] `W06.P12.S243` - Repair Spanish, Catalan, and Hungarian localized reference tokens and generated CLI toctree integration so all localized nitpicky builds resolve current targets; `docs/locales/ and docs/reference/cli/`.
 - [ ] `W06.P12.S244` - Repair the main nitpicky API documentation cross-references and toctree ownership against current public module exports; `docs/api/ and docs/conf.py`.

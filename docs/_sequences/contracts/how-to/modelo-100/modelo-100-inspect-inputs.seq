@@ -8,4 +8,4 @@ aeat --format json app modelo casillas 100 --period 0A --required
 @step Show the saved observations behind the calculated figures.
 @result aeat --format json app modelo work observations --modelo 100 --year 2025 --period 0A
 @expect exit_code == 0
-@expect result.state == "borrador"
+@expect result.observations[0].casilla_id == "0001"

@@ -5,29 +5,10 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:7ade1bc839cb728c718ac49de2b0c960a793cf40deb09e784d7f0034fa2b8c53'
+body_hash: 'sha256:1d41b52f6c2f8a6113e48d503cb20c901e9ef37bfe3fae2db63c25d6fb8e158c'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace profile-password-custody with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `profile-password-custody` audit: `S241 live documentation authority review`
 
@@ -44,16 +25,12 @@ identity and removal assertions, and captured-value comparison in the central
 sequence expectation evaluator. Unrelated registry changes present in the
 shared worktree were excluded from the verdict.
 
+The post-PASS re-review additionally covered the corrected active-profile
+expectation in `authenticate-profile` and the corrected first-observation
+expectation in `modelo-100-inspect-inputs`, including their reported green
+page-coherence runs.
+
 ## Findings
-
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### S241 live documentation authority review | {level} | {summary}
-
-     followed by a paragraph carrying the detail. S241 live documentation authority review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
 
 No findings. The reviewed documentation and sequence assertions agree with the
 current production authority: interactive profile creation owns the verified
@@ -68,11 +45,17 @@ exit codes, while retaining the literal expectation when no such capture
 exists. Its focused test exercises a captured expected value against a recorded
 result frame.
 
-## Recommendations
+The post-PASS corrections introduce no finding. `config profile list` returns a
+`profiles` collection whose rows carry the authoritative `active` boolean; it
+does not declare a top-level result `count`, so asserting
+`result.profiles[0].active == true` now tests the intended prerequisite against
+the real payload. The Modelo 100 observations result carries typed observation
+rows, and the seeded calculation's first row is casilla `0001`; asserting that
+identity verifies the documented observation content without coupling the page
+to the calculation revision's lifecycle-sensitive `state`.
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
+## Recommendations
 
 Accept S241. Continue with S242 to regenerate the affected CLI-owned sequence
 goldens from these corrected live contracts; do not hand-author their output.
+The post-PASS re-review does not change this recommendation.
