@@ -12,6 +12,7 @@ from ....core.hashing import sha256_hex
 from ....core.identity import ContentDigest
 from ....core.time import validate_utc_aware
 from ..storage import (
+    OPERATION_SECURE_REFERENCE_NAMESPACE,
     RepositoryError,
     SecureObjectNamespaceDefinition,
     SecureObjectRepository,
@@ -112,3 +113,15 @@ class OperationSecureReferenceRepository:
     def _require_matching_digest(reference: ContentDigest, payload: bytes) -> None:
         if sha256_hex(payload) != reference:
             raise RepositoryError("operation secure reference content digest mismatch")
+
+
+def operation_secure_reference_repository(*, objects: SecureObjectRepository) -> OperationSecureReferenceRepository:
+    """Bind the one globally registered process-local operation operand namespace."""
+    return OperationSecureReferenceRepository(objects=objects, namespace=OPERATION_SECURE_REFERENCE_NAMESPACE)
+
+
+__all__ = [
+    "OPERATION_SECURE_REFERENCE_NAMESPACE",
+    "OperationSecureReferenceRepository",
+    "operation_secure_reference_repository",
+]

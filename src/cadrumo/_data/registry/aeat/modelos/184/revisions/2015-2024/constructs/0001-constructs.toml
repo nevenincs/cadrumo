@@ -39,11 +39,6 @@ application_links = [
 ]
 filing_schedules = ["modelo-184-anual"]
 deadline_windows = [
-    "modelo-184-2018-0a",
-    "modelo-184-2019-0a",
-    "modelo-184-2020-0a",
-    "modelo-184-2021-0a",
-    "modelo-184-2022-0a",
     "modelo-184-2023-0a",
     "modelo-184-2024-0a",
 ]

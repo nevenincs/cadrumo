@@ -1048,10 +1048,9 @@ def _provider_label(kind: AuthProviderKind) -> str:
 
 #: Key carrying the section chooser's answer.
 #:
-#: Deliberately not a schema field key, so
-#: :func:`~cadrumo.application.user_profile.section_row_facts` ignores it
-#: when projecting the row: the chooser tells the page which fields to ask
-#: for, and is not itself one of them.
+#: Deliberately not a schema field key. The chooser tells the page which fields
+#: to ask for; the application mutation authority excludes it from the committed
+#: row.
 _ROW_SECTION_KEY = "__row_section"
 
 
@@ -1086,10 +1085,7 @@ def _run_add_row() -> ManagerActionOutcome:
     """
     from ....adapters.inbound.tui import ManagerActionDisposition, ManagerActionOutcome
     from ....application.user_profile import (
-        ProfileFactWriteDoor,
-        apply_profile_fact_changes,
-        next_section_row_index,
-        section_row_facts,
+        add_profile_repeatable_section_row,
     )
     from ....core import require_active_bucket_id
     from ....domain.user_profile import ProfileSchemaValidationError, load_user_profile_schema
@@ -1111,24 +1107,11 @@ def _run_add_row() -> ManagerActionOutcome:
         return ManagerActionOutcome(message=tr("flows.manager.action.abandoned"))
 
     section = _chosen_section(sections, collected)
-    # Read presence from the page the operator is looking at: its rule for
-    # "this field has a value" is the shared one, so the row this numbers
-    # against is the row set they can see.
-    before = build_active_profile_overview()
-    present = frozenset(view.path for section_view in before.sections for view in section_view.fields if view.present)
-    row_index = next_section_row_index(section.key, present)
-    facts = section_row_facts(section, row_index=row_index, values=collected)
-    if not facts:
-        return ManagerActionOutcome(
-            message=tr("flows.manager.action.add_row_empty"),
-            disposition=ManagerActionDisposition.REFUSED,
-        )
-
     try:
-        apply_profile_fact_changes(
+        mutation = add_profile_repeatable_section_row(
             profile_id=require_active_bucket_id(),
-            changes=facts,
-            door=ProfileFactWriteDoor.MANAGER_ROW,
+            section_key=section.key,
+            values=collected,
         )
     except ProfileSchemaValidationError:
         return ManagerActionOutcome(
@@ -1138,9 +1121,9 @@ def _run_add_row() -> ManagerActionOutcome:
 
     return ManagerActionOutcome(
         message=tr(
-            "flows.manager.action.add_row_done",
-            section=profile_section_title(section),
-            index=row_index,
+                "flows.manager.action.add_row_done",
+                section=profile_section_title(section),
+                index=mutation.row_index,
         ),
         overview=build_active_profile_overview(),
     )

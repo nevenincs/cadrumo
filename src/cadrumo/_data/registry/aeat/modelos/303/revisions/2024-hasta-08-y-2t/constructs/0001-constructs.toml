@@ -174,20 +174,10 @@ live_cross_references = ["modelo-303-static-documentation", "modelo-303-filed-de
 application_links = ["modelo-303-portal", "modelo-303-filing", "modelo-303-extractor", "modelo-303-review", "modelo-303-approval", "modelo-303-reconciliation", "modelo-303-workflow", "modelo-303-deadline", "modelo-303-calculation"]
 filing_schedules = ["modelo-303-trimestral", "modelo-303-mensual"]
 deadline_windows = [
-    "modelo-303-2024-1t",
-    "modelo-303-2024-2t",
-    "modelo-303-2024-3t",
-    "modelo-303-2024-4t",
-    "modelo-303-2025-1t",
-    "modelo-303-2025-2t",
-    "modelo-303-2025-3t",
-    "modelo-303-2025-4t",
     "modelo-303-2024-01-mensual",
     "modelo-303-2024-06-mensual",
-    "modelo-303-2024-12-mensual",
-    "modelo-303-2025-01-mensual",
-    "modelo-303-2025-06-mensual",
-    "modelo-303-2025-12-mensual",
+    "modelo-303-2024-1t",
+    "modelo-303-2024-2t",
 ]
 
 # The completeness_manifest section lives in the completeness_manifest/ fragment

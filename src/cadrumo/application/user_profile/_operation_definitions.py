@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, SecretStr, field_validator, model_validator
 
 from ...core import (
     STRICT_FROZEN_CONFIG,
@@ -17,12 +18,12 @@ from ...core import (
     require_active_bucket_id,
 )
 from ...core.identity import ContentDigest
-from ...domain.user_profile import UserProfileFact, load_user_profile_schema
 from ..operations import (
     OperationBaselinePolicy,
     OperationCapabilities,
     OperationConflictScope,
     OperationDefinition,
+    OperationEphemeralSecretDeclaration,
     OperationExecutorContext,
     OperationExecutorFactory,
     OperationFrontendProjection,
@@ -35,13 +36,12 @@ from ..operations import (
 from ._bundle_export import (
     ProfileBundleExportRequest,
     ProfileBundleExportResult,
+    ProfileBundleExportTransport,
     export_profile_bundle,
 )
-from ._fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
+from ._fact_write import apply_manager_profile_field_mutation
 from ._login_session import logout_active_profile
-from ._profile_record_repository import ProfileRecordRepository
-from ._projections import record_to_path_values
-from ._section_rows import next_section_row_index, section_row_facts
+from ._section_rows import add_profile_repeatable_section_row
 
 PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID = "user-profile.field-mutation"
 PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID = "user-profile.repeatable-row-mutation"
@@ -60,6 +60,7 @@ _PROFILE_REPEATABLE_ROW_MUTATION_PHASES = (
 )
 _PROFILE_BUNDLE_EXPORT_PHASES = (
     "user-profile.bundle-export.preflight",
+    "user-profile.bundle-export.secret-consume",
     "user-profile.bundle-export.execute",
     "user-profile.bundle-export.settlement",
 )
@@ -123,6 +124,10 @@ class ProfileBundleExportOperationRequest(BaseModel):
     def _forbid_a_second_profile_selector(self) -> ProfileBundleExportOperationRequest:
         if self.export.profile_name is not None:
             raise ValueError("profile bundle operation resolves its profile from the operation subject")
+        if self.export.passphrase is not None:
+            raise ValueError("profile bundle operation accepts its passphrase only through one-shot secret submission")
+        if self.export.transport is not ProfileBundleExportTransport.PASSPHRASE_ENCRYPTED:
+            raise ValueError("profile bundle operation requires passphrase-encrypted transport")
         return self
 
 
@@ -195,10 +200,10 @@ class ProfileFieldMutationOperationExecutor:
         await context.events.phase(_PROFILE_FIELD_MUTATION_PHASES[0])
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase(_PROFILE_FIELD_MUTATION_PHASES[1])
-        record = apply_profile_fact_changes(
+        record = apply_manager_profile_field_mutation(
             profile_id=str(payload.profile_id),
-            changes=(UserProfileFact(path=payload.path, value=payload.value.strip() or None),),
-            door=ProfileFactWriteDoor.MANAGER_FIELD,
+            path=payload.path,
+            value=payload.value,
         )
         result = ProfileMutationOperationResult(
             profile_id=payload.profile_id,
@@ -222,31 +227,20 @@ class ProfileRepeatableRowMutationOperationExecutor:
         payload = request.payload
         _require_active_profile_subject(request, payload.profile_id)
         await context.events.phase(_PROFILE_REPEATABLE_ROW_MUTATION_PHASES[0])
-        section = load_user_profile_schema().section(payload.section_key)
-        if not section.repeatable:
-            raise ValueError("repeatable-row operation requires a schema-declared repeatable section")
-        record = ProfileRecordRepository.for_current_session(payload.profile_id).load(payload.profile_id)
-        row_index = next_section_row_index(section.key, record_to_path_values(record))
-        facts = section_row_facts(
-            section,
-            row_index=row_index,
-            values={item.field_key: item.value for item in payload.values},
-        )
-        if not facts:
-            raise ValueError("repeatable-row operation projected no profile facts")
+        values = {item.field_key: item.value for item in payload.values}
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase(_PROFILE_REPEATABLE_ROW_MUTATION_PHASES[1])
-        updated = apply_profile_fact_changes(
+        mutation = add_profile_repeatable_section_row(
             profile_id=str(payload.profile_id),
-            changes=facts,
-            door=ProfileFactWriteDoor.MANAGER_ROW,
+            section_key=payload.section_key,
+            values=values,
         )
         result = ProfileRepeatableRowMutationOperationResult(
             profile_id=payload.profile_id,
-            record_revision=updated.record_revision,
-            content_digest=updated.content_digest,
-            section_key=section.key,
-            row_index=row_index,
+            record_revision=mutation.record.record_revision,
+            content_digest=mutation.record.content_digest,
+            section_key=mutation.section_key,
+            row_index=mutation.row_index,
         )
         result_ref = await _result_reference(result, context)
         await context.events.effect(OperationEffect.UPDATED)
@@ -265,12 +259,25 @@ class ProfileBundleExportOperationExecutor:
         payload = request.payload
         _require_active_profile_subject(request, payload.profile_id)
         await context.events.phase(_PROFILE_BUNDLE_EXPORT_PHASES[0])
-        await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase(_PROFILE_BUNDLE_EXPORT_PHASES[1])
-        result = export_profile_bundle(payload.export.model_copy(update={"profile_name": str(payload.profile_id)}))
+        async with context.ephemeral_secret.consume() as secret:
+            passphrase = bytes(secret).decode("utf-8")
+            try:
+                await context.events.effect(OperationEffect.UNKNOWN)
+                await context.events.phase(_PROFILE_BUNDLE_EXPORT_PHASES[2])
+                result = export_profile_bundle(
+                    payload.export.model_copy(
+                        update={
+                            "profile_name": None,
+                            "passphrase": SecretStr(passphrase),
+                        }
+                    )
+                )
+            finally:
+                passphrase = ""
         result_ref = await _result_reference(result, context)
         await context.events.effect(OperationEffect.UPDATED)
-        await context.events.phase(_PROFILE_BUNDLE_EXPORT_PHASES[2])
+        await context.events.phase(_PROFILE_BUNDLE_EXPORT_PHASES[3])
         return result_ref
 
 
@@ -300,6 +307,7 @@ def _definition(
     result_type: type[BaseModel],
     executor_type: type[object],
     phase_codes: tuple[str, ...],
+    ephemeral_secret: OperationEphemeralSecretDeclaration | None = None,
 ) -> OperationDefinition:
     return OperationDefinition(
         definition_id=definition_id,
@@ -327,6 +335,7 @@ def _definition(
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        ephemeral_secret=ephemeral_secret,
     )
 
 
@@ -351,6 +360,10 @@ USER_PROFILE_OPERATION_DEFINITIONS = (
         result_type=ProfileBundleExportResult,
         executor_type=ProfileBundleExportOperationExecutor,
         phase_codes=_PROFILE_BUNDLE_EXPORT_PHASES,
+        ephemeral_secret=OperationEphemeralSecretDeclaration(
+            secret_kind="profile.bundle-export.passphrase",  # noqa: S106
+            lifetime=timedelta(minutes=5),
+        ),
     ),
     _definition(
         definition_id=PROFILE_LOGOUT_OPERATION_DEFINITION_ID,

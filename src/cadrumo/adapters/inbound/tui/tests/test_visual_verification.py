@@ -253,18 +253,13 @@ def _manager_populated(tmp_path: Path) -> Iterator[ProfileManagerApp]:
     made a socio row require a ``clave`` this fixture would otherwise have
     to track.
     """
-    from .....application.user_profile import (
-        next_section_row_index,
-        section_row_facts,
-    )
-    from .....domain.user_profile import load_user_profile_schema
+    from .....application.user_profile import add_profile_repeatable_section_row
     from .....entrypoints.cli._config._manager_actions import manager_actions
     from .....entrypoints.cli._config._manager_frontend import (
         build_active_profile_overview,
         persist_active_profile_field,
         profile_field_value_refusal,
     )
-    from .....tests.profile_capsule import set_active_test_profile_facts
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(
@@ -276,12 +271,11 @@ def _manager_populated(tmp_path: Path) -> Iterator[ProfileManagerApp]:
         # and building the overview both go through the capsule, which serves
         # neither without an authenticated session.
         login_profile(name=_VISUAL_LABEL, passphrase_callback=lambda: _VISUAL_PASSWORD)
-        schema = load_user_profile_schema()
-        section = next(item for item in schema.sections if item.key == "activities")
-        facts = section_row_facts(
-            section, row_index=next_section_row_index(section.key, ()), values={"description": "Consultoria"}
+        add_profile_repeatable_section_row(
+            profile_id=require_active_bucket_id(),
+            section_key="activities",
+            values={"description": "Consultoria"},
         )
-        set_active_test_profile_facts(facts)
         yield ProfileManagerApp(
             build_active_profile_overview(),
             persist=persist_active_profile_field,

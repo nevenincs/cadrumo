@@ -126,7 +126,7 @@ def _mcp_evidence(cohort: LoadedReleaseCohort, *, client: bool = False) -> Insta
         with zipfile.ZipFile(cohort.artifact("mcpb")) as archive:
             archive.extractall(project_root)
         shutil.copytree(_client_venv_template(server.parents[1]), project_root / ".venv", copy_function=os.link)
-        scripts = project_root / ".venv" / ("Scripts" if os.name == "nt" else "bin")
+        scripts = venv_bin_dir(project_root / ".venv")
         server = (scripts / ("cadrumo-mcp.exe" if os.name == "nt" else "cadrumo-mcp")).resolve(strict=True)
     cli = server.with_name("aeat.exe" if server.suffix.lower() == ".exe" else "aeat")
     invoked_cli_sha256 = hashlib.sha256(str(cli).encode("utf-8")).hexdigest()

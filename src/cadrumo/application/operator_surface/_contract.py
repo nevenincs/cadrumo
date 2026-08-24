@@ -18,7 +18,7 @@ from functools import lru_cache
 from ...core import BindingSourceKind
 from ...core.i18n import tr
 from ...core.logging import get_logger
-from ._errors import OperatorSurfaceContractError
+from ._errors import OperatorSurfaceContractError, operator_surface_contract_verdict
 from ._models import (
     LifecycleContract,
     ModeloLifecycleStep,
@@ -397,6 +397,10 @@ def require_accepted_root(name: str) -> RootSurface:
             "cli.operator_surface.errors.accepted_roots_only",
             default="accepted operator roots are config and app",
         ),
+        precondition_verdict=operator_surface_contract_verdict(
+            "operator_surface.accepted_root",
+            facts={"requested_root": normalized or name},
+        ),
     )
 
 
@@ -421,5 +425,9 @@ def resolve_source_kind_alias(value: str) -> BindingSourceKind:
             "cli.operator_surface.errors.unknown_source_kind",
             kind=value,
             options=", ".join(source_kind.value for source_kind in SOURCE_KINDS),
+        ),
+        precondition_verdict=operator_surface_contract_verdict(
+            "operator_surface.source_kind_alias",
+            facts={"requested_source_kind": value},
         ),
     )

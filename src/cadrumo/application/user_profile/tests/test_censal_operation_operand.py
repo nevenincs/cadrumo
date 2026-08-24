@@ -10,17 +10,13 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.operations import OperationSecureReferenceRepository
-from ....adapters.persistence.storage import (
-    RepositoryError,
-    SecureObjectNamespaceDefinition,
-    StorageCustodyDisposition,
-    StorageNamespaceScope,
+from ....adapters.persistence.operations import (
+    OPERATION_SECURE_REFERENCE_NAMESPACE,
+    operation_secure_reference_repository,
 )
-from ....core.classification import SensitivityClass
+from ....adapters.persistence.storage import RepositoryError
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import aeat_url
-from ....tests.secure_namespace_registration import registered_objects
 from ....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from ...operations import OperationRequest
 from .._censal_observation import CensalObservation, CensalObservationAddress, CensalObservationIdentity
@@ -38,18 +34,6 @@ from .._censo_sync import CENSAL_ADOPTABLE_PATHS
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 8, 24, 12, tzinfo=UTC)
-_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="censal_reviewed_operand_test",
-    namespace="cadrumo-test.user-profile.censal-reviewed-operand",
-    owner="cadrumo.application.user_profile.tests.test_censal_operation_operand",
-    sensitivity=SensitivityClass.IDENTITY,
-    schema_version=1,
-    object_key_grammar="{content_digest}",
-    scope=StorageNamespaceScope.BUCKET_LOCAL,
-    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
-)
-
-
 def _domicilio(*, notification: bool) -> CensalObservationAddress:
     return CensalObservationAddress(
         tipo_via="CALLE",
@@ -159,8 +143,8 @@ def test_reviewed_operand_strict_serialization_round_trip_and_tamper_refusal() -
 def test_reviewed_operand_real_secure_reference_round_trip_and_digest_corruption(tmp_path: Path) -> None:
     operand = _operand()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        objects = registered_objects(profile.repository, _NAMESPACE)
-        store = OperationSecureReferenceRepository(objects=objects, namespace=_NAMESPACE)
+        objects = profile.repository
+        store = operation_secure_reference_repository(objects=objects)
         reference = asyncio.run(store.put(operand, written_at=_NOW))
         assert asyncio.run(store.resolve(reference, CensalReviewedOperand)) == operand
         at_rest = read_db_at_rest_bytes(profile.paths.database_file)
@@ -169,10 +153,10 @@ def test_reviewed_operand_real_secure_reference_round_trip_and_digest_corruption
 
         substituted = operand.model_copy(update={"field_intents": tuple(reversed(operand.field_intents))})
         objects.save(
-            namespace=_NAMESPACE.namespace,
+            namespace=OPERATION_SECURE_REFERENCE_NAMESPACE.namespace,
             object_key=reference,
-            classification=_NAMESPACE.sensitivity,
-            schema_version=_NAMESPACE.schema_version,
+            classification=OPERATION_SECURE_REFERENCE_NAMESPACE.sensitivity,
+            schema_version=OPERATION_SECURE_REFERENCE_NAMESPACE.schema_version,
             written_at=_NOW,
             payload=substituted.model_dump_json().encode(),
         )

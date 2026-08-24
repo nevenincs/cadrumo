@@ -1,24 +1,4 @@
 [[revisions.2024-desde-09-y-3t.deadline_windows]]
-id = "modelo-303-2024-1t"
-filing_year = 2024
-period = "2024 1T"
-period_kind = "quarterly"
-opens_on = 2024-04-01
-closes_on = 2024-04-22
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
-source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
-
-[[revisions.2024-desde-09-y-3t.deadline_windows]]
-id = "modelo-303-2024-2t"
-filing_year = 2024
-period = "2024 2T"
-period_kind = "quarterly"
-opens_on = 2024-07-01
-closes_on = 2024-07-22
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
-source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
-
-[[revisions.2024-desde-09-y-3t.deadline_windows]]
 id = "modelo-303-2024-3t"
 filing_year = 2024
 period = "2024 3T"
@@ -39,101 +19,11 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
 source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 
 [[revisions.2024-desde-09-y-3t.deadline_windows]]
-id = "modelo-303-2025-1t"
-filing_year = 2025
-period = "2025 1T"
-period_kind = "quarterly"
-opens_on = 2025-04-01
-closes_on = 2025-04-21
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
-source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
-
-[[revisions.2024-desde-09-y-3t.deadline_windows]]
-id = "modelo-303-2025-2t"
-filing_year = 2025
-period = "2025 2T"
-period_kind = "quarterly"
-opens_on = 2025-07-01
-closes_on = 2025-07-21
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
-source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
-
-[[revisions.2024-desde-09-y-3t.deadline_windows]]
-id = "modelo-303-2025-3t"
-filing_year = 2025
-period = "2025 3T"
-period_kind = "quarterly"
-opens_on = 2025-10-01
-closes_on = 2025-10-20
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
-source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
-
-[[revisions.2024-desde-09-y-3t.deadline_windows]]
-id = "modelo-303-2025-4t"
-filing_year = 2025
-period = "2025 4T"
-period_kind = "quarterly"
-opens_on = 2026-01-01
-closes_on = 2026-01-30
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
-source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
-
-[[revisions.2024-desde-09-y-3t.deadline_windows]]
-id = "modelo-303-2024-01-mensual"
-filing_year = 2024
-period = "2024 01"
-period_kind = "monthly"
-opens_on = 2024-02-01
-closes_on = 2024-02-29
-legal_refs = ["rd-1624-1992:art-71"]
-source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
-
-[[revisions.2024-desde-09-y-3t.deadline_windows]]
-id = "modelo-303-2024-06-mensual"
-filing_year = 2024
-period = "2024 06"
-period_kind = "monthly"
-opens_on = 2024-07-01
-closes_on = 2024-07-30
-legal_refs = ["rd-1624-1992:art-71"]
-source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
-
-[[revisions.2024-desde-09-y-3t.deadline_windows]]
 id = "modelo-303-2024-12-mensual"
 filing_year = 2024
 period = "2024 12"
 period_kind = "monthly"
 opens_on = 2025-01-01
 closes_on = 2025-01-30
-legal_refs = ["rd-1624-1992:art-71"]
-source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
-
-[[revisions.2024-desde-09-y-3t.deadline_windows]]
-id = "modelo-303-2025-01-mensual"
-filing_year = 2025
-period = "2025 01"
-period_kind = "monthly"
-opens_on = 2025-02-01
-closes_on = 2025-02-28
-legal_refs = ["rd-1624-1992:art-71"]
-source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
-
-[[revisions.2024-desde-09-y-3t.deadline_windows]]
-id = "modelo-303-2025-06-mensual"
-filing_year = 2025
-period = "2025 06"
-period_kind = "monthly"
-opens_on = 2025-07-01
-closes_on = 2025-07-30
-legal_refs = ["rd-1624-1992:art-71"]
-source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
-
-[[revisions.2024-desde-09-y-3t.deadline_windows]]
-id = "modelo-303-2025-12-mensual"
-filing_year = 2025
-period = "2025 12"
-period_kind = "monthly"
-opens_on = 2026-01-01
-closes_on = 2026-01-30
 legal_refs = ["rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]

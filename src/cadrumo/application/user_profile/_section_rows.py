@@ -25,7 +25,12 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from ...domain.user_profile import ProfileSchemaValidationError, UserProfileFact, UserProfileRecord, load_user_profile_schema
+from ...domain.user_profile import (
+    ProfileSchemaValidationError,
+    UserProfileFact,
+    UserProfileRecord,
+    load_user_profile_schema,
+)
 from ._completeness import profile_section_rows
 from ._fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
 from ._profile_record_repository import ProfileRecordRepository

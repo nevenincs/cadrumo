@@ -12,16 +12,9 @@ from pydantic import BaseModel, Field
 from ....adapters.persistence.operations import (
     OperationJournalRepository,
     OperationLeaseFilesystemRepository,
-    OperationSecureReferenceRepository,
-)
-from ....adapters.persistence.storage import (
-    SecureObjectNamespaceDefinition,
-    StorageCustodyDisposition,
-    StorageNamespaceScope,
+    operation_secure_reference_repository,
 )
 from ....core import STRICT_FROZEN_CONFIG
-from ....core.classification import SensitivityClass
-from ....tests.secure_namespace_registration import registered_objects as _registered_objects
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     OperationBaselinePolicy,
@@ -50,16 +43,6 @@ from .. import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 8, 14, 17, tzinfo=UTC)
-_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="operation_supervisor_replay_test",
-    namespace="cadrumo-test.operations.supervisor-replay",
-    owner="cadrumo.application.operations.tests.test_supervisor_replay",
-    sensitivity=SensitivityClass.FINANCIAL,
-    schema_version=1,
-    object_key_grammar="{content_digest}",
-    scope=StorageNamespaceScope.BUCKET_LOCAL,
-    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
-)
 _DEFINITION_ID = "operation.supervisor.replay"
 
 
@@ -149,9 +132,7 @@ def test_supervisor_replay_reads_idempotent_bounded_pages_from_the_durable_event
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         journal = OperationJournalRepository(storage_root=tmp_path / "durable-state")
         leases = OperationLeaseFilesystemRepository(storage_root=tmp_path / "durable-state")
-        operands = OperationSecureReferenceRepository(
-            objects=_registered_objects(profile.repository, _NAMESPACE), namespace=_NAMESPACE
-        )
+        operands = operation_secure_reference_repository(objects=profile.repository)
         supervisor = _supervisor(journal=journal, leases=leases, operands=operands)
         operation_id = asyncio.run(
             supervisor.submit(
