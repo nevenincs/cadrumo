@@ -96,10 +96,20 @@ def worker_command(
         common["startupinfo"] = startupinfo
         command.extend(("--request-handle", str(request_handle), "--result-handle", str(result_handle)))
     else:
+        descriptor_bound = os.sysconf("SC_OPEN_MAX")
         common["pass_fds"] = (request_read, result_write)
         common["start_new_session"] = True
         common["preexec_fn"] = apply_posix_worker_limits
-        command.extend(("--request-fd", str(request_read), "--result-fd", str(result_write)))
+        command.extend(
+            (
+                "--request-fd",
+                str(request_read),
+                "--result-fd",
+                str(result_write),
+                "--descriptor-bound",
+                str(descriptor_bound),
+            )
+        )
     return command, common
 
 

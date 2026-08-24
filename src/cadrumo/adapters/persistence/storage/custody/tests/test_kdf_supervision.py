@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+import tempfile
 import time
 from itertools import product
 from pathlib import Path
@@ -38,6 +39,8 @@ from .. import (
     wrap_profile_custody_password_material,
     wrap_profile_custody_recovery_material,
 )
+from .._kdf_attestation import parse_ready_attestation
+from .._kdf_process import apply_posix_worker_limits, worker_environment
 from .._kdf_process import terminate_process_tree as _terminate_process_tree
 from .._kdf_supervision import (
     KDF_FRAME_CONTROL,
@@ -271,6 +274,63 @@ def test_ready_attestation_proves_the_real_os_containment_environment_and_handle
             )
             assert not os.get_inheritable(worker._request_fd)
             assert not os.get_inheritable(worker._result_fd)
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX descriptor inheritance boundary")
+def test_real_worker_sheds_extra_inherited_pty_and_pipe_descriptors_before_ready() -> None:
+    import pty
+
+    request_read, request_write = os.pipe()
+    result_read, result_write = os.pipe()
+    extra_pipe_read, extra_pipe_write = os.pipe()
+    pty_controller, pty_peer = pty.openpty()
+    inherited = (request_read, result_write, extra_pipe_read, extra_pipe_write, pty_controller, pty_peer)
+    for descriptor in inherited:
+        os.set_inheritable(descriptor, True)
+
+    with tempfile.TemporaryDirectory() as neutral_directory:
+        neutral_root = Path(neutral_directory)
+        command = [
+            sys.executable,
+            "-m",
+            "cadrumo.adapters.persistence.storage.custody._kdf_worker",
+            "--request-fd",
+            str(request_read),
+            "--result-fd",
+            str(result_write),
+            "--descriptor-bound",
+            str(os.sysconf("SC_OPEN_MAX")),
+        ]
+        process = subprocess.Popen(  # noqa: S603 - fixed interpreter and module argv
+            command,
+            close_fds=True,
+            cwd=neutral_root,
+            env=worker_environment(neutral_root=neutral_root),
+            pass_fds=inherited,
+            preexec_fn=apply_posix_worker_limits,
+            start_new_session=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        os.close(request_read)
+        os.close(result_write)
+        try:
+            kind, value = read_kdf_frame(result_read)
+            assert kind == KDF_FRAME_CONTROL
+            attestation = parse_ready_attestation(value)
+            assert attestation["open_file_descriptors"] == sorted({0, 1, 2, request_read, result_write})
+
+            os.write(extra_pipe_write, b"parent-owned")
+            assert os.read(extra_pipe_read, len(b"parent-owned")) == b"parent-owned"
+            assert os.fstat(pty_controller).st_rdev
+            assert os.fstat(pty_peer).st_rdev
+        finally:
+            os.close(request_write)
+            os.close(result_read)
+            for descriptor in (extra_pipe_read, extra_pipe_write, pty_controller, pty_peer):
+                os.close(descriptor)
+            process.wait(timeout=5.0)
 
 
 def test_real_os_containment_refuses_or_reaps_a_worker_child_escape() -> None:

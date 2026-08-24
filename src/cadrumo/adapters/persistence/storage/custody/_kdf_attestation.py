@@ -16,7 +16,7 @@ from ._kdf_windows_job import (
 )
 
 
-def kdf_worker_ready_attestation() -> bytes:
+def kdf_worker_ready_attestation(*, request_fd: int, result_fd: int) -> bytes:
     """Build a child attestation of the limits it can observe before secrets arrive."""
     platform = "win32" if sys.platform == "win32" else "posix"
     limits: dict[str, int] = {
@@ -49,12 +49,15 @@ def kdf_worker_ready_attestation() -> bytes:
         "transport": "framed-anonymous-pipe/v1",
     }
     if platform == "posix":
-        payload["open_file_descriptors"] = _open_posix_file_descriptors()
+        payload["open_file_descriptors"] = _open_posix_file_descriptors(
+            authorized=(request_fd, result_fd),
+        )
     return _canonical_frame_bytes(payload)
 
 
-def _open_posix_file_descriptors() -> list[int]:
-    return [descriptor for descriptor in range(16) if _is_open_file_descriptor(descriptor)]
+def _open_posix_file_descriptors(*, authorized: tuple[int, int]) -> list[int]:
+    candidates = {*(range(16)), *authorized}
+    return [descriptor for descriptor in sorted(candidates) if _is_open_file_descriptor(descriptor)]
 
 
 def _is_open_file_descriptor(descriptor: int) -> bool:

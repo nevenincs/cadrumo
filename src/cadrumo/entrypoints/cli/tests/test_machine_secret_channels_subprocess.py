@@ -665,7 +665,7 @@ def _run_profile_create_with_recovery(root: Path, *, channel: str, payload: str)
                     os.close(descriptor)
         supervisor.join(timeout=5)
     assert not supervisor.is_alive()
-    assert supervisor_failure == []
+    assert supervisor_failure == [], result.stderr
     return result
 
 
@@ -1040,8 +1040,8 @@ def test_posix_recovery_descriptors_complete_real_headless_creation(tmp_path: Pa
         result = subprocess.run(  # noqa: S603 - fixed interpreter and module
             [
                 sys.executable,
-                "-m",
-                "cadrumo.entrypoints.cli",
+                "-c",
+                "from cadrumo.entrypoints.cli import main; main()",
                 "--format",
                 "json",
                 "config",
@@ -1070,7 +1070,7 @@ def test_posix_recovery_descriptors_complete_real_headless_creation(tmp_path: Pa
         os.close(verification_reader)
     supervisor.join(timeout=5)
     assert not supervisor.is_alive()
-    assert supervisor_failure == []
+    assert supervisor_failure == [], result.stderr
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout)["result"]["profile_name"] == "posix-recovery"
 

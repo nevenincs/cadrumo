@@ -44,15 +44,25 @@ def main() -> int:
     parser.add_argument("--result-fd", type=int)
     parser.add_argument("--request-handle", type=int)
     parser.add_argument("--result-handle", type=int)
+    parser.add_argument("--descriptor-bound", type=int)
     args = parser.parse_args()
     request_fd, result_fd = _worker_fds(args)
+    _close_unallowlisted_posix_file_descriptors(
+        request_fd=request_fd,
+        result_fd=result_fd,
+        descriptor_bound=args.descriptor_bound,
+    )
     try:
-        write_kdf_frame(result_fd, kdf_worker_ready_attestation(), kind=KDF_FRAME_CONTROL)
+        write_kdf_frame(
+            result_fd,
+            kdf_worker_ready_attestation(request_fd=request_fd, result_fd=result_fd),
+            kind=KDF_FRAME_CONTROL,
+        )
         request_kind, request = read_kdf_frame(request_fd)
         if request_kind != KDF_FRAME_CONTROL:
             raise ValueError("profile KDF request frame kind is invalid")
         payload = _parse_request(request)
-        operation = payload["operation"]
+        operation = cast(str, payload["operation"])
         if operation == "calibrate-v1":
             _derive_calibration(payload)
             write_kdf_frame(result_fd, KDF_CALIBRATED_FRAME, kind=KDF_FRAME_CONTROL)
@@ -72,6 +82,27 @@ def main() -> int:
         os.close(request_fd)
         os.close(result_fd)
     return 0
+
+
+def _close_unallowlisted_posix_file_descriptors(
+    *,
+    request_fd: int,
+    result_fd: int,
+    descriptor_bound: int | None,
+) -> None:
+    if os.name == "nt":
+        return
+
+    if descriptor_bound is None:
+        raise ValueError("profile KDF worker descriptor bound is unavailable")
+    allowed = {0, 1, 2, request_fd, result_fd}
+    if any(descriptor < 0 or descriptor >= descriptor_bound for descriptor in allowed):
+        raise ValueError("profile KDF worker descriptor is outside the OS bound")
+    range_start = 3
+    for descriptor in sorted(allowed - {0, 1, 2}):
+        os.closerange(range_start, descriptor)
+        range_start = descriptor + 1
+    os.closerange(range_start, descriptor_bound)
 
 
 def _worker_fds(args: argparse.Namespace) -> tuple[int, int]:
