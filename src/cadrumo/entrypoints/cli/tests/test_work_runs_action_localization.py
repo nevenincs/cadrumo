@@ -213,20 +213,44 @@ def test_work_runs_localizes_only_human_text_and_keeps_one_structural_envelope()
     summaries_by_locale: dict[str, tuple[str, str]] = {}
     structural_digests: set[str] = set()
     for language in SUPPORTED_OUTPUT_LANGUAGES:
-        result = invoke_cached_cli(
-            [
-                "--format",
-                "json",
-                "app",
-                "modelo",
-                "work",
-                "runs",
-                "--output-language",
-                language,
-            ],
-        )
-        assert result.exit_code == 0, result.output
-        rows = {row["run_id"]: row for row in json.loads(result.output)["result"]["runs"]}
+        rows = {}
+        for run in (action_run, health_run):
+            result = invoke_cached_cli(
+                [
+                    "--format",
+                    "json",
+                    "app",
+                    "modelo",
+                    "work",
+                    "run",
+                    run.run_id,
+                    "--output-language",
+                    language,
+                ],
+            )
+            assert result.exit_code == 0, result.output
+            row = json.loads(result.output)["result"]
+            details_result = invoke_cached_cli(
+                [
+                    "--format",
+                    "json",
+                    "app",
+                    "modelo",
+                    "work",
+                    "run-details",
+                    run.run_id,
+                    "--output-language",
+                    language,
+                ],
+            )
+            assert details_result.exit_code == 0, details_result.output
+            details = json.loads(details_result.output)["result"]
+            details["summary_details"] = {
+                "kind": details.pop("summary_detail_kind"),
+                **details.pop("summary_detail_facts"),
+            }
+            row.update(details)
+            rows[row["run_id"]] = row
         action_row = rows[action_run.run_id]
         health_row = rows[health_run.run_id]
         summaries_by_locale[language] = (action_row["summary"], health_row["summary"])
@@ -236,9 +260,10 @@ def test_work_runs_localizes_only_human_text_and_keeps_one_structural_envelope()
             "kind": "workflow_failure",
             "error_code": "workflow.draft.build_failure",
         }
-        assert action_row["obligation"]["modelo"] == "130"
+        assert action_row["modelo"] == "130"
+        assert action_row["obligation_status"] == "upcoming"
         assert action_row["summary_stage"] == WorkflowStage.BUILDING_DRAFT.value
-        assert action_row["site_health_alert"] is None
+        assert action_row["site_health_state"] is None
         assert action_row["action"]["action"] == {
             "action_id": "operator.modelo.work.calculate",
             "target_command_key": "modelo.work.calculate",
@@ -247,14 +272,11 @@ def test_work_runs_localizes_only_human_text_and_keeps_one_structural_envelope()
         assert action_row["action"]["missing_argument_names"] == ["work_unit_id"]
         assert health_row["action"]["action"] is None
         assert health_row["action"]["no_recovery_outcome"] == "operator_decision"
-        assert health_row["site_health_alert"]["status"] == {
-            "alert_code": "workflow.site.mantenimiento",
-            "state": "mantenimiento",
-            "observed_at": _T.isoformat(),
-            "http_status": 503,
-            "retry_after_seconds": 120,
-            "detected_marker_count": 2,
-        }
+        assert health_row["site_health_state"] == "mantenimiento"
+        assert health_row["site_health_observed_at"] == _T.isoformat()
+        assert health_row["site_health_http_status"] == 503
+        assert health_row["site_health_retry_after_seconds"] == 120
+        assert health_row["site_health_detected_marker_count"] == 2
 
         structural_rows = []
         for row in rows.values():

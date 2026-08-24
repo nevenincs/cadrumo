@@ -379,6 +379,19 @@ def test_work_revisions_resolves_a_visible_filing_target(_isolated_cli_backend: 
     payload = _payload(result.output)
     assert payload["work_unit_id_filter"] == work_unit_id
     assert [revision["calculation_revision_id"] for revision in payload["revisions"]] == [revision_id]
+    assert set(payload["revisions"][0]) == {
+        "short_calculation_revision_id",
+        "calculation_revision_id",
+        "short_work_unit_id",
+        "work_unit_id",
+        "state",
+        "created_at",
+    }
+
+    detail = _invoke(["--format", "json", "app", "modelo", "work", "revision", revision_id])
+    assert detail.exit_code == 0, detail.output
+    assert _payload(detail.output)["calculation_revision_id"] == revision_id
+    assert "casillas" in _payload(detail.output)
 
 
 def test_work_calculate_resolves_a_visible_filing_target(_isolated_cli_backend: Path) -> None:

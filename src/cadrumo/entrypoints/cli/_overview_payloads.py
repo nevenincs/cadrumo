@@ -372,6 +372,50 @@ class OverviewCalendarProfilePayload(OutputSchema):
     next_due_closes_on: str | None = None
 
 
+class OverviewCalendarEntrySummaryPayload(OutputSchema):
+    """Actionable deadline summary returned by ``overview calendar``.
+
+    The calendar is computed from the caller's clock and therefore cannot
+    honestly thin rows behind a later read.  This projection instead keeps the
+    deadline, recovery, local-work and filing-state facts needed to decide the
+    next action while omitting duplicated evidence identity and provenance
+    metadata available on the filing and live-record surfaces.
+    """
+
+    modelo: str
+    period: str
+    adjusted_closes_on: str
+    payment_cutoff_on: str | None = None
+    status: str
+    user_state: Literal["due", "late", "filed", "unknown"]
+    recovery: OverviewRecoveryPayload | None = None
+    censo_enrolment_state: Literal["not_checked", "not_required", "unverified", "verified"]
+    local_work_unit_id: WorkUnitId | None = None
+    local_work_unit_name: str | None = None
+    local_work_unit_revision_id: RevisionId | None = None
+    local_filing_state: Literal["not_ready_to_file", "ready_to_file", "external_baseline_imported"]
+    aeat_submission_state: Literal["not_observed", "submitted_observed", "accepted", "justificante_verified"]
+    justificante_required: bool
+    justificante_verified: bool
+
+
+class OverviewCalendarEventSummaryPayload(OutputSchema):
+    """Compact additive event summary for a clock-derived calendar result."""
+
+    event_type: Literal["filing", "message"]
+    event_date: str
+    summary: str
+    reference_id: str
+    modelo: str | None = None
+    period: str | None = None
+    status: str | None = None
+    notificacion_estado_servicio: str | None = None
+    aeat_submission_state: Literal["not_observed", "submitted_observed", "accepted", "justificante_verified"] | None = (
+        None
+    )
+    justificante_verified: bool | None = None
+
+
 # ---------------------------------------------------------------------------
 # Graph-declared schema targets
 # ---------------------------------------------------------------------------
@@ -422,8 +466,8 @@ class OverviewCalendarResult(OutputSchema):
     from_date: str | None = None
     to_date: str | None = None
     range: OverviewCalendarRangePayload | None = None
-    entries: list[OverviewCalendarEntryPayload] = []
-    events: list[OverviewCalendarEventPayload] = []
+    entries: list[OverviewCalendarEntrySummaryPayload] = []
+    events: list[OverviewCalendarEventSummaryPayload] = []
     warnings: list[OverviewCalendarWarningPayload] = []
     suppressed_entries: list[OverviewSuppressedCalendarEntryPayload] = []
     profiles: list[OverviewCalendarProfilePayload] = []
@@ -434,12 +478,6 @@ class OverviewCalendarResult(OutputSchema):
         if self.range is not None and self.coverage is None:
             raise ValueError("single-profile calendar results must include obligation coverage")
         return self
-
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
-    # pydantic v2 model_config class-variable assignment triggers mypy
-    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
-    model_config = {"extra": "allow"}  # type: ignore[assignment]  # reason: TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is...
-
 
 class OverviewAgendaResult(OutputSchema):
     """JSON envelope result for ``aeat app overview agenda``.

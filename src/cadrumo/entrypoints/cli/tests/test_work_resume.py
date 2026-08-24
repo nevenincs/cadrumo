@@ -320,6 +320,8 @@ def test_work_runs_projects_a_typed_builder_refusal_without_reconstructing_a_com
     assert rendered["final_stage"] == WorkflowStage.ABORTED.value
     assert rendered["aborted_reason"] == WorkflowAbortReason.DRAFT_HAS_ERRORS.value
     assert rendered["summary"]
+    assert "summary_details" not in rendered
+    assert "obligation" not in rendered
     assert "next_action" not in rendered
     assert rendered["action"] == {
         "failed_condition_id": "workflow.draft.buildable",
@@ -350,6 +352,18 @@ def test_work_runs_projects_a_typed_builder_refusal_without_reconstructing_a_com
         "conditionality": "requires_arguments",
         "no_recovery_outcome": None,
     }
+
+    run_result = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "run", run.run_id])
+    assert run_result.exit_code == 0, run_result.output
+    full = json.loads(run_result.output)["result"]
+    assert full["run_id"] == run.run_id
+    details_result = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "run-details", run.run_id])
+    assert details_result.exit_code == 0, details_result.output
+    details = json.loads(details_result.output)["result"]
+    assert details["summary_detail_kind"] == "workflow_failure"
+    assert details["summary_detail_facts"] == {"error_code": "workflow.draft.build_failure"}
+    assert full["modelo"] == "130"
+    assert full["obligation_status"] == "upcoming"
 
     assert load_run(run.run_id) == stored_before
     assert [candidate.run_id for candidate in list_runs()] == [run.run_id]

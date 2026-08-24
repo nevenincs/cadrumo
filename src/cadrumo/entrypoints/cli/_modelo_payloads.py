@@ -97,7 +97,10 @@ from ._modelo_aux_payloads import (
     ModeloRowPayload,
     WithholdingClaveBreakdownPayload,
     WorkflowRunPayload,
+    WorkflowRunSummaryPayload,
     WorkHistoryResult,
+    WorkRunDetailsResult,
+    WorkRunResult,
     WorkRunsResult,
     WorkUnitHistoryEventPayload,
 )
@@ -114,6 +117,7 @@ from ._modelo_iva_wallet_payloads import (
     IvaWalletSeedResult,
 )
 from ._modelo_revision_payload_parts import (
+    CalculationRevisionCommandProjectionFields,
     CalculationRevisionProjectionFields,
     DetailRowPayload,
     ObservationPayload,
@@ -569,13 +573,13 @@ class WorkDiscardResult(OutputSchema):
     causante_ccaa: str | None = None
 
 
-class WorkCalculateResult(CalculationRevisionProjectionFields):
+class WorkCalculateResult(CalculationRevisionCommandProjectionFields):
     """Successful ``modelo work calculate`` result payload.
 
     The calculate CLI flattens the persisted
     :class:`CalculationRevision` fields from
     :class:`CalculationRevisionPayload`
-    (carried by the shared :class:`CalculationRevisionProjectionFields` base),
+    (carried by the compact revision-command projection base),
     then adds the presentation-only values
     carried by
     :class:`ModeloWorkCalculationServiceResult`: Modelo
@@ -594,19 +598,29 @@ class WorkCalculateResult(CalculationRevisionProjectionFields):
     deadline: WorkDeadlinePosturePayload | None = None
 
 
+class CalculationRevisionSummaryPayload(OutputSchema):
+    """Compact calculation-revision row returned by ``modelo.work.revisions``."""
+
+    short_calculation_revision_id: str
+    calculation_revision_id: CalculationRevisionId
+    short_work_unit_id: str
+    work_unit_id: WorkUnitId
+    state: CalculationRevisionState
+    created_at: str
+
+
 class WorkRevisionsResult(OutputSchema):
     """Calculation-revision listing returned by ``aeat app modelo work revisions``.
 
-    Each entry in ``revisions`` is a
-    :class:`CalculationRevisionPayload`
-    carrying the full casilla table, typed observations, and provenance for one
-    persisted :class:`CalculationRevision`.
+    Each entry is a compact discovery row. Resolve its
+    ``calculation_revision_id`` through ``modelo.work.revision`` for the full
+    casilla table, typed observations, and provenance.
     """
 
     operation: str = "modelo.work.revisions"
     work_unit_id_filter: str | None = None
     revision_count: int
-    revisions: list[CalculationRevisionPayload]
+    revisions: list[CalculationRevisionSummaryPayload]
 
 
 class WorkVerifyResult(OutputSchema):
@@ -1409,6 +1423,7 @@ __all__ = [
     "BindingListRowPayload",
     "BindingPreviewRowPayload",
     "CalculationRevisionPayload",
+    "CalculationRevisionSummaryPayload",
     "CasillaObservationPayload",
     "CasillaRowPayload",
     "CompareSectionPayload",
@@ -1486,6 +1501,8 @@ __all__ = [
     "WorkReviewRowSourceFingerprintPayload",
     "WorkRevisionResult",
     "WorkRevisionsResult",
+    "WorkRunDetailsResult",
+    "WorkRunResult",
     "WorkRunsResult",
     "WorkStatusResult",
     "WorkUnitHistoryEventPayload",
@@ -1493,4 +1510,5 @@ __all__ = [
     "WorkVerifyResult",
     "WorkWizardResult",
     "WorkflowRunPayload",
+    "WorkflowRunSummaryPayload",
 ]

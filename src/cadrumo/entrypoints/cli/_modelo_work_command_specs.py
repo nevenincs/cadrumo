@@ -318,6 +318,22 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "WorkObservationsResult",
     ),
     _leaf(
+        "run",
+        "cadrumo.entrypoints.cli._modelo_work_runs_cli",
+        (_a("run_id"), _LANG),
+        _MODEL_READ,
+        "cadrumo.entrypoints.cli._modelo_aux_payloads",
+        "WorkRunResult",
+    ),
+    _leaf(
+        "run-details",
+        "cadrumo.entrypoints.cli._modelo_work_runs_cli",
+        (_a("run_id"), _LANG),
+        _MODEL_READ,
+        "cadrumo.entrypoints.cli._modelo_aux_payloads",
+        "WorkRunDetailsResult",
+    ),
+    _leaf(
         "runs",
         "cadrumo.entrypoints.cli._modelo_work_runs_cli",
         (_LANG,),

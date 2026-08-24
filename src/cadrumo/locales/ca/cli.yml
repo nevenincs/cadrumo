@@ -1522,6 +1522,11 @@ cli:
           {supported}.'
         row_validation_error: 'Validació fallida per a la fila --row tipus {row_type!r}:
           {error}'
+        run_details_help: Mostra les dades tipades del pas terminal d'una execució
+          persistent.
+        run_help: Mostra una execució persistent del flux pel seu identificador.
+        run_id_help: Identificador estable de 16 caràcters obtingut de modelo work
+          runs.
         runs_help: Llistar les execucions de flux persistides amb els seus ids d'execució,
           de la més recent a la més antiga. Usa un id d'execució amb `aeat app modelo
           work resume`. Només local; mai contacta amb AEAT.

@@ -152,6 +152,12 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
             "identity.surnames": "Workflow",
             "activities.description": "Servicios",
             "iva.regime": "GENERAL",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             "tax_residence.ccaa": "madrid",
         },
     )
@@ -767,6 +773,12 @@ def test_config_profile_create_iva_regime_round_trips_to_deadline_engine(
             "identity.surnames": "Workflow",
             "activities.description": "Servicios",
             "iva.regime": "GENERAL",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
 

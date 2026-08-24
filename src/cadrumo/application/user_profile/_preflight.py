@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING
 
-from ...core import Period
+from ...core import Modelo, Period
 from ...domain.calculations.registry import (
     ProfileKeyGrounding,
     RevisionId,
@@ -276,6 +276,18 @@ class ProfilePreflightService:
                         candidate_path,
                         schema=self._schema,
                         selector=field.model_selectors[0] if field.model_selectors else candidate_path,
+                        grounding_index=grounding_index,
+                    ),
+                )
+        if modelo.strip() == Modelo.M111.value:
+            colegio_path = "withholding.colegio_concertado"
+            per_operation_selected += 1
+            if not self._has_value(values, colegio_path):
+                missing.append(
+                    build_profile_preflight_requirement(
+                        colegio_path,
+                        schema=self._schema,
+                        selector="colegio_concertado",
                         grounding_index=grounding_index,
                     ),
                 )

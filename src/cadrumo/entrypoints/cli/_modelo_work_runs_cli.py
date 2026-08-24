@@ -38,6 +38,7 @@ from ...application.workflow import (
     WorkflowStage,
     WorkflowStepDetails,
     list_runs,
+    load_run,
     resolve_modelo_workflow_resume_target,
     resume_modelo_workflow,
 )
@@ -53,7 +54,14 @@ from ._modelo_cli_support import (
     validate_calculation_revision_id,
     validate_work_unit_id,
 )
-from ._modelo_payloads import WorkflowRunPayload, WorkResumeResult, WorkRunsResult
+from ._modelo_payloads import (
+    WorkflowRunPayload,
+    WorkflowRunSummaryPayload,
+    WorkResumeResult,
+    WorkRunDetailsResult,
+    WorkRunResult,
+    WorkRunsResult,
+)
 
 
 def _render_workflow_step_summary(summary_locale_key: str, details: WorkflowStepDetails | None) -> str:
@@ -110,7 +118,22 @@ def _workflow_run_payload(run: WorkflowResult) -> WorkflowRunPayload:
     )
 
 
-def _workflow_run_tab_line(run: WorkflowRunPayload) -> str:
+def _workflow_run_summary_payload(run: WorkflowResult) -> WorkflowRunSummaryPayload:
+    """Project one persisted run into the compact listing contract."""
+    payload = _workflow_run_payload(run)
+    return WorkflowRunSummaryPayload(
+        run_id=payload.run_id,
+        modelo=payload.modelo,
+        period=payload.period,
+        final_stage=payload.final_stage,
+        aborted_reason=payload.aborted_reason,
+        started_at=payload.started_at,
+        summary=payload.summary,
+        action=payload.action,
+    )
+
+
+def _workflow_run_tab_line(run: WorkflowRunSummaryPayload) -> str:
     """Render one workflow-run payload as its tab-delimited CLI row."""
     return "\t".join(
         (
@@ -170,14 +193,91 @@ def _emit_work_resume(
     _emit_envelope(ctx, command="modelo.work.resume", result=resume_result, lines=lines)
 
 
-__all__ = ["work_resume", "work_runs"]
+__all__ = ["work_resume", "work_run", "work_run_details", "work_runs"]
+
+
+def work_run_details(
+    ctx: typer.Context,
+    run_id: str,
+    output_language: OutputLanguage | None = None,
+) -> None:
+    """Show the typed terminal-step facts for one persisted workflow run."""
+    activate_subcommand_output_language(ctx, output_language)
+    try:
+        run = load_run(run_id)
+    except WorkflowError as exc:
+        raise bad_parameter_from_error(exc) from exc
+    projection = _workflow_run_projection(run)
+    detail_facts = (
+        projection.summary_details.model_dump(mode="json", exclude={"kind"}, exclude_none=True)
+        if projection.summary_details is not None
+        else None
+    )
+    result = WorkRunDetailsResult(
+        run_id=run.run_id,
+        summary_stage=projection.summary_stage,
+        summary_locale_key=projection.summary_locale_key,
+        summary_detail_kind=projection.summary_details.kind if projection.summary_details is not None else None,
+        summary_detail_facts=detail_facts,
+    )
+    lines = [
+        "operation\tmodelo.work.run_details",
+        f"run_id\t{run.run_id}",
+        f"summary_stage\t{projection.summary_stage.value if projection.summary_stage is not None else ''}",
+        f"summary_locale_key\t{projection.summary_locale_key}",
+    ]
+    _emit_envelope(ctx, command="modelo.work.run_details", result=result, lines=lines)
+
+
+def work_run(
+    ctx: typer.Context,
+    run_id: str,
+    output_language: OutputLanguage | None = None,
+) -> None:
+    """Show one full persisted :class:`WorkflowResult`."""
+    activate_subcommand_output_language(ctx, output_language)
+    try:
+        run = load_run(run_id)
+    except WorkflowError as exc:
+        raise bad_parameter_from_error(exc) from exc
+    payload = _workflow_run_payload(run)
+    obligation = run.obligation
+    health = payload.site_health_alert
+    health_status = health.status if health is not None else None
+    result = WorkRunResult(
+        run_id=payload.run_id,
+        modelo=payload.modelo,
+        period=payload.period,
+        final_stage=payload.final_stage,
+        aborted_reason=payload.aborted_reason,
+        started_at=payload.started_at,
+        obligation_opens_on=obligation.opens_on.isoformat() if obligation is not None else None,
+        obligation_closes_on=obligation.closes_on.isoformat() if obligation is not None else None,
+        obligation_status=obligation.status.value if obligation is not None else None,
+        summary_stage=payload.summary_stage,
+        summary_locale_key=payload.summary_locale_key,
+        site_health_stage=health.stage.value if health is not None else None,
+        site_health_state=health_status.state.value if health_status is not None else None,
+        site_health_observed_at=health_status.observed_at.isoformat() if health_status is not None else None,
+        site_health_http_status=health_status.http_status if health_status is not None else None,
+        site_health_retry_after_seconds=health_status.retry_after_seconds if health_status is not None else None,
+        site_health_detected_marker_count=health_status.detected_marker_count if health_status is not None else None,
+        summary=payload.summary,
+        action=payload.action,
+    )
+    lines = [
+        "operation\tmodelo.work.run",
+        "run_id\tmodelo\tperiod\tfinal_stage\taborted_reason\tstarted_at\tsummary\taction",
+        _workflow_run_tab_line(payload),
+    ]
+    _emit_envelope(ctx, command="modelo.work.run", result=result, lines=lines)
 
 
 def work_runs(ctx: typer.Context, output_language: OutputLanguage | None = None) -> None:
     """List persisted :class:`WorkflowResult` rows."""
     activate_subcommand_output_language(ctx, output_language)
     runs = list_runs()
-    run_payloads = [_workflow_run_payload(run) for run in runs]
+    run_payloads = [_workflow_run_summary_payload(run) for run in runs]
     result = WorkRunsResult(run_count=len(runs), runs=run_payloads)
     lines = [
         "operation\tmodelo.work.runs",

@@ -30,6 +30,12 @@ def test_verify_after_profile_activity_start_change_refuses_without_traceback(
             "taxpayer_type.incn_prior_12_months": "500000",
             "taxpayer_type.new_entity_first_two_profit_periods": "false",
             "iva.regime": "GENERAL",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             "tax_residence.ccaa": "madrid",
         },
     )

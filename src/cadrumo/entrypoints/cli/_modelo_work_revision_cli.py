@@ -31,7 +31,12 @@ from ...domain.modelos import CalculationRevision, WorkUnit
 from ._common import _emit_envelope, activate_subcommand_output_language
 from ._modelo_behavior_support import require_active_profile, resolve_revision_for_cli, resolve_work_unit_for_cli
 from ._modelo_cli_support import bad_parameter_from_error, selector_bad_parameter
-from ._modelo_payloads import WorkObservationsResult, WorkRevisionResult, WorkRevisionsResult
+from ._modelo_payloads import (
+    CalculationRevisionSummaryPayload,
+    WorkObservationsResult,
+    WorkRevisionResult,
+    WorkRevisionsResult,
+)
 from ._modelo_rendering import (
     calculation_observation_lines,
     calculation_revision_lines,
@@ -120,7 +125,17 @@ def work_revisions(
         {
             "work_unit_id_filter": resolved_work_unit_id,
             "revision_count": len(revisions),
-            "revisions": [calculation_revision_payload(rev) for rev in revisions],
+            "revisions": [
+                CalculationRevisionSummaryPayload(
+                    short_calculation_revision_id=short_id(rev.calculation_revision_id) or "",
+                    calculation_revision_id=rev.calculation_revision_id,
+                    short_work_unit_id=short_id(rev.work_unit_id) or "",
+                    work_unit_id=rev.work_unit_id,
+                    state=rev.state,
+                    created_at=rev.created_at.isoformat(),
+                )
+                for rev in revisions
+            ],
         }
     )
     lines = [
@@ -130,19 +145,17 @@ def work_revisions(
         "short_calculation_revision_id\tcalculation_revision_id\tshort_work_unit_id\twork_unit_id\tstate\tcreated_at",
     ]
     lines.extend(
-
-            "\t".join(
-                (
-                    short_id(rev.calculation_revision_id) or "",
-                    rev.calculation_revision_id,
-                    short_id(rev.work_unit_id) or "",
-                    rev.work_unit_id,
-                    rev.state.value,
-                    rev.created_at.isoformat(),
-                )
+        "\t".join(
+            (
+                short_id(rev.calculation_revision_id) or "",
+                rev.calculation_revision_id,
+                short_id(rev.work_unit_id) or "",
+                rev.work_unit_id,
+                rev.state.value,
+                rev.created_at.isoformat(),
             )
-            for rev in revisions
-
+        )
+        for rev in revisions
     )
     _emit_envelope(ctx, command="modelo.work.revisions", result=result, lines=lines)
 

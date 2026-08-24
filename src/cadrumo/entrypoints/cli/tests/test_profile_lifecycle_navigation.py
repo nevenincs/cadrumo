@@ -19,11 +19,11 @@ independently confirm.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator, Sequence
 from pathlib import Path
 from typing import Final
 
-import json
 import pytest
 from click.testing import Result
 
@@ -331,6 +331,12 @@ def test_deleted_profile_name_is_reusable_by_create(
             "identity.surnames": "Operator",
             "activities.description": "design",
             "iva.regime": "GENERAL",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
 

@@ -124,6 +124,10 @@ def test_profile_edit_cli_accepts_objetiva_modulos_facts_and_directa_without_the
                 "tax_residence.jurisdiction_scope": "common_regime",
                 "iva.regime": "GENERAL",
                 "iva.m303_regime_composition": "general",
+                "iva.redeme_enrolled": "false",
+                "iva.cash_accounting_regime_enrolled": "false",
+                "iva.voluntary_sii_enrolled": "false",
+                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             },
         )
         register_cli_profile(
@@ -139,6 +143,10 @@ def test_profile_edit_cli_accepts_objetiva_modulos_facts_and_directa_without_the
                 "tax_residence.jurisdiction_scope": "common_regime",
                 "iva.regime": "GENERAL",
                 "iva.m303_regime_composition": "general",
+                "iva.redeme_enrolled": "false",
+                "iva.cash_accounting_regime_enrolled": "false",
+                "iva.voluntary_sii_enrolled": "false",
+                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             },
         )
 

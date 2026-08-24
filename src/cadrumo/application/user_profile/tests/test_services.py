@@ -246,6 +246,62 @@ def test_preflight_modelo_100_per_operation_axis_now_contributes(schema: Profile
     assert not any(item.section_key == "identity" and item.field_key == "tax_id" for item in ready_report.missing)
 
 
+def test_preflight_modelo_111_requires_an_explicit_colegio_concertado_declaration(
+    schema: ProfileSchemaDefinition,
+) -> None:
+    """Both boolean declarations are complete; absence remains a refusal."""
+    service = ProfilePreflightService(schema=schema)
+    period = Period.from_year_and_code(2026, "1T")
+
+    missing = service.report(
+        record=UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id="11111111-1111-4111-8111-111111111111",
+            facts=(),
+        ),
+        modelo=Modelo.M111.value,
+        revision_id="2019-y-siguientes",
+        period=period,
+    )
+
+    assert missing.ready is False
+    assert missing.per_operation_requirements_assessed is True
+    assert [(item.section_key, item.field_key) for item in missing.missing] == [
+        ("withholding", "colegio_concertado"),
+    ]
+
+    for declared in (False, True):
+        ready = service.report(
+            record=UserProfileRecord(
+                setup_state=ProfileSetupState.COMPLETE,
+                profile_id="11111111-1111-4111-8111-111111111111",
+                facts=(UserProfileFact(path="withholding.colegio_concertado", value=declared),),
+            ),
+            modelo=Modelo.M111.value,
+            revision_id="2019-y-siguientes",
+            period=period,
+        )
+        assert ready.ready is True
+        assert ready.missing == ()
+
+
+def test_preflight_does_not_require_the_m111_declaration_for_another_modelo(
+    schema: ProfileSchemaDefinition,
+) -> None:
+    report = ProfilePreflightService(schema=schema).report(
+        record=UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id="11111111-1111-4111-8111-111111111111",
+            facts=(),
+        ),
+        modelo=Modelo.M200.value,
+        revision_id="2024-y-siguientes",
+        period=Period.from_year_and_code(2024, "0A"),
+    )
+
+    assert not any(item.field_key == "colegio_concertado" for item in report.missing)
+
+
 def test_preflight_accepts_legal_entity_legal_name_for_export_headers(schema: ProfileSchemaDefinition) -> None:
     period = Period.from_year_and_code(2026, "1P")
     snapshot = resources().modelos.authority.snapshot("202", filing_year=2026, period=period.registry_token)

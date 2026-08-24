@@ -23,6 +23,7 @@ broke both silently.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Sequence
 
 from ...application.operator_actions import ActionReference, DeclaredNextAction
@@ -64,6 +65,8 @@ from ._overview_payloads import (
     OverviewAgendaResult,
     OverviewBacklogResult,
     OverviewCalendarResult,
+    OverviewCalendarEntrySummaryPayload,
+    OverviewCalendarEventSummaryPayload,
     OverviewExplainResult,
     OverviewPipelineModeloPayload,
     OverviewPipelineResult,
@@ -453,7 +456,53 @@ def overview_calendar_output(
     evidence_notices: Sequence[Notice],
 ) -> tuple[OverviewCalendarResult, list[str], list[Notice]]:
     """Project one active-profile calendar into payload, text lines, and notices."""
-    typed_cal = strict_round_trip(OverviewCalendarResult, cal)
+    entries = [
+        OverviewCalendarEntrySummaryPayload(
+            modelo=entry.modelo,
+            period=str(entry.period),
+            adjusted_closes_on=entry.adjusted_closes_on.isoformat(),
+            payment_cutoff_on=(entry.payment_cutoff_on.isoformat() if entry.payment_cutoff_on is not None else None),
+            status=entry.status,
+            user_state=entry.user_state,
+            recovery=entry.recovery,
+            censo_enrolment_state=entry.censo_enrolment_state,
+            local_work_unit_id=entry.local_work_unit_id,
+            local_work_unit_name=entry.local_work_unit_name,
+            local_work_unit_revision_id=entry.local_work_unit_revision_id,
+            local_filing_state=entry.filing_evidence.local_filing_state,
+            aeat_submission_state=entry.filing_evidence.aeat_submission_state,
+            justificante_required=entry.filing_evidence.justificante_required,
+            justificante_verified=entry.filing_evidence.justificante_verified,
+        ).model_dump(mode="json")
+        for entry in cal.entries
+    ]
+    events = [
+        OverviewCalendarEventSummaryPayload(
+            event_type=event.event_type,
+            event_date=event.event_date.isoformat(),
+            summary=event.summary,
+            reference_id=event.reference_id,
+            modelo=event.modelo,
+            period=str(event.period) if event.period is not None else None,
+            status=event.status,
+            notificacion_estado_servicio=event.notificacion_estado_servicio,
+            aeat_submission_state=event.aeat_submission_state,
+            justificante_verified=event.justificante_verified,
+        ).model_dump(mode="json")
+        for event in cal.events
+    ]
+    typed_cal = OverviewCalendarResult.model_validate_json(
+        json.dumps(
+            {
+                "range": cal.range.model_dump(mode="json"),
+                "entries": entries,
+                "events": events,
+                "warnings": [warning.model_dump(mode="json") for warning in cal.warnings],
+                "suppressed_entries": [entry.model_dump(mode="json") for entry in cal.suppressed_entries],
+                "coverage": cal.coverage.model_dump(mode="json"),
+            },
+        ),
+    )
     lines: list[str] = [
         f"from\t{rng.from_date.isoformat()}",
         f"to\t{rng.to_date.isoformat()}",

@@ -573,9 +573,9 @@ def _readiness(**overrides: object) -> ProjectionModeloReadiness:
     return ProjectionModeloReadiness.model_validate(base)
 
 
-def test_quickfile_result_payload_carries_the_typed_readiness_report_when_ready() -> None:
-    """A ready readiness report reaches the operator through the quickfile envelope."""
-    from .._app_quickfile_payloads import QuickfileResultPayload
+def test_quickfile_result_payload_summarises_the_readiness_report_when_ready() -> None:
+    """A ready readiness report reaches the operator as a compact axis verdict."""
+    from .._app_quickfile_payloads import QuickfileReadinessSummaryPayload, QuickfileResultPayload
 
     payload = QuickfileResultPayload(
         modelo="130",
@@ -584,19 +584,21 @@ def test_quickfile_result_payload_carries_the_typed_readiness_report_when_ready(
         registry_revision_id="rev-1",
         completed=False,
         stopped_at_stage=None,
-        readiness=_readiness(),
+        readiness=QuickfileReadinessSummaryPayload.from_result(_readiness()),
         stages=(),
     )
 
     assert payload.readiness is not None
     assert payload.readiness.ready is True
+    assert payload.readiness.missing_profile_fact_count == 0
+    assert payload.readiness.missing_binding_count == 0
+    assert payload.readiness.ledger_issue_count == 0
 
 
-def test_quickfile_result_payload_carries_the_typed_readiness_report_when_not_ready() -> None:
-    """A not-ready readiness report (blocked on a missing profile requirement) round-trips cleanly."""
-    from ....application.state_projection import ProjectionModeloReadiness
+def test_quickfile_result_payload_summarises_a_missing_profile_requirement() -> None:
+    """A missing profile fact is retained as an axis verdict and blocker count."""
     from ....application.user_profile import ProfilePreflightRequirement
-    from .._app_quickfile_payloads import QuickfileResultPayload
+    from .._app_quickfile_payloads import QuickfileReadinessSummaryPayload, QuickfileResultPayload
 
     not_ready = _readiness(
         profile_ready=False,
@@ -617,20 +619,20 @@ def test_quickfile_result_payload_carries_the_typed_readiness_report_when_not_re
         registry_revision_id="rev-1",
         completed=False,
         stopped_at_stage=None,
-        readiness=not_ready,
+        readiness=QuickfileReadinessSummaryPayload.from_result(not_ready),
         stages=(),
     )
 
     assert payload.readiness is not None
     assert payload.readiness.ready is False
-    assert payload.readiness.missing[0].selector == "identity.tax_id"
-    assert isinstance(payload.readiness, ProjectionModeloReadiness)
+    assert payload.readiness.profile_ready is False
+    assert payload.readiness.missing_profile_fact_count == 1
 
 
-def test_quickfile_result_payload_carries_a_missing_binding_requirement() -> None:
-    """A binding-blocked readiness report carries the missing-binding row through the envelope."""
+def test_quickfile_result_payload_summarises_a_missing_binding_requirement() -> None:
+    """A binding-blocked readiness report retains its axis verdict and blocker count."""
     from ....application.state_projection import ProjectionModeloBindingRequirement
-    from .._app_quickfile_payloads import QuickfileResultPayload
+    from .._app_quickfile_payloads import QuickfileReadinessSummaryPayload, QuickfileResultPayload
 
     blocked = _readiness(
         binding_ready=False,
@@ -650,9 +652,10 @@ def test_quickfile_result_payload_carries_a_missing_binding_requirement() -> Non
         registry_revision_id="rev-1",
         completed=False,
         stopped_at_stage=None,
-        readiness=blocked,
+        readiness=QuickfileReadinessSummaryPayload.from_result(blocked),
         stages=(),
     )
 
     assert payload.readiness is not None
-    assert payload.readiness.missing_bindings[0].binding_id == "binding-1"
+    assert payload.readiness.binding_ready is False
+    assert payload.readiness.missing_binding_count == 1

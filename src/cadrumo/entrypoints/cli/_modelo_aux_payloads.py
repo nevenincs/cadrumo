@@ -149,7 +149,20 @@ class WorkHistoryResult(OutputSchema):
     events: list[WorkUnitHistoryEventPayload]
 
 
-class WorkflowRunPayload(OutputSchema):
+class WorkflowRunSummaryPayload(OutputSchema):
+    """Compact workflow-run row returned by ``modelo.work.runs``."""
+
+    run_id: str
+    modelo: str | None
+    period: str | None
+    final_stage: str
+    aborted_reason: str | None
+    started_at: str
+    summary: str
+    action: ResolvedPreconditionAction | None = None
+
+
+class WorkflowRunPayload(WorkflowRunSummaryPayload):
     """One localized view of a locale-neutral persisted workflow run.
 
     The human summary is derived only at this transport boundary. Its stable
@@ -186,7 +199,60 @@ class WorkRunsResult(OutputSchema):
 
     operation: str = "modelo.work.runs"
     run_count: int
-    runs: list[WorkflowRunPayload]
+    runs: list[WorkflowRunSummaryPayload]
+
+
+class WorkRunResult(OutputSchema):
+    """Detailed persisted workflow run returned by ``modelo.work.run``.
+
+    Nested obligation and site-health records are flattened so this singular
+    read preserves their operator-relevant facts without advertising their
+    unrelated recursive schema graphs.
+    """
+
+    operation: str = "modelo.work.run"
+    run_id: str
+    modelo: str | None
+    period: str | None
+    final_stage: str
+    aborted_reason: str | None
+    started_at: str
+    obligation_opens_on: str | None = None
+    obligation_closes_on: str | None = None
+    obligation_status: str | None = None
+    summary_stage: WorkflowStage | None
+    summary_locale_key: str = Field(
+        pattern=r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$",
+        min_length=3,
+        max_length=160,
+    )
+    site_health_stage: str | None = None
+    site_health_state: str | None = None
+    site_health_observed_at: str | None = None
+    site_health_http_status: int | None = None
+    site_health_retry_after_seconds: int | None = None
+    site_health_detected_marker_count: int | None = None
+    summary: str
+    action: ResolvedPreconditionAction | None = None
+
+
+class WorkRunDetailsResult(OutputSchema):
+    """Bounded terminal-step facts for one persisted workflow run.
+
+    Values retain the persisted JSON primitives while ``kind`` remains the
+    discriminator operators use to interpret the closed workflow detail shape.
+    """
+
+    operation: str = "modelo.work.run_details"
+    run_id: str
+    summary_stage: WorkflowStage | None
+    summary_locale_key: str = Field(
+        pattern=r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$",
+        min_length=3,
+        max_length=160,
+    )
+    summary_detail_kind: str | None = None
+    summary_detail_facts: dict[str, str | int | bool | list[str] | None] | None = None
 
 
 class ModeloRowPayload(OutputSchema):

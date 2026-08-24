@@ -115,8 +115,8 @@ def test_no_verb_output_schema_exceeds_the_size_budget() -> None:
         "Reduce what the verb RETURNS -- summarise a nested collection and let the "
         "caller fetch detail per item. Moving bulk rows to a resource_link works only "
         "where those rows are PERSISTED and a read verb can resolve them again; a verb "
-        "computed from a clock has nothing to resolve against. Note also that roughly "
-        "4700 chars are envelope spine no payload change can touch, so the verb-specific "
+        "computed from a clock has nothing to resolve against. Note also that 5769 "
+        "chars are envelope spine no payload change can touch, so the verb-specific "
         "allowance is well under the headline budget."
     )
 

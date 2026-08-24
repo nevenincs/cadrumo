@@ -111,6 +111,12 @@ def test_registered_profile_custody_survives_logout_and_reopens_on_login(tmp_pat
             "identity.surnames": "Operator",
             "activities.description": "design",
             "iva.regime": "GENERAL",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
 
@@ -156,6 +162,12 @@ def test_profile_logout_is_the_only_strong_logout_before_switch(tmp_path: Path) 
             "identity.surnames": "Operator",
             "activities.description": "design",
             "iva.regime": "GENERAL",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
 
@@ -199,6 +211,12 @@ def test_config_passphrase_change_self_authenticates_without_a_keychain(tmp_path
             "identity.surnames": "Operator",
             "activities.description": "design",
             "iva.regime": "GENERAL",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
     provisioning_passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
@@ -263,6 +281,12 @@ def test_profile_root_secret_authenticates_keychain_free_read_in_process(tmp_pat
             "identity.surnames": "Operator",
             "activities.description": "design",
             "iva.regime": "GENERAL",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
     passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
@@ -514,6 +538,12 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
             "identity.surnames": "Operator",
             "activities.description": "consulting",
             "iva.regime": "GENERAL",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
     beta_id = _register_profile(
@@ -526,6 +556,12 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
             "identity.surnames": "Operator",
             "activities.description": "design",
             "iva.regime": "GENERAL",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
 
