@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:3554fb8995b5227611ca9523cc2268801e67075bd49cb3f8e8908876090fac24'
+body_hash: 'sha256:d5ea2ee09eabadebf755f9cc1763f7e37e73c6c5bd3ae19097ca18e6f85f73f1'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -84,7 +84,7 @@ Compose one typed cross-authority report from validated registry coverage, sourc
 - [x] `W01.P02.S68` - Repair deferred S64/S65 audit-record hygiene through canonical vault edits, then re-attest markdown, annotations, and body fingerprints.; `.vault/audit/2026-08-24-registry-completeness-closure-s64-independent-post-review-audit.md; .vault/audit/2026-08-24-registry-completeness-closure-s65-context-authority-review-audit.md`.
 - [ ] `W01.P02.S69` - Prove complete, refused, stale-evidence, below-filing-grade, and cross-limb-disagreement outcomes through real composed authority limbs and guard-weakening bites.; `src/cadrumo/application/registry/tests/; dev/registry/conformance/tests/`.
 - [x] `W01.P02.S70` - Correct S11 evidence and independent-review claims after successor proof passes, then re-attest the records.; `.vault/exec/2026-08-24-registry-completeness-closure/; .vault/audit/; .vault/index/`.
-- [ ] `W01.P02.S71` - Replace the stale fixed completion-step total with a current-plan-derived closure criterion that remains valid as Steps are added; `.vault/plan/2026-08-24-registry-completeness-closure-plan.md`.
+- [x] `W01.P02.S71` - Replace the stale fixed completion-step total with a current-plan-derived closure criterion that remains valid as Steps are added; `.vault/plan/2026-08-24-registry-completeness-closure-plan.md`.
 
 ## Wave `W02` - filing-gap adjudication and owner routing
 
@@ -163,7 +163,7 @@ generator, or cross-layer implementation work.
 
 ## Verification
 
-Completion requires all 39 Steps closed with one execution record per Step and mandatory
+Completion requires every Step in this canonical plan to be closed, with one execution record per Step and mandatory
 independent code review after every implementation cycle. The derived report must carry
 one row for every law-selectable registered revision and must fail closed for a missing,
 stale, unreviewed, conflicting, or scope-inadequate limb. Every live filing gap must have
