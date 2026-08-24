@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-24'
-body_hash: 'sha256:a267b20b2a89c23d7d632c0717b967c4d00a19603e749979b1ca894c3bbaf9ad'
+body_hash: 'sha256:04ac7788e30b1233cc4f1c95d4474ae22ba44654ac9b57be07dd6520e0d1acbd'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -206,7 +206,7 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [x] `W05.P10.S69` - Migrate local outbound-storage provider permission, path, conflict, not-found, and integrity failures to typed safety or operator-decision outcomes without inventing caller-owned recovery; `src/cadrumo/adapters/outbound/storage/_errors.py; src/cadrumo/adapters/outbound/storage/_local.py; src/cadrumo/adapters/outbound/storage/tests`.
 - [ ] `W05.P10.S70` - Migrate persistence adapter recovery producers to current typed actions and delete recovery-hint fields; `src/cadrumo/adapters/persistence`.
 - [x] `W05.P10.S71` - Migrate aggregation recovery producers to typed conditions and canonical actions; `src/cadrumo/application/aggregation`.
-- [ ] `W05.P10.S72` - Prove the complete M303 carry-contradiction and official-evidence displacement refusal population through exact canonical terminal contracts; `src/cadrumo/application/calculations/_errors.py; src/cadrumo/application/calculations/_m303_carry_ingress.py; src/cadrumo/application/calculations/_observation_repository.py; src/cadrumo/application/calculations/tests`.
+- [x] `W05.P10.S72` - Prove the complete M303 carry-contradiction and official-evidence displacement refusal population through exact canonical terminal contracts; `src/cadrumo/application/calculations/_errors.py; src/cadrumo/application/calculations/_m303_carry_ingress.py; src/cadrumo/application/calculations/_observation_repository.py; src/cadrumo/application/calculations/tests`.
 - [x] `W05.P10.S73` - Migrate corpus-search recovery producers to typed conditions and canonical actions; `src/cadrumo/application/corpus_search`.
 - [x] `W05.P10.S74` - Migrate evidence-service recovery producers to typed conditions and canonical actions; `src/cadrumo/application/evidence`.
 - [ ] `W05.P10.S75` - Migrate filing continuation producers to typed conditions and canonical actions; `src/cadrumo/application/filing`.
