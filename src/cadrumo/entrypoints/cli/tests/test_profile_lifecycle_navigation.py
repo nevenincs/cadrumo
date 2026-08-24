@@ -23,6 +23,7 @@ from collections.abc import Iterator, Sequence
 from pathlib import Path
 from typing import Final
 
+import json
 import pytest
 from click.testing import Result
 
@@ -41,7 +42,29 @@ PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"buckets"})
 
 
 def _invoke(args: Sequence[str]) -> Result:
+    # `config profile create` mints a custody envelope, so it needs the operator
+    # passphrase and its confirmation, and a test runner is not a terminal: the
+    # bounded strict-JSON channel is the only one the verb accepts.
+    if "create" in args and "profile" in args and "--secrets-stdin" not in args:
+        return invoke_cached_cli(
+            (*args, "--secrets-stdin"),
+            input=json.dumps(
+                {"passphrase": _dev_passphrase(), "passphrase_confirmation": _dev_passphrase()}
+            ),
+        )
+    # `login` OPENS an existing envelope rather than minting one, so it takes the
+    # passphrase alone and refuses a payload carrying the confirmation field.
+    if "login" in args and "--secrets-stdin" not in args:
+        return invoke_cached_cli(
+            (*args, "--secrets-stdin"),
+            input=json.dumps({"passphrase": _dev_passphrase()}),
+        )
     return invoke_cached_cli(args)
+
+
+def _dev_passphrase() -> str:
+    """The secret the isolated backend seeds custody envelopes with."""
+    return load_settings().cadrumo_dev_test_database_password.get_secret_value()
 
 
 @pytest.fixture
