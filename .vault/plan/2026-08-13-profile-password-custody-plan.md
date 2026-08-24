@@ -19,7 +19,7 @@ related:
   - '[[2026-08-13-sealed-archive-transport-successor-adr]]'
   - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
 modified: '2026-08-24'
-body_hash: 'sha256:94b3f0f23edd39bf6498ee25d5ffc1ad30ecef48f6a80d9ceba193c2cef95bc4'
+body_hash: 'sha256:c7dfec7997eb8a335a694e528d262bcd2630a4f0604be9b9f2b7ab04b0477167'
 ---
 
 # `profile-password-custody` plan
@@ -340,7 +340,7 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 - [x] `W06.P12.S229` - Resynchronize the Spanish, Catalan, and Hungarian Sphinx gettext catalogues from stable English sources and retire the generated-page environment-overrides orphans; `docs/locales/es/LC_MESSAGES/ and docs/locales/ca/LC_MESSAGES/ and docs/locales/hu/LC_MESSAGES/`.
 - [x] `W06.P12.S230` - Complete every blank or fuzzy Spanish user-page translation and correct download command-list punctuation without English fallback; `docs/locales/es/LC_MESSAGES/`.
 - [x] `W06.P12.S231` - Complete every blank or fuzzy Catalan user-page translation and correct download command-list punctuation without English fallback; `docs/locales/ca/LC_MESSAGES/`.
-- [ ] `W06.P12.S232` - Complete every blank or fuzzy Hungarian user-page translation and correct download command-list punctuation without English fallback; `docs/locales/hu/LC_MESSAGES/`.
+- [x] `W06.P12.S232` - Complete every blank or fuzzy Hungarian user-page translation and correct download command-list punctuation without English fallback; `docs/locales/hu/LC_MESSAGES/`.
 - [ ] `W06.P12.S233` - Run the complete documented-command, catalogue-drift, locale-completeness, localized-build, no-skip, native Windows, and WSL proof suite and persist fresh global evidence; `dev/docs/tests/ and dev/tests/test_no_skip_xfail.py and src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`.
 - [ ] `W06.P12.S234` - Use Vaultspec RAG semantic discovery plus targeted symbol and caller confirmation to audit recovery creation, handoff, export, restore, and refusal-witness responsibilities for redeclaration, consolidate substitutable implementations, and correct stale optional-recovery production prose; `src/cadrumo/application/user_profile/ and src/cadrumo/adapters/persistence/storage/custody/ and src/cadrumo/entrypoints/cli/`.
 - [ ] `W06.P12.S235` - Repeat the fresh-context campaign-close honesty review against every corrected finding and close the campaign only with no unresolved CRITICAL, HIGH, or MEDIUM result; `.vault/audit/`.

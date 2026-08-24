@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-24'
-body_hash: 'sha256:f74e24089bb9f54c19797163efb28e82496e5e2645372b815cfd16374079b8b1'
+body_hash: 'sha256:56fdd777161970daf867d9e960abcb271db18d8befbe9bbabc67ee9f02587de5'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -172,7 +172,7 @@ Convert registered defaults and exception-level action overrides into catalogue 
 - [x] `W05.P08.S102` - Migrate IVA-compensation exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/domain/iva_compensation/_carry_forward.py; src/cadrumo/domain/iva_compensation/_reconciliation.py`.
 - [x] `W05.P08.S103` - Migrate application export exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/export/_tabular.py`.
 - [x] `W05.P08.S104` - Migrate calc-sheets exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/storage/calc_sheets/_engine.py; src/cadrumo/application/storage/calc_sheets/_evidence.py; src/cadrumo/application/storage/calc_sheets/_layout.py; src/cadrumo/application/storage/calc_sheets/_translator.py`.
-- [ ] `W05.P08.S105` - Finish the portal exception constructor and taxonomy migration, and adjudicate operator reachability for the remaining invoice and IVA validators; `src/cadrumo/domain/portals/_errors.py; src/cadrumo/domain/portals/_registry.py; src/cadrumo/domain/invoices/_models.py; src/cadrumo/domain/iva/_classification.py; src/cadrumo/domain/iva/_saturation.py`.
+- [ ] `W05.P08.S105` - Finish portal exception taxonomy and typed refusal propagation, and encode the exact downstream owner/projection census for operator-reachable invoice and IVA validation families; `src/cadrumo/domain/portals/_errors.py; src/cadrumo/domain/portals/_registry.py; src/cadrumo/domain/portals/tests; src/cadrumo/domain/invoices/_models.py; src/cadrumo/domain/iva/_classification.py; src/cadrumo/entrypoints/cli/_app_live_portals_cli.py; src/cadrumo/entrypoints/cli/_ledger*.py; src/cadrumo/entrypoints/cli/tests; dev/tests`.
 - [x] `W05.P08.S106` - Migrate config-reset exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/_config_reset_repository.py; src/cadrumo/application/config_reset.py`.
 - [x] `W05.P08.S116` - Replace runtime pkgutil result-schema discovery with one canonical schema-module declaration reconciled bidirectionally to the live command and result-schema surface; `src/cadrumo/entrypoints/cli/_app_contract.py; src/cadrumo/entrypoints/schema_surface.py; src/cadrumo/entrypoints/cli/tests/test_app_contract_resilience.py; src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py`.
 
