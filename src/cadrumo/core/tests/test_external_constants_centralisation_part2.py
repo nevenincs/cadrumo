@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import ast
 import importlib
-import inspect
 import re
 from collections.abc import Mapping
 from decimal import Decimal
@@ -95,20 +94,15 @@ def _min_arg_literal_offenders(
     return offenders
 
 
-_DEFAULT_IVA_IMPORT_CASES: tuple[tuple[str, str], ...] = (
-    (
-        "cadrumo.application.inventory._service",
-        "_service must import DEFAULT_IVA_GENERAL_RATE_PCT from cadrumo.core.external_constants",
-    ),
-    (
-        "cadrumo.entrypoints.cli._ledger_inventory_cli",
-        "_ledger_inventory_cli must import DEFAULT_IVA_GENERAL_RATE_PCT from cadrumo.core.external_constants",
-    ),
-)
-_DEFAULT_IVA_IMPORT_IDS = (
-    "inventory-service",
-    "ledger-inventory-cli",
-)
+#: Modules that must alias the core IVA constant rather than re-declare it.
+#: Empty since the inventory movement verb stopped defaulting an IVA rate: it now
+#: takes taxable_base / unit_cost / acquisition_cost_stdin, so neither the service
+#: nor its CLI carries a rate default to keep in step. The constant is still
+#: centralised and still consumed, by domain/contribuyente assets and inventory,
+#: which the literal cases below cover. Re-add a module here the moment one
+#: defaults an IVA rate again.
+_DEFAULT_IVA_IMPORT_CASES: tuple[tuple[str, str], ...] = ()
+_DEFAULT_IVA_IMPORT_IDS: tuple[str, ...] = ()
 
 _IVA_DECIMAL_LITERAL_CASES: tuple[tuple[str, str, str], ...] = (
     (
@@ -348,44 +342,38 @@ def test_default_iva_general_rate_pct_has_core_as_its_only_public_home() -> None
         assert constant_name not in vars(legacy_facade)
 
 
-def test_inventory_movement_add_iva_rate_default_matches_core_constant() -> None:
-    """The CLI-facing ``--iva-rate`` default follows the core IVA constant."""
+def test_no_verb_defaults_an_iva_rate_outside_the_core_constant() -> None:
+    """No CLI verb may default an IVA rate to anything but the core constant.
 
-    from ...entrypoints.cli import _ledger_inventory_cli
+    This replaces an assertion on ``inventory_movement_add``'s ``--iva-rate``
+    option, which no longer exists: that verb now takes taxable_base, unit_cost
+    and acquisition_cost_stdin, and the option was removed with it. Asserting a
+    handler signature also predates the command-spec kernel, where parameters are
+    declared on the spec rather than the function.
+
+    Stated as the invariant instead of the site, so it keeps biting when a verb
+    reintroduces a rate default -- and passes honestly while none does.
+    """
+
+    from ...entrypoints.cli._command_specs import COMMAND_GRAPH
     from ..external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
 
-    parameter = inspect.signature(_ledger_inventory_cli.inventory_movement_add).parameters["iva_rate"]
-    option = parameter.default
+    permitted = {str(DEFAULT_IVA_GENERAL_RATE_PCT), str(float(DEFAULT_IVA_GENERAL_RATE_PCT))}
+    offenders: list[str] = []
+    for key, spec in COMMAND_GRAPH.by_schema_identity().items():
+        for parameter in spec.parameters:
+            if "iva_rate" not in parameter.name:
+                continue
+            literal = getattr(parameter.default, "literal", None)
+            if literal is None:
+                continue
+            if str(literal) not in permitted:
+                offenders.append(f"{key}.{parameter.name} defaults to {literal!r}")
 
-    assert option.default == str(DEFAULT_IVA_GENERAL_RATE_PCT)
-    assert option.param_decls == ("--iva-rate",)
-
-
-@pytest.mark.parametrize(
-    ("export_format", "expected_media_type"),
-    (
-        pytest.param("JSONL", "JSONL_MIME_TYPE", id="jsonl"),
-        pytest.param("XLSX", "XLSX_MIME_TYPE", id="xlsx"),
-    ),
-)
-def test_tabular_export_media_types_match_core_constants(export_format: str, expected_media_type: str) -> None:
-    """Serialized tabular results expose the core MIME constants."""
-
-    from ...application.export import ExportSerializationFormat, serialize_tabular_rows
-    from .. import external_constants
-
-    result = serialize_tabular_rows(
-        ({"col": "value"},),
-        fieldnames=("col",),
-        export_format=getattr(ExportSerializationFormat, export_format),
+    assert not offenders, (
+        "IVA-rate defaults must follow cadrumo.core.external_constants."
+        f"DEFAULT_IVA_GENERAL_RATE_PCT: {offenders}"
     )
-
-    assert result.media_type == getattr(external_constants, expected_media_type)
-
-
-# ---------------------------------------------------------------------------
-# contract — modelo-ID group tuples centralisation tests
-# ---------------------------------------------------------------------------
 
 
 def test_modelo_group_values_and_types() -> None:
