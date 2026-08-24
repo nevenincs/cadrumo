@@ -111,7 +111,22 @@ def apply_profile_fact_changes(
     )
 
 
+def apply_manager_profile_field_mutation(
+    *,
+    profile_id: str,
+    path: str,
+    value: str,
+) -> UserProfileRecord:
+    """Apply the manager's one-field trim-or-clear policy through the sole write door."""
+    return apply_profile_fact_changes(
+        profile_id=profile_id,
+        changes=(UserProfileFact(path=path, value=value.strip() or None),),
+        door=ProfileFactWriteDoor.MANAGER_FIELD,
+    )
+
+
 __all__ = [
     "ProfileFactWriteDoor",
+    "apply_manager_profile_field_mutation",
     "apply_profile_fact_changes",
 ]

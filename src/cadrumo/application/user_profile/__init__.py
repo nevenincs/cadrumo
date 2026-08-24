@@ -587,6 +587,9 @@ if TYPE_CHECKING:
         ProfileFactWriteDoor as ProfileFactWriteDoor,
     )
     from ._fact_write import (
+        apply_manager_profile_field_mutation as apply_manager_profile_field_mutation,
+    )
+    from ._fact_write import (
         apply_profile_fact_changes as apply_profile_fact_changes,
     )
     from ._filing_baseline import (
@@ -776,6 +779,12 @@ if TYPE_CHECKING:
         user_profile_snapshot_object_key as user_profile_snapshot_object_key,
     )
     from ._section_rows import (
+        ProfileRepeatableRowMutationOutcome as ProfileRepeatableRowMutationOutcome,
+    )
+    from ._section_rows import (
+        add_profile_repeatable_section_row as add_profile_repeatable_section_row,
+    )
+    from ._section_rows import (
         next_section_row_index as next_section_row_index,
     )
     from ._section_rows import (
@@ -942,6 +951,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfilePassphraseRotationError": "._passphrase_rotation",
     "ProfilePassphraseRotationOutcome": "._passphrase_rotation",
     "ProfileRecordRepository": "._profile_record_repository",
+    "ProfileRepeatableRowMutationOutcome": "._section_rows",
     "ProfileRecordSession": "._capsule_record",
     "bound_profile_record_session": "._profile_record_repository",
     "ProfileRecoveryArtifactReceipt": "._recovery_custody",
@@ -967,8 +977,10 @@ _LAZY_EXPORTS: dict[str, str] = {
     "UserProfileSnapshotRepository": "._repository",
     "activate_profile_record_session": "._profile_record_repository",
     "active_profile_pointer_transaction": "._profile_pointer_transaction",
+    "add_profile_repeatable_section_row": "._section_rows",
     "apply_censal_read": "._censo_sync",
     "apply_cotejo": "._cotejo_apply",
+    "apply_manager_profile_field_mutation": "._fact_write",
     "apply_profile_fact_changes": "._fact_write",
     "build_profile_overview": "._overview",
     "build_profile_preflight_requirement": "._preflight",
@@ -1164,6 +1176,7 @@ __all__ = [
     "ProfilePreflightRequirement",
     "ProfilePreflightService",
     "ProfileRecordRepository",
+    "ProfileRepeatableRowMutationOutcome",
     "ProfileRecordSession",
     "ProfileRecoveryArtifactReceipt",
     "ProfileRecoveryEnrollment",
@@ -1188,8 +1201,10 @@ __all__ = [
     "UserProfileSnapshotRepository",
     "activate_profile_record_session",
     "active_profile_pointer_transaction",
+    "add_profile_repeatable_section_row",
     "apply_censal_read",
     "apply_cotejo",
+    "apply_manager_profile_field_mutation",
     "apply_profile_fact_changes",
     "bind_resumed_profile_session",
     "bound_profile_record_session",
