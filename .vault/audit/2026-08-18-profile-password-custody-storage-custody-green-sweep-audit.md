@@ -9244,3 +9244,43 @@ someone is typing in.
 The durable fix is not another sweep: it is that these gates run before a change
 lands, so a violation never reaches the tree. Until then a sweep can only ever
 report the instantaneous count, and the count is a function of when it ran.
+
+### A taxpayer's schedule lists every Modelo 303 quarter four times
+
+Three `domain/deadlines` failures are not test drift. `engine.compute` returns
+**16 Modelo 303 obligations for 2025 — each quarter four times.** An operator
+reading their schedule sees four identical "Modelo 303 1T 2025" rows.
+
+The cause is registry data, and it is checkable. A revision's deadline windows
+should fall inside the years its own period selector governs. They do not:
+
+| revision | period selector | declares windows for |
+|---|---|---|
+| 2022 | 2022-2022 | 2022 |
+| 2023 | 2023-2023 | 2024, 2025 |
+| 2024-hasta-08-y-2t | 2024-2024 | 2024, 2025 |
+| 2024-desde-09-y-3t | 2024-2024 | 2024, 2025 |
+| 2025 | 2025-2025 | 2024, 2025 |
+| 2026-y-siguientes | 2026- | 2024, 2025, 2026 |
+
+Only the 2022 revision is self-consistent. `deadline_windows(year)` filters on
+`window.filing_year == year` alone, so a year collects windows from four or five
+revisions and the engine emits an obligation for each. The registry-authority
+rule says a triple binds to exactly ONE revision; nothing enforces that for
+deadline windows, and the cross-revision overlap machinery checks period
+SELECTORS rather than window years.
+
+**The three failing tests are correct and are left failing.** One of them,
+`test_modelo_303_quarterly_windows_resolve`, I first "fixed" by comparing
+distinct periods — which would have softened an assertion that was correctly
+reporting a live defect. That change is reverted. Softening a red test that is
+right is the same error as weakening a gate, and it is easier to commit by
+accident because the edit looks like a tidy-up.
+
+The fix is not mine to guess: either the windows belong only to the revision
+that governs their year (registry data), or the accessor must resolve the
+governing revision per triple (product). Both are authority claims about which
+revision AEAT binds to a filing year. Whoever owns the M303 buildout should also
+add the missing invariant — a revision's declared window years must lie within
+its period selector's span — because without it this recurs silently on the next
+revision added.
