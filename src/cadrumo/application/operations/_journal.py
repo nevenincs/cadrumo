@@ -57,7 +57,7 @@ class OperationPersistedSnapshot(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    schema_version: Literal[5] = 5
+    schema_version: Literal[6] = 6
     identity: OperationIdentity
     definition_contract_digest: ContentDigest
     request_storage: OperationRequestStoragePolicy
@@ -76,6 +76,7 @@ class OperationPersistedSnapshot(BaseModel):
     cleanup_deadline: datetime | None
     cancellation_requested_at: datetime | None
     cancellation_acknowledged_at: datetime | None
+    cancellation_deferred: bool
     event_cursor: OperationEventCursor = 0
     terminal_receipt: OperationTerminalReceipt | None = None
     events: tuple[OperationEvent, ...] = ()
@@ -252,6 +253,14 @@ def _validate_deadline_and_cancellation_state(snapshot: OperationPersistedSnapsh
     cleanup_deadline = snapshot.cleanup_deadline
     requested_at = snapshot.cancellation_requested_at
     acknowledged_at = snapshot.cancellation_acknowledged_at
+
+    if snapshot.cancellation_deferred:
+        if snapshot.executor_entered_at is None:
+            raise ValueError("deferred cancellation requires executor entry")
+        if snapshot.lifecycle is OperationLifecycle.TERMINAL:
+            raise ValueError("terminal operation cannot defer cancellation")
+        if acknowledged_at is not None:
+            raise ValueError("acknowledged cancellation cannot remain deferred")
 
     for timestamp in (execution_deadline, cleanup_deadline, requested_at, acknowledged_at):
         if timestamp is not None:

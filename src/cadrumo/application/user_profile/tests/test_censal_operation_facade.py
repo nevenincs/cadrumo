@@ -13,12 +13,14 @@ import pytest
 from .. import (
     CENSAL_OPERATION_DEFINITION,
     CENSAL_OPERATION_DEFINITION_ID,
+    CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING,
     CensalFieldIntent,
     CensalOperationOutcome,
     CensalOperationRequest,
     CensalOperationResult,
     CensalProfileBaseline,
     CensalReviewedFieldIntent,
+    CensalReviewResponse,
 )
 from .. import __all__ as public_names
 
@@ -37,6 +39,7 @@ def test_censal_operation_contract_resolves_from_the_public_facade() -> None:
     assert CENSAL_OPERATION_DEFINITION.executor_factory.request_type is CensalOperationRequest
     assert CENSAL_OPERATION_DEFINITION.executor_factory.executor_type.__module__.endswith("._censal_operation")
     assert CENSAL_OPERATION_DEFINITION.executor_factory.build() is not None
+    assert CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING.model_type is CensalReviewResponse
 
     assert CensalFieldIntent.__module__.endswith("._censal_operation")
     assert CensalOperationOutcome.__module__.endswith("._censal_operation")
@@ -70,11 +73,13 @@ def test_censal_operation_public_names_are_unique_and_resolvable() -> None:
     operation_names = [
         "CENSAL_OPERATION_DEFINITION",
         "CENSAL_OPERATION_DEFINITION_ID",
+        "CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING",
         "CensalFieldIntent",
         "CensalOperationOutcome",
         "CensalOperationRequest",
         "CensalOperationResult",
         "CensalProfileBaseline",
+        "CensalReviewResponse",
         "CensalReviewedFieldIntent",
     ]
     assert operation_names == sorted(operation_names)

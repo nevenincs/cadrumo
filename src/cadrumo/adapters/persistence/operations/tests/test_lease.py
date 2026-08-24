@@ -80,6 +80,7 @@ def _snapshot(*, revision: int) -> OperationPersistedSnapshot:
         cleanup_deadline=None,
         cancellation_requested_at=None,
         cancellation_acknowledged_at=None,
+        cancellation_deferred=False,
         event_cursor=event.sequence,
         events=(event,),
     )

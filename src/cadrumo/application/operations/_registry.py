@@ -786,6 +786,11 @@ def _schema_identity_key(identity: OperationSchemaIdentityV1) -> tuple[str, int,
     return identity.schema_id, identity.schema_version, identity.schema_fingerprint
 
 
+def operation_public_schema_reference(identity: OperationSchemaIdentityV1) -> str:
+    """Return the canonical internal reference for one registered public schema."""
+    return f"schema:{identity.schema_id}.v{identity.schema_version}"
+
+
 def _definition_contract_value(
     contract: OperationPublicDefinitionContractV1,
     *,
@@ -915,4 +920,5 @@ __all__ = [
     "OperationSchemaBindingV1",
     "OperationSchemaIdentityV1",
     "OperationWorkspaceRefreshAdapter",
+    "operation_public_schema_reference",
 ]

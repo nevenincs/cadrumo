@@ -52,7 +52,11 @@ from ._public import (
     OperationReviewProjectionReferenceV1,
     OperationUnsupportedInteractionV1,
 )
-from ._registry import OperationPublicDefinitionContractV1, OperationRegistry
+from ._registry import (
+    OperationPublicDefinitionContractV1,
+    OperationRegistry,
+    operation_public_schema_reference,
+)
 from ._replay import OperationReplayStatus
 
 _SUPPORTED_OBSERVATION_VERSION = 1
@@ -155,6 +159,7 @@ class OperationObservationService:
                 contract.cancellation is not OperationCancellation.UNSUPPORTED
                 and snapshot.lifecycle in _CANCELLABLE_LIFECYCLES
                 and snapshot.cancellation_requested_at is None
+                and not snapshot.cancellation_deferred
             ),
             cancellation_requested=snapshot.cancellation_requested_at is not None,
             cancellation_acknowledged=snapshot.cancellation_acknowledged_at is not None,
@@ -229,10 +234,14 @@ def _project_pending_interaction(
     if pending is None:
         return OperationNoPendingInteractionV1()
     request = pending.request
+    if request.kind not in contract.interaction_kinds:
+        raise _DefinitionContractMismatchError
     if request.kind is OperationInteractionKind.REVIEW:
         review_schema = contract.review_projection_schema
         response_schema = contract.interaction_response_schema
         if review_schema is None or response_schema is None:
+            raise _DefinitionContractMismatchError
+        if request.response_schema_ref != operation_public_schema_reference(response_schema):
             raise _DefinitionContractMismatchError
         reference = OperationReviewProjectionReferenceV1(
             operation_id=request.identity.operation_id,

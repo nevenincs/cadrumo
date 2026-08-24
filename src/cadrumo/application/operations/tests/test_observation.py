@@ -18,17 +18,27 @@ from ....core import (
     OperationDeadline,
     OperationDurability,
     OperationEffect,
+    OperationEventKind,
     OperationLifecycle,
+    OperationTerminalCondition,
 )
 from .. import (
     OperationBaselinePolicy,
     OperationCapabilities,
     OperationConflictScope,
     OperationDefinition,
+    OperationDiagnosticEvent,
+    OperationEffectEvent,
     OperationExecutorContext,
     OperationExecutorFactory,
     OperationFrontendProjection,
     OperationIdentity,
+    OperationInteractionEvent,
+    OperationInteractionKind,
+    OperationInteractionRequest,
+    OperationLogRecord,
+    OperationLogSeverity,
+    OperationNoticeEvent,
     OperationObservationMaterialization,
     OperationObservationRefusalCode,
     OperationObservationRefusalV1,
@@ -38,6 +48,7 @@ from .. import (
     OperationObservationVersionHeader,
     OperationOwnedResource,
     OperationOwnerLease,
+    OperationPendingInteraction,
     OperationPersistedSnapshot,
     OperationPhaseEvent,
     OperationProgressEvent,
@@ -45,6 +56,8 @@ from .. import (
     OperationProgressFoldInput,
     OperationPublicDefinitionRegistrationV1,
     OperationPublicProgressEventV1,
+    OperationReconciliationEvent,
+    OperationReconciliationOutcome,
     OperationReconciliationPolicy,
     OperationRegistry,
     OperationReplayPage,
@@ -52,9 +65,14 @@ from .. import (
     OperationReplayStatus,
     OperationRequest,
     OperationRequestStoragePolicy,
+    OperationReviewAvailableInteractionV1,
     OperationSchemaBindingV1,
     OperationSensitiveInputPolicy,
+    OperationTerminalEvent,
+    OperationTerminalReceipt,
+    OperationUnsupportedInteractionV1,
     operation_conflict_scope_reference,
+    operation_public_schema_reference,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -83,8 +101,23 @@ def _build_executor() -> ObservationExecutor:
     return ObservationExecutor()
 
 
-def _registry() -> OperationRegistry:
-    capabilities = OperationCapabilities(
+class ReviewProjection(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+    summary_code: str
+
+
+class ReviewResponse(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+    intent_code: str
+
+
+def _review_projector(operand: BaseModel, interaction: OperationInteractionRequest) -> BaseModel:
+    del operand, interaction
+    return ReviewProjection(summary_code="observation.review")
+
+
+def _capabilities() -> OperationCapabilities:
+    return OperationCapabilities(
         durability=OperationDurability.RECORDED,
         cancellation=OperationCancellation.COOPERATIVE,
         deadline=OperationDeadline.COOPERATIVE,
@@ -94,9 +127,12 @@ def _registry() -> OperationRegistry:
         sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
         conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
         owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK}),
-        permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
+        permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
         close_policy=OperationClosePolicy.REQUEST_CANCEL,
     )
+
+
+def _registry() -> OperationRegistry:
     definition = OperationDefinition(
         definition_id=_DEFINITION_ID,
         request_type=ObservationRequest,
@@ -108,7 +144,7 @@ def _registry() -> OperationRegistry:
         ),
         phase_codes=("observation.phase.one", "observation.phase.two"),
         interaction_kinds=frozenset(),
-        capabilities=capabilities,
+        capabilities=_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
     )
@@ -120,6 +156,51 @@ def _registry() -> OperationRegistry:
             model_type=ObservationRequest,
         ),
     )
+    return OperationRegistry(definitions=(definition,), public_registrations=(registration,))
+
+
+def _review_registry(*, interaction_kind: OperationInteractionKind = OperationInteractionKind.REVIEW) -> OperationRegistry:
+    definition = OperationDefinition(
+        definition_id=_DEFINITION_ID,
+        request_type=ObservationRequest,
+        result_type=None,
+        executor_factory=OperationExecutorFactory(
+            request_type=ObservationRequest,
+            executor_type=ObservationExecutor,
+            build=_build_executor,
+        ),
+        phase_codes=("observation.phase.one", "observation.phase.two"),
+        interaction_kinds=frozenset({interaction_kind}),
+        capabilities=_capabilities(),
+        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
+    )
+    request_schema = OperationSchemaBindingV1.bind(
+        schema_id="operations.observation.request",
+        schema_version=1,
+        model_type=ObservationRequest,
+    )
+    if interaction_kind is not OperationInteractionKind.REVIEW:
+        registration = OperationPublicDefinitionRegistrationV1.compose(
+            definition=definition,
+            request_schema=request_schema,
+        )
+    else:
+        registration = OperationPublicDefinitionRegistrationV1.compose(
+            definition=definition,
+            request_schema=request_schema,
+            review_projection_schema=OperationSchemaBindingV1.bind(
+                schema_id="operations.observation.review",
+                schema_version=1,
+                model_type=ReviewProjection,
+            ),
+            interaction_response_schema=OperationSchemaBindingV1.bind(
+                schema_id="operations.observation.response",
+                schema_version=1,
+                model_type=ReviewResponse,
+            ),
+            review_projector=_review_projector,
+        )
     return OperationRegistry(definitions=(definition,), public_registrations=(registration,))
 
 
@@ -155,6 +236,7 @@ def _snapshot(
         cleanup_deadline=None,
         cancellation_requested_at=None,
         cancellation_acknowledged_at=None,
+        cancellation_deferred=False,
         event_cursor=event.sequence,
         events=(event,),
     )
@@ -162,8 +244,10 @@ def _snapshot(
 
 def _write_history(
     root: Path,
+    *,
+    registry: OperationRegistry | None = None,
 ) -> tuple[OperationJournalRepository, OperationRegistry, tuple[OperationPersistedSnapshot, ...]]:
-    registry = _registry()
+    registry = registry or _registry()
     identity = OperationIdentity(
         operation_id=_OPERATION_ID,
         definition_id=_DEFINITION_ID,
@@ -227,6 +311,54 @@ def _write_history(
     for predecessor, successor in pairwise(snapshots):
         asyncio.run(repository.commit(successor, expected_revision=predecessor.revision, lease=lease))
     return repository, registry, snapshots
+
+
+def _commit_pending(
+    repository: OperationJournalRepository,
+    registry: OperationRegistry,
+    current: OperationPersistedSnapshot,
+    *,
+    kind: OperationInteractionKind,
+    response_schema_ref: str,
+) -> OperationPersistedSnapshot:
+    interaction = OperationInteractionRequest(
+        interaction_id="e" * 64,
+        identity=current.identity,
+        revision=current.revision + 1,
+        kind=kind,
+        presentation_code="observation.review.ready",
+        response_schema_ref=response_schema_ref,
+        continuation_digest="1" * 64,
+        expires_at=_STARTED + timedelta(minutes=40),
+    )
+    pending = OperationPendingInteraction.bind(
+        request=interaction,
+        response_token="2" * 64,
+        reviewed_proposal_digest="3" * 64,
+    )
+    event = OperationInteractionEvent(
+        identity=current.identity,
+        revision=current.revision + 1,
+        sequence=current.event_cursor + 1,
+        timestamp=_STARTED + timedelta(minutes=4),
+        code="operation.interaction.pending",
+        interaction_id=interaction.interaction_id,
+    )
+    waiting = OperationPersistedSnapshot.model_validate(
+        current.model_copy(
+            update={
+                "revision": current.revision + 1,
+                "lifecycle": OperationLifecycle.WAITING_FOR_INTERACTION,
+                "updated_at": event.timestamp,
+                "event_cursor": event.sequence,
+                "events": (event,),
+                "pending_interaction": pending,
+            }
+        ).model_dump()
+    )
+    asyncio.run(repository.commit(waiting, expected_revision=current.revision, lease=_lease()))
+    assert waiting.definition_contract_digest == registry.lookup_public_contract(_DEFINITION_ID).definition_contract_digest
+    return waiting
 
 
 def test_observation_projects_one_anchor_and_reconnects_without_mutation(tmp_path: Path) -> None:
@@ -318,6 +450,206 @@ def test_observation_returns_closed_safe_refusals(tmp_path: Path) -> None:
     )
     assert isinstance(mismatch, OperationObservationRefusalV1)
     assert mismatch.code is OperationObservationRefusalCode.DEFINITION_CONTRACT_MISMATCH
+
+    journal_path = tmp_path / "operation-journals" / f"{_OPERATION_ID}.json"
+    journal_path.write_text("{not-json", encoding="utf-8")
+    unavailable = asyncio.run(
+        service.observe(OperationObservationRequestV1(operation_id=_OPERATION_ID, after_cursor=0, page_limit=1))
+    )
+    assert isinstance(unavailable, OperationObservationRefusalV1)
+    assert unavailable.code is OperationObservationRefusalCode.OBSERVATION_UNAVAILABLE
+
+
+def test_observation_projects_only_registered_interaction_contracts(tmp_path: Path) -> None:
+    review_registry = _review_registry()
+    repository, _, snapshots = _write_history(tmp_path / "review", registry=review_registry)
+    response_schema = review_registry.lookup_public_contract(_DEFINITION_ID).interaction_response_schema
+    assert response_schema is not None
+    waiting = _commit_pending(
+        repository,
+        review_registry,
+        snapshots[-1],
+        kind=OperationInteractionKind.REVIEW,
+        response_schema_ref=operation_public_schema_reference(response_schema),
+    )
+    observed = asyncio.run(
+        OperationObservationService(reader=repository, registry=review_registry).observe(
+            OperationObservationRequestV1(
+                operation_id=_OPERATION_ID,
+                after_cursor=waiting.event_cursor,
+                page_limit=1,
+            )
+        )
+    )
+    assert isinstance(observed, OperationObservationSuccessV1)
+    assert isinstance(observed.projection.pending_interaction, OperationReviewAvailableInteractionV1)
+    safe_json = observed.model_dump_json()
+    assert "22222222" not in safe_json
+    assert "33333333" not in safe_json
+    assert "continuation_digest" not in safe_json
+
+    mismatch_repository, _, mismatch_snapshots = _write_history(
+        tmp_path / "mismatch",
+        registry=review_registry,
+    )
+    _commit_pending(
+        mismatch_repository,
+        review_registry,
+        mismatch_snapshots[-1],
+        kind=OperationInteractionKind.REVIEW,
+        response_schema_ref="schema:operations.observation.wrong.v1",
+    )
+    mismatch = asyncio.run(
+        OperationObservationService(reader=mismatch_repository, registry=review_registry).observe(
+            OperationObservationRequestV1(operation_id=_OPERATION_ID, after_cursor=0, page_limit=10)
+        )
+    )
+    assert isinstance(mismatch, OperationObservationRefusalV1)
+    assert mismatch.code is OperationObservationRefusalCode.DEFINITION_CONTRACT_MISMATCH
+
+    input_registry = _review_registry(interaction_kind=OperationInteractionKind.INPUT)
+    input_repository, _, input_snapshots = _write_history(tmp_path / "input", registry=input_registry)
+    _commit_pending(
+        input_repository,
+        input_registry,
+        input_snapshots[-1],
+        kind=OperationInteractionKind.INPUT,
+        response_schema_ref="schema:operations.observation.input.v1",
+    )
+    unsupported = asyncio.run(
+        OperationObservationService(reader=input_repository, registry=input_registry).observe(
+            OperationObservationRequestV1(operation_id=_OPERATION_ID, after_cursor=0, page_limit=10)
+        )
+    )
+    assert isinstance(unsupported, OperationObservationSuccessV1)
+    assert isinstance(unsupported.projection.pending_interaction, OperationUnsupportedInteractionV1)
+
+
+def test_observation_projects_every_safe_event_and_terminal_axis_independently(tmp_path: Path) -> None:
+    repository, registry, snapshots = _write_history(tmp_path)
+    current = snapshots[-1]
+    timestamp = _STARTED + timedelta(minutes=4)
+    events = (
+        OperationLogRecord(
+            identity=current.identity,
+            revision=current.revision + 1,
+            sequence=5,
+            timestamp=timestamp,
+            code="observation.log",
+            severity=OperationLogSeverity.INFO,
+            diagnostic_ref=None,
+        ),
+        OperationEffectEvent(
+            identity=current.identity,
+            revision=current.revision + 1,
+            sequence=6,
+            timestamp=timestamp,
+            code="observation.effect",
+            effect=OperationEffect.UPDATED,
+        ),
+        OperationNoticeEvent(
+            identity=current.identity,
+            revision=current.revision + 1,
+            sequence=7,
+            timestamp=timestamp,
+            code="observation.notice",
+            notice_code="observation.notice",
+        ),
+        OperationReconciliationEvent(
+            identity=current.identity,
+            revision=current.revision + 1,
+            sequence=8,
+            timestamp=timestamp,
+            code="observation.reconciliation",
+            outcome=OperationReconciliationOutcome.RECOVERED,
+            lease_evidence_ref="4" * 64,
+        ),
+        OperationDiagnosticEvent(
+            identity=current.identity,
+            revision=current.revision + 1,
+            sequence=9,
+            timestamp=timestamp,
+            code="observation.diagnostic",
+            diagnostic_ref=f"sha256:{'5' * 12}",
+        ),
+        OperationInteractionEvent(
+            identity=current.identity,
+            revision=current.revision + 1,
+            sequence=10,
+            timestamp=timestamp,
+            code="observation.interaction",
+            interaction_id="6" * 64,
+        ),
+    )
+    enriched = OperationPersistedSnapshot.model_validate(
+        current.model_copy(
+            update={
+                "revision": current.revision + 1,
+                "updated_at": timestamp,
+                "effect": OperationEffect.UPDATED,
+                "event_cursor": 10,
+                "events": events,
+            }
+        ).model_dump()
+    )
+    asyncio.run(repository.commit(enriched, expected_revision=current.revision, lease=_lease()))
+    page = asyncio.run(
+        OperationObservationService(reader=repository, registry=registry).observe(
+            OperationObservationRequestV1(operation_id=_OPERATION_ID, after_cursor=4, page_limit=10)
+        )
+    )
+    assert isinstance(page, OperationObservationSuccessV1)
+    assert tuple(event.kind for event in page.event_page.events) == (
+        OperationEventKind.LOG,
+        OperationEventKind.EFFECT,
+        OperationEventKind.NOTICE,
+        OperationEventKind.RECONCILIATION,
+        OperationEventKind.DIAGNOSTIC,
+        OperationEventKind.INTERACTION,
+    )
+
+    settled_at = _STARTED + timedelta(minutes=5)
+    receipt = OperationTerminalReceipt(
+        identity=current.identity,
+        revision=enriched.revision + 1,
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.UPDATED,
+        settled_at=settled_at,
+        result_ref="result:observation-complete",
+    )
+    terminal_event = OperationTerminalEvent(
+        identity=current.identity,
+        revision=receipt.revision,
+        sequence=11,
+        timestamp=settled_at,
+        code="operation.terminal",
+        receipt=receipt,
+    )
+    terminal = OperationPersistedSnapshot.model_validate(
+        enriched.model_copy(
+            update={
+                "revision": receipt.revision,
+                "lifecycle": OperationLifecycle.TERMINAL,
+                "terminal_condition": receipt.condition,
+                "updated_at": settled_at,
+                "event_cursor": 11,
+                "events": (terminal_event,),
+                "terminal_receipt": receipt,
+            }
+        ).model_dump()
+    )
+    asyncio.run(repository.commit(terminal, expected_revision=enriched.revision, lease=_lease()))
+    result = asyncio.run(
+        OperationObservationService(reader=repository, registry=registry).observe(
+            OperationObservationRequestV1(operation_id=_OPERATION_ID, after_cursor=10, page_limit=1)
+        )
+    )
+    assert isinstance(result, OperationObservationSuccessV1)
+    assert result.projection.lifecycle is OperationLifecycle.TERMINAL
+    assert result.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    assert result.projection.effect is OperationEffect.UPDATED
+    assert result.projection.result_ref == receipt.result_ref
+    assert result.event_page.events[0].kind is OperationEventKind.TERMINAL
 
 
 @pytest.mark.parametrize("status", (OperationReplayStatus.EXPIRED, OperationReplayStatus.COMPACTED))

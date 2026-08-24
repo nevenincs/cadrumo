@@ -77,6 +77,7 @@ def _snapshot(*, revision: int, sequence: int) -> OperationPersistedSnapshot:
         cleanup_deadline=None,
         cancellation_requested_at=None,
         cancellation_acknowledged_at=None,
+        cancellation_deferred=False,
         event_cursor=sequence,
         events=(event,),
     )
@@ -121,6 +122,7 @@ def _progress_snapshot() -> OperationPersistedSnapshot:
         cleanup_deadline=None,
         cancellation_requested_at=None,
         cancellation_acknowledged_at=None,
+        cancellation_deferred=False,
         event_cursor=event.sequence,
         events=(event,),
     )
@@ -336,6 +338,7 @@ def test_operation_journal_create_requires_coherent_initial_history_and_commit_r
         cleanup_deadline=None,
         cancellation_requested_at=None,
         cancellation_acknowledged_at=None,
+        cancellation_deferred=False,
     )
     _claim_lease(tmp_path, _lease())
     asyncio.run(repository.create(empty, lease=_lease()))

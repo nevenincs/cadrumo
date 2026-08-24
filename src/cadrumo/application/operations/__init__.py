@@ -169,6 +169,7 @@ from ._registry import (
     OperationSchemaBindingV1,
     OperationSchemaIdentityV1,
     OperationWorkspaceRefreshAdapter,
+    operation_public_schema_reference,
 )
 from ._replay import OperationEventCursor, OperationReplayLimit, OperationReplayPage, OperationReplayStatus
 from ._secret_submission import (
@@ -341,4 +342,5 @@ __all__ = [
     "OperationWorkspaceRefreshTargetVersionHeader",
     "new_operation_id",
     "operation_conflict_scope_reference",
+    "operation_public_schema_reference",
 ]

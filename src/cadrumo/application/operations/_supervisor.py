@@ -197,6 +197,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             cleanup_deadline=None,
             cancellation_requested_at=None,
             cancellation_acknowledged_at=None,
+            cancellation_deferred=False,
             idempotency_claim=claim,
         )
         try:
@@ -558,6 +559,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         cleanup_deadline: datetime | None = None,
         cancellation_requested_at: datetime | None = None,
         cancellation_acknowledged_at: datetime | None = None,
+        cancellation_deferred: bool | None = None,
         executor_entered_at: datetime | None = None,
         discard_ephemeral_secret: bool = False,
     ) -> OperationPersistedSnapshot:
@@ -597,6 +599,11 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
                         snapshot.cancellation_acknowledged_at
                         if cancellation_acknowledged_at is None
                         else cancellation_acknowledged_at
+                    ),
+                    "cancellation_deferred": (
+                        snapshot.cancellation_deferred
+                        if cancellation_deferred is None
+                        else cancellation_deferred
                     ),
                     "executor_entered_at": (
                         snapshot.executor_entered_at if executor_entered_at is None else executor_entered_at
@@ -729,6 +736,31 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             lifecycle=OperationLifecycle.SETTLING,
             cancellation_acknowledged_at=self._clock(),
         )
+
+    async def _set_cancellation_deferred(
+        self,
+        context_snapshot: OperationPersistedSnapshot,
+        deferred: bool,
+    ) -> OperationPersistedSnapshot:
+        """Persist current cancellation availability across an irreversible section."""
+        while True:
+            current = await self.inspect(context_snapshot.identity.operation_id)
+            if current.identity != context_snapshot.identity:
+                raise ValueError("cancellation availability identity does not match current operation")
+            if deferred and current.cancellation_requested_at is not None:
+                raise ValueError("cancellation was requested before the irreversible section began")
+            if current.cancellation_deferred is deferred:
+                return current
+            try:
+                return await self._advance(
+                    current,
+                    lifecycle=current.lifecycle,
+                    cancellation_deferred=deferred,
+                )
+            except Exception:
+                latest = await self.inspect(current.identity.operation_id)
+                if latest.revision == current.revision:
+                    raise
 
     async def _escalate_cleanup_deadline(self, operation_id: OperationId) -> OperationPersistedSnapshot:
         """Retain uncertainty after the cleanup window without publishing a false terminal state."""
@@ -1036,6 +1068,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             resources=self._resources,
             advance=self._advance,
             acknowledge_cancellation=self._acknowledge_cancellation,
+            set_cancellation_deferred=self._set_cancellation_deferred,
         )
 
     async def _record_reconciliation(

@@ -84,6 +84,7 @@ def _snapshot(*, revision: int, sequence: int, updated_at: datetime) -> Operatio
         cleanup_deadline=None,
         cancellation_requested_at=None,
         cancellation_acknowledged_at=None,
+        cancellation_deferred=False,
         event_cursor=sequence,
         events=(event,),
     )

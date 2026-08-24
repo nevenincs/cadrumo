@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...core.errors import CadrumoError, CoreError, CoreValidationError
+from ...core.errors import CadrumoError, CoreError, CoreValidationError, TerminalPreconditionErrorMixin
 from ...core.i18n import Translatable as tr
 from ..operator_actions import PreconditionVerdict
 
@@ -26,7 +26,7 @@ class AggregationConfigError(CoreError, ValueError):
     """
 
 
-class AggregationError(CadrumoError):
+class AggregationError(TerminalPreconditionErrorMixin, CadrumoError):
     """Base class for financial transaction aggregation failures.
 
     The ``translated_message`` field is a translation key resolved by
@@ -47,16 +47,8 @@ class AggregationError(CadrumoError):
         precondition_verdict: PreconditionVerdict | None = None,
     ) -> None:
         super().__init__(
-            str(message),
-            translated_message=message,
-            context=context,
+            str(message), translated_message=message, context=context, precondition_verdict=precondition_verdict
         )
-        self._terminal_precondition_verdict = precondition_verdict
-
-    @property
-    def terminal_precondition_verdict(self) -> PreconditionVerdict | None:
-        """Return the exact aggregation refusal for later boundary projection."""
-        return self._terminal_precondition_verdict
 
 
 class AggregationPeriodError(AggregationError):

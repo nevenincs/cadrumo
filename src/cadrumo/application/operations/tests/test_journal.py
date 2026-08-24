@@ -94,6 +94,7 @@ def _persisted_snapshot() -> OperationPersistedSnapshot:
         cleanup_deadline=None,
         cancellation_requested_at=None,
         cancellation_acknowledged_at=None,
+        cancellation_deferred=False,
         event_cursor=event.sequence,
         events=(event,),
     )
@@ -133,6 +134,7 @@ def _terminal_persisted_snapshot() -> OperationPersistedSnapshot:
         cleanup_deadline=None,
         cancellation_requested_at=None,
         cancellation_acknowledged_at=None,
+        cancellation_deferred=False,
         event_cursor=event.sequence,
         terminal_receipt=receipt,
         events=(event,),
@@ -152,7 +154,7 @@ def test_persisted_snapshot_is_versioned_and_excludes_the_runtime_request() -> N
     with pytest.raises(ValidationError, match="frozen_instance"):
         restored.revision = 1
     payload = persisted.model_dump()
-    for schema_version in (1, 2, 3, 4):
+    for schema_version in (1, 2, 3, 4, 5):
         payload = persisted.model_dump(mode="json")
         payload["schema_version"] = schema_version
         with pytest.raises(ValidationError):
@@ -166,6 +168,7 @@ def test_persisted_snapshot_is_versioned_and_excludes_the_runtime_request() -> N
         "cleanup_deadline",
         "cancellation_requested_at",
         "cancellation_acknowledged_at",
+        "cancellation_deferred",
     ):
         payload = persisted.model_dump(mode="json")
         del payload[safety_field]
@@ -192,6 +195,7 @@ def test_persisted_snapshot_correlates_deadline_and_cooperative_cancellation_fac
         cleanup_deadline=cleanup_deadline,
         cancellation_requested_at=requested_at,
         cancellation_acknowledged_at=acknowledged_at,
+        cancellation_deferred=False,
     )
 
     accepted = OperationPersistedSnapshot.model_validate(payload)

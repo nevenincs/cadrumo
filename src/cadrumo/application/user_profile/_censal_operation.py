@@ -42,7 +42,9 @@ from ..operations import (
     OperationRequest,
     OperationRequestStoragePolicy,
     OperationResponseIntent,
+    OperationSchemaBindingV1,
     OperationSensitiveInputPolicy,
+    operation_public_schema_reference,
 )
 from ._capsule_record import ProfileRecordConflictError
 from ._censal_observation import CensalObservation
@@ -201,6 +203,22 @@ class CensalOperationResult(BaseModel):
     reviewed_proposal_digest: ContentDigest
 
 
+class CensalReviewResponse(BaseModel):
+    """Authority-free public decision submitted for a censal REVIEW."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    response_version: Literal[1]
+    intent: OperationResponseIntent
+
+
+CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING = OperationSchemaBindingV1.bind(
+    schema_id="user-profile.censo-review.response",
+    schema_version=1,
+    model_type=CensalReviewResponse,
+)
+
+
 @dataclass(frozen=True, slots=True)
 class CensalOperationAcquisition:
     """Completed read plus its idempotently closeable acquisition resource."""
@@ -298,7 +316,9 @@ class CensalOperationExecutor:
             revision=context.revision + 1,
             kind=OperationInteractionKind.REVIEW,
             presentation_code="censo.review.ready",
-            response_schema_ref="schema:censo-review-response.v1",
+            response_schema_ref=operation_public_schema_reference(
+                CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING.identity
+            ),
             continuation_digest=continuation_digest,
         )
         await context.interactions.publish_review(
@@ -418,6 +438,7 @@ CENSAL_OPERATION_DEFINITION = OperationDefinition(
 __all__ = [
     "CENSAL_OPERATION_DEFINITION",
     "CENSAL_OPERATION_DEFINITION_ID",
+    "CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING",
     "CensalFieldIntent",
     "CensalOperationAcquisition",
     "CensalOperationExecutor",
@@ -425,6 +446,7 @@ __all__ = [
     "CensalOperationRequest",
     "CensalOperationResult",
     "CensalProfileBaseline",
+    "CensalReviewResponse",
     "CensalReviewedFieldIntent",
     "CensalReviewedOperand",
 ]

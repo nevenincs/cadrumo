@@ -52,6 +52,9 @@ from .. import (
     OperationLeaseDisposition,
     OperationLifecycle,
     OperationNoticeEvent,
+    OperationObservationRequestV1,
+    OperationObservationService,
+    OperationObservationSuccessV1,
     OperationOwnedResource,
     OperationOwnerLease,
     OperationPendingInteraction,
@@ -657,7 +660,7 @@ def test_filesystem_journal_refuses_pre_v5_operation_snapshots_without_rewrite(t
         ).definition_contract_digest
         journal_path = storage_root / "operation-journals" / f"{operation_id}.json"
         current_record = json.loads(journal_path.read_text(encoding="utf-8"))
-        for schema_version in (1, 2, 3, 4):
+        for schema_version in (1, 2, 3, 4, 5):
             old_record = json.loads(json.dumps(current_record))
             snapshot = old_record["snapshot"]
             snapshot["schema_version"] = schema_version
@@ -666,6 +669,7 @@ def test_filesystem_journal_refuses_pre_v5_operation_snapshots_without_rewrite(t
                 "cleanup_deadline",
                 "cancellation_requested_at",
                 "cancellation_acknowledged_at",
+                "cancellation_deferred",
             ):
                 del snapshot[safety_field]
             raw_old_record = json.dumps(old_record, sort_keys=True).encode("utf-8")
@@ -2022,12 +2026,13 @@ def test_irreversible_section_allows_request_but_refuses_acknowledgement_until_e
         journal, leases, operands = _repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
+        registry = _registry(
+            executor_type=IrreversibleSectionExecutor,
+            build=lambda: executor,
+            capabilities=_capabilities(cancellation=OperationCancellation.COOPERATIVE),
+        )
         supervisor = _supervisor(
-            registry=_registry(
-                executor_type=IrreversibleSectionExecutor,
-                build=lambda: executor,
-                capabilities=_capabilities(cancellation=OperationCancellation.COOPERATIVE),
-            ),
+            registry=registry,
             journal=journal,
             leases=leases,
             operands=operands,
@@ -2039,6 +2044,13 @@ def test_irreversible_section_allows_request_but_refuses_acknowledgement_until_e
             operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
             start_task = asyncio.create_task(supervisor.start(operation_id))
             await executor.entered.wait()
+            observation = await OperationObservationService(reader=journal, registry=registry).observe(
+                OperationObservationRequestV1(operation_id=operation_id, after_cursor=0, page_limit=20)
+            )
+            assert isinstance(observation, OperationObservationSuccessV1)
+            assert observation.projection.lifecycle is OperationLifecycle.RUNNING
+            assert not observation.projection.cancellable_now
+            assert (await supervisor.inspect(operation_id)).cancellation_deferred
             requested = await supervisor.request_cancel(operation_id)
             assert executor.context is not None
             with pytest.raises(ValueError, match="irreversible section"):
@@ -2061,6 +2073,7 @@ def test_irreversible_section_allows_request_but_refuses_acknowledgement_until_e
                 ),
             )
         )
+        assert not terminal.cancellation_deferred
 
     assert settling.lifecycle is OperationLifecycle.SETTLING
     assert settling.cancellation_acknowledged_at is not None
@@ -2222,6 +2235,7 @@ def test_reconcile_foreign_expired_lease_orphans_target_without_mutating_foreign
             cleanup_deadline=None,
             cancellation_requested_at=None,
             cancellation_acknowledged_at=None,
+            cancellation_deferred=False,
         )
         asyncio.run(journal.create(foreign_snapshot, lease=foreign_lease))
         foreign_path = storage_root / "operation-journals" / f"{foreign_lease.operation_id}.json"

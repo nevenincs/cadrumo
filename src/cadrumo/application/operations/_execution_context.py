@@ -45,9 +45,11 @@ class _Cancellation:
         *,
         context: DefinitionBoundContext,
         acknowledge: Callable[[OperationPersistedSnapshot], Awaitable[OperationPersistedSnapshot]],
+        set_deferred: Callable[[OperationPersistedSnapshot, bool], Awaitable[OperationPersistedSnapshot]],
     ) -> None:
         self._context = context
         self._acknowledge = acknowledge
+        self._set_deferred = set_deferred
         self._irreversible_section_depth = 0
 
     @property
@@ -72,11 +74,15 @@ class _Cancellation:
         """Protect one executor-owned mutation boundary from an unsafe stop."""
         if self.cancellation_requested:
             raise ValueError("cancellation was requested before the irreversible section began")
+        if self._irreversible_section_depth == 0:
+            self._context.snapshot = await self._set_deferred(self._context.snapshot, True)
         self._irreversible_section_depth += 1
         try:
             yield
         finally:
             self._irreversible_section_depth -= 1
+            if self._irreversible_section_depth == 0:
+                self._context.snapshot = await self._set_deferred(self._context.snapshot, False)
 
 
 class _Deadlines:
@@ -105,6 +111,9 @@ class DefinitionBoundContext:
         resources: dict[OperationId, list[AsyncCloseable]],
         advance: Callable[..., Awaitable[OperationPersistedSnapshot]],
         acknowledge_cancellation: Callable[[OperationPersistedSnapshot], Awaitable[OperationPersistedSnapshot]],
+        set_cancellation_deferred: Callable[
+            [OperationPersistedSnapshot, bool], Awaitable[OperationPersistedSnapshot]
+        ],
     ) -> None:
         self.registry = registry
         self.clock = clock
@@ -112,7 +121,11 @@ class DefinitionBoundContext:
         self.advance_transition = advance
         self.snapshot = snapshot
         self.identity = snapshot.identity
-        self.cancellation = _Cancellation(context=self, acknowledge=acknowledge_cancellation)
+        self.cancellation = _Cancellation(
+            context=self,
+            acknowledge=acknowledge_cancellation,
+            set_deferred=set_cancellation_deferred,
+        )
         self.deadlines = _Deadlines(self)
         self.events = _DefinitionBoundEvents(self)
         self.operands = operands

@@ -263,6 +263,9 @@ if TYPE_CHECKING:
         CENSAL_OPERATION_DEFINITION_ID as CENSAL_OPERATION_DEFINITION_ID,
     )
     from ._censal_operation import (
+        CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING as CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING,
+    )
+    from ._censal_operation import (
         CensalFieldIntent as CensalFieldIntent,
     )
     from ._censal_operation import (
@@ -280,6 +283,7 @@ if TYPE_CHECKING:
     from ._censal_operation import (
         CensalReviewedFieldIntent as CensalReviewedFieldIntent,
     )
+    from ._censal_operation import CensalReviewResponse as CensalReviewResponse
     from ._censo_errors import (
         CensoSyncError as CensoSyncError,
     )
@@ -877,12 +881,14 @@ _LAZY_EXPORTS: dict[str, str] = {
     "CensalObservationIdentity": "._censal_observation",
     "CENSAL_OPERATION_DEFINITION": "._censal_operation",
     "CENSAL_OPERATION_DEFINITION_ID": "._censal_operation",
+    "CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING": "._censal_operation",
     "CensalFieldIntent": "._censal_operation",
     "CensalOperationOutcome": "._censal_operation",
     "CensalOperationRequest": "._censal_operation",
     "CensalOperationResult": "._censal_operation",
     "CensalProfileBaseline": "._censal_operation",
     "CensalReviewedFieldIntent": "._censal_operation",
+    "CensalReviewResponse": "._censal_operation",
     "CENSO_CERTIFICATE_AXIS_PREFIX": "._cotejo_apply",
     "CENSO_DIVERGENCE_NOTICE_CODE": "._cotejo_apply",
     "CENSO_DIVERGENCE_PREFIX": "._cotejo_apply",
@@ -1090,6 +1096,7 @@ __all__ = [
     "CENSAL_ADOPTABLE_PATHS",
     "CENSAL_OPERATION_DEFINITION",
     "CENSAL_OPERATION_DEFINITION_ID",
+    "CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING",
     "CENSO_CERTIFICATE_AXIS_PREFIX",
     "CENSO_DIVERGENCE_NOTICE_CODE",
     "CENSO_DIVERGENCE_PREFIX",
@@ -1113,6 +1120,7 @@ __all__ = [
     "CensalOperationResult",
     "CensalProfileBaseline",
     "CensalReconciliation",
+    "CensalReviewResponse",
     "CensalReviewedFieldIntent",
     "CensoDivergence",
     "CensoSyncError",
