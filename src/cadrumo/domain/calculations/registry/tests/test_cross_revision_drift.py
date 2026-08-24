@@ -62,13 +62,19 @@ def _casilla(
     legal_refs: tuple[LegalRefId, ...] = ("ley-58-2003:art-29",),
     continuidad_id: str | None = None,
 ) -> CasillaDefinition:
+    # Continuity is a legal identity assertion. Synthetic fixtures that are not
+    # specifically testing a missing semantic role should therefore model the
+    # ordinary role-derived spelling as the production corpus does.
+    resolved_semantic_role = semantic_role
+    if resolved_semantic_role is None and continuidad_id is not None:
+        resolved_semantic_role = continuidad_id.replace("-", "_")
     payload = {
         "id": cid,
         "number": cid,
         "localization_keys": (_write_test_label(label),),
         "section": section,
         "data_type": data_type,
-        "semantic_role": semantic_role,
+        "semantic_role": resolved_semantic_role,
         "legal_refs": legal_refs,
         "source_refs": ("aeat-manual",),
     }
@@ -260,6 +266,7 @@ number = "700"
 section = ["test"]
 data_type = "money"
 continuidad_id = "base"
+semantic_role = "base"
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
 """.lstrip(),
@@ -295,6 +302,7 @@ number = "700"
 section = ["test"]
 data_type = "money"
 continuidad_id = "base"
+semantic_role = "base"
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
 {evolution_block}
@@ -661,21 +669,23 @@ class TestCrossRevisionConsistency:
             continuidad_id="unrelated-continuity-id",
         )
 
-        failures = declared_cross_revision_continuity_semantic_linkage_failures([_annual_modelo(source, target)])
+        failures = validate_registry_scope([_annual_modelo(source, target)])
 
         assert len(failures) == 1
         assert "semantic linkage mismatch" in failures[0]
         assert "total-tax-due" in failures[0]
 
     def test_continuity_semantic_linkage_requires_roles_across_a_revision_boundary(self) -> None:
-        source = _casilla(cid="0700", continuidad_id="total-tax-due")
+        source = _casilla(cid="0700", continuidad_id="total-tax-due").model_copy(
+            update={"semantic_role": None},
+        )
         target = _casilla(
             cid="0700",
             semantic_role="total_tax_due",
             continuidad_id="total-tax-due",
         )
 
-        failures = declared_cross_revision_continuity_semantic_linkage_failures([_annual_modelo(source, target)])
+        failures = validate_registry_scope([_annual_modelo(source, target)])
 
         assert len(failures) == 1
         assert "semantic linkage missing" in failures[0]
@@ -764,9 +774,23 @@ class TestCrossRevisionConsistency:
     def test_strict_continuity_validation_accepts_two_chains_across_the_gap(self) -> None:
         """The declared resolution: the resumed concept takes a new chain id."""
         m = _three_year_modelo(
-            [_casilla(cid="1082", label="Otras deducciones", continuidad_id="la-rioja-otras-2023")],
+            [
+                _casilla(
+                    cid="1082",
+                    label="Otras deducciones",
+                    semantic_role="la_rioja_otras",
+                    continuidad_id="la-rioja-otras-2023",
+                ),
+            ],
             [_casilla(cid="0900", label="Unrelated")],
-            [_casilla(cid="1082", label="Otras deducciones", continuidad_id="la-rioja-otras-2025")],
+            [
+                _casilla(
+                    cid="1082",
+                    label="Otras deducciones",
+                    semantic_role="la_rioja_otras",
+                    continuidad_id="la-rioja-otras-2025",
+                ),
+            ],
             evolutions={
                 "2024": (
                     {

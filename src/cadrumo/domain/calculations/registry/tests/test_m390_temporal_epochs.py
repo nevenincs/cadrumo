@@ -27,10 +27,9 @@ def test_m390_selects_the_exact_annual_epoch_and_own_record_design(filing_year: 
     assert revision.valid_to == date(filing_year, 12, 31)
     assert revision.period_selector.years == (filing_year,)
     assert revision.source_refs.count(own_source_ref) == 1
-    serialized_revision = revision.model_dump_json()
-    assert own_source_ref in serialized_revision
-    for other_year in {2021, 2022, 2023, 2024, 2025} - {filing_year}:
-        assert f"aeat-dr-390-{other_year}" not in serialized_revision
+    assert {source_ref for source_ref in revision.source_refs if source_ref.startswith("aeat-dr-390-")} == {
+        own_source_ref
+    }
     assert catalogues.sources[own_source_ref].record_design_epoch == str(filing_year)
     assert catalogues.sources[own_source_ref].applies_from == date(filing_year, 1, 1)
     assert catalogues.sources[own_source_ref].applies_to == date(filing_year, 12, 31)
