@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-24'
-body_hash: 'sha256:cfe0b2f800563f5e54ba35500592ff06b29dc0233f72bdc1618203a191b1700b'
+body_hash: 'sha256:b2046de5403a200a8627045de463bf26096bd9e893c8eb89eb3babfb4764df4e'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -197,7 +197,7 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [ ] `W05.P10.S39` - Replace the remaining DeadlineRecovery.next_command transport and its overview projection with typed recovery actions; `src/cadrumo/domain/deadlines/_models.py; src/cadrumo/domain/deadlines/_recargo.py; src/cadrumo/domain/deadlines/tests/test_extemporaneidad.py; src/cadrumo/domain/deadlines/tests/test_recargo.py; src/cadrumo/application/overview; src/cadrumo/entrypoints/cli/_overview.py`.
 - [x] `W05.P10.S40` - Migrate the remaining LiveIvaSurfaceTimeoutError producers and boundary projection to typed actions with explicit safety dispositions; `src/cadrumo/application/live/_errors.py; src/cadrumo/application/live/_filed_data_capture.py; src/cadrumo/application/live/_iva_remote_state.py; src/cadrumo/entrypoints/cli/_app_live.py`.
 - [x] `W05.P10.S41` - Own every new provisioning and optional-extra renderer key and template in all four locale catalogues, accepting only typed condition facts plus resolved action or no-recovery outcome and never feature identity, package command, or English prose; `src/cadrumo/locales`.
-- [ ] `W05.P10.S58` - Replace AEAT browser optional-extra, launch, evasion, session, navigation, and teardown recovery prose with canonical typed external-system outcomes and redacted facts; `src/cadrumo/adapters/outbound/aeat/browser/_errors.py; src/cadrumo/adapters/outbound/aeat/browser/_factory.py; src/cadrumo/adapters/outbound/aeat/browser/session.py; src/cadrumo/adapters/outbound/aeat/browser/evasion.py; src/cadrumo/adapters/outbound/aeat/browser/tests`.
+- [x] `W05.P10.S58` - Replace AEAT browser optional-extra, launch, evasion, session, navigation, and teardown recovery prose with canonical typed external-system outcomes and redacted facts; `src/cadrumo/adapters/outbound/aeat/browser/_errors.py; src/cadrumo/adapters/outbound/aeat/browser/_factory.py; src/cadrumo/adapters/outbound/aeat/browser/session.py; src/cadrumo/adapters/outbound/aeat/browser/evasion.py; src/cadrumo/adapters/outbound/aeat/browser/tests`.
 - [x] `W05.P10.S59` - Remove stale lazy schema-owner-table claims from the config payload surface while S91 exclusively owns residual Modelo CLI action producers; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
 - [x] `W05.P10.S60` - Migrate TUI recovery rendering to the shared resolved action projection; `src/cadrumo/adapters/inbound/tui`.
 - [x] `W05.P10.S61` - Migrate shipped agent harness action citations to canonical action identities; `src/cadrumo/_data/agent`.
