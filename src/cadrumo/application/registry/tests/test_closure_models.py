@@ -113,6 +113,36 @@ def test_unmeasured_limb_cannot_disguise_a_refusal_as_a_measurement_gap() -> Non
         )
 
 
+@pytest.mark.parametrize(
+    ("outcome", "reason"),
+    (("refused", "missing_evidence"), ("unmeasured", "unmeasured")),
+)
+def test_active_closure_refusal_cannot_claim_a_resolved_owner_disposition(
+    outcome: str,
+    reason: str,
+) -> None:
+    refusal = _refusal(limb="source_connectivity", reason=reason).model_copy(
+        update={
+            "disposition": RegistryClosureOwnerDisposition(
+                limb="source_connectivity",
+                state="resolved",
+                owner="registry release owner",
+                work_item="source-connectivity-adjudication",
+                reconsideration_condition="Measure the selected revision against current evidence.",
+            ),
+        },
+    )
+
+    with pytest.raises(ValidationError, match="cannot carry a resolved owner disposition"):
+        RegistryClosureLimb(
+            modelo="303",
+            revision="2025",
+            name="source_connectivity",
+            outcome=outcome,
+            refusal=refusal,
+        )
+
+
 def test_evidence_and_models_are_strict_and_immutable() -> None:
     evidence = _evidence()
     with pytest.raises(ValidationError, match="frozen"):

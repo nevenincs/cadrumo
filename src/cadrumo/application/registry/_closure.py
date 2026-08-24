@@ -111,6 +111,8 @@ class RegistryClosureLimb(_ClosureModel):
             raise ValueError("unsatisfied closure limb requires an actionable refusal")
         if self.refusal.disposition.limb != self.name:
             raise ValueError("closure refusal disposition must name the owning limb")
+        if self.refusal.disposition.state == "resolved":
+            raise ValueError("active closure refusal cannot carry a resolved owner disposition")
         if self.outcome == "unmeasured" and self.refusal.reason != "unmeasured":
             raise ValueError("unmeasured closure limb requires the unmeasured refusal reason")
         if self.outcome == "refused" and self.refusal.reason == "unmeasured":

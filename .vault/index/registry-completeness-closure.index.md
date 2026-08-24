@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:ea620c80e14bc7cfadd7672b21472479981cd92b20f3cefa6c2fd66bf23af510'
+body_hash: 'sha256:4f39eb65a8dd87609722ff9ccbc06093a98075701670437c098877ec7ebcf32c'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -18,6 +18,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-summary]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S06]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S07]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S43]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
@@ -62,6 +63,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P01-summary` - `registry-completeness-closure` `W01.P01` summary
 - `2026-08-24-registry-completeness-closure-W01-P02-S06` - Define strict typed per-revision closure-limb and refusal models on the application registry boundary
 - `2026-08-24-registry-completeness-closure-W01-P02-S07` - Compose the temporal coverage and authority-grade limb from validated law-selected registry revisions
+- `2026-08-24-registry-completeness-closure-W01-P02-S43` - Reject resolved owner dispositions on active closure refusals and prove the contradiction fails validation
 
 ### plan
 
