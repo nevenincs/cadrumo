@@ -25,7 +25,6 @@ from .._executor import (
     OperationInteractionAccess,
     OperationSecureOperandLookup,
 )
-from .._interactions import OperationInteractionRequest, OperationPendingInteraction
 from .._secret_submission import OperationEphemeralSecretAccess
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -97,17 +96,20 @@ class CleanupOwner:
 
 
 class InteractionAccess:
-    async def request(self, pending: OperationPendingInteraction) -> None: ...
-
     async def publish_review(
         self,
         *,
-        request: OperationInteractionRequest,
-        response_token: str,
+        interaction_id: str,
+        identity: OperationIdentity,
+        revision: int,
+        presentation_code: str,
+        response_schema_ref: str,
+        continuation_digest: str,
+        expires_at: datetime | None,
         reviewed_operand: BaseModel,
         baseline_digest: str | None = None,
         proposed_effect_digest: str | None = None,
-    ) -> OperationPendingInteraction: ...
+    ) -> None: ...
 
 
 class EphemeralSecretAccess:
@@ -193,8 +195,13 @@ def test_public_callable_parameters_retain_semantic_keyword_names() -> None:
     )
     assert tuple(inspect.signature(OperationInteractionAccess.publish_review).parameters) == (
         "self",
-        "request",
-        "response_token",
+        "interaction_id",
+        "identity",
+        "revision",
+        "presentation_code",
+        "response_schema_ref",
+        "continuation_digest",
+        "expires_at",
         "reviewed_operand",
         "baseline_digest",
         "proposed_effect_digest",

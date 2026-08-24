@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, SecretStr
 
 from ...core import (
     STRICT_FROZEN_CONFIG,
+    AuthProviderKind,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -27,6 +28,7 @@ from ..operations import (
     OperationConflictScope,
     OperationDefinition,
     OperationEphemeralSecretDeclaration,
+    OperationExecutorContext,
     OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
@@ -36,7 +38,6 @@ from ..operations import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..operations._executor import OperationExecutorContext
 from ..user_profile import (
     ProfileLoginOutcome,
     ProfilePassphraseRotationOutcome,
@@ -62,14 +63,14 @@ class ProfileLoginOperationRequest(CredentialFreeOperationRequest):
 class AuthConfigureOperationRequest(BaseModel):
     model_config = _PUBLIC_REQUEST_CONFIG
 
-    provider: str
+    provider: AuthProviderKind
     certificate_path: Path | None = None
 
 
 class AuthSessionAcquireOperationRequest(BaseModel):
     model_config = _PUBLIC_REQUEST_CONFIG
 
-    provider: str | None = None
+    provider: AuthProviderKind | None = None
     fresh: bool = False
     reset_lock: bool = False
 
@@ -77,7 +78,7 @@ class AuthSessionAcquireOperationRequest(BaseModel):
 class AuthTeardownOperationRequest(BaseModel):
     model_config = _PUBLIC_REQUEST_CONFIG
 
-    provider: str | None = None
+    provider: AuthProviderKind | None = None
     all_providers: bool = False
 
 
@@ -192,7 +193,10 @@ class AuthConfigureOperationExecutor:
         await context.events.phase("auth.configure.preflight")
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase("auth.configure.execute")
-        result = configure_operator_auth(request.payload.provider, certificate_path=request.payload.certificate_path)
+        result = configure_operator_auth(
+            request.payload.provider.value,
+            certificate_path=request.payload.certificate_path,
+        )
         await context.events.effect(OperationEffect.UPDATED)
         await context.events.phase("auth.configure.settlement")
         return await _result_reference(result, context)
@@ -209,7 +213,7 @@ class AuthSessionAcquireOperationExecutor:
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase("auth.acquire.execute")
         result = await login_operator_auth(
-            request.payload.provider,
+            request.payload.provider.value if request.payload.provider is not None else None,
             fresh=request.payload.fresh,
             reset_lock=request.payload.reset_lock,
         )
@@ -229,7 +233,7 @@ class AuthLogoutOperationExecutor:
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase("auth.logout.execute")
         result = logout_operator_auth(
-            provider=request.payload.provider,
+            provider=request.payload.provider.value if request.payload.provider is not None else None,
             all_providers=request.payload.all_providers,
             target_bucket_id=target_bucket_id,
         )
@@ -250,7 +254,7 @@ class AuthResetOperationExecutor:
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase("auth.reset.execute")
         result = reset_operator_auth(
-            provider=request.payload.provider,
+            provider=request.payload.provider.value if request.payload.provider is not None else None,
             all_providers=request.payload.all_providers,
             target_bucket_id=target_bucket_id,
         )
@@ -303,7 +307,9 @@ def _definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        permitted_frontends=frozenset(
+            {OperationFrontendProjection.CLI, OperationFrontendProjection.MCP, OperationFrontendProjection.TUI}
+        ),
         ephemeral_secret=(
             None
             if secret_kind is None

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import contextmanager
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -12,6 +12,7 @@ import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import M210PayerMode, Period
@@ -25,6 +26,7 @@ from .._calculation_actions import calculate_modelo_revision
 from .._m303_regimen_simplificado_scope import active_taxpayer_profile
 from .._work_lifecycle import create_work_unit
 from .._work_plazo import calculated_m210_plazo_notice
+from ._file_flow_support import verify_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -156,6 +158,293 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
         "deadline_window_id": "modelo-210-2025-0a-arrendamiento-ingreso",
         "opens_on": "2026-04-01",
         "closes_on": "2026-04-20",
+        "legal_refs": "orden-eha-3316-2010:art-5",
+        "source_refs": "aeat-modelo-210-procedure, boe-modelo-210-base-order",
+    }
+
+
+@pytest.mark.parametrize(
+    ("tipo_renta_code", "casilla_inputs", "text_tipo_renta", "expected_resultado", "expected_window"),
+    [
+        pytest.param(
+            "01",
+            {"rendimientos_integros": Decimal("900.00")},
+            "general",
+            "I",
+            ("modelo-210-2025-0a-arrendamiento-ingreso", "2026-04-01", "2026-04-20"),
+            id="arrendamiento-01-ingreso",
+        ),
+        pytest.param(
+            "35",
+            {"rendimientos_integros": Decimal("900.00")},
+            "general",
+            "I",
+            ("modelo-210-2025-0a-arrendamiento-ingreso", "2026-04-01", "2026-04-20"),
+            id="arrendamiento-35-ingreso",
+        ),
+        pytest.param(
+            "01",
+            {"rendimientos_integros": Decimal("0.00")},
+            "general",
+            "N",
+            ("modelo-210-2025-0a-cuota-cero", "2026-01-01", "2026-01-20"),
+            id="cuota-cero",
+        ),
+        pytest.param(
+            "01",
+            {
+                "rendimientos_integros": Decimal("100.00"),
+                "retencion_practicada": Decimal("100.00"),
+            },
+            "general",
+            "D",
+            ("modelo-210-2025-0a-devolucion", "2026-02-01", "2030-02-01"),
+            id="devolver",
+        ),
+    ],
+)
+def test_calculate_and_verify_project_exactly_one_grounded_qualified_plazo_notice(
+    tmp_path: Path,
+    tipo_renta_code: str,
+    casilla_inputs: dict[str, Decimal],
+    text_tipo_renta: str,
+    expected_resultado: str,
+    expected_window: tuple[str, str, str],
+) -> None:
+    """Real calculation and verification retain one identical grounded notice."""
+    with _secure_backend(tmp_path):
+        snapshot = resources().modelos.authority.snapshot("210", filing_year=_FILING_YEAR, period="0A")
+        work_repo = WorkUnitCatalogueRepository()
+        calculation_repo = CalculationRevisionCatalogueRepository()
+        verification_repo = VerificationReportCatalogueRepository()
+        event_repo = BucketEventHistoryRepository()
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo="210",
+            filing_year=_FILING_YEAR,
+            period=Period.from_year_and_code(_FILING_YEAR, "0A"),
+            revision_id=snapshot.revision.id,
+            repository=work_repo,
+            clock=_CLOCK,
+        )
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            actor="operator",
+            casilla_inputs=casilla_inputs,
+            text_casilla_inputs={"tipo_renta": text_tipo_renta},
+            m210_official_tipo_renta_code=tipo_renta_code,
+            detail_rows=(
+                Modelo210AgrupacionRentaRow(
+                    source_id=f"plazo-{tipo_renta_code}",
+                    tipo_renta_code=tipo_renta_code,
+                    importe=casilla_inputs["rendimientos_integros"],
+                    tipo_gravamen=Decimal("0.24"),
+                    pagador_mode=(
+                        M210PayerMode.MULTIPLE_PAYERS_CODE_35
+                        if tipo_renta_code == "35"
+                        else M210PayerMode.SINGLE_PAYER
+                    ),
+                    pagador_id=None if tipo_renta_code == "35" else "ES-PAGADOR-1",
+                    deriva_de_bien_derecho=True,
+                    bien_derecho_id="ES-INMUEBLE-1",
+                ),
+            ),
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            bucket_event_repository=event_repo,
+            clock=_CLOCK,
+        )
+        profile = active_taxpayer_profile(work_unit)
+        calculate_notices = tuple(
+            notice
+            for notice in (
+                calculated_m210_plazo_notice(
+                    work_unit=work_unit,
+                    revision=revision,
+                    workflow_profile=profile,
+                ),
+            )
+            if notice is not None
+        )
+        verify_revision(
+            revision.calculation_revision_id,
+            revision=revision,
+            work_unit=work_unit,
+            actor="operator",
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+            bucket_event_repository=event_repo,
+            clock=_CLOCK,
+        )
+        verify_notices = tuple(
+            notice
+            for notice in (
+                calculated_m210_plazo_notice(
+                    work_unit=work_unit,
+                    revision=revision,
+                    workflow_profile=profile,
+                ),
+            )
+            if notice is not None
+        )
+
+    assert len(calculate_notices) == len(verify_notices) == 1
+    assert verify_notices == calculate_notices
+    context = calculate_notices[0].context
+    assert context is not None
+    window_id, opens_on, closes_on = expected_window
+    assert context == {
+        "modelo": "210",
+        "filing_year": "2025",
+        "period": "0A",
+        "resultado": expected_resultado,
+        "tipo_renta_code": tipo_renta_code,
+        "deadline_window_id": window_id,
+        "opens_on": opens_on,
+        "closes_on": closes_on,
+        "legal_refs": "orden-eha-3316-2010:art-5",
+        "source_refs": "aeat-modelo-210-procedure, boe-modelo-210-base-order",
+    }
+
+
+def test_calculate_and_verify_never_project_an_ungrounded_tipo_28_offset(tmp_path: Path) -> None:
+    """Tipo 28 remains event-shaped and silent at both lifecycle boundaries."""
+    with _secure_backend(tmp_path):
+        snapshot = resources().modelos.authority.snapshot("210", filing_year=_FILING_YEAR, period="EVENT-1")
+        work_repo = WorkUnitCatalogueRepository()
+        calculation_repo = CalculationRevisionCatalogueRepository()
+        verification_repo = VerificationReportCatalogueRepository()
+        event_repo = BucketEventHistoryRepository()
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo="210",
+            filing_year=_FILING_YEAR,
+            period=Period.from_year_and_code(_FILING_YEAR, "EVENT-1"),
+            revision_id=snapshot.revision.id,
+            repository=work_repo,
+            clock=_CLOCK,
+        )
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            actor="operator",
+            casilla_inputs={"rendimientos_integros": Decimal("900.00")},
+            text_casilla_inputs={"tipo_renta": "general"},
+            m210_official_tipo_renta_code="28",
+            filing_period_date=date(_FILING_YEAR, 12, 31),
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            bucket_event_repository=event_repo,
+            clock=_CLOCK,
+        )
+        profile = active_taxpayer_profile(work_unit)
+        calculate_notice = calculated_m210_plazo_notice(
+            work_unit=work_unit,
+            revision=revision,
+            workflow_profile=profile,
+        )
+        verify_revision(
+            revision.calculation_revision_id,
+            revision=revision,
+            work_unit=work_unit,
+            actor="operator",
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+            bucket_event_repository=event_repo,
+            clock=_CLOCK,
+        )
+        verify_notice = calculated_m210_plazo_notice(
+            work_unit=work_unit,
+            revision=revision,
+            workflow_profile=profile,
+        )
+
+    assert calculate_notice is None
+    assert verify_notice is None
+
+
+def test_imputadas_02_event_work_projects_the_grounded_annual_notice_on_calculate_and_verify(
+    tmp_path: Path,
+) -> None:
+    """The real EVENT-N work model reuses the qualified annual plazo authority."""
+    with _secure_backend(tmp_path):
+        snapshot = resources().modelos.authority.snapshot("210", filing_year=_FILING_YEAR, period="EVENT-1")
+        work_repo = WorkUnitCatalogueRepository()
+        calculation_repo = CalculationRevisionCatalogueRepository()
+        verification_repo = VerificationReportCatalogueRepository()
+        event_repo = BucketEventHistoryRepository()
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo="210",
+            filing_year=_FILING_YEAR,
+            period=Period.from_year_and_code(_FILING_YEAR, "EVENT-1"),
+            revision_id=snapshot.revision.id,
+            repository=work_repo,
+            clock=_CLOCK,
+        )
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            actor="operator",
+            casilla_inputs={
+                "valor_catastral": Decimal("100000.00"),
+                "coeficiente_imputacion_inmobiliaria": Decimal("0.011"),
+                "dias_imputacion": Decimal("365"),
+            },
+            text_casilla_inputs={"tipo_renta": "inmobiliaria"},
+            m210_official_tipo_renta_code="02",
+            filing_period_date=date(_FILING_YEAR, 12, 31),
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            bucket_event_repository=event_repo,
+            clock=_CLOCK,
+        )
+        profile = active_taxpayer_profile(work_unit)
+        calculate_notices = tuple(
+            notice
+            for notice in (
+                calculated_m210_plazo_notice(
+                    work_unit=work_unit,
+                    revision=revision,
+                    workflow_profile=profile,
+                ),
+            )
+            if notice is not None
+        )
+        verify_revision(
+            revision.calculation_revision_id,
+            revision=revision,
+            work_unit=work_unit,
+            actor="operator",
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+            bucket_event_repository=event_repo,
+            clock=_CLOCK,
+        )
+        verify_notices = tuple(
+            notice
+            for notice in (
+                calculated_m210_plazo_notice(
+                    work_unit=work_unit,
+                    revision=revision,
+                    workflow_profile=profile,
+                ),
+            )
+            if notice is not None
+        )
+
+    assert len(calculate_notices) == len(verify_notices) == 1
+    assert verify_notices == calculate_notices
+    assert calculate_notices[0].context == {
+        "modelo": "210",
+        "filing_year": "2025",
+        "period": "EVENT-1",
+        "resultado": "I",
+        "tipo_renta_code": "02",
+        "deadline_window_id": "modelo-210-2025-0a-renta-imputada",
+        "opens_on": "2026-01-01",
+        "closes_on": "2026-12-31",
         "legal_refs": "orden-eha-3316-2010:art-5",
         "source_refs": "aeat-modelo-210-procedure, boe-modelo-210-base-order",
     }

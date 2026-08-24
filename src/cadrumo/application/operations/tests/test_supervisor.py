@@ -144,18 +144,14 @@ class DurableContinuationExecutor:
     ) -> str | None:
         del request
         type(self).acquisitions += 1
-        interaction = OperationInteractionRequest(
+        await context.interactions.publish_review(
             interaction_id="f" * 64,
             identity=context.identity,
             revision=context.revision + 1,
-            kind=OperationInteractionKind.REVIEW,
             presentation_code="operation.review.ready",
             response_schema_ref="schema:operation-review",
             continuation_digest=_CONTINUATION_DIGEST,
-        )
-        await context.interactions.publish_review(
-            request=interaction,
-            response_token=_RESPONSE_TOKEN,
+            expires_at=None,
             reviewed_operand=ReviewedOperand(observation="encrypted post-submission observation"),
             baseline_digest=_BASELINE_DIGEST,
             proposed_effect_digest=_PROPOSED_EFFECT_DIGEST,
@@ -922,6 +918,7 @@ def _supervisor(
         lease_duration=lease_duration,
         execution_timeout=execution_timeout,
         cleanup_timeout=cleanup_timeout,
+        response_token_factory=lambda: _RESPONSE_TOKEN,
     )
 
 

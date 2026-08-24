@@ -26,6 +26,7 @@ from ..operations import (
     OperationConflictScope,
     OperationDefinition,
     OperationEphemeralSecretDeclaration,
+    OperationExecutorContext,
     OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
@@ -35,7 +36,6 @@ from ..operations import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..operations._executor import OperationExecutorContext
 from ._bundle_export import (
     ProfileBundleExportPurpose,
     ProfileBundleExportRequest,
@@ -169,9 +169,7 @@ def _profile_subject(profile_id: UUID) -> str:
     return f"profile:{profile_id}"
 
 
-def _require_active_profile_subject[PayloadT: BaseModel](
-    request: OperationRequest[PayloadT], profile_id: UUID
-) -> None:
+def _require_active_profile_subject[PayloadT: BaseModel](request: OperationRequest[PayloadT], profile_id: UUID) -> None:
     """Bind every active-profile authority to exactly its secure operation subject."""
     if request.subject_ref != _profile_subject(profile_id):
         raise ValueError("user-profile operation subject does not match its exact profile")
@@ -332,7 +330,9 @@ def _definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        permitted_frontends=frozenset(
+            {OperationFrontendProjection.CLI, OperationFrontendProjection.MCP, OperationFrontendProjection.TUI}
+        ),
         ephemeral_secret=ephemeral_secret,
     )
 

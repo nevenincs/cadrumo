@@ -12,7 +12,6 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from ...core import (
     STRICT_FROZEN_CONFIG,
-    Hex64Str,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -30,6 +29,7 @@ from ..operations import (
     OperationCapabilities,
     OperationConflictScope,
     OperationDefinition,
+    OperationExecutorContext,
     OperationExecutorFactory,
     OperationFrontendProjection,
     OperationOwnedResource,
@@ -38,16 +38,10 @@ from ..operations import (
     OperationReplayPolicy,
     OperationRequest,
     OperationRequestStoragePolicy,
+    OperationResumeCheckpoint,
     OperationSchemaBindingV1,
     OperationSensitiveInputPolicy,
     operation_public_schema_reference,
-)
-from ..operations._executor import OperationExecutorContext
-from ..operations._interactions import (
-    OperationConsumedInteraction,
-    OperationInteractionRequest,
-    OperationPendingInteraction,
-    OperationResponseIntent,
 )
 from ._capsule_record import ProfileRecordConflictError
 from ._censal_observation import CensalObservation
@@ -172,13 +166,12 @@ class CensalReviewedOperand(BaseModel):
 
 
 class CensalOperationRequest(BaseModel):
-    """Exact preflight baseline, review choices, and caller-held response token."""
+    """Exact preflight baseline and review choices with no bearer material."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     baseline: CensalProfileBaseline
     field_intents: tuple[CensalReviewedFieldIntent, ...]
-    response_token: Hex64Str
 
     @field_validator("field_intents")
     @classmethod
@@ -212,7 +205,7 @@ class CensalReviewResponse(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     response_version: Literal[1]
-    intent: OperationResponseIntent
+    intent: Literal["apply", "reject"]
 
 
 class CensalReviewFieldProjectionV1(BaseModel):
@@ -249,7 +242,7 @@ CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING = OperationSchemaBindingV1.bind(
 
 def _project_censal_review(
     operand: BaseModel,
-    interaction: OperationInteractionRequest,
+    interaction: object,
 ) -> BaseModel:
     """Project only reviewed field values; discard custody and bearer facts."""
     del interaction
@@ -378,18 +371,14 @@ class CensalOperationExecutor:
                 "proposed_effect_digest": operand.proposed_effect_digest,
             }
         )
-        interaction = OperationInteractionRequest(
+        await context.interactions.publish_review(
             interaction_id=secrets.token_hex(32),
             identity=context.identity,
             revision=context.revision + 1,
-            kind=OperationInteractionKind.REVIEW,
             presentation_code="censo.review.ready",
             response_schema_ref=operation_public_schema_reference(CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING.identity),
             continuation_digest=continuation_digest,
-        )
-        await context.interactions.publish_review(
-            request=interaction,
-            response_token=request.payload.response_token,
+            expires_at=None,
             reviewed_operand=operand,
             baseline_digest=content_hash_hex(operand.baseline.model_dump(mode="json")),
             proposed_effect_digest=operand.proposed_effect_digest,
@@ -399,17 +388,17 @@ class CensalOperationExecutor:
     async def resume(
         self,
         request: OperationRequest[CensalOperationRequest],
-        checkpoint: OperationPendingInteraction | OperationConsumedInteraction,
+        checkpoint: OperationResumeCheckpoint,
         context: OperationExecutorContext,
     ) -> str | None:
         del request
         if await _acknowledge_if_cancelled(context):
             return None
-        if isinstance(checkpoint, OperationPendingInteraction):
+        if not checkpoint.consumed:
             return None
-        proposal_digest = checkpoint.checkpoint.reviewed_proposal_digest
+        proposal_digest = checkpoint.reviewed_proposal_digest
         operand = await context.operands.resolve(proposal_digest, CensalReviewedOperand)
-        if checkpoint.intent is OperationResponseIntent.REJECT:
+        if checkpoint.response_action == "reject":
             await context.events.phase(CENSAL_PHASE_REJECT)
             await context.events.effect(OperationEffect.NONE)
             await context.events.phase(CENSAL_PHASE_SETTLEMENT)
@@ -500,7 +489,9 @@ CENSAL_OPERATION_DEFINITION = OperationDefinition(
         close_policy=OperationClosePolicy.DETACH_ALLOWED,
     ),
     reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
-    permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+    permitted_frontends=frozenset(
+        {OperationFrontendProjection.CLI, OperationFrontendProjection.MCP, OperationFrontendProjection.TUI}
+    ),
 )
 
 

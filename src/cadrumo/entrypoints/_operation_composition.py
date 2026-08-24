@@ -78,6 +78,7 @@ def compose_operation_dependencies(
     return compose_operation_services(
         registry=registry,
         journal=journal,
+        reader=journal,
         event_stream=journal,
         leases=leases,
         operands=operands,

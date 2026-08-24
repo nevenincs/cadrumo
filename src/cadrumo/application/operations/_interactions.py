@@ -100,6 +100,16 @@ class OperationPendingInteraction(BaseModel):
     baseline_digest: ContentDigest | None = None
     proposed_effect_digest: ContentDigest | None = None
 
+    @property
+    def consumed(self) -> bool:
+        """Report that this checkpoint still awaits a response."""
+        return False
+
+    @property
+    def response_action(self) -> None:
+        """Expose no decision before the checkpoint is consumed."""
+        return None
+
     @classmethod
     def bind(
         cls,
@@ -195,6 +205,21 @@ class OperationConsumedInteraction(BaseModel):
     consumed_at: datetime
     checkpoint: OperationPendingInteraction
     continuation_proof_digest: ContentDigest
+
+    @property
+    def consumed(self) -> bool:
+        """Report that this checkpoint carries a durable response."""
+        return True
+
+    @property
+    def reviewed_proposal_digest(self) -> ContentDigest:
+        """Expose only the digest required by the resumed executor."""
+        return self.checkpoint.reviewed_proposal_digest
+
+    @property
+    def response_action(self) -> Literal["apply", "reject"]:
+        """Project the private intent enum as a safe closed action literal."""
+        return self.intent.value
 
     @model_validator(mode="after")
     def _validate_consumed_at(self) -> OperationConsumedInteraction:

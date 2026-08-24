@@ -245,6 +245,7 @@ class OperationFrontendProjection(StrEnum):
     """Product-owned identities of permitted operation projections."""
 
     CLI = "cli"
+    MCP = "mcp"
     TUI = "tui"
 
 

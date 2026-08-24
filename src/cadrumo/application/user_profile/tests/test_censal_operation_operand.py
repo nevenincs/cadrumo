@@ -169,7 +169,6 @@ def test_censal_operation_definition_binds_complete_resumable_request() -> None:
     payload = CensalOperationRequest(
         baseline=operand.baseline,
         field_intents=operand.field_intents,
-        response_token="d" * 64,
     )
     request = OperationRequest(
         definition_id=CENSAL_OPERATION_DEFINITION.definition_id,
@@ -186,5 +185,4 @@ def test_censal_operation_definition_binds_complete_resumable_request() -> None:
         CensalOperationRequest(
             baseline=operand.baseline,
             field_intents=operand.field_intents[:-1],
-            response_token="d" * 64,
         )

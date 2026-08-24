@@ -753,9 +753,7 @@ def test_observation_materialization_accepts_checkpoint_suffix_and_refuses_cross
         ),
     ):
         with pytest.raises(ValidationError, match=message):
-            OperationObservationMaterialization.model_validate(
-                {**materialization.model_dump(), **mutation}
-            )
+            OperationObservationMaterialization.model_validate({**materialization.model_dump(), **mutation})
 
 
 def test_lease_transition_correlations_refuse_planted_identity_and_time_mutations() -> None:

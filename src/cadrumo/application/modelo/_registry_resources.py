@@ -86,7 +86,7 @@ def reject_unknown_period_for_revision(*, modelo: str, revision_id: RevisionId, 
     with no declared schedule is accepted here; a missing revision is also left
     alone because :func:`reject_unknown_revision` owns that refusal.
     """
-    from ...domain.calculations.registry import RegistrySnapshotError
+    from ...domain.calculations.registry import RegistrySnapshotError, selector_period_matches_request
 
     try:
         modelo_def = authority_via_resources().modelo(modelo)
@@ -98,7 +98,7 @@ def reject_unknown_period_for_revision(*, modelo: str, revision_id: RevisionId, 
     declared: set[str] = set()
     for schedule in revision.filing_schedules:
         declared.update(schedule.periods)
-    if not declared or period.registry_token in declared:
+    if not declared or any(selector_period_matches_request(token, period.registry_token) for token in declared):
         return
     available = ", ".join(sorted(declared))
     raise ModeloError(

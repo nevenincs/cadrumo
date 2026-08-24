@@ -26,6 +26,7 @@ from ....application.operations import (
     OperationTerminalCondition,
 )
 from ....application.operations._supervisor import OperationSupervisor
+from ....core import AuthProviderKind
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ...user_profile import (
     login_profile,
@@ -273,7 +274,7 @@ def test_configure_acquire_logout_and_reset_execute_through_real_active_profile_
                 OperationRequest(
                     definition_id=AUTH_CONFIGURE_OPERATION_DEFINITION_ID,
                     subject_ref=subject_ref,
-                    payload=AuthConfigureOperationRequest(provider="certificate"),
+                    payload=AuthConfigureOperationRequest(provider=AuthProviderKind.CERTIFICATE),
                 ),
                 operation_id="6" * 64,
             )
@@ -289,7 +290,7 @@ def test_configure_acquire_logout_and_reset_execute_through_real_active_profile_
                 OperationRequest(
                     definition_id=AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID,
                     subject_ref=subject_ref,
-                    payload=AuthSessionAcquireOperationRequest(provider="certificate"),
+                    payload=AuthSessionAcquireOperationRequest(provider=AuthProviderKind.CERTIFICATE),
                 ),
                 operation_id="7" * 64,
             )
@@ -303,7 +304,7 @@ def test_configure_acquire_logout_and_reset_execute_through_real_active_profile_
                 OperationRequest(
                     definition_id=AUTH_LOGOUT_OPERATION_DEFINITION_ID,
                     subject_ref=subject_ref,
-                    payload=AuthTeardownOperationRequest(provider="certificate"),
+                    payload=AuthTeardownOperationRequest(provider=AuthProviderKind.CERTIFICATE),
                 ),
                 operation_id="8" * 64,
             )
@@ -319,7 +320,7 @@ def test_configure_acquire_logout_and_reset_execute_through_real_active_profile_
                 OperationRequest(
                     definition_id=AUTH_RESET_OPERATION_DEFINITION_ID,
                     subject_ref=subject_ref,
-                    payload=AuthTeardownOperationRequest(provider="certificate"),
+                    payload=AuthTeardownOperationRequest(provider=AuthProviderKind.CERTIFICATE),
                 ),
                 operation_id="9" * 64,
             )

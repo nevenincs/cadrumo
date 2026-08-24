@@ -6,45 +6,97 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from ._journal import OperationEventStream, OperationJournal, OperationLeaseRepository, OperationObservationReader, OperationSecureReferenceStore
+from pydantic import BaseModel
+
+from ._journal import (
+    OperationEventStream,
+    OperationJournal,
+    OperationLeaseRepository,
+    OperationObservationReader,
+    OperationSecureReferenceStore,
+)
+from ._models import OperationId, OperationRequest
 from ._observation import OperationObservationService
 from ._projection_services import (
     OperationCancellationService,
     OperationDetachService,
+    OperationResponseAuthorityBroker,
     OperationResponseControlService,
     OperationReviewProjectionService,
-    OperationSecureResponseAuthority,
     OperationWorkspaceRefreshTargetService,
+    _read_snapshot,
+    _UnavailableOperationSecureResponseAuthority,
+    _UnavailableSnapshot,
 )
+from ._public import OperationResponseControlRequestV1, OperationSubmissionReceiptV1
 from ._registry import OperationRegistry
+from ._secret_submission import OperationSecretRequirement
 from ._supervisor import OperationSupervisor
+
+
+class OperationSubmissionService:
+    """Public submit/start door over the private canonical supervisor."""
+
+    def __init__(self, supervisor: OperationSupervisor) -> None:
+        self._supervisor = supervisor
+
+    async def submit(
+        self,
+        request: OperationRequest[BaseModel],
+        *,
+        operation_id: OperationId | None = None,
+    ) -> OperationSubmissionReceiptV1:
+        """Durably submit one typed registered request without starting it."""
+        submitted_id = await self._supervisor.submit(request, operation_id=operation_id)
+        snapshot = await self._supervisor.inspect(submitted_id)
+        return OperationSubmissionReceiptV1(
+            operation_id=submitted_id,
+            secret_requirement=snapshot.secret_requirement,
+        )
+
+    async def submit_secret(self, requirement: OperationSecretRequirement, secret: bytearray) -> None:
+        """Transfer one exact mutable secret buffer into runtime-only custody."""
+        await self._supervisor.submit_ephemeral_secret(requirement, secret)
+
+    async def start(self, operation_id: OperationId) -> OperationId:
+        """Start one submitted operation without exposing its raw snapshot."""
+        snapshot = await self._supervisor.start(operation_id)
+        return snapshot.identity.operation_id
 
 
 @dataclass(frozen=True, slots=True)
 class OperationComposedServices:
     """The only service family a frontend composition result can expose."""
 
+    submission: OperationSubmissionService
     observation: OperationObservationService
     review: OperationReviewProjectionService
     refresh: OperationWorkspaceRefreshTargetService
     cancellation: OperationCancellationService
     detach: OperationDetachService
-    _response_factory: Callable[[OperationSecureResponseAuthority], OperationResponseControlService]
+    _response_factory: Callable[
+        [OperationResponseControlRequestV1],
+        Awaitable[OperationResponseControlService],
+    ]
     _shutdown: Callable[[], Awaitable[None]]
 
     async def shutdown(self) -> None:
         """Settle owner-held runtime resources without exposing them."""
         await self._shutdown()
 
-    def response(self, authority: OperationSecureResponseAuthority) -> OperationResponseControlService:
-        """Bind the separately held REVIEW response authority at the owner seam."""
-        return self._response_factory(authority)
+    async def response(
+        self,
+        request: OperationResponseControlRequestV1,
+    ) -> OperationResponseControlService:
+        """Bind caller identity to the exact process-local REVIEW authority."""
+        return await self._response_factory(request)
 
 
 def compose_operation_services(
     *,
     registry: OperationRegistry,
     journal: OperationJournal,
+    reader: OperationObservationReader,
     event_stream: OperationEventStream,
     leases: OperationLeaseRepository,
     operands: OperationSecureReferenceStore,
@@ -56,6 +108,7 @@ def compose_operation_services(
     cleanup_timeout: timedelta,
 ) -> OperationComposedServices:
     """Bind one immutable registry to real runtime adapters and safe services."""
+    authority_broker = OperationResponseAuthorityBroker()
     supervisor = OperationSupervisor(
         registry=registry,
         journal=journal,
@@ -68,22 +121,43 @@ def compose_operation_services(
         lease_duration=lease_duration,
         execution_timeout=execution_timeout,
         cleanup_timeout=cleanup_timeout,
+        response_authority_issuer=authority_broker,
     )
-    reader: OperationObservationReader = journal
     observation = OperationObservationService(reader=reader, registry=registry)
+
+    async def bind_response(
+        request: OperationResponseControlRequestV1,
+    ) -> OperationResponseControlService:
+        snapshot = await _read_snapshot(reader, request.operation_id)
+        pending = (
+            None if snapshot is None or isinstance(snapshot, _UnavailableSnapshot) else snapshot.pending_interaction
+        )
+        authority = (
+            _UnavailableOperationSecureResponseAuthority()
+            if pending is None
+            else authority_broker.bind(request, pending, clock=clock)
+        )
+        return OperationResponseControlService(
+            reader=reader,
+            registry=registry,
+            authority=authority,
+            supervisor=supervisor,
+        )
+
+    async def shutdown() -> None:
+        authority_broker.close()
+        await supervisor.shutdown()
+
     return OperationComposedServices(
+        submission=OperationSubmissionService(supervisor),
         observation=observation,
         review=OperationReviewProjectionService(reader=reader, registry=registry, operands=operands, clock=clock),
         refresh=OperationWorkspaceRefreshTargetService(reader=reader, registry=registry),
         cancellation=OperationCancellationService(reader=reader, registry=registry, supervisor=supervisor),
         detach=OperationDetachService(reader=reader, registry=registry, supervisor=supervisor),
-        _response_factory=lambda authority: OperationResponseControlService(
-            reader=reader,
-            registry=registry,
-            authority=authority,
-        ),
-        _shutdown=supervisor.shutdown,
+        _response_factory=bind_response,
+        _shutdown=shutdown,
     )
 
 
-__all__ = ["OperationComposedServices", "compose_operation_services"]
+__all__ = ["OperationComposedServices", "OperationSubmissionService", "compose_operation_services"]

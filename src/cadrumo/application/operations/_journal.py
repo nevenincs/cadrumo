@@ -154,10 +154,7 @@ class OperationObservationMaterialization(BaseModel):
             raise ValueError("observation replay cursor cannot exceed its anchor")
         if self.replay.next_cursor > self.anchor_cursor:
             raise ValueError("observation replay result cannot exceed its anchor")
-        if (
-            self.replay.status is OperationReplayStatus.CAUGHT_UP
-            and self.replay.next_cursor != self.anchor_cursor
-        ):
+        if self.replay.status is OperationReplayStatus.CAUGHT_UP and self.replay.next_cursor != self.anchor_cursor:
             raise ValueError("caught-up observation replay must reach its authoritative anchor")
         self._validate_event_set(self.replay.events, label="replay")
         self._validate_progress_fold()
@@ -184,10 +181,7 @@ class OperationObservationMaterialization(BaseModel):
                 raise ValueError("progress checkpoint does not match operation identity")
             if checkpoint.through_cursor > self.anchor_cursor:
                 raise ValueError("progress checkpoint cannot exceed the observation anchor")
-            if (
-                checkpoint.progress_event is not None
-                and checkpoint.progress_event.revision > self.snapshot.revision
-            ):
+            if checkpoint.progress_event is not None and checkpoint.progress_event.revision > self.snapshot.revision:
                 raise ValueError("progress checkpoint revision cannot exceed its snapshot")
         self._validate_event_set(fold.events, label="progress-fold")
         sequences = tuple(event.sequence for event in fold.events)

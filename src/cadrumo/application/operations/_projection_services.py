@@ -6,6 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from secrets import compare_digest
+from threading import RLock
 from typing import Protocol, cast, runtime_checkable
 
 from pydantic import BaseModel
@@ -49,13 +50,13 @@ from ._public import (
     OperationDetachResultV1,
     OperationDetachSuccessV1,
     OperationDetachVersionHeader,
+    OperationResponseApplyRequestV1,
     OperationResponseControlRefusalCode,
     OperationResponseControlRefusalV1,
     OperationResponseControlRequestV1,
     OperationResponseControlResultV1,
     OperationResponseControlSuccessV1,
     OperationResponseControlVersionHeader,
-    OperationResponseApplyRequestV1,
     OperationResponseMutationRequestV1,
     OperationResponseMutationResultV1,
     OperationResponseMutationSuccessV1,
@@ -119,6 +120,13 @@ class OperationSecureResponseAuthority(Protocol):
     ) -> OperationResponseToken: ...
 
     def close(self) -> None: ...
+
+
+@runtime_checkable
+class OperationResponseAuthorityIssuer(Protocol):
+    """Runtime-only sink for one freshly published REVIEW bearer."""
+
+    def issue(self, pending: OperationPendingInteraction, response_token: OperationResponseToken) -> None: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -207,6 +215,86 @@ class BoundOperationSecureResponseAuthority:
     def close(self) -> None:
         zeroize_secret_buffer(self._token)
         object.__setattr__(self, "_closed", True)
+
+
+class _UnavailableOperationSecureResponseAuthority:
+    async def permitted_intents(
+        self,
+        request: OperationResponseControlRequestV1,
+        pending: OperationPendingInteraction,
+        /,
+    ) -> frozenset[OperationResponseIntent]:
+        del request, pending
+        raise ValueError("response authority is unavailable")
+
+    async def response_token(
+        self,
+        request: OperationResponseControlRequestV1,
+        pending: OperationPendingInteraction,
+        intent: OperationResponseIntent,
+        /,
+    ) -> OperationResponseToken:
+        del request, pending, intent
+        raise ValueError("response authority is unavailable")
+
+    def close(self) -> None:
+        """Close the empty authority idempotently."""
+
+
+class OperationResponseAuthorityBroker:
+    """Process-local REVIEW bearer custody that cannot survive restart."""
+
+    def __init__(self) -> None:
+        self._entries: dict[OperationId, tuple[OperationPendingInteraction, bytearray]] = {}
+        self._lock = RLock()
+
+    def issue(self, pending: OperationPendingInteraction, response_token: OperationResponseToken) -> None:
+        """Retain one mutable bearer only after its digest-bound checkpoint exists."""
+        operation_id = pending.request.identity.operation_id
+        token = bytearray(response_token, "ascii")
+        with self._lock:
+            if operation_id in self._entries:
+                zeroize_secret_buffer(token)
+                raise ValueError("response authority is already issued")
+            self._entries[operation_id] = (pending, token)
+
+    def bind(
+        self,
+        request: OperationResponseControlRequestV1,
+        pending: OperationPendingInteraction,
+        *,
+        clock: Callable[[], datetime],
+    ) -> OperationSecureResponseAuthority:
+        """Transfer one exact live bearer into an actor-bound response service."""
+        with self._lock:
+            entry = self._entries.pop(request.operation_id, None)
+        if entry is None:
+            return _UnavailableOperationSecureResponseAuthority()
+        issued_pending, token = entry
+        try:
+            if issued_pending != pending:
+                raise ValueError("issued response authority does not match the current checkpoint")
+            return BoundOperationSecureResponseAuthority.bind(
+                operation_id=request.operation_id,
+                interaction_id=request.interaction_id,
+                revision=request.revision,
+                reviewed_proposal_digest=pending.reviewed_proposal_digest,
+                actor_ref=request.actor_ref,
+                expires_at=pending.request.expires_at,
+                intents=frozenset({OperationResponseIntent.APPLY, OperationResponseIntent.REJECT}),
+                response_token=token.decode("ascii"),
+                clock=clock,
+            )
+        finally:
+            zeroize_secret_buffer(token)
+
+    def close(self) -> None:
+        """Wipe every unbound bearer during application shutdown."""
+        with self._lock:
+            entries = tuple(self._entries.values())
+            self._entries.clear()
+        for _pending, token in entries:
+            zeroize_secret_buffer(token)
 
 
 @dataclass(frozen=True, slots=True)
@@ -397,6 +485,7 @@ class OperationResponseControlService:
     reader: OperationObservationReader
     registry: OperationRegistry
     authority: OperationSecureResponseAuthority
+    supervisor: OperationControlSupervisor
 
     async def inspect(
         self,
@@ -458,13 +547,87 @@ class OperationResponseControlService:
                 interaction_id=request.interaction_id,
                 revision=request.revision,
                 available=bool(intents),
-                permitted_intents=intents,
+                permitted_intents=frozenset(intent.value for intent in intents),
             )
         except Exception:
             return _response_refusal(
                 OperationResponseControlRefusalCode.RESPONSE_AUTHORITY_UNAVAILABLE,
                 requested_version=1,
             )
+
+    async def apply(self, request: OperationResponseApplyRequestV1) -> OperationResponseMutationResultV1:
+        """Consume one exact APPLY response through the bound runtime authority."""
+        return await self._respond(request)
+
+    async def reject(self, request: OperationResponseRejectRequestV1) -> OperationResponseMutationResultV1:
+        """Consume one exact REJECT response through the bound runtime authority."""
+        return await self._respond(request)
+
+    async def _respond(self, request: OperationResponseMutationRequestV1) -> OperationResponseMutationResultV1:
+        availability = await self.inspect(request)
+        if isinstance(availability, OperationResponseControlRefusalV1):
+            return availability
+        intent = OperationResponseIntent(request.response_action)
+        if request.response_action not in availability.permitted_intents:
+            return _response_refusal(
+                OperationResponseControlRefusalCode.RESPONSE_AUTHORITY_UNAVAILABLE,
+                requested_version=1,
+            )
+        snapshot = await _read_snapshot(self.reader, request.operation_id)
+        if snapshot is None:
+            return _response_refusal(OperationResponseControlRefusalCode.UNKNOWN_OPERATION, requested_version=1)
+        if isinstance(snapshot, _UnavailableSnapshot) or snapshot.pending_interaction is None:
+            return _response_refusal(
+                OperationResponseControlRefusalCode.RESPONSE_NOT_PENDING,
+                requested_version=1,
+            )
+        pending = snapshot.pending_interaction
+        try:
+            response_token = await self.authority.response_token(request, pending, intent)
+            response: OperationApplyResponse | OperationRejectResponse
+            if isinstance(request, OperationResponseApplyRequestV1):
+                if pending.baseline_digest is None or pending.proposed_effect_digest is None:
+                    raise ValueError("pending REVIEW lacks APPLY digests")
+                response = OperationApplyResponse(
+                    interaction_id=pending.request.interaction_id,
+                    operation_id=pending.request.identity.operation_id,
+                    revision=pending.request.revision,
+                    response_token=response_token,
+                    continuation_digest=pending.request.continuation_digest,
+                    reviewed_proposal_digest=pending.reviewed_proposal_digest,
+                    actor_ref=request.actor_ref,
+                    responded_at=request.responded_at,
+                    baseline_digest=pending.baseline_digest,
+                    proposed_effect_digest=pending.proposed_effect_digest,
+                )
+            else:
+                response = OperationRejectResponse(
+                    interaction_id=pending.request.interaction_id,
+                    operation_id=pending.request.identity.operation_id,
+                    revision=pending.request.revision,
+                    response_token=response_token,
+                    continuation_digest=pending.request.continuation_digest,
+                    reviewed_proposal_digest=pending.reviewed_proposal_digest,
+                    actor_ref=request.actor_ref,
+                    responded_at=request.responded_at,
+                    reason_code=request.reason_code,
+                )
+            consumed = await self.supervisor.respond(response)
+            if consumed.interaction_id != request.interaction_id or consumed.intent is not intent:
+                raise ValueError("operation supervisor consumed a different response")
+            return OperationResponseMutationSuccessV1(
+                operation_id=request.operation_id,
+                interaction_id=request.interaction_id,
+                revision=request.revision,
+                response_action=request.response_action,
+            )
+        except Exception:
+            return _response_refusal(
+                OperationResponseControlRefusalCode.RESPONSE_AUTHORITY_UNAVAILABLE,
+                requested_version=1,
+            )
+        finally:
+            self.authority.close()
 
 
 @dataclass(frozen=True, slots=True)

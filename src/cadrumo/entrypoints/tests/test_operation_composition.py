@@ -6,6 +6,7 @@ import ast
 import asyncio
 from dataclasses import fields
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -21,6 +22,7 @@ from ...application.operations import (
     OperationObservationService,
     OperationPublicDefinitionRegistrationV1,
     OperationReviewProjectionService,
+    OperationSubmissionService,
     OperationWorkspaceRefreshTargetService,
 )
 from ...application.user_profile import (
@@ -62,7 +64,10 @@ def _owner_registry_fixed_point() -> tuple[
             key=lambda item: item.contract.definition_id,
         )
     )
-    return definitions, registrations
+    return (
+        cast(tuple[OperationDefinition, ...], definitions),
+        cast(tuple[OperationPublicDefinitionRegistrationV1, ...], registrations),
+    )
 
 
 def test_production_composition_reaches_the_owner_registry_fixed_point(tmp_path: Path) -> None:
@@ -77,6 +82,7 @@ def test_production_composition_reaches_the_owner_registry_fixed_point(tmp_path:
         assert registry.public_contract_set.definitions == tuple(item.contract for item in expected_registrations)
         assert len(registry.public_contract_set.contract_set_digest) == 64
         assert isinstance(dependencies.observation, OperationObservationService)
+        assert isinstance(dependencies.submission, OperationSubmissionService)
         assert isinstance(dependencies.review, OperationReviewProjectionService)
         assert isinstance(dependencies.refresh, OperationWorkspaceRefreshTargetService)
         assert isinstance(dependencies.cancellation, OperationCancellationService)
@@ -102,7 +108,7 @@ def test_production_composition_is_available_before_profile_login(tmp_path: Path
 def test_production_composition_exposes_only_public_services() -> None:
     public_fields = {item.name for item in fields(OperationComposedServices) if not item.name.startswith("_")}
 
-    assert public_fields == {"observation", "review", "refresh", "cancellation", "detach"}
+    assert public_fields == {"submission", "observation", "review", "refresh", "cancellation", "detach"}
     assert {"registry", "supervisor", "response"}.isdisjoint(public_fields)
     assert callable(OperationComposedServices.response)
 
@@ -134,3 +140,20 @@ def test_production_composition_imports_only_the_inbound_safe_operation_facade()
         "OperationRegistry",
         "compose_operation_services",
     }
+
+
+def test_inbound_entrypoints_do_not_import_the_operation_owner_module() -> None:
+    entrypoints_root = Path(__file__).parents[1]
+    owner_imports: list[tuple[Path, str]] = []
+
+    for source in entrypoints_root.rglob("*.py"):
+        tree = ast.parse(source.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.ImportFrom)
+                and node.module is not None
+                and node.module.endswith("operations.owner")
+            ):
+                owner_imports.append((source, node.module))
+
+    assert owner_imports == []

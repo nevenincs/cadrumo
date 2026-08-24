@@ -13,12 +13,17 @@ from .. import (
     OperationCapabilities,
     OperationComposedServices,
     OperationEventCursor,
+    OperationEventEmitter,
+    OperationExecutor,
+    OperationExecutorContext,
+    OperationInteractionAccess,
     OperationLogSeverity,
     OperationObservationService,
     OperationPublicProjectionV1,
     OperationRegistry,
     OperationRequest,
-    OperationResponseIntent,
+    OperationResumableExecutor,
+    OperationResumeCheckpoint,
     OperationReviewProjectionService,
 )
 from .. import __all__ as public_names
@@ -43,7 +48,7 @@ def test_representative_contracts_resolve_from_public_facade() -> None:
     assert OperationLogSeverity.__module__.endswith("._events")
     assert OperationRequest.__module__.endswith("._models")
     assert OperationPublicProjectionV1.__module__.endswith("._public")
-    assert OperationResponseIntent.__module__.endswith("._interactions")
+    assert OperationExecutorContext.__module__.endswith("._executor")
     assert OperationRegistry.__module__.endswith("._registry")
     assert OperationObservationService.__module__.endswith("._observation")
     assert OperationReviewProjectionService.__module__.endswith("._projection_services")
@@ -60,16 +65,12 @@ def test_facade_does_not_export_runtime_or_persistence_authorities() -> None:
         "OperationDeadlineAccess",
         "OperationEphemeralSecretAccess",
         "OperationEvent",
-        "OperationEventEmitter",
-        "OperationExecutor",
-        "OperationExecutorContext",
-        "OperationInteractionAccess",
         "OperationJournal",
         "OperationLeaseObservation",
         "OperationPendingInteraction",
         "OperationPersistedSnapshot",
         "OperationReplayPage",
-        "OperationResumableExecutor",
+        "OperationResponseIntent",
         "OperationResponseToken",
         "OperationSecureOperandLookup",
         "OperationSecureResponseAuthority",
@@ -92,6 +93,7 @@ def test_facade_does_not_import_frontend_or_adapter_modules() -> None:
         "_capabilities",
         "_composition",
         "_events",
+        "_executor",
         "_models",
         "_observation",
         "_public",
@@ -100,3 +102,29 @@ def test_facade_does_not_import_frontend_or_adapter_modules() -> None:
         "_registry",
         "_secret_submission",
     }
+
+
+def test_application_owners_do_not_import_private_operation_modules() -> None:
+    application_root = Path(__file__).parents[2]
+    owner_roots = (application_root / "auth", application_root / "live", application_root / "user_profile")
+    private_imports: list[tuple[Path, str]] = []
+
+    for owner_root in owner_roots:
+        for source in owner_root.rglob("*.py"):
+            if "tests" in source.parts:
+                continue
+            tree = ast.parse(source.read_text(encoding="utf-8"))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ImportFrom) and node.module is not None and "operations._" in node.module:
+                    private_imports.append((source, node.module))
+
+    assert private_imports == []
+
+
+def test_owner_contracts_resolve_from_the_canonical_facade() -> None:
+    assert OperationEventEmitter.__module__.endswith("._executor")
+    assert OperationExecutor.__module__.endswith("._executor")
+    assert OperationExecutorContext.__module__.endswith("._executor")
+    assert OperationInteractionAccess.__module__.endswith("._executor")
+    assert OperationResumableExecutor.__module__.endswith("._executor")
+    assert OperationResumeCheckpoint.__module__.endswith("._executor")

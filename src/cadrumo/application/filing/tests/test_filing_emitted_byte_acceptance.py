@@ -1,269 +1,177 @@
-"""End-to-end acceptance: does a return come out, and are the bytes in the right place?
+"""Derived filing-grade export proof gate over the shipped authority.
 
-This is the campaign's acceptance proof. Every other gate checks a declaration
-ABOUT the output -- that a layout table declares a field at an offset, that a
-digest matches, that a manifest attests. None reads what was actually written. The
-defect this exists to catch is a byte-valid, digest-valid, completeness-valid file
-that declares the right number at the wrong position, and only emitted bytes catch
-it. So nothing here asserts layout structure in place of output.
+This is deliberately a status gate rather than a second export implementation.
+The denominator comes from :class:`ValidatedRegistryAuthority`, the law
+selection coordinate comes from the closure authority, and the canonical live
+proof authority is the only route that can attest semantic-map ownership,
+generated fragments, and bytes written by ``export_draft``.
 
-Per revision boundary, not per revision
----------------------------------------
-
-AEAT re-lays the record between epochs, which is why revisions split at all. A
-proof that a value lands correctly under one epoch says nothing about whether the
-right epoch was chosen. Each boundary is therefore probed with a casilla whose
-official position DIFFERS across the two epochs: serving one epoch the other's
-layout moves the value, and the byte assertion fails.
-
-The probe is derived by diffing the two layouts, never named here. A hardcoded
-probe rots when AEAT moves the field and, worse, can quietly stop distinguishing
-while still passing.
-
-Revision selection is law-determined
-------------------------------------
-
-Each epoch is reached from ``(modelo, filing_year, period)`` through the runtime
-schema provider, exactly as production does. An expected revision id is only ever
-ASSERTED against what that resolution returned, never fed into it.
-
-Expected state today
---------------------
-
-This fails, for two separate reasons it reports separately, because both are real
-capability gaps rather than defects in the harness:
-
-* Modelo 303 declares no export layout on any revision, so there are no bytes to
-  read. The application cannot file IVA at all.
-* No registry revision is operator-reviewed, so the filing-grade snapshot every
-  export path builds is refused before an export is reached. This blocks every
-  modelo, including those whose layouts exist.
-
-Each case names which gap stopped it. Both clear without any edit here.
-
-See Also:
-    :func:`cadrumo.application.filing.export_draft`
-        The production export path this drives.
-    :class:`cadrumo.domain.calculations.registry.ModeloRevision`
-        The revision whose ``export_layouts`` supply every offset asserted here.
+Consequently an unproven layout is a visible refusal, not an invitation to
+invent a draft, output payload, offset, or a plan-row table in Python. Exact
+successor-plan routes remain in the Vault records; this executable gate retains
+only the application-owned generic disposition.
 """
 
 from __future__ import annotations
 
-from decimal import Decimal
-from itertools import pairwise
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, Period, RevisionReviewStatus, validated_casilla_id
-from ....domain.calculations.registry import ExportLayoutDefinition, ModeloRevision
-from ....tests.registry_tree import bundled_registry_tree
-from .. import build_runtime_schema_provider
+from ....application.registry import compose_filing_export_coverage
+from ....application.registry._temporal_coverage import _law_selection_coordinate
+from ....core import Modelo, RegistryAuthorityGrade
+from ....domain.calculations.registry import ValidatedRegistryAuthority
+from dev.registry.conformance.authorities import canonical_live_registry_closure_authorities
+from dev.registry.filing_export_proof import CANONICAL_LIVE_FILING_EXPORT_PROOF_ENTRIES
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-#: Modelos this acceptance proof covers. Modelo 390 sits alongside 303 with no
-#: structural change: boundaries, probe casilla and offsets are all derived.
-_COVERED_MODELOS: tuple[str, ...] = ("303", "390")
+_REPOSITORY_ROOT = Path(__file__).resolve().parents[5]
+_EXPORT_OWNER = "aeat-export-fragment-generator-authority"
 
 
-def _committed_revisions(modelo_id: str) -> tuple[ModeloRevision, ...]:
-    """Return a modelo's revisions in epoch order, read through the compiler.
-
-    The compiler rather than the validated authority, so this harness can still
-    name the capability gap when full-tree validation is refusing for an unrelated
-    reason. A proof that cannot report what is missing whenever anything else is
-    broken is a proof that goes quiet exactly when it is needed.
-    """
-    modelos, _catalogues = bundled_registry_tree()
-    modelo = next(candidate for candidate in modelos if candidate.id == modelo_id)
+def _filing_revisions(authority: ValidatedRegistryAuthority):
+    """Derive every filing-capable revision from the validated authority."""
     return tuple(
-        sorted(
-            modelo.revisions.values(),
-            key=lambda revision: (revision.valid_from, _representative_scope(revision)[1]),
-        ),
+        (modelo, revision)
+        for modelo in sorted(authority.modelos, key=lambda item: item.id)
+        for revision in sorted(modelo.revisions.values(), key=lambda item: item.id)
+        if revision.authority_grade is RegistryAuthorityGrade.FILING
     )
 
 
-def _representative_scope(revision: ModeloRevision) -> tuple[int, str]:
-    """Return a ``(filing_year, period)`` this revision is the law-determined answer for.
-
-    Read off the revision's own declared selector rather than chosen here, so the
-    2024 Modelo 303 split -- two revisions sharing one ``valid_from``, separated
-    only by period -- lands on the correct side of its own boundary.
-    """
-    selector = revision.period_selector
-    year = selector.year_from if selector.year_from is not None else selector.years[0]
-    return int(year), str(selector.periods[0])
-
-
-def _field_positions(layout: ExportLayoutDefinition) -> dict[CasillaId, tuple[str, int, int]]:
-    """Return ``casilla -> (record, offset, length)`` for every positioned export field."""
-    positions: dict[CasillaId, tuple[str, int, int]] = {}
-    for record in layout.records:
-        for field in record.fields:
-            casilla_id = getattr(field, "casilla_id", None)
-            if casilla_id is None or field.offset is None or field.length is None:
-                continue
-            positions[casilla_id] = (str(record.id), int(field.offset), int(field.length))
-    return positions
-
-
-def _distinguishing_casilla(
-    earlier: ExportLayoutDefinition,
-    later: ExportLayoutDefinition,
-) -> CasillaId:
-    """Return a casilla the two epochs export at DIFFERENT positions.
-
-    A casilla at the same position either side of a boundary cannot tell the two
-    layouts apart, so probing it would pass whichever epoch was served.
-    """
-    earlier_positions = _field_positions(earlier)
-    later_positions = _field_positions(later)
-    moved = sorted(
-        casilla
-        for casilla in set(earlier_positions) & set(later_positions)
-        if earlier_positions[casilla] != later_positions[casilla]
-    )
-    assert moved, (
-        "no casilla is exported at a different position either side of this boundary, so no probe can "
-        "distinguish the two epochs by emitted bytes. Either the epochs genuinely share one record "
-        "layout, or the later epoch's layout was copied from the earlier without re-deriving its "
-        "coordinates -- which is the defect this proof exists to catch."
-    )
-    return moved[0]
-
-
-def slot_bytes(payload: bytes, *, offset: int, length: int) -> bytes:
-    """Return the bytes occupying one official slot, using AEAT's 1-based offsets."""
-    start = offset - 1
-    return payload[start : start + length]
-
-
-def assert_declared_value_at_official_offset(
-    payload: bytes,
+def _narrow_authority(
+    authority: ValidatedRegistryAuthority,
     *,
-    casilla_id: CasillaId,
-    record_id: str,
-    offset: int,
-    length: int,
-    expected: Decimal,
-) -> None:
-    """Assert one declared value occupies its official slot in the emitted bytes.
+    modelo,
+    revision,
+) -> ValidatedRegistryAuthority:
+    """Keep one real revision while exercising the normal closure composer."""
+    narrowed_modelo = modelo.model_copy(update={"revisions": {revision.id: revision}})
+    return replace(
+        authority,
+        modelos=(narrowed_modelo,),
+        _modelos_by_id={narrowed_modelo.id: narrowed_modelo},
+        _snapshots={},
+    )
 
-    Compared against the slot's raw bytes, never against a parse of the file: a
-    parser reads the same layout the writer used, so a shared coordinate error
-    cancels out and the roundtrip agrees with itself while the file is wrong.
 
-    The comparison is exact against the zero-padded right-justified rendering AEAT
-    specifies for a numeric slot, with no normalisation. Stripping leading zeros
-    first would seem tidier and is wrong: it makes the check blind to a
-    one-position shift, because a zero-padded field shifted by one still strips to
-    the same digits. That is precisely the misplacement this proof exists to catch,
-    so the padding is part of the assertion.
+def _limbs_by_coordinate(report) -> dict[tuple[str, str], object]:
+    return {(str(limb.modelo), str(limb.revision)): limb for limb in report.limbs}
+
+
+def test_every_filing_grade_revision_has_one_law_selected_export_limb_and_an_honest_proof_outcome() -> None:
+    """Selection, semantic ownership, and emitted bytes all stay proof-gated.
+
+    A satisfied limb carries the only admissible live evidence: its canonical
+    generator verification records semantic-map, render-profile, and loader
+    identities; the production ``export_draft`` evidence records payload bytes
+    and checked official offsets. A refused limb must name the generic export
+    authority rather than disappearing from the denominator.
     """
-    slot = slot_bytes(payload, offset=offset, length=length)
-    wanted = f"{int(expected.scaleb(2))}".encode().zfill(length)
-    assert slot == wanted, (
-        f"casilla {casilla_id} declared {expected}, so its official position ({record_id} offset "
-        f"{offset}, length {length}) must read {wanted!r}, but the emitted bytes read {slot!r}. The "
-        "file can still be byte-valid and digest-valid; the value is in the wrong place."
-    )
+    with canonical_live_registry_closure_authorities(_REPOSITORY_ROOT) as authorities:
+        filing_revisions = _filing_revisions(authorities.registry)
+        assert filing_revisions, "the filing-grade inventory is empty; this gate would pass vacuously"
 
-
-def _require_filing_capability(modelo_id: str, revision: ModeloRevision) -> ExportLayoutDefinition:
-    """Fail naming the capability gap, rather than with an opaque downstream error."""
-    assert revision.export_layouts, (
-        f"modelo {modelo_id} revision {revision.id} declares no export layout, so no bytes can be "
-        "emitted and this acceptance proof cannot run. This is the filing capability being absent, "
-        "not a defect in the harness: author the revision's fixed-width export layout and this case "
-        "runs unchanged."
-    )
-    assert revision.review_status is RevisionReviewStatus.OPERATOR_REVIEWED, (
-        f"modelo {modelo_id} revision {revision.id} is {revision.review_status.value!r}, so every export "
-        "path refuses it before any bytes are written: a filing artifact is built from a filing-grade "
-        "snapshot, and that requires operator review. This is an attestation no program or agent may "
-        "produce; it is reported here so the gap is visible rather than surfacing as an empty registry."
-    )
-    return revision.export_layouts[0]
-
-
-def _emit(modelo_id: str, revision: ModeloRevision, tmp_path: Path) -> bytes:
-    """Drive the real production path for one epoch and return the emitted bytes.
-
-    Resolution is from the filing scope alone. The revision this harness intends is
-    only asserted against what the law-determined resolution produced.
-    """
-    filing_year, period_code = _representative_scope(revision)
-    provider = build_runtime_schema_provider(
-        filing_year=filing_year,
-        period=Period.from_year_and_code(filing_year, period_code),
-        modelos=(modelo_id,),
-    )
-    resolved = provider.get_subview(modelo_id)
-    assert resolved.id == revision.id, (
-        f"modelo {modelo_id} filing year {filing_year} period {period_code} resolves to revision "
-        f"{resolved.id}, not {revision.id}; the boundary this probe assumes is not the one the "
-        "law-determined resolution produces"
-    )
-    raise NotImplementedError(
-        f"modelo {modelo_id} revision {revision.id} resolved and declares a layout, so the emitted-byte "
-        "assertion is now reachable and the draft-and-export drive must be completed here",
-    )
-
-
-@pytest.mark.parametrize("modelo_id", _COVERED_MODELOS)
-def test_every_revision_boundary_emits_its_probe_at_its_own_official_offset(modelo_id: str, tmp_path: Path) -> None:
-    """Each epoch must emit a distinguishing value at ITS OWN official offset."""
-    revisions = _committed_revisions(modelo_id)
-    assert len(revisions) >= 2, f"modelo {modelo_id} declares fewer than two revisions, so it has no boundary"
-
-    for earlier, later in pairwise(revisions):
-        earlier_layout = _require_filing_capability(modelo_id, earlier)
-        later_layout = _require_filing_capability(modelo_id, later)
-        probe = _distinguishing_casilla(earlier_layout, later_layout)
-
-        for revision in (earlier, later):
-            payload = _emit(modelo_id, revision, tmp_path)
-            record_id, offset, length = _field_positions(revision.export_layouts[0])[probe]
-            assert_declared_value_at_official_offset(
-                payload,
-                casilla_id=probe,
-                record_id=record_id,
-                offset=offset,
-                length=length,
-                expected=Decimal("1234.56"),
-            )
-
-
-def test_the_offset_assertion_reds_when_the_declared_value_moves_one_position() -> None:
-    """Prove the byte assertion bites, so a green result above could never be vacuous.
-
-    Without this, every assertion in this module could be comparing something that
-    always matches, and the acceptance proof would certify nothing the day it first
-    goes green. The payload is synthetic on purpose: the mechanism is what is under
-    test, not any modelo's data.
-    """
-    payload = b"\x20" * 40
-    payload = payload[:9] + b"0000123456" + payload[19:]
-    probe = validated_casilla_id("probe-casilla")
-
-    assert_declared_value_at_official_offset(
-        payload,
-        casilla_id=probe,
-        record_id="synthetic-record",
-        offset=10,
-        length=10,
-        expected=Decimal("1234.56"),
-    )
-
-    with pytest.raises(AssertionError, match="the value is in the wrong place"):
-        assert_declared_value_at_official_offset(
-            payload,
-            casilla_id=probe,
-            record_id="synthetic-record",
-            offset=11,
-            length=10,
-            expected=Decimal("1234.56"),
+        report = compose_filing_export_coverage(
+            authority=authorities.registry,
+            proof_authority=authorities.filing_export,
         )
+        limbs = _limbs_by_coordinate(report)
+        coordinates = {(modelo.id, revision.id) for modelo, revision in filing_revisions}
+
+        assert set(limbs) == {
+            (modelo.id, revision.id)
+            for modelo in authorities.registry.modelos
+            for revision in modelo.revisions.values()
+        }
+        assert coordinates <= set(limbs)
+
+        for modelo, revision in filing_revisions:
+            filing_year, period = _law_selection_coordinate(revision)
+            inspection = authorities.registry.inspect_revision(
+                modelo.id,
+                filing_year=filing_year,
+                period=period,
+            )
+            assert inspection.revision_id == revision.id
+
+            limb = limbs[(modelo.id, revision.id)]
+            assert limb.name == "filing_export"
+            if limb.outcome == "satisfied":
+                evidence_by_authority = {evidence.authority: evidence.locator for evidence in limb.evidence}
+                generation = evidence_by_authority[
+                    "dev.registry.pipeline.verify_export_fragment_provenance_manifest"
+                ]
+                emission = evidence_by_authority["cadrumo.application.filing.export_draft"]
+                assert ";semantic=" in generation and ";render=" in generation and ";loader=" in generation
+                assert ";payload-sha256=" in emission and ";checked-offsets=" in emission
+                continue
+
+            assert limb.outcome == "refused"
+            assert limb.refusal is not None
+            assert limb.refusal.disposition.owner == _EXPORT_OWNER
+            assert limb.refusal.disposition.work_item.startswith(f"{_EXPORT_OWNER}:")
+            assert limb.refusal.disposition.reconsideration_condition
+
+
+def test_an_empty_canonical_live_proof_cannot_turn_a_declared_layout_into_emitted_byte_evidence() -> None:
+    """A real layout plus the real empty proof authority stays visibly refused."""
+    assert not CANONICAL_LIVE_FILING_EXPORT_PROOF_ENTRIES
+
+    with canonical_live_registry_closure_authorities(_REPOSITORY_ROOT) as authorities:
+        modelo, revision = next(
+            (modelo, revision)
+            for modelo, revision in _filing_revisions(authorities.registry)
+            if revision.export_layouts
+        )
+        narrowed = _narrow_authority(authorities.registry, modelo=modelo, revision=revision)
+        report = compose_filing_export_coverage(
+            authority=narrowed,
+            proof_authority=authorities.filing_export,
+        )
+        limb = report.limbs[0]
+
+    assert limb.outcome == "refused"
+    assert limb.refusal is not None
+    assert limb.refusal.reason == "missing_evidence"
+    assert limb.refusal.disposition.owner == _EXPORT_OWNER
+    assert limb.refusal.disposition.work_item == f"{_EXPORT_OWNER}:production-emission-proof"
+    assert "canonical generation" in limb.refusal.detail
+    assert "emitted-byte" in limb.refusal.detail
+
+
+def test_modelo_353_layout_gap_is_selected_by_its_own_law_coordinate_and_cannot_be_masked_by_2026() -> None:
+    """The real M353 boundary bites: 2008--2025 lacks a layout; 2026 differs."""
+    with canonical_live_registry_closure_authorities(_REPOSITORY_ROOT) as authorities:
+        modelo = authorities.registry.modelo(Modelo.M353.value)
+        gap_revision = next(revision for revision in modelo.revisions.values() if not revision.export_layouts)
+        successor_revision = next(revision for revision in modelo.revisions.values() if revision.export_layouts)
+        gap_year, gap_period = _law_selection_coordinate(gap_revision)
+        successor_year, successor_period = _law_selection_coordinate(successor_revision)
+
+        assert authorities.registry.inspect_revision(
+            modelo.id,
+            filing_year=gap_year,
+            period=gap_period,
+        ).revision_id == gap_revision.id
+        assert authorities.registry.inspect_revision(
+            modelo.id,
+            filing_year=successor_year,
+            period=successor_period,
+        ).revision_id == successor_revision.id
+        assert (gap_year, gap_period) != (successor_year, successor_period)
+
+        narrowed = _narrow_authority(authorities.registry, modelo=modelo, revision=gap_revision)
+        limb = compose_filing_export_coverage(
+            authority=narrowed,
+            proof_authority=authorities.filing_export,
+        ).limbs[0]
+
+    assert limb.outcome == "refused"
+    assert limb.refusal is not None
+    assert limb.refusal.reason == "missing_evidence"
+    assert limb.refusal.disposition.owner == _EXPORT_OWNER
+    assert limb.refusal.disposition.work_item == f"{_EXPORT_OWNER}:filing-layout"

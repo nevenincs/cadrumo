@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from contextlib import AbstractAsyncContextManager
 from datetime import datetime
-from typing import Protocol, runtime_checkable
+from typing import Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel
 
@@ -18,12 +18,6 @@ from ...core.async_cleanup import AsyncCloseable
 from ...core.identity import ContentDigest
 from ._capabilities import OperationOwnedResource
 from ._events import OperationDiagnosticReference, OperationEventCode, OperationLogSeverity
-from ._interactions import (
-    OperationConsumedInteraction,
-    OperationInteractionRequest,
-    OperationPendingInteraction,
-    OperationResponseToken,
-)
 from ._models import OperationIdentity, OperationReference, OperationRequest, OperationRevision
 from ._secret_submission import OperationEphemeralSecretAccess
 
@@ -133,21 +127,36 @@ class OperationCleanupOwner(Protocol):
 class OperationInteractionAccess(Protocol):
     """Persist one definition-declared interaction checkpoint before yielding."""
 
-    async def request(self, pending: OperationPendingInteraction) -> None:
-        """Publish a pending checkpoint; continuation arrives through supervisor respond."""
-        ...
-
     async def publish_review(
         self,
         *,
-        request: OperationInteractionRequest,
-        response_token: OperationResponseToken,
+        interaction_id: str,
+        identity: OperationIdentity,
+        revision: OperationRevision,
+        presentation_code: OperationEventCode,
+        response_schema_ref: OperationReference,
+        continuation_digest: ContentDigest,
+        expires_at: datetime | None,
         reviewed_operand: BaseModel,
         baseline_digest: ContentDigest | None = None,
         proposed_effect_digest: ContentDigest | None = None,
-    ) -> OperationPendingInteraction:
+    ) -> None:
         """Secure a typed reviewed operand before publishing its digest-bound checkpoint."""
         ...
+
+
+@runtime_checkable
+class OperationResumeCheckpoint(Protocol):
+    """Safe executor-facing view of one pending or consumed continuation."""
+
+    @property
+    def consumed(self) -> bool: ...
+
+    @property
+    def reviewed_proposal_digest(self) -> ContentDigest: ...
+
+    @property
+    def response_action(self) -> Literal["apply", "reject"] | None: ...
 
 
 @runtime_checkable
@@ -220,7 +229,7 @@ class OperationResumableExecutor[RequestPayloadT: BaseModel](Protocol):
     async def resume(
         self,
         request: OperationRequest[RequestPayloadT],
-        checkpoint: OperationPendingInteraction | OperationConsumedInteraction,
+        checkpoint: OperationResumeCheckpoint,
         context: OperationExecutorContext,
     ) -> OperationReference | None:
         """Resume from the exact durable checkpoint under a new supervisor lease."""
@@ -236,5 +245,6 @@ __all__ = [
     "OperationExecutorContext",
     "OperationInteractionAccess",
     "OperationResumableExecutor",
+    "OperationResumeCheckpoint",
     "OperationSecureOperandLookup",
 ]
