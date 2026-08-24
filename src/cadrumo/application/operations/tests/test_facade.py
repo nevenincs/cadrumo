@@ -16,6 +16,7 @@ from .. import (
     OperationLeaseObservation,
     OperationLeaseObservationDisposition,
     OperationPersistedSnapshot,
+    OperationPublicProjectionV1,
     OperationRegistry,
     OperationReplayPage,
     OperationRequest,
@@ -40,6 +41,7 @@ def test_representative_contracts_resolve_from_public_facade() -> None:
     assert OperationCapabilities.__module__.endswith("._capabilities")
     assert OperationRequest.__module__.endswith("._models")
     assert OperationPersistedSnapshot.__module__.endswith("._journal")
+    assert OperationPublicProjectionV1.__module__.endswith("._public")
     assert OperationLeaseObservation.__module__.endswith("._leases")
     assert OperationLeaseObservationDisposition.__module__.endswith("._leases")
     assert OperationReplayPage.__module__.endswith("._replay")
@@ -67,6 +69,7 @@ def test_facade_does_not_import_frontend_or_adapter_modules() -> None:
         "_journal",
         "_leases",
         "_models",
+        "_public",
         "_replay",
         "_registry",
         "_secret_submission",
