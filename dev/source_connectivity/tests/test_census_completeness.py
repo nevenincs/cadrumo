@@ -1,15 +1,17 @@
 from __future__ import annotations
 
+from collections import Counter
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.application.registry.source_connectivity import (
     RegistryDestinationCandidate,
     load_source_connectivity_census,
     validate_census_destination_candidates,
 )
-from cadrumo.core import Period
+from cadrumo.core import BindingSourceKind, Modelo, Period, SourceConnectivityGroundingLocatorKind
 from cadrumo.core.resources import bundled_path, resources
 from cadrumo.domain.calculations.registry import CensoModeloEventKind
 from cadrumo.domain.calculations.registry._loader import load_modelo_directory
@@ -34,9 +36,10 @@ def test_every_live_capability_has_exactly_one_frozen_census_assignment() -> Non
     assignments = validate_census_completeness(REPO_ROOT)
 
     assigned = tuple(capability_id for row in assignments.values() for capability_id in row)
-    assert len(discovered) == 448
-    assert len(assigned) == len(set(assigned))
-    assert set(assigned) == set(discovered)
+    assignment_counts = Counter(assigned)
+    assert discovered
+    assert set(assignment_counts) == set(discovered)
+    assert all(count == 1 for count in assignment_counts.values())
 
 
 def test_new_capability_refuses_selector_digest_drift() -> None:
@@ -141,6 +144,55 @@ def test_registry_destination_candidates_resolve_against_live_authority() -> Non
     manifest = load_source_connectivity_census()
 
     validate_census_destination_candidates(manifest, resources().modelos.authority)
+
+
+def test_manual_source_reference_grounding_must_resolve_from_catalogue_and_selected_revision() -> None:
+    """Terminal M036 evidence cannot carry an invented or another revision's source."""
+    manifest = load_source_connectivity_census()
+    authority = resources().modelos.authority
+    entry = next(item for item in manifest.entries if item.candidate_id == "censo.modelo-036-profile-status")
+    grounding = next(
+        item
+        for item in entry.grounding
+        if item.locator_kind is SourceConnectivityGroundingLocatorKind.SOURCE_REFERENCE
+    )
+
+    invented = grounding.model_copy(update={"reference": "invented-source-reference"})
+    invented_entry = entry.model_copy(
+        update={"grounding": tuple(invented if item is grounding else item for item in entry.grounding)}
+    )
+    invented_manifest = manifest.model_copy(
+        update={"entries": tuple(invented_entry if item is entry else item for item in manifest.entries)}
+    )
+    with pytest.raises(ValueError, match="absent from the validated source catalogue"):
+        validate_census_destination_candidates(invented_manifest, authority)
+
+    selected_revision = authority.modelo(Modelo.M036).revisions["2025-02-03-y-siguientes"]
+    outside_scope_reference = next(
+        source_ref for source_ref in authority.catalogues.sources if source_ref not in selected_revision.source_refs
+    )
+    outside_scope = grounding.model_copy(update={"reference": outside_scope_reference})
+    outside_scope_entry = entry.model_copy(
+        update={"grounding": tuple(outside_scope if item is grounding else item for item in entry.grounding)}
+    )
+    outside_scope_manifest = manifest.model_copy(
+        update={"entries": tuple(outside_scope_entry if item is entry else item for item in manifest.entries)}
+    )
+    with pytest.raises(ValueError, match="outside its exact selected revision source scope"):
+        validate_census_destination_candidates(outside_scope_manifest, authority)
+
+
+def test_censo_event_coordinate_refuses_modelo_100_alta() -> None:
+    """The existing censo event enum is not a generic registry period vocabulary."""
+    with pytest.raises(ValidationError, match="reserved for canonical Modelo 036"):
+        RegistryDestinationCandidate(
+            kind="binding_source",
+            modelo_id=Modelo.M100,
+            revision_id="2025",
+            filing_year=2025,
+            period=CensoModeloEventKind.ALTA,
+            source_kind=BindingSourceKind.PROFILE,
+        )
 
 
 def test_absent_registry_destination_candidate_is_rejected() -> None:

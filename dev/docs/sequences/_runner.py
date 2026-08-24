@@ -56,7 +56,7 @@ import shutil
 import time
 import warnings
 from collections.abc import Iterator, Mapping, Sequence
-from contextlib import chdir, contextmanager
+from contextlib import chdir, contextmanager, nullcontext
 from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -488,6 +488,11 @@ def _provisioned_sandbox_profile() -> Iterator[None]:
     """
     publish_test_profile_capsule(SANDBOX_PROFILE_ID, label=SANDBOX_PROFILE_LABEL)
     with open_test_profile_session(SANDBOX_PROFILE_ID):
+        from uuid import UUID
+
+        from cadrumo.application.evidence import LegalHoldCaseAuthority
+        from cadrumo.application.filing import try_record_filing_retention_snapshot
+
         record = upsert_test_profile_facts(SANDBOX_PROFILE_ID, _SANDBOX_PROFILE_FACTS)
         with bound_test_profile_record(SANDBOX_PROFILE_ID) as repository:
             repository.complete_setup(
@@ -495,6 +500,21 @@ def _provisioned_sandbox_profile() -> Iterator[None]:
                 expected_revision=record.record_revision,
                 expected_content_digest=record.content_digest,
             )
+        # A production registration records the empty filing catalogue. The
+        # synthetic docs taxpayer also has an explicit empty legal-case
+        # observation so its deletion walkthrough can exercise the real
+        # fail-closed preflight without fabricating a hold bypass.
+        observed_at = datetime.now(UTC)
+        try_record_filing_retention_snapshot(
+            bucket_id=SANDBOX_PROFILE_ID,
+            records=(),
+            observed_at=observed_at,
+        )
+        LegalHoldCaseAuthority().record_open_case_snapshot(
+            profile_id=UUID(SANDBOX_PROFILE_ID),
+            open_case_ids=(),
+            observed_at=observed_at,
+        )
         yield
 
 
@@ -978,7 +998,19 @@ def _invoke_frame(args: tuple[str, ...]) -> Result:
     burning bounded-retry latency in front of it.
     """
     _drop_handlers_bound_to_a_dead_stream()
-    result = invoke_cached_cli(list(args))
+    # The synthetic capsule stays readable across a sequence through a
+    # test-only active-profile override. Profile deletion is deliberately
+    # sessionless, however, and must observe the durable pointer that logout
+    # clears rather than that provisioning override. Narrowly mask the harness
+    # field for this exact leaf; every sibling retains the normal sandbox span.
+    is_profile_delete = any(args[index : index + 3] == ("config", "profile", "delete") for index in range(len(args)))
+    settings_context = (
+        override_settings(cadrumo_active_profile=None)
+        if is_profile_delete
+        else nullcontext()
+    )
+    with settings_context:
+        result = invoke_cached_cli(list(args))
     if os.environ.get("CI"):
         return result
     tries = 1
