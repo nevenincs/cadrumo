@@ -3,8 +3,8 @@
 Modify stages answers in flow state only and commits once at review, so
 two honesty surfaces must be LOUD, never silent:
 
-1. THE SAVE ATTEMPT — the substrate's per-mode checkpoint declaration
-   makes save-and-exit UNAVAILABLE in modify, so the review renders the
+1. THE SAVE ATTEMPT — the substrate's checkpoint declaration makes
+   save-and-exit UNAVAILABLE, so the review renders the
    substrate's ``flows.review.save_unavailable`` refusal and never offers
    the save action. Driven here through the real
    :class:`~cadrumo.application.flows.LineFlowFrontend` over a definition
@@ -75,8 +75,8 @@ _SAVE_UNAVAILABLE_MESSAGE = tr("flows.review.save_unavailable", mode=FlowMode.MO
 def _one_page_definition() -> FlowDefinition:
     """A one-required-page definition carrying the setup flow's checkpoint.
 
-    Reuses ``_SETUP_CHECKPOINT`` (MODIFY UNAVAILABLE) — the setup flow's own
-    per-mode declaration — so the rendered refusal is driven by the real
+    Reuses ``_SETUP_CHECKPOINT`` (both modes unavailable) — the setup flow's
+    own declaration — so the rendered refusal is driven by the real
     posture the flow ships, not a synthetic one.
     """
 
@@ -122,8 +122,8 @@ def test_modify_review_renders_save_unavailable_refusal() -> None:
     assert _SAVE_UNAVAILABLE_MESSAGE in rendered
 
 
-def test_setup_flow_declares_modify_checkpoint_unavailable() -> None:
-    """The bridged setup definition declares MODIFY save UNAVAILABLE, CREATE AVAILABLE.
+def test_setup_flow_declares_checkpoint_unavailable_in_both_modes() -> None:
+    """The bridged setup definition offers no obsolete save/resume route.
 
     The no-op checkpoint is a per-mode declaration on the definition (never
     a silent implementation detail), which is what drives the substrate
@@ -131,9 +131,9 @@ def test_setup_flow_declares_modify_checkpoint_unavailable() -> None:
     """
     definition = flow_definition_from_wizard_flow(SETUP_FLOW, checkpoint=_SETUP_CHECKPOINT)
 
-    assert definition.checkpoint[FlowMode.MODIFY] is CheckpointAvailability.UNAVAILABLE
-    assert checkpoint_available(definition, FlowMode.MODIFY) is False
-    assert checkpoint_available(definition, FlowMode.CREATE) is True
+    for mode in (FlowMode.CREATE, FlowMode.MODIFY):
+        assert definition.checkpoint[mode] is CheckpointAvailability.UNAVAILABLE
+        assert checkpoint_available(definition, mode) is False
 
 
 # ── surface 2: the final envelope carries the info notice ────────────────
@@ -216,7 +216,7 @@ def test_edit_envelope_carries_descendants_via_door_notice(
     assert _MODIFY_DESCENDANTS_DOOR_CODE in codes
     notice = codes[_MODIFY_DESCENDANTS_DOOR_CODE]
     assert notice["severity"] == NoticeSeverity.INFO.value
-    assert notice["action"]["action"]["action"]["action_id"] == "operator.profile.descendiente"
+    assert notice["action"]["action"]["action_id"] == "operator.profile.descendiente"
     assert notice["action"]["action"]["target_command_key"] == "config.profile.descendiente.list"
 
 

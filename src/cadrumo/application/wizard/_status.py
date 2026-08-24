@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
-from ...core import ActionEvidenceProvenance, NoRecoveryOutcome, STRICT_FROZEN_CONFIG, resolve_active_bucket_id
+from ...core import STRICT_FROZEN_CONFIG, ActionEvidenceProvenance, NoRecoveryOutcome, resolve_active_bucket_id
 from ...domain.deadlines import TaxpayerProfile
 from ..operator_actions import DeclaredNextAction
 from ..state_projection import build_auth_readiness

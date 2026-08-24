@@ -1,7 +1,7 @@
-"""Typed ``--json`` results for the setup-wizard success emitters.
+"""Typed ``--json`` results for setup-wizard success emitters.
 
-These two classes are the actual runtime payload the wizard's success and
-save-exit emitters build and validate (see
+These two classes are the actual runtime payload the wizard's success
+emitters build and validate (see
 :mod:`application.wizard._commands`). Each is a strict
 :class:`~cadrumo.core.json_contract.OutputSchema` subclass at its true owner —
 the wizard, not the CLI transport — because the CLI package sits above
@@ -41,19 +41,15 @@ class ProfileWizardStatus(StrEnum):
 
     CREATED = "created"
     UPDATED = "updated"
-    SAVED = "saved"
     ABANDONED = "abandoned"
 
 
 class ConfigProfileCreateResult(OutputSchema):
-    """JSON envelope for ``aeat config profile create``.
+    """JSON envelope for the profile-creation command.
 
-    Covers both terminal outcomes the wizard's create mode can emit: a full
-    creation (``active_profile`` populated) and a mid-flow save-and-exit
-    (``active_profile`` stays ``None`` — the profile is ``SETUP_INCOMPLETE``
-    and not yet active). The post-create next-step hint and the
-    saved-for-later resume hint both ride the envelope ``notices`` channel,
-    not a bespoke ``next`` field.
+    The successful create payload carries the active profile label. Any
+    forward guidance belongs to a typed envelope notice, never a bespoke
+    ``next`` field or an executable text recommendation.
     """
 
     profile_name: str

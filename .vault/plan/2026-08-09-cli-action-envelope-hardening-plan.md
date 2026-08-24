@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-24'
-body_hash: 'sha256:2d7f88243c2d07259134f224fd7c64209c00180ae415548f9bb8e8ec43f49450'
+body_hash: 'sha256:a267b20b2a89c23d7d632c0717b967c4d00a19603e749979b1ca894c3bbaf9ad'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -192,7 +192,7 @@ Migrate high-density operational guidance and prove blank-state and readiness re
 Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale slices named by the census.
 
 - [x] `W05.P10.S36` - Replace the remaining authentication diagnostics report command literal with a typed action projection or explicit non-action classification; `src/cadrumo/application/auth/_diagnostics.py; src/cadrumo/application/auth/tests`.
-- [ ] `W05.P10.S37` - Replace wizard status, missing-input, label, console, and next-action command authority with canonical typed verdicts, and prove unavailable interactive profile-create recovery is never recommended; `src/cadrumo/application/wizard/_errors.py; src/cadrumo/application/wizard/_status.py; src/cadrumo/application/wizard/_commands.py; src/cadrumo/application/wizard/_report.py; src/cadrumo/application/wizard/tests`.
+- [x] `W05.P10.S37` - Replace wizard status, missing-input, label, console, and next-action command authority with canonical typed verdicts, and prove unavailable interactive profile-create recovery is never recommended; `src/cadrumo/application/wizard; src/cadrumo/application/tests/test_diagnostics_dispatch.py`.
 - [x] `W05.P10.S38` - Consume the S33 typed reader-availability facts at _batch_ingest.py and _llm_classification.py within the exclusive ledger area, retain no MissingOptionalExtraError prose or compatibility bridge, and preserve only explicit typed reader-availability verdicts; `src/cadrumo/application/ledger`.
 - [ ] `W05.P10.S39` - Replace the remaining DeadlineRecovery.next_command transport and its overview projection with typed recovery actions; `src/cadrumo/domain/deadlines/_models.py; src/cadrumo/domain/deadlines/_recargo.py; src/cadrumo/domain/deadlines/tests/test_extemporaneidad.py; src/cadrumo/domain/deadlines/tests/test_recargo.py; src/cadrumo/application/overview; src/cadrumo/entrypoints/cli/_overview.py`.
 - [x] `W05.P10.S40` - Migrate the remaining LiveIvaSurfaceTimeoutError producers and boundary projection to typed actions with explicit safety dispositions; `src/cadrumo/application/live/_errors.py; src/cadrumo/application/live/_filed_data_capture.py; src/cadrumo/application/live/_iva_remote_state.py; src/cadrumo/entrypoints/cli/_app_live.py`.
