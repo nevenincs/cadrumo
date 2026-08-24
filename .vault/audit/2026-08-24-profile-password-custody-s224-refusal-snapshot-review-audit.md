@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:5e2aa9afcac2723b117700952377fc82a113b577515d6a7d97c70ad3e98b1d3e'
+body_hash: 'sha256:1c5ad7c5dd790f417d57020aab716a714440a34c14d99af268b9acb2aa1db70e'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -26,3 +26,12 @@ The two subprocess harnesses deliberately share one source string, so the format
 ## Recommendations
 
 Do not approve or close S224. Apply the same explicit durable-file predicate to `_DURABLE_SNAPSHOT_SOURCE` and `_storage_snapshot`: include session and receipt artifacts, and exclude only precisely identified diagnostic logs and `.lock` debris. Then rerun the exact native Windows and WSL matrices, Ruff, and ty against that saved diff and repeat this focused review. Preserve the shared subprocess implementation so unread-channel, native HANDLE, and POSIX/WSL harness behavior cannot drift.
+### s224-snapshot-implementation-resolved | high | The lock-safe durable snapshot is now present and the blocker is resolved
+
+Re-review confirmed that `_DURABLE_SNAPSHOT_SOURCE`, shared by the ordinary subprocess harness and native Windows HANDLE harness, now excludes `.lock` suffixes while continuing to include session and receipt artifacts. The local `_storage_snapshot` applies the matching predicate across the host/runtime boundary. Diagnostic logs and lock debris are the only excluded categories; custody, session, and receipt state remains observable. Centralizing the two embedded implementations in one source reduces the earlier risk of harness drift. The local helper remains necessarily separate because it executes in the host test runtime, but it matches the embedded predicate and is not a competing production mechanism.
+
+The final implementation is supported by the complete native matrix at 70 passed, the WSL matrix reaching 68 passed before two tests were interrupted by a transient syntax error in a concurrently edited peer module, and the exact affected descriptor subset subsequently passing 8 of 8 on both native Windows and WSL after that peer module compiled again. Ruff and ty are clean. The transient peer syntax error is outside the reviewed file and does not challenge unread-channel, HANDLE inheritance, POSIX descriptor, or durable-snapshot semantics. The original HIGH is resolved; no unresolved CRITICAL, HIGH, MEDIUM, or LOW finding remains in S224 scope.
+
+## Final disposition
+
+Approve S224. The reviewed diff closes the refusal-snapshot witness gap without changing production secret-channel behavior or creating a parallel authority. The Step may be closed using the stated native, WSL, subset, and static evidence.

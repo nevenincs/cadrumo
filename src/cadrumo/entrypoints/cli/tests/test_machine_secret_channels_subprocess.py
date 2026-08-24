@@ -68,6 +68,7 @@ _DURABLE_SNAPSHOT_SOURCE = dedent(
             for path in root.rglob("*")
             if path.is_file()
             and "log" not in path.name.lower()
+            and path.suffix != ".lock"
         }
     """
 )
@@ -457,13 +458,15 @@ def _combined(result: subprocess.CompletedProcess[str]) -> str:
 
 
 def _storage_snapshot(root: Path) -> dict[str, bytes]:
-    """Capture every durable custody artifact except diagnostic logs."""
+    """Capture durable custody artifacts, excluding only logs and lock debris."""
     if not root.exists():
         return {}
     return {
         path.relative_to(root).as_posix(): path.read_bytes()
         for path in root.rglob("*")
-        if path.is_file() and "log" not in path.name.lower()
+        if path.is_file()
+        and "log" not in path.name.lower()
+        and path.suffix != ".lock"
     }
 
 

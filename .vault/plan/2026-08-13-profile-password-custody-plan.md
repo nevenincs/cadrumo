@@ -3,8 +3,6 @@ tags:
   - '#plan'
   - '#profile-password-custody'
 date: '2026-08-13'
-modified: '2026-08-24'
-body_hash: 'sha256:624484fd8d470bfc65a518c3caba35d5e99ef2683668d9532a0b1d4a85e8ac03'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -20,6 +18,8 @@ related:
   - '[[2026-08-13-recovery-mnemonic-presentation-successor-adr]]'
   - '[[2026-08-13-sealed-archive-transport-successor-adr]]'
   - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
+modified: '2026-08-24'
+body_hash: 'sha256:030fd7373cf83a38402a41fe64f389da91de58f33bd928c3b87e91e012d279ec'
 ---
 
 # `profile-password-custody` plan
@@ -332,7 +332,7 @@ Repair the execution-evidence ledger from real implementation and history, then 
 
 Close every red gate and witness gap identified by the corrected fresh-context honesty review before repeating campaign closure.
 
-- [ ] `W06.P12.S224` - Extend every machine-secret refusal and dispatch-state snapshot to include session and receipt artifacts while preserving unread-channel and cross-platform harness evidence; `src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`.
+- [x] `W06.P12.S224` - Extend every machine-secret refusal and dispatch-state snapshot to include session and receipt artifacts while preserving unread-channel and cross-platform harness evidence; `src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`.
 - [ ] `W06.P12.S225` - Replace the capsule-source symlink platform skip with a deterministic real-filesystem reparse-point-or-directory refusal witness while retaining linked-content non-adoption where symlinks are supported; `src/cadrumo/application/user_profile/tests/test_capsule_source_reads_are_anchored.py`.
 - [ ] `W06.P12.S226` - Replace the Windows-only foreign-launcher plant with a platform-neutral real confined-venv launcher swap and prove the canonical path rejects a peer entry point on Windows and POSIX; `dev/packaging/tests/test_distribution_evidence_emit.py`.
 - [ ] `W06.P12.S227` - Retire the unsupported workstation agent-materialisation sequence and stale agent-extra claims while preserving the separately owned harness and MCP guidance; `docs/workstation-setup.md and docs/_sequences/contracts/workstation-setup/`.
