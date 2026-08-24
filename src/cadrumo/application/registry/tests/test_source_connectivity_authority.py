@@ -46,6 +46,7 @@ from .. import (
     LiveSourceConnectivityProofAuthority,
     LiveSourceConnectivityProofExpectation,
     RepositoryRootEvidenceDigestVerifier,
+    SourceConnectivityCensusEntry,
     build_calculation_route_source_ownership_catalogue,
     compose_source_connectivity_coverage,
     load_source_connectivity_census,
@@ -535,6 +536,60 @@ def test_coverage_composer_classifies_structured_live_proof_failures(
 
     assert (limb.outcome, limb.refusal.reason) == ("refused", "missing_evidence")
     assert expected_detail in limb.refusal.detail
+
+
+def test_coverage_composer_fails_closed_on_generic_live_proof_validation_error(
+    tmp_path: Path,
+    secure_objects: SecureObjectRepository,
+    registry_authority,
+) -> None:
+    """A malformed admitted proof must reach the fallback as a refused source limb."""
+    authority, connection, proof, _ = _composition(tmp_path, secure_objects)
+    census = load_source_connectivity_census()
+    inventory = next(entry for entry in census.entries if entry.candidate_id == "inventory.stock-valuation")
+    connected = inventory.model_copy(
+        update={
+            "candidate_id": connection.candidate_id,
+            "disposition": SourceConnectivityDisposition.CONNECTED,
+            "connected_proof": proof,
+            "review_condition": None,
+            "bounded_follow_up": None,
+        },
+    )
+    assert (
+        SourceConnectivityCensusEntry.validate_with_authority(
+            connected.model_dump(mode="python"),
+            authority=authority,
+        )
+        == connected
+    )
+
+    # Model a corrupted in-memory census record after its initial admission.
+    # The composer must revalidate rather than trusting this frozen-model instance.
+    object.__setattr__(connected, "connected_proof", None)
+    with pytest.raises(ValidationError) as validation_error:
+        SourceConnectivityCensusEntry.validate_with_authority(
+            connected.model_dump(mode="python"),
+            authority=authority,
+        )
+    error_type = validation_error.value.errors(include_url=False)[0]["type"]
+    assert error_type == "value_error"
+    assert (
+        SourceConnectivityProofFailureCause.from_validation_error_type(error_type)
+        is SourceConnectivityProofFailureCause.LIVE_PROOF_VALIDATION_FAILED
+    )
+
+    connected_census = census.model_copy(update={"entries": (connected, *census.entries[1:])})
+    report = compose_source_connectivity_coverage(
+        authority=registry_authority,
+        census=connected_census,
+        as_of=date(2026, 8, 24),
+        proof_authority=authority,
+    )
+    limb = next(limb for limb in report.limbs if (limb.modelo, limb.revision) == ("100", "2025"))
+
+    assert (limb.outcome, limb.refusal.reason) == ("refused", "missing_evidence")
+    assert "connected connectivity row requires complete connected_proof" in limb.refusal.detail
 
 
 def test_real_live_authority_refuses_deferred_reserved_and_missing_revision(
