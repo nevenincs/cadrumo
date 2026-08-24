@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:cac0c033afe80b29838b2728910392168d97d7fe6d7083acc0797a43a7ec4145'
+body_hash: 'sha256:982c0f7f908d7c470e3166873f79ff338767d46dd9bca3436d9a40a4218ec6bf'
 related: []
 ---
 
@@ -331,6 +331,65 @@ Three things need an owner, and none should be guessed:
 The provenance gap is the root problem: had the fixture declared what it is, the
 codec change would have been checked against a known artefact class instead of
 turning seven tests red with an unanswerable question.
+
+## Full-tree measurement and the remaining clusters
+
+Measured at frozen commit `e493848e93`, the first commit in this campaign whose
+COMMITTED registry validates:
+
+| layer | failed | passed | pass rate |
+|---|---|---|---|
+| core | 0 | 2233 | 100.0% |
+| domain | 97 | 8728 | 98.9% |
+| application | 514 | 8604 | 94.4% |
+| adapters | 34 | 4261 | 99.2% |
+| entrypoints | 15 | 1382 | 98.9% |
+| **total** | **660** | **25208** | **97.4%** |
+
+### Closed since that measurement
+
+- **Ledger evidence, 82 -> 41.** Fourteen modules seeded no profile, so every
+  confirm and draft test refused on the missing fiscal-address postcode -- the
+  fact that separates peninsula from Canarias and Ceuta y Melilla, never read
+  off an invoice -- before reaching any assertion. Seeding moved into
+  `_evidence_test_support` as an autouse fixture each module binds.
+- **`test_invoice_link_event`, 3 -> 0.** All three asserted the bucket event log
+  was entirely empty, but the profile capsule has emitted its own
+  `PROFILE_BUCKET_CREATED` event for eleven days. They now assert the delta.
+
+### Open, with diagnosis
+
+- **~119, modelo 200 and 036 authority grade.** `modelo 200 revision
+  2024-y-siguientes declares 'calculation' authority grade, which cannot satisfy
+  the requested 'filing' snapshot authority`. Whole modules ride on this --
+  `test_export_implicit_decimal_slots` is 13 failures of nothing else. Same
+  class as the 117/126/128/136 attestations already briefed out; needs an
+  attestation decision, not a code change.
+- **~41, confirmation blockers.** The confirmation gate began requiring blocker
+  resolutions eleven days ago (`252e29f6f95`) and these tests supply none. The
+  postcode refusal was masking this. Each needs the right resolution
+  constructed against the blockers its fixture invoice actually raises.
+- **~16, rectificativa aggregate context.** `CalculationRevision` refuses a
+  rectificativa built without a context-bound
+  `CalculationRevisionAggregateContext`. The canonical pattern is in
+  `test_m303_rectificativa_motive_lifecycle`: build the context from work units,
+  filing records, justificantes and registry snapshots, then
+  `model_validate(..., context={CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY:
+  context})`. Nine of these sit in `test_prior_domiciliation_election`.
+- **~5, source provenance id.** Fixtures use a placeholder
+  `calculation_revision_id` of sixty-four `a` characters that no longer matches
+  the content-addressed derivation.
+- **7, the m130 submitted-file fixture** recorded above, blocked on provenance.
+
+### The pattern worth carrying forward
+
+Roughly 120 of the failures closed in this campaign were tests that never
+reached an assertion -- missing fixture facts, absolute assertions invalidated
+by a new lifecycle event, partially-injected repositories escaping to a real
+runtime. A test failing in setup is worse than one failing an assertion: its
+name still promises coverage, and the suite still counts it, but it has not
+exercised the behaviour it is named for since the day it broke. Several had been
+in that state for eleven days or more.
 
 ## Durable lesson
 
