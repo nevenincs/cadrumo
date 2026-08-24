@@ -54,4 +54,3 @@ The emitted-byte acceptance catalogue remains empty because no observed revision
 completed both proof stages. The production M200 refusal is the bounded live blocker;
 it is evidence that the new authority fails closed, not a reason to invent an expected
 payload. The temporary failed-export artifact used during grounding was removed.
-

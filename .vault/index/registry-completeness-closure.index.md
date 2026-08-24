@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:51f4b5dc4b647eca5f066bed8a8fa350c80fc58c2172f8d7896ebd382dad7c9a'
+body_hash: 'sha256:bdc890fe6c2aaad1a211be4050c513411cec82952cfb1681be9681cfc8f68642'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -39,6 +39,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S58]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S59]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S60]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S62]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
@@ -154,6 +155,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P02-S58` - Validate and live-rehash filing-envelope and auxiliary-envelope-header source identities and digests against the catalogue, with missing, mismatched, and stale-digest mutation proof
 - `2026-08-24-registry-completeness-closure-W01-P02-S59` - Mutate filing-envelope and auxiliary-header catalogue source kinds away from record_design and prove snapshot refusal plus a weakened-guard mutation bite.
 - `2026-08-24-registry-completeness-closure-W01-P02-S60` - Replace the passive filing-export proof catalogue with a live fail-closed authority that re-hashes canonical manifest, semantic-map, render-profile, loader-semantic, generated-output, and emitted-payload evidence and verifies production export_draft offsets and execution at composition time, with fabricated and stale catalogue mutation regressions including Modelo 111
+- `2026-08-24-registry-completeness-closure-W01-P02-S62` - Remove the S60 audit and execution-record EOF blank lines and re-attest the committed Step surface with the scoped diff check.
 
 ### plan
 

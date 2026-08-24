@@ -42,4 +42,3 @@ the Modelo 200 year-field defect or another production export path is independen
 fixed, add the first successful entry and an end-to-end green proof using externally
 reviewed payload digest and offset probes; do not pre-author those expected bytes while
 the writer is refusing.
-
