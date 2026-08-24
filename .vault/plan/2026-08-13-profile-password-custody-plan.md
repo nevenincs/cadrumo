@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-24'
-body_hash: 'sha256:a2424b21ae94cee62003db7fa396344824bbd07a3936135512decd30b9ecf034'
+body_hash: 'sha256:624484fd8d470bfc65a518c3caba35d5e99ef2683668d9532a0b1d4a85e8ac03'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -327,3 +327,19 @@ Repair the execution-evidence ledger from real implementation and history, then 
 - [x] `W06.P11.S221` - Re-run the complete S206 recovery-enrollment matrix across interactive, TUI, stdin, POSIX descriptor, Windows inherited-handle, mismatch, cancellation, collision, and publication-failure paths and persist the resulting evidence; `src/cadrumo/application/user_profile/tests/test_recovery_enrollment_at_creation.py and src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/adapters/inbound/tui/tests/`.
 - [x] `W06.P11.S222` - Re-run the S209 supervised-KDF platform gate without weakening exact descriptor attestation, worker isolation, or fail-closed supervision and persist the Windows, POSIX, and WSL evidence; `src/cadrumo/adapters/persistence/storage/custody/ and src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`.
 - [x] `W06.P11.S223` - Perform a fresh-context campaign-close honesty review covering decision-to-code consistency, Step-to-record evidence, stale recovery prose, S206 and S209 gates, feature-scoped Vaultspec validation, and the historical-close pointer; `.vault/audit/`.
+
+### Phase `W06.P12` - derived close blockers
+
+Close every red gate and witness gap identified by the corrected fresh-context honesty review before repeating campaign closure.
+
+- [ ] `W06.P12.S224` - Extend every machine-secret refusal and dispatch-state snapshot to include session and receipt artifacts while preserving unread-channel and cross-platform harness evidence; `src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`.
+- [ ] `W06.P12.S225` - Replace the capsule-source symlink platform skip with a deterministic real-filesystem reparse-point-or-directory refusal witness while retaining linked-content non-adoption where symlinks are supported; `src/cadrumo/application/user_profile/tests/test_capsule_source_reads_are_anchored.py`.
+- [ ] `W06.P12.S226` - Replace the Windows-only foreign-launcher plant with a platform-neutral real confined-venv launcher swap and prove the canonical path rejects a peer entry point on Windows and POSIX; `dev/packaging/tests/test_distribution_evidence_emit.py`.
+- [ ] `W06.P12.S227` - Retire the unsupported workstation agent-materialisation sequence and stale agent-extra claims while preserving the separately owned harness and MCP guidance; `docs/workstation-setup.md and docs/_sequences/contracts/workstation-setup/`.
+- [ ] `W06.P12.S228` - Replace the inline profile-delete command and false active-delete claim with a terminal real-execution sequence that logs out and deletes only its sandbox profile; `docs/how-to/profile-setup.md and docs/_sequences/contracts/how-to/`.
+- [ ] `W06.P12.S229` - Resynchronize the Spanish, Catalan, and Hungarian Sphinx gettext catalogues from stable English sources and retire the generated-page environment-overrides orphans; `docs/locales/es/LC_MESSAGES/ and docs/locales/ca/LC_MESSAGES/ and docs/locales/hu/LC_MESSAGES/`.
+- [ ] `W06.P12.S230` - Complete every blank or fuzzy Spanish user-page translation and correct download command-list punctuation without English fallback; `docs/locales/es/LC_MESSAGES/`.
+- [ ] `W06.P12.S231` - Complete every blank or fuzzy Catalan user-page translation and correct download command-list punctuation without English fallback; `docs/locales/ca/LC_MESSAGES/`.
+- [ ] `W06.P12.S232` - Complete every blank or fuzzy Hungarian user-page translation and correct download command-list punctuation without English fallback; `docs/locales/hu/LC_MESSAGES/`.
+- [ ] `W06.P12.S233` - Run the complete documented-command, catalogue-drift, locale-completeness, localized-build, no-skip, native Windows, and WSL proof suite and persist fresh global evidence; `dev/docs/tests/ and dev/tests/test_no_skip_xfail.py and src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`.
+- [ ] `W06.P12.S234` - Repeat the fresh-context campaign-close honesty review against every corrected finding and close the campaign only with no unresolved CRITICAL, HIGH, or MEDIUM result; `.vault/audit/`.
