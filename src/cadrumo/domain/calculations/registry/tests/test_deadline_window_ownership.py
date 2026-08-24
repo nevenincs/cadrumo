@@ -84,3 +84,34 @@ def test_registry_build_routes_ownership_through_canonical_validation_pass() -> 
         match=r"deadline window 'quarterly-window' belongs to canonically selected revision 'quarterly'",
     ):
         RegistryValidator(minimal_catalogues()).validate_modelo(modelo)
+
+
+def test_registry_build_accumulates_missing_and_ambiguous_canonical_owners() -> None:
+    ambiguous_window = _window("ambiguous-window", "1T")
+    missing_window = _window("missing-window", "0A")
+    first = minimal_revision(deadline_windows=(ambiguous_window, missing_window)).model_copy(
+        update={
+            "id": "first",
+            "valid_from": date(2024, 1, 1),
+            "period_selector": PeriodSelector(year_from=2024, year_to=2024, periods=("1T",)),
+        },
+    )
+    second = minimal_revision().model_copy(
+        update={
+            "id": "second",
+            "valid_from": date(2024, 1, 1),
+            "period_selector": PeriodSelector(year_from=2024, year_to=2024, periods=("1T",)),
+        },
+    )
+    modelo = minimal_modelo(minimal_revision()).model_copy(
+        update={"revisions": {first.id: first, second.id: second}},
+    )
+
+    with pytest.raises(RegistryValidationError) as excinfo:
+        RegistryValidator(minimal_catalogues()).validate_modelo(modelo)
+
+    message = str(excinfo.value)
+    assert "deadline window 'ambiguous-window' has no unique canonical owner" in message
+    assert "ambiguous revision selection" in message
+    assert "deadline window 'missing-window' has no unique canonical owner" in message
+    assert "modelo 130: no revision for year=2024 period='0A' revision=None" in message
