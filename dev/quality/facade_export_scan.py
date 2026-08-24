@@ -167,7 +167,10 @@ def _lazy_resolvable_names(tree: ast.Module) -> set[str]:
         if isinstance(sub, ast.Constant) and isinstance(sub.value, str)
     }
     referenced = {
-        sub.id for node in getattr_defs for sub in ast.walk(node) if isinstance(sub, ast.Name) and isinstance(sub.ctx, ast.Load)
+        sub.id
+        for node in getattr_defs
+        for sub in ast.walk(node)
+        if isinstance(sub, ast.Name) and isinstance(sub.ctx, ast.Load)
     }
     return inline | _module_level_strings(tree, referenced)
 

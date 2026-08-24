@@ -47,7 +47,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from datetime import datetime
-from typing import Protocol, runtime_checkable
+from typing import Annotated, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -61,11 +61,18 @@ __all__ = [
     "SyncRunCoverage",
     "SyncRunCoverageSource",
     "SyncRunRecord",
+    "SyncRunRecordReference",
     "SyncRunRecordRepositoryProtocol",
     "bounded_scope_description",
     "coverage_of",
     "sync_run_record_key",
 ]
+
+SyncRunRecordReference = Annotated[
+    str,
+    Field(pattern=r"^sync-run:(?:filed_declarations|calc_sheets_export):[0-9a-f]{64}$"),
+]
+"""Stable encrypted-store key resolving one persisted sync-run record."""
 
 #: Bound on the persisted scope description. Not a formality: a filed sweep with
 #: no explicit modelo list resolves to EVERY bundled modelo, which enumerates
@@ -272,7 +279,7 @@ def bounded_scope_description(items: tuple[str, ...], *, suffix: str = "") -> st
     return f"{len(items)} modelos ({items[0]}..{items[-1]}){tail}"
 
 
-def sync_run_record_key(*, surface: SyncSurface, bucket_event_id: str) -> str:
+def sync_run_record_key(*, surface: SyncSurface, bucket_event_id: str) -> SyncRunRecordReference:
     """Return the storage key for one run over one surface.
 
     Keyed ``sync-run:{surface}:{bucket_event_id}``, matching the namespace's

@@ -70,6 +70,28 @@ from .test_cited_design_field_bounds_are_self_consistent import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+#: Designs that number the record's LINE BREAK as a field inside the declared length.
+#:
+#: This pipeline models a terminator on the TRANSPORT -- an export layout declares
+#: ``line_ending`` and the renderer appends it. Modelo 840 instead lists "Salto de
+#: linea. Constante CRLF." at positions 1131-1132 of a record whose declared total is
+#: 1132, so the break sits inside the extent the design states.
+#:
+#: Both models cannot hold at once, and every available entry kind writes the wrong
+#: bytes. A ``literal`` entry is validated by extracting the constant from the design's
+#: own text, which yields the four-character NAME "CRLF" against a two-byte field. A
+#: ``filler`` entry renders two spaces where the terminator belongs. Omitting the row is
+#: refused, because a semantic map must form a complete bijection with parser output.
+#: Excluding it in the reader was tried and measured: it drops the record below its
+#: declared total and every sheet then reports a contiguity hole.
+#:
+#: So this waits on a terminator concept the export pipeline does not have -- a field a
+#: map may name and the renderer resolves to the transport's line ending. Recorded here
+#: rather than worked around, because each workaround corrupts the last two bytes of
+#: every record in the file.
+_TERMINATOR_IS_A_NUMBERED_FIELD = "aeat-dr-840"
+
+
 def _revisions_that_cannot_emit() -> tuple[tuple[str, str, str], ...]:
     """Return every ``(modelo, revision)`` that can produce no filing artifact.
 
@@ -178,6 +200,14 @@ def _blocker(modelo: object, revision: object, sources: object) -> str:
             "extraction places fields across each other's bytes -- the bundled artefact is a form "
             "DIAGRAM with a position ruler, not a field table, so no coordinate read from it can be "
             "trusted and no parser repair changes that"
+        )
+
+    if _TERMINATOR_IS_A_NUMBERED_FIELD in cited:
+        return (
+            f"BLOCKED on record terminator: {_TERMINATOR_IS_A_NUMBERED_FIELD} numbers the line break "
+            "as a field inside the record's declared extent, while this pipeline puts the terminator "
+            "on the transport's line_ending -- no entry kind renders it correctly and the map may "
+            "not omit it"
         )
 
     uncovered = _uncovered_claimed_years(revision, cited, sources)

@@ -10,11 +10,14 @@ from pathlib import Path
 import pytest
 
 from .....application.operations import (
+    OperationApplyResponse,
     OperationConsumedInteraction,
     OperationIdempotencyClaim,
     OperationIdentity,
+    OperationInteractionRequest,
     OperationLeaseDisposition,
     OperationOwnerLease,
+    OperationPendingInteraction,
     OperationPersistedSnapshot,
     OperationPhaseEvent,
     OperationReplayStatus,
@@ -22,7 +25,13 @@ from .....application.operations import (
     OperationTerminalReceipt,
     operation_conflict_scope_reference,
 )
-from .....core import OperationEffect, OperationLifecycle, OperationTerminalCondition, scan_directory
+from .....core import (
+    OperationEffect,
+    OperationInteractionKind,
+    OperationLifecycle,
+    OperationTerminalCondition,
+    scan_directory,
+)
 from ...storage import RepositoryError
 from .._journal import OperationJournalRepository
 from .._lease import OperationLeaseFilesystemRepository
@@ -107,6 +116,40 @@ def _terminal_event() -> OperationTerminalEvent:
         timestamp=_STARTED,
         code="operation.terminal",
         receipt=receipt,
+    )
+
+
+def _consumed_interaction() -> OperationConsumedInteraction:
+    """Build a complete current-schema continuation through its production binder."""
+    identity = OperationIdentity(operation_id="a" * 64, definition_id="test.operation", subject_ref="subject")
+    pending = OperationPendingInteraction.bind(
+        request=OperationInteractionRequest(
+            interaction_id="e" * 64,
+            identity=identity,
+            revision=3,
+            kind=OperationInteractionKind.REVIEW,
+            presentation_code="operation.review.ready",
+            response_schema_ref="schema:operation-review",
+            continuation_digest="1" * 64,
+        ),
+        response_token="2" * 64,
+        reviewed_proposal_digest="3" * 64,
+        baseline_digest="4" * 64,
+        proposed_effect_digest="5" * 64,
+    )
+    return pending.consume(
+        OperationApplyResponse(
+            interaction_id=pending.request.interaction_id,
+            operation_id=identity.operation_id,
+            revision=pending.request.revision,
+            response_token="2" * 64,
+            continuation_digest=pending.request.continuation_digest,
+            reviewed_proposal_digest=pending.reviewed_proposal_digest,
+            actor_ref="operator:persistence-test",
+            responded_at=_STARTED + timedelta(minutes=3),
+            baseline_digest="4" * 64,
+            proposed_effect_digest="5" * 64,
+        )
     )
 
 
@@ -248,19 +291,25 @@ def test_operation_journal_replays_full_history_by_exclusive_bounded_cursor(tmp_
     assert caught_up.next_cursor == second_page.next_cursor
 
 
-@pytest.mark.parametrize("field", ("response_digest", "consumed_at"))
+@pytest.mark.parametrize(
+    "field",
+    ("intent", "response_digest", "consumed_at", "checkpoint", "continuation_proof_digest"),
+)
 def test_operation_journal_refuses_rewriting_full_consumed_interaction_evidence(tmp_path: Path, field: str) -> None:
     """A real CAS keeps every consumed response fact immutable, not only its ID."""
     repository, snapshots = _commit_history(tmp_path)
-    accepted_consumption = OperationConsumedInteraction(
-        interaction_id="e" * 64,
-        response_digest="f" * 64,
-        consumed_at=_STARTED + timedelta(minutes=3),
-    )
+    accepted_consumption = _consumed_interaction()
     accepted = _snapshot(revision=3, sequence=4).model_copy(update={"consumed_interactions": (accepted_consumption,)})
     asyncio.run(repository.commit(accepted, expected_revision=snapshots[-1].revision, lease=_lease()))
 
-    changed_value = "9" * 64 if field == "response_digest" else _STARTED + timedelta(minutes=4)
+    changed_values = {
+        "intent": "reject",
+        "response_digest": "9" * 64,
+        "consumed_at": _STARTED + timedelta(minutes=4),
+        "checkpoint": accepted_consumption.checkpoint.model_copy(update={"reviewed_proposal_digest": "8" * 64}),
+        "continuation_proof_digest": "7" * 64,
+    }
+    changed_value = changed_values[field]
     planted = accepted_consumption.model_copy(update={field: changed_value})
     tampered = _snapshot(revision=4, sequence=5).model_copy(update={"consumed_interactions": (planted,)})
     path = tmp_path / "operation-journals" / f"{accepted.operation_id}.json"
@@ -269,6 +318,21 @@ def test_operation_journal_refuses_rewriting_full_consumed_interaction_evidence(
     with pytest.raises(RepositoryError, match="cannot rewrite consumed interaction history"):
         asyncio.run(repository.commit(tampered, expected_revision=accepted.revision, lease=_lease()))
     assert path.read_bytes() == stable_bytes
+
+
+def test_operation_journal_refuses_intent_only_tamper_during_strict_hydration(tmp_path: Path) -> None:
+    """A changed durable intent cannot reach dispatch with its original continuation proof."""
+    repository, snapshots = _commit_history(tmp_path)
+    consumed = _consumed_interaction()
+    accepted = _snapshot(revision=3, sequence=4).model_copy(update={"consumed_interactions": (consumed,)})
+    asyncio.run(repository.commit(accepted, expected_revision=snapshots[-1].revision, lease=_lease()))
+    path = tmp_path / "operation-journals" / f"{accepted.operation_id}.json"
+    document = json.loads(path.read_text(encoding="utf-8"))
+    document["snapshot"]["consumed_interactions"][0]["intent"] = "reject"
+    path.write_text(json.dumps(document), encoding="utf-8")
+
+    with pytest.raises(RepositoryError, match="invalid operation journal"):
+        asyncio.run(repository.load(accepted.operation_id))
 
 
 @pytest.mark.parametrize(
