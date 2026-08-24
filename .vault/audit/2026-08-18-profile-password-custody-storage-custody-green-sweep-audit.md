@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:88cdb644fa14b38f5a375892a1e09b6e2407460b36b9d14bbe7287a571447b4d'
+body_hash: 'sha256:0d6d0734c6989f8cfbc533ff53e1258906a829b3f982766a4b5568881cadead6'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -9325,3 +9325,24 @@ AUTHORITY CLAIM, and the second kind is where this stops:
   whose own test exists to prove behaviour when the composition is ABSENT.
   Adding the axis breaks that subject; the gate's exclusion mechanism covers
   literal maps only, not fact containers. Both sides belong to the same campaign.
+
+### The deadline-window defect is owned elsewhere
+
+The M303 duplicate-obligation finding recorded above -- a taxpayer's schedule
+listing every quarter four times, because revisions declare deadline windows for
+years their period selectors do not govern -- has been briefed out to another
+team. The operator confirmed it, and the working tree agrees: a
+`deadline-window-revision-authority` research and reference pair appeared under
+`.vault/` while this sweep was running.
+
+So it is NOT an open item here, and the three `domain/deadlines` tests that
+report it stay red on purpose until that team lands the authority decision. Do
+not re-investigate it, do not soften those assertions, and do not race the fix:
+choosing whether the windows belong only to the governing revision (registry
+data) or the accessor must resolve per triple (product) is a claim about which
+revision AEAT binds to a filing year, and duplicating that work risks two
+incompatible answers landing in the same tree.
+
+What remains useful from this sweep's side is the invariant it exposed, offered
+rather than imposed: a revision's declared window years should lie within its
+period selector's span. Only the 2022 revision of M303 satisfies it today.
