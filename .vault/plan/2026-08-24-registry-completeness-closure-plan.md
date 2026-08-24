@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:dcc70393d3e09493bf8dcdbe442d58c70d15f190752e07c9624de4023b8b4502'
+body_hash: 'sha256:1e18c5494f2453303b79bc41e4b9a35452c278a9aaaff4f95d2214dc1c48c72b'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -51,7 +51,7 @@ Compose one typed cross-authority report from validated registry coverage, sourc
 
 - [x] `W01.P02.S06` - Define strict typed per-revision closure-limb and refusal models on the application registry boundary; `src/cadrumo/application/registry/`.
 - [x] `W01.P02.S07` - Compose the temporal coverage and authority-grade limb from validated law-selected registry revisions; `src/cadrumo/application/registry/`.
-- [ ] `W01.P02.S08` - Compose the source-connectivity limb from the canonical evidence-backed census authority; `src/cadrumo/application/registry/`.
+- [x] `W01.P02.S08` - Compose the source-connectivity limb from the canonical evidence-backed census authority; `src/cadrumo/application/registry/`.
 - [ ] `W01.P02.S09` - Compose the filing-export limb from exact layout capability and official-byte evidence; `src/cadrumo/application/registry/`.
 - [ ] `W01.P02.S10` - Publish the derived cross-authority closure report and blocking release predicate through registry conformance; `dev/registry/conformance/`.
 - [ ] `W01.P02.S11` - Prove complete, refused, stale-evidence, below-filing-grade, and cross-limb disagreement outcomes with mutation tests; `src/cadrumo/application/registry/tests/`.

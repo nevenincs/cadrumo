@@ -177,6 +177,10 @@ from ._source_connectivity_authority import (
     RepositoryRootEvidenceDigestVerifier,
     build_calculation_route_source_ownership_catalogue,
 )
+from ._source_connectivity_coverage import (
+    SourceConnectivityCoverageReport,
+    compose_source_connectivity_coverage,
+)
 from ._temporal_coverage import (
     TemporalCoverageReport,
     TemporalRevisionCoverage,
@@ -650,6 +654,7 @@ __all__ = [
     "RevisionModelLawCoverage",
     "SourceConnectivityCensusEntry",
     "SourceConnectivityCensusManifest",
+    "SourceConnectivityCoverageReport",
     "TemporalCoverageReport",
     "TemporalRevisionCoverage",
     "audit_bundled_registry_conformance",
@@ -657,6 +662,7 @@ __all__ = [
     "build_registry_conformance_profile",
     "compare_annual_casilla_population",
     "compare_annual_casilla_population_for_revision",
+    "compose_source_connectivity_coverage",
     "compose_temporal_coverage",
     "derive_registry_binding_records",
     "derive_registry_destination_records",

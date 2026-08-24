@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:875fb5f3480366c3015f7bd2b08573fba345650688f943f4158d18c3fc97b780'
+body_hash: 'sha256:42478ff718d30a7cc949e3451037efa320b716e49867b84c6981dff4f7f665cc'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -18,8 +18,10 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-summary]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S06]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S07]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S08]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S42]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S43]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S44]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
@@ -68,8 +70,10 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P01-summary` - `registry-completeness-closure` `W01.P01` summary
 - `2026-08-24-registry-completeness-closure-W01-P02-S06` - Define strict typed per-revision closure-limb and refusal models on the application registry boundary
 - `2026-08-24-registry-completeness-closure-W01-P02-S07` - Compose the temporal coverage and authority-grade limb from validated law-selected registry revisions
+- `2026-08-24-registry-completeness-closure-W01-P02-S08` - Compose the source-connectivity limb from the canonical evidence-backed census authority
 - `2026-08-24-registry-completeness-closure-W01-P02-S42` - Constrain temporal evidence identity, period, and filing-year fields to registry semantics and add mutation proof for every composer refusal outcome
 - `2026-08-24-registry-completeness-closure-W01-P02-S43` - Reject resolved owner dispositions on active closure refusals and prove the contradiction fails validation
+- `2026-08-24-registry-completeness-closure-W01-P02-S44` - Encode branch-specific TemporalRevisionCoverage refusal invariants and add construction and mutation-bite tests.
 
 ### plan
 
