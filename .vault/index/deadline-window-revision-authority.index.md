@@ -6,13 +6,14 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:4222e64428e58505be0078e113b93116caafe65e23227014099545c6297c4b7d'
+body_hash: 'sha256:24e198b7de377072508787f5e949a0a527f571a4e4999e291f695f378b49e6e5'
 related:
   - '[[2026-08-24-deadline-window-revision-authority-W01-P01-S01]]'
   - '[[2026-08-24-deadline-window-revision-authority-W01-P01-S02]]'
   - '[[2026-08-24-deadline-window-revision-authority-W01-P01-S03]]'
   - '[[2026-08-24-deadline-window-revision-authority-W01-P01-S04]]'
   - '[[2026-08-24-deadline-window-revision-authority-W01-P02-S05]]'
+  - '[[2026-08-24-deadline-window-revision-authority-W02-P03-S10]]'
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
   - '[[2026-08-24-deadline-window-revision-authority-audit]]'
   - '[[2026-08-24-deadline-window-revision-authority-plan]]'
@@ -41,6 +42,7 @@ Auto-generated index of all documents tagged with `#deadline-window-revision-aut
 - `2026-08-24-deadline-window-revision-authority-W01-P01-S03` - Define the canonical deadline semantic coordinate from modelo, Period, ResultDisposition, and official tipo-renta code scope using existing period authorities
 - `2026-08-24-deadline-window-revision-authority-W01-P01-S04` - Extend deadline-window loading and serialization for typed qualifiers while preserving unqualified rows and fragmented authoring ownership
 - `2026-08-24-deadline-window-revision-authority-W01-P02-S05` - Enforce equality between deadline filing_year and Period.filing_year while preserving following-calendar-year physical dates
+- `2026-08-24-deadline-window-revision-authority-W02-P03-S10` - Re-adjudicate and repair Modelo 190 deadline identity against bundled and official AEAT authority while retaining following-January physical dates
 
 ### plan
 

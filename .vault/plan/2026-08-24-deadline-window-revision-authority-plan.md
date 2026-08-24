@@ -14,7 +14,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
 modified: '2026-08-24'
 body_schema: body-v1
-body_hash: 'sha256:9e8951b1d3dfcc4517c94268e4c07218254ea1b76c79c6ed97106a53be7d1a03'
+body_hash: 'sha256:e0c0b473f3f1aae98238c582276e7f18dffb1baf0a948563d12f1a10d4de351e'
 ---
 
 <!-- RETIRED: P06, P07, P09 -->
@@ -67,7 +67,7 @@ Repair every affected registry row and complete officially grounded schedules wi
 
 Correct following-January annual identity without altering physical filing dates.
 
-- [ ] `W02.P03.S10` - Re-adjudicate and repair Modelo 190 deadline identity against bundled and official AEAT authority while retaining following-January physical dates; `src/cadrumo/_data/registry/aeat/modelos/190/`.
+- [x] `W02.P03.S10` - Re-adjudicate and repair Modelo 190 deadline identity against bundled and official AEAT authority while retaining following-January physical dates; `src/cadrumo/_data/registry/aeat/modelos/190/`.
 - [ ] `W02.P03.S11` - Re-adjudicate and repair Modelo 193 deadline identity against bundled and official AEAT authority while retaining following-January physical dates; `src/cadrumo/_data/registry/aeat/modelos/193/`.
 
 ### Phase `W02.P04` - periodic IVA schedule repair
