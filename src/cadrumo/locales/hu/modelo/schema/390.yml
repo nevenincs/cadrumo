@@ -153,10 +153,10 @@ modelo:
           iva-anual-regimen-simplificado-cuota-resultante-no-agricola:
             help: null
             label: null
-          iva-anual-regimen-simplificado-entrega-activos-fijos:
+          iva-anual-regimen-simplificado-entrega-activos-fijos-cuota-devengada:
             help: null
             label: null
-          iva-anual-regimen-simplificado-inversion-sujeto-pasivo:
+          iva-anual-regimen-simplificado-inversion-sujeto-pasivo-cuota-devengada:
             help: null
             label: null
           iva-anual-regimen-simplificado-iva-soportado-activos-fijos:
@@ -841,43 +841,43 @@ modelo:
             help: null
             label: Jogerős közigazgatási határozat vagy bírósági ítélet alapján, már
               nem hatályos kulcsokkal levonható ÁFA - levonható adóösszeg
-          iva-especificas-adquisiciones-interiores-exentas:
+          iva-operaciones-especificas-adquisiciones-interiores-exentas:
             help: null
             label: Különös ügyletek - Adómentes belföldi beszerzések [230]
-          iva-especificas-adquisiciones-intracomunitarias-exentas:
+          iva-operaciones-especificas-adquisiciones-intracomunitarias-exentas:
             help: null
             label: Különös ügyletek - Adómentes Közösségen belüli beszerzések [109]
-          iva-especificas-base-iva-soportado-no-deducible:
+          iva-operaciones-especificas-base-iva-soportado-no-deducible:
             help: null
             label: Különös ügyletek - A le nem vonható előzetes áfa adóalapja [232]
-          iva-especificas-criterio-caja-adquisiciones-base:
+          iva-operaciones-especificas-criterio-caja-adquisiciones-base:
             help: null
             label: Különös ügyletek - Termékbeszerzés pénzforgalmi elszámolás szerint
               - Adóalap [656]
-          iva-especificas-criterio-caja-adquisiciones-cuota:
+          iva-operaciones-especificas-criterio-caja-adquisiciones-cuota:
             help: null
             label: Különös ügyletek - Termékbeszerzés pénzforgalmi elszámolás szerint
               - Adóösszeg [657]
-          iva-especificas-criterio-caja-entregas-base:
+          iva-operaciones-especificas-criterio-caja-entregas-base:
             help: null
             label: Különös ügyletek - Termékértékesítés pénzforgalmi elszámolás szerint
               - Adóalap [654]
-          iva-especificas-criterio-caja-entregas-cuota:
+          iva-operaciones-especificas-criterio-caja-entregas-cuota:
             help: null
             label: Különös ügyletek - Termékértékesítés pénzforgalmi elszámolás szerint
               - Adóösszeg [655]
-          iva-especificas-entrega-interior-inversion-triangular:
+          iva-operaciones-especificas-entrega-interior-inversion-triangular:
             help: null
             label: Különös ügyletek - Fordított adózás alá eső belföldi termékértékesítés
               háromszögügyletben [113]
-          iva-especificas-importaciones-exentas:
+          iva-operaciones-especificas-importaciones-exentas:
             help: null
             label: Különös ügyletek - Adómentes import [231]
-          iva-especificas-operaciones-derecho-devolucion-mensual:
+          iva-operaciones-especificas-operaciones-derecho-devolucion-mensual:
             help: null
             label: Különös ügyletek - A havi visszatérítésre jogosító adóköteles ügyletek
               [111]
-          iva-especificas-servicios-tai-inversion-sujeto-pasivo:
+          iva-operaciones-especificas-servicios-tai-inversion-sujeto-pasivo:
             help: null
             label: Különös ügyletek - Belföldön teljesített, fordított adózás alá
               eső szolgáltatások [523]
@@ -1117,19 +1117,19 @@ modelo:
             help: null
             label: Csoporton belüli ügyletek után keletkezett ÁFA 7,5% kulccsal -
               adóösszeg
-          iva-repercutido-recargo-tipo-0-5-base:
+          iva-recargo-equivalencia-tipo-0-5-base:
             help: null
             label: Egyenértékűségi felár 0.5% kulccsal - adóalap
-          iva-repercutido-recargo-tipo-1-4-base:
+          iva-recargo-equivalencia-tipo-1-4-base:
             help: null
             label: Egyenértékűségi felár 1.4% kulccsal - adóalap
-          iva-repercutido-recargo-tipo-1-75-base:
+          iva-recargo-equivalencia-tipo-1-75-base:
             help: null
             label: Egyenértékűségi felár 1.75% kulccsal - adóalap
-          iva-repercutido-recargo-tipo-1-75-cuota:
+          iva-recargo-equivalencia-tipo-1-75-cuota:
             help: null
             label: Egyenértékűségi felár 1.75% kulccsal - felár összege
-          iva-repercutido-recargo-tipo-5-2-base:
+          iva-recargo-equivalencia-tipo-5-2-base:
             help: null
             label: Egyenértékűségi felár 5.2% kulccsal - adóalap
           iva-resultado-liquidacion:
@@ -1377,7 +1377,7 @@ modelo:
           iva-territorio-vizcaya-porcentaje:
             help: null
             label: Területi adómegosztás - Bizkaia - Százalék [90]
-          iva-total-bases-iva:
+          iva-total-bases-iva-base:
             help: null
             label: A fizetendő ÁFA adóalapjai összesen
           iva-volumen-agencias-viajes:

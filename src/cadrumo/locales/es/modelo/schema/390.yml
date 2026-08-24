@@ -154,10 +154,10 @@ modelo:
           iva-anual-regimen-simplificado-cuota-resultante-no-agricola:
             help: null
             label: IVA devengado - Suma cuotas actividades no agríc., ganad. y forest.
-          iva-anual-regimen-simplificado-entrega-activos-fijos:
+          iva-anual-regimen-simplificado-entrega-activos-fijos-cuota-devengada:
             help: null
             label: IVA devengado en entregas de activos fijos
-          iva-anual-regimen-simplificado-inversion-sujeto-pasivo:
+          iva-anual-regimen-simplificado-inversion-sujeto-pasivo-cuota-devengada:
             help: null
             label: IVA devengado por inversión del sujeto pasivo
           iva-anual-regimen-simplificado-iva-soportado-activos-fijos:
@@ -844,45 +844,45 @@ modelo:
             help: null
             label: Cuotas deducibles en virtud de resolución administrativa o sentencia
               firmes con tipos no vigentes - Cuota deducible
-          iva-especificas-adquisiciones-interiores-exentas:
+          iva-operaciones-especificas-adquisiciones-interiores-exentas:
             help: null
             label: Operaciones específicas - Adquisiciones interiores exentas [230]
-          iva-especificas-adquisiciones-intracomunitarias-exentas:
+          iva-operaciones-especificas-adquisiciones-intracomunitarias-exentas:
             help: null
             label: Operaciones específicas - Adquisiciones intracomunitarias exentas
               [109]
-          iva-especificas-base-iva-soportado-no-deducible:
+          iva-operaciones-especificas-base-iva-soportado-no-deducible:
             help: null
             label: Operaciones específicas - Bases imponibles del IVA soportado no
               deducible [232]
-          iva-especificas-criterio-caja-adquisiciones-base:
+          iva-operaciones-especificas-criterio-caja-adquisiciones-base:
             help: null
             label: Operaciones específicas - Adquisiciones de bienes en régimen especial
               del criterio de caja - Base imponible [656]
-          iva-especificas-criterio-caja-adquisiciones-cuota:
+          iva-operaciones-especificas-criterio-caja-adquisiciones-cuota:
             help: null
             label: Operaciones específicas - Adquisiciones de bienes en régimen especial
               del criterio de caja - Cuota [657]
-          iva-especificas-criterio-caja-entregas-base:
+          iva-operaciones-especificas-criterio-caja-entregas-base:
             help: null
             label: Operaciones específicas - Entregas de bienes en régimen especial
               del criterio de caja - Base imponible [654]
-          iva-especificas-criterio-caja-entregas-cuota:
+          iva-operaciones-especificas-criterio-caja-entregas-cuota:
             help: null
             label: Operaciones específicas - Entregas de bienes en régimen especial
               del criterio de caja - Cuota [655]
-          iva-especificas-entrega-interior-inversion-triangular:
+          iva-operaciones-especificas-entrega-interior-inversion-triangular:
             help: null
             label: Operaciones específicas - Entregas interiores de bienes devengadas
               por inversión del sujeto pasivo en operaciones triangulares [113]
-          iva-especificas-importaciones-exentas:
+          iva-operaciones-especificas-importaciones-exentas:
             help: null
             label: Operaciones específicas - Importaciones exentas [231]
-          iva-especificas-operaciones-derecho-devolucion-mensual:
+          iva-operaciones-especificas-operaciones-derecho-devolucion-mensual:
             help: null
             label: Operaciones específicas - Operaciones sujetas que originan el derecho
               a la devolución mensual [111]
-          iva-especificas-servicios-tai-inversion-sujeto-pasivo:
+          iva-operaciones-especificas-servicios-tai-inversion-sujeto-pasivo:
             help: null
             label: Operaciones específicas - Servicios localizados en el territorio
               de aplicación del impuesto por inversión del sujeto pasivo [523]
@@ -1123,19 +1123,19 @@ modelo:
           iva-repercutido-intragrupo-tipo-7-5-cuota:
             help: null
             label: IVA devengado en operaciones intragrupo al tipo 7,5% - Cuota
-          iva-repercutido-recargo-tipo-0-5-base:
+          iva-recargo-equivalencia-tipo-0-5-base:
             help: null
             label: Recargo de equivalencia al tipo 0,5% - Base imponible
-          iva-repercutido-recargo-tipo-1-4-base:
+          iva-recargo-equivalencia-tipo-1-4-base:
             help: null
             label: Recargo de equivalencia al tipo 1,4% - Base imponible
-          iva-repercutido-recargo-tipo-1-75-base:
+          iva-recargo-equivalencia-tipo-1-75-base:
             help: null
             label: Recargo de equivalencia al tipo 1,75% - Base imponible
-          iva-repercutido-recargo-tipo-1-75-cuota:
+          iva-recargo-equivalencia-tipo-1-75-cuota:
             help: null
             label: Recargo de equivalencia al tipo 1,75% - Cuota
-          iva-repercutido-recargo-tipo-5-2-base:
+          iva-recargo-equivalencia-tipo-5-2-base:
             help: null
             label: Recargo de equivalencia al tipo 5,2% - Base imponible
           iva-resultado-liquidacion:
@@ -1382,7 +1382,7 @@ modelo:
           iva-territorio-vizcaya-porcentaje:
             help: null
             label: Tributación por razón de territorio - Vizcaya - Porcentaje [90]
-          iva-total-bases-iva:
+          iva-total-bases-iva-base:
             help: null
             label: Total bases imponibles del IVA devengado
           iva-volumen-agencias-viajes:
