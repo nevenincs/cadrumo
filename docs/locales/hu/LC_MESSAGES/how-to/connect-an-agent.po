@@ -45,17 +45,17 @@ msgid "What the agent connection is"
 msgstr "Mi az ügynökkapcsolat"
 
 #: ../../how-to/connect-an-agent.md:12
-#, fuzzy
 msgid ""
 "The separate `cadrumo-harness` distribution ships an MCP (Model Context "
 "Protocol) server, `cadrumo-mcp`, for the `aeat` command. MCP is an open "
 "standard that lets assistants call tools. Any MCP-capable client can "
 "connect; Claude is one such client."
 msgstr ""
-"A Cadrumo az `aeat` parancs mellett egy MCP-kiszolgálót (Model Context "
-"Protocol) is szállít, a `cadrumo-mcp`-t. Az MCP egy nyílt szabvány, amely"
-" lehetővé teszi, hogy az asszisztensek eszközöket hívjanak meg. Bármely "
-"MCP-képes kliens csatlakozhat; a Claude egy ilyen kliens."
+"A különálló `cadrumo-harness` disztribúció egy MCP-kiszolgálót (Model "
+"Context Protocol), a `cadrumo-mcp`-t biztosít az `aeat` parancshoz. Az MCP "
+"nyílt szabvány, amely lehetővé teszi, hogy az asszisztensek eszközöket "
+"hívjanak meg. Bármely MCP-képes kliens csatlakozhat; a Claude egy ilyen "
+"kliens."
 
 #: ../../how-to/connect-an-agent.md:17
 msgid ""
@@ -89,15 +89,15 @@ msgid "Register the source server"
 msgstr "A forráskiszolgáló regisztrálása"
 
 #: ../../how-to/connect-an-agent.md:37
-#, fuzzy
 msgid ""
 "Register `uv run --package cadrumo-harness cadrumo-mcp` as a stdio server"
 " and set the checkout as the working directory. In clients that accept a "
 "JSON server definition:"
 msgstr ""
-"Regisztrálja az `uv run cadrumo-mcp`-t stdio-kiszolgálóként, és állítsa "
-"be a kiszedést munkakönyvtárként. Azoknál a klienseknél, amelyek "
-"elfogadnak egy JSON-kiszolgálódefiníciót:"
+"Regisztrálja az `uv run --package cadrumo-harness cadrumo-mcp` parancsot "
+"stdio-kiszolgálóként, és állítsa be a repozitórium munkapéldányát "
+"munkakönyvtárként. Azoknál a klienseknél, amelyek elfogadnak egy JSON-"
+"kiszolgálódefiníciót:"
 
 #: ../../how-to/connect-an-agent.md:53
 msgid ""
@@ -166,4 +166,3 @@ msgstr ""
 #~ "csatlakozzon. A generált beépülő modul- "
 #~ "és bővítmény-műtermékek kiadásjelöltek, nem"
 #~ " nyilvános telepítési csatornák."
-
