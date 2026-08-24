@@ -5,10 +5,12 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:6feceb971064beadee6662b2b587b409db63d4b944977ae4edb824ba3ef3ddd0'
+body_hash: 'sha256:40530faa0cf2a4daa2c7b8940a7f22ab1155f04956892c02b98b1d61271fc51a'
 related:
   - "[[2026-08-24-deadline-window-revision-authority-research]]"
   - '[[2026-08-24-deadline-window-revision-authority-reference]]'
+  - '[[2026-08-14-registry-temporal-coverage-adr]]'
+  - '[[2026-07-09-m210-plazo-keying-adr]]'
 ---
 
 # `deadline-window-revision-authority` adr: `deadline windows are revision-owned law facts` | (**status:** `accepted`)
@@ -50,8 +52,9 @@ ownership, and semantic uniqueness during registry build; project only validated
   `period.filing_year`; removal or derivation can follow as a separate schema change.
 - M210 must complete its typed plazo-keying design before the fleet invariant can pass;
   no modelo-specific exemption is permitted.
-- Open-ended revisions declare a deadline-calendar supported-through year; validation
-  requires complete periods through it and makes no claim about unpublished future dates.
+- Deadline completeness consumes the shared supported-filing-year coverage declaration
+  owned by the accepted registry-temporal-coverage architecture; it does not add a
+  deadline-specific horizon. Validation makes no claim about unpublished future dates.
 - Any changed legal date requires verification against bundled and official authority.
 
 ## Implementation
@@ -61,13 +64,15 @@ period.registry_token, typed deadline qualifiers)`. Registry validation will req
 the redundant year to match the period year, the containing revision to be the unique
 law-selected owner, and IDs and semantic coordinates to be unique across revisions.
 For periodic schedules, validation will require every selected cadence token for each
-declared calendar-supported year. Sparse coverage is permitted only for an explicitly
-typed ad-hoc/event schedule, never inferred from missing rows.
+filing year declared supported by the canonical temporal-coverage projection. Sparse
+coverage is permitted only for an explicitly typed ad-hoc/event schedule, never inferred
+from missing rows.
 
 Repair all affected modelo data. M303, M322, and M353 retain rows only in their canonical
 revision. M190 and M193 align identity year while retaining physical filing dates. M210
-uses canonical `EVENT-N`/`0A` identity plus typed resultado and tipo-renta qualifiers,
-completing rather than bypassing its plazo-keying decision. Missing periodic windows are
+uses canonical `EVENT-N`/`0A` identity plus the existing `ResultDisposition` and official
+two-digit tipo-renta code authorities as qualifiers, completing rather than bypassing its
+plazo-keying decision. Missing periodic windows are
 materialised for M303, M322, M353, and M369 through the declared supported year.
 
 The authority deadline projection will traverse validated canonical rows and assert the

@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#m210-plazo-keying'
 date: '2026-07-09'
-modified: '2026-07-17'
-body_hash: 'sha256:1c0dade9a0416b0c47387727f8058107d22794ca720b1b47bc395f673806c9a9'
+modified: '2026-08-24'
+body_hash: 'sha256:cda72b01018b8cd6bcefcc9e10065856cddc5cd34462573cb13e9f01927cac79'
 related:
   - "[[2026-07-10-m210-irnr-phase-2-engine-adr]]"
   - "[[2026-06-04-m210-irnr-phase-2-engine-research]]"
@@ -107,7 +107,7 @@ Decision 1 - how to attach the RESULTADO qualifier:
 
 - **O1a resultado-tagged window variants resolved POST-calculation (chosen half).**
   Add an optional typed `resultado_scope` to `DeadlineWindowDefinition`
-  (default `None`); the annual resultado cases declare it; a resultado-aware
+  (default `None`) using the existing canonical `ResultDisposition`; the annual resultado cases declare it; a resultado-aware
   resolver picks the tagged variant after the engine computes the resultado. Pro:
   dates stay registry-declared and grounded; the qualifier lives where the value
   is known. Con: one new optional field + a second resolver entry point.
@@ -131,7 +131,8 @@ Decision 2 - the TIPO-dependent cases:
 
 - **O2a tipo-scoped window variants (chosen).** Add an optional typed
   `tipo_renta_scope` to `DeadlineWindowDefinition` (default `None`), reusing the
-  Slice-A tipo axis; resolved post-declaration alongside the resultado qualifier.
+  registry-backed official two-digit M210 tipo-renta code authority; resolved
+  post-declaration alongside the resultado qualifier.
   Arrendamiento-April composes `tipo_renta_scope in {01,35}` with
   `resultado_scope = a_ingresar`; imputadas-02 is `tipo_renta_scope = 02` alone.
   Pro: matches the form (tipo is a declared per-unit axis) and keeps
@@ -187,15 +188,12 @@ Decision 4 - relationship to the accepted phase-2 work model:
 
 ## Implementation
 
-**Two new optional qualifier axes on `DeadlineWindowDefinition`
-(`domain/calculations/registry/_schema.py`).** Add `resultado_scope:
-M210ResultadoScope | None = None` and `tipo_renta_scope: TipoRentaIrnr | None =
-None` (or the `OfficialTipoRentaCode`-projected value; the loader hydrates the
-authoring token at the boundary per the enum-at-boundary rule). Both default
-`None`, preserving every existing window (M210 quarterly + every other modelo's
-windows) byte-identical. `M210ResultadoScope` is a new core `StrEnum`
-(`A_INGRESAR` / `CUOTA_CERO` / `A_DEVOLVER`) declared in `core/` per the
-closed-value-set rule.
+**Two optional qualifier axes on `DeadlineWindowDefinition`
+(`domain/calculations/registry/_schema.py`).** Add `resultado_scope` using the
+existing canonical `ResultDisposition` values and `tipo_renta_scope` using official
+two-digit M210 codes validated against the registry's existing code projection. Both
+default to empty/unqualified. No parallel resultado enum, tipo-renta code catalogue,
+or lossy `TipoRentaIrnr` projection is introduced.
 
 **Annual resultado/tipo window rows** are authored on the 2025 revision
 `deadline_windows` fragment (grounded `legal_refs = ["orden-eha-3316-2010:art-5"]`):
@@ -222,8 +220,8 @@ the typed qualifier schema, grounded annual window rows, post-calculation
 resolver and typed `Notice` projection.
 
 **Code-surface footprint** (for the implementation plan):
-- `src/cadrumo/core/_irnr.py` - new `M210ResultadoScope` StrEnum; reuse
-  `TipoRentaIrnr` / `OfficialTipoRentaCode` for the tipo axis.
+- `src/cadrumo/core/_result_disposition.py` and `src/cadrumo/core/_irnr.py` - reuse
+  `ResultDisposition` and the official M210 tipo-renta code authority; add no duplicate enum.
 - `src/cadrumo/domain/calculations/registry/_schema.py` - two optional qualifier
   fields on `DeadlineWindowDefinition` (default `None`).
 - `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/deadline_windows/`

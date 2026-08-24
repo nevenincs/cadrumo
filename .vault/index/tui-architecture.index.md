@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:acfab0fdd01523159d17ac9af4d28310f44e074273abbaa5e6becfdef58f494e'
+body_hash: 'sha256:9895da6706c0aa0efd1a6e8df4e057e7ffff98642e4d0930a65794f604bf9aba'
 related:
   - '[[2026-08-11-tui-architecture-W01-P01-S01]]'
   - '[[2026-08-11-tui-architecture-W01-P01-S02]]'
@@ -100,6 +100,7 @@ related:
   - '[[2026-08-24-tui-architecture-s35-filed-history-dry-run-review-audit]]'
   - '[[2026-08-24-tui-architecture-s36-filed-history-progress-review-audit]]'
   - '[[2026-08-24-tui-architecture-s37-live-facade-audit]]'
+  - '[[2026-08-24-tui-architecture-s38-filed-history-conformance-audit]]'
 ---
 
 # `tui-architecture` feature index
@@ -155,6 +156,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-24-tui-architecture-s35-filed-history-dry-run-review-audit` - `tui-architecture` audit: `S35 filed-history dry-run review`
 - `2026-08-24-tui-architecture-s36-filed-history-progress-review-audit` - `tui-architecture` audit: `s36 filed history progress review`
 - `2026-08-24-tui-architecture-s37-live-facade-audit` - `tui-architecture` audit: `S37 live facade review`
+- `2026-08-24-tui-architecture-s38-filed-history-conformance-audit` - `tui-architecture` audit: `S38 filed-history conformance review`
 
 ### exec
 

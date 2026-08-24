@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:9ed87a598b379badeb00259f1bd7c4847dfb765d6ff4b3a624b0ad1c7b6d94f7'
+body_hash: 'sha256:71fec88bca27a7178bf6e422aee17683d8b1b70ef60d1d5c7277dc3f88aaa8b8'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -55,9 +55,11 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S72]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P03-S12]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P03-S13]]'
+  - '[[2026-08-24-registry-completeness-closure-W02-P03-S14]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-036-2025-filing-authority-reference]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-038-design-extraction-reference]]'
+  - '[[2026-08-24-registry-completeness-closure-modelo-136-2026-filing-boundary-reference]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
   - '[[2026-08-24-registry-completeness-closure-s01-schema-family-coverage-review-audit]]'
@@ -224,6 +226,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P02-S72` - Make filing-export participation grade-scoped per the accepted ADR, revise closure eligibility so below-filing revisions are not filing refusals, prove a genuinely complete real composed below-grade row when canonical temporal and source evidence support it, and add durable mutation-bite evidence for complete, refused, stale-evidence, below-filing-grade, and cross-limb-disagreement guards
 - `2026-08-24-registry-completeness-closure-W02-P03-S12` - Adjudicate Modelo 036 revision 2025-02-03-y-siguientes producer vocabulary and official filing authority
 - `2026-08-24-registry-completeness-closure-W02-P03-S13` - Adjudicate Modelo 038 revision 2002-y-siguientes design extraction trust and fileability
+- `2026-08-24-registry-completeness-closure-W02-P03-S14` - Adjudicate Modelo 136 revision 2026 record-design availability and supported filing boundary
 
 ### plan
 
@@ -233,6 +236,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 
 - `2026-08-24-registry-completeness-closure-modelo-036-2025-filing-authority-reference` - `registry-completeness-closure` reference: `Modelo 036 2025 filing authority adjudication`
 - `2026-08-24-registry-completeness-closure-modelo-038-design-extraction-reference` - `registry-completeness-closure` reference: `modelo 038 design extraction`
+- `2026-08-24-registry-completeness-closure-modelo-136-2026-filing-boundary-reference` - `registry-completeness-closure` reference: `modelo 136 2026 filing boundary`
 
 ### research
 

@@ -5,31 +5,12 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:cb11b58b1429788fc9b0dd6fb13a03deaf3ef408ba24ee29ad6f904c8e1dbfc5'
+body_hash: 'sha256:8de0528f1b1d0ce13973b6eb91375ddf059b23e47b1f76020589bb4363b9a631'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
   - "[[2026-08-24-registry-completeness-closure-adr]]"
   - "[[2026-08-24-registry-completeness-closure-W01-P02-S72]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace registry-completeness-closure with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `registry-completeness-closure` audit: `S72 filing-grade scoping independent post-review`
 
@@ -50,4 +31,3 @@ The live canonical report has no below-filing revision with both validated tempo
 ## Recommendations
 
 Keep S72 and S11 unchecked until a real composed below-filing row proves the named complete outcome. Add one explicit W02.P04 follow-up that starts with M036, adjudicates real source participation and evidence, routes accepted evidence or an ADR-authorized disposition into the source-casilla predecessor plan, and returns that canonical proof to S72/S11. The follow-up must preserve `unmeasured` for absence, reject vacuous satisfaction, and author no census evidence that cannot be independently supported.
-

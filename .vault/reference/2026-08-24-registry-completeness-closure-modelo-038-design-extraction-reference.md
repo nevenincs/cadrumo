@@ -91,4 +91,3 @@ Reconsider fileability only after all of these are true:
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_038/files/01-038-diseno-de-registro-actualizado-28-06-2024.pdf.extracted.json`
 - `src/cadrumo/domain/calculations/registry/tests/test_cited_design_field_bounds_are_self_consistent.py`
 - `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py`
-

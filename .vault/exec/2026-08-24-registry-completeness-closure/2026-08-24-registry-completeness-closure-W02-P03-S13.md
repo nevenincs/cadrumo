@@ -44,4 +44,3 @@ that boundary before any fileability work is reconsidered.
 - The aggregate filing-capability worklist assertion is intentionally red with
   fourteen current refusal rows; its Modelo 038 row reports the expected design
   extraction blocker. No production file changed.
-

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:e32ae98c561e93f8b761aa47e4197760ac569b91a37205d7f00c1e9f484a40d7'
+body_hash: 'sha256:c20dbc336bfc66afc325a1aebf9d5c18e1c8d477157221507bf9b85b5b319c0d'
 related:
   - '[[2026-08-24-deadline-window-revision-authority-research]]'
 ---
@@ -22,9 +22,12 @@ Validation is assembled under `domain/calculations/registry/_validate.py`; the n
 ownership invariant belongs there. Its coordinate is `(modelo, period.filing_year,
 period.registry_token, typed qualifiers)`, with redundant window `filing_year` equal to
 the period year. Following-year filing dates remain in `opens_on` and `closes_on`.
+Completeness consumes the temporal-coverage campaign's canonical supported-filing-year
+projection rather than adding a parallel deadline horizon.
 
 Repair inventory: M190/M193 align the redundant year; M210 replaces duplicated quarter
-keys with the typed `EVENT-N`/`0A` plazo design; M303 retains rows only in the exact
+keys with the typed `EVENT-N`/`0A` plazo design, reusing `ResultDisposition` and the
+registry-backed official tipo-renta codes; M303 retains rows only in the exact
 owner including the 2024 cutover; M322 removes two 2023 copies from `2008-2022`; M353
 removes three 2025 copies from `2026-y-siguientes`. Periodic completeness repair also
 materialises missing selector periods for M303, M322, M353, and M369. Open-ended
