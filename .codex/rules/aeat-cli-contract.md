@@ -114,8 +114,15 @@ verb hands the agent a dead instruction it cannot recover from.
 - **Bad:** citing a harness verb that does not exist, or renaming a CLI verb
   without sweeping the harness documents.
 
-Gates: `test_documented_command_conformance.py`,
-`test_json_schema_conformance.py`, `test_rule_surface_conformance.py`. Source:
+Gates in this repository: `test_documented_command_conformance.py` and
+`test_json_schema_conformance.py`. The latter was rebuilt against the command-spec
+`ResultSchemaSpec` kernel after the `SCHEMA_REGISTRY` it originally walked was
+retired; it walks every spec declaring a result-schema target and refuses a
+bespoke `next` / `suggestion` / `*_advisory` field beside the envelope's one
+diagnostic channel. `test_rule_surface_conformance.py` is deliberately NOT named
+here any more: it shipped inside the cadrumo-harness client and left with it when
+that client was rehomed out of this repository, so naming it here pointed every
+reader at a file this tree does not contain. Source:
 ADRs `2026-06-10-cli-pull-file-standard-adr`,
 `2026-06-10-cli-envelope-notice-standardisation-adr`,
 `2026-06-10-ledger-interface-contract-adr`,
