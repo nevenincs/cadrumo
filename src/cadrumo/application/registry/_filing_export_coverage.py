@@ -28,7 +28,11 @@ from ._closure import (
     RegistryClosureRefusal,
     RegistryClosureRefusalReason,
 )
-from ._filing_export_authority import FilingExportProof, FilingExportProofAuthority
+from ._filing_export_authority import (
+    FilingExportProof,
+    FilingExportProofAuthority,
+    FilingExportProofConflictError,
+)
 from ._temporal_coverage import _law_selection_coordinate
 
 __all__ = [
@@ -251,6 +255,8 @@ def _filing_export_proof(
             revision=snapshot.revision.id,
             layout_ids=layout_ids,
         )
+    except FilingExportProofConflictError as exc:
+        return None, _LayoutEvidenceFailure(reason="conflicting_evidence", detail=_failure_detail(exc))
     except (OSError, RuntimeError, ValueError) as exc:
         return None, _LayoutEvidenceFailure(reason="stale_evidence", detail=_failure_detail(exc))
     if proof is None:

@@ -172,7 +172,7 @@ from ._filing_export_authority import (
     FilingExportGenerationProof,
     FilingExportProof,
     FilingExportProofAuthority,
-    FilingExportProofCatalogue,
+    FilingExportProofConflictError,
     GeneratedExportFileDigest,
 )
 from ._filing_export_coverage import (
@@ -615,7 +615,7 @@ __all__ = [
     "FilingExportGenerationProof",
     "FilingExportProof",
     "FilingExportProofAuthority",
-    "FilingExportProofCatalogue",
+    "FilingExportProofConflictError",
     "FormulaDiff",
     "GeneratedExportFileDigest",
     "LatestRevisionSupportProbe",

@@ -11,8 +11,6 @@ from ....core import Modelo, RegistryAuthorityGrade, RevisionReviewStatus
 from .. import (
     FilingExportEmissionProof,
     FilingExportGenerationProof,
-    FilingExportProof,
-    FilingExportProofCatalogue,
     GeneratedExportFileDigest,
     compose_filing_export_coverage,
 )
@@ -48,39 +46,11 @@ def test_emission_proof_refuses_zero_checked_official_offsets() -> None:
         )
 
 
-def test_proof_catalogue_refuses_a_different_loaded_layout_identity() -> None:
-    """Proof for one layout cannot cross-satisfy another layout of the same revision."""
-    proof = FilingExportProof(
-        modelo=Modelo.M111,
-        revision="2019-y-siguientes",
-        layout_ids=("m111-2019-fixed",),
-        generation=FilingExportGenerationProof(
-            authority="dev.registry.pipeline.verify_export_fragment_provenance_manifest",
-            manifest_locator="structural-proof/_generation.provenance.json",
-            manifest_sha256=_DIGEST,
-            semantic_map_sha256=_DIGEST,
-            render_profile_sha256=_DIGEST,
-            loader_semantic_sha256=_DIGEST,
-            output_files=(GeneratedExportFileDigest(relative_path="0000-export-layout.toml", sha256=_DIGEST),),
-        ),
-        emission=FilingExportEmissionProof(
-            authority="cadrumo.application.filing.export_draft",
-            evidence_locator="structural-proof/emitted-byte-result",
-            payload_sha256=_DIGEST,
-            emitted_bytes=1,
-            checked_official_offsets=1,
-        ),
-    )
-    catalogue = FilingExportProofCatalogue(proofs=(proof,))
+def test_application_registry_exports_no_passive_proof_catalogue() -> None:
+    """A caller-authored tuple of hashes is no longer a shipped proof authority."""
+    from .. import __all__ as registry_exports
 
-    assert (
-        catalogue.proof_for(
-            modelo=Modelo.M111,
-            revision=proof.revision,
-            layout_ids=("different-layout",),
-        )
-        is None
-    )
+    assert "FilingExportProofCatalogue" not in registry_exports
 
 
 def test_filing_export_coverage_retains_every_revision_and_below_grade_refusal(registry_authority) -> None:

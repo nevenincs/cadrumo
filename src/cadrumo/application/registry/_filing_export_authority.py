@@ -23,7 +23,7 @@ __all__ = [
     "FilingExportGenerationProof",
     "FilingExportProof",
     "FilingExportProofAuthority",
-    "FilingExportProofCatalogue",
+    "FilingExportProofConflictError",
     "GeneratedExportFileDigest",
 ]
 
@@ -106,6 +106,10 @@ class FilingExportProof(_ProofModel):
         return self
 
 
+class FilingExportProofConflictError(ValueError):
+    """Live proof coordinate conflicts with the composing registry snapshot."""
+
+
 @runtime_checkable
 class FilingExportProofAuthority(Protocol):
     """Port supplying independently verified generation and emitted-byte proof."""
@@ -118,32 +122,3 @@ class FilingExportProofAuthority(Protocol):
         layout_ids: tuple[ExportLayoutId, ...],
     ) -> FilingExportProof | None:
         """Return exact proof only when both canonical verification stages passed."""
-
-
-class FilingExportProofCatalogue(_ProofModel):
-    """Immutable exact-coordinate catalogue produced by an external proof runner."""
-
-    proofs: tuple[FilingExportProof, ...]
-
-    @model_validator(mode="after")
-    def _require_unique_coordinates(self) -> FilingExportProofCatalogue:
-        coordinates = tuple((proof.modelo, proof.revision) for proof in self.proofs)
-        if len(coordinates) != len(set(coordinates)):
-            raise ValueError("filing export proof catalogue coordinates must be unique")
-        return self
-
-    def proof_for(
-        self,
-        *,
-        modelo: ModeloId,
-        revision: RevisionId,
-        layout_ids: tuple[ExportLayoutId, ...],
-    ) -> FilingExportProof | None:
-        """Resolve a proof only when its complete loaded-layout identity agrees."""
-        proof = next(
-            (item for item in self.proofs if item.modelo == modelo and item.revision == revision),
-            None,
-        )
-        if proof is None or proof.layout_ids != layout_ids:
-            return None
-        return proof
