@@ -173,7 +173,7 @@ def _seed_justificante(*, csv: str, period: str = "1T", modelo: str = "130", fil
 
 
 def _import_external_baseline(
-    work_unit_id: str, *, csv: str = "JUST-2025-130-1T-AMEND-WIZARD", period: str = "1T"
+    work_unit_id: str, *, csv: str = "JUST20251301TAMENDWIZARD", period: str = "1T"
 ) -> str:
     """Import an AEAT-attested M130 baseline filing and return its filing_record_id."""
     _seed_justificante(csv=csv, period=period)
@@ -194,7 +194,7 @@ def _import_external_baseline(
 def _import_external_m303_baseline(
     work_unit_id: str,
     *,
-    csv: str = "JUST-2025-303-1T-AMEND-WIZARD",
+    csv: str = "JUST20253031TAMENDWIZARD",
     period: str = "1T",
 ) -> str:
     """Import an AEAT-attested M303 baseline filing and return its filing_record_id."""
@@ -534,7 +534,7 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend() -> None:
     wizard_unit_id = _create_m303_work_unit()
     wizard_baseline_filing_id = _import_external_m303_baseline(
         wizard_unit_id,
-        csv="JUST-2025-303-1T-RECT-WIZARD",
+        csv="JUST20253031TRECTWIZARD",
         period="1T",
     )
     overrides, kind, motive, reason = _scripted_amend(
@@ -563,7 +563,7 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend() -> None:
     )
     hand_baseline_filing_id = _import_external_m303_baseline(
         hand_unit_id,
-        csv="JUST-2025-303-2T-RECT-HANDBUILT",
+        csv="JUST20253032TRECTHANDBUILT",
         period="2T",
     )
     hand_built_result = _invoke(
@@ -638,7 +638,7 @@ def test_amend_wizard_kind_select_offers_only_period_permitted_kinds() -> None:
     assert "complementaria" not in m303_kinds
 
     m130_unit_id = _create_m130_work_unit(period="2T")
-    _import_external_baseline(m130_unit_id, csv="JUST-2025-130-2T-KINDS", period="2T")
+    _import_external_baseline(m130_unit_id, csv="JUST20251302TKINDS", period="2T")
     m130_kinds = _permitted_kind_choice_values(m130_unit_id, change_numbers=["01"])
     assert "complementaria" in m130_kinds
     assert "rectificativa" not in m130_kinds
