@@ -14,7 +14,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
 modified: '2026-08-24'
 body_schema: body-v1
-body_hash: 'sha256:246bde4ae705a9ba69a147f2d682db56f853f392445bdc696a484b00eeb5cb68'
+body_hash: 'sha256:b651d5689e3fad636844f11fbb68521a51fbf2c9d032f431956bb58352560bad'
 ---
 
 <!-- RETIRED: P06, P07, P09 -->
@@ -93,7 +93,7 @@ Complete M210 using canonical periods, ResultDisposition, and official tipo-rent
 Complete the measured non-IVA periodic corpus for supported filing years 2022-2026 from official sources, with one canonical-authority redeclaration audit per modelo.
 
 - [x] `W02.P14.S37` - Re-adjudicate Modelo 111 deadlines for supported filing years 2022-2026 and materialise all 48 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/111/`.
-- [ ] `W02.P14.S38` - Re-adjudicate Modelo 115 deadlines for supported filing years 2022-2026 and materialise all 16 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/115/`.
+- [x] `W02.P14.S38` - Re-adjudicate Modelo 115 deadlines for supported filing years 2022-2026 and materialise all 16 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/115/`.
 - [ ] `W02.P14.S39` - Re-adjudicate Modelo 123 deadlines for supported filing years 2022-2026 and materialise all 12 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/123/`.
 - [ ] `W02.P14.S40` - Re-adjudicate Modelo 130 deadlines for supported filing years 2022-2026 and materialise all 8 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/130/`.
 - [ ] `W02.P14.S41` - Re-adjudicate Modelo 131 deadlines for supported filing years 2022-2026 and materialise all 4 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/131/`.

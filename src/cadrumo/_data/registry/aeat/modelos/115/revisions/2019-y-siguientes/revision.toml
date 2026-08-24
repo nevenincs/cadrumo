@@ -9,6 +9,11 @@ source_refs = [
     "aeat-modelo-115-obligaciones-retenedor",
     "aeat-modelo-115-guia-censal",
     "aeat-modelo-115-180-folleto-actividades",
+    "aeat-calendario-contribuyente-2022",
+    "aeat-calendario-contribuyente-2023",
+    "aeat-calendario-contribuyente-2024",
+    "aeat-calendario-contribuyente-2025",
+    "aeat-calendario-contribuyente-2026",
 ]
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"

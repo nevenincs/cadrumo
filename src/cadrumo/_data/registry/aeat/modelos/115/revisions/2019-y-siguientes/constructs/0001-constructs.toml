@@ -7,6 +7,11 @@ source_refs = [
     "aeat-modelo-115-guia-censal",
     "aeat-modelo-115-180-folleto-actividades",
     "boe-rirpf-art-108-retencion-deadline",
+    "aeat-calendario-contribuyente-2022",
+    "aeat-calendario-contribuyente-2023",
+    "aeat-calendario-contribuyente-2024",
+    "aeat-calendario-contribuyente-2025",
+    "aeat-calendario-contribuyente-2026",
 ]
 casilla_ids = ["01", "02", "03", "04", "05"]
 bindings = ["modelo-115-perceptores", "modelo-115-base-retenciones"]
@@ -29,4 +34,10 @@ application_links = [
     "modelo-115-deadline",
     "modelo-115-workflow",
 ]
-deadline_windows = ["modelo-115-2026-1t", "modelo-115-2026-2t", "modelo-115-2026-3t", "modelo-115-2026-4t"]
+deadline_windows = [
+    "modelo-115-2022-1t", "modelo-115-2022-2t", "modelo-115-2022-3t", "modelo-115-2022-4t",
+    "modelo-115-2023-1t", "modelo-115-2023-2t", "modelo-115-2023-3t", "modelo-115-2023-4t",
+    "modelo-115-2024-1t", "modelo-115-2024-2t", "modelo-115-2024-3t", "modelo-115-2024-4t",
+    "modelo-115-2025-1t", "modelo-115-2025-2t", "modelo-115-2025-3t", "modelo-115-2025-4t",
+    "modelo-115-2026-1t", "modelo-115-2026-2t", "modelo-115-2026-3t", "modelo-115-2026-4t",
+]
