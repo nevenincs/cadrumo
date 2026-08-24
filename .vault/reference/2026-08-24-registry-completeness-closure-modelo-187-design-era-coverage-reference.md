@@ -45,12 +45,22 @@ AEAT currently exposes Modelo 187 filing for 2025 and historical routes for
 
 ## Filing boundary
 
-BOE-A-2014-9225 requires the filer to be a person obliged to withhold or pay
-on account in the stated IIC transactions, and requires reported operations to
-follow Annex II. BOE-A-2014-9784 corrects both type-1 declarant and type-2
-operation records from 250 to 500 positions. A summary sheet is therefore
-neither the full record layout nor evidence that an ordinary participant can
-file the form.
+For the selected 2019+ period, Article 2 as redrafted by BOE-A-2018-17997
+has two independent filer limbs. The first covers persons obliged to withhold
+or pay on account that satisfy the stated IIC or subscription-right income. The
+second covers the persons or entities in Article 42 RGAT for IIC operations.
+That Article 42 population includes IIC management companies and fund
+distributors, financial entities and intermediaries, public notaries, SICAVs
+in the stated cases, and other regulated participants; it is not a synonym for
+a withholding payer. The existing one-fact applicability selector can confirm
+only the first limb and must leave the second incomplete until an accepted
+profile-population decision gives it a canonical fact. An ordinary participant
+is not thereby a filer.
+
+BOE-A-2014-9225 requires the reported operations to follow Annex II.
+BOE-A-2014-9784 corrects both type-1 declarant and type-2 operation records
+from 250 to 500 positions. A summary sheet is therefore neither the full
+record layout nor evidence that an ordinary participant can file the form.
 
 The registered revision has only manual summary casillas `01` through `04`,
 no formulas, and no export layout. The live capability worklist derives
@@ -80,10 +90,14 @@ bytes at official offsets. No parallel writer, remote submission, compatibility
 layout, or authority promotion is authorized here.
 
 Reconsider fileability only after every selected year has immutable official
-design evidence, the actual Article-2 filing population and all value owners
-are approved, each selected design has a complete reviewed field map, and
-generated fragments plus production rendering pass emitted-byte proof. Only
-then may the selected revision be considered for filing grade.
+design evidence; an accepted population decision covers both Article-2 limbs
+(the withholding/pay-on-account payer population and the separate Article 42
+RGAT person/entity population), including their exclusions and priority rules;
+all value owners are approved; each selected design has a complete reviewed
+field map; and generated fragments plus production rendering pass emitted-byte
+proof. The population decision must extend the existing canonical
+applicability authority rather than create a second selector. Only then may the
+selected revision be considered for filing grade.
 
 ## Sources
 
@@ -91,6 +105,12 @@ then may the selected revision be considered for filing grade.
   retrieved 2026-08-24: https://www.boe.es/buscar/doc.php?id=BOE-A-2014-9225
 - BOE-A-2014-9784, correction to Modelo 187 Annex II, retrieved 2026-08-24:
   https://www.boe.es/diario_boe/txt.php?id=BOE-A-2014-9784
+- BOE-A-2018-17997, Orden HAC/1417/2018, article one (current Article 2
+  filer population), retrieved 2026-08-24:
+  https://www.boe.es/buscar/doc.php?id=BOE-A-2018-17997#a1
+- BOE-A-2007-15984, RD 1065/2007, Article 42 (financial-operation
+  information population), retrieved 2026-08-24:
+  https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a42
 - BOE-A-2020-17271, article 5 and final provision, retrieved 2026-08-24:
   https://www.boe.es/buscar/doc.php?id=BOE-A-2020-17271
 - BOE-A-2021-20004, article 7 and final provision, retrieved 2026-08-24:

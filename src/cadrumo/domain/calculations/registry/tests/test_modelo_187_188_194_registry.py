@@ -70,6 +70,21 @@ def test_modelo_187_188_194_declare_no_formula(modelo_id: str) -> None:
     assert not any(construct.formulas for construct in revision.constructs)
 
 
+def test_modelo_187_preserves_both_article_2_filer_population_limbs() -> None:
+    """The retained withholding selector must not erase Article 42 RGAT filers."""
+    modelo, catalogues = _committed_modelo("187")
+    revision = modelo.revisions["2019-y-siguientes"]
+    (rule,) = revision.applicability
+
+    assert rule.required_payer_fact == "pays_capital_income_with_retencion"
+    assert "orden-hac-1417-2018:art-primero" in rule.legal_refs
+    assert "articulo 42 RGAT" in rule.applicable_reason
+    assert "permanece sin resolver" in rule.not_applicable_reason
+
+    article_2 = catalogues.legal["orden-hac-1417-2018:art-primero"]
+    assert "Asimismo, se encuentran también obligadas a presentar el modelo 187" in article_2.required_text
+
+
 @pytest.mark.parametrize(
     ("modelo_id", "expected"),
     [
