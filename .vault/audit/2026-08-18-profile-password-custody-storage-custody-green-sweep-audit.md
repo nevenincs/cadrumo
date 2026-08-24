@@ -8818,3 +8818,53 @@ compactly. That is owned by whoever owns the notice contract in
 `aeat-cli-contract`, because it trades client-side schema fidelity for listing
 cost on every session. Not taken unilaterally here; recorded so it is decided
 once rather than relitigated thirty-six times.
+
+### Resolving two gates that contradicted each other
+
+The size budget and `test_action_projection` were in direct contradiction, which
+is the oscillation `aeat-quality-gates` warns about: the budget charged every
+verb 5769 chars of notice/action machinery, while the action-projection gate
+positively REQUIRES `ResolvedActionReference` and `ResolvedPreconditionAction`
+in each schema's `$defs` and pins notice properties to `Notice.model_fields`.
+Collapsing the action tree to satisfy the budget would have been exactly the
+forbidden resolution — hiding a construct from one gate's matcher — and the rule
+says a third shape is needed instead.
+
+The third shape: measure what the verb controls, and lock the constant
+separately. The per-verb ceiling now applies to the schema minus the shared
+envelope definitions, and the spine carries its own 6500-char ceiling plus an
+assertion that it is genuinely identical across all 295 verbs. That second half
+matters: excluding the spine without watching it would be an accounting trick,
+and a per-verb cost could hide inside the excluded set and escape both halves.
+
+Recorded plainly rather than buried, because a future reader will otherwise see
+a green gate and assume nothing changed: **this re-bases the effective per-verb
+total from 18000 to 18000+6500.** It is a real loosening of the headline number,
+taken because the alternative was a red that no verb owner could ever clear.
+
+### The seven that are genuinely over, and why they are not a quick fix
+
+With the constant excluded, seven verbs remain over on payload they do own.
+Their cost is not one hotspot but breadth: 27 to 32 definitions each, topped by
+legitimate closed-value enums the architecture rules positively require —
+`Modelo` (2243B), `BindingSourceKind` (2427B), `Period` (1572B),
+`ProjectionModeloReadiness` (4149B).
+
+| verb | own payload | dominant definitions |
+|---|---|---|
+| `modelo.work.runs` | 27381 | Modelo, Period, WorkflowRunPayload, WorkflowStepDetails |
+| `app.quickfile` | 27240 | ProjectionModeloReadiness, BindingSourceKind, ModeloExportPayload |
+| `modelo.work.review` | 25513 | BindingSourceKind, ModeloWorkReviewCasilla, CasillaConstraints |
+| `overview.calendar` | 21230 | — |
+| `modelo.work.wizard` | 18866 | — |
+| `modelo.work.calculate` | 18725 | — |
+| `modelo.work.revisions` | 18400 | — |
+
+None of those enums can shrink without deleting real members, and their
+`description` text is the documentation the repository separately mandates. So
+the only honest lever is the one the gate prescribes — return less — and that
+means deciding, per verb, which nested collection becomes a summary the caller
+re-fetches per item. That is an operator-facing output-contract change for seven
+commands, each with tests and CLI consumers pinned to the current shape, and it
+is the one item in this campaign that is genuinely product design rather than
+repair. Enumerated here with per-verb evidence so it can be scoped as such.
