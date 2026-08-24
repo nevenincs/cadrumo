@@ -11,21 +11,24 @@ related:
 supersedes:
   - '2026-05-14-secure-backend-passkey-custody-adr'
   - '2026-08-02-adjacent-domain-deduplication-store-scoped-login-throttle-adr'
-modified: '2026-08-23'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:5ca3835ea2bd71eb63467536fa75620c3c1ed4e5bbac1cbea41fadf0cf56ac76'
+body_hash: 'sha256:4fadda95a257413968b5b19cab6627f4261e2b9fc7e026c0d29cc13fa18796ca'
 ---
 # `profile-password-custody` adr: `per-profile password custody authority` | (**status:** `accepted`)
 
 ## Problem Statement
 
-Normal unlock is exactly: select an existing profile, enter its password, and unlock it. Runtime provider availability, a shared master key, or optional recovery material must not replace or obstruct that authority. The incident and option space are grounded in `2026-08-13-profile-password-custody-research`.
+Normal unlock is exactly: select an existing profile, enter its password, and unlock it. Runtime provider availability, a shared master key, or recovery material must not replace or obstruct that authority. At the same time, publishing a profile without verified recovery permanently reduces its custody options because this architecture has no post-creation enrollment path. The incident and original option space are grounded in `2026-08-13-profile-password-custody-research`; the creation-lane contradiction and closure requirement are recorded by `2026-08-24-profile-password-custody-fresh-context-campaign-close-audit`, and the implemented verification boundary is reviewed by `2026-08-24-profile-password-custody-s206-recovery-parity-review-audit`.
 
 ## Considerations
 
 - A valid profile password must be necessary and sufficient for normal unlock.
 - Profiles require independent compromise, loss, rotation, backup, and deletion boundaries.
-- Recovery is optional and orthogonal; keyring storage is session acceleration only.
+- Verified recovery is mandatory before profile publication but remains orthogonal to password authority.
+- A valid profile password remains independently sufficient; unavailable, missing, or damaged recovery never obstructs login, password rotation, normal backup, or normal restore.
+- Every creation caller, including direct application integrations, must participate in the bounded recovery handoff and exact verification protocol.
+- Keyring storage is session acceleration only.
 - On-disk mutation must remain deterministic after crashes, concurrent operations, and partial publication.
 - Password envelopes permit offline guessing; online controls cannot claim otherwise.
 - The current configured format is cut over destructively. No legacy reader, inference, adoption, or migration survives.
@@ -44,6 +47,9 @@ Normal unlock is exactly: select an existing profile, enter its password, and un
 - A coherent offline rollback of every capsule artifact cannot be detected without an external monotonic witness. The product must state this limit.
 - Current Argon2 and authenticated-encryption dependencies are stable. Process supervision requires a canonical adapter over Windows Job Objects and POSIX process controls.
 - Normal commands never read retired content. Old artifacts cause refusal and permit only explicit destructive reset or re-enrollment.
+- Profile creation has no password-only outcome: registration requires an exact recovery handoff and verification exchange and refuses before publication when either cannot complete.
+- Recovery enrollment exists only inside the profile-creation transaction. There is no post-creation enrollment writer, recovery-artifact import path, legacy adoption path, or fallback publication path.
+- Recovery state is never a precondition for normal authentication or any password-authorized operation.
 
 ## Implementation
 
@@ -53,7 +59,7 @@ Each immutable profile UUID owns one random 32-byte data-encryption key (DEK). `
 
 Password-wrap authenticated additional data binds product, schema, profile UUID, generation, `dek_epoch`, key schedule, password encoding, KDF-record digest, and purpose. A committed encrypted sentinel under `data/` binds profile UUID, `dek_epoch`, data-format version, and sentinel purpose. Every password or recovery unwrap must authenticate this sentinel before accepting the DEK.
 
-Passwords contain 15 to 256 Unicode scalar values and at most 1,024 strict UTF-8 bytes. Surrogates and invalid UTF-8 are refused. No normalization, trimming, folding, replacement, or composition rule applies. Spaces, paste, password managers, and scalar control values remain valid. Transports that cannot preserve the sequence refuse instead of rewriting it.
+Passwords contain 8 to 256 Unicode scalar values and at most 1,024 strict UTF-8 bytes. Surrogates and invalid UTF-8 are refused. No normalization, trimming, folding, replacement, or composition rule applies. Spaces, paste, password managers, and scalar control values remain valid. Transports that cannot preserve the sequence refuse instead of rewriting it.
 
 ### Bounded KDF and worker supervision
 
@@ -65,14 +71,15 @@ Windows uses an assigned Job Object with kill-on-close, active-process, memory, 
 
 Per-profile online backoff and global/cross-process KDF concurrency protect resources only. Missing or corrupt throttle state means clear, never permanent denial. The product states that stolen envelopes support offline guessing.
 
-### Optional recovery
+### Mandatory creation-time recovery
 
-`custody/recovery.v1.json` is a separate optional record with its own schema, generation, `dek_epoch`, KDF, AAD domain, digest chain, and wrapped copy of the same DEK. Password login must not stat, open, parse, digest, or validate this file. Missing, cancelled, inaccessible, malformed, or corrupt recovery cannot affect password login, activation, password rotation, normal backup, or normal restore.
+`custody/recovery.v1.json` is a separate record with its own schema, generation, `dek_epoch`, KDF, AAD domain, digest chain, and wrapped copy of the same DEK. Every creation caller supplies a bounded recovery handoff and exact verification channel. The mnemonic is handed off before publication, and the caller must return an exact canonical proof. Cancellation, mismatch, malformed input, unavailable descriptors, transport failure, or shutdown aborts before capsule publication, active-pointer mutation, session publication, or any other durable profile state.
 
-Recovery enrollment occurs after activation. Rotation verifies the candidate before atomic replacement. Password rotation preserves valid recovery because the DEK and epoch do not change. Recovery removal requires current-password authentication. Recovery-based password reset is a separate archive-and-lineage capability deferred by `2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr`; if a successor accepts it later, it must increment the password-envelope generation and preserve the epoch rather than fork the canonical rotation authority.
+This requirement is enforced at the application registration boundary, not only by operator-facing CLI surfaces. Headless registration follows the `2026-08-23-cli-machine-secret-channel-unification-adr` inherited-handle and descriptor rules. Interactive registration uses masked exact re-entry. The mnemonic or verification secret never appears in argv, environment variables, stdout, stderr, action envelopes, logs, or result payloads.
 
-A portable `profile-recovery-artifact/v1` contains UUID, `dek_epoch`, recovery generation and bounded KDF, recovery wrap, AAD descriptor, and canonical self-digest. It contains no mnemonic, password envelope, data, session, or keyring state. Export requires current-password authentication and exclusive creation. Import requires explicit naming, UUID/epoch agreement, mnemonic unwrap, and sentinel proof; it never overwrites enrolled recovery implicitly. Warnings identify offline-guessing exposure, separate-storage requirements, retained exported copies, and the fact that loss does not harm password login.
+Password login must not stat, open, parse, digest, or validate the recovery record. Missing, inaccessible, malformed, corrupt, or removed recovery cannot affect password login, activation, password rotation, normal backup, or normal restore. Recovery rotation applies only to already-enrolled recovery and verifies the candidate before atomic replacement. Recovery removal requires current-password authentication, is irreversible, and leaves no post-creation writer that can restore enrollment. Recovery-based password reset is a separate archive-and-lineage capability deferred by `2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr`; if a successor accepts it later, it must increment the password-envelope generation and preserve the epoch rather than fork the canonical rotation authority.
 
+A portable `profile-recovery-artifact/v1` is a restore proof only. It contains UUID, `dek_epoch`, recovery generation and bounded KDF, recovery wrap, AAD descriptor, and canonical self-digest, but no mnemonic, password envelope, data, session, or keyring state. Export requires current-password authentication and exclusive creation. An artifact cannot import, replace, or create enrolled recovery. Explicit recovery restore requires a named capsule source, a named artifact, UUID and epoch agreement, mnemonic unwrap, and sentinel proof. Warnings identify offline-guessing exposure, separate-storage requirements, retained exported copies, and the fact that recovery loss does not harm password login.
 ### Transactions and immutable capsule publication
 
 Each capsule has `custody/`, `data/`, and immutable `profile.commit.v1.json`. The marker contains only marker schema, layout version, UUID, transaction UUID, publication kind, publication time, and canonical self-digest. It contains no envelope, epoch, sentinel, or inventory binding. Creation and restore build and fsync the marker inside a complete sibling staging capsule. One atomic directory rename publishes the capsule. Discovery recognizes only final UUID directories with a valid marker.
@@ -107,8 +114,12 @@ Deletion performs no AEAT or external write, token revocation, certificate revoc
 
 ## Rationale
 
-The selected model is the only option that makes the supplied profile password independently sufficient while containing compromise and rotation to one immutable profile UUID. Separate recovery, session, projection, transport, and external-operation owners prevent optional or unavailable mechanisms from becoming competing custody authorities. The transaction and capsule rules make every visible state attributable after a crash.
+The selected model is the only option that makes the supplied profile password independently sufficient while containing compromise and rotation to one immutable profile UUID. Mandatory verified recovery at the sole creation publication boundary prevents an irreversible password-only profile while keeping recovery separate from normal-login authority. Separate recovery, session, projection, transport, and external-operation owners prevent unavailable recovery or acceleration mechanisms from becoming competing custody authorities. The transaction and capsule rules make every visible state attributable after a crash.
 
 ## Consequences
 
-Every profile carries its own password envelope and DEK proof. Shared master-key and provider-fallback code must be removed rather than retained as compatibility. Recovery becomes optional without weakening disaster recovery. Backup is host-independent. KDF work gains an explicit denial-of-service and supervision boundary. The hard cutover requires destructive reset for current retired stores, DEK rotation remains unavailable, and coherent full-capsule rollback remains outside guarantees without an external witness.
+Every profile carries its own password envelope and DEK proof and has verified recovery before publication. Shared master-key and provider-fallback code must be removed rather than retained as compatibility. Every creation caller must complete the bounded handoff and exact verification exchange; any failure leaves no published profile or durable profile state.
+
+The profile password remains independently sufficient for normal operations. Recovery removal, loss, or damage reduces only disaster-recovery options and never blocks password login, password rotation, normal backup, or normal restore. Removal is irreversible because enrollment has no post-creation writer, and portable recovery artifacts remain explicit restore proofs rather than enrollment inputs.
+
+Backup is host-independent. KDF work gains an explicit denial-of-service and supervision boundary. The hard cutover requires destructive reset for current retired stores, DEK rotation remains unavailable, and coherent full-capsule rollback remains outside guarantees without an external witness.

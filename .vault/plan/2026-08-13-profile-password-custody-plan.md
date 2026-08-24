@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#profile-password-custody'
 date: '2026-08-13'
+modified: '2026-08-24'
+body_hash: 'sha256:878b4a422c2c85f1206de5a64a44c01ad1e9bdf45f328b051386d972831b5cb8'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -17,8 +19,6 @@ related:
   - '[[2026-08-13-recovery-mnemonic-presentation-successor-adr]]'
   - '[[2026-08-13-sealed-archive-transport-successor-adr]]'
   - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
-modified: '2026-08-24'
-body_hash: 'sha256:36bae7d40f298cf2987d7b31a4c9466a57d693326ecc6f2d72ee6937c43c660e'
 ---
 
 # `profile-password-custody` plan
@@ -231,7 +231,7 @@ Remove shared-master custody and prove no retired path remains reachable or reco
 - [x] `W04.P07.S143` - Have Sol Medium rule where companion distributions built from this repository live, since two established companions sit under one directory and a third was placed elsewhere, which is one concept in two homes and the fragmentation this campaign exists to remove; `pyproject.toml`.
 - [x] `W04.P07.S144` - Have Sol Medium rule whether a deletion landing without its consumer sweep should be mechanically detectable, since three separate removals in one session each shipped the deletion in one commit and the consumer repair in another or not at all, blocking collection tree-wide for every agent until somebody noticed, which makes the split the norm on this tree rather than the exception; `.vault/audit/ and dev/import_hygiene_scan.py`.
 - [x] `W04.P07.S145` - Have Terra XHigh sever the dependency cycle between the core distribution and the extracted harness by moving the four harness-delivery surfaces into the harness package and dropping the core dependency, since the harness project file states that it consumes the core library and never the reverse while a repair added exactly that reverse edge, making the current shape a deliberate temporary the sever supersedes; `pyproject.toml and src/cadrumo/entrypoints/ and src/cadrumo-harness/`.
-- [x] `W04.P07.S148` - Have Terra XHigh reconcile the two enrolment gates whose key spaces disagree, adding the four standalone capsule and pointer files to the independent path discovery source rather than to the hand list, and narrowing the namespace pin so it excludes namespaces without excluding a payload grammar that carries its own version constant; `src/cadrumo/tests/test_persisted_format_enrollment.py and src/cadrumo/adapters/persistence/storage/`.
+- [ ] `W04.P07.S148` - Have Terra XHigh reconcile the two enrolment gates whose key spaces disagree, adding the four standalone capsule and pointer files to the independent path discovery source rather than to the hand list, and narrowing the namespace pin so it excludes namespaces without excluding a payload grammar that carries its own version constant; `src/cadrumo/tests/test_persisted_format_enrollment.py and src/cadrumo/adapters/persistence/storage/`.
 - [x] `W04.P07.S149` - Have Sol Medium triage the forty-two persisted models whose schema version defaults to a bare literal rather than a named constant, since the binding gate discovers formats by constant name so a version that never gets a name is invisible to it entirely, and establish which of the forty-two are genuine persisted formats before naming any of them; `src/cadrumo/`.
 - [x] `W04.P07.S150` - Have Sol Medium rule on the three remaining error classes that are defined and exported and registered but never raised, each on its own justification rather than on the retention-floor refusal's, since that one was a missing guard while these may be genuine dead code; `src/cadrumo/core/errors/registry/`.
 - [x] `W04.P07.S158` - Have Sol Medium remove the duplicate bundle schema version literal on the portable export model, which defaults to a bare three while its own named constant declares three in the module beside it, so an already-enrolled format states its current version twice with nothing comparing them, this being the smallest instance of the double-declaration class and the one whose correct shape already exists to copy; `src/cadrumo/application/user_profile/_bundle.py`.
@@ -293,3 +293,36 @@ Exercise the actual local system and read-only DEHu path, then complete an indep
 - [x] `W05.P08.S204` - Have Terra XHigh close the split between active-profile and named-profile resolution, since a record written in one process is found by the active-profile path in a fresh interpreter and reported present with its keys, while the named-profile path refuses the same record as missing and reports zero present keys and no source, which means the cold-process problem is a resolution defect rather than the durability or key-digest failure two earlier investigations were framed around; `src/cadrumo/application/user_profile/ and src/cadrumo/application/workflow/`.
 - [x] `W05.P08.S205` - Have Terra XHigh settle whether a seeded profile should also carry an empty legal-hold snapshot, since the seeding door now records the empty filing-retention snapshot registration records but deletion still refuses three reset targets on a legal or filing hold, and an absent legal-hold snapshot means nobody has been asked rather than no holds exist so the refusal is the fail-closed design working, which makes this a question about what the seeding door owes rather than a defect in the guard; `src/cadrumo/tests/user_profile.py and src/cadrumo/application/evidence/_profile_legal_hold.py`.
 - [x] `W05.P08.S207` - Have Terra XHigh give the legal-hold evidence arm a production producer, since the custody hold authority joins a filing projection that has two real writers with a legal projection that has none, the recorder having zero callers anywhere outside its own module so its snapshot file never exists, its projection raises on the absence and the transaction converts that to a refusal, which means no profile can be deleted by any route today and the all-profile reset shares the same three primitives so the campaign's closing destructive step is blocked behind it as well; `src/cadrumo/application/evidence/_profile_legal_hold.py and src/cadrumo/application/user_profile/_custody_hold.py and src/cadrumo/application/user_profile/_registration.py`.
+
+## Wave `W06` - authority and evidence reconciliation
+
+Reconcile the accepted custody authority with mandatory verified recovery, enforce that invariant at the application boundary, and restore a truthful evidence chain before repeating campaign closure.
+
+### Phase `W06.P09` - governing authority
+
+Persist the approved recovery amendment and complete the plan's governing-decision chain before implementation changes are judged.
+
+- [x] `W06.P09.S210` - Persist the approved in-place amendment requiring verified recovery enrollment at every profile creation, mandatory application-level recovery handoff, password-login independence, and restore-only recovery artifacts; `.vault/adr/2026-08-13-profile-password-custody-rollup-adr.md`.
+- [ ] `W06.P09.S211` - Add the accepted machine-secret channel decision to the plan's governing related set and regenerate the feature index; `.vault/plan/2026-08-13-profile-password-custody-plan.md`.
+- [ ] `W06.P09.S212` - Mark the 2026-08-18 campaign close as historical without rewriting its measurements or dispositions, and point readers to the current reconciliation and successor honesty review; `.vault/audit/2026-08-18-profile-password-custody-campaign-close-audit.md`.
+
+### Phase `W06.P10` - mandatory creation recovery
+
+Make verified recovery a required application invariant, migrate every creation consumer, and remove claims that recovery can be absent or enrolled later.
+
+- [ ] `W06.P10.S213` - Require register_profile_with_credentials to receive a recovery handoff and publish a profile only after exact possession verification succeeds, with refusal or cancellation leaving no profile behind; `src/cadrumo/application/user_profile/_registration.py and src/cadrumo/application/user_profile/_custody_service.py`.
+- [ ] `W06.P10.S214` - Migrate the scripted CLI creation consumer to the required application recovery handoff while preserving bounded descriptor transfer, collision preflight, verification, and failure atomicity; `src/cadrumo/entrypoints/cli/_config/_scripted_registration.py and src/cadrumo/entrypoints/cli/_config/_profile_command_specs.py`.
+- [ ] `W06.P10.S215` - Migrate the terminal and TUI creation consumer to the required application recovery handoff while preserving masked exact re-entry and cancellation-before-publication; `src/cadrumo/entrypoints/cli/_config/_manager_frontend.py and src/cadrumo/adapters/inbound/tui/`.
+- [ ] `W06.P10.S216` - Migrate all remaining direct registration callers and their shared test provisioning doors to supply and verify recovery instead of constructing password-only profiles; `src/cadrumo/tests/ and src/cadrumo-harness/src/cadrumo_harness/`.
+- [ ] `W06.P10.S217` - Re-author application, CLI, TUI, storage, and harness tests around mandatory recovery handoff, exact possession verification, and rollback on missing, mismatched, cancelled, or failed handoff; `src/cadrumo/application/user_profile/tests/ and src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/adapters/inbound/tui/tests/ and src/cadrumo/adapters/persistence/storage/`.
+- [ ] `W06.P10.S218` - Confirm recovery artifacts remain external restore proofs only, remove any API or prose that permits later enrollment or treats a missing creation wrapper as current-format success, and retain password login without recovery reads; `src/cadrumo/application/user_profile/_recovery_custody.py and src/cadrumo/application/user_profile/_capsule_restore.py and src/cadrumo/application/user_profile/_custody_ports.py and src/cadrumo/adapters/persistence/storage/custody/`.
+- [ ] `W06.P10.S219` - Remove stale password-only creation and later-enrollment claims from operator guidance, four locale catalogues, and generated reference sequences, then regenerate CLI-owned artifacts; `docs/how-to/protect-data-access.md and docs/locales/ and docs/_sequences/`.
+
+### Phase `W06.P11` - evidence and final proof
+
+Repair the execution-evidence ledger from real implementation and history, then repeat the security and honesty gates against the reconciled authority.
+
+- [ ] `W06.P11.S220` - Adjudicate every checked execution record that fails the required body schema, preserving genuine evidence where it exists and reopening or formally carrying forward any Step whose completed work cannot be established; `.vault/exec/2026-08-13-profile-password-custody/`.
+- [ ] `W06.P11.S221` - Re-run the complete S206 recovery-enrollment matrix across interactive, TUI, stdin, POSIX descriptor, Windows inherited-handle, mismatch, cancellation, collision, and publication-failure paths and persist the resulting evidence; `src/cadrumo/application/user_profile/tests/test_recovery_enrollment_at_creation.py and src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/adapters/inbound/tui/tests/`.
+- [ ] `W06.P11.S222` - Re-run the S209 supervised-KDF platform gate without weakening exact descriptor attestation, worker isolation, or fail-closed supervision and persist the Windows, POSIX, and WSL evidence; `src/cadrumo/adapters/persistence/storage/custody/ and src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`.
+- [ ] `W06.P11.S223` - Perform a fresh-context campaign-close honesty review covering decision-to-code consistency, Step-to-record evidence, stale recovery prose, S206 and S209 gates, feature-scoped Vaultspec validation, and the historical-close pointer; `.vault/audit/`.
