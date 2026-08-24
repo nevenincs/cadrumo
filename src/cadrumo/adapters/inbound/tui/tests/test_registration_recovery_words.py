@@ -85,7 +85,9 @@ async def _fill(pilot, *, username: str, password: str, confirm: str) -> None:
 async def _wait_for_recovery_screen(pilot) -> RecoveryWordsScreen:
     for _ in range(100):
         if isinstance(pilot.app.screen, RecoveryWordsScreen):
-            return pilot.app.screen
+            screen = pilot.app.screen
+            if screen.query("#words-value") and screen.query("#btn-confirm-words"):
+                return screen
         await pilot.pause(0.1)
     raise AssertionError("recovery confirmation screen did not open")
 
@@ -106,8 +108,7 @@ async def test_the_full_screen_door_shows_the_words_then_wipes_them(tmp_path) ->
 
             # The words screen is now on top; the mnemonic renders there.
             words = await _wait_for_recovery_screen(pilot)
-            mnemonic = words.query_one("#words-value", None)
-            assert mnemonic is not None
+            mnemonic = words.query_one("#words-value")
             rendered = str(mnemonic.render())
             assert len(rendered.split()) == 24
             assert not any(view.label == "Recovery Words Subject" for view in CommittedProfileRepository().list())

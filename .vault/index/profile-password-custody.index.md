@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:b6d4ba3f64a6c6db7552b0b7afa71029bcb39ce237bdee034fa075eff578f05c'
+body_hash: 'sha256:18014f36e90ef83dcc94dd058f45d886d5e4091873bc072ce717a930df199391'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -229,6 +229,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W06-P10-S218]]'
   - '[[2026-08-13-profile-password-custody-W06-P10-S219]]'
   - '[[2026-08-13-profile-password-custody-W06-P11-S220]]'
+  - '[[2026-08-13-profile-password-custody-W06-P11-S221]]'
   - '[[2026-08-13-profile-password-custody-plan]]'
   - '[[2026-08-13-profile-password-custody-research]]'
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
@@ -262,6 +263,7 @@ related:
   - '[[2026-08-24-profile-password-custody-s209-posix-kdf-descriptor-attestation-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s219-docs-audit]]'
   - '[[2026-08-24-profile-password-custody-s220-exec-evidence-audit]]'
+  - '[[2026-08-24-profile-password-custody-s221-recovery-matrix-audit]]'
 ---
 
 # `profile-password-custody` feature index
@@ -306,6 +308,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-24-profile-password-custody-s209-posix-kdf-descriptor-attestation-review-audit` - `profile-password-custody` audit: `S209 POSIX KDF descriptor attestation security review`
 - `2026-08-24-profile-password-custody-s219-docs-audit` - `profile-password-custody` audit: `S219 mandatory recovery documentation`
 - `2026-08-24-profile-password-custody-s220-exec-evidence-audit` - `profile-password-custody` audit: `S220 execution evidence adjudication`
+- `2026-08-24-profile-password-custody-s221-recovery-matrix-audit` - `profile-password-custody` audit: `S221 recovery matrix review`
 
 ### exec
 
@@ -530,6 +533,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W06-P10-S218` - Confirm recovery artifacts remain external restore proofs only, remove any API or prose that permits later enrollment or treats a missing creation wrapper as current-format success, and retain password login without recovery reads
 - `2026-08-13-profile-password-custody-W06-P10-S219` - Remove stale password-only creation and later-enrollment claims from operator guidance, four locale catalogues, and generated reference sequences, then regenerate CLI-owned artifacts
 - `2026-08-13-profile-password-custody-W06-P11-S220` - Adjudicate every checked execution record that fails the required body schema, preserving genuine evidence where it exists and reopening or formally carrying forward any Step whose completed work cannot be established
+- `2026-08-13-profile-password-custody-W06-P11-S221` - Re-run the complete S206 recovery-enrollment matrix across interactive, TUI, stdin, POSIX descriptor, Windows inherited-handle, mismatch, cancellation, collision, and publication-failure paths and persist the resulting evidence
 
 ### plan
 
