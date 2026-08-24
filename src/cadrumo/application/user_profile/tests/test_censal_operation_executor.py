@@ -14,23 +14,16 @@ import pytest
 from ....adapters.persistence.operations import (
     OperationJournalRepository,
     OperationLeaseFilesystemRepository,
-    OperationSecureReferenceRepository,
-)
-from ....adapters.persistence.storage import (
-    SecureObjectNamespaceDefinition,
-    StorageCustodyDisposition,
-    StorageNamespaceScope,
+    operation_secure_reference_repository,
 )
 from ....adapters.persistence.storage.custody import (
     load_committed_profile_password_material,
     unlock_profile_custody,
 )
 from ....core import OperationEffect, OperationLifecycle, OperationTerminalCondition
-from ....core.classification import SensitivityClass
 from ....core.config import override_settings
 from ....domain.user_profile import UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url
-from ....tests.secure_namespace_registration import registered_objects
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...operations import (
     OperationApplyResponse,
@@ -62,18 +55,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 _NOW = datetime(2026, 8, 24, 18, tzinfo=UTC)
 _PASSPHRASE = "censal-operation-executor-passphrase"  # noqa: S105 - synthetic fixture
 _RESPONSE_TOKEN = "a" * 64
-_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="censal_operation_executor_test",
-    namespace="cadrumo-test.user-profile.censal-operation-executor",
-    owner="cadrumo.application.user_profile.tests.test_censal_operation_executor",
-    sensitivity=SensitivityClass.IDENTITY,
-    schema_version=1,
-    object_key_grammar="{content_digest}",
-    scope=StorageNamespaceScope.BUCKET_LOCAL,
-    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
-)
-
-
 @contextmanager
 def _subject(tmp_path: Path) -> Generator[tuple[str, object, ProfileRecordSession]]:
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
@@ -142,8 +123,7 @@ def _supervisor(
     token: str,
     now: datetime = _NOW,
 ) -> OperationSupervisor:
-    secured = registered_objects(objects, _NAMESPACE)  # type: ignore[arg-type]
-    operands = OperationSecureReferenceRepository(objects=secured, namespace=_NAMESPACE)
+    operands = operation_secure_reference_repository(objects=objects)  # type: ignore[arg-type]
     definition = CENSAL_OPERATION_DEFINITION.model_copy(
         update={
             "executor_factory": OperationExecutorFactory(

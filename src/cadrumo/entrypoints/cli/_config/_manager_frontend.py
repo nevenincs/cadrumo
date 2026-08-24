@@ -202,12 +202,6 @@ def persist_active_profile_field(path: str, value: str, *, label: str | None = N
     from ....application.user_profile import apply_manager_profile_field_mutation
     from ....core import require_active_bucket_id
 
-    # Strip before deciding blank-versus-value. An exact `!= ""` test persists a
-    # whitespace-only submission as a VALUE, while every reader treats it as
-    # blank — and a reader that adopts on blank then restamps the path as
-    # app-owned, converting the operator's write into one the app may overwrite
-    # freely thereafter. The two surfaces have to agree on what spaces mean, and
-    # this is the boundary that decides it.
     apply_manager_profile_field_mutation(
         profile_id=require_active_bucket_id(),
         path=path,

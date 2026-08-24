@@ -21,14 +21,9 @@ from ....adapters.outbound.aeat.sede import (
 from ....adapters.persistence.operations import (
     OperationJournalRepository,
     OperationLeaseFilesystemRepository,
-    OperationSecureReferenceRepository,
+    operation_secure_reference_repository,
 )
 from ....adapters.persistence.profile.sync_runs import SyncRunRecordRepository
-from ....adapters.persistence.storage import (
-    SecureObjectNamespaceDefinition,
-    StorageCustodyDisposition,
-    StorageNamespaceScope,
-)
 from ....core import (
     FiledHistoryDiscoverySignal,
     OperationCancellation,
@@ -38,10 +33,8 @@ from ....core import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from ....core.classification import SensitivityClass
 from ....domain.deadlines import TaxpayerProfile
 from ....tests.offline_aeat_register import aeat_sede_fixture, open_routed_declarations_register
-from ....tests.secure_namespace_registration import registered_objects
 from ....tests.secure_sql import isolated_runtime_profile
 from ...operations import (
     OperationEffectEvent,
@@ -99,18 +92,6 @@ from .._filed_history_operation import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 8, 24, 20, tzinfo=UTC)
-_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="filed_history_operation_executor_test",
-    namespace="cadrumo-test.live.filed-history-operation",
-    owner="cadrumo.application.live.tests.test_filed_history_operation",
-    sensitivity=SensitivityClass.FINANCIAL,
-    schema_version=1,
-    object_key_grammar="{content_digest}",
-    scope=StorageNamespaceScope.BUCKET_LOCAL,
-    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
-)
-
-
 class _DeterministicFiledHistoryDiscovery:
     """Resolve one scope through the real register-option parser and models."""
 
@@ -295,10 +276,7 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
         )
         journal = OperationJournalRepository(storage_root=tmp_path / "operations")
         leases = OperationLeaseFilesystemRepository(storage_root=tmp_path / "operations")
-        operands = OperationSecureReferenceRepository(
-            objects=registered_objects(profile.repository, _NAMESPACE),
-            namespace=_NAMESPACE,
-        )
+        operands = operation_secure_reference_repository(objects=profile.repository)
         supervisor = OperationSupervisor(
             registry=OperationRegistry(definitions=(definition,)),
             journal=journal,
@@ -408,10 +386,7 @@ def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path) -> None:
         )
         journal = OperationJournalRepository(storage_root=tmp_path / "operations")
         leases = OperationLeaseFilesystemRepository(storage_root=tmp_path / "operations")
-        operands = OperationSecureReferenceRepository(
-            objects=registered_objects(profile.repository, _NAMESPACE),
-            namespace=_NAMESPACE,
-        )
+        operands = operation_secure_reference_repository(objects=profile.repository)
         supervisor = OperationSupervisor(
             registry=OperationRegistry(definitions=(definition,)),
             journal=journal,
@@ -491,10 +466,7 @@ def test_supervisor_receipt_joins_the_exact_encrypted_child_and_releases_its_lea
             journal=journal,
             event_stream=journal,
             leases=leases,
-            operands=OperationSecureReferenceRepository(
-                objects=registered_objects(profile.repository, _NAMESPACE),
-                namespace=_NAMESPACE,
-            ),
+            operands=operation_secure_reference_repository(objects=profile.repository),
             owner_id="5" * 64,
             lease_token_factory=lambda: "6" * 64,
             clock=lambda: _NOW,

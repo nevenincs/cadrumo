@@ -15,12 +15,7 @@ import pytest
 from ....adapters.persistence.operations import (
     OperationJournalRepository,
     OperationLeaseFilesystemRepository,
-    OperationSecureReferenceRepository,
-)
-from ....adapters.persistence.storage import (
-    SecureObjectNamespaceDefinition,
-    StorageCustodyDisposition,
-    StorageNamespaceScope,
+    operation_secure_reference_repository,
 )
 from ....application.operations import (
     OperationEffect,
@@ -31,8 +26,6 @@ from ....application.operations import (
     OperationSupervisor,
     OperationTerminalCondition,
 )
-from ....core.classification import SensitivityClass
-from ....tests.secure_namespace_registration import registered_objects
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ...user_profile import (
     login_profile,
@@ -59,18 +52,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _CURRENT = "s39-current-profile-passphrase"
 _REPLACEMENT = "s39-replacement-profile-passphrase"
-_OPERAND_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="auth_operation_results",
-    namespace="cadrumo-test.auth-operation-results",
-    owner="cadrumo.application.auth.tests.test_operation_definitions",
-    sensitivity=SensitivityClass.FINANCIAL,
-    schema_version=1,
-    object_key_grammar="{content_digest}",
-    scope=StorageNamespaceScope.BUCKET_LOCAL,
-    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
-)
-
-
 def _supervisor(
     root: Path,
     *,
@@ -83,10 +64,7 @@ def _supervisor(
     operands = (
         None
         if profile_objects is None
-        else OperationSecureReferenceRepository(
-            objects=registered_objects(profile_objects, _OPERAND_NAMESPACE),  # type: ignore[arg-type]
-            namespace=_OPERAND_NAMESPACE,
-        )
+        else operation_secure_reference_repository(objects=profile_objects)  # type: ignore[arg-type]
     )
     return OperationSupervisor(
         registry=OperationRegistry(definitions=AUTH_OPERATION_DEFINITIONS),

@@ -16,21 +16,17 @@ from ....adapters.persistence.operations import (
     OperationJournalRepository,
     OperationLeaseFilesystemRepository,
     OperationSecureReferenceRepository,
+    operation_secure_reference_repository,
 )
 from ....adapters.persistence.storage import (
     STORAGE_NAMESPACE_REGISTRY,
     RepositoryError,
-    SecureObjectNamespaceDefinition,
     SecureObjectRepository,
-    StorageCustodyDisposition,
-    StorageNamespaceScope,
 )
 from ....core import STRICT_FROZEN_CONFIG, scan_directory
 from ....core.access_gate import AeatLiveReadNotEnabledError
-from ....core.classification import SensitivityClass
 from ....core.errors import CoreError, get_registered_error_code
 from ....tests.aeat_literal_fixtures import REDACTION_TOKEN_QUERY_URL_CANARY
-from ....tests.secure_namespace_registration import registered_objects as _registered_objects
 from ....tests.secure_sql import isolated_ephemeral_secure_sql, isolated_runtime_profile
 from .. import (
     OperationApplyResponse,
@@ -80,16 +76,6 @@ from .. import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 8, 14, 15, tzinfo=UTC)
-_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="operation_supervisor_test",
-    namespace="cadrumo-test.operations.supervisor",
-    owner="cadrumo.application.operations.tests.test_supervisor",
-    sensitivity=SensitivityClass.FINANCIAL,
-    schema_version=1,
-    object_key_grammar="{content_digest}",
-    scope=StorageNamespaceScope.BUCKET_LOCAL,
-    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
-)
 _CONTINUATION_DIGEST = "a" * 64
 _RESPONSE_TOKEN = "b" * 64
 _REVIEWED_PROPOSAL_DIGEST = "c" * 64
@@ -817,9 +803,7 @@ def _repositories(
     return (
         OperationJournalRepository(storage_root=storage_root),
         OperationLeaseFilesystemRepository(storage_root=storage_root),
-        OperationSecureReferenceRepository(
-            objects=_registered_objects(profile_objects, _NAMESPACE), namespace=_NAMESPACE
-        ),
+        operation_secure_reference_repository(objects=profile_objects),
     )
 
 

@@ -14,16 +14,12 @@ from ....adapters.persistence.operations import (
     OperationJournalRepository,
     OperationLeaseFilesystemRepository,
     OperationSecureReferenceRepository,
+    operation_secure_reference_repository,
 )
 from ....adapters.persistence.storage import (
-    SecureObjectNamespaceDefinition,
     SecureObjectRepository,
-    StorageCustodyDisposition,
-    StorageNamespaceScope,
 )
 from ....core import STRICT_FROZEN_CONFIG
-from ....core.classification import SensitivityClass
-from ....tests.secure_namespace_registration import registered_objects as _registered_objects
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     OperationBaselinePolicy,
@@ -56,16 +52,6 @@ from .. import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 8, 14, 16, tzinfo=UTC)
-_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="operation_executor_contract_test",
-    namespace="cadrumo-test.operations.executor-contract",
-    owner="cadrumo.application.operations.tests.test_executor_contract",
-    sensitivity=SensitivityClass.FINANCIAL,
-    schema_version=1,
-    object_key_grammar="{content_digest}",
-    scope=StorageNamespaceScope.BUCKET_LOCAL,
-    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
-)
 _DEFINITION_ID = "operation.executor.contract"
 
 
@@ -224,9 +210,7 @@ def _repositories(
     return (
         OperationJournalRepository(storage_root=storage_root),
         OperationLeaseFilesystemRepository(storage_root=storage_root),
-        OperationSecureReferenceRepository(
-            objects=_registered_objects(profile_objects, _NAMESPACE), namespace=_NAMESPACE
-        ),
+        operation_secure_reference_repository(objects=profile_objects),
     )
 
 

@@ -12,11 +12,36 @@ so boundary adapters can render the refusal through the shared error contract.
 
 from __future__ import annotations
 
-from ...core.errors import CadrumoError
+from collections.abc import Mapping
+
+from ...core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ...core.errors import CadrumoError, TerminalPreconditionErrorMixin
 from ...core.i18n import tr
+from ..operator_actions import ConditionEvidence, PreconditionVerdict
 
 
-class OperatorSurfaceContractError(CadrumoError):
+def operator_surface_contract_verdict(
+    condition_id: str,
+    *,
+    facts: Mapping[str, str | bool | int],
+) -> PreconditionVerdict:
+    """Build the terminal verdict for an invalid operator-surface contract request."""
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            ConditionEvidence(
+                condition_id=condition_id,
+                evidence_id=f"{condition_id}.observation",
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                values=facts,
+            ),
+        ),
+        conditionality=ActionConditionality.NOT_APPLICABLE,
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    )
+
+
+class OperatorSurfaceContractError(TerminalPreconditionErrorMixin[PreconditionVerdict], CadrumoError):
     """Registered application error for rejected operator-surface requests.
 
     The message is localized with a stable, non-secret ``surface`` / ``reason``
@@ -24,7 +49,13 @@ class OperatorSurfaceContractError(CadrumoError):
     for the central error renderer to handle consistently.
     """
 
-    def __init__(self, surface: str, *, reason: str) -> None:
+    def __init__(
+        self,
+        surface: str,
+        *,
+        reason: str,
+        precondition_verdict: PreconditionVerdict | None = None,
+    ) -> None:
         super().__init__(
             tr(
                 "cli.operator_surface.errors.contract_not_accepted",
@@ -33,6 +64,7 @@ class OperatorSurfaceContractError(CadrumoError):
                 reason=reason,
             ),
             context={"surface": surface, "reason": reason},
+            precondition_verdict=precondition_verdict,
         )
         self.surface = surface
         self.reason = reason

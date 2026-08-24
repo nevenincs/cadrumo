@@ -3,24 +3,20 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import UUID
 
 import pytest
-from pydantic import SecretStr
 
 from ....adapters.persistence.operations import (
     OperationJournalRepository,
     OperationLeaseFilesystemRepository,
     OperationSecureReferenceRepository,
+    operation_secure_reference_repository,
 )
-from ....adapters.persistence.storage import (
-    SecureObjectNamespaceDefinition,
-    StorageCustodyDisposition,
-    StorageNamespaceScope,
-    has_active_bucket_session,
-)
+from ....adapters.persistence.storage import current_active_bucket_session
 from ....application.operations import (
     OperationEffect,
     OperationLifecycle,
@@ -32,21 +28,17 @@ from ....application.operations import (
     OperationSupervisor,
     OperationTerminalCondition,
 )
-from ....core import resolve_active_bucket_id
-from ....core.classification import SensitivityClass
-from ....tests.secure_namespace_registration import registered_objects
+from ....core import read_pointer
 from ....tests.secure_sql import isolated_profile_storage_root
-from ..._bundle_export_operation import ProfileBundleExportJournalRepository
-from ..._custody_ports import profile_custody_secure_object_repository
-from ..._profile_record_repository import ProfileRecordRepository
-from ..._projections import record_to_path_values
-from ..._registration import register_profile_with_credentials
 from .._bundle_export_contracts import (
     ProfileBundleExportPurpose,
     ProfileBundleExportRequest,
     ProfileBundleExportResult,
     ProfileBundleExportTransport,
 )
+from .._bundle_export_operation import ProfileBundleExportJournalRepository
+from .._custody_ports import profile_custody_secure_object_repository
+from .._login_session import login_profile
 from .._operation_definitions import (
     PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,
     PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
@@ -61,22 +53,13 @@ from .._operation_definitions import (
     ProfileRepeatableRowMutationOperationResult,
     ProfileRepeatableRowValue,
 )
+from .._profile_record_repository import ProfileRecordRepository
+from .._projections import record_to_path_values
+from .._registration import register_profile_with_credentials
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _PROFILE_PASSPHRASE = "s40-profile-operation-passphrase"  # noqa: S105 - synthetic test fixture
-_OPERAND_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="user_profile_operation_results",
-    namespace="cadrumo-test.user-profile-operation-results",
-    owner="cadrumo.application.user_profile.tests.test_operation_definitions",
-    sensitivity=SensitivityClass.FINANCIAL,
-    schema_version=1,
-    object_key_grammar="{content_digest}",
-    scope=StorageNamespaceScope.BUCKET_LOCAL,
-    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
-)
-
-
 def _supervisor(
     root: Path,
     *,
@@ -85,10 +68,7 @@ def _supervisor(
     lease_token: str,
 ) -> tuple[OperationSupervisor, OperationSecureReferenceRepository]:
     """Build the real encrypted supervisor stack used by each family proof."""
-    operands = OperationSecureReferenceRepository(
-        objects=registered_objects(profile_objects, _OPERAND_NAMESPACE),  # type: ignore[arg-type]
-        namespace=_OPERAND_NAMESPACE,
-    )
+    operands = operation_secure_reference_repository(objects=profile_objects)  # type: ignore[arg-type]
     journal = OperationJournalRepository(storage_root=root)
     return (
         OperationSupervisor(
@@ -113,31 +93,61 @@ def _register_profile() -> UUID:
         passphrase=_PROFILE_PASSPHRASE,
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
     )
+    login_profile(name=outcome.profile_id, passphrase_callback=lambda: _PROFILE_PASSPHRASE)
     return UUID(outcome.profile_id)
 
 
-def _start_from_fresh_supervisor(
+def _start_operation(
     root: Path,
     *,
     profile_objects: object,
     request: OperationRequest,
     operation_id: str,
 ) -> tuple[object, OperationSecureReferenceRepository]:
-    """Persist the request, then resolve it through a fresh real supervisor owner."""
-    submitting, _ = _supervisor(
+    """Persist and execute one request through its real lease-owning supervisor."""
+    supervisor, operands = _supervisor(
         root,
         profile_objects=profile_objects,
         owner_id="1" * 64,
         lease_token="2" * 64,
     )
-    created = asyncio.run(submitting.submit(request, operation_id=operation_id))
-    starting, operands = _supervisor(
+    created = asyncio.run(supervisor.submit(request, operation_id=operation_id))
+    return asyncio.run(supervisor.start(created)), operands
+
+
+def _start_secret_operation(
+    root: Path,
+    *,
+    profile_objects: object,
+    request: OperationRequest,
+    operation_id: str,
+    secret: bytes,
+) -> tuple[object, OperationSecureReferenceRepository]:
+    """Submit one bound ephemeral secret, then run the real export executor."""
+    supervisor, operands = _supervisor(
         root,
         profile_objects=profile_objects,
-        owner_id="3" * 64,
-        lease_token="4" * 64,
+        owner_id="5" * 64,
+        lease_token="6" * 64,
     )
-    return asyncio.run(starting.start(created)), operands
+    created = asyncio.run(supervisor.submit(request, operation_id=operation_id))
+    requirement = asyncio.run(supervisor.inspect(created)).secret_requirement
+    assert requirement is not None
+    assert requirement.secret_kind == "profile.bundle-export.passphrase"  # noqa: S105
+    submission = bytearray(secret)
+    asyncio.run(supervisor.submit_ephemeral_secret(requirement, submission))
+    assert submission == bytearray(len(secret))
+    return asyncio.run(supervisor.start(created)), operands
+
+
+def _assert_not_durable(root: Path, secret: bytes) -> None:
+    """The one-shot export secret and derivative must not reach persistent state."""
+    derivative = hashlib.sha256(secret).hexdigest().encode("ascii")
+    for path in root.rglob("*"):
+        if path.is_file():
+            contents = path.read_bytes()
+            assert secret not in contents, path
+            assert derivative not in contents, path
 
 
 def test_profile_operation_families_have_one_secure_registered_definition_each() -> None:
@@ -163,7 +173,7 @@ def test_field_mutation_runs_through_the_supervisor_and_real_encrypted_profile_s
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         profile_id = _register_profile()
         with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as profile_objects:
-            terminal, operands = _start_from_fresh_supervisor(
+            terminal, operands = _start_operation(
                 root,
                 profile_objects=profile_objects,
                 request=OperationRequest(
@@ -194,7 +204,7 @@ def test_repeatable_row_mutation_allocates_and_persists_one_real_schema_row(tmp_
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         profile_id = _register_profile()
         with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as profile_objects:
-            terminal, operands = _start_from_fresh_supervisor(
+            terminal, operands = _start_operation(
                 root,
                 profile_objects=profile_objects,
                 request=OperationRequest(
@@ -229,7 +239,7 @@ def test_bundle_export_reuses_the_real_durable_publication_and_journal(tmp_path:
         profile_id = _register_profile()
         destination = tmp_path / "profile-transfer.bundle"
         with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as profile_objects:
-            terminal, operands = _start_from_fresh_supervisor(
+            terminal, operands = _start_secret_operation(
                 root,
                 profile_objects=profile_objects,
                 request=OperationRequest(
@@ -241,11 +251,12 @@ def test_bundle_export_reuses_the_real_durable_publication_and_journal(tmp_path:
                             destination=destination,
                             purpose=ProfileBundleExportPurpose.PORTABLE_TRANSFER,
                             transport=ProfileBundleExportTransport.PASSPHRASE_ENCRYPTED,
-                            passphrase=SecretStr(_PROFILE_PASSPHRASE),
+                            passphrase=None,
                         ),
                     ),
                 ),
                 operation_id="c" * 64,
+                secret=_PROFILE_PASSPHRASE.encode("utf-8"),
             )
             assert terminal.lifecycle is OperationLifecycle.TERMINAL
             assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
@@ -258,27 +269,40 @@ def test_bundle_export_reuses_the_real_durable_publication_and_journal(tmp_path:
         assert result.profile_id == str(profile_id)
         assert result.destination == destination
         assert ProfileBundleExportJournalRepository(storage_root=root).scan().operations == ()
+        _assert_not_durable(root, _PROFILE_PASSPHRASE.encode("utf-8"))
 
 
 def test_profile_logout_strong_closes_real_custody_after_secure_request_resolution(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         profile_id = _register_profile()
+        live_session = current_active_bucket_session()
+        assert live_session is not None
+        assert read_pointer(root) is not None
         with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as profile_objects:
-            terminal, _operands = _start_from_fresh_supervisor(
-                root,
-                profile_objects=profile_objects,
-                request=OperationRequest(
-                    definition_id=PROFILE_LOGOUT_OPERATION_DEFINITION_ID,
-                    subject_ref=f"profile:{profile_id}",
-                    payload=ProfileLogoutOperationRequest(profile_id=profile_id),
-                ),
-                operation_id="d" * 64,
-            )
+            async def _run_strong_close() -> object:
+                supervisor, _operands = _supervisor(
+                    root,
+                    profile_objects=profile_objects,
+                    owner_id="7" * 64,
+                    lease_token="8" * 64,
+                )
+                created = await supervisor.submit(
+                    OperationRequest(
+                        definition_id=PROFILE_LOGOUT_OPERATION_DEFINITION_ID,
+                        subject_ref=f"profile:{profile_id}",
+                        payload=ProfileLogoutOperationRequest(profile_id=profile_id),
+                    ),
+                    operation_id="d" * 64,
+                )
+                terminal = await supervisor.start(created)
+                return terminal
+
+            terminal = asyncio.run(_run_strong_close())
 
         assert terminal.lifecycle is OperationLifecycle.TERMINAL
         assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
         assert terminal.effect is OperationEffect.UPDATED
         assert terminal.terminal_receipt is not None
         assert terminal.terminal_receipt.result_ref == f"profile:{profile_id}"
-        assert has_active_bucket_session() is False
-        assert resolve_active_bucket_id() is None
+        assert read_pointer(root) is None
+        assert live_session.sealed is True

@@ -1048,10 +1048,9 @@ def _provider_label(kind: AuthProviderKind) -> str:
 
 #: Key carrying the section chooser's answer.
 #:
-#: Deliberately not a schema field key, so
-#: :func:`~cadrumo.application.user_profile.section_row_facts` ignores it
-#: when projecting the row: the chooser tells the page which fields to ask
-#: for, and is not itself one of them.
+#: Deliberately not a schema field key. The chooser tells the page which fields
+#: to ask for; the application mutation authority excludes it from the committed
+#: row.
 _ROW_SECTION_KEY = "__row_section"
 
 
