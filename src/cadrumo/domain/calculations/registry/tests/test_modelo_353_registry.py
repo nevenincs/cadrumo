@@ -12,6 +12,7 @@ from ....iva import IvaLedgerObservationRole
 from .. import (
     ModeloDefinition,
     RegistryCatalogues,
+    RegistryValidationError,
     RegistryValidator,
     build_snapshot,
     bundled_authority,
@@ -74,6 +75,42 @@ def test_modelo_353_january_deadline_uses_official_calendar_shift() -> None:
     assert "aeat-modelo-353-procedure" in jan_2026.source_refs
     assert "aeat-calendario-contribuyente-2026-hasta-2-marzo" in jan_2026.source_refs
     assert "aeat-calendario-contribuyente-2026-domiciliacion" in jan_2026.source_refs
+
+
+def test_modelo_353_2025_december_calendar_is_window_scoped_not_revision_scoped() -> None:
+    """The following-year calendar grounds its deadline, not the 2025 revision generally."""
+    modelo, catalogues = _load_modelo_353()
+    revision = modelo.revisions["2008-2025"]
+    calendar_id = "aeat-calendario-contribuyente-2026-domiciliacion"
+    december = next(window for window in revision.deadline_windows if window.id == "modelo-353-2025-12")
+    calendar = catalogues.sources[calendar_id]
+
+    assert revision.valid_to is not None
+    assert calendar.applies_from is not None
+    assert calendar.applies_from > revision.valid_to
+    assert december.closes_on <= calendar.applies_to
+    assert calendar_id in december.source_refs
+    assert calendar_id not in revision.source_refs
+
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="12")
+
+    assert calendar_id in snapshot.sources
+
+    incorrectly_revision_scoped = revision.model_copy(
+        update={"source_refs": (*revision.source_refs, calendar_id)},
+    )
+    incorrectly_scoped_modelo = modelo.model_copy(
+        update={"revisions": {**modelo.revisions, revision.id: incorrectly_revision_scoped}},
+    )
+
+    with pytest.raises(RegistryValidationError, match=calendar_id):
+        build_snapshot(
+            incorrectly_scoped_modelo,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=2025,
+            period="12",
+        )
 
 
 def test_modelo_353_other_months_close_at_30_days_following_month() -> None:
@@ -305,18 +342,26 @@ def test_modelo_353_historical_deadlines_exactly_match_official_aeat_calendars(
         assert window.filing_year == window.period.filing_year == filing_year
         assert window.period_kind == "monthly"
         assert (window.opens_on, window.closes_on, window.payment_cutoff_on) == dates
-        physical_year = window.closes_on.year
+        # The annual AEAT calendar publishes the period-11 deadline with that
+        # ejercicio's December table even when a holiday pushes the physical
+        # close into January. Period 12 is the following calendar's January
+        # filing, so it alone uses the next year's source.
+        calendar_year = filing_year + 1 if period == "12" else filing_year
         assert set(window.source_refs) == {
             "boe-modelo-353-2007-form",
             "aeat-modelo-353-procedure",
-            f"aeat-calendario-contribuyente-{physical_year}",
+            f"aeat-calendario-contribuyente-{calendar_year}",
         }
 
 
 def test_modelo_353_2025_deadlines_exactly_match_the_official_aeat_calendars() -> None:
     modelo, _ = _load_modelo_353()
     revision = modelo.revisions["2008-2025"]
-    windows = {window.period.registry_token: window for window in revision.deadline_windows}
+    windows = {
+        window.period.registry_token: window
+        for window in revision.deadline_windows
+        if window.filing_year == 2025
+    }
     expected = {
         "01": (date(2025, 2, 1), date(2025, 2, 28), date(2025, 2, 25)),
         "02": (date(2025, 3, 1), date(2025, 3, 31), date(2025, 3, 26)),
