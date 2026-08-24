@@ -1,5 +1,7 @@
 [revisions."2026"]
-authority_grade = "applicability"
+# Calculation grade is operator-attested for the construct-owned base, levy and result
+# formulas. No filing/export authority is claimed: this revision declares no export layout.
+authority_grade = "calculation"
 valid_from = 2026-01-01
 period_selector = { years = [2026], periods = ["1T", "2T", "3T", "4T"] }
 orden_aplicabilidad = [

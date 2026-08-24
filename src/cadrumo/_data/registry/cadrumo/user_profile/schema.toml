@@ -1279,7 +1279,7 @@ effective_dated = true
 description = "Explicit Modelo 303 regime composition. Required when any IVA profile fact claims the IVA block; mixed is distinct from either single-regime arm."
 enum_values = ["general", "simplified", "mixed"]
 model_selectors = ["iva.m303_regime_composition"]
-legal_refs = ["ley-37-1992:art-122", "orden-hac-242-2025:modelo-303"]
+legal_refs = ["ley-37-1992:art-122", "orden-eha-3786-2008:art-1"]
 
 [[sections.fields]]
 key = "cash_accounting_regime_enrolled"
