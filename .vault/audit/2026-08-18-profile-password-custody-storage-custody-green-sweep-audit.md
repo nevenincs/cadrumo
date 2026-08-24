@@ -8868,3 +8868,54 @@ re-fetches per item. That is an operator-facing output-contract change for seven
 commands, each with tests and CLI consumers pinned to the current shape, and it
 is the one item in this campaign that is genuinely product design rather than
 repair. Enumerated here with per-verb evidence so it can be scoped as such.
+
+### The full tree, measured at last: 333 failing, 3639 passing
+
+Every measurement in this campaign until now covered `src/cadrumo-harness`
+only — about 320 tests of roughly 4000. The harness went 19 failing to 3 and
+that was read, wrongly, as the tree being close to green. The canonical lane
+over the whole repository takes 18m26s and reports **333 failed, 3639 passed, 1
+skipped, 32 errors**. An earlier attempt was abandoned mid-run after production
+files were edited underneath it: source edits during a suite invalidate every
+result after the edit, and the failure density visibly jumped at exactly that
+point. Do not edit source while a measurement is in flight.
+
+**None of it is attributable to this session's CLI changes**, and the check was
+cheap and specific rather than assumed: the log contains zero occurrences of
+`is not one of` (so no pinned enum axis rejected a value any test passes), zero
+of `No such option` (so no removed option is still being passed), and zero of
+`deprecated` (so deleting the deprecation affordance broke nothing). Those three
+greps are the falsification test for the three changes made here, and all three
+came back clean.
+
+Two clusters are ENVIRONMENTAL rather than defects in the product, and both are
+marker-hygiene bugs rather than code bugs:
+
+- **35 hits on a live ECB call** — `ECB euro reference-rate lookup failed for
+  'https://data-api.ecb.europa.eu...'`. Tests in the ordinary integration lane
+  are reaching the public internet, so they fail on any offline or
+  network-restricted machine and pass elsewhere. A test that needs the network
+  belongs behind a live marker or on a bundled rate fixture.
+- **27 hits on `OS keychain is unavailable`** — the lane already deselects
+  `os_keychain`, so these tests are exercising the keychain WITHOUT carrying the
+  marker that exists to deselect them. Mis-marked, not broken.
+
+Both make the suite report differently on different machines, which is worse
+than a straightforward red: it means no two people measuring this tree agree,
+and it is exactly how a campaign convinces itself it is close to green.
+
+The largest behavioural cluster traces to the peer's mandatory recovery
+enrollment (`b1a81de241`): headless `config profile create` now refuses without
+`--recovery-handoff-fd` and `--recovery-verification-fd`, and everything
+downstream fails as "no active profile", "not logged in", or `KeyError:
+profile_id`. The shared helper has already been routed around this —
+`seed_profile` goes through the registration door and its docstring records that
+`create_quiet_profile` "refuses unconditionally" and survives only for tests
+whose subject is a refusal — so this is not one helper fix but a per-test
+migration wherever a test still drives the `create` verb expecting success.
+
+Attribution beyond these clusters is deliberately not asserted here. The `-q`
+log does not carry one line per failure, and counting greps against it produced
+numbers that do not sum to 333 — the same instrument error that earlier turned
+ten over-budget tool names into a confident zero. A `--tb=line` re-run is the
+right instrument and is what the next grouping should be built on.
