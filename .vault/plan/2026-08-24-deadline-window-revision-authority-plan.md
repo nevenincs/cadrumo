@@ -3,6 +3,9 @@ tags:
   - '#plan'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
+modified: '2026-08-24'
+body_schema: body-v1
+body_hash: 'sha256:8ad432f9535bd027faff9a7efd1f8ecd8094e4379ac2d74a36bed77df3d2f985'
 tier: L3
 related:
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
@@ -12,9 +15,6 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
-modified: '2026-08-24'
-body_schema: body-v1
-body_hash: 'sha256:63d2131d7f01e721fc5bf0ade418822bc23c9704ec486b1b981807d42184adab'
 ---
 
 <!-- RETIRED: P06, P07, P09 -->
@@ -97,7 +97,7 @@ Project only validated owning rows and share one exact filing-window matcher.
 
 Correct the authority projection without runtime deduplication.
 
-- [ ] `W03.P08.S21` - Rewrite ValidatedRegistryAuthority.deadline_windows to project canonical owners through select_revision with deterministic qualifier-aware ordering and no deduplication; `src/cadrumo/domain/calculations/registry/_authority.py`.
+- [x] `W03.P08.S21` - Rewrite ValidatedRegistryAuthority.deadline_windows to project canonical owners through select_revision with deterministic qualifier-aware ordering and no deduplication; `src/cadrumo/domain/calculations/registry/_authority.py`.
 - [ ] `W03.P08.S22` - Add a fleet authority test proving canonical ownership, exact multiplicity, qualifier distinction, and modelo-filter invariance; `src/cadrumo/domain/calculations/registry/tests/`.
 
 ### Phase `W03.P10` - filing-window resolution

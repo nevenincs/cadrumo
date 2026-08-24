@@ -321,7 +321,16 @@ class ValidatedRegistryAuthority:
         *,
         modelos: tuple[str, ...] | None = None,
     ) -> tuple[_DeadlineWindow, ...]:
-        """Return validated deadline windows registered for ``year``."""
+        """Return canonically owned, validated deadline windows for ``year``.
+
+        Window rows retain their containing revision for provenance, but that
+        containment does not choose the governing revision.  The filing
+        coordinate does, through the same :func:`select_revision` authority
+        used by snapshots.  Non-owning historical copies are therefore never
+        projected, including when a fingerprint-certified warm load predates a
+        stricter corpus validation verdict.  This is selection, not
+        deduplication: every row in the selected revision remains observable.
+        """
         out: list[_DeadlineWindow] = []
         for modelo in self._selected_modelos(modelos):
             candidates = tuple(
@@ -336,13 +345,26 @@ class ValidatedRegistryAuthority:
                 self.validate_modelo(modelo.id)
             except RegistryValidationError:
                 raise
-            for revision, window in candidates:
-                out.append((modelo.id, revision, window))
+            for containing_revision, window in candidates:
+                selected_revision = select_revision(
+                    modelo,
+                    filing_year=window.period.filing_year,
+                    period=window.period.registry_token,
+                )
+                if selected_revision.id != containing_revision.id:
+                    continue
+                # Cold validation proves this ownership invariant.  Keep the
+                # assertion at the projection boundary as a defence against a
+                # future traversal refactor accidentally returning provenance
+                # from a revision other than the canonical selector's result.
+                assert containing_revision is modelo.revisions[selected_revision.id]
+                out.append((modelo.id, selected_revision, window))
         out.sort(
             key=lambda item: (
                 item[2].closes_on,
                 item[0],
                 *_deadline_window_period_sort_key(item[2]),
+                *_deadline_window_qualifier_sort_key(item[2]),
             ),
         )
         return tuple(out)
@@ -355,6 +377,13 @@ class ValidatedRegistryAuthority:
 
 def _deadline_window_period_sort_key(window: DeadlineWindowDefinition) -> tuple[int, str]:
     return window.filing_year, window.period.registry_token
+
+
+def _deadline_window_qualifier_sort_key(window: DeadlineWindowDefinition) -> tuple[str, tuple[str, ...]]:
+    """Order qualified plazo variants without defining another vocabulary."""
+    resultado = "" if window.resultado_scope is None else window.resultado_scope.value
+    tipo_renta = () if window.tipo_renta_scope is None else tuple(sorted(window.tipo_renta_scope))
+    return resultado, tipo_renta
 
 
 def bundled_authority() -> ValidatedRegistryAuthority:

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:970e8610c08edde758b35fa8b5a663ff8a466a1601f77cb3d83f4666a91e8d94'
+body_hash: 'sha256:eddb5f639c751d6bc8bde9f18cca6f7b42ac402b675d6eeeeb04fcd29dfe8293'
 related:
   - '[[2026-08-24-deadline-window-revision-authority-W01-P01-S01]]'
   - '[[2026-08-24-deadline-window-revision-authority-W01-P01-S02]]'
@@ -22,12 +22,14 @@ related:
   - '[[2026-08-24-deadline-window-revision-authority-W02-P05-S18]]'
   - '[[2026-08-24-deadline-window-revision-authority-W02-P05-S19]]'
   - '[[2026-08-24-deadline-window-revision-authority-W02-P05-S20]]'
+  - '[[2026-08-24-deadline-window-revision-authority-W03-P08-S21]]'
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
   - '[[2026-08-24-deadline-window-revision-authority-audit]]'
   - '[[2026-08-24-deadline-window-revision-authority-plan]]'
   - '[[2026-08-24-deadline-window-revision-authority-reference]]'
   - '[[2026-08-24-deadline-window-revision-authority-research]]'
   - '[[2026-08-24-deadline-window-revision-authority-s20-contract-review-audit]]'
+  - '[[2026-08-24-deadline-window-revision-authority-s21-authority-projection-review-audit]]'
 ---
 
 # `deadline-window-revision-authority` feature index
@@ -44,6 +46,7 @@ Auto-generated index of all documents tagged with `#deadline-window-revision-aut
 
 - `2026-08-24-deadline-window-revision-authority-audit` - `deadline-window-revision-authority` audit: `W01 P01 implementation review`
 - `2026-08-24-deadline-window-revision-authority-s20-contract-review-audit` - `deadline-window-revision-authority` audit: `S20 canonical M210 qualifier contract review`
+- `2026-08-24-deadline-window-revision-authority-s21-authority-projection-review-audit` - `deadline-window-revision-authority` audit: `s21 authority projection review`
 
 ### exec
 
@@ -61,6 +64,7 @@ Auto-generated index of all documents tagged with `#deadline-window-revision-aut
 - `2026-08-24-deadline-window-revision-authority-W02-P05-S18` - Replace invalid M210 quarter identities with canonical EVENT-N or 0A identities and author ResultDisposition plus official-code-qualified variants
 - `2026-08-24-deadline-window-revision-authority-W02-P05-S19` - Keep M210 tipo 28 event-shaped without a numeric offset until RD 1776/2004 article 14 is bundled and verified
 - `2026-08-24-deadline-window-revision-authority-W02-P05-S20` - Prove M210 qualifiers accept canonical ResultDisposition and official codes while rejecting lossy conceptual tipo authoring
+- `2026-08-24-deadline-window-revision-authority-W03-P08-S21` - Rewrite ValidatedRegistryAuthority.deadline_windows to project canonical owners through select_revision with deterministic qualifier-aware ordering and no deduplication
 
 ### plan
 
