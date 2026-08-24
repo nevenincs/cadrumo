@@ -668,3 +668,24 @@ required_text = [
     "Plazos para las anotaciones registrales",
     "antes de que finalice el plazo legal para realizar la referida liquidación y pago",
 ]
+
+[legal."rd-1624-1992:art-68-bis"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1624-1992-art-68-bis.html#a68bis"
+document_id = "BOE-A-1992-28925"
+article = "68 bis"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28925#a68bis"
+published_at = 1992-12-31
+effective_from = 2017-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-24
+reviewed_by = "verified against live consolidated BOE; human legal review still required"
+notes = "RIVA art. 68 bis governs the voluntary option to keep VAT ledgers electronically through the AEAT electronic office, its duration, renewal and waiver. Added as agent-prepared evidence only; no operator/legal-review provenance is claimed."
+required_text = [
+    "Opción por la llevanza electrónica de los libros registro",
+    "mediante la presentación de la correspondiente declaración censal",
+    "La opción se entenderá prorrogada para los años siguientes",
+    "durante al menos el año natural para el que se ejercita la opción",
+]

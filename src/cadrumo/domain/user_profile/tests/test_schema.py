@@ -31,7 +31,7 @@ def test_committed_user_profile_schema_loads_with_canonical_sections() -> None:
     schema = load_user_profile_schema()
 
     assert schema.id == "cadrumo.user_profile"
-    assert schema.version == 5
+    assert schema.version == 6
     assert schema.snapshot_policy is ProfileSnapshotPolicy.IMMUTABLE_SECURE_SNAPSHOT_HASH
     assert schema.remove_policy is ProfileRemovePolicy.LIVE_PROFILE_TOMBSTONE_RETAIN_SNAPSHOTS
     assert {

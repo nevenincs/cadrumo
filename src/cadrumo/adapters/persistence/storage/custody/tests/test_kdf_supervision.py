@@ -7,9 +7,10 @@ import subprocess
 import sys
 import tempfile
 import time
+from collections.abc import Callable
 from itertools import product
 from pathlib import Path
-from typing import Literal
+from typing import Literal, cast
 from uuid import UUID
 
 import pytest
@@ -276,14 +277,17 @@ def test_ready_attestation_proves_the_real_os_containment_environment_and_handle
             assert not os.get_inheritable(worker._result_fd)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="POSIX descriptor inheritance boundary")
-def test_real_worker_sheds_extra_inherited_pty_and_pipe_descriptors_before_ready() -> None:
+def _assert_posix_worker_sheds_extra_inherited_pty_and_pipe_descriptors_before_ready() -> None:
     import pty
 
+    pty_open_member = "openpty"
+    sysconf_member = "sysconf"
+    openpty = cast("Callable[[], tuple[int, int]]", getattr(pty, pty_open_member))
+    sysconf = cast("Callable[[str], int]", getattr(os, sysconf_member))
     request_read, request_write = os.pipe()
     result_read, result_write = os.pipe()
     extra_pipe_read, extra_pipe_write = os.pipe()
-    pty_controller, pty_peer = pty.openpty()
+    pty_controller, pty_peer = openpty()
     inherited = (request_read, result_write, extra_pipe_read, extra_pipe_write, pty_controller, pty_peer)
     for descriptor in inherited:
         os.set_inheritable(descriptor, True)
@@ -299,7 +303,7 @@ def test_real_worker_sheds_extra_inherited_pty_and_pipe_descriptors_before_ready
             "--result-fd",
             str(result_write),
             "--descriptor-bound",
-            str(os.sysconf("SC_OPEN_MAX")),
+            str(sysconf("SC_OPEN_MAX")),
         ]
         process = subprocess.Popen(  # noqa: S603 - fixed interpreter and module argv
             command,
@@ -323,14 +327,38 @@ def test_real_worker_sheds_extra_inherited_pty_and_pipe_descriptors_before_ready
 
             os.write(extra_pipe_write, b"parent-owned")
             assert os.read(extra_pipe_read, len(b"parent-owned")) == b"parent-owned"
-            assert os.fstat(pty_controller).st_rdev
-            assert os.fstat(pty_peer).st_rdev
+            assert getattr(os.fstat(pty_controller), "st_rdev", 0)
+            assert getattr(os.fstat(pty_peer), "st_rdev", 0)
         finally:
             os.close(request_write)
             os.close(result_read)
             for descriptor in (extra_pipe_read, extra_pipe_write, pty_controller, pty_peer):
                 os.close(descriptor)
             process.wait(timeout=5.0)
+
+
+def test_real_worker_sheds_extra_inherited_pty_and_pipe_descriptors_before_ready() -> None:
+    """Prove the native worker route closes every unapproved inherited channel."""
+    if sys.platform != "win32":
+        _assert_posix_worker_sheds_extra_inherited_pty_and_pipe_descriptors_before_ready()
+        return
+
+    worker = _SupervisedKdfWorker(deadline=time.monotonic() + 5.0)
+    with worker:
+        assert worker._process is not None
+        assert worker._job is not None
+        assert worker._job.contains(worker._process)
+        assert worker._job.limits() == {
+            "cpu_seconds": 15,
+            "memory_bytes": 1024 * 1024 * 1024,
+            "max_processes": 2,
+        }
+        assert worker._request_fd is not None
+        assert worker._result_fd is not None
+        import msvcrt
+
+        assert not os.get_handle_inheritable(msvcrt.get_osfhandle(worker._request_fd))
+        assert not os.get_handle_inheritable(msvcrt.get_osfhandle(worker._result_fd))
 
 
 def test_real_os_containment_refuses_or_reaps_a_worker_child_escape() -> None:

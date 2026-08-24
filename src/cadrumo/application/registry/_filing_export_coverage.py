@@ -60,14 +60,14 @@ class FilingExportCoverageReport(BaseModel):
     @computed_field
     @property
     def fully_satisfied(self) -> bool:
-        """Return whether every registered revision has filing-capable byte evidence."""
-        return all(limb.outcome == "satisfied" for limb in self.limbs)
+        """Return whether every participating revision has filing-capable byte evidence."""
+        return all(limb.outcome in {"satisfied", "not_applicable"} for limb in self.limbs)
 
     @computed_field
     @property
     def unsatisfied_limbs(self) -> tuple[RegistryClosureLimb, ...]:
-        """Return every visible non-filing-capable revision."""
-        return tuple(limb for limb in self.limbs if limb.outcome != "satisfied")
+        """Return every filing participant that lacks required export evidence."""
+        return tuple(limb for limb in self.limbs if limb.outcome not in {"satisfied", "not_applicable"})
 
 
 def compose_filing_export_coverage(
@@ -105,18 +105,11 @@ def _compose_revision_limb(
 ) -> RegistryClosureLimb:
     """Build one retained filing-export limb from its declared revision scope."""
     if revision.authority_grade is not RegistryAuthorityGrade.FILING:
-        return _refused_limb(
-            modelo_id=modelo_id,
-            revision_id=revision.id,
-            reason="below_filing_grade",
-            detail=(
-                f"revision declares {revision.authority_grade.value if revision.authority_grade else 'no'} "
-                "filing authority grade"
-            ),
-            work_item="registry-temporal-coverage:authority-grade",
-            reconsideration_condition=(
-                "Validate the revision at filing authority grade before claiming export capability."
-            ),
+        return RegistryClosureLimb(
+            modelo=modelo_id,
+            revision=revision.id,
+            name="filing_export",
+            outcome="not_applicable",
         )
     if revision.review_status not in REVIEWED_REVISION_REVIEW_STATUSES:
         return _refused_limb(

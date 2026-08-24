@@ -18,6 +18,7 @@ from ...core import (
     OperationInteractionKind,
     require_active_bucket_id,
 )
+from ...core.time import now
 from ...domain.deadlines import TaxpayerProfile
 from ..operations import (
     OperationBaselinePolicy,
@@ -137,6 +138,17 @@ def _result_reference(run: FiledHistoryOnboardingRun) -> str | None:
     return run.sync_run_ref
 
 
+async def _settlement_reference(
+    run: FiledHistoryOnboardingRun,
+    context: OperationExecutorContext,
+) -> str:
+    """Retain child provenance or persist a typed result when no child exists."""
+    child_reference = _result_reference(run)
+    if child_reference is not None:
+        return child_reference
+    return await context.operands.put(run, written_at=now())
+
+
 class FiledHistoryOperationExecutor:
     """Run the existing filed-history service under one recorded identity."""
 
@@ -168,7 +180,7 @@ class FiledHistoryOperationExecutor:
         await context.events.phase(FILED_HISTORY_PHASE_CLEANUP)
         await context.events.effect(_settled_effect(run))
         await context.events.phase(FILED_HISTORY_PHASE_SETTLEMENT)
-        return _result_reference(run)
+        return await _settlement_reference(run, context)
 
 
 def build_filed_history_operation_definition(

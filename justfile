@@ -56,7 +56,33 @@ provision: env-playwright
 [group('bootstrap')]
 [windows]
 install:
-    uv pip install --python .venv/Scripts/python.exe --editable ".[workbook-windows]" --group dev
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    $venv = (Resolve-Path '.venv').Path.TrimEnd('\')
+    $mutexName = 'Local\cadrumo-install-' + [Convert]::ToHexString(
+        [Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($venv))
+    )
+    $mutex = [Threading.Mutex]::new($false, $mutexName)
+    if (-not $mutex.WaitOne(0)) {
+        Write-Error "Another dependency install already owns $venv."
+        exit 1
+    }
+    try {
+        $users = @(Get-CimInstance Win32_Process | Where-Object {
+            ($_.ExecutablePath -and $_.ExecutablePath.StartsWith("$venv\", [StringComparison]::OrdinalIgnoreCase)) -or
+            ($_.CommandLine -and $_.CommandLine.Contains("$venv\", [StringComparison]::OrdinalIgnoreCase))
+        })
+        if ($users) {
+            $details = $users | ForEach-Object { "PID $($_.ProcessId): $($_.CommandLine)" }
+            Write-Error ("Refusing to mutate a virtualenv used by live processes. Stop the owning sessions first:`n" + ($details -join "`n"))
+            exit 1
+        }
+        uv pip install --python .venv/Scripts/python.exe --editable ".[workbook-windows]" --group dev
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    } finally {
+        $mutex.ReleaseMutex()
+        $mutex.Dispose()
+    }
 
 [doc('Additively install runtime, workbook, and dev dependencies into the current venv.')]
 [group('bootstrap')]
@@ -247,6 +273,11 @@ check-imports:
 check-relative-imports:
     @uv run --no-sync python -m dev.quality.relative_imports
 
+# Verify the core facade, import-edge, and no-shim architecture invariants.
+[group('static-checks')]
+check-architecture:
+    @uv run --no-sync pytest -q -n0 dev/tests/test_import_hygiene_gate.py dev/tests/test_import_edge_integrity_gate.py dev/tests/test_facade_export_gate.py
+
 # Verify dependency declarations for drift or unused packages. Silent on success.
 [group('static-checks')]
 check-dependencies:
@@ -410,7 +441,7 @@ check-semantic:
 check-pre-commit:
     @uv run --no-sync python -m dev.quality.quiet uv run --no-sync prek run --all-files
 
-# Excludes check-pre-commit (re-runs ruff + ty) and the local-only RAG/semantic checks.
+# Excludes check-pre-commit (re-runs ruff + ty + architecture) and the local-only RAG/semantic checks.
 # Run every fast static gate to completion; report only failures; silent on full pass.
 [group('static-checks')]
 check-all:

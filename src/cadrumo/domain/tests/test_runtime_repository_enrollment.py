@@ -88,7 +88,9 @@ def _invoice(bucket_id: str) -> Invoice:
 
 
 def test_transaction_repository_default_uses_runtime_created_bucket_store(tmp_path: Path) -> None:
-    bucket_id = "runtime-ledger"
+    # A canonical profile identity: the test capsule publisher now requires one,
+    # so a readable slug no longer stands in for a bucket id.
+    bucket_id = "73737373-7373-4373-8373-737373737311"
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         original = TransactionCatalogue.from_transactions((_transaction(Path(__file__)),))
@@ -101,7 +103,7 @@ def test_transaction_repository_default_uses_runtime_created_bucket_store(tmp_pa
 
 
 def test_invoice_repository_default_uses_runtime_created_bucket_store(tmp_path: Path) -> None:
-    bucket_id = "runtime-invoices"
+    bucket_id = "73737373-7373-4373-8373-737373737312"
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         invoice = _invoice(bucket_id)

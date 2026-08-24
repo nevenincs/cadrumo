@@ -1,7 +1,7 @@
 {
   "packages": {
     "vaultspec-core": {
-      "install_mode": "dev"
+      "install_mode": "tool"
     },
     "vaultspec-rag": {
       "install_mode": "tool"

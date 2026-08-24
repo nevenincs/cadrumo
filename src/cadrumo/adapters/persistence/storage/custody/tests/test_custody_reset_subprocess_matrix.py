@@ -110,12 +110,15 @@ def _child_env(root: Path) -> dict[str, str]:
     from ......core.config import load_settings
 
     settings = load_settings()
+    passphrase = settings.cadrumo_secret_passphrase
+    if passphrase is None:
+        raise RuntimeError("the reset subprocess matrix requires a configured secret-store passphrase")
     return {
         **os.environ,
         "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
         "CADRUMO_PROFILE_KDF_MEASURE_CALIBRATION": "false",
         "CADRUMO_SECRET_STORE_BACKEND": settings.cadrumo_secret_store_backend,
-        "CADRUMO_SECRET_PASSPHRASE": settings.cadrumo_secret_passphrase.get_secret_value(),
+        "CADRUMO_SECRET_PASSPHRASE": passphrase.get_secret_value(),
     }
 
 

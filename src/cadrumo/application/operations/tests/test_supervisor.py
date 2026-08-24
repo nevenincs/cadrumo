@@ -299,8 +299,9 @@ class ReviewExecutor:
 class ResumableReviewExecutor:
     """A real declared checkpoint executor that proves supervisor re-entry."""
 
-    def __init__(self) -> None:
+    def __init__(self, *, result_ref: str | None = None) -> None:
         self.resume_checkpoints: list[OperationPendingInteraction] = []
+        self._result_ref = result_ref
 
     async def execute(
         self,
@@ -320,7 +321,7 @@ class ResumableReviewExecutor:
         del request
         self.resume_checkpoints.append(checkpoint)
         await context.events.phase("operation.phase.declared")
-        return None
+        return self._result_ref
 
 
 class ResumableIdleExecutor:
@@ -2211,6 +2212,64 @@ def test_reconcile_reenters_only_a_declared_valid_checkpoint(tmp_path: Path) -> 
     assert tuple(event.outcome for event in replayed.events if isinstance(event, OperationReconciliationEvent)) == (
         OperationReconciliationOutcome.RESUMED,
     )
+
+
+def test_resumed_executor_result_reference_settles_the_recovered_operation(tmp_path: Path) -> None:
+    """A resumed executor's domain reference follows the same terminal join as start."""
+    executors: list[ResumableReviewExecutor] = []
+    result_ref = "result:resumed-operation"
+
+    def build() -> ResumableReviewExecutor:
+        executor = ResumableReviewExecutor(result_ref=result_ref if executors else None)
+        executors.append(executor)
+        return executor
+
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "resumed-result-state",
+            profile_objects=profile.repository,
+        )
+        registry = _registry(
+            executor_type=ResumableReviewExecutor,
+            build=build,
+            capabilities=_capabilities(
+                durability=OperationDurability.RESUMABLE,
+                replay=OperationReplayPolicy.RESUMABLE,
+            ),
+            interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
+            reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
+        )
+        owner = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+            lease_duration=timedelta(minutes=1),
+        )
+        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        waiting = asyncio.run(owner.start(operation_id))
+        recovery = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="4" * 64,
+            token="5" * 64,
+            clock=lambda: _NOW + timedelta(minutes=2),
+        )
+
+        terminal = asyncio.run(recovery.reconcile(operation_id))
+        reloaded = asyncio.run(journal.load(operation_id))
+
+    assert waiting.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION
+    assert len(executors) == 2
+    assert terminal.lifecycle is OperationLifecycle.TERMINAL
+    assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    assert terminal.terminal_receipt is not None
+    assert terminal.terminal_receipt.result_ref == result_ref
+    assert reloaded == terminal
 
 
 def test_reconcile_refuses_changed_undeclared_checkpoint_kind_before_reentry(tmp_path: Path) -> None:

@@ -99,7 +99,7 @@ def _legal(ref_id: str) -> LegalReference:
         document_id="BOE-A-0000-00000",
         permalink="https://example.invalid/legal",
         effective_from=date(2024, 1, 1),
-        review_status="reviewed",
+        review_status="operator_reviewed",
         reviewed_at=date(2025, 1, 1),
         reviewed_by="rate-grounding-refusal-test",
         required_text=("a provision this absent corpus file cannot contain",),

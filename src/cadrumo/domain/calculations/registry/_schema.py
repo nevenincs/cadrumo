@@ -23,6 +23,7 @@ from pydantic import (
 )
 
 from ....core import (
+    M210_TIPO_RENTA_CODE_PROJECTION,
     UNDECLARED_REGISTRY_AUTHORITY_GRADE,
     CasillaId,
     FilingProjectionRef,
@@ -31,6 +32,7 @@ from ....core import (
     PeriodKind,
     RegistryAuthorityGrade,
     RegistrySelectorPeriodCode,
+    ResultDisposition,
     RevisionReviewStatus,
     TaxDomain,
     filing_projection_ref_casilla_id,
@@ -579,8 +581,32 @@ class DeadlineWindowDefinition(RegistryModel):
     payment_cutoff_on: date | None = None
     applicability_condition_mode: Literal["all", "any"] = "all"
     applicability_conditions: tuple[ProfilePredicateDefinition, ...] = ()
+    resultado_scope: Annotated[
+        ResultDisposition,
+        BeforeValidator(lambda value: ResultDisposition(value) if isinstance(value, str) else value),
+    ] | None = None
+    tipo_renta_scope: tuple[str, ...] | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
+
+    @field_validator("tipo_renta_scope")
+    @classmethod
+    def _validate_tipo_renta_scope(cls, value: tuple[str, ...] | None) -> tuple[str, ...] | None:
+        """Preserve official M210 codes without folding them into rate concepts."""
+        if value is None:
+            return None
+        if not value:
+            raise RegistryValidationError("deadline window tipo_renta_scope must not be empty")
+        if len(set(value)) != len(value):
+            raise RegistryValidationError("deadline window tipo_renta_scope entries must be unique")
+        unknown_codes = tuple(code for code in value if code not in M210_TIPO_RENTA_CODE_PROJECTION)
+        if unknown_codes:
+            accepted = ", ".join(sorted(M210_TIPO_RENTA_CODE_PROJECTION))
+            raise RegistryValidationError(
+                f"deadline window tipo_renta_scope contains unknown official Modelo 210 codes "
+                f"{unknown_codes!r}; accepted codes: {accepted}",
+            )
+        return value
 
     @model_validator(mode="after")
     def _validate_window(self) -> DeadlineWindowDefinition:

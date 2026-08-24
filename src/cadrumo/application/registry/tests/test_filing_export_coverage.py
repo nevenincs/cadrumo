@@ -53,8 +53,8 @@ def test_application_registry_exports_no_passive_proof_catalogue() -> None:
     assert "FilingExportProofCatalogue" not in registry_exports
 
 
-def test_filing_export_coverage_retains_every_revision_and_below_grade_refusal(registry_authority) -> None:
-    """Registered models without filing authority remain visible, not inferred fileable."""
+def test_filing_export_coverage_retains_every_revision_and_below_grade_non_participation(registry_authority) -> None:
+    """Registered models below filing grade remain visible without becoming filing participants."""
     report = compose_filing_export_coverage(authority=registry_authority)
 
     assert {(limb.modelo, limb.revision) for limb in report.limbs} == {
@@ -62,10 +62,11 @@ def test_filing_export_coverage_retains_every_revision_and_below_grade_refusal(r
     }
     limb = next(limb for limb in report.limbs if (limb.modelo, limb.revision) == ("036", "2025-02-03-y-siguientes"))
 
-    assert (limb.name, limb.outcome, limb.refusal.reason) == (
+    assert (limb.name, limb.outcome, limb.evidence, limb.refusal) == (
         "filing_export",
-        "refused",
-        "below_filing_grade",
+        "not_applicable",
+        (),
+        None,
     )
 
 

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/rd-1624-1992-art-68-bis.html",
+  "source_sha256": "58c7aa9dd35cc9cdc72059f8a730b0270e494ba089ad0124cae767ea190a7485",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.3",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "La opción a que se refiere el artículo 62.6 de este Reglamento, podrá ejercitarse a lo largo de todo el ejercicio, mediante la presentación de la correspondiente declaración censal, surtiendo efecto para el primer periodo de liquidación que se inicie después de que se hubiera ejercido dicha opción.\nLa opción se entenderá prorrogada para los años siguientes en tanto no se produzca la renuncia a la misma.\nQuienes opten por este sistema de llevanza de los libros registro deberán cumplir con el suministro de los registros de facturación durante al menos el año natural para el que se ejercita la opción.\nLa renuncia a la opción deberá ejercitarse mediante comunicación al órgano competente de la Agencia Estatal de Administración Tributaria, mediante la presentación de la correspondiente declaración censal y se deberá formular en el mes de noviembre anterior al inicio del año natural en el que deba surtir efecto.\nLos sujetos pasivos inscritos en el registro de devolución mensual que queden excluidos del mismo por aplicación de lo dispuesto en el artículo 30.6 de este Reglamento quedarán asimismo excluidos de la obligación de llevar los libros registro a través de la Sede electrónica de la Agencia Estatal de Administración Tributaria, con efectos desde el primer día del período de liquidación en el que se haya notificado el respectivo acuerdo de exclusión.\nEl cese en la aplicación del régimen especial del grupo de entidades conforme lo que establece el artículo 163 septies de la Ley del Impuesto determinará, con efectos desde que se produzca aquel, el cese de la obligación de llevar los libros registro a través de la Sede electrónica de la Agencia Estatal de Administración Tributaria.\nLo establecido en los dos párrafos anteriores no será de aplicación cuando se trate de empresarios o profesionales cuyo periodo de liquidación siga siendo mensual de acuerdo con lo dispuesto en el artículo 71.3 de este Reglamento.",
+      "title": "Artículo 68 bis. Opción por la llevanza electrónica de los libros registro.",
+      "section": "Artículo 68 bis. Opción por la llevanza electrónica de los libros registro.",
+      "anchor": "#a68bis"
+    }
+  ]
+}

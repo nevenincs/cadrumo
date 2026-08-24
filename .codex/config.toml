@@ -1481,8 +1481,8 @@ for the full subcommand surface.
 
 # <vaultspec type="mcps">
 [mcp_servers."vaultspec-core"]
-args = ["run", "--no-sync", "python", "-m", "vaultspec_core.mcp_server.app"]
-command = "uv"
+args = ["--from", "vaultspec-core", "python", "-m", "vaultspec_core.mcp_server.app"]
+command = "uvx"
 
 [mcp_servers."vaultspec-rag"]
 args = ["--from", "vaultspec-rag[mcp]", "python", "-m", "vaultspec_rag.server"]

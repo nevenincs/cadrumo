@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+from collections.abc import Callable
 
 import pytest
 
@@ -32,15 +33,18 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _RELEASE_HELPER = "_release_bucket_file_handles"
 
 
-def _first_statement_calls(function: object, name: str) -> bool:
+def _first_statement_calls(function: Callable[..., object], name: str) -> bool:
     """Is ``name`` called before anything that could touch the directory?
 
     "Before" is what matters: releasing handles after the rename would be an
     expensive no-op that still fails. The rename resolves its source first, so
     the release is allowed to sit behind that lookup but nothing else.
     """
-    tree = ast.parse(inspect.getsource(function).lstrip())  # type: ignore[arg-type]
-    body = tree.body[0].body  # type: ignore[attr-defined]
+    tree = ast.parse(inspect.getsource(function).lstrip())
+    definition = tree.body[0]
+    if not isinstance(definition, ast.FunctionDef | ast.AsyncFunctionDef):
+        raise AssertionError("the destruction target must be a function definition")
+    body = definition.body
     for statement in body:
         for node in ast.walk(statement):
             if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == name:

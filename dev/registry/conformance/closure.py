@@ -34,7 +34,7 @@ from cadrumo.application.registry import (
     compose_temporal_coverage,
     load_source_connectivity_census,
 )
-from cadrumo.core import STRICT_FROZEN_CONFIG, SourceConnectivityProofAuthority
+from cadrumo.core import STRICT_FROZEN_CONFIG, RegistryAuthorityGrade, SourceConnectivityProofAuthority
 from cadrumo.domain.calculations.registry import ValidatedRegistryAuthority, bundled_authority
 
 __all__ = [
@@ -52,7 +52,6 @@ __all__ = [
 type RegistryClosurePredicateOutcome = Literal["satisfied", "refused"]
 type RegistryClosureJoinDisagreementKind = Literal["missing_from_limb", "unexpected_limb_coordinate"]
 type RegistryClosurePredicateRefusalReason = Literal[
-    "below_filing_grade",
     "conflicting_evidence",
     "cross_limb_disagreement",
     "missing_evidence",
@@ -138,6 +137,13 @@ class RegistryClosureRevisionReport(_ClosureReportModel):
                 raise ValueError(f"present {name} limb cannot carry a join disagreement")
         if any((item.modelo, item.revision) != coordinate for item in self.join_disagreements):
             raise ValueError("closure-report row disagreement must name the enclosing coordinate")
+        filing = self.filing_export
+        if filing is not None:
+            filing_required = self.temporal_coverage.declared_authority_grade is RegistryAuthorityGrade.FILING
+            if filing_required and filing.outcome == "not_applicable":
+                raise ValueError("filing-grade temporal coverage requires a participating filing-export limb")
+            if not filing_required and filing.outcome != "not_applicable":
+                raise ValueError("below-filing temporal coverage requires a not-applicable filing-export limb")
         return self
 
     @computed_field
@@ -166,7 +172,7 @@ class RegistryClosureRevisionReport(_ClosureReportModel):
     @computed_field
     @property
     def predicate_outcome(self) -> RegistryClosurePredicateOutcome:
-        """Return satisfied only when all three release limbs are satisfied."""
+        """Return satisfied when every required limb is satisfied."""
         return "satisfied" if not self.refusals else "refused"
 
 
@@ -421,7 +427,10 @@ def render_registry_closure_report(report: RegistryClosureReport) -> str:
         _kv_line("closure_refusal_reason", reason=reason, count=count)
         for reason, count in report.refusal_reason_census.items()
     )
-    lines.append("note release_eligible=true requires every temporal denominator revision to satisfy every limb")
+    lines.append(
+        "note release_eligible=true requires every temporal denominator revision to satisfy every required limb; "
+        "filing export participates only at filing grade",
+    )
     return "\n".join(lines)
 
 
@@ -471,7 +480,7 @@ def _limb_or_join_refusal(
                 ),
             ),
         )
-    if limb.outcome == "satisfied":
+    if limb.outcome in {"satisfied", "not_applicable"}:
         return ()
     assert limb.refusal is not None
     return (

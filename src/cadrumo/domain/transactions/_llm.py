@@ -410,6 +410,16 @@ _IVA_CATEGORY_HINTS: dict[IvaCategory, str] = {
     IvaCategory.DOMESTIC_ZERO: "domestic supply at a 0% rate",
     IvaCategory.DOMESTIC_EXEMPT: "domestic supply exempt from IVA (education, health, finance — Art. 20)",
     IvaCategory.DOMESTIC_NOT_SUBJECT: "operation not subject to Spanish IVA",
+    # No RATE is stated on purpose: the compensación percentages differ by
+    # activity and have moved, and a stale figure in a classifier hint would
+    # steer a classification the filing then carries. The article is what
+    # distinguishes it, and it is the one this codebase already grounds the
+    # compensación on (_LIVA_REAGP_COMPENSACION).
+    IvaCategory.REAGP_COMPENSATION: (
+        "REAGP compensación a tanto alzado — the buyer pays a farmer, forester or fisher under the "
+        "special agriculture regime instead of repercutido IVA (LIVA Art. 130); it is NOT IVA the "
+        "supplier charged"
+    ),
     IvaCategory.DOMESTIC_REVERSE_CHARGE: "domestic reverse charge — the recipient self-assesses IVA (Art. 84)",
     IvaCategory.INTRA_COMMUNITY_SUPPLY: "exempt intra-community supply of goods to an EU business (Art. 25)",
     IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE: "reverse-charge EU goods acquisition",
