@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:0e89902455d4da2a3f4e6ae06c367d48c77563802c2165e223fb75cd574a9d02'
+body_hash: 'sha256:a73eb4eda54650d122731e416f7935d07822752087e7efd7a37fb9975c4e3fc2'
 related:
   - '[[2026-08-24-deadline-window-revision-authority-W01-P01-S01]]'
   - '[[2026-08-24-deadline-window-revision-authority-W01-P01-S02]]'
@@ -26,6 +26,7 @@ related:
   - '[[2026-08-24-deadline-window-revision-authority-W03-P08-S21]]'
   - '[[2026-08-24-deadline-window-revision-authority-W03-P10-S23]]'
   - '[[2026-08-24-deadline-window-revision-authority-W03-P10-S24]]'
+  - '[[2026-08-24-deadline-window-revision-authority-W03-P10-S25]]'
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
   - '[[2026-08-24-deadline-window-revision-authority-audit]]'
   - '[[2026-08-24-deadline-window-revision-authority-plan]]'
@@ -34,6 +35,7 @@ related:
   - '[[2026-08-24-deadline-window-revision-authority-s20-contract-review-audit]]'
   - '[[2026-08-24-deadline-window-revision-authority-s21-authority-projection-review-audit]]'
   - '[[2026-08-24-deadline-window-revision-authority-s23-qualified-resolver-review-audit]]'
+  - '[[2026-08-24-deadline-window-revision-authority-s25-qualified-resolution-tests-review-audit]]'
 ---
 
 # `deadline-window-revision-authority` feature index
@@ -52,6 +54,7 @@ Auto-generated index of all documents tagged with `#deadline-window-revision-aut
 - `2026-08-24-deadline-window-revision-authority-s20-contract-review-audit` - `deadline-window-revision-authority` audit: `S20 canonical M210 qualifier contract review`
 - `2026-08-24-deadline-window-revision-authority-s21-authority-projection-review-audit` - `deadline-window-revision-authority` audit: `s21 authority projection review`
 - `2026-08-24-deadline-window-revision-authority-s23-qualified-resolver-review-audit` - `deadline-window-revision-authority` audit: `s23 qualified resolver review`
+- `2026-08-24-deadline-window-revision-authority-s25-qualified-resolution-tests-review-audit` - `deadline-window-revision-authority` audit: `s25 qualified resolution tests review`
 
 ### exec
 
@@ -73,6 +76,7 @@ Auto-generated index of all documents tagged with `#deadline-window-revision-aut
 - `2026-08-24-deadline-window-revision-authority-W03-P08-S21` - Rewrite ValidatedRegistryAuthority.deadline_windows to project canonical owners through select_revision with deterministic qualifier-aware ordering and no deduplication
 - `2026-08-24-deadline-window-revision-authority-W03-P10-S23` - Extend resolve_filing_window with optional ResultDisposition and official tipo-code context using one exact matcher and ambiguity refusal
 - `2026-08-24-deadline-window-revision-authority-W03-P10-S24` - Keep resolve_filing_closes_on as the unqualified convenience and route post-calculation M210 plazo through the same matcher
+- `2026-08-24-deadline-window-revision-authority-W03-P10-S25` - Prove qualified resolution wildcard and exact scopes, official-code distinction, ambiguity refusal, and no year borrowing
 
 ### plan
 
