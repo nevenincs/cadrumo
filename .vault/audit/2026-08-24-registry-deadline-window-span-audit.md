@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:809a9787f640ba122829750348b0f044fe36adb002ba502f6dad0355b9460265'
+body_hash: 'sha256:32ec6726ef2e84708ff7e34516be40dd7598778fdf9a1c37fa9b52b635fd7f36'
 related: []
 ---
 
@@ -173,6 +173,35 @@ before and after and refuses to report a number when they differ, and a
 two-pass protocol where the long run only NOMINATES candidates and a short
 second pass over just those modules confirms them. Reproduction across two runs
 at different HEADs is stronger evidence than tree-stability at either one.
+
+## Application layer: a real cluster fixed, the rest peer-owned
+
+`application/aggregation` measures 24 failures, down from 39. Fifteen shared one
+cause worth naming, because it is a test-authoring trap rather than a defect in
+what the tests cover.
+
+Each file built a fixture-backed `TransactionCatalogueRepository` and injected
+it, but left the SIBLING repositories unset. Production then resolved those from
+the real bucket storage runtime -- `import_ledger_transactions` reaching for a
+`BucketEventHistoryRepository`, `_load_income_invoices` for an
+`InvoiceCatalogueRepository` -- which is not ready in a unit-lane test. Every one
+of those tests failed on `errors.storage.runtime.not_ready` before reaching a
+single assertion, so the coverage they appear to give was not being exercised at
+all. Injecting one repository is not enough: a partially-injected call still
+reaches the runtime through whichever seam was left defaulted. Fixed in
+`65bafa2f04` against the pattern `test_m210_irnr_income_ledger` already used.
+
+The remaining failures are other teams' in-flight work:
+
+- **modelo 151** was split into `2015-2022` plus `2025-y-siguientes`, and three
+  application tests still name `2015-y-siguientes`, the pre-split revision. Note
+  that `2025-y-siguientes` declares `valid_from = 2023-01-01`, so it is a third
+  id-versus-span disagreement -- but the contiguous 2015-2022 span beside it
+  suggests the SPAN is right and the NAME is wrong here, the opposite of 184.
+  Left for whoever owns the split.
+- **modelo 200 and modelo 036** grade refusals, and **modelo 390** revision
+  selection for 2026, reach into the application layer from the registry work
+  already recorded above.
 
 ## Durable lesson
 
