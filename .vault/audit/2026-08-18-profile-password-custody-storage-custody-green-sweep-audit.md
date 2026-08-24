@@ -8919,3 +8919,50 @@ log does not carry one line per failure, and counting greps against it produced
 numbers that do not sum to 333 — the same instrument error that earlier turned
 ten over-budget tool names into a confident zero. A `--tb=line` re-run is the
 right instrument and is what the next grouping should be built on.
+
+### 314 confirmed real, and the shape is a long tail
+
+The parallel full runs disagreed with each other — 333 failures with 32 errors,
+then 317 with none — which on a share documented to fail under concurrent I/O is
+the signature of the drive, not the code. Re-running the 317 failing node ids
+sequentially (`-n0`, 14m11s) settles it: **314 reproduce, 3 were flaky.** So the
+red is real and only ~1% of it was noise. Worth keeping: a parallel run on this
+share is fine for discovery but must never be the basis for triage, and the
+cheap confirmation is to re-run the failing SET rather than the whole tree.
+
+The shape matters more than the number: **314 failures spread across 120
+modules, the largest module holding 12.** There is no single lever. Grouping the
+one-line tracebacks gives a long tail — a generic `assert X in Y` group of 36,
+export-write failures around 20, `KeyError` 14, and a scatter of envelope-shape
+assertions across unrelated commands. A campaign hoping for one root cause does
+not get one here.
+
+Two causes were positively identified and one of them fixed:
+
+- **A stale test against a deliberately-tightened model.**
+  `Modelo232VinculadaRow.pais` is required and carries its reason on the field:
+  defaulting it to Spain would infer a fact the operator never stated and would
+  silently declare a cross-border related-party operation as domestic. The model
+  is right; the "minimal spec" test predated the tightening. Fixed by stating
+  the country.
+- **Locale-dependent assertions.** Three refusal tests matched English words in
+  messages that ride `tr()`, while `DEFAULT_OUTPUT_LANGUAGE` is `ES` and has
+  been for a long time. Their subject is WHICH refusal fires, not its language,
+  so they pin the language through the canonical Settings override. Note the
+  default did NOT recently flip — so this red is long-standing rather than a new
+  regression, which is itself the important finding: this tree has been degraded
+  for a while and the harness-only measurements never showed it.
+
+Not resolved, with evidence for whoever takes it: the export cluster fails with
+`cause_type: FilingProducerSnapshotError` and the envelope deliberately redacts
+the underlying message. The modelo-303-specific raise sites in
+`application/modelo/_export.py` do not apply (the failing exports are 111 and
+202), so it is the generic pydantic wrap at `_producer_snapshot.py:1557`. A
+throwaway pytest plugin patching that error's `__init__` from OUTSIDE the repo
+did not fire, which is itself information: the construction is not passing
+through the site it appears to. That is where the next attempt should start.
+
+A large share of the remaining failures is fallout from the peer's in-flight
+mandatory-recovery work, which they are actively migrating — the dirty-file
+count went from 87 to 139 during this session. Racing them through the
+credential surface would collide; the productive ground is everywhere else.
