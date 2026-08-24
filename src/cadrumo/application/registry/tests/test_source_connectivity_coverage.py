@@ -85,3 +85,35 @@ def test_source_connectivity_coverage_accepts_current_terminal_census_evidence(
     assert limb.outcome == "satisfied"
     assert limb.refusal is None
     assert limb.evidence
+
+
+def test_source_connectivity_coverage_refuses_expired_terminal_evidence_without_follow_up(
+    registry_authority,
+) -> None:
+    """Expiry invalidates a terminal claim even when it had no open action."""
+    census = load_source_connectivity_census()
+    inventory = next(entry for entry in census.entries if entry.candidate_id == "inventory.stock-valuation")
+    expired_terminal = inventory.model_copy(
+        update={
+            "disposition": SourceConnectivityDisposition.NOT_APPLICABLE,
+            "expires_on": _AS_OF,
+            "review_condition": None,
+            "bounded_follow_up": None,
+        },
+    )
+    report = compose_source_connectivity_coverage(
+        authority=registry_authority,
+        census=census.model_copy(update={"entries": (expired_terminal, *census.entries[1:])}),
+        as_of=_AS_OF,
+    )
+
+    limb = next(limb for limb in report.limbs if (limb.modelo, limb.revision) == ("100", "2025"))
+
+    assert (limb.outcome, limb.refusal.reason) == ("refused", "stale_evidence")
+    assert limb.refusal.disposition.model_dump() == {
+        "limb": "source_connectivity",
+        "state": "owned",
+        "owner": "source-connectivity-campaign",
+        "work_item": "inventory.stock-valuation:revalidate-expired-evidence",
+        "reconsideration_condition": "Current source-connectivity evidence revalidates the terminal disposition.",
+    }

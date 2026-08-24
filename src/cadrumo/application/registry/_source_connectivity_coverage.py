@@ -148,16 +148,23 @@ def _compose_revision_limb(
     expired = tuple(
         entry
         for entry in entries
-        if entry.disposition not in _TERMINAL_DISPOSITIONS
-        and entry.expiry_posture(as_of=as_of) is SourceConnectivityExpiryPosture.EXPIRED
+        if entry.expiry_posture(as_of=as_of) is SourceConnectivityExpiryPosture.EXPIRED
     )
     if expired:
+        entry = expired[0]
+        if entry.disposition in _TERMINAL_DISPOSITIONS:
+            return _expired_terminal_limb(
+                modelo_id=modelo_id,
+                revision=revision,
+                evidence=evidence,
+                entry=entry,
+            )
         return _refused_limb(
             modelo_id=modelo_id,
             revision=revision,
             entries=entries,
             evidence=evidence,
-            entry=expired[0],
+            entry=entry,
             reason="stale_evidence",
             detail="source-connectivity census evidence expired without the required adjudication",
         )
@@ -214,6 +221,36 @@ def _entry_evidence(
         )
         for entry in entries
         for grounding in entry.grounding
+    )
+
+
+def _expired_terminal_limb(
+    *,
+    modelo_id,
+    revision: ModeloRevision,
+    evidence: tuple[RegistryClosureEvidence, ...],
+    entry: SourceConnectivityCensusEntry,
+) -> RegistryClosureLimb:
+    """Refuse expired terminal evidence with its census owner still accountable."""
+    return RegistryClosureLimb(
+        modelo=modelo_id,
+        revision=revision.id,
+        name="source_connectivity",
+        outcome="refused",
+        evidence=evidence,
+        refusal=RegistryClosureRefusal(
+            reason="stale_evidence",
+            detail=f"source-connectivity terminal evidence expired: {entry.candidate_id}",
+            disposition=RegistryClosureOwnerDisposition(
+                limb="source_connectivity",
+                state="owned",
+                owner=entry.owner,
+                work_item=f"{entry.candidate_id}:revalidate-expired-evidence",
+                reconsideration_condition=(
+                    "Current source-connectivity evidence revalidates the terminal disposition."
+                ),
+            ),
+        ),
     )
 
 
