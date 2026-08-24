@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:65f39a49312dc111be70e1437ad04a0f5993d5bf7cb5f59c788caa799234c34b'
+body_hash: 'sha256:4959859e42f188d19144c77cd15dbdd24940f3b45ead909f525f5812a56ad6b8'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -57,6 +57,21 @@ verb is refused, the CLI refresh writes no `profile-setup-delete` golden. An
 executed documentation sequence cannot be merged or closed without that
 generated ownership record.
 
+### s228-profile-delete-sequence-review | resolved | sessionless deletion now reaches the custody boundary
+
+S238 removed inactive deletion from the root login gate while retaining active
+profile refusal, exact target binding, explicit confirmation, and the custody
+preflight. The real sequence now logs out and deletes the exact sandbox profile
+successfully; its result reports `deleted == true` and no active profile.
+
+### s228-profile-delete-sequence-review | resolved | generated golden and terminal page ordering are complete
+
+The sequence refresh CLI generated the logout/delete golden, and S239 enrolled
+only the destroyed encrypted-byte digest as a central command-and-path-specific
+mask. Stable fingerprint counts remain asserted. Deletion is now the guide's
+last profile operation, so later examples never reuse a destroyed profile.
+Independent formal re-review passed with no findings.
+
 ## Recommendations
 
 - Reconcile whether irreversible profile deletion is intentionally login-gated
@@ -65,3 +80,6 @@ generated ownership record.
 - Once the real subprocess journey succeeds, refresh through the sequence CLI,
   commit its generated golden, rerun page coherence and nitpicky documentation
   gates, and request a fresh formal review.
+- Close S228 on the real sequence, terminal page placement, generated golden,
+  and clean formal re-review evidence. Track concurrent registry schema and
+  unrelated cross-page sequence baseline failures with their owning work.

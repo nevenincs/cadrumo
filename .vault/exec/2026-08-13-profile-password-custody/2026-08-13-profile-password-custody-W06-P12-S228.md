@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:662fb27860e75822a0b661d17f799e84e33e4349f6206593df4c01f8d8c5395a'
+body_hash: 'sha256:89307152c4c48c23c76a8ad032ee366bdc454509c15b14eabfd16f8099a1b71d'
 step_id: 'S228'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -67,6 +67,13 @@ S228 remains open. The real runner proves logout succeeds but deletion then
 fails at the root login gate with exit 2, so no CLI-owned golden can be
 generated and the documented journey is not yet executable product truth.
 
+S238 resolved that boundary contradiction: logged-out inactive deletion now
+reaches the custody transaction while active deletion still refuses. The real
+sequence refresh produced its CLI-owned golden with an inactive post-state and
+`deleted == true`. S239 masks only the freshly encrypted destroyed-byte digest.
+Moving deletion after history makes it the guide's terminal profile operation.
+Independent formal re-review passed with no findings, so S228 is closed.
+
 ## Notes
 
 - Concurrent commits `d6d45d618c` and `32567777ce` captured the scaffold and
@@ -80,3 +87,9 @@ generated and the documented journey is not yet executable product truth.
   real subprocess refusal observed by the sequence runner.
 - Formal review requires the missing generated golden and therefore remains
   changes-required.
+- Focused page golden checking and documented-command conformance were observed
+  green after S238/S239 (349 conformance cases). A later closure rerun was
+  blocked before profile execution by concurrent registry catalogue WIP, while
+  broader sequence and nitpicky gates also reported unrelated multi-page
+  golden/baseline drift. These external failures do not weaken the exact S228
+  golden, post-state, or formal review evidence.

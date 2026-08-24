@@ -19,7 +19,7 @@ related:
   - '[[2026-08-13-sealed-archive-transport-successor-adr]]'
   - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
 modified: '2026-08-24'
-body_hash: 'sha256:f458c88c21168bb6886b55208019266ce065627b3cbeb0524ea5473e97391408'
+body_hash: 'sha256:6c336a4ceace3aba78ad3b56621597a3491511396a4b7649d9bc69c42063b4ec'
 ---
 
 # `profile-password-custody` plan
@@ -336,7 +336,7 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 - [x] `W06.P12.S225` - Replace the capsule-source symlink platform skip with a deterministic real-filesystem reparse-point-or-directory refusal witness while retaining linked-content non-adoption where symlinks are supported; `src/cadrumo/application/user_profile/tests/test_capsule_source_reads_are_anchored.py`.
 - [x] `W06.P12.S226` - Replace the Windows-only foreign-launcher plant with a platform-neutral real confined-venv launcher swap and prove the canonical path rejects a peer entry point on Windows and POSIX; `dev/packaging/tests/test_distribution_evidence_emit.py`.
 - [x] `W06.P12.S227` - Retire the unsupported workstation agent-materialisation sequence and stale agent-extra claims while preserving the separately owned harness and MCP guidance; `docs/workstation-setup.md and docs/_sequences/contracts/workstation-setup/`.
-- [ ] `W06.P12.S228` - Replace the inline profile-delete command and false active-delete claim with a terminal real-execution sequence that logs out and deletes only its sandbox profile; `docs/how-to/profile-setup.md and docs/_sequences/contracts/how-to/`.
+- [x] `W06.P12.S228` - Replace the inline profile-delete command and false active-delete claim with a terminal real-execution sequence that logs out and deletes only its sandbox profile; `docs/how-to/profile-setup.md and docs/_sequences/contracts/how-to/`.
 - [ ] `W06.P12.S229` - Resynchronize the Spanish, Catalan, and Hungarian Sphinx gettext catalogues from stable English sources and retire the generated-page environment-overrides orphans; `docs/locales/es/LC_MESSAGES/ and docs/locales/ca/LC_MESSAGES/ and docs/locales/hu/LC_MESSAGES/`.
 - [ ] `W06.P12.S230` - Complete every blank or fuzzy Spanish user-page translation and correct download command-list punctuation without English fallback; `docs/locales/es/LC_MESSAGES/`.
 - [ ] `W06.P12.S231` - Complete every blank or fuzzy Catalan user-page translation and correct download command-list punctuation without English fallback; `docs/locales/ca/LC_MESSAGES/`.
