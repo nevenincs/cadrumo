@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:309b504942fb8d7af7393af13cd469a5912ba7059c367e4245e578d328bbb7f6'
+body_hash: 'sha256:add58c361da6b9291e9a8dbc4efa8ff2e19f4eb933e936c45c7144d8a06f1f5b'
 related: []
 ---
 
@@ -71,21 +71,40 @@ already agree on 2023-2024, and no revision covers 2018-2022, so those windows
 were unreachable data contradicting the span that governs them. Removing them
 makes the fragment agree with its own selector. Landed as `6a69b9715b`.
 
-## Open, needs an authority ruling: modelo 322 `2008-2022` authority grade
+## Open, needs authored windows: modelos 303 and 322 filing-grade gaps
 
-Removing the borrowed 2023 windows revealed that this revision has no deadline
-windows of its own, and it claims `filing` authority grade:
+Two revisions claim `filing` authority grade while declaring no deadline windows
+of their own. Both were previously masked: each was satisfying the grade with
+windows an adjacent revision canonically owns, and removing those duplicates --
+in modelo 322 here, in modelo 303 by the separately-briefed deadline-owner fix
+`b6312a471c4` -- exposed the real state.
 
 ```
+modelo 303 revision 2023 claims 'filing' authority grade while ['deadline_windows']
+remain blocked pending evidence.
 modelo 322 revision 2008-2022 claims 'filing' authority grade while
 ['deadline_windows'] remain blocked pending evidence.
 ```
 
-The grade was previously satisfied only by duplicating another revision's
-windows, so this is a pre-existing overstatement the fix exposed rather than
-introduced. Closing it means either authoring the revision's real 2008-2022
-windows, downgrading the grade, or declaring the family not applicable with a
-reason and citations -- each an authority claim.
+Each governs a real filing year and needs its windows authored:
+
+- **modelo 303 revision `2023`** -- `valid_from 2023-01-01`, `valid_to
+  2023-12-31`; zero windows authored.
+- **modelo 322 revision `2008-2022`** -- the directory name is again misleading:
+  the revision declares `valid_from 2022-01-01`, `valid_to 2022-12-31` and
+  `period_selector = { years = [2022], periods = ["01" .. "12"] }`, so it governs
+  2022 alone and needs twelve monthly windows.
+
+"Declare the family not applicable" is not available to either: both are
+self-assessment modelos with real statutory filing deadlines for the years they
+govern, so a not-applicable declaration would be false. The remaining honest
+options are authoring the windows against AEAT sources, or downgrading the
+authority grade. Authoring requires `legal_refs` and `source_refs` grounded in
+official sources, which is why this is recorded rather than guessed.
+
+These two errors are the whole remaining registry-validation surface -- the
+count fell from 3183 to 2 -- and they gate the entire tree above core, because
+registry validation raises during collection.
 
 ## Durable lesson
 
