@@ -22,11 +22,12 @@ You need:
 
 - an [active profile](profile-setup.md#what-the-active-profile-means). `aeat
   config auth configure` refuses with `No hay un perfil activo` until you
-  create one. Create one non-interactively (a NIF, CIF, DNI, or NIE is a
-  Spanish tax identifier):
+  create one. Start the interactive wizard (a NIF, CIF, DNI, or NIE is a
+  Spanish tax identifier); it enrolls the profile passphrase and requires you
+  to verify the one-time recovery phrase before creation commits:
 
   ```{cli-sequence} authenticate-profile
-  :verify: Confirm a taxpayer profile can be created non-interactively.
+  :verify: Review recovery-enrolling profile creation and confirm a profile is active.
   ```
 
 - the master-key passphrase that protects your local store; the tool

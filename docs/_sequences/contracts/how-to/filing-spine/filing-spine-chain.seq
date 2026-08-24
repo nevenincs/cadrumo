@@ -6,7 +6,7 @@ aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1
 @step Verify the calculated draft.
 aeat --format json app modelo work verify --modelo 303 --year 2026 --period 1T
 @expect result.granted_verificado_completo == true
-@step Attempt the fichero-BOE export. Modelo 303 refuses it: the layout is withdrawn rather than shipped partial, because a partial one would let a filing under-declare in silence.
+@step Attempt the fichero-BOE export. Modelo 303 refuses it until reviewed product/software identity authority can stamp its envelope.
 @result aeat --format json app modelo export --modelo 303 --year 2026 --period 1T --output modelo-303.boe
-@expect exit_code == 2
-@expect error.code == "REFUSED_MODELO_EXPORT_UNSUPPORTED"
+@expect exit_code == 5
+@expect error.code == "FAIL_MODELO_EXPORT"

@@ -9,7 +9,7 @@
 aeat --format json app modelo work verify {revision_id}
 @step File a specific calculation by its reference number.
 aeat --format json app modelo work file {revision_id}
-@step Address an export by reference numbers. Modelo 303 refuses the fichero-BOE layout itself, so the addressing is shown against that refusal.
+@step Address an export by reference numbers; Modelo 303 still refuses without reviewed product/software identity authority.
 @result aeat --format json app modelo export {work_unit_id} --revision {revision_id} --output ./modelo-303.boe
-@expect exit_code == 2
-@expect error.code == "REFUSED_MODELO_EXPORT_UNSUPPORTED"
+@expect exit_code == 5
+@expect error.code == "FAIL_MODELO_EXPORT"

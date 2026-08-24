@@ -167,20 +167,15 @@ earlier quarters. For how the tool organises filing work behind the scenes, see
 
 ## 5. Record the quarter as filed
 
-Modelo 130 has no fichero-BOE layout, so export refuses. Record the quarter as
-filed locally instead:
+Export the verified Modelo 130 fichero-BOE artefact, then record the quarter as
+filed locally:
 
 ```{cli-sequence} quickstart-export
-:verify: Confirm the export refuses and the local filing marker is recorded.
+:verify: Confirm the export succeeds and the local filing marker is recorded.
 ```
 
-The refusal is deliberate. A fichero-BOE layout is published only once every
-field it contains can be produced from checked values, because a partial layout
-can under-declare without saying so. Calculation, verification and the local
-filing record all still work; only the upload file is unavailable.
-
-Enter the calculated box values yourself at the AEAT portal, as step 7
-describes.
+The exported file is a local artefact, not evidence that AEAT accepted the
+return. Present it through the AEAT portal, as step 7 describes.
 
 This example uses a deductible-IVA expense, so it links the purchase invoice
 before calculating. Verification refuses a deducted IVA row that carries no

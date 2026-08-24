@@ -495,6 +495,15 @@ class TestExpectEvaluation:
     def test_expectations_pass_against_the_live_run(self, json_run: SequenceTranscript) -> None:
         assert evaluate_expectations(_json_sequence(), json_run, page=_PAGE) == ()
 
+    def test_expectation_can_compare_with_an_earlier_capture(self, json_run: SequenceTranscript) -> None:
+        sequence = parse_sequence(
+            sequence_id="compare-json-case",
+            options={"verify": "Verify both profile listings report the same status."},
+            body=_JSON_BODY.replace('@expect status == "success"', '@expect status == "{run_status}"'),
+        )
+
+        assert evaluate_expectations(sequence, json_run, page=_PAGE) == ()
+
     def test_failed_semantic_expectation_is_named(self, json_run: SequenceTranscript) -> None:
         """A sequence cannot 'verify' by reproducing the wrong meaning: the
         expectation evaluates against the LIVE output and fails loudly."""

@@ -229,9 +229,14 @@ def evaluate_expectations(
     for index, (frame, execution) in enumerate(zip(executed, transcript.frames, strict=True)):
         at = _frame_locator(page, sequence.sequence_id, index, execution)
         for assertion in frame.expects:
-            rendered = json.dumps(assertion.expected)
+            expected = assertion.expected
+            if isinstance(expected, str) and expected.startswith("{") and expected.endswith("}"):
+                capture_name = expected[1:-1]
+                if capture_name in transcript.captures:
+                    expected = transcript.captures[capture_name]
+            rendered = json.dumps(expected)
             if assertion.json_path == _EXIT_CODE_PATH:
-                if execution.exit_code != assertion.expected:
+                if execution.exit_code != expected:
                     problems.append(
                         f"{at}: @expect {_EXIT_CODE_PATH} == {rendered} failed — live exit "
                         f"code is {execution.exit_code}",
@@ -251,7 +256,7 @@ def evaluate_expectations(
                     f"envelope (top-level keys: {', '.join(sorted(execution.envelope))})",
                 )
                 continue
-            if value != assertion.expected:
+            if value != expected:
                 problems.append(
                     f"{at}: @expect {assertion.json_path} == {rendered} failed — live value "
                     f"is {json.dumps(value, default=str)}",

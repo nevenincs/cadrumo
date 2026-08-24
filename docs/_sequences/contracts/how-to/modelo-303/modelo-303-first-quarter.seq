@@ -11,8 +11,7 @@ aeat --format json app modelo work verify {calculation_revision_id}
 @expect result.granted_verificado_completo == true
 @step Record the local filed marker after you upload through AEAT yourself.
 aeat --format json app modelo work file --modelo 303 --year 2026 --period 1T
-@step Try to export the filed revision. Modelo 303 has no fichero-BOE layout, so this refuses.
+@step Try to export the filed revision; it refuses without reviewed product/software identity authority.
 @result aeat --format json app modelo export --modelo 303 --year 2026 --period 1T --output modelo-303-1t.boe
-@expect exit_code == 2
-@expect error.code == "REFUSED_MODELO_EXPORT_UNSUPPORTED"
-@expect error.context.modelo == "303"
+@expect exit_code == 5
+@expect error.code == "FAIL_MODELO_EXPORT"

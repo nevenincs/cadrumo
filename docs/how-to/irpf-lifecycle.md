@@ -8,8 +8,8 @@ IRPF filing the year asks of a self-employed consultant.
 
 Cadrumo (the `aeat` command) prepares local files for Spanish tax forms. It
 does not submit them to the Agencia Estatal de Administración Tributaria
-(AEAT). Modelo 130 has no fichero-BOE layout, so at each filing you enter the
-calculated box values yourself through the AEAT portal.
+(AEAT). For Modelo 130 it writes a local fichero-BOE artefact that you present
+through the AEAT portal.
 
 Meet the persona this run-through follows: Ana García López, a consultant
 (*consultoría*) who started her activity on January 1, 2026, invoices her
@@ -70,11 +70,11 @@ Create and calculate the first instalment. Modelo 130 is cumulative, and a
 true first period has no history, so the three prior-period carries are
 passed as zeros - this is the only quarter where you do this. The sequence
 below records the quarter's two rows, creates and calculates the draft,
-verifies it, and shows the export refusing; the file and reconcile commands
+verifies it, and exports it; the file and reconcile commands
 that close the quarter are shown after it:
 
 ```{cli-sequence} irpf-lifecycle-q1
-:verify: Confirm the first instalment verifies and the export refuses.
+:verify: Confirm the first instalment verifies and exports locally.
 ```
 
 The key figures show the year so far: 1000 earned, 500 spent, and an
@@ -91,8 +91,7 @@ absorbs the whole instalment - casilla 13 in the output shows it.)
 
 Verify reports `completeness_status complete` and
 `granted_verificado_completo true` (the sequence above asserts this). `export`
-refuses: Modelo 130 carries no fichero-BOE layout, so there is no upload file to
-produce.
+writes the fichero-BOE upload artefact and reports its checksum.
 
 Enter the calculated figures at the AEAT portal (the checklist is
 [File your modelo at the AEAT portal](file-at-aeat.md)), then record

@@ -1,4 +1,7 @@
-@step Create a taxpayer profile non-interactively (use your own NIF, CIF, DNI, or NIE).
-  @result aeat --format json config profile create me --quiet --tax-residence-jurisdiction-scope common_regime --entity-type natural_person --tax-id 87654321X --name "Ana" --surnames "Garcia Lopez"
-  @expect result.profile_name == "me"
-  @expect exit_code == 0
+@step Start the interactive profile wizard, which enrolls both the passphrase and its one-time recovery phrase.
+@static aeat config profile create me
+@blocked interactive-tty Profile creation must receive and verify the recovery phrase through an interactive terminal.
+@step Confirm a profile is active before configuring AEAT authentication.
+@result aeat --format json config profile list
+@expect result.count == 1
+@expect exit_code == 0

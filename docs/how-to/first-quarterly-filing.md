@@ -7,8 +7,8 @@ before you file it. It is written for a self-employed taxpayer with a NIF,
 CIF, NIE, or other filing identity who is running Cadrumo for the first time.
 
 Cadrumo never submits a return to the Agencia Estatal de Administración
-Tributaria (AEAT). Modelo 130 has no fichero-BOE layout, so you enter the
-calculated box values yourself through the official AEAT channel.
+Tributaria (AEAT). It produces the Modelo 130 fichero-BOE artefact locally;
+you present that file through the official AEAT channel.
 
 The commands on this page run live at build time in a fresh, synthetic sandbox.
 The transactions, amounts, and taxpayer are invented. Run the same commands
@@ -93,11 +93,11 @@ evidence, so this example registers the supplier invoice and attaches it before
 it calculates. Attach in that order: a draft bundles its evidence when you
 verify it, so an invoice attached afterwards does not reach the filing.
 
-The sequence below shows `export` refusing - Modelo 130 has no fichero-BOE
-layout - and then the local filed marker recording.
+The sequence below exports the verified draft and then records the local filed
+marker.
 
 ```{cli-sequence} first-quarter-export-file
-:verify: Confirm the export refuses and the filing stays local.
+:verify: Confirm the export succeeds and the filing marker stays local.
 ```
 
 A later quarter builds on this one: leave the three prior-period bindings unset

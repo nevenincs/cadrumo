@@ -8,8 +8,8 @@ annual Modelo 390 summary that must reconcile with the four quarters.
 
 Cadrumo (the `aeat` command) prepares local files for Spanish tax forms. It
 does not submit them to the Agencia Estatal de Administración Tributaria
-(AEAT). Modelo 303 has no fichero-BOE layout, so at each filing you enter the
-calculated box values yourself through the AEAT portal.
+(AEAT). Modelo 303 export currently refuses without reviewed product/software
+identity authority, so you enter the calculated box values through the portal.
 
 The persona and the ledger continue from the income-tax run-through: Ana García
 López, consultant, activity started January 1, 2026. The same sale and
@@ -68,8 +68,8 @@ would want it locked.
 
 The first quarter's rows are already recorded and classified with their IVA
 detail (the sequence seeds them). Create, calculate, verify and file Modelo
-303 for the quarter; the export step refuses, because the modelo has no
-fichero-BOE layout:
+303 for the quarter; the export step refuses because the envelope lacks
+reviewed product/software identity authority:
 
 ```{cli-sequence} iva-lifecycle-q1
 :verify: Confirm the first quarter's IVA return verifies, files, and the export refuses.

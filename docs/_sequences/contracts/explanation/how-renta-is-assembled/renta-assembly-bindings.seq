@@ -1,4 +1,4 @@
 @step List every data source the declaration binds for the filing year.
 @result aeat --format json app modelo bindings list --modelo 100 --year 2025 --period 0A
-@expect result.binding_count == 64
+@expect result.binding_count == 67
 @expect exit_code == 0

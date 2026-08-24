@@ -2,8 +2,8 @@
 @setup aeat --format json app modelo work create --modelo 349 --year 2026 --period 1T
 @setup aeat --format json app modelo work calculate --modelo 349 --year 2026 --period 1T
 @setup aeat --format json app modelo work verify --modelo 349 --year 2026 --period 1T
-@step Export the verified declaration to a local fichero-BOE file.
+@step Confirm export refuses while the authoritative layout cannot encode every required casilla.
 @result aeat --format json app modelo export --modelo 349 --year 2026 --period 1T --output ./modelo-349.boe
-@expect result.filing_year == 2026
-@expect result.byte_size == 1500
-@expect exit_code == 0
+@expect error.code == "FAIL_MODELO_EXPORT"
+@expect error.context.cause == "application.filing.export_parity.errors.required_casillas_omitted"
+@expect exit_code == 5
