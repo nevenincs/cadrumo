@@ -70,6 +70,7 @@ from .._filed_data_capture import (
     pull_filed_history,
 )
 from .._filed_history_operation import (
+    FILED_HISTORY_IVA_WALLET_REFUSAL_CODE,
     FILED_HISTORY_NOTIFICATIONS_REFUSAL_CODE,
     FILED_HISTORY_OPERATION_DEFINITION_ID,
     FILED_HISTORY_PAIR_PROGRESS_UNIT,
@@ -371,6 +372,7 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
     ]
     assert [event.code for event in events if event.kind is OperationEventKind.LOG] == [
         FILED_HISTORY_PAIR_REFUSAL_CODE,
+        FILED_HISTORY_IVA_WALLET_REFUSAL_CODE,
         FILED_HISTORY_NOTIFICATIONS_REFUSAL_CODE,
     ]
     assert [event.effect for event in events if event.kind is OperationEventKind.EFFECT] == [
@@ -580,6 +582,15 @@ def test_public_registration_uses_a_strict_profile_free_request_schema(tmp_path:
     assert registry.lookup_public_registration(definition.definition_id) is registration
     assert tuple(request_schema["properties"]) == ("output_root", "today", "limit", "dry_run")
     assert "TaxpayerProfile" not in request_schema.get("$defs", {})
+
+
+def test_active_profile_resolution_uses_the_workflow_public_facade() -> None:
+    """The live operation must not reach through workflow's persistence module."""
+    module = importlib.import_module(".._filed_history_operation", package=__package__)
+    source = Path(module.__file__).read_text(encoding="utf-8")
+
+    assert "from ..workflow import workflow_state_repository" in source
+    assert "from ..workflow._persistence import workflow_state_repository" not in source
 
 
 def test_filed_history_operation_facade_does_not_publish_executor_or_phase_internals() -> None:
