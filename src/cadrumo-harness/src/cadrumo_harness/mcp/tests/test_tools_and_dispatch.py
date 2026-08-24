@@ -25,6 +25,18 @@ from .._toolsets import Toolset, build_toolsets
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
+def _live_authentication_contract():
+    """Read the authentication contract off the live projection.
+
+    Not hand-built: its field set derives from the root profile secret and its
+    booleans are policy, so a copy here would be a second declaration of a
+    product invariant and free to drift from the one that governs.
+    """
+    from cadrumo.entrypoints.cli._command_schema import command_registration_projection
+
+    return command_registration_projection().profile_authentication_contract
+
+
 def test_cli_form_uses_the_resolved_config_root_not_a_hardcoded_app_root() -> None:
     # A config.* verb resolves under the ``config`` CLI root
     # (aeat-architecture-boundaries: config/app are the only two roots); the
@@ -33,12 +45,16 @@ def test_cli_form_uses_the_resolved_config_root_not_a_hardcoded_app_root() -> No
     config_schema = VerbInputSchema(
         command_key="config.auth.apoderado.check",
         cli_path=("config", "auth", "apoderado", "check"),
+        profile_authentication="not-applicable",
+        profile_authentication_contract=_live_authentication_contract(),
     )
     assert _cli_form(config_schema) == "aeat config auth apoderado check"
 
     app_schema = VerbInputSchema(
         command_key="modelo.work.calculate",
         cli_path=("app", "modelo", "work", "calculate"),
+        profile_authentication="not-applicable",
+        profile_authentication_contract=_live_authentication_contract(),
     )
     assert _cli_form(app_schema) == "aeat app modelo work calculate"
 
@@ -235,6 +251,8 @@ def test_default_true_flag_pair_is_expressible_false_and_emits_the_off_token() -
     schema = VerbInputSchema(
         command_key="probe.flag",
         cli_path=("app", "probe", "flag"),
+        profile_authentication="not-applicable",
+        profile_authentication_contract=_live_authentication_contract(),
         parameters=(
             VerbParameter(
                 name="colour",

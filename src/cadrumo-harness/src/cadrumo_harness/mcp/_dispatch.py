@@ -69,6 +69,13 @@ _SEGMENT_ABBREVIATIONS: tuple[tuple[str, str], ...] = (
     ("review_package", "rpkg"),
     ("subject_access_request", "sar"),
     ("certificate_secret", "cert_secret"),
+    ("closing-authority", "closeauth"),
+    ("counterparty", "cparty"),
+    ("attachment", "attach"),
+    ("evidence", "evid"),
+    ("consent", "cnst"),
+    ("document", "doc"),
+    ("complete", "cmpl"),
 )
 
 
