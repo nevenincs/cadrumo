@@ -7,9 +7,114 @@ opens_on = 2026-02-01
 closes_on = 2026-03-02
 payment_cutoff_on = 2026-02-25
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
-source_refs = [
-    "boe-modelo-353-2007-form",
-    "aeat-modelo-353-procedure",
-    "aeat-calendario-contribuyente-2026-hasta-2-marzo",
-    "aeat-calendario-contribuyente-2026-domiciliacion",
-]
+source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2026-hasta-2-marzo", "aeat-calendario-contribuyente-2026-domiciliacion"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-353-2026-02"
+filing_year = 2026
+period = "2026 02"
+period_kind = "monthly"
+opens_on = 2026-03-01
+closes_on = 2026-03-30
+payment_cutoff_on = 2026-03-25
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2026-domiciliacion"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-353-2026-03"
+filing_year = 2026
+period = "2026 03"
+period_kind = "monthly"
+opens_on = 2026-04-01
+closes_on = 2026-04-30
+payment_cutoff_on = 2026-04-27
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2026-domiciliacion"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-353-2026-04"
+filing_year = 2026
+period = "2026 04"
+period_kind = "monthly"
+opens_on = 2026-05-01
+closes_on = 2026-06-01
+payment_cutoff_on = 2026-05-27
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2026-domiciliacion"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-353-2026-05"
+filing_year = 2026
+period = "2026 05"
+period_kind = "monthly"
+opens_on = 2026-06-01
+closes_on = 2026-06-30
+payment_cutoff_on = 2026-06-25
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2026-domiciliacion"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-353-2026-06"
+filing_year = 2026
+period = "2026 06"
+period_kind = "monthly"
+opens_on = 2026-07-01
+closes_on = 2026-07-30
+payment_cutoff_on = 2026-07-27
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2026-domiciliacion"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-353-2026-07"
+filing_year = 2026
+period = "2026 07"
+period_kind = "monthly"
+opens_on = 2026-08-01
+closes_on = 2026-08-31
+payment_cutoff_on = 2026-08-26
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2026-domiciliacion"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-353-2026-08"
+filing_year = 2026
+period = "2026 08"
+period_kind = "monthly"
+opens_on = 2026-09-01
+closes_on = 2026-09-30
+payment_cutoff_on = 2026-09-25
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2026-domiciliacion"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-353-2026-09"
+filing_year = 2026
+period = "2026 09"
+period_kind = "monthly"
+opens_on = 2026-10-01
+closes_on = 2026-10-30
+payment_cutoff_on = 2026-10-27
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2026-domiciliacion"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-353-2026-10"
+filing_year = 2026
+period = "2026 10"
+period_kind = "monthly"
+opens_on = 2026-11-01
+closes_on = 2026-11-30
+payment_cutoff_on = 2026-11-25
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2026-domiciliacion"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-353-2026-11"
+filing_year = 2026
+period = "2026 11"
+period_kind = "monthly"
+opens_on = 2026-12-01
+closes_on = 2026-12-30
+payment_cutoff_on = 2026-12-24
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure", "aeat-calendario-contribuyente-2026-domiciliacion"]

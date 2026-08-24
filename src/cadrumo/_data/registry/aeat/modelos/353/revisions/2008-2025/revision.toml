@@ -55,6 +55,8 @@ source_refs = [
     "aeat-dr-353-2021-2025",
     "aeat-modelo-353-procedure",
     "boe-modelo-353-2007-form",
+    "aeat-calendario-contribuyente-2025",
+    "aeat-calendario-contribuyente-2026-domiciliacion",
 ]
 
 

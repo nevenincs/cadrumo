@@ -1182,6 +1182,28 @@ def test_donativo_donor_country_code_must_be_uppercase_alphabetic() -> None:
         )
 
 
+def test_donativo_donor_refuses_type_1_declarant_nature() -> None:
+    """MUTATION: a protected-estate filer header cannot become donor-row data.
+
+    Modelo 182 type-1 nature ``3`` identifies a protected-estate holder or an
+    administrator. It belongs to the still-unshipped declarant/type-2 lifecycle,
+    not to a ``DonativoDonorObservation``. Accepting it here would create a
+    second, incomplete legal-filer declaration beside the canonical header
+    authority and make an eventual export silently narrow the filer population.
+    """
+    with pytest.raises(ValidationError, match="declarant_nature"):
+        DonativoDonorObservation.model_validate(
+            {
+                "source_id": "d1",
+                "donor_tax_id": "12345678A",
+                "transaction_date": date(2025, 3, 15),
+                "amount_donated": Decimal("100"),
+                "deduction_percentage": Decimal("80"),
+                "declarant_nature": "3",
+            },
+        )
+
+
 def test_build_donativo_rows_sums_per_donor_and_preserves_recurrencia() -> None:
     """A donor who gave twice in the year folds into one row; recurrencia sticks."""
     q1_amount = Decimal("100")

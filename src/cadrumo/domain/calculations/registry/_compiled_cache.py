@@ -70,7 +70,7 @@ package data); mutable-tree TOML files carry a content hash so a same-size,
 same-mtime rewrite still re-keys the cache.
 """
 
-_COMPILED_CACHE_SCHEMA_VERSION = b"compiled-registry-v1"
+_COMPILED_CACHE_SCHEMA_VERSION = b"compiled-registry-v2"
 _CACHE_FILENAME_PREFIX = "cadrumo_registry_"
 _CACHE_FILENAME_SUFFIX = ".pkl"
 _FRAME_SEPARATOR = b"\n"
@@ -505,9 +505,41 @@ def _is_compiled_registry_payload(payload: object) -> TypeGuard[CompiledRegistry
     modelos_raw, catalogues_raw = payload
     if not _is_object_tuple(modelos_raw):
         return False
-    return all(isinstance(modelo, ModeloDefinition) for modelo in modelos_raw) and isinstance(
+    if not all(isinstance(modelo, ModeloDefinition) for modelo in modelos_raw) or not isinstance(
         catalogues_raw, RegistryCatalogues
-    )
+    ):
+        return False
+    return _has_current_pydantic_shape((*modelos_raw, catalogues_raw))
+
+
+def _has_current_pydantic_shape(values: Iterable[object]) -> bool:
+    """Whether every nested Pydantic object carries every field in today's schema.
+
+    Pickle restores an old Pydantic instance without running today's validators or
+    materialising fields added since it was written.  ``isinstance`` alone therefore
+    accepts a stale object whose class name still resolves, only to fail later with an
+    ``AttributeError``.  Walk the already-decoded first-party graph and refuse any
+    model whose stored state omits a current field.  Refusal deletes and recompiles
+    the derived cache; it never hydrates or migrates the stale object.
+    """
+    pending = list(values)
+    seen: set[int] = set()
+    while pending:
+        value = pending.pop()
+        identity = id(value)
+        if identity in seen:
+            continue
+        seen.add(identity)
+        if isinstance(value, BaseModel):
+            if not set(type(value).model_fields).issubset(value.__dict__):
+                return False
+            pending.extend(value.__dict__.values())
+        elif isinstance(value, dict):
+            pending.extend(value.keys())
+            pending.extend(value.values())
+        elif isinstance(value, (tuple, list, set, frozenset)):
+            pending.extend(value)
+    return True
 
 
 def _is_object_tuple(value: object) -> TypeGuard[tuple[object, ...]]:

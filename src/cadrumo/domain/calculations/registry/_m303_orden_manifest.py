@@ -16,7 +16,7 @@ from ._m303_orden_census_artefact import (
     load_m303_annual_orden_censuses,
     render_m303_annual_orden_censuses,
 )
-from ._m303_orden_constants import EXTRACTOR_VERSION, SUPPORTED_EJERCICIOS
+from ._m303_orden_constants import EXTRACTOR_VERSION
 from ._m303_orden_legal import compile_annual_orden_legal_references
 from ._m303_orden_projection_compiler import compile_m303_annual_orden_projection
 from ._m303_orden_projection_models import (
@@ -53,6 +53,7 @@ def _generate_manifest_with_censuses(
     source_root: Path,
     sources: Mapping[SourceRefId, SourceReference],
     registry_root: Path | None = None,
+    supported_filing_years: tuple[int, ...] | None = None,
 ) -> tuple[M303AnnualOrdenGeneratedManifest, dict[SourceRefId, M303AnnualOrdenSourceCensus]]:
     """Derive the manifest AND hand back the censuses it was derived from.
 
@@ -71,7 +72,12 @@ def _generate_manifest_with_censuses(
     generated_sources: list[M303AnnualOrdenGeneratedSource] = []
     censuses: dict[SourceRefId, M303AnnualOrdenSourceCensus] = {}
     shipped = load_m303_annual_orden_censuses(registry_root, sources=sources) if registry_root is not None else None
-    for ejercicio in SUPPORTED_EJERCICIOS:
+    ejercicios = (
+        _annual_orden_years_from_sources(sources)
+        if supported_filing_years is None
+        else supported_filing_years
+    )
+    for ejercicio in ejercicios:
         source = _single_annual_orden_source_for_year(sources, ejercicio=ejercicio)
         census = None if shipped is None else shipped.get(source.id)
         if census is None or census.ejercicio != ejercicio:
@@ -254,6 +260,7 @@ def _check_manifest_with_censuses(
     source_root: Path,
     sources: Mapping[SourceRefId, SourceReference],
     registry_root: Path | None = None,
+    supported_filing_years: tuple[int, ...] | None = None,
 ) -> tuple[M303AnnualOrdenGeneratedManifest, dict[SourceRefId, M303AnnualOrdenSourceCensus]]:
     """Run the staleness refusal and hand back the censuses behind it.
 
@@ -285,6 +292,7 @@ def _check_manifest_with_censuses(
         source_root=source_root,
         sources=sources,
         registry_root=registry_root,
+        supported_filing_years=supported_filing_years,
     )
     expected = _render_generated_manifest(manifest)
     try:
@@ -302,6 +310,7 @@ def load_m303_annual_orden_authority(
     source_root: Path,
     modelos: Sequence[ModeloDefinition],
     sources: Mapping[SourceRefId, SourceReference],
+    supported_filing_years: tuple[int, ...] | None = None,
 ) -> M303AnnualOrdenCompilation:
     """Compile source-pinned annual Orden rows and legal provisions into the registry."""
     manifest_path = root.resolve() / "m303_orden_anual" / "manifest.toml"
@@ -315,6 +324,7 @@ def load_m303_annual_orden_authority(
         source_root=source_root,
         sources=sources,
         registry_root=root.resolve(),
+        supported_filing_years=supported_filing_years,
     )
     modelo_303 = _single_m303_modelo(modelos)
     annual_source_refs = frozenset(source.source_ref for source in manifest.sources)
@@ -469,6 +479,31 @@ def _single_annual_orden_source_for_year(
             f"got {len(candidates)}",
         )
     return candidates[0]
+
+
+def _annual_orden_years_from_sources(
+    sources: Mapping[SourceRefId, SourceReference],
+) -> tuple[int, ...]:
+    """Derive authoring-tool years from the same source rows production consumes.
+
+    Production compilation receives the registry-supported catalogue explicitly;
+    this source-derived path exists only for generators and staleness checks that
+    intentionally operate before a compiled registry catalogue is available.
+    """
+    return tuple(
+        sorted(
+            source.applies_from.year
+            for source in sources.values()
+            if source.id.endswith("-iva-authority")
+            and source.authority == "boe"
+            and source.kind == "instructions"
+            and source.applies_from is not None
+            and source.applies_to is not None
+            and source.applies_from.month == 1
+            and source.applies_from.day == 1
+            and source.applies_to == date(source.applies_from.year, 12, 31)
+        ),
+    )
 
 
 def _single_m303_modelo(modelos: Sequence[ModeloDefinition]) -> ModeloDefinition:

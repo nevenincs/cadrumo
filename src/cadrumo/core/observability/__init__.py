@@ -47,6 +47,7 @@ from ._fingerprint import (
 )
 from ._golden import (
     GOLDEN_MASK_FIELDS,
+    GOLDEN_MASK_PATHS,
     MASK_SENTINEL,
     assert_golden_match,
     canonicalise,
@@ -97,6 +98,7 @@ __all__ = [
     "ENVELOPE_FILENAME",
     "EVENTS_FILENAME",
     "GOLDEN_MASK_FIELDS",
+    "GOLDEN_MASK_PATHS",
     "MASK_SENTINEL",
     "REPLAY_ACTIVE_ENV_VAR",
     "RUN_CONTEXT_VAR",

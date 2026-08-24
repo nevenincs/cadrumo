@@ -9,11 +9,10 @@ from pydantic import BaseModel, Field
 
 from ..core import (
     STRICT_FROZEN_CONFIG,
-    ActionConditionality,
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
-from .operator_actions import ConditionEvidence, PreconditionVerdict
+from .operator_actions import PreconditionVerdict
 
 __all__ = [
     "OLLAMA_PROBE_CACHE_TTL_S",
@@ -93,19 +92,11 @@ def provisioning_no_recovery_verdict(
     facts: Mapping[str, ProvisioningFactValue],
 ) -> PreconditionVerdict:
     """Return the explicit closed outcome for one provisioning refusal."""
-    condition_id = condition.value
-    return PreconditionVerdict(
-        failed_condition_id=condition_id,
-        evidence=(
-            ConditionEvidence(
-                condition_id=condition_id,
-                evidence_id=f"{condition_id}.observation",
-                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-                values=facts,
-            ),
-        ),
-        conditionality=ActionConditionality.NOT_APPLICABLE,
-        no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+    from .operator_actions import no_action_precondition_verdict
+    return no_action_precondition_verdict(
+        condition_id=condition.value, facts=facts,
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
     )
 
 

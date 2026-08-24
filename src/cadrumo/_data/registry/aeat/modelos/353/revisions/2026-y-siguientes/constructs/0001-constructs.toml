@@ -64,6 +64,16 @@ application_links = [
 filing_schedules = ["modelo-353-mensual"]
 deadline_windows = [
     "modelo-353-2026-01",
+    "modelo-353-2026-02",
+    "modelo-353-2026-03",
+    "modelo-353-2026-04",
+    "modelo-353-2026-05",
+    "modelo-353-2026-06",
+    "modelo-353-2026-07",
+    "modelo-353-2026-08",
+    "modelo-353-2026-09",
+    "modelo-353-2026-10",
+    "modelo-353-2026-11",
 ]
 
 # Calculation-completeness manifest for revision 2026-y-siguientes: the

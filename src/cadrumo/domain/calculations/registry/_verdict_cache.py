@@ -7,7 +7,8 @@ which asserted a validation role this module never had -- it stamps and
 reads verdicts a real validator already produced.
 
 A green ``validate_registry`` run persists a verdict keyed by the registry
-fingerprint tuples, the package version, and the outcome. On a later load a
+identity, source evidence, package version, canonical loader-code fingerprint,
+and the outcome. On a later load a
 match lets :class:`ValidatedRegistryAuthority` construct with validation marked
 done and skip the multi-second re-validation of an immutable bundled registry
 (build and continuous integration are the gate;
@@ -37,6 +38,7 @@ from .... import __version__
 from ....core import StorageCategory, storage_path
 from ....core.atomic_write import atomic_write_best_effort_text
 from ....core.external_constants import UTF_8_ENCODING
+from ._compiled_cache import loader_code_fingerprint
 from ._identity import RegistryIdentity
 from ._loader_cache import is_bundled_registry_root
 
@@ -55,9 +57,9 @@ _LOGGER = logging.getLogger(__name__)
 class RegistryValidationVerdict(BaseModel):
     """A persisted proof that a registry tree validated green.
 
-    ``verdict_key`` folds the fingerprint tuples and the package version into
-    one hash; the runtime skips validation only when a stored green verdict's
-    key equals the freshly recomputed key.
+    ``verdict_key`` folds the authority inputs and the canonical loader-code
+    fingerprint into one hash; the runtime skips validation only when a stored
+    green verdict's key equals the freshly recomputed key.
     """
 
     model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
@@ -72,8 +74,9 @@ def compute_verdict_key(
     identity_digest: str,
     source_evidence_fingerprints: SourceEvidenceFingerprintTuples,
     package_version: str = __version__,
+    loader_code_fingerprint_override: str | None = None,
 ) -> str:
-    """Bind one tree identity plus the source-evidence set into a verdict key.
+    """Bind tree, evidence, and current registry validation code into one key.
 
     ``identity_digest`` comes from
     :func:`~domain.calculations.registry._identity.resolve_registry_identity`
@@ -83,10 +86,18 @@ def compute_verdict_key(
     moving between groups cannot collide.
 
     Returns:
-        The hex SHA-256 digest binding the identity to ``package_version``.
+        The hex SHA-256 digest binding the identity and validation code to
+        ``package_version``.
     """
     hasher = hashlib.sha256()
     hasher.update(package_version.encode("utf-8"))
+    code_fingerprint = (
+        loader_code_fingerprint()
+        if loader_code_fingerprint_override is None
+        else loader_code_fingerprint_override
+    )
+    hasher.update(b"registry-code")
+    hasher.update(code_fingerprint.encode("utf-8"))
     hasher.update(b"identity")
     hasher.update(identity_digest.encode("utf-8"))
     hasher.update(b"source")
@@ -100,15 +111,17 @@ def compute_shipped_verdict_key(
     *,
     identity_digest: str,
     package_version: str = __version__,
+    loader_code_fingerprint_override: str | None = None,
 ) -> str:
     """Compute the install-stable key for the release-stamped bundled verdict.
 
     Drops the source-evidence group that :func:`compute_verdict_key` folds:
     those tuples carry absolute paths and ``mtime_ns``, neither of which
-    survives packaging. What remains is the release version plus the stamped
-    install-stable tree identity, which is byte-stable from the build machine to
-    every install. Install byte integrity is owned by the package-manager digest
-    chain; any change the stamp can see re-validates.
+    survives packaging. What remains is the release version, the canonical
+    path-independent loader-code fingerprint, and the stamped install-stable
+    tree identity, all byte-stable from build machine to install. Install byte
+    integrity is owned by the package-manager digest chain; any change the stamp
+    can see re-validates.
 
     Returns:
         The hex SHA-256 digest over the version and the stamped identity.
@@ -116,6 +129,12 @@ def compute_shipped_verdict_key(
     hasher = hashlib.sha256()
     hasher.update(b"shipped-registry-verdict")
     hasher.update(package_version.encode("utf-8"))
+    code_fingerprint = (
+        loader_code_fingerprint()
+        if loader_code_fingerprint_override is None
+        else loader_code_fingerprint_override
+    )
+    hasher.update(code_fingerprint.encode("utf-8"))
     hasher.update(identity_digest.encode("utf-8"))
     return hasher.hexdigest()
 

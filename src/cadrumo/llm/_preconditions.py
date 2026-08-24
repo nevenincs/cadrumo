@@ -14,7 +14,7 @@ from collections.abc import Mapping
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from ..core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ..core import ActionEvidenceProvenance, NoRecoveryOutcome
 
 if TYPE_CHECKING:
     from ..application.operator_actions import PreconditionVerdict
@@ -61,21 +61,13 @@ def llm_no_recovery_verdict(
     cycle.  The returned object is nevertheless the canonical application-owned
     verdict type used by the shared CLI resolver.
     """
-    from ..application.operator_actions import ConditionEvidence, PreconditionVerdict
+    from ..application.operator_actions import no_action_precondition_verdict
 
-    condition_id = condition.value
-    return PreconditionVerdict(
-        failed_condition_id=condition_id,
-        evidence=(
-            ConditionEvidence(
-                condition_id=condition_id,
-                evidence_id=f"{condition_id}.observation",
-                provenance=provenance,
-                values=facts,
-            ),
-        ),
-        conditionality=ActionConditionality.NOT_APPLICABLE,
-        no_recovery_outcome=outcome,
+    return no_action_precondition_verdict(
+        condition_id=condition.value,
+        facts=facts,
+        provenance=provenance,
+        outcome=outcome,
     )
 
 

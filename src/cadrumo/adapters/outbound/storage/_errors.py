@@ -94,7 +94,7 @@ class OutboundStorageUnavailableError(OutboundStorageError):
     """Raised when the backend is reachable but signals temporary unavailability."""
 
 
-class StorageCorruptionError(CoreError):
+class StorageCorruptionError(TerminalPreconditionErrorMixin, CoreError):
     """Raised when a sidecar file contains structurally invalid field types.
 
     As a :class:`core.errors.CoreError`, this indicates on-disk data
@@ -105,6 +105,14 @@ class StorageCorruptionError(CoreError):
     :func:`adapters.outbound.storage._integrity.verify_content_hash`, this
     error surfaces schema-level violations in the sidecar metadata file itself.
     """
+
+    def __init__(self, message=None, *, context=None, translated_message=None, precondition_verdict=None):
+        super().__init__(
+            message,
+            context=context,
+            translated_message=translated_message,
+            precondition_verdict=precondition_verdict,
+        )
 
 
 __all__ = [

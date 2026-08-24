@@ -20,13 +20,14 @@ import sys
 import sysconfig
 import threading
 import traceback
+from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from enum import StrEnum
 from pathlib import Path
 from typing import cast
 
 from cadrumo.adapters.persistence.storage import close_active_bucket_session
-from cadrumo.core import PRODUCT_IDENTITY
+from cadrumo.core import PRODUCT_IDENTITY, ActionEvidenceProvenance, NoRecoveryOutcome
 from cadrumo.core.errors import ErrorEnvelope
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.i18n import tr
@@ -35,6 +36,7 @@ from cadrumo.core.json_contract import (
     EnvelopeStatus,
     Notice,
     NoticeSeverity,
+    ResolvedPreconditionAction,
     validate_registered_envelope_document,
 )
 from cadrumo.entrypoints.cli.command_api import cli_argv_for
@@ -70,6 +72,31 @@ class McpTransport(StrEnum):
     SUBPROCESS_FALLBACK = "subprocess_fallback"
 
 
+_TRANSPORT_CALL_COMPLETED_CONDITION = "mcp.transport.call_completed"
+_TRANSPORT_CLI_AVAILABLE_CONDITION = "mcp.transport.cli_available"
+_TRANSPORT_WARM_AVAILABLE_CONDITION = "mcp.transport.warm_available"
+
+
+def _terminal_transport_projection(
+    *,
+    condition_id: str,
+    facts: Mapping[str, str | int | bool],
+    outcome: NoRecoveryOutcome,
+) -> ResolvedPreconditionAction:
+    """Resolve one transport-owned terminal observation through shared authority."""
+    from cadrumo.application.operator_actions import no_action_precondition_verdict
+    from cadrumo.entrypoints.cli import resolve_cli_precondition_action
+
+    return resolve_cli_precondition_action(
+        no_action_precondition_verdict(
+            condition_id=condition_id,
+            facts=facts,
+            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            outcome=outcome,
+        ),
+    )
+
+
 def _transport_error_envelope(
     *,
     command_key: str,
@@ -77,6 +104,7 @@ def _transport_error_envelope(
     message: str,
     retryable: bool,
     context: dict[str, str],
+    action: ResolvedPreconditionAction,
 ) -> dict[str, object]:
     """Build one strict canonical error document for an MCP transport failure.
 
@@ -123,12 +151,12 @@ def _transport_error_envelope(
             code=code,
             category="refused",
             message=message,
-            action=None,
+            action=action,
             retryable=retryable,
             runbook_id=None,
             context=context,
             trace_id=None,
-        ).model_dump(mode="json"),
+        ).model_dump(mode="python"),
         "notices": [],
     }
     return validate_registered_envelope_document(document, None)
@@ -142,8 +170,7 @@ def _timeout_refusal_envelope(*, command_key: str, tier: CallTier, timeout_s: fl
         tier=tier.value,
         seconds=int(timeout_s),
         default=(
-            "'{command}' exceeded the {tier}-tier time limit ({seconds}s) and was cancelled. "
-            "Retry, or run the equivalent Cadrumo command directly in a terminal for a long operation."
+            "'{command}' exceeded the {tier}-tier time limit ({seconds}s) and was cancelled."
         ),
     )
     return _transport_error_envelope(
@@ -152,6 +179,16 @@ def _timeout_refusal_envelope(*, command_key: str, tier: CallTier, timeout_s: fl
         message=message,
         retryable=True,
         context={"tier": tier.value, "timeout_seconds": str(int(timeout_s)), "timed_out": "true"},
+        action=_terminal_transport_projection(
+            condition_id=_TRANSPORT_CALL_COMPLETED_CONDITION,
+            facts={
+                "call_completed": False,
+                "tier": tier.value,
+                "timed_out": True,
+                "timeout_seconds": int(timeout_s),
+            },
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        ),
     )
 
 
@@ -206,9 +243,18 @@ def _cli_resolution_refusal_envelope(*, command_key: str, error: OSError) -> dic
     return _transport_error_envelope(
         command_key=command_key,
         code="mcp.transport.installation_incomplete",
-        message=f"The Cadrumo CLI could not be resolved: {detail}. Reinstall the package, then retry.",
+        message=f"The Cadrumo CLI could not be resolved: {detail}.",
         retryable=False,
         context={"installation_incomplete": "true"},
+        action=_terminal_transport_projection(
+            condition_id=_TRANSPORT_CLI_AVAILABLE_CONDITION,
+            facts={
+                "cli_available": False,
+                "error_type": type(error).__name__,
+                "errno_present": error.errno is not None,
+            },
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        ),
     )
 
 
@@ -330,17 +376,27 @@ def _inprocess_timeout_notice(*, command_key: str, worker_stack: str = "") -> No
         command=command_key,
         default=(
             "'{command}' exceeded its time limit; the operation may still be completing in the "
-            "background. Re-run it with the same idempotency key to check - the idempotency guard "
-            "makes the retry safe and never double-writes."
+            "background. The idempotency guard prevents duplicate writes."
         ),
     )
-    context: dict[str, str] = {"command": command_key, "idempotent_retry": "safe"}
+    context: dict[str, str] = {}
     if worker_stack:
         context["worker_stack_at_timeout"] = worker_stack
     return Notice(
         severity=NoticeSeverity.WARNING,
         code="mcp.call.timeout_may_complete",
         message=message,
+        action=_terminal_transport_projection(
+            condition_id=_TRANSPORT_CALL_COMPLETED_CONDITION,
+            facts={
+                "call_completed": False,
+                "inprocess": True,
+                "idempotency_guard": True,
+                "may_complete": True,
+                "timed_out": True,
+            },
+            outcome=NoRecoveryOutcome.SAFETY,
+        ),
         context=context,
     )
 
@@ -370,6 +426,14 @@ def _warm_degradation_notice(*, command_key: str, wedged: bool) -> Notice:
         severity=NoticeSeverity.WARNING,
         code="mcp.serving.warm_transport_degraded",
         message=message,
+        action=_terminal_transport_projection(
+            condition_id=_TRANSPORT_WARM_AVAILABLE_CONDITION,
+            facts={
+                "warm_available": False,
+                "warm_state": reason,
+            },
+            outcome=NoRecoveryOutcome.TERMINAL,
+        ),
         context={"command_key": command_key, "transport": "subprocess", "reason": reason},
     )
 

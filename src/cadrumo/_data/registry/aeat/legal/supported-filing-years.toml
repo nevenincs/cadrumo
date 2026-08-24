@@ -1,0 +1,5 @@
+# One registry-wide declaration. A year is admitted here only after the
+# coverage audit enumerates its unresolved modelo/period prerequisites; the
+# audit remains advisory until the separately authorised enforcement flip.
+[supported_filing_years]
+years = [2022, 2023, 2024, 2025, 2026]

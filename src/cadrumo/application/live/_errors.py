@@ -22,12 +22,11 @@ from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from ...core import (
-    ActionConditionality,
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
 from ...core.errors import CadrumoError, TerminalPreconditionErrorMixin
-from ..operator_actions import PreconditionVerdict
+from ..operator_actions import PreconditionVerdict, no_action_precondition_verdict
 
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.auth import ClaveMovilApprovalTimeoutError
@@ -94,21 +93,11 @@ def live_read_no_recovery_verdict(
         The :class:`~application.operator_actions.PreconditionVerdict` carrying
         the failed condition and its explicit no-recovery outcome.
     """
-    from ..operator_actions import ConditionEvidence, PreconditionVerdict
-
-    condition_id = condition.value
-    return PreconditionVerdict(
-        failed_condition_id=condition_id,
-        evidence=(
-            ConditionEvidence(
-                condition_id=condition_id,
-                evidence_id=f"{condition_id}.observation",
-                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-                values=facts,
-            ),
-        ),
-        conditionality=ActionConditionality.NOT_APPLICABLE,
-        no_recovery_outcome=outcome,
+    return no_action_precondition_verdict(
+        condition_id=condition.value,
+        facts=facts,
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        outcome=outcome,
     )
 
 

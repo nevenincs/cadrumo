@@ -248,18 +248,10 @@ def _diagnostic_no_recovery_verdict(
     outcome: NoRecoveryOutcome,
 ) -> PreconditionVerdict:
     """Build one explicit diagnostics-owned closed recovery outcome."""
-    return PreconditionVerdict(
-        failed_condition_id=condition_id,
-        evidence=(
-            ConditionEvidence(
-                condition_id=condition_id,
-                evidence_id=evidence_id,
-                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-                values=values,
-            ),
-        ),
-        conditionality=ActionConditionality.NOT_APPLICABLE,
-        no_recovery_outcome=outcome,
+    from .operator_actions import no_action_precondition_verdict
+    return no_action_precondition_verdict(
+        condition_id=condition_id, evidence_id=evidence_id, facts=values,
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION, outcome=outcome,
     )
 
 

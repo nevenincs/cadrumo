@@ -9,15 +9,20 @@ from typing import Annotated, Any, TypedDict, cast, override
 import pytest
 from pydantic import (
     BaseModel,
+    BeforeValidator,
     Field,
+    GetCoreSchemaHandler,
     GetJsonSchemaHandler,
     Json,
     PlainSerializer,
     SecretStr,
     ValidationError,
+    ValidatorFunctionWrapHandler,
     computed_field,
     field_serializer,
+    field_validator,
     model_serializer,
+    model_validator,
 )
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import CoreSchema
@@ -267,6 +272,76 @@ class StructuralSchemaExtraPayload(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     value: int = Field(json_schema_extra={"type": "string"})
+
+
+class BeforeFieldValidatorPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    value: int
+
+    @field_validator("value", mode="before")
+    @classmethod
+    def _accept_string_integer(cls, value: object) -> object:
+        return int(value) if isinstance(value, str) else value
+
+
+class PlainFieldValidatorPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    value: int
+
+    @field_validator("value", mode="plain")
+    @classmethod
+    def _accept_string_integer(cls, value: object) -> int:
+        return int(value) if isinstance(value, str) else 0
+
+
+class WrapFieldValidatorPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    value: int
+
+    @field_validator("value", mode="wrap")
+    @classmethod
+    def _accept_string_integer(cls, value: object, handler: ValidatorFunctionWrapHandler) -> int:
+        resolved = handler(int(value)) if isinstance(value, str) else handler(value)
+        assert isinstance(resolved, int)
+        return resolved
+
+
+class BeforeModelValidatorPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    value: int
+
+    @model_validator(mode="before")
+    @classmethod
+    def _accept_scalar(cls, value: object) -> object:
+        return {"value": int(value)} if isinstance(value, str) else value
+
+
+class AnnotationCoreSchemaPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    value: Annotated[
+        int,
+        BeforeValidator(lambda value: int(value) if isinstance(value, str) else value),
+    ]
+
+
+class ModelCoreSchemaHookPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    value: int
+
+    @classmethod
+    @override
+    def __get_pydantic_core_schema__(
+        cls,
+        source_type: object,
+        handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        return handler(source_type)
 
 
 class Executor:
@@ -757,7 +832,7 @@ def test_public_schema_identity_refuses_serializer_drift(model_type: type[BaseMo
 
 
 def test_public_schema_identity_refuses_annotated_serializer_drift() -> None:
-    with pytest.raises(ValueError, match="validation and serialization shapes must be identical"):
+    with pytest.raises(ValueError, match="must not customize its Pydantic core schema"):
         OperationSchemaIdentityV1.from_model(
             schema_id="profile.sync.annotated-serializer-drift",
             schema_version=1,
@@ -780,6 +855,44 @@ def test_public_schema_identity_refuses_structural_json_schema_extras() -> None:
             schema_id="profile.sync.structural-schema-extra",
             schema_version=1,
             model_type=StructuralSchemaExtraPayload,
+        )
+
+
+@pytest.mark.parametrize(
+    "model_type",
+    [
+        BeforeFieldValidatorPayload,
+        PlainFieldValidatorPayload,
+        WrapFieldValidatorPayload,
+        BeforeModelValidatorPayload,
+    ],
+)
+def test_public_schema_identity_refuses_coercive_before_plain_or_wrap_validators(
+    model_type: type[BaseModel],
+) -> None:
+    with pytest.raises(ValueError, match="must not declare coercive"):
+        OperationSchemaIdentityV1.from_model(
+            schema_id="profile.sync.coercive-validator",
+            schema_version=1,
+            model_type=model_type,
+        )
+
+
+def test_public_schema_identity_refuses_annotation_core_schema_hooks() -> None:
+    with pytest.raises(ValueError, match="must not customize its Pydantic core schema"):
+        OperationSchemaIdentityV1.from_model(
+            schema_id="profile.sync.core-schema-hook",
+            schema_version=1,
+            model_type=AnnotationCoreSchemaPayload,
+        )
+
+
+def test_public_schema_identity_refuses_model_class_core_schema_hooks() -> None:
+    with pytest.raises(ValueError, match="must not customize its Pydantic core schema"):
+        OperationSchemaIdentityV1.from_model(
+            schema_id="profile.sync.model-core-schema-hook",
+            schema_version=1,
+            model_type=ModelCoreSchemaHookPayload,
         )
 
 

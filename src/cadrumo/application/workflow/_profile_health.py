@@ -50,6 +50,7 @@ from ..operator_actions import (
     ActionReference,
     ConditionEvidence,
     PreconditionVerdict,
+    no_action_precondition_verdict,
 )
 from ..profile_preconditions import inspect_active_profile_precondition, profile_session_failure_verdict
 from ..user_profile import (
@@ -342,11 +343,12 @@ def _pointer_repair_verdict(*, condition_id: str, evidence: ConditionEvidence) -
 
 def _operator_decision_verdict(*, condition_id: str, evidence: ConditionEvidence) -> PreconditionVerdict:
     """Return a terminal policy outcome when no command is honestly available."""
-    return PreconditionVerdict(
-        failed_condition_id=condition_id,
-        evidence=(evidence,),
-        conditionality=ActionConditionality.NOT_APPLICABLE,
-        no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+    return no_action_precondition_verdict(
+        condition_id=condition_id,
+        evidence_id=evidence.evidence_id,
+        facts=evidence.values,
+        provenance=evidence.provenance,
+        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
     )
 
 

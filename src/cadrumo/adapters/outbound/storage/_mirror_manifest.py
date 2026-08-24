@@ -17,6 +17,8 @@ from datetime import datetime
 
 from pydantic import ValidationError
 
+from ....application.operator_actions import no_action_precondition_verdict
+from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.hashing import sha256_hex
 from ...persistence.storage.sql.secure_objects import SecureObjectRawRow
 from ._errors import OutboundStorageIntegrityError, OutboundStorageNotFoundError, OutboundStorageValidationError
@@ -108,6 +110,12 @@ def get_remote_mirror_namespace_manifest(
         raise OutboundStorageIntegrityError(
             f"remote mirror manifest for namespace {namespace!r} is malformed",
             context={"namespace": namespace},
+            precondition_verdict=no_action_precondition_verdict(
+                condition_id="storage.mirror.manifest.schema_valid",
+                facts={"namespace": namespace, "manifest_valid": False},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         ) from exc
     if manifest.manifest_schema_version != REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION:
         raise OutboundStorageIntegrityError(
@@ -118,6 +126,16 @@ def get_remote_mirror_namespace_manifest(
                 "manifest_schema_version": manifest.manifest_schema_version,
                 "supported_manifest_schema_version": REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION,
             },
+            precondition_verdict=no_action_precondition_verdict(
+                condition_id="storage.mirror.manifest.schema_supported",
+                facts={
+                    "namespace": namespace,
+                    "manifest_schema_version": manifest.manifest_schema_version,
+                    "supported_manifest_schema_version": REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION,
+                },
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         )
     return manifest
 
@@ -264,6 +282,12 @@ def _compare_manifest_objects(
         raise OutboundStorageValidationError(
             "cannot compare remote mirror manifests from different namespaces",
             context={"local_namespace": local.namespace, "remote_namespace": remote.namespace},
+            precondition_verdict=no_action_precondition_verdict(
+                condition_id="storage.mirror.manifest.namespaces_match",
+                facts={"local_namespace": local.namespace, "remote_namespace": remote.namespace},
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            ),
         )
     issues: list[RemoteMirrorIssue] = []
     local_by_key = {entry.object_key_hmac: entry for entry in local.objects}

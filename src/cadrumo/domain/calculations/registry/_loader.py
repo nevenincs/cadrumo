@@ -69,6 +69,7 @@ from ._schema import (
     ModeloRevision,
     RegistryCatalogues,
     SourceReference,
+    SupportedFilingYearsCatalogue,
 )
 from ._toml_helpers import as_toml_table as _as_toml_table
 from ._validate_revision_identity import revision_reference_identity_failures
@@ -960,7 +961,19 @@ def _load_catalogue_file_cached(
         kind="legal parameter",
         model=LegalParameter,
     )
-    return RegistryCatalogues(legal=legal, sources=sources, parameters=parameters)
+    supported_filing_years = None
+    raw_supported_filing_years = data.get("supported_filing_years")
+    if raw_supported_filing_years is not None:
+        try:
+            supported_filing_years = SupportedFilingYearsCatalogue.model_validate(raw_supported_filing_years)
+        except ValidationError as exc:
+            raise RegistryLoadError(f"{source_path}: invalid supported_filing_years catalogue: {exc}") from exc
+    return RegistryCatalogues(
+        legal=legal,
+        sources=sources,
+        parameters=parameters,
+        supported_filing_years=supported_filing_years,
+    )
 
 
 def _validate_catalogue_section[T: BaseModel](
@@ -1277,6 +1290,7 @@ def _load_shared_catalogue_files(legal_dir: Path) -> RegistryCatalogues:
     legal: dict[str, LegalReference] = {}
     sources: dict[str, SourceReference] = {}
     parameters: dict[str, LegalParameter] = {}
+    supported_filing_years: SupportedFilingYearsCatalogue | None = None
     for path in scan_directory(legal_dir, pattern="*.toml"):
         catalogue = load_catalogue_file(path)
         overlap_legal = set(legal).intersection(catalogue.legal)
@@ -1287,11 +1301,24 @@ def _load_shared_catalogue_files(legal_dir: Path) -> RegistryCatalogues:
                 f"{path}: duplicate catalogue ids legal={sorted(overlap_legal)!r} "
                 f"sources={sorted(overlap_sources)!r} parameters={sorted(overlap_parameters)!r}",
             )
+        if catalogue.supported_filing_years is not None:
+            if supported_filing_years is not None:
+                raise RegistryLoadError(
+                    f"{path}: supported_filing_years is already declared by another shared catalogue file",
+                )
+            supported_filing_years = catalogue.supported_filing_years
         legal.update(catalogue.legal)
         sources.update(catalogue.sources)
         parameters.update(catalogue.parameters)
     _validate_legal_parameter_refs(legal_dir, parameters=parameters, legal=legal)
-    return RegistryCatalogues(legal=legal, sources=sources, parameters=parameters)
+    if supported_filing_years is None:
+        raise RegistryLoadError(f"{legal_dir}: missing supported_filing_years catalogue declaration")
+    return RegistryCatalogues(
+        legal=legal,
+        sources=sources,
+        parameters=parameters,
+        supported_filing_years=supported_filing_years,
+    )
 
 
 def _validate_legal_directory(legal_dir: Path) -> None:

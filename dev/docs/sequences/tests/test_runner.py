@@ -90,6 +90,26 @@ def _profile_seed_sequence(
     )
 
 
+def test_logout_then_delete_uses_durable_pointer_not_the_sandbox_override(tmp_path: Path) -> None:
+    """The exact delete leaf can remove only the logged-out synthetic profile."""
+    sequence = _result_sequence(
+        "aeat --format json config logout\n"
+        '@expect status == "success"\n'
+        "@result aeat --format json config profile delete docs-sequence-sandbox --yes\n"
+        '@expect result.deleted == true\n'
+        "@expect exit_code == 0\n",
+        sequence_id="runner-logout-delete",
+    )
+
+    transcript = execute_sequence(sequence, sandbox_root=tmp_path / "delete")
+
+    assert transcript.frames[0].envelope is not None
+    assert transcript.frames[0].envelope["result"]["logged_out_profile"] == "docs-sequence-sandbox"
+    assert transcript.result_frame.envelope is not None
+    assert transcript.result_frame.envelope["result"]["deleted"] is True
+    assert not (Path(transcript.storage_root) / "buckets" / SANDBOX_PROFILE_ID).exists()
+
+
 class TestPageSeedLifecycle:
     """Named setup executes once per page while isolated runs stay self-contained."""
 

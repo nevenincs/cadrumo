@@ -19,7 +19,7 @@ from cadrumo.entrypoints.cli import (
 
 from .._annotations import annotation_coverage_gaps
 from .._dispatch import command_key_for_tool, tool_name_for_command
-from .._tools import _cli_form, build_tool_descriptors
+from .._tools import build_tool_descriptors
 from .._toolsets import Toolset, build_toolsets
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -35,28 +35,6 @@ def _live_authentication_contract():
     from cadrumo.entrypoints.cli._command_schema import command_registration_projection
 
     return command_registration_projection().profile_authentication_contract
-
-
-def test_cli_form_uses_the_resolved_config_root_not_a_hardcoded_app_root() -> None:
-    # A config.* verb resolves under the ``config`` CLI root
-    # (aeat-architecture-boundaries: config/app are the only two roots); the
-    # description builder must read that root off the resolved cli_path, never
-    # hardcode ``aeat app`` for every command.
-    config_schema = VerbInputSchema(
-        command_key="config.auth.apoderado.check",
-        cli_path=("config", "auth", "apoderado", "check"),
-        profile_authentication="not-applicable",
-        profile_authentication_contract=_live_authentication_contract(),
-    )
-    assert _cli_form(config_schema) == "aeat config auth apoderado check"
-
-    app_schema = VerbInputSchema(
-        command_key="modelo.work.calculate",
-        cli_path=("app", "modelo", "work", "calculate"),
-        profile_authentication="not-applicable",
-        profile_authentication_contract=_live_authentication_contract(),
-    )
-    assert _cli_form(app_schema) == "aeat app modelo work calculate"
 
 
 def test_every_exposable_command_has_a_descriptor() -> None:
@@ -109,21 +87,17 @@ def test_every_descriptor_carries_the_freshly_derived_verb_schema() -> None:
         ) == (derived.command_key, derived.cli_path, derived.parameters, derived.help)
 
 
-def test_description_cli_form_matches_the_resolved_cli_path_for_every_descriptor() -> None:
-    # The description's ``Run `aeat ...`.`` prefix must name the SAME root and
-    # path the dispatcher actually resolves (verb_schema.cli_path), never a
-    # hardcoded ``aeat app`` root re-derived from the dotted command key.
+def test_descriptor_presentation_carries_no_authored_cli_invocation() -> None:
+    # The resolver-backed capability extension owns executable identity. Tool
+    # prose may describe the operator intent, but cannot duplicate a CLI form.
     for descriptor in build_tool_descriptors():
-        expected_cli_form = "aeat " + " ".join(descriptor.verb_schema.cli_path)
-        assert descriptor.description.startswith(f"Run `{expected_cli_form}`.")
-
-
-def test_config_command_descriptors_advertise_the_config_root_not_app() -> None:
-    config_descriptors = [d for d in build_tool_descriptors() if d.verb_schema.cli_path[0] == "config"]
-    assert config_descriptors, "expected at least one resolved config.* descriptor"
-    for descriptor in config_descriptors:
-        assert descriptor.description.startswith("Run `aeat config ")
-        assert "aeat app config" not in descriptor.description
+        for presentation in (descriptor.description, descriptor.annotations.title):
+            normalized = presentation.casefold()
+            assert "aeat app" not in normalized
+            assert "aeat config" not in normalized
+            assert "`aeat" not in normalized
+            assert "run aeat" not in normalized
+        assert descriptor.verb_schema.cli_path
 
 
 def test_mutability_projects_onto_annotations() -> None:

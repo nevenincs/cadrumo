@@ -36,6 +36,7 @@ class SupplementaryOrdenCompiler(Protocol):
         source_root: Path,
         modelos: Sequence[ModeloDefinition],
         sources: Mapping[SourceRefId, SourceReference],
+        supported_filing_years: tuple[int, ...],
     ) -> M303AnnualOrdenCompilation: ...
 
 
@@ -61,6 +62,7 @@ def compile_supplementary_ordenes(
     source_root: Path,
     modelos: Sequence[ModeloDefinition],
     sources: Mapping[SourceRefId, SourceReference],
+    supported_filing_years: tuple[int, ...],
 ) -> SupplementaryOrdenCompilation:
     """Compile every registered modelo whose :class:`ModeloDefinition` declares a revision.
 
@@ -73,7 +75,13 @@ def compile_supplementary_ordenes(
     for modelo_id, compiler in _ORDEN_COMPILERS.items():
         if modelo_id not in present:
             continue
-        compilation = compiler(root, source_root=source_root, modelos=modelos, sources=sources)
+        compilation = compiler(
+            root,
+            source_root=source_root,
+            modelos=modelos,
+            sources=sources,
+            supported_filing_years=supported_filing_years,
+        )
         authorities[modelo_id] = compilation.authority
         legal.update(compilation.legal)
     return SupplementaryOrdenCompilation(authorities=authorities, legal=legal)

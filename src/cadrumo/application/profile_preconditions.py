@@ -27,6 +27,7 @@ from .operator_actions import (
     ActionReference,
     ConditionEvidence,
     PreconditionVerdict,
+    no_action_precondition_verdict,
 )
 
 
@@ -265,21 +266,12 @@ def profile_session_failure_verdict(
 def former_product_state_verdict(scope: FormerProductDetectionScope) -> PreconditionVerdict:
     """Return the safety refusal for state Cadrumo deliberately cannot adopt."""
     condition_id = ProfilePreconditionCondition.FORMER_PRODUCT_STATE_ABSENT.value
-    return PreconditionVerdict(
-        failed_condition_id=condition_id,
-        evidence=(
-            _evidence(
-                condition_id=condition_id,
-                evidence_id=ProfilePreconditionEvidence.FORMER_PRODUCT_STATE.value,
-                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-                values={
-                    "detection_scope": scope.value,
-                    "former_product_state_detected": True,
-                },
-            ),
-        ),
-        conditionality=ActionConditionality.NOT_APPLICABLE,
-        no_recovery_outcome=NoRecoveryOutcome.SAFETY,
+    return no_action_precondition_verdict(
+        condition_id=condition_id,
+        evidence_id=ProfilePreconditionEvidence.FORMER_PRODUCT_STATE.value,
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        facts={"detection_scope": scope.value, "former_product_state_detected": True},
+        outcome=NoRecoveryOutcome.SAFETY,
     )
 
 

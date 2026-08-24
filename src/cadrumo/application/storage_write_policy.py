@@ -56,6 +56,7 @@ from .operator_actions import (
     ActionReference,
     ConditionEvidence,
     PreconditionVerdict,
+    no_action_precondition_verdict,
 )
 
 
@@ -242,24 +243,18 @@ def _missing_active_profile_verdict(route: StorageRouteClassification) -> Precon
 def _explicit_database_route_verdict(route: StorageRouteClassification) -> PreconditionVerdict:
     """Return the closed outcome for an operator-owned database URL override."""
     condition_id = StorageWritePolicyCondition.ACTIVE_BUCKET_ROUTE.value
-    return PreconditionVerdict(
-        failed_condition_id=condition_id,
-        evidence=(
-            ConditionEvidence(
-                condition_id=condition_id,
-                evidence_id=StorageWritePolicyEvidence.ACTIVE_BUCKET_ROUTE_CLASSIFICATION.value,
-                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-                values={
-                    "active_bucket_attached": False,
-                    "database_url_explicit": True,
-                    "explicit_route_setting": _settings_environment_name("cadrumo_database_url"),
-                    "route_kind": route.kind.value,
-                    "storage_root_setting": _settings_environment_name(STORAGE_ROOT_SETTINGS_FIELD),
-                },
-            ),
-        ),
-        conditionality=ActionConditionality.NOT_APPLICABLE,
-        no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+    return no_action_precondition_verdict(
+        condition_id=condition_id,
+        evidence_id=StorageWritePolicyEvidence.ACTIVE_BUCKET_ROUTE_CLASSIFICATION.value,
+        facts={
+            "active_bucket_attached": False,
+            "database_url_explicit": True,
+            "explicit_route_setting": _settings_environment_name("cadrumo_database_url"),
+            "route_kind": route.kind.value,
+            "storage_root_setting": _settings_environment_name(STORAGE_ROOT_SETTINGS_FIELD),
+        },
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
     )
 
 

@@ -14,12 +14,10 @@ from enum import StrEnum
 from pydantic import ValidationError
 
 from ..core import (
-    ActionConditionality,
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
 from .operator_actions import (
-    ConditionEvidence,
     PreconditionVerdict,
 )
 
@@ -178,19 +176,10 @@ def cli_exception_no_recovery_verdict(
     The facts name what was observed, while the closed outcome prevents a CLI
     adapter from smuggling an unbound command template into a recovery field.
     """
-    condition_id = condition.value
-    return PreconditionVerdict(
-        failed_condition_id=condition_id,
-        evidence=(
-            ConditionEvidence(
-                condition_id=condition_id,
-                evidence_id=f"{condition_id}.observation",
-                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-                values=facts,
-            ),
-        ),
-        conditionality=ActionConditionality.NOT_APPLICABLE,
-        no_recovery_outcome=outcome,
+    from .operator_actions import no_action_precondition_verdict
+    return no_action_precondition_verdict(
+        condition_id=condition.value, facts=facts,
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION, outcome=outcome,
     )
 
 

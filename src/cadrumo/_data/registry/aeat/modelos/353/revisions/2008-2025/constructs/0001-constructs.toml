@@ -17,6 +17,8 @@ source_refs = [
     "aeat-modelo-353-procedure",
     "boe-modelo-322-2007-form",
     "boe-modelo-353-2007-form",
+    "aeat-calendario-contribuyente-2025",
+    "aeat-calendario-contribuyente-2026-domiciliacion",
 ]
 casilla_ids = [
     "iva.repercutido.general",
@@ -72,7 +74,16 @@ application_links = [
 filing_schedules = ["modelo-353-mensual"]
 deadline_windows = [
     "modelo-353-2025-01",
+    "modelo-353-2025-02",
+    "modelo-353-2025-03",
+    "modelo-353-2025-04",
+    "modelo-353-2025-05",
     "modelo-353-2025-06",
+    "modelo-353-2025-07",
+    "modelo-353-2025-08",
+    "modelo-353-2025-09",
+    "modelo-353-2025-10",
+    "modelo-353-2025-11",
     "modelo-353-2025-12",
 ]
 

@@ -21,7 +21,8 @@ from collections.abc import Iterator, Mapping
 from datetime import datetime
 from pathlib import Path
 
-from ....core import iter_directory, scan_directory
+from ....application.operator_actions import no_action_precondition_verdict
+from ....core import ActionEvidenceProvenance, NoRecoveryOutcome, iter_directory, scan_directory
 from ....core.atomic_write import DurableWriteBatch, atomic_write_hardened_bytes, atomic_write_text
 from ....core.errors import CoreValidationError
 from ....core.external_constants import UTF_8_ENCODING
@@ -48,6 +49,21 @@ _logger = get_logger(__name__)
 _FILE_EXTENSION = ".bin"
 _SIDECAR_EXTENSION = ".meta.json"
 _PROBE_NAMESPACE = "_probe"
+
+
+def _local_failure_verdict(
+    condition_id: str,
+    *,
+    facts: Mapping[str, str | int | bool],
+    outcome: NoRecoveryOutcome = NoRecoveryOutcome.SAFETY,
+):
+    """Project an observed local-provider failure through the shared policy."""
+    return no_action_precondition_verdict(
+        condition_id=condition_id,
+        facts=facts,
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        outcome=outcome,
+    )
 
 
 def _validate_namespace(namespace: str) -> str:
@@ -82,6 +98,9 @@ def _parse_sidecar_byte_length(value: object) -> int:
             f"sidecar byte_length has unexpected type: {type(value)!r}",
             context={"actual_type": repr(type(value))},
             translated_message="adapters.outbound.storage.local.errors.byte_length_invalid",
+            precondition_verdict=_local_failure_verdict(
+                "storage.local.sidecar.byte_length_valid", facts={"field": "byte_length", "valid": False}
+            ),
         )
     try:
         byte_length = int(value)
@@ -90,12 +109,18 @@ def _parse_sidecar_byte_length(value: object) -> int:
             f"sidecar byte_length is not an integer: {value!r}",
             context={"actual_value": str(value)},
             translated_message="adapters.outbound.storage.local.errors.byte_length_invalid",
+            precondition_verdict=_local_failure_verdict(
+                "storage.local.sidecar.byte_length_valid", facts={"field": "byte_length", "valid": False}
+            ),
         ) from None
     if byte_length < 0:
         raise StorageCorruptionError(
             f"sidecar byte_length must not be negative: {byte_length}",
             context={"actual_value": str(byte_length)},
             translated_message="adapters.outbound.storage.local.errors.byte_length_invalid",
+            precondition_verdict=_local_failure_verdict(
+                "storage.local.sidecar.byte_length_valid", facts={"field": "byte_length", "valid": False}
+            ),
         )
     return byte_length
 
@@ -126,6 +151,9 @@ def _parse_sidecar_written_at(value: object) -> datetime:
             f"sidecar written_at is absent or not a string: {value!r}",
             context={"actual_value": repr(value)},
             translated_message="adapters.outbound.storage.local.errors.written_at_invalid",
+            precondition_verdict=_local_failure_verdict(
+                "storage.local.sidecar.written_at_valid", facts={"field": "written_at", "valid": False}
+            ),
         )
     try:
         written_at = datetime.fromisoformat(value)
@@ -134,6 +162,9 @@ def _parse_sidecar_written_at(value: object) -> datetime:
             f"sidecar written_at is not an ISO-8601 instant: {value!r}",
             context={"actual_value": value},
             translated_message="adapters.outbound.storage.local.errors.written_at_invalid",
+            precondition_verdict=_local_failure_verdict(
+                "storage.local.sidecar.written_at_valid", facts={"field": "written_at", "valid": False}
+            ),
         ) from None
     try:
         validate_utc_aware(written_at)
@@ -142,6 +173,9 @@ def _parse_sidecar_written_at(value: object) -> datetime:
             f"sidecar written_at carries no timezone: {value!r}",
             context={"actual_value": value},
             translated_message="adapters.outbound.storage.local.errors.written_at_invalid",
+            precondition_verdict=_local_failure_verdict(
+                "storage.local.sidecar.written_at_valid", facts={"field": "written_at", "valid": False}
+            ),
         ) from None
     return written_at
 
@@ -172,6 +206,9 @@ class LocalFileSystemProvider:
                 f"cannot create namespace directory {target}: {exc}",
                 context={"namespace": namespace, "path": str(target)},
                 translated_message="adapters.outbound.storage.local.errors.namespace_create_permission",
+                precondition_verdict=_local_failure_verdict(
+                    "storage.local.namespace.writable", facts={"operation": "create_namespace"}
+                ),
             ) from None
         except OSError as exc:
             if is_windows_long_path_error(exc):
@@ -179,6 +216,9 @@ class LocalFileSystemProvider:
                     f"cannot create namespace directory {target}: path exceeds the Windows MAX_PATH ceiling ({exc})",
                     context={"namespace": namespace, "path": str(target)},
                     translated_message="adapters.outbound.storage.local.errors.namespace_create_path_too_long",
+                    precondition_verdict=_local_failure_verdict(
+                        "storage.local.path.within_limit", facts={"operation": "create_namespace"}
+                    ),
                 ) from None
             raise
         return target
@@ -220,6 +260,10 @@ class LocalFileSystemProvider:
                         "sidecar_object_key_hmac": repr(sidecar_hmac),
                         "sidecar_path": str(sidecar_path),
                     },
+                    precondition_verdict=_local_failure_verdict(
+                        "storage.local.sidecar.identity_matches",
+                        facts={"operation": "resolve_object", "prefix_collision": True},
+                    ),
                 )
             resolved_path = entry
         return resolved_path
@@ -232,12 +276,18 @@ class LocalFileSystemProvider:
                 f"sidecar {sidecar_path} is unreadable or malformed: {exc}",
                 context={"sidecar_path": str(sidecar_path)},
                 translated_message="adapters.outbound.storage.local.errors.sidecar_malformed",
+                precondition_verdict=_local_failure_verdict(
+                    "storage.local.sidecar.schema_valid", facts={"sidecar_valid": False}
+                ),
             ) from None
         if not isinstance(raw, dict):
             raise OutboundStorageIntegrityError(
                 f"sidecar {sidecar_path} is not a JSON object",
                 context={"sidecar_path": str(sidecar_path)},
                 translated_message="adapters.outbound.storage.local.errors.sidecar_not_object",
+                precondition_verdict=_local_failure_verdict(
+                    "storage.local.sidecar.schema_valid", facts={"sidecar_valid": False}
+                ),
             )
         # CAST-RATIONALE-SIDECAR-MAPPING: json.loads returns Any; isinstance
         # guard above confirms dict shape; cast narrows the static type to
@@ -326,6 +376,9 @@ class LocalFileSystemProvider:
                 f"cannot write object payload to {target_path}: {exc}",
                 context={"path": str(target_path)},
                 translated_message="adapters.outbound.storage.local.errors.payload_write_permission",
+                precondition_verdict=_local_failure_verdict(
+                    "storage.local.payload.writable", facts={"operation": "put", "writable": False}
+                ),
             ) from None
         except OSError as exc:
             if is_windows_long_path_error(exc):
@@ -333,11 +386,19 @@ class LocalFileSystemProvider:
                     f"cannot write object payload to {target_path}: path exceeds the Windows MAX_PATH ceiling ({exc})",
                     context={"path": str(target_path)},
                     translated_message="adapters.outbound.storage.local.errors.payload_write_path_too_long",
+                    precondition_verdict=_local_failure_verdict(
+                        "storage.local.path.within_limit", facts={"operation": "put_payload", "within_limit": False}
+                    ),
                 ) from None
             raise OutboundStorageConflictError(
                 f"failed to commit object payload to {target_path}: {exc}",
                 context={"path": str(target_path)},
                 translated_message="adapters.outbound.storage.local.errors.payload_commit_failed",
+                precondition_verdict=_local_failure_verdict(
+                    "storage.local.payload.commit_succeeded",
+                    facts={"operation": "put", "committed": False},
+                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                ),
             ) from None
 
         written_at = now()
@@ -358,11 +419,17 @@ class LocalFileSystemProvider:
                     f"cannot write sidecar {sidecar_path}: path exceeds the Windows MAX_PATH ceiling ({exc})",
                     context={"path": str(sidecar_path)},
                     translated_message="adapters.outbound.storage.local.errors.sidecar_write_path_too_long",
+                    precondition_verdict=_local_failure_verdict(
+                        "storage.local.path.within_limit", facts={"operation": "put_sidecar", "within_limit": False}
+                    ),
                 ) from None
             raise OutboundStoragePermissionError(
                 f"failed to write sidecar {sidecar_path}: {exc}",
                 context={"path": str(sidecar_path)},
                 translated_message="adapters.outbound.storage.local.errors.sidecar_write_failed",
+                precondition_verdict=_local_failure_verdict(
+                    "storage.local.sidecar.writable", facts={"operation": "put_sidecar", "writable": False}
+                ),
             ) from None
 
         if stale_pair is not None:
@@ -421,6 +488,11 @@ class LocalFileSystemProvider:
                 f"object {hmac_clean!r} not found in namespace {namespace_clean!r}",
                 context={"namespace": namespace_clean, "object_key_hmac": hmac_clean},
                 translated_message="adapters.outbound.storage.local.errors.object_not_found",
+                precondition_verdict=_local_failure_verdict(
+                    "storage.local.object.present",
+                    facts={"operation": "get", "object_present": False},
+                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                ),
             )
         sidecar_path = target_path.with_name(target_path.stem + _SIDECAR_EXTENSION)
         if not sidecar_path.is_file():
@@ -428,6 +500,9 @@ class LocalFileSystemProvider:
                 f"object {target_path.name} has no sidecar; storage corrupt",
                 context={"path": str(target_path)},
                 translated_message="adapters.outbound.storage.local.errors.sidecar_missing",
+                precondition_verdict=_local_failure_verdict(
+                    "storage.local.sidecar.present", facts={"operation": "get", "sidecar_present": False}
+                ),
             )
         sidecar = self._load_sidecar(sidecar_path)
 
@@ -438,6 +513,9 @@ class LocalFileSystemProvider:
                 f"cannot read object payload from {target_path}: {exc}",
                 context={"path": str(target_path)},
                 translated_message="adapters.outbound.storage.local.errors.payload_read_permission",
+                precondition_verdict=_local_failure_verdict(
+                    "storage.local.payload.readable", facts={"operation": "get", "readable": False}
+                ),
             ) from None
 
         actual_hash = sha256_hex(payload)
@@ -455,6 +533,9 @@ class LocalFileSystemProvider:
                 f"sidecar {sidecar_path} carries no content_hash; storage corrupt",
                 context={"sidecar_path": str(sidecar_path), "path": str(target_path)},
                 translated_message="adapters.outbound.storage.local.errors.sidecar_malformed",
+                precondition_verdict=_local_failure_verdict(
+                    "storage.local.sidecar.digest_present", facts={"operation": "get", "content_hash_present": False}
+                ),
             )
         # The stored hash may be a vendor-prefixed string ("sha256-XXX")
         # or a bare hex digest; we accept either as long as the digest
@@ -548,6 +629,9 @@ class LocalFileSystemProvider:
                     f"cannot read sidecar {sidecar_path} before deleting object {target_path}: {exc}",
                     context={"path": str(target_path), "sidecar_path": str(sidecar_path)},
                     translated_message="adapters.outbound.storage.local.errors.object_delete_permission",
+                    precondition_verdict=_local_failure_verdict(
+                        "storage.local.sidecar.readable", facts={"operation": "delete", "readable": False}
+                    ),
                 ) from None
 
         try:
@@ -557,6 +641,9 @@ class LocalFileSystemProvider:
                 f"cannot delete sidecar {sidecar_path}: {exc}",
                 context={"path": str(target_path), "sidecar_path": str(sidecar_path)},
                 translated_message="adapters.outbound.storage.local.errors.object_delete_permission",
+                precondition_verdict=_local_failure_verdict(
+                    "storage.local.sidecar.deletable", facts={"operation": "delete", "deletable": False}
+                ),
             ) from None
 
         try:
@@ -567,6 +654,9 @@ class LocalFileSystemProvider:
                 f"cannot delete object {target_path}: {exc}",
                 context={"path": str(target_path), "sidecar_path": str(sidecar_path)},
                 translated_message="adapters.outbound.storage.local.errors.object_delete_permission",
+                precondition_verdict=_local_failure_verdict(
+                    "storage.local.payload.deletable", facts={"operation": "delete", "deletable": False}
+                ),
             ) from None
         return True
 
@@ -634,6 +724,11 @@ class LocalFileSystemProvider:
                 f"namespace {namespace_clean!r} does not exist",
                 context={"namespace": namespace_clean},
                 translated_message="adapters.outbound.storage.local.errors.namespace_not_found",
+                precondition_verdict=_local_failure_verdict(
+                    "storage.local.namespace.present",
+                    facts={"operation": "iter_objects", "namespace_present": False},
+                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                ),
             )
         for entry in scan_directory(namespace_dir):
             if not entry.is_file() or entry.suffix != _FILE_EXTENSION:

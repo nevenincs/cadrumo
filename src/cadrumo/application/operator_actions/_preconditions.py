@@ -11,6 +11,7 @@ from ._models import ConditionEvidence, PreconditionVerdict
 def no_action_precondition_verdict(
     *,
     condition_id: str,
+    evidence_id: str | None = None,
     facts: Mapping[str, str | int | bool],
     provenance: ActionEvidenceProvenance,
     outcome: NoRecoveryOutcome,
@@ -21,7 +22,7 @@ def no_action_precondition_verdict(
         evidence=(
             ConditionEvidence(
                 condition_id=condition_id,
-                evidence_id=f"{condition_id}.observation",
+                evidence_id=evidence_id if evidence_id is not None else f"{condition_id}.observation",
                 provenance=provenance,
                 values=facts,
             ),

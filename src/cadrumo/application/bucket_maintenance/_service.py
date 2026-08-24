@@ -16,14 +16,14 @@ from uuid import UUID
 
 from ...adapters.persistence.storage import custody
 from ...application.filing import FilingRetentionAuthority
-from ...core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.hashing import CONTENT_DIGEST_PREFIX
 from ...core.time import now
 from ...domain.buckets import BucketDeleteRefusedError
 from ...domain.retention import RetentionFloorAssessment
 from ...domain.user_profile import ProfileNotFoundError
 from .._bucket_deletion_contracts import BucketDeletionFingerprint
-from ..operator_actions import ConditionEvidence, PreconditionVerdict
+from ..operator_actions import PreconditionVerdict, no_action_precondition_verdict
 from ..user_profile import (
     default_profile_bucket_storage,
 )
@@ -50,19 +50,11 @@ def _bucket_deletion_no_recovery_verdict(
     facts: Mapping[str, str | int | bool],
 ) -> PreconditionVerdict:
     """Return a safety outcome for a deletion target with no safe repair verb."""
-    condition_id = condition.value
-    return PreconditionVerdict(
-        failed_condition_id=condition_id,
-        evidence=(
-            ConditionEvidence(
-                condition_id=condition_id,
-                evidence_id=f"{condition_id}.observation",
-                provenance=ActionEvidenceProvenance.PERSISTED_STATE,
-                values=facts,
-            ),
-        ),
-        conditionality=ActionConditionality.NOT_APPLICABLE,
-        no_recovery_outcome=NoRecoveryOutcome.SAFETY,
+    return no_action_precondition_verdict(
+        condition_id=condition.value,
+        facts=facts,
+        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        outcome=NoRecoveryOutcome.SAFETY,
     )
 
 

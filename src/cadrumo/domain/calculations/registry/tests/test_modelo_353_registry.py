@@ -9,7 +9,15 @@ import pytest
 from .....core import IvaDeductionFactKind
 from .....core.resources import bundled_path
 from ....iva import IvaLedgerObservationRole
-from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, previous_filing_source_reference
+from .. import (
+    ModeloDefinition,
+    RegistryCatalogues,
+    RegistryValidator,
+    build_snapshot,
+    bundled_authority,
+    previous_filing_source_reference,
+    select_revision,
+)
 from ._ledger_iva_aggregation_support import _deduction_provenance
 from ._registry_schema_support import _committed_modelo
 
@@ -75,6 +83,109 @@ def test_modelo_353_other_months_close_at_30_days_following_month() -> None:
     jun = windows["modelo-353-2025-06"]
     assert jun.opens_on == date(2025, 7, 1)
     assert jun.closes_on == date(2025, 7, 30)
+
+
+def test_modelo_353_2025_deadlines_exactly_match_the_official_aeat_calendars() -> None:
+    modelo, _ = _load_modelo_353()
+    revision = modelo.revisions["2008-2025"]
+    windows = {window.period.registry_token: window for window in revision.deadline_windows}
+    expected = {
+        "01": (date(2025, 2, 1), date(2025, 2, 28), date(2025, 2, 25)),
+        "02": (date(2025, 3, 1), date(2025, 3, 31), date(2025, 3, 26)),
+        "03": (date(2025, 4, 1), date(2025, 4, 30), date(2025, 4, 25)),
+        "04": (date(2025, 5, 1), date(2025, 5, 30), date(2025, 5, 27)),
+        "05": (date(2025, 6, 1), date(2025, 6, 30), date(2025, 6, 25)),
+        "06": (date(2025, 7, 1), date(2025, 7, 30), date(2025, 7, 25)),
+        "07": (date(2025, 8, 1), date(2025, 9, 1), date(2025, 8, 27)),
+        "08": (date(2025, 9, 1), date(2025, 9, 30), date(2025, 9, 25)),
+        "09": (date(2025, 10, 1), date(2025, 10, 30), date(2025, 10, 27)),
+        "10": (date(2025, 11, 1), date(2025, 12, 1), date(2025, 11, 26)),
+        "11": (date(2025, 12, 1), date(2025, 12, 30), date(2025, 12, 25)),
+        "12": (date(2026, 1, 1), date(2026, 1, 30), date(2026, 1, 27)),
+    }
+
+    assert len(windows) == len(expected) == 12
+    assert set(windows) == set(expected) == set(revision.period_selector.periods)
+    for period, dates in expected.items():
+        window = windows[period]
+        assert window.id == f"modelo-353-2025-{period}"
+        assert window.filing_year == window.period.filing_year == 2025
+        assert window.period_kind == "monthly"
+        assert (window.opens_on, window.closes_on, window.payment_cutoff_on) == dates
+        calendar_source = (
+            "aeat-calendario-contribuyente-2026-domiciliacion"
+            if period == "12"
+            else "aeat-calendario-contribuyente-2025"
+        )
+        assert set(window.source_refs) == {
+            "boe-modelo-353-2007-form",
+            "aeat-modelo-353-procedure",
+            calendar_source,
+        }
+
+
+def test_modelo_353_2026_deadlines_stop_at_the_officially_published_calendar_horizon() -> None:
+    """The 2026 AEAT table publishes 1M--11M; 12M awaits the 2027 calendar."""
+    modelo, _ = _load_modelo_353()
+    revision = modelo.revisions["2026-y-siguientes"]
+    windows = {window.period.registry_token: window for window in revision.deadline_windows}
+    expected = {
+        "01": (date(2026, 2, 1), date(2026, 3, 2), date(2026, 2, 25)),
+        "02": (date(2026, 3, 1), date(2026, 3, 30), date(2026, 3, 25)),
+        "03": (date(2026, 4, 1), date(2026, 4, 30), date(2026, 4, 27)),
+        "04": (date(2026, 5, 1), date(2026, 6, 1), date(2026, 5, 27)),
+        "05": (date(2026, 6, 1), date(2026, 6, 30), date(2026, 6, 25)),
+        "06": (date(2026, 7, 1), date(2026, 7, 30), date(2026, 7, 27)),
+        "07": (date(2026, 8, 1), date(2026, 8, 31), date(2026, 8, 26)),
+        "08": (date(2026, 9, 1), date(2026, 9, 30), date(2026, 9, 25)),
+        "09": (date(2026, 10, 1), date(2026, 10, 30), date(2026, 10, 27)),
+        "10": (date(2026, 11, 1), date(2026, 11, 30), date(2026, 11, 25)),
+        "11": (date(2026, 12, 1), date(2026, 12, 30), date(2026, 12, 24)),
+    }
+
+    assert len(windows) == len(expected) == 11
+    assert set(windows) == set(expected)
+    assert "12" in revision.period_selector.periods
+    assert "12" not in windows
+    for period, dates in expected.items():
+        window = windows[period]
+        assert window.id == f"modelo-353-2026-{period}"
+        assert window.filing_year == window.period.filing_year == 2026
+        assert window.period_kind == "monthly"
+        assert (window.opens_on, window.closes_on, window.payment_cutoff_on) == dates
+        assert "aeat-calendario-contribuyente-2026-domiciliacion" in window.source_refs
+
+
+@pytest.mark.parametrize(
+    ("filing_year", "revision_id", "expected_periods"),
+    [
+        (2025, "2008-2025", tuple(f"{month:02d}" for month in range(1, 13))),
+        (2026, "2026-y-siguientes", tuple(f"{month:02d}" for month in range(1, 12))),
+    ],
+)
+def test_modelo_353_authored_deadlines_have_one_canonical_owner_and_projection(
+    filing_year: int,
+    revision_id: str,
+    expected_periods: tuple[str, ...],
+) -> None:
+    modelo, _ = _load_modelo_353()
+
+    for period in expected_periods:
+        selected = select_revision(modelo, filing_year=filing_year, period=period)
+        owners = [
+            revision.id
+            for revision in modelo.revisions.values()
+            if any(
+                window.filing_year == filing_year and window.period.registry_token == period
+                for window in revision.deadline_windows
+            )
+        ]
+        assert selected.id == revision_id
+        assert owners == [selected.id]
+
+    projected = bundled_authority().deadline_windows(filing_year, modelos=("353",))
+    assert tuple(window.period.registry_token for _, _, window in projected) == expected_periods
+    assert {revision.id for _, revision, _ in projected} == {revision_id}
 
 
 def test_modelo_353_snapshot_builds_per_month() -> None:

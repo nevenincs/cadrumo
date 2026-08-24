@@ -372,14 +372,6 @@ What each step does:
   `aeat config profile restore`, and read a sealed archive's header without
   decrypting it using `aeat config profile archive inspect`.
 
-Delete a profile for good only after closing its active session. Cadrumo refuses
-to delete the active profile, so log out first and then confirm the irreversible
-deletion of that exact named profile:
-
-```{cli-sequence} profile-setup-delete
-:verify: Confirm logout makes the sandbox profile inactive before deleting only that exact profile.
-```
-
 A sealed archive contains taxpayer data, including the tax identifier, activity,
 and local filing history. Store it as sensitive tax data, and don't attach it to
 a support request. See
@@ -435,6 +427,18 @@ vocabulary.
 A rename appears as two events on purpose: `profile.renamed` records that the
 data changed, and `bucket.renamed` records that you ran the rename action. One
 answers "what changed", the other "what was done".
+
+## Delete a profile permanently
+
+Delete a profile for good only after closing its active session. Cadrumo refuses
+to delete the active profile, so log out first and then confirm the irreversible
+deletion of that exact named profile. This terminal example comes after every
+profile operation in this guide because the deleted profile cannot be used
+again:
+
+```{cli-sequence} profile-setup-delete
+:verify: Confirm logout makes the sandbox profile inactive before deleting only that exact profile.
+```
 
 ## If setup looks wrong
 

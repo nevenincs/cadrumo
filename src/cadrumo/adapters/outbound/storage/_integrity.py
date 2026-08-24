@@ -35,6 +35,8 @@ corruption report ever arrives.
 
 from __future__ import annotations
 
+from ....application.operator_actions import no_action_precondition_verdict
+from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ._errors import OutboundStorageIntegrityError
 
 _SHA256_PREFIX = "sha256-"
@@ -80,7 +82,17 @@ def verify_content_hash(
     if not stripped or (require_full_digest and len(stripped) != _SHA256_HEX_LENGTH):
         return
     if stripped != actual_hash:
-        raise OutboundStorageIntegrityError(message, context=context, translated_message=translated_message)
+        raise OutboundStorageIntegrityError(
+            message,
+            context=context,
+            translated_message=translated_message,
+            precondition_verdict=no_action_precondition_verdict(
+                condition_id="storage.integrity.content_hash_matches",
+                facts=context,
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
+        )
 
 
 def require_full_sha256_content_hash(
@@ -97,6 +109,12 @@ def require_full_sha256_content_hash(
             message,
             context={**context, "stored_hash": stored_hash},
             translated_message=translated_message,
+            precondition_verdict=no_action_precondition_verdict(
+                condition_id="storage.integrity.sha256_digest_valid",
+                facts={**context, "stored_hash": stored_hash},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         )
     return digest
 
@@ -136,4 +154,14 @@ def verify_payload_byte_length(
                 "actual_byte_length": str(actual_byte_length),
             },
             translated_message=translated_message,
+            precondition_verdict=no_action_precondition_verdict(
+                condition_id="storage.integrity.payload_byte_length_matches",
+                facts={
+                    **context,
+                    "stored_byte_length": str(stored_byte_length),
+                    "actual_byte_length": str(actual_byte_length),
+                },
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         )

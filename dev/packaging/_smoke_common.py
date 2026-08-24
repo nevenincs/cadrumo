@@ -393,6 +393,32 @@ def _dependency_group_name(entry: str | dict[str, Any]) -> str:
     return normalise_distribution_name(name)
 
 
+def _dependency_group_entries(
+    groups: dict[str, Any],
+    group_name: str,
+    *,
+    stack: tuple[str, ...] = (),
+) -> tuple[str | dict[str, Any], ...]:
+    """Expand PEP 735 ``include-group`` entries into dependency entries."""
+    if group_name in stack:
+        cycle = " -> ".join((*stack, group_name))
+        raise ValueError(f"dependency-group include cycle: {cycle}")
+    raw_entries = groups.get(group_name, [])
+    if not isinstance(raw_entries, list):
+        raise ValueError(f"dependency group must be a list: {group_name!r}")
+
+    entries: list[str | dict[str, Any]] = []
+    for entry in raw_entries:
+        if not isinstance(entry, dict) or "include-group" not in entry:
+            entries.append(entry)
+            continue
+        included = entry["include-group"]
+        if not isinstance(included, str) or not included:
+            raise ValueError(f"dependency-group include must name a group: {entry!r}")
+        entries.extend(_dependency_group_entries(groups, included, stack=(*stack, group_name)))
+    return tuple(entries)
+
+
 def _dependency_group_applies_to_current_platform(entry: str | dict[str, Any]) -> bool:
     """Return whether a dependency-group entry applies to the current platform."""
     if isinstance(entry, str):
@@ -424,7 +450,8 @@ def pyproject_surfaces(repo_root: Path) -> DependencySurfaces:
     optional_active_names = {
         requirement_name(req) for req in optional_requirements if _requirement_applies_to_current_platform(req)
     }
-    dev_entries = pyproject.get("dependency-groups", {}).get("dev", [])
+    dependency_groups = pyproject.get("dependency-groups", {})
+    dev_entries = _dependency_group_entries(dependency_groups, "dev")
     dev_names = {_dependency_group_name(entry) for entry in dev_entries}
     dev_active_names = {
         _dependency_group_name(entry) for entry in dev_entries if _dependency_group_applies_to_current_platform(entry)
@@ -627,9 +654,7 @@ def expected_wheel_data_paths_from_source_tree(source_root: Path) -> set[str]:
     """Derive wheel data expectations solely from one sealed extracted source tree."""
     data_root = source_root / _SOURCE_DATA_PREFIX.removesuffix("/")
     tracked = {
-        path.relative_to(source_root).as_posix()
-        for path in scan_directory(data_root, recursive=True)
-        if path.is_file()
+        path.relative_to(source_root).as_posix() for path in scan_directory(data_root, recursive=True) if path.is_file()
     }
     if not tracked:
         raise SystemExit(f"sealed source tree has no shipped data under {data_root}")

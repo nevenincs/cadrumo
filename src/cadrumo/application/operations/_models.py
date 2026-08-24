@@ -150,15 +150,29 @@ class OperationTerminalReceipt(BaseModel):
     @model_validator(mode="after")
     def _validate_terminal_references(self) -> OperationTerminalReceipt:
         validate_utc_aware(self.settled_at)
-        if self.condition is OperationTerminalCondition.SUCCEEDED:
-            if self.result_ref is None or self.refusal_ref is not None:
-                raise ValueError("succeeded operation requires one result reference and forbids a refusal reference")
-        elif self.condition is OperationTerminalCondition.REFUSED:
-            if self.refusal_ref is None or self.result_ref is not None:
-                raise ValueError("refused operation requires one refusal reference and forbids a result reference")
-        elif self.refusal_ref is not None:
-            raise ValueError("refusal reference is valid only for a refused operation")
+        validate_terminal_reference_meaning(
+            condition=self.condition,
+            result_ref=self.result_ref,
+            refusal_ref=self.refusal_ref,
+        )
         return self
+
+
+def validate_terminal_reference_meaning(
+    *,
+    condition: OperationTerminalCondition,
+    result_ref: OperationReference | None,
+    refusal_ref: OperationReference | None,
+) -> None:
+    """Enforce the canonical terminal result/refusal relationship."""
+    if condition is OperationTerminalCondition.SUCCEEDED:
+        if result_ref is None or refusal_ref is not None:
+            raise ValueError("succeeded operation requires one result reference and forbids a refusal reference")
+    elif condition is OperationTerminalCondition.REFUSED:
+        if refusal_ref is None or result_ref is not None:
+            raise ValueError("refused operation requires one refusal reference and forbids a result reference")
+    elif refusal_ref is not None:
+        raise ValueError("refusal reference is valid only for a refused operation")
 
 
 class OperationSnapshot[RequestPayloadT: BaseModel](BaseModel):
@@ -256,6 +270,8 @@ def _require_deeply_immutable_payload(value: object, *, path: str, visiting: set
             _require_deeply_immutable_payload(item, path=f"{path}[{index}]", visiting=visiting)
     finally:
         visiting.remove(identity)
+
+
 __all__ = [
     "CredentialFreeOperationRequest",
     "OperationDefinitionId",

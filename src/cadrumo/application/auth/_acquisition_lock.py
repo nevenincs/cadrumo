@@ -30,7 +30,6 @@ from pydantic import BaseModel, Field, ValidationError
 from ...core import (
     LOCKFILE_UNLINK_RETRY_SECONDS,
     STRICT_FROZEN_CONFIG,
-    ActionConditionality,
     ActionEvidenceProvenance,
     AuthProviderKind,
     NoRecoveryOutcome,
@@ -42,7 +41,7 @@ from ...core.external_constants import UTF_8_ENCODING
 from ...core.logging import get_logger
 from ...core.time import coerce_utc_aware
 from ...core.time import now as _utc_now
-from ..operator_actions import ConditionEvidence, PreconditionVerdict
+from ..operator_actions import PreconditionVerdict, no_action_precondition_verdict
 
 if TYPE_CHECKING:
     from ...core.config import Settings
@@ -111,22 +110,16 @@ class AuthAcquisitionLockedError(CadrumoError):
             context=_status_context(status),
         )
         condition_id = "auth.acquisition_lock.available"
-        self._precondition_verdict = PreconditionVerdict(
-            failed_condition_id=condition_id,
-            evidence=(
-                ConditionEvidence(
-                    condition_id=condition_id,
-                    evidence_id="auth.acquisition_lock.state",
-                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-                    values={
-                        "lock_available": False,
-                        "lock_recoverable": status.recoverable,
-                        "lock_state": status.state.value,
-                    },
-                ),
-            ),
-            conditionality=ActionConditionality.NOT_APPLICABLE,
-            no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        self._precondition_verdict = no_action_precondition_verdict(
+            condition_id=condition_id,
+            evidence_id="auth.acquisition_lock.state",
+            facts={
+                "lock_available": False,
+                "lock_recoverable": status.recoverable,
+                "lock_state": status.state.value,
+            },
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
         )
 
     @property

@@ -12,7 +12,6 @@ from pydantic import (
     ConfigDict,
     Field,
     PydanticInvalidForJsonSchema,
-    field_serializer,
     field_validator,
     model_validator,
 )
@@ -84,6 +83,12 @@ _STRICT_RUNTIME_BINDING_CONFIG = ConfigDict(
     extra="forbid",
     arbitrary_types_allowed=True,
 )
+_STRICT_PUBLIC_MODEL_CONFIG = ConfigDict(
+    strict=True,
+    frozen=True,
+    extra="forbid",
+    validate_default=True,
+)
 
 OperationPublicSchemaId = Annotated[
     str,
@@ -94,7 +99,7 @@ OperationPublicSchemaId = Annotated[
 class OperationSchemaIdentityV1(BaseModel):
     """Stable public identity of one exact strict Pydantic JSON schema."""
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = _STRICT_PUBLIC_MODEL_CONFIG
 
     schema_id: OperationPublicSchemaId
     schema_version: Annotated[int, Field(ge=1)]
@@ -120,7 +125,7 @@ class OperationSchemaIdentityV1(BaseModel):
 class OperationPublicDefinitionContractV1(BaseModel):
     """Renderer-neutral public manifest row for one operation definition."""
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = _STRICT_PUBLIC_MODEL_CONFIG
 
     manifest_version: Literal[1] = 1
     definition_id: OperationDefinitionId
@@ -147,10 +152,6 @@ class OperationPublicDefinitionContractV1(BaseModel):
     ephemeral_secret_required: bool
     definition_contract_digest: ContentDigest
 
-    @field_serializer("interaction_kinds", "owned_resources", "permitted_effects", "permitted_frontends")
-    def _serialize_sets_in_canonical_order(self, value: frozenset[StrEnum]) -> tuple[str, ...]:
-        return tuple(sorted(item.value for item in value))
-
     @model_validator(mode="after")
     def _validate_digest(self) -> OperationPublicDefinitionContractV1:
         expected = _definition_contract_digest(self)
@@ -162,7 +163,7 @@ class OperationPublicDefinitionContractV1(BaseModel):
 class OperationPublicContractSetV1(BaseModel):
     """Canonical fixed-point inventory of all public operation contracts."""
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = _STRICT_PUBLIC_MODEL_CONFIG
 
     contract_set_version: Literal[1] = 1
     definitions: tuple[OperationPublicDefinitionContractV1, ...] = Field(min_length=1)
@@ -549,8 +550,7 @@ class OperationRegistry(BaseModel):
     ) -> None:
         contract = registration.contract
         bindings = {
-            _schema_identity_key(binding.identity): binding.model_type
-            for binding in registration.schema_bindings
+            _schema_identity_key(binding.identity): binding.model_type for binding in registration.schema_bindings
         }
         declared_identities = {
             _schema_identity_key(identity)
@@ -770,9 +770,7 @@ def _contract_set_digest(
 ) -> ContentDigest:
     payload = {
         "contract_set_version": 1,
-        "definitions": [
-            _definition_contract_value(definition, include_digest=True) for definition in definitions
-        ],
+        "definitions": [_definition_contract_value(definition, include_digest=True) for definition in definitions],
     }
     return content_hash_hex(payload)
 
@@ -787,10 +785,45 @@ def _definition_contract_value(
     include_digest: bool,
 ) -> dict[str, object]:
     """Return the explicitly ordered, JSON-safe value governed by the digest."""
-    payload = cast(
-        dict[str, object],
-        contract.model_dump(mode="json", exclude={"definition_contract_digest"}),
-    )
+    payload: dict[str, object] = {
+        "manifest_version": contract.manifest_version,
+        "definition_id": contract.definition_id,
+        "action_reference": (
+            None if contract.action_reference is None else contract.action_reference.model_dump(mode="json")
+        ),
+        "request_schema": contract.request_schema.model_dump(mode="json"),
+        "result_schema": None if contract.result_schema is None else contract.result_schema.model_dump(mode="json"),
+        "review_projection_schema": (
+            None
+            if contract.review_projection_schema is None
+            else contract.review_projection_schema.model_dump(mode="json")
+        ),
+        "interaction_response_schema": (
+            None
+            if contract.interaction_response_schema is None
+            else contract.interaction_response_schema.model_dump(mode="json")
+        ),
+        "workspace_refresh_target_schema": (
+            None
+            if contract.workspace_refresh_target_schema is None
+            else contract.workspace_refresh_target_schema.model_dump(mode="json")
+        ),
+        "interaction_kinds": tuple(sorted(item.value for item in contract.interaction_kinds)),
+        "request_storage": contract.request_storage.value,
+        "durability": contract.durability.value,
+        "cancellation": contract.cancellation.value,
+        "deadline": contract.deadline.value,
+        "replay": contract.replay.value,
+        "baseline": contract.baseline.value,
+        "sensitive_input": contract.sensitive_input.value,
+        "conflict_scope": contract.conflict_scope.value,
+        "owned_resources": tuple(sorted(item.value for item in contract.owned_resources)),
+        "permitted_effects": tuple(sorted(item.value for item in contract.permitted_effects)),
+        "close_policy": contract.close_policy.value,
+        "reconciliation_policy": contract.reconciliation_policy.value,
+        "permitted_frontends": tuple(sorted(item.value for item in contract.permitted_frontends)),
+        "ephemeral_secret_required": contract.ephemeral_secret_required,
+    }
     if include_digest:
         payload["definition_contract_digest"] = contract.definition_contract_digest
     return payload

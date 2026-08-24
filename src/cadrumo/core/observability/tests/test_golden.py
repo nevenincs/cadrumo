@@ -28,6 +28,7 @@ from ...json_contract import OutputSchema, emit_json_success
 from ...time import frozen_clock, now
 from .. import (
     GOLDEN_MASK_FIELDS,
+    GOLDEN_MASK_PATHS,
     MASK_SENTINEL,
     GoldenCaptureError,
     GoldenReplayMismatchError,
@@ -156,6 +157,29 @@ class TestCanonicaliseAndMask:
         a = {"result": {"x": 1, "y": 2}}
         b = {"result": {"x": 1, "y": 3}}
         assert differing_paths(a, b) == frozenset({"result.y"})
+
+    def test_profile_delete_masks_only_its_fingerprint_digest_path(self) -> None:
+        assert frozenset(
+            {("config.profile.delete", "result.fingerprint.digest")},
+        ) == GOLDEN_MASK_PATHS
+        delete = {
+            "command": "config.profile.delete",
+            "digest": "visible-top-level",
+            "result": {
+                "digest": "visible-result",
+                "fingerprint": {"digest": "flapping", "file_count": 5, "total_bytes": 2534},
+            },
+        }
+        masked = cast("dict[str, Any]", mask_document(delete))
+        assert masked["result"]["fingerprint"]["digest"] == MASK_SENTINEL
+        assert masked["digest"] == "visible-top-level"
+        assert masked["result"]["digest"] == "visible-result"
+        assert masked["result"]["fingerprint"]["file_count"] == 5
+        assert masked["result"]["fingerprint"]["total_bytes"] == 2534
+
+        sibling = {**delete, "command": "config.profile.inspect"}
+        sibling_masked = cast("dict[str, Any]", mask_document(sibling))
+        assert sibling_masked["result"]["fingerprint"]["digest"] == "flapping"
 
 
 class TestAssertGoldenMatch:

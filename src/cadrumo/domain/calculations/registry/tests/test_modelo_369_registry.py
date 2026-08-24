@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import warnings
+from calendar import monthrange
 from datetime import date
 from functools import lru_cache
 
@@ -17,6 +18,7 @@ from .. import (
     OssIossLedgerObservation,
     RegistryCatalogues,
     RegistryValidator,
+    bundled_authority,
     extract_record_design,
     resolve_available_bound_inputs_by_casilla_id,
     resolve_ledger_oss_aggregation_binding_values,
@@ -303,6 +305,83 @@ def test_modelo_369_deadline_windows_close_last_day_next_natural_month() -> None
         assert window.opens_on == opens_on, window_id
         assert window.closes_on == closes_on, window_id
         assert "orden-hac-610-2021:art-3" in window.legal_refs
+
+
+def test_modelo_369_deadline_coordinates_are_complete_exact_and_canonically_owned() -> None:
+    """Every supported 2025/2026 OSS/IOSS period has one law-selected row.
+
+    HAC/610/2021 article 3 fixes the window as the natural month following
+    the return period.  This assertion covers all three scheme vocabularies,
+    every coordinate, both boundary dates, exact provenance, and the public
+    authority's canonical owner projection.
+    """
+    expected_periods = {
+        "esquema-exterior": ("EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T"),
+        "esquema-union": ("1T", "2T", "3T", "4T"),
+        "esquema-importacion": tuple(f"{month:02d}" for month in range(1, 13)),
+    }
+    authority = bundled_authority()
+
+    for filing_year in (2025, 2026):
+        projected = authority.deadline_windows(filing_year, modelos=("369",))
+        assert len(projected) == 20
+        projected_by_coordinate = {
+            (revision.id, window.period.registry_token): window
+            for modelo, revision, window in projected
+            if modelo == "369"
+        }
+
+        for revision_id, periods in expected_periods.items():
+            assert {
+                period
+                for owner, period in projected_by_coordinate
+                if owner == revision_id
+            } == set(periods)
+            for period in periods:
+                window = projected_by_coordinate[(revision_id, period)]
+                if period.endswith("T"):
+                    quarter = int(period[-2])
+                    filing_month = quarter * 3 + 1
+                else:
+                    filing_month = int(period) + 1
+                filing_calendar_year = filing_year + (filing_month == 13)
+                filing_month = 1 if filing_month == 13 else filing_month
+                expected_open = date(filing_calendar_year, filing_month, 1)
+                expected_close = date(
+                    filing_calendar_year,
+                    filing_month,
+                    monthrange(filing_calendar_year, filing_month)[1],
+                )
+
+                assert window.filing_year == window.period.filing_year == filing_year
+                assert (window.opens_on, window.closes_on) == (expected_open, expected_close)
+                assert set(window.legal_refs) == {"orden-hac-610-2021:art-3"}
+                assert set(window.source_refs) == {
+                    "boe-modelo-369-2021-form",
+                    "aeat-modelo-369-procedure",
+                }
+
+
+def test_modelo_369_deadlines_do_not_shift_weekend_month_ends() -> None:
+    """AEAT expressly excludes Modelo 369 from non-working-day extensions."""
+    authority = bundled_authority()
+    windows = {
+        (revision.id, window.period.registry_token): window.closes_on
+        for _modelo, revision, window in authority.deadline_windows(2025, modelos=("369",))
+    }
+
+    assert windows[("esquema-importacion", "04")] == date(2025, 5, 31)  # Saturday
+    assert windows[("esquema-importacion", "07")] == date(2025, 8, 31)  # Sunday
+
+
+def test_modelo_369_deadline_materialisation_has_no_unpublished_filing_year() -> None:
+    """Materialisation stops at the shared presently supported filing-year edge."""
+    modelo, _ = _load_modelo_369()
+    assert {
+        window.filing_year
+        for revision in modelo.revisions.values()
+        for window in revision.deadline_windows
+    } == {2025, 2026}
 
 
 def test_modelo_369_live_cross_references_are_read_only() -> None:
