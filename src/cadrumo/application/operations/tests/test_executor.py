@@ -13,22 +13,20 @@ import pytest
 from pydantic import BaseModel
 
 from ....core import STRICT_FROZEN_CONFIG
-from .. import (
+from .. import OperationEffect, OperationIdentity, OperationOwnedResource
+from .._events import OperationLogSeverity
+from .._executor import (
     OperationCancellationScope,
     OperationCleanupOwner,
     OperationDeadlineAccess,
-    OperationEffect,
-    OperationEphemeralSecretAccess,
     OperationEventEmitter,
     OperationExecutor,
     OperationExecutorContext,
-    OperationIdentity,
     OperationInteractionAccess,
-    OperationOwnedResource,
     OperationSecureOperandLookup,
 )
-from .._events import OperationLogSeverity
 from .._interactions import OperationInteractionRequest, OperationPendingInteraction
+from .._secret_submission import OperationEphemeralSecretAccess
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

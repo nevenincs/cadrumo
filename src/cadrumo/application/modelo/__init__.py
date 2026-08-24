@@ -570,6 +570,7 @@ from ._work_lifecycle import (
 from ._work_plazo import (
     ModeloWorkConditionalRecargoPreview,
     ModeloWorkDeadlinePosture,
+    calculated_m210_plazo_notice,
     modelo_work_deadline_posture,
     validate_modelo_work_deadline_posture,
 )
@@ -851,6 +852,7 @@ __all__ = [
     "calculate_modelo_revision_from_bucket_aggregation",
     "calculate_modelo_revision_from_bucket_aggregation_with_diagnostics",
     "calculate_modelo_work_revision",
+    "calculated_m210_plazo_notice",
     "calculation_result_summary",
     "casilla_id_for_unique_revision_semantic_role",
     "ceded_autonomic_modelo_locale_key",

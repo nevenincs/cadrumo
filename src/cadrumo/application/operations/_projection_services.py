@@ -21,8 +21,11 @@ from ...core import (
 from ...core.identity import ContentDigest
 from ._interactions import (
     OperationActorReference,
+    OperationApplyResponse,
+    OperationConsumedInteraction,
     OperationInteractionId,
     OperationPendingInteraction,
+    OperationRejectResponse,
     OperationResponseIntent,
     OperationResponseToken,
 )
@@ -52,6 +55,11 @@ from ._public import (
     OperationResponseControlResultV1,
     OperationResponseControlSuccessV1,
     OperationResponseControlVersionHeader,
+    OperationResponseApplyRequestV1,
+    OperationResponseMutationRequestV1,
+    OperationResponseMutationResultV1,
+    OperationResponseMutationSuccessV1,
+    OperationResponseRejectRequestV1,
     OperationReviewProjectionRefusalCode,
     OperationReviewProjectionRefusalV1,
     OperationReviewProjectionRequestV1,
@@ -85,6 +93,11 @@ class OperationControlSupervisor(Protocol):
 
     async def detach(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
 
+    async def respond(
+        self,
+        response: OperationApplyResponse | OperationRejectResponse,
+    ) -> OperationConsumedInteraction: ...
+
 
 @runtime_checkable
 class OperationSecureResponseAuthority(Protocol):
@@ -96,6 +109,16 @@ class OperationSecureResponseAuthority(Protocol):
         pending: OperationPendingInteraction,
         /,
     ) -> frozenset[OperationResponseIntent]: ...
+
+    async def response_token(
+        self,
+        request: OperationResponseControlRequestV1,
+        pending: OperationPendingInteraction,
+        intent: OperationResponseIntent,
+        /,
+    ) -> OperationResponseToken: ...
+
+    def close(self) -> None: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -167,6 +190,19 @@ class BoundOperationSecureResponseAuthority:
         if not compare_digest(token_digest, pending.response_token_digest):
             raise ValueError("secure response authority bearer does not match the pending interaction")
         return self.intents
+
+    async def response_token(
+        self,
+        request: OperationResponseControlRequestV1,
+        pending: OperationPendingInteraction,
+        intent: OperationResponseIntent,
+        /,
+    ) -> OperationResponseToken:
+        """Return the private token only after exact authority validation."""
+        intents = await self.permitted_intents(request, pending)
+        if intent not in intents:
+            raise ValueError("secure response authority does not permit the requested intent")
+        return self._token.decode("ascii")
 
     def close(self) -> None:
         zeroize_secret_buffer(self._token)

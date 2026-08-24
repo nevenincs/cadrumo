@@ -40,8 +40,8 @@ from ....tests.secure_sql import isolated_runtime_profile
 from ...operations import (
     OperationRegistry,
     OperationRequest,
-    OperationSupervisor,
 )
+from ...operations._supervisor import OperationSupervisor
 from .. import (
     FILED_HISTORY_OPERATION_DEFINITION_ID as PUBLIC_FILED_HISTORY_OPERATION_DEFINITION_ID,
 )

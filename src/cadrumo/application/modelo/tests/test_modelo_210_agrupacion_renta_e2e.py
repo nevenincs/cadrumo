@@ -22,7 +22,9 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...tests import register_wizard_catalogue
 from .._calculation_actions import calculate_modelo_revision
+from .._m303_regimen_simplificado_scope import active_taxpayer_profile
 from .._work_lifecycle import create_work_unit
+from .._work_plazo import calculated_m210_plazo_notice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -134,7 +136,26 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
             bucket_event_repository=event_repo,
             clock=_CLOCK,
         )
+        plazo_notice = calculated_m210_plazo_notice(
+            work_unit=work_unit,
+            revision=revision,
+            workflow_profile=active_taxpayer_profile(work_unit),
+        )
 
     assert revision.detail_rows == rows
     assert revision.m210_official_tipo_renta_code == "01"
     assert revision.casilla_values["base_imponible"] == Decimal("900.00")
+    assert plazo_notice is not None
+    assert plazo_notice.code == "modelo.work.m210.plazo_resolved"
+    assert plazo_notice.context == {
+        "modelo": "210",
+        "filing_year": "2025",
+        "period": "0A",
+        "resultado": "I",
+        "tipo_renta_code": "01",
+        "deadline_window_id": "modelo-210-2025-0a-arrendamiento-ingreso",
+        "opens_on": "2026-04-01",
+        "closes_on": "2026-04-20",
+        "legal_refs": "orden-eha-3316-2010:art-5",
+        "source_refs": "aeat-modelo-210-procedure, boe-modelo-210-base-order",
+    }

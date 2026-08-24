@@ -29,10 +29,10 @@ from ...operations import (
     OperationExecutorFactory,
     OperationRegistry,
     OperationRequest,
-    OperationSupervisor,
     operation_public_schema_reference,
 )
 from ...operations._interactions import OperationApplyResponse, OperationRejectResponse
+from ...operations._supervisor import OperationSupervisor
 from .._capsule_record import ProfileRecordSession, ProfileRecordStore
 from .._censal_observation import CensalObservation, CensalObservationAddress, CensalObservationIdentity
 from .._censal_operation import (

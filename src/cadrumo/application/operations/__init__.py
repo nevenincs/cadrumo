@@ -11,7 +11,6 @@ from ...core import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from .. import JournalRepositoryBase
 from ._capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -21,25 +20,13 @@ from ._capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
+from ._composition import OperationComposedServices, compose_operation_services
 from ._events import OperationLogSeverity
-from ._execution_context import OperationDeclarationError
-from ._executor import (
-    OperationCancellationScope,
-    OperationCleanupOwner,
-    OperationDeadlineAccess,
-    OperationEventEmitter,
-    OperationExecutor,
-    OperationExecutorContext,
-    OperationInteractionAccess,
-    OperationResumableExecutor,
-    OperationSecureOperandLookup,
-)
 from ._interactions import OperationResponseIntent
 from ._models import (
     CredentialFreeOperationRequest,
     OperationDefinitionId,
     OperationId,
-    OperationIdempotencyClaim,
     OperationIdentity,
     OperationReconciliationOutcome,
     OperationReference,
@@ -51,11 +38,9 @@ from ._models import (
 from ._observation import OperationObservationService
 from ._projection_services import (
     OperationCancellationService,
-    OperationControlSupervisor,
     OperationDetachService,
     OperationResponseControlService,
     OperationReviewProjectionService,
-    OperationSecureResponseAuthority,
     OperationWorkspaceRefreshTargetService,
 )
 from ._public import (
@@ -124,44 +109,33 @@ from ._registry import (
     OperationPublicSchemaId,
     OperationReconciliationPolicy,
     OperationRegistry,
-    OperationReviewProjector,
     OperationSchemaBindingV1,
     OperationSchemaIdentityV1,
-    OperationWorkspaceRefreshAdapter,
     operation_public_schema_reference,
 )
 from ._replay import OperationEventCursor
 from ._secret_submission import (
-    EphemeralSecretSubmission,
-    OperationEphemeralSecretAccess,
     OperationEphemeralSecretDeclaration,
     OperationSecretKind,
     OperationSecretRequirement,
 )
-from ._supervisor import OperationSupervisor
 
 __all__ = [
     "CredentialFreeOperationRequest",
-    "EphemeralSecretSubmission",
-    "JournalRepositoryBase",
     "OperationBaselinePolicy",
     "OperationCancellation",
     "OperationCancellationRefusalCode",
     "OperationCancellationRefusalV1",
     "OperationCancellationRequestV1",
     "OperationCancellationResultV1",
-    "OperationCancellationScope",
     "OperationCancellationService",
     "OperationCancellationSuccessV1",
     "OperationCancellationVersionHeader",
     "OperationCapabilities",
-    "OperationCleanupOwner",
     "OperationClosePolicy",
+    "OperationComposedServices",
     "OperationConflictScope",
-    "OperationControlSupervisor",
     "OperationDeadline",
-    "OperationDeadlineAccess",
-    "OperationDeclarationError",
     "OperationDefinition",
     "OperationDefinitionId",
     "OperationDetachRefusalCode",
@@ -173,19 +147,13 @@ __all__ = [
     "OperationDetachVersionHeader",
     "OperationDurability",
     "OperationEffect",
-    "OperationEphemeralSecretAccess",
     "OperationEphemeralSecretDeclaration",
     "OperationEventCursor",
-    "OperationEventEmitter",
     "OperationEventKind",
-    "OperationExecutor",
-    "OperationExecutorContext",
     "OperationExecutorFactory",
     "OperationFrontendProjection",
     "OperationId",
-    "OperationIdempotencyClaim",
     "OperationIdentity",
-    "OperationInteractionAccess",
     "OperationInteractionKind",
     "OperationLifecycle",
     "OperationLogSeverity",
@@ -231,7 +199,6 @@ __all__ = [
     "OperationResponseControlSuccessV1",
     "OperationResponseControlVersionHeader",
     "OperationResponseIntent",
-    "OperationResumableExecutor",
     "OperationReviewAvailableInteractionV1",
     "OperationReviewProjectionReferenceV1",
     "OperationReviewProjectionRefusalCode",
@@ -241,20 +208,15 @@ __all__ = [
     "OperationReviewProjectionService",
     "OperationReviewProjectionSuccessV1",
     "OperationReviewProjectionVersionHeader",
-    "OperationReviewProjector",
     "OperationRevision",
     "OperationSchemaBindingV1",
     "OperationSchemaIdentityV1",
     "OperationSecretKind",
     "OperationSecretRequirement",
-    "OperationSecureOperandLookup",
-    "OperationSecureResponseAuthority",
     "OperationSensitiveInputPolicy",
-    "OperationSupervisor",
     "OperationTerminalCondition",
     "OperationTerminalReceipt",
     "OperationUnsupportedInteractionV1",
-    "OperationWorkspaceRefreshAdapter",
     "OperationWorkspaceRefreshTargetRefusalCode",
     "OperationWorkspaceRefreshTargetRefusalV1",
     "OperationWorkspaceRefreshTargetRequestV1",
@@ -262,6 +224,7 @@ __all__ = [
     "OperationWorkspaceRefreshTargetService",
     "OperationWorkspaceRefreshTargetSuccessV1",
     "OperationWorkspaceRefreshTargetVersionHeader",
+    "compose_operation_services",
     "new_operation_id",
     "operation_public_schema_reference",
 ]

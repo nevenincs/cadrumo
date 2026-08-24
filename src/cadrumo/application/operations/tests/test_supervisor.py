@@ -35,12 +35,9 @@ from .. import (
     OperationClosePolicy,
     OperationConflictScope,
     OperationDeadline,
-    OperationDeclarationError,
     OperationDefinition,
     OperationDurability,
     OperationEffect,
-    OperationExecutor,
-    OperationExecutorContext,
     OperationExecutorFactory,
     OperationFrontendProjection,
     OperationIdentity,
@@ -59,7 +56,6 @@ from .. import (
     OperationRequestStoragePolicy,
     OperationSchemaBindingV1,
     OperationSensitiveInputPolicy,
-    OperationSupervisor,
     OperationTerminalCondition,
     OperationTerminalReceipt,
 )
@@ -69,6 +65,8 @@ from .._events import (
     OperationReconciliationEvent,
     OperationTerminalEvent,
 )
+from .._execution_context import OperationDeclarationError
+from .._executor import OperationExecutor, OperationExecutorContext
 from .._interactions import (
     OperationApplyResponse,
     OperationConsumedInteraction,
@@ -78,6 +76,7 @@ from .._interactions import (
 )
 from .._journal import OperationPersistedSnapshot, OperationSecureReferenceStore
 from .._leases import OperationLeaseDisposition, OperationOwnerLease, operation_conflict_scope_reference
+from .._supervisor import OperationSupervisor
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

@@ -30,7 +30,6 @@ from ..operations import (
     OperationCapabilities,
     OperationConflictScope,
     OperationDefinition,
-    OperationExecutorContext,
     OperationExecutorFactory,
     OperationFrontendProjection,
     OperationOwnedResource,
@@ -39,15 +38,16 @@ from ..operations import (
     OperationReplayPolicy,
     OperationRequest,
     OperationRequestStoragePolicy,
-    OperationResponseIntent,
     OperationSchemaBindingV1,
     OperationSensitiveInputPolicy,
     operation_public_schema_reference,
 )
+from ..operations._executor import OperationExecutorContext
 from ..operations._interactions import (
     OperationConsumedInteraction,
     OperationInteractionRequest,
     OperationPendingInteraction,
+    OperationResponseIntent,
 )
 from ._capsule_record import ProfileRecordConflictError
 from ._censal_observation import CensalObservation
@@ -446,7 +446,10 @@ async def _pull_censal_datos() -> CensalObservation:
     """Acquire through the sole public live application door."""
     from ..live import pull_censal_datos
 
-    return await pull_censal_datos()
+    observation = await pull_censal_datos()
+    if not isinstance(observation, CensalObservation):
+        raise TypeError("censal acquisition returned an invalid observation")
+    return observation
 
 
 def _require_current_operand_baseline(operand: CensalReviewedOperand) -> None:

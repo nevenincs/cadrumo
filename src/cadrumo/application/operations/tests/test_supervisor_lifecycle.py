@@ -32,7 +32,6 @@ from .. import (
     OperationDefinition,
     OperationDurability,
     OperationEffect,
-    OperationExecutorContext,
     OperationExecutorFactory,
     OperationFrontendProjection,
     OperationLifecycle,
@@ -45,12 +44,13 @@ from .. import (
     OperationRequestStoragePolicy,
     OperationSchemaBindingV1,
     OperationSensitiveInputPolicy,
-    OperationSupervisor,
     OperationTerminalCondition,
     OperationTerminalReceipt,
 )
 from .._events import OperationTerminalEvent
+from .._executor import OperationExecutorContext
 from .._journal import OperationPersistedSnapshot
+from .._supervisor import OperationSupervisor
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import secrets
-from dataclasses import dataclass
 from datetime import timedelta
 
 from ..adapters.persistence.operations import (
@@ -18,15 +17,9 @@ from ..application.live import (
     build_filed_history_operation_registration,
 )
 from ..application.operations import (
-    OperationCancellationService,
-    OperationDetachService,
-    OperationObservationService,
+    OperationComposedServices,
     OperationRegistry,
-    OperationResponseControlService,
-    OperationReviewProjectionService,
-    OperationSecureResponseAuthority,
-    OperationSupervisor,
-    OperationWorkspaceRefreshTargetService,
+    compose_operation_services,
 )
 from ..application.user_profile import (
     CENSAL_OPERATION_DEFINITION,
@@ -43,35 +36,10 @@ _EXECUTION_TIMEOUT = timedelta(hours=1)
 _CLEANUP_TIMEOUT = timedelta(minutes=2)
 
 
-@dataclass(frozen=True, slots=True)
-class OperationProductionDependencies:
-    """One reusable production graph shared by every inbound frontend."""
-
-    registry: OperationRegistry
-    supervisor: OperationSupervisor
-    observation: OperationObservationService
-    review: OperationReviewProjectionService
-    refresh: OperationWorkspaceRefreshTargetService
-    cancellation: OperationCancellationService
-    detach: OperationDetachService
-
-    async def shutdown(self) -> None:
-        """Settle supervisor-owned tasks and resources before process exit."""
-        await self.supervisor.shutdown()
-
-    def response(self, authority: OperationSecureResponseAuthority) -> OperationResponseControlService:
-        """Bind response inspection to a separately held runtime authority."""
-        return OperationResponseControlService(
-            reader=self.observation.reader,
-            registry=self.registry,
-            authority=authority,
-        )
-
-
 def compose_operation_dependencies(
     *,
     settings: Settings | None = None,
-) -> OperationProductionDependencies:
+) -> OperationComposedServices:
     """Compose the immutable production registry and all public services.
 
     Construction is deliberately explicit and effect-light: it opens no
@@ -107,7 +75,7 @@ def compose_operation_dependencies(
     journal = OperationJournalRepository(storage_root=storage_root)
     leases = OperationLeaseFilesystemRepository(storage_root=storage_root)
     operands = operation_secure_reference_repository()
-    supervisor = OperationSupervisor(
+    return compose_operation_services(
         registry=registry,
         journal=journal,
         event_stream=journal,
@@ -120,15 +88,6 @@ def compose_operation_dependencies(
         execution_timeout=_EXECUTION_TIMEOUT,
         cleanup_timeout=_CLEANUP_TIMEOUT,
     )
-    return OperationProductionDependencies(
-        registry=registry,
-        supervisor=supervisor,
-        observation=OperationObservationService(reader=journal, registry=registry),
-        review=OperationReviewProjectionService(reader=journal, registry=registry, operands=operands, clock=now),
-        refresh=OperationWorkspaceRefreshTargetService(reader=journal, registry=registry),
-        cancellation=OperationCancellationService(reader=journal, registry=registry, supervisor=supervisor),
-        detach=OperationDetachService(reader=journal, registry=registry, supervisor=supervisor),
-    )
 
 
-__all__ = ["OperationProductionDependencies", "compose_operation_dependencies"]
+__all__ = ["compose_operation_dependencies"]

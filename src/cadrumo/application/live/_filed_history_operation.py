@@ -24,8 +24,6 @@ from ..operations import (
     OperationCapabilities,
     OperationConflictScope,
     OperationDefinition,
-    OperationEventEmitter,
-    OperationExecutorContext,
     OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
@@ -35,6 +33,7 @@ from ..operations import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
+from ..operations._executor import OperationEventEmitter, OperationExecutorContext
 from ..storage.sync_runs import SyncRunRecordRepositoryProtocol
 from ._filed_data_capture import (
     FILED_HISTORY_DECLARATION_PROGRESS_UNIT,

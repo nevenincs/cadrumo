@@ -14,14 +14,12 @@ from pydantic import BaseModel, ValidationError
 
 from .....application.operations import (
     CredentialFreeOperationRequest,
-    EphemeralSecretSubmission,
     OperationBaselinePolicy,
     OperationCapabilities,
     OperationConflictScope,
     OperationDefinition,
     OperationEffect,
     OperationEphemeralSecretDeclaration,
-    OperationExecutorContext,
     OperationExecutorFactory,
     OperationFrontendProjection,
     OperationLifecycle,
@@ -34,10 +32,12 @@ from .....application.operations import (
     OperationSchemaBindingV1,
     OperationSecretRequirement,
     OperationSensitiveInputPolicy,
-    OperationSupervisor,
     OperationTerminalCondition,
     OperationTerminalReceipt,
 )
+from .....application.operations._executor import OperationExecutorContext
+from .....application.operations._secret_submission import EphemeralSecretSubmission
+from .....application.operations._supervisor import OperationSupervisor
 from .....core import (
     STRICT_FROZEN_CONFIG,
     OperationCancellation,

@@ -11,14 +11,15 @@ import pytest
 
 from .. import (
     OperationCapabilities,
+    OperationComposedServices,
     OperationEventCursor,
-    OperationExecutorContext,
+    OperationLogSeverity,
     OperationObservationService,
     OperationPublicProjectionV1,
     OperationRegistry,
     OperationRequest,
+    OperationResponseIntent,
     OperationReviewProjectionService,
-    OperationSupervisor,
 )
 from .. import __all__ as public_names
 
@@ -37,31 +38,44 @@ def test_facade_exports_only_declared_public_generic_symbols() -> None:
 
 def test_representative_contracts_resolve_from_public_facade() -> None:
     assert OperationCapabilities.__module__.endswith("._capabilities")
+    assert OperationComposedServices.__module__.endswith("._composition")
     assert str(OperationEventCursor).startswith("typing.Annotated")
+    assert OperationLogSeverity.__module__.endswith("._events")
     assert OperationRequest.__module__.endswith("._models")
     assert OperationPublicProjectionV1.__module__.endswith("._public")
-    assert OperationExecutorContext.__module__.endswith("._executor")
+    assert OperationResponseIntent.__module__.endswith("._interactions")
     assert OperationRegistry.__module__.endswith("._registry")
     assert OperationObservationService.__module__.endswith("._observation")
     assert OperationReviewProjectionService.__module__.endswith("._projection_services")
     assert callable(OperationRegistry.resolve_request_json)
     assert callable(OperationRegistry.resolve_snapshot_json)
-    assert OperationSupervisor.__module__.endswith("._supervisor")
 
 
-def test_facade_does_not_export_persistence_or_response_bearer_internals() -> None:
+def test_facade_does_not_export_runtime_or_persistence_authorities() -> None:
     operations = importlib.import_module("..", package=__package__)
     forbidden = {
         "BoundOperationSecureResponseAuthority",
         "OperationConsumedInteraction",
+        "OperationControlSupervisor",
+        "OperationDeadlineAccess",
+        "OperationEphemeralSecretAccess",
         "OperationEvent",
+        "OperationEventEmitter",
+        "OperationExecutor",
+        "OperationExecutorContext",
+        "OperationInteractionAccess",
         "OperationJournal",
         "OperationLeaseObservation",
         "OperationPendingInteraction",
         "OperationPersistedSnapshot",
         "OperationReplayPage",
+        "OperationResumableExecutor",
         "OperationResponseToken",
+        "OperationSecureOperandLookup",
+        "OperationSecureResponseAuthority",
         "OperationSnapshot",
+        "OperationSupervisor",
+        "EphemeralSecretSubmission",
     }
 
     assert forbidden.isdisjoint(public_names)
@@ -76,10 +90,8 @@ def test_facade_does_not_import_frontend_or_adapter_modules() -> None:
     assert targets == {
         "core",
         "_capabilities",
+        "_composition",
         "_events",
-        "_execution_context",
-        "_executor",
-        "_interactions",
         "_models",
         "_observation",
         "_public",
@@ -87,5 +99,4 @@ def test_facade_does_not_import_frontend_or_adapter_modules() -> None:
         "_replay",
         "_registry",
         "_secret_submission",
-        "_supervisor",
     }

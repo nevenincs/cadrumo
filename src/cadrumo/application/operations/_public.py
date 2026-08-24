@@ -21,7 +21,7 @@ from ...core import (
 from ...core.identity import ContentDigest
 from ...core.time import validate_utc_aware
 from ._events import OperationEventCode, OperationEventSequence, OperationLogSeverity
-from ._interactions import OperationActorReference, OperationInteractionId, OperationResponseIntent
+from ._interactions import OperationActorReference, OperationInteractionId
 from ._models import (
     OperationDefinitionId,
     OperationDiagnosticReference,
@@ -36,6 +36,7 @@ from ._registry import (
     OperationSchemaIdentityV1,
 )
 from ._replay import OperationEventCursor, OperationReplayLimit, OperationReplayStatus
+from ._secret_submission import OperationSecretRequirement
 
 _PUBLIC_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
@@ -608,7 +609,7 @@ class OperationResponseControlSuccessV1(BaseModel):
     interaction_id: OperationInteractionId
     revision: OperationRevision
     available: bool
-    permitted_intents: frozenset[OperationResponseIntent]
+    permitted_intents: frozenset[Literal["apply", "reject"]]
 
     @model_validator(mode="after")
     def _validate_availability(self) -> OperationResponseControlSuccessV1:
@@ -632,6 +633,66 @@ OperationResponseControlResultV1 = Annotated[
     OperationResponseControlSuccessV1 | OperationResponseControlRefusalV1,
     Field(discriminator="outcome"),
 ]
+
+
+class OperationResponseApplyRequestV1(OperationResponseControlRequestV1):
+    """Apply one exact pending REVIEW through separately held authority."""
+
+    response_action: Literal["apply"] = "apply"
+    responded_at: datetime
+
+    @model_validator(mode="after")
+    def _validate_response_time(self) -> OperationResponseApplyRequestV1:
+        validate_utc_aware(self.responded_at)
+        return self
+
+
+class OperationResponseRejectRequestV1(OperationResponseControlRequestV1):
+    """Reject one exact pending REVIEW through separately held authority."""
+
+    response_action: Literal["reject"] = "reject"
+    responded_at: datetime
+    reason_code: OperationEventCode | None = None
+
+    @model_validator(mode="after")
+    def _validate_response_time(self) -> OperationResponseRejectRequestV1:
+        validate_utc_aware(self.responded_at)
+        return self
+
+
+OperationResponseMutationRequestV1 = Annotated[
+    OperationResponseApplyRequestV1 | OperationResponseRejectRequestV1,
+    Field(discriminator="response_action"),
+]
+
+
+class OperationResponseMutationSuccessV1(BaseModel):
+    """Safe acknowledgement that one exact response was durably consumed."""
+
+    model_config = _PUBLIC_CONFIG
+
+    outcome: Literal["success"] = "success"
+    response_control_version: Literal[1] = 1
+    operation_id: OperationId
+    interaction_id: OperationInteractionId
+    revision: OperationRevision
+    response_action: Literal["apply", "reject"]
+
+
+OperationResponseMutationResultV1 = Annotated[
+    OperationResponseMutationSuccessV1 | OperationResponseControlRefusalV1,
+    Field(discriminator="outcome"),
+]
+
+
+class OperationSubmissionReceiptV1(BaseModel):
+    """Credential-free result of durable registered-operation submission."""
+
+    model_config = _PUBLIC_CONFIG
+
+    submission_version: Literal[1] = 1
+    operation_id: OperationId
+    secret_requirement: OperationSecretRequirement | None
 
 
 class OperationCancellationRequestV1(BaseModel):
@@ -782,6 +843,11 @@ __all__ = [
     "OperationResponseControlResultV1",
     "OperationResponseControlSuccessV1",
     "OperationResponseControlVersionHeader",
+    "OperationResponseApplyRequestV1",
+    "OperationResponseMutationRequestV1",
+    "OperationResponseMutationResultV1",
+    "OperationResponseMutationSuccessV1",
+    "OperationResponseRejectRequestV1",
     "OperationReviewAvailableInteractionV1",
     "OperationReviewProjectionReferenceV1",
     "OperationReviewProjectionRefusalCode",
@@ -790,6 +856,7 @@ __all__ = [
     "OperationReviewProjectionResultV1",
     "OperationReviewProjectionSuccessV1",
     "OperationReviewProjectionVersionHeader",
+    "OperationSubmissionReceiptV1",
     "OperationUnsupportedInteractionV1",
     "OperationWorkspaceRefreshTargetRefusalCode",
     "OperationWorkspaceRefreshTargetRefusalV1",

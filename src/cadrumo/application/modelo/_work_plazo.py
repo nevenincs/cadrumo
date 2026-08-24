@@ -27,9 +27,13 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal
 
+from ...core import Modelo
+from ...core.i18n import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
 from ...core.time import today_madrid
-from ...domain.modelos import WorkUnit
+from ...domain.deadlines import TaxpayerProfile
+from ...domain.modelos import CalculationRevision, WorkUnit
 
 _LOG = get_logger(__name__)
 
@@ -197,9 +201,81 @@ def modelo_work_deadline_posture(
     )
 
 
+def calculated_m210_plazo_notice(
+    *,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    workflow_profile: TaxpayerProfile,
+) -> Notice | None:
+    """Return the grounded post-calculation Modelo 210 plazo notice, if known.
+
+    Modelo 210 annual filing windows depend on the calculated declaration
+    result and the operator's persisted official two-digit tipo-renta code.
+    Those facts do not exist at work-unit creation time, so this projection is
+    deliberately separate from :func:`modelo_work_deadline_posture`, which
+    remains the unqualified pre-calculation extemporaneidad surface.
+
+    The function derives the result through the same application resolver used
+    by filing/export and delegates window matching to the canonical deadline
+    resolver.  It owns no result vocabulary, tipo-renta map, date catalogue, or
+    matching rule.  A missing window produces no notice; notably, tipo 28 stays
+    silent until its event-relative offset has authoritative registry backing.
+    """
+    if work_unit.modelo != Modelo.M210:
+        return None
+
+    from ...domain.deadlines import resolve_filing_window
+    from ._result_disposition_resolution import resolve_modelo_result_disposition
+
+    resultado = resolve_modelo_result_disposition(
+        work_unit=work_unit,
+        revision=revision,
+        workflow_profile=workflow_profile,
+        period=work_unit.period,
+    )
+    tipo_renta_code = revision.m210_official_tipo_renta_code
+    window = resolve_filing_window(
+        str(work_unit.modelo),
+        work_unit.filing_year,
+        work_unit.period,
+        resultado=resultado,
+        tipo_renta_code=tipo_renta_code,
+    )
+    if window is None:
+        return None
+
+    context = {
+        "modelo": str(work_unit.modelo),
+        "filing_year": str(work_unit.filing_year),
+        "period": work_unit.period.registry_token,
+        "resultado": resultado.value,
+        "deadline_window_id": window.id,
+        "opens_on": window.opens_on.isoformat(),
+        "closes_on": window.closes_on.isoformat(),
+        "legal_refs": ", ".join(window.legal_refs),
+        "source_refs": ", ".join(window.source_refs),
+    }
+    if tipo_renta_code is not None:
+        context["tipo_renta_code"] = tipo_renta_code
+    if window.payment_cutoff_on is not None:
+        context["payment_cutoff_on"] = window.payment_cutoff_on.isoformat()
+
+    return Notice(
+        severity=NoticeSeverity.INFO,
+        code="modelo.work.m210.plazo_resolved",
+        message=tr(
+            "cli.app.modelo.work.m210_plazo_resolved",
+            default="Modelo 210 filing window resolved: voluntary filing closes on %{closes_on}.",
+            closes_on=window.closes_on.isoformat(),
+        ),
+        context=context,
+    )
+
+
 __all__ = [
     "ModeloWorkConditionalRecargoPreview",
     "ModeloWorkDeadlinePosture",
+    "calculated_m210_plazo_notice",
     "modelo_work_deadline_posture",
     "validate_modelo_work_deadline_posture",
 ]

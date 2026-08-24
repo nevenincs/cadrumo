@@ -87,7 +87,13 @@ from typing import TYPE_CHECKING, Literal, Protocol, overload
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from ._persistence import WorkflowStateRepository
     from ._profile_bucket_models import ProfileBucketPointer
+    from ._state_models import WorkflowState
+
+    def workflow_state_repository() -> WorkflowStateRepository:
+        """Type the lazily exported active workflow repository factory."""
+        ...
 
 
 class _ProfileBucketLookup(Protocol):
@@ -100,6 +106,7 @@ class _ProfileBucketCatalog(Protocol):
     """Type the lazy committed-profile catalog export without importing its scanner."""
 
     def __call__(self, *, root: Path | None = None) -> dict[str, ProfileBucketPointer]: ...
+
 
 _LAZY_EXPORTS: dict[str, str] = {
     **dict.fromkeys(

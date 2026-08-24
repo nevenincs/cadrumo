@@ -26,7 +26,6 @@ from cadrumo.application.operations import (
     OperationDetachVersionHeader,
     OperationDurability,
     OperationEffect,
-    OperationExecutorContext,
     OperationExecutorFactory,
     OperationFrontendProjection,
     OperationNoPendingInteractionV1,
@@ -67,6 +66,7 @@ from cadrumo.application.operations import (
     OperationWorkspaceRefreshTargetSuccessV1,
     OperationWorkspaceRefreshTargetVersionHeader,
 )
+from cadrumo.application.operations._executor import OperationExecutorContext
 from cadrumo.application.operations._model_contract import require_strict_frozen_operation_model_graph
 from cadrumo.core import OperationEventKind, OperationInteractionKind, OperationLifecycle
 

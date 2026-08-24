@@ -26,7 +26,6 @@ from ..operations import (
     OperationConflictScope,
     OperationDefinition,
     OperationEphemeralSecretDeclaration,
-    OperationExecutorContext,
     OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
@@ -36,6 +35,7 @@ from ..operations import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
+from ..operations._executor import OperationExecutorContext
 from ._bundle_export import (
     ProfileBundleExportPurpose,
     ProfileBundleExportRequest,

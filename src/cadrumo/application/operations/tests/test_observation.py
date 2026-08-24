@@ -27,7 +27,6 @@ from .. import (
     OperationCapabilities,
     OperationConflictScope,
     OperationDefinition,
-    OperationExecutorContext,
     OperationExecutorFactory,
     OperationFrontendProjection,
     OperationIdentity,
@@ -66,6 +65,7 @@ from .._events import (
     OperationReconciliationEvent,
     OperationTerminalEvent,
 )
+from .._executor import OperationExecutorContext
 from .._interactions import OperationInteractionRequest, OperationPendingInteraction
 from .._journal import (
     OperationObservationMaterialization,
