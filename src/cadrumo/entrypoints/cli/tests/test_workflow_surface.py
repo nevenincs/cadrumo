@@ -766,7 +766,7 @@ def test_config_profile_create_iva_regime_round_trips_to_deadline_engine(
             "identity.name": "Operator",
             "identity.surnames": "Workflow",
             "activities.description": "Servicios",
-            "iva.regime": "general",
+            "iva.regime": "GENERAL",
         },
     )
 
