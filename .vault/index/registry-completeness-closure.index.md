@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:917fb6a44278ab5aedca56df7bfa3de1033369b7bc003916ee0b928b19093e3b'
+body_hash: 'sha256:2bd1a6f366ea58585b97d85ee2ddcb7a0b07398edee21978dc62b7ba70cc86f0'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -51,6 +51,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s48-undeclared-grade-guard-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s49-structured-proof-cause-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s50-undeclared-grade-all-rungs-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s51-proof-cause-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s52-source-composer-whitespace-post-review-audit]]'
 ---
 
@@ -84,6 +85,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s48-undeclared-grade-guard-review-audit` - `registry-completeness-closure` audit: `S48 undeclared-grade guard review`
 - `2026-08-24-registry-completeness-closure-s49-structured-proof-cause-review-audit` - `registry-completeness-closure` audit: `S49 structured proof cause review`
 - `2026-08-24-registry-completeness-closure-s50-undeclared-grade-all-rungs-review-audit` - `registry-completeness-closure` audit: `S50 all-rungs undeclared-grade review`
+- `2026-08-24-registry-completeness-closure-s51-proof-cause-post-review-audit` - `registry-completeness-closure` audit: `S51 proof-cause post review`
 - `2026-08-24-registry-completeness-closure-s52-source-composer-whitespace-post-review-audit` - `registry-completeness-closure` audit: `S52 source-composer whitespace post-review`
 
 ### exec

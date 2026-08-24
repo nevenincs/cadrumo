@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:6f941c90b7d2143e1f45e3665b865fb3ccab956b3f4c31ba6bca8e1bd274ac1c'
+body_hash: 'sha256:42c9f5d5823fa314fbb49b8627610c66ee61a9733f9fedf43bd0689d6efaece4'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -67,6 +67,8 @@ Compose one typed cross-authority report from validated registry coverage, sourc
 - [x] `W01.P02.S51` - Assert structured Pydantic proof-cause codes and composer taxonomy for source-enrollment, operator-workflow, and encrypted-provenance failures, with a ValueError-fallback mutation bite.; `src/cadrumo/core/tests/; src/cadrumo/application/registry/tests/`.
 - [x] `W01.P02.S52` - Remove the recorded source-connectivity composer trailing whitespace and prove the committed surface is whitespace-clean; `src/cadrumo/application/registry/_source_connectivity_coverage.py`.
 - [ ] `W01.P02.S53` - Correct the S52 execution record repair provenance and EOF whitespace, then re-attest the clean Step-surface diff check.; `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S52.md`.
+- [ ] `W01.P02.S54` - Drive a generic ValueError through live connected-proof revalidation and prove the closure composer maps the fallback cause to a fail-closed missing-evidence refusal with a mutation bite.; `src/cadrumo/application/registry/tests/; src/cadrumo/core/tests/`.
+- [ ] `W01.P02.S55` - Repair W01.P02.S51 execution-record Description, Outcome, and Notes through the canonical execution-document flow and re-attest its scoped checks.; `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S51.md`.
 
 ## Wave `W02` - filing-gap adjudication and owner routing
 
