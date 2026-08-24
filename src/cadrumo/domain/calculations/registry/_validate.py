@@ -45,6 +45,7 @@ from ._validate_record_design_epochs import (
 )
 from ._validate_registry_scope import validate_registry_scope
 from ._validate_revision_rules import (
+    validate_deadline_window_ownership,
     validate_deadline_window_uniqueness,
     validate_informative_class_invariant,
     validate_m210_tipo_renta_code_projection_parity,
@@ -240,6 +241,7 @@ class RegistryValidator:
             failures.extend(self._validate_revision(modelo, revision))
         failures.extend(self._validate_user_profile_contract((modelo,)))
         failures.extend(validate_revision_windows(modelo))
+        failures.extend(validate_deadline_window_ownership(modelo))
         failures.extend(validate_deadline_window_uniqueness(modelo))
         failures.extend(validate_informative_class_invariant(modelo))
         failures.extend(validate_m210_tipo_renta_code_projection_parity(modelo))

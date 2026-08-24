@@ -15,7 +15,9 @@ from datetime import date, timedelta
 
 from ....core import M210_TIPO_RENTA_CODE_PROJECTION
 from ._deadline_coordinate import DeadlineSemanticCoordinate, deadline_window_semantic_coordinates
+from ._errors import RegistrySnapshotError
 from ._schema import DatedValue, InputKind, ModeloDefinition, ModeloRevision, ParameterDefinition
+from ._temporal import select_revision
 from ._validate_relation_sources import period_selectors_overlap
 
 _FAR_FUTURE = date(9999, 12, 31)
@@ -79,6 +81,42 @@ def validate_deadline_window_uniqueness(modelo: ModeloDefinition) -> list[str]:
                 )
                 duplicate_coordinates.add(coordinate)
 
+    return failures
+
+
+def validate_deadline_window_ownership(modelo: ModeloDefinition) -> list[str]:
+    """Require every deadline row to live beneath its law-selected revision.
+
+    The deadline's canonical filing coordinate drives the existing temporal
+    resolver.  The containing revision is only asserted against that result;
+    it never participates in selection.  This keeps period-sensitive cutovers
+    governed by exactly the same resolver as snapshots and other registry
+    projections.
+    """
+    failures: list[str] = []
+    for containing_revision in modelo.revisions.values():
+        for window in containing_revision.deadline_windows:
+            filing_year = window.period.filing_year
+            period = window.period.registry_token
+            try:
+                selected_revision = select_revision(
+                    modelo,
+                    filing_year=filing_year,
+                    period=period,
+                )
+            except RegistrySnapshotError as exc:
+                failures.append(
+                    f"modelo {modelo.id} revision {containing_revision.id}: deadline window "
+                    f"{window.id!r} has no unique canonical owner for filing coordinate "
+                    f"({filing_year}, {period!r}): {exc}",
+                )
+                continue
+            if selected_revision.id != containing_revision.id:
+                failures.append(
+                    f"modelo {modelo.id} revision {containing_revision.id}: deadline window "
+                    f"{window.id!r} belongs to canonically selected revision "
+                    f"{selected_revision.id!r} for filing coordinate ({filing_year}, {period!r})",
+                )
     return failures
 
 

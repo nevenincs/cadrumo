@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:b1886fef98d5cd752c5a5ce6268b8efbe30cf28ad31c9a26e47ef35e8c21b2a2'
+body_hash: 'sha256:abb3f831be58def959dd9e62e71a11986394e18ec4abf8a771ecfdfd09c0fe5a'
 related:
   - '[[2026-08-24-deadline-window-revision-authority-W01-P01-S01]]'
   - '[[2026-08-24-deadline-window-revision-authority-W01-P01-S02]]'
@@ -14,6 +14,7 @@ related:
   - '[[2026-08-24-deadline-window-revision-authority-W01-P01-S04]]'
   - '[[2026-08-24-deadline-window-revision-authority-W01-P02-S05]]'
   - '[[2026-08-24-deadline-window-revision-authority-W01-P02-S06]]'
+  - '[[2026-08-24-deadline-window-revision-authority-W01-P02-S07]]'
   - '[[2026-08-24-deadline-window-revision-authority-W02-P03-S10]]'
   - '[[2026-08-24-deadline-window-revision-authority-W02-P03-S11]]'
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
@@ -45,6 +46,7 @@ Auto-generated index of all documents tagged with `#deadline-window-revision-aut
 - `2026-08-24-deadline-window-revision-authority-W01-P01-S04` - Extend deadline-window loading and serialization for typed qualifiers while preserving unqualified rows and fragmented authoring ownership
 - `2026-08-24-deadline-window-revision-authority-W01-P02-S05` - Enforce equality between deadline filing_year and Period.filing_year while preserving following-calendar-year physical dates
 - `2026-08-24-deadline-window-revision-authority-W01-P02-S06` - Enforce globally unique deadline IDs and semantic coordinates across every revision with independent bite tests
+- `2026-08-24-deadline-window-revision-authority-W01-P02-S07` - Enforce exact-one deadline ownership through canonical select_revision including period-sensitive cutovers
 - `2026-08-24-deadline-window-revision-authority-W02-P03-S10` - Re-adjudicate and repair Modelo 190 deadline identity against bundled and official AEAT authority while retaining following-January physical dates
 - `2026-08-24-deadline-window-revision-authority-W02-P03-S11` - Re-adjudicate and repair Modelo 193 deadline identity against bundled and official AEAT authority while retaining following-January physical dates
 
