@@ -111,8 +111,6 @@ def _validate_secret_state(snapshot: OperationPersistedSnapshot) -> None:
             raise ValueError("created or queued operation cannot record executor entry")
     if requirement is None:
         return
-    if snapshot.request_storage is not OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL:
-        raise ValueError("ephemeral secret requirement requires credential-free request storage")
     if requirement.identity != snapshot.identity:
         raise ValueError("ephemeral secret requirement does not match operation identity")
     if requirement.revision != 0:

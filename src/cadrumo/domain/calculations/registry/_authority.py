@@ -23,6 +23,7 @@ from ....core.access_gate import (
     load_authorization_manifest,
 )
 from ....core.resources import bundled_path as _bundled_path
+from ._compiled_cache import loader_code_fingerprint
 from ._convenio import collect_convenio_fingerprints, load_convenio_authority, validate_convenio_legal_refs
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._identity import (
@@ -458,11 +459,13 @@ def _load_validated_authority(
     verdict_key = compute_verdict_key(
         identity_digest=identity.digest,
         source_evidence_fingerprints=_source_evidence_fingerprint,
+        validation_code_fingerprint=loader_code_fingerprint(),
     )
     if registry_validation_is_certified(
         root,
         verdict_key=verdict_key,
         identity=identity,
+        validation_code_fingerprint=loader_code_fingerprint(),
     ):
         authority.mark_registry_validated()
     else:
@@ -570,6 +573,7 @@ def stamp_bundled_registry_release(
     verdict_path = shipped_verdict_location(resolved)
     stamp_bundled_verdict(
         identity_digest=stamp.tree_digest,
+        validation_code_fingerprint=loader_code_fingerprint(),
         output_path=verdict_path,
         package_version=package_version,
     )

@@ -17,6 +17,7 @@ from ...core import (
     OperationDurability,
     OperationEffect,
     OperationInteractionKind,
+    require_active_bucket_id,
 )
 from ..operations import (
     CredentialFreeOperationRequest,
@@ -48,30 +49,38 @@ AUTH_CONFIGURE_OPERATION_DEFINITION_ID = "auth.provider.configure"
 AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID = "auth.session.acquire"
 AUTH_LOGOUT_OPERATION_DEFINITION_ID = "auth.session.logout"
 AUTH_RESET_OPERATION_DEFINITION_ID = "auth.session.reset"
-PROFILE_PASSPHRASE_ROTATION_OPERATION_DEFINITION_ID = "auth.profile.passphrase-rotate"
+PROFILE_PASSPHRASE_ROTATION_OPERATION_DEFINITION_ID = "auth.profile.passphrase-rotate"  # noqa: S105
 
 
 class ProfileLoginOperationRequest(CredentialFreeOperationRequest):
     profile_id: UUID
 
 
-class AuthConfigureOperationRequest(CredentialFreeOperationRequest):
+class AuthConfigureOperationRequest(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
     provider: str
     certificate_path: Path | None = None
 
 
-class AuthSessionAcquireOperationRequest(CredentialFreeOperationRequest):
+class AuthSessionAcquireOperationRequest(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
     provider: str | None = None
     fresh: bool = False
     reset_lock: bool = False
 
 
-class AuthTeardownOperationRequest(CredentialFreeOperationRequest):
+class AuthTeardownOperationRequest(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
     provider: str | None = None
     all_providers: bool = False
 
 
-class ProfilePassphraseRotationOperationRequest(CredentialFreeOperationRequest):
+class ProfilePassphraseRotationOperationRequest(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
     profile_id: UUID
 
 
@@ -89,14 +98,30 @@ def _profile_subject(profile_id: UUID) -> str:
     return f"profile:{profile_id}"
 
 
-def _require_profile_subject(request: OperationRequest[CredentialFreeOperationRequest], profile_id: UUID) -> None:
+def _require_profile_subject(request: OperationRequest[BaseModel], profile_id: UUID) -> None:
     if request.subject_ref != _profile_subject(profile_id):
         raise ValueError("auth operation subject does not match its exact profile")
 
 
+def _require_active_profile_subject(request: OperationRequest[BaseModel]) -> str:
+    """Bind active-profile authorities to the operation's exact profile subject."""
+    try:
+        profile_id = UUID(request.subject_ref.removeprefix("profile:"))
+    except ValueError as error:
+        raise ValueError("auth operation subject is not a canonical profile reference") from error
+    if request.subject_ref != _profile_subject(profile_id):
+        raise ValueError("auth operation subject is not a canonical profile reference")
+    if require_active_bucket_id() != str(profile_id):
+        raise ValueError("auth operation requires its profile to be active")
+    return str(profile_id)
+
+
 async def _result_reference(result: BaseModel, context: OperationExecutorContext) -> str:
     """Persist a post-custody result or retain the safe profile reference."""
-    if context.identity.definition_id == PROFILE_LOGIN_OPERATION_DEFINITION_ID:
+    if context.identity.definition_id in {
+        PROFILE_LOGIN_OPERATION_DEFINITION_ID,
+        PROFILE_PASSPHRASE_ROTATION_OPERATION_DEFINITION_ID,
+    }:
         return context.identity.subject_ref
     return await context.operands.put(result, written_at=context.snapshot.updated_at)
 
@@ -155,7 +180,12 @@ class ProfilePassphraseRotationOperationExecutor:
 
 
 class AuthConfigureOperationExecutor:
-    async def execute(self, request: OperationRequest[AuthConfigureOperationRequest], context: OperationExecutorContext) -> str:
+    async def execute(
+        self,
+        request: OperationRequest[AuthConfigureOperationRequest],
+        context: OperationExecutorContext,
+    ) -> str:
+        _require_active_profile_subject(request)
         await context.events.phase("auth.configure.preflight")
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase("auth.configure.execute")
@@ -166,7 +196,12 @@ class AuthConfigureOperationExecutor:
 
 
 class AuthSessionAcquireOperationExecutor:
-    async def execute(self, request: OperationRequest[AuthSessionAcquireOperationRequest], context: OperationExecutorContext) -> str:
+    async def execute(
+        self,
+        request: OperationRequest[AuthSessionAcquireOperationRequest],
+        context: OperationExecutorContext,
+    ) -> str:
+        _require_active_profile_subject(request)
         await context.events.phase("auth.acquire.preflight")
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase("auth.acquire.execute")
@@ -181,44 +216,74 @@ class AuthSessionAcquireOperationExecutor:
 
 
 class AuthLogoutOperationExecutor:
-    async def execute(self, request: OperationRequest[AuthTeardownOperationRequest], context: OperationExecutorContext) -> str:
+    async def execute(
+        self,
+        request: OperationRequest[AuthTeardownOperationRequest],
+        context: OperationExecutorContext,
+    ) -> str:
+        target_bucket_id = _require_active_profile_subject(request)
         await context.events.phase("auth.logout.preflight")
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase("auth.logout.execute")
         result = logout_operator_auth(
             provider=request.payload.provider,
             all_providers=request.payload.all_providers,
-            target_bucket_id=request.subject_ref.removeprefix("profile:"),
+            target_bucket_id=target_bucket_id,
         )
-        await context.events.effect(OperationEffect.UPDATED if result.removed_sessions or result.cleared_session_state else OperationEffect.NONE)
+        changed = result.removed_sessions or result.cleared_session_state
+        await context.events.effect(OperationEffect.UPDATED if changed else OperationEffect.NONE)
         await context.events.phase("auth.logout.settlement")
         return await _result_reference(result, context)
 
 
 class AuthResetOperationExecutor:
-    async def execute(self, request: OperationRequest[AuthTeardownOperationRequest], context: OperationExecutorContext) -> str:
+    async def execute(
+        self,
+        request: OperationRequest[AuthTeardownOperationRequest],
+        context: OperationExecutorContext,
+    ) -> str:
+        target_bucket_id = _require_active_profile_subject(request)
         await context.events.phase("auth.reset.preflight")
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase("auth.reset.execute")
         result = reset_operator_auth(
             provider=request.payload.provider,
             all_providers=request.payload.all_providers,
-            target_bucket_id=request.subject_ref.removeprefix("profile:"),
+            target_bucket_id=target_bucket_id,
         )
-        changed = any((result.removed_sessions, result.cleared_provider_configuration, result.cleared_locks, result.removed_certificate_sources, result.removed_certificate_secrets))
+        changed = any(
+            (
+                result.removed_sessions,
+                result.cleared_provider_configuration,
+                result.cleared_locks,
+                result.removed_certificate_sources,
+                result.removed_certificate_secrets,
+            )
+        )
         await context.events.effect(OperationEffect.UPDATED if changed else OperationEffect.NONE)
         await context.events.phase("auth.reset.settlement")
         return await _result_reference(result, context)
 
 
 def _definition(
-    *, definition_id: str, request_type: type[CredentialFreeOperationRequest], result_type: type[BaseModel], executor_type: type[object], phases: tuple[str, ...], secret_kind: str | None = None
+    *,
+    definition_id: str,
+    request_type: type[BaseModel],
+    result_type: type[BaseModel],
+    executor_type: type[object],
+    phases: tuple[str, ...],
+    secret_kind: str | None = None,
+    request_storage: OperationRequestStoragePolicy = OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
 ) -> OperationDefinition:
     return OperationDefinition(
         definition_id=definition_id,
         request_type=request_type,
         result_type=result_type,
-        executor_factory=OperationExecutorFactory(request_type=request_type, executor_type=executor_type, build=executor_type),
+        executor_factory=OperationExecutorFactory(
+            request_type=request_type,
+            executor_type=executor_type,
+            build=executor_type,
+        ),
         phase_codes=phases,
         interaction_kinds=frozenset[OperationInteractionKind](),
         capabilities=OperationCapabilities(
@@ -227,7 +292,7 @@ def _definition(
             deadline=OperationDeadline.ABSENT,
             replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
             baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
+            request_storage=request_storage,
             sensitive_input=OperationSensitiveInputPolicy.NONE,
             conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
             owned_resources=frozenset(),
@@ -237,18 +302,66 @@ def _definition(
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         ephemeral_secret=(
-            None if secret_kind is None else OperationEphemeralSecretDeclaration(secret_kind=secret_kind, lifetime=timedelta(minutes=5))
+            None
+            if secret_kind is None
+            else OperationEphemeralSecretDeclaration(
+                secret_kind=secret_kind,
+                lifetime=timedelta(minutes=5),
+            )
         ),
     )
 
 
 AUTH_OPERATION_DEFINITIONS = (
-    _definition(definition_id=PROFILE_LOGIN_OPERATION_DEFINITION_ID, request_type=ProfileLoginOperationRequest, result_type=ProfileLoginOutcome, executor_type=ProfileLoginOperationExecutor, phases=("auth.login.secret-consume", "auth.login.execute", "auth.login.settlement"), secret_kind="profile.login.passphrase"),
-    _definition(definition_id=AUTH_CONFIGURE_OPERATION_DEFINITION_ID, request_type=AuthConfigureOperationRequest, result_type=AuthConfigureResult, executor_type=AuthConfigureOperationExecutor, phases=("auth.configure.preflight", "auth.configure.execute", "auth.configure.settlement")),
-    _definition(definition_id=AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID, request_type=AuthSessionAcquireOperationRequest, result_type=AuthLoginResult, executor_type=AuthSessionAcquireOperationExecutor, phases=("auth.acquire.preflight", "auth.acquire.execute", "auth.acquire.settlement")),
-    _definition(definition_id=AUTH_LOGOUT_OPERATION_DEFINITION_ID, request_type=AuthTeardownOperationRequest, result_type=AuthLogoutResult, executor_type=AuthLogoutOperationExecutor, phases=("auth.logout.preflight", "auth.logout.execute", "auth.logout.settlement")),
-    _definition(definition_id=AUTH_RESET_OPERATION_DEFINITION_ID, request_type=AuthTeardownOperationRequest, result_type=AuthResetResult, executor_type=AuthResetOperationExecutor, phases=("auth.reset.preflight", "auth.reset.execute", "auth.reset.settlement")),
-    _definition(definition_id=PROFILE_PASSPHRASE_ROTATION_OPERATION_DEFINITION_ID, request_type=ProfilePassphraseRotationOperationRequest, result_type=ProfilePassphraseRotationOutcome, executor_type=ProfilePassphraseRotationOperationExecutor, phases=("auth.passphrase.secret-consume", "auth.passphrase.execute", "auth.passphrase.settlement"), secret_kind="profile.passphrase.rotation"),
+    _definition(
+        definition_id=PROFILE_LOGIN_OPERATION_DEFINITION_ID,
+        request_type=ProfileLoginOperationRequest,
+        result_type=ProfileLoginOutcome,
+        executor_type=ProfileLoginOperationExecutor,
+        phases=("auth.login.secret-consume", "auth.login.execute", "auth.login.settlement"),
+        secret_kind="profile.login.passphrase",  # noqa: S106
+    ),
+    _definition(
+        definition_id=AUTH_CONFIGURE_OPERATION_DEFINITION_ID,
+        request_type=AuthConfigureOperationRequest,
+        result_type=AuthConfigureResult,
+        executor_type=AuthConfigureOperationExecutor,
+        phases=("auth.configure.preflight", "auth.configure.execute", "auth.configure.settlement"),
+        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
+    ),
+    _definition(
+        definition_id=AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID,
+        request_type=AuthSessionAcquireOperationRequest,
+        result_type=AuthLoginResult,
+        executor_type=AuthSessionAcquireOperationExecutor,
+        phases=("auth.acquire.preflight", "auth.acquire.execute", "auth.acquire.settlement"),
+        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
+    ),
+    _definition(
+        definition_id=AUTH_LOGOUT_OPERATION_DEFINITION_ID,
+        request_type=AuthTeardownOperationRequest,
+        result_type=AuthLogoutResult,
+        executor_type=AuthLogoutOperationExecutor,
+        phases=("auth.logout.preflight", "auth.logout.execute", "auth.logout.settlement"),
+        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
+    ),
+    _definition(
+        definition_id=AUTH_RESET_OPERATION_DEFINITION_ID,
+        request_type=AuthTeardownOperationRequest,
+        result_type=AuthResetResult,
+        executor_type=AuthResetOperationExecutor,
+        phases=("auth.reset.preflight", "auth.reset.execute", "auth.reset.settlement"),
+        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
+    ),
+    _definition(
+        definition_id=PROFILE_PASSPHRASE_ROTATION_OPERATION_DEFINITION_ID,
+        request_type=ProfilePassphraseRotationOperationRequest,
+        result_type=ProfilePassphraseRotationOutcome,
+        executor_type=ProfilePassphraseRotationOperationExecutor,
+        phases=("auth.passphrase.secret-consume", "auth.passphrase.execute", "auth.passphrase.settlement"),
+        secret_kind="profile.passphrase.rotation",  # noqa: S106
+        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
+    ),
 )
 
 

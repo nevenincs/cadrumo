@@ -238,10 +238,14 @@ def test_registry_refuses_unmarked_credential_secret_binary_and_invalid_secret_c
         with pytest.raises(ValidationError, match=message):
             OperationDefinition.model_validate(payload)
 
-    for mutation, message in (
-        ({"request_storage": OperationRequestStoragePolicy.SECURE_REFERENCE}, "credential-free"),
-        ({"durability": OperationDurability.RESUMABLE, "replay": OperationReplayPolicy.RESUMABLE}, "recorded"),
-    ):
+    secure_reference = accepted.model_dump()
+    secure_reference["capabilities"] = {
+        **secure_reference["capabilities"],
+        "request_storage": OperationRequestStoragePolicy.SECURE_REFERENCE,
+    }
+    assert OperationDefinition.model_validate(secure_reference).capabilities.request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE
+
+    for mutation, message in (({"durability": OperationDurability.RESUMABLE, "replay": OperationReplayPolicy.RESUMABLE}, "recorded"),):
         payload = accepted.model_dump()
         payload["capabilities"] = {**payload["capabilities"], **mutation}
         with pytest.raises(ValidationError, match=message):

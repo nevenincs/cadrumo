@@ -60,7 +60,21 @@ def _base_interpreter_pythonpath() -> str:
     return os.pathsep.join(entry for entry in sys.path if entry)
 
 
-_HARNESS = dedent(
+_DURABLE_SNAPSHOT_SOURCE = dedent(
+    """
+    def durable_snapshot(root):
+        return {
+            str(path.relative_to(root)): path.read_bytes()
+            for path in root.rglob("*")
+            if path.is_file()
+            and "log" not in path.name.lower()
+        }
+    """
+)
+
+
+_HARNESS = (
+    dedent(
     """
     import json
     import os
@@ -69,15 +83,11 @@ _HARNESS = dedent(
     from cadrumo.core import config as config_module
     from cadrumo.core.config import Settings
     from cadrumo.core.logging import defer_logging_configuration, resume_logging_configuration
-
-    def durable_snapshot(root):
-        return {
-            str(path.relative_to(root)): path.read_bytes()
-            for path in root.rglob("*")
-            if path.is_file()
-            and "log" not in path.name.lower()
-        }
-
+    """
+    )
+    + _DURABLE_SNAPSHOT_SOURCE
+    + dedent(
+        """
     payload = json.loads(sys.argv[1])
     settings = Settings(_env_file=None, **payload["settings"])
     token = config_module._settings_override.set(settings)
@@ -132,10 +142,12 @@ _HARNESS = dedent(
     finally:
         config_module._settings_override.reset(token)
     raise SystemExit(exit_code)
-    """
+        """
+    )
 )
 
-_WINDOWS_HANDLE_HARNESS = dedent(
+_WINDOWS_HANDLE_HARNESS = (
+    dedent(
     """
     import json
     import os
@@ -145,15 +157,11 @@ _WINDOWS_HANDLE_HARNESS = dedent(
     from cadrumo.core.config import Settings
     from cadrumo.core.logging import defer_logging_configuration, resume_logging_configuration
     from cadrumo.entrypoints.cli._windows_profile_secret_bootstrap import bootstrap_argv
-
-    def durable_snapshot(root):
-        return {
-            str(path.relative_to(root)): path.read_bytes()
-            for path in root.rglob("*")
-            if path.is_file()
-            and "log" not in path.name.lower()
-        }
-
+    """
+    )
+    + _DURABLE_SNAPSHOT_SOURCE
+    + dedent(
+        """
     payload = json.loads(sys.argv[1])
     settings = Settings(_env_file=None, **payload["settings"])
     argv = bootstrap_argv(
@@ -223,7 +231,8 @@ _WINDOWS_HANDLE_HARNESS = dedent(
     finally:
         config_module._settings_override.reset(token)
     raise SystemExit(exit_code)
-    """
+        """
+    )
 )
 
 
@@ -448,7 +457,7 @@ def _combined(result: subprocess.CompletedProcess[str]) -> str:
 
 
 def _storage_snapshot(root: Path) -> dict[str, bytes]:
-    """Capture every custody artifact except diagnostic logs for refusal witnesses."""
+    """Capture every durable custody artifact except diagnostic logs."""
     if not root.exists():
         return {}
     return {

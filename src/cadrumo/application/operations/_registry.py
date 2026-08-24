@@ -187,8 +187,6 @@ class OperationDefinition(BaseModel):
     def _validate_ephemeral_secret(self) -> None:
         if self.ephemeral_secret is None:
             return
-        if self.capabilities.request_storage is not OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL:
-            raise ValueError("ephemeral secret operations require credential-free journal request storage")
         if self.capabilities.durability is not OperationDurability.RECORDED:
             raise ValueError("ephemeral secret operations require recorded durability")
         if self.reconciliation_policy is not OperationReconciliationPolicy.INTERRUPT:
