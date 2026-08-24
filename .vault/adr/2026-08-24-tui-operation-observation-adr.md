@@ -16,7 +16,7 @@ related:
   - '[[2026-08-10-current-schema-only-purge-adr]]'
 ---
 
-# `tui-operation-observation` adr: `public operation contract parent-amendment staging` | (**status:** `proposed`)
+# `tui-operation-observation` adr: `public operation contract parent-amendment staging` | (**status:** `rejected`)
 
 ## Problem Statement
 

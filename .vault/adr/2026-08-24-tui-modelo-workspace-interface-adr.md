@@ -14,18 +14,17 @@ related:
   - "[[2026-06-04-modelo-addressing-ux-adr]]"
   - '[[2026-08-24-modelo-edit-contract-adr]]'
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
-  - '[[2026-08-24-tui-operation-observation-adr]]'
 ---
 
-# `tui-modelo-workspace-interface` adr: `Modelo workspace interface and staged editor amendment` | (**status:** `proposed`)
+# `tui-modelo-workspace-interface` adr: `Modelo workspace interface and staged editor amendment` | (**status:** `accepted`)
 
 ## Problem Statement
 
 The accepted TUI interface decision reserves `modelo.view` and requires a later
-accepted write-side decision before `modelo.edit` can exist. The proposed
-registry API gate supplies application read data, the proposed
+accepted write-side decision before `modelo.edit` can exist. The accepted
+registry API gate supplies application read data, the accepted
 `2026-08-24-modelo-edit-contract-adr` supplies the frontend-neutral mutation
-contract, and the accepted operation architecture supplies supervised execution
+contract, and the amended accepted operation architecture supplies supervised execution
 and observation. None decides the Modelo destination catalogue, workspace
 hierarchy, TUI-local view state, edit interaction, focus and conflict behavior,
 or the proof by which visual/editor cohorts may become available.

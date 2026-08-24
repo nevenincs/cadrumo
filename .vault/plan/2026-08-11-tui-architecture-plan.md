@@ -8,7 +8,7 @@ related:
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-11-tui-architecture-research]]'
 modified: '2026-08-24'
-body_hash: 'sha256:093edbe0c2642d69a5468b22889323eb6605f9a6a27f741f52383deb15c0b163'
+body_hash: 'sha256:203771b93684f89489e37f2b0764bd8876b3f994f1675e1e87eb5f372913c4b8'
 ---
 
 # `tui-architecture` plan
@@ -130,7 +130,7 @@ Model previous-filing history pull as one recorded, partial-effect operation wit
 Move every current manager and credential action behind registered application executors and the shared conformance contract.
 
 - [x] `W03.P08.S114` - Implement credential-free non-secret operation requests and one-shot supervisor-owned ephemeral secret submission with exact binding, expiry, zeroisation, restart interruption, and no durable secret derivatives before registering login or passphrase operations; `src/cadrumo/application/operations, src/cadrumo/adapters/persistence/operations, and focused real persistence and lifecycle tests`.
-- [ ] `W03.P08.S39` - Register login, provider configuration, credential acquisition, passphrase rotation, and auth teardown as application-owned operations; `src/cadrumo/application/auth/_operation_definitions.py`.
+- [x] `W03.P08.S39` - Register login, provider configuration, credential acquisition, passphrase rotation, and auth teardown as application-owned operations; `src/cadrumo/application/auth/_operation_definitions.py`.
 - [ ] `W03.P08.S40` - Register profile field mutation, repeatable-row mutation, bundle export, and profile logout operations through existing user-profile authorities; `src/cadrumo/application/user_profile/_operation_definitions.py`.
 - [ ] `W03.P08.S41` - Move Google export planning and application orchestration out of the CLI frontend and register its external-effect operation; `src/cadrumo/application/export/_google_operation.py`.
 - [ ] `W03.P08.S42` - Expose authentication operation definitions through the authentication application facade; `src/cadrumo/application/auth/__init__.py`.

@@ -22,11 +22,10 @@ related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-04-modelo-localization-cascade-adr]]'
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
-  - '[[2026-08-24-tui-operation-observation-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
 ---
 
-# `tui-registry-api-gate` adr: `read-only Modelo workspace projection and capability facade` | (**status:** `proposed`)
+# `tui-registry-api-gate` adr: `read-only Modelo workspace projection and capability facade` | (**status:** `accepted`)
 
 ## Problem Statement
 

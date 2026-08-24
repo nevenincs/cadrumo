@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:ffbd44064931e3a6c6bf25a1731cff9695e4e58cc06ae6385272c1876250dc69'
+body_hash: 'sha256:5900f528ab65792d4cceb11c65b178dfda87a0debc4e23114860e9d7a25ac44d'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -75,6 +75,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-modelo-220-2024-producer-vocabulary-and-design-authority-reference]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-220-2025-open-window-design-coverage-reference]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
+  - '[[2026-08-24-registry-completeness-closure-redeclaration-rag-audit]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
   - '[[2026-08-24-registry-completeness-closure-s01-schema-family-coverage-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s04-authority-grade-ladder-review-audit]]'
@@ -94,6 +95,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s17-modelo-187-filer-population-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s18-independent-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s19-modelo-194-design-era-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s21-modelo-220-2025-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s41-cache-key-type-review-audit]]'
@@ -146,6 +148,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 
 ### audit
 
+- `2026-08-24-registry-completeness-closure-redeclaration-rag-audit` - `registry-completeness-closure` audit: `Registry completeness closure redeclaration RAG audit`
 - `2026-08-24-registry-completeness-closure-s01-schema-family-coverage-review-audit` - `registry-completeness-closure` audit: `S01 schema-family coverage review`
 - `2026-08-24-registry-completeness-closure-s04-authority-grade-ladder-review-audit` - `registry-completeness-closure` audit: `S04 authority-grade ladder review`
 - `2026-08-24-registry-completeness-closure-s06-closure-contract-review-audit` - `registry-completeness-closure` audit: `S06 closure contract review`
@@ -164,6 +167,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s17-modelo-187-filer-population-review-audit` - `registry-completeness-closure` audit: `Modelo 187 filer population review`
 - `2026-08-24-registry-completeness-closure-s18-independent-post-review-audit` - `registry-completeness-closure` audit: `S18 independent Modelo 188 post-review`
 - `2026-08-24-registry-completeness-closure-s19-modelo-194-design-era-review-audit` - `registry-completeness-closure` audit: `s19 modelo 194 design-era review`
+- `2026-08-24-registry-completeness-closure-s21-modelo-220-2025-post-review-audit` - `registry-completeness-closure` audit: `S21 Modelo 220 2025 post-review`
 - `2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot authority-grade enforcement review`
 - `2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot-grade enforcement review`
 - `2026-08-24-registry-completeness-closure-s41-cache-key-type-review-audit` - `registry-completeness-closure` audit: `S41 cache-key type review`

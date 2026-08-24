@@ -71,4 +71,3 @@ no temporal-plan change is required.
 Treat the mixed commit as a non-retroactive, recorded traceability exception.
 Do not rewrite shared history or represent `97a62cc593` as an isolated S16
 implementation commit.
-

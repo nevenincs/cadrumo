@@ -12,11 +12,10 @@ related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-adr]]'
   - '[[2026-08-11-tui-architecture-adr]]'
-  - '[[2026-08-24-tui-operation-observation-adr]]'
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
 ---
 
-# `modelo-edit-contract` adr: `Versioned Modelo edit and mutation contract` | (**status:** `proposed`)
+# `modelo-edit-contract` adr: `Versioned Modelo edit and mutation contract` | (**status:** `accepted`)
 
 ## Problem Statement
 

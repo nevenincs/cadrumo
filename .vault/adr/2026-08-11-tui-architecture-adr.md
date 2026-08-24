@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:398114214e216dc5de9730c44cb0d3f4d20afdb38536ada3aa22bc7340b6b7f8'
+body_hash: 'sha256:985e02df2296c12151a4b13f14e79f67efbce19573e43c43e048e14aa1eb9d3c'
 related:
   - '[[2026-08-11-tui-architecture-research]]'
   - '[[2026-08-11-tui-interface-research]]'
@@ -18,6 +18,10 @@ related:
   - '[[2026-08-24-tui-architecture-censo-operation-authority-reconciliation-research]]'
   - '[[2026-08-24-tui-architecture-pre-custody-login-secret-submission-research]]'
   - '[[2026-08-24-tui-architecture-pre-custody-login-secret-submission-reference]]'
+  - '[[2026-08-24-tui-operation-observation-research]]'
+  - '[[2026-08-24-tui-operation-observation-adr]]'
+  - '[[2026-07-09-compatibility-lifecycle-adr]]'
+  - '[[2026-08-10-current-schema-only-purge-adr]]'
 ---
 
 # `tui-architecture` adr: `Application-owned operation envelope and supervisor API` | (**status:** `accepted`)
@@ -61,6 +65,23 @@ must conform to this record's canonical `cadrumo.entrypoints.tui` placement and
 - Cancellation, deadlines, durability, resumability, and resource ownership are
   capabilities, not promises every executor can honestly make
   (`2026-08-11-tui-architecture-research`).
+- A frontend-safe observation must bind current snapshot state, ordered event
+  history, progress, and replay to one atomic anchor; a frontend cannot
+  reconstruct that authority from separate supervisor calls
+  (`2026-08-24-tui-operation-observation-research`).
+- REVIEW observation, safe REVIEW content, and response bearer authority are
+  separate contracts. Observation must never recreate apply/reject authority
+  (`2026-08-24-tui-operation-observation-research`).
+- A transient financial edit operand requires typed, baseline-bound,
+  single-consumer custody distinct from generic secret submission, persistent
+  secure lookup, and `OperationDurability.EPHEMERAL`
+  (`2026-08-24-tui-operation-observation-research`).
+- A generic terminal result reference cannot be interpreted as a Workspace
+  target; the operation definition must register a safe typed adapter
+  (`2026-08-24-tui-operation-observation-research`).
+- Public manifest, observation, REVIEW, Workspace-refresh, operand, envelope,
+  cursor, and private journal versions answer different questions and cannot
+  share one version axis (`2026-08-24-tui-operation-observation-research`).
 
 ## Considered options
 
@@ -98,6 +119,22 @@ must conform to this record's canonical `cadrumo.entrypoints.tui` placement and
   cancelling an observer, wrapper worker, or countdown cannot produce either.
 - Secret-bearing interaction values MUST remain within secure custody and MUST
   NOT enter journals, diagnostics, events, approval digests, or projections.
+- Public operation models MUST be strict, frozen, discriminated,
+  renderer-neutral, and free of persistence DTOs, raw exceptions, secure
+  references, localized prose, callbacks, and untyped payload bags.
+- Initial public interaction observation supports only `REVIEW` plus separately
+  authorized `APPLY` and `REJECT`. `INPUT` and `CHOICE` remain unavailable until
+  their response and custody contracts are separately accepted and proven.
+- While the repo-committed compatibility regime is `PRE_RELEASE`, private
+  operation schemas accept only the current shape. Breaking cutover requires
+  zero affected nonterminal invocations and deletion of superseded readers,
+  migrators, fixtures, and tests; this ADR cannot authorize a post-release
+  upgrader.
+- Financial operands and reversible derivatives MUST NOT enter operation
+  requests, journals, events, checkpoints, receipts, public projections,
+  diagnostics, traces, temporary files, caches, exception text, content
+  digests, or retained frontend state. Only the canonical encrypted domain
+  effect may retain a committed financial value.
 - Unsafe interruption windows MUST declare cancellation unsupported until the
   operation can stop without violating its domain invariants.
 - The accepted action identity, wizard-state, and CLI projection contracts are
@@ -121,6 +158,18 @@ This accepted ADR is the topology authority. The canonical frontend home is
 `cadrumo.tui`, a top-level `cadrumo.bootstrap`, nested `entrypoints.tui.core`,
 `shared`, and generic `surfaces` packages are prohibited. Related frontend
 decisions conform to this tree and do not reopen its root or naming.
+
+The sole frontend-neutral operation API is the public
+`cadrumo.application.operations` facade. Persistence-facing ports and records
+remain application-owned implementation contracts for adapters. An inbound
+frontend may neither import nor receive `OperationPersistedSnapshot`,
+`OperationJournalRecord`, raw `OperationEvent`,
+`OperationPendingInteraction`, or `OperationConsumedInteraction`. TUI, CLI,
+MCP, and future frontends consume only the versioned public observation,
+REVIEW-projection, response, cancellation, detach, and Workspace-refresh
+services. Entry points never call transient-financial-operand custody directly;
+the owning domain application service performs that handoff inside one
+application-owned submission flow.
 
 ### D0a - Existing-capability reuse ledger
 
@@ -174,6 +223,12 @@ extensible through versioned registered request, result, phase, interaction,
 event-detail, and review-payload families. Extensions cannot add new generic
 state meanings by smuggling them into free-form fields.
 
+Submission pins the selected operation definition contract digest in the same
+atomic transition as the request reference and initial lifecycle event. That
+pin is invocation identity: resume, observation, REVIEW resolution, response,
+Workspace-refresh resolution, and reconciliation all require the current
+registry definition to reproduce it.
+
 ### D2 - Independent lifecycle, terminal, and effect axes
 
 The global lifecycle is `CREATED`, `QUEUED`, `RUNNING`,
@@ -218,6 +273,37 @@ enters `SETTLING` after execution and reaches `TERMINAL` only after resources
 are released or cleanup failure is recorded. Closing a frontend detaches its
 projection; it does not assert that the operation stopped.
 
+`observe` and `stream_events` are supervisor/application implementation seams,
+not frontend DTO boundaries. The public facade instead accepts
+`OperationObservationRequestV1`, containing observation version `1`, operation
+identity, exclusive `after_cursor`, and a bounded page limit, and returns the
+closed `OperationObservationResultV1`. Success contains one
+`OperationPublicProjectionV1` and one `OperationPublicEventPageV1` for the same
+anchor; refusal is typed and renderer-neutral. The service parses only a
+minimal version header before exact request dispatch. Unsupported versions
+return `unsupported_operation_observation_version`; unknown operation,
+cursor-ahead, invalid cursor, and observation-unavailable conditions likewise
+return typed safe refusals. Raw validation, repository, and persistence
+exceptions never cross the facade.
+
+One internal observation-read port returns an application-owned materialization
+from a single persistence read. It binds the current internal snapshot and
+envelope revision, authoritative anchor cursor, bounded history slice requested
+after the caller cursor, fold input or checkpoint needed to derive progress
+through that anchor, and replay status plus restart cursor when retained history
+cannot continue the caller's fold. The persistence adapter obtains all of those
+facts from one atomic journal-record read. The application projector rejects a
+materialization whose event identity, revision, sequence, or cursor exceeds or
+disagrees with the anchor. A later commit may make the result stale, but cannot
+make it internally inconsistent.
+
+The application fold begins with no progress, clears progress on phase change,
+and replaces it with each progress event through the anchor cursor. A future
+compaction implementation must persist or derive an equivalent fold checkpoint
+before returning `expired` or `compacted`; it may not drop current progress or
+ask a frontend to reconstruct pre-retention history. Notices, logs, and
+diagnostics remain ordered page records rather than current lifecycle fields.
+
 ### D3a - Credential-free request identity and ephemeral secret submission
 
 The supervisor has two explicit, mutually exclusive request-storage policies.
@@ -257,6 +343,82 @@ supervisor capability, not a profile-login exception. Its conformance suite
 must prove exact binding, single consumption, every refusal, cleanup,
 non-retention, pre-entry restart interruption, and post-entry uncertainty.
 
+This generic byte-oriented secret broker does not authorize financial editing.
+The distinct current-only `OperationTransientFinancialOperandProtocolV1` is a
+typed, definition-declared custody protocol for an already validated financial
+operand. It is explicitly not `OperationDurability.EPHEMERAL`,
+`EphemeralSecretSubmission`, or persistent `OperationSecureOperandLookup`.
+An opting-in definition binds one
+`OperationTransientFinancialOperandDeclarationV1`: exact typed operand model
+and schema identity, maximum lifetime, exact edit-baseline schema identity,
+reconciliation policy `INTERRUPT`, and an authoritative domain effect-receipt
+resolver. Registry construction permits it only for `RECORDED` operations that
+declare effect `NONE`, `UNKNOWN`, and every domain effect the writer can prove.
+
+An owning domain edit application service submits through
+`OperationTransientFinancialOperandSubmissionV1`; no entrypoint receives or
+retains the custody grant. The service creates or resolves the exact
+credential-free operation and receives a runtime-only 256-bit submission grant
+from the supervisor. The grant remains within that application call, is never
+serialized or returned to a frontend, and is discarded after success or
+refusal. Durable `OperationTransientFinancialOperandRequirementV1` contains
+only operation and definition identity, invocation revision, a fingerprint of
+fresh random grant material, operand schema identity, the declaration's
+edit-baseline schema identity, a safe opaque domain edit-baseline reference,
+and expiry. It contains no operand value or content-derived digest. For Modelo,
+the reference identifies `ModeloEditBaselineV1`; a Workspace read baseline is
+never accepted as a substitute.
+
+The supervisor owns one in-memory entry per exact requirement and serializes
+submission, consumption, cancellation, expiry, and settlement under the same
+operation transition lock. It validates the registered concrete operand type
+without serializing or hashing values, takes the sole strong custody reference,
+and atomically advances the durable custody checkpoint from
+`awaiting_submission` to `bound`. Wrong type, definition, schema, operation or
+revision, expired grant, duplicate submission, duplicate consumption, and an
+already terminal operation are typed refusals. The submitting scope drops its
+operand and grant references after transfer.
+
+Only the registered executor receives
+`OperationTransientFinancialOperandAccessV1`. One consume attempt durably
+advances `bound -> delivery_started` before the broker removes its entry, then
+`delivery_started -> delivery_acknowledged` when the executor accepts the
+guarded value. No second consumer can observe it. Exiting the guarded scope
+drops supervisor and executor custody references and advances to `released`;
+release proves custody cleanup, not an effect. Mutable backing buffers are
+zeroised where the declared model provides them, while the implementation makes
+no false claim that immutable Python object memory can be reliably erased.
+
+Expiry before `delivery_started` discards the runtime entry and settles
+`INTERRUPTED` with effect `NONE`; expiry is a submission bound, not an aggregate
+execution deadline. Pre-delivery cancellation discards the entry and settles
+`CANCELLED/NONE` only after supervisor acknowledgement and cleanup. After
+`delivery_started`, expiry cannot revoke executor access and cancellation cannot
+claim a terminal outcome until the executor or reconciliation settles. Process
+loss in `awaiting_submission` or `bound` with no delivery start settles
+`INTERRUPTED/NONE`. Process loss in `delivery_started`,
+`delivery_acknowledged`, or `released` without a terminal receipt settles
+`INTERRUPTED/UNKNOWN` unless the registered authoritative domain effect receipt
+proves `NONE`, the exact committed effect, or `PARTIAL`. The operand is never
+reconstructed or resumed after owner loss.
+
+For an enrolled Modelo edit, the domain writer consumes the exact admitted
+`ModeloEditBaselineV1` and performs one atomic compare-and-swap revalidation
+with the canonical encrypted mutation. Where the Modelo store and operation
+journal cannot share one transaction, the writer records an idempotent effect
+receipt keyed by operation and handoff identity, containing no financial value,
+in the same transaction as the mutation; the supervisor settles from that
+receipt. Absence or disagreement remains `UNKNOWN`, never inferred from a
+refreshed read. The canonical encrypted Modelo store is the sole durable home
+for committed financial values.
+
+All runtime entries are discarded on successful consume, expiry, pre-delivery
+cancellation, terminal settlement, supervisor shutdown, and owner cleanup.
+Conformance scans unique sentinel values across every forbidden operation,
+frontend, filesystem, diagnostic, logging, trace, exception, receipt, digest,
+and cache surface, excluding only the canonical encrypted value written by the
+successful domain effect.
+
 ### D4 - Typed interaction and exact approval binding
 
 Operator interaction is a discriminated application contract, not a frontend
@@ -278,6 +440,56 @@ reviewable proposal or provisional outcome while remaining
 registered effect phase using exactly that operand; `REJECT` records a typed
 rejection result and settles with no governed effect. A proposal is never
 reported as the authoritative terminal result before this continuation settles.
+
+Public pending-interaction observation is discriminated as `none`,
+`review_available`, or `unsupported`. `review_available` carries only safe
+operation and interaction identities, operation revision, presentation and
+response-schema codes, expiry, and
+`OperationReviewProjectionReferenceV1`. That reference contains only operation
+ID, interaction ID, operation revision, REVIEW-projection schema identity,
+definition-contract digest, and expiry. Neither form carries a response token
+or digest, persistence or secure-operand reference, reviewed operand, baseline
+or proposed-effect digest, continuation material, or consumed checkpoint.
+
+Caller-independent observation states whether the registered definition
+supports the response family and whether the interaction is current. Possession
+of response authority remains separate: the secure response service validates
+a runtime-only bearer against exact operation, interaction, revision, proposal,
+actor, and expiry. Apply/reject controls are available only when that service
+confirms the bearer and the projected interaction remains current. Observation
+after detach or from a fresh process cannot recreate response authority.
+`INPUT` and `CHOICE` project `unsupported` with a stable code while lifecycle,
+phase, progress, cancellation, and settlement remain observable.
+
+The independent `OperationReviewProjectionRequestV1` carries minimal header
+`review_projection_version = 1` plus the safe reference.
+`OperationReviewProjectionResultV1` is a closed success/refusal union. Success
+is `OperationReviewProjectionSuccessV1[ReviewProjectionT]`, specialized by the
+definition's exact safe REVIEW model and echoing its schema identity and
+definition digest.
+
+Every definition declaring `REVIEW` binds exactly one strict safe REVIEW type,
+`OperationSchemaIdentityV1`, and side-effect-free projector from the internally
+resolved reviewed operand and current interaction facts. Registry construction
+rejects a REVIEW definition without that triple. The operation-owned resolver
+reloads the authoritative operation and pending checkpoint; validates operation,
+interaction, revision, expiry, definition digest, and schema identity; resolves
+the encrypted reviewed operand only behind the secure application port;
+validates its registered private type; invokes the projector; validates the
+exact public type and schema fingerprint; and then drops its local operand
+reference. A projector may emit explanatory safe facts but never financial
+values, secure references, operand or content digests, continuation or response
+material, repository identity, or localized prose.
+
+The exact refusal codes are `unsupported_review_projection_version`,
+`unknown_operation`, `review_not_pending`, `stale_review_reference`,
+`review_expired`, `definition_contract_mismatch`, `review_schema_mismatch`, and
+`review_projection_unavailable`. Raw validation, decryption, repository, and
+projector failures collapse to the last safe refusal plus a redacted diagnostic
+reference. Resolution is read-only: it does not consume the checkpoint or
+change expiry, lifecycle, revision, or response capability. `APPLY` and
+`REJECT` still require the separate exact secure response bearer and current
+revision.
 
 ### D5 - Declared durability, cancellation, and deadlines
 
@@ -302,11 +514,24 @@ envelope or perform effects. Lease expiry does not authorize immediate replay:
 `reconcile` first proves owner loss, classifies any uncertain effect, and either
 resumes from a declared checkpoint or settles `INTERRUPTED`.
 
-Recorded schemas are versioned and migrated before acquisition. Event delivery
-is at-least-once by cursor; envelope revisions and event sequence numbers make
-duplicates detectable. The journal transition, lease transition, and effect
-receipt boundary MUST be specified per executor wherever they cannot share one
-atomic store. The supervisor is the sole orphan-reconciliation authority.
+Recorded private schemas carry an explicit current version marker. While the
+repo-committed compatibility regime is `PRE_RELEASE`, acquisition refuses every
+non-current private shape. A breaking definition or private-schema cutover must
+first prove there are zero affected nonterminal invocations, then delete the
+superseded private request, interaction, and journal readers, migrators,
+fixtures, and tests. It may not translate a stored invocation or rewrite only
+its definition digest. A current-shape invocation whose definition digest no
+longer matches refuses acquisition and enters normal reconciliation; a
+non-current shape fails at hydration and is never interpreted or reconciled as
+current. A future post-release upgrade path may exist only after the accepted
+compatibility-checkpoint authority flips the regime; this operation decision
+does not create or anticipate one.
+
+Event delivery is at-least-once by cursor; envelope revisions and event sequence
+numbers make duplicates detectable. The journal transition, lease transition,
+and effect receipt boundary MUST be specified per executor wherever they cannot
+share one atomic store. The supervisor is the sole orphan-reconciliation
+authority.
 
 Cancellation and deadline settlement follow these rules:
 
@@ -330,24 +555,141 @@ Cancellation and deadline settlement follow these rules:
 One application registry, keyed by `OperationDefinitionId`, binds request and
 result schemas, executor factory, phase and interaction families, approval and
 baseline policy, request-storage and ephemeral-secret-submission policy,
-capabilities, effect and idempotency semantics, reconciliation policy, and
-permitted frontend projections. It does not extend or duplicate the
-operator-action catalogue. An optional join table maps an existing
-`ActionReference` to an operation definition only where a validated recovery
-action launches that operation.
+transient-financial-operand declaration, capabilities, effect and idempotency
+semantics, reconciliation policy, safe REVIEW projector, optional
+Workspace-refresh adapter, and permitted frontend projections. It does not
+extend or duplicate the operator-action catalogue. An optional join table maps
+an existing `ActionReference` to an operation definition only where a validated
+recovery action launches that operation.
+
+The registry publishes `OperationSchemaIdentityV1` and
+`OperationPublicDefinitionContractV1`. A schema identity contains one stable
+schema ID, positive schema version, and SHA-256 fingerprint of the canonical
+closed JSON schema. A public definition contract contains manifest version `1`,
+`OperationDefinitionId`, nullable canonical `ActionReference`, request and
+nullable result schema identities, nullable safe REVIEW-projection and
+interaction-response schema identities, nullable Workspace-refresh-target
+schema identity, safe declarations for interaction, request storage,
+transient-financial-operand custody, durability, cancellation, deadline,
+reconciliation, effect, and permitted frontend projection, plus
+`definition_contract_digest` over the canonical ordered value excluding the
+digest itself.
+
+Each schema identity binds one exact strict Pydantic model and its
+`model_json_schema()` fingerprint. Construction rejects duplicate IDs,
+duplicate `(schema ID, version)` pairs with different fingerprints, missing
+declared models, undeclared projectors or adapters, and a manifest whose digest
+does not reproduce. Domain-owned models, projectors, and adapters bind through
+public protocols at composition; `cadrumo.application.operations` never
+statically imports the domain package. Python module, class, callable, and
+adapter-path names and raw JSON schemas are not manifest fields.
+
+`OperationPublicContractSetV1` is the canonical sorted inventory of every
+public definition contract and carries deterministic `contract_set_digest`.
+The inventory, each definition digest, and every schema fingerprint are
+fixed-point checked against live registry composition. A registered request,
+result, REVIEW, response, or refresh schema changes only by current-version
+replacement of its identity plus new definition and contract-set digests; it
+cannot drift behind an unchanged ID.
 
 TUI, CLI, and MCP dispatch registered operations through the supervisor. They
 may use different presentation and waiting strategies, but none may invoke an
 executor, outbound adapter, or mutating business callback directly.
 
+An operation definition may register one exact Workspace-refresh-target model,
+its `OperationSchemaIdentityV1`, and a deterministic side-effect-free
+domain-owned adapter from safe terminal subject/result facts to that model.
+The operations package owns `OperationWorkspaceRefreshTargetRequestV1` and closed
+`OperationWorkspaceRefreshTargetResultV1[RefreshTargetT]`; domain packages own
+their target DTOs and adapters and register them at composition. Operations
+never imports Modelo, and Workspace never imports operation persistence
+contracts.
+
+The refresh request carries `refresh_target_version = 1`, operation ID,
+terminal revision, definition-contract digest, and declared target schema
+identity. It never accepts a caller-supplied `result_ref`. The operation service
+reloads the authoritative terminal receipt, validates success/refusal,
+definition digest, and registered schema, passes only definition-owned safe
+terminal facts to the adapter, and validates the returned exact target type and
+fingerprint. For Modelo, application composition registers
+`ModeloWorkspaceRefreshTargetV1`, containing only typed coordinates for a new
+Workspace request and no financial value or old baseline. Workspace remains the
+sole owner of the new authoritative read and baseline.
+
+The exact refresh refusals are `unsupported_refresh_target_version`,
+`unknown_operation`, `operation_not_terminal`, `operation_not_successful`,
+`refresh_adapter_unavailable`, `definition_contract_mismatch`,
+`refresh_schema_mismatch`, and `unsafe_refresh_target`. Resolution works after
+process restart from durable safe terminal facts and live registry composition.
+A raw result/reference, repository DTO, route ID, TUI view model, exception, or
+adapter path never crosses the facade.
+
 ### D7 - Surface projections
 
-The TUI observes envelope revisions and renders lifecycle, phase, interaction,
+The TUI consumes `OperationPublicProjectionV1` and
+`OperationPublicEventPageV1`, then renders lifecycle, phase, interaction,
 progress, structured live logs, cancellation availability, deadline, reviewable
 outcome, apply/reject affordances, effect, and terminal state. Spinner visibility
-is derived from the envelope's executing or settling lifecycle and stops only on
-an authoritative waiting or terminal state. Textual workers and stream
-connections may relay observation but are never operation state.
+is derived from the public projection's executing or settling lifecycle and
+stops only on an authoritative waiting or terminal state. Textual workers and
+stream connections may relay observation but are never operation state.
+
+`OperationPublicProjectionV1` contains observation schema version, operation
+and definition identities, nullable canonical action reference, envelope
+revision, and anchor cursor; the exact `OperationPublicDefinitionContractV1`
+with request, nullable result, nullable REVIEW-projection, nullable interaction-
+response, and nullable Workspace-refresh-target schema identities, its
+`definition_contract_digest`, and the containing `contract_set_digest`;
+lifecycle, nullable terminal condition, effect, phase code, start and update
+times; nullable current progress with completed, total, unit code, phase code,
+event sequence, and envelope revision; declared close policy, cancellation
+capability and current availability, cancellation request/acknowledgement, and
+execution and cleanup deadlines; a discriminated pending interaction; terminal
+result or refusal reference only when settlement provides it; and a redacted
+diagnostic reference, never diagnostic prose.
+
+Schema identities and digests are compatibility facts, not payload or response
+authority. Projection refuses when the definition is absent from the current
+contract set, the invocation's recorded definition digest cannot be validated,
+or registered schema identities disagree with its projector. Lifecycle,
+terminal condition, and effect preserve the accepted enums and validation
+relationship. Spinner, terminal copy, controls, countdown, and colours remain
+frontend derivations. Declared cancellation capability remains separate from
+`cancellable_now` inside an irreversible section.
+
+`OperationPublicEventPageV1` echoes the observation anchor, requested cursor,
+status, ordered safe events, next cursor, and nullable restart cursor. Status is
+`page`, `caught_up`, `expired`, or `compacted`; unknown operation is a result
+refusal. A page is contiguous and ends at `next_cursor`. `expired` and
+`compacted` carry no event rows, advance to an authoritative restart cursor,
+and require the consumer to replace event-derived local state with the
+accompanying projection before continuing. No event row may exceed the
+projection's anchor cursor.
+
+The public contract set has separate current-only axes:
+
+- public-definition manifest version `1` and `contract_set_digest`;
+- observation request/result/projection/event-page version `1`;
+- REVIEW-projection reference/request/result version `1` and each registered
+  REVIEW DTO's schema identity;
+- Workspace-refresh-target request/result version `1` and each registered
+  target DTO's schema identity;
+- transient-financial-operand protocol version `1` and each registered operand
+  schema identity;
+- operation-definition digest and request/result/response schema identities;
+- envelope revision for lifecycle compare-and-swap;
+- event cursor for replay; and
+- private durable journal schema version for persistence hydration.
+
+None may substitute for another or be copied into a shared `version` field.
+Each public endpoint parses only its minimal version header before exact model
+dispatch and returns its endpoint-specific unsupported-version refusal. A
+supported endpoint version with mismatched definition digest or registered
+schema identity refuses; it is never reinterpreted. A pre-release breaking
+public change replaces the current V1 contracts and all in-tree producers and
+consumers in one cutover, deletes old models, dispatchers, fixtures, and tests,
+and regenerates the contract-set digest. No reader, migration shim, fallback
+parser, or missing-field default preserves a retired public version.
 
 The CLI may synchronously submit and await, then project the authoritative
 terminal result through its existing success/error envelope, notice, text, and
@@ -369,18 +711,21 @@ dedicated-launcher, packaging, reverse-consumer, legacy-deletion, or campaign-cl
 
 ### D7a - Generic operation modal
 
-`OperationModal` is the operation-agnostic Textual projection of an
-`OperationEnvelope`. The host owns mounting, focus, and the observation
-subscription; the supervisor owns the operation, executor task or contained
-process, interactions, resources, deadline, cancellation, effects, and
-settlement. The modal holds only operation ID, event cursor, latest revision,
-pending interaction ID, and render-local state.
+`OperationModal` is the operation-agnostic Textual projection of
+`OperationPublicProjectionV1` and `OperationPublicEventPageV1`. The host owns
+mounting, focus, and the public observation subscription; the supervisor owns
+the operation, executor task or contained process, interactions, resources,
+deadline, cancellation, effects, and settlement. The modal holds only operation
+ID, event cursor, latest public revision, pending interaction ID, and
+render-local state.
 
-The modal derives phase, progress, structured logs, review content, spinner,
-enabled controls, cancellation availability, effect, and terminal copy from
-supervisor snapshots. It MUST NOT execute business work, translate Textual
-worker state into operation state, retain a business result as authority, close
-an operation resource, or kill a subprocess directly.
+The modal derives phase, progress, structured logs, safe REVIEW content,
+spinner, enabled controls, cancellation availability, effect, and terminal copy
+only from public DTOs and the registered safe REVIEW resolver. It MUST NOT
+inspect supervisor snapshots, journals, raw operation events, or persistence
+checkpoints; execute business work; translate Textual worker state into
+operation state; retain a business result as authority; close an operation
+resource; or kill a subprocess directly.
 
 The operation definition declares one close policy:
 
@@ -393,11 +738,15 @@ The operation definition declares one close policy:
 
 Window close, Escape, unmount, and navigation never manufacture approval,
 rejection, cancellation completion, success, abandonment, or failure.
-Apply/reject dispatch `respond` for the exact pending interaction; Cancel
-dispatches `request_cancel`. A pending interaction survives detachment. Even
-when execution uses a contained subprocess, the supervisor owns its handle,
-heartbeat, termination, reaping, and reconciliation. TUI application shutdown
-uses supervisor shutdown policy rather than modal teardown.
+Apply/reject call the public response service for the exact pending interaction
+and separately held secure bearer; Cancel calls the public cancellation
+service; close uses the public detach service where permitted. A pending
+interaction survives detachment, but observation cannot recreate response
+authority. `INPUT` or `CHOICE` renders a typed unsupported disposition without
+hiding lifecycle or settlement. Even when execution uses a contained
+subprocess, the supervisor owns its handle, heartbeat, termination, reaping,
+and reconciliation. TUI application shutdown uses supervisor shutdown policy
+rather than modal teardown.
 
 ### D8 - Structural and behavioral conformance
 
@@ -428,6 +777,31 @@ mismatched interaction, deadline behavior, cancellation at declared safe
 points, frontend detachment, cleanup failure, and restart reconciliation.
 Projection tests prove TUI, CLI, and MCP render authoritative state without
 becoming lifecycle owners.
+
+Public-operation conformance additionally proves strict schema round trips and
+endpoint-specific version refusal; fixed-point definition, schema, projector,
+adapter, and production-composition parity; one-read observation atomicity
+under an interleaved transition; independent lifecycle, terminal-condition,
+and effect parity; progress fold and phase reset; bounded replay,
+cursor-ahead refusal, expiry/compaction resynchronization, detach, and reconnect;
+and absence of every persistence DTO from frontend imports and values.
+
+REVIEW conformance resolves a registered safe projection from a fresh service
+instance, covers every typed refusal and exact output-schema validation, and
+proves resolution neither consumes nor grants response authority. Workspace-
+refresh conformance resolves a registered typed target after process restart,
+covers every typed refusal, and proves no caller-supplied result reference or
+stale Workspace baseline is accepted.
+
+Transient-financial conformance proves exact declaration/type/schema/baseline
+binding, duplicate and concurrent submit/consume races, one executor
+observation, every custody transition, expiry and cancellation, terminal and
+shutdown cleanup, process-loss classification at every transition, domain
+effect-receipt narrowing, Modelo compare-and-swap/effect-receipt co-commit, and
+unique-sentinel non-retention. PRE_RELEASE persistence conformance proves exact
+private-schema refusal, zero affected nonterminal invocations at breaking
+cutover, and absence of superseded operation readers, migrators, fixtures, and
+tests.
 
 ### D9 - Migration and grounded acceptance call sites
 
@@ -519,7 +893,11 @@ fixed ownership:
 ```text
 cadrumo/application/operations/
   __init__.py          # sole public operation-platform facade
-  _models.py           # envelope, snapshot and receipt models
+  _models.py           # private envelope, snapshot and receipt models
+  _public.py           # strict public DTOs, version headers and refusals
+  _observation.py      # atomic read port, fold and public observation service
+  _financial_operand.py # distinct typed transient-financial custody protocol
+  _projection_services.py # registered safe REVIEW and Workspace-refresh services
   _capabilities.py     # validated per-operation declarations
   _events.py           # ordered event and redacted log records
   _interactions.py     # request and response contracts
@@ -529,6 +907,16 @@ cadrumo/application/operations/
   _secret_submission.py # runtime-only supervisor-owned one-shot secret broker port
   _journal.py          # journal and lock ports only
 ```
+
+`__init__.py` is the only public import path for the operation contract set.
+`_public.py` contains no persistence model or frontend type. `_observation.py`
+may depend on the private journal port but returns only public DTOs.
+`_financial_operand.py` is distinct from `_secret_submission.py`; sharing
+low-level cleanup mechanics cannot merge their schemas, grants, checkpoints,
+or reconciliation semantics. `_projection_services.py` invokes only registered
+public protocols and imports no domain implementation. The registry fixed point
+joins every exported schema, projector, adapter, and custody declaration to
+production composition.
 
 Initial operation executors remain with their application owners:
 `src/cadrumo/application/user_profile/_censal_operation.py` and
@@ -736,6 +1124,106 @@ and real non-retention conformance. S39 then composes that public capability and
 the existing profile-login authority exactly once; it must not introduce a
 per-login callback, persistence exception, or shadow authentication path.
 
+Before any visual operation projection begins, the roll-up plan must produce
+the exact C0 artifact
+`.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md`.
+It validates as `TuiOperationObservationDependencyReceiptV1` under the sole
+live-tree validator
+`src/cadrumo/application/operations/tests/test_public_operation_dependency_receipt.py`.
+No alternate path, schema alias, prose attestation, fixture-only validator, or
+receipt from another commit opens C0.
+
+The C0 receipt is produced only from a clean implementation commit and records:
+
+- receipt schema version, producing commit, source-tree digest, and dirty-tree
+  refusal;
+- this governing stem, its `accepted` status, post-amendment body hash and
+  producing commit, plus ancestry to the receipt;
+- staging stem `2026-08-24-tui-operation-observation-adr`, its required
+  `rejected` status and body hash, proving it is provenance rather than a second
+  authority;
+- public-definition manifest, observation, REVIEW-resolver, and Workspace-
+  refresh endpoint versions; every registered schema identity and fingerprint;
+  every definition digest; and exact `contract_set_digest`;
+- sorted public export and observation/review/cancel/detach/respond/refresh
+  capability inventories and digests, plus production-composition parity;
+- real-adapter atomic observation under interleaved transition, independent
+  lifecycle/terminal/effect parity, progress folding and phase reset, bounded
+  replay, cursor-ahead refusal, expiry/compaction resynchronization, detach, and
+  reconnect;
+- complete public-state parity for action reference, definition, request,
+  result, REVIEW, response, and refresh schema identities and digests;
+- atomic invocation definition-digest pinning plus acquisition, observation,
+  response, and reconciliation refusal after simulated registry drift;
+- registered safe REVIEW resolution from a fresh service instance, every typed
+  refusal, strict output validation, and proof that resolution neither consumes
+  nor grants response authority;
+- registered typed Workspace-refresh resolution after process restart, every
+  typed refusal, and proof that no caller-supplied result reference or stale
+  Workspace baseline is accepted;
+- exact current-version round trips and endpoint-specific unsupported-version,
+  schema-mismatch, and definition-digest refusals;
+- PRE_RELEASE exact private-schema refusal, zero affected nonterminal
+  invocations at breaking cutover, and deletion of superseded operation
+  readers, migrators, fixtures, and tests; and
+- forbidden-import and sentinel non-retention proof across public DTOs,
+  journal, events, receipts, diagnostics, traces, logs, exceptions, and
+  persistence materializations.
+
+This receipt opens only the C0 operation-platform public-projection cohort. It
+does not claim transient financial custody exists and cannot open C1 read-only
+Modelo relocation, C2 Workspace, C3 edit, C4 action enrollment, or C5 closure.
+
+The operation-side prerequisite for C3 is the separate exact artifact
+`.vault/reference/2026-08-24-tui-operation-financial-operand-dependency-receipt.md`.
+It validates as `TuiOperationFinancialOperandDependencyReceiptV1` under the
+sole live-tree validator
+`src/cadrumo/application/operations/tests/test_financial_operand_dependency_receipt.py`.
+It is not produced during C0 and cannot be replaced by generic
+`EphemeralSecretSubmission` conformance.
+
+The financial receipt's closed predecessor tuple contains the exact C0 receipt
+path, schema, producing commit, and content digest; this accepted parent's
+then-current body hash; accepted stem `2026-08-24-modelo-edit-contract-adr` and
+its body hash; exact Workspace predecessor
+`.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md` as
+`ModeloWorkspaceC2DependencyReceiptV1` with producing commit and content digest;
+and the implementation commit under validation. It records and proves:
+
+- protocol version `1`, every enrolled declaration and operand schema identity,
+  affected operation-definition digests, and production registry/DI parity;
+- exact type, operation, definition, revision, random-grant fingerprint,
+  baseline, expiry, and schema binding without content hashing;
+- atomic `awaiting_submission -> bound -> delivery_started ->
+  delivery_acknowledged -> released` transitions, duplicate and concurrent
+  submit/consume races, and exactly one executor observation;
+- expiry, pre-delivery cancellation, terminal settlement, owner cleanup, and
+  supervisor-shutdown release;
+- crash injection before binding, while bound, after delivery start, after
+  acknowledgement, after release, and across terminal settlement, with exact
+  `NONE`/`UNKNOWN` classification and domain effect-receipt narrowing;
+- an enrolled Modelo writer's atomic `ModeloEditBaselineV1` compare-and-swap,
+  idempotent effect-receipt co-commit, stale-baseline refusal, and proof that a
+  refreshed read never masquerades as effect evidence; and
+- unique-sentinel absence from every forbidden operation, frontend,
+  filesystem, diagnostic, log, trace, exception, receipt, digest, and cache
+  surface, allowing only the successful canonical encrypted Modelo value.
+
+Passing this receipt opens only the operation-custody half of C3. C3 still
+requires the accepted Modelo editor decision, applicable Workspace and
+interface predecessor receipts, and their live validators. Neither operation
+receipt opens C4 or C5.
+
+Within the one canonical plan, `W05.P11.S60` consumes the public observation
+service rather than supervisor inspection or persistence DTOs; `S61` projects
+only `OperationPublicProjectionV1`; `S62` consumes
+`OperationPublicEventPageV1`; and `S63` is restricted to registered safe REVIEW
+projection plus separately authorized `APPLY`/`REJECT`. The public-definition
+manifest and Workspace-refresh service precede C0. The transient-financial-
+operand protocol is scheduled only at the future C3 dependency step. No
+separate operation, editor, receipt-migration, or implementation plan is
+authorized.
+
 The roll-up plan schedules foundations upward: structural census and dependency
 gates; core operation axes and application contracts; registry, supervisor,
 journal ports, and persistence adapter; real executor lifecycle proofs; TUI
@@ -763,6 +1251,16 @@ what the application performs. The distinct operation registry joins existing
 recovery actions only where dispatch actually connects them, preserving the
 accepted action catalogue's narrower authority
 (`2026-08-09-cli-action-envelope-hardening-adr`).
+
+The public observation materialization is the only option that gives every
+frontend an internally consistent lifecycle/event/progress view without
+publishing journal topology or duplicating the authoritative fold. Registered
+safe REVIEW and Workspace-refresh projectors keep domain interpretation with
+the owning application while the generic operation package retains schema,
+version, and refusal authority. Distinct transient-financial custody preserves
+single-use application-memory handoff and honest crash classification without
+turning an editor draft into a resumable operation operand. These refinements
+are grounded in `2026-08-24-tui-operation-observation-research`.
 
 ## Consequences
 
@@ -793,3 +1291,21 @@ accepted action catalogue's narrower authority
   to report post-commit failures honestly.
 - Census becomes a demanding proof of the platform contract without turning
   the general architecture into census-specific machinery.
+- Frontends gain one strict current-only operation definition, observation,
+  event-page, safe REVIEW, and typed Workspace-refresh contract without
+  receiving persistence records or secure-reference topology.
+- Progress, replay, detach, reconnect, and resynchronization share one atomic
+  anchor; terminal condition remains independent from lifecycle, effect,
+  result, and refusal.
+- Safe REVIEW content remains resolvable after restart, but observation never
+  grants apply/reject authority.
+- Successful terminal operations may yield a typed Workspace refresh target;
+  Workspace still owns the new authoritative read and baseline.
+- Financial edit values may cross one single-consumer application-memory
+  handoff, but never become a resumable operand. Crash after delivery start is
+  `UNKNOWN` unless an authoritative domain receipt narrows it.
+- Public version changes and private journal changes remain separate. While
+  `PRE_RELEASE`, both use current-only cutover and no private-schema migration
+  path survives.
+- C0 and C3 remain independently gated by their exact dependency receipts;
+  neither receipt authorizes a later Modelo or visual cohort by implication.
