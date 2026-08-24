@@ -56,12 +56,13 @@ from .._evidence_textlayer import transcribe_text_layer
 from .._preconditions import LedgerPreconditionCondition
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile
+from ._evidence_test_support import seeded_filer_profile as seeded_filer_profile
 from ._ledger_value_fixtures import isolated_settings, secure_objects
 from ._llm_vision_evidence_support import _json_array, _run_against_loopback_ollama
 from ._loopback_reader import serving_a_loopback_reader
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-__all__ = ["isolated_settings", "runtime_profile", "secure_objects"]
+__all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]
 
 # A real Spanish CIF (Agencia Tributaria checksum-valid: leading letter B,
 # 7 digits, digit control character computed by the AEAT algorithm).
