@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-24'
-body_hash: 'sha256:2ea267aadbe1d83c6d9e38bd4fe2c90886a16735c8f30067799c55b2a19ae268'
+body_hash: 'sha256:f9e1a8eb7f7b4f9bbb0782ea60d6536485ba1c32ab57e8790af0a4e4e391f415'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -205,7 +205,7 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [x] `W05.P10.S67` - Migrate inbound censo parse-refusal action producers to typed conditions and canonical actions; `src/cadrumo/adapters/inbound/censo/_parser.py`.
 - [x] `W05.P10.S68` - Migrate Google profile, OAuth, and impersonation refusals to typed recoverable actions or explicit operator-decision and safety outcomes; `src/cadrumo/adapters/outbound/google/_active_profile.py; src/cadrumo/adapters/outbound/google/_oauth_flow.py; src/cadrumo/adapters/outbound/google/_impersonation.py; src/cadrumo/adapters/outbound/google/tests`.
 - [x] `W05.P10.S69` - Migrate local outbound-storage provider permission, path, conflict, not-found, and integrity failures to typed safety or operator-decision outcomes without inventing caller-owned recovery; `src/cadrumo/adapters/outbound/storage/_errors.py; src/cadrumo/adapters/outbound/storage/_local.py; src/cadrumo/adapters/outbound/storage/tests`.
-- [ ] `W05.P10.S70` - Migrate persistence adapter recovery producers to current typed actions and delete recovery-hint fields; `src/cadrumo/adapters/persistence`.
+- [ ] `W05.P10.S70` - Replace five persistence session, bucket, master-key, and secure-object login command producers with boundary-owned canonical login or explicit typed no-recovery outcomes; `src/cadrumo/adapters/persistence/storage/master_key/_active_session.py; src/cadrumo/adapters/persistence/storage/master_key/_bucket_session.py; src/cadrumo/adapters/persistence/storage/master_key/_master_key.py; src/cadrumo/adapters/persistence/storage/master_key/tests; src/cadrumo/adapters/persistence/storage/sql/secure_objects.py; src/cadrumo/adapters/persistence/storage/sql/tests; src/cadrumo/entrypoints/cli/tests/test_session_lifecycle_roundtrip.py`.
 - [x] `W05.P10.S71` - Migrate aggregation recovery producers to typed conditions and canonical actions; `src/cadrumo/application/aggregation`.
 - [x] `W05.P10.S72` - Prove the complete M303 carry-contradiction and official-evidence displacement refusal population through exact canonical terminal contracts; `src/cadrumo/application/calculations/_errors.py; src/cadrumo/application/calculations/_m303_carry_ingress.py; src/cadrumo/application/calculations/_observation_repository.py; src/cadrumo/application/calculations/tests`.
 - [x] `W05.P10.S73` - Migrate corpus-search recovery producers to typed conditions and canonical actions; `src/cadrumo/application/corpus_search`.

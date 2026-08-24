@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:5271e703c8a2d4ab598b50216584ab8e4a0aede5dd8800a8ae8b7f84b600c93b'
+body_hash: 'sha256:3affc5a65fb8b01e2798c8206718c74d73b8170c14a1db0f0973d644fec55ab7'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -84,6 +84,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W02-P04-S83]]'
   - '[[2026-08-24-registry-completeness-closure-W03-P05-S30]]'
   - '[[2026-08-24-registry-completeness-closure-W03-P05-S31]]'
+  - '[[2026-08-24-registry-completeness-closure-W03-P05-S32]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-audit]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-036-2025-filing-authority-reference]]'
@@ -131,6 +132,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s27-source-owner-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s28-export-owner-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s29-s83-remediation-post-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s30-localization-revalidation-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s31-continuity-semantic-linkage-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit]]'
@@ -225,6 +227,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s27-source-owner-review-audit` - `registry-completeness-closure` audit: `S27 source-owner enrollment review`
 - `2026-08-24-registry-completeness-closure-s28-export-owner-post-review-audit` - `registry-completeness-closure` audit: `S28 export predecessor owner independent post-review`
 - `2026-08-24-registry-completeness-closure-s29-s83-remediation-post-review-audit` - `registry-completeness-closure` audit: `S29 and S83 remediation post review`
+- `2026-08-24-registry-completeness-closure-s30-localization-revalidation-post-review-audit` - `registry-completeness-closure` audit: `W03.P05.S30 localization revalidation independent post-review`
 - `2026-08-24-registry-completeness-closure-s31-continuity-semantic-linkage-post-review-audit` - `registry-completeness-closure` audit: `S31 continuity semantic-linkage post-review`
 - `2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot authority-grade enforcement review`
 - `2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot-grade enforcement review`
@@ -355,6 +358,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W02-P04-S83` - Adjudicate the Modelo 036 product boundary through an accepted ADR, choose its canonical non-filing disposition, then align the capability worklist and S28 record with mutation proof without authoring an M036 exporter.
 - `2026-08-24-registry-completeness-closure-W03-P05-S30` - Verify every shipped modelo and revision localization key across supported output locales
 - `2026-08-24-registry-completeness-closure-W03-P05-S31` - Verify casilla identity, semantic linkage, and continuity chains across every supported revision boundary
+- `2026-08-24-registry-completeness-closure-W03-P05-S32` - Verify binding selectors, resolver enrollment, calculation paths, and provenance for every filing-grade revision
 
 ### plan
 
