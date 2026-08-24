@@ -5,12 +5,18 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:58fcec19a3f911c8b24eced602fc50bcc15fc4acae45f94ee55d4bdbc93ad249'
+body_hash: 'sha256:3c756bb8fb40924ce2e7033b65bca8b5cbed85c1c0f15d14aba6d88310b1e12d'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
   - "[[2026-08-24-registry-completeness-closure-modelo-036-2025-filing-authority-reference]]"
 ---
 # `registry-completeness-closure` reference: `Modelo 036 source-connectivity participation`
+
+## Summary
+
+Modelo 036 participates in source-connectivity at applicability grade only. Its
+accepted `manual_by_design` disposition is grounded by a catalogue-resolved,
+revision-scoped official procedure and does not create a Cadrumo filing or export path.
 
 ## Decision
 

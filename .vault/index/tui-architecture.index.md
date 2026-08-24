@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:1d9a05756fc093060ecfd369d05bd547018496390a724e59947cedf54028c85a'
+body_hash: 'sha256:a17d39c66a192d5bf0bb474c0358dcf433fe45389994b7fb1d483bd4770e382d'
 related:
   - '[[2026-08-11-tui-architecture-W01-P01-S01]]'
   - '[[2026-08-11-tui-architecture-W01-P01-S02]]'
@@ -44,6 +44,7 @@ related:
   - '[[2026-08-11-tui-architecture-W02-P18-S111]]'
   - '[[2026-08-11-tui-architecture-W02-P18-S112]]'
   - '[[2026-08-11-tui-architecture-W02-P19-S115]]'
+  - '[[2026-08-11-tui-architecture-W02-P19-S116]]'
   - '[[2026-08-11-tui-architecture-W03-P06-S113]]'
   - '[[2026-08-11-tui-architecture-W03-P06-S29]]'
   - '[[2026-08-11-tui-architecture-W03-P06-S30]]'
@@ -209,6 +210,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W02-P18-S111` - Prove the graph-wide available-route fixed point, global-only option placement, implemented-route dispatch, and representative unimplemented refusals
 - `2026-08-11-tui-architecture-W02-P18-S112` - Reconcile the accepted availability decision with the still-open dedicated-entrypoint migration and complete a fresh honesty review
 - `2026-08-11-tui-architecture-W02-P19-S115` - Extend the immutable operation registry with OperationSchemaIdentityV1, OperationPublicDefinitionContractV1, OperationPublicContractSetV1, exact strict-model fingerprints, registered REVIEW and refresh adapters, deterministic definition digests, and contract-set fixed-point validation
+- `2026-08-11-tui-architecture-W02-P19-S116` - Define the strict current-only operation observation, public projection, event-page, REVIEW-projection, response-control, cancellation, detach, and Workspace-refresh request, success, and typed refusal DTO families with independent V1 dispatch axes
 - `2026-08-11-tui-architecture-W03-P06-S113` - Implement supervisor-owned post-submission secure checkpoint publication, durable response continuation scheduling, and restart recovery without reacquisition
 - `2026-08-11-tui-architecture-W03-P06-S29` - Implement the resumable census executor across preflight, Clave device wait, remote read, proposal construction, interaction wait, exact apply, and settlement
 - `2026-08-11-tui-architecture-W03-P06-S30` - Persist the encrypted reviewed observation, baseline revision and digest, field intents, and proposed-effect digest behind a secure reference

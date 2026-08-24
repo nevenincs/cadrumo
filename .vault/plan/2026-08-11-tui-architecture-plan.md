@@ -3,8 +3,6 @@ tags:
   - '#plan'
   - '#tui-architecture'
 date: '2026-08-11'
-modified: '2026-08-24'
-body_hash: 'sha256:60959f135130e191984d4ae28850d6d3c66e6260249d5f2098149dd6f24cf09a'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -13,6 +11,8 @@ related:
   - '[[2026-08-24-modelo-edit-contract-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
+modified: '2026-08-24'
+body_hash: 'sha256:60959f135130e191984d4ae28850d6d3c66e6260249d5f2098149dd6f24cf09a'
 ---
 
 # `tui-architecture` plan
