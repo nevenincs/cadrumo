@@ -12,7 +12,7 @@ enforces.
 Like ``_corpus_tools`` / ``_harness_tools``, this module is SDK-independent pure
 functions over typed models; :func:`build_terminology_search_tool` lazily adapts
 onto the MCP SDK's ``Tool`` type so the module imports (and the server refuses
-gracefully) without the ``cadrumo[agent]`` extra. The search itself is owned by the
+gracefully) without the harness distribution's MCP runtime. The search itself is owned by the
 application service (:func:`~application.corpus_search.search_terminology`),
 consumed through the package facade per ``aeat-architecture-boundaries``.
 """
@@ -26,7 +26,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from cadrumo.application.corpus_search import TerminologyHit, search_terminology
 
 if TYPE_CHECKING:
-    # Typing-only: the MCP SDK is an optional runtime dependency (``cadrumo[agent]``);
+    # Typing-only: the MCP SDK is supplied by the sibling harness distribution;
     # the real import stays deferred to inside the function body below.
     from mcp.types import Tool
 
@@ -108,7 +108,7 @@ def build_terminology_search_tool() -> Tool:
     """Build the SDK ``Tool`` for the terminology search tool.
 
     Lazily imports the SDK types so the module imports without the
-    ``cadrumo[agent]`` extra. Annotated ``readOnlyHint`` / ``idempotentHint``.
+    harness distribution's MCP runtime. Annotated ``readOnlyHint`` / ``idempotentHint``.
 
     Returns:
         The ``cadrumo_terminology_search`` :class:`~mcp.types.Tool` object.

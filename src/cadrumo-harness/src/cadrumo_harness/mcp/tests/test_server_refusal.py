@@ -1,4 +1,4 @@
-"""The MCP server refuses gracefully when the agent extra is not installed.
+"""The MCP server refuses gracefully when the harness runtime is incomplete.
 
 The refusal contract is tested directly via :func:`emit_missing_sdk_refusal`, so
 the test is environment-independent (no skip) whether or not the MCP SDK happens
@@ -23,8 +23,10 @@ def test_missing_sdk_refusal_exits_non_zero_with_install_hint(capsys: pytest.Cap
         emit_missing_sdk_refusal()
     assert exc.value.code == 3
     captured = capsys.readouterr()
-    assert "cadrumo[agent]" in captured.err
-    assert "aeat-cli[agent]" not in captured.err
+    assert captured.err == (
+        "the MCP server is provided by the cadrumo-harness distribution: "
+        "pip install cadrumo-harness; launch it with cadrumo-mcp\n"
+    )
 
 
 def test_installed_service_refuses_a_plugin_requiring_another_cohort_version() -> None:
@@ -45,3 +47,7 @@ def test_installed_service_refuses_a_plugin_requiring_another_cohort_version() -
     assert "version mismatch: cadrumo=" in completed.stderr
     assert "cadrumo-data-manuals=" in completed.stderr
     assert "cadrumo-data-official=" in completed.stderr
+    assert completed.stderr.endswith(
+        "pip install cadrumo-harness==999.0.0 cadrumo==999.0.0 "
+        "cadrumo-data-manuals==999.0.0 cadrumo-data-official==999.0.0\n"
+    )

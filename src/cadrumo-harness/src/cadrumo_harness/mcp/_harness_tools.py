@@ -15,7 +15,7 @@ functions over typed models: :func:`build_harness_floor_payload` and
 :func:`render_harness_floor_text` carry no protocol detail and are unit-tested
 directly, while :func:`build_harness_floor_tool` lazily adapts the payload
 surface onto the MCP SDK's ``Tool`` type so the module still imports (and the
-server still refuses gracefully) when the ``cadrumo[agent]`` extra is absent.
+server still refuses gracefully) when the harness distribution's MCP runtime is absent.
 
 The operating-layer text is read through the ``cadrumo_harness`` package facade
 (:func:`~agent.operator_rules_text` and
@@ -40,7 +40,7 @@ from .. import iter_personas, operator_rules_text
 from ._persona_scope import AgentPersona
 
 if TYPE_CHECKING:
-    # Typing-only: the MCP SDK is an optional runtime dependency (``cadrumo[agent]``);
+    # Typing-only: the MCP SDK is supplied by the sibling harness distribution;
     # the real import stays deferred to inside the function body below.
     from mcp.types import Tool
 
@@ -231,7 +231,7 @@ def build_harness_floor_tool() -> Tool:
     """Build the SDK ``Tool`` object for the ``harness.load`` floor tool.
 
     Lazily imports the SDK types so the module still imports when the
-    ``cadrumo[agent]`` extra is absent. The tool takes no arguments (the active
+    harness distribution's MCP runtime is absent. The tool takes no arguments (the active
     persona is resolved server-side from the session scope) and is annotated
     ``readOnlyHint`` / ``idempotentHint``: it reads shipped data and never
     mutates state.
@@ -333,7 +333,7 @@ def build_whoami_tool() -> Tool:
     """Build the SDK ``Tool`` object for the ``whoami`` identity tool.
 
     Lazily imports the SDK types so the module still imports when the
-    ``cadrumo[agent]`` extra is absent. The tool takes no arguments and is
+    harness distribution's MCP runtime is absent. The tool takes no arguments and is
     annotated ``readOnlyHint`` / ``idempotentHint``: it reads the active-profile
     health projection and never mutates state. Its description states its
     identity-safety job so an agent calls it to confirm WHO is active before a

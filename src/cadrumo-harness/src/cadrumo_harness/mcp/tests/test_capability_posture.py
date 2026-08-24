@@ -7,7 +7,7 @@ logging is asserted-ABSENT (no handler is registered); and every
 ``listChanged`` / ``subscribe`` sub-flag is pinned to its current value so a
 future capability shift cannot land silently.
 
-When the ``cadrumo[agent]`` SDK extra is absent the SDK-dependent build is
+When the harness distribution's MCP runtime is absent the SDK-dependent build is
 asserted to refuse at the optional-dependency boundary — the same
 graceful-degradation contract the sibling handshake tests follow, never a skip.
 """

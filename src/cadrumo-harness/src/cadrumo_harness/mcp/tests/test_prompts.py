@@ -7,7 +7,7 @@ unknown prompt name maps to a clean protocol error. The SDK-independent
 ``_prompts.py`` surface is asserted directly; the server-side ``list``/``get``
 wiring is asserted through the real built ``Server`` - built with an empty
 descriptor set so the prompt handlers are exercised without transiting the CLI
-tool-descriptor import chain. When the ``cadrumo[agent]`` extra is absent, the
+tool-descriptor import chain. When the harness distribution's MCP runtime is absent, the
 SDK-dependent build is asserted to fail at the optional-dependency boundary
 instead - never a skip.
 """
