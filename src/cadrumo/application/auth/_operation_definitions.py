@@ -33,6 +33,8 @@ from ..operations import (
     OperationReplayPolicy,
     OperationRequest,
     OperationRequestStoragePolicy,
+    OperationPublicDefinitionRegistrationV1,
+    OperationSchemaBindingV1,
     OperationSensitiveInputPolicy,
 )
 from ..user_profile import (
@@ -369,4 +371,34 @@ def build_auth_operation_definitions() -> tuple[OperationDefinition, ...]:
     return AUTH_OPERATION_DEFINITIONS
 
 
-__all__ = ["AUTH_OPERATION_DEFINITIONS", "build_auth_operation_definitions"]
+def build_auth_operation_registrations(
+    definitions: tuple[OperationDefinition, ...],
+) -> tuple[OperationPublicDefinitionRegistrationV1, ...]:
+    """Bind the auth-owned definitions to their stable public schemas."""
+    return tuple(
+        OperationPublicDefinitionRegistrationV1.compose(
+            definition=definition,
+            request_schema=OperationSchemaBindingV1.bind(
+                schema_id=f"{definition.definition_id}.request",
+                schema_version=1,
+                model_type=definition.request_type,
+            ),
+            result_schema=(
+                None
+                if definition.result_type is None
+                else OperationSchemaBindingV1.bind(
+                    schema_id=f"{definition.definition_id}.result",
+                    schema_version=1,
+                    model_type=definition.result_type,
+                )
+            ),
+        )
+        for definition in definitions
+    )
+
+
+__all__ = [
+    "AUTH_OPERATION_DEFINITIONS",
+    "build_auth_operation_definitions",
+    "build_auth_operation_registrations",
+]

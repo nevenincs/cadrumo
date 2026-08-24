@@ -31,6 +31,8 @@ from ..operations import (
     OperationReplayPolicy,
     OperationRequest,
     OperationRequestStoragePolicy,
+    OperationPublicDefinitionRegistrationV1,
+    OperationSchemaBindingV1,
     OperationSensitiveInputPolicy,
 )
 from ._bundle_export import (
@@ -380,7 +382,34 @@ def build_user_profile_operation_definitions() -> tuple[OperationDefinition, ...
     return USER_PROFILE_OPERATION_DEFINITIONS
 
 
+def build_user_profile_operation_registrations(
+    definitions: tuple[OperationDefinition, ...],
+) -> tuple[OperationPublicDefinitionRegistrationV1, ...]:
+    """Bind profile-maintenance definitions to their stable public schemas."""
+    return tuple(
+        OperationPublicDefinitionRegistrationV1.compose(
+            definition=definition,
+            request_schema=OperationSchemaBindingV1.bind(
+                schema_id=f"{definition.definition_id}.request",
+                schema_version=1,
+                model_type=definition.request_type,
+            ),
+            result_schema=(
+                None
+                if definition.result_type is None
+                else OperationSchemaBindingV1.bind(
+                    schema_id=f"{definition.definition_id}.result",
+                    schema_version=1,
+                    model_type=definition.result_type,
+                )
+            ),
+        )
+        for definition in definitions
+    )
+
+
 __all__ = [
     "USER_PROFILE_OPERATION_DEFINITIONS",
     "build_user_profile_operation_definitions",
+    "build_user_profile_operation_registrations",
 ]
