@@ -47,6 +47,24 @@ from .._overview_rendering import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
+@pytest.fixture(autouse=True)
+def _english_operator_wording():
+    """Render this module's assertions in English.
+
+    Every test here asserts the ENGLISH operator wording -- "3 modelo ... in
+    progress", "discarded", "No saved declaration drafts" -- while the configured
+    output language defaults to Spanish. Without the pin the line searches match
+    nothing and the ``next(...)`` lookups raise StopIteration rather than
+    reporting a wording problem, which is a confusing way to learn the language
+    was wrong. The subject of these tests is the WORDING, so the language is
+    pinned once for the module.
+    """
+    from ....core.config import override_settings
+
+    with override_settings(cadrumo_output_language="en"):
+        yield
+
+
 def _report(
     *,
     transactions: int = 0,
