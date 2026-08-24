@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#registry-completeness-closure'
 date: '2026-08-24'
+modified: '2026-08-24'
+body_hash: 'sha256:fda84f29f21fb864a65e9c8d63ec18afa0334d7eac67b6d3296e5d01e46e20ce'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -10,8 +12,6 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-22-source-casilla-integration-plan]]'
-modified: '2026-08-24'
-body_hash: 'sha256:372905b0b388e00d316be21b657f7f3feb7ff25989251232d1c714e16fdcc3ac'
 ---
 
 # `registry-completeness-closure` plan
@@ -106,7 +106,7 @@ Classify each of the fourteen live filing gaps independently so missing authorit
 - [x] `W02.P03.S20` - Adjudicate Modelo 220 revision 2024 producer vocabulary and exact design authority; `.vault/reference/`.
 - [x] `W02.P03.S21` - Adjudicate Modelo 220 revision 2025-y-siguientes open-window design coverage; `.vault/reference/`.
 - [x] `W02.P03.S22` - Adjudicate Modelo 390 revision 2021 casilla surface and exact annual filing authority; `.vault/reference/`.
-- [ ] `W02.P03.S23` - Adjudicate Modelo 721 revision 2023-y-siguientes record-design availability and supported filing boundary; `.vault/reference/`.
+- [x] `W02.P03.S23` - Adjudicate Modelo 721 revision 2023-y-siguientes record-design availability and supported filing boundary; `.vault/reference/`.
 - [ ] `W02.P03.S24` - Adjudicate Modelo 763 revision 2011-y-siguientes design-era coverage; `.vault/reference/`.
 - [ ] `W02.P03.S25` - Adjudicate Modelo 840 revision 2003-y-siguientes record-terminator semantics and official extent; `.vault/reference/`.
 
