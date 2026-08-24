@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
@@ -252,6 +252,13 @@ class FilingEnvelopeDefinition(RegistryModel):
         return self
 
 
+#: Wire version of the auxiliary-envelope header declaration. Named rather than
+#: written as a bare default so the number has one home: a reader can find every
+#: site bound to this format, and a version bump cannot land on the model while a
+#: writer stamping the old number silently disagrees with it.
+AUXILIARY_ENVELOPE_HEADER_SCHEMA_VERSION: Final[int] = 1
+
+
 class AuxiliaryEnvelopeHeaderDefinition(RegistryModel):
     """Static total-less page-zero header declaration carried by a generated layout.
 
@@ -266,7 +273,7 @@ class AuxiliaryEnvelopeHeaderDefinition(RegistryModel):
     the application filing boundary owns at render time.
     """
 
-    schema_version: Literal[1] = 1
+    schema_version: Literal[1] = AUXILIARY_ENVELOPE_HEADER_SCHEMA_VERSION
     source_ref: SourceRefId
     source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     record_identity: str = Field(min_length=1)
