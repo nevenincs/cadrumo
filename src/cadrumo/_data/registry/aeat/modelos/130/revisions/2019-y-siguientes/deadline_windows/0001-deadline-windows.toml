@@ -7,7 +7,7 @@ opens_on = 2024-04-01
 closes_on = 2024-04-22
 payment_cutoff_on = 2024-04-17
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2024"]
 
 [[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "art109_activity_income_withholding_ge_70pct"
@@ -26,7 +26,7 @@ opens_on = 2024-07-01
 closes_on = 2024-07-22
 payment_cutoff_on = 2024-07-17
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2024"]
 
 [[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "art109_activity_income_withholding_ge_70pct"
@@ -45,7 +45,7 @@ opens_on = 2024-10-01
 closes_on = 2024-10-21
 payment_cutoff_on = 2024-10-16
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2024"]
 
 [[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "art109_activity_income_withholding_ge_70pct"
@@ -64,7 +64,7 @@ opens_on = 2025-01-01
 closes_on = 2025-01-30
 payment_cutoff_on = 2025-01-27
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2025"]
 
 [[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "art109_activity_income_withholding_ge_70pct"
@@ -83,7 +83,7 @@ opens_on = 2025-04-01
 closes_on = 2025-04-21
 payment_cutoff_on = 2025-04-15
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2025"]
 
 [[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "art109_activity_income_withholding_ge_70pct"
@@ -102,7 +102,7 @@ opens_on = 2025-07-01
 closes_on = 2025-07-21
 payment_cutoff_on = 2025-07-16
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2025"]
 
 [[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "art109_activity_income_withholding_ge_70pct"
@@ -121,7 +121,7 @@ opens_on = 2025-10-01
 closes_on = 2025-10-20
 payment_cutoff_on = 2025-10-15
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2025"]
 
 [[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "art109_activity_income_withholding_ge_70pct"
@@ -140,7 +140,7 @@ opens_on = 2026-01-01
 closes_on = 2026-01-30
 payment_cutoff_on = 2026-01-27
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2026"]
 
 [[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "art109_activity_income_withholding_ge_70pct"
@@ -159,7 +159,7 @@ opens_on = 2026-04-01
 closes_on = 2026-04-20
 payment_cutoff_on = 2026-04-15
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2026"]
 
 [[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "art109_activity_income_withholding_ge_70pct"
@@ -178,7 +178,7 @@ opens_on = 2026-07-01
 closes_on = 2026-07-20
 payment_cutoff_on = 2026-07-15
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2026"]
 
 [[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "art109_activity_income_withholding_ge_70pct"
@@ -197,7 +197,7 @@ opens_on = 2026-10-01
 closes_on = 2026-10-20
 payment_cutoff_on = 2026-10-15
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+source_refs = ["aeat-modelo-130-instructions", "aeat-calendario-contribuyente-2026"]
 
 [[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "art109_activity_income_withholding_ge_70pct"
@@ -214,9 +214,8 @@ period = "2026 4T"
 period_kind = "quarterly"
 opens_on = 2027-01-01
 closes_on = 2027-01-30
-payment_cutoff_on = 2027-01-25
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+source_refs = ["aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "art109_activity_income_withholding_ge_70pct"

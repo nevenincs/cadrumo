@@ -19,8 +19,10 @@ from .. import (
     calculate_registry_snapshot,
     resolve_previous_filing_binding_values,
 )
+from .._authority import bundled_authority
 from .._binding_selector_utils import selector_as_dict
 from .._bindings import RegistryModeloObservation
+from .._temporal import select_revision
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -74,6 +76,38 @@ _M130_EXTRACTION_PROFILE_TARGET_LEGAL_REFS = frozenset(
         "rd-439-2007:art-95",
     }
 )
+_M130_SUPPORTED_DEADLINES = {
+    2022: (
+        ("2022-04-20", "2022-04-15"),
+        ("2022-07-20", "2022-07-15"),
+        ("2022-10-20", "2022-10-15"),
+        ("2023-01-30", "2023-01-25"),
+    ),
+    2023: (
+        ("2023-04-20", "2023-04-15"),
+        ("2023-07-20", "2023-07-15"),
+        ("2023-10-20", "2023-10-15"),
+        ("2024-01-30", "2024-01-25"),
+    ),
+    2024: (
+        ("2024-04-22", "2024-04-17"),
+        ("2024-07-22", "2024-07-17"),
+        ("2024-10-21", "2024-10-16"),
+        ("2025-01-30", "2025-01-27"),
+    ),
+    2025: (
+        ("2025-04-21", "2025-04-15"),
+        ("2025-07-21", "2025-07-16"),
+        ("2025-10-20", "2025-10-15"),
+        ("2026-01-30", "2026-01-27"),
+    ),
+    2026: (
+        ("2026-04-20", "2026-04-15"),
+        ("2026-07-20", "2026-07-15"),
+        ("2026-10-20", "2026-10-15"),
+        ("2027-01-30", None),
+    ),
+}
 
 
 @pytest.fixture(scope="module")
@@ -83,6 +117,49 @@ def modelo_130_registry():
 
 def _snapshot_130(_modelo_130_registry: _ModeloFixture, *, period: str = "1T", filing_year: int = 2026):
     return _committed_snapshot("130", filing_year, period)
+
+
+def test_modelo_130_supported_year_deadline_census_dates_sources_and_ownership(
+    modelo_130_registry: _ModeloFixture,
+) -> None:
+    modelo, catalogues = modelo_130_registry
+    revision = modelo.revisions["2019-y-siguientes"]
+    windows = {(window.filing_year, window.period.registry_token): window for window in revision.deadline_windows}
+
+    assert len(revision.deadline_windows) == len(windows) == 20
+    assert set(revision.constructs[0].deadline_windows) == {window.id for window in revision.deadline_windows}
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+
+    calendar_refs = {f"aeat-calendario-contribuyente-{year}" for year in range(2022, 2027)}
+    assert calendar_refs <= set(revision.source_refs)
+    assert calendar_refs <= set(revision.constructs[0].source_refs)
+    for source_ref in calendar_refs:
+        source = catalogues.sources[source_ref]
+        assert (source.authority, source.evidence_tier) == ("aeat", "official_source_guidance")
+        assert (bundled_path() / source.corpus_path).is_file()
+
+    for filing_year, expected_deadlines in _M130_SUPPORTED_DEADLINES.items():
+        expected_periods = {"1T", "2T", "3T", "4T"}
+        assert {period for year, period in windows if year == filing_year} == expected_periods
+        projected = bundled_authority().deadline_windows(filing_year, modelos=("130",))
+        assert len(projected) == 4
+        assert {window.period.registry_token for _, _, window in projected} == expected_periods
+
+        for quarter, (close_text, cutoff_text) in enumerate(expected_deadlines, start=1):
+            period = f"{quarter}T"
+            window = windows[(filing_year, period)]
+            assert select_revision(modelo, filing_year=filing_year, period=period) is revision
+            assert window.id == f"modelo-130-{filing_year}-{period.lower()}"
+            assert window.filing_year == window.period.filing_year == filing_year
+            assert window.opens_on == date(window.closes_on.year, window.closes_on.month, 1)
+            assert window.closes_on == date.fromisoformat(close_text)
+            assert window.payment_cutoff_on == (None if cutoff_text is None else date.fromisoformat(cutoff_text))
+            expected_sources = {"aeat-modelo-130-instructions"}
+            if window.closes_on.year <= 2026:
+                expected_sources.add(f"aeat-calendario-contribuyente-{window.closes_on.year}")
+            assert set(window.source_refs) == expected_sources
+
+    assert windows[(2026, "4T")].payment_cutoff_on is None
 
 
 def test_modelo_130_extraction_profile_legal_refs_match_target_casillas(
