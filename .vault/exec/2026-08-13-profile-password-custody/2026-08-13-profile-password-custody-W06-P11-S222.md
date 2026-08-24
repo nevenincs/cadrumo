@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:933097b8f6d63fa1e149f977d1aa50f9979a34ca1e098faa61573d47cab39292'
+body_hash: 'sha256:46d18501ac91d7ff98db6c6b97362dbcf4594c2ed4581c7d5291cb21350d0070'
 step_id: 'S222'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -19,10 +19,11 @@ related:
 
 ## Description
 
-- Run the native Windows KDF supervision module and complete machine-secret subprocess module sequentially.
-- Run the same KDF supervision module and complete machine-secret subprocess module under the retained isolated WSL2 environment.
-- Increase only the real profile-create subprocess timeout after mandatory password plus recovery KDF work reproducibly exceeded the former budget under WSL.
-- Re-run the formerly timing-out case and the unreduced WSL module, then run scoped Ruff and ty checks.
+- Replace Windows-only and POSIX-only platform skips with always-collected native-route tests.
+- Preserve real Windows inherited-HANDLE/Job Object proof and POSIX inherited-descriptor/PTY proof rather than masking either platform.
+- Run the complete KDF supervision and machine-secret subprocess matrices sequentially on native Windows and isolated Ubuntu WSL.
+- Run scoped Ruff and ty checks for the complete custody and machine-secret subprocess surfaces.
+- Run the canonical skip/xfail inventory and record its one non-S209 carry-forward for the fresh-context close review.
 
 ## Outcome
 
@@ -30,20 +31,22 @@ The complete platform gate passed on both operating systems:
 
 | Platform and lane | Result | Duration |
 | --- | --- | ---: |
-| Native Windows KDF supervision | 18 passed, 1 POSIX-only skip | 26.66 s |
-| Native Windows machine-secret subprocess matrix | 71 passed, 1 POSIX-only skip | 466.49 s |
-| WSL2/Linux KDF supervision | 19 passed | 39.17 s |
-| WSL2/Linux machine-secret subprocess matrix | 70 passed, 2 Windows-only skips | 1090.34 s |
+| Native Windows KDF supervision | 19 passed, zero skips | 28.17 s |
+| Native Windows machine-secret subprocess matrix | 70 passed, zero skips | 524.11 s |
+| WSL2/Linux KDF supervision | 19 passed, zero skips | 35.66 s |
+| WSL2/Linux machine-secret subprocess matrix | 70 passed, zero skips | 1192.31 s |
 
 Exact commands:
 
-- `uv run pytest -q -n 0 src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_supervision.py`
-- `uv run pytest -q -n 0 -m integration src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`
-- `wsl.exe bash -lc "cd /mnt/y/code/aeat-worktrees/main && source /tmp/cadrumo-s209-venv/bin/activate && PYTHONPATH=src pytest -q -n 0 src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_supervision.py"`
-- `wsl.exe bash -lc "cd /mnt/y/code/aeat-worktrees/main && source /tmp/cadrumo-s209-venv/bin/activate && PYTHONPATH=src pytest -q -n 0 -m integration src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py"`
+- `uv run --no-sync pytest -q -n 0 -m unit src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_supervision.py`
+- `uv run --no-sync pytest -q -n 0 -m integration src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`
+- `wsl.exe -d Ubuntu -- bash -lc "cd /mnt/y/code/aeat-worktrees/main && UV_PROJECT_ENVIRONMENT=/home/hello/.cache/cadrumo-s222-wsl uv run --no-sync pytest -q -n 0 -m unit src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_supervision.py"`
+- `wsl.exe -d Ubuntu -- bash -lc "cd /mnt/y/code/aeat-worktrees/main && UV_PROJECT_ENVIRONMENT=/home/hello/.cache/cadrumo-s222-wsl uv run --no-sync pytest -q -n 0 -m integration src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py"`
 
-Scoped Ruff and ty checks on the modified subprocess module passed.
+Scoped Ruff and ty checks on the complete custody and machine-secret subprocess surfaces passed. The canonical no-skip inventory reports one remaining external user-profile symlink-construction shortcut, carried to S223 rather than represented as a green global ratchet.
+
+Additional focused evidence: `test_capsule.py` passed 18 tests in 7.53 seconds, and the complete S209-owned platform worktree passed scoped Ruff, ty, and `git diff --check`. Feature-scoped Vaultspec validation passed with every check clean after the execution record, audit, generated feature index, and plan state were reconciled through their owning CLI commands. The independent review passed at current HEAD after the final native Windows and WSL matrix counts were available.
 
 ## Notes
 
-The first WSL gate and a focused retry both timed out after 45 seconds in the stdin profile-create case; no descriptor-attestation, custody refusal, or secret-channel diagnostic was emitted. Mandatory creation now performs both password and recovery KDF work, and the same real case completed in 63.11 seconds after its helper-only timeout was raised to 120 seconds. The unreduced WSL rerun then passed. No production KDF, attestation, descriptor, fallback, or skip behavior changed, and no residual failure remains.
+The current collection contains no S209-owned skip or xfail marker. Native routing remains real: Windows exercises inherited HANDLE allowlists through the bootstrap and Job Object containment, while POSIX/WSL exercise `pass_fds`, resource limits, process-group isolation, exact descriptor attestation, and inherited-PTY closure before readiness. The independent review found no HIGH or CRITICAL issue. It records one LOW refusal-snapshot coverage gap for S223: session and receipt artifact names are presently excluded from the no-mutation snapshot, so the fresh-context review must ensure those artifacts are explicitly covered.
