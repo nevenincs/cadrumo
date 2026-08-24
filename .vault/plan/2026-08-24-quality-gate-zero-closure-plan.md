@@ -4,7 +4,7 @@ tags:
   - '#quality-gate-zero-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:acf9a945338fe1d65cb6ea886f98c3707a23049b347920dca4e27a51d1cc1b06'
+body_hash: 'sha256:a95827022f9b23460a52f21f2a2808861f4849b3d0e42569e55b7f236c3814be'
 tier: L3
 related:
   - '[[2026-08-24-quality-gate-zero-closure-adr]]'
@@ -36,7 +36,7 @@ Establish the durable observe, claim, repair, recheck, and evidence loop for the
 At each observation, capture the current HEAD and gate state, redeclare semantic ownership, and claim only current disjoint work. The live owner queue belongs in execution evidence, never in this plan.
 
 - [x] `W07.P20.S93` - Observe the current branch revision, dirty paths, ownership context, and gate state, recording revision-scoped evidence without treating any result as a baseline (Luna max audit and mechanical); `.vault/exec/`.
-- [ ] `W07.P20.S94` - Redeclare semantic canonical homes and consumer ownership against the indexed live source, persisting only current RAG evidence (Luna max audit); `.vault/audit/`.
+- [x] `W07.P20.S94` - Redeclare semantic canonical homes and consumer ownership against the indexed live source, persisting only current RAG evidence (Luna max audit); `.vault/audit/`.
 - [ ] `W07.P20.S95` - Claim only currently disjoint work and write the live owner queue, starting revision, collision result, and handoff metadata to execution evidence rather than this plan (Luna max audit and mechanical); `.vault/exec/`.
 - [ ] `W07.P20.S96` - Amend or codify the standing ratchet rule when observation exposes a durable governance gap, routing architecture-only decisions to Sol and keeping rule maintenance evidence-backed (Luna max audit and mechanical); `.codex/rules/`.
 
