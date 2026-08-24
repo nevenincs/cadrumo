@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:ca01f83a31e6a2e1e820a6e4ef92e27fda7e6508b2c6d2207b0f8711b19a9ff9'
+body_hash: 'sha256:de45e275ded8b48a8fd819db7eee868f6f082d14e471b6ce31e2833f7d9b6c5f'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -241,6 +241,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W06-P12-S230]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S231]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S232]]'
+  - '[[2026-08-13-profile-password-custody-W06-P12-S233]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S236]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S237]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S238]]'
@@ -291,6 +292,7 @@ related:
   - '[[2026-08-24-profile-password-custody-s230-spanish-translation-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s231-catalan-translation-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s232-hungarian-translation-review-audit]]'
+  - '[[2026-08-24-profile-password-custody-s233-global-proof-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s236-s227-audit-schema-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s237-harness-install-authority-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s238-sessionless-delete-review-audit]]'
@@ -352,6 +354,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-24-profile-password-custody-s230-spanish-translation-review-audit` - `profile-password-custody` audit: `s230 spanish translation review`
 - `2026-08-24-profile-password-custody-s231-catalan-translation-review-audit` - `profile-password-custody` audit: `s231 catalan translation review`
 - `2026-08-24-profile-password-custody-s232-hungarian-translation-review-audit` - `profile-password-custody` audit: `s232 hungarian translation review`
+- `2026-08-24-profile-password-custody-s233-global-proof-review-audit` - `profile-password-custody` audit: `s233 global proof review`
 - `2026-08-24-profile-password-custody-s236-s227-audit-schema-review-audit` - `profile-password-custody` audit: `s236 s227 audit schema review`
 - `2026-08-24-profile-password-custody-s237-harness-install-authority-review-audit` - `profile-password-custody` audit: `s237 harness install authority review`
 - `2026-08-24-profile-password-custody-s238-sessionless-delete-review-audit` - `profile-password-custody` audit: `S238 sessionless profile delete review`
@@ -592,6 +595,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W06-P12-S230` - Complete every blank or fuzzy Spanish user-page translation and correct download command-list punctuation without English fallback
 - `2026-08-13-profile-password-custody-W06-P12-S231` - Complete every blank or fuzzy Catalan user-page translation and correct download command-list punctuation without English fallback
 - `2026-08-13-profile-password-custody-W06-P12-S232` - Complete every blank or fuzzy Hungarian user-page translation and correct download command-list punctuation without English fallback
+- `2026-08-13-profile-password-custody-W06-P12-S233` - Run the complete documented-command, catalogue-drift, locale-completeness, localized-build, no-skip, native Windows, and WSL proof suite and persist fresh global evidence
 - `2026-08-13-profile-password-custody-W06-P12-S236` - Correct the S227 review audit into the canonical Scope, Findings, and Recommendations body schema without changing its substantive verdict
 - `2026-08-13-profile-password-custody-W06-P12-S237` - Remove the retired cadrumo agent-extra installation claim from live harness docstrings and install hints while preserving the sibling cadrumo-harness distribution boundary
 - `2026-08-13-profile-password-custody-W06-P12-S238` - Remove inactive profile deletion from the root login gate while preserving active-profile refusal, explicit confirmation, custody preflight, and exact target binding in real subprocess execution

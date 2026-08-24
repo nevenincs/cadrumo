@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#profile-password-custody'
 date: '2026-08-13'
+modified: '2026-08-24'
+body_hash: 'sha256:d92fb1e710f87da43dc8c4b94045c94c6569949c5ffff0e0703c35ae4176fe9b'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -18,8 +20,6 @@ related:
   - '[[2026-08-13-recovery-mnemonic-presentation-successor-adr]]'
   - '[[2026-08-13-sealed-archive-transport-successor-adr]]'
   - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
-modified: '2026-08-24'
-body_hash: 'sha256:8588bd8827ba8732368fa7274c0d6111d1192087a08f6eb8eb94a6744d7a3dc8'
 ---
 
 # `profile-password-custody` plan
@@ -348,3 +348,11 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 - [x] `W06.P12.S237` - Remove the retired cadrumo agent-extra installation claim from live harness docstrings and install hints while preserving the sibling cadrumo-harness distribution boundary; `src/cadrumo-harness/src/cadrumo_harness/`.
 - [x] `W06.P12.S238` - Remove inactive profile deletion from the root login gate while preserving active-profile refusal, explicit confirmation, custody preflight, and exact target binding in real subprocess execution; `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py and src/cadrumo/entrypoints/cli/_config/_profile_delete.py and src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/application/config_reset.py and src/cadrumo/application/user_profile/_custody_repository.py and src/cadrumo/application/user_profile/_custody_service.py and src/cadrumo/application/user_profile/_custody_transactions.py and src/cadrumo/application/user_profile/_lifecycle.py and src/cadrumo/application/user_profile/tests/test_custody_transactions.py`.
 - [x] `W06.P12.S239` - Add a central path-specific golden mask for only the profile-delete result fingerprint digest, retain generic digest visibility, and prove the mask is exactly the fresh-sandbox residual through real sequence replay; `src/cadrumo/core/observability/ and dev/docs/sequences/ and dev/docs/tests/test_sequence_goldens.py`.
+- [ ] `W06.P12.S240` - Add exact result-payload expectations to every newly enrolled result frame on the nine named documentation pages and tighten the baseline so future unasserted frames fail; `docs/_sequences/contracts/ and dev/docs/tests/test_documented_command_conformance.py`.
+- [ ] `W06.P12.S241` - Adjudicate and correct live documentation sequence behavior for mandatory recovery creation, export product identity, registry and ledger evidence, binding counts, and required-casilla expectations against current production authority; `docs/_sequences/contracts/ and docs/how-to/ and docs/quickstart.md`.
+- [ ] `W06.P12.S242` - Regenerate every affected documentation sequence golden through the owning CLI after live behavior is adjudicated and reconcile frame counts without hand-authored output; `docs/_sequences/`.
+- [ ] `W06.P12.S243` - Repair Spanish, Catalan, and Hungarian localized reference tokens and generated CLI toctree integration so all localized nitpicky builds resolve current targets; `docs/locales/ and docs/reference/cli/`.
+- [ ] `W06.P12.S244` - Repair the main nitpicky API documentation cross-references and toctree ownership against current public module exports; `docs/api/ and docs/conf.py`.
+- [ ] `W06.P12.S245` - Migrate harness warm-runtime profile provisioning to the mandatory verified recovery handoff and prove real runtime startup succeeds; `src/cadrumo-harness/`.
+- [ ] `W06.P12.S246` - Repair the harness serial watchdog kill-switch and disarm lifecycle so the full integration suite terminates cleanly without weakening timeout enforcement; `src/cadrumo-harness/`.
+- [ ] `W06.P12.S247` - Resolve changed-surface Ruff import order and partition every remaining type diagnostic to its owning implementation or fixture until the scoped global proof is clean; `src/cadrumo/ and src/cadrumo-harness/ and dev/`.
