@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:32ec6726ef2e84708ff7e34516be40dd7598778fdf9a1c37fa9b52b635fd7f36'
+body_hash: 'sha256:9c04c3e0b3062511f5dda6edc27c2b82c3b7eba3a2c4bdf8388b656fd3edbf99'
 related: []
 ---
 
@@ -202,6 +202,44 @@ The remaining failures are other teams' in-flight work:
 - **modelo 200 and modelo 036** grade refusals, and **modelo 390** revision
   selection for 2026, reach into the application layer from the registry work
   already recorded above.
+
+## Every layer above core is gated on one shared artefact
+
+Measuring upward stopped being possible, and the reason is structural rather
+than a backlog of defects.
+
+The application layer measured 715 failures across a 28-minute run. That number
+is not evidence: 15 commits landed while it ran, and roughly 410 of the failures
+were registry-sourced. Checking the registry directly afterwards showed it
+failing validation on modelo 390 semantic-role constraints, and `git status`
+showed those exact 390 casilla fragments DIRTY -- a peer mid-edit, uncommitted,
+with 75 files dirty overall.
+
+The harness lane fails the same way: its full-corpus collectability harness
+cannot collect `test_clasificacion_casillas_oficiales.py` while the registry is
+invalid. So core is the only layer that can be measured independently. Domain,
+application, adapters, entrypoints and harness all load the registry during
+collection, which means:
+
+**A single invalid registry turns every layer above core red at once, and the
+registry is invalid whenever any of several teams is mid-edit.**
+
+That is why layer numbers above core have oscillated between "green" and
+"hundreds of failures" within the same hour without any code changing. It is not
+flakiness in the tests and not phantom failures in the peers' sense -- the
+registry genuinely is invalid at those moments, and genuinely valid at others.
+
+What would make upward measurement possible, in rough order of cost:
+
+- Measure against a fixed commit in a separate git worktree, so peer edits to
+  the shared working tree cannot reach the run at all. This is the only option
+  that removes the problem rather than working around it.
+- Treat registry validity as a precondition gate: assert it immediately before
+  and after a layer run, and discard the run when either check fails, the same
+  way the tree-fingerprint check discards a run whose HEAD moved.
+
+Until one of those exists, an "all-green" claim for any layer above core is a
+statement about one lucky minute, not about the tree.
 
 ## Durable lesson
 
