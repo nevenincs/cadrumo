@@ -38,11 +38,10 @@ _Reference = Annotated[
 type RegistryClosureLimbName = Literal["temporal_coverage", "source_connectivity", "filing_export"]
 """One independently-derived conjunct of the registry release predicate."""
 
-type RegistryClosureLimbOutcome = Literal["satisfied", "refused", "unmeasured"]
-"""The fail-closed result of one closure limb."""
+type RegistryClosureLimbOutcome = Literal["satisfied", "not_applicable", "refused", "unmeasured"]
+"""The result of one closure limb, including an explicitly out-of-scope capability."""
 
 type RegistryClosureRefusalReason = Literal[
-    "below_filing_grade",
     "conflicting_evidence",
     "cross_limb_disagreement",
     "missing_evidence",
@@ -106,6 +105,14 @@ class RegistryClosureLimb(_ClosureModel):
                 raise ValueError("satisfied closure limb requires evidence")
             if self.refusal is not None:
                 raise ValueError("satisfied closure limb cannot carry a refusal")
+            return self
+        if self.outcome == "not_applicable":
+            if self.name != "filing_export":
+                raise ValueError("only the filing-export limb may be not applicable")
+            if self.evidence:
+                raise ValueError("not-applicable filing-export limb cannot carry capability evidence")
+            if self.refusal is not None:
+                raise ValueError("not-applicable filing-export limb cannot carry a refusal")
             return self
         if self.refusal is None:
             raise ValueError("unsatisfied closure limb requires an actionable refusal")

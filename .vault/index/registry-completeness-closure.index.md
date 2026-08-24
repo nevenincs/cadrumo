@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:65a9a8af6f042864ee743ed3671b8123ea6531d05337ca9c5311802913d83799'
+body_hash: 'sha256:8475eee6a23306a11d17bc10deee751a9dc926cca83086c5b0b72382160c1637'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -52,6 +52,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S69]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S70]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S71]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S72]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
@@ -210,6 +211,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P02-S69` - Prove complete, refused, stale-evidence, below-filing-grade, and cross-limb-disagreement outcomes through real composed authority limbs and guard-weakening bites.
 - `2026-08-24-registry-completeness-closure-W01-P02-S70` - Correct S11 evidence and independent-review claims after successor proof passes, then re-attest the records.
 - `2026-08-24-registry-completeness-closure-W01-P02-S71` - Replace the stale fixed completion-step total with a current-plan-derived closure criterion that remains valid as Steps are added
+- `2026-08-24-registry-completeness-closure-W01-P02-S72` - Make filing-export participation grade-scoped per the accepted ADR, revise closure eligibility so below-filing revisions are not filing refusals, prove a genuinely complete real composed below-grade row when canonical temporal and source evidence support it, and add durable mutation-bite evidence for complete, refused, stale-evidence, below-filing-grade, and cross-limb-disagreement guards
 
 ### plan
 

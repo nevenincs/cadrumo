@@ -17,6 +17,7 @@ from functools import cache
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.application.filing import (
     FilingElectionFacts,
@@ -94,8 +95,8 @@ def test_real_live_filing_success_cannot_invent_a_complete_source_limb() -> None
     assert not report.release_eligible
 
 
-def test_real_loader_retains_refused_and_below_filing_grade_outcomes() -> None:
-    """The shipped authority cannot turn a supported non-filing revision into filing support."""
+def test_real_below_grade_row_is_blocked_only_by_canonical_source_evidence_gap() -> None:
+    """Modelo 036 is outside filing participation, while its real source gap remains blocking."""
     report = _canonical_report()
     row = next(
         item
@@ -105,11 +106,55 @@ def test_real_loader_retains_refused_and_below_filing_grade_outcomes() -> None:
 
     assert row.predicate_outcome == "refused"
     assert row.filing_export is not None
-    assert (row.filing_export.outcome, row.filing_export.refusal.reason) == (
-        "refused",
-        "below_filing_grade",
+    assert (row.filing_export.outcome, row.filing_export.evidence, row.filing_export.refusal) == (
+        "not_applicable",
+        (),
+        None,
     )
+    assert row.source_connectivity is not None
+    assert (row.source_connectivity.outcome, row.source_connectivity.refusal.reason) == (
+        "unmeasured",
+        "unmeasured",
+    )
+    assert [(refusal.limb, refusal.reason) for refusal in row.refusals] == [
+        ("source_connectivity", "unmeasured"),
+    ]
     assert not report.release_eligible
+
+
+def test_real_grade_scope_row_guards_bite_both_participation_mutations() -> None:
+    """Real composed rows reject filing participation that contradicts temporal grade."""
+    report = _canonical_report()
+    below_grade = next(
+        item
+        for item in report.rows
+        if (item.modelo, item.revision) == (Modelo.M036, "2025-02-03-y-siguientes")
+    )
+    filing_grade = next(
+        item
+        for item in report.rows
+        if (item.modelo, item.revision) == (Modelo.M100, "2025")
+    )
+    assert below_grade.filing_export is not None
+    assert filing_grade.filing_export is not None
+
+    below_grade_payload = below_grade.model_dump(mode="python", exclude={"refusals", "predicate_outcome"})
+    below_grade_payload["filing_export"] = filing_grade.filing_export.model_dump(mode="python")
+    below_grade_payload["filing_export"].update(
+        modelo=below_grade.modelo,
+        revision=below_grade.revision,
+    )
+    with pytest.raises(ValidationError, match="below-filing temporal coverage requires"):
+        below_grade.__class__.model_validate(below_grade_payload)
+
+    filing_grade_payload = filing_grade.model_dump(mode="python", exclude={"refusals", "predicate_outcome"})
+    filing_grade_payload["filing_export"] = below_grade.filing_export.model_dump(mode="python")
+    filing_grade_payload["filing_export"].update(
+        modelo=filing_grade.modelo,
+        revision=filing_grade.revision,
+    )
+    with pytest.raises(ValidationError, match="filing-grade temporal coverage requires"):
+        filing_grade.__class__.model_validate(filing_grade_payload)
 
 
 def test_real_loader_reports_stale_layout_bytes_from_a_live_catalogue_mutation() -> None:

@@ -114,6 +114,41 @@ def test_unmeasured_limb_cannot_disguise_a_refusal_as_a_measurement_gap() -> Non
         )
 
 
+def test_not_applicable_is_a_filing_only_non_capability_state() -> None:
+    """The conditional filing limb cannot become evidence or leak to another authority."""
+    limb = RegistryClosureLimb(
+        modelo="036",
+        revision="2025-02-03-y-siguientes",
+        name="filing_export",
+        outcome="not_applicable",
+    )
+
+    assert (limb.evidence, limb.refusal) == ((), None)
+    with pytest.raises(ValidationError, match="only the filing-export limb"):
+        RegistryClosureLimb(
+            modelo=limb.modelo,
+            revision=limb.revision,
+            name="source_connectivity",
+            outcome="not_applicable",
+        )
+    with pytest.raises(ValidationError, match="cannot carry capability evidence"):
+        RegistryClosureLimb(
+            modelo=limb.modelo,
+            revision=limb.revision,
+            name="filing_export",
+            outcome="not_applicable",
+            evidence=(_evidence(),),
+        )
+    with pytest.raises(ValidationError, match="cannot carry a refusal"):
+        RegistryClosureLimb(
+            modelo=limb.modelo,
+            revision=limb.revision,
+            name="filing_export",
+            outcome="not_applicable",
+            refusal=_refusal(),
+        )
+
+
 @pytest.mark.parametrize(
     ("outcome", "reason"),
     (("refused", "missing_evidence"), ("unmeasured", "unmeasured")),
