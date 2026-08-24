@@ -11,7 +11,7 @@ from cadrumo.core import Period, ResultDisposition
 from cadrumo.domain.calculations.registry import DeadlineWindowDefinition, ModeloRevision
 
 from .._errors import DeadlineValidationError
-from .._plazo import _resolve_projected_filing_window
+from .._plazo import _resolve_projected_filing_window, resolve_filing_window
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -115,3 +115,24 @@ def test_none_is_reserved_for_an_exact_absence_without_year_borrowing() -> None:
         )
         is None
     )
+
+
+@pytest.mark.parametrize(
+    ("resultado", "tipo_renta_code"),
+    [
+        ("I", "01"),
+        (ResultDisposition.INGRESO, "99"),
+    ],
+)
+def test_public_resolver_refuses_invalid_qualifier_context_before_authority_lookup(
+    resultado: object,
+    tipo_renta_code: str,
+) -> None:
+    with pytest.raises(DeadlineValidationError, match=r"resultado|canonical official"):
+        resolve_filing_window(
+            "210",
+            _YEAR,
+            _PERIOD,
+            resultado=resultado,  # type: ignore[arg-type]
+            tipo_renta_code=tipo_renta_code,
+        )

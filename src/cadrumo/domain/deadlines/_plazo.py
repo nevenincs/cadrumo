@@ -13,7 +13,7 @@ from datetime import date
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
-from ...core import Period, ResultDisposition
+from ...core import M210_TIPO_RENTA_CODE_PROJECTION, Modelo, Period, ResultDisposition
 from ._errors import DeadlineValidationError
 
 if TYPE_CHECKING:
@@ -116,6 +116,17 @@ def resolve_filing_window(
             coordinate. Ambiguous registry authority is never treated as absence.
     """
     from ...core.resources import resources
+
+    if resultado is not None and not isinstance(resultado, ResultDisposition):
+        raise DeadlineValidationError(
+            f"filing window resultado must be ResultDisposition, got {type(resultado).__name__}",
+        )
+    if tipo_renta_code is not None and (
+        modelo != Modelo.M210 or tipo_renta_code not in M210_TIPO_RENTA_CODE_PROJECTION
+    ):
+        raise DeadlineValidationError(
+            f"filing window tipo_renta_code {tipo_renta_code!r} is not a canonical official Modelo 210 code",
+        )
 
     authority = resources().modelos.authority
 
