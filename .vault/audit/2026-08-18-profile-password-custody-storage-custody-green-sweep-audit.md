@@ -8479,3 +8479,27 @@ not a test-driven nudge from an adjacent campaign. Left alone on purpose.
 
 Recorded so the three failures read as an unfinished chain with a stated reason rather
 than a defect someone should hunt.
+
+## Do not "fix" the sede submitted-file fixtures: they are real AEAT bytes
+
+Seven cases in `adapters/outbound/aeat/sede` fail on registry export-layout validation --
+`signed export field 'modelo-130-casilla-03' must use ASCII space or N as its sign
+marker`, `XML dictionary boolean field 'LGC' contains invalid data`, `export literal field
+'modelo-180-decl-tipo-soporte' does not match the registry layout`.
+
+The obvious move is to edit the fixture until the parser accepts it. That would be
+falsifying evidence. `modelo-130-2026-1T-redacted.txt` is a REAL AEAT submitted file with
+redactions -- it opens `<T130020261T0000><AUX>`, and its siblings in that directory say
+`synthetic` in the filename when they are synthetic. Editing it would make the suite
+assert that AEAT emits bytes it does not emit.
+
+And the fixture is not what is wrong. The layout declares
+`modelo-130-casilla-03` at offset 143, length 17, signed. Reading the artefact at exactly
+that window gives seventeen spaces, and a space is one of the two markers the rule
+accepts. So the byte the codec rejected was NOT read from the declared offset: the file
+carries several records, the offsets are per-record, and the refusal points at how the
+parser segments records rather than at the data.
+
+Left for the campaign owning the sede parser and the M130 export layout. What is
+established here and worth not re-deriving: the fixture is official evidence, the declared
+offset holds a legal marker, and therefore the defect is upstream of the bytes.
