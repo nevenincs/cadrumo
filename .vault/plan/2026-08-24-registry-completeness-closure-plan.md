@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:4df02c9d518c20631477dfa9a0471b8b1b797ca04d33d9722254c8fedeb80763'
+body_hash: 'sha256:22dc5c8f8ba0b16b62c9b6d1065e8f9f7d504900d8fdc00905c68b0f2179dd8e'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -58,6 +58,9 @@ Compose one typed cross-authority report from validated registry coverage, sourc
 - [x] `W01.P02.S42` - Constrain temporal evidence identity, period, and filing-year fields to registry semantics and add mutation proof for every composer refusal outcome; `src/cadrumo/application/registry/`.
 - [x] `W01.P02.S43` - Reject resolved owner dispositions on active closure refusals and prove the contradiction fails validation; `src/cadrumo/application/registry/`.
 - [x] `W01.P02.S44` - Encode branch-specific TemporalRevisionCoverage refusal invariants and add construction and mutation-bite tests.; `src/cadrumo/application/registry/`.
+- [ ] `W01.P02.S45` - Revalidate connected census claims through live source proof authority at composition time and refuse proof loss or digest mismatch.; `src/cadrumo/application/registry/`.
+- [ ] `W01.P02.S46` - Apply expiry semantics to every scoped census disposition and refuse expired terminal evidence, with mutation-bite tests.; `src/cadrumo/application/registry/`.
+- [ ] `W01.P02.S47` - Add revision filing-year and period scope to census destinations and require exact scoped source mapping with Modelo 100 and 193 cross-satisfaction regressions.; `src/cadrumo/application/registry/`.
 
 ## Wave `W02` - filing-gap adjudication and owner routing
 

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:42478ff718d30a7cc949e3451037efa320b716e49867b84c6981dff4f7f665cc'
+body_hash: 'sha256:21235873460e6a5f5ea18aab3ce13e0a9433f0e2684f80aa02a44931801a85fc'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -29,11 +29,13 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s04-authority-grade-ladder-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s06-closure-contract-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s07-temporal-coverage-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s08-source-connectivity-coverage-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s41-cache-key-type-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s42-temporal-refusal-invariants-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s43-active-refusal-disposition-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s44-temporal-refusal-invariants-review-audit]]'
 ---
 
 # `registry-completeness-closure` feature index
@@ -52,11 +54,13 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s04-authority-grade-ladder-review-audit` - `registry-completeness-closure` audit: `S04 authority-grade ladder review`
 - `2026-08-24-registry-completeness-closure-s06-closure-contract-review-audit` - `registry-completeness-closure` audit: `S06 closure contract review`
 - `2026-08-24-registry-completeness-closure-s07-temporal-coverage-review-audit` - `registry-completeness-closure` audit: `S07 temporal coverage review`
+- `2026-08-24-registry-completeness-closure-s08-source-connectivity-coverage-review-audit` - `registry-completeness-closure` audit: `S08 source-connectivity coverage review`
 - `2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot authority-grade enforcement review`
 - `2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot-grade enforcement review`
 - `2026-08-24-registry-completeness-closure-s41-cache-key-type-review-audit` - `registry-completeness-closure` audit: `S41 cache-key type review`
 - `2026-08-24-registry-completeness-closure-s42-temporal-refusal-invariants-audit` - `registry-completeness-closure` audit: `S42 temporal refusal invariant review`
 - `2026-08-24-registry-completeness-closure-s43-active-refusal-disposition-review-audit` - `registry-completeness-closure` audit: `S43 active-refusal disposition review`
+- `2026-08-24-registry-completeness-closure-s44-temporal-refusal-invariants-review-audit` - `registry-completeness-closure` audit: `s44 temporal refusal invariants review`
 
 ### exec
 
