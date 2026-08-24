@@ -71,7 +71,6 @@ def compute_verdict_key(
     *,
     identity_digest: str,
     source_evidence_fingerprints: SourceEvidenceFingerprintTuples,
-    validation_code_fingerprint: str,
     package_version: str = __version__,
 ) -> str:
     """Bind one tree identity plus the source-evidence set into a verdict key.
@@ -88,8 +87,6 @@ def compute_verdict_key(
     """
     hasher = hashlib.sha256()
     hasher.update(package_version.encode("utf-8"))
-    hasher.update(b"validation-code")
-    hasher.update(validation_code_fingerprint.encode("utf-8"))
     hasher.update(b"identity")
     hasher.update(identity_digest.encode("utf-8"))
     hasher.update(b"source")
@@ -102,7 +99,6 @@ def compute_verdict_key(
 def compute_shipped_verdict_key(
     *,
     identity_digest: str,
-    validation_code_fingerprint: str,
     package_version: str = __version__,
 ) -> str:
     """Compute the install-stable key for the release-stamped bundled verdict.
@@ -120,7 +116,6 @@ def compute_shipped_verdict_key(
     hasher = hashlib.sha256()
     hasher.update(b"shipped-registry-verdict")
     hasher.update(package_version.encode("utf-8"))
-    hasher.update(validation_code_fingerprint.encode("utf-8"))
     hasher.update(identity_digest.encode("utf-8"))
     return hasher.hexdigest()
 
@@ -128,7 +123,6 @@ def compute_shipped_verdict_key(
 def stamp_bundled_verdict(
     *,
     identity_digest: str,
-    validation_code_fingerprint: str,
     output_path: Path,
     package_version: str = __version__,
 ) -> RegistryValidationVerdict:
@@ -144,7 +138,6 @@ def stamp_bundled_verdict(
     """
     key = compute_shipped_verdict_key(
         identity_digest=identity_digest,
-        validation_code_fingerprint=validation_code_fingerprint,
         package_version=package_version,
     )
     verdict = RegistryValidationVerdict(
@@ -240,7 +233,6 @@ def registry_validation_is_certified(
     *,
     verdict_key: str,
     identity: RegistryIdentity,
-    validation_code_fingerprint: str,
     package_version: str = __version__,
 ) -> bool:
     """Whether a persisted green verdict certifies this tree for ``root``.
@@ -277,7 +269,6 @@ def registry_validation_is_certified(
         return False
     shipped_key = compute_shipped_verdict_key(
         identity_digest=identity.digest,
-        validation_code_fingerprint=validation_code_fingerprint,
         package_version=package_version,
     )
     return _verdict_matches(shipped_verdict, shipped_key)
