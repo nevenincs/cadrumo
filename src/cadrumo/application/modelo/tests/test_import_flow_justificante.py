@@ -41,7 +41,7 @@ def test_import_refuses_justificante_evidence_without_expected_tax_id(repos: _Re
     wu_repo, _, _, _, _ = repos
     work_unit = _seed_work_unit(wu_repo)
     _persist_matching_justificante(
-        "JUST-NO-TAX-ID",
+        "JUSTNOTAXID1",
         work_unit,
         captured_at=_T1,
     )
@@ -50,7 +50,7 @@ def test_import_refuses_justificante_evidence_without_expected_tax_id(repos: _Re
         _import_external_filing(
             repos,
             work_unit,
-            evidence_reference_id="JUST-NO-TAX-ID",
+            evidence_reference_id="JUSTNOTAXID1",
             clock=_T1,
         )
 
@@ -61,7 +61,7 @@ def test_import_refuses_justificante_evidence_for_different_period(repos: _Repos
     wu_repo, _, _, _, _ = repos
     work_unit = _seed_work_unit(wu_repo)
     _persist_matching_justificante(
-        "JUST-MISMATCH",
+        "JUSTMISMATCH",
         work_unit,
         period="2T",
         captured_at=_T1,
@@ -71,7 +71,7 @@ def test_import_refuses_justificante_evidence_for_different_period(repos: _Repos
         _import_external_filing(
             repos,
             work_unit,
-            evidence_reference_id="JUST-MISMATCH",
+            evidence_reference_id="JUSTMISMATCH",
             expected_tax_id=_TAX_ID,
             clock=_T1,
         )
@@ -83,7 +83,7 @@ def test_import_refuses_justificante_evidence_for_different_taxpayer(repos: _Rep
     wu_repo, _, _, _, _ = repos
     work_unit = _seed_work_unit(wu_repo)
     _persist_matching_justificante(
-        "JUST-WRONG-TAXPAYER",
+        "JUSTWRONGTAXPAYER",
         work_unit,
         captured_at=_T1,
     )
@@ -92,7 +92,7 @@ def test_import_refuses_justificante_evidence_for_different_taxpayer(repos: _Rep
         _import_external_filing(
             repos,
             work_unit,
-            evidence_reference_id="JUST-WRONG-TAXPAYER",
+            evidence_reference_id="JUSTWRONGTAXPAYER",
             expected_tax_id="B12345674",
             clock=_T1,
         )
@@ -104,7 +104,7 @@ def test_import_justificante_taxpayer_match_is_case_insensitive(repos: _Repos) -
     wu_repo, _, _, _, _ = repos
     work_unit = _seed_work_unit(wu_repo)
     _persist_matching_justificante(
-        "JUST-CASE-TAXPAYER",
+        "JUSTCASETAXPAYER",
         work_unit,
         captured_at=_T1,
         tax_id="X1234567L",
@@ -113,14 +113,14 @@ def test_import_justificante_taxpayer_match_is_case_insensitive(repos: _Repos) -
     filing = _import_external_filing(
         repos,
         work_unit,
-        evidence_reference_id="JUST-CASE-TAXPAYER",
+        evidence_reference_id="JUSTCASETAXPAYER",
         expected_tax_id="x1234567l",
         clock=_T1,
     )
 
     assert filing.aeat_accepted is True
     assert filing.external_evidence is not None
-    assert filing.external_evidence.reference_id == "JUST-CASE-TAXPAYER"
+    assert filing.external_evidence.reference_id == "JUSTCASETAXPAYER"
 
 
 def test_import_justificante_pdf_refuses_without_enrolled_justificante(repos: _Repos) -> None:
