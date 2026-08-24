@@ -9284,3 +9284,44 @@ revision AEAT binds to a filing year. Whoever owns the M303 buildout should also
 add the missing invariant — a revision's declared window years must lie within
 its period selector's span — because without it this recurs silently on the next
 revision added.
+
+### Domain 97 to 18, and where the remainder genuinely stops
+
+Fixed with judgement rather than mechanically: the usage-ratio confidentiality
+assertion (narrowed to the model identity after probing the bytes, since the
+word it banned is storage addressing metadata), five authority-grade ordering
+tests (fixture clears the new gate where a LATER gate is the subject, expectation
+moves where the accessor is), the schema version pin, two identity tightenings
+(Hex64Str's pattern, canonical bucket UUIDs), and the REAGP compensación
+classification hint (stated with NO rate: the percentages differ by activity and
+a stale one would steer a classification the filing then carries).
+
+Two traps repeated from earlier in this campaign, both from textual matching:
+changing BOTH `review_status="reviewed"` lines in one file turned one failure
+into ten, because twelve lines apart they belong to different models with
+different status vocabularies. And grouping failures by basename hid which of
+four `test_secure_storage_roundtrip.py` files was failing. A textual match is
+not a semantic match.
+
+The remaining eighteen split into work that is mine and work that is an
+AUTHORITY CLAIM, and the second kind is where this stops:
+
+- Four modelos (117, 126, 128, 136) declare `applicability` grade and their
+  arithmetic tests request `calculation`. The refusal says it exactly:
+  "validate and attest the revision at the requested grade". Attesting is the
+  claim; nobody should automate it.
+- Two schema `legal_refs` resolve against nothing in the legal catalogue. Adding
+  them means BOE or AEAT corpus text under human review.
+- Three are corpus-evidence proofs about AEAT design re-layouts.
+- Three are the M303 duplicate-obligation defect recorded above.
+- One is a line-count ratchet exceeded by ONE line (`_validate.py: 308 exceeds
+  307`). This repo's own rule warns that a tally gate "encodes a moment, trains
+  everyone to update the constant, and then detects nothing" -- so bumping it is
+  the wrong reflex, and the module should shed the line instead.
+- One is a genuine gate conflict inside the peer's M303 work:
+  `test_every_claimed_current_iva_profile_has_the_canonical_required_axes` treats
+  ANY fact tuple mentioning `iva.regime` as a claimed current profile, so it
+  demands `iva.m303_regime_composition` of a three-fact SCHEMA-MINIMUM baseline
+  whose own test exists to prove behaviour when the composition is ABSENT.
+  Adding the axis breaks that subject; the gate's exclusion mechanism covers
+  literal maps only, not fact containers. Both sides belong to the same campaign.
