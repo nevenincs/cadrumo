@@ -243,9 +243,9 @@ def _manager_populated(tmp_path: Path) -> Iterator[ProfileManagerApp]:
     profile and a fact-filled one have the IDENTICAL row set and would not
     exercise a region-eviction defect the way a populated status page does.
     What DOES change the structure is a repeatable section gaining a row,
-    the same mechanism ``add_row_action`` drives, added here directly
-    through the write door rather than by pressing the button: the
-    property under test is rendering, not the seam.
+    the same canonical application mutation ``add_row_action`` drives, added
+    here directly rather than by pressing the button: the property under test
+    is rendering, not the seam.
 
     ``activities`` is picked over ``attribution_entity_socios`` (used
     elsewhere in this package) because its only required field is
