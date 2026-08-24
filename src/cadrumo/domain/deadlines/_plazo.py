@@ -67,7 +67,7 @@ def resolve_filing_closes_on(modelo: str, filing_year: int, period: Period) -> d
     return None if window is None else window.closes_on
 
 
-@lru_cache(maxsize=256)
+@lru_cache(maxsize=256, typed=True)
 def resolve_filing_window(
     modelo: str,
     filing_year: int,
@@ -162,7 +162,11 @@ def _resolve_projected_filing_window(
     # Registry applicability imports this deadline facade, so defer the public
     # registry-facade import until resolution time to keep that dependency cycle
     # out of module initialisation.
-    from ..calculations.registry import deadline_semantic_coordinate, deadline_window_semantic_coordinates
+    from ..calculations.registry import (
+        deadline_semantic_coordinate,
+        deadline_window_semantic_coordinates,
+        selector_period_matches_request,
+    )
 
     requested = deadline_semantic_coordinate(modelo, period, resultado, tipo_renta_code)
     if requested.filing_year != filing_year:
@@ -170,7 +174,7 @@ def _resolve_projected_filing_window(
 
     qualified_m210_event = (
         modelo == Modelo.M210
-        and period.kind is PeriodKind.EXTENDED
+        and selector_period_matches_request("EVENT-N", period.registry_token)
         and (resultado is not None or tipo_renta_code is not None)
     )
     matches: tuple[DeadlineWindowDefinition, ...]

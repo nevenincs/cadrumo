@@ -13,7 +13,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
 modified: '2026-08-24'
-body_hash: 'sha256:f290eedc72aaa1c89e6859829b2511f70ab28b257703a4192352700647ecbfc4'
+body_hash: 'sha256:5761178f939cda6499fcd397862ec71dd6f062a5b3f6faab74ebc2299c7965b6'
 ---
 
 <!-- RETIRED: P06, P07, P09 -->
@@ -131,7 +131,7 @@ Keep the engine thin and resolve resultado-aware M210 deadlines post-calculation
 
 - [ ] `W03.P11.S26` - Keep DeadlineEngine.compute thin and prove exact-one complete monthly and quarterly emission without local selection or deduplication; `src/cadrumo/domain/deadlines/_engine.py; src/cadrumo/domain/deadlines/tests/test_engine.py`.
 - [x] `W03.P11.S27` - Route calculated M210 ResultDisposition and official tipo code into canonical deadline resolution and the existing typed Notice channel; `src/cadrumo/application/modelo/`.
-- [ ] `W03.P11.S28` - Prove M210 calculate and verify envelopes emit grounded qualified plazo notices and never claim an ungrounded tipo-28 offset; `src/cadrumo/application/modelo/tests/`.
+- [x] `W03.P11.S28` - Prove M210 calculate and verify envelopes emit grounded qualified plazo notices and never claim an ungrounded tipo-28 offset; `src/cadrumo/application/modelo/tests/`.
 
 ## Wave `W04` - consumer parity and closure
 

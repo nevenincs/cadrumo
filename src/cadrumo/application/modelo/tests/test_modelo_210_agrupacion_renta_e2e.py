@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import contextmanager
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -12,21 +12,22 @@ import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import M210PayerMode, Period
 from ....core.resources import resources
 from ....domain.modelos import Modelo210AgrupacionRentaRow, ModeloError
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....tests.cli_envelope import unwrap_envelope_notices
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...tests import register_wizard_catalogue
+from .._calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
 from .._calculation_actions import calculate_modelo_revision
 from .._m303_regimen_simplificado_scope import active_taxpayer_profile
 from .._work_lifecycle import create_work_unit
 from .._work_plazo import calculated_m210_plazo_notice
-from ._file_flow_support import verify_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -64,6 +65,18 @@ def _seed_minimal_profile(objects: SecureObjectRepository) -> None:
             created_at=_CLOCK,
             updated_at=_CLOCK,
         )
+    )
+
+
+def _verify_plazo_notices(calculation_revision_id: str) -> tuple[dict[str, object], ...]:
+    result = invoke_cached_cli(
+        ["--format", "json", "app", "modelo", "work", "verify", calculation_revision_id],
+    )
+    assert result.exit_code in {0, 1}, result.output
+    return tuple(
+        notice
+        for notice in unwrap_envelope_notices(result.output)
+        if notice["code"] == "modelo.work.m210.plazo_resolved"
     )
 
 
@@ -215,9 +228,6 @@ def test_calculate_and_verify_project_exactly_one_grounded_qualified_plazo_notic
     with _secure_backend(tmp_path):
         snapshot = resources().modelos.authority.snapshot("210", filing_year=_FILING_YEAR, period="0A")
         work_repo = WorkUnitCatalogueRepository()
-        calculation_repo = CalculationRevisionCatalogueRepository()
-        verification_repo = VerificationReportCatalogueRepository()
-        event_repo = BucketEventHistoryRepository()
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="210",
@@ -227,13 +237,17 @@ def test_calculate_and_verify_project_exactly_one_grounded_qualified_plazo_notic
             repository=work_repo,
             clock=_CLOCK,
         )
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
+        calculation_result = calculate_modelo_work_revision(
+            work_unit_id=work_unit.work_unit_id,
             actor="operator",
-            casilla_inputs=casilla_inputs,
-            text_casilla_inputs={"tipo_renta": text_tipo_renta},
-            m210_official_tipo_renta_code=tipo_renta_code,
-            detail_rows=(
+            inputs=WorkCalculateInputBundle.build(
+                casilla_inputs=casilla_inputs,
+                text_casilla_inputs={"tipo_renta": text_tipo_renta},
+                m210_official_tipo_renta_code=tipo_renta_code,
+                binding_values={},
+                enum_binding_values={},
+                relation_values={},
+                detail_rows=(
                 Modelo210AgrupacionRentaRow(
                     source_id=f"plazo-{tipo_renta_code}",
                     tipo_renta_code=tipo_renta_code,
@@ -248,49 +262,18 @@ def test_calculate_and_verify_project_exactly_one_grounded_qualified_plazo_notic
                     deriva_de_bien_derecho=True,
                     bien_derecho_id="ES-INMUEBLE-1",
                 ),
+                ),
+                borrador_snapshot_id=None,
             ),
-            work_unit_repository=work_repo,
-            calculation_repository=calculation_repo,
-            bucket_event_repository=event_repo,
-            clock=_CLOCK,
         )
-        profile = active_taxpayer_profile(work_unit)
         calculate_notices = tuple(
             notice
-            for notice in (
-                calculated_m210_plazo_notice(
-                    work_unit=work_unit,
-                    revision=revision,
-                    workflow_profile=profile,
-                ),
-            )
-            if notice is not None
+            for notice in calculation_result.plazo_notices
+            if notice.code == "modelo.work.m210.plazo_resolved"
         )
-        verify_revision(
-            revision.calculation_revision_id,
-            revision=revision,
-            work_unit=work_unit,
-            actor="operator",
-            work_unit_repository=work_repo,
-            calculation_repository=calculation_repo,
-            verification_repository=verification_repo,
-            bucket_event_repository=event_repo,
-            clock=_CLOCK,
-        )
-        verify_notices = tuple(
-            notice
-            for notice in (
-                calculated_m210_plazo_notice(
-                    work_unit=work_unit,
-                    revision=revision,
-                    workflow_profile=profile,
-                ),
-            )
-            if notice is not None
-        )
+        verify_notices = _verify_plazo_notices(calculation_result.revision.calculation_revision_id)
 
     assert len(calculate_notices) == len(verify_notices) == 1
-    assert verify_notices == calculate_notices
     context = calculate_notices[0].context
     assert context is not None
     window_id, opens_on, closes_on = expected_window
@@ -306,6 +289,7 @@ def test_calculate_and_verify_project_exactly_one_grounded_qualified_plazo_notic
         "legal_refs": "orden-eha-3316-2010:art-5",
         "source_refs": "aeat-modelo-210-procedure, boe-modelo-210-base-order",
     }
+    assert verify_notices[0]["context"] == dict(context)
 
 
 def test_calculate_and_verify_never_project_an_ungrounded_tipo_28_offset(tmp_path: Path) -> None:
@@ -313,9 +297,6 @@ def test_calculate_and_verify_never_project_an_ungrounded_tipo_28_offset(tmp_pat
     with _secure_backend(tmp_path):
         snapshot = resources().modelos.authority.snapshot("210", filing_year=_FILING_YEAR, period="EVENT-1")
         work_repo = WorkUnitCatalogueRepository()
-        calculation_repo = CalculationRevisionCatalogueRepository()
-        verification_repo = VerificationReportCatalogueRepository()
-        event_repo = BucketEventHistoryRepository()
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="210",
@@ -325,43 +306,29 @@ def test_calculate_and_verify_never_project_an_ungrounded_tipo_28_offset(tmp_pat
             repository=work_repo,
             clock=_CLOCK,
         )
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
+        calculation_result = calculate_modelo_work_revision(
+            work_unit_id=work_unit.work_unit_id,
             actor="operator",
-            casilla_inputs={"rendimientos_integros": Decimal("900.00")},
-            text_casilla_inputs={"tipo_renta": "general"},
-            m210_official_tipo_renta_code="28",
-            filing_period_date=date(_FILING_YEAR, 12, 31),
-            work_unit_repository=work_repo,
-            calculation_repository=calculation_repo,
-            bucket_event_repository=event_repo,
-            clock=_CLOCK,
+            inputs=WorkCalculateInputBundle.build(
+                casilla_inputs={"rendimientos_integros": Decimal("900.00")},
+                text_casilla_inputs={"tipo_renta": "ganancia_patrimonial"},
+                m210_official_tipo_renta_code="28",
+                binding_values={},
+                enum_binding_values={},
+                relation_values={},
+                detail_rows=(),
+                borrador_snapshot_id=None,
+            ),
         )
-        profile = active_taxpayer_profile(work_unit)
-        calculate_notice = calculated_m210_plazo_notice(
-            work_unit=work_unit,
-            revision=revision,
-            workflow_profile=profile,
+        calculate_notices = tuple(
+            notice
+            for notice in calculation_result.plazo_notices
+            if notice.code == "modelo.work.m210.plazo_resolved"
         )
-        verify_revision(
-            revision.calculation_revision_id,
-            revision=revision,
-            work_unit=work_unit,
-            actor="operator",
-            work_unit_repository=work_repo,
-            calculation_repository=calculation_repo,
-            verification_repository=verification_repo,
-            bucket_event_repository=event_repo,
-            clock=_CLOCK,
-        )
-        verify_notice = calculated_m210_plazo_notice(
-            work_unit=work_unit,
-            revision=revision,
-            workflow_profile=profile,
-        )
+        verify_notices = _verify_plazo_notices(calculation_result.revision.calculation_revision_id)
 
-    assert calculate_notice is None
-    assert verify_notice is None
+    assert calculate_notices == ()
+    assert verify_notices == ()
 
 
 def test_imputadas_02_event_work_projects_the_grounded_annual_notice_on_calculate_and_verify(
@@ -371,9 +338,6 @@ def test_imputadas_02_event_work_projects_the_grounded_annual_notice_on_calculat
     with _secure_backend(tmp_path):
         snapshot = resources().modelos.authority.snapshot("210", filing_year=_FILING_YEAR, period="EVENT-1")
         work_repo = WorkUnitCatalogueRepository()
-        calculation_repo = CalculationRevisionCatalogueRepository()
-        verification_repo = VerificationReportCatalogueRepository()
-        event_repo = BucketEventHistoryRepository()
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="210",
@@ -383,59 +347,32 @@ def test_imputadas_02_event_work_projects_the_grounded_annual_notice_on_calculat
             repository=work_repo,
             clock=_CLOCK,
         )
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
+        calculation_result = calculate_modelo_work_revision(
+            work_unit_id=work_unit.work_unit_id,
             actor="operator",
-            casilla_inputs={
-                "valor_catastral": Decimal("100000.00"),
-                "coeficiente_imputacion_inmobiliaria": Decimal("0.011"),
-                "dias_imputacion": Decimal("365"),
-            },
-            text_casilla_inputs={"tipo_renta": "inmobiliaria"},
-            m210_official_tipo_renta_code="02",
-            filing_period_date=date(_FILING_YEAR, 12, 31),
-            work_unit_repository=work_repo,
-            calculation_repository=calculation_repo,
-            bucket_event_repository=event_repo,
-            clock=_CLOCK,
+            inputs=WorkCalculateInputBundle.build(
+                casilla_inputs={
+                    "valor_catastral": Decimal("100000.00"),
+                    "coeficiente_imputacion_inmobiliaria": Decimal("0.011"),
+                    "dias_imputacion": Decimal("365"),
+                },
+                text_casilla_inputs={"tipo_renta": "inmobiliaria"},
+                m210_official_tipo_renta_code="02",
+                binding_values={},
+                enum_binding_values={},
+                relation_values={},
+                detail_rows=(),
+                borrador_snapshot_id=None,
+            ),
         )
-        profile = active_taxpayer_profile(work_unit)
         calculate_notices = tuple(
             notice
-            for notice in (
-                calculated_m210_plazo_notice(
-                    work_unit=work_unit,
-                    revision=revision,
-                    workflow_profile=profile,
-                ),
-            )
-            if notice is not None
+            for notice in calculation_result.plazo_notices
+            if notice.code == "modelo.work.m210.plazo_resolved"
         )
-        verify_revision(
-            revision.calculation_revision_id,
-            revision=revision,
-            work_unit=work_unit,
-            actor="operator",
-            work_unit_repository=work_repo,
-            calculation_repository=calculation_repo,
-            verification_repository=verification_repo,
-            bucket_event_repository=event_repo,
-            clock=_CLOCK,
-        )
-        verify_notices = tuple(
-            notice
-            for notice in (
-                calculated_m210_plazo_notice(
-                    work_unit=work_unit,
-                    revision=revision,
-                    workflow_profile=profile,
-                ),
-            )
-            if notice is not None
-        )
+        verify_notices = _verify_plazo_notices(calculation_result.revision.calculation_revision_id)
 
     assert len(calculate_notices) == len(verify_notices) == 1
-    assert verify_notices == calculate_notices
     assert calculate_notices[0].context == {
         "modelo": "210",
         "filing_year": "2025",
@@ -448,3 +385,4 @@ def test_imputadas_02_event_work_projects_the_grounded_annual_notice_on_calculat
         "legal_refs": "orden-eha-3316-2010:art-5",
         "source_refs": "aeat-modelo-210-procedure, boe-modelo-210-base-order",
     }
+    assert verify_notices[0]["context"] == dict(calculate_notices[0].context or {})
