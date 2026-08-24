@@ -9,7 +9,7 @@ import pytest
 
 from .....core import ConvenioOverrideKind, ResultDisposition, TipoRentaIrnr
 from .....core.resources import bundled_path
-from .. import load_convenio_authority, load_modelo_directory, select_revision
+from .. import load_catalogue_file, load_convenio_authority, load_modelo_directory, select_revision
 from .._errors import NoRevisionForPeriodError
 from .._legal import verify_legal_catalogue
 from .._schema import ModeloDefinition, RegistryCatalogues
@@ -206,6 +206,21 @@ def test_modelo_210_deadlines_use_canonical_annual_identity_and_exact_revision_o
 
     assert select_revision(modelo, filing_year=2025, period=_ANNUAL_PERIOD).id == "2025"
     assert select_revision(modelo, filing_year=2026, period=_ANNUAL_PERIOD).id == "2026-y-siguientes"
+
+
+def test_modelo_210_tipo_28_stays_event_shaped_until_its_offset_authority_is_bundled() -> None:
+    """Tipo 28 must not turn a remembered event offset into registry law."""
+    registry_root = bundled_path("registry", "aeat")
+    modelo = load_modelo_directory(registry_root / "modelos" / "210")
+    irnr_catalogue = load_catalogue_file(registry_root / "legal" / "irnr.toml")
+
+    assert all("EVENT-N" in revision.period_selector.periods for revision in modelo.revisions.values())
+    assert "rd-1776-2004:art-14" not in irnr_catalogue.legal
+    assert all(
+        "28" not in (window.tipo_renta_scope or ())
+        for revision in modelo.revisions.values()
+        for window in revision.deadline_windows
+    )
 
 
 def test_modelo_210_legacy_evento_period_is_not_supported() -> None:

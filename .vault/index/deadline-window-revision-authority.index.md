@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:f11f65351f09d93a4461070e81eccd16ec5ec000b3c2966363486395f029219e'
+body_hash: 'sha256:6b81ed9de46c60eb4cf582304924283509d2afab821e9852170eca9b72eea0c9'
 related:
   - '[[2026-08-24-deadline-window-revision-authority-W01-P01-S01]]'
   - '[[2026-08-24-deadline-window-revision-authority-W01-P01-S02]]'
@@ -19,6 +19,8 @@ related:
   - '[[2026-08-24-deadline-window-revision-authority-W02-P03-S10]]'
   - '[[2026-08-24-deadline-window-revision-authority-W02-P03-S11]]'
   - '[[2026-08-24-deadline-window-revision-authority-W02-P05-S17]]'
+  - '[[2026-08-24-deadline-window-revision-authority-W02-P05-S18]]'
+  - '[[2026-08-24-deadline-window-revision-authority-W02-P05-S19]]'
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
   - '[[2026-08-24-deadline-window-revision-authority-audit]]'
   - '[[2026-08-24-deadline-window-revision-authority-plan]]'
@@ -53,6 +55,8 @@ Auto-generated index of all documents tagged with `#deadline-window-revision-aut
 - `2026-08-24-deadline-window-revision-authority-W02-P03-S10` - Re-adjudicate and repair Modelo 190 deadline identity against bundled and official AEAT authority while retaining following-January physical dates
 - `2026-08-24-deadline-window-revision-authority-W02-P03-S11` - Re-adjudicate and repair Modelo 193 deadline identity against bundled and official AEAT authority while retaining following-January physical dates
 - `2026-08-24-deadline-window-revision-authority-W02-P05-S17` - Re-adjudicate every Modelo 210 plazo case against bundled Orden EHA 3316/2010 article 5 and official authority including presentation versus domiciliacion
+- `2026-08-24-deadline-window-revision-authority-W02-P05-S18` - Replace invalid M210 quarter identities with canonical EVENT-N or 0A identities and author ResultDisposition plus official-code-qualified variants
+- `2026-08-24-deadline-window-revision-authority-W02-P05-S19` - Keep M210 tipo 28 event-shaped without a numeric offset until RD 1776/2004 article 14 is bundled and verified
 
 ### plan
 
