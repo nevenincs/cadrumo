@@ -355,12 +355,12 @@ def test_no_verb_defaults_an_iva_rate_outside_the_core_constant() -> None:
     reintroduces a rate default -- and passes honestly while none does.
     """
 
-    from ...entrypoints.cli._command_specs import COMMAND_GRAPH
+    from ...entrypoints.cli import command_graph
     from ..external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
 
     permitted = {str(DEFAULT_IVA_GENERAL_RATE_PCT), str(float(DEFAULT_IVA_GENERAL_RATE_PCT))}
     offenders: list[str] = []
-    for key, spec in COMMAND_GRAPH.by_schema_identity().items():
+    for key, spec in command_graph.by_schema_identity().items():
         for parameter in spec.parameters:
             if "iva_rate" not in parameter.name:
                 continue

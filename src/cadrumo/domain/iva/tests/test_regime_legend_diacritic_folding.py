@@ -27,10 +27,10 @@ from __future__ import annotations
 
 import pytest
 
+from ....core.text_fold import fold_printed_phrase
 from .._legend_derivation import (
     index_regime_legends,
     match_regime_legend,
-    normalise_regime_legend_text,
 )
 from .._regime_legend import REGIME_LEGENDS, RegimeLegend
 
@@ -114,7 +114,7 @@ def test_every_mention_stays_a_multi_word_phrase_after_folding() -> None:
     words, so the phrase carries the distinctiveness both before and after.
     """
     for legend in REGIME_LEGENDS:
-        assert len(normalise_regime_legend_text(legend.phrase).split()) >= 4, legend.provision
+        assert len(fold_printed_phrase(legend.phrase).split()) >= 4, legend.provision
 
 
 def test_no_single_token_of_a_mention_matches_on_its_own() -> None:
@@ -124,7 +124,7 @@ def test_no_single_token_of_a_mention_matches_on_its_own() -> None:
     tokens. This asks the matcher.
     """
     for legend in REGIME_LEGENDS:
-        for token in normalise_regime_legend_text(legend.phrase).split():
+        for token in fold_printed_phrase(legend.phrase).split():
             assert match_regime_legend(token) is None, f"the lone token {token!r} matched a mandated mention"
 
 
@@ -135,7 +135,7 @@ def test_no_folded_mention_is_contained_in_another() -> None:
     distinct forms can still nest. Asserted separately because the matcher
     returns the FIRST containment hit.
     """
-    folded = [normalise_regime_legend_text(legend.phrase) for legend in REGIME_LEGENDS]
+    folded = [fold_printed_phrase(legend.phrase) for legend in REGIME_LEGENDS]
     for outer in folded:
         for inner in folded:
             if inner != outer:

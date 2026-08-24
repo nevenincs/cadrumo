@@ -26,10 +26,10 @@ from ....core.json_contract import (
     ResolvedActionArgument,
     ResolvedNoticeAction,
 )
+from .. import current_operator_surface_reconciliation
 from .._common import (
     _OPERATOR_SURFACE_RECONCILIATION_META_KEY,
     _action_text_lines,
-    _current_operator_surface_reconciliation,
     _powershell_action_token,
     _resolve_notice_actions,
     resolve_cli_precondition_action,
@@ -122,7 +122,7 @@ def test_common_action_resolver_refuses_invalid_invocation_reconciliation() -> N
     with click.Context(click.Command("operator-surface")) as context:
         context.meta[_OPERATOR_SURFACE_RECONCILIATION_META_KEY] = "not a reconciliation"
         with pytest.raises(TypeError, match="operator-surface reconciliation context contains an invalid value"):
-            _current_operator_surface_reconciliation()
+            current_operator_surface_reconciliation()
 
 
 def test_common_action_resolver_materialises_ledger_link_from_the_live_surface() -> None:

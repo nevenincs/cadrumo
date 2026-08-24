@@ -26,8 +26,8 @@ import pytest
 from .....core.config import override_settings
 from .....domain.filing import ModeloDraftError
 from .....tests.secure_sql import isolated_storage_root as _isolated_storage  # noqa: F401 - autouse fixture
-from ...storage import StorageRuntimeReadinessCode, StorageValidationError
-from .._filing_runtime import resolve_filing_repository_bucket_id, secure_objects_for_filing_bucket
+from ...storage import StorageRuntimeReadinessCode, StorageValidationError, secure_object_repository_for_bucket
+from .._filing_runtime import resolve_filing_repository_bucket_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -85,7 +85,7 @@ def test_secure_objects_for_filing_bucket_refuses_unready_runtime(tmp_path: Path
         override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_ACTIVE_BUCKET_ID),
         pytest.raises(StorageValidationError) as raised,
     ):
-        secure_objects_for_filing_bucket(_ACTIVE_BUCKET_ID)
+        secure_object_repository_for_bucket(_ACTIVE_BUCKET_ID)
 
     assert raised.value.translated_message == "errors.storage.runtime.not_ready"
     assert raised.value.context is not None

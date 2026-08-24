@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from ..domain.tests._regulatory_cap_witnesses import REGULATORY_CAP_WITNESSES
-from ._inventory import aeat_relative, production_ast_items
+from ..domain.tests import REGULATORY_CAP_WITNESSES
+from . import aeat_relative, production_ast_items
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

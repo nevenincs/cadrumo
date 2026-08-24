@@ -28,9 +28,7 @@ from ....adapters.persistence.storage.custody import (
     ProfileCustodyWrappedDek,
     create_profile_custody_sentinel,
 )
-from ....application.user_profile._capsule_record import ProfileRecordSession
-from ....application.user_profile._lifecycle import ProfileCapsuleLifecycle
-from ....application.user_profile._profile_record_repository import bound_profile_record_session
+from ....application.user_profile import ProfileCapsuleLifecycle, ProfileRecordSession, bound_profile_record_session
 from ....core import (
     BucketPointer,
     ProfileRecordUnavailability,
@@ -254,7 +252,7 @@ def test_resolve_profile_bucket_returns_none_for_an_unknown_identifier(tmp_path:
 
 def test_duplicate_label_is_refused_before_a_second_capsule_can_enter_discovery(tmp_path: Path) -> None:
     """Current projections never carry a legacy ambiguous-label state."""
-    from ...user_profile._custody_transactions import ProfileCustodyTransactionConflictError
+    from ...user_profile import ProfileCustodyTransactionConflictError
 
     first = _current_profile_session(
         "51c1fa97-28e1-4700-ac1e-ed7cf094d37b",

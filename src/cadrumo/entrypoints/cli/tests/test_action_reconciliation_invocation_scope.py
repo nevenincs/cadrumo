@@ -12,7 +12,7 @@ from click.testing import CliRunner as ClickCliRunner
 from typer.testing import CliRunner as TyperCliRunner
 
 from ....application.operator_surface import OperatorSurfaceReconciliation
-from .._common import _current_operator_surface_reconciliation
+from .. import current_operator_surface_reconciliation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -49,11 +49,11 @@ def test_upstream_click_dispatch_reuses_one_reconciliation_per_invocation() -> N
 
     @click.group()
     def surface() -> None:
-        observed.append(_current_operator_surface_reconciliation())
+        observed.append(current_operator_surface_reconciliation())
 
     @surface.command()
     def inspect() -> None:
-        observed.append(_current_operator_surface_reconciliation())
+        observed.append(current_operator_surface_reconciliation())
 
     runner = ClickCliRunner()
     _assert_two_invocations_reuse_only_their_own_reconciliation(
@@ -68,11 +68,11 @@ def test_vendored_typer_dispatch_reuses_one_reconciliation_per_invocation() -> N
 
     @surface.callback()
     def root() -> None:
-        observed.append(_current_operator_surface_reconciliation())
+        observed.append(current_operator_surface_reconciliation())
 
     @surface.command()
     def inspect() -> None:
-        observed.append(_current_operator_surface_reconciliation())
+        observed.append(current_operator_surface_reconciliation())
 
     runner = TyperCliRunner()
     _assert_two_invocations_reuse_only_their_own_reconciliation(

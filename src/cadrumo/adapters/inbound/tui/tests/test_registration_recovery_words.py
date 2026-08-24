@@ -15,11 +15,15 @@ import pytest
 from textual.widgets import Input
 from textual.worker import WorkerCancelled
 
-from .....application.user_profile import CommittedProfileRepository
+from .....application.user_profile import (
+    CommittedProfileRepository,
+    ProfileRegistrationError,
+    register_profile_with_credentials,
+)
 from .....core import assess_profile_password
-from .....entrypoints.cli._config._manager_frontend import attempt_registration
+from .....domain.user_profile import UserProfileFact
 from .....tests.secure_sql import isolated_profile_storage_root
-from .. import RegistrationApp
+from .. import RecoveryHandoverCancelledError, RegistrationApp, RegistrationAttempt, RegistrationRefusal
 from .._recovery_words_screen import RecoveryWordsScreen
 
 pytestmark = [
@@ -31,10 +35,42 @@ _TERMINAL_SIZE = (140, 60)
 _TYPED_PASSWORD = "recovery-words-screen-operator-secret"  # noqa: S105 - synthetic test fixture
 
 
+def _attempt_registration(
+    label: str,
+    passphrase: str,
+    output_language: str,
+    recovery_handover,
+) -> RegistrationAttempt:
+    """Drive the public registration door through the adapter's injected contract."""
+    try:
+        outcome = register_profile_with_credentials(
+            label=label,
+            passphrase=passphrase,
+            facts=(UserProfileFact(path="preferences.output_language", value=output_language),),
+            recovery_handover=recovery_handover,
+        )
+    except RecoveryHandoverCancelledError:
+        return RegistrationAttempt(
+            expected_refusal=RegistrationRefusal(
+                message_key="cli.config.profile.create_recovery_verification_cancelled",
+            )
+        )
+    except ProfileRegistrationError as refusal:
+        if refusal.translated_message is None:
+            raise
+        return RegistrationAttempt(
+            expected_refusal=RegistrationRefusal(
+                message_key=refusal.translated_message,
+                context=tuple((refusal.context or {}).items()),
+            )
+        )
+    return RegistrationAttempt(outcome=outcome)
+
+
 def _screen() -> RegistrationApp:
     return RegistrationApp(
         assess=assess_profile_password,
-        register=attempt_registration,
+        register=_attempt_registration,
         suggested_name="",
     )
 
@@ -74,9 +110,7 @@ async def test_the_full_screen_door_shows_the_words_then_wipes_them(tmp_path) ->
             assert mnemonic is not None
             rendered = str(mnemonic.render())
             assert len(rendered.split()) == 24
-            assert not any(
-                view.label == "Recovery Words Subject" for view in CommittedProfileRepository().list()
-            )
+            assert not any(view.label == "Recovery Words Subject" for view in CommittedProfileRepository().list())
 
             # Confirmation zeroises the container and releases the flow.
             words.query_one("#field-recovery-verification", Input).value = rendered
@@ -108,9 +142,7 @@ async def test_cancelling_recovery_confirmation_publishes_no_capsule(tmp_path) -
             await pilot.pause()
 
         assert app.outcome is None
-        assert not any(
-            view.label == "Cancelled Recovery Subject" for view in CommittedProfileRepository().list()
-        )
+        assert not any(view.label == "Cancelled Recovery Subject" for view in CommittedProfileRepository().list())
 
 
 @pytest.mark.asyncio
@@ -153,6 +185,4 @@ async def test_app_shutdown_releases_pending_handoff_without_publication(tmp_pat
             app.exit(None)
             with pytest.raises(WorkerCancelled):
                 await app.workers.wait_for_complete()
-        assert not any(
-            view.label == "Shutdown Recovery Subject" for view in CommittedProfileRepository().list()
-        )
+        assert not any(view.label == "Shutdown Recovery Subject" for view in CommittedProfileRepository().list())

@@ -44,6 +44,7 @@ from ._checkpoint_store import (
 )
 from ._commands import (
     DEFAULT_PROFILE_NEXT_COMMAND,
+    SETUP_OPTION_INFOS,
     build_wizard_command,
     next_step_command_for_profile_values,
     profile_next_step_modelo,
@@ -117,6 +118,7 @@ __all__ = [
     "DESCENDANT_LOCALE_KEYS",
     "DESCENDANT_NIF_VALIDATOR_ID",
     "DESCENDANT_PAGE_IDS",
+    "SETUP_OPTION_INFOS",
     "SETUP_UNIDAD_FAMILIAR_VALIDATOR_ID",
     "TAXPAYER_PROJECTION_VALIDATOR_ID",
     "WIZARD_FLOWS",

@@ -62,7 +62,7 @@ from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocati
 from ._command_policy import CommandExecutionPolicy as _CommandExecutionPolicy
 from ._command_runtime import build_command_app as _build_command_app
 from ._command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
-from ._common import attach_cli_policy_verdict, resolve_cli_precondition_action
+from ._common import attach_cli_policy_verdict, current_operator_surface_reconciliation, resolve_cli_precondition_action
 from ._errors import decorate_typer_app as _decorate_typer_app
 from ._framework_localisation import (
     localise_help_section_headers as _localise_help_section_headers,
@@ -93,6 +93,7 @@ CommandExecutionPolicy = _CommandExecutionPolicy
 
 app = _build_command_app(_COMMAND_GRAPH)
 _decorate_typer_app(app)
+command_graph = _COMMAND_GRAPH
 
 
 def full_command_tree() -> _TyCommand:
@@ -349,10 +350,12 @@ __all__ = [
     "cli_argv_for",
     "cli_path_for_command_key",
     "command_execution_policy_for_cli_path",
+    "command_graph",
     "command_schema_refs",
     "command_schema_type",
     "command_schema_types",
     "command_search_terms",
+    "current_operator_surface_reconciliation",
     "is_exposable_command",
     "main",
     "resolve_cli_precondition_action",

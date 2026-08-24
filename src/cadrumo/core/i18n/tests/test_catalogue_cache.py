@@ -23,6 +23,7 @@ from pathlib import Path
 import pytest
 
 from ...config import override_settings
+from ...hashing import sha256_hex
 from .. import _catalogue_cache as cc
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -50,7 +51,7 @@ def test_write_then_read_round_trips_the_flat_map(tmp_path: Path) -> None:
     """A freshly written cache is read back byte-for-byte identical."""
     with override_settings(cadrumo_local_storage_root=tmp_path):
         flat: dict[str, str | None] = {"cli.root.app_help": "Ayuda", "cli.missing": None}
-        digest = cc.compute_source_digest(b"source bytes v1")
+        digest = sha256_hex(b"source bytes v1")
 
         cc.write_catalogue_cache("es", source_digest=digest, flat=flat)
         cached = cc.read_catalogue_cache("es", source_digest=digest)
@@ -61,7 +62,7 @@ def test_write_then_read_round_trips_the_flat_map(tmp_path: Path) -> None:
 def test_absent_cache_is_a_clean_miss(tmp_path: Path) -> None:
     """No cache file at all returns None, never an error."""
     with override_settings(cadrumo_local_storage_root=tmp_path):
-        digest = cc.compute_source_digest(b"anything")
+        digest = sha256_hex(b"anything")
         assert cc.read_catalogue_cache("es", source_digest=digest) is None
 
 
@@ -73,8 +74,8 @@ def test_source_digest_mismatch_is_a_miss_not_a_wrong_answer(tmp_path: Path) -> 
     same code path by construction (the digest is part of the lookup key).
     """
     with override_settings(cadrumo_local_storage_root=tmp_path):
-        old_digest = cc.compute_source_digest(b"source bytes v1")
-        new_digest = cc.compute_source_digest(b"source bytes v2 -- different")
+        old_digest = sha256_hex(b"source bytes v1")
+        new_digest = sha256_hex(b"source bytes v2 -- different")
         flat: dict[str, str | None] = {"cli.root.app_help": "Old value"}
 
         cc.write_catalogue_cache("es", source_digest=old_digest, flat=flat)
@@ -91,7 +92,7 @@ def test_corrupt_json_is_a_clean_miss_and_self_heals(tmp_path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("{not valid json at all", encoding="utf-8")
 
-        digest = cc.compute_source_digest(b"whatever")
+        digest = sha256_hex(b"whatever")
         assert cc.read_catalogue_cache("es", source_digest=digest) is None
         assert not path.exists()
 
@@ -106,7 +107,7 @@ def test_truncated_payload_under_a_matching_source_digest_is_rejected(tmp_path: 
     embedded payload_digest is the second, independent check that catches it.
     """
     with override_settings(cadrumo_local_storage_root=tmp_path):
-        digest = cc.compute_source_digest(b"source bytes")
+        digest = sha256_hex(b"source bytes")
         full_flat: dict[str, str | None] = {f"cli.key.{i}": f"value {i}" for i in range(200)}
 
         cc.write_catalogue_cache("es", source_digest=digest, flat=full_flat)
@@ -136,7 +137,7 @@ def test_tampered_value_under_a_matching_source_digest_is_rejected(tmp_path: Pat
     way -- any alteration of ``flat`` changes its content hash.
     """
     with override_settings(cadrumo_local_storage_root=tmp_path):
-        digest = cc.compute_source_digest(b"source bytes")
+        digest = sha256_hex(b"source bytes")
         flat: dict[str, str | None] = {"cli.root.app_help": "Valor correcto"}
         cc.write_catalogue_cache("es", source_digest=digest, flat=flat)
 
@@ -173,7 +174,7 @@ def test_end_to_end_tr_self_heals_across_all_three_corruption_modes(tmp_path: Pa
         with override_settings(cadrumo_local_storage_root=tmp_path):
             first = _reread_from_disk()
             path = cc.catalogue_cache_path("es")
-            digest = cc.compute_source_digest(b"test-source")
+            digest = sha256_hex(b"test-source")
             cc.write_catalogue_cache("es", source_digest=digest, flat={"cli.root.app_help": first})
             assert path.is_file(), "on-disk cache must exist"
 

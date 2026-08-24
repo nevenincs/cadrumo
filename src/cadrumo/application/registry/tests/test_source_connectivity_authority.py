@@ -36,7 +36,7 @@ from ....domain.modelos import (
     CalculationSourceRef,
     derive_calculation_revision_id,
 )
-from ....entrypoints.cli._common import _current_operator_surface_reconciliation
+from ....entrypoints.cli import current_operator_surface_reconciliation
 from ...aggregation import BindingSourceDisposition
 from ...modelo import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
 from ...operator_surface import build_supported_modelo_calculation_workflow_catalogue
@@ -74,7 +74,7 @@ _EVIDENCE_REFERENCES = {
 
 
 def _live_workflows():
-    return build_supported_modelo_calculation_workflow_catalogue(_current_operator_surface_reconciliation())
+    return build_supported_modelo_calculation_workflow_catalogue(current_operator_surface_reconciliation())
 
 
 def _persisted_revision(

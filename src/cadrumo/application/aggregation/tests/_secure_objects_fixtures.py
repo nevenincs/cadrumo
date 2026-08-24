@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....tests._bucket_id_fixture import bucket_id
+from ....tests import bucket_id
 from ....tests.secure_sql import isolated_runtime_profile
 
 

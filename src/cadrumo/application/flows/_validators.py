@@ -51,7 +51,7 @@ class ValidationVerdict(BaseModel):
 
     @classmethod
     def failed(cls, message_key: str, **context: object) -> ValidationVerdict:
-        return cls(ok=False, message_key=message_key, context=redact_answer_context(dict(context)))
+        return cls(ok=False, message_key=message_key, context=redact_validation_context(dict(context)))
 
 
 AnswerValidator = Callable[[FlowPage, str], ValidationVerdict]
@@ -105,11 +105,6 @@ def _resolve[ValidatorT](registry: Mapping[str, ValidatorT], validator_id: str) 
             context={"validator_id": validator_id, "registered_count": len(registry)},
         )
     return validator
-
-
-def redact_answer_context(context: dict[str, object]) -> dict[str, object]:
-    """Strip raw operator answers through the canonical diagnostic policy."""
-    return redact_validation_context(context)
 
 
 def validate_widget_shape(page: FlowPage, raw: str) -> tuple[str, ValidationVerdict]:
@@ -321,7 +316,6 @@ __all__ = [
     "AnswerValidator",
     "CrossFieldValidator",
     "ValidationVerdict",
-    "redact_answer_context",
     "register_answer_validator",
     "register_cross_field_validator",
     "resolve_answer_validator",

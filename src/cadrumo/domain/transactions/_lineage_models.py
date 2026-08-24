@@ -22,11 +22,11 @@ from ...core import OBJECT_TUPLE_ADAPTER, Hex64Str
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.hashing import sha256_hex
 from ...core.identity import TransactionId
+from ...core.time import parse_iso_datetime
 from .._identifiers import canonical_decimal_string
 from ._enums import BusinessClassification, SplitRole, TransactionLifecycleState
 from ._errors import TransactionValidationError
 from ._model_validation import (
-    parse_datetime,
     parse_required_aware_datetime,
     require_aware_datetime,
     trim_lineage_text,
@@ -136,7 +136,7 @@ class ClassificationHistoryEntry(BaseModel):
             payload["business_pct"] = Decimal(raw_business_pct)
         raw_classified_at = payload.get("classified_at")
         if isinstance(raw_classified_at, str):
-            payload["classified_at"] = parse_datetime(raw_classified_at)
+            payload["classified_at"] = parse_iso_datetime(raw_classified_at)
         raw_confidence = payload.get("confidence")
         if isinstance(raw_confidence, str):
             payload["confidence"] = Decimal(raw_confidence)

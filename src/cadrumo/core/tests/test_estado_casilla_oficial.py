@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from ... import core
-from ...tests._inventory import modules_declaring_class
+from ...tests import modules_declaring_class
 from .. import DirectoryEntryKind, EstadoCasillaOficial, scan_directory
 from .. import _estado_casilla_oficial as owner
 

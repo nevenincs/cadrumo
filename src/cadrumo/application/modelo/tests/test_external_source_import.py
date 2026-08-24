@@ -11,9 +11,14 @@ from ....adapters.persistence.storage import SecureObjectRevisionConflictError
 from ....core import Period
 from ....domain.buckets import BucketEventType
 from ....domain.modelos import CalculationRevisionAmendmentKind, ExternalEvidenceKind
-from ...calculations import CalculationObservationRepository, ObservationSourceKind
-from ...calculations._cross_period_clean_state import _filing_external_evidence_blockers
-from ...calculations._cross_period_models import CrossPeriodCleanStateBlocker
+from ...calculations import (
+    CalculationObservationRepository,
+    CrossPeriodCleanStateBlocker,
+    ObservationSourceKind,
+)
+from ...calculations import (
+    filing_external_evidence_blockers as _filing_external_evidence_blockers,
+)
 from .. import (
     ExternalFilingBaselineSource,
     amend_modelo_revision,

@@ -69,7 +69,6 @@ __all__ = [
     "derive_category_from_regime_legend",
     "index_regime_legends",
     "match_regime_legend",
-    "normalise_regime_legend_text",
 ]
 
 
@@ -172,31 +171,6 @@ def _validate_legend_derivation_payload(
 _NOTHING_DERIVED: Final = LegendDerivation(outcome=LegendDerivationOutcome.ABSENT)
 
 
-def normalise_regime_legend_text(printed: str) -> str:
-    """Return the form a printed mention is matched under.
-
-    Three normalisations and no more, mirroring the printed-country vocabulary
-    for the same reasons. Case is folded because art. 6.1 fixes the wording
-    rather than the typography. Runs of whitespace collapse to one because a
-    mention set as a line on an invoice arrives with its line break in it.
-    Combining accents are folded away because a text layer or an OCR pass
-    routinely returns ASCII, so ``"inversion del sujeto pasivo"`` is the same
-    printed mention as ``"inversión del sujeto pasivo"``.
-
-    **Folding the accent is not the loosening the match refuses.** That refusal
-    is about PARAPHRASE -- deriving a regime from words the issuer did not
-    print. A dropped diacritic is our own reading pipeline degrading wording the
-    issuer DID print, which is the opposite case: without folding, a document
-    carrying the mandated mention derives nothing and no contradiction can fire
-    on it.
-
-    Punctuation is deliberately NOT stripped, and no token is matched in
-    isolation: every mention is four to nine words, and its distinctiveness is
-    the whole phrase.
-    """
-    return fold_printed_phrase(printed)
-
-
 def index_regime_legends(legends: Iterable[RegimeLegend]) -> dict[str, RegimeLegend]:
     """Index mentions by their normalised form, refusing a table that collides.
 
@@ -222,7 +196,7 @@ def index_regime_legends(legends: Iterable[RegimeLegend]) -> dict[str, RegimeLeg
     """
     indexed: dict[str, RegimeLegend] = {}
     for legend in legends:
-        normalised = normalise_regime_legend_text(legend.phrase)
+        normalised = fold_printed_phrase(legend.phrase)
         if not normalised:
             raise ValueError(f"the mention for {legend.provision} normalises to nothing and can match anything")
         claimed = indexed.get(normalised)
@@ -247,7 +221,7 @@ def _regime_legends_by_normalised_phrase() -> dict[str, RegimeLegend]:
 def match_regime_legend(printed: str | None) -> RegimeLegend | None:
     """Return the mandated mention *printed* contains, or ``None``.
 
-    Matched under :func:`normalise_regime_legend_text`, which folds case,
+    Matched under :func:`core.text_fold.fold_printed_phrase`, which folds case,
     collapses whitespace and folds combining accents away. Nothing beyond that
     is normalised: a phrase the regulation does not fix is not a mandated
     mention, and loosening the match to catch PARAPHRASES would derive a regime
@@ -268,7 +242,7 @@ def match_regime_legend(printed: str | None) -> RegimeLegend | None:
     """
     if printed is None:
         return None
-    folded = normalise_regime_legend_text(printed)
+    folded = fold_printed_phrase(printed)
     if not folded:
         return None
     for phrase, legend in _regime_legends_by_normalised_phrase().items():

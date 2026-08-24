@@ -63,7 +63,7 @@ from typing import TYPE_CHECKING, Final, NamedTuple
 
 import pytest
 
-from ...tests._inventory import SRC_CADRUMO, production_ast_items, repo_relative
+from ...tests import SRC_CADRUMO, production_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

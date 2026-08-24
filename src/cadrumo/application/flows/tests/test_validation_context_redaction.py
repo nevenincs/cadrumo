@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
+from ....core.redaction import redact_validation_context
 from ...wizard._widgets import _redact_validation_context
-from .. import redact_answer_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -27,5 +27,5 @@ def test_flow_and_wizard_share_validation_context_redaction(
     expected: dict[str, object],
 ) -> None:
     """Both caller surfaces remove raw/detail values with identical safe markers."""
-    assert redact_answer_context(context) == expected
+    assert redact_validation_context(context) == expected
     assert _redact_validation_context(context) == expected

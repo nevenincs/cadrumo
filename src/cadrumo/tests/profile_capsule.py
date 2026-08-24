@@ -8,6 +8,7 @@ binds the exact record session around each read or replacement.
 
 from __future__ import annotations
 
+import contextlib
 from base64 import b64encode
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
@@ -25,11 +26,13 @@ from ..adapters.persistence.storage.custody import (
     list_current_profile_custody_capsule_ids,
 )
 from ..adapters.persistence.storage.master_key import current_active_bucket_session, session_serves_bucket
-from ..application.user_profile._capsule_record import ProfileRecordSession
-from ..application.user_profile._lifecycle import ProfileCapsuleLifecycle
-from ..application.user_profile._profile_record_repository import (
+from ..application.user_profile import (
+    ProfileCapsuleLifecycle,
+    ProfileCustodyRecoveryEnvelopePort,
     ProfileRecordRepository,
+    ProfileRecordSession,
     bound_profile_record_session,
+    close_active_profile_record_session,
 )
 from ..core.identity import canonical_profile_bucket_id
 from ..core.paths import effective_storage_root
@@ -87,7 +90,6 @@ def open_test_profile_session(profile_id: str | UUID) -> Iterator[str]:
         BucketSession,
         activate_session,
     )
-    from ..application.user_profile._profile_record_repository import close_active_profile_record_session
     from ..core.config import override_settings
 
     live = current_active_bucket_session()
@@ -146,6 +148,23 @@ def _new_test_envelope(profile_id: UUID) -> ProfileCustodyEnvelope:
             tag_b64=b64encode(second[:16]).decode("ascii"),
         ),
     )
+
+
+@contextmanager
+def _test_recovery_envelope(
+    profile_id: UUID,
+    *,
+    dek: bytes,
+    dek_epoch: str,
+) -> Iterator[ProfileCustodyRecoveryEnvelopePort]:
+    """Mint a production recovery wrapper and bound its secret lifetime."""
+    from ..application.user_profile._recovery_custody import _mint_profile_creation_recovery
+
+    enrollment = _mint_profile_creation_recovery(profile_id=profile_id, dek=dek, dek_epoch=dek_epoch)
+    try:
+        yield enrollment.envelope
+    finally:
+        enrollment.recovery_key.wipe()
 
 
 def _record_session(profile_id: UUID, *, root: Path) -> ProfileRecordSession:
@@ -234,26 +253,24 @@ def replace_test_profile_record(
         if record.setup_state is ProfileSetupState.COMPLETE:
             applied = repository.load(identity)
             if applied.setup_state is not ProfileSetupState.COMPLETE:
-                try:
+                # The caller's facts cannot support the claim, and NO production
+                # path can mint that record either -- COMPLETE asserts that
+                # nothing schema-required is absent. Leaving the record as
+                # applied is the honest answer rather than a silent one: many
+                # fixtures seed a deliberately minimal fact set for the
+                # behaviour under test and never read the state, and a fixture
+                # that DOES depend on it meets the readiness gate's
+                # missing-field refusal, which names what to add. The case this
+                # promotion exists for is the opposite one -- a schema-complete
+                # fact set whose state was dropped, where that gate could only
+                # say "incomplete" and enumerate nothing.
+                with contextlib.suppress(ProfileSchemaValidationError):
                     repository.complete_setup(
                         identity,
                         expected_revision=applied.record_revision,
                         expected_content_digest=applied.content_digest,
                         now=replacement.updated_at,
                     )
-                except ProfileSchemaValidationError:
-                    # The caller's facts cannot support the claim, and NO production
-                    # path can mint that record either -- COMPLETE asserts that
-                    # nothing schema-required is absent. Leaving the record as
-                    # applied is the honest answer rather than a silent one: many
-                    # fixtures seed a deliberately minimal fact set for the
-                    # behaviour under test and never read the state, and a fixture
-                    # that DOES depend on it meets the readiness gate's
-                    # missing-field refusal, which names what to add. The case this
-                    # promotion exists for is the opposite one -- a schema-complete
-                    # fact set whose state was dropped, where that gate could only
-                    # say "incomplete" and enumerate nothing.
-                    pass
         return repository.load(identity)
 
 
@@ -347,15 +364,17 @@ def publish_test_profile_capsule(
     initial = UserProfileRecord(profile_id=str(identity), setup_state=ProfileSetupState.INCOMPLETE)
     session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
     try:
-        ProfileCapsuleLifecycle(root=storage_root).create(
-            label=label,
-            profile_id=identity,
-            password_envelope=envelope,
-            sentinel=create_profile_custody_sentinel(envelope=envelope, dek=dek),
-            data_files={},
-            initial_record=initial,
-            record_session=session,
-        )
+        with _test_recovery_envelope(identity, dek=dek, dek_epoch=envelope.dek_epoch) as recovery_envelope:
+            ProfileCapsuleLifecycle(root=storage_root).create(
+                label=label,
+                profile_id=identity,
+                password_envelope=envelope,
+                sentinel=create_profile_custody_sentinel(envelope=envelope, dek=dek),
+                data_files={},
+                initial_record=initial,
+                record_session=session,
+                recovery_envelope=recovery_envelope,
+            )
     finally:
         session.close()
     return initial
@@ -381,15 +400,17 @@ def seed_test_profile_record(
             previous_record_digest=None,
         )
         try:
-            ProfileCapsuleLifecycle(root=storage_root).create(
-                label=label,
-                profile_id=identity,
-                password_envelope=envelope,
-                sentinel=create_profile_custody_sentinel(envelope=envelope, dek=dek),
-                data_files={},
-                initial_record=initial,
-                record_session=session,
-            )
+            with _test_recovery_envelope(identity, dek=dek, dek_epoch=envelope.dek_epoch) as recovery_envelope:
+                ProfileCapsuleLifecycle(root=storage_root).create(
+                    label=label,
+                    profile_id=identity,
+                    password_envelope=envelope,
+                    sentinel=create_profile_custody_sentinel(envelope=envelope, dek=dek),
+                    data_files={},
+                    initial_record=initial,
+                    record_session=session,
+                    recovery_envelope=recovery_envelope,
+                )
         finally:
             session.close()
         return initial

@@ -34,7 +34,6 @@ from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, FilingRecordId, WorkUnitId
-from ...core.time import now
 from ...domain.buckets import BucketEventObjectType
 
 
@@ -193,11 +192,6 @@ def derive_bundle_id(
     return sha256_hex(canonical)
 
 
-def utcnow() -> datetime:
-    """Return the current UTC timestamp via :func:`core.time.now`."""
-    return now()
-
-
 __all__ = [
     "BundleVerificationState",
     "EvidenceBundle",
@@ -207,5 +201,4 @@ __all__ = [
     "EvidenceRecordRef",
     "VerificationCheck",
     "derive_bundle_id",
-    "utcnow",
 ]

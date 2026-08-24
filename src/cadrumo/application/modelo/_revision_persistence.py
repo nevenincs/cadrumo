@@ -184,7 +184,7 @@ def build_modelo_bucket_event(
     The non-saving counterpart of :func:`emit_modelo_bucket_event`, supplying the
     same :data:`_BUCKET_EVENT_PAYLOAD_VERSION` so a co-committed event cannot
     declare a different payload contract than an emitted one. Pair it with
-    :func:`modelo_bucket_event_write` to commit the event in the same unit of
+    :func:`domain.buckets.bucket_event_history_write` to commit the event in the same unit of
     work as the catalogues it records.
     """
     return _build_domain_bucket_event(
@@ -197,31 +197,6 @@ def build_modelo_bucket_event(
         payload=payload,
         payload_version=_BUCKET_EVENT_PAYLOAD_VERSION,
     )
-
-
-def modelo_bucket_event_write(
-    repository: BucketEventHistoryRepositoryProtocol,
-    events: tuple[BucketEvent, ...],
-) -> SecureObjectWrite:
-    """Return the event-history write appending ``events``, without committing it.
-
-    A modelo state change that saves its catalogues and emits afterwards can come
-    to rest durable-but-unrecorded: the revision, filing record, and advanced
-    work-unit pointer survive while the history has no matching entry and no
-    retryable marker names the gap. Folding this write into the owning
-    catalogue's ``save_with_secure_object_writes`` puts the state and its
-    promised event in one SQL unit of work, so neither can land without the
-    other.
-
-    Appending is idempotent on content, so re-deriving the same event collapses
-    onto the same ``event_id`` rather than duplicating the entry.
-
-    The shape is not modelo-specific and is no longer implemented here: this
-    delegates to :func:`~cadrumo.domain.buckets.bucket_event_history_write`,
-    which every emitting domain shares. The wrapper stays because the modelo
-    call sites read better naming their own domain.
-    """
-    return bucket_event_history_write(repository, events)
 
 
 def _source_provenance_trace_sha256(source_provenance: tuple[CalculationSourceRef, ...]) -> str:
@@ -446,7 +421,7 @@ def persist_calculation_revision(
                 advanced_work_units,
                 expected_revision_id=work_units_revision_id,
             ),
-            modelo_bucket_event_write(bucket_event_repository, (created_event,)),
+            bucket_event_history_write(bucket_event_repository, (created_event,)),
         ),
         expected_revision_id=revisions_revision_id,
     )
@@ -944,7 +919,7 @@ def persist_filed_revision(
     extra_writes = (
         *extra_writes,
         work_unit_repository.to_secure_object_write(advanced_work_units),
-        modelo_bucket_event_write(bucket_event_repository, tuple(filed_events)),
+        bucket_event_history_write(bucket_event_repository, tuple(filed_events)),
     )
 
     # One unit of work for the whole local filing transition: the filed revision,
@@ -992,7 +967,6 @@ supersede_prior_current_filing = _supersede_prior_current_filing
 __all__ = [
     "build_modelo_bucket_event",
     "emit_modelo_bucket_event",
-    "modelo_bucket_event_write",
     "persist_calculation_revision",
     "persist_filed_revision",
 ]

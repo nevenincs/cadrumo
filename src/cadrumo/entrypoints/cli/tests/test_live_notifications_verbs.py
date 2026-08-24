@@ -11,7 +11,7 @@ from click.testing import Result
 from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.sede import NotificationDocument, RemoteNotification
-from ....application.live.tests._notification_document_support import build_service, sancion_pdf_bytes, served_document
+from ....application.live.tests import build_service, sancion_pdf_bytes, served_document
 from ....core import require_active_bucket_id
 from ....core.hashing import sha256_hex
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture

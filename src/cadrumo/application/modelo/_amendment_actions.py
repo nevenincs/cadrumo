@@ -47,7 +47,14 @@ from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogue
 from ...core import CasillaId, Modelo
 from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now
-from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
+from ...domain.buckets import (
+    BucketEventHistoryRepositoryProtocol,
+    BucketEventObjectType,
+    BucketEventType,
+)
+from ...domain.buckets import (
+    bucket_event_history_write as _bucket_event_write,
+)
 from ...domain.calculations.registry import CasillaObservation, RegistrySnapshot, bundled_authority
 from ...domain.justificante import JustificanteRepositoryProtocol
 from ...domain.modelos import (
@@ -95,7 +102,6 @@ from ._profile_export_binding import resolve_export_identity
 from ._registry_helpers import reject_incomplete_amendment_casillas as _reject_incomplete_amendment_casillas
 from ._registry_helpers import reject_unknown_override_casillas as _reject_unknown_override_casillas
 from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
-from ._revision_persistence import modelo_bucket_event_write as _bucket_event_write
 
 
 def _load_amendment_baseline[CasillaKey](

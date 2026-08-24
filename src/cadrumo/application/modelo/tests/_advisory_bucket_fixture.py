@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from ....tests._bucket_id_fixture import bucket_id  # noqa: F401
+from ....tests import bucket_id  # noqa: F401
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile

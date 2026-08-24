@@ -735,7 +735,7 @@ def _run_instrumentation_probe(storage_root: Path) -> None:
 
     from pydantic import BaseModel
 
-    from cadrumo.adapters.persistence.storage._path_safety import safe_repository_id as aliased_storage_call
+    from cadrumo.adapters.persistence.storage import safe_repository_id as aliased_storage_call
 
     class ProbeModel(BaseModel):
         value: int

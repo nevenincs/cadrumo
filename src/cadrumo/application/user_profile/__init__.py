@@ -656,6 +656,9 @@ if TYPE_CHECKING:
         activate_profile_record_session as activate_profile_record_session,
     )
     from ._profile_record_repository import (
+        bound_profile_record_session as bound_profile_record_session,
+    )
+    from ._profile_record_repository import (
         close_active_profile_record_session as close_active_profile_record_session,
     )
     from ._profile_record_repository import (
@@ -899,6 +902,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfilePassphraseRotationOutcome": "._passphrase_rotation",
     "ProfileRecordRepository": "._profile_record_repository",
     "ProfileRecordSession": "._capsule_record",
+    "bound_profile_record_session": "._profile_record_repository",
     "ProfileRecoveryArtifactReceipt": "._recovery_custody",
     "ProfileRecoveryEnrollment": "._recovery_custody",
     "ProfileRegistrationConflictError": "._registration",
@@ -1137,6 +1141,7 @@ __all__ = [
     "apply_cotejo",
     "apply_profile_fact_changes",
     "bind_resumed_profile_session",
+    "bound_profile_record_session",
     "build_profile_overview",
     "build_profile_preflight_requirement",
     "bundle_data_categories",

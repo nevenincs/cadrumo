@@ -24,10 +24,10 @@ import pytest
 
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
+    ExportRecordDefinition,
     derive_export_layouts_from_bindings,
     load_registry_tree,
 )
-from ....domain.calculations.registry._schema import ExportRecordDefinition
 from .._record_renderer import _record_render_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

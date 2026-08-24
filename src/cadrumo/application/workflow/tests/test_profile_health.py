@@ -19,10 +19,12 @@ from ....adapters.persistence.storage.custody import (
     create_profile_custody_sentinel,
 )
 from ....application.state_projection import _build_active_profile
-from ....application.user_profile import active_profile_pointer_transaction
-from ....application.user_profile._capsule_record import ProfileRecordSession
-from ....application.user_profile._lifecycle import ProfileCapsuleLifecycle
-from ....application.user_profile._profile_record_repository import bound_profile_record_session
+from ....application.user_profile import (
+    ProfileCapsuleLifecycle,
+    ProfileRecordSession,
+    active_profile_pointer_transaction,
+    bound_profile_record_session,
+)
 from ....core import BucketPointer, read_pointer, write_pointer
 from ....core.config import override_settings
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord

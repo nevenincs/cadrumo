@@ -130,6 +130,9 @@ _TUI_MODULE_DISPOSITIONS: Final[dict[str, TuiMigrationDisposition]] = {
     f"{LEGACY_TUI_PACKAGE}._registration_screen": TuiMigrationDisposition(
         "interface", f"{CANONICAL_TUI_PACKAGE}.secret.registration"
     ),
+    f"{LEGACY_TUI_PACKAGE}._recovery_words_screen": TuiMigrationDisposition(
+        "interface", f"{CANONICAL_TUI_PACKAGE}.secret.registration"
+    ),
     f"{LEGACY_TUI_PACKAGE}._review_screen": TuiMigrationDisposition(
         "interface", f"{CANONICAL_TUI_PACKAGE}.flows.review"
     ),
@@ -155,8 +158,8 @@ _TUI_SYMBOL_DISPOSITIONS: Final[dict[tuple[str, str], TuiMigrationDisposition]] 
     )
 }
 
-_ACCEPTED_TUI_MIGRATION_IDENTITY_SHA256: Final[str] = "4eda54f61f2d91912366af74bc8684732afce84ed2fb4e45c11c19ff28ee549f"
-_ACCEPTED_TUI_TEXTUAL_EDGE_SHA256: Final[str] = "ff45a174acd6c53d0f6265770462d9b28b65b03dd72127f8a9e64de0a63b7ebe"
+_ACCEPTED_TUI_MIGRATION_IDENTITY_SHA256: Final[str] = "ec3ce967729972b09bd128616ac36acf1c199ca029c4aa8abb1579599a1b0b55"
+_ACCEPTED_TUI_TEXTUAL_EDGE_SHA256: Final[str] = "89b92f93dd8e3ee73c472dfd60e6d9c32978155457b5da52a7b6083d89e4e41e"
 
 
 # ---------------------------------------------------------------------------

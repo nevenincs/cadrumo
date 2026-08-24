@@ -58,10 +58,6 @@ def _json_default(value: object) -> str:
     return str(value)
 
 
-def parse_datetime(value: str) -> datetime:
-    return parse_iso_datetime(value)
-
-
 def require_aware_datetime(value: datetime) -> datetime:
     try:
         return validate_utc_aware(value)
@@ -123,7 +119,7 @@ def trim_lineage_text(value: str | None) -> str | None:
 
 def parse_required_aware_datetime(value: object, *, field_name: str) -> datetime:
     if isinstance(value, str):
-        value = parse_datetime(value)
+        value = parse_iso_datetime(value)
     if not isinstance(value, datetime):
         raise TransactionValidationError(f"{field_name} must be a datetime")
     return require_aware_datetime(value)

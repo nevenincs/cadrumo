@@ -41,6 +41,7 @@ from ...core.config import Settings
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.identity import CalculationRevisionId
+from ...core.time import now
 from ._models import (
     BundleVerificationState,
     EvidenceBundle,
@@ -50,7 +51,6 @@ from ._models import (
     EvidenceRecordRef,
     VerificationCheck,
     derive_bundle_id,
-    utcnow,
 )
 
 _MANIFEST_VERSION = 1
@@ -256,7 +256,7 @@ class EvidenceBundleService:
             records=records,
             verification_state=BundleVerificationState.PENDING,
             completeness_ratio=1.0 if records else 0.0,
-            created_at=utcnow(),
+            created_at=now(),
             notes=notes,
         )
         self._repository_for(bucket_id).save(bundle)

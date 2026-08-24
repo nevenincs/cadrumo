@@ -30,8 +30,8 @@ from ....core.resources import resources
 from ....domain.calculations.registry import (
     m303_regimen_simplificado_annual_summary_requirement,
     resolve_m303_regimen_simplificado_snapshot,
+    selector_as_dict,
 )
-from ....domain.calculations.registry._binding_selector_utils import selector_as_dict
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import (

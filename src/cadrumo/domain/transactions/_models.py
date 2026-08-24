@@ -34,7 +34,7 @@ from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, TransactionId
 from ...core.money import round_to_cents
 from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction, parse_iso8601_date
-from ...core.time import now
+from ...core.time import now, parse_iso_datetime
 from .._identifiers import canonical_decimal_string
 from ..iva import (
     EUMemberState,
@@ -71,7 +71,6 @@ from ._m210_income_classification import M210IncomeClassification
 from ._model_validation import (
     coerce_raw_transaction,
     normalize_identifier_tuple,
-    parse_datetime,
     require_aware_datetime,
     validate_business_pct_coupling,
     validate_classified_by_shape,
@@ -611,7 +610,7 @@ class Transaction(BaseModel):
     def _coerce_datetime_field(cls, value: object) -> object:
         """Accept a JSON-decoded ISO-8601 datetime string alongside a real ``datetime``."""
         if isinstance(value, str):
-            return parse_datetime(value)
+            return parse_iso_datetime(value)
         return value
 
     @field_validator(

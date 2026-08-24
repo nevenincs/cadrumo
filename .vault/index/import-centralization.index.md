@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#import-centralization'
 date: '2026-08-23'
-modified: '2026-08-23'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:56d244187eb0730c69cc8c778f38108e8d38cb8017ec5f2107b89e1e32ab07b2'
+body_hash: 'sha256:16463f7c3616577e5ddfdf968c7594ea5950898a37d27cecb7db26253645f785'
 related:
   - '[[2026-07-01-import-centralization-W01-P02-S01]]'
   - '[[2026-07-01-import-centralization-W01-P03-S02]]'
@@ -402,6 +402,7 @@ related:
   - '[[2026-07-01-import-centralization-research]]'
   - '[[2026-07-02-import-centralization-audit]]'
   - '[[2026-07-02-import-centralization-exec]]'
+  - '[[2026-08-24-import-centralization-audit]]'
 ---
 
 # `import-centralization` feature index
@@ -417,6 +418,7 @@ Auto-generated index of all documents tagged with `#import-centralization`.
 ### audit
 
 - `2026-07-02-import-centralization-audit` - `import-centralization` audit: `closeout synthesis of the structural code review and the fresh-context honesty review`
+- `2026-08-24-import-centralization-audit` - `import-centralization` audit: `S403 import-integrity closure review`
 
 ### exec
 
