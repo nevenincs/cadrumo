@@ -9072,3 +9072,48 @@ The audit and repair are a scratch tool rather than a committed one: the
 underlying fault is whatever keeps racing installs against live processes, and
 a repair script in the repository would institutionalise working around it
 instead of fixing it.
+
+### The export cluster is the top remaining lever, and here is what it is NOT
+
+Ten of the eleven `test_modelo_review_package_verb` failures and three of
+`test_modelo_export_verb`'s share one root, so this single cause is worth more
+than a dozen tests. All of them die building a modelo 111 package through
+`build_review_package_via_cli`, with:
+
+    Fallo. No se pudo escribir el archivo de exportación para la revisión de
+    cálculo <id>.
+      cause_type: FilingProducerSnapshotError
+
+`_export.py:754` catches `(FilingProducerSnapshotError, ValueError)` and
+re-raises `ModeloExportError` carrying only `cause_type`, so the actual message
+never reaches the operator or the test output. That redaction is the whole
+difficulty.
+
+Ruled out, each at real cost, so the next attempt does not repeat them:
+
+- **Not the modelo-303 guards.** The four self-describing raise sites in
+  `application/modelo/_export.py` are all M303-specific (differentiated sectors,
+  bienes de inversión regularisation, simplified-regime scope). The failing
+  exports are 111 and 202, so it is the generic pydantic wrap at
+  `_producer_snapshot.py:1557`.
+- **Not the two account guards.** Neither "domiciliacion requires a charge
+  account" nor "refund disposition requires a refund account" appears anywhere
+  in the captured output.
+- **Not a stale cached result.** `invoke_cached_cli` caches the Click command
+  TREE, not results.
+- **Not reachable by patching `FilingProducerSnapshotError.__init__`** from a
+  pytest plugin. Two attempts printed nothing; the first was silently an
+  INTERNALERROR from a wrong import path (`cadrumo.application.modelo._errors`
+  does not hold `ModeloExportError`; `cadrumo.domain.modelos` does), and a grep
+  filtered that away. **A plugin that prints nothing has not proven anything
+  until it also prints a load marker** — that mistake cost two rounds.
+- **Not reproducible from a scratch pytest module** without more scaffolding
+  than it is worth: `seed_exportable_modelo_revision` needs the seeded, selected
+  profile the real module's fixture chain provides, and fails with "no active
+  profile is selected" outside it.
+
+The cheap next step is therefore NOT another indirect probe. It is to widen the
+redaction at the source for one run — the `except` block already holds `exc`,
+so adding it to the context temporarily, or catching narrower, names the field
+immediately. Do it as a deliberate, announced edit to a tracked file, revert it
+in the same session, and take the reading from a healthy environment.
