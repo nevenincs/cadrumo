@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:bdc890fe6c2aaad1a211be4050c513411cec82952cfb1681be9681cfc8f68642'
+body_hash: 'sha256:1097712403364f3a36b5fd2a9876eb994b02c2a503a562c1011ae4f9916932a0'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -39,6 +39,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S58]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S59]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S60]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S61]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S62]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
@@ -75,6 +76,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s59-embedded-envelope-source-kind-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s60-independent-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s60-live-export-proof-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s62-post-review-audit]]'
 ---
 
 # `registry-completeness-closure` feature index
@@ -121,6 +123,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s59-embedded-envelope-source-kind-review-audit` - `registry-completeness-closure` audit: `S59 embedded envelope source kind review`
 - `2026-08-24-registry-completeness-closure-s60-independent-post-review-audit` - `registry-completeness-closure` audit: `S60 independent post-review`
 - `2026-08-24-registry-completeness-closure-s60-live-export-proof-review-audit` - `registry-completeness-closure` audit: `S60 live export proof review`
+- `2026-08-24-registry-completeness-closure-s62-post-review-audit` - `registry-completeness-closure` audit: `S62 post review`
 
 ### exec
 
@@ -155,6 +158,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P02-S58` - Validate and live-rehash filing-envelope and auxiliary-envelope-header source identities and digests against the catalogue, with missing, mismatched, and stale-digest mutation proof
 - `2026-08-24-registry-completeness-closure-W01-P02-S59` - Mutate filing-envelope and auxiliary-header catalogue source kinds away from record_design and prove snapshot refusal plus a weakened-guard mutation bite.
 - `2026-08-24-registry-completeness-closure-W01-P02-S60` - Replace the passive filing-export proof catalogue with a live fail-closed authority that re-hashes canonical manifest, semantic-map, render-profile, loader-semantic, generated-output, and emitted-payload evidence and verifies production export_draft offsets and execution at composition time, with fabricated and stale catalogue mutation regressions including Modelo 111
+- `2026-08-24-registry-completeness-closure-W01-P02-S61` - Require distinct official offset-probe identities and emitted byte positions in live filing-export acceptance, and prove duplicate probes cannot inflate checked-offset evidence with a mutation bite.
 - `2026-08-24-registry-completeness-closure-W01-P02-S62` - Remove the S60 audit and execution-record EOF blank lines and re-attest the committed Step surface with the scoped diff check.
 
 ### plan
