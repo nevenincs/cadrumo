@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:71fec88bca27a7178bf6e422aee17683d8b1b70ef60d1d5c7277dc3f88aaa8b8'
+body_hash: 'sha256:4e5f8767df5606eae4c2648c7570da7ccd507eeae23afcc3bea33c518f447637'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -60,6 +60,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-modelo-036-2025-filing-authority-reference]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-038-design-extraction-reference]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-136-2026-filing-boundary-reference]]'
+  - '[[2026-08-24-registry-completeness-closure-modelo-182-design-era-and-donor-row-reference]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
   - '[[2026-08-24-registry-completeness-closure-s01-schema-family-coverage-review-audit]]'
@@ -74,6 +75,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s11-source-connectivity-ratchet-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s12-independent-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s13-independent-post-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s14-independent-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s41-cache-key-type-review-audit]]'
@@ -138,6 +140,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s11-source-connectivity-ratchet-audit` - `registry-completeness-closure` audit: `s11 source connectivity ratchet`
 - `2026-08-24-registry-completeness-closure-s12-independent-post-review-audit` - `registry-completeness-closure` audit: `Modelo 036 authority adjudication independent post-review`
 - `2026-08-24-registry-completeness-closure-s13-independent-post-review-audit` - `registry-completeness-closure` audit: `S13 independent Modelo 038 post-review`
+- `2026-08-24-registry-completeness-closure-s14-independent-post-review-audit` - `registry-completeness-closure` audit: `S14 independent Modelo 136 post-review`
 - `2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot authority-grade enforcement review`
 - `2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot-grade enforcement review`
 - `2026-08-24-registry-completeness-closure-s41-cache-key-type-review-audit` - `registry-completeness-closure` audit: `S41 cache-key type review`
@@ -237,6 +240,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-modelo-036-2025-filing-authority-reference` - `registry-completeness-closure` reference: `Modelo 036 2025 filing authority adjudication`
 - `2026-08-24-registry-completeness-closure-modelo-038-design-extraction-reference` - `registry-completeness-closure` reference: `modelo 038 design extraction`
 - `2026-08-24-registry-completeness-closure-modelo-136-2026-filing-boundary-reference` - `registry-completeness-closure` reference: `modelo 136 2026 filing boundary`
+- `2026-08-24-registry-completeness-closure-modelo-182-design-era-and-donor-row-reference` - `registry-completeness-closure` reference: `Modelo 182 design-era and donor-row filing boundary`
 
 ### research
 
