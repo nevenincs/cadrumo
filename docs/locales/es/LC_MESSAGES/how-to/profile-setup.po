@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 18:31+0200\n"
+"POT-Creation-Date: 2026-08-24 14:46+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -243,8 +243,18 @@ msgstr ""
 
 #: ../../how-to/profile-setup.md:102
 msgid ""
-"The wizard prompts for your master-key passphrase before it stores "
-"anything. For unattended runs, see [Run without a passphrase prompt"
+"The wizard prompts for the profile passphrase before it stores anything. "
+"It then shows a 24-word recovery phrase and requires exact re-entry "
+"before it publishes the profile. Creation refuses if this verification "
+"does not finish. Recovery cannot be added later, and it never "
+"participates in password login."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:107
+#, fuzzy
+msgid ""
+"For unattended runs, provide the separate recovery handoff and "
+"verification channels described in [Run without a passphrase prompt"
 "](protect-data-access.md#run-without-a-passphrase-prompt)."
 msgstr ""
 "El asistente solicita tu frase de contraseña de la clave maestra antes de"
@@ -252,7 +262,7 @@ msgstr ""
 "solicitud de frase de contraseña](protect-data-access.md#run-without-a"
 "-passphrase-prompt)."
 
-#: ../../how-to/profile-setup.md:106
+#: ../../how-to/profile-setup.md:111
 msgid ""
 "Use `--language en`, `es`, `ca`, or `hu` for one command. A profile can "
 "also store its default output language."
@@ -260,11 +270,11 @@ msgstr ""
 "Usa `--language en`, `es`, `ca` o `hu` para un solo comando. Un perfil "
 "también puede guardar su idioma de salida predeterminado."
 
-#: ../../how-to/profile-setup.md:110
+#: ../../how-to/profile-setup.md:115
 msgid "Save now, finish later"
 msgstr ""
 
-#: ../../how-to/profile-setup.md:112
+#: ../../how-to/profile-setup.md:117
 msgid ""
 "Stop a first-time setup at any point and keep what you answered. Choose "
 "*save and exit* on any page: every answer you gave is already stored, and"
@@ -272,7 +282,7 @@ msgid ""
 " flags an incomplete profile so you can spot it later."
 msgstr ""
 
-#: ../../how-to/profile-setup.md:117
+#: ../../how-to/profile-setup.md:122
 msgid ""
 "Resume by running the same create command again with the same profile "
 "name. The wizard picks up where you left off with your earlier answers in"
@@ -281,13 +291,13 @@ msgid ""
 "commands."
 msgstr ""
 
-#: ../../how-to/profile-setup.md:122
+#: ../../how-to/profile-setup.md:127
 msgid ""
 "Descendientes are the one exception on resume: the wizard asks for them "
 "again so the set you confirm is always complete and current."
 msgstr ""
 
-#: ../../how-to/profile-setup.md:125
+#: ../../how-to/profile-setup.md:130
 msgid ""
 "Use flags with `--quiet` when you want a repeatable, scriptable setup, "
 "passing the entity type, tax id, name, and surnames to `aeat config "
@@ -300,7 +310,7 @@ msgstr ""
 "práctico de más abajo](#worked-example-a-natural-person-with-an-activity)"
 " ejecuta una creación automatizada completa."
 
-#: ../../how-to/profile-setup.md:130
+#: ../../how-to/profile-setup.md:135
 msgid ""
 "`--quiet` runs without prompts and uses only the flags you provide. A "
 "`--quiet` run refuses if a required flag is missing and tells you which "
@@ -313,7 +323,7 @@ msgstr ""
 " la identidad de presentación: el identificador fiscal, el tipo de "
 "entidad y el nombre y los apellidos:"
 
-#: ../../how-to/profile-setup.md:140
+#: ../../how-to/profile-setup.md:145
 msgid ""
 "Add `--accept-defaults` when you intentionally want Cadrumo to fill the "
 "questions you omit from its built-in defaults."
@@ -322,11 +332,11 @@ msgstr ""
 "rellene las preguntas que omite con sus valores predeterminados "
 "integrados."
 
-#: ../../how-to/profile-setup.md:144
+#: ../../how-to/profile-setup.md:149
 msgid "Worked example: a natural person with an activity"
 msgstr "Ejemplo práctico: una persona física con una actividad"
 
-#: ../../how-to/profile-setup.md:146
+#: ../../how-to/profile-setup.md:151
 msgid ""
 "This example creates a natural-person profile for an individual with an "
 "economic activity, then inspects and validates it before you rely on it:"
@@ -335,11 +345,11 @@ msgstr ""
 "actividad económica, y luego lo inspecciona y lo valida antes de que te "
 "fíes de él:"
 
-#: ../../how-to/profile-setup.md:153
+#: ../../how-to/profile-setup.md:158
 msgid "The facts setup asks for"
 msgstr "Los datos que pide la configuración"
 
-#: ../../how-to/profile-setup.md:155
+#: ../../how-to/profile-setup.md:160
 msgid ""
 "Setup groups its questions by decision area. These values are stable "
 "command tokens: they're case-sensitive and don't translate. Run `aeat "
@@ -354,19 +364,19 @@ msgstr ""
 "cónyuge, unidad familiar, no residentes e inscripciones que esta guía "
 "resume en lugar de repetir."
 
-#: ../../how-to/profile-setup.md:161
+#: ../../how-to/profile-setup.md:166
 msgid "Who the taxpayer is"
 msgstr "Quién es el contribuyente"
 
-#: ../../how-to/profile-setup.md:163
+#: ../../how-to/profile-setup.md:168
 msgid "Choose the entity type:"
 msgstr "Elige el tipo de entidad:"
 
-#: ../../how-to/profile-setup.md:165
+#: ../../how-to/profile-setup.md:170
 msgid "`natural_person` - an individual."
 msgstr "`natural_person`: un particular."
 
-#: ../../how-to/profile-setup.md:166
+#: ../../how-to/profile-setup.md:171
 msgid ""
 "`legal_entity` - a company. Record its legal form too, such as `sl`, "
 "`sa`, or `cooperativa`."
@@ -374,7 +384,7 @@ msgstr ""
 "`legal_entity`: una empresa. Registra también su forma jurídica, como "
 "`sl`, `sa` o `cooperativa`."
 
-#: ../../how-to/profile-setup.md:168
+#: ../../how-to/profile-setup.md:173
 msgid ""
 "`attribution_entity` - a co-ownership or community of goods whose income "
 "is attributed to its members."
@@ -382,7 +392,7 @@ msgstr ""
 "`attribution_entity`: una copropiedad o comunidad de bienes cuya renta se"
 " atribuye a sus miembros."
 
-#: ../../how-to/profile-setup.md:171
+#: ../../how-to/profile-setup.md:176
 msgid ""
 "For a natural person, list each kind of income that applies, repeating "
 "the flag once per category:"
@@ -390,33 +400,33 @@ msgstr ""
 "Para una persona física, enumera cada tipo de renta que corresponda, "
 "repitiendo la opción una vez por categoría:"
 
-#: ../../how-to/profile-setup.md:174
+#: ../../how-to/profile-setup.md:179
 msgid "`actividad_economica` - business or professional activity."
 msgstr "`actividad_economica`: actividad empresarial o profesional."
 
-#: ../../how-to/profile-setup.md:175
+#: ../../how-to/profile-setup.md:180
 msgid "`trabajo` - salaried employment."
 msgstr "`trabajo`: trabajo por cuenta ajena."
 
-#: ../../how-to/profile-setup.md:176
+#: ../../how-to/profile-setup.md:181
 msgid "`capital_inmobiliario` - rental income from property."
 msgstr "`capital_inmobiliario`: rendimientos del alquiler de inmuebles."
 
-#: ../../how-to/profile-setup.md:177
+#: ../../how-to/profile-setup.md:182
 msgid "`capital_mobiliario` - investment income such as dividends or interest."
 msgstr ""
 "`capital_mobiliario`: rendimientos de inversiones como dividendos o "
 "intereses."
 
-#: ../../how-to/profile-setup.md:178
+#: ../../how-to/profile-setup.md:183
 msgid "`ganancias_patrimoniales` - capital gains."
 msgstr "`ganancias_patrimoniales`: ganancias patrimoniales."
 
-#: ../../how-to/profile-setup.md:179
+#: ../../how-to/profile-setup.md:184
 msgid "`pension` - a retirement or disability pension."
 msgstr "`pension`: una pensión de jubilación o de incapacidad."
 
-#: ../../how-to/profile-setup.md:181
+#: ../../how-to/profile-setup.md:186
 msgid ""
 "Choose `actividad_economica` only when the taxpayer runs an activity. A "
 "pure landlord, a salaried-only taxpayer, or a pensioner with no activity "
@@ -426,7 +436,7 @@ msgstr ""
 "actividad. Un simple arrendador, un contribuyente solo asalariado o un "
 "pensionista sin actividad no deben seleccionarlo."
 
-#: ../../how-to/profile-setup.md:185
+#: ../../how-to/profile-setup.md:190
 msgid ""
 "For an activity, record how IRPF estimates its yield. Direct estimation "
 "is the default and files Modelo 130. Use `--irpf-estimation-regime "
@@ -438,11 +448,11 @@ msgstr ""
 "`--irpf-estimation-regime objetiva` para el régimen de estimación "
 "objetiva (módulos), que presenta el Modelo 131 en su lugar."
 
-#: ../../how-to/profile-setup.md:189
+#: ../../how-to/profile-setup.md:194
 msgid "Identity"
 msgstr "Identidad"
 
-#: ../../how-to/profile-setup.md:191
+#: ../../how-to/profile-setup.md:196
 msgid ""
 "The tax identifier (NIF, CIF, DNI, or NIE) is required. Spanish citizens "
 "use their DNI as their NIF; foreign individuals use their NIE; companies "
@@ -456,11 +466,11 @@ msgstr ""
 "apellidos (o el nombre visible de la entidad), la actividad económica "
 "cuando la haya y el código postal del domicilio fiscal."
 
-#: ../../how-to/profile-setup.md:196
+#: ../../how-to/profile-setup.md:201
 msgid "Where the taxpayer is resident"
 msgstr "Dónde reside el contribuyente"
 
-#: ../../how-to/profile-setup.md:198
+#: ../../how-to/profile-setup.md:203
 msgid ""
 "For a Spanish IRPF (personal income tax) resident, set the autonomous "
 "community (`--tax-residence-ccaa`), such as `madrid` or `cataluna`."
@@ -469,7 +479,7 @@ msgstr ""
 " Físicas) español, establece la comunidad autónoma (`--tax-residence-"
 "ccaa`), como `madrid` o `cataluna`."
 
-#: ../../how-to/profile-setup.md:201
+#: ../../how-to/profile-setup.md:206
 msgid ""
 "This tool does not model the foral regimes. Setting the community to "
 "`pais_vasco` or `navarra` is refused, because residents there file with "
@@ -481,7 +491,7 @@ msgstr ""
 "presentan ante su *Hacienda Foral* bajo el *Concierto Económico*, no ante"
 " la AEAT:"
 
-#: ../../how-to/profile-setup.md:211
+#: ../../how-to/profile-setup.md:216
 msgid ""
 "For a non-resident, set `--fiscal-residency non_resident_irnr` (not "
 "`--tax-residence-ccaa`), then supply the country of residence with "
@@ -495,25 +505,25 @@ msgstr ""
 "y, cuando sea necesario, un representante fiscal con `--representante-"
 "fiscal-nif` y `--representante-fiscal-nombre`."
 
-#: ../../how-to/profile-setup.md:217
+#: ../../how-to/profile-setup.md:222
 msgid "Which IVA regime applies"
 msgstr "Qué régimen de IVA corresponde"
 
-#: ../../how-to/profile-setup.md:219
+#: ../../how-to/profile-setup.md:224
 msgid "Set `--iva-regime` to the taxpayer's IVA regime:"
 msgstr "Establece `--iva-regime` con el régimen de IVA del contribuyente:"
 
-#: ../../how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:226
 msgid "`GENERAL` - the standard regime; files quarterly IVA through Modelo 303."
 msgstr ""
 "`GENERAL`: el régimen estándar; presenta el IVA trimestral mediante el "
 "Modelo 303."
 
-#: ../../how-to/profile-setup.md:222
+#: ../../how-to/profile-setup.md:227
 msgid "`SIMPLIFICADO` - the simplified, module-based regime."
 msgstr "`SIMPLIFICADO`: el régimen simplificado, basado en módulos."
 
-#: ../../how-to/profile-setup.md:223
+#: ../../how-to/profile-setup.md:228
 msgid ""
 "`RECARGO_EQUIVALENCIA` - the equivalence surcharge for qualifying "
 "retailers."
@@ -521,15 +531,15 @@ msgstr ""
 "`RECARGO_EQUIVALENCIA`: el recargo de equivalencia para los comerciantes "
 "minoristas que cumplan los requisitos."
 
-#: ../../how-to/profile-setup.md:224
+#: ../../how-to/profile-setup.md:229
 msgid "`REAGP` - the special regime for agriculture, livestock, and fishing."
 msgstr "`REAGP`: el régimen especial de la agricultura, la ganadería y la pesca."
 
-#: ../../how-to/profile-setup.md:225
+#: ../../how-to/profile-setup.md:230
 msgid "`EXENTO` - exempt activities, such as some education or healthcare."
 msgstr "`EXENTO`: actividades exentas, como algunas de enseñanza o sanidad."
 
-#: ../../how-to/profile-setup.md:227
+#: ../../how-to/profile-setup.md:232
 msgid ""
 "Record any IVA enrollments that apply, such as ROI (intra-community "
 "operators) or OSS (one-stop-shop for cross-border B2C sales)."
@@ -538,11 +548,11 @@ msgstr ""
 "(operadores intracomunitarios) o el OSS (ventanilla única para ventas "
 "transfronterizas B2C)."
 
-#: ../../how-to/profile-setup.md:230
+#: ../../how-to/profile-setup.md:235
 msgid "Which recurring obligations apply"
 msgstr "Qué obligaciones recurrentes corresponden"
 
-#: ../../how-to/profile-setup.md:232
+#: ../../how-to/profile-setup.md:237
 msgid ""
 "These facts decide which forms the taxpayer must file. Record the ones "
 "that are true:"
@@ -550,7 +560,7 @@ msgstr ""
 "Estos datos deciden qué formularios debe presentar el contribuyente. "
 "Registra los que sean ciertos:"
 
-#: ../../how-to/profile-setup.md:235
+#: ../../how-to/profile-setup.md:240
 msgid ""
 "`--has-employees` or `--pays-professionals-with-retencion` - pays "
 "salaries or professional fees with withholding."
@@ -558,7 +568,7 @@ msgstr ""
 "`--has-employees` o `--pays-professionals-with-retencion`: paga salarios "
 "u honorarios profesionales con retención."
 
-#: ../../how-to/profile-setup.md:237
+#: ../../how-to/profile-setup.md:242
 msgid ""
 "`--pays-rent-with-retencion` - pays business-premises rent with "
 "withholding."
@@ -566,11 +576,11 @@ msgstr ""
 "`--pays-rent-with-retencion`: paga el alquiler de locales de negocio con "
 "retención."
 
-#: ../../how-to/profile-setup.md:238
+#: ../../how-to/profile-setup.md:243
 msgid "`--does-intracomunitario` - trades with businesses in other EU countries."
 msgstr "`--does-intracomunitario`: opera con empresas de otros países de la UE."
 
-#: ../../how-to/profile-setup.md:239
+#: ../../how-to/profile-setup.md:244
 msgid ""
 "`--third-party-transactions-above-347-threshold` - transactions with "
 "third parties exceed the Modelo 347 threshold."
@@ -578,7 +588,7 @@ msgstr ""
 "`--third-party-transactions-above-347-threshold`: las operaciones con "
 "terceros superan el umbral del Modelo 347."
 
-#: ../../how-to/profile-setup.md:241
+#: ../../how-to/profile-setup.md:246
 msgid ""
 "`--bienes-extranjero-above-threshold` - foreign assets exceed the legal "
 "threshold."
@@ -586,7 +596,7 @@ msgstr ""
 "`--bienes-extranjero-above-threshold`: los bienes en el extranjero "
 "superan el umbral legal."
 
-#: ../../how-to/profile-setup.md:243
+#: ../../how-to/profile-setup.md:248
 msgid ""
 "`--art109-activity-income-withholding-ge-70pct` - the Art. 109 RIRPF 70 "
 "percent income-coverage exception applies for covered professional, "
@@ -599,7 +609,7 @@ msgstr ""
 " o forestales. Para los inicios de actividad, registra el dato de "
 "cobertura para el periodo de pago actual."
 
-#: ../../how-to/profile-setup.md:248
+#: ../../how-to/profile-setup.md:253
 msgid ""
 "Leaving an obligation flag unset is not the same as marking it false. "
 "When a fact is undeclared, the readiness check reports the related form "
@@ -612,11 +622,11 @@ msgstr ""
 "puede determinar), no como *no aplicable*. Registra cada dato que "
 "conozca."
 
-#: ../../how-to/profile-setup.md:252
+#: ../../how-to/profile-setup.md:257
 msgid "Check your facts before you calculate"
 msgstr "Comprueba tus datos antes de calcular"
 
-#: ../../how-to/profile-setup.md:254
+#: ../../how-to/profile-setup.md:259
 msgid ""
 "A wrong or missing fact produces a wrong filing. Confirm the profile "
 "before you calculate a modelo. The example shows the active profile's "
@@ -630,7 +640,7 @@ msgstr ""
 " esquema, y luego comprueba si el perfil contiene los datos que un "
 "formulario concreto necesita para un contexto de presentación concreto:"
 
-#: ../../how-to/profile-setup.md:263
+#: ../../how-to/profile-setup.md:268
 msgid ""
 "`preflight` names the missing fields for that `(modelo, filing-year, "
 "period)` context. Use [Choose which modelo to file](choose-modelo.md) to "
@@ -642,11 +652,11 @@ msgstr ""
 "](choose-modelo.md) para encontrar los códigos de periodo que un modelo "
 "acepta. Corrige cualquier dato erróneo con `edit` antes de continuar."
 
-#: ../../how-to/profile-setup.md:267
+#: ../../how-to/profile-setup.md:272
 msgid "How your facts decide which forms apply"
 msgstr "Cómo deciden tus datos qué formularios corresponden"
 
-#: ../../how-to/profile-setup.md:269
+#: ../../how-to/profile-setup.md:274
 msgid ""
 "The profile facts you recorded determine which modelos the taxpayer must "
 "file. Use this mapping to sanity-check your profile, then confirm a "
@@ -656,27 +666,27 @@ msgstr ""
 "el contribuyente. Usa esta correspondencia para comprobar la coherencia "
 "de tu perfil, y luego confirma un formulario concreto con `preflight`:"
 
-#: ../../how-to/profile-setup.md:259
+#: ../../how-to/profile-setup.md:264
 msgid "When this is true of the taxpayer"
 msgstr "Cuando esto es cierto del contribuyente"
 
-#: ../../how-to/profile-setup.md:259
+#: ../../how-to/profile-setup.md:264
 msgid "These forms apply"
 msgstr "Estos formularios corresponden"
 
-#: ../../how-to/profile-setup.md:259
+#: ../../how-to/profile-setup.md:264
 msgid "Is a natural person"
 msgstr "Es una persona física"
 
-#: ../../how-to/profile-setup.md:259
+#: ../../how-to/profile-setup.md:264
 msgid "Modelo 100 (annual Renta)"
 msgstr "Modelo 100 (Renta anual)"
 
-#: ../../how-to/profile-setup.md:259
+#: ../../how-to/profile-setup.md:264
 msgid "Is a company"
 msgstr "Es una empresa"
 
-#: ../../how-to/profile-setup.md:259
+#: ../../how-to/profile-setup.md:264
 msgid ""
 "Modelo 200 (annual IS, corporate income tax), Modelo 202 (payments on "
 "account)"
@@ -684,79 +694,79 @@ msgstr ""
 "Modelo 200 (IS anual, impuesto sobre sociedades), Modelo 202 (pagos a "
 "cuenta)"
 
-#: ../../how-to/profile-setup.md:259
+#: ../../how-to/profile-setup.md:264
 msgid "Runs an activity under direct estimation"
 msgstr "Ejerce una actividad en estimación directa"
 
-#: ../../how-to/profile-setup.md:259
+#: ../../how-to/profile-setup.md:264
 msgid "Modelo 130 (quarterly IRPF)"
 msgstr "Modelo 130 (IRPF trimestral)"
 
-#: ../../how-to/profile-setup.md:259
+#: ../../how-to/profile-setup.md:264
 msgid "Runs an activity under objective estimation (módulos)"
 msgstr "Ejerce una actividad en estimación objetiva (módulos)"
 
-#: ../../how-to/profile-setup.md:259
+#: ../../how-to/profile-setup.md:264
 msgid "Modelo 131"
 msgstr "Modelo 131"
 
-#: ../../how-to/profile-setup.md:259
+#: ../../how-to/profile-setup.md:264
 msgid "Art. 109 activity-income coverage exception applies"
 msgstr "Se aplica la excepción de cobertura de renta de actividad del art. 109"
 
-#: ../../how-to/profile-setup.md:259
+#: ../../how-to/profile-setup.md:264
 msgid "Removes the Modelo 130 obligation"
 msgstr "Elimina la obligación del Modelo 130"
 
-#: ../../how-to/profile-setup.md:259
+#: ../../how-to/profile-setup.md:264
 msgid "Charges VAT under the general regime"
 msgstr "Repercute IVA bajo el régimen general"
 
-#: ../../how-to/profile-setup.md:259
+#: ../../how-to/profile-setup.md:264
 msgid "Modelo 303 (quarterly), Modelo 390 (annual)"
 msgstr "Modelo 303 (trimestral), Modelo 390 (anual)"
 
-#: ../../how-to/profile-setup.md:259
+#: ../../how-to/profile-setup.md:264
 msgid "Pays employees or professionals with withholding"
 msgstr "Paga a empleados o profesionales con retención"
 
-#: ../../how-to/profile-setup.md:259
+#: ../../how-to/profile-setup.md:264
 msgid "Modelo 111 (quarterly), Modelo 190 (annual)"
 msgstr "Modelo 111 (trimestral), Modelo 190 (anual)"
 
-#: ../../how-to/profile-setup.md:259
+#: ../../how-to/profile-setup.md:264
 msgid "Pays business-premises rent with withholding"
 msgstr "Paga el alquiler de locales de negocio con retención"
 
-#: ../../how-to/profile-setup.md:259
+#: ../../how-to/profile-setup.md:264
 msgid "Modelo 115 (quarterly), Modelo 180 (annual)"
 msgstr "Modelo 115 (trimestral), Modelo 180 (anual)"
 
-#: ../../how-to/profile-setup.md:259
+#: ../../how-to/profile-setup.md:264
 msgid "Trades with EU businesses"
 msgstr "Opera con empresas de la UE"
 
-#: ../../how-to/profile-setup.md:259
+#: ../../how-to/profile-setup.md:264
 msgid "Modelo 349"
 msgstr "Modelo 349"
 
-#: ../../how-to/profile-setup.md:259
+#: ../../how-to/profile-setup.md:264
 msgid "Has third-party transactions over the 347 threshold"
 msgstr "Tiene operaciones con terceros por encima del umbral del 347"
 
-#: ../../how-to/profile-setup.md:259
+#: ../../how-to/profile-setup.md:264
 msgid "Modelo 347"
 msgstr "Modelo 347"
 
-#: ../../how-to/profile-setup.md:259
+#: ../../how-to/profile-setup.md:264
 msgid "Holds foreign assets over the legal threshold"
 msgstr "Posee bienes en el extranjero por encima del umbral legal"
 
-#: ../../how-to/profile-setup.md:259
+#: ../../how-to/profile-setup.md:264
 msgid "Modelo 720"
 msgstr "Modelo 720"
 
-#: ../../how-to/profile-setup.md:287
+#: ../../how-to/profile-setup.md:292
 msgid ""
 "This is a guide, not the authority. The tool decides applicability from "
 "the full profile and the registry rules. To see what applies to your "
@@ -767,16 +777,16 @@ msgstr ""
 "corresponde a tu perfil, usa [Elige qué modelo presentar](choose-"
 "modelo.md)."
 
-#: ../../how-to/profile-setup.md:292
+#: ../../how-to/profile-setup.md:297
 #, fuzzy
 msgid "Modify your profile"
 msgstr "Mantén tu perfil"
 
-#: ../../how-to/profile-setup.md:294
+#: ../../how-to/profile-setup.md:299
 msgid "Re-run the wizard over an existing profile to change its facts:"
 msgstr ""
 
-#: ../../how-to/profile-setup.md:299
+#: ../../how-to/profile-setup.md:304
 msgid ""
 "Edit mode walks the same pages with your current answers in place. Change"
 " what you need, then confirm the review page. Nothing is written until "
@@ -786,35 +796,35 @@ msgid ""
 "interactive edit, so an edit never silently half-applies."
 msgstr ""
 
-#: ../../how-to/profile-setup.md:306
+#: ../../how-to/profile-setup.md:311
 msgid ""
 "Descendientes are not part of profile edit. Manage them with the "
 "[descendiente command](#manage-your-descendants) below. The edit summary "
 "reminds you of this every time."
 msgstr ""
 
-#: ../../how-to/profile-setup.md:310
+#: ../../how-to/profile-setup.md:315
 msgid ""
 "For a scripted change, pass `--quiet` with only the flags you want to "
 "change; every fact you don't name stays as it was."
 msgstr ""
 
-#: ../../how-to/profile-setup.md:314
+#: ../../how-to/profile-setup.md:319
 msgid "Manage your descendants"
 msgstr ""
 
-#: ../../how-to/profile-setup.md:316
+#: ../../how-to/profile-setup.md:321
 msgid ""
 "Descendientes drive the *mínimo por descendientes* in the annual Renta. "
 "Declare them during first-time setup; manage them afterwards with the "
 "`descendiente` command."
 msgstr ""
 
-#: ../../how-to/profile-setup.md:320
+#: ../../how-to/profile-setup.md:325
 msgid "Open the paged descendant editor:"
 msgstr ""
 
-#: ../../how-to/profile-setup.md:325
+#: ../../how-to/profile-setup.md:330
 msgid ""
 "The editor shows your declared descendientes, lets you change any answer,"
 " add one, or reduce the count, and commits the complete set when you "
@@ -822,11 +832,11 @@ msgid ""
 "stored set always matches exactly what you confirmed."
 msgstr ""
 
-#: ../../how-to/profile-setup.md:330
+#: ../../how-to/profile-setup.md:335
 msgid "Script the same changes with the flag verbs:"
 msgstr ""
 
-#: ../../how-to/profile-setup.md:336
+#: ../../how-to/profile-setup.md:341
 msgid ""
 "`add` takes one `--descendiente` per child as `KEY=VALUE` pairs separated"
 " by commas. `NACIMIENTO` (birth date, `AAAA-MM-DD`) is required; "
@@ -836,7 +846,7 @@ msgid ""
 "`remove` takes the position from `list`, counting from `0`."
 msgstr ""
 
-#: ../../how-to/profile-setup.md:343
+#: ../../how-to/profile-setup.md:348
 msgid ""
 "`MESES_TRABAJO` names *which* months the mother worked, not how many. "
 "Write a month as two digits, a run as `MM-MM`, and separate entries with "
@@ -850,7 +860,7 @@ msgstr ""
 "`MESES_TRABAJO=01;03;09-12` para enero, marzo y de septiembre a "
 "diciembre."
 
-#: ../../how-to/profile-setup.md:348
+#: ../../how-to/profile-setup.md:353
 msgid ""
 "Name the months. The guardería increment counts only the months the "
 "mother worked *and* the child attended, so a count cannot say whether the"
@@ -860,21 +870,21 @@ msgstr ""
 "que la madre trabajó *y* el menor asistió, así que un recuento no puede "
 "indicar si ambos coinciden."
 
-#: ../../how-to/profile-setup.md:351
+#: ../../how-to/profile-setup.md:356
 msgid "Maintain your profile"
 msgstr "Mantén tu perfil"
 
-#: ../../how-to/profile-setup.md:353
+#: ../../how-to/profile-setup.md:358
 msgid ""
 "The following steps edit a fact and back up the profile to a sealed "
 "archive:"
 msgstr ""
 
-#: ../../how-to/profile-setup.md:359
+#: ../../how-to/profile-setup.md:364
 msgid "What each step does:"
 msgstr "Qué hace cada paso:"
 
-#: ../../how-to/profile-setup.md:361
+#: ../../how-to/profile-setup.md:366
 #, fuzzy
 msgid ""
 "**Edit** re-runs the wizard, or changes only the flags you pass with "
@@ -884,7 +894,7 @@ msgstr ""
 "**Edit** cambia solo las opciones que pasas. Ejecuta `show`, `status` o "
 "`validate` de nuevo tras editar."
 
-#: ../../how-to/profile-setup.md:364
+#: ../../how-to/profile-setup.md:369
 msgid ""
 "**Archive export** writes a sealed, encrypted copy of the profile. The "
 "target filename must end with `.cadrumo-bucket.tar.gz`. The archive is "
@@ -894,7 +904,7 @@ msgid ""
 " inspect`."
 msgstr ""
 
-#: ../../how-to/profile-setup.md:370
+#: ../../how-to/profile-setup.md:375
 #, fuzzy
 msgid ""
 "Delete a profile for good with `aeat config profile delete NAME --yes`. "
@@ -904,7 +914,7 @@ msgstr ""
 "**Delete** elimina un perfil para siempre. Si el perfil eliminado era el "
 "activo, Cadrumo borra el puntero del perfil activo."
 
-#: ../../how-to/profile-setup.md:373
+#: ../../how-to/profile-setup.md:378
 #, fuzzy
 msgid ""
 "A sealed archive contains taxpayer data, including the tax identifier, "
@@ -917,7 +927,7 @@ msgstr ""
 "local. Guárdalo como datos fiscales sensibles y no lo adjunte a una "
 "solicitud de soporte salvo que haya eliminado los datos personales."
 
-#: ../../how-to/profile-setup.md:378
+#: ../../how-to/profile-setup.md:383
 msgid ""
 "Sign out without deleting the profile using `aeat config logout`. Logout "
 "closes the active storage session, discards its in-memory keys, disposes "
@@ -928,11 +938,11 @@ msgstr ""
 " claves en memoria, libera los motores de bucket y borra el puntero local"
 " del perfil activo:"
 
-#: ../../how-to/profile-setup.md:386
+#: ../../how-to/profile-setup.md:391
 msgid "Choose your service capabilities"
 msgstr "Elige las capacidades de servicio"
 
-#: ../../how-to/profile-setup.md:388
+#: ../../how-to/profile-setup.md:393
 msgid ""
 "Each profile carries its own opt-in for three optional services. The "
 "setup wizard asks these questions when you create or edit a profile, and "
@@ -944,11 +954,11 @@ msgstr ""
 "perfil, y puede cambiarlas en cualquier momento. Estos pasos muestran la "
 "postura actual, desactivan una capacidad y muestran de nuevo la postura:"
 
-#: ../../how-to/profile-setup.md:397
+#: ../../how-to/profile-setup.md:402
 msgid "The three capabilities are:"
 msgstr "Las tres capacidades son:"
 
-#: ../../how-to/profile-setup.md:399
+#: ../../how-to/profile-setup.md:404
 msgid ""
 "`cloud_evidence_upload` - allow sending sensitive evidence to a cloud LLM"
 " provider. Off by default. Barred for gestor profiles."
@@ -957,19 +967,19 @@ msgstr ""
 " de LLM en la nube. Desactivada por defecto. Vedada para los perfiles de "
 "gestor."
 
-#: ../../how-to/profile-setup.md:401
+#: ../../how-to/profile-setup.md:406
 msgid "`llm_vision` - read invoices with the on-host vision model. On by default."
 msgstr ""
 "`llm_vision`: lee las facturas con el modelo de visión en el equipo. "
 "Activada por defecto."
 
-#: ../../how-to/profile-setup.md:402
+#: ../../how-to/profile-setup.md:407
 msgid "`google_export` - export calculations to Google Sheets. On by default."
 msgstr ""
 "`google_export`: exporta los cálculos a Google Sheets. Activada por "
 "defecto."
 
-#: ../../how-to/profile-setup.md:404
+#: ../../how-to/profile-setup.md:409
 msgid ""
 "Turn any capability on or off with `aeat config profile capabilities "
 "set`. The example turns `llm_vision` off. Pass `cloud_evidence_upload on`"
@@ -982,11 +992,11 @@ msgstr ""
 " de paquete que falten producen el comando de instalación exacto. "
 "Consulta [Instala Cadrumo](../workstation-setup.md) para los extras."
 
-#: ../../how-to/profile-setup.md:409
+#: ../../how-to/profile-setup.md:414
 msgid "See what changed"
 msgstr "Ve qué cambió"
 
-#: ../../how-to/profile-setup.md:411
+#: ../../how-to/profile-setup.md:416
 #, fuzzy
 msgid ""
 "Every change to a profile - creation, edits, imports, classifications, "
@@ -1002,7 +1012,7 @@ msgstr ""
 "cambia a él primero tras el cierre de sesión. El ejemplo crea, renombra y"
 " edita un perfil antes de recorrer y filtrar su historial:"
 
-#: ../../how-to/profile-setup.md:421
+#: ../../how-to/profile-setup.md:426
 msgid ""
 "Repeat `--event-type` to include several types. An unknown type is "
 "refused with the full accepted list, so an empty value is a quick way to "
@@ -1012,7 +1022,7 @@ msgstr ""
 "rechaza con la lista completa de admitidos, así que un valor vacío es una"
 " forma rápida de descubrir el vocabulario."
 
-#: ../../how-to/profile-setup.md:425
+#: ../../how-to/profile-setup.md:430
 msgid ""
 "A rename appears as two events on purpose: `profile.renamed` records that"
 " the data changed, and `bucket.renamed` records that you ran the rename "
@@ -1023,11 +1033,11 @@ msgstr ""
 "registra que ejecutaste la acción de renombrar. Uno responde a «qué "
 "cambió», el otro a «qué se hizo»."
 
-#: ../../how-to/profile-setup.md:429
+#: ../../how-to/profile-setup.md:434
 msgid "If setup looks wrong"
 msgstr "Si la configuración parece incorrecta"
 
-#: ../../how-to/profile-setup.md:431
+#: ../../how-to/profile-setup.md:436
 msgid ""
 "If a command reports no active profile, an invalid field value, or that "
 "you're working under the wrong profile, see [Diagnose and repair your "
@@ -1037,7 +1047,7 @@ msgstr ""
 "no válido o de que estás trabajando bajo el perfil equivocado, consulta "
 "[Diagnostica y repara tu configuración local](troubleshooting.md)."
 
-#: ../../how-to/profile-setup.md:435
+#: ../../how-to/profile-setup.md:440
 msgid ""
 "When the troubleshooting steps don't resolve it, follow [Prepare a "
 "privacy-safe support request](troubleshooting.md#prepare-a-privacy-safe-"
@@ -1050,27 +1060,27 @@ msgstr ""
 "Nombra las salidas que incluir y los datos personales que dejar fuera "
 "antes de llevar el problema al gestor de incidencias del proyecto."
 
-#: ../../how-to/profile-setup.md:441
+#: ../../how-to/profile-setup.md:446
 msgid "Next steps"
 msgstr "Pasos siguientes"
 
-#: ../../how-to/profile-setup.md:443
+#: ../../how-to/profile-setup.md:448
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Importa y gestiona los movimientos](import-bank-statements.md)"
 
-#: ../../how-to/profile-setup.md:444
+#: ../../how-to/profile-setup.md:449
 msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
 msgstr "[Mantén los datos censales del Modelo 036 en tu perfil](censo-update.md)"
 
-#: ../../how-to/profile-setup.md:445
+#: ../../how-to/profile-setup.md:450
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Planifica tu calendario de presentaciones](filing-calendar.md)"
 
-#: ../../how-to/profile-setup.md:446
+#: ../../how-to/profile-setup.md:451
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisa y aporta las entradas de cálculo](review-calculation-values.md)"
 
-#: ../../how-to/profile-setup.md:447
+#: ../../how-to/profile-setup.md:452
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referencia de la CLI](../cli/index.rst)"
 

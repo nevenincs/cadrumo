@@ -13,49 +13,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "active_profile\tdocs-sequence-sandbox\n*\tdocs-sequence-sandbox\tactive\n"
-    },
-    {
-      "argv": [
-        "aeat",
-        "config",
-        "profile",
-        "create",
-        "my-other-profile",
-        "--quiet",
-        "--tax-residence-jurisdiction-scope",
-        "common_regime",
-        "--entity-type",
-        "natural_person",
-        "--tax-id",
-        "87654321X",
-        "--name",
-        "Otra",
-        "--surnames",
-        "Persona Ejemplo"
-      ],
-      "captures": [],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": "Profile\tmy-other-profile\nStatus\tcreated\nActive profile\tmy-other-profile\nNext\taeat app modelo work create\nNo comunidad autónoma was chosen, so madrid was assumed for this profile. Autonomic deductions and the autonomic part of the tax scale are calculated for madrid. Set --tax-residence-ccaa to use a different comunidad.\n"
-    },
-    {
-      "argv": [
-        "aeat",
-        "config",
-        "login",
-        "my-other-profile"
-      ],
-      "captures": [],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "command",
-      "stderr_text": null,
-      "text": "active_profile\tmy-other-profile\nprofile_id\t<profile-id>\nidle_deadline\t2026-04-01T09:15:00+00:00\nabsolute_deadline\t2026-04-01T13:00:00+00:00\nNo usable OS keychain found, so the session cannot be saved; this login applies to the current command only.\n"
+      "text": "active_profile\tdocs-sequence-sandbox\n*\tdocs-sequence-sandbox\n"
     },
     {
       "argv": [
@@ -68,21 +26,21 @@
       ],
       "captures": [],
       "envelope": {
-        "active_profile": "my-other-profile",
+        "active_profile": "docs-sequence-sandbox",
         "command": "config.profile.status",
         "notices": [],
         "result": {
-          "active_profile": "my-other-profile",
-          "activity_present": false,
-          "configured": false,
-          "iva_regime": null,
+          "active_profile": "docs-sequence-sandbox",
+          "activity_present": true,
+          "configured": true,
+          "iva_regime": "GENERAL",
           "precondition_action": null,
-          "profile_id": null,
+          "profile_id": "<profile-id>",
           "profile_record_error": null,
           "profile_record_present": null,
           "registered_profile": null,
           "tax_id_present": true,
-          "tax_residence_ccaa": null
+          "tax_residence_ccaa": ""
         },
         "schema_version": "2",
         "status": "success"

@@ -5,50 +5,8 @@
         "aeat",
         "config",
         "profile",
-        "create",
-        "bruno-2026",
-        "--quiet",
-        "--accept-defaults",
-        "--entity-type",
-        "natural_person",
-        "--tax-id",
-        "22222222J",
-        "--name",
-        "Bruno",
-        "--surnames",
-        "Martin Ruiz",
-        "--irpf-income-categories",
-        "actividad_economica",
-        "--activity",
-        "diseno grafico",
-        "--iva-regime",
-        "GENERAL",
-        "--tax-residence-ccaa",
-        "madrid",
-        "--tax-residence-jurisdiction-scope",
-        "common_regime",
-        "--iva-m303-regime-composition",
-        "general",
-        "--no-iva-redeme-enrolled",
-        "--no-iva-cash-accounting-regime-enrolled",
-        "--no-iva-voluntary-sii-enrolled",
-        "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled"
-      ],
-      "captures": [],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": "Profile 'bruno-2026' created and ready. Reopen it any time with 'aeat config profile edit'.\nNo recovery phrase was created: this run had no terminal to display it on. The passphrase is now the only way into this profile, and recovery cannot be added later.\n"
-    },
-    {
-      "argv": [
-        "aeat",
-        "config",
-        "profile",
         "edit",
-        "bruno-2026",
+        "docs-sequence-sandbox",
         "--quiet",
         "--address-postcode",
         "28013"
@@ -59,22 +17,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "Profile\tbruno-2026\nStatus\tupdated\nNext\taeat app modelo work create\n"
-    },
-    {
-      "argv": [
-        "aeat",
-        "config",
-        "login",
-        "bruno-2026"
-      ],
-      "captures": [],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "command",
-      "stderr_text": null,
-      "text": "active_profile\tbruno-2026\nprofile_id\t<profile-id>\nidle_deadline\t2026-04-01T09:15:00+00:00\nabsolute_deadline\t2026-04-01T13:00:00+00:00\nNo usable OS keychain found, so the session cannot be saved; this login applies to the current command only.\n"
+      "text": "Profile\tdocs-sequence-sandbox\nStatus\tupdated\nNext\taeat app modelo work create\n"
     },
     {
       "argv": [
@@ -85,20 +28,20 @@
         "profile",
         "archive",
         "export",
-        "bruno-2026",
-        "--to",
-        "bruno-2026.cadrumo-bucket.tar.gz"
+        "docs-sequence-sandbox",
+        "--output",
+        "docs-sequence-sandbox.cadrumo-bucket.tar.gz"
       ],
       "captures": [],
       "envelope": {
-        "active_profile": "bruno-2026",
+        "active_profile": "docs-sequence-sandbox",
         "command": "config.profile.archive.export",
         "notices": [],
         "result": {
           "archive_schema_version": 4,
           "bucket_id": "<bucket-id>",
-          "recovery_enrolled": false,
-          "target": "bruno-2026.cadrumo-bucket.tar.gz"
+          "recovery_enrolled": true,
+          "target": "docs-sequence-sandbox.cadrumo-bucket.tar.gz"
         },
         "schema_version": "2",
         "status": "success"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 18:31+0200\n"
+"POT-Creation-Date: 2026-08-23 19:58+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
 "Language: es\n"
@@ -26,7 +26,8 @@ msgstr "Identidad y nomenclatura"
 #, fuzzy
 msgid ""
 "The Agencia Estatal de Administración Tributaria (AEAT) is the external "
-"tax authority. CLI means command-line interface."
+"tax authority. CLI means command-line interface. MCP means Model Context "
+"Protocol."
 msgstr ""
 "La Agencia Estatal de Administración Tributaria (AEAT) es la autoridad "
 "tributaria externa. CLI significa interfaz de línea de comandos. MCP "
@@ -81,6 +82,32 @@ msgid "`nevenincs/cadrumo`"
 msgstr "`nevenincs/cadrumo`"
 
 #: ../../reference/identity-and-naming.md
+msgid "MCP server identity"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+#, fuzzy
+msgid "MCP executable"
+msgstr "Ejecutable de CLI para personas"
+
+#: ../../reference/identity-and-naming.md
+#, fuzzy
+msgid "`cadrumo-mcp`"
+msgstr "`cadrumo`"
+
+#: ../../reference/identity-and-naming.md
+msgid "MCP tool prefix"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "MCP resource scheme"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "Plugin identifier"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
 msgid "Product environment prefix"
 msgstr "Prefijo de entorno del producto"
 
@@ -104,7 +131,7 @@ msgstr "Espacio de nombres de Python complementario"
 msgid "`cadrumo_data`"
 msgstr "`cadrumo_data`"
 
-#: ../../reference/identity-and-naming.md:19
+#: ../../reference/identity-and-naming.md:24
 msgid ""
 "These values identify one product. There is no alternate human CLI "
 "spelling or Python import alias."
@@ -112,7 +139,7 @@ msgstr ""
 "Estos valores identifican un único producto. No existe una grafía "
 "alternativa de la CLI para personas ni un alias de importación de Python."
 
-#: ../../reference/identity-and-naming.md:22
+#: ../../reference/identity-and-naming.md:27
 msgid "Product and authority names"
 msgstr "Nombres de producto y de la autoridad"
 
@@ -160,7 +187,7 @@ msgstr ""
 "portal de la AEAT, credenciales de la AEAT, fichero oficial de la AEAT, "
 "fuente legal de la AEAT, taxonomía de la AEAT"
 
-#: ../../reference/identity-and-naming.md:29
+#: ../../reference/identity-and-naming.md:34
 msgid ""
 "AEAT is an external authority and counterparty, not the application name."
 " Authority-owned terms such as *modelo*, *casilla*, *justificante*, and "

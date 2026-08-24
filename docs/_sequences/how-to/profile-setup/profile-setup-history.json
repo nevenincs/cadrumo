@@ -5,137 +5,16 @@
         "aeat",
         "config",
         "profile",
-        "create",
-        "carla-2026",
-        "--quiet",
-        "--tax-residence-jurisdiction-scope",
-        "common_regime",
-        "--entity-type",
-        "natural_person",
-        "--tax-id",
-        "44444444A",
-        "--name",
-        "Carla",
-        "--surnames",
-        "Lopez Sanz"
-      ],
-      "captures": [],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": "Profile\tcarla-2026\nStatus\tcreated\nActive profile\tcarla-2026\nNext\taeat app modelo work create\nNo comunidad autónoma was chosen, so madrid was assumed for this profile. Autonomic deductions and the autonomic part of the tax scale are calculated for madrid. Set --tax-residence-ccaa to use a different comunidad.\n"
-    },
-    {
-      "argv": [
-        "aeat",
-        "config",
-        "profile",
-        "rename",
-        "carla-2026",
-        "carla-real"
-      ],
-      "captures": [],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": "profile_id\t<profile-id>\nprevious_display_name\tcarla-2026\ndisplay_name\tcarla-real\n"
-    },
-    {
-      "argv": [
-        "aeat",
-        "config",
-        "profile",
-        "edit",
-        "carla-real",
-        "--quiet",
-        "--address-postcode",
-        "28013"
-      ],
-      "captures": [],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": "Profile\tcarla-real\nStatus\tupdated\nNext\taeat app modelo work create\n"
-    },
-    {
-      "argv": [
-        "aeat",
-        "config",
-        "profile",
         "history",
-        "carla-real",
-        "--event-type",
-        "profile.renamed"
+        "--help"
       ],
       "captures": [],
       "envelope": null,
       "envelope_source": null,
-      "exit_code": 0,
-      "kind": "command",
-      "stderr_text": null,
-      "text": "operation\tconfig.profile.history\nprofile\tcarla-real\nevent_count\t1\n2026-04-01T09:00:00+00:00\tprofile.renamed\tprofile\t<profile-id>\tcadrumo.application.user_profile\n"
-    },
-    {
-      "argv": [
-        "aeat",
-        "config",
-        "profile",
-        "history",
-        "carla-real",
-        "--since",
-        "2026-01-01",
-        "--until",
-        "2026-03-31"
-      ],
-      "captures": [],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "command",
-      "stderr_text": null,
-      "text": "operation\tconfig.profile.history\nprofile\tcarla-real\nevent_count\t0\n"
-    },
-    {
-      "argv": [
-        "aeat",
-        "--format",
-        "json",
-        "config",
-        "profile",
-        "history",
-        "carla-real",
-        "--actor",
-        "operator"
-      ],
-      "captures": [],
-      "envelope": {
-        "active_profile": "carla-real",
-        "command": "config.bucket.history",
-        "notices": [],
-        "result": {
-          "actor": "operator",
-          "bucket_id": "<bucket-id>",
-          "event_types": null,
-          "events": [],
-          "object_id": null,
-          "operation": "config.bucket.history",
-          "since": null,
-          "until": null
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
       "stderr_text": null,
-      "text": null
+      "text": "Usage: aeat config profile history [OPTIONS] [profile]\n\n  Show the append-only event history for one profile\n\nArguments:\n  profile  Profile name whose event history should be inspected\n\nOptions:\n  --event-type <str>              Filter the history to one or more event\n                                  types (repeatable)\n  --since <str>                   Filter the history to events at or after\n                                  this ISO-8601 timestamp (e.g.\n                                  2026-04-01T00:00:00+00:00)\n  --until <str>                   Filter the history to events at or before\n                                  this ISO-8601 timestamp (e.g.\n                                  2026-04-30T23:59:59+00:00)\n  --object-id <str>               Filter the history to events targeting a\n                                  specific object_id (exact match)\n  --actor <str>                   Filter the history to events recorded by a\n                                  specific actor (exact match)\n  --output-language, --language <es|en|ca|hu>\n                                  Output language for the response text (es,\n                                  en, ca, hu).\n  --install-completion            Install completion for the current shell.\n  --show-completion               Show completion for the current shell, to\n                                  copy it or customize the installation.\n  --help                          Show this message and exit.\n"
     }
   ],
   "golden_schema_version": 1,

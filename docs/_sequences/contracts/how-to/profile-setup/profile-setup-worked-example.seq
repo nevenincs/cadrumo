@@ -1,7 +1,5 @@
-@step Create the natural-person profile with activity and residence facts.
-aeat config profile create ana-2026 --quiet --accept-defaults --entity-type natural_person --tax-id 11111111H --name "Ana" --surnames "Garcia Lopez" --irpf-income-categories actividad_economica --activity "diseno grafico" --iva-regime GENERAL --tax-residence-ccaa madrid --tax-residence-jurisdiction-scope common_regime --iva-m303-regime-composition general --no-iva-redeme-enrolled --no-iva-cash-accounting-regime-enrolled --no-iva-voluntary-sii-enrolled --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled --output-language en
 @step Inspect the stored facts.
-aeat config profile show ana-2026
-@result aeat --format json config profile validate ana-2026
+aeat config profile show docs-sequence-sandbox
+@result aeat --format json config profile validate docs-sequence-sandbox
 @expect result.valid == true
 @expect exit_code == 0

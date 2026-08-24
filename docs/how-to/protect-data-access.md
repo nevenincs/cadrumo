@@ -13,7 +13,7 @@ reset local state only as a last resort.
 You need:
 
 - An active profile - see [set up your taxpayer profile](profile-setup.md).
-- Your current master-key passphrase.
+- Your current profile passphrase.
 
 Use `--language en`, `es`, `ca`, or `hu` when you need a specific output
 language.
@@ -47,14 +47,14 @@ standard error, arguments, environment variables, or logs, and Cadrumo keeps
 no copy. Nobody can show it to you again.
 
 Write it down when it appears. Store it apart from your passphrase and apart
-from the computer holding the data - anyone who has the phrase can open the
-profile without the passphrase.
+from the computer holding the data. The phrase alone cannot restore a profile:
+recovery also requires a matching external artifact and the source capsule.
 
-Every creation door enrolls recovery. If the one-time handoff cannot complete,
-or if possession cannot be verified, creation refuses before publishing the
-profile. Recovery cannot be added after creation. Losing or damaging recovery
-does not block password login, passphrase changes, normal backup, or normal
-password restore.
+A profile is never created with a password only. Every creation door enrolls
+recovery. If the one-time handoff cannot complete, or if possession cannot be
+verified, creation refuses before publishing the profile. Recovery cannot be
+added after creation. Losing or damaging recovery does not block password
+login, passphrase changes, normal backup, or normal password restore.
 
 For a headless create, provide both `--recovery-handoff-fd WRITE_FD` and
 `--recovery-verification-fd READ_FD`. Read exactly one object shaped as
@@ -65,10 +65,12 @@ anonymous pipes and distinct descriptor numbers; neither descriptor may be
 after its one bounded operation. A missing half, malformed proof, mismatch,
 oversized payload, descriptor collision, or I/O failure leaves no profile.
 
-Keep the phrase with its separately exported recovery artifact. Use both only
-with the explicit `profile restore --artifact` door. The artifact and phrase
-prove a restore; they do not log in, reset the passphrase, enroll recovery in
-the restored profile, or travel inside a normal backup archive.
+The CLI does not currently export a recovery artifact, so do not treat the
+phrase as a complete operator recovery path. Where an external provisioning
+workflow supplies the matching artifact, use it only with the explicit
+artifact-based profile restore command and a source capsule. The artifact and
+phrase prove a restore; they do not log in, reset the passphrase, enroll
+recovery in the restored profile, or travel inside a normal backup archive.
 
 ## Change your passphrase
 
@@ -114,7 +116,7 @@ variable or command-line argument. The CLI does not use
 There are two separate option pairs:
 
 - Use leaf `--secrets-stdin` or `--secrets-fd FD` when the command itself owns
-  the secret. The five leaf commands and their exact objects are listed below.
+  the secret. The six leaf commands and their exact objects are listed below.
 - Use root `--profile-secrets-stdin` or `--profile-secrets-fd FD` before
   `config` when a profile-bound command needs to authenticate a selected
   profile after its persisted session cannot resume. Its object is
@@ -137,7 +139,9 @@ Use the same two leaf flags on each scalar-secret command:
 | `aeat config profile restore` with `--artifact` | `{"recovery_secret": "..."}` |
 | `aeat config auth certificate secret set` | `{"certificate_passphrase": "..."}` |
 
-The object must contain exactly the fields shown. Duplicate, missing, extra,
+Each object must contain exactly the fields shown. For profile creation, also
+provide the required recovery-handoff pair described in [store your recovery
+phrase safely](#store-your-recovery-phrase-safely). Duplicate, missing, extra,
 oversized, malformed, or non-UTF-8 input is refused. The former restore field
 `password` and certificate field `secret` are not accepted.
 

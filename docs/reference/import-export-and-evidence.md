@@ -157,11 +157,13 @@ This is a portability gap, not a recovery one. Backup and recovery are
 unaffected and run through `aeat config profile archive export` and
 `aeat config profile restore`, which operate on the sealed profile capsule.
 
-The sealed custody archive is an encrypted full-custody recovery transport, not
-a structured, readable copy of one profile's records. It excludes process-local
-and rebuildable derivatives. Without a recovery passphrase, restoration requires
-the matching active bucket key. A recovery passphrase permits restoration into
-a fresh storage root.
+The sealed custody archive is an encrypted profile backup, not a structured,
+readable copy of one profile's records. It excludes recovery material,
+process-local state, and rebuildable derivatives. Restore it with the profile
+passphrase. Recovery restore requires an externally provisioned matching
+artifact, its 24-word phrase, and the source capsule; the CLI does not currently
+export that artifact. The proof restores the data path only; it does not reset
+the passphrase or enroll recovery in the restored profile.
 
 ## What an audit export is for
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 18:31+0200\n"
+"POT-Creation-Date: 2026-08-23 19:58+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
 "Language: es\n"
@@ -30,7 +30,8 @@ msgstr "Consulta de comandos y etapas del flujo de trabajo"
 #, fuzzy
 msgid ""
 "The command-line interface (CLI) exposes live help as the command "
-"authority. The canonical executable is `aeat`."
+"authority. The canonical human executable is `aeat`. The separate Model "
+"Context Protocol (MCP) executable is `cadrumo-mcp`."
 msgstr ""
 "La interfaz de línea de comandos (CLI) expone la ayuda en vivo como "
 "autoridad de comandos. El ejecutable canónico para personas es `aeat`. El"
@@ -111,7 +112,7 @@ msgstr "Ayuda de la raíz y de las hojas"
 msgid "[Automation reference](../cli/automation.rst)"
 msgstr "[Referencia de automatización](../cli/automation.rst)"
 
-#: ../../reference/commands-and-configuration.md:16
+#: ../../reference/commands-and-configuration.md:17
 msgid ""
 "The filing stages relate as `calculate` → `review` → `verify` → `export` "
 "→ human upload → local record → reconcile. The stage names describe "
@@ -129,7 +130,7 @@ msgstr ""
 "separadas y [las guías prácticas](../how-to/index.md) para las secuencias"
 " de tareas."
 
-#: ../../reference/commands-and-configuration.md:22
+#: ../../reference/commands-and-configuration.md:23
 msgid "Configuration ownership"
 msgstr "Titularidad de la configuración"
 
@@ -177,7 +178,7 @@ msgstr ""
 "Endpoints de la autoridad, credenciales de la autoridad, controles de "
 "lectura en vivo y terminología conservada de la autoridad"
 
-#: ../../reference/commands-and-configuration.md:29
+#: ../../reference/commands-and-configuration.md:30
 #, fuzzy
 msgid ""
 "Examples of product controls include `CADRUMO_LOCAL_STORAGE_ROOT`, "
@@ -201,7 +202,7 @@ msgstr ""
 "comandos. Los campos de Python se enumeran en la interfaz de programación"
 " de aplicaciones de Cadrumo generada ([API](../api/cadrumo.rst))."
 
-#: ../../reference/commands-and-configuration.md:43
+#: ../../reference/commands-and-configuration.md:44
 msgid ""
 "Former product-owned `AEAT_*` state controls are not aliases for "
 "`CADRUMO_*`. Authority-owned `AEAT_*` integration controls remain valid "

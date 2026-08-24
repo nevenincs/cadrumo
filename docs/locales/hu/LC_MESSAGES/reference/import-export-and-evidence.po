@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 18:31+0200\n"
+"POT-Creation-Date: 2026-08-24 14:57+0200\n"
 "PO-Revision-Date: 2026-07-18 13:20+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -582,26 +582,22 @@ msgid ""
 msgstr ""
 
 #: ../../reference/import-export-and-evidence.md:160
-#, fuzzy
 msgid ""
-"The sealed custody archive is an encrypted full-custody recovery "
-"transport, not a structured, readable copy of one profile's records. It "
-"excludes process-local and rebuildable derivatives. Without a recovery "
-"passphrase, restoration requires the matching active bucket key. A "
-"recovery passphrase permits restoration into a fresh storage root."
+"The sealed custody archive is an encrypted profile backup, not a "
+"structured, readable copy of one profile's records. It excludes recovery "
+"material, process-local state, and rebuildable derivatives. Restore it "
+"with the profile passphrase. Recovery restore requires an externally "
+"provisioned matching artifact, its 24-word phrase, and the source "
+"capsule; the CLI does not currently export that artifact. The proof "
+"restores the data path only; it does not reset the passphrase or enroll "
+"recovery in the restored profile."
 msgstr ""
-"A lezárt letéti archívum más célt szolgál. Titkosított teljes letéti "
-"helyreállítási átvitel a besorolt tartós letét számára. A folyamatlokális"
-" és újraépíthető származékok szándékosan ki vannak zárva. Helyreállítási "
-"jelszó nélkül a visszaállítás az egyező aktív bucket-kulcsot igényli. Egy"
-" helyreállítási jelszó lehetővé teszi a visszaállítást egy friss tárolási"
-" gyökérbe."
 
-#: ../../reference/import-export-and-evidence.md:166
+#: ../../reference/import-export-and-evidence.md:168
 msgid "What an audit export is for"
 msgstr "Mire való egy auditexport"
 
-#: ../../reference/import-export-and-evidence.md:168
+#: ../../reference/import-export-and-evidence.md:170
 msgid ""
 "When an audit or professional review is requested, the audit evidence "
 "bundle is intended to let the recipient establish:"
@@ -609,33 +605,33 @@ msgstr ""
 "Amikor auditot vagy szakmai áttekintést kérnek, az auditbizonyíték-csomag"
 " arra szolgál, hogy a címzett megállapíthassa:"
 
-#: ../../reference/import-export-and-evidence.md:171
+#: ../../reference/import-export-and-evidence.md:173
 msgid "Which original records supported the return."
 msgstr "Mely eredeti nyilvántartások támasztották alá a bevallást."
 
-#: ../../reference/import-export-and-evidence.md:172
+#: ../../reference/import-export-and-evidence.md:174
 msgid "Whether those bytes still match their recorded SHA-256 digests."
 msgstr ""
 "Hogy azok a bájtok még mindig egyeznek-e a rögzített SHA-256 "
 "lenyomataikkal."
 
-#: ../../reference/import-export-and-evidence.md:173
+#: ../../reference/import-export-and-evidence.md:175
 msgid "Which ledger facts contributed to which casillas."
 msgstr "Mely ledger-tények járultak hozzá mely casillákhoz."
 
-#: ../../reference/import-export-and-evidence.md:174
+#: ../../reference/import-export-and-evidence.md:176
 msgid "Which registry and legal references governed the calculation."
 msgstr "Mely registry- és jogi hivatkozások szabályozták a számítást."
 
-#: ../../reference/import-export-and-evidence.md:175
+#: ../../reference/import-export-and-evidence.md:177
 msgid "Which calculation revision and filing record were involved."
 msgstr "Mely számítási revízió és bevallási nyilvántartás volt érintett."
 
-#: ../../reference/import-export-and-evidence.md:176
+#: ../../reference/import-export-and-evidence.md:178
 msgid "Whether later revisions superseded the original position."
 msgstr "Hogy későbbi revíziók felülírták-e az eredeti pozíciót."
 
-#: ../../reference/import-export-and-evidence.md:178
+#: ../../reference/import-export-and-evidence.md:180
 msgid ""
 "The audit evidence bundle ZIP file contains reachable record bytes "
 "followed by `manifest.json`. Failed verification prevents export; "
@@ -653,7 +649,7 @@ msgstr ""
 "tudja ellenőrizni a hivatkozott nyilvántartásbájtokat, mert nincs megadva"
 " hasznosteher-betöltő."
 
-#: ../../reference/import-export-and-evidence.md:185
+#: ../../reference/import-export-and-evidence.md:187
 #, fuzzy
 msgid ""
 "The current audit commands do not yet provide a complete one-command "
@@ -670,23 +666,23 @@ msgstr ""
 "elhagyhat nyilvántartásokat, és tartalmazhatja csak a kéziratot. Ne "
 "kezelje azt a kimenetet teljes bizonyítékcsomagként."
 
-#: ../../reference/import-export-and-evidence.md:192
+#: ../../reference/import-export-and-evidence.md:194
 msgid "What a complete audit handoff means"
 msgstr "Mit jelent egy teljes auditátadás"
 
-#: ../../reference/import-export-and-evidence.md:194
+#: ../../reference/import-export-and-evidence.md:196
 msgid "A genuinely complete audit handoff would normally combine:"
 msgstr "Egy valóban teljes auditátadás rendszerint egyesítené:"
 
-#: ../../reference/import-export-and-evidence.md:196
+#: ../../reference/import-export-and-evidence.md:198
 msgid "Official AEAT evidence proving submission."
 msgstr "A beküldést bizonyító hivatalos AEAT-bizonyítékot."
 
-#: ../../reference/import-export-and-evidence.md:197
+#: ../../reference/import-export-and-evidence.md:199
 msgid "The exact submitted-file digest or captured filed copy."
 msgstr "A pontos beküldöttfájl-lenyomatot vagy a rögzített benyújtott másolatot."
 
-#: ../../reference/import-export-and-evidence.md:198
+#: ../../reference/import-export-and-evidence.md:200
 msgid ""
 "A verified audit evidence bundle containing every referenced supporting "
 "record."
@@ -694,7 +690,7 @@ msgstr ""
 "Egy ellenőrzött auditbizonyíték-csomagot, amely minden hivatkozott "
 "alátámasztó nyilvántartást tartalmaz."
 
-#: ../../reference/import-export-and-evidence.md:199
+#: ../../reference/import-export-and-evidence.md:201
 msgid ""
 "The calculation or review package explaining how those records produced "
 "the declared casillas."
@@ -702,7 +698,7 @@ msgstr ""
 "A számítási vagy áttekintési csomagot, amely elmagyarázza, hogyan "
 "állították elő azok a nyilvántartások a bevallott casillákat."
 
-#: ../../reference/import-export-and-evidence.md:202
+#: ../../reference/import-export-and-evidence.md:204
 msgid ""
 "That combination supports both halves of the audit question: “Was this "
 "actually filed?” and “What facts, rules, and calculations produced it?”"
@@ -711,7 +707,7 @@ msgstr ""
 "ténylegesen benyújtották?” és „Mely tények, szabályok és számítások "
 "állították elő?”"
 
-#: ../../reference/import-export-and-evidence.md:205
+#: ../../reference/import-export-and-evidence.md:207
 msgid ""
 "The audit evidence bundle does not currently include every item listed "
 "above. Assemble and verify the missing items separately; a bundle is "
@@ -723,11 +719,11 @@ msgstr ""
 " csomag csak akkor teljes, ha minden hivatkozott alátámasztó "
 "nyilvántartás és hasznos teher jelen van."
 
-#: ../../reference/import-export-and-evidence.md:209
+#: ../../reference/import-export-and-evidence.md:211
 msgid "Important limitations"
 msgstr "Fontos korlátozások"
 
-#: ../../reference/import-export-and-evidence.md:211
+#: ../../reference/import-export-and-evidence.md:213
 msgid ""
 "Support is limited to Modelo and revision combinations backed by "
 "registered, authoritative layouts and real evidence. Consequently:"
@@ -736,7 +732,7 @@ msgstr ""
 "amelyeket bejegyzett, hiteles elrendezések és valós bizonyíték támaszt "
 "alá. Ennek következtében:"
 
-#: ../../reference/import-export-and-evidence.md:214
+#: ../../reference/import-export-and-evidence.md:216
 msgid ""
 "Import and export support must not be described as universal across all "
 "Modelos and periods."
@@ -744,11 +740,11 @@ msgstr ""
 "Az import- és exporttámogatás nem írható le úgy, mintha minden modelóra "
 "és időszakra általánosan érvényes lenne."
 
-#: ../../reference/import-export-and-evidence.md:216
+#: ../../reference/import-export-and-evidence.md:218
 msgid "Filed declaración-PDF extraction requires an exact registered profile."
 msgstr "A benyújtott declaración-PDF kinyerése pontos, bejegyzett profilt igényel."
 
-#: ../../reference/import-export-and-evidence.md:217
+#: ../../reference/import-export-and-evidence.md:219
 msgid ""
 "An operator-supplied local observation, local export, checksum, Google "
 "Sheet, or review ZIP cannot prove AEAT acceptance. A locally held AEAT "
@@ -761,7 +757,7 @@ msgstr ""
 "bizonyítékká válhat. Importálja a külső bizonyíték munkafolyamatán "
 "keresztül."
 
-#: ../../reference/import-export-and-evidence.md:221
+#: ../../reference/import-export-and-evidence.md:223
 msgid ""
 "Integrity proves that bytes have not changed; it does not establish "
 "signer identity or independent legal authenticity. Use the separate "
@@ -772,7 +768,7 @@ msgstr ""
 "külön áttekintéscsomag-aláírási munkafolyamatot, ha a szerző azonossága "
 "számít."
 
-#: ../../reference/import-export-and-evidence.md:224
+#: ../../reference/import-export-and-evidence.md:226
 msgid ""
 "Evidence is encrypted in normal custody. Base review and audit ZIPs are "
 "deliberate plaintext exports, so secure delivery becomes your "
@@ -782,7 +778,7 @@ msgstr ""
 "ZIP-ek szándékos nyílt szöveges exportok, így a biztonságos kézbesítés az"
 " Ön felelőssége lesz."
 
-#: ../../reference/import-export-and-evidence.md:226
+#: ../../reference/import-export-and-evidence.md:228
 msgid ""
 "A forced incomplete audit evidence bundle export is not a complete "
 "handoff."
@@ -790,7 +786,7 @@ msgstr ""
 "Egy kényszerített hiányos auditbizonyíték-csomag exportja nem teljes "
 "átadás."
 
-#: ../../reference/import-export-and-evidence.md:227
+#: ../../reference/import-export-and-evidence.md:229
 msgid ""
 "`audit check` reruns bundle checks. Through the current command-line "
 "interface, it cannot verify referenced bytes, and it does not reproduce "
@@ -800,7 +796,7 @@ msgstr ""
 "parancssori felületen keresztül nem tudja ellenőrizni a hivatkozott "
 "bájtokat, és nem reprodukálja vagy számolja újra az adóügyi döntést."
 
-#: ../../reference/import-export-and-evidence.md:231
+#: ../../reference/import-export-and-evidence.md:233
 msgid ""
 "For storage, recovery, and external-access boundaries, see [Protect "
 "access to taxpayer data](../how-to/protect-data-access.md) and "
@@ -914,4 +910,43 @@ msgstr ""
 #~ "Egyik sem teljes biztonsági mentés; "
 #~ "ahhoz használja a lezárt letéti "
 #~ "archívumot."
+
+#~ msgid ""
+#~ "The sealed custody archive is an "
+#~ "encrypted full-custody recovery transport, "
+#~ "not a structured, readable copy of "
+#~ "one profile's records. It excludes "
+#~ "process-local and rebuildable derivatives. "
+#~ "Without a recovery passphrase, restoration "
+#~ "requires the matching active bucket key."
+#~ " A recovery passphrase permits restoration"
+#~ " into a fresh storage root."
+#~ msgstr ""
+#~ "A lezárt letéti archívum más célt "
+#~ "szolgál. Titkosított teljes letéti "
+#~ "helyreállítási átvitel a besorolt tartós "
+#~ "letét számára. A folyamatlokális és "
+#~ "újraépíthető származékok szándékosan ki vannak"
+#~ " zárva. Helyreállítási jelszó nélkül a "
+#~ "visszaállítás az egyező aktív bucket-"
+#~ "kulcsot igényli. Egy helyreállítási jelszó "
+#~ "lehetővé teszi a visszaállítást egy "
+#~ "friss tárolási gyökérbe."
+
+#~ msgid ""
+#~ "The sealed custody archive is an "
+#~ "encrypted profile backup, not a "
+#~ "structured, readable copy of one "
+#~ "profile's records. It excludes recovery "
+#~ "material, process-local state, and "
+#~ "rebuildable derivatives. Restore it with "
+#~ "the profile passphrase. If the "
+#~ "passphrase is lost, use the explicit "
+#~ "restore command with a separately stored"
+#~ " recovery artifact and its 24-word "
+#~ "phrase. That proof restores the data "
+#~ "path only; it does not reset the"
+#~ " passphrase or enroll recovery in the"
+#~ " restored profile."
+#~ msgstr ""
 

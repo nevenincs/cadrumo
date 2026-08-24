@@ -1,9 +1,5 @@
 @step List the profiles and see which one is active.
 aeat config profile list
-@step Add a second taxpayer profile.
-@setup aeat config profile create my-other-profile --quiet --tax-residence-jurisdiction-scope common_regime --entity-type natural_person --tax-id 87654321X --name "Otra" --surnames "Persona Ejemplo"
-@step Log in to the second profile to make it the active context.
-aeat config login my-other-profile
 @result aeat --format json config profile status
 @expect result.tax_id_present == true
 @expect exit_code == 0

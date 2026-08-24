@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 18:31+0200\n"
+"POT-Creation-Date: 2026-08-23 19:58+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
@@ -424,9 +424,9 @@ msgstr "Usa una sugerencia de un LLM"
 #: ../../how-to/classify-transactions.md:181
 #, fuzzy
 msgid ""
-"Cadrumo can use an AI assistant to suggest how to classify each "
-"transaction. The suggestion is a starting point. You must confirm or "
-"correct it. It does not fill in tax amounts such as taxable base, IVA "
+"Cadrumo can use a configured language model to suggest how to classify "
+"each transaction. The suggestion is a starting point. You must confirm or"
+" correct it. It does not fill in tax amounts such as taxable base, IVA "
 "rate, or IRPF category."
 msgstr ""
 "Cadrumo puede usar un modelo de lenguaje configurado para sugerir cómo "
@@ -434,7 +434,7 @@ msgstr ""
 "confirmarla o corregirla. No rellena importes fiscales como la base "
 "imponible, el tipo de IVA o la categoría de IRPF."
 
-#: ../../how-to/classify-transactions.md:185
+#: ../../how-to/classify-transactions.md:186
 msgid ""
 "Use [Classify transactions with an LLM](classify-with-llm.md) for the "
 "full provider, preview, apply, and override flow."
@@ -442,11 +442,11 @@ msgstr ""
 "Usa [Clasificar transacciones con un LLM](classify-with-llm.md) para el "
 "flujo completo de proveedor, vista previa, aplicación y anulación."
 
-#: ../../how-to/classify-transactions.md:189
+#: ../../how-to/classify-transactions.md:190
 msgid "See everything that still needs a decision"
 msgstr "Ver todo lo que aún necesita una decisión"
 
-#: ../../how-to/classify-transactions.md:191
+#: ../../how-to/classify-transactions.md:192
 msgid ""
 "The review queue is one profile-wide list of everything that still wants "
 "your attention before a filing: transactions without a classification, "
@@ -466,7 +466,7 @@ msgstr ""
 "resuelven cuando corriges el registro subyacente con la orden que nombra "
 "la fila. La secuencia importa el trimestre y luego lee la cola:"
 
-#: ../../how-to/classify-transactions.md:203
+#: ../../how-to/classify-transactions.md:204
 msgid ""
 "Each row shows the item id, its kind, the affected record, the period, a "
 "severity (`critical`, `high`, `normal`, or `info`), and a final column "
@@ -477,7 +477,7 @@ msgstr ""
 "última columna con la orden que ejecutar a continuación. Acota la lista "
 "por tipo, modelo o estado:"
 
-#: ../../how-to/classify-transactions.md:211
+#: ../../how-to/classify-transactions.md:212
 msgid ""
 "Accepted `--kind` tokens are `ledger_transaction`, "
 "`purchase_invoice_evidence`, `payable_invoice`, `collectible_invoice`, "
@@ -496,7 +496,7 @@ msgstr ""
 "legales, o usa la opción global `--format json` (antes de la orden) para "
 "obtener un campo `legal_refs` en cada fila."
 
-#: ../../how-to/classify-transactions.md:219
+#: ../../how-to/classify-transactions.md:220
 msgid ""
 "Transaction items clear when you classify the row (this page). Invoice "
 "items clear when you link or update the invoice - see [Attach invoices "
@@ -511,11 +511,11 @@ msgstr ""
 "valores informados y vuelves a verificar; consulta [Verificar una "
 "presentación](verification-reports.md)."
 
-#: ../../how-to/classify-transactions.md:225
+#: ../../how-to/classify-transactions.md:226
 msgid "Confirm readiness"
 msgstr "Confirma la preparación"
 
-#: ../../how-to/classify-transactions.md:227
+#: ../../how-to/classify-transactions.md:228
 msgid ""
 "Run preflight after classification. The sequence imports and classifies "
 "the quarter, then runs preflight and reads the ledger status:"
@@ -524,7 +524,7 @@ msgstr ""
 "importa y clasifica el trimestre, y luego ejecuta la comprobación previa "
 "y lee el estado del ledger:"
 
-#: ../../how-to/classify-transactions.md:234
+#: ../../how-to/classify-transactions.md:235
 msgid ""
 "Preflight names rows that still need category, taxable base, IVA amount, "
 "IVA rate, currency, or proportionality reference."
@@ -533,11 +533,11 @@ msgstr ""
 " imponible, cuota de IVA, tipo de IVA, moneda o referencia de "
 "proporcionalidad."
 
-#: ../../how-to/classify-transactions.md:237
+#: ../../how-to/classify-transactions.md:238
 msgid "Correct a classification"
 msgstr "Corrige una clasificación"
 
-#: ../../how-to/classify-transactions.md:239
+#: ../../how-to/classify-transactions.md:240
 msgid ""
 "Re-run `classify` on the same transaction id. A manual decision replaces "
 "the previous classification. The sequence classifies a row as business, "
@@ -547,23 +547,23 @@ msgstr ""
 "decisión manual reemplaza la clasificación anterior. La secuencia "
 "clasifica una fila como de la actividad y luego la corrige a personal:"
 
-#: ../../how-to/classify-transactions.md:247
+#: ../../how-to/classify-transactions.md:248
 msgid "Inspect the row again with `ledger view` before calculating."
 msgstr "Examina la fila de nuevo con `ledger view` antes de calcular."
 
-#: ../../how-to/classify-transactions.md:249
+#: ../../how-to/classify-transactions.md:250
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/classify-transactions.md:251
+#: ../../how-to/classify-transactions.md:252
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Importar y gestionar transacciones](import-bank-statements.md)"
 
-#: ../../how-to/classify-transactions.md:252
+#: ../../how-to/classify-transactions.md:253
 msgid "[Classify transactions with an LLM](classify-with-llm.md)"
 msgstr "[Clasificar transacciones con un LLM](classify-with-llm.md)"
 
-#: ../../how-to/classify-transactions.md:253
+#: ../../how-to/classify-transactions.md:254
 msgid ""
 "[How your records become tax figures](../explanation/from-records-to-"
 "figures.md)"
@@ -571,15 +571,15 @@ msgstr ""
 "[Cómo tus registros se convierten en cifras fiscales](../explanation"
 "/from-records-to-figures.md)"
 
-#: ../../how-to/classify-transactions.md:254
+#: ../../how-to/classify-transactions.md:255
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisar y aportar los datos de cálculo](review-calculation-values.md)"
 
-#: ../../how-to/classify-transactions.md:255
+#: ../../how-to/classify-transactions.md:256
 msgid "[Review calculations with Google Sheets](review-with-google-sheets.md)"
 msgstr "[Revisar cálculos con Google Sheets](review-with-google-sheets.md)"
 
-#: ../../how-to/classify-transactions.md:256
+#: ../../how-to/classify-transactions.md:257
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referencia de la CLI](../cli/index.rst)"
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 18:31+0200\n"
+"POT-Creation-Date: 2026-08-23 19:58+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.example>\n"
 "Language: es\n"
@@ -35,6 +35,10 @@ msgid "Quickstart"
 msgstr "Guía rápida"
 
 #: ../../index.md:118
+msgid "Connect an agent (MCP)"
+msgstr ""
+
+#: ../../index.md:118
 msgid "First quarterly filing"
 msgstr "Primera presentación trimestral"
 
@@ -46,171 +50,171 @@ msgstr "El año del IRPF"
 msgid "The IVA year"
 msgstr "El año del IVA"
 
-#: ../../index.md:130
+#: ../../index.md:131
 msgid "Set up a profile"
 msgstr "Configurar un perfil"
 
-#: ../../index.md:130
+#: ../../index.md:131
 msgid "Authenticate with AEAT"
 msgstr "Autenticarse con la AEAT"
 
-#: ../../index.md:130
+#: ../../index.md:131
 msgid "Maintain census facts"
 msgstr "Mantener los datos censales"
 
-#: ../../index.md:130
+#: ../../index.md:131
 msgid "Which modelos apply to you"
 msgstr "Qué modelos te corresponden"
 
-#: ../../index.md:130
+#: ../../index.md:131
 msgid "Protect data access"
 msgstr "Proteger el acceso a los datos"
 
-#: ../../index.md:130
+#: ../../index.md:131
 msgid "Your profile"
 msgstr "Tu perfil"
 
-#: ../../index.md:141
+#: ../../index.md:142
 msgid "Filing calendar"
 msgstr "Calendario de presentaciones"
 
-#: ../../index.md:141
+#: ../../index.md:142
 msgid "AEAT notifications"
 msgstr "Notificaciones de la AEAT"
 
-#: ../../index.md:141
+#: ../../index.md:142
 msgid "Filing readiness"
 msgstr "Preparación para presentar"
 
-#: ../../index.md:141
+#: ../../index.md:142
 msgid "Your calendar"
 msgstr "Tu calendario"
 
-#: ../../index.md:150
+#: ../../index.md:151
 msgid "Work with transactions"
 msgstr "Trabajar con transacciones"
 
-#: ../../index.md:81 ../../index.md:150
+#: ../../index.md:81 ../../index.md:151
 msgid "Classify transactions"
 msgstr "Clasificar transacciones"
 
-#: ../../index.md:150
+#: ../../index.md:151
 msgid "Classify with an LLM"
 msgstr "Clasificar con un LLM"
 
-#: ../../index.md:150
+#: ../../index.md:151
 msgid "Attach invoices and receipts"
 msgstr "Adjuntar facturas y recibos"
 
-#: ../../index.md:150
+#: ../../index.md:151
 msgid "Manage business invoices"
 msgstr "Gestionar facturas de la actividad"
 
-#: ../../index.md:150
+#: ../../index.md:151
 msgid "Correct mistakes"
 msgstr "Corregir errores"
 
-#: ../../index.md:150
+#: ../../index.md:151
 msgid "IVA prorrata deductions"
 msgstr "Deducciones de IVA en prorrata"
 
-#: ../../index.md:150
+#: ../../index.md:151
 msgid "Your ledger"
 msgstr "Tu ledger"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "The filing workflow"
 msgstr "El flujo de trabajo de presentación"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Modelo 036 (censo)"
 msgstr "Modelo 036 (censo)"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Modelo 100 (Renta)"
 msgstr "Modelo 100 (Renta)"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Modelo 130 (IRPF instalment)"
 msgstr "Modelo 130 (pago fraccionado del IRPF)"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Modelo 303 (IVA)"
 msgstr "Modelo 303 (IVA)"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Modelo 349 (intra-community)"
 msgstr "Modelo 349 (intracomunitario)"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Modelo 390 (IVA summary)"
 msgstr "Modelo 390 (resumen anual de IVA)"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Calculation inputs"
 msgstr "Entradas del cálculo"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Google Sheets review"
 msgstr "Revisión con Google Sheets"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Verify a filing"
 msgstr "Verificar una presentación"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "File at AEAT"
 msgstr "Presentar en la AEAT"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Reconcile a filing"
 msgstr "Conciliar una presentación"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Your filings"
 msgstr "Tus presentaciones"
 
-#: ../../index.md:181
+#: ../../index.md:182
 msgid "Troubleshooting"
 msgstr "Resolución de problemas"
 
-#: ../../index.md:181
+#: ../../index.md:182
 msgid "Disclaimer"
 msgstr "Aviso legal"
 
-#: ../../index.md:181
+#: ../../index.md:182
 msgid "Help"
 msgstr "Ayuda"
 
-#: ../../index.md:189
+#: ../../index.md:190
 msgid "Cadrumo reference"
 msgstr "Referencia de Cadrumo"
 
-#: ../../index.md:189
+#: ../../index.md:190
 msgid "Reference"
 msgstr "Referencia"
 
-#: ../../index.md:200
+#: ../../index.md:201
 msgid "Overview"
 msgstr "Visión general"
 
-#: ../../index.md:200
+#: ../../index.md:201
 msgid "How it works"
 msgstr "Cómo funciona"
 
-#: ../../index.md:207
+#: ../../index.md:208
 msgid "Updates and downloads"
 msgstr "Actualizaciones y descargas"
 
-#: ../../index.md:207
+#: ../../index.md:208
 msgid "Architecture"
 msgstr "Arquitectura"
 
-#: ../../index.md:207
+#: ../../index.md:208
 msgid "Authoring guide"
 msgstr "Guía de redacción"
 
-#: ../../index.md:207
+#: ../../index.md:208
 msgid "Project"
 msgstr "Proyecto"
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 18:31+0200\n"
+"POT-Creation-Date: 2026-08-23 19:58+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
@@ -459,10 +459,20 @@ msgid "Tools and help"
 msgstr "Herramientas y ayuda"
 
 #: ../../how-to/index.md:303
+msgid "Connect an agent (MCP)"
+msgstr ""
+
+#: ../../how-to/index.md:307
+msgid ""
+"Expose the toolset to Claude or any MCP client, with the safety boundary "
+"intact."
+msgstr ""
+
+#: ../../how-to/index.md:310
 msgid "Troubleshooting"
 msgstr "Resolución de problemas"
 
-#: ../../how-to/index.md:307
+#: ../../how-to/index.md:314
 msgid "Fix active-profile, storage, registry, and authentication problems."
 msgstr ""
 "Corrige problemas de perfil activo, almacenamiento, registro y "

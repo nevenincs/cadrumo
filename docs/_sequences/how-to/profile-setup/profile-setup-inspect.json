@@ -28,7 +28,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "Profile record is valid.\nrecord_validity\tvalid\tissues=0\nprofile_id\t<profile-id>\ndisplay_name\tdocs-sequence-sandbox\nstatus\tactive\nactivities.description\tdocumentation examples\nidentity.name\tDocs\nidentity.surnames\tSandbox\nidentity.tax_id\tsha256:1c9f9632\niva.cash_accounting_regime_enrolled\tfalse\niva.hydrocarbon_deposit_advance_payment_deduction_entitled\tfalse\niva.m303_regime_composition\tgeneral\niva.redeme_enrolled\tfalse\niva.regime\tGENERAL\niva.voluntary_sii_enrolled\tfalse\ntax_residence.jurisdiction_scope\tcommon_regime\ntaxpayer_type.entity_type\tnatural_person\n"
+      "text": "Profile record is valid.\nrecord_validity\tvalid\tissues=0\nprofile_id\t<profile-id>\ndisplay_name\tdocs-sequence-sandbox\nsetup_state\tcomplete\nactivities.description\tdocumentation examples\nidentity.name\tDocs\nidentity.surnames\tSandbox\nidentity.tax_id\tsha256:1c9f9632\niva.cash_accounting_regime_enrolled\tfalse\niva.hydrocarbon_deposit_advance_payment_deduction_entitled\tfalse\niva.m303_regime_composition\tgeneral\niva.redeme_enrolled\tfalse\niva.regime\tGENERAL\niva.voluntary_sii_enrolled\tfalse\ntax_residence.jurisdiction_scope\tcommon_regime\ntaxpayer_type.entity_type\tnatural_person\n"
     },
     {
       "argv": [
@@ -43,7 +43,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "readiness\tready\tissues=0\nprofile_id\t<profile-id>\ndisplay_name\tdocs-sequence-sandbox\nstatus\tactive\nschema_version\t5\nvalid\tTrue\n"
+      "text": "readiness\tready\tissues=0\nprofile_id\t<profile-id>\ndisplay_name\tdocs-sequence-sandbox\nsetup_state\tcomplete\nschema_version\t6\nvalid\tTrue\n"
     },
     {
       "argv": [
