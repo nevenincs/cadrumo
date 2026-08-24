@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:057d40dc524ad779d9c9cfcfcd81352234b7d8b99821f0fb21345a811fdf436f'
+body_hash: 'sha256:687a4742219d9060047dc7152b0037bfac4d7e97e6ae278e44df1cf846c72022'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -35,6 +35,8 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S54]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S55]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S56]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S57]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S58]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
@@ -136,6 +138,8 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P02-S54` - Drive a generic ValueError through live connected-proof revalidation and prove the closure composer maps the fallback cause to a fail-closed missing-evidence refusal with a mutation bite.
 - `2026-08-24-registry-completeness-closure-W01-P02-S55` - Repair W01.P02.S51 execution-record Description, Outcome, and Notes through the canonical execution-document flow and re-attest its scoped checks.
 - `2026-08-24-registry-completeness-closure-W01-P02-S56` - Reconcile S51's checked state and execution record with independently reviewed S54 live fallback evidence, closing the S55 high tracking finding without rewriting history.
+- `2026-08-24-registry-completeness-closure-W01-P02-S57` - Require canonical generator provenance, exact semantic-map and render-profile identities, generated-fragment integrity, and successful emitted-byte evidence before filing-export closure can satisfy, with a Modelo 111 refusal regression
+- `2026-08-24-registry-completeness-closure-W01-P02-S58` - Validate and live-rehash filing-envelope and auxiliary-envelope-header source identities and digests against the catalogue, with missing, mismatched, and stale-digest mutation proof
 
 ### plan
 

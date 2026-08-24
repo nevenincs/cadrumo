@@ -167,6 +167,14 @@ from ._diff import (
     diff_registry_revisions,
 )
 from ._errors import RegistryApplicationError, RegistryApplicationInputError
+from ._filing_export_authority import (
+    FilingExportEmissionProof,
+    FilingExportGenerationProof,
+    FilingExportProof,
+    FilingExportProofAuthority,
+    FilingExportProofCatalogue,
+    GeneratedExportFileDigest,
+)
 from ._filing_export_coverage import (
     FilingExportCoverageReport,
     compose_filing_export_coverage,
@@ -603,7 +611,13 @@ __all__ = [
     "CoverageAuthorityScope",
     "FiledStateVerificationReport",
     "FilingExportCoverageReport",
+    "FilingExportEmissionProof",
+    "FilingExportGenerationProof",
+    "FilingExportProof",
+    "FilingExportProofAuthority",
+    "FilingExportProofCatalogue",
     "FormulaDiff",
+    "GeneratedExportFileDigest",
     "LatestRevisionSupportProbe",
     "LiveSourceConnectivityProofAuthority",
     "LiveSourceConnectivityProofExpectation",

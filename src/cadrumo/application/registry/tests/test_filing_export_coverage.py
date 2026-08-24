@@ -5,11 +5,82 @@ from __future__ import annotations
 from dataclasses import replace
 
 import pytest
+from pydantic import ValidationError
 
-from ....core import RegistryAuthorityGrade, RevisionReviewStatus
-from .. import compose_filing_export_coverage
+from ....core import Modelo, RegistryAuthorityGrade, RevisionReviewStatus
+from .. import (
+    FilingExportEmissionProof,
+    FilingExportGenerationProof,
+    FilingExportProof,
+    FilingExportProofCatalogue,
+    GeneratedExportFileDigest,
+    compose_filing_export_coverage,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_DIGEST = "0" * 64
+
+
+def test_generation_proof_refuses_a_manifest_without_generated_fragments() -> None:
+    """A manifest digest alone cannot stand in for verified generated output files."""
+    with pytest.raises(ValidationError, match="at least one emitted TOML fragment"):
+        FilingExportGenerationProof(
+            authority="dev.registry.pipeline.verify_export_fragment_provenance_manifest",
+            manifest_locator="registry/aeat/modelos/111/revisions/2019-y-siguientes/export/_generation.provenance.json",
+            manifest_sha256=_DIGEST,
+            semantic_map_sha256=_DIGEST,
+            render_profile_sha256=_DIGEST,
+            loader_semantic_sha256=_DIGEST,
+            output_files=(GeneratedExportFileDigest(relative_path="README.md", sha256=_DIGEST),),
+        )
+
+
+def test_emission_proof_refuses_zero_checked_official_offsets() -> None:
+    """Payload bytes without an official-offset assertion are not emission proof."""
+    with pytest.raises(ValidationError, match="greater than 0"):
+        FilingExportEmissionProof(
+            authority="cadrumo.application.filing.export_draft",
+            evidence_locator="src/cadrumo/application/filing/tests/test_filing_emitted_byte_acceptance.py",
+            payload_sha256=_DIGEST,
+            emitted_bytes=1,
+            checked_official_offsets=0,
+        )
+
+
+def test_proof_catalogue_refuses_a_different_loaded_layout_identity() -> None:
+    """Proof for one layout cannot cross-satisfy another layout of the same revision."""
+    proof = FilingExportProof(
+        modelo=Modelo.M111,
+        revision="2019-y-siguientes",
+        layout_ids=("m111-2019-fixed",),
+        generation=FilingExportGenerationProof(
+            authority="dev.registry.pipeline.verify_export_fragment_provenance_manifest",
+            manifest_locator="structural-proof/_generation.provenance.json",
+            manifest_sha256=_DIGEST,
+            semantic_map_sha256=_DIGEST,
+            render_profile_sha256=_DIGEST,
+            loader_semantic_sha256=_DIGEST,
+            output_files=(GeneratedExportFileDigest(relative_path="0000-export-layout.toml", sha256=_DIGEST),),
+        ),
+        emission=FilingExportEmissionProof(
+            authority="cadrumo.application.filing.export_draft",
+            evidence_locator="structural-proof/emitted-byte-result",
+            payload_sha256=_DIGEST,
+            emitted_bytes=1,
+            checked_official_offsets=1,
+        ),
+    )
+    catalogue = FilingExportProofCatalogue(proofs=(proof,))
+
+    assert (
+        catalogue.proof_for(
+            modelo=Modelo.M111,
+            revision=proof.revision,
+            layout_ids=("different-layout",),
+        )
+        is None
+    )
 
 
 def test_filing_export_coverage_retains_every_revision_and_below_grade_refusal(registry_authority) -> None:
@@ -17,9 +88,7 @@ def test_filing_export_coverage_retains_every_revision_and_below_grade_refusal(r
     report = compose_filing_export_coverage(authority=registry_authority)
 
     assert {(limb.modelo, limb.revision) for limb in report.limbs} == {
-        (modelo.id, revision.id)
-        for modelo in registry_authority.modelos
-        for revision in modelo.revisions.values()
+        (modelo.id, revision.id) for modelo in registry_authority.modelos for revision in modelo.revisions.values()
     }
     limb = next(limb for limb in report.limbs if (limb.modelo, limb.revision) == ("036", "2025-02-03-y-siguientes"))
 
@@ -70,6 +139,32 @@ def test_filing_export_coverage_refuses_layout_source_byte_drift(registry_author
     limb = report.limbs[0]
 
     assert (limb.outcome, limb.refusal.reason) == ("refused", "stale_evidence")
+
+
+def test_modelo_111_layout_cannot_satisfy_without_generation_and_emission_proof(registry_authority) -> None:
+    """A loadable fixed-width declaration is not evidence that production can emit it."""
+    modelo = registry_authority.modelo(Modelo.M111)
+    revision = modelo.revisions["2019-y-siguientes"]
+    assert revision.authority_grade is RegistryAuthorityGrade.FILING
+    assert revision.export_layouts
+    authority = _authority_with_single_revision(
+        registry_authority,
+        modelo=modelo,
+        revision=revision,
+    )
+
+    report = compose_filing_export_coverage(authority=authority)
+    limb = report.limbs[0]
+
+    assert (limb.modelo, limb.revision, limb.outcome) == (
+        Modelo.M111,
+        revision.id,
+        "refused",
+    )
+    assert limb.refusal is not None
+    assert limb.refusal.reason == "missing_evidence"
+    assert "generation" in limb.refusal.detail
+    assert "emitted-byte" in limb.refusal.detail
 
 
 def _authority_with_single_revision(

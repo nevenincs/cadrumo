@@ -28,6 +28,7 @@ from ._closure import (
     RegistryClosureRefusal,
     RegistryClosureRefusalReason,
 )
+from ._filing_export_authority import FilingExportProof, FilingExportProofAuthority
 from ._temporal_coverage import _law_selection_coordinate
 
 __all__ = [
@@ -65,7 +66,11 @@ class FilingExportCoverageReport(BaseModel):
         return tuple(limb for limb in self.limbs if limb.outcome != "satisfied")
 
 
-def compose_filing_export_coverage(*, authority: ValidatedRegistryAuthority) -> FilingExportCoverageReport:
+def compose_filing_export_coverage(
+    *,
+    authority: ValidatedRegistryAuthority,
+    proof_authority: FilingExportProofAuthority | None = None,
+) -> FilingExportCoverageReport:
     """Compose filing-layout evidence from validated law-selected snapshots.
 
     A revision below filing grade is a deliberate non-filing capability and is
@@ -75,7 +80,12 @@ def compose_filing_export_coverage(*, authority: ValidatedRegistryAuthority) -> 
     """
     authority.validate_registry()
     limbs = tuple(
-        _compose_revision_limb(authority=authority, modelo_id=modelo.id, revision=revision)
+        _compose_revision_limb(
+            authority=authority,
+            proof_authority=proof_authority,
+            modelo_id=modelo.id,
+            revision=revision,
+        )
         for modelo in sorted(authority.modelos, key=lambda item: item.id)
         for revision in sorted(modelo.revisions.values(), key=lambda item: item.id)
     )
@@ -85,6 +95,7 @@ def compose_filing_export_coverage(*, authority: ValidatedRegistryAuthority) -> 
 def _compose_revision_limb(
     *,
     authority: ValidatedRegistryAuthority,
+    proof_authority: FilingExportProofAuthority | None,
     modelo_id: str,
     revision,
 ) -> RegistryClosureLimb:
@@ -155,6 +166,24 @@ def _compose_revision_limb(
             work_item="aeat-export-fragment-generator-authority:official-layout-evidence",
             reconsideration_condition="Restore byte-exact official layout evidence for every emitted filing layout.",
         )
+    proof, proof_failure = _filing_export_proof(
+        proof_authority=proof_authority,
+        snapshot=snapshot,
+    )
+    if proof_failure is not None:
+        return _refused_limb(
+            modelo_id=modelo_id,
+            revision_id=revision.id,
+            reason=proof_failure.reason,
+            detail=proof_failure.detail,
+            work_item="aeat-export-fragment-generator-authority:production-emission-proof",
+            reconsideration_condition=(
+                "Verify the canonical generation manifest against the current semantic map and render profile, "
+                "then record successful production emitted-byte evidence."
+            ),
+        )
+    assert proof is not None
+    evidence = (*evidence, *_proof_evidence(proof))
     return RegistryClosureLimb(
         modelo=modelo_id,
         revision=revision.id,
@@ -204,6 +233,62 @@ def _layout_byte_evidence(
     return tuple(evidence), None
 
 
+def _filing_export_proof(
+    *,
+    proof_authority: FilingExportProofAuthority | None,
+    snapshot,
+) -> tuple[FilingExportProof | None, _LayoutEvidenceFailure | None]:
+    """Require one exact canonical-generation and production-emission proof."""
+    if proof_authority is None:
+        return None, _LayoutEvidenceFailure(
+            reason="missing_evidence",
+            detail="no canonical generation and production emitted-byte proof authority was supplied",
+        )
+    layout_ids = tuple(layout.id for layout in snapshot.revision.export_layouts)
+    try:
+        proof = proof_authority.proof_for(
+            modelo=snapshot.modelo.id,
+            revision=snapshot.revision.id,
+            layout_ids=layout_ids,
+        )
+    except (OSError, RuntimeError, ValueError) as exc:
+        return None, _LayoutEvidenceFailure(reason="stale_evidence", detail=_failure_detail(exc))
+    if proof is None:
+        return None, _LayoutEvidenceFailure(
+            reason="missing_evidence",
+            detail="canonical generation or successful production emitted-byte evidence is absent",
+        )
+    if proof.modelo != snapshot.modelo.id or proof.revision != snapshot.revision.id or proof.layout_ids != layout_ids:
+        return None, _LayoutEvidenceFailure(
+            reason="conflicting_evidence",
+            detail="filing export proof identity does not match the law-selected registry snapshot",
+        )
+    return proof, None
+
+
+def _proof_evidence(proof: FilingExportProof) -> tuple[RegistryClosureEvidence, ...]:
+    """Project both independent proof authorities into the closure evidence spine."""
+    return (
+        RegistryClosureEvidence(
+            authority=proof.generation.authority,
+            locator=(
+                f"{proof.generation.manifest_locator}#sha256={proof.generation.manifest_sha256}"
+                f";semantic={proof.generation.semantic_map_sha256}"
+                f";render={proof.generation.render_profile_sha256}"
+                f";loader={proof.generation.loader_semantic_sha256}"
+            ),
+        ),
+        RegistryClosureEvidence(
+            authority=proof.emission.authority,
+            locator=(
+                f"{proof.emission.evidence_locator}#payload-sha256={proof.emission.payload_sha256}"
+                f";bytes={proof.emission.emitted_bytes}"
+                f";checked-offsets={proof.emission.checked_official_offsets}"
+            ),
+        ),
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class _LayoutEvidenceFailure:
     """One typed internal failure while checking live layout-source bytes."""
@@ -241,6 +326,6 @@ def _refused_limb(
     )
 
 
-def _failure_detail(error: RegistrySnapshotError | RegistryValidationError) -> str:
+def _failure_detail(error: Exception) -> str:
     """Keep a source or snapshot refusal stable for report consumers."""
-    return str(error).splitlines()[0][:1024]
+    return str(error).splitlines()[0][:500]

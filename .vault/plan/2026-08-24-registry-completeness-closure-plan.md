@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:931a8176558ec6dc70f03c089c488c9660a8010af8d6336afd5a1c5aeb31b1cb'
+body_hash: 'sha256:8f1badc9dec04f0e9b8b9851f30cf0af2b85dc0869c97efb48800ff7ebbe772a'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -70,7 +70,7 @@ Compose one typed cross-authority report from validated registry coverage, sourc
 - [x] `W01.P02.S54` - Drive a generic ValueError through live connected-proof revalidation and prove the closure composer maps the fallback cause to a fail-closed missing-evidence refusal with a mutation bite.; `src/cadrumo/application/registry/tests/; src/cadrumo/core/tests/`.
 - [x] `W01.P02.S55` - Repair W01.P02.S51 execution-record Description, Outcome, and Notes through the canonical execution-document flow and re-attest its scoped checks.; `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S51.md`.
 - [x] `W01.P02.S56` - Reconcile S51's checked state and execution record with independently reviewed S54 live fallback evidence, closing the S55 high tracking finding without rewriting history.; `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S51.md; .vault/plan/2026-08-24-registry-completeness-closure-plan.md; .vault/audit/`.
-- [ ] `W01.P02.S57` - Require canonical generator provenance, exact semantic-map and render-profile identities, generated-fragment integrity, and successful emitted-byte evidence before filing-export closure can satisfy, with a Modelo 111 refusal regression; `src/cadrumo/application/registry/; dev/registry/; src/cadrumo/application/filing/tests/`.
+- [x] `W01.P02.S57` - Require canonical generator provenance, exact semantic-map and render-profile identities, generated-fragment integrity, and successful emitted-byte evidence before filing-export closure can satisfy, with a Modelo 111 refusal regression; `src/cadrumo/application/registry/; dev/registry/; src/cadrumo/application/filing/tests/`.
 - [x] `W01.P02.S58` - Validate and live-rehash filing-envelope and auxiliary-envelope-header source identities and digests against the catalogue, with missing, mismatched, and stale-digest mutation proof; `src/cadrumo/domain/calculations/registry/; src/cadrumo/application/registry/`.
 
 ## Wave `W02` - filing-gap adjudication and owner routing
