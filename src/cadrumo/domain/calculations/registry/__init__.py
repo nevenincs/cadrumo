@@ -671,9 +671,11 @@ from ._schema import (
     RelationDefinition,
     SourceReference,
     SourceRefs,
+    SupportedFilingYearsCatalogue,
     export_semantic_payload_axis,
     WorkbookParityReference,
 )
+from ._supported_filing_years import SupportedFilingYearGap, audit_supported_filing_years
 from ._schema_scalars import registry_scalar_value_type, validate_registry_text_scalar
 from ._static_inspection import RegistryRevisionInspection
 from ._schema_input_kind import InputKind, InputKindValue
@@ -1195,6 +1197,8 @@ __all__ = [
     "SourceReference",
     "SourceRefs",
     "StampedRegistryRelease",
+    "SupportedFilingYearGap",
+    "SupportedFilingYearsCatalogue",
     "TaxRoute",
     "UnattributedOraclePayload",
     "UngroundedRentaIncome",
@@ -1229,6 +1233,7 @@ __all__ = [
     "audit_registry_oracle_bindings",
     "audit_registry_relation_handoff_applicability",
     "audit_registry_relation_handoffs",
+    "audit_supported_filing_years",
     "binding_aggregation_op",
     "binding_profile_keys",
     "binding_row_set_selector",

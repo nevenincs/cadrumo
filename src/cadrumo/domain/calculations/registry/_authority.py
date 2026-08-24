@@ -39,6 +39,7 @@ from ._snapshot import _build_validated_snapshot
 from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
 from ._static_inspection import RegistryRevisionInspection
 from ._supplementary_orden import collect_supplementary_orden_fingerprints, compile_supplementary_ordenes
+from ._supported_filing_years import SupportedFilingYearGap, audit_supported_filing_years
 from ._temporal import select_revision
 from ._validate import RegistryValidator
 from ._validate_evidence import flush_corpus_text_cache
@@ -122,6 +123,7 @@ class ValidatedRegistryAuthority:
     _validated_modelos: set[str]
     _snapshots: dict[_SnapshotKey, RegistrySnapshot]
     _authorization_manifest: AuthorizationManifest
+    _supported_filing_year_gaps: tuple[SupportedFilingYearGap, ...]
 
     @classmethod
     def load(cls, root: Path, *, source_root: Path) -> ValidatedRegistryAuthority:
@@ -230,6 +232,11 @@ class ValidatedRegistryAuthority:
             The loaded :class:`AuthorizationManifest` object.
         """
         return self._authorization_manifest
+
+    @property
+    def supported_filing_year_gaps(self) -> tuple[SupportedFilingYearGap, ...]:
+        """Return the complete advisory gap projection for declared years."""
+        return self._supported_filing_year_gaps
 
     def modelo_has_engine(self, modelo_id: str) -> bool:
         """Return whether ``modelo_id`` declares a calculation surface.
@@ -515,11 +522,14 @@ def _construct_authority(
     # the shared legal/ catalogue (which resolves to bundled BOE corpus text).
     convenio = load_convenio_authority(root / "treaties")
     validate_convenio_legal_refs(convenio, frozenset(catalogues.legal))
+    if catalogues.supported_filing_years is None:
+        raise RegistryValidationError("registry has no supported_filing_years catalogue")
     supplementary_ordenes = compile_supplementary_ordenes(
         root,
         source_root=source_root,
         modelos=modelos,
         sources=catalogues.sources,
+        supported_filing_years=catalogues.supported_filing_years.years,
     )
     duplicate_legal_refs = set(catalogues.legal).intersection(supplementary_ordenes.legal)
     if duplicate_legal_refs:
@@ -553,6 +563,11 @@ def _construct_authority(
         # The manifest is fingerprinted into _collect_registry_tree_fingerprints
         # so this lru_cache invalidates when the manifest changes on disk.
         _authorization_manifest=load_authorization_manifest(root),
+        _supported_filing_year_gaps=audit_supported_filing_years(
+            modelos,
+            catalogue=catalogues.supported_filing_years,
+            sources=catalogues.sources,
+        ),
     )
     return authority
 

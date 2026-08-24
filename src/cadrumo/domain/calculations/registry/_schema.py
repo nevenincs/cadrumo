@@ -229,6 +229,7 @@ __all__ = [
     "SourceCitationText",
     "SourceReference",
     "SourceRefs",
+    "SupportedFilingYearsCatalogue",
     "TemporalApplicability",
     "VerificationExpectationDefinition",
     "VerificationPredicateDefinition",
@@ -1468,12 +1469,28 @@ def _union_across_expectations[T](
     return frozenset(value for expectation in expectations for value in select(expectation))
 
 
+class SupportedFilingYearsCatalogue(RegistryModel):
+    """The registry's sole declaration of filing years the product supports."""
+
+    years: tuple[int, ...] = Field(min_length=1)
+
+    @field_validator("years")
+    @classmethod
+    def _years_are_unique_and_ordered(cls, value: tuple[int, ...]) -> tuple[int, ...]:
+        if any(year < 2000 or year > 2099 for year in value):
+            raise RegistryValidationError("supported filing years must be between 2000 and 2099")
+        if tuple(sorted(set(value))) != value:
+            raise RegistryValidationError("supported filing years must be unique and in ascending order")
+        return value
+
+
 class RegistryCatalogues(RegistryModel):
     legal: Mapping[LegalRefId, LegalReference]
     sources: Mapping[SourceRefId, SourceReference]
     parameters: Mapping[str, LegalParameter] = Field(default_factory=dict)
     convenio: ConvenioAuthority = Field(default_factory=ConvenioAuthority.empty)
     supplementary_ordenes: Mapping[Modelo, M303AnnualOrdenAuthority] = Field(default_factory=dict)
+    supported_filing_years: SupportedFilingYearsCatalogue | None = None
 
 
 class RegistrySnapshot(RegistryModel):

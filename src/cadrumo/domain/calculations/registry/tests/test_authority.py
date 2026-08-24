@@ -116,6 +116,9 @@ def test_authority_deadline_windows_are_validated_and_sorted(registry_authority:
 
 
 _MINIMAL_CATALOGUE_TOML = """\
+[supported_filing_years]
+years = [2025]
+
 [legal."test-ley-001:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"
