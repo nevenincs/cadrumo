@@ -8503,3 +8503,40 @@ parser segments records rather than at the data.
 Left for the campaign owning the sede parser and the M130 export layout. What is
 established here and worth not re-deriving: the fixture is official evidence, the declared
 offset holds a legal marker, and therefore the defect is upstream of the bytes.
+
+## Two of the three gates the CLI-contract rule names are gone
+
+`aeat-cli-contract` closes by naming its gates: `test_documented_command_conformance.py`,
+`test_json_schema_conformance.py`, `test_rule_surface_conformance.py`. Only the first
+still exists.
+
+`test_json_schema_conformance.py` -- 1,209 lines -- was deleted eighteen hours ago in
+`4b78f996de`, whose entire message is "src: operator surface, json contract and inventory
+projection follow-ups". `test_rule_surface_conformance.py` is absent too.
+
+The deletion is not incoherent on its own terms: the same commit removed
+`SCHEMA_REGISTRY` from `core/json_contract.py`, and schema identity now lives on the
+command specs as `ResultSchemaSpec(..., identity="ledger.list")`. Restoring the old gate
+verbatim fails at import for exactly that reason, so this was a mechanism change and not
+a slip.
+
+What did NOT move is the contract the gate enforced. Nothing now checks that a command
+refuses to regrow a bespoke `advisory` / `next` / `suggestion` field beside the envelope's
+one diagnostic channel -- which is the rule's central mandate, and a defect this campaign
+has already hit twice from the other direction (a notice carrying command prose, a
+context carrying an exception class name).
+
+Two test modules were left importing the deleted surfaces and now fail at COLLECTION,
+which takes down collection for any run that touches that directory:
+`test_conformance_detector_controls.py` (imports `_is_forbidden_notice_field` from the
+deleted gate) and `test_profile_target_invocation_shape.py` (imports
+`_has_explicit_profile_read_target`, deleted in `167a42c22e6`).
+
+The control module is worth reading before it goes. It exists because "a gate only earns
+trust once it has been shown to return a NON-empty answer", and it supplied the missing
+positive controls for exactly the two detectors that had none. Deleting the gate removed
+the check; deleting the control removes the proof the check ever bit.
+
+This needs an owner decision, not a repair from here: either the envelope contract is
+re-gated against the command-spec kernel that replaced the registry, or the rule stops
+naming gates that no longer exist. Both are cheap; neither is mine to pick.
