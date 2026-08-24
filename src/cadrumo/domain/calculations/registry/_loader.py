@@ -20,7 +20,6 @@ from ....core import (
     OBJECT_TUPLE_ADAPTER,
     DirectoryEntryKind,
     FilingProducerKey,
-    ResultDisposition,
     compile_filing_projection_ref,
     freeze_toml,
     read_toml,
@@ -80,7 +79,6 @@ clear_fingerprint_cache = _clear_fingerprint_cache
 _REVISION_EXPORT_LAYOUTS = "export_layouts"
 _REVISION_CONSTRUCTS = "constructs"
 _REVISION_COMPLETENESS_MANIFEST = "completeness_manifest"
-_DEADLINE_WINDOW_QUALIFIER_FIELDS = frozenset({"resultado_scope", "tipo_renta_scope"})
 _REVISION_SPECIAL_MERGE_FIELDS = frozenset({_REVISION_EXPORT_LAYOUTS, _REVISION_CONSTRUCTS})
 _REVISION_APPEND_ARRAYS: frozenset[str] = frozenset(
     field_name
@@ -351,49 +349,9 @@ def _compile_revision_projection_layout(source_path: Path, raw_layout: object) -
     return compiled
 
 
-def _compile_deadline_window_qualifiers(source_path: Path, raw_window: object) -> object:
-    """Compile optional deadline qualifiers without rewriting legacy rows.
-
-    Unqualified frozen TOML rows are returned verbatim.  That keeps the loader's
-    pre-schema representation byte-stable for the existing corpus while the
-    qualified path resolves ``resultado_scope`` through the shared core enum at
-    the same compiler boundary used by other registry-owned enum tokens.
-    """
-    window = _as_toml_table(raw_window)
-    if window is None or not _DEADLINE_WINDOW_QUALIFIER_FIELDS.intersection(window):
-        return raw_window
-    compiled = dict(window)
-    raw_resultado = compiled.get("resultado_scope")
-    if raw_resultado is not None and not isinstance(raw_resultado, ResultDisposition):
-        if not isinstance(raw_resultado, str):
-            raise RegistryLoadError(
-                f"{source_path}: deadline window resultado_scope must be a canonical string token, got "
-                f"{type(raw_resultado).__name__!r}",
-            )
-        try:
-            compiled["resultado_scope"] = ResultDisposition(raw_resultado)
-        except ValueError as exc:
-            raise RegistryLoadError(
-                f"{source_path}: deadline window resultado_scope {raw_resultado!r} is not a canonical "
-                "ResultDisposition",
-            ) from exc
-    return compiled
-
-
 def _compile_revision_projection_semantics(source_path: Path, payload: Mapping[str, object]) -> dict[str, object]:
     """Compile revision-owned typed tokens before schema construction."""
-    misplaced_qualifiers = sorted(_DEADLINE_WINDOW_QUALIFIER_FIELDS.intersection(payload))
-    if misplaced_qualifiers:
-        raise RegistryLoadError(
-            f"{source_path}: deadline qualifier fields {misplaced_qualifiers!r} must be declared inside a "
-            "deadline_windows row in the deadline_windows section",
-        )
     compiled = dict(payload)
-    windows = _as_toml_array(payload.get("deadline_windows"))
-    if windows is not None:
-        compiled["deadline_windows"] = tuple(
-            _compile_deadline_window_qualifiers(source_path, raw_window) for raw_window in windows
-        )
     declarations = _as_toml_array(payload.get("projection_endpoints"))
     if declarations is not None:
         compiled["projection_endpoints"] = tuple(

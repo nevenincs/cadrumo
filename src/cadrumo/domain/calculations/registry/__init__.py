@@ -139,7 +139,7 @@ from ._authority import (
 from ._deadline_coordinate import (
     DeadlineSemanticCoordinate,
     deadline_semantic_coordinate,
-    deadline_window_semantic_coordinate,
+    deadline_window_semantic_coordinates,
 )
 from ._identity import (
     REGISTRY_IDENTITY_SCHEMA_VERSION,
@@ -1276,7 +1276,7 @@ __all__ = [
     "compute_withholding_totals_parity",
     "counterpart_binding_requirements",
     "deadline_semantic_coordinate",
-    "deadline_window_semantic_coordinate",
+    "deadline_window_semantic_coordinates",
     "declared_casilla_ids",
     "derive_calculation_completeness_casillas",
     "derive_diseno_coverage_casillas",
