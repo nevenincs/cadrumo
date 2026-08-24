@@ -23,11 +23,13 @@ rules out treating the workspace as one eagerly mounted generic schema form.
 
 The evidence favors a typed, destination-oriented Modelo workspace that maps an
 application-owned projection into TUI-local view models, stages edits in one
-memory-only session, submits application-owned operation requests, and refreshes
-from a new authoritative projection after settlement. The ADR must decide that
-interface contract, its staged cohorts, and its proof gates without taking
-registry, calculation, operation-lifecycle, persistence, or root-shell
-authority.
+memory-only session, consumes a separate versioned application edit contract,
+and refreshes from a new authoritative projection after operation settlement.
+The interface ADR must decide destinations, local state, staged cohorts, and
+visual proof without taking registry, calculation, application mutation,
+operation-lifecycle, persistence, or root-shell authority. The missing
+frontend-neutral edit contract is a separate decision consumed by that
+interface.
 
 ## Findings
 
@@ -88,7 +90,7 @@ must not decide authority grade, editability, calculation rules, lifecycle
 readiness, or operation eligibility. This mapping also gives snapshot tests a
 stable interface without making Textual types part of the application API.
 
-### Editing is one baseline-bound transaction, not a sequence of domain writes
+### Editing has a local transaction and a separate application write contract
 
 Calculation revisions are immutable, content-addressed records whose identity
 includes scalar, binding, relation, row, provenance, and detail-row inputs
@@ -101,17 +103,54 @@ random destination navigation, virtualization, and conflict state rather than
 being modelled as one linear generic flow
 (`2026-07-23-tui-wizard-substrate-adr`).
 
-The interface decision therefore needs a memory-only edit session containing a
-visible work address, the Workspace read-consistency identity, a separately
-admitted write-side edit baseline, schema/version identity, base projection
-reference, staged typed intents, dirty semantic addresses, ordered row intents,
-validation presentation, and submit state. `UNCHANGED`, `SET`, `CLEAR` or
-override removal, zero, row add, row delete, and row move cannot be collapsed
-into one nullable value. Review should compile one application-owned mutation
-request; the TUI must neither persist a partial calculation revision nor write
-through on blur. A durable editor checkpoint would duplicate sensitive
-financial inputs outside the existing work repository and has no accepted
-custody contract, so it is not supported by current evidence.
+The interface needs a memory-only edit session containing a visible work
+address, Workspace read-consistency identity, separately admitted write-side
+baseline, schema/version identity, base semantic references, staged typed
+intents, dirty addresses, ordered row intents, validation presentation, and
+submit state. `UNCHANGED`, `SET`, `CLEAR` or override removal, zero, row add,
+row delete, and row move cannot be collapsed into one nullable value. Review
+must compile one application-owned mutation request; the TUI must neither
+persist a partial calculation revision nor write through on blur. A durable
+editor checkpoint would duplicate sensitive financial inputs outside the
+existing work repository and has no accepted custody contract.
+
+That local session is not itself the write contract. Workspace V1 is expressly
+read-only, while the operation registry owns lifecycle rather than parsing,
+editability, repeated rows, or Modelo persistence. A frontend-neutral public
+contract is therefore still required behind `application.modelo` for version
+dispatch, admission, locale-aware parsing, authoritative preflight, normalized
+intents, capability/refusal, and execution result. Its current-only
+compatibility boundary must name Workspace, edit, public operation projection,
+and operation financial-operand versions independently; sharing one generic
+version or letting an operation definition stand in for the edit schema would
+hide incompatible seams.
+
+### The mutation baseline spans both catalogues and the selected registry schema
+
+The existing calculation writer already receives the revision-stamped work
+catalogue, revision-loads the calculation catalogue, and compares both during a
+single secure-object save. The work unit additionally carries its law-selected
+registry revision and nullable current calculation head. Workspace V1 supplies
+the canonical schema identity and fingerprint. Those are the minimum complete
+edit baseline: work-catalogue revision, calculation-catalogue revision, current
+calculation-revision id, registry revision, schema identity/fingerprint, and the
+application-issued permitted edit surface. A Workspace read token cannot replace
+them because it is explicitly not a mutation precondition
+(`src/cadrumo/application/modelo/_revision_persistence.py:224-427`,
+`src/cadrumo/domain/modelos/_work_unit.py:125-177`).
+
+The existing success path already co-commits an immutable calculation revision,
+the advanced work-unit pointer, and the corresponding bucket event under
+compare-and-swap. It returns the revision to the caller but has no durable
+edit-result receipt that an operation reconciler can use after a crash. The
+stable edit boundary therefore needs to extend that same single writer with a
+safe encrypted result receipt, not create a second persistence path. Stale work
+catalogue, calculation catalogue/head, registry, schema, or permitted-surface
+coordinates must refuse before any write; a failed compare-and-swap leaves all
+four records absent. A receipt that contains only safe identities can prove an
+already-committed `UPDATED` effect without retaining financial values
+(`src/cadrumo/adapters/persistence/profile/modelos_work_units.py:221-282`,
+`src/cadrumo/application/modelo/tests/test_lifecycle_event_atomicity.py:1-18`).
 
 ### Repeated rows require draft identity distinct from canonical row coordinates
 
@@ -155,7 +194,7 @@ Successful operation settlement must similarly trigger a fresh authoritative
 workspace read; patching the old projection from a terminal result would create
 a second materializer.
 
-### Actions are typed capability references, not button callbacks
+### Actions need a generated complete denominator, not a chosen button list
 
 The accepted operation architecture owns enrollment, interaction, progress,
 cancellation, settlement, result, and effect semantics. The current operation
@@ -167,21 +206,42 @@ observation required by that architecture
 workspace must therefore consume the operation projection only after the
 operation cohort closes; it cannot define a sibling operation DTO.
 
-Each visual action needs an application-projected stable action reference,
+Each visual action needs an application-projected stable mutation identity,
 registered operation definition reference, capability disposition, refusal or
-reconsideration condition, interaction kind, and result destination. A control
-is enabled only when the projection says the capability is available. Refused,
-not-applicable, and unmeasured are distinct visible states; an
-unexplained disabled control is not sufficient. Canonical application error and
-action envelopes remain the sources for top-level failure and recovery actions.
+reconsideration condition, interaction kind, and result destination. A
+canonical recovery `ActionReference` may be joined but does not grant invocation
+authority. A control is enabled only when the projection says the capability is
+available. Refused, not-applicable, and unmeasured are distinct visible states;
+an unexplained disabled control is not sufficient. Canonical application error
+and action envelopes remain the sources for top-level failure and recovery
+actions.
 
-The lifecycle action inventory must be explicit per cohort. Read destinations
-may offer refresh and inspect actions before mutation exists. Calculate or
-recalculate is the first editor submit action. Verify, file, export,
-discard, rename, and similar lifecycle actions cannot appear merely because a
-CLI command exists; each requires its own enrolled operation, projected
-capability, interaction classification, terminal refresh mapping, and acceptance
-receipt.
+The lifecycle action inventory must be derived and explicit per cohort. Its
+candidate denominator must join the canonical action catalogue, operation
+definitions, complete command graph and `TuiCapability` declarations, direct
+application mutation/outbound sites, TUI routes/dispatch, and typed exclusions.
+A fixed point over only actions already chosen for display can never detect an
+omitted action.
+
+Current code makes that failure concrete. `modelo.work.amend` is a live
+calculation mutation, and `modelo.work.amend_wizard` is a separate guided
+command currently marked `TuiCapability.AVAILABLE`
+(`src/cadrumo/entrypoints/cli/_modelo_core_command_specs.py:167-199`,
+`src/cadrumo/entrypoints/cli/_modelo_nonwork_command_specs.py:2311-2415`). The
+domain amendment service atomically advances filing and calculation state
+rather than behaving like ordinary recalculation. The inventory must therefore
+classify `amend` as a separately enrolled lifecycle/editor action and the wizard
+as a flow-owned transitional presentation to replace or retire, rather than
+letting either disappear from a hand-maintained workspace table. The same
+generated denominator must classify direct queries and other flow/global
+operation commands exactly once.
+
+Read destinations may offer refresh and inspect actions before mutation exists.
+Calculate or recalculate is the first editor submit action. Verify, file,
+export, amend, discard, rename, and similar lifecycle actions cannot appear
+merely because a CLI command exists; each requires its own application
+capability, enrolled operation, interaction classification, terminal refresh
+mapping, and acceptance receipt.
 
 ### Registry scale requires bounded rendering and consistency tokens
 
@@ -214,7 +274,8 @@ proof matrix already establishes Spanish, English, Catalan, and Hungarian;
 `80x24`, `120x36`, and `160x48`; light and dark themes; keyboard traversal; and
 non-colour-only status. Complex Modelo proof must extend that matrix with long
 labels, deep sections, large row counts, validation focus, stale conflict,
-capability/refusal, and production root-app composition
+capability/refusal, and production root-app composition before each route or
+action becomes callable or declares `TuiCapability.AVAILABLE`
 (`2026-08-11-tui-interface-adr`).
 
 Financial values are not generic application secrets, but they are sensitive.
@@ -227,10 +288,27 @@ decisions.
 ### The dependency order is sequential, but registry completeness is not a global gate
 
 The audit's C0-C5 sequence matches the real dependencies: operation observation;
-bounded review relocation; complex read workspace; staged calculate/edit;
-lifecycle actions; then fixed-point visual, scale, accessibility, and
-composition closure. A cohort should open only when its named API and
-architecture dependencies have accepted records plus executable receipts.
+bounded review relocation; complex read workspace; the application edit
+contract plus operation-owned financial-operand submission; lifecycle actions;
+then fixed-point visual and composition closure. A cohort should open only when
+its named API and architecture dependencies have accepted records plus
+executable receipts. Accessibility cannot be delayed until the final cohort if
+an earlier route becomes callable; each cohort needs its applicable
+locale/geometry/theme/keyboard/non-colour proof before availability.
+
+The accepted Casilla record gives C1 one canonical bounded review at
+`entrypoints.tui.modelo.view`, but the larger destination catalogue needs an
+explicit C1 destination identity and an atomic C2 replacement rule. Otherwise a
+"closed" catalogue can omit the only screen its first cohort migrates
+(`2026-08-10-casilla-schema-read-model-adr`).
+
+Receipt identity also needs one home. The C1 interface exit is
+`ModeloWorkspaceC1ExitReceiptV1`; the API-owned C2 dependency is
+`ModeloWorkspaceC2DependencyReceiptV1`; C3 must consume a separately green edit
+contract receipt and the operation-owned financial-operand receipt. Every later
+receipt needs predecessor digests and a typed not-applicable disposition with
+owner, code, reason, and evidence. Null or prose "n/a" would let a missing
+required axis masquerade as a green matrix cell.
 
 Global registry completion need not precede complex reads. A selected revision
 can honestly render available inspection capability and evidence-backed
@@ -243,8 +321,9 @@ cannot deliver the requested workspace. A generic registry-to-widget interpreter
 is superficially fast but violates application and registry boundaries. Treating
 the whole workspace as one generic wizard preserves atomic submit but fails
 non-linear navigation and scale. The evidence favors a destination-oriented
-workspace with local view models and a staged edit session; the ADR must settle
-that option and its exact gates.
+workspace with local view models, a staged local session, and a separate
+application edit contract; the ADR cluster must settle those boundaries and
+their exact gates.
 
 ### Not investigated
 
@@ -252,8 +331,9 @@ This research does not choose visual styling, copy, a design-token palette,
 framework-specific widget classes, or numeric performance budgets beyond the
 architectural requirement for bounded rendering. It does not expand which
 Modelos have filing authority, authorize live AEAT side effects, define registry
-fields, or decide a general-purpose merge algorithm. Those remain with their
-existing authorities or future focused decisions.
+fields, decide operation custody, or introduce a general-purpose merge
+algorithm. Those remain with their existing authorities or future focused
+decisions.
 
 ## Sources
 
@@ -261,13 +341,21 @@ existing authorities or future focused decisions.
 - `2026-08-11-tui-interface-adr`
 - `2026-08-11-tui-architecture-adr`
 - `2026-08-24-tui-registry-api-gate-adr`
+- `2026-08-24-tui-operation-observation-adr`
+- `2026-08-10-casilla-schema-read-model-adr`
 - `2026-06-04-modelo-addressing-ux-adr`
 - `2026-07-23-tui-wizard-substrate-adr`
 - `src/cadrumo/domain/calculations/registry/_schema_surfaces.py:102-303`
 - `src/cadrumo/application/modelo/_calculate_input.py:149-177`
+- `src/cadrumo/application/modelo/_revision_persistence.py:224-427`
+- `src/cadrumo/adapters/persistence/profile/modelos_work_units.py:221-282`
 - `src/cadrumo/domain/modelos/_calculation_revision.py:399-463`
 - `src/cadrumo/domain/modelos/_calculation_revision.py:1011-1094`
+- `src/cadrumo/domain/modelos/_work_unit.py:125-177`
 - `src/cadrumo/application/operations/_registry.py:61-65`
 - `src/cadrumo/application/operations/_supervisor.py:366-369`
+- `src/cadrumo/entrypoints/cli/_modelo_core_command_specs.py:167-199`
+- `src/cadrumo/entrypoints/cli/_modelo_nonwork_command_specs.py:2311-2415`
+- `src/cadrumo/application/modelo/tests/test_lifecycle_event_atomicity.py:1-18`
 - Runtime measurement on 2026-08-24: `uv run --no-sync python -c` over
   `cadrumo.domain.calculations.registry.bundled_authority()`.

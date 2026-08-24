@@ -11,9 +11,6 @@ related:
   - "[[2026-08-24-deadline-window-revision-authority-plan]]"
 ---
 
-
-
-
 # Define the canonical deadline semantic coordinate from modelo, Period, ResultDisposition, and official tipo-renta code scope using existing period authorities
 
 ## Scope

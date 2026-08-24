@@ -11,9 +11,6 @@ related:
   - "[[2026-08-24-deadline-window-revision-authority-plan]]"
 ---
 
-
-
-
 # Record the canonical shared temporal-coverage dependency in the approved deadline architecture
 
 ## Scope

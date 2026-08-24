@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:2a452e075cc80817857e3ef6cf4b3cb02659389fa90c4fe82016fefb80ed3e51'
+body_hash: 'sha256:02718d99aaab9f34595afb0c1afcf7eac03e81fcd1a518ec4693bf0259512a25'
 related:
   - '[[2026-08-24-tui-registry-api-gate-research]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
@@ -14,6 +14,7 @@ related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
   - '[[2026-08-10-casilla-schema-canonical-derivations-adr]]'
   - '[[2026-08-10-casilla-schema-blocker-spine-adr]]'
+  - '[[2026-08-08-profile-requirement-grounding-adr]]'
   - '[[2026-06-04-modelo-addressing-ux-adr]]'
   - '[[2026-06-10-period-revision-resolution-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
@@ -62,9 +63,15 @@ reconciliation are grounded in `2026-08-24-tui-registry-api-gate-research` and
 - Schema is language-neutral. Display text is resolved through the canonical
   localization cascade and locale changes cannot alter domain identity,
   values, or capability (`2026-08-04-modelo-localization-cascade-adr`).
-- `ModeloWorkReview` remains a bounded pure-read projection; Workspace V1 is a
-  separate, wider read model rather than its replacement
+- `ModeloWorkReview` remains the accepted canonical bounded C1 projection with
+  one public producer. Workspace V1 is a wider read model around that exact
+  facet, not a second assembler or its replacement
   (`2026-08-10-casilla-schema-read-model-adr`).
+- Profile readiness retains an explicit per-operation assessment axis whose
+  `false` state means nothing on that axis was examined and whose `true` state
+  still means only that tokenised required fields were examined. Neither state
+  is a Modelo-completeness verdict
+  (`2026-08-08-profile-requirement-grounding-adr`).
 - Public operation observation is the external amendment proposed by
   `2026-08-24-tui-operation-observation-adr`. Modelo workspace presentation and
   editing are the external interface/write-side amendment proposed by
@@ -115,6 +122,11 @@ reconciliation are grounded in `2026-08-24-tui-registry-api-gate-research` and
   `unmeasured`, never available. Workspace V1 does not infer readiness from
   schema population, layout presence, lifecycle state, or neighbouring
   capabilities.
+- Every owner contributing to a successful projection exposes one stamped port
+  that atomically returns its projection and an owner-scoped ABA-safe epoch.
+  A payload digest, wall-clock timestamp, or equality of an earlier and later
+  payload is not an epoch. An owner that cannot provide that atomic pair cannot
+  participate in a successful Workspace projection.
 - Locale affects display fields only. The canonical locale resolver supplies
   the key, requested language, resolved language, and fallback or suppression
   disposition. The workspace never reads schema-carried prose, constructs
@@ -167,6 +179,27 @@ canonical registry schema identity and fingerprint, locale summary, and
 baseline when a projection was assembled. An absent work unit is explicit read
 state; the facade never creates one.
 
+### Canonical bounded review facet
+
+`ModeloWorkspaceProjection.work_review` is the canonical bounded C1 facet. When
+the admission path permits a work review it is the exact frozen
+`ModeloWorkReview` produced for the resolved coordinate by
+`build_modelo_work_review(...)`; static inspection and other ineligible paths
+carry a typed facet disposition rather than a partial or reconstructed review.
+The Workspace producer must not independently join or reinterpret the Casilla
+schema, realised values, verification, findings, progress, blockers, or origin
+layers owned by that record.
+
+If atomic Workspace capture requires sharing a lower-level materialization,
+`build_modelo_work_review(...)` and the Workspace producer delegate to one
+application-owned pure semantic assembler over the same captured inputs. The
+accepted function remains the sole public `ModeloWorkReview` producer. A
+fixed-point test compares the complete Workspace facet with the complete public
+producer result, including absent-work and refusal behavior, for every selected
+fixture coordinate. Any unequal field, identity, ordering, disposition, or
+evidence reference fails C1 parity and therefore C2; a second independently
+maintained review join is forbidden.
+
 ### Schema, materialization, and provenance projection
 
 Workspace schema records are explanatory application DTOs. They preserve the
@@ -209,13 +242,28 @@ and filing-export readiness. Each record is `available`, `not_applicable`,
 canonical producer identity, safe evidence references, and source disposition.
 
 Modelo readiness is selected from the canonical
-`ProjectionModeloReadiness`; registry completeness is selected from the
-canonical cross-authority closure report and its temporal, source-connectivity,
-and filing-export limbs. Blockers retain their native code and total
-`OperatorActionAxis` projection. An optional recovery `ActionReference` is
-copied from the action catalogue; it is guidance only and grants no invocation
-authority. If a canonical production producer or join has not landed, the
-workspace reports `unmeasured` and never recreates a development-only join.
+`ProjectionModeloReadiness` without collapsing its axes. The Workspace DTO
+preserves `profile_ready`, `per_operation_requirements_assessed`,
+`registry_ready`, `binding_ready`, `ledger_preflight_required`, nullable
+`ledger_ready`, the corresponding missing requirements/issues/refusals, and
+the aggregate `ready` value exactly as produced. It does not rename or erase an
+unassessed axis. In particular, `ProjectionModeloReadiness.ready` alone can
+never produce capability disposition `available`: the aggregate currently
+does not prove that the per-operation profile axis was assessed, and
+`per_operation_requirements_assessed = true` proves only the tokenised subset,
+not complete Modelo requirements. `available` requires a separately stamped,
+explicit verdict from the canonical producer responsible for that exact
+capability and coordinate. Without that verdict, or when its declared
+assessment is incomplete or unknown, the capability is `unmeasured` rather
+than inferred.
+
+Registry completeness is selected from the canonical cross-authority closure
+report and its temporal, source-connectivity, and filing-export limbs. Blockers
+retain their native code and total `OperatorActionAxis` projection. An optional
+recovery `ActionReference` is copied from the action catalogue; it is guidance
+only and grants no invocation authority. If a canonical production producer or
+join has not landed, the workspace reports `unmeasured` and never recreates a
+development-only join.
 
 A domain refusal contains a stable code, affected capability or admission
 boundary, requested coordinate, selected coordinate when resolution reached
@@ -226,6 +274,28 @@ Localized command prose and raw exceptions never enter either arm. Global
 registry completeness need not be satisfied for Workspace V1 to render; an
 evidence-backed refusal is valid workspace data.
 
+### Stamped contributing-port contract
+
+Every registry, work, bounded-review, calculation, readiness, closure,
+locale-catalogue, and field-manifest port that contributes to a successful
+Workspace result publishes a frozen `ModeloWorkspaceProducerContractV1`. The
+contract names the owner and producer, public projection discriminator and
+contract version, deterministic projection-schema fingerprint, epoch kind and
+epoch-schema version, and the declared atomic read operation. The generated
+`ModeloWorkspaceProducerContractInventoryV1` contains exactly one contract for
+every contributing port; missing, duplicate, stale, or unclassified contracts
+fail the fixed-point gate rather than becoming a permanent hand-maintained
+allowlist.
+
+One port call atomically returns a frozen
+`ModeloWorkspaceContributingProjectionV1[T]` containing the projection, its
+`ModeloWorkspaceProducerStampV1`, and its `ModeloWorkspaceEpochV1`. The stamp
+binds the returned value to the declared producer contract and schema
+fingerprint. The epoch is owner-scoped and monotonically advances, or has an
+equivalent generation guarantee that distinguishes A -> B -> A; it cannot be a
+payload hash, timestamp, or value-equality marker. A contract or stamp mismatch
+is a typed `consistency_unavailable` refusal, never a best-effort read.
+
 ### Locale and consistency boundary
 
 Each localized field carries its canonical key plus requested language,
@@ -235,18 +305,31 @@ same semantic record has identical identities, values, provenance, and
 capabilities in every locale.
 
 `ModeloWorkspaceProjection` is one logical point-in-time read, and the
-application owns its complete semantic join. The producer captures a consistency
-vector from every canonical registry, work, calculation, readiness, closure,
-locale-catalogue, and field-manifest owner contributing to that result, then
-mints one safe opaque `ModeloWorkspaceBaseline`. A full response is assembled
-against that vector. Every collection without an authoritative finite bound is
+application owns its complete semantic join. Assembly follows this exact
+protocol:
+
+1. capture the atomic projection, producer stamp, and ABA-safe epoch from every
+   contributing port;
+2. assemble only from those captured projections, with no live owner re-read
+   hidden inside the join;
+3. re-read or validate every owner's current epoch and exact producer stamp and
+   compare them with the captured tuple; and
+4. only after every comparison succeeds, mint one safe opaque
+   `ModeloWorkspaceBaseline` over the sorted contributor tuple, resolved
+   request coordinate, selected revision, Workspace contract version,
+   registry schema identity and fingerprint, locale-catalogue stamp, and
+   field-manifest digest.
+
+An unknown or changed epoch or producer stamp causes a bounded whole-assembly
+retry and then a typed `workspace_changed` or `consistency_unavailable`
+refusal. No baseline is minted before validation, and A -> B -> A invalidates
+the capture. Every collection without an authoritative finite bound is
 delivered through a typed bounded facet, page, or expansion. Those delivery
-shapes carry the same contract version, schema identity and fingerprint,
-selected revision, and baseline, and are served only while every owner stamp
-still agrees. Unpinned pagination is forbidden. A change during assembly causes
-a bounded retry or typed `workspace_changed` refusal; it never yields a
-mixed-epoch graph. The token contains no raw value, secret, source identity, or
-reusable authorization.
+shapes carry and revalidate the same sorted contributor tuple, contract
+version, schema identity and fingerprint, selected revision, and baseline.
+Unpinned pagination and a contributor that cannot atomically return projection
+plus ABA-safe epoch are forbidden. The token contains no raw value, secret,
+source identity, or reusable authorization.
 
 ### Version and conformance gate
 
@@ -259,8 +342,16 @@ ambiguity and revision-assertion refusal; inspection-versus-snapshot
 separation; grade and family-disposition parity; locale resolution; schema and
 manifest fixed point; schema-identity and fingerprint parity; scalar and
 repeated-row coordinates; provenance edges; readiness and closure parity;
-full-versus-faceted baseline consistency; stale and mid-read refusal; version
-refusal; forbidden imports; and sensitive-data non-retention.
+complete `ModeloWorkReview` facet fixed-point parity with its sole public
+producer; full-versus-faceted baseline consistency; stale and mid-read refusal;
+producer-contract/stamp drift; torn-read refusal; and ABA A -> B -> A
+invalidation. Readiness fixtures include aggregate `ready = true` with
+`per_operation_requirements_assessed = false`, assessed-but-token-partial
+requirements, and mixed profile/registry/binding/ledger axes. They prove exact
+axis parity and prove that no case becomes `available` from `ready` or
+assessment alone without the separately stamped canonical capability verdict.
+The suite also covers version refusal, forbidden imports, sensitive-data
+non-retention, and the live C2 dependency-receipt validator.
 
 ### C2 complex-read gate and external prerequisites
 
@@ -270,8 +361,10 @@ complex-read cohort remains blocked until all of these receipts exist:
 1. this ADR is accepted and Workspace V1 is exported from the public
    application facade;
 2. for a TUI consumer, `2026-08-24-tui-modelo-workspace-interface-adr` is
-   accepted and its C1 exit receipt is green; that record retains ownership
-   of destinations, view models, bounded rendering, and visual conformance;
+   accepted and its `ModeloWorkspaceC1ExitReceiptV1` at
+   `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt.md`
+   is green; that record retains ownership of destinations, view models,
+   bounded rendering, and visual conformance;
 3. the authority-grade decision is accepted or formally reconciled and both
    admission paths use its public contracts;
 4. canonical readiness and closure producers are public and their Workspace
@@ -279,10 +372,37 @@ complex-read cohort remains blocked until all of these receipts exist:
    evidence-backed refusals;
 5. the generated current-HEAD field-classification manifest has zero
    unclassified paths and its digest is recorded;
-6. the complete V1 conformance suite above is green; and
-7. the TUI dependency receipt records source ancestry, Workspace V1, the
-   manifest digest, baseline/locale proof, and the exact complex-read routes it
-   opens.
+6. every contributing port publishes a current stamped producer contract and
+   the generated `ModeloWorkspaceProducerContractInventoryV1` fixed point is
+   green;
+7. the complete V1 conformance suite above is green; and
+8. the machine-readable
+   `.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md`
+   validates as `ModeloWorkspaceC2DependencyReceiptV1` under
+   `validate_modelo_workspace_c2_dependency_receipt` on current HEAD.
+
+`ModeloWorkspaceC2DependencyReceiptV1.predecessors` is the closed, ordered
+`ModeloWorkspaceC2PredecessorTupleV1`:
+
+1. this accepted ADR's stem, accepted commit, and body hash;
+2. the accepted `2026-08-24-tui-modelo-workspace-interface-adr` stem, accepted
+   commit, and body hash;
+3. the `ModeloWorkspaceC1ExitReceiptV1` path above, producing commit, and
+   artifact digest;
+4. the accepted or formally reconciled authority-grade decision stem,
+   disposition, commit, body hash, and reconciliation-artifact digest when
+   reconciliation was required; and
+5. the `ModeloWorkspaceProducerContractInventoryV1` schema version, producing
+   commit, and artifact digest.
+
+The C2 receipt additionally records the sorted producer contracts and stamps,
+captured epoch tuple/digest, Workspace version and schema fingerprint, generated
+field-manifest digest, baseline and locale proofs, source ancestry, and exact
+complex-read routes opened. Its validator rejects an absent or reordered
+predecessor, a proposed/unapproved decision, a non-ancestor producing commit,
+artifact or body-hash drift, missing or mismatched producer stamps, epoch-
+protocol drift, a non-green C1 receipt, or a route outside C2. Mocks, prose
+attestations, and a receipt produced from a different tree cannot open the gate.
 
 C2 authorizes only complex read-only workspace consumers. It does not create
 `modelo.edit`, authorize a command, enroll an operation, or open verify, file,
@@ -323,8 +443,9 @@ choice supported by `2026-08-24-tui-registry-api-gate-research` and
   new field, while backend-only grammar remains private.
 - Large workspaces may be read through typed baseline-pinned facets without
   mixed registry, work, calculation, readiness, closure, or locale epochs.
-- `ModeloWorkReview` remains a small bounded consumer and is neither expanded
-  into Workspace V1 nor made obsolete by this decision.
+- `ModeloWorkReview` remains the canonical bounded C1 record and appears
+  unchanged as the Workspace review facet; Workspace V1 neither expands it nor
+  duplicates its semantic join.
 - Registry incompleteness remains visible as owner-backed refused or unmeasured
   capability data; it does not destabilize the contract or become synthetic
   readiness.

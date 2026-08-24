@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:453e5a8d3d799d154c42cb19d3f55019b7d2c9b3c4b2cd75153d532d0a6d19c8'
+body_hash: 'sha256:a75a9d187a2c81b0648db913b1f530cda1985970d2e8bc6b6084f033167a0a9b'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -58,12 +58,14 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W02-P03-S14]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P03-S15]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P03-S16]]'
+  - '[[2026-08-24-registry-completeness-closure-W02-P03-S17]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-036-2025-filing-authority-reference]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-038-design-extraction-reference]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-136-2026-filing-boundary-reference]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-182-design-era-and-donor-row-reference]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-185-historical-design-authority-reference]]'
+  - '[[2026-08-24-registry-completeness-closure-modelo-187-design-era-coverage-reference]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
   - '[[2026-08-24-registry-completeness-closure-s01-schema-family-coverage-review-audit]]'
@@ -81,6 +83,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s14-independent-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s15-independent-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s16-independent-post-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s17-modelo-187-filer-population-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s41-cache-key-type-review-audit]]'
@@ -148,6 +151,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s14-independent-post-review-audit` - `registry-completeness-closure` audit: `S14 independent Modelo 136 post-review`
 - `2026-08-24-registry-completeness-closure-s15-independent-post-review-audit` - `registry-completeness-closure` audit: `S15 Modelo 182 independent post-review`
 - `2026-08-24-registry-completeness-closure-s16-independent-post-review-audit` - `registry-completeness-closure` audit: `S16 independent post-review`
+- `2026-08-24-registry-completeness-closure-s17-modelo-187-filer-population-review-audit` - `registry-completeness-closure` audit: `Modelo 187 filer population review`
 - `2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot authority-grade enforcement review`
 - `2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot-grade enforcement review`
 - `2026-08-24-registry-completeness-closure-s41-cache-key-type-review-audit` - `registry-completeness-closure` audit: `S41 cache-key type review`
@@ -239,6 +243,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W02-P03-S14` - Adjudicate Modelo 136 revision 2026 record-design availability and supported filing boundary
 - `2026-08-24-registry-completeness-closure-W02-P03-S15` - Adjudicate Modelo 182 revision 2007-y-siguientes design-era coverage and donor-row prerequisites
 - `2026-08-24-registry-completeness-closure-W02-P03-S16` - Adjudicate Modelo 185 revision 2003-2025 exact historical design authority
+- `2026-08-24-registry-completeness-closure-W02-P03-S17` - Adjudicate Modelo 187 revision 2019-y-siguientes design-era coverage
 
 ### plan
 
@@ -251,6 +256,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-modelo-136-2026-filing-boundary-reference` - `registry-completeness-closure` reference: `modelo 136 2026 filing boundary`
 - `2026-08-24-registry-completeness-closure-modelo-182-design-era-and-donor-row-reference` - `registry-completeness-closure` reference: `Modelo 182 design-era and donor-row filing boundary`
 - `2026-08-24-registry-completeness-closure-modelo-185-historical-design-authority-reference` - `registry-completeness-closure` reference: `Modelo 185 historical design and filing boundary`
+- `2026-08-24-registry-completeness-closure-modelo-187-design-era-coverage-reference` - `registry-completeness-closure` reference: `modelo 187 design era coverage`
 
 ### research
 
