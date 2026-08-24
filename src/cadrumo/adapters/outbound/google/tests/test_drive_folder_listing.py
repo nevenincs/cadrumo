@@ -20,13 +20,32 @@ from __future__ import annotations
 
 import pytest
 
-from ...storage import OutboundStorageNetworkError, OutboundStoragePermissionError
+from .....core import ActionConditionality, NoRecoveryOutcome
+from ...storage import OutboundStorageNetworkError, OutboundStoragePermissionError, OutboundStorageValidationError
 from .._document_link_resolver import list_drive_folder_documents
 from ._drive_media_server import drive_files_list_endpoint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _FOLDER_ID = "1FoldEr12345678901234567890AB"
+
+
+def _assert_closed_outcome(
+    error: BaseException,
+    *,
+    condition_id: str,
+    facts: dict[str, str | int | bool],
+    outcome: NoRecoveryOutcome,
+) -> None:
+    """Assert a fact-only refusal whose no-recovery contract is explicit."""
+    verdict = error.terminal_precondition_verdict
+    assert verdict.failed_condition_id == condition_id
+    assert verdict.evidence[0].values == facts
+    assert verdict.action is None
+    assert verdict.argument_bindings == ()
+    assert verdict.missing_argument_names == ()
+    assert verdict.conditionality is ActionConditionality.NOT_APPLICABLE
+    assert verdict.no_recovery_outcome is outcome
 
 
 def test_lists_pdf_and_image_children_and_skips_nested_folder() -> None:
@@ -94,22 +113,23 @@ def test_repeated_page_token_refuses_before_an_unbounded_drive_sweep() -> None:
 
 
 @pytest.mark.parametrize(
-    "entry",
+    ("entry", "entry_mapping"),
     (
-        {"name": "invoice.pdf", "mimeType": "application/pdf"},
-        {"id": None, "name": "invoice.pdf", "mimeType": "application/pdf"},
-        {"id": "", "name": "invoice.pdf", "mimeType": "application/pdf"},
-        {"id": "file-1", "mimeType": "application/pdf"},
-        {"id": "file-1", "name": "", "mimeType": "application/pdf"},
-        {"id": "file-1", "name": "invoice.pdf"},
-        {"id": "file-1", "name": "invoice.pdf", "mimeType": ""},
+        ({"name": "invoice.pdf", "mimeType": "application/pdf"}, True),
+        ({"id": None, "name": "invoice.pdf", "mimeType": "application/pdf"}, True),
+        ({"id": "", "name": "invoice.pdf", "mimeType": "application/pdf"}, True),
+        ({"id": "file-1", "mimeType": "application/pdf"}, True),
+        ({"id": "file-1", "name": "", "mimeType": "application/pdf"}, True),
+        ({"id": "file-1", "name": "invoice.pdf"}, True),
+        ({"id": "file-1", "name": "invoice.pdf", "mimeType": ""}, True),
+        ("not-a-file-mapping", False),
     ),
 )
-def test_malformed_successful_file_entry_refuses_at_the_drive_boundary(entry: dict[str, object]) -> None:
+def test_malformed_successful_file_entry_refuses_at_the_drive_boundary(entry: object, entry_mapping: bool) -> None:
     """A real generated client maps malformed 2xx file rows to a typed error."""
     with (
         drive_files_list_endpoint(pages=[{"files": [entry]}]) as endpoint,
-        pytest.raises(OutboundStorageNetworkError, match="malformed file entry") as excinfo,
+        pytest.raises(OutboundStorageValidationError, match="malformed file entry") as excinfo,
     ):
         list_drive_folder_documents(folder_id=_FOLDER_ID, credentials=None, service=endpoint.service)
 
@@ -118,6 +138,27 @@ def test_malformed_successful_file_entry_refuses_at_the_drive_boundary(entry: di
         "folder_id": _FOLDER_ID,
         "entry_index": "0",
     }
+    _assert_closed_outcome(
+        excinfo.value,
+        condition_id="google.document_link.folder_entry_valid",
+        facts={"folder_id": _FOLDER_ID, "entry_index": 0, "entry_mapping": entry_mapping},
+        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+    )
+
+
+def test_non_list_successful_files_field_is_a_validation_outcome() -> None:
+    with (
+        drive_files_list_endpoint(pages=[{"files": {"id": "not-a-list"}}]) as endpoint,
+        pytest.raises(OutboundStorageValidationError, match="non-list files field") as excinfo,
+    ):
+        list_drive_folder_documents(folder_id=_FOLDER_ID, credentials=None, service=endpoint.service)
+
+    _assert_closed_outcome(
+        excinfo.value,
+        condition_id="google.document_link.folder_files_list_valid",
+        facts={"folder_id": _FOLDER_ID, "files_list_valid": False},
+        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+    )
 
 
 def test_empty_folder_returns_no_documents() -> None:
@@ -140,3 +181,13 @@ def test_permission_denied_folder_refuses_with_scope_named_error() -> None:
     assert excinfo.value.context is not None
     assert excinfo.value.context["required_scope"] == "https://www.googleapis.com/auth/drive.readonly"
     assert excinfo.value.context["folder_id"] == _FOLDER_ID
+    _assert_closed_outcome(
+        excinfo.value,
+        condition_id="google.document_link.folder_scope_sufficient",
+        facts={
+            "folder_id": _FOLDER_ID,
+            "required_scope": "https://www.googleapis.com/auth/drive.readonly",
+            "scope_sufficient": False,
+        },
+        outcome=NoRecoveryOutcome.SAFETY,
+    )

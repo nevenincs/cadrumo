@@ -26,10 +26,13 @@ from __future__ import annotations
 import re
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import Any, Final, Protocol, cast
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
+from ....application.operator_actions import ConditionEvidence, PreconditionVerdict
+from ....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.external_constants import PDF_MIME_TYPE
 from ....domain.attachments import AttachmentSource
 from ..storage import (
@@ -39,7 +42,7 @@ from ..storage import (
     OutboundStorageValidationError,
     next_drive_page_token,
 )
-from ._api import GoogleDriveFile, execute_request
+from ._api import execute_request
 
 # .../d/<ID>/... (file, spreadsheets, document) | ...?id=<ID> | bare <ID>.
 # The bare form requires >=25 chars so a hyphenated English token (e.g.
@@ -63,6 +66,52 @@ _INVOICE_MIME_TYPES: Final[frozenset[str]] = frozenset(
 )
 _DRIVE_FOLDER_MIME_TYPE: Final[str] = "application/vnd.google-apps.folder"
 _DRIVE_LIST_PAGE_SIZE: Final[int] = 100
+
+
+class DocumentLinkPreconditionCondition(StrEnum):
+    """Closed terminal conditions owned by the document-link adapter."""
+
+    API_CLIENT_AVAILABLE = "google.document_link.api_client_available"
+    REMOTE_SOURCE_SUPPORTED = "google.document_link.remote_source_supported"
+    DRIVE_REFERENCE_IDENTIFIED = "google.document_link.drive_reference_identified"
+    SOURCE_SCOPE_SUFFICIENT = "google.document_link.source_scope_sufficient"
+    FILE_SCOPE_SUFFICIENT = "google.document_link.file_scope_sufficient"
+    MEDIA_TRANSPORT_AVAILABLE = "google.document_link.media_transport_available"
+    MEDIA_PAYLOAD_BYTES = "google.document_link.media_payload_bytes"
+    FOLDER_SCOPE_SUFFICIENT = "google.document_link.folder_scope_sufficient"
+    FOLDER_FILES_LIST_VALID = "google.document_link.folder_files_list_valid"
+    FOLDER_ENTRY_VALID = "google.document_link.folder_entry_valid"
+    FOLDER_PAGE_TOKEN_VALID = "google.document_link.folder_page_token_valid"
+
+
+def _document_link_terminal_refusal(
+    error: OutboundStorageError,
+    condition: DocumentLinkPreconditionCondition,
+    *,
+    facts: Mapping[str, str | int | bool],
+    outcome: NoRecoveryOutcome,
+) -> OutboundStorageError:
+    """Return ``error``'s typed equivalent carrying this adapter's terminal verdict."""
+    condition_id = condition.value
+    verdict = PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            ConditionEvidence(
+                condition_id=condition_id,
+                evidence_id=f"{condition_id}.observation",
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                values=facts,
+            ),
+        ),
+        conditionality=ActionConditionality.NOT_APPLICABLE,
+        no_recovery_outcome=outcome,
+    )
+    return type(error)(
+        error.args[0] if error.args else None,
+        context=error.context,
+        translated_message=error.translated_message,
+        precondition_verdict=verdict,
+    )
 
 
 class _DriveMediaRequest(Protocol):
@@ -152,9 +201,14 @@ def _drive_service(credentials: object) -> _DriveService:
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:
-        raise OutboundStorageNetworkError(
-            "googleapiclient is not importable",
-            context={"dependency": "google-api-python-client"},
+        raise _document_link_terminal_refusal(
+            OutboundStorageNetworkError(
+                "googleapiclient is not importable",
+                context={"dependency": "google-api-python-client"},
+            ),
+            DocumentLinkPreconditionCondition.API_CLIENT_AVAILABLE,
+            facts={"dependency": "google_api_python_client", "client_available": False},
+            outcome=NoRecoveryOutcome.SAFETY,
         ) from exc
 
     # dynamic resource; the protocol pins the files().get_media().execute
@@ -195,29 +249,49 @@ def resolve_document_link(
             with no recognisable file id.
     """
     if source is AttachmentSource.GMAIL:
-        raise OutboundStoragePermissionError(
-            "Gmail document-link resolution requires the sensitive gmail.readonly scope, "
-            "which this integration does not request",
-            context={"required_scope": _GMAIL_SCOPE, "source": source.value},
+        raise _document_link_terminal_refusal(
+            OutboundStoragePermissionError(
+                "Gmail document-link resolution requires the sensitive gmail.readonly scope, "
+                "which this integration does not request",
+                context={"required_scope": _GMAIL_SCOPE, "source": source.value},
+            ),
+            DocumentLinkPreconditionCondition.SOURCE_SCOPE_SUFFICIENT,
+            facts={"source": source.value, "required_scope": _GMAIL_SCOPE, "scope_sufficient": False},
+            outcome=NoRecoveryOutcome.SAFETY,
         )
     if source is AttachmentSource.GOOGLE_DRIVE:
         file_id = parse_drive_file_id(reference)
         if file_id is None:
-            raise OutboundStorageValidationError(
-                "Google Drive link does not contain a recognisable file id",
-                context={"reference": reference},
+            raise _document_link_terminal_refusal(
+                OutboundStorageValidationError(
+                    "Google Drive link does not contain a recognisable file id",
+                    context={"reference": reference},
+                ),
+                DocumentLinkPreconditionCondition.DRIVE_REFERENCE_IDENTIFIED,
+                facts={"source": source.value, "reference_identified": False},
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
             )
         drive_service = service if service is not None else _drive_service(credentials)
         return _download_drive_file_from_service(file_id, drive_service)
     if source is AttachmentSource.URL:
-        raise OutboundStoragePermissionError(
-            "resolving an arbitrary external URL is outside the granted drive.file scope; "
-            "it requires drive.readonly (for Drive content) or manual download",
-            context={"required_scope": _DRIVE_READONLY_SCOPE, "source": source.value},
+        raise _document_link_terminal_refusal(
+            OutboundStoragePermissionError(
+                "resolving an arbitrary external URL is outside the granted drive.file scope; "
+                "it requires drive.readonly (for Drive content) or manual download",
+                context={"required_scope": _DRIVE_READONLY_SCOPE, "source": source.value},
+            ),
+            DocumentLinkPreconditionCondition.SOURCE_SCOPE_SUFFICIENT,
+            facts={"source": source.value, "required_scope": _DRIVE_READONLY_SCOPE, "scope_sufficient": False},
+            outcome=NoRecoveryOutcome.SAFETY,
         )
-    raise OutboundStorageValidationError(
-        f"document-link source {source.value!r} is not a resolvable remote document",
-        context={"source": source.value},
+    raise _document_link_terminal_refusal(
+        OutboundStorageValidationError(
+            f"document-link source {source.value!r} is not a resolvable remote document",
+            context={"source": source.value},
+        ),
+        DocumentLinkPreconditionCondition.REMOTE_SOURCE_SUPPORTED,
+        facts={"source": source.value, "remote_source_supported": False},
+        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
     )
 
 
@@ -232,20 +306,44 @@ def _download_drive_file_from_service(file_id: str, service: _DriveService) -> b
         # drive.file cannot see files the app did not create / the operator did
         # not pick — Google returns 403/404. Surface the scope-upgrade path.
         if status in (403, 404):
-            raise OutboundStoragePermissionError(
-                f"Drive file {file_id!r} is not reachable under the drive.file scope "
-                "(the app can only read files it created or the operator picked); "
-                "reading an arbitrary operator file requires drive.readonly",
-                context={"required_scope": _DRIVE_READONLY_SCOPE, "file_id": file_id},
+            raise _document_link_terminal_refusal(
+                OutboundStoragePermissionError(
+                    f"Drive file {file_id!r} is not reachable under the drive.file scope "
+                    "(the app can only read files it created or the operator picked); "
+                    "reading an arbitrary operator file requires drive.readonly",
+                    context={"required_scope": _DRIVE_READONLY_SCOPE, "file_id": file_id},
+                ),
+                DocumentLinkPreconditionCondition.FILE_SCOPE_SUFFICIENT,
+                facts={
+                    "file_id": file_id,
+                    "required_scope": _DRIVE_READONLY_SCOPE,
+                    "status": str(status),
+                    "scope_sufficient": False,
+                },
+                outcome=NoRecoveryOutcome.SAFETY,
             ) from exc
-        raise OutboundStorageNetworkError(
-            "Drive files.get_media failed",
-            context={"file_id": file_id, "status": str(status) if status is not None else "unknown"},
+        raise _document_link_terminal_refusal(
+            OutboundStorageNetworkError(
+                "Drive files.get_media failed",
+                context={"file_id": file_id, "status": str(status) if status is not None else "unknown"},
+            ),
+            DocumentLinkPreconditionCondition.MEDIA_TRANSPORT_AVAILABLE,
+            facts={
+                "file_id": file_id,
+                "status": str(status) if status is not None else "unknown",
+                "transport_available": False,
+            },
+            outcome=NoRecoveryOutcome.SAFETY,
         ) from exc
     if not isinstance(payload, (bytes, bytearray)):
-        raise OutboundStorageNetworkError(
-            "Drive files.get_media returned a non-bytes payload",
-            context={"file_id": file_id},
+        raise _document_link_terminal_refusal(
+            OutboundStorageValidationError(
+                "Drive files.get_media returned a non-bytes payload",
+                context={"file_id": file_id},
+            ),
+            DocumentLinkPreconditionCondition.MEDIA_PAYLOAD_BYTES,
+            facts={"file_id": file_id, "payload_bytes": False, "payload_type": type(payload).__name__},
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
         )
     return bytes(payload)
 
@@ -333,22 +431,54 @@ def _iter_drive_folder_files(drive_service: _DriveService, *, folder_id: str) ->
             context = dict(exc.context or {})
             if "required_scope" in context:
                 raise
-            raise OutboundStoragePermissionError(
-                f"Drive folder {folder_id!r} is not reachable under the drive.file scope "
-                "(the app can only list files/folders it created or the operator picked); "
-                "reading an arbitrary operator folder requires drive.readonly",
-                context={"required_scope": _DRIVE_READONLY_SCOPE, "folder_id": folder_id, **context},
+            raise _document_link_terminal_refusal(
+                OutboundStoragePermissionError(
+                    f"Drive folder {folder_id!r} is not reachable under the drive.file scope "
+                    "(the app can only list files/folders it created or the operator picked); "
+                    "reading an arbitrary operator folder requires drive.readonly",
+                    context={"required_scope": _DRIVE_READONLY_SCOPE, "folder_id": folder_id, **context},
+                ),
+                DocumentLinkPreconditionCondition.FOLDER_SCOPE_SUFFICIENT,
+                facts={"folder_id": folder_id, "required_scope": _DRIVE_READONLY_SCOPE, "scope_sufficient": False},
+                outcome=NoRecoveryOutcome.SAFETY,
             ) from exc
         # CAST-RATIONALE-thirdparty: Google Drive files-list is an untyped JSON API response
-        raw_files = cast("list[GoogleDriveFile]", response.get("files", []))
+        raw_files = response.get("files", [])
+        if not isinstance(raw_files, list):
+            raise _document_link_terminal_refusal(
+                OutboundStorageValidationError(
+                    "Drive files.list returned a non-list files field",
+                    context={"action": "drive.files.list", "folder_id": folder_id},
+                ),
+                DocumentLinkPreconditionCondition.FOLDER_FILES_LIST_VALID,
+                facts={"folder_id": folder_id, "files_list_valid": False},
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            )
         for entry_index, raw_file in enumerate(raw_files):
             yield _drive_folder_document_from_response(raw_file, folder_id=folder_id, entry_index=entry_index)
         # CAST-RATIONALE-thirdparty: Google Drive nextPageToken is an untyped JSON API response
-        page_token = next_drive_page_token(
-            response.get("nextPageToken"),
-            seen_tokens=seen_tokens,
-            action="drive.files.list",
-        )
+        raw_page_token = response.get("nextPageToken")
+        try:
+            page_token = next_drive_page_token(
+                raw_page_token,
+                seen_tokens=seen_tokens,
+                action="drive.files.list",
+            )
+        except OutboundStorageNetworkError as exc:
+            token_state = "repeated" if isinstance(raw_page_token, str) else "non_string"
+            raise _document_link_terminal_refusal(
+                OutboundStorageValidationError(
+                    "Drive files.list returned an invalid nextPageToken",
+                    context={
+                        "action": "drive.files.list",
+                        "folder_id": folder_id,
+                        "page_token_state": token_state,
+                    },
+                ),
+                DocumentLinkPreconditionCondition.FOLDER_PAGE_TOKEN_VALID,
+                facts={"folder_id": folder_id, "page_token_state": token_state, "page_token_valid": False},
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            ) from exc
         if not page_token:
             break
 
@@ -361,16 +491,26 @@ def _drive_folder_document_from_response(
 ) -> DriveFolderDocument:
     """Validate a successful ``files.list`` row before callers classify it."""
     if not isinstance(raw_file, Mapping):
-        raise OutboundStorageNetworkError(
-            "Drive files.list returned a malformed file entry",
-            context={"action": "drive.files.list", "folder_id": folder_id, "entry_index": str(entry_index)},
+        raise _document_link_terminal_refusal(
+            OutboundStorageValidationError(
+                "Drive files.list returned a malformed file entry",
+                context={"action": "drive.files.list", "folder_id": folder_id, "entry_index": str(entry_index)},
+            ),
+            DocumentLinkPreconditionCondition.FOLDER_ENTRY_VALID,
+            facts={"folder_id": folder_id, "entry_index": entry_index, "entry_mapping": False},
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
         )
     try:
         return DriveFolderDocument.model_validate(raw_file)
     except ValidationError as exc:
-        raise OutboundStorageNetworkError(
-            "Drive files.list returned a malformed file entry",
-            context={"action": "drive.files.list", "folder_id": folder_id, "entry_index": str(entry_index)},
+        raise _document_link_terminal_refusal(
+            OutboundStorageValidationError(
+                "Drive files.list returned a malformed file entry",
+                context={"action": "drive.files.list", "folder_id": folder_id, "entry_index": str(entry_index)},
+            ),
+            DocumentLinkPreconditionCondition.FOLDER_ENTRY_VALID,
+            facts={"folder_id": folder_id, "entry_index": entry_index, "entry_mapping": True},
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
         ) from exc
 
 

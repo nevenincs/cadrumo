@@ -35,13 +35,56 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from enum import StrEnum
 from typing import Any, Final
 
-from ..storage import OutboundStorageConflictError, OutboundStorageValidationError
+from ....application.operator_actions import ConditionEvidence, PreconditionVerdict
+from ....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ..storage import OutboundStorageConflictError, OutboundStorageError, OutboundStorageValidationError
 from ._api import execute_request
 
 OWNERSHIP_KEY: Final[str] = "cadrumo_vault_app"
 OWNERSHIP_VALUE: Final[str] = "cadrumo"
+
+
+class DriveEntryPreconditionCondition(StrEnum):
+    """Closed terminal conditions owned by the Drive entry adapter."""
+
+    IDENTIFIER_VALID = "google.drive_entry.identifier_valid"
+    LIST_RESPONSE_VALID = "google.drive_entry.list_response_valid"
+    ENTRY_MAPPING_VALID = "google.drive_entry.entry_mapping_valid"
+    OWNERSHIP_METADATA_VALID = "google.drive_entry.ownership_metadata_valid"
+    OWNERSHIP_ALIGNED = "google.drive_entry.ownership_aligned"
+
+
+def _drive_entry_terminal_refusal(
+    error: OutboundStorageError,
+    condition: DriveEntryPreconditionCondition,
+    *,
+    facts: Mapping[str, str | int | bool],
+) -> OutboundStorageError:
+    """Return ``error``'s operator-review equivalent without making up an action."""
+    condition_id = condition.value
+    verdict = PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            ConditionEvidence(
+                condition_id=condition_id,
+                evidence_id=f"{condition_id}.observation",
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                values=facts,
+            ),
+        ),
+        conditionality=ActionConditionality.NOT_APPLICABLE,
+        no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+    )
+    return type(error)(
+        error.args[0] if error.args else None,
+        context=error.context,
+        translated_message=error.translated_message,
+        precondition_verdict=verdict,
+    )
 
 
 def escape_drive_query_name(name: str) -> str:
@@ -102,9 +145,18 @@ def require_drive_entry_id(
     """
     raw_id = entry.get("id")
     if not isinstance(raw_id, str) or not raw_id.strip():
-        raise OutboundStorageValidationError(
-            f"Drive returned an app-owned entry named {name!r} without a usable id",
-            context={"parent_id": parent_id, "name": name, "entry_id": repr(raw_id)},
+        raise _drive_entry_terminal_refusal(
+            OutboundStorageValidationError(
+                f"Drive returned an app-owned entry named {name!r} without a usable id",
+                context={"parent_id": parent_id, "name": name, "entry_id": repr(raw_id)},
+            ),
+            DriveEntryPreconditionCondition.IDENTIFIER_VALID,
+            facts={
+                "parent_id": parent_id,
+                "entry_name": name,
+                "identifier_present": isinstance(raw_id, str) and bool(raw_id.strip()),
+                "identifier_type": type(raw_id).__name__,
+            },
         )
     return raw_id
 
@@ -152,8 +204,45 @@ def find_owned_drive_entry(
         drive.files().list(q=query, fields="files(id,name,appProperties)", pageSize=10),
         action=list_action,
     )
-    for entry in response.get("files", []):
-        existing = entry.get("appProperties") or {}
+    entries = response.get("files", [])
+    if not isinstance(entries, list):
+        raise _drive_entry_terminal_refusal(
+            OutboundStorageValidationError(
+                "Drive owned-entry lookup returned a non-list files field",
+                context={"parent_id": parent_id, "name": name},
+            ),
+            DriveEntryPreconditionCondition.LIST_RESPONSE_VALID,
+            facts={"parent_id": parent_id, "entry_name": name, "entries_list_valid": False},
+        )
+    for entry_index, entry in enumerate(entries):
+        if not isinstance(entry, dict):
+            raise _drive_entry_terminal_refusal(
+                OutboundStorageValidationError(
+                    "Drive owned-entry lookup returned a non-mapping entry",
+                    context={"parent_id": parent_id, "name": name, "entry_index": entry_index},
+                ),
+                DriveEntryPreconditionCondition.ENTRY_MAPPING_VALID,
+                facts={"parent_id": parent_id, "entry_name": name, "entry_index": entry_index, "entry_mapping": False},
+            )
+        raw_properties = entry.get("appProperties")
+        if raw_properties is None:
+            existing: Mapping[str, Any] = {}
+        elif isinstance(raw_properties, Mapping):
+            existing = raw_properties
+        else:
+            raise _drive_entry_terminal_refusal(
+                OutboundStorageValidationError(
+                    "Drive owned-entry lookup returned non-mapping ownership metadata",
+                    context={"parent_id": parent_id, "name": name, "entry_index": entry_index},
+                ),
+                DriveEntryPreconditionCondition.OWNERSHIP_METADATA_VALID,
+                facts={
+                    "parent_id": parent_id,
+                    "entry_name": name,
+                    "entry_index": entry_index,
+                    "ownership_metadata_mapping": False,
+                },
+            )
         if existing.get(OWNERSHIP_KEY) == OWNERSHIP_VALUE:
             require_drive_entry_id(entry, name=name, parent_id=parent_id)
             return entry
@@ -171,9 +260,13 @@ def find_owned_drive_entry(
                 action=backfill_action,
             )
             return entry
-        raise OutboundStorageConflictError(
-            conflict_message,
-            context={"parent_id": parent_id, "name": name},
+        raise _drive_entry_terminal_refusal(
+            OutboundStorageConflictError(
+                conflict_message,
+                context={"parent_id": parent_id, "name": name},
+            ),
+            DriveEntryPreconditionCondition.OWNERSHIP_ALIGNED,
+            facts={"parent_id": parent_id, "entry_name": name, "ownership_aligned": False},
         )
     return None
 

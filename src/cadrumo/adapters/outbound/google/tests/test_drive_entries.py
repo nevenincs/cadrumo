@@ -23,6 +23,7 @@ from typing import Any
 
 import pytest
 
+from .....core import ActionConditionality, NoRecoveryOutcome
 from ....outbound.storage import OutboundStorageConflictError, OutboundStorageValidationError
 from .._calc_sheets_apply import _ensure_folder, _find_folder, _find_spreadsheet
 from .._drive_entries import (
@@ -37,6 +38,23 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _FOLDER_MIME = "application/vnd.google-apps.folder"
 _SPREADSHEET_MIME = "application/vnd.google-apps.spreadsheet"
+
+
+def _assert_closed_operator_review(
+    error: BaseException,
+    *,
+    condition_id: str,
+    facts: dict[str, str | int | bool],
+) -> None:
+    """Assert a fact-only state/validation refusal has no invented recovery action."""
+    verdict = error.terminal_precondition_verdict
+    assert verdict.failed_condition_id == condition_id
+    assert verdict.evidence[0].values == facts
+    assert verdict.action is None
+    assert verdict.argument_bindings == ()
+    assert verdict.missing_argument_names == ()
+    assert verdict.conditionality is ActionConditionality.NOT_APPLICABLE
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
 
 
 class _RecordedCall:
@@ -60,7 +78,7 @@ class _RecordedFiles:
 
     def list(self, *, q: str, fields: str, pageSize: int) -> _RecordedCall:  # noqa: N803 - Drive API kwarg name
         self._owner.queries.append(q)
-        return _RecordedCall("list", {"_result": {"files": list(self._owner.entries)}})
+        return _RecordedCall("list", {"_result": {"files": self._owner.entries}})
 
     def update(self, *, fileId: str, body: dict[str, Any], fields: str) -> _RecordedCall:  # noqa: N803 - Drive API kwarg name
         self._owner.updates.append(fileId)
@@ -73,7 +91,7 @@ class _RecordedFiles:
 class _RecordedDrive:
     """Minimal Drive service double capturing queries and backfill updates."""
 
-    def __init__(self, entries: list[dict[str, Any]]) -> None:
+    def __init__(self, entries: object) -> None:
         self.entries = entries
         self.queries: list[str] = []
         self.updates: list[str] = []
@@ -126,6 +144,16 @@ def test_owned_entry_without_a_usable_id_is_refused_not_indexed(bad_id: str | No
     with pytest.raises(OutboundStorageValidationError) as excinfo:
         _find_folder(drive, parent_id="root", name="target")
     assert "without a usable id" in str(excinfo.value)
+    _assert_closed_operator_review(
+        excinfo.value,
+        condition_id="google.drive_entry.identifier_valid",
+        facts={
+            "parent_id": "root",
+            "entry_name": "target",
+            "identifier_present": False,
+            "identifier_type": type(bad_id).__name__,
+        },
+    )
 
 
 def test_ensure_folder_refuses_an_id_less_owned_entry() -> None:
@@ -150,6 +178,48 @@ def test_backfill_does_not_issue_an_update_for_an_id_less_entry() -> None:
     assert drive.updates == []
 
 
+def test_non_list_files_response_is_an_explicit_validation_outcome() -> None:
+    with pytest.raises(OutboundStorageValidationError) as excinfo:
+        _find_folder(_RecordedDrive({"id": "not-a-list"}), parent_id="root", name="target")
+
+    _assert_closed_operator_review(
+        excinfo.value,
+        condition_id="google.drive_entry.list_response_valid",
+        facts={"parent_id": "root", "entry_name": "target", "entries_list_valid": False},
+    )
+
+
+def test_non_mapping_drive_entry_is_an_explicit_validation_outcome() -> None:
+    with pytest.raises(OutboundStorageValidationError) as excinfo:
+        _find_folder(_RecordedDrive(["not-a-mapping"]), parent_id="root", name="target")
+
+    _assert_closed_operator_review(
+        excinfo.value,
+        condition_id="google.drive_entry.entry_mapping_valid",
+        facts={"parent_id": "root", "entry_name": "target", "entry_index": 0, "entry_mapping": False},
+    )
+
+
+def test_non_mapping_ownership_metadata_is_an_explicit_validation_outcome() -> None:
+    with pytest.raises(OutboundStorageValidationError) as excinfo:
+        _find_folder(
+            _RecordedDrive([{"id": "candidate", "name": "target", "appProperties": "not-a-mapping"}]),
+            parent_id="root",
+            name="target",
+        )
+
+    _assert_closed_operator_review(
+        excinfo.value,
+        condition_id="google.drive_entry.ownership_metadata_valid",
+        facts={
+            "parent_id": "root",
+            "entry_name": "target",
+            "entry_index": 0,
+            "ownership_metadata_mapping": False,
+        },
+    )
+
+
 def test_unmarked_entry_is_backfilled_and_adopted() -> None:
     """A pre-marker entry this app created is stamped, then returned."""
     drive = _RecordedDrive([{"id": "legacy-1", "name": "target"}])
@@ -162,10 +232,20 @@ def test_unmarked_entry_is_backfilled_and_adopted() -> None:
 def test_foreign_owned_entry_is_refused_on_both_lookups() -> None:
     """Foreign Drive content is never adopted, by either lookup."""
     foreign = [{"id": "foreign-1", "name": "target", "appProperties": {"someone_else": "yes"}}]
-    with pytest.raises(OutboundStorageConflictError):
+    with pytest.raises(OutboundStorageConflictError) as folder_error:
         _find_folder(_RecordedDrive(list(foreign)), parent_id="root", name="target")
-    with pytest.raises(OutboundStorageConflictError):
+    _assert_closed_operator_review(
+        folder_error.value,
+        condition_id="google.drive_entry.ownership_aligned",
+        facts={"parent_id": "root", "entry_name": "target", "ownership_aligned": False},
+    )
+    with pytest.raises(OutboundStorageConflictError) as spreadsheet_error:
         _find_spreadsheet(_RecordedDrive(list(foreign)), parent_id="folder", name="target")
+    _assert_closed_operator_review(
+        spreadsheet_error.value,
+        condition_id="google.drive_entry.ownership_aligned",
+        facts={"parent_id": "folder", "entry_name": "target", "ownership_aligned": False},
+    )
 
 
 def test_owned_entry_with_a_usable_id_round_trips() -> None:
