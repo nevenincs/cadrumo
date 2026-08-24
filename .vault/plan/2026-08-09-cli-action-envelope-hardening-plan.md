@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-24'
-body_hash: 'sha256:04ac7788e30b1233cc4f1c95d4474ae22ba44654ac9b57be07dd6520e0d1acbd'
+body_hash: 'sha256:6d58ead3f18be0b631ccf5079bce2f7c88967d38871cbf3e8de19d6290191a05'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -172,9 +172,10 @@ Convert registered defaults and exception-level action overrides into catalogue 
 - [x] `W05.P08.S102` - Migrate IVA-compensation exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/domain/iva_compensation/_carry_forward.py; src/cadrumo/domain/iva_compensation/_reconciliation.py`.
 - [x] `W05.P08.S103` - Migrate application export exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/export/_tabular.py`.
 - [x] `W05.P08.S104` - Migrate calc-sheets exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/storage/calc_sheets/_engine.py; src/cadrumo/application/storage/calc_sheets/_evidence.py; src/cadrumo/application/storage/calc_sheets/_layout.py; src/cadrumo/application/storage/calc_sheets/_translator.py`.
-- [ ] `W05.P08.S105` - Finish portal exception taxonomy and typed refusal propagation, and encode the exact downstream owner/projection census for operator-reachable invoice and IVA validation families; `src/cadrumo/domain/portals/_errors.py; src/cadrumo/domain/portals/_registry.py; src/cadrumo/domain/portals/tests; src/cadrumo/domain/invoices/_models.py; src/cadrumo/domain/iva/_classification.py; src/cadrumo/entrypoints/cli/_app_live_portals_cli.py; src/cadrumo/entrypoints/cli/_ledger*.py; src/cadrumo/entrypoints/cli/tests; dev/tests`.
+- [ ] `W05.P08.S105` - Finish portal exception taxonomy and preserve operator-reachable portal refusals as canonical typed outcomes instead of BadParameter or authored integrity prose; `src/cadrumo/domain/portals/_errors.py; src/cadrumo/domain/portals/_registry.py; src/cadrumo/domain/portals/tests; src/cadrumo/entrypoints/cli/_app_live_portals_cli.py; src/cadrumo/entrypoints/cli/tests`.
 - [x] `W05.P08.S106` - Migrate config-reset exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/_config_reset_repository.py; src/cadrumo/application/config_reset.py`.
 - [x] `W05.P08.S116` - Replace runtime pkgutil result-schema discovery with one canonical schema-module declaration reconciled bidirectionally to the live command and result-schema surface; `src/cadrumo/entrypoints/cli/_app_contract.py; src/cadrumo/entrypoints/schema_surface.py; src/cadrumo/entrypoints/cli/tests/test_app_contract_resilience.py; src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py`.
+- [ ] `W05.P08.S130` - Encode the exact downstream owner and terminal projection census for every operator-reachable invoice and IVA validation family; `src/cadrumo/domain/invoices/_models.py; src/cadrumo/domain/iva/_classification.py; src/cadrumo/entrypoints/cli/_ledger*.py; src/cadrumo/entrypoints/cli/tests; dev/tests`.
 
 ### Phase `W05.P09` - Diagnostics overview and provisioning
 
@@ -218,7 +219,7 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [x] `W05.P10.S81` - Migrate review action producers to typed conditions and canonical actions; `src/cadrumo/application/review`.
 - [x] `W05.P10.S82` - Migrate storage-management recovery producers to typed conditions and canonical actions; `src/cadrumo/application/storage_management`.
 - [x] `W05.P10.S83` - Migrate authorization-domain recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/auth`.
-- [ ] `W05.P10.S84` - Migrate calculation-registry recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/calculations`.
+- [ ] `W05.P10.S84` - Replace calculation-domain applicability, query, authority-grade, and loader-race command/retry prose with domain-owned failed-condition facts and boundary-resolved typed outcomes; `src/cadrumo/domain/calculations/_errors.py; src/cadrumo/domain/calculations/_applicability.py; src/cadrumo/domain/calculations/_applicability_modelo202.py; src/cadrumo/domain/calculations/_queries.py; src/cadrumo/domain/calculations/_snapshot.py; src/cadrumo/domain/calculations/_loader.py; src/cadrumo/domain/calculations/_loader_cache.py; src/cadrumo/domain/calculations/_loader_fingerprints.py; src/cadrumo/domain/calculations/tests; src/cadrumo/application/calculations; src/cadrumo/entrypoints/cli`.
 - [x] `W05.P10.S85` - Migrate taxpayer-domain recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/contribuyente`.
 - [x] `W05.P10.S86` - Replace the remaining transaction-model free-form recovery hints and ledger-category command prose with typed conditions and canonical actions or explicit no-recovery outcomes; `src/cadrumo/domain/transactions/_models.py; src/cadrumo/domain/transactions/tests`.
 - [x] `W05.P10.S87` - Migrate user-profile-domain recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/user_profile`.
