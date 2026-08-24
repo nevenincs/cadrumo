@@ -104,8 +104,12 @@ def test_split_lineage_constructs_parent_role() -> None:
 @pytest.mark.parametrize(
     ("split_group_id", "role", "sibling_transaction_ids", "expected_match"),
     (
-        ("g" * 64, SplitRole.PARENT, (_CHILD_A,), "lowercase hex"),
-        ("A" * 64, SplitRole.PARENT, (_CHILD_A,), "lowercase"),
+        # split_group_id moved onto the shared Hex64Str identity type, so the
+        # refusal is that type's pattern rather than a bespoke phrase. The pattern
+        # still states the accepted shape, including the lower-case-only range,
+        # which is what these two cases exist to prove.
+        ("g" * 64, SplitRole.PARENT, (_CHILD_A,), r"\^\[0-9a-f\]\{64\}\$"),
+        ("A" * 64, SplitRole.PARENT, (_CHILD_A,), r"\^\[0-9a-f\]\{64\}\$"),
         ("0" * 64, SplitRole.PARENT, (), "at least one sibling"),
         ("0" * 64, SplitRole.CHILD, (_CHILD_A, _CHILD_A), "unique"),
         ("0" * 64, SplitRole.CHILD, ("abc",), "64-character"),
