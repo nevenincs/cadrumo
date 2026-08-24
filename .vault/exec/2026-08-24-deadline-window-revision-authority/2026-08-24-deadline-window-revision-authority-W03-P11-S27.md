@@ -11,9 +11,6 @@ related:
   - "[[2026-08-24-deadline-window-revision-authority-plan]]"
 ---
 
-
-
-
 # Route calculated M210 ResultDisposition and official tipo code into canonical deadline resolution and the existing typed Notice channel
 
 ## Scope
@@ -55,4 +52,3 @@ provenance record, not a replacement vocabulary.
 - The real M210 grouped-renta test passed: `1 passed in 52.81s`.
 - Broad corpus gates were intentionally not run for this step; they are owned by
   later plan closure steps and concurrent registry corpus work.
-

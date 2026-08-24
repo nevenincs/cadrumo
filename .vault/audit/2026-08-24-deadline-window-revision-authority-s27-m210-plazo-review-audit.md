@@ -21,4 +21,3 @@ No findings. The implementation reuses the sole `resolve_filing_window`, `resolv
 ## Recommendations
 
 Approve `W03.P11.S27`. Retain the separate `W03.P11.S28` envelope-level regression step as the proof floor for calculate, verify, and tipo-28 silence.
-

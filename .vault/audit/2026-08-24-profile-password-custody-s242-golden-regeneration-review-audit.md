@@ -10,8 +10,6 @@ related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
 
-
-
 # `profile-password-custody` audit: `S242 golden regeneration formal review`
 
 ## Scope

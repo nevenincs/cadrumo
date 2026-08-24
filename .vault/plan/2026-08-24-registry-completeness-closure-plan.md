@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:f3105780c85b12f3f765f143184e5c6d8a663458bb3d8d8951bc3a2636459472'
+body_hash: 'sha256:e432c33000a3939b24af651cf9407d15e2be04170db1a83d2b689315377f8e1b'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -140,7 +140,7 @@ Exercise the supported revision umbrella through localization, casilla continuit
 
 - [x] `W03.P05.S30` - Verify every shipped modelo and revision localization key across supported output locales; `dev/locales/`.
 - [x] `W03.P05.S31` - Verify casilla identity, semantic linkage, and continuity chains across every supported revision boundary; `src/cadrumo/domain/calculations/registry/tests/`.
-- [ ] `W03.P05.S32` - Verify binding selectors, resolver enrollment, calculation paths, and provenance for every filing-grade revision; `src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `W03.P05.S32` - Verify binding selectors, resolver enrollment, calculation paths, and provenance for every filing-grade revision; `src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W03.P05.S33` - Verify official export layout selection, mapped semantic owners, and emitted-byte offsets for every filing-grade revision; `src/cadrumo/application/filing/tests/`.
 
 ### Phase `W03.P06` - predecessor campaign closure
