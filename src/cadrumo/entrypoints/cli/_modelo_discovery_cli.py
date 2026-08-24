@@ -814,7 +814,17 @@ def bindings_list(
 ) -> None:
     """List bindings across modelos. All filters are optional refinements."""
     resolved_as_of = _as_of(as_of)
-    targets = registry_modelo_codes() if modelo is None else (modelo,)
+    known_codes = registry_modelo_codes()
+    if modelo is not None and modelo not in known_codes:
+        # The accepted set is registry-derived, so it cannot be a static Choice on
+        # the option. A late refusal is allowed for exactly that reason, but it
+        # has to NAME the accepted codes: "not present in the calculation
+        # registry" alone leaves the operator guessing which codes exist.
+        raise typer.BadParameter(
+            f"modelo {modelo!r} is not in the calculation registry. "
+            f"Accepted: {', '.join(known_codes)}."
+        )
+    targets = known_codes if modelo is None else (modelo,)
     per_modelo_reports = []
     for target in targets:
         try:
