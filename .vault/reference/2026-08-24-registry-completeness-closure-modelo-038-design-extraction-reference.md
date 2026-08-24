@@ -5,11 +5,10 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:42101930d80732a6f6a58dc399983fd9c22aebeff14808c13e26ce00dd5e1a6f'
+body_hash: 'sha256:dc3608be3b704d0db71c98260e960e38c031e6f85065630ce945fb1e5c0f3bb7'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
 ---
-
 # `registry-completeness-closure` reference: `modelo 038 design extraction`
 
 Modelo 038 has an official current fixed-position design and an active fichero
@@ -52,28 +51,33 @@ design extraction. Its aggregate assertion is intentionally red while the
 fourteen-revision filing backlog exists; its Modelo 038 line is the expected
 refusal, not a regression.
 
-### Adjudication and owner
+### Adjudication and exact owners
 
 `038/2002-y-siguientes` is supported for registered-modelo inspection and monthly
 applicability only. It is not fileable in Cadrumo. Retaining
 `authority_grade = "applicability"` and no export layout is the correct boundary;
 the official design must not be converted into guessed field coordinates.
 
-The existing owner is the `aeat-export-fragment-generator-authority` plan: its
-source-to-intermediate, semantic-map, and generated-byte authority is the only
-place a trusted layout could be created. The temporal-coverage plan owns the
-separate source-era correction: the present catalogue stamps the 2024 PDF with
-`record_design_epoch = "2002"` and `applies_from = 2002-01-16`, which conflicts
-with the 2024 Orden's stated first application. This reference is a refusal
-disposition, not authorization to change either corpus.
+`W02.P05.S43` in `registry-temporal-coverage` is the exact owner of the source-era
+correction. It must retain the 2024 design only from the June 2024 declaration,
+obtain a hash-pinned earlier official design before it asserts 2002-to-May-2024
+coverage, and split the revision or source binding through the validated temporal
+authority. It cannot promote the grade, author a layout, infer the earlier layout,
+or retain a fallback.
+
+`W04.P07.S96` in `aeat-export-fragment-generator-authority` is the separate exact
+owner of trusted-layout acquisition. Only after the source era is exact, it may
+derive a complete non-overlapping coordinate intermediate from a hash-pinned
+official design and then pass the existing reviewed semantic-map, render-profile,
+canonical-generator, provenance, and production emitted-byte proof gates. It may
+not guess coordinates or add a parallel writer.
 
 Reconsider fileability only after all of these are true:
 
-1. The revision/source boundary is split or otherwise made exact: a validated
-   historical design covers the earlier window and the 2024 design is scoped from
-   June 2024.
-2. An official source produces a complete, non-overlapping coordinate intermediate
-   with source-hash and applicability validation; a parser workaround alone is
+1. `W02.P05.S43` closes with a validated historical design for the earlier window
+   and the 2024 design scoped from June 2024.
+2. `W04.P07.S96` derives a complete, non-overlapping coordinate intermediate with
+   source-hash and applicability validation; a parser workaround alone is
    insufficient.
 3. A reviewed semantic map, render profile, generated-tree proof, and production
    emitted-byte test satisfy the established export-generator authority.
@@ -91,3 +95,5 @@ Reconsider fileability only after all of these are true:
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_038/files/01-038-diseno-de-registro-actualizado-28-06-2024.pdf.extracted.json`
 - `src/cadrumo/domain/calculations/registry/tests/test_cited_design_field_bounds_are_self_consistent.py`
 - `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py`
+- `.vault/plan/2026-08-14-registry-temporal-coverage-plan.md` (`W02.P05.S43`)
+- `.vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md` (`W04.P07.S96`)

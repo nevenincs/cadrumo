@@ -5,12 +5,11 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:fa3958af6f199221039cb389f1fae2368cc52958e6dd3b3bfd7a12aad5ab7a9f'
+body_hash: 'sha256:49f112440e2874ba109ff62b882750bc6c0b52bd6d27049b58530e996678017a'
 step_id: 'S13'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
 ---
-
 # Adjudicate Modelo 038 revision 2002-y-siguientes design extraction trust and fileability
 
 ## Scope
@@ -35,8 +34,11 @@ revision remains applicability-grade and inspection-only.
 
 The evidence also exposes a separate historical-scope defect: BOE-A-2024-13049
 limits the IRUS change to the June 2024 declaration, while the current source
-metadata claims the 2024 PDF from 2002. The temporal/export owners must correct
-that boundary before any fileability work is reconsidered.
+metadata claims the 2024 PDF from 2002. The later independent review enrolled
+the exact routes: `registry-temporal-coverage` `W02.P05.S43` owns the validated
+pre-June source-era correction, and `aeat-export-fragment-generator-authority`
+`W04.P07.S96` owns trusted layout acquisition after that correction. Neither route
+authorizes filing until its independent acceptance conditions close.
 
 ## Notes
 

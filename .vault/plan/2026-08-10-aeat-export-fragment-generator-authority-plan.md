@@ -3,13 +3,13 @@ tags:
   - '#plan'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
-modified: '2026-08-18'
-body_hash: 'sha256:e760d4093b65a58a38bd48239c7aace4ad03370118fd308573f8f1da1cb7b8a7'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-source-authority-research]]'
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
+modified: '2026-08-24'
+body_hash: 'sha256:3747e5eb208b645fe94b800144ee0c615cfa02ba9ae75359a900bf5f97e90ac0'
 ---
 
 <!-- RETIRED: S19, S26, S65, S93 -->
@@ -88,6 +88,7 @@ Cover every authority boundary with positive and negative real-behavior tests.
 
 Verify generated layouts as loadable complete structures and as real emitted filing bytes.
 
+
 ## Wave `W04` - regenerate and release relayout waves
 
 Use the proven authority to replace unverified trees, close the blocked split spans, and restore architecture-consistent model bindings.
@@ -152,6 +153,7 @@ Regenerate the highest-priority calculation-model revisions and discharge the he
 - [ ] `W04.P07.S89` - Prepare the exact Modelo-303-only-nine legal worklist after the Modelo 390 split, then require the human operator to review and attest each reference one at a time against live official authority with exact identity, provision, corpus anchor, presence and absence clauses, applicability, amounts and rates. Refuse agent or bulk promotion and prove the partition remains exact; `src/cadrumo/_data/registry/aeat/legal/iva.toml, .vault/audit/`.
 - [ ] `W04.P07.S90` - Prepare the exact Modelo-390-only-two legal worklist after the Modelo 390 split, prove RDL 4/2024 article 1 is selected only for 2024, then require the human operator to review and attest each reference one at a time against live official authority. Refuse agent or bulk promotion and prove the partition remains exact; `src/cadrumo/_data/registry/aeat/legal/iva.toml, .vault/audit/`.
 - [ ] `W04.P07.S91` - Require one-at-a-time human operator signoff for Modelo 303 revisions 2023, 2024-hasta-08-y-2t, 2024-desde-09-y-3t, 2025, and 2026-y-siguientes and Modelo 390 revisions 2022, 2023, 2024, and 2025. Then build real filing-grade snapshots and prove selected revision and all selected legal references are operator-reviewed, the shared and model-only partitions are pairwise disjoint and exhaust the exact twenty-reference target union, every year selects its exact source, and Modelo 390 2026 refuses as unsupported. Complete the public M303 filing-instance renderer and authoritative real-byte proof here, never through inspection authority; `src/cadrumo/domain/calculations/registry/, src/cadrumo/application/filing/, src/cadrumo/application/modelo/, src/cadrumo/_data/registry/aeat/modelos/303/, src/cadrumo/_data/registry/aeat/modelos/390/, src/cadrumo/application/filing/tests/`.
+- [ ] `W04.P07.S96` - Acquire a trusted Modelo 038 layout only after its exact source era is resolved by deriving a complete non-overlapping coordinate intermediate from a hash-pinned official design, then require the existing reviewed semantic-map, render-profile, canonical-generator, provenance, and production emitted-byte proof gates before any filing-grade claim without guessed coordinates or a parallel writer.; `dev/registry/; dev/registry/mappings/modelo_038/; dev/registry/render_profiles/modelo_038/; src/cadrumo/_data/registry/aeat/modelos/038/revisions/; src/cadrumo/application/filing/tests/`.
 
 ### Phase `W04.P08` - campaign integration and release
 

@@ -9,7 +9,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-load-topology-reference]]'
   - '[[2026-08-14-registry-temporal-coverage-research]]'
 modified: '2026-08-24'
-body_hash: 'sha256:33ccf2b1669fd7aac38dedf0f70b414067bd6b959b2409162194c2542e53520d'
+body_hash: 'sha256:3fb5c6ca727794263e643cdf74bd20956c4ea9d15d0607e2a35a6c48cd00a1e4'
 ---
 
 <!-- RETIRED: S31 -->
@@ -98,6 +98,7 @@ Refuse or advise at the authority and snapshot resolution boundary, which execut
 - [ ] `W02.P05.S12` - Validate temporal coherence at registry build as advisory: a superseded revision without a real terminus, a bounded or enumerated selector with an open validity end, and a selector start disagreeing with the declared validity start each surface a finding, proven by deliberate broken fixtures; `src/cadrumo/domain/calculations/registry/; src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W02.P05.S24` - Declare the supported-filing-years catalogue in the registry authoring tree, replacing every Python-resident year set including SUPPORTED_EJERCICIOS, and refuse the entire registry load when any declared year has any obliged modelo without its required grade, resolvable revision or evidence-backed cells for every period, enumerating every gap with modelo, period and missing prerequisite, advisory-first until the flip; `src/cadrumo/_data/registry/aeat/; src/cadrumo/domain/calculations/registry/; src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W02.P05.S25` - Refuse production calculation and filing consumption at the authority and snapshot boundary for any evaluation date whose filing year is not declared supported, naming the year and the declaration that would admit it, with the evaluation date flowing from the one clock authority so the refusal is proven with an explicit date under a warm load, while deadline and applicability scheduling surfaces stay readable; `src/cadrumo/domain/calculations/registry/_authority.py; src/cadrumo/domain/calculations/registry/_snapshot.py; src/cadrumo/domain/calculations/registry/tests/`.
+- [ ] `W02.P05.S43` - Correct Modelo 038 source-era scope: retain the 2024 dr038 design only from the June 2024 declaration, acquire and hash-pin an earlier official design before asserting the 2002-to-May-2024 window, and split the revision or source binding through the validated temporal authority without guessed coverage, legacy fallback, a filing-grade promotion, or an export layout.; `src/cadrumo/_data/registry/aeat/legal/modelo-038.toml; src/cadrumo/_data/registry/aeat/modelos/038/revisions/; src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_038/; src/cadrumo/domain/calculations/registry/tests/`.
 
 ### Phase `W02.P06` - coverage ledger reconciliation
 
