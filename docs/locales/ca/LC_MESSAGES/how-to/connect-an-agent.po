@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 23:20+0200\n"
+"POT-Creation-Date: 2026-08-24 20:06+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -43,18 +43,19 @@ msgid "What the agent connection is"
 msgstr "Què és la connexió de l'agent"
 
 #: ../../how-to/connect-an-agent.md:12
+#, fuzzy
 msgid ""
-"Cadrumo ships an MCP (Model Context Protocol) server, `cadrumo-mcp`, "
-"alongside the `aeat` command. MCP is an open standard that lets "
-"assistants call tools. Any MCP-capable client can connect; Claude is one "
-"such client."
+"The separate `cadrumo-harness` distribution ships an MCP (Model Context "
+"Protocol) server, `cadrumo-mcp`, for the `aeat` command. MCP is an open "
+"standard that lets assistants call tools. Any MCP-capable client can "
+"connect; Claude is one such client."
 msgstr ""
 "Cadrumo inclou un servidor MCP (Model Context Protocol), `cadrumo-mcp`, "
 "al costat de l'ordre `aeat`. L'MCP és un estàndard obert que permet als "
 "assistents cridar eines. Qualsevol client amb capacitat MCP s'hi pot "
 "connectar; Claude és un d'aquests clients."
 
-#: ../../how-to/connect-an-agent.md:16
+#: ../../how-to/connect-an-agent.md:17
 msgid ""
 "The server exposes the CLI's read and prepare operations as tools, plus "
 "grounded search over the bundled BOE and AEAT legal corpus. It refuses "
@@ -65,7 +66,7 @@ msgstr ""
 "de l'AEAT inclòs. Es nega a la presentació en directe per construcció, "
 "exactament com la CLI."
 
-#: ../../how-to/connect-an-agent.md:20
+#: ../../how-to/connect-an-agent.md:21
 msgid ""
 "In the beta, connect from the repository checkout below. Every release "
 "also builds the plugin and Desktop extension artifacts; their marketplace"
@@ -73,29 +74,31 @@ msgid ""
 "Cadrumo](../download.md) for channel status)."
 msgstr ""
 "En la beta, connecta des de la còpia del repositori de sota. Cada versió "
-"també construeix els artefactes del connector i de l'extensió d'escriptori; "
-"les seves llistes al mercat i als registres s'obriran amb el llançament "
-"públic (consulta [Obtén Cadrumo](../download.md) per a l'estat de cada "
-"canal)."
+"també construeix els artefactes del connector i de l'extensió "
+"d'escriptori; les seves llistes al mercat i als registres s'obriran amb "
+"el llançament públic (consulta [Obtén Cadrumo](../download.md) per a "
+"l'estat de cada canal)."
 
-#: ../../how-to/connect-an-agent.md:25
+#: ../../how-to/connect-an-agent.md:26
 msgid "Prepare the source checkout"
 msgstr "Prepara el checkout del codi font"
 
-#: ../../how-to/connect-an-agent.md:34
+#: ../../how-to/connect-an-agent.md:35
 msgid "Register the source server"
 msgstr "Registra el servidor de codi font"
 
-#: ../../how-to/connect-an-agent.md:36
+#: ../../how-to/connect-an-agent.md:37
+#, fuzzy
 msgid ""
-"Register `uv run cadrumo-mcp` as a stdio server and set the checkout as "
-"the working directory. In clients that accept a JSON server definition:"
+"Register `uv run --package cadrumo-harness cadrumo-mcp` as a stdio server"
+" and set the checkout as the working directory. In clients that accept a "
+"JSON server definition:"
 msgstr ""
 "Registra `uv run cadrumo-mcp` com a servidor stdio i estableix el "
 "checkout com a directori de treball. En els clients que accepten una "
 "definició de servidor en JSON:"
 
-#: ../../how-to/connect-an-agent.md:51
+#: ../../how-to/connect-an-agent.md:53
 msgid ""
 "Replace the example path with the absolute path to your authorized "
 "checkout. Do not replace this with `uvx`, a marketplace install, or a "
@@ -105,11 +108,11 @@ msgstr ""
 "autoritzat. No ho substitueixis per `uvx`, una instal·lació de mercat o "
 "una extensió descarregada fins que s'anunciï la distribució pública."
 
-#: ../../how-to/connect-an-agent.md:55
+#: ../../how-to/connect-an-agent.md:57
 msgid "Before the first agent session"
 msgstr "Abans de la primera sessió de l'agent"
 
-#: ../../how-to/connect-an-agent.md:57
+#: ../../how-to/connect-an-agent.md:59
 msgid ""
 "The server uses the same local encrypted store and the same active "
 "profile as the CLI. A server cannot answer a passphrase prompt, so "
@@ -123,11 +126,11 @@ msgstr ""
 "execucions desateses: consulta [Executa sense sol·licitud de contrasenya"
 "](protect-data-access.md#run-without-a-passphrase-prompt)."
 
-#: ../../how-to/connect-an-agent.md:62
+#: ../../how-to/connect-an-agent.md:64
 msgid "What the agent can and cannot do"
 msgstr "Què pot i què no pot fer l'agent"
 
-#: ../../how-to/connect-an-agent.md:64
+#: ../../how-to/connect-an-agent.md:66
 msgid ""
 "The agent can import and classify records, run calculations, verify "
 "drafts, and prepare exports, because those are local operations. It "

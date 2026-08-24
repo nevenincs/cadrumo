@@ -19,7 +19,7 @@ related:
   - '[[2026-08-13-sealed-archive-transport-successor-adr]]'
   - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
 modified: '2026-08-24'
-body_hash: 'sha256:6c336a4ceace3aba78ad3b56621597a3491511396a4b7649d9bc69c42063b4ec'
+body_hash: 'sha256:0eeb66d2cabe7994e5782ae6ba9368cfef2098d24e4a1be8e8929104d0c9a28d'
 ---
 
 # `profile-password-custody` plan
@@ -337,7 +337,7 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 - [x] `W06.P12.S226` - Replace the Windows-only foreign-launcher plant with a platform-neutral real confined-venv launcher swap and prove the canonical path rejects a peer entry point on Windows and POSIX; `dev/packaging/tests/test_distribution_evidence_emit.py`.
 - [x] `W06.P12.S227` - Retire the unsupported workstation agent-materialisation sequence and stale agent-extra claims while preserving the separately owned harness and MCP guidance; `docs/workstation-setup.md and docs/_sequences/contracts/workstation-setup/`.
 - [x] `W06.P12.S228` - Replace the inline profile-delete command and false active-delete claim with a terminal real-execution sequence that logs out and deletes only its sandbox profile; `docs/how-to/profile-setup.md and docs/_sequences/contracts/how-to/`.
-- [ ] `W06.P12.S229` - Resynchronize the Spanish, Catalan, and Hungarian Sphinx gettext catalogues from stable English sources and retire the generated-page environment-overrides orphans; `docs/locales/es/LC_MESSAGES/ and docs/locales/ca/LC_MESSAGES/ and docs/locales/hu/LC_MESSAGES/`.
+- [x] `W06.P12.S229` - Resynchronize the Spanish, Catalan, and Hungarian Sphinx gettext catalogues from stable English sources and retire the generated-page environment-overrides orphans; `docs/locales/es/LC_MESSAGES/ and docs/locales/ca/LC_MESSAGES/ and docs/locales/hu/LC_MESSAGES/`.
 - [ ] `W06.P12.S230` - Complete every blank or fuzzy Spanish user-page translation and correct download command-list punctuation without English fallback; `docs/locales/es/LC_MESSAGES/`.
 - [ ] `W06.P12.S231` - Complete every blank or fuzzy Catalan user-page translation and correct download command-list punctuation without English fallback; `docs/locales/ca/LC_MESSAGES/`.
 - [ ] `W06.P12.S232` - Complete every blank or fuzzy Hungarian user-page translation and correct download command-list punctuation without English fallback; `docs/locales/hu/LC_MESSAGES/`.

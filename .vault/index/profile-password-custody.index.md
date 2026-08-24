@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:a8b4ccd5920ea8cabb7c59426aa60332820f01d0b8a81785bbd6e30f98db78a5'
+body_hash: 'sha256:25bb27f2b98082439bf358ce31345a9c5bf3c9018134905bfc7a920a97d030fa'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -237,6 +237,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W06-P12-S226]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S227]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S228]]'
+  - '[[2026-08-13-profile-password-custody-W06-P12-S229]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S238]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S239]]'
   - '[[2026-08-13-profile-password-custody-plan]]'
@@ -281,6 +282,7 @@ related:
   - '[[2026-08-24-profile-password-custody-s226-foreign-launcher-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s227-workstation-docs-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s228-profile-delete-sequence-review-audit]]'
+  - '[[2026-08-24-profile-password-custody-s229-gettext-sync-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s238-sessionless-delete-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s239-path-specific-golden-mask-review-audit]]'
 ---
@@ -336,6 +338,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-24-profile-password-custody-s226-foreign-launcher-review-audit` - `profile-password-custody` audit: `S226 foreign launcher review`
 - `2026-08-24-profile-password-custody-s227-workstation-docs-review-audit` - `profile-password-custody` audit: `S227 workstation docs review`
 - `2026-08-24-profile-password-custody-s228-profile-delete-sequence-review-audit` - `profile-password-custody` audit: `S228 profile delete sequence review`
+- `2026-08-24-profile-password-custody-s229-gettext-sync-review-audit` - `profile-password-custody` audit: `s229 gettext sync review`
 - `2026-08-24-profile-password-custody-s238-sessionless-delete-review-audit` - `profile-password-custody` audit: `S238 sessionless profile delete review`
 - `2026-08-24-profile-password-custody-s239-path-specific-golden-mask-review-audit` - `profile-password-custody` audit: `s239 path specific golden mask review`
 
@@ -570,6 +573,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W06-P12-S226` - Replace the Windows-only foreign-launcher plant with a platform-neutral real confined-venv launcher swap and prove the canonical path rejects a peer entry point on Windows and POSIX
 - `2026-08-13-profile-password-custody-W06-P12-S227` - Retire the unsupported workstation agent-materialisation sequence and stale agent-extra claims while preserving the separately owned harness and MCP guidance
 - `2026-08-13-profile-password-custody-W06-P12-S228` - Replace the inline profile-delete command and false active-delete claim with a terminal real-execution sequence that logs out and deletes only its sandbox profile
+- `2026-08-13-profile-password-custody-W06-P12-S229` - Resynchronize the Spanish, Catalan, and Hungarian Sphinx gettext catalogues from stable English sources and retire the generated-page environment-overrides orphans
 - `2026-08-13-profile-password-custody-W06-P12-S238` - Remove inactive profile deletion from the root login gate while preserving active-profile refusal, explicit confirmation, custody preflight, and exact target binding in real subprocess execution
 - `2026-08-13-profile-password-custody-W06-P12-S239` - Add a central path-specific golden mask for only the profile-delete result fingerprint digest, retain generic digest visibility, and prove the mask is exactly the fresh-sandbox residual through real sequence replay
 
