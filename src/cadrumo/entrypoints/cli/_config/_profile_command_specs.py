@@ -197,6 +197,20 @@ irpf-special-regime-start-date does-intracomunitario third-party-transactions-ab
 bienes-extranjero-above-threshold monedas-virtuales-extranjero-above-threshold llm-vision google-export notes""".split()  # noqa: SIM905 - ordered declaration table
 
 
+#: Wizard axes whose answer validator accepts the enum's exact member value and
+#: nothing else, so the closed set can be declared at the Typer boundary and click
+#: renders it on a parse failure. ``iva-regime`` is deliberately absent: its
+#: validator upper-cases the token before constructing the enum, so it accepts
+#: lowercase input a Choice would refuse.
+_WIZARD_ENUM_FIELDS: dict[str, ValueContract] = {
+    "entity-type": ValueContract(DeferredTarget("cadrumo.domain.deadlines", "EntityType")),
+    "legal-entity-form": ValueContract(DeferredTarget("cadrumo.domain.deadlines", "LegalEntityForm")),
+    "irpf-estimation-regime": ValueContract(DeferredTarget("cadrumo.domain.deadlines", "IrpfEstimationRegime")),
+    "irpf-special-regime": ValueContract(DeferredTarget("cadrumo.domain.deadlines", "IrpfSpecialRegime")),
+    "fiscal-residency": ValueContract(DeferredTarget("cadrumo.domain.contribuyente", "FiscalResidency")),
+}
+
+
 def _wizard_option(token: str) -> OptionSpec:
     name = token.replace("-", "_")
     help_key = f"wizard.setup.flags.{token}.help"
@@ -212,6 +226,9 @@ def _wizard_option(token: str) -> OptionSpec:
         )
     if token in _WIZARD_CHECKBOX_FIELDS:
         return _option(name, (f"--{token}",), _STR, help_key, default=(), multiple=True)
+    enum_contract = _WIZARD_ENUM_FIELDS.get(token)
+    if enum_contract is not None:
+        return _option(name, (f"--{token}",), enum_contract, help_key)
     return _option(name, (f"--{token}",), _STR, help_key)
 
 

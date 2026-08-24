@@ -88,6 +88,12 @@ _BY_PARAMETER_NAME: dict[str, tuple[AxisExemption, str]] = {
         AxisExemption.NAME_COLLISION,
         "The movement and amendment kinds are now pinned to their own enums. The one bare site left, registry.manuals.rules, filters on RegistryManualRulesCommand.kind -- a free-form str with no closed set behind it, so there is no enum to declare.",
     ),
+    "iva_regime": (
+        AxisExemption.NORMALISING_PARSER,
+        "The answer validator constructs the enum from value.upper(), and IVARegime's members are "
+        "upper-case tokens, so the CLI accepts lower-case input ('general') that a Choice would "
+        "refuse. The five sibling wizard axes take the member value exactly and ARE pinned.",
+    ),
     "valuation_method": (
         AxisExemption.INSTRUCTIVE_GUARD,
         "The domain accepts out-of-enum 'lifo' so it can refuse it citing LIS art. 17.1 -- \"LIFO valuation is not admitted for this tax ledger; use FIFO, PMP, or coste_medio\". A Choice would replace a legal citation with a bare not-one-of.",
