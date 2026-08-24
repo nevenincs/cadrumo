@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:ad3fa950cd27cf7836d99dfc32237b92e46f358284800f82d78076b64bd0d63e'
+body_hash: 'sha256:edc1a52c81e130bfde9efac2edd8334f72562f1a211dbe843e47888e502b3aea'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -72,6 +72,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W03-P06-S18]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S190]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S194]]'
+  - '[[2026-08-13-profile-password-custody-W03-P06-S195]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S201]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S209]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S42]]'
@@ -243,6 +244,7 @@ related:
   - '[[2026-08-16-profile-password-custody-retired-custody-absence-audit]]'
   - '[[2026-08-18-profile-password-custody-campaign-close-audit]]'
   - '[[2026-08-18-profile-password-custody-storage-custody-green-sweep-audit]]'
+  - '[[2026-08-24-profile-password-custody-s195-setup-incomplete-proof-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s206-recovery-parity-review-audit]]'
 ---
 
@@ -282,6 +284,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-16-profile-password-custody-retired-custody-absence-audit` - `profile-password-custody` audit: `retired custody absence`
 - `2026-08-18-profile-password-custody-campaign-close-audit` - `profile-password-custody` audit: `campaign close`
 - `2026-08-18-profile-password-custody-storage-custody-green-sweep-audit` - `profile-password-custody` audit: `storage and custody green sweep`
+- `2026-08-24-profile-password-custody-s195-setup-incomplete-proof-review-audit` - `profile-password-custody` audit: `S195 setup-incomplete proof review`
 - `2026-08-24-profile-password-custody-s206-recovery-parity-review-audit` - `profile-password-custody` audit: `S206 recovery parity review`
 
 ### exec
@@ -494,6 +497,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W05-P08-S24` - Have Sol Medium complete the final security and architecture proof against every accepted custody invariant and execution record
 - `2026-08-13-profile-password-custody-W05-P08-S25` - After S24 proves the hard cutover, perform the explicitly authorized local-only destructive reset of the existing disposable retired/shared-master store through the new canonical application-owned profile deletion authority, capture journal and receipt evidence, re-enrol only current-format profiles, never read/adopt/migrate retired custody, never delete through raw filesystem or SQL, and perform no AEAT or external mutation
 - `2026-08-13-profile-password-custody-W03-P06-S209` - Have Terra XHigh reproduce and resolve the WSL supervised-KDF inherited-PTY attestation refusal that prevents the full machine-secret CLI subprocess matrix from reaching dispatch, preserve strict worker isolation without bypasses or weaker fallback, and add a WSL runtime gate proving all five leaf descriptor channels, both restore variants, root authentication, and cross-scope collision semantics
+- `2026-08-13-profile-password-custody-W03-P06-S195` - Have Sol Medium confirm the restored setup-incomplete anti-tautology case green once the registry authority loads again, since that single case is the only one in its module that builds a real calendar and therefore the only one that needs the authority, it has never been observed passing while the concurrent authority-grade sweep leaves the registry refusing tree-wide, and an anti-tautology case never seen to pass is not yet evidence of anything
 
 ### plan
 
