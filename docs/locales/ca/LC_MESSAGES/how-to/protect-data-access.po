@@ -204,7 +204,6 @@ msgstr ""
 "cap perfil."
 
 #: ../../how-to/protect-data-access.md:68
-#, fuzzy
 msgid ""
 "The CLI does not currently export a recovery artifact, so do not treat "
 "the phrase as a complete operator recovery path. Where an external "

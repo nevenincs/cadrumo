@@ -5,29 +5,10 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:19198e1a1b6e843eb52db67d97cc919254f44593d870d23c36cd1e0364ac28a3'
+body_hash: 'sha256:772ff55fedca635192b25d4d4d2d8d4164605a8259f6efa3b8a0b74cac4605ff'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace profile-password-custody with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `profile-password-custody` audit: `S219 mandatory recovery documentation`
 
@@ -76,23 +57,30 @@ without its documented portable proof.
   operators to perform an unavailable export. Keep the artifact explicitly
   restore-only and separate from normal archives.
 
+### global-docs-locale-completeness | high | The full localized user-documentation gate remains red outside the three S219 catalogues
+
+`pytest -n 0 dev/docs/tests/test_docs_localization.py` reports 30 incomplete
+catalogues out of 57 in each target language, three `download.md` dash-policy
+violations in each language, and an orphan
+`reference/environment-overrides.po` catalogue in each language. The three
+protect-data-access catalogues are complete, non-fuzzy, and match their
+regenerated source messages, but the whole-corpus locale gate cannot pass until
+the external drift is closed.
+
 ## Re-review disposition
 
-The high finding is closed. The five invalid profile-setup prerequisites were
-replaced with the real provisioned-profile or stable-help lanes appropriate to
-their subjects, the logged-out status contract now expects the live refusal,
-and all nine page goldens were regenerated from their contracts. Independent
-checks for both `how-to/profile-setup` and `how-to/protect-data-access` report
-`cli-sequence goldens: clean`.
+The profile-setup high finding remains external and unresolved by this scoped
+commit. Its contracts and goldens are not staged here, so their concurrent
+worktree state is not evidence for S219 closure.
 
-The medium finding is closed as a truthful documented capability gap. The
-operator guide now states that the CLI does not currently export a recovery
+The medium finding is closed as a truthful target-surface documentation fix.
+The operator guide now states that the CLI does not currently export a recovery
 artifact, that the phrase alone is not a complete recovery path, and that only
 an external provisioning workflow supplying the matching artifact can use the
 explicit artifact restore door. The prose does not imply that an unavailable
 export command exists.
 
-No critical, high, or medium findings remain for S219. The documentation and
-locale-owned CLI help consistently state mandatory exact recovery verification
-at creation, refusal before publication, no later enrollment, restore-proof-
-only artifacts, normal-archive exclusion, and password-login independence.
+Independent review finds no critical, high, or medium defect in the scoped
+protect-data-access guide, its three catalogues, or its generated goldens. The
+external profile-setup and whole-corpus locale findings remain open for their
+own closure work.
