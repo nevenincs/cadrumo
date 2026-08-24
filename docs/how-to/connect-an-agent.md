@@ -9,9 +9,10 @@ gated commands the CLI does.
 
 ## What the agent connection is
 
-Cadrumo ships an MCP (Model Context Protocol) server, `cadrumo-mcp`, alongside
-the `aeat` command. MCP is an open standard that lets assistants call tools.
-Any MCP-capable client can connect; Claude is one such client.
+The separate `cadrumo-harness` distribution ships an MCP (Model Context
+Protocol) server, `cadrumo-mcp`, for the `aeat` command. MCP is an open
+standard that lets assistants call tools. Any MCP-capable client can connect;
+Claude is one such client.
 
 The server exposes the CLI's read and prepare operations as tools, plus
 grounded search over the bundled BOE and AEAT legal corpus. It refuses live
@@ -27,21 +28,22 @@ registry listings open with the public launch (see
 ```bash
 git clone https://github.com/nevenincs/cadrumo.git
 cd cadrumo
-uv sync --extra agent
-uv run cadrumo-mcp --help
+uv sync --package cadrumo-harness
+uv run --package cadrumo-harness cadrumo-mcp --help
 ```
 
 ## Register the source server
 
-Register `uv run cadrumo-mcp` as a stdio server and set the checkout as the
-working directory. In clients that accept a JSON server definition:
+Register `uv run --package cadrumo-harness cadrumo-mcp` as a stdio server and
+set the checkout as the working directory. In clients that accept a JSON server
+definition:
 
 ```json
 {
   "mcpServers": {
     "cadrumo": {
       "command": "uv",
-      "args": ["run", "cadrumo-mcp"],
+      "args": ["run", "--package", "cadrumo-harness", "cadrumo-mcp"],
       "cwd": "/absolute/path/to/cadrumo"
     }
   }

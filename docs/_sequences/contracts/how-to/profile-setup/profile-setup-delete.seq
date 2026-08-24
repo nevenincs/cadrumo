@@ -1,4 +1,3 @@
-@step Delete the active profile after confirming the irreversible operation.
-@result aeat --format json config profile delete docs-sequence-sandbox --yes
-@expect status == "success"
-@expect exit_code == 0
+@step Delete an inactive profile after confirming the irreversible operation.
+@static aeat config profile delete NAME --yes
+@blocked sandbox-posture The hermetic runner provides one active profile and cannot register a second authentic custody profile without an operator passphrase, while this verb intentionally refuses to delete the active profile.
