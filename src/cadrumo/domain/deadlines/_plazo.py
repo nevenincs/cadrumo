@@ -13,10 +13,13 @@ from datetime import date
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
-from ...core import Period
+from ...core import Period, ResultDisposition
+from ._errors import DeadlineValidationError
 
 if TYPE_CHECKING:
-    from ..calculations.registry import DeadlineWindowDefinition
+    from ..calculations.registry import DeadlineWindowDefinition, ModeloRevision
+
+    type DeadlineWindowProjection = tuple[str, ModeloRevision, DeadlineWindowDefinition]
 
 
 def resolve_filing_closes_on(modelo: str, filing_year: int, period: Period) -> date | None:
@@ -57,7 +60,14 @@ def resolve_filing_closes_on(modelo: str, filing_year: int, period: Period) -> d
 
 
 @lru_cache(maxsize=256)
-def resolve_filing_window(modelo: str, filing_year: int, period: Period) -> DeadlineWindowDefinition | None:
+def resolve_filing_window(
+    modelo: str,
+    filing_year: int,
+    period: Period,
+    *,
+    resultado: ResultDisposition | None = None,
+    tipo_renta_code: str | None = None,
+) -> DeadlineWindowDefinition | None:
     """Return the registry deadline window for a modelo+year+period, or ``None``.
 
     This is the single matching authority for "which registry deadline window
@@ -67,10 +77,11 @@ def resolve_filing_window(modelo: str, filing_year: int, period: Period) -> Dead
     change to the year/token matching rule or to the no-window behaviour can
     never move one surface without the other.
 
-    Matching rule: the registry window's period must carry the same filing year
-    and the same bare registry period token as the requested ``period`` (e.g.
-    ``"1T"``, ``"0A"``, ``"01"``). No following-year or future-year window is
-    ever borrowed when an exact match is absent.
+    Matching uses the registry's canonical atomic deadline coordinate. The
+    filing year and bare period token must be exact; a window's absent qualifier
+    scope is a wildcard, while an authored resultado or tipo-renta scope must
+    contain the requested canonical value. No following-year or future-year
+    window is ever borrowed when an exact match is absent.
 
     ``None`` means one thing only: the registry loaded, and declares no window
     matching this combination. A registry that cannot be read or validated is
@@ -90,6 +101,8 @@ def resolve_filing_window(modelo: str, filing_year: int, period: Period) -> Dead
             (e.g. ``"130"``, ``"303"``).
         filing_year: Tax year for which the filing target was created.
         period: The typed filing period to match.
+        resultado: Optional canonical post-calculation result disposition.
+        tipo_renta_code: Optional official two-digit Modelo 210 tipo-renta code.
 
     Returns:
         The matching
@@ -99,19 +112,57 @@ def resolve_filing_window(modelo: str, filing_year: int, period: Period) -> Dead
     Raises:
         RegistryError: The registry could not be read or validated. The caller
             is told the deadline is unknown rather than absent.
+        DeadlineValidationError: More than one window matches the atomic request
+            coordinate. Ambiguous registry authority is never treated as absence.
     """
     from ...core.resources import resources
 
     authority = resources().modelos.authority
 
-    windows = authority.deadline_windows(filing_year)
-    for window_modelo, _revision, window in windows:
-        if window_modelo != modelo:
-            continue
-        wp = window.period
-        if wp.filing_year == filing_year and wp.registry_token == period.registry_token:
-            return window
-    return None
+    windows = authority.deadline_windows(filing_year, modelos=(modelo,))
+    return _resolve_projected_filing_window(
+        windows,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        resultado=resultado,
+        tipo_renta_code=tipo_renta_code,
+    )
+
+
+def _resolve_projected_filing_window(
+    windows: tuple[DeadlineWindowProjection, ...],
+    *,
+    modelo: str,
+    filing_year: int,
+    period: Period,
+    resultado: ResultDisposition | None,
+    tipo_renta_code: str | None,
+) -> DeadlineWindowDefinition | None:
+    """Resolve one already-validated authority projection by semantic coordinate."""
+    # Registry applicability imports this deadline facade, so defer the public
+    # registry-facade import until resolution time to keep that dependency cycle
+    # out of module initialisation.
+    from ..calculations.registry import deadline_semantic_coordinate, deadline_window_semantic_coordinates
+
+    requested = deadline_semantic_coordinate(modelo, period, resultado, tipo_renta_code)
+    if requested.filing_year != filing_year:
+        return None
+
+    matches = tuple(
+        window
+        for projected_modelo, _revision, window in windows
+        if projected_modelo == modelo
+        and requested in deadline_window_semantic_coordinates(projected_modelo, window)
+    )
+    if not matches:
+        return None
+    if len(matches) > 1:
+        raise DeadlineValidationError(
+            f"filing window resolution is ambiguous for {requested!r}: "
+            f"matched window ids {[window.id for window in matches]!r}",
+        )
+    return matches[0]
 
 
 __all__ = ["resolve_filing_closes_on", "resolve_filing_window"]
