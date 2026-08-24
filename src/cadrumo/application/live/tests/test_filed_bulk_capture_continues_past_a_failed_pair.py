@@ -49,69 +49,29 @@ into a false alarm, if the PDF leg ever does become reachable offline.
 from __future__ import annotations
 
 import asyncio
-import re
-from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
-from playwright.async_api import Route, async_playwright
 
-from ....adapters.outbound.aeat.auth import AeatSession, CertificateSessionDetail
-from ....adapters.outbound.aeat.sede import DeclaracionesRegisterSession
 from ....adapters.persistence.profile.sync_runs import SyncRunRecordRepository
-from ....core.config import override_settings
-from ....tests import FIXTURES_DIR
+from ....tests.offline_aeat_register import (
+    aeat_sede_fixture,
+    declared_register_total,
+    open_routed_declarations_register,
+    rendered_register_rows,
+)
 from ....tests.secure_sql import isolated_runtime_profile
 from .._filed_data_capture import capture_filed_data_bulk
 from .._remote_state_models import BulkFiledDataCaptureReport
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_FIXTURE_ROOT = FIXTURES_DIR / "aeat-sede"
 _MODELO = "100"
 # Both years carry a registry revision for this modelo, so both survive the
 # pre-flight query plan and actually reach the register walk.
 _YEAR_FROM = 2024
 _YEAR_TO = 2025
 _BUCKET_ID = "7c7c7c7c-7c7c-47c7-87c7-7c7c7c7c7c7c"
-
-
-def _offline_session() -> AeatSession:
-    """A real session carrying no persisted browser state and reaching nothing."""
-    authenticated_at = datetime(2026, 8, 9, 9, 0, tzinfo=UTC)
-    return AeatSession(
-        authenticated_at=authenticated_at,
-        idle_deadline=authenticated_at + timedelta(hours=8),
-        storage_state_path=None,
-        identity_nif="12345678Z",
-        provider_detail=CertificateSessionDetail(
-            certificate_thumbprint="aabbcc",
-            certificate_subject="CN=test",
-        ),
-    )
-
-
-def _fixture(stem: str) -> str:
-    return (_FIXTURE_ROOT / f"{stem}.html").read_text(encoding="utf-8")
-
-
-# Lifted from the fixture's raw markup, never from anything the production
-# parser computes, so a comparison against them is a cross-check rather than the
-# parser measured against itself.
-_TOTAL_REGISTROS_RE = re.compile(r"de (\d+) en total")
-_LISTITEM_RE = re.compile(r'class="[^"]*\bz-listitem\b')
-
-
-def _declared_total_in(html: str) -> int:
-    """Return the record total the fixture's own pager label states."""
-    match = _TOTAL_REGISTROS_RE.search(html)
-    assert match is not None, "fixture's pager label shape changed; it can no longer declare a total"
-    return int(match.group(1))
-
-
-def _rendered_rows_in(html: str) -> int:
-    """Count the rendered grid rows straight out of the fixture markup."""
-    return len(_LISTITEM_RE.findall(html))
 
 
 def _capture(output_root: Path) -> BulkFiledDataCaptureReport:
