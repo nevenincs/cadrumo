@@ -5,12 +5,11 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:e2ecbf3ecefb620a24690c5f832e323c2c68ae61d45cf147465fe20ac56ca468'
+body_hash: 'sha256:5197875cd25ca7b8c2f86071fe107c9ac4405802d6346da1078c31b4e68451d3'
 step_id: 'S30'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
 ---
-
 # Verify every shipped modelo and revision localization key across supported output locales
 
 ## Scope
@@ -19,18 +18,19 @@ related:
 
 ## Description
 
-- Discover the canonical Modelo locale compiler, resolver, scanner, and catalogue-routing surfaces with Vaultspec-RAG, then confirm the unique builder declarations by exact source audit.
-- Add a registry-derived runtime gate that compares the scanner inventory to the keys attached to every loaded Modelo, revision, construct, casilla, help, and alias surface.
-- Resolve every required presentation scalar and every authored optional scalar through each supported output locale using the public schema accessors.
-- Add mutation bites for an unresolvable real casilla label and a second canonical identity-builder declaration.
+- Locate the canonical Modelo locale compiler, resolver, scanner, and catalogue-routing surfaces with Vaultspec-RAG, then read the authority files in full and confirm their declarations with an exact source audit.
+- Revalidate the entire shipped schema corpus after the S31 continuity correction, exercising the public accessors for every Modelo, revision, construct, casilla, optional help scalar, and alias across every supported output locale.
+- Run the runtime scanner-to-schema inventory equality gate, its missing-real-label mutation bite, and the canonical identity-builder redeclaration mutation bite.
+- Run the full bundled registry authority and the Modelo locale-key parity gates.
 
 ## Outcome
 
-- The loaded corpus contains 58 Modelos, 102 revisions, 26,066 casillas, 162 constructs, no aliases, and 55,095 derived Modelo-schema locale keys.
-- The new focused gate passes all five checks. It establishes that the scanner equals the live schema inventory, the public accessors render every required scalar across the supported output locales, and no canonical locale-key builder is redeclared outside `_modelo_localization.py`.
-- Spanish continues to be enforced by the required resolver paths. Optional revision labels and help remain optional; their absence is not promoted into unsupported source text, while any authored value must be non-blank and render successfully.
+- The repaired loaded corpus contains 58 Modelos, 102 revisions, 26,066 casillas, 162 constructs, no aliases, and 55,095 derived Modelo-schema locale keys.
+- `bundled_authority()` validates all 58 Modelos. The focused runtime localization gate passes all five checks, and the focused Modelo locale-key parity gates pass 371 checks.
+- Every required presentation scalar renders through its public schema accessor in every supported output locale. Optional revision labels and casilla help remain optional, but an authored optional scalar must resolve as non-blank text.
+- The direct declaration audit finds all six Modelo identity builders only in `_modelo_localization.py`. Other `modelo.schema` references route, scan, validate, or move already-derived keys; none re-derives a Modelo schema identity.
 
 ## Notes
 
-- No locale catalogue was edited. A general `dev.locales audit` remains red on concurrent non-Modelo locale work: two missing adapter error keys and one stale flow key in all catalogue sets.
-- The shared full `bundled_authority()` validation is concurrently red on fourteen Modelo 303 construct deadline-source-reference findings. This Step's localization gate intentionally uses the canonical schema loader, as does the production locale scanner, and makes no claim that the unrelated cross-layer authority gate passed.
+- `dev.locales audit` completed its aggregate registry scan and reported only concurrent non-Modelo catalogue drift: five missing and three stale generic keys in each locale. It reported no Modelo-schema key finding.
+- A later `scaffold --check` invocation was interrupted by concurrent uncommitted syntax work in `application.modelo`; that unrelated worktree condition was preserved and is not used as Modelo-schema evidence.
