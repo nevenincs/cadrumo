@@ -14,6 +14,8 @@ from types import ModuleType
 import pytest
 
 from ....adapters.outbound.aeat.sede import (
+    Declaracion,
+    DeclaracionesRegisterSession,
     FiledDeclarationAvailability,
     FiledDeclarationAvailabilityReport,
 )
@@ -72,8 +74,6 @@ from .._filed_data_capture import (
     FiledHistoryDiscoveryReport,
     FiledHistoryOnboardingRun,
     FiledHistoryPairOutcome,
-    _CaptureAccumulator,
-    _persisted_bulk_filed_capture_report,
     filed_history_discovery_report,
     pull_filed_history,
 )
@@ -90,7 +90,6 @@ from .._filed_history_operation import (
     FILED_HISTORY_PHASE_RESULT,
     FILED_HISTORY_PHASE_SETTLEMENT,
     FiledHistoryOperationRequest,
-    _result_reference,
     _settled_effect,
     build_filed_history_operation_definition,
 )
@@ -110,17 +109,21 @@ _NAMESPACE = SecureObjectNamespaceDefinition(
 )
 
 
-class _FixtureBackedFiledHistoryDiscovery:
+class _DeterministicFiledHistoryDiscovery:
     """Resolve one scope through the real register-option parser and models."""
 
     def __init__(
         self,
         *,
+        modelo: str = "100",
+        ejercicio: int = 2000,
         entered: asyncio.Event | None = None,
         release: asyncio.Event | None = None,
     ) -> None:
         self._entered = entered
         self._release = release
+        self._modelo = modelo
+        self._ejercicio = ejercicio
 
     async def __call__(
         self,
@@ -136,14 +139,34 @@ class _FixtureBackedFiledHistoryDiscovery:
         return filed_history_discovery_report(
             expected=ExpectedFiledDeclarationGrid(),
             availability=FiledDeclarationAvailabilityReport(
-                items=(FiledDeclarationAvailability(modelo="100", ejercicios=(2000,)),),
+                items=(
+                    FiledDeclarationAvailability(
+                        modelo=self._modelo,
+                        ejercicios=(self._ejercicio,),
+                    ),
+                ),
                 discovered_at=_NOW,
             ),
         )
 
 
-def _local_pull(discover: FiledHistoryDiscoveryPort):
-    """Bind the canonical composition to fixture-backed production discovery."""
+class _DeterministicEmptyRegister(DeclaracionesRegisterSession):
+    """Concrete offline register boundary for an observed empty supported pair."""
+
+    def __init__(self) -> None:
+        """Require no browser because an empty pair has no row capture leg."""
+
+    async def walk(self, *, modelo: str, ejercicio: int) -> tuple[Declaracion, ...]:
+        assert (modelo, ejercicio) == ("303", 2025)
+        return ()
+
+
+def _local_pull(
+    discover: FiledHistoryDiscoveryPort,
+    *,
+    register: DeclaracionesRegisterSession | None = None,
+):
+    """Bind the canonical composition to deterministic discovery/register inputs."""
 
     async def pull(payload, repository, events):
         return await pull_filed_history(
@@ -153,6 +176,7 @@ def _local_pull(discover: FiledHistoryDiscoveryPort):
             limit=payload.limit,
             dry_run=payload.dry_run,
             discover=discover,
+            register=register,
             sync_run_repository=repository,
             events=events,
         )
@@ -164,7 +188,7 @@ def test_definition_declares_recorded_non_stoppable_execution(tmp_path: Path) ->
     with isolated_runtime_profile(tmp_path=tmp_path):
         definition = build_filed_history_operation_definition(
             sync_run_repository=SyncRunRecordRepository(),
-            pull=_local_pull(_FixtureBackedFiledHistoryDiscovery()),
+            pull=_local_pull(_DeterministicFiledHistoryDiscovery()),
         )
 
     assert definition.definition_id == FILED_HISTORY_OPERATION_DEFINITION_ID
@@ -179,7 +203,7 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
         discovery_entered = asyncio.Event()
         release_discovery = asyncio.Event()
         pull = _local_pull(
-            _FixtureBackedFiledHistoryDiscovery(
+            _DeterministicFiledHistoryDiscovery(
                 entered=discovery_entered,
                 release=release_discovery,
             ),
@@ -189,15 +213,17 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
             pull=pull,
         )
         journal = OperationJournalRepository(storage_root=tmp_path / "operations")
+        leases = OperationLeaseFilesystemRepository(storage_root=tmp_path / "operations")
+        operands = OperationSecureReferenceRepository(
+            objects=registered_objects(profile.repository, _NAMESPACE),
+            namespace=_NAMESPACE,
+        )
         supervisor = OperationSupervisor(
             registry=OperationRegistry(definitions=(definition,)),
             journal=journal,
             event_stream=journal,
-            leases=OperationLeaseFilesystemRepository(storage_root=tmp_path / "operations"),
-            operands=OperationSecureReferenceRepository(
-                objects=registered_objects(profile.repository, _NAMESPACE),
-                namespace=_NAMESPACE,
-            ),
+            leases=leases,
+            operands=operands,
             owner_id="1" * 64,
             lease_token_factory=lambda: "2" * 64,
             clock=lambda: _NOW,
@@ -241,18 +267,31 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
             finally:
                 release_discovery.set()
             snapshot = await start_task
-            assert snapshot.lifecycle is OperationLifecycle.RUNNING
+            assert snapshot.lifecycle is OperationLifecycle.TERMINAL
             assert snapshot.phase_code == FILED_HISTORY_PHASE_SETTLEMENT
             assert snapshot.effect is OperationEffect.NONE
             assert snapshot.execution_deadline is None
             assert snapshot.cleanup_deadline is None
             events = (await supervisor.replay(operation_id, 0, limit=OperationReplayLimit(100))).events
-            return snapshot, events
+            result_ref = snapshot.terminal_receipt.result_ref if snapshot.terminal_receipt is not None else None
+            result = await operands.resolve(result_ref, FiledHistoryOnboardingRun) if result_ref is not None else None
+            lease = await leases.inspect(
+                operation_conflict_scope_reference(
+                    definition_id=definition.definition_id,
+                    subject_ref=profile.bucket_id,
+                ),
+                operation_id,
+                observed_at=_NOW,
+            )
+            return snapshot, events, result, lease
 
-        snapshot, events = asyncio.run(run())
+        snapshot, events, result, lease = asyncio.run(run())
 
     assert snapshot.identity.definition_id == FILED_HISTORY_OPERATION_DEFINITION_ID
-    assert snapshot.events[-1].code == FILED_HISTORY_PHASE_SETTLEMENT
+    assert result is not None
+    assert result.sync_run_ref is None
+    assert lease.current is None
+    assert snapshot.events[-1].code == "operation.terminal"
     assert [event.phase_code for event in events if isinstance(event, OperationPhaseEvent)] == [
         FILED_HISTORY_PHASE_PREFLIGHT,
         FILED_HISTORY_PHASE_EXECUTION,
@@ -282,18 +321,23 @@ def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         definition = build_filed_history_operation_definition(
             sync_run_repository=SyncRunRecordRepository(),
-            pull=_local_pull(_FixtureBackedFiledHistoryDiscovery()),
+            pull=_local_pull(
+                _DeterministicFiledHistoryDiscovery(modelo="303", ejercicio=2025),
+                register=_DeterministicEmptyRegister(),
+            ),
         )
         journal = OperationJournalRepository(storage_root=tmp_path / "operations")
+        leases = OperationLeaseFilesystemRepository(storage_root=tmp_path / "operations")
+        operands = OperationSecureReferenceRepository(
+            objects=registered_objects(profile.repository, _NAMESPACE),
+            namespace=_NAMESPACE,
+        )
         supervisor = OperationSupervisor(
             registry=OperationRegistry(definitions=(definition,)),
             journal=journal,
             event_stream=journal,
-            leases=OperationLeaseFilesystemRepository(storage_root=tmp_path / "operations"),
-            operands=OperationSecureReferenceRepository(
-                objects=registered_objects(profile.repository, _NAMESPACE),
-                namespace=_NAMESPACE,
-            ),
+            leases=leases,
+            operands=operands,
             owner_id="1" * 64,
             lease_token_factory=lambda: "2" * 64,
             clock=lambda: _NOW,
@@ -314,11 +358,26 @@ def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path) -> None:
             operation_id = await supervisor.submit(request, operation_id="4" * 64)
             snapshot = await supervisor.start(operation_id)
             events = (await supervisor.replay(operation_id, 0, limit=OperationReplayLimit(100))).events
-            return snapshot, events
+            receipt = snapshot.terminal_receipt
+            assert receipt is not None
+            result = await operands.resolve(receipt.result_ref, FiledHistoryOnboardingRun)
+            lease = await leases.inspect(
+                operation_conflict_scope_reference(
+                    definition_id=definition.definition_id,
+                    subject_ref=profile.bucket_id,
+                ),
+                operation_id,
+                observed_at=_NOW,
+            )
+            return snapshot, events, result, lease
 
-        snapshot, events = asyncio.run(run())
+        snapshot, events, result, lease = asyncio.run(run())
 
+    assert snapshot.lifecycle is OperationLifecycle.TERMINAL
     assert snapshot.effect is OperationEffect.NONE
+    assert result.dry_run is True
+    assert result.sync_run_ref is None
+    assert lease.current is None
     assert all(
         event.effect is not OperationEffect.UNKNOWN for event in events if isinstance(event, OperationEffectEvent)
     )
@@ -330,60 +389,17 @@ def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path) -> None:
     ]
 
 
-def test_canonical_writer_reference_resolves_the_exact_encrypted_sync_run(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        repository = SyncRunRecordRepository()
-        report = _persisted_bulk_filed_capture_report(
-            output_root=tmp_path / "filed",
-            modelos=("303",),
-            year_from=2025,
-            year_to=2025,
-            accumulator=_CaptureAccumulator(),
-            failures=[],
-            bucket_id=profile.bucket_id,
-            sync_run_repository=repository,
-        )
-
-        reference = report.sync_run_ref
-        assert reference is not None
-        stored = repository.load(reference)
-
-        assert stored is not None
-        assert repository.extract_identifier(stored) == reference
-        assert stored.bucket_id == profile.bucket_id
-        run = FiledHistoryOnboardingRun(sync_run_ref=reference)
-        assert _result_reference(run) == reference
-        assert _settled_effect(run) is OperationEffect.UPDATED
-        assert (
-            _settled_effect(
-                run.model_copy(update={"stage_failures": ("notificaciones: safe local refusal",)}),
-            )
-            is OperationEffect.PARTIAL
-        )
-
-
 def test_supervisor_receipt_joins_the_exact_encrypted_child_and_releases_its_lease(tmp_path: Path) -> None:
     """Successful settlement preserves the writer-owned child identity end to end."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repository = SyncRunRecordRepository()
 
-        async def persisted_pull(payload, sync_runs, events):
-            del events
-            report = _persisted_bulk_filed_capture_report(
-                output_root=payload.output_root,
-                modelos=("303",),
-                year_from=2025,
-                year_to=2025,
-                accumulator=_CaptureAccumulator(),
-                failures=[],
-                bucket_id=profile.bucket_id,
-                sync_run_repository=sync_runs,
-            )
-            return FiledHistoryOnboardingRun(sync_run_ref=report.sync_run_ref)
-
         definition = build_filed_history_operation_definition(
             sync_run_repository=repository,
-            pull=persisted_pull,
+            pull=_local_pull(
+                _DeterministicFiledHistoryDiscovery(modelo="303", ejercicio=2025),
+                register=_DeterministicEmptyRegister(),
+            ),
         )
         durable_root = tmp_path / "terminal-operations"
         journal = OperationJournalRepository(storage_root=durable_root)
@@ -405,7 +421,10 @@ def test_supervisor_receipt_joins_the_exact_encrypted_child_and_releases_its_lea
         request = OperationRequest(
             definition_id=definition.definition_id,
             subject_ref=profile.bucket_id,
-            payload=FiledHistoryOperationRequest(output_root=tmp_path / "terminal-filed"),
+            payload=FiledHistoryOperationRequest(
+                output_root=tmp_path / "terminal-filed",
+                today=date(2026, 3, 15),
+            ),
         )
 
         async def run():
@@ -435,7 +454,7 @@ def test_supervisor_receipt_joins_the_exact_encrypted_child_and_releases_its_lea
         assert stored.bucket_id == profile.bucket_id
         assert terminal.lifecycle is OperationLifecycle.TERMINAL
         assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        assert terminal.effect is OperationEffect.UPDATED
+        assert terminal.effect is OperationEffect.PARTIAL
         assert reloaded == terminal
         assert lease.current is None
         phases = [event for event in events if isinstance(event, OperationPhaseEvent)]

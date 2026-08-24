@@ -2077,6 +2077,7 @@ async def _capture_discovered_filed_history(
     output_root: Path,
     limit: int | None,
     dry_run: bool,
+    register: DeclaracionesRegisterSession | None,
     sync_run_repository: SyncRunRecordRepositoryProtocol | None,
     events: OperationEventEmitter | None = None,
 ) -> BulkFiledDataCaptureReport:
@@ -2089,6 +2090,7 @@ async def _capture_discovered_filed_history(
         output_root=output_root,
         modelos=modelos,
         limit=limit,
+        register=register,
         dry_run=dry_run,
         sync_run_repository=sync_run_repository,
         events=events,
@@ -2170,6 +2172,7 @@ async def pull_filed_history(
     limit: int | None = None,
     dry_run: bool = False,
     discover: FiledHistoryDiscoveryPort = discover_filed_history,
+    register: DeclaracionesRegisterSession | None = None,
     sync_run_repository: SyncRunRecordRepositoryProtocol | None = None,
     events: OperationEventEmitter | None = None,
 ) -> FiledHistoryOnboardingRun:
@@ -2202,6 +2205,9 @@ async def pull_filed_history(
         discover: The discovery step to sequence, defaulting to
             :func:`discover_filed_history`. Injected so the composition itself is
             reachable without an authenticated session; production never passes it.
+        register: An already-open declarations register forwarded to the bulk
+            capture boundary. Production omits it; deterministic composition
+            proofs supply it to avoid live access and browser lifecycle.
         sync_run_repository: Completed-run persistence port forwarded to the
             bulk capture after discovery finds a supported pair.
         events: Optional operation event emitter that receives only stable stage
@@ -2231,6 +2237,7 @@ async def pull_filed_history(
         output_root=output_root,
         limit=limit,
         dry_run=dry_run,
+        register=register,
         sync_run_repository=sync_run_repository,
         events=events,
     )
