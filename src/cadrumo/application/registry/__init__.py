@@ -167,6 +167,10 @@ from ._diff import (
     diff_registry_revisions,
 )
 from ._errors import RegistryApplicationError, RegistryApplicationInputError
+from ._filing_export_coverage import (
+    FilingExportCoverageReport,
+    compose_filing_export_coverage,
+)
 from ._source_connectivity_authority import (
     CalculationRouteManualSourceOwnership,
     CalculationRouteResolverSourceOwnership,
@@ -598,6 +602,7 @@ __all__ = [
     "CasillaDiff",
     "CoverageAuthorityScope",
     "FiledStateVerificationReport",
+    "FilingExportCoverageReport",
     "FormulaDiff",
     "LatestRevisionSupportProbe",
     "LiveSourceConnectivityProofAuthority",
@@ -662,6 +667,7 @@ __all__ = [
     "build_registry_conformance_profile",
     "compare_annual_casilla_population",
     "compare_annual_casilla_population_for_revision",
+    "compose_filing_export_coverage",
     "compose_source_connectivity_coverage",
     "compose_temporal_coverage",
     "derive_registry_binding_records",
