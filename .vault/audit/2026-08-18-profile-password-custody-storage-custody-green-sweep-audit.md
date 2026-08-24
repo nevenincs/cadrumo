@@ -8565,3 +8565,75 @@ commits first (all test-only, no production `context=` touched, so they could no
 possibly change a refusal's context), then diffing the failing sets, then re-running
 sequentially. Totals alone would have sent me hunting a regression that does not exist,
 in someone else's half-finished work.
+
+### A dying gate premise reads exactly like a product regression
+
+Three of this iteration's harness failures were gates whose own premise had
+silently died, and every one of them accused the product first.
+
+`test_server_loop_responsiveness` measured event-loop freedom as the gap between
+a mid-call `tools/list` completing and a slow subprocess call completing, and
+reported `gap 0.000s` with the message "execute blocked the event loop". Nothing
+was blocked. Its probe named `app.live.expedientes.list`, and within the live
+family only the fetch-from-AEAT `pull` verbs carry `open_world_hint`;
+`list`/`view`/`latest` read the LOCAL store, so the transport serves them warm
+in-process in about 70ms. The probe finished before the probe request was even
+issued. Repointed at `app.live.expedientes.pull` the observed gap is 4.2-4.5s
+against the unchanged 1.0s floor: the threshold was always sound, only the
+subject was wrong. The durable fix is not the new key but
+`_assert_probe_stays_on_the_subprocess_transport`, which fails outright on a
+warm-served probe instead of inverting the verdict — because the failure mode
+here is a gate that reads a free loop as a blocked one, which is worse than no
+gate at all.
+
+`test_tool_naming_budget` asserted `is_exposable_command(deep)` on a fabricated
+deep key as its anti-tautology proof. Exposability is decided by the live
+command graph, so a fabricated key can never satisfy it — the assertion was
+unprovable by construction, not a regression. Only the budget arithmetic is
+provable there, so that is what the proof now carries, plus a passing
+counterpart so it cannot pass vacuously.
+
+**Generalise it:** before believing a gate that accuses the product, confirm the
+gate can still SEE what it claims to measure. A premise that quietly stopped
+holding produces a confident, specific, wrong accusation.
+
+### Measure with the product's own function, never a re-implementation
+
+Ten exposed MCP commands rendered past the 64-char client-prefixed ceiling. I
+nearly dismissed all ten: checking them, I re-implemented the name renderer in a
+scratch script and measured against `_TOOL_PREFIX` (8 chars) where the budget
+measures against `CLIENT_NAME_PREFIX` (29). That printed `over=0` and read as
+proof there was no defect — a cleaner, more confident signal than the real gate's
+failure. Only running the gate itself contradicted it.
+
+The rule that follows is narrow and absolute: to check whether a gate's finding
+is real, call the function the gate calls. A re-implementation shares no bugs
+with the original and therefore proves nothing about it. Both surfaces existed in
+one module, twenty lines apart, and picking the wrong one silently changed the
+answer from ten to zero.
+
+### The single diagnostic channel binds the harness's own notices
+
+`_warm_degradation_notice` in the harness transport built its `Notice` context
+with a `command` key, which `Notice` refuses as a reserved action-guidance name.
+The notice raised instead of degrading, so the warm-to-subprocess fallback could
+not report itself — the one path whose whole purpose is to not fail silently. The
+value is diagnostic, so it is `command_key` now. A sweep of every other
+`context=` site found no second instance; the `"action"` keys in the Google
+adapters belong to `OutboundStorageNetworkError`, a different model where the key
+names the API call.
+
+### Harness state at this iteration's close
+
+19 failing at the start of the harness work, 10 now, 311 passing. Of the ten,
+four (`test_client_handshake` x2, `test_warm_runtime_holds_no_bucket_session`,
+`test_a_rebuilt_warm_runtime_serves_encrypted_state_cleanly`) share ONE cause:
+profile creation over MCP refuses without the secrets channel. That surface is
+inside a peer's live edit set — 87 files dirty, including the registration
+screens and the password-policy ADR — so the finding is the deliverable and the
+fix is theirs. The remaining six are genuine open scope, none of them mine to
+decide alone: two `test_command_ranking_golden` (semantic ranking does not
+surface `quickfile` for outcome phrasing), two `test_closed_value_axis_gate`
+(unpinned bare enum axes plus exemptions that no longer describe a real axis),
+one `test_localization_boundary`, one `test_result_size_budget` (36-plus verb
+output schemas over the size budget, the largest at 19513).
