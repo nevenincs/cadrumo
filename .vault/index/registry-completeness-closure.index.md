@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:21235873460e6a5f5ea18aab3ce13e0a9433f0e2684f80aa02a44931801a85fc'
+body_hash: 'sha256:dbbc3d52ef9d8ea4c7883b94663a03958b3b9f18d81c2d32b47250bbc5cad5b0'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -22,6 +22,9 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S42]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S43]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S44]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S45]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S46]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S48]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
@@ -36,6 +39,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s42-temporal-refusal-invariants-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s43-active-refusal-disposition-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s44-temporal-refusal-invariants-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s46-terminal-expiry-review-audit]]'
 ---
 
 # `registry-completeness-closure` feature index
@@ -61,6 +65,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s42-temporal-refusal-invariants-audit` - `registry-completeness-closure` audit: `S42 temporal refusal invariant review`
 - `2026-08-24-registry-completeness-closure-s43-active-refusal-disposition-review-audit` - `registry-completeness-closure` audit: `S43 active-refusal disposition review`
 - `2026-08-24-registry-completeness-closure-s44-temporal-refusal-invariants-review-audit` - `registry-completeness-closure` audit: `s44 temporal refusal invariants review`
+- `2026-08-24-registry-completeness-closure-s46-terminal-expiry-review-audit` - `registry-completeness-closure` audit: `S46 terminal expiry review`
 
 ### exec
 
@@ -78,6 +83,9 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P02-S42` - Constrain temporal evidence identity, period, and filing-year fields to registry semantics and add mutation proof for every composer refusal outcome
 - `2026-08-24-registry-completeness-closure-W01-P02-S43` - Reject resolved owner dispositions on active closure refusals and prove the contradiction fails validation
 - `2026-08-24-registry-completeness-closure-W01-P02-S44` - Encode branch-specific TemporalRevisionCoverage refusal invariants and add construction and mutation-bite tests.
+- `2026-08-24-registry-completeness-closure-W01-P02-S45` - Revalidate connected census claims through live source proof authority at composition time and refuse proof loss or digest mismatch.
+- `2026-08-24-registry-completeness-closure-W01-P02-S46` - Apply expiry semantics to every scoped census disposition and refuse expired terminal evidence, with mutation-bite tests.
+- `2026-08-24-registry-completeness-closure-W01-P02-S48` - Prove undeclared-grade refusals reject a non-null declared grade through direct construction and revalidated mutation.
 
 ### plan
 

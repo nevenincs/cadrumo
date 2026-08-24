@@ -134,6 +134,11 @@ def test_temporal_coverage_row_constructs_only_real_refusal_branch_shapes(
             {"declared_authority_grade": None},
             "declared-grade snapshot refusal requires a declared",
         ),
+        (
+            "undeclared_authority_grade",
+            {"declared_authority_grade": RegistryAuthorityGrade.APPLICABILITY},
+            "undeclared-grade refusal cannot carry a declared authority grade",
+        ),
     ],
 )
 def test_temporal_coverage_row_refuses_impossible_branch_evidence_at_construction(
@@ -164,6 +169,11 @@ def test_temporal_coverage_row_refuses_impossible_branch_evidence_at_constructio
             "undeclared_authority_grade",
             {"selected_revision": None},
             "undeclared-grade refusal requires",
+        ),
+        (
+            "undeclared_authority_grade",
+            {"declared_authority_grade": RegistryAuthorityGrade.APPLICABILITY},
+            "undeclared-grade refusal cannot carry a declared authority grade",
         ),
         (
             "declared_grade_snapshot_refused",
