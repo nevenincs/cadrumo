@@ -4,7 +4,7 @@ tags:
   - '#calculation-export-import-adjudication'
 date: '2026-07-14'
 modified: '2026-08-24'
-body_hash: 'sha256:610c5ca4bad1e921cbe66072353b187808f4f00817d09ed5ce825173369d2be9'
+body_hash: 'sha256:1a00dfff04daa9e3d54d09dcc02d05470ffd9a1111a955b68785134af4555084'
 related:
   - "[[2026-07-14-calculation-export-import-adjudication-research]]"
   - "[[2026-07-14-calculation-export-import-adjudication-reference]]"
@@ -106,7 +106,7 @@ no production work.
 - Future implementations remain constrained to registry data and canonical
   engines unless a separately approved ADR changes authority or ownership.
 
-## Amendment 2026-08-24 Ã¢â‚¬â€� Modelo 036 product boundary
+## Amendment 2026-08-24 - Modelo 036 product boundary
 
 The Modelo 036 outbound candidate is **not-mandated** under this ADR's
 four-condition gate. The current product supports censo applicability,
