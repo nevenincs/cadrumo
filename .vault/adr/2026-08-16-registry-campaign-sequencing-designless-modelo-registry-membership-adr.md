@@ -5,14 +5,13 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:b641f84d65ba46782da5849feb4315ead5e967b48405c72ca403c62d3689463b'
+body_hash: 'sha256:16631b9c5d74a8252de0dcddb215afdde89058a2a55e3261e5c8016138e3f26c'
 related:
   - '[[2026-08-14-registry-campaign-sequencing-adr]]'
   - '[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-721-structured-message-design-and-filing-boundary-reference]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
 ---
-
 # `registry-campaign-sequencing` adr: `registry membership requires an AEAT-published machine filing format` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -216,55 +215,73 @@ predicate drifts to the weaker reading.
 ### Amendment (2026-08-24): structured-message filing contracts
 
 The accepted membership criterion is format-neutral. A machine filing format is
-either a positional `record_design` or an exact, hash-pinned structured-message
-contract whose schema and service description jointly define locally renderable
-request bytes. A printed `form_spec`, instructions page, observed browser request,
-dictionary without its validating schema, or model name is not such a contract.
-Grounding: `2026-08-24-registry-completeness-closure-modelo-721-structured-message-design-and-filing-boundary-reference`.
+either a positional `record_design` or, once actually acquired and enrolled, an
+exact, hash-pinned structured-message contract whose schema and service
+description jointly define locally renderable request bytes. A printed
+`form_spec`, instructions page, observed browser request, dictionary without its
+validating schema, or model name is not such a contract. Grounding:
+`2026-08-24-registry-completeness-closure-modelo-721-structured-message-design-and-filing-boundary-reference`.
 
-Source taxonomy has one canonical typed owner. The existing source-artifact
-vocabulary is promoted from a repeated literal to a core enum and gains a
-`structured_message_contract` member for an immutable package whose reviewed
-inventory contains the governing WSDL and request/response XSDs. The source row
-pins the package digest and exact exercise scope; the package verifier pins its
-member inventory and digests. Existing `record_design`, `xsd`, `dictionary`, and
-`form_spec` meanings remain distinct. Consumers import one canonical predicate
-for machine filing authority rather than maintaining local sets of qualifying
-source strings.
+No Modelo 721 structured-message contract is enrolled today. The current source
+catalogue has neither a `structured_message_contract` kind nor an immutable
+Modelo 721 WSDL/XSD package; the sole revision instead cites two BOE
+`form_spec` annexes and `instructions`. This amendment authorizes the future
+contract boundary but does not make that absent evidence true.
 
-Modelo 721 is therefore an authorable filing gap, not a terminal absence. Its
-official SOAP 1.1 document/literal package is enrolled in separate 2023 and 2024
-evidence eras, and no open-ended technical-schema claim follows from the
-applicability revision's open window. Filing grade remains refused until the
-law-selected revision cites the exact contract for the selected exercise, the
-complete message field and producer surface is grounded, and local export and
-proof both pass. Modelo 136 remains terminal under present evidence because it
-cites only a visual form and procedure guidance; this amendment creates no
-modelo allowlist and no visual-form escape.
+`W04.P07.S97` owns the future single typed source-artifact taxonomy and
+machine-filing-contract predicate. It must promote the existing source-artifact
+vocabulary from repeated literals to one core enum and add
+`structured_message_contract` only for an immutable reviewed package whose
+inventory contains the governing WSDL and request/response XSDs. Existing
+`record_design`, `xsd`, `dictionary`, and `form_spec` meanings must remain
+distinct, and consumers must import the one resulting predicate rather than
+maintaining local qualifying-source sets.
 
-The structured shape extends the existing `ExportLayoutFormat` vocabulary and
-the one `application.filing.export_draft` dispatcher. The new branch emits a
-local SOAP request XML document, validates it against the pinned official
-schemas, and returns the ordinary export receipt. It does not perform an HTTPS
-call, read a client certificate, claim AEAT acceptance, parse a response as a
-filing receipt, or create a Modelo-specific writer. The existing standalone
-`xml_dictionary` renderer may contribute genuinely shared XML primitives only
-when their constraints are a superset; it is not relabelled as the SOAP writer.
+For Modelo 721, S97 must acquire two distinct contract-package inventories:
+one for exercise 2023 and one for exercise 2024. Each inventory must list every
+authoritative package member and its exact digest, pin the package digest, and
+declare its own exercise, period, and legal applicability bounds. The
+law-selected filing context must choose the exact inventory through the selected
+revision's source scope; the open-ended `2023-y-siguientes` revision must not
+turn one current Sede download, a revision id alone, or the 2023 package into
+authority for 2024 or later. Neither inventory exists in the shipped registry at
+this decision's acceptance.
 
-The one live filing-export proof authority also remains canonical. Its
-format-specific acceptance probe becomes a typed union: fixed-width layouts
-retain official byte-offset probes, while structured-message layouts require
-successful XSD validation plus source-grounded document-identity and semantic
-path probes over bytes emitted by production `export_draft`. Generation
-manifest, semantic-map, render-profile, output digest, receipt, and live payload
-rehashing remain common gates. A schema-valid synthetic document, direct
-serializer call, remote response, or second proof store cannot satisfy closure.
+Modelo 721 is therefore an authorable filing gap, not a terminal absence. AEAT
+publishes a SOAP 1.1 document/literal technical channel in distinct 2023 and
+2024 evidence eras, but neither era is currently source-catalogued or
+hash-pinned as a filing contract. Filing grade remains refused until the
+law-selected revision cites its exact enrolled contract, the complete message
+field and producer surface is grounded, and local export and proof both pass.
+Modelo 136 remains terminal under present evidence because it cites only a
+visual form and procedure guidance; this amendment creates no modelo allowlist
+and no visual-form escape.
+
+After S97 has supplied that evidence, `W04.P07.S98` must extend the existing
+`ExportLayoutFormat` vocabulary and the one `application.filing.export_draft`
+dispatcher with a local SOAP request-XML branch. That future branch must validate
+against the selected pinned official schemas and return the ordinary export
+receipt. It must not perform an HTTPS call, read a client certificate, claim
+AEAT acceptance, parse a response as a filing receipt, or create a
+Modelo-specific writer. The existing standalone `xml_dictionary` renderer may
+contribute genuinely shared XML primitives only when their constraints are a
+superset; it must not be relabelled as the SOAP writer.
+
+After S98, `W04.P07.S99` must extend the one live filing-export proof authority
+with a typed structured-message acceptance branch. Fixed-width layouts retain
+official byte-offset probes; the new branch must require successful XSD
+validation plus source-grounded document-identity and semantic-path probes over
+bytes emitted by production `export_draft`. Generation manifest, semantic-map,
+render-profile, output digest, receipt, and live payload rehashing remain common
+gates. A schema-valid synthetic document, direct serializer call, remote
+response, or second proof store cannot satisfy closure.
 
 Implementation ownership stays in
 `2026-08-10-aeat-export-fragment-generator-authority-plan`, consuming the exact
 source/casilla surface owned by the source-casilla campaign. This amendment is
-architectural authorization, not self-executing promotion: Modelo 721 remains
-applicability-only until those owner rows land with local emitted-payload proof.
+architectural authorization, not self-executing promotion: S97--S99 remain open,
+and Modelo 721 remains applicability-only until their owner rows land with local
+emitted-payload proof.
 
 ## Rationale
 

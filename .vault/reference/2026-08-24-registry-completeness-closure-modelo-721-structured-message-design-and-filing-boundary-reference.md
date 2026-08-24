@@ -5,11 +5,10 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:217d3b9a06057ef5d4297579ebb02a402710d2e2188bfd994854045700d08236'
+body_hash: 'sha256:5efba8270df4aff619bb89affb00e77003595815685cf4ccd039ee02ed8c3714'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
 ---
-
 # `registry-completeness-closure` reference: `Modelo 721 structured message design and filing boundary`
 
 ## Summary
@@ -62,6 +61,16 @@ are precisely the technical authorities missing from the shipped source
 catalogue; they must be acquired and hash-pinned before any exporter is
 declared.
 
+No Modelo 721 SOAP contract package is currently enrolled or hash-pinned. The
+open-ended applicability revision cannot make a current Sede document describe
+all future exercises. Before a filing claim can be considered, future owner
+work must create two distinct immutable inventories: one for exercise 2023 and
+one for exercise 2024. Each must identify every governing WSDL, request XSD,
+response XSD, and accompanying validation authority by exact member hash and
+package hash, with explicit legal and filing-context scope. The registry must
+then select the package from the law-selected revision and filing context, not
+from the revision id alone or a generic 2023-plus label.
+
 ## Shipped boundary and no-redeclaration finding
 
 The source catalogue currently calls the two BOE annex PDFs `form_spec`, and
@@ -98,6 +107,13 @@ response XSDs, with explicit exercise applicability. It must keep the 2023 and
 2024 designs distinct, and it must not let the open-ended applicability revision
 turn a current Sede download into unbounded technical-layout authority.
 
+`W04.P07.S97` remains open to turn that scoped acquisition into the single
+canonical typed source-artifact taxonomy and machine-filing predicate. It must
+persist the distinct 2023 and 2024 contract-package inventories and their exact
+member/package hashes, bind each to the law-selected revision and filing
+context, and refuse a package whose scope does not match that selection. This
+reference records a future obligation, not an enrolled source fact.
+
 `W02.P04.S27` must enroll the source/casilla remedy in
 `2026-08-22-source-casilla-integration-plan`: replace the seven-field partial
 surface with the complete, source-grounded message grammar, including repeated
@@ -119,8 +135,10 @@ proof.
 Reconsider filing grade only when every selected exercise has an exact,
 immutable technical schema; the complete field and source-owner surface is
 reviewed; an approved canonical serializer validates against the official XSD;
-and the derived local XML has live generation and emitted-payload proof. Until
-then the revision remains applicability-only and non-fileable.
+and the derived local XML has live generation and emitted-payload proof. That
+means S97--S99 must have completed the separate 2023 and 2024 contract-package
+inventory, canonical export, and proof work; until then the revision remains
+applicability-only and non-fileable.
 
 ## Sources
 
