@@ -126,7 +126,7 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         expected_revision: OperationRevision,
         lease: OperationOwnerLease,
     ) -> None:
-        """Atomically create or advance a snapshot after all transition checks pass."""
+        """Atomically advance an existing snapshot after all transition checks pass."""
         self._validate_lease(snapshot, lease)
         self._ensure_root()
         path = self.path_for(snapshot.operation_id)
@@ -137,15 +137,11 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
                 lease=lease,
                 observed_at=snapshot.updated_at,
             )
-            if path.exists():
-                current = super().load(snapshot.operation_id)
-                self._validate_advance(current.snapshot, snapshot, expected_revision)
-                record = OperationJournalRecord(snapshot=snapshot, history=(*current.history, *snapshot.events))
-            else:
-                if snapshot.idempotency_claim is not None:
-                    raise RepositoryError("idempotent operation creation requires the journal create protocol")
-                self._validate_create(snapshot, expected_revision)
-                record = OperationJournalRecord(snapshot=snapshot, history=snapshot.events)
+            if not os.path.lexists(path):
+                raise RepositoryError("operation journal commit requires an existing snapshot created via create")
+            current = super().load(snapshot.operation_id)
+            self._validate_advance(current.snapshot, snapshot, expected_revision)
+            record = OperationJournalRecord(snapshot=snapshot, history=(*current.history, *snapshot.events))
             self._write(path, record)
 
     @staticmethod
@@ -243,7 +239,7 @@ class OperationJournalRepository(OperationJournal, OperationEventStream):
         expected_revision: OperationRevision,
         lease: OperationOwnerLease,
     ) -> None:
-        """Atomically create or advance the snapshot through the typed substrate."""
+        """Atomically advance an existing snapshot through the typed substrate."""
         self._repository.commit(snapshot, expected_revision=expected_revision, lease=lease)
 
     def _is_absent(self, operation_id: str) -> bool:

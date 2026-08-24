@@ -396,13 +396,15 @@ def test_journal_commit_holds_the_exact_operation_journal_lock(tmp_path: Path) -
     )
     storage = OperationLeaseStorage(storage_root=tmp_path)
     assert storage.lock_target == tmp_path / "operation-journals" / ".repository"
+    journal = OperationJournalRepository(storage_root=tmp_path)
+    asyncio.run(journal.create(_snapshot(revision=0), lease=lease))
 
     context = multiprocessing.get_context("spawn")
     attempting = context.Event()
     results: Queue[str] = context.Queue()
     process = context.Process(
         target=_commit_in_process,
-        args=(str(tmp_path), _snapshot(revision=0).model_dump_json(), lease.model_dump_json(), attempting, results),
+        args=(str(tmp_path), _snapshot(revision=1).model_dump_json(), lease.model_dump_json(), attempting, results),
     )
     with exclusive_file_lock(storage.lock_target):
         process.start()
@@ -431,7 +433,7 @@ def test_journal_refuses_absent_expired_and_stale_durable_leases_without_byte_mu
             is OperationLeaseDisposition.ACQUIRED
         )
         journal = OperationJournalRepository(storage_root=storage_root)
-        asyncio.run(journal.commit(_snapshot(revision=0), expected_revision=0, lease=lease))
+        asyncio.run(journal.create(_snapshot(revision=0), lease=lease))
         path = storage_root / "operation-journals" / f"{_OPERATION_ID}.json"
         original_bytes = path.read_bytes()
 

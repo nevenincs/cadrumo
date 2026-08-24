@@ -723,6 +723,30 @@ def test_observation_materialization_accepts_checkpoint_suffix_and_refuses_cross
             "cannot exceed its anchor",
         ),
         ({"progress_fold": OperationProgressFoldInput(checkpoint=checkpoint, events=())}, "cover every event"),
+        (
+            {
+                "replay": OperationReplayPage(
+                    status=OperationReplayStatus.CAUGHT_UP,
+                    requested_cursor=0,
+                    events=(),
+                    next_cursor=0,
+                )
+            },
+            "must reach its authoritative anchor",
+        ),
+        (
+            {
+                "replay": OperationReplayPage(
+                    status=OperationReplayStatus.COMPACTED,
+                    requested_cursor=0,
+                    events=(),
+                    next_cursor=1,
+                    restart_cursor=1,
+                ),
+                "progress_fold": OperationProgressFoldInput(events=(initial.events[0], progress)),
+            },
+            "exact progress checkpoint",
+        ),
     ):
         with pytest.raises(ValidationError, match=message):
             OperationObservationMaterialization.model_validate(

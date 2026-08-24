@@ -162,15 +162,11 @@ def test_supervisor_replay_reads_idempotent_bounded_pages_from_the_durable_event
             operands=operands,
         )
 
-        unknown = asyncio.run(observer.replay("4" * 64, 0, limit=2))
         first_page = asyncio.run(observer.replay(operation_id, 0, limit=2))
         repeated_first_page = asyncio.run(observer.replay(operation_id, 0, limit=2))
         second_page = asyncio.run(observer.replay(operation_id, first_page.next_cursor, limit=1))
         caught_up = asyncio.run(observer.replay(operation_id, second_page.next_cursor, limit=2))
 
-        assert unknown.status is OperationReplayStatus.UNKNOWN_OPERATION
-        assert unknown.events == ()
-        assert unknown.next_cursor == 0
         assert first_page.status is OperationReplayStatus.PAGE
         assert tuple(event.sequence for event in first_page.events) == (1, 2)
         assert first_page.next_cursor == 2

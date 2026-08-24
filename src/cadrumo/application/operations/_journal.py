@@ -153,8 +153,17 @@ class OperationObservationMaterialization(BaseModel):
             raise ValueError("observation replay cursor cannot exceed its anchor")
         if self.replay.next_cursor > self.anchor_cursor:
             raise ValueError("observation replay result cannot exceed its anchor")
+        if (
+            self.replay.status is OperationReplayStatus.CAUGHT_UP
+            and self.replay.next_cursor != self.anchor_cursor
+        ):
+            raise ValueError("caught-up observation replay must reach its authoritative anchor")
         self._validate_event_set(self.replay.events, label="replay")
         self._validate_progress_fold()
+        if self.replay.status in {OperationReplayStatus.EXPIRED, OperationReplayStatus.COMPACTED}:
+            checkpoint = self.progress_fold.checkpoint
+            if checkpoint is None or checkpoint.through_cursor != self.replay.restart_cursor:
+                raise ValueError("resynchronizing observation replay requires its exact progress checkpoint")
         return self
 
     def _validate_event_set(self, events: tuple[OperationEvent, ...], *, label: str) -> None:

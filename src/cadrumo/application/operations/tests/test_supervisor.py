@@ -689,29 +689,8 @@ def test_supervisor_refuses_registry_drift_against_the_pinned_invocation_digest(
             token="2" * 64,
         )
         operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
-        original_definition = original_registry.lookup("operation.supervisor.test")
-        drifted_definition = original_definition.model_copy(
-            update={"permitted_frontends": frozenset({OperationFrontendProjection.CLI})}
-        )
-        drifted_registration = OperationPublicDefinitionRegistrationV1.compose(
-            definition=drifted_definition,
-            request_schema=OperationSchemaBindingV1.bind(
-                schema_id="operation.supervisor.test.request",
-                schema_version=1,
-                model_type=SupervisorRequest,
-            ),
-            result_schema=OperationSchemaBindingV1.bind(
-                schema_id="operation.supervisor.test.result",
-                schema_version=1,
-                model_type=SupervisorResult,
-            ),
-        )
-        drifted_registry = OperationRegistry(
-            definitions=(drifted_definition,),
-            public_registrations=(drifted_registration,),
-        )
         restarted = _supervisor(
-            registry=drifted_registry,
+            registry=_drifted_registry(original_registry),
             journal=journal,
             leases=leases,
             operands=operands,
@@ -722,6 +701,63 @@ def test_supervisor_refuses_registry_drift_against_the_pinned_invocation_digest(
         with pytest.raises(ValueError, match="no longer reproduces"):
             asyncio.run(restarted.start(operation_id))
         assert asyncio.run(journal.load(operation_id)).lifecycle is OperationLifecycle.CREATED
+
+
+@pytest.mark.parametrize(
+    "route",
+    (
+        "inspect",
+        "observe",
+        "detach",
+        "replay",
+        "await_terminal",
+        "request_cancel",
+        "acknowledge_cancellation",
+        "escalate_cleanup_deadline",
+    ),
+)
+def test_loaded_snapshot_routes_refuse_definition_drift_before_return_or_mutation(
+    tmp_path: Path,
+    route: str,
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        storage_root = tmp_path / "durable-state"
+        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+        )
+        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        snapshot = asyncio.run(journal.load(operation_id))
+        journal_path = storage_root / "operation-journals" / f"{operation_id}.json"
+        original_bytes = journal_path.read_bytes()
+        restarted = _supervisor(
+            registry=_drifted_registry(registry),
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+        )
+
+        async def invoke() -> None:
+            if route == "replay":
+                await restarted.replay(operation_id, 0, limit=20)
+            elif route == "acknowledge_cancellation":
+                await restarted._acknowledge_cancellation(snapshot)
+            elif route == "escalate_cleanup_deadline":
+                await restarted._escalate_cleanup_deadline(operation_id)
+            else:
+                await getattr(restarted, route)(operation_id)
+
+        with pytest.raises(ValueError, match="no longer reproduces"):
+            asyncio.run(invoke())
+        assert journal_path.read_bytes() == original_bytes
 
 
 def _pending_interaction(identity: OperationIdentity) -> OperationPendingInteraction:
@@ -843,6 +879,26 @@ def _registry(
         definitions=(item,),
         public_registrations=(registration,),
     )
+
+
+def _drifted_registry(registry: OperationRegistry) -> OperationRegistry:
+    item = registry.lookup("operation.supervisor.test").model_copy(
+        update={"permitted_frontends": frozenset({OperationFrontendProjection.CLI})}
+    )
+    registration = OperationPublicDefinitionRegistrationV1.compose(
+        definition=item,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id="operation.supervisor.test.request",
+            schema_version=1,
+            model_type=SupervisorRequest,
+        ),
+        result_schema=OperationSchemaBindingV1.bind(
+            schema_id="operation.supervisor.test.result",
+            schema_version=1,
+            model_type=SupervisorResult,
+        ),
+    )
+    return OperationRegistry(definitions=(item,), public_registrations=(registration,))
 
 
 def _supervisor(
@@ -2401,6 +2457,15 @@ def test_reconcile_refuses_changed_definition_digest_before_reentry(tmp_path: Pa
             clock=lambda: _NOW + timedelta(minutes=2),
         )
 
+        journal_path = tmp_path / "durable-state" / "operation-journals" / f"{operation_id}.json"
+        before_response = journal_path.read_bytes()
+        with pytest.raises(ValueError, match="no longer reproduces"):
+            asyncio.run(
+                recovery.respond(
+                    _response(intent="apply", operation_id=operation_id, revision=waiting.revision)
+                )
+            )
+        assert journal_path.read_bytes() == before_response
         with pytest.raises(ValueError, match="no longer reproduces"):
             asyncio.run(recovery.reconcile(operation_id))
         reloaded = asyncio.run(journal.load(operation_id))

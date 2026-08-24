@@ -152,7 +152,7 @@ def test_public_persistence_facades_commit_replay_and_reload_credential_free_his
 
     initial = _snapshot(revision=0, sequence=1, updated_at=_STARTED)
     successor = _snapshot(revision=1, sequence=2, updated_at=_STARTED + timedelta(minutes=1))
-    asyncio.run(journal.commit(initial, expected_revision=0, lease=owner))
+    asyncio.run(journal.create(initial, lease=owner))
     asyncio.run(journal.commit(successor, expected_revision=0, lease=owner))
 
     journal_path = tmp_path / "operation-journals" / f"{_OPERATION_ID}.json"
@@ -230,9 +230,7 @@ def test_public_persistence_facades_enforce_exact_owner_across_conflict_takeover
         asyncio.run(leases.acquire(initial_owner, observed_at=_STARTED)).disposition
         is OperationLeaseDisposition.ACQUIRED
     )
-    asyncio.run(
-        journal.commit(_snapshot(revision=0, sequence=1, updated_at=_STARTED), expected_revision=0, lease=initial_owner)
-    )
+    asyncio.run(journal.create(_snapshot(revision=0, sequence=1, updated_at=_STARTED), lease=initial_owner))
 
     conflict = asyncio.run(leases.acquire(replacement_owner, observed_at=_STARTED + timedelta(minutes=1)))
     assert conflict.disposition is OperationLeaseDisposition.CONFLICT
@@ -354,9 +352,7 @@ def test_public_persistence_facades_serialize_snapshot_cas_and_refuse_linked_roo
     leases = OperationLeaseFilesystemRepository(storage_root=tmp_path)
     journal = OperationJournalRepository(storage_root=tmp_path)
     assert asyncio.run(leases.acquire(owner, observed_at=_STARTED)).disposition is OperationLeaseDisposition.ACQUIRED
-    asyncio.run(
-        journal.commit(_snapshot(revision=0, sequence=1, updated_at=_STARTED), expected_revision=0, lease=owner)
-    )
+    asyncio.run(journal.create(_snapshot(revision=0, sequence=1, updated_at=_STARTED), lease=owner))
     successor = _snapshot(revision=1, sequence=2, updated_at=_STARTED + timedelta(minutes=1))
 
     context = multiprocessing.get_context("spawn")

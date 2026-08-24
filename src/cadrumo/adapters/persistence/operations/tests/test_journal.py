@@ -91,12 +91,13 @@ def _claim_lease(storage_root: Path, lease: OperationOwnerLease) -> None:
     assert result.disposition is OperationLeaseDisposition.ACQUIRED
 
 
-def _commit_history(storage_root: Path) -> tuple[OperationJournalRepository, tuple[OperationPersistedSnapshot, ...]]:
+def _create_history(storage_root: Path) -> tuple[OperationJournalRepository, tuple[OperationPersistedSnapshot, ...]]:
     """Write three real revision transitions with a retained event per revision."""
     repository = OperationJournalRepository(storage_root=storage_root)
     snapshots = tuple(_snapshot(revision=revision, sequence=revision + 1) for revision in range(3))
     _claim_lease(storage_root, _lease())
-    for expected_revision, snapshot in zip((0, 0, 1), snapshots, strict=True):
+    asyncio.run(repository.create(snapshots[0], lease=_lease()))
+    for expected_revision, snapshot in zip((0, 1), snapshots[1:], strict=True):
         asyncio.run(repository.commit(snapshot, expected_revision=expected_revision, lease=_lease()))
     return repository, snapshots
 
@@ -161,7 +162,7 @@ def test_operation_journal_commits_cas_transitions_and_refuses_mutations(tmp_pat
     repository = OperationJournalRepository(storage_root=tmp_path)
     initial = _snapshot(revision=0, sequence=1)
     _claim_lease(tmp_path, _lease())
-    asyncio.run(repository.commit(initial, expected_revision=0, lease=_lease()))
+    asyncio.run(repository.create(initial, lease=_lease()))
     path = tmp_path / "operation-journals" / f"{initial.operation_id}.json"
     original_bytes = path.read_bytes()
 
@@ -217,8 +218,10 @@ def test_operation_journal_commits_cas_transitions_and_refuses_mutations(tmp_pat
     assert "operand" not in raw
 
 
-def test_operation_journal_requires_coherent_initial_history(tmp_path: Path) -> None:
-    """Creation permits cursor zero without events or an event history starting at one."""
+def test_operation_journal_create_requires_coherent_initial_history_and_commit_refuses_creation(
+    tmp_path: Path,
+) -> None:
+    """Only create accepts an initial snapshot and validates its complete history."""
     repository = OperationJournalRepository(storage_root=tmp_path)
     identity = OperationIdentity(operation_id="a" * 64, definition_id="test.operation", subject_ref="subject")
     empty = OperationPersistedSnapshot(
@@ -236,7 +239,7 @@ def test_operation_journal_requires_coherent_initial_history(tmp_path: Path) -> 
         cancellation_acknowledged_at=None,
     )
     _claim_lease(tmp_path, _lease())
-    asyncio.run(repository.commit(empty, expected_revision=0, lease=_lease()))
+    asyncio.run(repository.create(empty, lease=_lease()))
     assert (
         asyncio.run(repository.read_after(identity.operation_id, 0, limit=1)).status is OperationReplayStatus.CAUGHT_UP
     )
@@ -245,7 +248,13 @@ def test_operation_journal_requires_coherent_initial_history(tmp_path: Path) -> 
     malformed = OperationJournalRepository(storage_root=malformed_root)
     _claim_lease(malformed_root, _lease())
     with pytest.raises(RepositoryError, match="begin at sequence one"):
-        asyncio.run(malformed.commit(_snapshot(revision=0, sequence=2), expected_revision=0, lease=_lease()))
+        asyncio.run(malformed.create(_snapshot(revision=0, sequence=2), lease=_lease()))
+    commit_only_root = tmp_path / "commit-only"
+    commit_only = OperationJournalRepository(storage_root=commit_only_root)
+    _claim_lease(commit_only_root, _lease())
+    with pytest.raises(RepositoryError, match="existing snapshot created via create"):
+        asyncio.run(commit_only.commit(_snapshot(revision=0, sequence=1), expected_revision=0, lease=_lease()))
+    assert not (commit_only_root / "operation-journals" / f"{identity.operation_id}.json").exists()
 
 
 def test_operation_journal_creates_and_resolves_idempotency_only_from_a_complete_snapshot(tmp_path: Path) -> None:
@@ -278,7 +287,7 @@ def test_operation_journal_creates_and_resolves_idempotency_only_from_a_complete
 
 def test_operation_journal_replays_full_history_by_exclusive_bounded_cursor(tmp_path: Path) -> None:
     """Retained history supports unknown, page, and caught-up replay without expiry claims."""
-    repository, snapshots = _commit_history(tmp_path)
+    repository, snapshots = _create_history(tmp_path)
     operation_id = snapshots[-1].operation_id
 
     unknown = asyncio.run(repository.read_after("e" * 64, 0, limit=2))
@@ -309,7 +318,7 @@ def test_operation_journal_replays_full_history_by_exclusive_bounded_cursor(tmp_
 )
 def test_operation_journal_refuses_rewriting_full_consumed_interaction_evidence(tmp_path: Path, field: str) -> None:
     """A real CAS keeps every consumed response fact immutable, not only its ID."""
-    repository, snapshots = _commit_history(tmp_path)
+    repository, snapshots = _create_history(tmp_path)
     accepted_consumption = _consumed_interaction()
     accepted = _snapshot(revision=3, sequence=4).model_copy(update={"consumed_interactions": (accepted_consumption,)})
     asyncio.run(repository.commit(accepted, expected_revision=snapshots[-1].revision, lease=_lease()))
@@ -334,7 +343,7 @@ def test_operation_journal_refuses_rewriting_full_consumed_interaction_evidence(
 
 def test_operation_journal_refuses_intent_only_tamper_during_strict_hydration(tmp_path: Path) -> None:
     """A changed durable intent cannot reach dispatch with its original continuation proof."""
-    repository, snapshots = _commit_history(tmp_path)
+    repository, snapshots = _create_history(tmp_path)
     consumed = _consumed_interaction()
     accepted = _snapshot(revision=3, sequence=4).model_copy(update={"consumed_interactions": (consumed,)})
     asyncio.run(repository.commit(accepted, expected_revision=snapshots[-1].revision, lease=_lease()))
@@ -353,7 +362,7 @@ def test_operation_journal_refuses_intent_only_tamper_during_strict_hydration(tm
 )
 def test_operation_journal_refuses_raw_history_corruption(tmp_path: Path, corruption: str) -> None:
     """A load rejects every cross-revision history invariant broken on disk."""
-    repository, snapshots = _commit_history(tmp_path)
+    repository, snapshots = _create_history(tmp_path)
     path = tmp_path / "operation-journals" / f"{snapshots[-1].operation_id}.json"
     document = json.loads(path.read_text(encoding="utf-8"))
     history = document["history"]

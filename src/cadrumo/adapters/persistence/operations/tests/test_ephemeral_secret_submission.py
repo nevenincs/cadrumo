@@ -189,6 +189,21 @@ def _registry(executor: ConsumingExecutor | BlockingExecutor) -> OperationRegist
     return OperationRegistry(definitions=(definition,), public_registrations=(registration,))
 
 
+def _drifted_registry(executor: ConsumingExecutor | BlockingExecutor) -> OperationRegistry:
+    definition = _definition(executor).model_copy(
+        update={"permitted_frontends": frozenset({OperationFrontendProjection.TUI})}
+    )
+    registration = OperationPublicDefinitionRegistrationV1.compose(
+        definition=definition,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id="profile.unlock.ephemeral.request",
+            schema_version=1,
+            model_type=SafeUnlockRequest,
+        ),
+    )
+    return OperationRegistry(definitions=(definition,), public_registrations=(registration,))
+
+
 def _supervisor(
     *,
     root: Path,
@@ -316,6 +331,32 @@ def test_exact_one_shot_submission_executes_once_and_never_reaches_filesystem(tm
         asyncio.run(supervisor.submit_ephemeral_secret(requirement, after_terminal))
     assert after_terminal == bytearray(len(_SECRET))
     _assert_no_secret_or_derivative(tmp_path)
+
+
+def test_secret_submission_and_pre_entry_cancel_refuse_definition_drift_before_mutation(tmp_path: Path) -> None:
+    executor = ConsumingExecutor()
+    clock = [_NOW]
+    owner = _supervisor(root=tmp_path, registry=_registry(executor), owner="1" * 64, token="2" * 64, clock=clock)
+    operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+    requirement = asyncio.run(owner.inspect(operation_id)).secret_requirement
+    assert requirement is not None
+    journal_path = tmp_path / "operation-journals" / f"{operation_id}.json"
+    original_bytes = journal_path.read_bytes()
+    restarted = _supervisor(
+        root=tmp_path,
+        registry=_drifted_registry(executor),
+        owner="1" * 64,
+        token="2" * 64,
+        clock=clock,
+    )
+
+    secret = bytearray(_SECRET)
+    with pytest.raises(ValueError, match="no longer reproduces"):
+        asyncio.run(restarted.submit_ephemeral_secret(requirement, secret))
+    assert secret == bytearray(len(_SECRET))
+    with pytest.raises(ValueError, match="no longer reproduces"):
+        asyncio.run(restarted.request_cancel(operation_id))
+    assert journal_path.read_bytes() == original_bytes
 
 
 def test_expiry_cancellation_and_shutdown_clear_pre_entry_secret_waits(tmp_path: Path) -> None:

@@ -213,7 +213,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         if not isinstance(request.payload, request_type):
             raise ValueError("request payload does not match definition")
 
-    def _lookup_pinned_definition(self, snapshot: OperationPersistedSnapshot) -> OperationDefinition:
+    def _require_pinned_definition(self, snapshot: OperationPersistedSnapshot) -> OperationDefinition:
         definition_id = snapshot.identity.definition_id
         definition = self._registry.lookup(definition_id)
         current_contract = self._registry.lookup_public_contract(definition_id)
@@ -221,12 +221,18 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             raise ValueError("operation definition contract no longer reproduces its invocation digest")
         return definition
 
+    async def _load_pinned_snapshot(self, operation_id: OperationId) -> OperationPersistedSnapshot:
+        """Load one invocation only after its immutable registry contract reproduces."""
+        snapshot = await self._journal.load(operation_id)
+        self._require_pinned_definition(snapshot)
+        return snapshot
+
     async def start(self, operation_id: OperationId) -> OperationPersistedSnapshot:
         """Start one owned registered executor from its declared request storage."""
         snapshot = await self.inspect(operation_id)
         if snapshot.lifecycle is not OperationLifecycle.CREATED:
             raise ValueError("only a created operation may be started")
-        definition = self._lookup_pinned_definition(snapshot)
+        definition = self._require_pinned_definition(snapshot)
         execution_deadline = self._execution_deadline_for(definition.capabilities.deadline)
         self._require_cleanup_timeout(definition.capabilities.cancellation)
         requirement = snapshot.secret_requirement
@@ -495,7 +501,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         await asyncio.wait((executor_task,), timeout=remaining_seconds)
 
     async def inspect(self, operation_id: OperationId) -> OperationPersistedSnapshot:
-        return await self._journal.load(operation_id)
+        return await self._load_pinned_snapshot(operation_id)
 
     async def observe(self, operation_id: OperationId) -> OperationPersistedSnapshot:
         """Return the latest durable operation observation."""
@@ -509,6 +515,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         limit: OperationReplayLimit,
     ) -> OperationReplayPage:
         """Read one bounded authoritative event page after an exclusive cursor."""
+        await self.inspect(operation_id)
         return await self._event_stream.read_after(operation_id, cursor, limit=limit)
 
     async def detach(self, operation_id: OperationId) -> OperationPersistedSnapshot:
@@ -554,6 +561,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         executor_entered_at: datetime | None = None,
         discard_ephemeral_secret: bool = False,
     ) -> OperationPersistedSnapshot:
+        self._require_pinned_definition(snapshot)
         now = self._clock()
         async with self._lease_lock(snapshot.identity.operation_id):
             lease = await self._require_owned_lease_unlocked(snapshot.identity, now)
@@ -623,7 +631,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             events=(event,),
             consumed=(*snapshot.consumed_interactions, consumed),
         )
-        definition = self._lookup_pinned_definition(snapshot)
+        definition = self._require_pinned_definition(snapshot)
         if definition.reconciliation_policy is OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT:
             self._schedule_continuation(successor, definition, consumed)
         return consumed
@@ -677,7 +685,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
                 discard_ephemeral_secret=True,
             )
             return await self._settle_pre_entry_secret_wait(acknowledged, OperationTerminalCondition.CANCELLED)
-        cancellation = self._lookup_pinned_definition(snapshot).capabilities.cancellation
+        cancellation = self._require_pinned_definition(snapshot).capabilities.cancellation
         if cancellation is OperationCancellation.UNSUPPORTED:
             raise ValueError("operation does not support cancellation")
         self._require_cleanup_timeout(cancellation)
@@ -737,7 +745,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         snapshot = await self.inspect(operation_id)
         if receipt.identity != snapshot.identity or receipt.revision != snapshot.revision + 1:
             raise ValueError("terminal receipt does not match successor revision")
-        definition = self._lookup_pinned_definition(snapshot)
+        definition = self._require_pinned_definition(snapshot)
         if receipt.effect not in definition.capabilities.permitted_effects:
             raise OperationDeclarationError("terminal receipt effect is not declared by its definition")
         if (
@@ -862,7 +870,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         snapshot = await self.inspect(operation_id)
         if snapshot.lifecycle is OperationLifecycle.TERMINAL:
             return snapshot
-        definition = self._lookup_pinned_definition(snapshot)
+        definition = self._require_pinned_definition(snapshot)
         scope_ref = operation_conflict_scope_reference(
             definition_id=snapshot.identity.definition_id,
             subject_ref=snapshot.identity.subject_ref,
