@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-24'
-body_hash: 'sha256:a7e74bc8c743ecdf73e94be21cc51c56906214f2caa523533b1f86eae11621e7'
+body_hash: 'sha256:d1e4764ee2dd45cb8e5c4935d8821160519e873c2024d3ea24aa7e6b791f578b'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -242,6 +242,7 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [x] `W05.P10.S121` - Migrate Google API transport failures to typed external-system safety outcomes, adjudicating remote not-found recovery only where the caller owns creation; `src/cadrumo/adapters/outbound/google/_api.py; src/cadrumo/adapters/outbound/google/tests`.
 - [x] `W05.P10.S122` - Migrate Google Drive and document-resolution network, permission, and conflict refusals to typed safety or operator-review outcomes and classify unreachable validation invariants explicitly; `src/cadrumo/adapters/outbound/google/_document_link_resolver.py; src/cadrumo/adapters/outbound/google/_drive_entries.py; src/cadrumo/adapters/outbound/google/tests`.
 - [ ] `W05.P10.S123` - Migrate Google calculation-sheet apply and pull transport and synchronization refusals to typed safety or state-divergence outcomes and classify provider-contract validation invariants explicitly; `src/cadrumo/adapters/outbound/google/_calc_sheets_apply.py; src/cadrumo/adapters/outbound/google/_calc_sheets_pull.py; src/cadrumo/adapters/outbound/google/tests`.
+- [ ] `W05.P10.S124` - Centralize Google adapter terminal-verdict construction in one shared helper and prohibit module-local PreconditionVerdict redeclarations while preserving caller-owned condition and outcome policy; `src/cadrumo/adapters/outbound/google/_preconditions.py [new]; src/cadrumo/adapters/outbound/google/_api.py; src/cadrumo/adapters/outbound/google/_document_link_resolver.py; src/cadrumo/adapters/outbound/google/_drive_entries.py; src/cadrumo/adapters/outbound/google/_calc_sheets_apply.py; src/cadrumo/adapters/outbound/google/_calc_sheets_pull.py; src/cadrumo/adapters/outbound/google/tests`.
 
 ## Wave `W06` - Prove action chains and close honestly
 
