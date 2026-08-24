@@ -27,6 +27,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
 
+from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core import CasillaId as _CasillaId
 from ...core.resources import bundled_path as _bundled_path
 from ...domain.calculations.registry import AmbiguousRevisionSelectionError as _AmbiguousRevisionSelectionError
@@ -47,7 +48,7 @@ from ...domain.calculations.registry import (
     ValidatedRegistryAuthority as _ValidatedRegistryAuthority,
 )
 from ...domain.calculations.registry import select_revision_for_year as _select_revision_for_year
-from ._errors import RegistryApplicationInputError
+from ._errors import RegistryPreconditionCondition, registry_terminal_refusal
 
 __all__ = [
     "BindingDiff",
@@ -174,23 +175,41 @@ def _revision_for_year(
         # The candidates are SURFACED, not restated: the selector's own candidate-id
         # tuple rides on the error, so this refusal quotes it rather than composing a
         # second copy that could drift from the selector's.
-        raise RegistryApplicationInputError(
+        raise registry_terminal_refusal(
+            condition=RegistryPreconditionCondition.DIFF_REVISION_SELECTION_UNAMBIGUOUS,
             translated_message="application.registry.errors.no_revision_for_diff_year",
             context={
                 "modelo": str(definition.id),
                 "filing_year": filing_year,
                 "available_revisions": ", ".join(exc.candidate_ids),
             },
+            facts={
+                "modelo": str(definition.id),
+                "filing_year": filing_year,
+                "revision_selection_unambiguous": False,
+                "candidate_revision_count": len(exc.candidate_ids),
+            },
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
         ) from exc
     except _NoRevisionForPeriodError as exc:
         available = ", ".join(sorted(definition.revisions))
-        raise RegistryApplicationInputError(
+        raise registry_terminal_refusal(
+            condition=RegistryPreconditionCondition.DIFF_REVISION_AVAILABLE,
             translated_message="application.registry.errors.no_revision_for_diff_year",
             context={
                 "modelo": str(definition.id),
                 "filing_year": filing_year,
                 "available_revisions": available,
             },
+            facts={
+                "modelo": str(definition.id),
+                "filing_year": filing_year,
+                "revision_available": False,
+                "candidate_revision_count": len(definition.revisions),
+            },
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
         ) from exc
 
 

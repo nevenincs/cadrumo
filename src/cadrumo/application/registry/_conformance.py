@@ -107,6 +107,7 @@ from pydantic import BaseModel, Field
 from ...core import NON_REGISTRY_MODELOS as _NON_REGISTRY_MODELOS
 from ...core import REVIEWED_REVISION_REVIEW_STATUSES as _REVIEWED_REVISION_REVIEW_STATUSES
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
+from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core import CasillaId as _CasillaId
 from ...core import ExportLayoutFormat as _ExportLayoutFormat
 from ...core import Modelo as _Modelo
@@ -168,7 +169,7 @@ from ...domain.calculations.registry import (
 )
 from ...domain.calculations.registry import validate_registry_scope as _validate_registry_scope
 from ...domain.calculations.registry import xml_dictionary_entries as _xml_dictionary_entries
-from ._errors import RegistryApplicationInputError
+from ._errors import RegistryPreconditionCondition, registry_terminal_refusal
 
 __all__ = [
     "AnnualCasillaPopulationComparison",
@@ -1011,9 +1012,12 @@ class _AxisIndex:
         """
         row = self.classification_rows.get(modelo_id)
         if row is None:
-            raise RegistryApplicationInputError(
-                f"registry conformance: classification audit carries no row for modelo {modelo_id!r}",
+            raise registry_terminal_refusal(
+                condition=RegistryPreconditionCondition.CONFORMANCE_CLASSIFICATION_ROW_PRESENT,
                 context={"modelo": modelo_id},
+                facts={"modelo": str(modelo_id), "classification_row_present": False},
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                outcome=NoRecoveryOutcome.SAFETY,
             )
         return row
 
@@ -1030,10 +1034,16 @@ class _AxisIndex:
         """
         row = self.grounding_rows.get((modelo_id, revision_id))
         if row is None:
-            raise RegistryApplicationInputError(
-                f"registry conformance: external-grounding audit carries no row for modelo "
-                f"{modelo_id!r} revision {revision_id!r}",
+            raise registry_terminal_refusal(
+                condition=RegistryPreconditionCondition.CONFORMANCE_GROUNDING_ROW_PRESENT,
                 context={"modelo": modelo_id, "revision_id": revision_id},
+                facts={
+                    "modelo": str(modelo_id),
+                    "revision_id": str(revision_id),
+                    "grounding_row_present": False,
+                },
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                outcome=NoRecoveryOutcome.SAFETY,
             )
         return row
 

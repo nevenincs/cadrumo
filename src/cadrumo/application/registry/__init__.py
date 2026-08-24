@@ -58,6 +58,7 @@ from ...adapters.outbound.aeat.sede import (
 from ...adapters.outbound.aeat.sede import (
     registry_observation_from_filed_declaration as _registry_observation_from_filed_declaration,
 )
+from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core import BindingSourceKind as _BindingSourceKind
 from ...core import CasillaId as _CasillaId
 from ...core import validated_casilla_id as _validated_casilla_id
@@ -166,7 +167,12 @@ from ._diff import (
     RenumberedCasilla,
     diff_registry_revisions,
 )
-from ._errors import RegistryApplicationError, RegistryApplicationInputError
+from ._errors import (
+    RegistryApplicationError,
+    RegistryApplicationInputError,
+    RegistryPreconditionCondition,
+    registry_terminal_refusal,
+)
 from ._filing_export_authority import (
     FilingExportEmissionProof,
     FilingExportGenerationProof,
@@ -234,23 +240,36 @@ def _verified_required_casilla_ids(
                 surface="registry.verify_filed_state --casilla",
             )
         except ValueError as exc:
-            raise RegistryApplicationInputError(
-                f"registry.verify_filed_state --casilla {raw_casilla_id!r} is not a canonical casilla.id",
+            raise registry_terminal_refusal(
+                condition=RegistryPreconditionCondition.FILED_STATE_CASILLA_ID_CANONICAL,
                 context={
                     "modelo": snapshot.modelo.id,
                     "revision_id": snapshot.revision.id,
                     "casilla_id": str(raw_casilla_id),
                 },
+                facts={
+                    "modelo": str(snapshot.modelo.id),
+                    "revision_id": str(snapshot.revision.id),
+                    "casilla_id_canonical": False,
+                },
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
             ) from exc
         if _undeclared_casilla_ids(snapshot.revision, (casilla_id,)):
-            raise RegistryApplicationInputError(
-                f"registry.verify_filed_state --casilla {casilla_id!r} is not declared as a canonical "
-                f"casilla.id in modelo {snapshot.modelo.id} revision {snapshot.revision.id}",
+            raise registry_terminal_refusal(
+                condition=RegistryPreconditionCondition.FILED_STATE_CASILLA_DECLARED,
                 context={
                     "modelo": snapshot.modelo.id,
                     "revision_id": snapshot.revision.id,
                     "casilla_id": casilla_id,
                 },
+                facts={
+                    "modelo": str(snapshot.modelo.id),
+                    "revision_id": str(snapshot.revision.id),
+                    "casilla_id_declared": False,
+                },
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
             )
         requested.append(casilla_id)
     return tuple(requested)

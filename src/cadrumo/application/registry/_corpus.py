@@ -31,7 +31,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field, StringConstraints
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import scan_directory
+from ...core import ActionEvidenceProvenance, NoRecoveryOutcome, scan_directory
 from ...core.config import Settings, coerce_output_language_setting, load_settings
 from ...core.errors import BaseSeverity
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
@@ -66,7 +66,7 @@ from ._corpus_manual_helpers import (
     manual_report_with_registry_casilla_issues as _manual_report_with_registry_casilla_issues,
 )
 from ._corpus_manual_helpers import manual_rule_kind as _manual_rule_kind
-from ._errors import RegistryApplicationInputError
+from ._errors import RegistryApplicationInputError, RegistryPreconditionCondition, registry_terminal_refusal
 
 _LOGGER = get_logger(__name__)
 
@@ -572,7 +572,8 @@ def show_registry_manual(
                     "registry_structure_available": False,
                 },
             )
-            raise RegistryApplicationInputError(
+            raise registry_terminal_refusal(
+                condition=RegistryPreconditionCondition.MANUAL_SECTION_STRUCTURE_AVAILABLE,
                 translated_message="application.registry.errors.manual_section_requires_structure",
                 context={
                     "registry_service": "registry.manuals.show",
@@ -583,6 +584,9 @@ def show_registry_manual(
                     "manual_key": manual_key,
                     "structure_available": False,
                 },
+                facts={"manual_structure_available": False, "section_requested": True},
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                outcome=NoRecoveryOutcome.SAFETY,
             ) from None
         manifest, _part_root = _load_manual_manifest(
             manual_id=manual_id,
@@ -622,7 +626,8 @@ def show_registry_manual(
                     "registry_structure_available": True,
                 },
             )
-            raise RegistryApplicationInputError(
+            raise registry_terminal_refusal(
+                condition=RegistryPreconditionCondition.MANUAL_SECTION_DECLARED,
                 translated_message="application.registry.errors.manual_section_not_found",
                 context={
                     "registry_service": "registry.manuals.show",
@@ -632,6 +637,9 @@ def show_registry_manual(
                     "section": command.section,
                     "structure_available": True,
                 },
+                facts={"manual_structure_available": True, "requested_section_declared": False},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
             )
         section_projection = RegistryManualSectionProjection(
             section_id=matched.section_id,
@@ -769,7 +777,8 @@ def _registry_topic_locale(locale: str | None) -> str:
                 "registry_allowed_locales": SUPPORTED_OUTPUT_LANGUAGES,
             },
         )
-        raise RegistryApplicationInputError(
+        raise registry_terminal_refusal(
+            condition=RegistryPreconditionCondition.TOPIC_OUTPUT_LANGUAGE_SUPPORTED,
             translated_message="application.registry.errors.invalid_topic_locale",
             context={
                 "registry_service": "registry.topics",
@@ -779,6 +788,9 @@ def _registry_topic_locale(locale: str | None) -> str:
                 "locale_code": locale,
                 "allowed_locales": ", ".join(SUPPORTED_OUTPUT_LANGUAGES),
             },
+            facts={"output_language_supported": False},
+            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
         )
     return normalized.value
 
@@ -873,13 +885,20 @@ def _resolve_legal_citation(
 
 
 def _citation_not_found_error(command: RegistryCitationShowCommand) -> RegistryApplicationInputError:
-    return RegistryApplicationInputError(
+    return registry_terminal_refusal(
+        condition=RegistryPreconditionCondition.CITATION_REFERENCE_AVAILABLE,
         translated_message="application.registry.errors.citation_not_found",
         context={
             "registry_service": "registry.citations.show",
             "legal_id": command.legal_id,
             "articulo": command.articulo,
         },
+        facts={
+            "citation_reference_available": False,
+            "article_requested": command.articulo is not None,
+        },
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
     )
 
 
@@ -1139,13 +1158,17 @@ def registry_manual_id(value: str | RegistryManualId | ManualId) -> RegistryManu
                 "registry_allowed_manual_ids": allowed,
             },
         )
-        raise RegistryApplicationInputError(
+        raise registry_terminal_refusal(
+            condition=RegistryPreconditionCondition.MANUAL_ID_SUPPORTED,
             translated_message="application.registry.errors.invalid_manual_id",
             context={
                 "registry_service": "registry.manuals",
                 "manual_id": raw,
                 "allowed_manual_ids": allowed,
             },
+            facts={"manual_id_supported": False},
+            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
         ) from exc
 
 
