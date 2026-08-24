@@ -134,7 +134,7 @@ aggregation:
       modelo_mismatch: Tax model does not match the expected Renta ledger model.
       period_mismatch: Period does not match the expected Renta ledger period.
       quarterly_period_required: Quarterly period is required for M130 income aggregation
-        (e.g. 2024Q1).
+        (for example --year 2024 --period 1T).
       unsupported_period: Annual period is required for Modelo 100 income aggregation
         (e.g. 2024-0A).
   retenciones:

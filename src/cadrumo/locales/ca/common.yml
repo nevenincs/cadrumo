@@ -141,8 +141,8 @@ aggregation:
         de Renda.
       period_mismatch: El període no coincideix amb el període esperat del llibre
         de Renda.
-      quarterly_period_required: Es requereix un període trimestral per a l'agregació
-        d'ingressos del Model 130 (p.ex. 2024Q1).
+      quarterly_period_required: Cal un període trimestral per a l'agregació d'ingressos
+        del Model 130 (per exemple --year 2024 --period 1T).
       unsupported_period: Es requereix un període anual per a l'agregació d'ingressos
         del Model 100 (p.ex. 2024-0A).
   retenciones:

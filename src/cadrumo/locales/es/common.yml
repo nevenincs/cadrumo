@@ -146,7 +146,7 @@ aggregation:
       period_mismatch: El periodo no coincide con el periodo esperado del libro de
         Renta.
       quarterly_period_required: Se requiere un periodo trimestral para la agregación
-        de ingresos del Modelo 130 (p.ej. 2024Q1).
+        de ingresos del Modelo 130 (por ejemplo --year 2024 --period 1T).
       unsupported_period: Se requiere un periodo anual para la agregación de ingresos
         del Modelo 100 (p.ej. 2024-0A).
   retenciones:

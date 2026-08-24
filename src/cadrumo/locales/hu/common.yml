@@ -130,8 +130,8 @@ aggregation:
         vödörrel.
       modelo_mismatch: Az adónyomtatvány nem egyezik a várt Renta főkönyvi nyomtatvánnyal.
       period_mismatch: Az időszak nem egyezik a várt Renta főkönyvi időszakkal.
-      quarterly_period_required: Az M130 jövedelemaggregáláshoz negyedéves időszak
-        szükséges (pl. 2024Q1).
+      quarterly_period_required: Az M130 bevétel-összesítéshez negyedéves időszak
+        szükséges (például --year 2024 --period 1T).
       unsupported_period: A Modelo 100 bevétel-összesítéshez éves időszak szükséges
         (pl. 2024-0A).
   retenciones:
