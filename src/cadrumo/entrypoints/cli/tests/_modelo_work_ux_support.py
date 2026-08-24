@@ -77,6 +77,12 @@ def _create_de_nonresident_legal_entity_profile() -> None:
             "taxpayer_type.fiscal_residency": "non_resident_irnr",
             "taxpayer_type.country_of_fiscal_residence": "DE",
             "iva.regime": "GENERAL",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
 

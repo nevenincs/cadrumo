@@ -15,6 +15,7 @@ from ....adapters.persistence.storage.custody import load_committed_profile_pass
 from ....core.config import override_settings
 from ....domain.buckets import BucketEventType
 from ....domain.user_profile import UserProfileFact
+from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...workflow import WorkflowState
 from .._capsule_record import ProfileRecordConflictError, ProfileRecordSession, ProfileRecordStore
@@ -70,7 +71,7 @@ def _proposal(record: object) -> CensalReviewedOperand:
             ),
             domicilio_notificacion=CensalObservationAddress(),
             captured_at=_NOW,
-            source_url="https://sede.agenciatributaria.gob.es/censo/consulta",
+            source_url=aeat_url("sede", "/censo/consulta"),
         ),
         baseline=CensalProfileBaseline.from_record(record),
         field_intents=(

@@ -34,7 +34,7 @@ def _review_lines(result: WorkReviewResult) -> list[str]:
         f"progress_state\t{review.progress.state.value}",
         f"materialised_count\t{(review.progress.materialised_count if review.progress.materialised_count is not None else '')}",
         f"target_count\t{(review.progress.target_count if review.progress.target_count is not None else '')}",
-        f"casilla_count\t{len(review.casillas)}",
+        f"casilla_count\t{review.casilla_count}",
         f"finding_count\t{len(review.findings)}",
         f"blocker_count\t{len(review.blockers)}",
     ]
@@ -51,18 +51,7 @@ def _review_lines(result: WorkReviewResult) -> list[str]:
             for blocker in review.blockers
 
     )
-    lines.extend(
-        "\t".join(
-            (
-                "row_source_fingerprint",
-                item.binding_id,
-                str(item.row_index),
-                item.source_kind.value,
-                item.fingerprint,
-            )
-        )
-        for item in review.row_source_fingerprints
-    )
+    lines.append(f"row_source_fingerprint_count\t{review.row_source_fingerprint_count}")
     return lines
 
 

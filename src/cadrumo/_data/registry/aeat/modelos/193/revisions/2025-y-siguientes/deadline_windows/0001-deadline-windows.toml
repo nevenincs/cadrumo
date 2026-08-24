@@ -1,13 +1,13 @@
 [[revisions."2025-y-siguientes".deadline_windows]]
 id = "modelo-193-2025-0a"
-filing_year = 2026
+filing_year = 2025
 period = "2025 0A"
 period_kind = "annual"
 opens_on = 2026-01-01
 closes_on = 2026-01-31
 applicability_condition_mode = "all"
 legal_refs = ["orden-eha-3377-2011:art-5"]
-source_refs = ["aeat-modelo-193-procedure", "boe-modelo-193-2011-form"]
+source_refs = ["aeat-modelo-193-procedure", "aeat-calendario-contribuyente-2026-hasta-2-febrero", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".deadline_windows.applicability_conditions]]
 field = "pays_capital_income_with_retencion"

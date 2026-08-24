@@ -101,7 +101,16 @@ def test_every_block_owned_path_claims_the_block_on_its_own() -> None:
 
 
 def test_a_satisfied_block_leaves_nothing_outstanding() -> None:
-    values = {"identity.tax_id": "12345678Z", "iva.regime": "GENERAL", **_SATISFIED_IVA_BLOCK}
+    values = {
+        "identity.tax_id": "12345678Z",
+        "iva.regime": "GENERAL",
+        "iva.m303_regime_composition": "general",
+        "tax_residence.jurisdiction_scope": "common_regime",
+        "iva.redeme_enrolled": "false",
+        "iva.cash_accounting_regime_enrolled": "false",
+        "iva.voluntary_sii_enrolled": "false",
+        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+    }
 
     assert conditional_profile_missing_required(values) == ()
 

@@ -35,6 +35,8 @@ EXPECTED_TOKENS = {
     "rename",
     "resume",
     "review",
+    "run",
+    "run-details",
     "revision",
     "revisions",
     "runs",
@@ -68,7 +70,7 @@ def _semantic_annotation(annotation: object) -> object:
 
 
 def test_modelo_work_specs_are_the_exact_owned_leaf_set() -> None:
-    assert len(MODELO_WORK_COMMAND_SPECS) == 16
+    assert len(MODELO_WORK_COMMAND_SPECS) == 18
     assert {spec.token for spec in MODELO_WORK_COMMAND_SPECS} == EXPECTED_TOKENS
     assert {spec.parent_key for spec in MODELO_WORK_COMMAND_SPECS} == {"app_modelo_work"}
     assert {spec.key for spec in MODELO_WORK_COMMAND_SPECS} == {

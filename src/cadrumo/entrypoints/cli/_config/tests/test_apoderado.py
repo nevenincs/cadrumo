@@ -87,6 +87,12 @@ def test_apoderado_happy_path_against_active_profile(profile_storage_root: Path)
             "identity.surnames": "Operator",
             "activities.description": "design",
             "iva.regime": "GENERAL",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
 
@@ -157,6 +163,12 @@ def _create_active_profile() -> None:
             "identity.surnames": "Operator",
             "activities.description": "design",
             "iva.regime": "GENERAL",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
 
@@ -239,6 +251,12 @@ def test_apoderado_configure_leaves_profile_facts_untouched(profile_storage_root
             "identity.surnames": "Operator",
             "activities.description": "design",
             "iva.regime": "GENERAL",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
 

@@ -185,6 +185,10 @@ sha256 = "ac324b935b690f0b6fe12dc8351c324cc804170750f483b0768d6417dd4976b7"
 bytes = 612620
 retrieved_at = 2026-05-03
 applies_from = 2013-02-01
+# Modelo 720 was first presented in 2013 for ejercicio 2012.  The calendar
+# applicability date and the filing-year coverage axis are therefore offset by
+# one year; state the latter explicitly so consumers need not infer it.
+period_selector = { year_from = 2012, periods = ["0A"] }
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/modelo_720.pdf"
 review_status = "reviewed"
 

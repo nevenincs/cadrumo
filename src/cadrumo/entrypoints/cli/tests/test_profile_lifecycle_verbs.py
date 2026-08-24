@@ -40,16 +40,15 @@ is live coverage rather than a leftover.
 from __future__ import annotations
 
 import json
-
 from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 
+from ....core.config import load_settings
 from ....core.i18n import tr
 from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
-from ....core.config import load_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.profile_storage_root_fixture import profile_storage_root_fixture
@@ -143,6 +142,12 @@ def test_registering_a_second_profile_uses_its_own_identity_while_the_first_is_a
             "identity.surnames": "Operator",
             "activities.description": "alpha-design",
             "iva.regime": "GENERAL",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
     register_cli_profile(
@@ -153,6 +158,12 @@ def test_registering_a_second_profile_uses_its_own_identity_while_the_first_is_a
             "identity.surnames": "Operator",
             "activities.description": "beta-consulting",
             "iva.regime": "GENERAL",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
 

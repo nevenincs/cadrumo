@@ -23,15 +23,12 @@ msgid "Identity and naming"
 msgstr "Identidad y nomenclatura"
 
 #: ../../reference/identity-and-naming.md:3
-#, fuzzy
 msgid ""
-"The Agencia Estatal de Administración Tributaria (AEAT) is the external "
-"tax authority. CLI means command-line interface. MCP means Model Context "
-"Protocol."
+"The Agencia Estatal de Administración Tributaria (AEAT) is the external tax authority. CLI means command-line "
+"interface. MCP means Model Context Protocol."
 msgstr ""
-"La Agencia Estatal de Administración Tributaria (AEAT) es la autoridad "
-"tributaria externa. CLI significa interfaz de línea de comandos. MCP "
-"significa Model Context Protocol."
+"La Agencia Estatal de Administración Tributaria (AEAT) es la autoridad tributaria externa. CLI significa interfaz de "
+"línea de comandos. MCP significa Model Context Protocol."
 
 #: ../../reference/identity-and-naming.md:6
 msgid "Canonical product identity"
@@ -83,29 +80,27 @@ msgstr "`nevenincs/cadrumo`"
 
 #: ../../reference/identity-and-naming.md
 msgid "MCP server identity"
-msgstr ""
+msgstr "Identidad del servidor MCP"
 
 #: ../../reference/identity-and-naming.md
-#, fuzzy
 msgid "MCP executable"
 msgstr "Ejecutable de CLI para personas"
 
 #: ../../reference/identity-and-naming.md
-#, fuzzy
 msgid "`cadrumo-mcp`"
 msgstr "`cadrumo`"
 
 #: ../../reference/identity-and-naming.md
 msgid "MCP tool prefix"
-msgstr ""
+msgstr "Prefijo de herramientas MCP"
 
 #: ../../reference/identity-and-naming.md
 msgid "MCP resource scheme"
-msgstr ""
+msgstr "Esquema de recursos MCP"
 
 #: ../../reference/identity-and-naming.md
 msgid "Plugin identifier"
-msgstr ""
+msgstr "Identificador del complemento"
 
 #: ../../reference/identity-and-naming.md
 msgid "Product environment prefix"
@@ -132,12 +127,10 @@ msgid "`cadrumo_data`"
 msgstr "`cadrumo_data`"
 
 #: ../../reference/identity-and-naming.md:24
-msgid ""
-"These values identify one product. There is no alternate human CLI "
-"spelling or Python import alias."
+msgid "These values identify one product. There is no alternate human CLI spelling or Python import alias."
 msgstr ""
-"Estos valores identifican un único producto. No existe una grafía "
-"alternativa de la CLI para personas ni un alias de importación de Python."
+"Estos valores identifican un único producto. No existe una grafía alternativa de la CLI para personas ni un alias de "
+"importación de Python."
 
 #: ../../reference/identity-and-naming.md:27
 msgid "Product and authority names"
@@ -164,12 +157,8 @@ msgid "`Cadrumo` or the canonical identifier in the identity table"
 msgstr "`Cadrumo` o el identificador canónico de la tabla de identidad"
 
 #: ../../reference/identity-and-naming.md
-msgid ""
-"Cadrumo CLI, Cadrumo profile, `cadrumo` package, "
-"`CADRUMO_LOCAL_STORAGE_ROOT`"
-msgstr ""
-"CLI de Cadrumo, perfil de Cadrumo, paquete `cadrumo`, "
-"`CADRUMO_LOCAL_STORAGE_ROOT`"
+msgid "Cadrumo CLI, Cadrumo profile, `cadrumo` package, `CADRUMO_LOCAL_STORAGE_ROOT`"
+msgstr "CLI de Cadrumo, perfil de Cadrumo, paquete `cadrumo`, `CADRUMO_LOCAL_STORAGE_ROOT`"
 
 #: ../../reference/identity-and-naming.md
 msgid "Spanish tax authority"
@@ -180,24 +169,17 @@ msgid "`AEAT`"
 msgstr "`AEAT`"
 
 #: ../../reference/identity-and-naming.md
-msgid ""
-"AEAT portal, AEAT credentials, AEAT official file, AEAT legal source, "
-"AEAT taxonomy"
-msgstr ""
-"portal de la AEAT, credenciales de la AEAT, fichero oficial de la AEAT, "
-"fuente legal de la AEAT, taxonomía de la AEAT"
+msgid "AEAT portal, AEAT credentials, AEAT official file, AEAT legal source, AEAT taxonomy"
+msgstr "portal de la AEAT, credenciales de la AEAT, fichero oficial de la AEAT, fuente legal de la AEAT, taxonomía de la AEAT"
 
 #: ../../reference/identity-and-naming.md:34
 msgid ""
-"AEAT is an external authority and counterparty, not the application name."
-" Authority-owned terms such as *modelo*, *casilla*, *justificante*, and "
-"official period or classification tokens keep their AEAT meaning inside "
-"Cadrumo."
+"AEAT is an external authority and counterparty, not the application name. Authority-owned terms such as *modelo*, "
+"*casilla*, *justificante*, and official period or classification tokens keep their AEAT meaning inside Cadrumo."
 msgstr ""
-"La AEAT es una autoridad externa y contraparte, no el nombre de la "
-"aplicación. Los términos propios de la autoridad como *modelo*, "
-"*casilla*, *justificante* y los tokens oficiales de periodo o de "
-"clasificación conservan su significado de la AEAT dentro de Cadrumo."
+"La AEAT es una autoridad externa y contraparte, no el nombre de la aplicación. Los términos propios de la autoridad "
+"como *modelo*, *casilla*, *justificante* y los tokens oficiales de periodo o de clasificación conservan su "
+"significado de la AEAT dentro de Cadrumo."
 
 #~ msgid "MCP server identity"
 #~ msgstr "Identidad del servidor MCP"

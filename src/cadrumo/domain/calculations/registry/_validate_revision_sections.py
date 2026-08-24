@@ -1,11 +1,6 @@
-"""Per-revision registry section validation dispatch.
+"""Per-revision registry section validation.
 
-Orchestrates all per-section validators for a single
-:class:`~cadrumo.domain.calculations.registry.ModeloRevision` within its
-:class:`~cadrumo.domain.calculations.registry.ModeloDefinition`, collecting every
-failure into a flat list returned to the registry-level validator.
-
-The dispatcher builds a
+Orchestrates validators for a modelo revision and collects their failures. The dispatcher builds a
 :class:`~cadrumo.domain.calculations.registry._validate_revision_context.RevisionValidationContext`
 once and reuses it across record, surface, dependency, algorithm, completeness,
 and closure validators. Legal/source refs are checked through the shared
@@ -14,8 +9,6 @@ and closure validators. Legal/source refs are checked through the shared
 See Also:
     :class:`cadrumo.domain.calculations.registry.RegistryValidator`
         Registry-level validator that calls :func:`validate_revision_definition`.
-    :mod:`cadrumo.domain.calculations.registry._validate_record_sections`
-        Record-section validators dispatched from this module.
     :mod:`cadrumo.domain.calculations.registry._validate_revision_closure`
         Closure validators dispatched after section-level checks.
 """

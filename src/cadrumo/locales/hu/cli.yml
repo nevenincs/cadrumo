@@ -1517,6 +1517,10 @@ cli:
         row_unknown_type: 'Ismeretlen --row típus: {row_type!r}; támogatott típusok:
           {supported}.'
         row_validation_error: 'A --row {row_type!r} sor validálása sikertelen: {error}'
+        run_details_help: Egy mentett munkafolyamat-futás záró lépésének típusos adatainak
+          megjelenítése.
+        run_help: Egy mentett munkafolyamat-futás megjelenítése futásazonosító alapján.
+        run_id_help: A modelo work runs által adott stabil, 16 karakteres futásazonosító.
         runs_help: 'Mentett munkafolyamat-futtatások listázása futtatásazonosítókkal,
           legújabb először. Futtatásazonosítót használjon: `aeat app modelo work resume`.
           Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'

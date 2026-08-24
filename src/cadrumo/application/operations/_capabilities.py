@@ -39,6 +39,13 @@ class OperationSensitiveInputPolicy(StrEnum):
     SECURE_REFERENCE = "secure_reference"
 
 
+class OperationRequestStoragePolicy(StrEnum):
+    """Exclusive durable location for one operation's validated request."""
+
+    SECURE_REFERENCE = "secure_reference"
+    CREDENTIAL_FREE_JOURNAL = "credential_free_journal"
+
+
 class OperationConflictScope(StrEnum):
     """Lease scope used to exclude conflicting operation owners."""
 
@@ -63,6 +70,7 @@ class OperationCapabilities(BaseModel):
     deadline: OperationDeadline
     replay: OperationReplayPolicy
     baseline: OperationBaselinePolicy
+    request_storage: OperationRequestStoragePolicy
     sensitive_input: OperationSensitiveInputPolicy
     conflict_scope: OperationConflictScope
     owned_resources: frozenset[OperationOwnedResource]
@@ -74,6 +82,11 @@ class OperationCapabilities(BaseModel):
         self._validate_durability()
         self._validate_stopping()
         self._validate_close_policy()
+        if (
+            self.request_storage is OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL
+            and self.sensitive_input is not OperationSensitiveInputPolicy.NONE
+        ):
+            raise ValueError("credential-free journal requests cannot declare sensitive request input")
         return self
 
     def _validate_durability(self) -> None:
@@ -119,5 +132,6 @@ __all__ = [
     "OperationConflictScope",
     "OperationOwnedResource",
     "OperationReplayPolicy",
+    "OperationRequestStoragePolicy",
     "OperationSensitiveInputPolicy",
 ]

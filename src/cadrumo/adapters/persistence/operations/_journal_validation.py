@@ -157,6 +157,29 @@ def _validate_advance_identity(
         RepositoryError,
     )
     _raise_if(
+        snapshot.request_storage != current.request_storage
+        or snapshot.credential_free_request_json != current.credential_free_request_json,
+        "operation journal transition cannot change request storage",
+        RepositoryError,
+    )
+    _raise_if(
+        snapshot.secret_requirement != current.secret_requirement,
+        "operation journal transition cannot change the secret requirement",
+        RepositoryError,
+    )
+    _raise_if(
+        current.executor_entered_at is not None and snapshot.executor_entered_at != current.executor_entered_at,
+        "operation journal transition cannot rewrite executor entry",
+        RepositoryError,
+    )
+    _raise_if(
+        current.executor_entered_at is None
+        and snapshot.executor_entered_at is not None
+        and snapshot.lifecycle.value != "running",
+        "operation journal executor entry requires running lifecycle",
+        RepositoryError,
+    )
+    _raise_if(
         snapshot.started_at != current.started_at,
         "operation journal transition cannot change the start time",
         RepositoryError,

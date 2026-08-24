@@ -18,7 +18,7 @@ from pydantic import Field
 from ...core import CasillaId
 from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry import LegalRefId, SourceRefId
-from ._modelo_revision_payload_parts import CalculationRevisionProjectionFields
+from ._modelo_revision_payload_parts import CalculationRevisionCommandProjectionFields
 
 #: Closed set of CLI input channels a wizard step resolves to: a direct
 #: ``--casilla`` override, a registry ``--binding`` override, or a
@@ -49,12 +49,12 @@ class WizardPromptedCasillaPayload(OutputSchema):
     help_text: str | None = None
 
 
-class WorkWizardResult(CalculationRevisionProjectionFields):
+class WorkWizardResult(CalculationRevisionCommandProjectionFields):
     """Successful ``aeat app modelo work wizard`` result payload.
 
     Mirrors the shape of :class:`~entrypoints.cli._modelo_payloads.WorkCalculateResult`
     (the wizard composes the exact same calculation path, and both share the
-    :class:`CalculationRevisionProjectionFields` base) plus the
+    compact persisted-revision projection) plus the
     ``prompted_casillas`` audit trail of what the wizard asked and what the
     operator (or the scripted answer queue) supplied.
     """

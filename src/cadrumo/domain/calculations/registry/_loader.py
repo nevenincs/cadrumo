@@ -350,7 +350,7 @@ def _compile_revision_projection_layout(source_path: Path, raw_layout: object) -
 
 
 def _compile_revision_projection_semantics(source_path: Path, payload: Mapping[str, object]) -> dict[str, object]:
-    """Compile revision-owned projection refs and export fields before schema construction."""
+    """Compile revision-owned typed tokens before schema construction."""
     compiled = dict(payload)
     declarations = _as_toml_array(payload.get("projection_endpoints"))
     if declarations is not None:

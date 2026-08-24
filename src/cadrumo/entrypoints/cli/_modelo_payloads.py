@@ -34,7 +34,6 @@ from ...application.modelo import (
     BlockerRef,
     ModeloWorkProgress,
     ModeloWorkReview,
-    ModeloWorkReviewCasilla,
     validate_modelo_work_deadline_posture,
 )
 from ...core import (
@@ -49,7 +48,6 @@ from ...core import (
 from ...core.identity import (
     BucketId,
     CalculationRevisionId,
-    ContentDigest,
     FilingRecordId,
     ProfileId,
     TransactionId,
@@ -97,7 +95,10 @@ from ._modelo_aux_payloads import (
     ModeloRowPayload,
     WithholdingClaveBreakdownPayload,
     WorkflowRunPayload,
+    WorkflowRunSummaryPayload,
     WorkHistoryResult,
+    WorkRunDetailsResult,
+    WorkRunResult,
     WorkRunsResult,
     WorkUnitHistoryEventPayload,
 )
@@ -114,7 +115,7 @@ from ._modelo_iva_wallet_payloads import (
     IvaWalletSeedResult,
 )
 from ._modelo_revision_payload_parts import (
-    CalculationRevisionProjectionFields,
+    CalculationRevisionCommandProjectionFields,
     DetailRowPayload,
     ObservationPayload,
     ResultSummaryRowPayload,
@@ -569,13 +570,13 @@ class WorkDiscardResult(OutputSchema):
     causante_ccaa: str | None = None
 
 
-class WorkCalculateResult(CalculationRevisionProjectionFields):
+class WorkCalculateResult(CalculationRevisionCommandProjectionFields):
     """Successful ``modelo work calculate`` result payload.
 
     The calculate CLI flattens the persisted
     :class:`CalculationRevision` fields from
     :class:`CalculationRevisionPayload`
-    (carried by the shared :class:`CalculationRevisionProjectionFields` base),
+    (carried by the compact revision-command projection base),
     then adds the presentation-only values
     carried by
     :class:`ModeloWorkCalculationServiceResult`: Modelo
@@ -594,19 +595,29 @@ class WorkCalculateResult(CalculationRevisionProjectionFields):
     deadline: WorkDeadlinePosturePayload | None = None
 
 
+class CalculationRevisionSummaryPayload(OutputSchema):
+    """Compact calculation-revision row returned by ``modelo.work.revisions``."""
+
+    short_calculation_revision_id: str
+    calculation_revision_id: CalculationRevisionId
+    short_work_unit_id: str
+    work_unit_id: WorkUnitId
+    state: CalculationRevisionState
+    created_at: str
+
+
 class WorkRevisionsResult(OutputSchema):
     """Calculation-revision listing returned by ``aeat app modelo work revisions``.
 
-    Each entry in ``revisions`` is a
-    :class:`CalculationRevisionPayload`
-    carrying the full casilla table, typed observations, and provenance for one
-    persisted :class:`CalculationRevision`.
+    Each entry is a compact discovery row. Resolve its
+    ``calculation_revision_id`` through ``modelo.work.revision`` for the full
+    casilla table, typed observations, and provenance.
     """
 
     operation: str = "modelo.work.revisions"
     work_unit_id_filter: str | None = None
     revision_count: int
-    revisions: list[CalculationRevisionPayload]
+    revisions: list[CalculationRevisionSummaryPayload]
 
 
 class WorkVerifyResult(OutputSchema):
@@ -635,17 +646,14 @@ class WorkVerifyResult(OutputSchema):
     findings: list[FindingPayload]
 
 
-class WorkReviewRowSourceFingerprintPayload(OutputSchema):
-    """Safe row-source provenance admitted to ordinary operator review output."""
-
-    binding_id: BindingId
-    row_index: int = Field(ge=1)
-    source_kind: BindingSourceKind
-    fingerprint: ContentDigest
-
-
 class WorkReviewPayload(OutputSchema):
-    """Explicit CLI projection of review state with fingerprint-only row provenance."""
+    """Compact CLI projection of current review state.
+
+    Full casilla values and source provenance remain available through the
+    persisted calculation revision read. This derived review keeps lifecycle,
+    progress, actionable findings and blockers, plus counts that make omitted
+    detail explicit.
+    """
 
     model_config = ConfigDict(**{**OutputSchema.model_config, "hide_input_in_errors": True})
     bucket_id: BucketId
@@ -658,10 +666,10 @@ class WorkReviewPayload(OutputSchema):
     lifecycle_state: CalculationRevisionState | None
     verification_outcome: VerificationCompletenessStatus | None
     progress: ModeloWorkProgress
-    casillas: tuple[ModeloWorkReviewCasilla, ...]
+    casilla_count: int = Field(ge=0)
     findings: tuple[ModeloVerificationFinding, ...]
     blockers: tuple[BlockerRef, ...]
-    row_source_fingerprints: tuple[WorkReviewRowSourceFingerprintPayload, ...] = ()
+    row_source_fingerprint_count: int = Field(ge=0)
 
     @classmethod
     def from_review(cls, review: ModeloWorkReview) -> WorkReviewPayload:
@@ -677,18 +685,10 @@ class WorkReviewPayload(OutputSchema):
             lifecycle_state=review.lifecycle_state,
             verification_outcome=review.verification_outcome,
             progress=review.progress,
-            casillas=review.casillas,
+            casilla_count=len(review.casillas),
             findings=review.findings,
             blockers=review.blockers,
-            row_source_fingerprints=tuple(
-                WorkReviewRowSourceFingerprintPayload(
-                    binding_id=item.binding_id,
-                    row_index=item.row_index,
-                    source_kind=item.source_kind,
-                    fingerprint=item.fingerprint,
-                )
-                for item in review.row_source_fingerprints
-            ),
+            row_source_fingerprint_count=len(review.row_source_fingerprints),
         )
 
 
@@ -1409,6 +1409,7 @@ __all__ = [
     "BindingListRowPayload",
     "BindingPreviewRowPayload",
     "CalculationRevisionPayload",
+    "CalculationRevisionSummaryPayload",
     "CasillaObservationPayload",
     "CasillaRowPayload",
     "CompareSectionPayload",
@@ -1483,9 +1484,10 @@ __all__ = [
     "WorkResumeResult",
     "WorkReviewPayload",
     "WorkReviewResult",
-    "WorkReviewRowSourceFingerprintPayload",
     "WorkRevisionResult",
     "WorkRevisionsResult",
+    "WorkRunDetailsResult",
+    "WorkRunResult",
     "WorkRunsResult",
     "WorkStatusResult",
     "WorkUnitHistoryEventPayload",
@@ -1493,4 +1495,5 @@ __all__ = [
     "WorkVerifyResult",
     "WorkWizardResult",
     "WorkflowRunPayload",
+    "WorkflowRunSummaryPayload",
 ]

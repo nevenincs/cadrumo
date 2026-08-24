@@ -142,8 +142,8 @@ def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> 
         (
             2024,
             "modelo-190-2024-0a",
-            (2025, "2024 0A", date(2025, 1, 1), date(2025, 1, 31)),
-            ("rd-439-2007:art-108", "orden-eha-3127-2009:art-1"),
+            (2024, "2024 0A", date(2025, 1, 1), date(2025, 1, 31)),
+            ("rd-439-2007:art-108", "orden-eha-3127-2009:art-5"),
             (date(2025, 1, 31), False, "business_day"),
         ),
         # Both windows store the NOMINAL statutory close, the month-end the plazo
@@ -156,9 +156,9 @@ def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> 
         # alone. This window is also grounded on art. 5, the article that
         # establishes the plazo, rather than art. 1, which approves the modelo.
         (
-            2026,
+            2025,
             "modelo-190-2025-0a",
-            (2026, "2025 0A", date(2026, 1, 1), date(2026, 1, 31)),
+            (2025, "2025 0A", date(2026, 1, 1), date(2026, 1, 31)),
             ("orden-eha-3127-2009:art-5",),
             (date(2026, 2, 2), True, "sabado"),
         ),
@@ -204,7 +204,7 @@ def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
     assert deadline_link.consumer == "cadrumo.domain.deadlines"
     assert deadline_link.requires_snapshot is True
     assert catalogues.legal["rd-439-2007:art-108"].evidence_tier == "legal_authority"
-    assert catalogues.legal["orden-eha-3127-2009:art-1"].evidence_tier == "legal_authority"
+    assert catalogues.legal["orden-eha-3127-2009:art-5"].evidence_tier == "legal_authority"
     assert catalogues.sources["aeat-modelo-190-procedure"].evidence_tier == "official_source_guidance"
     assert catalogues.sources["boe-modelo-190-2025-form"].evidence_tier == "layout_authority"
 

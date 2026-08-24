@@ -19,6 +19,7 @@ from ....adapters.persistence.storage import (
 )
 from ....core.classification import SensitivityClass
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.secure_namespace_registration import registered_objects
 from ....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from ...operations import OperationRequest
@@ -91,7 +92,7 @@ def _operand() -> CensalReviewedOperand:
         domicilio_fiscal=_domicilio(notification=False),
         domicilio_notificacion=_domicilio(notification=True),
         captured_at=_NOW,
-        source_url="https://sede.agenciatributaria.gob.es/censo/consulta",
+        source_url=aeat_url("sede", "/censo/consulta"),
     )
     record = UserProfileRecord(
         profile_id="11111111-1111-4111-8111-111111111111",

@@ -1537,6 +1537,11 @@ cli:
           {supported}.'
         row_validation_error: 'Validación fallida para fila --row tipo {row_type!r}:
           {error}'
+        run_details_help: Mostrar los datos tipados del paso terminal de una ejecución
+          persistida.
+        run_help: Mostrar una ejecución persistida del flujo por su identificador.
+        run_id_help: Identificador estable de 16 caracteres obtenido de modelo work
+          runs.
         runs_help: Listar las ejecuciones de flujo persistidas con sus ids de ejecución,
           de la más reciente a la más antigua. Usa un id de ejecución con `aeat app
           modelo work resume`. Solo local; nunca contacta con AEAT.

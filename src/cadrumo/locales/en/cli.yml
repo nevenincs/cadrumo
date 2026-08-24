@@ -1427,6 +1427,10 @@ cli:
         row_unknown_type: '--row type {row_type!r} is not recognised; supported types:
           {supported}.'
         row_validation_error: '--row {row_type!r} failed validation: {error}'
+        run_details_help: Show the typed terminal-step facts for one persisted workflow
+          run.
+        run_help: Show one persisted workflow run by run id.
+        run_id_help: Stable 16-character workflow run id from modelo work runs.
         runs_help: List persisted workflow runs with their run ids, newest first.
           Use a run id with `aeat app modelo work resume`. Local-only; never contacts
           AEAT.

@@ -57,6 +57,12 @@ def _create_profile(name: str = "collabco") -> None:
             "identity.surnames": "Operator",
             "activities.description": "design",
             "iva.regime": "GENERAL",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
 

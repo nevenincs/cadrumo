@@ -241,14 +241,12 @@ def test_foreign_launcher_cannot_borrow_an_exact_installed_payload(tmp_path: Pat
 def test_exact_path_foreign_launcher_is_refused(tmp_path: Path) -> None:
     """Replacing the canonical launcher cannot borrow its adjacent sealed payload."""
     server = Path(shutil.which("cadrumo-mcp") or "").resolve(strict=True)
-    if server.suffix.lower() != ".exe":
-        pytest.skip("Windows launcher-stub replacement plant")
     copied_venv = tmp_path / ".venv"
     shutil.copytree(_client_venv_template(server.parents[1]), copied_venv, copy_function=os.link)
-    scripts = copied_venv / "Scripts"
-    copied_server = scripts / "cadrumo-mcp.exe"
+    scripts = copied_venv / ("Scripts" if server.suffix.lower() == ".exe" else "bin")
+    copied_server = scripts / server.name
     copied_server.unlink()
-    shutil.copy2(scripts / "aeat.exe", copied_server)
+    shutil.copy2(scripts / ("aeat.exe" if server.suffix.lower() == ".exe" else "aeat"), copied_server)
     with pytest.raises(RuntimeError, match="launcher semantics drifted"):
         assert_installed_console_entry_point(
             copied_server,

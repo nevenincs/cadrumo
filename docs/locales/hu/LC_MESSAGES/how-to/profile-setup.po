@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-24 14:46+0200\n"
+"POT-Creation-Date: 2026-08-24 17:19+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -909,14 +909,13 @@ msgstr ""
 #: ../../how-to/profile-setup.md:375
 #, fuzzy
 msgid ""
-"Delete a profile for good with `aeat config profile delete NAME --yes`. "
-"If the deleted profile was active, Cadrumo clears the active-profile "
-"pointer."
+"Delete a profile for good. If the deleted profile was active, Cadrumo "
+"clears the active-profile pointer:"
 msgstr ""
 "A **törlés** véglegesen eltávolít egy profilt. Ha a törölt profil aktív "
 "volt, a Cadrumo törli az aktív-profil mutatót."
 
-#: ../../how-to/profile-setup.md:378
+#: ../../how-to/profile-setup.md:382
 #, fuzzy
 msgid ""
 "A sealed archive contains taxpayer data, including the tax identifier, "
@@ -929,7 +928,7 @@ msgstr ""
 "Tárolja érzékeny adóadatként, és ne csatolja egy támogatási kéréshez, "
 "hacsak nem távolította el a személyes adatokat."
 
-#: ../../how-to/profile-setup.md:383
+#: ../../how-to/profile-setup.md:387
 msgid ""
 "Sign out without deleting the profile using `aeat config logout`. Logout "
 "closes the active storage session, discards its in-memory keys, disposes "
@@ -940,11 +939,11 @@ msgstr ""
 "eldobja a memóriában lévő kulcsait, megszünteti a bucket-motorokat, és "
 "törli a helyi aktív-profil mutatót:"
 
-#: ../../how-to/profile-setup.md:391
+#: ../../how-to/profile-setup.md:395
 msgid "Choose your service capabilities"
 msgstr "Válassza ki a szolgáltatási képességeit"
 
-#: ../../how-to/profile-setup.md:393
+#: ../../how-to/profile-setup.md:397
 msgid ""
 "Each profile carries its own opt-in for three optional services. The "
 "setup wizard asks these questions when you create or edit a profile, and "
@@ -957,11 +956,11 @@ msgstr ""
 "őket. Ezek a lépések megmutatják a jelenlegi beállítottságot, "
 "kikapcsolnak egy képességet, majd újra megmutatják a beállítottságot:"
 
-#: ../../how-to/profile-setup.md:402
+#: ../../how-to/profile-setup.md:406
 msgid "The three capabilities are:"
 msgstr "A három képesség:"
 
-#: ../../how-to/profile-setup.md:404
+#: ../../how-to/profile-setup.md:408
 msgid ""
 "`cloud_evidence_upload` - allow sending sensitive evidence to a cloud LLM"
 " provider. Off by default. Barred for gestor profiles."
@@ -970,19 +969,19 @@ msgstr ""
 " felhőalapú LLM-szolgáltatónak. Alapértelmezés szerint kikapcsolva. "
 "Gestor-profiloknál tiltott."
 
-#: ../../how-to/profile-setup.md:406
+#: ../../how-to/profile-setup.md:410
 msgid "`llm_vision` - read invoices with the on-host vision model. On by default."
 msgstr ""
 "`llm_vision`: számlák olvasása a gépen futó vision-modellel. "
 "Alapértelmezés szerint bekapcsolva."
 
-#: ../../how-to/profile-setup.md:407
+#: ../../how-to/profile-setup.md:411
 msgid "`google_export` - export calculations to Google Sheets. On by default."
 msgstr ""
 "`google_export`: számítások exportálása Google Táblázatokba. "
 "Alapértelmezés szerint bekapcsolva."
 
-#: ../../how-to/profile-setup.md:409
+#: ../../how-to/profile-setup.md:413
 msgid ""
 "Turn any capability on or off with `aeat config profile capabilities "
 "set`. The example turns `llm_vision` off. Pass `cloud_evidence_upload on`"
@@ -996,11 +995,11 @@ msgstr ""
 "telepítési parancsot. A kiegészítőkhöz lásd: [A Cadrumo telepítése"
 "](../workstation-setup.md)."
 
-#: ../../how-to/profile-setup.md:414
+#: ../../how-to/profile-setup.md:418
 msgid "See what changed"
 msgstr "Lássa, mi változott"
 
-#: ../../how-to/profile-setup.md:416
+#: ../../how-to/profile-setup.md:420
 #, fuzzy
 msgid ""
 "Every change to a profile - creation, edits, imports, classifications, "
@@ -1016,7 +1015,7 @@ msgstr ""
 "kijelentkezés után előbb váltson rá. A példa létrehoz, átnevez és "
 "szerkeszt egy profilt, mielőtt böngészné és szűrné az előzményeit:"
 
-#: ../../how-to/profile-setup.md:426
+#: ../../how-to/profile-setup.md:430
 msgid ""
 "Repeat `--event-type` to include several types. An unknown type is "
 "refused with the full accepted list, so an empty value is a quick way to "
@@ -1026,7 +1025,7 @@ msgstr ""
 "ismeretlen típust elutasít a teljes elfogadott listával, így egy üres "
 "érték gyors módja a szókincs felfedezésének."
 
-#: ../../how-to/profile-setup.md:430
+#: ../../how-to/profile-setup.md:434
 msgid ""
 "A rename appears as two events on purpose: `profile.renamed` records that"
 " the data changed, and `bucket.renamed` records that you ran the rename "
@@ -1037,11 +1036,11 @@ msgstr ""
 "pedig rögzíti, hogy Ön futtatta az átnevezés műveletet. Az egyik a „mi "
 "változott”, a másik a „mit tettek” kérdésre válaszol."
 
-#: ../../how-to/profile-setup.md:434
+#: ../../how-to/profile-setup.md:438
 msgid "If setup looks wrong"
 msgstr "Ha a beállítás hibásnak tűnik"
 
-#: ../../how-to/profile-setup.md:436
+#: ../../how-to/profile-setup.md:440
 msgid ""
 "If a command reports no active profile, an invalid field value, or that "
 "you're working under the wrong profile, see [Diagnose and repair your "
@@ -1051,7 +1050,7 @@ msgstr ""
 "azt, hogy rossz profil alatt dolgozik, lásd: [Diagnosztizálja és javítsa "
 "a helyi beállítását](troubleshooting.md)."
 
-#: ../../how-to/profile-setup.md:440
+#: ../../how-to/profile-setup.md:444
 msgid ""
 "When the troubleshooting steps don't resolve it, follow [Prepare a "
 "privacy-safe support request](troubleshooting.md#prepare-a-privacy-safe-"
@@ -1064,29 +1063,29 @@ msgstr ""
 "oldalt. Megnevezi a beemelendő kimeneteket és a kihagyandó személyes "
 "adatokat, mielőtt a projekt hibakövetőjéhez viszi a problémát."
 
-#: ../../how-to/profile-setup.md:446
+#: ../../how-to/profile-setup.md:450
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/profile-setup.md:448
+#: ../../how-to/profile-setup.md:452
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Tranzakciók importálása és kezelése](import-bank-statements.md)"
 
-#: ../../how-to/profile-setup.md:449
+#: ../../how-to/profile-setup.md:453
 msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
 msgstr "[Tartsa karban a Modelo 036 censo-adatait a profiljában](censo-update.md)"
 
-#: ../../how-to/profile-setup.md:450
+#: ../../how-to/profile-setup.md:454
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Tervezze meg a benyújtási naptárát](filing-calendar.md)"
 
-#: ../../how-to/profile-setup.md:451
+#: ../../how-to/profile-setup.md:455
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr ""
 "[Számítási bemenetek felülvizsgálata és megadása](review-calculation-"
 "values.md)"
 
-#: ../../how-to/profile-setup.md:452
+#: ../../how-to/profile-setup.md:456
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[CLI-referencia](../cli/index.rst)"
 

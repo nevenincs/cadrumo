@@ -68,6 +68,12 @@ class OperationIdentity(BaseModel):
     subject_ref: OperationReference
 
 
+class CredentialFreeOperationRequest(BaseModel):
+    """Explicit opt-in base for request payloads safe to retain without credentials."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+
 class OperationIdempotencyClaim(BaseModel):
     """Durable binding from one caller key to one exact operation request."""
 
@@ -254,6 +260,7 @@ def _require_immutable_model_config(model: BaseModel, *, path: str) -> None:
 
 
 __all__ = [
+    "CredentialFreeOperationRequest",
     "OperationDefinitionId",
     "OperationDiagnosticReference",
     "OperationId",

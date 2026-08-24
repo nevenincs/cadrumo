@@ -464,6 +464,12 @@ def test_installed_console_honors_isolated_storage_env(tmp_path: Path) -> None:
                 "censo.activity_start_date": "2025-01-01",
                 "tax_residence.ccaa": "madrid",
                 "iva.regime": "GENERAL",
+                "tax_residence.jurisdiction_scope": "common_regime",
+                "iva.m303_regime_composition": "general",
+                "iva.redeme_enrolled": "false",
+                "iva.cash_accounting_regime_enrolled": "false",
+                "iva.voluntary_sii_enrolled": "false",
+                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
                 "irpf.estimation_regime": "directa_simplificada",
             },
         )

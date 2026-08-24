@@ -159,7 +159,36 @@ class CalculationRevisionProjectionFields(OutputSchema):
     superseded_at: str | None = None
 
 
+class CalculationRevisionCommandProjectionFields(OutputSchema):
+    """Compact persisted-revision projection for create-style command results.
+
+    Calculate and wizard return the new revision's actionable values and stable
+    identity. Resolver-level ``source_provenance`` remains available from the
+    singular ``modelo work revision`` read instead of being duplicated in every
+    create response and advertised schema.
+    """
+
+    calculation_revision_id: CalculationRevisionId
+    work_unit_id: WorkUnitId
+    state: str
+    casilla_values: dict[CasillaId, str]
+    observations: tuple[ObservationPayload, ...]
+    result_summary: tuple[ResultSummaryRowPayload, ...] = ()
+    detail_rows: tuple[DetailRowPayload, ...] = ()
+    binding_overrides: dict[BindingId, str]
+    relation_overrides: dict[RelationId, str] = Field(default_factory=dict)
+    input_values_by_casilla_id: dict[CasillaId, str]
+    created_at: str
+    updated_at: str
+    verified_at: str | None = None
+    verified_by: str | None = None
+    filed_at: str | None = None
+    filed_by: str | None = None
+    superseded_at: str | None = None
+
+
 __all__ = [
+    "CalculationRevisionCommandProjectionFields",
     "CalculationRevisionProjectionFields",
     "DetailRowPayload",
     "ObservationPayload",

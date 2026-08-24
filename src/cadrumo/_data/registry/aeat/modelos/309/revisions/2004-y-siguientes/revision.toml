@@ -28,8 +28,8 @@ review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 authority_grade = "filing"
-valid_from = 2003-12-31
-period_selector = { year_from = 2004, periods = ["AD-HOC"] }
+valid_from = 2023-01-01
+period_selector = { year_from = 2023, periods = ["AD-HOC"] }
 legal_refs = [
     "orden-hac-3625-2003:apartado-1",
     "orden-hac-3625-2003:apartado-3",

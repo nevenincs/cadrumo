@@ -21,6 +21,7 @@ from .....application.operations import (
     OperationPersistedSnapshot,
     OperationPhaseEvent,
     OperationReplayStatus,
+    OperationRequestStoragePolicy,
     OperationTerminalEvent,
     OperationTerminalReceipt,
     operation_conflict_scope_reference,
@@ -54,6 +55,7 @@ def _snapshot(*, revision: int, sequence: int) -> OperationPersistedSnapshot:
     )
     return OperationPersistedSnapshot(
         identity=identity,
+        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
         request_reference="d" * 64,
         revision=revision,
         lifecycle=OperationLifecycle.RUNNING,
@@ -213,6 +215,7 @@ def test_operation_journal_requires_coherent_initial_history(tmp_path: Path) -> 
     identity = OperationIdentity(operation_id="a" * 64, definition_id="test.operation", subject_ref="subject")
     empty = OperationPersistedSnapshot(
         identity=identity,
+        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
         request_reference="d" * 64,
         revision=0,
         lifecycle=OperationLifecycle.RUNNING,

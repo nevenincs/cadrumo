@@ -157,6 +157,12 @@ def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite() -> None:
             "preferences.output_language": "en",
             "contact.postcode": "08001",
             "iva.regime": "EXENTO",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
 

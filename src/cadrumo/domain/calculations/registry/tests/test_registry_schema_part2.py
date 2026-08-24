@@ -640,6 +640,26 @@ def test_deadline_window_rejects_combined_period_shapes() -> None:
             )
 
 
+def test_deadline_window_identity_year_matches_period_despite_following_year_dates() -> None:
+    payload = {
+        "id": "test-following-january-window",
+        "filing_year": 2024,
+        "period": "2024 0A",
+        "period_kind": "annual",
+        "opens_on": date(2025, 1, 1),
+        "closes_on": date(2025, 1, 31),
+        "legal_refs": ("test-law:art-1",),
+        "source_refs": ("test-source",),
+    }
+
+    window = DeadlineWindowDefinition.model_validate(payload)
+    assert window.filing_year == window.period.filing_year == 2024
+    assert window.closes_on.year == 2025
+
+    with pytest.raises(ValueError, match=r"filing_year 2025 must match period filing_year 2024"):
+        DeadlineWindowDefinition.model_validate({**payload, "filing_year": 2025})
+
+
 def test_keyed_bracket_table_parses_with_distinct_keys() -> None:
     """A keyed_bracket_table with two distinct keys parses cleanly."""
     parameter = ParameterDefinition(

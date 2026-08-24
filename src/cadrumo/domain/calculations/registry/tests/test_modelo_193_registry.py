@@ -135,7 +135,7 @@ def test_modelo_193_annual_deadline_is_grounded_to_current_revision() -> None:
         # that no shift occurred and discards the statutory date; the two forms
         # are indistinguishable on the operator-facing date alone, which is why
         # both halves are asserted.
-        "modelo-193-2025-0a": (2026, "2025 0A", date(2026, 1, 1), date(2026, 1, 31)),
+        "modelo-193-2025-0a": (2025, "2025 0A", date(2026, 1, 1), date(2026, 1, 31)),
     }
     assert set(windows) == set(expected_windows)
     for window_id, (filing_year, period, opens_on, closes_on) in expected_windows.items():
@@ -156,6 +156,35 @@ def test_modelo_193_annual_deadline_is_grounded_to_current_revision() -> None:
             True,
             "sabado",
         )
+
+
+@pytest.mark.parametrize(
+    ("revision_id", "filing_year", "opens_on", "closes_on"),
+    [
+        ("2024", 2024, date(2025, 1, 1), date(2025, 1, 31)),
+        ("2025-y-siguientes", 2025, date(2026, 1, 1), date(2026, 1, 31)),
+    ],
+)
+def test_modelo_193_deadline_identity_is_the_tax_year(
+    revision_id: str,
+    filing_year: int,
+    opens_on: date,
+    closes_on: date,
+) -> None:
+    modelo, _catalogues = _committed_modelo("193")
+    (window,) = modelo.revisions[revision_id].deadline_windows
+
+    assert window.filing_year == window.period.filing_year == filing_year
+    assert str(window.period) == f"{filing_year} 0A"
+    assert window.opens_on == opens_on
+    assert window.closes_on == closes_on
+    assert window.legal_refs == ("orden-eha-3377-2011:art-5",)
+    expected_calendar_ref = (
+        "aeat-calendario-contribuyente-2025"
+        if filing_year == 2024
+        else "aeat-calendario-contribuyente-2026-hasta-2-febrero"
+    )
+    assert expected_calendar_ref in window.source_refs
 
 
 def test_modelo_193_relations_resolve_against_modelo_123_registry() -> None:

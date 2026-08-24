@@ -584,7 +584,10 @@ def _emit_wizard_result(
         {
             "saved": True,
             "saved_confirmation": saved_confirmation,
-            **calculation_revision_payload(calculation_revision).model_dump(mode="python"),
+            **calculation_revision_payload(calculation_revision).model_dump(
+                mode="python",
+                exclude={"source_provenance"},
+            ),
             "prompted_casillas": prompted_payload,
         }
     )
