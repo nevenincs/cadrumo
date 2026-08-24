@@ -50,6 +50,7 @@ from ..operator_actions import (
     ActionReference,
     ConditionEvidence,
     PreconditionVerdict,
+    active_profile_pointer_repair_verdict,
     no_action_precondition_verdict,
 )
 from ..profile_preconditions import inspect_active_profile_precondition, profile_session_failure_verdict
@@ -212,7 +213,12 @@ def unavailable_profile_record_verdict(
         repairable_by_clearing_pointer=repairable_by_clearing_pointer,
     )
     if repairable_by_clearing_pointer:
-        return _pointer_repair_verdict(condition_id=condition_id, evidence=evidence)
+        return active_profile_pointer_repair_verdict(
+            condition_id=condition_id,
+            evidence_id=evidence.evidence_id,
+            facts=evidence.values,
+            provenance=evidence.provenance,
+        )
     return _operator_decision_verdict(condition_id=condition_id, evidence=evidence)
 
 
@@ -265,7 +271,12 @@ def _health_precondition_verdict(health: ActiveProfileHealth) -> PreconditionVer
     )
     if health.status in {"dangling_pointer", "capsule_unreadable"}:
         if health.repairable_by_clearing_pointer:
-            return _pointer_repair_verdict(condition_id=condition_id, evidence=evidence)
+            return active_profile_pointer_repair_verdict(
+                condition_id=condition_id,
+                evidence_id=evidence.evidence_id,
+                facts=evidence.values,
+                provenance=evidence.provenance,
+            )
         return _operator_decision_verdict(condition_id=condition_id, evidence=evidence)
     if health.status == "incomplete":
         profile_name = health.active_profile_label
@@ -317,27 +328,6 @@ def _health_evidence(
             "repairable_by_clearing_pointer": repairable_by_clearing_pointer,
             "required_fields_missing_count": missing_required_count,
         },
-    )
-
-
-def _pointer_repair_verdict(*, condition_id: str, evidence: ConditionEvidence) -> PreconditionVerdict:
-    """Return the confirm-required repair action for a broken active pointer."""
-    return PreconditionVerdict(
-        failed_condition_id=condition_id,
-        evidence=(evidence,),
-        action=ActionReference(action_id="operator.profile.repair_active_pointer"),
-        argument_bindings=(
-            ActionArgumentBinding(
-                argument_name="clear_active",
-                status=ActionArgumentStatus.RESOLVED,
-                value=True,
-                source=ActionArgumentSource.VERDICT_CONTEXT,
-                source_key="clear_active",
-            ),
-            ActionArgumentBinding(argument_name="yes", status=ActionArgumentStatus.MISSING),
-        ),
-        missing_argument_names=("yes",),
-        conditionality=ActionConditionality.REQUIRES_ARGUMENTS,
     )
 
 

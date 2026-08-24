@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import ast
 import inspect
 import json
+import textwrap
 
 import pytest
 from pydantic import ValidationError
@@ -118,18 +120,43 @@ def test_error_envelope_carries_resolved_precondition_action_through_json() -> N
     ]
 
 
-def test_error_envelope_does_not_synthesize_action_without_typed_verdict() -> None:
+def test_active_profile_pointer_error_carries_only_keyed_facts_before_application_projection() -> None:
     error = ActiveProfilePointerError(path="broken-pointer.json")
     registered = error.code
 
     assert registered is not None
+    assert error.args == ("errors.integrity.integrity_active_profile_pointer",)
+    assert error.context == {
+        "path": "broken-pointer.json",
+        "pointer_corrupt": True,
+        "root_fallback_refused": True,
+    }
     assert not hasattr(error, "suggestion")
     envelope = build_error_envelope(error)
     rendered = render_error_text(error)
 
     assert envelope.action is None
+    assert envelope.context == {
+        "path": "broken-pointer.json",
+        "pointer_corrupt": "true",
+        "root_fallback_refused": "true",
+    }
     assert "suggestion" not in envelope.model_dump()
     assert "aeat config repair" not in rendered
+
+
+def test_active_profile_pointer_error_does_not_redeclare_action_or_recovery_prose() -> None:
+    """Core carries only the observation; the outer boundary owns its action verdict."""
+    source = textwrap.dedent(inspect.getsource(ActiveProfilePointerError))
+    tree = ast.parse(source)
+
+    assert "aeat config repair" not in source
+    assert "suggestion" not in source
+    assert {
+        node.func.id
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    }.isdisjoint({"ActionReference", "ConditionEvidence", "PreconditionVerdict", "no_action_precondition_verdict"})
 
 
 def test_cadrumo_error_does_not_expose_retired_suggestion_parameter() -> None:

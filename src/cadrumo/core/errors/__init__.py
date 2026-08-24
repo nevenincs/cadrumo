@@ -276,7 +276,7 @@ class ActiveProfilePointerError(CoreError):
 
     A missing pointer is a clean cold-start state. A present pointer that
     cannot be parsed, decoded, read, or validated is storage metadata
-    corruption and must not degrade to a root fallback database route.
+    corruption and does not resolve to a root fallback database route.
     """
 
     def __init__(self, *, path: object) -> None:
@@ -286,9 +286,12 @@ class ActiveProfilePointerError(CoreError):
             path: Pointer file path that failed to load.
         """
         super().__init__(
-            f"invalid active-profile pointer at {path}; refusing root storage fallback",
             translated_message="errors.integrity.integrity_active_profile_pointer",
-            context={"path": str(path)},
+            context={
+                "path": str(path),
+                "pointer_corrupt": True,
+                "root_fallback_refused": True,
+            },
         )
 
 

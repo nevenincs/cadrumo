@@ -18,7 +18,11 @@ from ._models import (
     DeclaredNextAction,
     PreconditionVerdict,
 )
-from ._preconditions import no_action_precondition_verdict
+from ._preconditions import (
+    active_profile_pointer_repair_verdict,
+    corrupt_active_profile_pointer_verdict,
+    no_action_precondition_verdict,
+)
 
 __all__ = [
     "OPERATOR_ACTION_CATALOGUE",
@@ -30,7 +34,9 @@ __all__ = [
     "ConditionEvidence",
     "DeclaredNextAction",
     "PreconditionVerdict",
+    "active_profile_pointer_repair_verdict",
     "build_action_catalogue",
+    "corrupt_active_profile_pointer_verdict",
     "lookup_action",
     "next_action",
     "no_action_precondition_verdict",
