@@ -8458,3 +8458,24 @@ authentication legitimately comes first. Both are decisions for whoever owns the
 gate, and neither is worth guessing at from outside that campaign.
 
 Recorded here so the ten failures are attributable rather than mistaken for fixture rot.
+
+## Tests ahead of the registry: casilla 0613 and the guardería increment
+
+Three cases assert that a declared `GASTOS_GUARDERIA_MENSUAL` map reaches Modelo 100
+casilla 0613. It resolves to zero, and the registry says why in the binding's own words:
+
+    Declaring the binding does not by itself change any computed figure. The 0613
+    formula still reads the count-times-cap terms until it is rewritten to consume
+    this value, which is a separate change that moves a live number and carries its
+    own end-to-end proof.
+
+So the injector for `renta_family.incremento_guarderia_2024` is active and the binding is
+declared, but the 0613 FORMULA still computes count-times-cap and never consumes it. The
+tests describe the finished chain; the registry has deliberately stopped one step short.
+
+Rewriting that formula is exactly the change the note reserves: it moves a live Art. 81.2
+figure, so it needs its own grounding against the AEAT manual and an end-to-end proof,
+not a test-driven nudge from an adjacent campaign. Left alone on purpose.
+
+Recorded so the three failures read as an unfinished chain with a stated reason rather
+than a defect someone should hunt.
