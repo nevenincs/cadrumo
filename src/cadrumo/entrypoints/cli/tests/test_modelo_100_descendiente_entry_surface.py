@@ -34,6 +34,7 @@ import pytest
 
 from ....domain.calculations.registry import RegistrySnapshot, resolve_parameter
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile import load_user_profile_schema
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
@@ -100,7 +101,10 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
     """Seed the minimum facts an M100 work-unit applicability guard requires."""
     record = UserProfileRecord(
         schema_id="cadrumo.user_profile",
-        schema_version=1,
+        # Sourced from the schema, never pinned: a literal here goes stale the
+        # moment the profile schema is revised, and the record then refuses to
+        # validate against its own canonical version.
+        schema_version=load_user_profile_schema().version,
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
