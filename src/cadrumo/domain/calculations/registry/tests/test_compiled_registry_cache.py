@@ -121,6 +121,55 @@ def test_a_foreign_shaped_payload_is_refused_and_deleted(tmp_path: Path) -> None
         assert not path.is_file()
 
 
+def test_a_well_framed_pre_schema_pydantic_payload_is_deleted_not_hydrated(tmp_path: Path) -> None:
+    """A stale pickle with today's class names cannot bypass current schema shape.
+
+    Pickle does not run Pydantic validation when it restores an instance.  Plant
+    the exact failure mode from adding ``supported_filing_years``: a digest-valid
+    cache whose catalogue object predates that field.  The warm loader must delete
+    it, never add the missing default in memory or serve an eventual AttributeError.
+    """
+    root, fingerprints, payload = _bundled_payload()
+    cache_dir = tmp_path / "compiled-cache"
+    cache_dir.mkdir()
+    modelos, catalogues = payload
+    stale_catalogues = catalogues.model_copy(deep=True)
+    stale_catalogues.__dict__.pop("supported_filing_years")
+
+    with override_settings(cadrumo_registry_disk_cache_dir=cache_dir):
+        path = compiled_cache_path(root, fingerprints)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(_encode_frame((modelos, stale_catalogues)))
+
+        assert load_compiled_registry_cache(root, fingerprints) is None
+        assert not path.exists(), "a stale Pydantic object must be deleted, not compatibility-hydrated"
+
+
+def test_a_nested_pre_qualifier_deadline_window_is_deleted_not_served(tmp_path: Path) -> None:
+    """The current-shape walk reaches deadline rows nested below revisions."""
+    root, fingerprints, payload = _bundled_payload()
+    cache_dir = tmp_path / "compiled-cache"
+    cache_dir.mkdir()
+    modelos = list(payload[0])
+    modelo_index = next(
+        index
+        for index, modelo in enumerate(modelos)
+        if any(revision.deadline_windows for revision in modelo.revisions.values())
+    )
+    stale_modelo = modelos[modelo_index].model_copy(deep=True)
+    revision = next(revision for revision in stale_modelo.revisions.values() if revision.deadline_windows)
+    revision.deadline_windows[0].__dict__.pop("resultado_scope")
+    modelos[modelo_index] = stale_modelo
+
+    with override_settings(cadrumo_registry_disk_cache_dir=cache_dir):
+        path = compiled_cache_path(root, fingerprints)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(_encode_frame((tuple(modelos), payload[1])))
+
+        assert load_compiled_registry_cache(root, fingerprints) is None
+        assert not path.exists(), "a pre-qualifier deadline object must never reach validation"
+
+
 def test_mutating_the_cache_through_the_loader_rebuilds_byte_equivalently_from_toml(tmp_path: Path) -> None:
     """Through the loader: a mutated on-disk cache is refused and TOML is recompiled.
 

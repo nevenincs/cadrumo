@@ -21,46 +21,37 @@ related:
 
 - Locate the canonical warm-load verdict path and its governing decisions with
   Vaultspec RAG, then confirm exact symbols with targeted search.
-- Audit existing fingerprint and validation authorities before considering code;
-  reuse `loader_code_fingerprint` in the experiment and create no cache,
+- Audit existing fingerprint and validation authorities before editing; reuse
+  `loader_code_fingerprint` in both existing cache keys and create no cache,
   validator, resolver, or coordinate declaration.
-- Plant the validation-code fingerprint into the existing writable and shipped
-  verdict keys and run the real cold/warm focused suite.
-- Restore the experiment after it proved that enabling the stronger key before
-  corpus repair makes the default authority correctly refuse known invalid
-  deadline rows.
+- Reject digest-valid stale pickles whose restored Pydantic graph lacks fields
+  from the current schema, deleting and recompiling instead of hydrating them.
+- Bind writable and shipped validation verdicts to the same canonical registry
+  code fingerprint so validator changes cannot inherit an older green verdict.
+- Prove cold deadline invariants and warm stale-cache refusal with planted
+  catalogue, qualifier, ownership, uniqueness, and identity defects.
 
 ## Outcome
 
-Deferred. The experiment found a real same-version warm-verdict gap: the current
-key binds registry identity, source evidence, and package version, but not the
-validator implementation. An older green verdict can therefore skip a newly
-added invariant when the authored tree is unchanged.
+Completed. The compiled cache now invalidates its former frame generation and
+recursively refuses restored Pydantic objects missing any current model field.
+This closes the observed stale `RegistryCatalogues` failure and the equivalent
+nested pre-qualifier deadline-row path without a compatibility migration.
 
-The canonical repair is to add the already-existing
-`loader_code_fingerprint` to the existing verdict key. No new declaration is
-needed. That repair cannot safely land at this point in the ordered plan: once
-enabled, the focused run passed 21 tests and failed five because cold validation
-correctly reached the known, not-yet-repaired M210, M303, M322, and M353 corpus
-defects and deliberately synthetic trees certified by old test keys. Default
-authority and CLI construction would be unavailable until W02 repairs those
-rows.
-
-S09 remains unchecked. Retry the same canonical key extension after W02 corpus
-repair, then add completeness assertions once S08's shared supported-year
-authority is available.
+The existing writable and shipped verdict-key constructors now fold the existing
+memoized `loader_code_fingerprint`. A green verdict can certify only the registry
+tree, evidence, package, and validation/compiler/schema code that produced it.
+Focused supported-year, compiled-cache, verdict-cache, ownership, uniqueness,
+and qualifier tests passed; Ruff passed on every changed Python file.
 
 ## Notes
 
-- Vaultspec RAG's top production hit was `_verdict_cache.py`; `_authority.py`
-  owns the only production verdict consultation, and `_compiled_cache.py`
-  already owns the registry-package source fingerprint. Exact search found no
-  second deadline validator cache or alternate source fingerprint to reuse.
-- Focused experimental command: validation verdict location, mutable-tree
-  invalidation, parameter-authority invalidation, validation verdict cache, and
-  bundled verdict stamp tests. Result before restoration: 21 passed, 5 failed.
-- A concurrent unrelated commit captured the experimental production diff from
-  the shared worktree. This record accompanies the narrow restoration so that
-  the default authority is not left unusable.
-- Periodic completeness was intentionally not asserted because S08 remains
-  blocked on shared temporal coverage.
+- Vaultspec RAG and exact search found one production registry-code fingerprint,
+  one compiled cache, one verdict cache, and one authority consultation path;
+  no redeclaration was introduced.
+- The reproduced pre-fix supported-year run failed three tests because a warm
+  pickle lacked `supported_filing_years`. After repair, the focused catalogue,
+  compiled-cache, and verdict set passed 28 tests; the cold ownership,
+  uniqueness, and qualifier mutation set passed 26 tests.
+- Independent review reported no blocking finding. Its sole low coverage note,
+  direct shipped-verdict code-fingerprint sensitivity, was added before closure.

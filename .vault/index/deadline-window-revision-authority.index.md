@@ -29,6 +29,7 @@ related:
   - '[[2026-08-24-deadline-window-revision-authority-W03-P10-S25]]'
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
   - '[[2026-08-24-deadline-window-revision-authority-audit]]'
+  - '[[2026-08-24-deadline-window-revision-authority-s09-warm-cache-review-audit]]'
   - '[[2026-08-24-deadline-window-revision-authority-plan]]'
   - '[[2026-08-24-deadline-window-revision-authority-reference]]'
   - '[[2026-08-24-deadline-window-revision-authority-research]]'
@@ -51,6 +52,7 @@ Auto-generated index of all documents tagged with `#deadline-window-revision-aut
 ### audit
 
 - `2026-08-24-deadline-window-revision-authority-audit` - `deadline-window-revision-authority` audit: `W01 P01 implementation review`
+- `2026-08-24-deadline-window-revision-authority-s09-warm-cache-review-audit` - `deadline-window-revision-authority` audit: `S09 warm cache and verdict review`
 - `2026-08-24-deadline-window-revision-authority-s20-contract-review-audit` - `deadline-window-revision-authority` audit: `S20 canonical M210 qualifier contract review`
 - `2026-08-24-deadline-window-revision-authority-s21-authority-projection-review-audit` - `deadline-window-revision-authority` audit: `s21 authority projection review`
 - `2026-08-24-deadline-window-revision-authority-s23-qualified-resolver-review-audit` - `deadline-window-revision-authority` audit: `s23 qualified resolver review`
