@@ -45,4 +45,3 @@ The exact integration gate had two test-only regressions after the M036 census r
 ## Independent review request
 
 This is a closure of the S32 verification obligation only. Enrollment of the explicitly deferred families remains owned by S92â€“S107. Request a fresh independent review of the scoped data correction, regression tests, no-redeclaration evidence, and this verified/owned boundary.
-
