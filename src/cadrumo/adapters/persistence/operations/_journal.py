@@ -48,11 +48,6 @@ class _OperationReplayRequest(BaseModel):
     limit: OperationReplayLimit
 
 
-def _parse_operation_journal_record(raw: str | bytes) -> OperationJournalRecord:
-    """Parse only the current credential-free operation journal schema."""
-    return OperationJournalRecord.model_validate_json(raw)
-
-
 def _replay_page_from_record(
     record: OperationJournalRecord,
     request: _OperationReplayRequest,
@@ -100,7 +95,7 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         super().__init__(
             journal_dirname=storage_location(StorageCategory.OPERATION_JOURNAL).subpath,
             storage_root=storage_root,
-            parse_operation=_parse_operation_journal_record,
+            parse_operation=OperationJournalRecord.model_validate_json,
             error_type=RepositoryError,
             not_found_type=RepositoryError,
             corrupt_type=RepositoryError,

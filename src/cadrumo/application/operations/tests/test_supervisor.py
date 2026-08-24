@@ -639,8 +639,8 @@ def test_interrupted_settlement_refuses_known_live_executor_without_mutating_the
         asyncio.run(refuse_live_interruption())
 
 
-def test_filesystem_journal_refuses_pre_v5_operation_snapshots_without_rewrite(tmp_path: Path) -> None:
-    """Pre-release operation journals retain no reader migration path for pre-v5 snapshots."""
+def test_filesystem_journal_refuses_non_current_operation_snapshots_without_rewrite(tmp_path: Path) -> None:
+    """Pre-release operation journals reject a superseded snapshot without rewriting it."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
         journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
@@ -661,23 +661,13 @@ def test_filesystem_journal_refuses_pre_v5_operation_snapshots_without_rewrite(t
         )
         journal_path = storage_root / "operation-journals" / f"{operation_id}.json"
         current_record = json.loads(journal_path.read_text(encoding="utf-8"))
-        for schema_version in (1, 2, 3, 4, 5):
-            old_record = json.loads(json.dumps(current_record))
-            snapshot = old_record["snapshot"]
-            snapshot["schema_version"] = schema_version
-            for safety_field in (
-                "execution_deadline",
-                "cleanup_deadline",
-                "cancellation_requested_at",
-                "cancellation_acknowledged_at",
-                "cancellation_deferred",
-            ):
-                del snapshot[safety_field]
-            raw_old_record = json.dumps(old_record, sort_keys=True).encode("utf-8")
-            journal_path.write_bytes(raw_old_record)
-            with pytest.raises(RepositoryError):
-                asyncio.run(journal.load(operation_id))
-            assert journal_path.read_bytes() == raw_old_record
+        old_record = json.loads(json.dumps(current_record))
+        old_record["snapshot"]["schema_version"] = 5
+        raw_old_record = json.dumps(old_record, sort_keys=True).encode("utf-8")
+        journal_path.write_bytes(raw_old_record)
+        with pytest.raises(RepositoryError):
+            asyncio.run(journal.load(operation_id))
+        assert journal_path.read_bytes() == raw_old_record
 
 
 def test_supervisor_refuses_registry_drift_against_the_pinned_invocation_digest(tmp_path: Path) -> None:

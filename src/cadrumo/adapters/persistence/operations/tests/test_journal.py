@@ -570,6 +570,25 @@ def test_operation_journal_refuses_intent_only_tamper_during_strict_hydration(tm
         asyncio.run(repository.load(accepted.operation_id))
 
 
+@pytest.mark.parametrize("schema_version", (1, 2, 3, 4, 5))
+def test_operation_journal_refuses_every_superseded_snapshot_schema_without_byte_mutation(
+    tmp_path: Path, schema_version: int
+) -> None:
+    """The filesystem reader rejects every superseded journal schema without rewriting bytes."""
+    repository, snapshots = _create_history(tmp_path)
+    path = tmp_path / "operation-journals" / f"{snapshots[-1].operation_id}.json"
+    document = json.loads(path.read_text(encoding="utf-8"))
+    document["snapshot"]["schema_version"] = schema_version
+    path.write_text(json.dumps(document), encoding="utf-8")
+    original_bytes = path.read_bytes()
+
+    with pytest.raises(RepositoryError, match="invalid operation journal"):
+        asyncio.run(repository.load(snapshots[-1].operation_id))
+    with pytest.raises(RepositoryError, match="invalid operation journal"):
+        asyncio.run(repository.read_after(snapshots[-1].operation_id, 0, limit=1))
+    assert path.read_bytes() == original_bytes
+
+
 @pytest.mark.parametrize(
     "corruption",
     ("identity", "sequence", "timestamp", "revision", "terminal", "snapshot_tail"),

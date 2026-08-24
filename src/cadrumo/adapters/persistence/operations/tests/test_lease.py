@@ -195,54 +195,29 @@ def test_lease_scope_conflicts_distinct_operations_for_one_subject_but_not_anoth
     assert (tmp_path / "operation-journals" / f"{other_subject_scope}.lease.json").exists()
 
 
-def test_lease_migrates_only_an_unambiguous_scoped_legacy_record_during_acquisition(tmp_path: Path) -> None:
-    """Inspection ignores retired operation paths; acquisition alone migrates a proved scope binding."""
+@pytest.mark.parametrize("schema_version", (1, 3))
+def test_lease_refuses_non_current_schema_without_byte_mutation(tmp_path: Path, schema_version: int) -> None:
+    """A superseded lease schema is rejected in place and remains unchanged."""
     candidate = _lease()
     storage = OperationLeaseStorage(storage_root=tmp_path)
     storage.ensure_root()
-    legacy_path = storage._legacy_path_for(candidate.operation_id)
-    legacy_path.write_text(
-        json.dumps(
-            {
-                "schema_version": 1,
-                "operation_id": candidate.operation_id,
-                "recorded_at": candidate.acquired_at.isoformat(),
-                "lease": candidate.model_dump(mode="json"),
-            }
-        ),
-        encoding="utf-8",
-    )
-
-    repository = OperationLeaseFilesystemRepository(storage_root=tmp_path)
-    assert (
-        asyncio.run(repository.inspect(candidate.scope_ref, candidate.operation_id, observed_at=_STARTED)).disposition
-        is OperationLeaseObservationDisposition.ABSENT
-    )
-    assert (
-        asyncio.run(repository.acquire(candidate, observed_at=_STARTED)).disposition
-        is OperationLeaseDisposition.CONFLICT
-    )
-    assert not legacy_path.exists()
-    migrated_path = storage.path_for(candidate.scope_ref)
-    assert json.loads(migrated_path.read_text(encoding="utf-8"))["schema_version"] == 2
-
-    blocked = _lease(
-        operation_id="e" * 64,
-        scope_ref=operation_conflict_scope_reference(definition_id="test.operation", subject_ref="blocked-subject"),
-    )
-    blocked_legacy_path = storage._legacy_path_for(blocked.operation_id)
+    path = storage.path_for(candidate.scope_ref)
     document = {
-        "schema_version": 1,
-        "operation_id": blocked.operation_id,
-        "recorded_at": blocked.acquired_at.isoformat(),
-        "lease": blocked.model_dump(mode="json"),
+        "schema_version": schema_version,
+        "scope_ref": candidate.scope_ref,
+        "operation_id": candidate.operation_id,
+        "recorded_at": candidate.acquired_at.isoformat(),
+        "lease": candidate.model_dump(mode="json"),
     }
-    del document["lease"]["scope_ref"]
-    blocked_legacy_path.write_text(json.dumps(document), encoding="utf-8")
-    with pytest.raises(RepositoryError, match="cannot be unambiguously migrated"):
-        asyncio.run(repository.acquire(blocked, observed_at=_STARTED))
-    assert blocked_legacy_path.exists()
-    assert not storage.path_for(blocked.scope_ref).exists()
+    path.write_text(json.dumps(document), encoding="utf-8")
+    original_bytes = path.read_bytes()
+    repository = OperationLeaseFilesystemRepository(storage_root=tmp_path)
+
+    with pytest.raises(RepositoryError, match="invalid operation lease"):
+        asyncio.run(repository.inspect(candidate.scope_ref, candidate.operation_id, observed_at=_STARTED))
+    with pytest.raises(RepositoryError, match="invalid operation lease"):
+        asyncio.run(repository.acquire(candidate, observed_at=_STARTED))
+    assert path.read_bytes() == original_bytes
 
 
 def test_lease_refuses_live_conflict_and_expired_acquire_without_byte_mutation(tmp_path: Path) -> None:

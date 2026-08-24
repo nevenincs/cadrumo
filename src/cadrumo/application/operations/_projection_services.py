@@ -76,7 +76,12 @@ _READ_LIMIT = 1
 class OperationControlSupervisor(Protocol):
     """Narrow mutation port implemented by the canonical operation supervisor."""
 
-    async def request_cancel(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
+    async def request_cancel(
+        self,
+        operation_id: OperationId,
+        *,
+        expected_revision: int,
+    ) -> OperationPersistedSnapshot: ...
 
     async def detach(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
 
@@ -323,14 +328,14 @@ class OperationWorkspaceRefreshTargetService:
                 OperationWorkspaceRefreshTargetRefusalCode.DEFINITION_CONTRACT_MISMATCH,
                 requested_version=1,
             )
+        if contract.workspace_refresh_target_schema is None or registration.workspace_refresh_adapter is None:
+            return _refresh_refusal(
+                OperationWorkspaceRefreshTargetRefusalCode.REFRESH_ADAPTER_UNAVAILABLE,
+                requested_version=1,
+            )
         if request.target_schema != contract.workspace_refresh_target_schema:
             return _refresh_refusal(
                 OperationWorkspaceRefreshTargetRefusalCode.REFRESH_SCHEMA_MISMATCH,
-                requested_version=1,
-            )
-        if registration.workspace_refresh_adapter is None:
-            return _refresh_refusal(
-                OperationWorkspaceRefreshTargetRefusalCode.REFRESH_ADAPTER_UNAVAILABLE,
                 requested_version=1,
             )
         try:
@@ -490,7 +495,10 @@ class OperationCancellationService:
                 requested_version=1,
             )
         try:
-            successor = await self.supervisor.request_cancel(request.operation_id)
+            successor = await self.supervisor.request_cancel(
+                request.operation_id,
+                expected_revision=request.expected_revision,
+            )
             if successor.identity.operation_id != request.operation_id or successor.cancellation_requested_at is None:
                 raise ValueError("supervisor returned an invalid cancellation state")
             return OperationCancellationSuccessV1(
@@ -499,6 +507,12 @@ class OperationCancellationService:
                 cancellation_acknowledged=successor.cancellation_acknowledged_at is not None,
             )
         except Exception:
+            latest = await _read_snapshot(self.reader, request.operation_id)
+            if isinstance(latest, OperationPersistedSnapshot) and latest.revision != request.expected_revision:
+                return _cancellation_refusal(
+                    OperationCancellationRefusalCode.STALE_OPERATION_REVISION,
+                    requested_version=1,
+                )
             return _cancellation_refusal(
                 OperationCancellationRefusalCode.CANCELLATION_UNAVAILABLE,
                 requested_version=1,

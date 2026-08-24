@@ -54,28 +54,6 @@ class _OperationLeaseRecord(BaseModel):
         return self.recorded_at
 
 
-class _OperationLeaseRecordV1(BaseModel):
-    """Explicit pre-scope-path record accepted only for an unambiguous acquisition migration."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    schema_version: Literal[1]
-    operation_id: OperationId
-    recorded_at: datetime
-    lease: OperationOwnerLease | None
-
-    @model_validator(mode="after")
-    def _validate_record(self) -> _OperationLeaseRecordV1:
-        validate_utc_aware(self.recorded_at)
-        if self.lease is None:
-            raise ValueError("scope-less absent operation lease record cannot be migrated")
-        if self.lease.operation_id != self.operation_id:
-            raise ValueError("legacy durable operation lease record identity does not match its lease")
-        if self.lease.acquired_at > self.recorded_at:
-            raise ValueError("legacy durable operation lease record precedes lease acquisition")
-        return self
-
-
 class OperationLeaseStorage(JournalRepositoryBase[_OperationLeaseRecord]):
     """Shared operation-journal-root lease storage and lock authority.
 
@@ -99,10 +77,6 @@ class OperationLeaseStorage(JournalRepositoryBase[_OperationLeaseRecord]):
     @override
     def path_for(self, operation_id: str) -> Path:
         """Keep one lease record beside journals, using the supplied conflict-scope key."""
-        return super().path_for(operation_id).with_suffix(".lease.json")
-
-    def _legacy_path_for(self, operation_id: OperationId) -> Path:
-        """Return the retired operation-keyed path for one explicit migration attempt."""
         return super().path_for(operation_id).with_suffix(".lease.json")
 
     def ensure_root(self) -> None:
@@ -175,44 +149,6 @@ class OperationLeaseStorage(JournalRepositoryBase[_OperationLeaseRecord]):
         if current.expires_at <= observed_at:
             raise RepositoryError("operation journal commit lease is expired at the supplied evidence time")
 
-    def migrate_legacy_before_acquisition(self, candidate: OperationOwnerLease) -> None:
-        """Move one unequivocally scoped v1 record to its canonical scope path.
-
-        The retired record path named only an operation id.  It is therefore
-        never consulted by reads, release, compare-and-swap, or journal commit:
-        acquisition is the one safe point to migrate it, and only when its
-        embedded current lease proves both the candidate operation and scope.
-        """
-        canonical_path = self.path_for(candidate.scope_ref)
-        if os.path.lexists(canonical_path):
-            return
-        legacy_path = self._legacy_path_for(candidate.operation_id)
-        if not os.path.lexists(legacy_path):
-            return
-        if is_link_like(legacy_path):
-            raise RepositoryError(f"operation lease path cannot be a link: {candidate.operation_id}")
-        try:
-            legacy = _OperationLeaseRecordV1.model_validate_json(legacy_path.read_bytes())
-        except (OSError, ValueError) as exc:
-            raise RepositoryError(
-                "operation lease record cannot be unambiguously migrated to a conflict scope"
-            ) from exc
-        assert legacy.lease is not None
-        if legacy.operation_id != candidate.operation_id or legacy.lease.scope_ref != candidate.scope_ref:
-            raise RepositoryError("operation lease record cannot be unambiguously migrated to a conflict scope")
-        migrated = _OperationLeaseRecord(
-            scope_ref=candidate.scope_ref,
-            operation_id=candidate.operation_id,
-            recorded_at=legacy.recorded_at,
-            lease=legacy.lease,
-        )
-        self._write(canonical_path, migrated)
-        try:
-            legacy_path.unlink()
-        except OSError as exc:
-            raise RepositoryError("cannot remove migrated operation-keyed lease record") from exc
-
-
 class OperationLeaseFilesystemRepository(OperationLeaseRepository):
     """Caller-clocked durable owner-lease port over the operation journal root."""
 
@@ -256,7 +192,6 @@ class OperationLeaseFilesystemRepository(OperationLeaseRepository):
         """Acquire only an absent lease; live and expired predecessors remain unchanged."""
         self._storage.ensure_root()
         with exclusive_file_lock(self._storage.lock_target):
-            self._storage.migrate_legacy_before_acquisition(candidate)
             current = self._storage.current_unlocked(candidate.scope_ref)
             if current is None:
                 result = OperationLeaseResult(

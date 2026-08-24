@@ -601,9 +601,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
                         else cancellation_acknowledged_at
                     ),
                     "cancellation_deferred": (
-                        snapshot.cancellation_deferred
-                        if cancellation_deferred is None
-                        else cancellation_deferred
+                        snapshot.cancellation_deferred if cancellation_deferred is None else cancellation_deferred
                     ),
                     "executor_entered_at": (
                         snapshot.executor_entered_at if executor_entered_at is None else executor_entered_at
@@ -670,8 +668,15 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
     async def reject(self, response: OperationRejectResponse) -> OperationConsumedInteraction:
         return await self.respond(response)
 
-    async def request_cancel(self, operation_id: OperationId) -> OperationPersistedSnapshot:
+    async def request_cancel(
+        self,
+        operation_id: OperationId,
+        *,
+        expected_revision: int | None = None,
+    ) -> OperationPersistedSnapshot:
         snapshot = await self.inspect(operation_id)
+        if expected_revision is not None and snapshot.revision != expected_revision:
+            raise ValueError("operation cancellation expected revision is stale")
         if snapshot.secret_requirement is not None and snapshot.executor_entered_at is None:
             requested_at = self._clock()
             event = OperationNoticeEvent(

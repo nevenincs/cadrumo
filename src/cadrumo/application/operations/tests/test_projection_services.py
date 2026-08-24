@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -65,6 +66,7 @@ from .. import (
     OperationReviewProjectionRequestV1,
     OperationReviewProjectionService,
     OperationReviewProjectionSuccessV1,
+    OperationReviewProjectionVersionHeader,
     OperationSchemaBindingV1,
     OperationSensitiveInputPolicy,
     OperationSupervisor,
@@ -74,6 +76,7 @@ from .. import (
     OperationWorkspaceRefreshTargetRequestV1,
     OperationWorkspaceRefreshTargetService,
     OperationWorkspaceRefreshTargetSuccessV1,
+    OperationWorkspaceRefreshTargetVersionHeader,
     operation_conflict_scope_reference,
     operation_public_schema_reference,
 )
@@ -152,23 +155,13 @@ def _unsafe_refresh_target(receipt: OperationTerminalReceipt) -> BaseModel:
     return SafeReviewProjection(summary_code="wrong-model")
 
 
-def _replace_runtime_binding(
-    registry: OperationRegistry,
+def _registry(
     *,
-    review_projector: object | None = None,
-    refresh_adapter: object | None = None,
+    close_policy: OperationClosePolicy = OperationClosePolicy.DETACH_ALLOWED,
+    review_projector: Callable[[BaseModel, OperationInteractionRequest], BaseModel] = _project_review,
+    refresh_adapter: Callable[[OperationTerminalReceipt], BaseModel] = _refresh_target,
+    include_refresh: bool = True,
 ) -> OperationRegistry:
-    registration = registry.lookup_public_registration(_DEFINITION_ID)
-    updates: dict[str, object] = {}
-    if review_projector is not None:
-        updates["review_projector"] = review_projector
-    if refresh_adapter is not None:
-        updates["workspace_refresh_adapter"] = refresh_adapter
-    replaced = registration.model_copy(update=updates)
-    return OperationRegistry(definitions=registry.definitions, public_registrations=(replaced,))
-
-
-def _registry(*, close_policy: OperationClosePolicy = OperationClosePolicy.DETACH_ALLOWED) -> OperationRegistry:
     capabilities = OperationCapabilities(
         durability=OperationDurability.RECORDED,
         cancellation=OperationCancellation.COOPERATIVE,
@@ -219,14 +212,18 @@ def _registry(*, close_policy: OperationClosePolicy = OperationClosePolicy.DETAC
             schema_version=1,
             model_type=ReviewResponseSchema,
         ),
-        workspace_refresh_target_schema=OperationSchemaBindingV1.bind(
-            schema_id="operations.projection.refresh",
-            schema_version=1,
-            model_type=WorkspaceRefreshTarget,
+        workspace_refresh_target_schema=(
+            OperationSchemaBindingV1.bind(
+                schema_id="operations.projection.refresh",
+                schema_version=1,
+                model_type=WorkspaceRefreshTarget,
+            )
+            if include_refresh
+            else None
         ),
         reviewed_operand_type=ReviewedOperand,
-        review_projector=_project_review,
-        workspace_refresh_adapter=_refresh_target,
+        review_projector=review_projector,
+        workspace_refresh_adapter=refresh_adapter if include_refresh else None,
     )
     return OperationRegistry(definitions=(definition,), public_registrations=(registration,))
 
@@ -439,7 +436,7 @@ def test_review_resolution_uses_encrypted_operand_and_is_read_only(tmp_path: Pat
         unsafe_output = asyncio.run(
             OperationReviewProjectionService(
                 reader=repository,
-                registry=_replace_runtime_binding(registry, review_projector=_unsafe_review_projection),
+                registry=_registry(review_projector=_unsafe_review_projection),
                 operands=operands,
                 clock=lambda: _NOW,
             ).resolve(request)
@@ -472,7 +469,10 @@ def test_refresh_target_resolves_only_authoritative_successful_terminal_receipt(
         definition_contract_digest=contract.definition_contract_digest,
         target_schema=contract.workspace_refresh_target_schema,
     )
-    service = OperationWorkspaceRefreshTargetService(reader=repository, registry=registry)
+    service = OperationWorkspaceRefreshTargetService(
+        reader=OperationJournalRepository(storage_root=root),
+        registry=registry,
+    )
 
     result = asyncio.run(service.resolve(request))
     stale = asyncio.run(service.resolve(request.model_copy(update={"terminal_revision": terminal.revision + 1})))
@@ -483,7 +483,7 @@ def test_refresh_target_resolves_only_authoritative_successful_terminal_receipt(
     unsafe_output = asyncio.run(
         OperationWorkspaceRefreshTargetService(
             reader=repository,
-            registry=_replace_runtime_binding(registry, refresh_adapter=_unsafe_refresh_target),
+            registry=_registry(refresh_adapter=_unsafe_refresh_target),
         ).resolve(request)
     )
 
@@ -494,6 +494,97 @@ def test_refresh_target_resolves_only_authoritative_successful_terminal_receipt(
     assert schema_mismatch.code is OperationWorkspaceRefreshTargetRefusalCode.REFRESH_SCHEMA_MISMATCH
     assert unsafe_output.code is OperationWorkspaceRefreshTargetRefusalCode.UNSAFE_REFRESH_TARGET
     assert "result_ref" not in type(request).model_fields
+
+
+def test_projection_services_close_version_unknown_pending_terminal_and_adapter_refusals(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        registry = _registry()
+        running_root = tmp_path / "running"
+        running_repository = OperationJournalRepository(storage_root=running_root)
+        _write(running_root, running_repository, _running_snapshot(registry))
+        operands = operation_secure_reference_repository(objects=profile.repository)
+        review_service = OperationReviewProjectionService(
+            reader=running_repository,
+            registry=registry,
+            operands=operands,
+            clock=lambda: _NOW,
+        )
+        contract = registry.lookup_public_contract(_DEFINITION_ID)
+        assert contract.review_projection_schema is not None
+        not_pending = asyncio.run(
+            review_service.resolve(
+                OperationReviewProjectionRequestV1(
+                    reference=OperationReviewProjectionReferenceV1(
+                        operation_id=_OPERATION_ID,
+                        interaction_id=_INTERACTION_ID,
+                        revision=0,
+                        review_projection_schema=contract.review_projection_schema,
+                        definition_contract_digest=contract.definition_contract_digest,
+                        expires_at=None,
+                    )
+                )
+            )
+        )
+        unknown = asyncio.run(
+            review_service.resolve(
+                OperationReviewProjectionRequestV1(
+                    reference=OperationReviewProjectionReferenceV1(
+                        operation_id="9" * 64,
+                        interaction_id=_INTERACTION_ID,
+                        revision=0,
+                        review_projection_schema=contract.review_projection_schema,
+                        definition_contract_digest=contract.definition_contract_digest,
+                        expires_at=None,
+                    )
+                )
+            )
+        )
+        unsupported = asyncio.run(
+            review_service.resolve(OperationReviewProjectionVersionHeader(review_projection_version=2))
+        )
+
+        assert not_pending.code is OperationReviewProjectionRefusalCode.REVIEW_NOT_PENDING
+        assert unknown.code is OperationReviewProjectionRefusalCode.UNKNOWN_OPERATION
+        assert unsupported.code is OperationReviewProjectionRefusalCode.UNSUPPORTED_VERSION
+
+        assert contract.workspace_refresh_target_schema is not None
+        refresh_request = OperationWorkspaceRefreshTargetRequestV1(
+            operation_id=_OPERATION_ID,
+            terminal_revision=0,
+            definition_contract_digest=contract.definition_contract_digest,
+            target_schema=contract.workspace_refresh_target_schema,
+        )
+        refresh_service = OperationWorkspaceRefreshTargetService(reader=running_repository, registry=registry)
+        not_terminal = asyncio.run(refresh_service.resolve(refresh_request))
+        refresh_unsupported = asyncio.run(
+            refresh_service.resolve(OperationWorkspaceRefreshTargetVersionHeader(refresh_target_version=2))
+        )
+
+        no_adapter_registry = _registry(include_refresh=False)
+        no_adapter_root = tmp_path / "no-adapter"
+        no_adapter_repository = OperationJournalRepository(storage_root=no_adapter_root)
+        no_adapter_terminal = _terminal_snapshot(no_adapter_registry)
+        _write(no_adapter_root, no_adapter_repository, _running_snapshot(no_adapter_registry))
+        asyncio.run(no_adapter_repository.commit(no_adapter_terminal, expected_revision=0, lease=_lease()))
+        no_adapter_contract = no_adapter_registry.lookup_public_contract(_DEFINITION_ID)
+        assert no_adapter_contract.result_schema is not None
+        unavailable = asyncio.run(
+            OperationWorkspaceRefreshTargetService(
+                reader=OperationJournalRepository(storage_root=no_adapter_root),
+                registry=no_adapter_registry,
+            ).resolve(
+                OperationWorkspaceRefreshTargetRequestV1(
+                    operation_id=_OPERATION_ID,
+                    terminal_revision=1,
+                    definition_contract_digest=no_adapter_contract.definition_contract_digest,
+                    target_schema=no_adapter_contract.result_schema,
+                )
+            )
+        )
+
+        assert not_terminal.code is OperationWorkspaceRefreshTargetRefusalCode.OPERATION_NOT_TERMINAL
+        assert refresh_unsupported.code is OperationWorkspaceRefreshTargetRefusalCode.UNSUPPORTED_VERSION
+        assert unavailable.code is OperationWorkspaceRefreshTargetRefusalCode.REFRESH_ADAPTER_UNAVAILABLE
 
 
 def test_response_control_requires_separately_bound_runtime_bearer(tmp_path: Path) -> None:
@@ -566,7 +657,12 @@ def test_cancellation_and_detach_delegate_to_real_supervisor_ports(tmp_path: Pat
                 OperationCancellationRequestV1(operation_id=_OPERATION_ID, expected_revision=0)
             )
         )
+        journal_path = root / "operation-journals" / f"{_OPERATION_ID}.json"
+        settled_bytes = journal_path.read_bytes()
+        with pytest.raises(ValueError, match="expected revision is stale"):
+            asyncio.run(supervisor.request_cancel(_OPERATION_ID, expected_revision=0))
 
         assert isinstance(detach, OperationDetachSuccessV1)
         assert isinstance(cancelled, OperationCancellationSuccessV1)
         assert stale.code is OperationCancellationRefusalCode.STALE_OPERATION_REVISION
+        assert journal_path.read_bytes() == settled_bytes
