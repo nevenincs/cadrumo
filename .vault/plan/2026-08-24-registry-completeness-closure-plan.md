@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:388020a2b998fac30c5ac1574bbac0a980e599648baa51329b370487ea3d3095'
+body_hash: 'sha256:752a3078c02c2b99adc0d5c6b9f847fc9aef46b8462d665444ba6ffc8175b6c4'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -122,6 +122,7 @@ Add or reconcile the adjudicated remedies in each existing owning plan and prove
 - [ ] `W02.P04.S74` - Correct Modelo 036 human-filing wording and route its source and export reconsideration paths exactly.; `.vault/reference/; .vault/exec/; .vault/plan/`.
 - [ ] `W02.P04.S75` - Repair S13 Modelo 038 evidence handoff and EOF hygiene, correct its 2024-design-versus-2002 source-scope route, enroll exact temporal and export predecessor-plan owners for scope correction and trusted-layout acquisition, and retain the refusal until both routes close.; `.vault/reference/2026-08-24-registry-completeness-closure-modelo-038-design-extraction-reference.md; .vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W02-P03-S13.md; .vault/plan/2026-08-14-registry-temporal-coverage-plan.md; .vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md`.
 - [ ] `W02.P04.S76` - Correct the aggregate filing-capability worklist assertion and report so terminal no-authority refusals such as Modelo 136 are never described as requiring an authorable layout, retain named owners for authorable gaps, and pass the terminal-versus-owner distinction to S29.; `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py; .vault/reference/`.
+- [ ] `W02.P04.S77` - Correct Modelo 182 statutory filer-population wording and reconsideration scope so recipients, political parties, and protected-estate holders or administrators remain distinct from donor detail rows.; `.vault/reference/2026-08-24-registry-completeness-closure-modelo-182-design-era-and-donor-row-reference.md; .vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W02-P03-S15.md`.
 
 ## Wave `W03` - semantic proof and predecessor closure
 
