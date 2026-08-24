@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:166ea5a7ab5275d05b231b3bea45604dc51999438ab971a9516978ec46ad0494'
+body_hash: 'sha256:f2b0bafb75fae7c10745b64c920d4720ffa7d0a6181486b8ea59b35f4aa73301'
 step_id: 'S66'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
@@ -62,4 +62,4 @@ The S65 record now accurately separates the clean test-surface check from the or
 
 ## Notes
 
-Re-attestation before landing: `uv run --no-sync ruff check dev/registry/conformance/tests/test_closure.py` and `git diff --check 8afc6890b6^ 8afc6890b6 -- dev/registry/conformance/tests/test_closure.py` both passed. The historical whole-commit `git show --check 8afc6890b6` continues to report the original S65 EOF blank line, as expected. The repair commit's `git show --check HEAD` and the corrected cumulative `git diff --check 8afc6890b6^ HEAD` are clean.
+Re-attestation before landing: `uv run --no-sync ruff check dev/registry/conformance/tests/test_closure.py` and `git diff --check 8afc6890b6^ 8afc6890b6 -- dev/registry/conformance/tests/test_closure.py` both passed. The historical whole-commit `git show --check 8afc6890b6` continues to report the original S65 EOF blank line, as expected. The repair commit's `git show --check HEAD` and the corrected cumulative S65/S66-record `git diff --check` are clean; unrelated concurrent work is outside that owned cumulative scope.
