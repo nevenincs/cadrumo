@@ -11,9 +11,6 @@ related:
   - "[[2026-08-24-deadline-window-revision-authority-plan]]"
 ---
 
-
-
-
 # Enforce equality between deadline filing_year and Period.filing_year while preserving following-calendar-year physical dates
 
 ## Scope

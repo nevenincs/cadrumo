@@ -7,23 +7,27 @@ tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-11-tui-architecture-research]]'
+  - '[[2026-08-24-tui-registry-api-gate-adr]]'
+  - '[[2026-08-24-modelo-edit-contract-adr]]'
+  - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
+  - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-24'
-body_hash: 'sha256:203771b93684f89489e37f2b0764bd8876b3f994f1675e1e87eb5f372913c4b8'
+body_hash: 'sha256:793d0e21a77329df61b0b279be67b5a5890335e441df1bac4be1f58c16a9e41c'
 ---
 
 # `tui-architecture` plan
 
-Build the frontend-neutral operation platform first, then layer the canonical Textual entrypoint, operation reviews, cutover, and real-behavior proof.
+Build the frontend-neutral operation and Modelo application contracts first, then layer the canonical Textual entrypoint, receipt-gated cohorts, current-only cutover, and real-behavior proof.
 
 ## Description
 
-This L3 plan executes the accepted `tui-architecture` ADR. It preserves the existing hexagonal roots: reusable execution semantics live in core, application, and adapter packages, while every Textual implementation lives under `cadrumo.entrypoints.tui`. Waves are dependency ordered so presentation never becomes the test harness for an unfinished backend contract.
+This L3 plan executes the accepted and amended `tui-architecture` ADR together with the accepted registry API gate, Modelo Edit Contract, and Modelo Workspace Interface decisions. It preserves the existing hexagonal roots: reusable execution semantics live in core, application, and adapter packages, while every Textual implementation lives under `cadrumo.entrypoints.tui`. The architecture lane owns the public operation C0 contract and receipt, Workspace V1 and its C2 dependency receipt, Edit Contract V1, the distinct transient-financial-operand protocol, and the Edit C3 dependency receipt. The interface lane owns TUI destinations and the C1 through C5 exit receipts. Waves are dependency ordered so presentation never becomes the test harness for an unfinished backend contract.
 
 ### Approval and execution dependencies
 
-The plan was explicitly approved on 2026-08-11. Its execution is nevertheless `BLOCKED` until the in-flight canonical `casilla-schema` campaign in `2026-08-10-casilla-schema-plan.md` has landed completely and its closing structural checks are green. Research, review, and dependency reconciliation may continue while blocked, but no implementation Step in this plan may start.
+The plan was explicitly approved on 2026-08-11. Its original `casilla-schema` execution blocker is discharged: the canonical `2026-08-10-casilla-schema-plan.md` is complete at 52 of 52 Steps. This records the changed prerequisite without rewriting the earlier execution history.
 
-`tui-interface` is a downstream campaign. It MUST NOT begin implementation until this `tui-architecture` plan has landed completely and its final acceptance gates are green. That campaign may continue research and reconcile its proposed structure while blocked, but it must consume the operation platform, package boundary, and canonical `entrypoints/tui` seams delivered here rather than redeclare or build them independently.
+Architecture and interface execution now interleave only through exact current-HEAD receipts. `W02.P19.S124` closes C0 and alone opens the existing operation-presentation Steps `S60` through `S67`. `S104` supplies the canonical review relocation evidence consumed by the interface C1 exit. Workspace V1 may be built in `W03.P20`, but `W04.P22` may mint the C2 dependency receipt only after the exact green C1 exit, and interface C2 consumes that receipt. Edit Contract V1 may be built in `W03.P21`, but C3 remains unavailable until `W05.P23` closes both the financial-operand receipt and the Edit Contract dependency receipt after C2. Lifecycle enrollment in `W06.P24` supplies backend action evidence to interface C4. Interface C1 through C5 exit receipts remain owned by the separate interface plan and are not duplicated here.
 
 ## Steps
 
@@ -100,6 +104,21 @@ Expose one global TUI request now, refuse every unenrolled command path explicit
 - [x] `W02.P18.S111` - Prove the graph-wide available-route fixed point, global-only option placement, implemented-route dispatch, and representative unimplemented refusals; `src/cadrumo/entrypoints/cli/tests/test_global_tui_request.py, src/cadrumo/entrypoints/cli/_config/tests`.
 - [x] `W02.P18.S112` - Reconcile the accepted availability decision with the still-open dedicated-entrypoint migration and complete a fresh honesty review; `.vault/adr/2026-08-11-tui-architecture-adr.md, .vault/adr/2026-08-11-tui-interface-adr.md, .vault/audit`.
 
+### Phase `W02.P19` - Public operation contract and C0 dependency receipt
+
+Publish the frontend-safe operation definition, atomic observation, REVIEW, and Workspace-refresh services, cut over current-only persistence, prove production composition, and mint the exact C0 dependency receipt before any visual operation projection begins.
+
+- [ ] `W02.P19.S115` - Extend the immutable operation registry with OperationSchemaIdentityV1, OperationPublicDefinitionContractV1, OperationPublicContractSetV1, exact strict-model fingerprints, registered REVIEW and refresh adapters, deterministic definition digests, and contract-set fixed-point validation; `src/cadrumo/application/operations/_registry.py`.
+- [ ] `W02.P19.S116` - Define the strict current-only operation observation, public projection, event-page, REVIEW-projection, response-control, cancellation, detach, and Workspace-refresh request, success, and typed refusal DTO families with independent V1 dispatch axes; `src/cadrumo/application/operations/_public.py`.
+- [ ] `W02.P19.S117` - Pin each definition_contract_digest atomically with invocation identity and define one application-owned observation materialization port binding the current snapshot, anchor cursor, bounded history, progress-fold input, and resynchronization checkpoint; `src/cadrumo/application/operations/_journal.py`.
+- [ ] `W02.P19.S118` - Implement the observation-read port over one locked journal-record read so snapshot, history page, progress checkpoint, replay status, and restart cursor share one authoritative anchor under interleaved transitions; `src/cadrumo/adapters/persistence/operations/_journal.py and src/cadrumo/adapters/persistence/operations/_journal_validation.py`.
+- [ ] `W02.P19.S119` - Implement the public observation service and deterministic progress fold with phase reset, independent lifecycle-terminal-effect projection, bounded cursor replay, cursor-ahead refusal, expiry or compaction resynchronization, detach, and reconnect semantics; `src/cadrumo/application/operations/_observation.py`.
+- [ ] `W02.P19.S120` - Implement registered safe REVIEW resolution and typed Workspace-refresh-target resolution with exact version, definition-digest, schema, expiry, terminal-state, and output validation while preserving separate response authority and rejecting caller-supplied result references; `src/cadrumo/application/operations/_projection_services.py`.
+- [ ] `W02.P19.S121` - Perform the PRE_RELEASE current-only cutover by proving zero affected nonterminal operations, refusing every superseded journal and lease shape, and deleting the v1 lease reader, acquisition migrator, retired schema dispatchers, fixtures, and migration tests without a compatibility path; `src/cadrumo/application/operations and src/cadrumo/adapters/persistence/operations`.
+- [ ] `W02.P19.S122` - Export the sole public operation contract family and compose the immutable production registry, observation, REVIEW, refresh, response, cancel, and detach services with real adapters through one import-light entrypoint seam consumed by CLI, MCP, and the later TUI launcher; `src/cadrumo/application/operations/__init__.py and src/cadrumo/entrypoints/_operation_composition.py`.
+- [ ] `W02.P19.S123` - Implement TuiOperationObservationDependencyReceiptV1 and its sole live-tree validator, proving strict round trips, atomic interleaving, progress and replay, registered REVIEW non-authority, restart refresh, digest drift refusal, production DI, sentinel non-retention, current-only deletion, and a semantic-plus-exact producer census that fails duplicate operation state or projection authorities; `src/cadrumo/application/operations/tests/test_public_operation_dependency_receipt.py`.
+- [ ] `W02.P19.S124` - Produce the exact clean-commit C0 observation dependency receipt with accepted-parent and rejected-staging provenance, source ancestry, schema and capability inventories, contract digests, validator evidence, and the sole cohort-open disposition; `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md`.
+
 ## Wave `W03` - Application operation executors
 
 Adapt current effectful workflows to the supervisor contract, beginning with census and filed-history proofs and then covering all shipped manager operations.
@@ -138,6 +157,30 @@ Move every current manager and credential action behind registered application e
 - [ ] `W03.P08.S44` - Expose Google export operation definitions through the export application facade; `src/cadrumo/application/export/__init__.py`.
 - [ ] `W03.P08.S45` - Run every production-registered executor through the shared success, refusal, failure, interaction, cancellation-capability, deadline-capability, effect, and cleanup matrix and prove the exported definition population is complete; `src/cadrumo/application/operations/tests/test_registered_executor_conformance.py`.
 
+### Phase `W03.P20` - Frontend-neutral Modelo Workspace V1
+
+Implement the read-only Workspace V1 contract, stamped contributing ports, generated schema-field denominator, canonical owner projections, and live conformance without exposing registry grammar or duplicating ModeloWorkReview.
+
+- [ ] `W03.P20.S125` - Define strict Workspace V1 version headers, visible and exact target admission, inspection and graded result arms, projection, bounded facets, schema and provenance records, capability and refusal families, locale summary, and safe read baseline without mutation authority; `src/cadrumo/application/modelo/_workspace_models.py`.
+- [ ] `W03.P20.S126` - Define ModeloWorkspaceProducerContractV1, stamped contributing projections, owner-scoped ABA-safe epochs, atomic projection-plus-epoch ports, and the generated producer-contract inventory that rejects missing, duplicate, or stale contributors; `src/cadrumo/application/modelo/_workspace_producers.py`.
+- [ ] `W03.P20.S127` - Generate the exhaustive registry model-and-field classification manifest from validated public schema types, classifying every reachable leaf and discriminator branch exactly once as projected, canonically derived, or backend-only with destination, owner, and bounded reason; `src/cadrumo/application/modelo/_workspace_manifest.py`.
+- [ ] `W03.P20.S128` - Assemble Workspace projections only from stamped producer captures and canonical validated-registry, ModeloWorkReview, operator-state readiness, closure, calculation-revision, and source-graph owners, enforcing exact target admission, bounded materialization, two-pass epoch validation, locale selection, and stable safe-read baselines without parsing registry grammar; `src/cadrumo/application/modelo/_workspace_projection.py`.
+- [ ] `W03.P20.S129` - Export the sole frontend-neutral Workspace request, projection, capability, refresh-target, refusal, and producer-contract family without exposing registry grammar or persistence types; `src/cadrumo/application/modelo/__init__.py`.
+- [ ] `W03.P20.S130` - Prove strict Workspace round trips, exhaustive manifest coverage, exact ModeloWorkReview parity, readiness and closure parity, static versus graded admission, epoch and ABA refusal, locale behavior, bounded non-retention, forbidden-import boundaries, and a semantic-plus-exact census that fails duplicate Workspace authorities; `src/cadrumo/application/modelo/tests/test_workspace_projection.py`.
+- [ ] `W03.P20.S131` - Implement the sole ModeloWorkspaceC2DependencyReceiptV1 validator with current-HEAD, accepted-authority, closed-predecessor, public-schema, producer-inventory, field-denominator, conformance, no-legacy, and redeclaration evidence checks while leaving receipt minting to the C1 handoff phase; `src/cadrumo/application/modelo/tests/test_workspace_dependency_receipt.py`.
+
+### Phase `W03.P21` - Frontend-neutral Modelo Edit Contract V1
+
+Implement edit admission, parsing, preflight, exact mutation baselines, typed scalar and row intents, guarded calculation persistence, mutation capability, and safe result receipts while leaving operation custody for the later C3 gate.
+
+- [ ] `W03.P21.S132` - Define the strict ModeloEditContractV1 family covering version and compatibility headers, read-only edit schema, ModeloEditBaselineV1, parse and preflight requests and results, scalar and repeatable-row intents, guarded apply request, mutation capability, typed refusal, and immutable result receipt; `src/cadrumo/application/modelo/_edit_models.py`.
+- [ ] `W03.P21.S133` - Implement edit admission, registry-backed schema projection, locale-neutral parsing, typed-intent normalization, and preflight services that issue exact ModeloEditBaselineV1 coordinates and never treat a Workspace safe-read baseline as mutation authority; `src/cadrumo/application/modelo/_edit_services.py`.
+- [ ] `W03.P21.S134` - Persist encrypted Modelo edit result receipts with strict current-only serialization, compatibility-tuple validation, atomic lookup, and real round-trip evidence that cannot pass through tautological in-memory reconstruction; `src/cadrumo/adapters/persistence/profile/modelos_edit_receipts.py`.
+- [ ] `W03.P21.S135` - Replace calculation-revision persistence with guarded work-and-calculation compare-and-swap so duplicate-existing and new-revision branches recheck the same edit baseline and co-commit immutable revision, work pointer, lifecycle event, and edit result receipt without any unguarded pointer advance; `src/cadrumo/application/modelo/_revision_persistence.py`.
+- [ ] `W03.P21.S136` - Implement the application-owned edit executor that rechecks every ModeloEditBaselineV1 coordinate at the guarded commit point, refuses stale or incompatible intent without rebasing, delegates canonical calculation and guarded persistence, and returns only typed result receipts; `src/cadrumo/application/modelo/_edit_execution.py`.
+- [ ] `W03.P21.S137` - Expose the edit facade and prove schema, parsing, preflight, scalar and row intent, guarded compare-and-swap, duplicate-result, rollback, compatibility refusal, persistence round-trip, non-retention, and redeclaration behavior while leaving operation-enrollment capability UNMEASURED until its C3 receipt exists; `src/cadrumo/application/modelo/__init__.py and src/cadrumo/application/modelo/tests/test_edit_contract.py`.
+- [ ] `W03.P21.S138` - Implement the sole ModeloEditContractC3DependencyReceiptV1 validator with exact C2 predecessor, contract schema, baseline, guarded persistence, result-receipt, conformance, financial-handoff, production-definition, no-legacy, and redeclaration checks while leaving receipt minting to the C3 custody phase; `src/cadrumo/application/modelo/tests/test_edit_dependency_receipt.py`.
+
 ## Wave `W04` - Canonical TUI entrypoint and components
 
 Rehome presentation mechanics mechanically beneath cadrumo.entrypoints.tui without changing backend policy or operation semantics.
@@ -163,9 +206,16 @@ Mechanically relocate profile, secret, flow, test, and development surfaces with
 - [ ] `W04.P10.S55` - Relocate credential, login, registration, and passphrase projections while keeping secrets ephemeral; `src/cadrumo/entrypoints/tui/secret`.
 - [ ] `W04.P10.S56` - Relocate the existing flow renderer mechanically without changing application flow or wizard semantics; `src/cadrumo/entrypoints/tui/flows`.
 - [ ] `W04.P10.S57` - Relocate TUI-owned pilot, replay, screenshot, and terminal-surface tooling; `src/cadrumo/entrypoints/tui/devtools`.
-- [ ] `W04.P10.S104` - Relocate the casilla review screen and its tests to the canonical Modelo view as a read-only consumer of the public application.modelo ModeloWorkReview facade, preserving the named-outlier evidence and deleting the legacy inbound screen, its facade exports and its locale references in the same change without a compatibility facade; `src/cadrumo/entrypoints/tui/modelo/view and src/cadrumo/adapters/inbound/tui/_modelo_work_review_screen.py`.
+- [ ] `W04.P10.S104` - Relocate the sole Casilla review screen and tests to the canonical Modelo view as a read-only consumer of the existing public application.modelo ModeloWorkReview facade, preserve named-outlier evidence, delete the legacy inbound screen, facade exports, and locale references atomically without compatibility, and provide the migration evidence consumed by the interface C1 exit validator; `src/cadrumo/entrypoints/tui/modelo/view and src/cadrumo/adapters/inbound/tui/_modelo_work_review_screen.py`.
 - [ ] `W04.P10.S58` - Move presentation tests under the canonical owning packages and remove backend imports of TUI test helpers; `src/cadrumo/entrypoints/tui/tests`.
 - [ ] `W04.P10.S59` - Prove the relocation is behavior-preserving before any root app or navigation join is introduced; `src/cadrumo/entrypoints/tui/tests/test_relocation_parity.py`.
+
+### Phase `W04.P22` - C1-to-C2 Workspace dependency handoff
+
+Consume the green C1 interface exit, revalidate Workspace V1 and its producer fixed points on the same current tree, and mint the exact C2 dependency receipt that alone opens complex read-only consumers.
+
+- [ ] `W04.P22.S139` - Run the sole Workspace dependency validator against the exact green ModeloWorkspaceC1ExitReceiptV1, accepted Workspace authorities, authoritative reconciliation, closed Workspace implementation tuple, generated producer and field inventories, current source tree, no-legacy proof, and duplicate-authority census; `src/cadrumo/application/modelo/tests/test_workspace_dependency_receipt.py`.
+- [ ] `W04.P22.S140` - Produce and validate the exact clean-commit ModeloWorkspaceC2DependencyReceiptV1 binding the C1 predecessor digest, Workspace contract and producer fingerprints, captured epoch tuple, conformance evidence, current HEAD, and the exact C2 read destinations it opens; `.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md`.
 
 ## Wave `W05` - TUI operation projection and review
 
@@ -175,14 +225,14 @@ Build the operation-agnostic modal, live log projection, interactions, and domai
 
 Project supervisor snapshots and ordered events into a detachable modal, live logs, progress, controls, and typed interactions.
 
-- [ ] `W05.P11.S60` - Implement a TUI controller limited to supervisor submit, inspect, observe, respond, reject, cancel, and detach calls; `src/cadrumo/entrypoints/tui/operations/controller.py`.
-- [ ] `W05.P11.S61` - Project operation snapshots and capabilities into immutable modal view models without reclassifying backend truth; `src/cadrumo/entrypoints/tui/operations/projection.py`.
-- [ ] `W05.P11.S62` - Project cursor-based structured events into bounded live and historical log views with diagnostic references; `src/cadrumo/entrypoints/tui/operations/logs.py`.
-- [ ] `W05.P11.S63` - Render typed input, choice, review, apply, and reject interactions through registered presentation schemas; `src/cadrumo/entrypoints/tui/operations/interactions.py`.
-- [ ] `W05.P11.S64` - Implement the generic detachable operation modal with phase, progress, spinner, logs, diagnostics, interaction, cancellation, and terminal receipt regions; `src/cadrumo/entrypoints/tui/operations/modal.py`.
-- [ ] `W05.P11.S65` - Expose the narrow operation-presentation facade without exporting Textual internals as backend contracts; `src/cadrumo/entrypoints/tui/operations/__init__.py`.
-- [ ] `W05.P11.S66` - Derive spinner visibility, enabled controls, close policy, and terminal copy solely from supervisor projections; `src/cadrumo/entrypoints/tui/operations/projection.py`.
-- [ ] `W05.P11.S67` - Prove cursor replay, detach and reattach, interaction revisions, cancellation acknowledgement, terminal settlement, log visibility, and subscriber loss; `src/cadrumo/entrypoints/tui/operations/tests`.
+- [ ] `W05.P11.S60` - Implement a TUI controller limited to the composed public submit, atomic observation, registered REVIEW, typed response, cancel, detach, and Workspace-refresh services, with no supervisor inspection or persistence access; `src/cadrumo/entrypoints/tui/operations/controller.py`.
+- [ ] `W05.P11.S61` - Project only OperationPublicProjectionV1 and its public capability and refusal fields into immutable modal view models without importing persisted snapshots, journal records, or supervisor-private state; `src/cadrumo/entrypoints/tui/operations/projection.py`.
+- [ ] `W05.P11.S62` - Project only OperationPublicEventPageV1 into bounded live and historical log views, honoring public cursors, replay and resynchronization dispositions, and approved diagnostic references without reading the journal; `src/cadrumo/entrypoints/tui/operations/logs.py`.
+- [ ] `W05.P11.S63` - Render only registered safe REVIEW projections and separately response-authorized APPLY and REJECT controls, treating public INPUT and CHOICE interaction kinds as unsupported until a later accepted contract enrolls them; `src/cadrumo/entrypoints/tui/operations/interactions.py`.
+- [ ] `W05.P11.S64` - Implement the generic detachable operation modal solely from public projection, event-page, REVIEW, response-control, cancellation, detach, terminal-receipt, and typed Workspace-refresh DTOs; `src/cadrumo/entrypoints/tui/operations/modal.py`.
+- [ ] `W05.P11.S65` - Expose a narrow operation-presentation facade that accepts only public operation contracts and exports neither Textual internals nor application-private operation types as backend contracts; `src/cadrumo/entrypoints/tui/operations/__init__.py`.
+- [ ] `W05.P11.S66` - Derive spinner visibility, enabled controls, close policy, interaction affordance, and terminal copy solely from OperationPublicProjectionV1 and public response-control projections without reclassifying lifecycle truth; `src/cadrumo/entrypoints/tui/operations/projection.py`.
+- [ ] `W05.P11.S67` - Prove public cursor replay, resynchronization, detach and reattach, REVIEW revision and response authority, cancellation acknowledgement, typed Workspace refresh, terminal settlement, log visibility, subscriber loss, and exact C0 receipt ancestry with no private operation imports; `src/cadrumo/entrypoints/tui/operations/tests`.
 
 ### Phase `W05.P12` - Domain review projections
 
@@ -193,9 +243,29 @@ Render census field review and filed-history outcome detail without placing doma
 - [ ] `W05.P12.S70` - Prove census review dispatches exact typed responses and never writes or recomputes policy in the TUI; `src/cadrumo/entrypoints/tui/profile/tests/test_census_sync_review.py`.
 - [ ] `W05.P12.S71` - Prove filed-history progress, scoped errors, viewable logs, child provenance, and partial outcomes remain visible through settlement; `src/cadrumo/entrypoints/tui/profile/tests/test_filed_history_operation_view.py`.
 
+### Phase `W05.P23` - C3 transient financial custody and dependency receipts
+
+Add the distinct transient financial operand protocol, enroll the Modelo calculation edit, prove crash-safe custody and atomic effect evidence, and mint the financial-operand and Edit Contract C3 dependency receipts without treating either as a visual exit.
+
+- [ ] `W05.P23.S141` - Define OperationTransientFinancialOperandProtocolV1 with typed declaration, requirement, submission, access-grant, delivery, acknowledgement, release, expiry, refusal, and broker contracts that are distinct from EphemeralSecretSubmission and persistent secure-reference flows and prohibit operand hashing or durable derivatives; `src/cadrumo/application/operations/_financial_operand.py`.
+- [ ] `W05.P23.S142` - Persist only non-sensitive custody checkpoints and serialize awaiting_submission to bound to delivery_started to delivery_acknowledged to released transitions with expiry, cancellation, terminal settlement, crash classification, restart reconciliation, and exactly-once release across racing supervisor paths; `src/cadrumo/application/operations/_journal.py, src/cadrumo/application/operations/_supervisor.py, and src/cadrumo/adapters/persistence/operations/_journal_validation.py`.
+- [ ] `W05.P23.S143` - Extend registered operation definitions with validated transient-financial-operand declarations and an effect-receipt resolver that narrows recorded mutation, interruption, and uncertain-effect claims from committed application evidence without exposing financial operand material; `src/cadrumo/application/operations/_registry.py`.
+- [ ] `W05.P23.S144` - Enroll the calculate and recalculate edit family through ModeloEditContractV1 and the transient financial operand handoff, register the typed ModeloWorkspaceRefreshTargetV1 resolver, and ensure frontend entrypoints can submit only typed requests without custody or mutation access; `src/cadrumo/application/modelo/_operation_definitions.py`.
+- [ ] `W05.P23.S145` - Prove strict protocol round trips, successful delivery, expiry and cancellation races, crash windows, restart classification, exactly-once release, sentinel non-retention, guarded edit compare-and-swap, effect-receipt narrowing, immutable production composition, and a semantic-plus-exact census that fails duplicate custody or edit authorities; `src/cadrumo/application/operations/tests/test_financial_operand_conformance.py and src/cadrumo/application/modelo/tests/test_edit_operation_conformance.py`.
+- [ ] `W05.P23.S146` - Implement the sole TuiOperationFinancialOperandDependencyReceiptV1 validator with accepted-authority, protocol-schema, custody-transition, crash, effect, production-composition, non-retention, current-only, no-legacy, and duplicate-authority evidence checks; `src/cadrumo/application/operations/tests/test_financial_operand_dependency_receipt.py`.
+- [ ] `W05.P23.S147` - Produce and validate the exact clean-commit TuiOperationFinancialOperandDependencyReceiptV1 with protocol and schema fingerprints, custody-state evidence, crash matrix, non-retention proof, production definition inventory, source ancestry, and the precise edit path it opens; `.vault/reference/2026-08-24-tui-operation-financial-operand-dependency-receipt.md`.
+- [ ] `W05.P23.S148` - Run the sole Edit Contract dependency validator against the exact green Workspace C2 and financial-operand receipts, accepted edit authority, closed EditContract implementation tuple, enrolled production definition, guarded result evidence, current source tree, no-legacy proof, and duplicate-authority census; `src/cadrumo/application/modelo/tests/test_edit_dependency_receipt.py`.
+- [ ] `W05.P23.S149` - Produce and validate the exact clean-commit ModeloEditContractC3DependencyReceiptV1 binding the Workspace C2 and financial-operand predecessor digests, edit compatibility tuple, baseline and surface fingerprints, guarded persistence evidence, result schema, production definition, conformance, and exact C3 edit destinations it opens; `.vault/reference/2026-08-24-modelo-edit-contract-c3-dependency-receipt.md`.
+
 ## Wave `W06` - Composition cutover and legacy deletion
 
 Join the independently green backend and frontend lanes, migrate every reverse consumer, switch packaging, and remove the legacy adapter package.
+
+### Phase `W06.P24` - C4 Modelo lifecycle operation enrollment
+
+Enroll rename, discard, verify, local file, export, and amend one by one through their existing application writers, each with an independently proven capability, interaction, effect receipt, and typed Workspace refresh result.
+
+- [ ] `W06.P24.S150` - Enroll modelo.work.rename through the existing rename_work_unit single writer with exact approval and capability rules, declared atomic write set, safe effect and result receipt, and typed Workspace refresh target without recreating lifecycle policy; `src/cadrumo/application/modelo/_operation_definitions.py and src/cadrumo/application/modelo/_work_lifecycle.py`.
 
 ### Phase `W06.P13` - Root composition and packaging
 
@@ -261,8 +331,8 @@ Prove live feedback, visible diagnostics, review actions, responsive layouts, in
 
 ## Parallelization
 
-The whole plan is blocked until `casilla-schema` lands. After that gate opens, Waves are sequential unless a Wave explicitly identifies independent Phases. No TUI operation projection begins before the operation models, persistence, supervisor, and executor conformance base is green. Work internal to this plan may parallelize only where a Wave says so; composition, cutover, and deletion remain serialized. The separate `tui-interface` campaign does not execute in parallel and remains blocked until this plan lands and its acceptance gates are green.
+The discharged `casilla-schema` prerequisite no longer blocks execution. Independent backend contract phases may proceed in parallel when they do not share an authority or write surface, but receipt minting, composition, cutover, and deletion remain serialized. No TUI operation projection begins before the exact C0 receipt. Interface C2 waits for its exact Workspace C2 dependency receipt, interface C3 waits for the exact C2 exit plus financial-operand and Edit Contract dependency receipts, interface C4 waits for the C3 exit plus the enrolled action denominator, and C5 waits for the C4 exit and final structural fixed point. The interface plan consumes these receipts and never redeclares their application contracts.
 
 ## Verification
 
-The plan is complete when every Step is closed, the operation conformance matrix proves honest success, refusal, failure, cancellation, timeout, interruption, effect, and cleanup settlement, and the installed TUI proves live progress and review behavior at supported terminal sizes. Structural closure additionally requires no Textual or TUI implementation outside `cadrumo.entrypoints.tui`, no outside Python import of that package, no direct TUI mutation callback, and deletion of `cadrumo.adapters.inbound.tui` without a compatibility facade.
+The plan is complete when every Step is closed, the four sole dependency validators for public operation observation, Workspace C2, transient financial operands, and Edit C3 pass against their exact current-HEAD artifacts, and the operation conformance matrix proves honest success, refusal, failure, cancellation, timeout, interruption, effect, cleanup, and restart settlement. Workspace and Edit proof must cover strict public-schema manifests, stamped producer epochs, exact canonical-owner parity, guarded compare-and-swap, safe result receipts, production dependency injection, non-retention, and semantic-plus-exact producer censuses that fail any competing authority. Structural closure additionally requires current-only operation persistence with no legacy reader or migrator, no Textual or TUI implementation outside `cadrumo.entrypoints.tui`, no outside Python import of that package, no direct TUI mutation callback, deletion of `cadrumo.adapters.inbound.tui` without a compatibility facade, and installed TUI proof at supported terminal sizes.

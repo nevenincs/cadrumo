@@ -108,4 +108,3 @@ then may the selected revision be considered for filing grade.
 - `src/cadrumo/domain/calculations/registry/tests/test_modelo_187_188_194_registry.py`
 - `2026-08-14-registry-temporal-coverage-plan`
 - `2026-08-10-aeat-export-fragment-generator-authority-plan`
-

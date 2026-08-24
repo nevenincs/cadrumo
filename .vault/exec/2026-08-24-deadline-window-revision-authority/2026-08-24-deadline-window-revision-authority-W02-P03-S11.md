@@ -11,9 +11,6 @@ related:
   - "[[2026-08-24-deadline-window-revision-authority-plan]]"
 ---
 
-
-
-
 # Re-adjudicate and repair Modelo 193 deadline identity against bundled and official AEAT authority while retaining following-January physical dates
 
 ## Scope

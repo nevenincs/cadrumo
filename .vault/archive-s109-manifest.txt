@@ -1,0 +1,1 @@
+.vault/exec/2026-08-09-cli-action-envelope-hardening/2026-08-09-cli-action-envelope-hardening-W05-P10-S109.md

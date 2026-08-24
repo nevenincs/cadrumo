@@ -9,8 +9,6 @@ body_hash: 'sha256:6c3fdce0620f18b0c2c0d4c9f65b3e7d2fb82860a377ce3ce02f7348a1e5c
 related: []
 ---
 
-
-
 # `tax-authority-reconciliation` audit: filing-boundary and source-receipt reconciliation
 
 ## Scope
@@ -21,7 +19,6 @@ keeps detector anti-vacuity independent of support policy, encodes Modelo 720's
 filing-year axis, and removes Modelo 200's unsafe filing claim.
 
 ## Findings
-
 
 ### modelo-200-filing-retirement | high | the grade downgrade hides a genuine supported relayout instead of completing the accepted split
 
@@ -85,7 +82,6 @@ explicit filing-year selector is preferable to interpreting its
 `_receipt_covers_year` correctly gives the typed period selector precedence.
 
 ## Recommendations
-
 
 - Complete the accepted Modelo 200 2024/2025 split and retain filing grade only
   on the resulting layout-correct epochs.  If filing support is instead being

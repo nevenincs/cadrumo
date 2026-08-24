@@ -11,7 +11,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-22-source-casilla-integration-plan]]'
 modified: '2026-08-24'
-body_hash: 'sha256:8f30ca97ac3b4f655aa38afde51e3b10fa098ecb86168661aba95abcb27b5f64'
+body_hash: 'sha256:46adfe2f1e6b92e3d9c47e14285d11c7179e1f3c5b0dd339c060ff2b9a8e8381'
 ---
 
 # `registry-completeness-closure` plan
@@ -125,6 +125,7 @@ Add or reconcile the adjudicated remedies in each existing owning plan and prove
 - [ ] `W02.P04.S77` - Correct Modelo 182 statutory filer-population wording and reconsideration scope so recipients, political parties, and protected-estate holders or administrators remain distinct from donor detail rows.; `.vault/reference/2026-08-24-registry-completeness-closure-modelo-182-design-era-and-donor-row-reference.md; .vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W02-P03-S15.md`.
 - [ ] `W02.P04.S78` - Correct Modelo 187 Article-2 filer-population wording to include the separate Article 42 RGAT obligated-person/entity limb, update its prerequisite, reconsideration, and existing owner routes, and re-attest the reference and execution record.; `.vault/reference/2026-08-24-registry-completeness-closure-modelo-187-design-era-coverage-reference.md; .vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W02-P03-S17.md`.
 - [ ] `W02.P04.S79` - Correct Modelo 220/2024 reviewer-stamp record-design counts against the hash-verified parser measurement and re-attest the unchanged applicability-grade, non-fileable disposition.; `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/revision.toml; .vault/exec/2026-08-24-registry-completeness-closure/`.
+- [ ] `W02.P04.S80` - Reconcile Modelo 721 structured-message filing authority with the positional-only export predicate: obtain the required ADR decision and enroll source taxonomy, authority-grade gate, canonical exporter, and local emitted-payload proof under the existing export plan while preserving Modelo 136 terminal refusal.; `.vault/adr/; .vault/reference/; .vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md; src/cadrumo/domain/calculations/registry/_validate_export_exemption.py; src/cadrumo/domain/calculations/registry/tests/test_export_exemption_declared.py`.
 
 ## Wave `W03` - semantic proof and predecessor closure
 

@@ -32,4 +32,3 @@ Land the generated provider outputs atomically with the canonical tool-mode sour
 ### validator-ratchet-extraction | low | no findings
 
 Independent review found the projection-endpoint extraction behavior-preserving, correctly contained within the registry package, equivalently typed, and covered by the focused projection and reviewability tests. No remediation is required.
-
