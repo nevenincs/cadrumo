@@ -93,6 +93,7 @@ class _ProfileCustodyTransactionCapability:
         profile_id: UUID,
         transaction_id: UUID | None = None,
         retention_override: ProfileCustodyRetentionOverride | None = None,
+        requires_inactive_target: bool = False,
         now: datetime | None = None,
     ) -> ProfileCustodyTransactionJournal:
         """Record all local preflight evidence before any destructive action.
@@ -112,6 +113,10 @@ class _ProfileCustodyTransactionCapability:
         transaction = transaction_id or uuid4()
         instant = (now or _utc_now()).astimezone(UTC)
         with profile_custody_transaction_lock(self._root, profile_id):
+            self._refuse_active_target_when_required(
+                profile_id=profile_id,
+                requires_inactive_target=requires_inactive_target,
+            )
             hold_assessment = self._holds.assess(profile_id, now=instant)
             if retention_override is not None and not hold_assessment.filing_hold:
                 raise ProfileCustodyTransactionRefusalError(
@@ -132,6 +137,7 @@ class _ProfileCustodyTransactionCapability:
                 inventory=ProfileCustodyInventoryWitness.from_inventory(inventory),
                 hold_assessment=hold_assessment,
                 retention_override=retention_override,
+                requires_inactive_target=requires_inactive_target,
                 confirmation_challenge=secrets.token_hex(32),
             )
             self._repository.create_journal(journal)
@@ -601,6 +607,10 @@ class _ProfileCustodyTransactionCapability:
         intentionally linear: secrets, session acceleration, pointer, tombstone
         rename, local removal, and final receipt.
         """
+        self._refuse_active_target_when_required(
+            profile_id=journal.profile_id,
+            requires_inactive_target=journal.requires_inactive_target,
+        )
         self._validate_current_delete_hold(journal, instant)
         assert journal.inventory is not None
         inventory_digest = journal.inventory.digest
@@ -623,6 +633,24 @@ class _ProfileCustodyTransactionCapability:
         journal = self._rename_delete_capsule(journal, inventory_digest, instant)
         journal = self._remove_delete_capsule(journal, inventory_digest, instant)
         return self._complete_delete(journal, instant)
+
+    def _refuse_active_target_when_required(
+        self,
+        *,
+        profile_id: UUID,
+        requires_inactive_target: bool,
+    ) -> None:
+        """Bind and revalidate the single-target inactive-delete policy."""
+        if not requires_inactive_target:
+            return
+        from ._profile_pointer_transaction import active_profile_pointer_transaction
+
+        with active_profile_pointer_transaction(self._root) as pointer_transaction:
+            pointer = pointer_transaction.read()
+        if pointer is not None and pointer.bucket_id == str(profile_id):
+            raise ProfileCustodyTransactionRefusalError(
+                "single-target profile deletion refuses the active profile"
+            )
 
     def _validate_current_delete_hold(
         self,

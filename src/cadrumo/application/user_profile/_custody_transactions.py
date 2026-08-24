@@ -268,6 +268,10 @@ class ProfileCustodyTransactionJournal(CustodyDigestModel):
     #: authorisation cannot be edited into a journal after the fact, and the
     #: recorded reason survives with the transaction that acted on it.
     retention_override: ProfileCustodyRetentionOverride | None = None
+    #: True only for a single-target delete whose authority requires the
+    #: target to remain inactive across preparation, confirmation, crash
+    #: recovery, and every destructive owner effect.
+    requires_inactive_target: bool = False
     confirmation_challenge: str | None = Field(default=None, min_length=64, max_length=64)
     tombstone_relative_path: str | None = Field(default=None, min_length=1, max_length=256)
     self_digest: str = Field(min_length=71, max_length=71)
@@ -342,7 +346,9 @@ class ProfileCustodyTransactionJournal(CustodyDigestModel):
             raise ValueError("verified create transaction requires its staged custody digest")
 
     def _reject_create_authorization(self) -> None:
-        if any(value is not None for value in (self.inventory, self.hold_assessment, self.confirmation_challenge)):
+        if self.requires_inactive_target or any(
+            value is not None for value in (self.inventory, self.hold_assessment, self.confirmation_challenge)
+        ):
             raise ValueError("create transaction cannot carry deletion authorization")
 
     def _validate_delete_operation_shape(self) -> None:

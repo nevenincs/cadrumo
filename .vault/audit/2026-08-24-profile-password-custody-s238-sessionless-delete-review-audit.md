@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:80d83e8347b3231052422dff808790d8c9d064a76de0d159038f94e2989d1b2f'
+body_hash: 'sha256:4dc43d75e569058216a3340b60fdd5ea8041cd9fe4941212de4ceff61b43b133'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -33,21 +33,40 @@ related:
 
 ## Scope
 
-<!-- What was audited and why -->
+Audit the S238 root admission change, profile-delete custody boundary, Windows
+tombstone rename behavior, and real subprocess evidence against the accepted
+per-profile custody authority.
 
 ## Findings
 
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
+### s238-sessionless-profile-delete-review | low | root admission now matches custody ownership
 
-       ### S238 sessionless profile delete review | {level} | {summary}
+The exact delete leaf no longer demands the session that logout deliberately
+removes. Its own boundary continues to resolve one positional label, refuse the
+active pointer, assess statutory retention, require explicit confirmation, and
+bind destruction to the custody transaction's inventory witness and receipt.
 
-     followed by a paragraph carrying the detail. S238 sessionless profile delete review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
+### s238-sessionless-profile-delete-review | low | subprocess evidence closes the in-process gap
+
+Fresh interpreters now prove both sides of the boundary: logout followed by
+exact inactive deletion succeeds and leaves no registered profile, while an
+active exact target receives the typed refusal and remains active and listed.
+The exemption cites both test names as executable justification.
+
+### s238-sessionless-profile-delete-review | high | resolved active-target race and recovery gap
+
+Formal review found that an unlocked CLI check could race a concurrent login,
+and that an invocation-only policy would not survive crash recovery. The final
+implementation holds the canonical reentrant root transaction across the CLI
+decision and lifecycle, persists `requires_inactive_target` in the digest-bound
+journal, and revalidates it before any owner effect. Reset explicitly records
+its distinct active-target authority. Native, WSL/POSIX, and real subprocess
+evidence pass; final formal review reports no remaining findings.
 
 ## Recommendations
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
+- Retain the exact-leaf exemption rather than widening it to the profile group.
+- Keep the two subprocess witnesses named by the exemption whenever the command
+  graph or authentication posture changes.
+- Retain the durable inactive-policy recovery witness and the reentrant pointer
+  transaction; do not replace either with an unlocked CLI-only check.

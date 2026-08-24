@@ -116,7 +116,7 @@ def _refuse_erase_inside_the_retention_floor(assessment: BucketDeletionAssessmen
     )
 
 
-def _destroy(bucket_id: str) -> str:
+def _destroy(bucket_id: str, *, label: str) -> str:
     """Destroy one capsule through the journalled custody owner.
 
     Delegates to the journalled, crash-resumable custody primitives rather than
@@ -130,12 +130,20 @@ def _destroy(bucket_id: str) -> str:
     """
     from uuid import UUID
 
-    from ....application.user_profile import ProfileCapsuleLifecycle
+    from ....application.user_profile import ProfileCapsuleLifecycle, active_profile_pointer_transaction
 
-    lifecycle = ProfileCapsuleLifecycle()
-    journal = lifecycle.prepare_delete(profile_id=UUID(bucket_id))
-    confirmation = lifecycle.confirm_delete(journal)
-    receipt = lifecycle.delete(confirmation)
+    with active_profile_pointer_transaction():
+        # Revalidate under the canonical root/pointer lock and retain it until
+        # every journalled owner effect completes. A concurrent login cannot
+        # activate the target between this decision and tombstone removal.
+        _refuse_deleting_the_active_profile(bucket_id=bucket_id, label=label)
+        lifecycle = ProfileCapsuleLifecycle()
+        journal = lifecycle.prepare_delete(
+            profile_id=UUID(bucket_id),
+            requires_inactive_target=True,
+        )
+        confirmation = lifecycle.confirm_delete(journal)
+        receipt = lifecycle.delete(confirmation)
     return receipt.completed_at.isoformat()
 
 
@@ -196,7 +204,7 @@ def config_profile_delete(
     _refuse_deleting_the_active_profile(bucket_id=pointer.bucket_id, label=pointer.label)
     assessment = _assess(pointer.bucket_id)
     _refuse_erase_inside_the_retention_floor(assessment)
-    completed_at = _destroy(pointer.bucket_id) if yes else None
+    completed_at = _destroy(pointer.bucket_id, label=pointer.label) if yes else None
     result, lines, notices = _result_and_lines(
         assessment,
         label=pointer.label,
