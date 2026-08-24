@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:6c6edc8aa5ffd1e41b1ccfc9b6158fa90d01b6c508f202dd0131f2cbca5729a9'
+body_hash: 'sha256:931d841be8688adf514f0eca50fac7f9eeb4eeb8a8371034057bb401902d46c9'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -46,6 +46,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S64]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S65]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S66]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S67]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
@@ -184,6 +185,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P02-S64` - Remove fabricated strict proof authorities and digests from closure CLI tests, exercise the actual CLI with canonical live loaders and real evidence only, prove live-versus-offline refusal distinctions, keep eligibility unreachable until durable filing proof exists, prevent injected claims from bypassing the gate, and add a mutation bite rejecting canned proof
 - `2026-08-24-registry-completeness-closure-W01-P02-S65` - Add a hostile RegistryClosureAuthorities CLI context backed by eligible real protocol implementations, prove the shipped command ignores it, restore the exact former find_object authority branch for a mutation bite, and retain non-CLI loader injection
 - `2026-08-24-registry-completeness-closure-W01-P02-S66` - Repair S65 execution-record EOF whitespace and distinguish its scoped diff assertion from commit-wide git show --check, then re-attest both checks.
+- `2026-08-24-registry-completeness-closure-W01-P02-S67` - Normalize S65/S66 execution-record endings and S66 template annotations through canonical vault edits, then re-attest scoped markdown and annotations checks.
 
 ### plan
 
