@@ -24,6 +24,7 @@ import pytest
 
 from cadrumo.core import scan_directory
 
+from .._acquire_common import venv_bin_dir
 from .._command import CommandResult, run_command
 from .._hashing import sha256_path
 from .._installed_wheel_binding import (
@@ -243,7 +244,7 @@ def test_exact_path_foreign_launcher_is_refused(tmp_path: Path) -> None:
     server = Path(shutil.which("cadrumo-mcp") or "").resolve(strict=True)
     copied_venv = tmp_path / ".venv"
     shutil.copytree(_client_venv_template(server.parents[1]), copied_venv, copy_function=os.link)
-    scripts = copied_venv / ("Scripts" if server.suffix.lower() == ".exe" else "bin")
+    scripts = venv_bin_dir(copied_venv)
     copied_server = scripts / server.name
     copied_server.unlink()
     shutil.copy2(scripts / ("aeat.exe" if server.suffix.lower() == ".exe" else "aeat"), copied_server)
