@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:709ad5fd1bf8d2928e22d040d3f556f852d344ab6ae128d0edff8af6fdf04c12'
+body_hash: 'sha256:19198e1a1b6e843eb52db67d97cc919254f44593d870d23c36cd1e0364ac28a3'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -75,3 +75,24 @@ without its documented portable proof.
   export surface, or state the current capability gap instead of instructing
   operators to perform an unavailable export. Keep the artifact explicitly
   restore-only and separate from normal archives.
+
+## Re-review disposition
+
+The high finding is closed. The five invalid profile-setup prerequisites were
+replaced with the real provisioned-profile or stable-help lanes appropriate to
+their subjects, the logged-out status contract now expects the live refusal,
+and all nine page goldens were regenerated from their contracts. Independent
+checks for both `how-to/profile-setup` and `how-to/protect-data-access` report
+`cli-sequence goldens: clean`.
+
+The medium finding is closed as a truthful documented capability gap. The
+operator guide now states that the CLI does not currently export a recovery
+artifact, that the phrase alone is not a complete recovery path, and that only
+an external provisioning workflow supplying the matching artifact can use the
+explicit artifact restore door. The prose does not imply that an unavailable
+export command exists.
+
+No critical, high, or medium findings remain for S219. The documentation and
+locale-owned CLI help consistently state mandatory exact recovery verification
+at creation, refusal before publication, no later enrollment, restore-proof-
+only artifacts, normal-archive exclusion, and password-login independence.

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:54a8ddcda7d68ebdfaa1a563552446ac93e4c178f4ac051b0f85f11e34f4708c'
+body_hash: 'sha256:464cbf4cb160b1dda043e869ea7982d06fe969bf0c3a18b95a6f506e36bce6d2'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -227,6 +227,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W06-P10-S216]]'
   - '[[2026-08-13-profile-password-custody-W06-P10-S217]]'
   - '[[2026-08-13-profile-password-custody-W06-P10-S218]]'
+  - '[[2026-08-13-profile-password-custody-W06-P10-S219]]'
   - '[[2026-08-13-profile-password-custody-plan]]'
   - '[[2026-08-13-profile-password-custody-research]]'
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
@@ -258,6 +259,7 @@ related:
   - '[[2026-08-24-profile-password-custody-s195-setup-incomplete-proof-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s206-recovery-parity-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s209-posix-kdf-descriptor-attestation-review-audit]]'
+  - '[[2026-08-24-profile-password-custody-s219-docs-audit]]'
 ---
 
 # `profile-password-custody` feature index
@@ -300,6 +302,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-24-profile-password-custody-s195-setup-incomplete-proof-review-audit` - `profile-password-custody` audit: `S195 setup-incomplete proof review`
 - `2026-08-24-profile-password-custody-s206-recovery-parity-review-audit` - `profile-password-custody` audit: `S206 recovery parity review`
 - `2026-08-24-profile-password-custody-s209-posix-kdf-descriptor-attestation-review-audit` - `profile-password-custody` audit: `S209 POSIX KDF descriptor attestation security review`
+- `2026-08-24-profile-password-custody-s219-docs-audit` - `profile-password-custody` audit: `S219 mandatory recovery documentation`
 
 ### exec
 
@@ -522,6 +525,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W06-P10-S216` - Migrate all remaining direct registration callers and their shared test provisioning doors to supply and verify recovery instead of constructing password-only profiles
 - `2026-08-13-profile-password-custody-W06-P10-S217` - Re-author application, CLI, TUI, storage, and harness tests around mandatory recovery handoff, exact possession verification, and rollback on missing, mismatched, cancelled, or failed handoff
 - `2026-08-13-profile-password-custody-W06-P10-S218` - Confirm recovery artifacts remain external restore proofs only, remove any API or prose that permits later enrollment or treats a missing creation wrapper as current-format success, and retain password login without recovery reads
+- `2026-08-13-profile-password-custody-W06-P10-S219` - Remove stale password-only creation and later-enrollment claims from operator guidance, four locale catalogues, and generated reference sequences, then regenerate CLI-owned artifacts
 
 ### plan
 

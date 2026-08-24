@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:67e3e534c66a594865c0edd18a8b7b4186a6cc377f95c9e3df726bad3f3452b7'
+body_hash: 'sha256:085c6b8483d0ccee385f2d24b79da0e134cd014e18d87ae8e86dbeddfc9f5bbc'
 step_id: 'S219'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -52,10 +52,25 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- State mandatory verified recovery at creation, no later enrollment, and password-login independence in operator guidance and all four CLI locales.
+- State that recovery material is restore-only, excluded from normal archives, and incomplete without an externally provisioned artifact and source capsule.
+- Replace stale password-only profile-setup prerequisites with truthful seeded-profile or stable-help sequences and regenerate their committed goldens.
+- Regenerate the CLI-owned command reference, verify locale parity, and complete an independent formal review.
 
 ## Outcome
 
+Operator-facing material no longer describes password-only creation or later recovery enrollment. Every creation lane is documented as refusing before publication unless exact recovery possession is verified. Password login stays independent, and recovery proof is limited to explicit restore.
+
+Evidence:
+
+- `python -m dev.docs.sequences check --page how-to/profile-setup`: clean.
+- `python -m dev.docs.sequences check --page how-to/protect-data-access`: clean.
+- `vaultspec-core spec reference generate --check`: generated CLI reference in sync.
+- `python -m dev.locales scaffold --check` and `python -m dev.locales audit`: ca, en, es, and hu clean.
+- Focused documented-command suite: 347 passed; two unrelated standing failures remain in the retired `app agent` contract and an existing inline profile-delete span.
+- Comprehensive sequence-golden suite: 10 passed and two repository-wide gates failed on unrelated pages outside the two S219 pages.
+- Independent S219 re-review: pass, with no critical, high, or medium findings.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+The CLI currently has no production recovery-artifact export command. Guidance states this capability gap explicitly instead of promising an unavailable operator workflow. No unrelated sequence, registry, live-facade, or translation worktree changes were modified or absorbed.
