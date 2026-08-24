@@ -322,7 +322,10 @@ def test_months_declared_for_a_child_over_three_are_withheld_and_disclosed(
     # The remedy must name an editing route the paged door refuses on a piped
     # host and `descendiente add` (append-only) cannot perform: removing the
     # row and re-adding it.
-    assert "descendiente remove" in messages[0]
+    # The advisory names the record to restate, not the command that does it:
+    # Notice reserves executable command identity for the typed action
+    # projection and refuses a message carrying raw `aeat ...` prose.
+    assert "descendiente record" in messages[0]
 
 
 def test_an_eligible_child_does_not_raise_the_withheld_advisory(
@@ -520,7 +523,10 @@ def test_a_contributing_descendant_under_the_default_relacion_is_disclosed(
     assert messages, "the ambiguous-relación advisory must carry a rendered message"
     assert "grandchild" in messages[0] or "consanguinidad" in messages[0]
     assert "guarda y custodia" in messages[0]
-    assert "descendiente remove" in messages[0]
+    # The advisory names the record to restate, not the command that does it:
+    # Notice reserves executable command identity for the typed action
+    # projection and refuses a message carrying raw `aeat ...` prose.
+    assert "descendiente record" in messages[0]
 
 
 def test_the_advisory_names_every_contributing_descendant_under_the_default(
