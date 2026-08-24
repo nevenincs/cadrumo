@@ -123,7 +123,12 @@ class OperationRequest[RequestPayloadT: BaseModel](BaseModel):
 
     @model_validator(mode="after")
     def _validate_payload_immutability(self) -> OperationRequest[RequestPayloadT]:
-        require_strict_frozen_operation_model_graph(type(self.payload), path="request payload")
+        require_strict_frozen_operation_model_graph(
+            type(self.payload),
+            path="request payload",
+            reject_mutable_annotations=False,
+            require_validated_defaults=False,
+        )
         _require_deeply_immutable_payload(self.payload, path="payload", visiting=set())
         return self
 
@@ -222,7 +227,12 @@ def _require_deeply_immutable_payload(value: object, *, path: str, visiting: set
     if identity in visiting:
         raise ValueError(f"operation request {path} contains a cyclic reference")
     if isinstance(value, BaseModel):
-        require_strict_frozen_operation_model_graph(type(value), path=f"request {path}")
+        require_strict_frozen_operation_model_graph(
+            type(value),
+            path=f"request {path}",
+            reject_mutable_annotations=False,
+            require_validated_defaults=False,
+        )
         visiting.add(identity)
         try:
             for field_name in type(value).model_fields:

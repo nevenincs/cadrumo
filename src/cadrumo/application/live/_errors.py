@@ -27,11 +27,11 @@ from ...core import (
     NoRecoveryOutcome,
 )
 from ...core.errors import CadrumoError
+from ..operator_actions import ConditionEvidence, PreconditionVerdict
 
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.auth import ClaveMovilApprovalTimeoutError
     from ...adapters.outbound.aeat.sede import SedeError
-    from ..operator_actions import PreconditionVerdict
 
 
 class LiveIvaAcquisitionFailureMode(StrEnum):
@@ -159,6 +159,23 @@ class LiveIvaSurfaceTimeoutError(LiveApplicationError):
             message,
             context=context,
             translated_message="errors.error.error_application_live_iva_surface_timeout",
+            precondition_verdict=PreconditionVerdict(
+                failed_condition_id="live.iva.surface.completed",
+                evidence=(
+                    ConditionEvidence(
+                        condition_id="live.iva.surface.completed",
+                        evidence_id="live.iva.surface.completed.observation",
+                        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                        values={
+                            "surface": surface,
+                            "timeout_ms": timeout_ms,
+                            "progress_observed": bool(progress_context),
+                        },
+                    ),
+                ),
+                conditionality=ActionConditionality.NOT_APPLICABLE,
+                no_recovery_outcome=NoRecoveryOutcome.SAFETY,
+            ),
         )
         self.surface = surface
         self.timeout_ms = timeout_ms

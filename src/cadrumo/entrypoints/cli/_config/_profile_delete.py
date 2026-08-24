@@ -117,30 +117,25 @@ def _refuse_erase_inside_the_retention_floor(assessment: BucketDeletionAssessmen
 
 
 def _destroy(bucket_id: str) -> str:
-    """Destroy one capsule under its target lock; return the completion instant.
+    """Destroy one capsule through the journalled custody owner.
 
     Delegates to the journalled, crash-resumable custody primitives rather than
     re-implementing a write path: ``prepare_delete`` opens the transaction,
     ``confirm_delete`` produces the confirmation it will only accept, and
-    ``delete`` executes it. The target lock is held across all three so a
-    concurrent maintenance reader cannot observe a half-removed capsule.
+    ``delete`` executes it. Each custody transition holds the canonical external
+    transaction lock and revalidates the immutable inventory witness. Do not
+    hold the bucket's own ``.lock`` across execution: on Windows that live file
+    handle makes the authenticated capsule directory impossible to rename to
+    its transaction-owned deletion tombstone.
     """
     from uuid import UUID
 
-    from ....application.bucket_maintenance import BucketMaintenanceService
     from ....application.user_profile import ProfileCapsuleLifecycle
-    from ....core.config import load_settings
 
-    settings = load_settings()
-    with BucketMaintenanceService().deletion_target_locks(
-        root=settings.cadrumo_local_storage_root,
-        bucket_ids=(bucket_id,),
-        wait_seconds=settings.cadrumo_file_lock_timeout_s,
-    ):
-        lifecycle = ProfileCapsuleLifecycle()
-        journal = lifecycle.prepare_delete(profile_id=UUID(bucket_id))
-        confirmation = lifecycle.confirm_delete(journal)
-        receipt = lifecycle.delete(confirmation)
+    lifecycle = ProfileCapsuleLifecycle()
+    journal = lifecycle.prepare_delete(profile_id=UUID(bucket_id))
+    confirmation = lifecycle.confirm_delete(journal)
+    receipt = lifecycle.delete(confirmation)
     return receipt.completed_at.isoformat()
 
 

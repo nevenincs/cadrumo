@@ -44,6 +44,16 @@ def test_m036_verb_advertises_flag_set() -> None:
         assert "--note" in result.output, verb
 
 
+def test_m036_verb_help_describes_external_routes_and_optional_electronic_justificante() -> None:
+    """Each public verb keeps office filing separate from optional electronic evidence."""
+    for verb in _M036_VERBS:
+        result = _invoke(["app", "modelo", "m036", verb, "--help"])
+        assert result.exit_code == 0, result.output
+        assert "AEAT Sede" in result.output, verb
+        assert "competent AEAT office" in result.output, verb
+        assert "electronic justificante is optional" in result.output, verb
+
+
 def test_m036_group_lists_three_verbs() -> None:
     """``aeat app modelo m036 --help`` lists the three declarative verbs."""
     result = _invoke(["app", "modelo", "m036", "--help"])

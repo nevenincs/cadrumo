@@ -105,6 +105,9 @@ class ExemptionCriterion(StrEnum):
     OPERATOR_SUPPLIED_ARTEFACT = "operator_supplied_artefact"
     """It reads only files and keys the caller passes on the command line."""
 
+    SESSIONLESS_TARGET_DESTRUCTION = "sessionless_target_destruction"
+    """It destroys one exact inactive target under its own custody safeguards."""
+
 
 @dataclass(frozen=True, slots=True)
 class BootstrapExemption:
@@ -175,11 +178,6 @@ class LoginGatedVerb:
 #: a rename of the declared command reds the gate rather than silently retiring
 #: the refusal.
 #:
-#: The list is NOT limited to that surface, and the third entry says why in its
-#: own reason: a verb can need a currently-valid login for a reason other than
-#: its output leaving the encrypted store. Each entry states the ground it
-#: stands on, because a single shared justification would silently extend to a
-#: verb it does not actually fit.
 LOGIN_GATED_VERB_PATHS: tuple[LoginGatedVerb, ...] = (
     LoginGatedVerb(
         verb_path="config profile archive export",
@@ -197,20 +195,6 @@ LOGIN_GATED_VERB_PATHS: tuple[LoginGatedVerb, ...] = (
             "Same class as the archive export: its output is a copy of profile state leaving "
             "the encrypted store, so it needs a currently-valid login and not merely the "
             "ability to unlock the named target."
-        ),
-    ),
-    LoginGatedVerb(
-        verb_path="config profile delete",
-        reason=(
-            "Recorded for a DIFFERENT reason from its two siblings above, and the difference "
-            "matters because the output-leaves-the-store reasoning that gates them does not "
-            "reach this verb: nothing leaves the store, the capsule is destroyed in place. "
-            "What gates it is that it is irreversible and needs no target unlock at all - the "
-            "custody primitives destroy a capsule without opening it - so the mechanical "
-            "reading that frees a target-scoped verb frees this one most easily of the three, "
-            "and it is the one where a wrongly-granted exemption costs a taxpayer their "
-            "encrypted financial history rather than a redundant copy of it. The absence of an "
-            "exemption is the whole protection; this entry is what keeps the absence deliberate."
         ),
     ),
 )
@@ -298,6 +282,21 @@ BOOTSTRAP_EXEMPTIONS: tuple[BootstrapExemption, ...] = (
             "needs no session, so a locked profile still lists."
         ),
         cites_verbs=("config login",),
+    ),
+    BootstrapExemption(
+        verb_path="config profile delete",
+        criterion=ExemptionCriterion.SESSIONLESS_TARGET_DESTRUCTION,
+        note=(
+            "Deletion must run after logout, when the named target is inactive and no root "
+            "session can exist. The leaf still resolves one exact positional label, refuses "
+            "the active pointer, assesses legal retention before confirmation, and delegates "
+            "destruction to the journalled custody lifecycle. Exempting this exact leaf grants "
+            "none of its profile siblings the same posture."
+        ),
+        cites_tests=(
+            "test_logged_out_inactive_profile_delete_succeeds_through_real_root",
+            "test_active_profile_delete_still_refuses_through_real_root",
+        ),
     ),
     BootstrapExemption(
         verb_path="config storage",

@@ -2,10 +2,25 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import UTC, datetime
+from typing import Annotated, Any, TypedDict, cast, override
 
 import pytest
-from pydantic import BaseModel, ValidationError
+from pydantic import (
+    BaseModel,
+    Field,
+    GetJsonSchemaHandler,
+    Json,
+    PlainSerializer,
+    SecretStr,
+    ValidationError,
+    computed_field,
+    field_serializer,
+    model_serializer,
+)
+from pydantic.json_schema import JsonSchemaValue
+from pydantic_core import CoreSchema
 
 from ....core import (
     STRICT_FROZEN_CONFIG,
@@ -80,10 +95,178 @@ class NonStrictPayload(BaseModel):
     value: str
 
 
+class LaxNestedPayload(BaseModel):
+    value: str
+
+
+class StrictParentWithLaxNestedPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    nested: LaxNestedPayload
+
+
+class AnyPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    payload: Any
+
+
+class ObjectPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    payload: object
+
+
 class OpenObjectPayload(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     labels: dict[str, str]
+
+
+class FixedTuplePayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    values: tuple[str, int]
+
+
+class UntypedFixedTuplePayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    values: tuple[str, Any]
+
+
+class OpenFixedTuplePayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    values: tuple[str, int]
+
+    @classmethod
+    @override
+    def __get_pydantic_json_schema__(
+        cls,
+        core_schema: CoreSchema,
+        handler: GetJsonSchemaHandler,
+    ) -> JsonSchemaValue:
+        schema = handler(core_schema)
+        properties = cast(dict[str, object], schema["properties"])
+        values_schema = cast(dict[str, object], properties["values"])
+        values_schema.pop("maxItems", None)
+        return schema
+
+
+class MutableListPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    values: list[str]
+
+
+class MutableSetPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    values: set[str]
+
+
+class MutableMappingPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    values: Mapping[str, str]
+
+
+class MutableValues(TypedDict):
+    value: str
+
+
+class MutableTypedDictPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    values: MutableValues
+
+
+class MutableJsonPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    values: Json[list[str]]
+
+
+class SecretPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    value: SecretStr
+
+
+class ComputedPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    value: str
+
+    @computed_field
+    @property
+    def projected_value(self) -> str:
+        return self.value
+
+
+class InvalidDefaultPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    value: int = cast(int, "not-an-integer")  # intentional admission witness
+
+
+class FieldSerializerPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    value: str
+
+    @field_serializer("value")
+    def _serialize_value(self, value: str) -> dict[str, str]:
+        return {"drifted": value}
+
+
+class ModelSerializerPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    value: str
+
+    @model_serializer
+    def _serialize_model(self) -> dict[str, str]:
+        return {"renamed": self.value}
+
+
+def serialize_annotated_value(value: str) -> dict[str, str]:
+    return {"drifted": value}
+
+
+class AnnotatedSerializerPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    value: Annotated[
+        str,
+        PlainSerializer(serialize_annotated_value, return_type=dict[str, str]),
+    ]
+
+
+class LyingJsonSchemaPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    value: int
+
+    @classmethod
+    @override
+    def __get_pydantic_json_schema__(
+        cls,
+        core_schema: CoreSchema,
+        handler: GetJsonSchemaHandler,
+    ) -> JsonSchemaValue:
+        schema = handler(core_schema)
+        properties = cast(dict[str, object], schema["properties"])
+        value_schema = cast(dict[str, object], properties["value"])
+        value_schema["type"] = "string"
+        return schema
+
+
+class StructuralSchemaExtraPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    value: int = Field(json_schema_extra={"type": "string"})
 
 
 class Executor:
@@ -152,6 +335,26 @@ def review_projector(operand: BaseModel, interaction: OperationInteractionReques
 def refresh_adapter(receipt: OperationTerminalReceipt) -> BaseModel:
     del receipt
     return RefreshTarget(subject_ref="profile:active")
+
+
+def incompatible_review_projector(operand: BaseModel) -> BaseModel:
+    del operand
+    return ReviewPayload(summary_code="profile.sync.review")
+
+
+def incompatible_refresh_adapter(receipt: OperationTerminalReceipt, extra: object) -> BaseModel:
+    del receipt, extra
+    return RefreshTarget(subject_ref="profile:active")
+
+
+class AsyncReviewProjector:
+    async def __call__(
+        self,
+        operand: BaseModel,
+        interaction: OperationInteractionRequest,
+    ) -> BaseModel:
+        del operand, interaction
+        return ReviewPayload(summary_code="profile.sync.review")
 
 
 def public_registration(
@@ -453,17 +656,130 @@ def test_public_schema_identity_is_exact_and_refuses_non_strict_models() -> None
 
     assert first == second
     assert first.schema_fingerprint == "2d580ffa1af222cf9aba76e58220104f26fe5e3737b1fa1a674cde21fe93cee1"
-    with pytest.raises(ValueError, match="strict, frozen"):
+    with pytest.raises(ValueError, match="must set strict=True"):
         OperationSchemaIdentityV1.from_model(
             schema_id="profile.sync.unsafe",
             schema_version=1,
             model_type=NonStrictPayload,
         )
-    with pytest.raises(ValueError, match="open object payload bags"):
+    with pytest.raises(ValueError, match=r"public schema\.nested model must set strict=True"):
+        OperationSchemaIdentityV1.from_model(
+            schema_id="profile.sync.lax-nested",
+            schema_version=1,
+            model_type=StrictParentWithLaxNestedPayload,
+        )
+
+
+@pytest.mark.parametrize("model_type", [AnyPayload, ObjectPayload])
+def test_public_schema_identity_refuses_untyped_payload_branches(model_type: type[BaseModel]) -> None:
+    with pytest.raises(ValueError, match="untyped branch"):
+        OperationSchemaIdentityV1.from_model(
+            schema_id="profile.sync.untyped",
+            schema_version=1,
+            model_type=model_type,
+        )
+    with pytest.raises(ValueError, match=r"mutable container|open object branch"):
         OperationSchemaIdentityV1.from_model(
             schema_id="profile.sync.open-object",
             schema_version=1,
             model_type=OpenObjectPayload,
+        )
+
+
+def test_public_schema_identity_accepts_one_closed_fixed_tuple() -> None:
+    identity = OperationSchemaIdentityV1.from_model(
+        schema_id="profile.sync.fixed-tuple",
+        schema_version=1,
+        model_type=FixedTuplePayload,
+    )
+
+    assert len(identity.schema_fingerprint) == 64
+
+
+@pytest.mark.parametrize("model_type", [OpenFixedTuplePayload, UntypedFixedTuplePayload])
+def test_public_schema_identity_refuses_open_or_untyped_fixed_tuples(model_type: type[BaseModel]) -> None:
+    with pytest.raises(ValueError, match=r"customize its JSON schema|untyped branch"):
+        OperationSchemaIdentityV1.from_model(
+            schema_id="profile.sync.unsafe-tuple",
+            schema_version=1,
+            model_type=model_type,
+        )
+
+
+@pytest.mark.parametrize(
+    "model_type",
+    [MutableListPayload, MutableSetPayload, MutableMappingPayload, MutableTypedDictPayload, MutableJsonPayload],
+)
+def test_public_schema_identity_refuses_mutable_container_annotations(model_type: type[BaseModel]) -> None:
+    with pytest.raises(ValueError, match=r"mutable container|mutable TypedDict"):
+        OperationSchemaIdentityV1.from_model(
+            schema_id="profile.sync.mutable-container",
+            schema_version=1,
+            model_type=model_type,
+        )
+
+
+def test_public_schema_identity_refuses_secret_capable_schema_branches() -> None:
+    with pytest.raises(ValueError, match="secret-capable branch"):
+        OperationSchemaIdentityV1.from_model(
+            schema_id="profile.sync.secret",
+            schema_version=1,
+            model_type=SecretPayload,
+        )
+
+
+def test_public_schema_identity_refuses_computed_fields_absent_from_validation_schema() -> None:
+    with pytest.raises(ValueError, match="computed fields"):
+        OperationSchemaIdentityV1.from_model(
+            schema_id="profile.sync.computed",
+            schema_version=1,
+            model_type=ComputedPayload,
+        )
+
+
+def test_public_schema_identity_refuses_unvalidated_typed_defaults() -> None:
+    with pytest.raises(ValueError, match="defaults must set validate_default=True"):
+        OperationSchemaIdentityV1.from_model(
+            schema_id="profile.sync.invalid-default",
+            schema_version=1,
+            model_type=InvalidDefaultPayload,
+        )
+
+
+@pytest.mark.parametrize("model_type", [FieldSerializerPayload, ModelSerializerPayload])
+def test_public_schema_identity_refuses_serializer_drift(model_type: type[BaseModel]) -> None:
+    with pytest.raises(ValueError, match="serializers that drift"):
+        OperationSchemaIdentityV1.from_model(
+            schema_id="profile.sync.serializer-drift",
+            schema_version=1,
+            model_type=model_type,
+        )
+
+
+def test_public_schema_identity_refuses_annotated_serializer_drift() -> None:
+    with pytest.raises(ValueError, match="validation and serialization shapes must be identical"):
+        OperationSchemaIdentityV1.from_model(
+            schema_id="profile.sync.annotated-serializer-drift",
+            schema_version=1,
+            model_type=AnnotatedSerializerPayload,
+        )
+
+
+def test_public_schema_identity_refuses_custom_json_schema_hooks() -> None:
+    with pytest.raises(ValueError, match="must not customize its JSON schema"):
+        OperationSchemaIdentityV1.from_model(
+            schema_id="profile.sync.lying-schema-hook",
+            schema_version=1,
+            model_type=LyingJsonSchemaPayload,
+        )
+
+
+def test_public_schema_identity_refuses_structural_json_schema_extras() -> None:
+    with pytest.raises(ValueError, match="schema extras must be nonstructural"):
+        OperationSchemaIdentityV1.from_model(
+            schema_id="profile.sync.structural-schema-extra",
+            schema_version=1,
+            model_type=StructuralSchemaExtraPayload,
         )
 
 
@@ -558,6 +874,23 @@ def test_registry_refuses_missing_review_projector_and_refresh_adapter() -> None
     without_refresh = registration.model_copy(update={"workspace_refresh_adapter": None})
     with pytest.raises(ValidationError, match="schema and adapter"):
         OperationRegistry(definitions=(item,), public_registrations=(without_refresh,))
+
+
+def test_registry_refuses_signature_incompatible_review_and_refresh_adapters() -> None:
+    item = definition(definition_id="profile.sync")
+    registration = public_registration(item)
+
+    incompatible_review = registration.model_copy(update={"review_projector": incompatible_review_projector})
+    with pytest.raises(ValidationError, match="REVIEW projector must accept exactly 2 positional arguments"):
+        OperationRegistry(definitions=(item,), public_registrations=(incompatible_review,))
+    incompatible_refresh = registration.model_copy(
+        update={"workspace_refresh_adapter": incompatible_refresh_adapter},
+    )
+    with pytest.raises(ValidationError, match="refresh adapter must accept exactly 1 positional arguments"):
+        OperationRegistry(definitions=(item,), public_registrations=(incompatible_refresh,))
+    asynchronous_review = registration.model_copy(update={"review_projector": AsyncReviewProjector()})
+    with pytest.raises(ValidationError, match="REVIEW projector must be synchronous"):
+        OperationRegistry(definitions=(item,), public_registrations=(asynchronous_review,))
 
 
 def test_registry_refuses_incomplete_public_inventory_and_request_model_rebinding() -> None:

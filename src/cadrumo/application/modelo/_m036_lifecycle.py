@@ -1,8 +1,8 @@
 """Modelo 036 declarative-recording contracts, storage, and event emission.
 
 Per the accepted Modelo 036/037 foundation decision, the local app never files a
-036. AEAT is the authority; the operator files the declaration at sede or in
-person, then records that fact locally through ``aeat app modelo m036
+036. AEAT is the authority; the operator files the declaration through AEAT Sede or in person at
+a competent AEAT office, then records that fact locally through ``aeat app modelo m036
 {alta,modificacion,baja}``. This module owns the typed application service behind
 that surface: it persists encrypted
 :data:`~cadrumo.adapters.persistence.storage.LIVE_M036_DECLARATION_NAMESPACE` rows,
@@ -87,13 +87,14 @@ def derive_m036_declaration_id(
 
 
 class M036DeclarationCommand(BaseModel):
-    """Operator request to record an M036 declaration filed at sede.
+    """Operator request to record an M036 declaration already filed with AEAT.
 
-    The operator files the 036 with AEAT through the sede portal
-    (or in person at an oficina). This command records that the
-    declaration happened locally so the downstream stale-cascade
-    + audit-trail logic can react. The command MUST NOT trigger
-    any local filing action.
+    The operator files the 036 through AEAT Sede or in person at a competent
+    AEAT office. This command records that declaration locally so the
+    downstream stale-cascade + audit-trail logic can react. The optional
+    ``sede_justificante`` records an electronic AEAT receipt when available;
+    its absence does not prevent recording an office filing. The command MUST
+    NOT trigger any local filing action.
 
     ``event_kind`` is typed as
     :class:`~cadrumo.domain.calculations.registry.CensoModeloEventKind`, preserving
@@ -109,7 +110,7 @@ class M036DeclarationCommand(BaseModel):
         default=None,
         min_length=1,
         max_length=128,
-        description="Optional AEAT acuse de recibo identifier emitted by sede for the filing.",
+        description="Optional electronic AEAT justificante identifier; omit it for an office filing or when unavailable.",
     )
     note: str | None = Field(default=None, max_length=512)
 
@@ -346,12 +347,15 @@ def record_m036_declaration(
 ) -> M036DeclarationResult:
     """Persist an M036 declaration record and emit its BucketEvent.
 
-    Records that the operator filed an M036 declaration at sede.  The local
-    app NEVER files; this verb only records the operator's declaration so
-    downstream profile-state re-derivation and stale-cascade reasoning can
-    react.  The content-addressed ``declaration_id`` keeps a re-declaration
-    with the identical tuple idempotent; the parallel ``BucketEvent`` (one
-    of :attr:`BucketEventType.CENSO_DECLARATION_ALTA` /
+    Records an M036 declaration already filed through AEAT Sede or in person
+    at a competent AEAT office. The local app NEVER files; this verb only
+    records the operator's declaration so downstream profile-state
+    re-derivation and stale-cascade reasoning can react. An optional
+    ``sede_justificante`` records electronic receipt evidence, so its absence
+    does not prevent recording an office filing. The content-addressed
+    ``declaration_id`` keeps a re-declaration with the identical tuple
+    idempotent; the parallel ``BucketEvent`` (one of
+    :attr:`BucketEventType.CENSO_DECLARATION_ALTA` /
     :attr:`~.CENSO_DECLARATION_MODIFICACION` /
     :attr:`~.CENSO_DECLARATION_BAJA`) carries the audit-trail entry the
     composition-service rule requires alongside the data write, saved via the
@@ -368,7 +372,7 @@ def record_m036_declaration(
 
     Args:
         command: The declaration command naming the profile, event kind,
-            declared-on date and the sede justificante it was filed under.
+            declared-on date, and optional electronic justificante.
         bucket_id: The bucket to persist into; checked against
             ``command.profile_id`` before anything is derived or stored.
 

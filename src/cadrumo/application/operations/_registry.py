@@ -41,6 +41,7 @@ from ._capabilities import (
 from ._events import OperationEventCode
 from ._executor import OperationExecutor, OperationResumableExecutor
 from ._interactions import OperationInteractionRequest
+from ._model_contract import require_strict_frozen_operation_model_graph
 from ._models import (
     CredentialFreeOperationRequest,
     OperationDefinitionId,
@@ -49,7 +50,6 @@ from ._models import (
     OperationSnapshot,
     OperationTerminalReceipt,
 )
-from ._model_contract import require_strict_frozen_operation_model_graph
 from ._secret_submission import OperationEphemeralSecretDeclaration
 
 _FORBIDDEN_CREDENTIAL_FREE_FIELD_PARTS = frozenset(
@@ -77,7 +77,7 @@ _FORBIDDEN_CREDENTIAL_FREE_FIELD_PARTS = frozenset(
         "wrapped",
     }
 )
-_FORBIDDEN_CREDENTIAL_FREE_SCHEMA_FORMATS = frozenset({"binary", "byte", "password"})
+_FORBIDDEN_OPERATION_SCHEMA_FORMATS = frozenset({"binary", "byte", "password"})
 _STRICT_RUNTIME_BINDING_CONFIG = ConfigDict(
     strict=True,
     frozen=True,
@@ -580,9 +580,21 @@ class OperationRegistry(BaseModel):
             raise ValueError("REVIEW operation definitions require one public review schema")
         if declares_review != (registration.review_projector is not None):
             raise ValueError("REVIEW operation definitions require one registered review projector")
+        if registration.review_projector is not None:
+            _require_positional_callable_signature(
+                registration.review_projector,
+                arity=2,
+                label="REVIEW projector",
+            )
         declares_refresh = contract.workspace_refresh_target_schema is not None
         if declares_refresh != (registration.workspace_refresh_adapter is not None):
             raise ValueError("Workspace refresh schema and adapter must be declared together")
+        if registration.workspace_refresh_adapter is not None:
+            _require_positional_callable_signature(
+                registration.workspace_refresh_adapter,
+                arity=1,
+                label="Workspace refresh adapter",
+            )
         expected = _public_contract_for_definition(
             definition,
             request_schema=contract.request_schema,
@@ -647,7 +659,7 @@ def _validate_credential_free_schema(schema: object) -> None:
         return
     mapping = cast(dict[str, object], schema)
     schema_format = mapping.get("format")
-    if schema_format in _FORBIDDEN_CREDENTIAL_FREE_SCHEMA_FORMATS:
+    if schema_format in _FORBIDDEN_OPERATION_SCHEMA_FORMATS:
         raise ValueError("credential-free journal request schema contains a secret-capable format")
     properties = mapping.get("properties")
     if isinstance(properties, dict):
@@ -665,16 +677,21 @@ def _strict_model_json_schema(model_type: type[BaseModel]) -> dict[str, object]:
     """Return one exact closed schema after enforcing the public model baseline."""
     require_strict_frozen_operation_model_graph(model_type, path="public schema")
     try:
-        schema = model_type.model_json_schema()
+        validation_schema = model_type.model_json_schema(mode="validation")
+        serialization_schema = model_type.model_json_schema(mode="serialization")
     except PydanticInvalidForJsonSchema as error:
         raise ValueError("public operation schema model must have a closed JSON schema") from error
-    closed_schema = cast(dict[str, object], schema)
+    if validation_schema != serialization_schema:
+        raise ValueError("public operation schema validation and serialization shapes must be identical")
+    closed_schema = cast(dict[str, object], validation_schema)
     _validate_closed_json_schema(closed_schema, path=model_type.__name__)
     return closed_schema
 
 
 def _validate_closed_json_schema(schema: dict[str, object], *, path: str) -> None:
     """Refuse every untyped or open branch of one generated public schema."""
+    if schema.get("format") in _FORBIDDEN_OPERATION_SCHEMA_FORMATS or schema.get("writeOnly") is True:
+        raise ValueError(f"public operation schema {path} contains a secret-capable branch")
     definitions = schema.get("$defs")
     if isinstance(definitions, dict):
         for definition_name, definition in cast(dict[str, object], definitions).items():
@@ -719,6 +736,25 @@ def _validate_closed_json_schema(schema: dict[str, object], *, path: str) -> Non
                 path=f"{path}.{field_name}",
             )
     elif schema_type == "array":
+        prefix_items = schema.get("prefixItems")
+        if prefix_items is not None:
+            if not isinstance(prefix_items, list) or not prefix_items:
+                raise ValueError(f"public operation schema {path} has invalid fixed tuple items")
+            typed_prefix_items = cast(list[object], prefix_items)
+            item_count = len(typed_prefix_items)
+            if schema.get("minItems") != item_count or schema.get("maxItems") != item_count:
+                raise ValueError(f"public operation schema {path} contains an open fixed tuple")
+            trailing_items = schema.get("items")
+            if trailing_items is not None and trailing_items is not False:
+                raise ValueError(f"public operation schema {path} permits undeclared trailing tuple items")
+            for index, item in enumerate(typed_prefix_items):
+                if not isinstance(item, dict):
+                    raise ValueError(f"public operation schema {path} has an invalid fixed tuple item")
+                _validate_closed_json_schema(
+                    cast(dict[str, object], item),
+                    path=f"{path}.prefixItems[{index}]",
+                )
+            return
         items = schema.get("items")
         if not isinstance(items, dict):
             raise ValueError(f"public operation schema {path} contains an untyped array")
@@ -760,8 +796,13 @@ def _definition_contract_value(
     return payload
 
 
-def _require_positional_callable_signature(callable_value: object, *, arity: int, label: str) -> None:
-    if inspect.iscoroutinefunction(callable_value):
+def _require_positional_callable_signature(
+    callable_value: Callable[..., object],
+    *,
+    arity: int,
+    label: str,
+) -> None:
+    if inspect.iscoroutinefunction(callable_value) or inspect.iscoroutinefunction(type(callable_value).__call__):
         raise ValueError(f"operation {label} must be synchronous")
     try:
         signature = inspect.signature(callable_value)

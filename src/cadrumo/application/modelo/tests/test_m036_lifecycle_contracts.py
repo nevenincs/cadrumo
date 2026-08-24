@@ -47,6 +47,18 @@ def test_command_carries_optional_justificante_and_note() -> None:
     assert cmd.note == "Modificación de domicilio fiscal"
 
 
+def test_command_schema_exposes_external_filing_routes_and_optional_electronic_justificante() -> None:
+    """The public command schema keeps office filings distinct from electronic receipt evidence."""
+    schema = M036DeclarationCommand.model_json_schema()
+    description = " ".join(schema["description"].split())
+
+    assert "through AEAT Sede or in person at a competent AEAT office" in description
+    assert schema["properties"]["sede_justificante"]["description"] == (
+        "Optional electronic AEAT justificante identifier; omit it for an office filing or when unavailable."
+    )
+    assert "sede_justificante" not in schema["required"]
+
+
 def test_command_rejects_unknown_event_kind() -> None:
     """The closed-value axis rejects strings outside the AEAT-published set."""
     with pytest.raises(ValidationError):
