@@ -261,7 +261,7 @@ def test_work_runs_localizes_only_human_text_and_keeps_one_structural_envelope()
             "error_code": "workflow.draft.build_failure",
         }
         assert action_row["modelo"] == "130"
-        assert action_row["obligation_status"] == "upcoming"
+        assert action_row["obligation_status"] == "UPCOMING"
         assert action_row["summary_stage"] == WorkflowStage.BUILDING_DRAFT.value
         assert action_row["site_health_state"] is None
         assert action_row["action"]["action"] == {
@@ -380,11 +380,17 @@ def test_work_run_renderer_has_no_prose_or_legacy_action_authority() -> None:
         cli_root / "_modelo_work_runs_cli.py": {
             "_render_workflow_step_summary",
             "_workflow_run_payload",
+            "_workflow_run_summary_payload",
             "_workflow_run_tab_line",
-            "register_work_run_commands",
+            "work_run",
+            "work_run_details",
+            "work_runs",
         },
         cli_root / "_modelo_aux_payloads.py": {
             "WorkflowRunPayload",
+            "WorkflowRunSummaryPayload",
+            "WorkRunDetailsResult",
+            "WorkRunResult",
             "WorkRunsResult",
         },
     }

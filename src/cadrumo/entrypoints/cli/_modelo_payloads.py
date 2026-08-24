@@ -116,7 +116,6 @@ from ._modelo_iva_wallet_payloads import (
 )
 from ._modelo_revision_payload_parts import (
     CalculationRevisionCommandProjectionFields,
-    CalculationRevisionProjectionFields,
     DetailRowPayload,
     ObservationPayload,
     ResultSummaryRowPayload,

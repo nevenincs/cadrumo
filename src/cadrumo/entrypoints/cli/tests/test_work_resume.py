@@ -363,7 +363,7 @@ def test_work_runs_projects_a_typed_builder_refusal_without_reconstructing_a_com
     assert details["summary_detail_kind"] == "workflow_failure"
     assert details["summary_detail_facts"] == {"error_code": "workflow.draft.build_failure"}
     assert full["modelo"] == "130"
-    assert full["obligation_status"] == "upcoming"
+    assert full["obligation_status"] == "UPCOMING"
 
     assert load_run(run.run_id) == stored_before
     assert [candidate.run_id for candidate in list_runs()] == [run.run_id]

@@ -112,11 +112,11 @@ def _o(
     )
 
 
-def _a(name: str, *, help_name: str | None = None) -> ArgumentSpec:
+def _a(name: str, *, help_name: str | None = None, required: bool = False) -> ArgumentSpec:
     return ArgumentSpec(
         name,
         _STR,
-        ParameterDefault.value(None),
+        ParameterDefault.required() if required else ParameterDefault.value(None),
         _key(f"cli.app.modelo.work.{help_name or name}_help"),
     )
 
@@ -320,7 +320,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     _leaf(
         "run",
         "cadrumo.entrypoints.cli._modelo_work_runs_cli",
-        (_a("run_id"), _LANG),
+        (_a("run_id", required=True), _LANG),
         _MODEL_READ,
         "cadrumo.entrypoints.cli._modelo_aux_payloads",
         "WorkRunResult",
@@ -328,7 +328,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     _leaf(
         "run-details",
         "cadrumo.entrypoints.cli._modelo_work_runs_cli",
-        (_a("run_id"), _LANG),
+        (_a("run_id", required=True), _LANG),
         _MODEL_READ,
         "cadrumo.entrypoints.cli._modelo_aux_payloads",
         "WorkRunDetailsResult",

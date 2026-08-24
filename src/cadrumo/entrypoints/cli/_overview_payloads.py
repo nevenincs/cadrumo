@@ -454,13 +454,11 @@ class OverviewStatusResult(OutputSchema):
 class OverviewCalendarResult(OutputSchema):
     """JSON envelope for ``aeat app overview calendar``.
 
-    Covers both the single-profile mode (``entries``/``warnings``/
-    ``suppressed_entries`` populated) and the ``--all-profiles`` mode
-    (``profiles`` populated, single-profile fields empty). The same
-    envelope key serves the leaf so the JSON-contract registry holds
-    exactly one schema per CLI leaf; the populated field set tells the
-    consumer which branch produced the payload. Both branches still mirror the
-    same :class:`OverviewCalendar` compartments.
+    Covers both the compact single-profile mode (actionable deadline/event
+    summaries plus warnings and coverage) and the ``--all-profiles`` survey
+    mode (``profiles`` populated, single-profile fields empty). The same
+    envelope key serves the leaf so the JSON-contract registry holds exactly
+    one schema per CLI leaf; the populated field set identifies the branch.
     """
 
     from_date: str | None = None
