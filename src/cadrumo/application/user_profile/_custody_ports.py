@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Generator, Iterator
 from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, NoReturn, Protocol, TypeGuard, cast
 from uuid import UUID
@@ -36,6 +36,7 @@ from ...core import SecureObjectWrite, StorageCategory, storage_location
 from ...core.classification import SensitivityClass
 from ...core.config import Settings
 from ...core.errors import CoreError
+from ...core.time import now as _utc_now
 
 if TYPE_CHECKING:
     from ...adapters.persistence.storage import RecoveryKey
@@ -1142,7 +1143,7 @@ def profile_custody_secure_object_repository(
 @contextmanager
 def _temporary_profile_custody_session(*, profile_id: UUID, dek: bytes, root: Path) -> Generator[None]:
     """Bind the just-minted DEK while staging a not-yet-published capsule."""
-    now = datetime.now(UTC)
+    now = _utc_now()
     bridge = master_key.BucketSession.open_resumed(
         bucket_id=str(profile_id),
         dek=dek,

@@ -342,6 +342,8 @@ profile:
         total_m2:
           label: Total floor area (m2)
       withholding:
+        colegio_concertado:
+          label: Is a colegio concertado
         has_employees:
           label: Has employees
         modelo_111_no_retenciones_periods:

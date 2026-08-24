@@ -342,6 +342,8 @@ profile:
         total_m2:
           label: Superficie total de la vivienda (m2)
       withholding:
+        colegio_concertado:
+          label: Es un colegio concertado
         has_employees:
           label: Tiene empleados
         modelo_111_no_retenciones_periods:

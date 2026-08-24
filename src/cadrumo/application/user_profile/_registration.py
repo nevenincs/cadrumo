@@ -29,7 +29,6 @@ from __future__ import annotations
 
 from base64 import b64encode
 from contextlib import ExitStack
-from datetime import UTC, datetime
 from secrets import token_bytes
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -39,6 +38,7 @@ from pydantic import BaseModel, ConfigDict
 from ...core import assess_profile_password
 from ...core.errors import CadrumoError
 from ...core.identity import BucketId, ProfileId
+from ...core.time import now as _utc_now
 from ...domain.user_profile import ProfileSetupState, UserProfileRecord, new_profile_id
 from ..evidence import try_record_legal_hold_snapshot
 from ..filing import try_record_filing_retention_snapshot
@@ -307,7 +307,7 @@ def register_profile_with_credentials(
         try_record_filing_retention_snapshot(
             bucket_id=str(identity),
             records=(),
-            observed_at=datetime.now(UTC),
+            observed_at=_utc_now(),
         )
 
         # Record that this profile has zero known open legal cases, for the same
@@ -323,7 +323,7 @@ def register_profile_with_credentials(
         try_record_legal_hold_snapshot(
             bucket_id=str(identity),
             open_case_ids=(),
-            observed_at=datetime.now(UTC),
+            observed_at=_utc_now(),
         )
 
         return ProfileRegistrationOutcome(
