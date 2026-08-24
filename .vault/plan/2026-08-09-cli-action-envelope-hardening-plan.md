@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-24'
-body_hash: 'sha256:6d9bb6c8196bcbc9f7dbe1603ec1408bc7f5049738017a9b74a823052bf02922'
+body_hash: 'sha256:6220a6a78b0f44461ca9924e36580ddc0cf729b29670574efeb556557a7a371a'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -195,7 +195,7 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [ ] `W05.P10.S37` - Migrate wizard status, next-step, and missing-input refusal producers to typed failed-condition verdicts with live input bindings or explicit no-recovery outcomes, and prove profile-create recovery rejection.; `src/cadrumo/application/wizard`.
 - [x] `W05.P10.S38` - Consume the S33 typed reader-availability facts at _batch_ingest.py and _llm_classification.py within the exclusive ledger area, retain no MissingOptionalExtraError prose or compatibility bridge, and preserve only explicit typed reader-availability verdicts; `src/cadrumo/application/ledger`.
 - [ ] `W05.P10.S39` - Replace the remaining DeadlineRecovery.next_command transport and its overview projection with typed recovery actions; `src/cadrumo/domain/deadlines/_models.py; src/cadrumo/domain/deadlines/_recargo.py; src/cadrumo/domain/deadlines/tests/test_extemporaneidad.py; src/cadrumo/domain/deadlines/tests/test_recargo.py; src/cadrumo/application/overview; src/cadrumo/entrypoints/cli/_overview.py`.
-- [ ] `W05.P10.S40` - Migrate the remaining LiveIvaSurfaceTimeoutError producers and boundary projection to typed actions with explicit safety dispositions; `src/cadrumo/application/live/_errors.py; src/cadrumo/application/live/_filed_data_capture.py; src/cadrumo/application/live/_iva_remote_state.py; src/cadrumo/entrypoints/cli/_app_live.py`.
+- [x] `W05.P10.S40` - Migrate the remaining LiveIvaSurfaceTimeoutError producers and boundary projection to typed actions with explicit safety dispositions; `src/cadrumo/application/live/_errors.py; src/cadrumo/application/live/_filed_data_capture.py; src/cadrumo/application/live/_iva_remote_state.py; src/cadrumo/entrypoints/cli/_app_live.py`.
 - [x] `W05.P10.S41` - Own every new provisioning and optional-extra renderer key and template in all four locale catalogues, accepting only typed condition facts plus resolved action or no-recovery outcome and never feature identity, package command, or English prose; `src/cadrumo/locales`.
 - [ ] `W05.P10.S58` - Migrate AEAT adapter recovery producers with explicit external-system safety dispositions including browser _factory.py optional-extra forwarding with typed machine facts and no raw installation prose; `src/cadrumo/adapters/outbound/aeat`.
 - [x] `W05.P10.S59` - Remove stale lazy schema-owner-table claims from the config payload surface while S91 exclusively owns residual Modelo CLI action producers; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
