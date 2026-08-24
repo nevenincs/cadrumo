@@ -338,7 +338,14 @@ members = ["src/cadrumo-harness"]
 [tool.vaultspec-rag]
 managed-torch-direct-dependency = true
 [dependency-groups]
+registry = [
+  # Registry load-census tooling imports grimp directly for the executed import graph.
+  "grimp>=3.15,<4",
+  # Registry authoring preserves TOML comments and formatting through tomlkit directly.
+  "tomlkit>=0.15,<1",
+]
 dev = [
+  { include-group = "registry" },
   # Dependency declaration drift: missing, unused, transitive, and misplaced deps.
   "deptry>=0.24",
   # torch is the vaultspec-rag embedding backend (dev-only semantic search); no

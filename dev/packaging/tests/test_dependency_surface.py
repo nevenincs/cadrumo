@@ -8,6 +8,7 @@ import sys
 
 import pytest
 
+from .._smoke_common import find_repo_root, pyproject_surfaces
 from ..dependency_surface import _summary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -39,3 +40,10 @@ def test_dependency_surface_cli_json_contract() -> None:
     assert payload["registry_extras"] == ["anthropic", "browser", "google", "llm", "ofx"]
     assert payload["project_dependency_count"] > 0
     assert payload["dev_dependency_count"] >= payload["dev_only_dependency_count"] > 0
+
+
+def test_dependency_surface_expands_included_registry_group() -> None:
+    """The default dev install includes the direct registry tooling group."""
+    surfaces = pyproject_surfaces(find_repo_root())
+
+    assert {"grimp", "tomlkit"} <= surfaces.dev_only_names
