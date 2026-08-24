@@ -13,7 +13,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
 modified: '2026-08-24'
-body_hash: 'sha256:5761178f939cda6499fcd397862ec71dd6f062a5b3f6faab74ebc2299c7965b6'
+body_hash: 'sha256:47b6caa309aec0d719bf8c6fd993b5327b5c4c19d41ba3015d00a6fe96a183a3'
 ---
 
 <!-- RETIRED: P06, P07, P09 -->
@@ -115,7 +115,7 @@ Project only validated owning rows and share one exact filing-window matcher.
 Correct the authority projection without runtime deduplication.
 
 - [x] `W03.P08.S21` - Rewrite ValidatedRegistryAuthority.deadline_windows to project canonical owners through select_revision with deterministic qualifier-aware ordering and no deduplication; `src/cadrumo/domain/calculations/registry/_authority.py`.
-- [ ] `W03.P08.S22` - Add a fleet authority test proving canonical ownership, exact multiplicity, qualifier distinction, and modelo-filter invariance; `src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `W03.P08.S22` - Add a fleet authority test proving canonical ownership, exact multiplicity, qualifier distinction, and modelo-filter invariance; `src/cadrumo/domain/calculations/registry/tests/`.
 
 ### Phase `W03.P10` - filing-window resolution
 

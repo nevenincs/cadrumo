@@ -60,12 +60,15 @@ proves modelo-filter invariance, and repeated projection equality covers determi
 behaviour. The 2022-2026 scope keeps future 2027 gaps and unrelated completeness work
 from weakening the projection proof.
 
-Focused Ruff passed. Focused pytest cannot enter either test body because the
+Focused Ruff passed. The first focused pytest run could not enter either test body because the
 concurrently edited, unrelated Modelo 390 corpus fails bundled-authority construction.
 That fail-closed error is not a test-design defect; no skip, xfail, mock, stub, or
 validation bypass was introduced.
 
+The unrelated corpus condition subsequently cleared, and the unchanged real bundled-
+fleet focused target passed 2/2 in 32.53 seconds. The clean review verdict is therefore
+fully verified at runtime.
+
 ## Recommendations
 
-No S22 code change is recommended. Keep S22 open and rerun the focused pytest target
-after the unrelated Modelo 390 corpus is valid.
+No S22 code change is recommended.

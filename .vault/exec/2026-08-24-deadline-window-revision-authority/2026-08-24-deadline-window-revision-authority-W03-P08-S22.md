@@ -60,18 +60,22 @@ related:
 
 ## Outcome
 
-The fleet regression is authored and Ruff passes. It derives expected ownership
+The fleet regression is authored, Ruff passes, and the real bundled-fleet focused
+pytest target passes 2/2 in 32.53 seconds. It derives expected ownership
 through the existing `select_revision` function and expands qualifier identity through
 the existing `deadline_window_semantic_coordinates` function. It introduces no
 selector, resolver, period parser, cadence map, qualifier vocabulary, deadline
 catalogue, deduplication, or sort implementation.
 
-S22 remains open until the real bundled-fleet test can execute successfully.
+S22 is complete.
 
 ## Notes
 
-The focused pytest target currently fails before either test body can run because a
+The first focused pytest run failed before either test body could run because a
 concurrent unrelated workspace change left the Modelo 390 revision-2022
 `casilla_continuidad_evolutions` fragment directory empty. Registry loading correctly
 raises `RegistryLoadError` for that malformed tree. This step did not touch Modelo 390,
 did not weaken the real-fleet test, and did not add an xfail, skip, mock, or stub.
+
+After that concurrent workspace condition cleared, the unchanged real-fleet test was
+rerun successfully: 2 tests passed in 32.53 seconds.
