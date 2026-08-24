@@ -56,10 +56,13 @@ See Also:
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date
+from typing import Literal
 
 import pytest
 
+from .....core import Modelo
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from .._export import derive_export_layouts_from_bindings
@@ -92,7 +95,131 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _TERMINATOR_IS_A_NUMBERED_FIELD = "aeat-dr-840"
 
 
-def _revisions_that_cannot_emit() -> tuple[tuple[str, str, str], ...]:
+_OwnerRoute = Literal[
+    "W02.P04.S26 registry-temporal-coverage",
+    "W02.P04.S27 source-casilla-integration",
+    "W02.P04.S28 aeat-export-fragment-generator-authority",
+]
+
+_TEMPORAL_OWNER: _OwnerRoute = "W02.P04.S26 registry-temporal-coverage"
+_SOURCE_CASILLA_OWNER: _OwnerRoute = "W02.P04.S27 source-casilla-integration"
+_EXPORT_OWNER: _OwnerRoute = "W02.P04.S28 aeat-export-fragment-generator-authority"
+
+
+@dataclass(frozen=True)
+class _FilingCapabilityBlocker:
+    """One non-emitting revision's current, evidence-bounded disposition.
+
+    This is deliberately the canonical worklist's local report shape, rather
+    than a second registry declaration. Registry validation decides whether a
+    revision can emit; the worklist makes that absence visible and reports the
+    already-adjudicated route that could change it. A terminal refusal is not a
+    permanent exclusion: it has no authorable task *under today's authority*,
+    and becomes an owner-routed gap when the stated reconsideration condition
+    obtains.
+    """
+
+    disposition: Literal["terminal_no_authority", "authorable_gap"]
+    finding: str
+    reconsideration: str
+    owners: tuple[_OwnerRoute, ...] = ()
+
+    def __post_init__(self) -> None:
+        if self.disposition == "terminal_no_authority" and self.owners:
+            raise ValueError("a terminal no-authority refusal must not claim an authorable owner")
+        if self.disposition == "authorable_gap" and not self.owners:
+            raise ValueError("an authorable filing gap must name at least one existing-plan owner")
+
+    def report(self) -> str:
+        if self.disposition == "terminal_no_authority":
+            return (
+                f"TERMINAL NO-AUTHORITY: {self.finding}. No export layout is authorable now; "
+                f"reconsider only if {self.reconsideration}"
+            )
+        return (
+            f"AUTHORABLE GAP ({'; '.join(self.owners)}): {self.finding}. "
+            f"Reconsider/clear only after {self.reconsideration}"
+        )
+
+
+def _authorable(
+    finding: str,
+    *,
+    owners: tuple[_OwnerRoute, ...],
+    reconsideration: str,
+) -> _FilingCapabilityBlocker:
+    """Return the one owner-routed report shape for an actionable filing gap."""
+    return _FilingCapabilityBlocker(
+        disposition="authorable_gap",
+        finding=finding,
+        owners=owners,
+        reconsideration=reconsideration,
+    )
+
+
+def _terminal_no_authority(
+    modelo: object,
+    revision: object,
+    sources: object,
+) -> _FilingCapabilityBlocker | None:
+    """Return Modelo 136's current evidence-bounded terminal refusal, if still true.
+
+    This is intentionally a *named adjudication*, not an inference that every
+    modelo without a fixed-width record design lacks an authorable path. Modelo
+    721 is the counterexample: its source-backed SOAP/XML contract is an
+    authorable extension of the existing filing authority, despite not being a
+    positional record design. The official Modelo 136 catalogue/procedure
+    review is narrower: its current layout authority is a visual ``manual_pdf``
+    and it has no registered ``record_design``, ``xsd`` or ``dictionary``
+    source. Treating a visual form as any of those contracts would fabricate a
+    wire representation.
+
+    The source-kind condition makes this disposition self-invalidating. If the
+    catalogue gains a machine-readable Modelo 136 contract, this helper returns
+    ``None`` and the normal owner-routed classifier below takes over; the
+    dedicated regression then forces a fresh adjudication before anyone can
+    silently retain the terminal label.
+    """
+    if getattr(modelo, "id", None) != Modelo.M136 or getattr(revision, "id", None) != "2026":
+        return None
+
+    source_refs = set(getattr(revision, "source_refs", ()))
+    resolved = [sources.get(ref) for ref in source_refs if sources.get(ref) is not None]
+    kinds = {source.kind for source in resolved}
+    if "manual_pdf" not in kinds or _modelo_136_has_machine_contract(revision, sources):
+        return None
+
+    return _FilingCapabilityBlocker(
+        disposition="terminal_no_authority",
+        finding=(
+            "the reviewed AEAT form route has a visual approved form but no current machine-readable "
+            "Modelo 136 filing contract"
+        ),
+        reconsideration=(
+            "AEAT publishes a hash-pinned, revision-scoped machine-readable contract and "
+            f"{_EXPORT_OWNER} enrolls the semantic map, render profile, generated tree, and emitted-byte proof"
+        ),
+    )
+
+
+def _modelo_136_has_machine_contract(revision: object, sources: object) -> bool:
+    """Return whether this Modelo 136 revision itself cites machine authority.
+
+    The scope is the revision's source references, never every source attached to
+    the modelo. A future source registered only for another exercise cannot
+    silently change the 2026 worklist row. Conversely, when a machine-readable
+    contract is cited by this revision, the terminal refusal must retire even
+    while the remaining owner-routed implementation work is still open.
+    """
+    machine_kinds = {"record_design", "xsd", "dictionary"}
+    return any(
+        getattr(source, "kind", None) in machine_kinds
+        for ref in getattr(revision, "source_refs", ())
+        if (source := sources.get(ref)) is not None
+    )
+
+
+def _revisions_that_cannot_emit() -> tuple[tuple[str, str, _FilingCapabilityBlocker], ...]:
     """Return every ``(modelo, revision)`` that can produce no filing artifact.
 
     Capability is read exactly as the filing boundary reads it: layouts are derived
@@ -125,21 +252,30 @@ def _bundled_designs(modelo_id: str) -> tuple[str, ...]:
     return tuple(sorted(path.name for path in directory.iterdir() if path.suffix.lower() in {".pdf", ".xls", ".xlsx"}))
 
 
-def _blocker(modelo: object, revision: object, sources: object) -> str:
+def _blocker(modelo: object, revision: object, sources: object) -> _FilingCapabilityBlocker:
     """Return what this revision actually needs before a layout can be authored.
 
     Derived on every run, never listed. The bare worklist said only "no export
     layout" for every line, which reads as one backlog of one kind of work. It
-    is three. A revision whose modelo has no bundled design cannot be authored
-    at all until the corpus carries one. A revision whose designs are bundled
-    but unregistered needs the era each governs grounded first, and that is not
-    mechanical: a design may state no orden, no BOE reference and no ejercicio
-    anywhere in its text, leaving only AEAT's update date, which this campaign
-    has twice had to undo reading as a governed period. A revision whose modelo
-    HAS registered designs but cites none of them is waiting on the design for
-    its own window, which is modelo 185's 2003-2025 case: the one bundled design
-    governs 2026 onward and correctly grounds its sibling revision instead. A
-    revision already citing a registered design is authorable now.
+    is three. A revision whose modelo has no bundled design normally needs the
+    source/casilla and export owners to acquire the authority and establish the
+    payload. A revision whose designs are bundled but unregistered needs the era
+    each governs grounded first, and that is not mechanical: a design may state
+    no orden, no BOE reference and no ejercicio anywhere in its text, leaving
+    only AEAT's update date, which this campaign has twice had to undo reading
+    as a governed period. A revision whose modelo HAS registered designs but
+    cites none of them is waiting on the design for its own window, which is
+    modelo 185's 2003-2025 case: the one bundled design governs 2026 onward and
+    correctly grounds its sibling revision instead. A revision already citing a
+    registered design is authorable now.
+
+    The exception is a reviewed *terminal no-authority refusal*. It is not an
+    authoring gap at all: Modelo 136's current official surface is an electronic
+    form with no machine-readable contract. The source-specific classifier is
+    deliberately evaluated before the generic directory test so the report does
+    not turn that refusal into a false instruction to write a layout. It is also
+    deliberately narrow: no other modelo inherits a terminal disposition from
+    its absence of a fixed-width design.
 
     Sequencing the remaining work needs that distinction, and deriving it costs
     one directory listing per line.
@@ -168,6 +304,15 @@ def _blocker(modelo: object, revision: object, sources: object) -> str:
     through the sibling gate, which fails loudly if the corpus changes.
     """
     modelo_id = str(modelo.id)
+    terminal = _terminal_no_authority(modelo, revision, sources)
+    if terminal is not None:
+        return terminal
+    if modelo.id == Modelo.M136 and _modelo_136_has_machine_contract(revision, sources):
+        return _authorable(
+            "a machine-readable Modelo 136 contract is cited, but its semantic map and emitted-byte proof are absent",
+            owners=(_EXPORT_OWNER,),
+            reconsideration="the export owner lands the reviewed map, render profile, generated tree, and emitted-byte proof",
+        )
     designs = _bundled_designs(modelo_id)
     registered = tuple(
         ref
@@ -182,41 +327,57 @@ def _blocker(modelo: object, revision: object, sources: object) -> str:
         if (source := sources.get(str(ref))) is not None and getattr(source, "kind", None) == "record_design"
     )
     if not designs:
-        return "BLOCKED on corpus: no record design is bundled for this modelo"
+        return _authorable(
+            "no record design is bundled for this modelo",
+            owners=(_TEMPORAL_OWNER, _SOURCE_CASILLA_OWNER, _EXPORT_OWNER),
+            reconsideration=(
+                "the exact official technical authority is acquired with a bounded era, its complete value "
+                "surface has canonical owners, and the export owner proves the authorized payload"
+            ),
+        )
     if not registered:
-        return (
-            f"BLOCKED on grounding: {len(designs)} design(s) bundled, none registered -- the era each "
-            "governs must be grounded before it can become a source_ref"
+        return _authorable(
+            f"{len(designs)} design(s) are bundled but none is registered; the era each governs is not grounded",
+            owners=(_TEMPORAL_OWNER,),
+            reconsideration="the temporal owner registers the official source with exact applicability before it becomes a source_ref",
         )
     if not cited:
-        return (
-            f"BLOCKED on era: {len(registered)} registered design(s) for this modelo, none cited by this "
-            "revision -- the design governing THIS window is not among them"
+        return _authorable(
+            f"{len(registered)} record design(s) are registered for this modelo, but none is cited by this revision",
+            owners=(_TEMPORAL_OWNER,),
+            reconsideration="the temporal owner proves and cites the design governing this revision's exact window",
         )
 
     if _KNOWN_SELF_CONTRADICTING_DESIGN in cited:
-        return (
-            f"BLOCKED on design extraction: cites {_KNOWN_SELF_CONTRADICTING_DESIGN}, whose "
-            "extraction places fields across each other's bytes -- the bundled artefact is a form "
-            "DIAGRAM with a position ruler, not a field table, so no coordinate read from it can be "
-            "trusted and no parser repair changes that"
+        return _authorable(
+            (
+                f"cites {_KNOWN_SELF_CONTRADICTING_DESIGN}, whose extraction places fields across bytes; "
+                "the bundled artefact is a form diagram rather than a trustworthy field table"
+            ),
+            owners=(_TEMPORAL_OWNER, _EXPORT_OWNER),
+            reconsideration="the temporal and export owners acquire exact authority and a trustworthy layout before mapping bytes",
         )
 
     if _TERMINATOR_IS_A_NUMBERED_FIELD in cited:
-        return (
-            f"BLOCKED on record terminator: {_TERMINATOR_IS_A_NUMBERED_FIELD} numbers the line break "
-            "as a field inside the record's declared extent, while this pipeline puts the terminator "
-            "on the transport's line_ending -- no entry kind renders it correctly and the map may "
-            "not omit it"
+        return _authorable(
+            (
+                f"{_TERMINATOR_IS_A_NUMBERED_FIELD} numbers the line break inside the record extent, while "
+                "the current renderer puts it on the transport; no current entry kind renders that field"
+            ),
+            owners=(_EXPORT_OWNER,),
+            reconsideration="the export owner models the official terminator semantics and proves the emitted bytes",
         )
 
     uncovered = _uncovered_claimed_years(revision, cited, sources)
     if uncovered:
         span = f"{uncovered[0]}-{uncovered[-1]}" if len(uncovered) > 1 else str(uncovered[0])
-        return (
-            f"BLOCKED on design coverage: cites {cited[0]}, but ejercicio(s) {span} "
-            f"({len(uncovered)} year(s)) fall outside every cited design's era -- a layout authored "
-            "from it would write those years at offsets no bundled design evidences"
+        return _authorable(
+            (
+                f"cites {cited[0]}, but ejercicio(s) {span} ({len(uncovered)} year(s)) fall outside every "
+                "cited design era"
+            ),
+            owners=(_TEMPORAL_OWNER, _EXPORT_OWNER),
+            reconsideration="the temporal owner resolves the exact window and the export owner maps only evidenced offsets",
         )
     short = _casilla_surface_shortfall(modelo, revision)
     if short is not None:
@@ -224,14 +385,17 @@ def _blocker(modelo: object, revision: object, sources: object) -> str:
     missing_producers = _producer_vocabulary_gap(modelo)
     if missing_producers is not None:
         return missing_producers
-    return (
-        f"AUTHORABLE on era: cites {cited[0]}, {len(revision.casillas or ())} casilla(s) declared "
-        "-- needs its semantic map and layout, AND its design's extraction checked for partial "
-        "overlap first (see test_cited_design_field_bounds_are_self_consistent)"
+    return _authorable(
+        (
+            f"cites {cited[0]} and declares {len(revision.casillas or ())} casilla(s); it needs its semantic "
+            "map and authorized export form after the design extraction is checked for partial overlap"
+        ),
+        owners=(_EXPORT_OWNER,),
+        reconsideration="the export owner lands and reviews the semantic map, render profile, generated tree, and emitted-byte proof",
     )
 
 
-def _producer_vocabulary_gap(modelo: object) -> str | None:
+def _producer_vocabulary_gap(modelo: object) -> _FilingCapabilityBlocker | None:
     """Return why this modelo cannot be exported YET, when nothing can supply its values.
 
     A record design says WHERE each value sits. It does not say where the value comes
@@ -261,15 +425,17 @@ def _producer_vocabulary_gap(modelo: object) -> str | None:
     prefix = f"m{modelo.id}."
     if any(member.value.startswith(prefix) for member in FilingProducerKey):
         return None
-    return (
-        f"BLOCKED on producer vocabulary: no FilingProducerKey is namespaced {prefix!r}, so the "
-        "non-casilla fields of this design -- addresses, codes, activity data -- have no identity "
-        "the semantic map may name; the producer keys and the application producers behind them "
-        "come before the export"
+    return _authorable(
+        (
+            f"no FilingProducerKey is namespaced {prefix!r}, so non-casilla design fields have no canonical "
+            "identity or application producer"
+        ),
+        owners=(_SOURCE_CASILLA_OWNER, _EXPORT_OWNER),
+        reconsideration="the source/casilla owner supplies provenance-carrying producers before the export owner maps them",
     )
 
 
-def _casilla_surface_shortfall(modelo: object, revision: object) -> str | None:
+def _casilla_surface_shortfall(modelo: object, revision: object) -> _FilingCapabilityBlocker | None:
     """Return why this revision cannot be exported YET, when its casilla surface is short.
 
     An era match says the cited design governs the years claimed. It says nothing about
@@ -295,11 +461,13 @@ def _casilla_surface_shortfall(modelo: object, revision: object) -> str | None:
     ]
     if not peers or declared >= min(peers):
         return None
-    return (
-        f"BLOCKED on casilla surface: declares {declared} casilla(s) while every filing-grade "
-        f"revision of this modelo declares at least {min(peers)} -- the cited design's era "
-        "matches, but a layout authored over this surface would emit a return missing the "
-        "boxes AEAT expects; author the casillas before the export"
+    return _authorable(
+        (
+            f"declares {declared} casilla(s) while every filing-grade sibling declares at least {min(peers)}; "
+            "the cited era matches but the current surface cannot represent the declaration"
+        ),
+        owners=(_SOURCE_CASILLA_OWNER, _EXPORT_OWNER),
+        reconsideration="the source/casilla owner completes the grounded surface before the export owner maps it",
     )
 
 
@@ -355,11 +523,56 @@ def test_every_registry_revision_can_produce_a_filing_artifact() -> None:
 
     assert not unable, (
         f"{len(unable)} registry revision(s) across "
-        f"{len({modelo for modelo, _revision, _blocked in unable})} modelo(s) declare no export layout, so this "
-        "application cannot file them. This is the capability worklist, not a defect to suppress: each "
-        "line needs its fixed-width export layout authored before the modelo can be filed, and each states what it is waiting on.\n"
+        f"{len({modelo for modelo, _revision, _blocker in unable})} modelo(s) declare no export layout, so this "
+        "application cannot file them. This is the capability worklist, not a defect to suppress: an AUTHORABLE "
+        "GAP names its existing-plan owners, while a TERMINAL NO-AUTHORITY refusal names the exact evidence that "
+        "must change before an export task exists.\n"
         + "\n".join(
-            f"  modelo {modelo} revision {revision}: no export layout -- {blocked}"
-            for modelo, revision, blocked in unable
+            f"  modelo {modelo} revision {revision}: no export layout -- {blocker.report()}"
+            for modelo, revision, blocker in unable
         )
     )
+
+
+def test_worklist_keeps_terminal_refusal_separate_from_owner_routed_gaps() -> None:
+    """Modelo 136 cannot be relabelled as an authorable layout backlog.
+
+    The test reads the same compiler-loaded corpus as the expected-failing worklist.
+    It is a regression over the report's *classification*, not a second list of
+    missing layouts: new non-emitting rows remain visible without editing this
+    test, and every authorable row must carry at least one canonical owner.
+    """
+    unable = _revisions_that_cannot_emit()
+    by_revision = {(modelo, revision): blocker for modelo, revision, blocker in unable}
+
+    modelo_136 = by_revision[(Modelo.M136.value, "2026")]
+    assert modelo_136.disposition == "terminal_no_authority"
+    assert modelo_136.owners == ()
+    assert "No export layout is authorable now" in modelo_136.report()
+
+    authorable = [blocker for blocker in by_revision.values() if blocker.disposition == "authorable_gap"]
+    assert authorable, "the worklist no longer contains an owner-routed authorable gap to prove"
+    assert all(blocker.owners for blocker in authorable)
+    assert all("AUTHORABLE GAP" in blocker.report() for blocker in authorable)
+
+
+def test_modelo_136_terminal_refusal_becomes_owner_routed_when_machine_authority_arrives() -> None:
+    """MUTATION: a machine-readable M136 source invalidates the terminal label.
+
+    A copied real source is changed from ``manual_pdf`` to ``xsd`` only at the
+    classifier boundary. The expected transition proves that the terminal
+    disposition is tied to the authority condition, rather than to the modelo
+    identifier or a permanent hand-maintained exclusion.
+    """
+    modelos, catalogues = bundled_registry_tree()
+    modelo = next(item for item in modelos if item.id == Modelo.M136)
+    revision = modelo.revisions["2026"]
+    source_id = "boe-modelo-136-current-form"
+    upgraded = dict(catalogues.sources)
+    upgraded[source_id] = upgraded[source_id].model_copy(update={"kind": "xsd"})
+
+    assert _terminal_no_authority(modelo, revision, catalogues.sources) is not None
+    assert _terminal_no_authority(modelo, revision, upgraded) is None
+    blocker = _blocker(modelo, revision, upgraded)
+    assert blocker.disposition == "authorable_gap"
+    assert blocker.owners == (_EXPORT_OWNER,)

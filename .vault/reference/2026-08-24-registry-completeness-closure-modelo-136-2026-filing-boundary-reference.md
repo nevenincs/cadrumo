@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:68c922f5d2acd0f05999408372775b494840884745f9039132c9da84f88bb374'
+body_hash: 'sha256:6e7fcfaac0ef956ead63a45b89d8aeaf12bdaaae5b05d5f147defa7a8f9ce9d4'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
 ---
@@ -34,6 +34,10 @@ The BOE annex proves official form labels and calculations, not field positions.
 The filing-capability worklist refuses the revision with `BLOCKED on corpus: no record design is bundled for this modelo`. The focused Modelo 136 grounding suite passes; together those results show a valid form-grounded revision whose filing export is visibly refused.
 
 This is a terminal refusal rather than a currently authorable export task. The present owner is that refusal disposition. If AEAT publishes qualifying evidence, `W02.P04.S28` must enroll the one remedy in the existing `aeat-export-fragment-generator-authority` plan; it must not start a parallel Modelo 136 export path.
+
+### Aggregate capability-worklist classification
+
+The canonical filing-capability worklist reports `136/2026` as `TERMINAL NO-AUTHORITY`, not as an authorable layout task. Its narrowly scoped classifier checks the reviewed current-source condition: the Modelo 136 surface includes the approved visual `manual_pdf` form, but no `record_design`, `xsd`, or `dictionary` source. That is not a generic inference from a missing fixed-width layout: Modelo 721 is separately authorable from its published structured XML/SOAP authority. If a machine-readable Modelo 136 source is registered, the terminal classification removes itself and the ordinary owner-routed worklist path must take over after fresh adjudication.
 
 Reconsider fileability only if all of these are true:
 
