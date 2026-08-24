@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:6aa6ee0097bb598180a2b878ed2eca62b310674a3f700e8733631c41fa15b7fc'
+body_hash: 'sha256:dcc70393d3e09493bf8dcdbe442d58c70d15f190752e07c9624de4023b8b4502'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -57,6 +57,7 @@ Compose one typed cross-authority report from validated registry coverage, sourc
 - [ ] `W01.P02.S11` - Prove complete, refused, stale-evidence, below-filing-grade, and cross-limb disagreement outcomes with mutation tests; `src/cadrumo/application/registry/tests/`.
 - [x] `W01.P02.S42` - Constrain temporal evidence identity, period, and filing-year fields to registry semantics and add mutation proof for every composer refusal outcome; `src/cadrumo/application/registry/`.
 - [x] `W01.P02.S43` - Reject resolved owner dispositions on active closure refusals and prove the contradiction fails validation; `src/cadrumo/application/registry/`.
+- [ ] `W01.P02.S44` - Encode branch-specific TemporalRevisionCoverage refusal invariants and add construction and mutation-bite tests.; `src/cadrumo/application/registry/`.
 
 ## Wave `W02` - filing-gap adjudication and owner routing
 

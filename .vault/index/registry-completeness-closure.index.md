@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:64c752414c08e94e0b9cc429459d4e3968c739f5472ce30028ed652b91b079cc'
+body_hash: 'sha256:875fb5f3480366c3015f7bd2b08573fba345650688f943f4158d18c3fc97b780'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -30,6 +30,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s41-cache-key-type-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s42-temporal-refusal-invariants-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s43-active-refusal-disposition-review-audit]]'
 ---
 
@@ -52,6 +53,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot authority-grade enforcement review`
 - `2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot-grade enforcement review`
 - `2026-08-24-registry-completeness-closure-s41-cache-key-type-review-audit` - `registry-completeness-closure` audit: `S41 cache-key type review`
+- `2026-08-24-registry-completeness-closure-s42-temporal-refusal-invariants-audit` - `registry-completeness-closure` audit: `S42 temporal refusal invariant review`
 - `2026-08-24-registry-completeness-closure-s43-active-refusal-disposition-review-audit` - `registry-completeness-closure` audit: `S43 active-refusal disposition review`
 
 ### exec
