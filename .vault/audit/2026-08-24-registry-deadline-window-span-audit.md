@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:2495d0eaeef813609ef78e7c6f5e1c97539172c9a96d4035f657fff1288f68e6'
+body_hash: 'sha256:5cd1047cb54d436858e7590ed4e88ea74a077944387e1c3094121141762e33ee'
 related: []
 ---
 
@@ -404,6 +404,45 @@ runtime. A test failing in setup is worse than one failing an assertion: its
 name still promises coverage, and the suite still counts it, but it has not
 exercised the behaviour it is named for since the day it broke. Several had been
 in that state for eleven days or more.
+
+## Measured: what the modelo 200 filing-grade attestation would buy
+
+The largest open cluster was recorded above as "an attestation decision, not a
+code change". That is still true, but the decision can be made with numbers
+rather than in the dark. Measured in the throwaway measurement worktree, never
+in the shared tree, by raising `authority_grade` on modelo 200 revision
+`2024-y-siguientes` from `calculation` to `filing` and then restoring it:
+
+| state | filing + modelo packages |
+|---|---|
+| `authority_grade = "calculation"` (committed today) | 280 failed, 2086 passed |
+| `authority_grade = "filing"` | **230 failed, 2136 passed** |
+
+**Registry validation passes at filing grade.** Every enrolled family is already
+present in that revision -- applicability, bindings, casillas, completeness
+manifest, constructs, deadline windows, export, formulas, parameters,
+projection endpoints, relations, verification expectations and predicates -- so
+the filing rung's assertion that every family resolves is already satisfied by
+the data. Unlike modelo 322, where the equivalent refusal exposed a genuine
+absence of deadline windows, there is no data gap here to close first.
+
+So the attestation is a stamp, not a work item, and it recovers **50 tests in
+those two packages alone** -- whole modules such as
+`test_export_implicit_decimal_slots` are 13 failures of nothing but this
+refusal.
+
+What it is NOT is a stamp anyone should apply casually. The revision carries
+`review_status = "agent_reviewed"` and
+`reviewed_by = "agent-prepared-pending-operator"`, and the filing rung is the
+one that asserts this revision is fit to compute a real taxpayer's filing.
+`aeat-calculation-grounding` is explicit that an agent must not stamp a
+filing-grade claim under the operator's name. That is why this is recorded with
+its measurement rather than applied: the operator now knows the cost is zero
+data work and the benefit is 50 tests, and the judgement of whether modelo 200's
+2024 content is genuinely filing-grade remains theirs.
+
+The same question applies to modelo 036 revision `2025-02-03-y-siguientes`,
+which refuses the same way at `applicability` grade (34 failures).
 
 ## Durable lesson
 
