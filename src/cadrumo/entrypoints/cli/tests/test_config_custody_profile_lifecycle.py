@@ -181,15 +181,23 @@ def test_profile_logout_is_the_only_strong_logout_before_switch(tmp_path: Path) 
 
     missing_default = _run_cadrumo(tmp_path, ("config", "login"))
     assert missing_default.returncode != 0
-    assert "No active profile" in _combined_output(missing_default) or "active profile" in _combined_output(
-        missing_default,
-    )
+    assert "No passphrase channel is available" in _combined_output(missing_default)
 
-    switched_by_name = _run_cadrumo(tmp_path, ("config", "login", "custody"))
+    passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+    login_payload = json.dumps({"passphrase": passphrase})
+    switched_by_name = _run_cadrumo(
+        tmp_path,
+        ("config", "login", "custody", "--secrets-stdin"),
+        stdin_payload=login_payload,
+    )
     assert switched_by_name.returncode == 0, _combined_output(switched_by_name)
     assert "active_profile\tcustody" in switched_by_name.stdout
 
-    switched_default = _run_cadrumo(tmp_path, ("config", "login"))
+    switched_default = _run_cadrumo(
+        tmp_path,
+        ("config", "login", "--secrets-stdin"),
+        stdin_payload=login_payload,
+    )
     assert switched_default.returncode == 0, _combined_output(switched_default)
     assert "active_profile\tcustody" in switched_default.stdout
 
@@ -576,14 +584,29 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
         entry.name for entry in scan_directory(tmp_path / "buckets", select=DirectoryEntryKind.DIRECTORIES)
     }
 
-    pointer_default = _run_cadrumo(tmp_path, ("config", "profile", "show"))
+    profile_secret_payload = json.dumps(
+        {"profile_passphrase": load_settings().cadrumo_dev_test_database_password.get_secret_value()}
+    )
+
+    def _run_authenticated(
+        args: tuple[str, ...],
+        *,
+        extra_env: dict[str, str] | None = None,
+    ) -> subprocess.CompletedProcess[str]:
+        return _run_cadrumo(
+            tmp_path,
+            ("--profile-secrets-stdin", *args),
+            extra_env=extra_env,
+            stdin_payload=profile_secret_payload,
+        )
+
+    pointer_default = _run_authenticated(("config", "profile", "show"))
     assert pointer_default.returncode == 0, _combined_output(pointer_default)
     assert "identity.name\tBeta Operator" in pointer_default.stdout
 
     # A set environment variable cannot displace the pointer: the pointer
     # still selects beta even while the shell names alpha.
-    env_inert = _run_cadrumo(
-        tmp_path,
+    env_inert = _run_authenticated(
         ("config", "profile", "show"),
         extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
     )
@@ -591,27 +614,25 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
     assert "identity.name\tBeta Operator" in env_inert.stdout
 
     # The flag is the selection channel that does win over the pointer.
-    flag_default = _run_cadrumo(tmp_path, ("--profile", "alpha", "config", "profile", "show"))
+    flag_default = _run_authenticated(("--profile", "alpha", "config", "profile", "show"))
     assert flag_default.returncode == 0, _combined_output(flag_default)
     assert "identity.name\tAlpha Operator" in flag_default.stdout
 
-    # An explicit NAME outranks ``--profile``. The record itself is NOT
-    # readable here and that is custody working, not a defect: each profile's
-    # record is sealed under its own capsule key, and the live session belongs
-    # to alpha. What the precedence claim needs is which profile the verb
-    # RESOLVED to, and the refusal names it -- beta, not the alpha the flag and
-    # the environment both asked for. A precedence regression would name alpha.
-    explicit_name = _run_cadrumo(
-        tmp_path,
+    # An explicit NAME outranks ``--profile``. Explicit root authentication
+    # keeps custody availability constant, so the rendered profile identity
+    # directly proves which selector won: beta, not the alpha requested by the
+    # flag and environment. A precedence regression would render alpha.
+    explicit_name = _run_authenticated(
         ("--profile", "alpha", "config", "profile", "show", "beta"),
         extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
     )
     resolved_explicit_name = _combined_output(explicit_name)
+    assert explicit_name.returncode == 0, resolved_explicit_name
     assert "display_name\tbeta" in resolved_explicit_name, resolved_explicit_name
+    assert "identity.name\tBeta Operator" in resolved_explicit_name, resolved_explicit_name
     assert "display_name\talpha" not in resolved_explicit_name, resolved_explicit_name
 
-    explicit_root = _run_cadrumo(
-        tmp_path,
+    explicit_root = _run_authenticated(
         ("--profile", "alpha", "config", "profile", "show"),
         extra_env={
             "CADRUMO_ACTIVE_PROFILE": next(bucket_id for bucket_id, label in labels_by_id.items() if label == "beta"),
@@ -620,8 +641,7 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
     assert explicit_root.returncode == 0, _combined_output(explicit_root)
     assert "identity.name\tAlpha Operator" in explicit_root.stdout
 
-    explicit_root_by_id = _run_cadrumo(
-        tmp_path,
+    explicit_root_by_id = _run_authenticated(
         ("--profile", alpha_id, "config", "profile", "show"),
         extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
     )
@@ -642,8 +662,7 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
         counts: dict[str, int] = {}
         for bucket_id in (alpha_id, beta_id):
             profile_name = labels_by_id[bucket_id]
-            result = _run_cadrumo(
-                tmp_path,
+            result = _run_authenticated(
                 (
                     "--profile",
                     bucket_id,
@@ -664,7 +683,7 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
     before = _auth_event_counts()
 
     # Pointer-default precedence: pointer points at beta (last create wins).
-    pointer_write = _run_cadrumo(tmp_path, ("config", "auth", "configure", "--provider", "clave_movil"))
+    pointer_write = _run_authenticated(("config", "auth", "configure", "--provider", "clave_movil"))
     assert pointer_write.returncode == 0, _combined_output(pointer_write)
     assert "No active profile" not in _combined_output(pointer_write)
     after_pointer = _auth_event_counts()
@@ -680,8 +699,7 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
     # beta. This is the write-side half of the retired env precedence, and it
     # is asserted rather than deleted because a selection mechanism that
     # silently redirected WRITES is the failure worth guarding against.
-    env_write = _run_cadrumo(
-        tmp_path,
+    env_write = _run_authenticated(
         ("config", "auth", "configure", "--provider", "clave_movil"),
         extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
     )
@@ -697,8 +715,7 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
     )
 
     # Flag precedence: --profile IS the surviving override and does win.
-    flag_write = _run_cadrumo(
-        tmp_path,
+    flag_write = _run_authenticated(
         ("--profile", "alpha", "config", "auth", "configure", "--provider", "clave_movil"),
     )
     assert flag_write.returncode == 0, _combined_output(flag_write)
@@ -713,8 +730,7 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
 
     # The flag still decides even while a contradicting variable is exported:
     # --profile names beta, the environment names alpha, and beta wins.
-    explicit_write = _run_cadrumo(
-        tmp_path,
+    explicit_write = _run_authenticated(
         ("--profile", "beta", "config", "auth", "configure", "--provider", "clave_movil"),
         extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
     )

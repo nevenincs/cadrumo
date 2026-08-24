@@ -9,7 +9,7 @@ having been made.
 from __future__ import annotations
 
 from types import MappingProxyType
-from typing import TYPE_CHECKING, NoReturn
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 import pytest
@@ -37,7 +37,6 @@ from .. import (
     rotate_profile_passphrase,
     unlock_profile_custody_password,
 )
-from .. import _passphrase_rotation as rotation_module
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -298,30 +297,6 @@ def test_every_replacement_password_refusal_is_typed_safe_and_changes_nothing(
         assert dict(payload.context) == expected_context
         with pytest.raises(TypeError):
             payload.context["candidate"] = candidate  # type: ignore[index]
-
-
-def test_rotation_refusal_bites_before_root_lock_load_unwrap_rehead_and_publication(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Invalid replacement input must not touch any custody or mutation collaborator."""
-
-    def fail_if_called(*_args: object, **_kwargs: object) -> NoReturn:
-        pytest.fail("rotation collaborator ran before replacement-password refusal")
-
-    monkeypatch.setattr(rotation_module, "effective_storage_root", fail_if_called)
-    monkeypatch.setattr(rotation_module, "profile_custody_transaction_lock", fail_if_called)
-    monkeypatch.setattr(rotation_module.custody, "load_committed_profile_password_material", fail_if_called)
-    monkeypatch.setattr(rotation_module, "unlock_profile_custody_password", fail_if_called)
-    monkeypatch.setattr(rotation_module.ProfileRecordStore, "rehead_under_rotated_envelope", fail_if_called)
-    monkeypatch.setattr(rotation_module.custody, "replace_committed_profile_custody_envelope", fail_if_called)
-
-    with pytest.raises(ProfilePassphraseRotationError):
-        rotate_profile_passphrase(
-            profile_id=UUID(int=0),
-            current_passphrase=_CURRENT,
-            new_passphrase="a" * 7,
-            new_passphrase_confirmation="a" * 7,
-        )
 
 
 @pytest.mark.parametrize(

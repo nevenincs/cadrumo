@@ -281,16 +281,22 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
     ) -> None:
         """Accept one exact-bound mutable secret without serializing or digesting it."""
         try:
-            snapshot = await self.inspect(requirement.identity.operation_id)
-            if snapshot.secret_requirement != requirement:
-                raise ValueError("ephemeral secret submission does not match the durable requirement")
-            if snapshot.lifecycle is not OperationLifecycle.CREATED or snapshot.executor_entered_at is not None:
-                raise ValueError("ephemeral secret requirement is no longer awaiting submission")
-            if self._clock() >= requirement.expires_at:
-                self._ephemeral_secrets.discard(requirement.identity.operation_id)
-                await self._settle_pre_entry_secret_wait(snapshot, OperationTerminalCondition.INTERRUPTED)
+            expired_snapshot: OperationPersistedSnapshot | None = None
+            async with self._lease_lock(requirement.identity.operation_id):
+                snapshot = await self.inspect(requirement.identity.operation_id)
+                if snapshot.secret_requirement != requirement:
+                    raise ValueError("ephemeral secret submission does not match the durable requirement")
+                if snapshot.lifecycle is not OperationLifecycle.CREATED or snapshot.executor_entered_at is not None:
+                    raise ValueError("ephemeral secret requirement is no longer awaiting submission")
+                observed_at = self._clock()
+                if observed_at >= requirement.expires_at:
+                    self._ephemeral_secrets.discard(requirement.identity.operation_id)
+                    expired_snapshot = snapshot
+                else:
+                    self._ephemeral_secrets.submit(requirement, secret, observed_at=observed_at)
+            if expired_snapshot is not None:
+                await self._settle_pre_entry_secret_wait(expired_snapshot, OperationTerminalCondition.INTERRUPTED)
                 raise ValueError("ephemeral secret requirement is expired")
-            self._ephemeral_secrets.submit(requirement, secret, observed_at=self._clock())
         except BaseException:
             zeroize_secret_buffer(secret)
             raise
@@ -536,6 +542,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         cancellation_requested_at: datetime | None = None,
         cancellation_acknowledged_at: datetime | None = None,
         executor_entered_at: datetime | None = None,
+        discard_ephemeral_secret: bool = False,
     ) -> OperationPersistedSnapshot:
         now = self._clock()
         async with self._lease_lock(snapshot.identity.operation_id):
@@ -579,6 +586,8 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
                 }
             )
             await self._journal.commit(successor, expected_revision=snapshot.revision, lease=lease)
+            if discard_ephemeral_secret:
+                self._ephemeral_secrets.discard(snapshot.identity.operation_id)
         self._notify_durable_change(successor)
         return successor
 
@@ -639,7 +648,6 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
     async def request_cancel(self, operation_id: OperationId) -> OperationPersistedSnapshot:
         snapshot = await self.inspect(operation_id)
         if snapshot.secret_requirement is not None and snapshot.executor_entered_at is None:
-            self._ephemeral_secrets.discard(operation_id)
             requested_at = self._clock()
             event = OperationNoticeEvent(
                 identity=snapshot.identity,
@@ -656,6 +664,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
                 cleanup_deadline=requested_at + self._lease_duration,
                 cancellation_requested_at=requested_at,
                 cancellation_acknowledged_at=requested_at,
+                discard_ephemeral_secret=True,
             )
             return await self._settle_pre_entry_secret_wait(acknowledged, OperationTerminalCondition.CANCELLED)
         cancellation = self._registry.lookup(snapshot.identity.definition_id).capabilities.cancellation
@@ -776,6 +785,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
                 )
                 await self._journal.commit(successor, expected_revision=snapshot.revision, lease=lease)
                 await self._release_exact_lease(lease, observed_at=now)
+                self._ephemeral_secrets.discard(operation_id)
         if cleanup_deadline_elapsed:
             await self._escalate_cleanup_deadline(operation_id)
             raise TimeoutError("operation cleanup deadline elapsed before terminal settlement")
@@ -785,7 +795,6 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         self._executor_tasks.pop(operation_id, None)
         self._cleanup_tasks.pop(operation_id, None)
         self._continuation_tasks.pop(operation_id, None)
-        self._ephemeral_secrets.discard(operation_id)
         self._notify_durable_change(successor)
         return successor
 

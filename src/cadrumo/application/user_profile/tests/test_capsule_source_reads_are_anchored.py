@@ -70,19 +70,15 @@ def test_a_member_that_is_a_symlink_is_not_followed(tmp_path: Path) -> None:
     """DISCRIMINATING: the exfiltration shape, on a real symlink.
 
     A capsule whose member points outside itself must not have that file's
-    contents adopted into a restored profile. Skipped only where the platform
-    refuses to create the link at all -- an unprivileged Windows session
-    without developer mode -- because there the case cannot be constructed
-    rather than because it does not matter.
+    contents adopted into a restored profile. The fixture creates the real link
+    that the filesystem gives the production reader, so inability to construct
+    that link is a platform failure rather than an unobserved test case.
     """
     outside = tmp_path / "somebody-elses-secret.json"
     outside.write_bytes(b'{"stolen": true}')
     source = _capsule_skeleton(tmp_path / "capsule")
     link = source.joinpath(*_ENVELOPE)
-    try:
-        link.symlink_to(outside)
-    except (OSError, NotImplementedError) as exc:  # pragma: no cover - platform-dependent
-        pytest.skip(f"this platform cannot create a symlink here: {exc}")
+    link.symlink_to(outside)
 
     with pytest.raises(ProfileCustodyRecordError, match="reparse point or directory") as raised:
         read_profile_capsule_source(source)

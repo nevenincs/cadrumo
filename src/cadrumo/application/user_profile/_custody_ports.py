@@ -44,7 +44,7 @@ if TYPE_CHECKING:
 
 
 from ...adapters.persistence.storage import custody
-from ...core.hashing import bounded_canonical_json_bytes, canonical_json_digest
+from ...core.hashing import bounded_canonical_json_bytes, canonical_json_digest, prefixed_digest
 from ...core.paths import effective_storage_root
 from ._authentication import ProfileAuthenticationRefusedError, ProfilePasswordProofOperation
 
@@ -1028,6 +1028,31 @@ def unlock_profile_custody_password(
     )
 
 
+def load_profile_custody_password_material(
+    profile_id: UUID,
+    *,
+    root: Path | None = None,
+) -> ProfileCustodyPasswordMaterialPort:
+    """Load one committed password-proof bundle through the custody boundary."""
+    return custody.load_committed_profile_password_material(profile_id, root=root)
+
+
+def replace_profile_custody_password_envelope(
+    *,
+    profile_id: UUID,
+    current: ProfileCustodyEnvelopePort,
+    rotated: ProfileCustodyEnvelopePort,
+    root: Path,
+) -> None:
+    """CAS-replace exactly one committed password envelope through its owner."""
+    custody.replace_committed_profile_custody_envelope(
+        profile_id,
+        rotated.canonical_json_bytes(),
+        expected_sha256=prefixed_digest(current.canonical_json_bytes()),
+        root=root,
+    )
+
+
 def map_profile_authentication_proof_failure(
     error: BaseException,
     *,
@@ -1221,6 +1246,7 @@ __all__ = [
     "ensure_profile_custody_owner_root",
     "export_profile_recovery_artifact",
     "map_profile_authentication_proof_failure",
+    "load_profile_custody_password_material",
     "profile_advance_session_idle_deadline",
     "profile_bind_bucket_session",
     "profile_custody_owner_root",
@@ -1231,6 +1257,7 @@ __all__ = [
     "profile_is_authentication_failure",
     "profile_is_keyring_unavailable",
     "profile_is_persisted_session",
+    "replace_profile_custody_password_envelope",
     "profile_session_serves_bucket",
     "prove_profile_recovery_artifact",
     "refuse_profile_login_without_password_channel",

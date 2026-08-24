@@ -143,6 +143,12 @@ container, or a token naming an enrolled format's version.
 """
 
 CONSTANTS_AWAITING_CLASSIFICATION: Final[Mapping[str, str]] = {
+    "CENSAL_REVIEWED_OPERAND_SCHEMA_VERSION": (
+        "Censal reviewed-operand record: the encrypted exact preimage an operator approved or "
+        "rejected. It is operator-produced persisted data, so it is NOT outside this inventory, "
+        "but its durability class is a live decision belonging with the censal review work "
+        "rather than one to assign by copying a neighbour."
+    ),
     "CUSTODY_TRANSACTION_SCHEMA_VERSION": "Profile-deletion transaction journal; carries lifecycle facts after real effects.",
     "CUSTODY_RECEIPT_SCHEMA_VERSION": "Per-owner deletion receipts; the durable evidence that each owner step ran.",
     "SECRET_RECORD_SCHEMA_VERSION": "Secret-store record shape; sits beneath the enrolled secret index.",
@@ -338,7 +344,7 @@ def test_the_unclassified_gap_is_a_number_a_reader_can_see() -> None:
     version as a bare literal, so like the five above they were invisible to
     this gate until named, and they were named and classed in one move.
     """
-    assert len(CONSTANTS_AWAITING_CLASSIFICATION) == 18, (
+    assert len(CONSTANTS_AWAITING_CLASSIFICATION) == 19, (
         f"{len(CONSTANTS_AWAITING_CLASSIFICATION)} persisted formats await a durability class, not "
         "the 18 recorded here. If one has been argued, remove it from "
         "CONSTANTS_AWAITING_CLASSIFICATION and lower this number in the same change; if a new "

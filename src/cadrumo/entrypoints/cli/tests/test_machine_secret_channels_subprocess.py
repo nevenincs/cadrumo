@@ -76,8 +76,6 @@ _HARNESS = dedent(
             for path in root.rglob("*")
             if path.is_file()
             and "log" not in path.name.lower()
-            and "session" not in path.name.lower()
-            and "receipt" not in path.name.lower()
         }
 
     payload = json.loads(sys.argv[1])
@@ -154,8 +152,6 @@ _WINDOWS_HANDLE_HARNESS = dedent(
             for path in root.rglob("*")
             if path.is_file()
             and "log" not in path.name.lower()
-            and "session" not in path.name.lower()
-            and "receipt" not in path.name.lower()
         }
 
     payload = json.loads(sys.argv[1])
@@ -452,7 +448,7 @@ def _combined(result: subprocess.CompletedProcess[str]) -> str:
 
 
 def _storage_snapshot(root: Path) -> dict[str, bytes]:
-    """Capture durable state while excluding diagnostic and ephemeral session debris."""
+    """Capture every custody artifact except diagnostic logs for refusal witnesses."""
     if not root.exists():
         return {}
     return {
@@ -460,8 +456,6 @@ def _storage_snapshot(root: Path) -> dict[str, bytes]:
         for path in root.rglob("*")
         if path.is_file()
         and "log" not in path.name.lower()
-        and "session" not in path.name.lower()
-        and "receipt" not in path.name.lower()
     }
 
 

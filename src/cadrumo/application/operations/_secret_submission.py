@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator, Callable
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from datetime import datetime, timedelta
+from threading import RLock
 from typing import Annotated, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, model_validator
@@ -86,7 +87,10 @@ class EphemeralSecretBroker:
 
     def __init__(self) -> None:
         self._entries: dict[OperationId, tuple[OperationSecretRequirement, bytearray]] = {}
+        self._active: dict[OperationId, bytearray] = {}
         self._consumed: set[OperationId] = set()
+        self._closed = False
+        self._lock = RLock()
 
     def submit(
         self,
@@ -99,31 +103,37 @@ class EphemeralSecretBroker:
             raise TypeError("ephemeral secret submission requires a mutable bytearray")
         owned: bytearray | None = None
         try:
-            if not secret or len(secret) > _MAX_SECRET_BYTES:
-                raise ValueError("ephemeral secret submission has an invalid length")
-            if observed_at >= requirement.expires_at:
-                raise ValueError("ephemeral secret requirement is expired")
-            operation_id = requirement.identity.operation_id
-            if operation_id in self._consumed:
-                raise ValueError("ephemeral secret requirement is already consumed")
-            if operation_id in self._entries:
-                raise ValueError("ephemeral secret requirement already has a submission")
-            owned = bytearray(secret)
-            self._entries[operation_id] = (requirement, owned)
-            owned = None
+            with self._lock:
+                if self._closed:
+                    raise ValueError("ephemeral secret submission channel is closed")
+                if not secret or len(secret) > _MAX_SECRET_BYTES:
+                    raise ValueError("ephemeral secret submission has an invalid length")
+                if observed_at >= requirement.expires_at:
+                    raise ValueError("ephemeral secret requirement is expired")
+                operation_id = requirement.identity.operation_id
+                if operation_id in self._consumed:
+                    raise ValueError("ephemeral secret requirement is already consumed")
+                if operation_id in self._entries or operation_id in self._active:
+                    raise ValueError("ephemeral secret requirement already has a submission")
+                owned = bytearray(secret)
+                self._entries[operation_id] = (requirement, owned)
+                owned = None
         finally:
             zeroize_secret_buffer(secret)
             if owned is not None:
                 zeroize_secret_buffer(owned)
 
     def has_exact(self, requirement: OperationSecretRequirement, *, observed_at: datetime) -> bool:
-        entry = self._entries.get(requirement.identity.operation_id)
-        if entry is None:
-            return False
-        if observed_at >= requirement.expires_at:
-            self.discard(requirement.identity.operation_id)
-            return False
-        return entry[0] == requirement
+        with self._lock:
+            if self._closed:
+                return False
+            entry = self._entries.get(requirement.identity.operation_id)
+            if entry is None:
+                return False
+            if observed_at >= requirement.expires_at:
+                self._discard_unlocked(requirement.identity.operation_id)
+                return False
+            return entry[0] == requirement
 
     @asynccontextmanager
     async def consume(
@@ -133,36 +143,52 @@ class EphemeralSecretBroker:
         observed_at: datetime,
     ) -> AsyncGenerator[memoryview]:
         operation_id = requirement.identity.operation_id
-        entry = self._entries.pop(operation_id, None)
-        if entry is None:
-            if operation_id in self._consumed:
-                raise ValueError("ephemeral secret requirement is already consumed")
-            raise ValueError("ephemeral secret requirement has no submission")
-        bound_requirement, secret = entry
-        if bound_requirement != requirement:
-            zeroize_secret_buffer(secret)
-            raise ValueError("ephemeral secret submission does not match the executor requirement")
-        if observed_at >= requirement.expires_at:
-            zeroize_secret_buffer(secret)
-            raise ValueError("ephemeral secret requirement is expired")
-        self._consumed.add(operation_id)
+        with self._lock:
+            if self._closed:
+                raise ValueError("ephemeral secret submission channel is closed")
+            entry = self._entries.pop(operation_id, None)
+            if entry is None:
+                if operation_id in self._consumed:
+                    raise ValueError("ephemeral secret requirement is already consumed")
+                raise ValueError("ephemeral secret requirement has no submission")
+            bound_requirement, secret = entry
+            if bound_requirement != requirement:
+                zeroize_secret_buffer(secret)
+                raise ValueError("ephemeral secret submission does not match the executor requirement")
+            if observed_at >= requirement.expires_at:
+                zeroize_secret_buffer(secret)
+                raise ValueError("ephemeral secret requirement is expired")
+            self._consumed.add(operation_id)
+            self._active[operation_id] = secret
         view = memoryview(secret)
         try:
             yield view
         finally:
             view.release()
-            zeroize_secret_buffer(secret)
+            with self._lock:
+                self._active.pop(operation_id, None)
+                zeroize_secret_buffer(secret)
 
     def discard(self, operation_id: OperationId) -> None:
+        with self._lock:
+            self._discard_unlocked(operation_id)
+
+    def _discard_unlocked(self, operation_id: OperationId) -> None:
         entry = self._entries.pop(operation_id, None)
         if entry is not None:
             zeroize_secret_buffer(entry[1])
+        active = self._active.pop(operation_id, None)
+        if active is not None:
+            zeroize_secret_buffer(active)
         self._consumed.discard(operation_id)
 
     def close(self) -> None:
-        for operation_id in tuple(self._entries):
-            self.discard(operation_id)
-        self._consumed.clear()
+        with self._lock:
+            self._closed = True
+            operation_ids = self._entries.keys() | self._active.keys()
+            for operation_id in tuple(operation_ids):
+                self._discard_unlocked(operation_id)
+            self._consumed.clear()
 
 
 class BoundEphemeralSecretAccess:

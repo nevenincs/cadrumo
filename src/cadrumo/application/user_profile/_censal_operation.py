@@ -6,7 +6,7 @@ import secrets
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Literal
+from typing import Final, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -113,12 +113,19 @@ class CensalProfileBaseline(BaseModel):
         )
 
 
+#: Wire version of the reviewed-operand record. Named rather than written as a
+#: bare default so the number has one home: a reader can find every site bound
+#: to this shape, and a bump cannot land on the model while a writer stamping
+#: the old number silently disagrees with it.
+CENSAL_REVIEWED_OPERAND_SCHEMA_VERSION: Final[int] = 1
+
+
 class CensalReviewedOperand(BaseModel):
     """Encrypted exact preimage approved or rejected by the operator."""
 
     model_config = STRICT_FROZEN_CONFIG
 
-    schema_version: Literal[1] = 1
+    schema_version: Literal[1] = CENSAL_REVIEWED_OPERAND_SCHEMA_VERSION
     observation: CensalObservation
     baseline: CensalProfileBaseline
     field_intents: tuple[CensalReviewedFieldIntent, ...]

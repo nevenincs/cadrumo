@@ -34,6 +34,7 @@ from .....application.operations import (
     OperationSensitiveInputPolicy,
     OperationSupervisor,
     OperationTerminalCondition,
+    OperationTerminalReceipt,
 )
 from .....core import (
     STRICT_FROZEN_CONFIG,
@@ -110,6 +111,7 @@ class BlockingExecutor:
         self.entered = entered
         self.release = release
         self.calls = 0
+        self.active_buffer_zeroized = False
 
     async def execute(
         self,
@@ -122,6 +124,7 @@ class BlockingExecutor:
             assert secret.tobytes() == _SECRET
             self.entered.set()
             await self.release.wait()
+            self.active_buffer_zeroized = not any(secret)
         return "secret-operation:complete"
 
 
@@ -330,9 +333,113 @@ def test_expiry_cancellation_and_shutdown_clear_pre_entry_secret_waits(tmp_path:
     shutdown_buffer = bytearray(_SECRET)
     asyncio.run(supervisor.submit_ephemeral_secret(shutdown_requirement, shutdown_buffer))
     asyncio.run(supervisor.shutdown())
+    post_shutdown_buffer = bytearray(_SECRET)
+    with pytest.raises(ValueError, match="submission channel is closed"):
+        asyncio.run(supervisor.submit_ephemeral_secret(shutdown_requirement, post_shutdown_buffer))
+    assert post_shutdown_buffer == bytearray(len(_SECRET))
     with pytest.raises(ValueError, match="no exact live submission"):
         asyncio.run(supervisor.start(shutdown_id))
     _assert_no_secret_or_derivative(tmp_path)
+
+
+def test_submission_and_cancellation_share_one_operation_boundary(tmp_path: Path) -> None:
+    async def scenario() -> None:
+        executor = ConsumingExecutor()
+        registry = OperationRegistry(definitions=(_definition(executor),))
+        clock = [_NOW]
+        supervisor = _supervisor(root=tmp_path, registry=registry, owner="1" * 64, token="2" * 64, clock=clock)
+        operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+        requirement = (await supervisor.inspect(operation_id)).secret_requirement
+        assert requirement is not None
+        submitted = bytearray(_SECRET)
+
+        async with supervisor._lease_lock(operation_id):
+            submission = asyncio.create_task(supervisor.submit_ephemeral_secret(requirement, submitted))
+            await asyncio.sleep(0)
+            assert not submission.done()
+            cancellation = asyncio.create_task(supervisor.request_cancel(operation_id))
+            await asyncio.sleep(0)
+            assert not cancellation.done()
+
+        await submission
+        terminal = await cancellation
+        assert terminal.terminal_condition is OperationTerminalCondition.CANCELLED
+        assert submitted == bytearray(len(_SECRET))
+        retry = bytearray(_SECRET)
+        with pytest.raises(ValueError, match="no longer awaiting"):
+            await supervisor.submit_ephemeral_secret(requirement, retry)
+        assert retry == bytearray(len(_SECRET))
+        assert not supervisor._ephemeral_secrets.has_exact(requirement, observed_at=clock[0])
+        assert executor.calls == 0
+        _assert_no_secret_or_derivative(tmp_path)
+
+    asyncio.run(scenario())
+
+
+def test_submission_and_terminal_settlement_share_one_operation_boundary(tmp_path: Path) -> None:
+    async def scenario() -> None:
+        executor = ConsumingExecutor()
+        registry = OperationRegistry(definitions=(_definition(executor),))
+        clock = [_NOW]
+        supervisor = _supervisor(root=tmp_path, registry=registry, owner="7" * 64, token="8" * 64, clock=clock)
+        operation_id = await supervisor.submit(_request(), operation_id="9" * 64)
+        snapshot = await supervisor.inspect(operation_id)
+        requirement = snapshot.secret_requirement
+        assert requirement is not None
+        submitted = bytearray(_SECRET)
+        receipt = OperationTerminalReceipt(
+            identity=snapshot.identity,
+            revision=snapshot.revision + 1,
+            condition=OperationTerminalCondition.INTERRUPTED,
+            effect=OperationEffect.NONE,
+            settled_at=clock[0],
+        )
+
+        async with supervisor._lease_lock(operation_id):
+            submission = asyncio.create_task(supervisor.submit_ephemeral_secret(requirement, submitted))
+            await asyncio.sleep(0)
+            assert not submission.done()
+            settlement = asyncio.create_task(supervisor.settle(operation_id, receipt))
+            await asyncio.sleep(0)
+            assert not settlement.done()
+
+        await submission
+        terminal = await settlement
+        assert terminal.terminal_condition is OperationTerminalCondition.INTERRUPTED
+        assert submitted == bytearray(len(_SECRET))
+        assert not supervisor._ephemeral_secrets.has_exact(requirement, observed_at=clock[0])
+        assert executor.calls == 0
+        _assert_no_secret_or_derivative(tmp_path)
+
+    asyncio.run(scenario())
+
+
+def test_shutdown_zeroizes_secret_during_active_consumption(tmp_path: Path) -> None:
+    async def scenario() -> None:
+        entered = asyncio.Event()
+        release = asyncio.Event()
+        executor = BlockingExecutor(entered, release)
+        registry = OperationRegistry(definitions=(_definition(executor),))
+        clock = [_NOW]
+        supervisor = _supervisor(root=tmp_path, registry=registry, owner="4" * 64, token="5" * 64, clock=clock)
+        operation_id = await supervisor.submit(_request(), operation_id="6" * 64)
+        requirement = (await supervisor.inspect(operation_id)).secret_requirement
+        assert requirement is not None
+        submitted = bytearray(_SECRET)
+        await supervisor.submit_ephemeral_secret(requirement, submitted)
+        execution = asyncio.create_task(supervisor.start(operation_id))
+        await entered.wait()
+
+        await supervisor.shutdown()
+        release.set()
+        terminal = await execution
+
+        assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+        assert executor.active_buffer_zeroized
+        assert submitted == bytearray(len(_SECRET))
+        _assert_no_secret_or_derivative(tmp_path)
+
+    asyncio.run(scenario())
 
 
 def test_restart_before_entry_is_none_and_after_entry_is_unknown_without_reexecution(tmp_path: Path) -> None:
