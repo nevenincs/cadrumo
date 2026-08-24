@@ -223,4 +223,3 @@ revalidated before an ADR claims exhaustive architecture discovery.
 - `uv run --no-sync deptry src/cadrumo dev/registry --known-first-party cadrumo --extend-exclude ".*test_.*[.]py" --extend-exclude ".*_test_.*[.]py" --extend-exclude ".*[\\/]tests[\\/].*"` (2026-08-24 dirty-tree snapshot)
 - `uv run --no-sync pytest -q -p no:cacheprovider -rsf dev/tests/test_test_inventory.py dev/tests/test_marker_integrity.py src/cadrumo/tests/test_relative_imports_only.py dev/tests/test_no_skip_xfail.py dev/tests/test_mock_inventory.py dev/tests/test_monkeypatch_inventory.py dev/tests/test_no_broad_exception_raises.py dev/tests/test_no_bare_except.py dev/tests/test_no_tautology.py --tb=short` (2026-08-24 dirty-tree snapshot)
 - `uv run --no-sync vaultspec-core vault check all --json` (2026-08-24 dirty-tree snapshot)
-

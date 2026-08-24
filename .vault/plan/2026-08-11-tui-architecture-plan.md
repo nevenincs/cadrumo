@@ -8,7 +8,7 @@ related:
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-11-tui-architecture-research]]'
 modified: '2026-08-24'
-body_hash: 'sha256:7f4b00c33809f7f163d26206397ca00ae971045d09852a49fe3b6894b0294625'
+body_hash: 'sha256:eef7e912dac2321af00529b9c029eba62a501fe94394c0d3e6853d0514243463'
 ---
 
 # `tui-architecture` plan
@@ -122,7 +122,7 @@ Model previous-filing history pull as one recorded, partial-effect operation wit
 - [x] `W03.P07.S34` - Implement the recorded filed-history executor across discovery, register access, pair walk, capture, persistence, finalization, provenance, wallet, notifications, and settlement; `src/cadrumo/application/live/_filed_history_operation.py`.
 - [x] `W03.P07.S35` - Expose dry-run on the composed filed-history operation with identical discovery scope and effect none; `src/cadrumo/application/live/_filed_history_operation.py`.
 - [x] `W03.P07.S36` - Emit ordered safe stage and unit progress with scoped refusals and truthful none, updated, partial, or unknown effects; `src/cadrumo/application/live/_filed_history_operation.py`.
-- [ ] `W03.P07.S37` - Export the filed-history operation definition through the live application facade; `src/cadrumo/application/live/__init__.py`.
+- [x] `W03.P07.S37` - Export the filed-history operation definition through the live application facade; `src/cadrumo/application/live/__init__.py`.
 - [ ] `W03.P07.S38` - Prove dry-run parity, committed-unit accounting, child provenance references, unsupported cancellation and deadline claims, and cleanup before settlement; `src/cadrumo/application/live/tests/test_filed_history_operation.py`.
 
 ### Phase `W03.P08` - Remaining shipped operations
