@@ -76,50 +76,25 @@ _BUCKET_ID = "7c7c7c7c-7c7c-47c7-87c7-7c7c7c7c7c7c"
 
 def _capture(output_root: Path) -> BulkFiledDataCaptureReport:
     """Run the real bulk capture over two queued pages, one truncated, one complete."""
-    pending = [
-        _fixture("declaraciones-register-form-paginated-synthetic"),
-        _fixture("declaraciones-register-form-complete-synthetic"),
-    ]
-    served: list[str] = []
-
-    async def _serve(route: Route) -> None:
-        """Fulfil the real listing URL with the next queued synthetic page."""
-        if not route.request.is_navigation_request():
-            await route.fulfill(status=204, body="")
-            return
-        body = pending.pop(0) if pending else served[-1]
-        served.append(body)
-        await route.fulfill(status=200, content_type="text/html; charset=utf-8", body=body)
+    documents = (
+        aeat_sede_fixture("declaraciones-register-form-paginated-synthetic"),
+        aeat_sede_fixture("declaraciones-register-form-complete-synthetic"),
+    )
 
     async def _run() -> BulkFiledDataCaptureReport:
-        async with async_playwright() as playwright:
-            browser = await playwright.chromium.launch(headless=True)
-            try:
-                context = await browser.new_context()
-                page = await context.new_page()
-                await page.route("**/*", _serve)
-                register = DeclaracionesRegisterSession(_offline_session(), page, context)
-                with override_settings(
-                    cadrumo_browser_form_interaction_timeout_ms=3000,
-                    cadrumo_browser_buscar_settle_ms=50,
-                    cadrumo_browser_ver_click_timeout_ms=1500,
-                ):
-                    return await capture_filed_data_bulk(
-                        year_from=_YEAR_FROM,
-                        year_to=_YEAR_TO,
-                        output_root=output_root,
-                        modelos=(_MODELO,),
-                        register=register,
-                        sync_run_repository=SyncRunRecordRepository(),
-                    )
-            finally:
-                await browser.close()
+        async with open_routed_declarations_register(documents, ver_click_timeout_ms=1500) as (register, routed):
+            report = await capture_filed_data_bulk(
+                year_from=_YEAR_FROM,
+                year_to=_YEAR_TO,
+                output_root=output_root,
+                modelos=(_MODELO,),
+                register=register,
+                sync_run_repository=SyncRunRecordRepository(),
+            )
+            assert not routed.pending
+            return report
 
-    report = asyncio.run(_run())
-    assert not pending, (
-        "the capture stopped before requesting every queued page, so it did not continue past the failed pair"
-    )
-    return report
+    return asyncio.run(_run())
 
 
 def test_a_truncated_pair_is_reported_while_the_other_pair_is_still_captured(tmp_path: Path) -> None:
@@ -150,9 +125,10 @@ def test_a_truncated_pair_is_reported_while_the_other_pair_is_still_captured(tmp
     # Both numbers are read straight out of the fixture's own markup rather than
     # from anything the parser computed, so the row is cross-checked against the
     # page it came from and neither number is hardcoded here.
-    truncated_page = _fixture("declaraciones-register-form-paginated-synthetic")
-    declared_total = _declared_total_in(truncated_page)
-    rendered_rows = _rendered_rows_in(truncated_page)
+    truncated_page = aeat_sede_fixture("declaraciones-register-form-paginated-synthetic")
+    declared_total = declared_register_total(truncated_page)
+    assert declared_total is not None
+    rendered_rows = rendered_register_rows(truncated_page)
     assert rendered_rows < declared_total, "fixture no longer renders fewer rows than its pager declares"
     for failure in truncation_failures:
         assert str(rendered_rows) in failure.message and str(declared_total) in failure.message, (

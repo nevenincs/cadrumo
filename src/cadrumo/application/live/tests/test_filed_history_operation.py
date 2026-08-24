@@ -14,7 +14,6 @@ from types import ModuleType
 import pytest
 
 from ....adapters.outbound.aeat.sede import (
-    Declaracion,
     DeclaracionesRegisterSession,
     FiledDeclarationAvailability,
     FiledDeclarationAvailabilityReport,
@@ -41,6 +40,7 @@ from ....core import (
 )
 from ....core.classification import SensitivityClass
 from ....domain.deadlines import TaxpayerProfile
+from ....tests.offline_aeat_register import aeat_sede_fixture, open_routed_declarations_register
 from ....tests.secure_namespace_registration import registered_objects
 from ....tests.secure_sql import isolated_runtime_profile
 from ...operations import (
@@ -69,7 +69,9 @@ from .. import (
     build_filed_history_operation_definition as public_build_filed_history_operation_definition,
 )
 from .._filed_data_capture import (
+    FILED_HISTORY_DECLARATION_PROGRESS_UNIT,
     ExpectedFiledDeclarationGrid,
+    FiledHistoryDiscoveryPair,
     FiledHistoryDiscoveryPort,
     FiledHistoryDiscoveryReport,
     FiledHistoryOnboardingRun,
@@ -150,17 +152,6 @@ class _DeterministicFiledHistoryDiscovery:
         )
 
 
-class _DeterministicEmptyRegister(DeclaracionesRegisterSession):
-    """Concrete offline register boundary for an observed empty supported pair."""
-
-    def __init__(self) -> None:
-        """Require no browser because an empty pair has no row capture leg."""
-
-    async def walk(self, *, modelo: str, ejercicio: int) -> tuple[Declaracion, ...]:
-        assert (modelo, ejercicio) == ("303", 2025)
-        return ()
-
-
 def _local_pull(
     discover: FiledHistoryDiscoveryPort,
     *,
@@ -182,6 +173,96 @@ def _local_pull(
         )
 
     return pull
+
+
+def _routed_pull(discover: FiledHistoryDiscoveryPort):
+    """Run canonical composition through the real locally routed register adapter."""
+    document = aeat_sede_fixture("declaraciones-register-form-complete-synthetic")
+
+    async def pull(payload, repository, events):
+        async with open_routed_declarations_register((document,), ver_click_timeout_ms=1500) as (register, routed):
+            run = await pull_filed_history(
+                output_root=payload.output_root,
+                profile=payload.profile,
+                today=payload.today,
+                limit=payload.limit,
+                dry_run=payload.dry_run,
+                discover=discover,
+                register=register,
+                sync_run_repository=repository,
+                events=events,
+            )
+            assert not routed.pending
+            return run
+
+    return pull
+
+
+def _composition_discovery(*pairs: FiledHistoryDiscoveryPair) -> FiledHistoryDiscoveryPort:
+    """Supply strict discovery facts to the canonical composition boundary."""
+
+    async def discover(
+        *,
+        profile: TaxpayerProfile | None = None,
+        today: date | None = None,
+    ) -> FiledHistoryDiscoveryReport:
+        del profile, today
+        return FiledHistoryDiscoveryReport(
+            pairs=pairs,
+            register_options_read=True,
+            profile_year_span_determined=False,
+        )
+
+    return discover
+
+
+def _composition_pair(modelo: str = "100") -> FiledHistoryDiscoveryPair:
+    return FiledHistoryDiscoveryPair(
+        modelo=modelo,
+        ejercicio=2000,
+        signals=(FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,),
+    )
+
+
+def _run_composition(*pairs: FiledHistoryDiscoveryPair, tmp_path: Path, dry_run: bool = False):
+    return asyncio.run(
+        pull_filed_history(
+            output_root=tmp_path,
+            today=date(2026, 3, 15),
+            dry_run=dry_run,
+            discover=_composition_discovery(*pairs),
+        ),
+    )
+
+
+def test_canonical_composition_preserves_every_discovered_pair_and_refusal(tmp_path: Path) -> None:
+    run = _run_composition(_composition_pair("100"), _composition_pair("303"), tmp_path=tmp_path)
+
+    assert [(pair.modelo, pair.ejercicio) for pair in run.pairs] == [("100", 2000), ("303", 2000)]
+    assert all(pair.refused for pair in run.pairs)
+    assert all(pair.failure_type == "LiveApplicationInputError" for pair in run.pairs)
+    assert run.evidence_notices == ()
+
+
+def test_canonical_composition_dry_run_preserves_scope_without_provenance(tmp_path: Path) -> None:
+    pairs = (_composition_pair("100"), _composition_pair("303"))
+    normal = _run_composition(*pairs, tmp_path=tmp_path)
+    preview = _run_composition(*pairs, tmp_path=tmp_path, dry_run=True)
+
+    assert [(pair.modelo, pair.ejercicio) for pair in preview.pairs] == [
+        (pair.modelo, pair.ejercicio) for pair in normal.pairs
+    ]
+    assert preview.dry_run is True
+    assert preview.sync_run_ref is None
+    assert preview.iva_wallet_status == "not_attempted"
+    assert preview.notificaciones_status == "not_attempted"
+
+
+def test_canonical_composition_empty_discovery_short_circuits_truthfully(tmp_path: Path) -> None:
+    run = _run_composition(tmp_path=tmp_path)
+
+    assert run.pairs == ()
+    assert run.stage_failures == ("discovery: no modelo/ejercicio pair to walk",)
 
 
 def test_definition_declares_recorded_non_stoppable_execution(tmp_path: Path) -> None:
@@ -319,12 +400,11 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
 
 def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        repository = SyncRunRecordRepository()
+        sync_namespace_before = repository.secure_object_repository.namespace_payload_hashes(repository.namespace)
         definition = build_filed_history_operation_definition(
-            sync_run_repository=SyncRunRecordRepository(),
-            pull=_local_pull(
-                _DeterministicFiledHistoryDiscovery(modelo="303", ejercicio=2025),
-                register=_DeterministicEmptyRegister(),
-            ),
+            sync_run_repository=repository,
+            pull=_routed_pull(_DeterministicFiledHistoryDiscovery(modelo="100", ejercicio=2025)),
         )
         journal = OperationJournalRepository(storage_root=tmp_path / "operations")
         leases = OperationLeaseFilesystemRepository(storage_root=tmp_path / "operations")
@@ -372,11 +452,13 @@ def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path) -> None:
             return snapshot, events, result, lease
 
         snapshot, events, result, lease = asyncio.run(run())
+        sync_namespace_after = repository.secure_object_repository.namespace_payload_hashes(repository.namespace)
 
     assert snapshot.lifecycle is OperationLifecycle.TERMINAL
     assert snapshot.effect is OperationEffect.NONE
     assert result.dry_run is True
     assert result.sync_run_ref is None
+    assert sync_namespace_after == sync_namespace_before == {}
     assert lease.current is None
     assert all(
         event.effect is not OperationEffect.UNKNOWN for event in events if isinstance(event, OperationEffectEvent)
@@ -386,6 +468,9 @@ def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path) -> None:
     ] == [
         (0, 1, FILED_HISTORY_PAIR_PROGRESS_UNIT),
         (1, 1, FILED_HISTORY_PAIR_PROGRESS_UNIT),
+        (0, 2, FILED_HISTORY_DECLARATION_PROGRESS_UNIT),
+        (1, 2, FILED_HISTORY_DECLARATION_PROGRESS_UNIT),
+        (2, 2, FILED_HISTORY_DECLARATION_PROGRESS_UNIT),
     ]
 
 
@@ -396,10 +481,7 @@ def test_supervisor_receipt_joins_the_exact_encrypted_child_and_releases_its_lea
 
         definition = build_filed_history_operation_definition(
             sync_run_repository=repository,
-            pull=_local_pull(
-                _DeterministicFiledHistoryDiscovery(modelo="303", ejercicio=2025),
-                register=_DeterministicEmptyRegister(),
-            ),
+            pull=_routed_pull(_DeterministicFiledHistoryDiscovery(modelo="100", ejercicio=2025)),
         )
         durable_root = tmp_path / "terminal-operations"
         journal = OperationJournalRepository(storage_root=durable_root)
@@ -450,6 +532,7 @@ def test_supervisor_receipt_joins_the_exact_encrypted_child_and_releases_its_lea
         assert reference is not None
         stored = repository.load(reference)
         assert stored is not None
+        assert repository.secure_object_repository.namespace_payload_hashes(repository.namespace)
         assert repository.extract_identifier(stored) == reference
         assert stored.bucket_id == profile.bucket_id
         assert terminal.lifecycle is OperationLifecycle.TERMINAL

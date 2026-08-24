@@ -24,7 +24,9 @@ synthetic fixtures -- nothing here contacts AEAT.
 from __future__ import annotations
 
 import asyncio
+
 import pytest
+
 from ....tests.offline_aeat_register import (
     aeat_sede_fixture,
     declared_register_total,

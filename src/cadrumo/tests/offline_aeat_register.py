@@ -51,7 +51,7 @@ def offline_aeat_session() -> AeatSession:
     )
 
 
-@dataclass(slots=True)
+@dataclass
 class RoutedRegisterDocuments:
     """Track which deterministic documents the real browser consumed."""
 
