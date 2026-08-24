@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:687a4742219d9060047dc7152b0037bfac4d7e97e6ae278e44df1cf846c72022'
+body_hash: 'sha256:0392ccf6344b77e5b5e2ae09ded3127c6a302d81cc7621703a0d9f5951a2c8a0'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -67,6 +67,8 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s55-tracking-attestation-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s56-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s56-tracking-reconciliation-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s57-generation-emission-proof-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s58-embedded-envelope-source-authority-review-audit]]'
 ---
 
 # `registry-completeness-closure` feature index
@@ -108,6 +110,8 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s55-tracking-attestation-post-review-audit` - `registry-completeness-closure` audit: `S55 tracking and attestation post review`
 - `2026-08-24-registry-completeness-closure-s56-post-review-audit` - `registry-completeness-closure` audit: `S56 tracking reconciliation post review`
 - `2026-08-24-registry-completeness-closure-s56-tracking-reconciliation-audit` - `registry-completeness-closure` audit: `S56 tracking reconciliation review`
+- `2026-08-24-registry-completeness-closure-s57-generation-emission-proof-review-audit` - `registry-completeness-closure` audit: `S57 generation and emission proof review`
+- `2026-08-24-registry-completeness-closure-s58-embedded-envelope-source-authority-review-audit` - `registry-completeness-closure` audit: `S58 embedded envelope source authority review`
 
 ### exec
 

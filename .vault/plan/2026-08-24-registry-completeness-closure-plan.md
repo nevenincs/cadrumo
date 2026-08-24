@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:8f1badc9dec04f0e9b8b9851f30cf0af2b85dc0869c97efb48800ff7ebbe772a'
+body_hash: 'sha256:5790873b58f1ef50039df99d3849aa24c01df0a9ab4ac3690c7e5d7fe146283f'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -72,6 +72,7 @@ Compose one typed cross-authority report from validated registry coverage, sourc
 - [x] `W01.P02.S56` - Reconcile S51's checked state and execution record with independently reviewed S54 live fallback evidence, closing the S55 high tracking finding without rewriting history.; `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S51.md; .vault/plan/2026-08-24-registry-completeness-closure-plan.md; .vault/audit/`.
 - [x] `W01.P02.S57` - Require canonical generator provenance, exact semantic-map and render-profile identities, generated-fragment integrity, and successful emitted-byte evidence before filing-export closure can satisfy, with a Modelo 111 refusal regression; `src/cadrumo/application/registry/; dev/registry/; src/cadrumo/application/filing/tests/`.
 - [x] `W01.P02.S58` - Validate and live-rehash filing-envelope and auxiliary-envelope-header source identities and digests against the catalogue, with missing, mismatched, and stale-digest mutation proof; `src/cadrumo/domain/calculations/registry/; src/cadrumo/application/registry/`.
+- [ ] `W01.P02.S59` - Mutate filing-envelope and auxiliary-header catalogue source kinds away from record_design and prove snapshot refusal plus a weakened-guard mutation bite.; `src/cadrumo/domain/calculations/registry/tests/test_embedded_envelope_source_authority.py`.
 
 ## Wave `W02` - filing-gap adjudication and owner routing
 
