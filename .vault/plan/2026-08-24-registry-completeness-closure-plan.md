@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:ba6ed3120f99fe54d5c0fcc1c1ac178ee4fc3c547a59b9d68e470bd175fcdae4'
+body_hash: 'sha256:0282194d676cfbda96f2c93718585ebc793391d0300183cdb74b9a74cc821957'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -60,7 +60,7 @@ Compose one typed cross-authority report from validated registry coverage, sourc
 - [x] `W01.P02.S44` - Encode branch-specific TemporalRevisionCoverage refusal invariants and add construction and mutation-bite tests.; `src/cadrumo/application/registry/`.
 - [x] `W01.P02.S45` - Revalidate connected census claims through live source proof authority at composition time and refuse proof loss or digest mismatch.; `src/cadrumo/application/registry/`.
 - [x] `W01.P02.S46` - Apply expiry semantics to every scoped census disposition and refuse expired terminal evidence, with mutation-bite tests.; `src/cadrumo/application/registry/`.
-- [ ] `W01.P02.S47` - Add revision filing-year and period scope to census destinations and require exact scoped source mapping with Modelo 100 and 193 cross-satisfaction regressions.; `src/cadrumo/application/registry/`.
+- [x] `W01.P02.S47` - Add revision filing-year and period scope to census destinations and require exact scoped source mapping with Modelo 100 and 193 cross-satisfaction regressions.; `src/cadrumo/application/registry/`.
 - [x] `W01.P02.S48` - Prove undeclared-grade refusals reject a non-null declared grade through direct construction and revalidated mutation.; `src/cadrumo/application/registry/tests/`.
 - [ ] `W01.P02.S49` - Replace substring-based connected-proof failure taxonomy with structured cause mapping that distinguishes missing proof from digest conflict, with real deletion and drift composer regressions.; `src/cadrumo/application/registry/`.
 - [ ] `W01.P02.S50` - Parameterize undeclared-grade refusal contradictions across every authority grade and prove weakened-guard regression refusal.; `src/cadrumo/application/registry/tests/`.

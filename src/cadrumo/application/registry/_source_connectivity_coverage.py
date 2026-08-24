@@ -109,7 +109,7 @@ def compose_source_connectivity_coverage(
     destination applies to a particular revision.
     """
     authority.validate_registry()
-    validate_census_destination_candidates(census, authority.modelos)
+    validate_census_destination_candidates(census, authority)
     proof_failures = _connected_proof_failures(census, proof_authority=proof_authority)
     limbs = tuple(
         _compose_revision_limb(
@@ -263,6 +263,8 @@ def _candidate_applies_to_revision(
 ) -> bool:
     """Return whether one validated census destination exists in this revision."""
     if candidate.modelo_id != modelo_id:
+        return False
+    if candidate.revision_id != revision.id:
         return False
     if candidate.semantic_role is not None:
         return any(casilla.semantic_role == candidate.semantic_role for casilla in revision.casillas)

@@ -124,7 +124,7 @@ def check_capability_census(
                     f"connected census destinations do not match independent proof fixture: {row.candidate_id}"
                 )
     try:
-        validate_census_destination_candidates(manifest, resources().modelos.authority.modelos)
+        validate_census_destination_candidates(manifest, resources().modelos.authority)
     except ValueError as error:
         raise SourceConnectivityCheckError(str(error)) from error
     check_census_governance(manifest, as_of=as_of or date.today())

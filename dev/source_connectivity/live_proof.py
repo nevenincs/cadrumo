@@ -75,7 +75,7 @@ class ConnectedProofFixture:
     command_id: str
     route_id: ModeloCalculationRouteId
     canonical_cli_path: tuple[str, ...]
-    destination_identities: tuple[tuple[str, str, str], ...]
+    destination_identities: tuple[tuple[str, str, str, str, str, str], ...]
     modelo: str
     revision_id: str
     filing_year: int
@@ -227,6 +227,9 @@ def _execute_fixture(
         input_values_by_casilla_id=replay.input_values_by_casilla_id,
         binding_overrides=replay.binding_overrides,
         row_binding_values=replay.row_binding_values,
+        row_source_identities={},
+        row_casilla_values={},
+        row_casilla_provenance={},
         relation_overrides=replay.relation_overrides,
         casilla_values=dict(engine_result.values),
         source_transaction_ids=tuple(resolution.source_transaction_ids),

@@ -135,7 +135,7 @@ class LiveSourceConnectivityProofExpectation(BaseModel):
     command_id: str = Field(min_length=1, max_length=128)
     route_id: ModeloCalculationRouteId
     canonical_cli_path: tuple[str, ...] = Field(min_length=1)
-    destination_identities: tuple[tuple[str, str, str], ...] = Field(min_length=1)
+    destination_identities: tuple[tuple[str, str, str, str, str, str], ...] = Field(min_length=1)
 
 
 @runtime_checkable
@@ -375,7 +375,7 @@ class LiveSourceConnectivityProofAuthority:
     def destinations_match(
         self,
         connection: SourceConnectivityConnectionIdentity,
-        destination_identities: tuple[tuple[str, str, str], ...],
+        destination_identities: tuple[tuple[str, str, str, str, str, str], ...],
     ) -> bool:
         """Match registry destinations against the independently authored fixture."""
         expectation = self._expectation_for(connection)
