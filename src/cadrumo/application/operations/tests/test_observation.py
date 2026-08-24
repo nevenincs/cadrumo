@@ -106,6 +106,11 @@ class ReviewProjection(BaseModel):
     summary_code: str
 
 
+class ReviewOperand(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+    proposal_code: str
+
+
 class ReviewResponse(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
     intent_code: str
@@ -159,7 +164,9 @@ def _registry() -> OperationRegistry:
     return OperationRegistry(definitions=(definition,), public_registrations=(registration,))
 
 
-def _review_registry(*, interaction_kind: OperationInteractionKind = OperationInteractionKind.REVIEW) -> OperationRegistry:
+def _review_registry(
+    *, interaction_kind: OperationInteractionKind = OperationInteractionKind.REVIEW
+) -> OperationRegistry:
     definition = OperationDefinition(
         definition_id=_DEFINITION_ID,
         request_type=ObservationRequest,
@@ -199,6 +206,7 @@ def _review_registry(*, interaction_kind: OperationInteractionKind = OperationIn
                 schema_version=1,
                 model_type=ReviewResponse,
             ),
+            reviewed_operand_type=ReviewOperand,
             review_projector=_review_projector,
         )
     return OperationRegistry(definitions=(definition,), public_registrations=(registration,))
@@ -357,7 +365,9 @@ def _commit_pending(
         ).model_dump()
     )
     asyncio.run(repository.commit(waiting, expected_revision=current.revision, lease=_lease()))
-    assert waiting.definition_contract_digest == registry.lookup_public_contract(_DEFINITION_ID).definition_contract_digest
+    assert (
+        waiting.definition_contract_digest == registry.lookup_public_contract(_DEFINITION_ID).definition_contract_digest
+    )
     return waiting
 
 

@@ -298,17 +298,6 @@ class OperationPublicProjectionV1(BaseModel):
             and self.cleanup_deadline_at < self.started_at
         ):
             raise ValueError("public cleanup deadline cannot precede operation start")
-        if isinstance(self.pending_interaction, OperationReviewAvailableInteractionV1):
-            pending = self.pending_interaction
-            contract = self.definition_contract
-            if pending.operation_id != self.operation_id or pending.revision != self.revision:
-                raise ValueError("public REVIEW interaction does not match the current operation revision")
-            if pending.review_reference.definition_contract_digest != contract.definition_contract_digest:
-                raise ValueError("public REVIEW reference does not match the current definition contract")
-            if pending.review_reference.review_projection_schema != contract.review_projection_schema:
-                raise ValueError("public REVIEW reference does not match the registered projection schema")
-            if pending.response_schema != contract.interaction_response_schema:
-                raise ValueError("public REVIEW interaction does not match the registered response schema")
         terminal = self.lifecycle is OperationLifecycle.TERMINAL
         if terminal != (self.terminal_condition is not None):
             raise ValueError("public terminal lifecycle requires exactly one terminal condition")
@@ -316,6 +305,30 @@ class OperationPublicProjectionV1(BaseModel):
             raise ValueError("public terminal projection cannot carry a pending interaction")
         if terminal and self.cancellable_now:
             raise ValueError("public terminal projection cannot remain cancellable")
+        pending = self.pending_interaction
+        if isinstance(pending, OperationReviewAvailableInteractionV1):
+            interaction_kind = OperationInteractionKind.REVIEW
+        elif isinstance(pending, OperationUnsupportedInteractionV1):
+            interaction_kind = pending.interaction_kind
+        else:
+            interaction_kind = None
+        if interaction_kind is not None:
+            if self.lifecycle is not OperationLifecycle.WAITING_FOR_INTERACTION:
+                raise ValueError("public pending interaction requires waiting-for-interaction lifecycle")
+            if pending.revision != self.revision:
+                raise ValueError("public pending interaction does not match the current operation revision")
+            if interaction_kind not in self.definition_contract.interaction_kinds:
+                raise ValueError("public pending interaction kind is not declared by the definition contract")
+        if isinstance(pending, OperationReviewAvailableInteractionV1):
+            contract = self.definition_contract
+            if pending.operation_id != self.operation_id:
+                raise ValueError("public REVIEW interaction does not match the current operation")
+            if pending.review_reference.definition_contract_digest != contract.definition_contract_digest:
+                raise ValueError("public REVIEW reference does not match the current definition contract")
+            if pending.review_reference.review_projection_schema != contract.review_projection_schema:
+                raise ValueError("public REVIEW reference does not match the registered projection schema")
+            if pending.response_schema != contract.interaction_response_schema:
+                raise ValueError("public REVIEW interaction does not match the registered response schema")
         if self.result_ref is not None and self.refusal_ref is not None:
             raise ValueError("public projection cannot expose result and refusal references together")
         if self.terminal_condition is OperationTerminalCondition.SUCCEEDED and self.result_ref is None:
@@ -324,12 +337,17 @@ class OperationPublicProjectionV1(BaseModel):
             raise ValueError("refused public projection requires a refusal reference")
         if not terminal and (self.result_ref is not None or self.refusal_ref is not None):
             raise ValueError("nonterminal public projection cannot expose settlement references")
-        if self.progress is not None and (
-            self.progress.event_sequence > self.anchor_cursor or self.progress.revision > self.revision
-        ):
-            raise ValueError("public progress cannot exceed its projection anchor")
+        if self.progress is not None:
+            if self.progress.event_sequence > self.anchor_cursor or self.progress.revision > self.revision:
+                raise ValueError("public progress cannot exceed its projection anchor")
+            if self.progress.phase_code != self.phase_code:
+                raise ValueError("public progress phase must match the current projection phase")
         if self.cancellation is OperationCancellation.UNSUPPORTED and self.cancellable_now:
             raise ValueError("unsupported cancellation cannot be currently available")
+        if self.cancellable_now and (self.cancellation_requested or self.cancellation_acknowledged):
+            raise ValueError("public cancellation cannot remain currently available after it is requested")
+        if self.cancellable_now and self.lifecycle is OperationLifecycle.SETTLING:
+            raise ValueError("public cancellation cannot be currently available while settlement is underway")
         if self.cancellation is OperationCancellation.UNSUPPORTED and (
             self.cancellation_requested or self.cancellation_acknowledged
         ):
@@ -485,8 +503,13 @@ class OperationPublicEventPageV1(BaseModel):
             if self.next_cursor != sequences[-1] or self.restart_cursor is not None:
                 raise ValueError("public event page cursor does not match its final row")
         elif self.status is OperationReplayStatus.CAUGHT_UP:
-            if self.events or self.next_cursor != self.requested_cursor or self.restart_cursor is not None:
-                raise ValueError("caught-up public event page must preserve its cursor")
+            if (
+                self.events
+                or self.requested_cursor != self.anchor_cursor
+                or self.next_cursor != self.anchor_cursor
+                or self.restart_cursor is not None
+            ):
+                raise ValueError("caught-up public event page must equal its observation anchor cursor")
         else:
             if self.events or self.restart_cursor is None or self.next_cursor != self.restart_cursor:
                 raise ValueError("resynchronizing public event page requires one restart cursor and no rows")
@@ -512,6 +535,8 @@ class OperationObservationSuccessV1(BaseModel):
             self.event_page.anchor_cursor,
         ):
             raise ValueError("public observation projection and event page must share one anchor")
+        if any(event.revision > self.projection.revision for event in self.event_page.events):
+            raise ValueError("public event row revision cannot exceed its projection revision")
         return self
 
 

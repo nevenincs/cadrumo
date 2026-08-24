@@ -426,6 +426,7 @@ class OperationPublicDefinitionRegistrationV1(BaseModel):
 
     contract: OperationPublicDefinitionContractV1
     schema_bindings: tuple[OperationSchemaBindingV1, ...] = Field(min_length=1)
+    reviewed_operand_type: type[BaseModel] | None = None
     review_projector: OperationReviewProjector | None = None
     workspace_refresh_adapter: OperationWorkspaceRefreshAdapter | None = None
 
@@ -462,6 +463,7 @@ class OperationPublicDefinitionRegistrationV1(BaseModel):
         review_projection_schema: OperationSchemaBindingV1 | None = None,
         interaction_response_schema: OperationSchemaBindingV1 | None = None,
         workspace_refresh_target_schema: OperationSchemaBindingV1 | None = None,
+        reviewed_operand_type: type[BaseModel] | None = None,
         review_projector: OperationReviewProjector | None = None,
         workspace_refresh_adapter: OperationWorkspaceRefreshAdapter | None = None,
     ) -> OperationPublicDefinitionRegistrationV1:
@@ -494,6 +496,7 @@ class OperationPublicDefinitionRegistrationV1(BaseModel):
         return cls(
             contract=contract,
             schema_bindings=bindings,
+            reviewed_operand_type=reviewed_operand_type,
             review_projector=review_projector,
             workspace_refresh_adapter=workspace_refresh_adapter,
         )
@@ -580,6 +583,15 @@ class OperationRegistry(BaseModel):
             raise ValueError("REVIEW operation definitions require one public review schema")
         if declares_review != (registration.review_projector is not None):
             raise ValueError("REVIEW operation definitions require one registered review projector")
+        if declares_review != (registration.reviewed_operand_type is not None):
+            raise ValueError("REVIEW operation definitions require one registered reviewed operand type")
+        if registration.reviewed_operand_type is not None:
+            require_strict_frozen_operation_model_graph(
+                registration.reviewed_operand_type,
+                path="reviewed operand",
+                reject_mutable_annotations=True,
+                require_validated_defaults=True,
+            )
         if registration.review_projector is not None:
             _require_positional_callable_signature(
                 registration.review_projector,
@@ -628,6 +640,24 @@ class OperationRegistry(BaseModel):
             if registration.contract.definition_id == definition_id:
                 return registration.contract
         raise KeyError(f"operation definition has no public contract: {definition_id!r}")
+
+    def lookup_public_registration(self, definition_id: str) -> OperationPublicDefinitionRegistrationV1:
+        """Return the sole runtime binding for one public operation definition."""
+        for registration in self.public_registrations:
+            if registration.contract.definition_id == definition_id:
+                return registration
+        raise KeyError(f"operation definition has no public registration: {definition_id!r}")
+
+    def lookup_public_schema_binding(self, identity: OperationSchemaIdentityV1) -> OperationSchemaBindingV1:
+        """Resolve one exact schema identity without accepting an ID-only match."""
+        for registration in self.public_registrations:
+            for binding in registration.schema_bindings:
+                if binding.identity == identity:
+                    return binding
+        raise KeyError(
+            "operation public schema identity is not registered: "
+            f"{identity.schema_id!r} version {identity.schema_version}"
+        )
 
     def lookup_action(self, action: ActionReference) -> OperationDefinition:
         """Resolve an optional canonical action join without owning its catalogue."""

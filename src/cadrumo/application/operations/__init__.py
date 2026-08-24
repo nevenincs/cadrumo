@@ -99,6 +99,16 @@ from ._models import (
     new_operation_id,
 )
 from ._observation import OperationObservationService
+from ._projection_services import (
+    BoundOperationSecureResponseAuthority,
+    OperationCancellationService,
+    OperationControlSupervisor,
+    OperationDetachService,
+    OperationResponseControlService,
+    OperationReviewProjectionService,
+    OperationSecureResponseAuthority,
+    OperationWorkspaceRefreshTargetService,
+)
 from ._public import (
     OperationCancellationRefusalCode,
     OperationCancellationRefusalV1,
@@ -182,6 +192,7 @@ from ._secret_submission import (
 from ._supervisor import OperationSupervisor
 
 __all__ = [
+    "BoundOperationSecureResponseAuthority",
     "CredentialFreeOperationRequest",
     "EphemeralSecretSubmission",
     "JournalRepositoryBase",
@@ -194,6 +205,7 @@ __all__ = [
     "OperationCancellationRequestV1",
     "OperationCancellationResultV1",
     "OperationCancellationScope",
+    "OperationCancellationService",
     "OperationCancellationSuccessV1",
     "OperationCancellationVersionHeader",
     "OperationCapabilities",
@@ -202,6 +214,7 @@ __all__ = [
     "OperationConflictScope",
     "OperationConflictScopeReference",
     "OperationConsumedInteraction",
+    "OperationControlSupervisor",
     "OperationDeadline",
     "OperationDeadlineAccess",
     "OperationDeclarationError",
@@ -211,6 +224,7 @@ __all__ = [
     "OperationDetachRefusalV1",
     "OperationDetachRequestV1",
     "OperationDetachResultV1",
+    "OperationDetachService",
     "OperationDetachSuccessV1",
     "OperationDetachVersionHeader",
     "OperationDiagnosticEvent",
@@ -305,6 +319,7 @@ __all__ = [
     "OperationResponseControlRefusalV1",
     "OperationResponseControlRequestV1",
     "OperationResponseControlResultV1",
+    "OperationResponseControlService",
     "OperationResponseControlSuccessV1",
     "OperationResponseControlVersionHeader",
     "OperationResponseIntent",
@@ -316,6 +331,7 @@ __all__ = [
     "OperationReviewProjectionRefusalV1",
     "OperationReviewProjectionRequestV1",
     "OperationReviewProjectionResultV1",
+    "OperationReviewProjectionService",
     "OperationReviewProjectionSuccessV1",
     "OperationReviewProjectionVersionHeader",
     "OperationReviewProjector",
@@ -326,6 +342,7 @@ __all__ = [
     "OperationSecretRequirement",
     "OperationSecureOperandLookup",
     "OperationSecureReferenceStore",
+    "OperationSecureResponseAuthority",
     "OperationSensitiveInputPolicy",
     "OperationSnapshot",
     "OperationSupervisor",
@@ -338,6 +355,7 @@ __all__ = [
     "OperationWorkspaceRefreshTargetRefusalV1",
     "OperationWorkspaceRefreshTargetRequestV1",
     "OperationWorkspaceRefreshTargetResultV1",
+    "OperationWorkspaceRefreshTargetService",
     "OperationWorkspaceRefreshTargetSuccessV1",
     "OperationWorkspaceRefreshTargetVersionHeader",
     "new_operation_id",

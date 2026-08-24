@@ -460,6 +460,7 @@ def public_registration(
             schema_version=1,
             model_type=RefreshTarget,
         ),
+        reviewed_operand_type=ReviewPayload,
         review_projector=review_projector,
         workspace_refresh_adapter=refresh_adapter,
     )
@@ -987,6 +988,9 @@ def test_registry_refuses_missing_review_projector_and_refresh_adapter() -> None
     without_review = registration.model_copy(update={"review_projector": None})
     with pytest.raises(ValidationError, match="registered review projector"):
         OperationRegistry(definitions=(item,), public_registrations=(without_review,))
+    without_operand_type = registration.model_copy(update={"reviewed_operand_type": None})
+    with pytest.raises(ValidationError, match="registered reviewed operand type"):
+        OperationRegistry(definitions=(item,), public_registrations=(without_operand_type,))
     without_refresh = registration.model_copy(update={"workspace_refresh_adapter": None})
     with pytest.raises(ValidationError, match="schema and adapter"):
         OperationRegistry(definitions=(item,), public_registrations=(without_refresh,))

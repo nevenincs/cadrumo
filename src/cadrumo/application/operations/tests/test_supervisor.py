@@ -655,9 +655,10 @@ def test_filesystem_journal_refuses_pre_v5_operation_snapshots_without_rewrite(t
         )
         operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
         created = asyncio.run(journal.load(operation_id))
-        assert created.definition_contract_digest == registry.lookup_public_contract(
-            created.identity.definition_id
-        ).definition_contract_digest
+        assert (
+            created.definition_contract_digest
+            == registry.lookup_public_contract(created.identity.definition_id).definition_contract_digest
+        )
         journal_path = storage_root / "operation-journals" / f"{operation_id}.json"
         current_record = json.loads(journal_path.read_text(encoding="utf-8"))
         for schema_version in (1, 2, 3, 4, 5):
@@ -877,6 +878,7 @@ def _registry(
         request_schema=request_schema,
         result_schema=result_schema,
         review_projection_schema=review_schema,
+        reviewed_operand_type=ReviewedOperand if review_schema is not None else None,
         review_projector=review_projector if review_schema is not None else None,
     )
     return OperationRegistry(
@@ -2475,9 +2477,7 @@ def test_reconcile_refuses_changed_definition_digest_before_reentry(tmp_path: Pa
         before_response = journal_path.read_bytes()
         with pytest.raises(ValueError, match="no longer reproduces"):
             asyncio.run(
-                recovery.respond(
-                    _response(intent="apply", operation_id=operation_id, revision=waiting.revision)
-                )
+                recovery.respond(_response(intent="apply", operation_id=operation_id, revision=waiting.revision))
             )
         assert journal_path.read_bytes() == before_response
         with pytest.raises(ValueError, match="no longer reproduces"):
