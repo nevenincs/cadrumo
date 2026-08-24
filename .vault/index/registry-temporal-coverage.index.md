@@ -3,13 +3,14 @@ generated: true
 tags:
   - '#index'
   - '#registry-temporal-coverage'
-date: '2026-08-20'
+date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:c431d6adddabbab50c88835e31bc5ebee9569a2bd18b0e298ab81bf56c54c568'
+body_hash: 'sha256:d3f768610dccf96b6e93c32103b227e6f650772ffce27287894b12af36aba269'
 related:
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S01]]'
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S02]]'
+  - '[[2026-08-14-registry-temporal-coverage-W01-P01-S03]]'
   - '[[2026-08-14-registry-temporal-coverage-W01-P02-S04]]'
   - '[[2026-08-14-registry-temporal-coverage-W01-P02-S06]]'
   - '[[2026-08-14-registry-temporal-coverage-W01-P02-S07]]'
@@ -81,6 +82,7 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 - `2026-08-14-registry-temporal-coverage-W01-P04-S21` - Close the classification of the six validator modules the load traces showed executing in neither regime, recording for each the entry point that does reach it, because the census disproved the premise that they cannot execute: four are reached from the snapshot reference check on the inspection path, one is reached from the cross-revision validator on every cold load, and one publishes caches and defines no callable so it can never appear in an execution set however live it is, leaving the deletion clause of this row empty unless a member is newly shown dead
 - `2026-08-14-registry-temporal-coverage-W01-P09-S26` - Compute the static import closure from the sanctioned load entry points, diff it against the two traced execution sets, and classify every module reachable but never executed and every one of the 61 non-executing registry modules by owning entry point, marking each live, conditionally reachable with its trigger named, or dead, with dead members deleted and the classification persisted in the census audit
 - `2026-08-14-registry-temporal-coverage-W01-P09-S27` - Build and run a repo-wide drift detector over src/cadrumo AND dev/, not the registry package alone, explicitly naming the design-prose grammar in dev/registry/_export_tree.py (regex-parsing Spanish AEAT design prose patterns such as "15 enteros y 2 decimales", Constante "00500", and trailing Nota N references to derive filing wire facts) as a known in-scope instance alongside dev/registry/mappings/ and dev/registry/render_profiles/, finding regulatory numeric literals, year sets and modelo-conditional branches outside the sanctioned channels of registry TOML, core external_constants and the allowlisted math constants, with every allowlist entry stating its reason and keyed by path and enclosing function, and persist the census as a vault audit where every finding is enrolled as a plan row or formally deferred with a reference, gated on zero unclassified findings and on a re-run reproducing the census exactly
+- `2026-08-14-registry-temporal-coverage-W01-P01-S03` - Enforce the disposition-conditional grade ladder in registry build validation, registered in the family dispatch table: a calculation claim with an empty applicable formula family refuses and an informative revision at filing grade with a reasoned not_applicable formula family passes
 
 ### plan
 
