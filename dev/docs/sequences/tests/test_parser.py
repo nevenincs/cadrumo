@@ -19,6 +19,7 @@ from .. import (
     SequenceParseError,
     StaticBlocker,
     parse_sequence,
+    result_frame_asserts_result_payload,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -337,6 +338,22 @@ def test_expect_parses_json_literals_by_type() -> None:
         "result.count": 3,
         "result.ready": True,
     }
+
+
+@pytest.mark.parametrize(
+    "body",
+    (
+        '@result aeat app modelo export\n@expect error.code == "REFUSED_MODELO_EXPORT_UNSUPPORTED"\n',
+        "@result aeat config profile history --help\n@expect exit_code == 0\n",
+    ),
+)
+def test_result_frame_semantic_contract_accepts_refusal_payload_and_terminal_help(body: str) -> None:
+    assert result_frame_asserts_result_payload(_parse(body)) is True
+
+
+def test_result_frame_semantic_contract_rejects_exit_only_structured_command() -> None:
+    sequence = _parse("@result aeat app modelo work list\n@expect exit_code == 0\n")
+    assert result_frame_asserts_result_payload(sequence) is False
 
 
 def test_blank_lines_are_ignored() -> None:

@@ -4,3 +4,4 @@ aeat config logout
 @result aeat --format json config profile status
 @expect status == "error"
 @expect exit_code == 2
+@expect error.code == "REFUSED_CLI_BOUNDARY"
