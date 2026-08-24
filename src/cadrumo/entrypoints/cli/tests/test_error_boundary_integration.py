@@ -102,13 +102,16 @@ def test_log_level_resolution_error_exits_refused(
     """
     from ....core.config import override_settings
 
+    # The refusal prefix asserted below is catalogue text, and the product
+    # default output language is Spanish, so the language is pinned rather than
+    # assumed. Without this the assertion reads "Refused." against "Rechazado."
+    # and fails on a correctly-rendered envelope.
+    overrides: dict[str, str] = {"cadrumo_output_language": "en"}
     if env_key is not None and env_val is not None:
         # Translate the env-var name to the Settings field name. The
         # parametrise table currently only exercises CADRUMO_LOG_LEVEL.
-        field_name = env_key.lower()
-        with override_settings(**{field_name: env_val}):
-            result = invoke_cached_cli(args, catch_exceptions=False)
-    else:
+        overrides[env_key.lower()] = env_val
+    with override_settings(**overrides):
         result = invoke_cached_cli(args, catch_exceptions=False)
 
     assert result.exit_code == _REFUSED_EXIT, (
