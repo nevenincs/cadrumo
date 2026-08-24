@@ -14,7 +14,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
 modified: '2026-08-24'
 body_schema: body-v1
-body_hash: 'sha256:3bcef70da6bea8ae1d81a841a3f5d155d1de3ff7ef6ce266a72c28cdd6b6a6d0'
+body_hash: 'sha256:7b6290ee5edb003082b19d22fc03df45f2bdcf136adc5559e10a30e9db8f368e'
 ---
 
 <!-- RETIRED: P06, P07, P09 -->
@@ -77,7 +77,7 @@ Remove stale copies and complete every officially supported periodic schedule.
 - [ ] `W02.P04.S12` - Re-adjudicate Modelo 303 deadlines, remove every non-owner copy, preserve the 2024 cutover, and materialise every supported monthly and quarterly row; `src/cadrumo/_data/registry/aeat/modelos/303/`.
 - [x] `W02.P04.S13` - Re-adjudicate Modelo 322 deadlines, remove stale 2023 copies, and materialise every supported periodic row; `src/cadrumo/_data/registry/aeat/modelos/322/`.
 - [ ] `W02.P04.S14` - Re-adjudicate Modelo 353 deadlines, remove stale 2025 copies, and materialise every supported periodic row; `src/cadrumo/_data/registry/aeat/modelos/353/`.
-- [ ] `W02.P04.S15` - Re-adjudicate Modelo 369 deadlines and materialise every supported periodic row without modelo-specific cadence logic; `src/cadrumo/_data/registry/aeat/modelos/369/`.
+- [x] `W02.P04.S15` - Re-adjudicate Modelo 369 deadlines and materialise every supported periodic row without modelo-specific cadence logic; `src/cadrumo/_data/registry/aeat/modelos/369/`.
 - [ ] `W02.P04.S16` - Generate an auditable before-and-after census accounting for every removed, corrected, retained, and materialised deadline coordinate and source; `dev/; .vault/audit/`.
 
 ### Phase `W02.P05` - Modelo 210 qualified plazo repair

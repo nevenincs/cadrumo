@@ -47,3 +47,33 @@ opens_on = 2026-04-01
 closes_on = 2026-04-30
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
+
+[[revisions."esquema-union".deadline_windows]]
+id = "modelo-369-union-2026-2t"
+filing_year = 2026
+period = "2026 2T"
+period_kind = "quarterly"
+opens_on = 2026-07-01
+closes_on = 2026-07-31
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
+
+[[revisions."esquema-union".deadline_windows]]
+id = "modelo-369-union-2026-3t"
+filing_year = 2026
+period = "2026 3T"
+period_kind = "quarterly"
+opens_on = 2026-10-01
+closes_on = 2026-10-31
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
+
+[[revisions."esquema-union".deadline_windows]]
+id = "modelo-369-union-2026-4t"
+filing_year = 2026
+period = "2026 4T"
+period_kind = "quarterly"
+opens_on = 2027-01-01
+closes_on = 2027-01-31
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
