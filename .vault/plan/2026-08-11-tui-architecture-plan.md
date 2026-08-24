@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-24'
-body_hash: 'sha256:11b3fad6d8cec3d43c57a754d3a019432b8a0db7ba577a2102b067b9d3484b7e'
+body_hash: 'sha256:ed5f2d196b0d6169993b9b1de2d49fc89abd19a15ab65a7cd8d74c3b955dd439'
 ---
 
 # `tui-architecture` plan
@@ -112,7 +112,7 @@ Publish the frontend-safe operation definition, atomic observation, REVIEW, and 
 - [x] `W02.P19.S116` - Define the strict current-only operation observation, public projection, event-page, REVIEW-projection, response-control, cancellation, detach, and Workspace-refresh request, success, and typed refusal DTO families with independent V1 dispatch axes; `src/cadrumo/application/operations/_public.py`.
 - [x] `W02.P19.S117` - Pin each definition_contract_digest atomically with invocation identity and define one application-owned observation materialization port binding the current snapshot, anchor cursor, bounded history, progress-fold input, and resynchronization checkpoint; `src/cadrumo/application/operations/_journal.py`.
 - [x] `W02.P19.S118` - Implement the observation-read port over one locked journal-record read so snapshot, history page, progress checkpoint, replay status, and restart cursor share one authoritative anchor under interleaved transitions; `src/cadrumo/adapters/persistence/operations/_journal.py and src/cadrumo/adapters/persistence/operations/_journal_validation.py`.
-- [ ] `W02.P19.S119` - Implement the public observation service and deterministic progress fold with phase reset, independent lifecycle-terminal-effect projection, bounded cursor replay, cursor-ahead refusal, expiry or compaction resynchronization, detach, and reconnect semantics; `src/cadrumo/application/operations/_observation.py`.
+- [x] `W02.P19.S119` - Implement the public observation service and deterministic progress fold with phase reset, independent lifecycle-terminal-effect projection, bounded cursor replay, cursor-ahead refusal, expiry or compaction resynchronization, detach, and reconnect semantics; `src/cadrumo/application/operations/_observation.py`.
 - [ ] `W02.P19.S120` - Implement registered safe REVIEW resolution and typed Workspace-refresh-target resolution with exact version, definition-digest, schema, expiry, terminal-state, and output validation while preserving separate response authority and rejecting caller-supplied result references; `src/cadrumo/application/operations/_projection_services.py`.
 - [ ] `W02.P19.S121` - Perform the PRE_RELEASE current-only cutover by proving zero affected nonterminal operations, refusing every superseded journal and lease shape, and deleting the v1 lease reader, acquisition migrator, retired schema dispatchers, fixtures, and migration tests without a compatibility path; `src/cadrumo/application/operations and src/cadrumo/adapters/persistence/operations`.
 - [ ] `W02.P19.S122` - Export the sole public operation contract family and compose the immutable production registry, observation, REVIEW, refresh, response, cancel, and detach services with real adapters through one import-light entrypoint seam consumed by CLI, MCP, and the later TUI launcher; `src/cadrumo/application/operations/__init__.py and src/cadrumo/entrypoints/_operation_composition.py`.
