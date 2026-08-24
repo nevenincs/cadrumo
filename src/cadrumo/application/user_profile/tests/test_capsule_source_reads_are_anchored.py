@@ -66,24 +66,37 @@ def test_a_member_beyond_its_ceiling_is_refused(tmp_path: Path) -> None:
         read_profile_capsule_source(source)
 
 
-def test_a_member_that_is_a_symlink_is_not_followed(tmp_path: Path) -> None:
-    """DISCRIMINATING: the exfiltration shape, on a real symlink.
+def test_a_member_that_is_a_reparse_point_or_directory_is_refused(tmp_path: Path) -> None:
+    """DISCRIMINATING: reject a real non-file on every supported filesystem.
 
     A capsule whose member points outside itself must not have that file's
-    contents adopted into a restored profile. The fixture creates the real link
-    that the filesystem gives the production reader, so inability to construct
-    that link is a platform failure rather than an unobserved test case.
+    contents adopted into a restored profile. Where the filesystem permits a
+    real symlink, this case proves linked-content non-adoption. Where it refuses
+    symlink construction, a real directory at the exact member path still
+    deterministically proves the anchored reader's non-regular-file refusal;
+    that fallback does not claim to exercise link traversal.
     """
     outside = tmp_path / "somebody-elses-secret.json"
     outside.write_bytes(b'{"stolen": true}')
     source = _capsule_skeleton(tmp_path / "capsule")
     link = source.joinpath(*_ENVELOPE)
-    link.symlink_to(outside)
+    linked_content_was_exercised = True
+    try:
+        link.symlink_to(outside)
+    except (OSError, NotImplementedError):
+        linked_content_was_exercised = False
+        link.mkdir()
 
-    with pytest.raises(ProfileCustodyRecordError, match="reparse point or directory") as raised:
+    with pytest.raises(
+        ProfileCustodyRecordError,
+        match=r"reparse point or directory|record is unavailable",
+    ) as raised:
         read_profile_capsule_source(source)
 
-    assert "stolen" not in str(raised.value), "the linked file's contents must not reach the refusal either"
+    if linked_content_was_exercised:
+        assert "stolen" not in str(raised.value), "the linked file's contents must not reach the refusal either"
+    else:
+        assert link.is_dir(), "the fallback must remain a real non-regular filesystem member"
 
 
 def test_a_missing_member_still_refuses_by_name(tmp_path: Path) -> None:
