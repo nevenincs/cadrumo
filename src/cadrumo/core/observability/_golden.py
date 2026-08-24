@@ -30,6 +30,13 @@ scenario captured twice under a frozen clock and injected identity, the
 set of differing JSON paths reduces to exactly these masked fields —
 :func:`differing_field_names` and :func:`differing_paths` exist for that
 proof.
+
+One command also has a path-specific residual: the profile-delete result
+fingerprint hashes the encrypted bytes it has just destroyed, whose encryption
+material is freshly minted for every hermetic profile.  Only
+``config.profile.delete``'s ``result.fingerprint.digest`` is masked.  A generic
+``digest`` leaf, the rest of that fingerprint, and the same path on any other
+command remain assertable.
 """
 
 from __future__ import annotations
@@ -55,6 +62,12 @@ MASK_SENTINEL = "<masked>"
 #: Widening this set is a standing honesty hazard; every addition must be
 #: proven minimal by the anti-tautology gate.
 GOLDEN_MASK_FIELDS: frozenset[str] = frozenset({"snapshot_id", "run_id"})
+
+#: Exact ``(command, dotted result path)`` leaves whose values are irreducibly
+#: nondeterministic.  This is central policy, not a caller/sequence extension.
+GOLDEN_MASK_PATHS: frozenset[tuple[str, str]] = frozenset(
+    {("config.profile.delete", "result.fingerprint.digest")},
+)
 
 
 def canonicalise(document: Mapping[str, object]) -> str:
@@ -93,7 +106,29 @@ def mask_document(
     Returns:
         A new dict with the masked leaves replaced.
     """
-    return {key: (MASK_SENTINEL if key in fields else _mask_value(item, fields)) for key, item in document.items()}
+    masked = {
+        key: (MASK_SENTINEL if key in fields else _mask_value(item, fields))
+        for key, item in document.items()
+    }
+    command = document.get("command")
+    if isinstance(command, str):
+        for masked_command, path in GOLDEN_MASK_PATHS:
+            if command == masked_command:
+                _mask_existing_path(masked, path)
+    return masked
+
+
+def _mask_existing_path(document: dict[str, object], path: str) -> None:
+    """Mask ``path`` only when every mapping segment already exists."""
+    segments = path.split(".")
+    node: object = document
+    for segment in segments[:-1]:
+        if not isinstance(node, dict) or segment not in node:
+            return
+        node = node[segment]
+    leaf = segments[-1]
+    if isinstance(node, dict) and leaf in node:
+        node[leaf] = MASK_SENTINEL
 
 
 def _mask_value(value: object, fields: frozenset[str]) -> object:

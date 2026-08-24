@@ -75,6 +75,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 _SUBPROCESS_POOL_TIMEOUT = 1800
 
 _PAGE = "tutorials/anti-tautology-gate"
+_PROFILE_DELETE_SEQUENCE_ID = "profile-setup-delete"
+_PROFILE_DELETE_DIGEST_PATH = "result.fingerprint.digest"
 
 #: The representative sequence: a real capture-threaded JSON read chain. The
 #: ``app diagnostics runs`` frame is deliberate: its payload is the one
@@ -140,6 +142,62 @@ def _mutated_transcript(transcript: SequenceTranscript, key: str, value: str) ->
     document = transcript.model_dump(mode="json")
     document["frames"][0]["envelope"]["result"][key] = value
     return SequenceTranscript.model_validate_json(json.dumps(document))
+
+
+@pytest.fixture(scope="module")
+def profile_delete_double_run(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> tuple[str, SequenceTranscript, SequenceTranscript]:
+    """Execute the real logout/delete contract twice in fresh sandboxes."""
+    discovered, problems = discover_sequences(sequence_id=_PROFILE_DELETE_SEQUENCE_ID)
+    assert problems == ()
+    assert len(discovered) == 1
+    enrolled = discovered[0]
+    first = execute_sequence(enrolled.sequence, sandbox_root=tmp_path_factory.mktemp("delete-a"))
+    second = execute_sequence(enrolled.sequence, sandbox_root=tmp_path_factory.mktemp("delete-b"))
+    return enrolled.page, first, second
+
+
+def _set_delete_fingerprint_leaf(
+    value: SequenceGolden | SequenceTranscript,
+    leaf: str,
+    replacement: object,
+) -> SequenceGolden | SequenceTranscript:
+    """Return ``value`` with one real profile-delete fingerprint leaf changed."""
+    document = value.model_dump(mode="json")
+    fingerprint = document["frames"][1]["envelope"]["result"]["fingerprint"]
+    fingerprint[leaf] = replacement
+    return type(value).model_validate_json(json.dumps(document))
+
+
+class TestProfileDeletePathMaskHonesty:
+    def test_fresh_sandbox_residual_is_exactly_the_delete_digest(
+        self,
+        profile_delete_double_run: tuple[str, SequenceTranscript, SequenceTranscript],
+    ) -> None:
+        """Two real runs flap at the one centrally enrolled path, and nowhere else."""
+        _page, first, second = profile_delete_double_run
+        residual: set[str] = set()
+        for left, right in zip(first.frames, second.frames, strict=True):
+            assert left.envelope is not None and right.envelope is not None
+            residual |= differing_paths(left.envelope, right.envelope)
+        assert residual == {_PROFILE_DELETE_DIGEST_PATH}
+
+    def test_only_digest_flap_compares_clean_and_sibling_tampering_bites(
+        self,
+        profile_delete_double_run: tuple[str, SequenceTranscript, SequenceTranscript],
+    ) -> None:
+        """The path mask hides the real flap but preserves fingerprint evidence."""
+        page, first, second = profile_delete_double_run
+        golden = build_golden(first)
+        assert compare_transcript_to_golden(second, golden, page=page) == ()
+
+        for leaf, tampered in (("file_count", 999), ("total_bytes", 999999)):
+            changed = _set_delete_fingerprint_leaf(second, leaf, tampered)
+            assert isinstance(changed, SequenceTranscript)
+            problems = compare_transcript_to_golden(changed, golden, page=page)
+            assert len(problems) == 1
+            assert f"result.fingerprint.{leaf}" in problems[0]
 
 
 class TestExecutorMaskHonesty:
