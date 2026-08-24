@@ -71,7 +71,9 @@ from typing import Annotated
 import typer
 
 from ._stamp import StampableReviewStatus, StampError, bundled_registry_root, stamp_revision
+from .authorities import RegistryClosureAuthorities, canonical_live_registry_closure_authorities
 from .closure import (
+    RegistryClosureReport,
     check_registry_closure_release,
     load_registry_closure_report,
     render_registry_closure_report,
@@ -154,6 +156,7 @@ def coverage(as_json: _AsJson = False, no_validate: _NoValidate = False) -> None
 
 @app.command("closure")
 def closure(
+    context: typer.Context,
     check: Annotated[
         bool,
         typer.Option(
@@ -172,19 +175,54 @@ def closure(
         ),
     ] = None,
     as_json: _AsJson = False,
+    offline: Annotated[
+        bool,
+        typer.Option(
+            "--offline",
+            help="Evaluate without live source-connectivity or filing-export proof authorities.",
+        ),
+    ] = False,
 ) -> None:
     """Render the derived cross-authority release report and optional blocking gate.
 
-    The report derives its temporal, source, and filing facts through the
-    shipped application authorities.  It never treats absent live proof as a
-    pass: the affected limb remains an owned refusal, and ``--check`` blocks
-    the release claim.
+    The default report derives temporal, source, and filing facts through the
+    canonical live authorities. ``--offline`` is the explicit no-proof mode.
+    Neither mode treats absent proof as a pass: the affected limb remains an
+    owned refusal, and ``--check`` blocks the release claim.
     """
     try:
         as_of_date = None if as_of is None else date.fromisoformat(as_of)
     except ValueError as error:
         raise typer.BadParameter("must be an ISO calendar date (YYYY-MM-DD)") from error
-    report = load_registry_closure_report(as_of=as_of_date)
+    injected = context.find_object(RegistryClosureAuthorities)
+    if offline:
+        report = load_registry_closure_report(as_of=as_of_date)
+    elif injected is not None:
+        report = load_registry_closure_report(
+            as_of=as_of_date,
+            registry_authority=injected.registry,
+            source_proof_authority=injected.source_connectivity,
+            filing_proof_authority=injected.filing_export,
+        )
+    else:
+        repository_root = Path(__file__).resolve().parents[3]
+        with canonical_live_registry_closure_authorities(repository_root) as authorities:
+            report = load_registry_closure_report(
+                as_of=as_of_date,
+                registry_authority=authorities.registry,
+                source_proof_authority=authorities.source_connectivity,
+                filing_proof_authority=authorities.filing_export,
+            )
+    emit_registry_closure_command(report, check=check, as_json=as_json)
+
+
+def emit_registry_closure_command(
+    report: RegistryClosureReport,
+    *,
+    check: bool,
+    as_json: bool,
+) -> None:
+    """Emit one already-composed report through the closure command contract."""
     result = check_registry_closure_release(report)
     if as_json:
         typer.echo(report.model_dump_json(indent=2))

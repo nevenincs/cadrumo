@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field, computed_field, model_validator
 
 from cadrumo.application.registry import (
     FilingExportCoverageReport,
+    FilingExportProofAuthority,
     RegistryClosureLimb,
     RegistryClosureLimbName,
     RegistryClosureOwnerDisposition,
@@ -33,8 +34,8 @@ from cadrumo.application.registry import (
     compose_temporal_coverage,
     load_source_connectivity_census,
 )
-from cadrumo.core import STRICT_FROZEN_CONFIG
-from cadrumo.domain.calculations.registry import bundled_authority
+from cadrumo.core import STRICT_FROZEN_CONFIG, SourceConnectivityProofAuthority
+from cadrumo.domain.calculations.registry import ValidatedRegistryAuthority, bundled_authority
 
 __all__ = [
     "RegistryClosureJoinDisagreement",
@@ -326,8 +327,9 @@ def build_registry_closure_report(
 def load_registry_closure_report(
     *,
     as_of: date | None = None,
-    source_proof_authority: object | None = None,
-    filing_proof_authority: object | None = None,
+    registry_authority: ValidatedRegistryAuthority | None = None,
+    source_proof_authority: SourceConnectivityProofAuthority | None = None,
+    filing_proof_authority: FilingExportProofAuthority | None = None,
 ) -> RegistryClosureReport:
     """Compose the bundled registry's closure report from current evidence.
 
@@ -336,7 +338,7 @@ def load_registry_closure_report(
     retain their application-owned missing-evidence refusals.  A release caller
     that has live proof authorities can supply them to this same single join.
     """
-    authority = bundled_authority()
+    authority = bundled_authority() if registry_authority is None else registry_authority
     resolved_as_of = date.today() if as_of is None else as_of
     return build_registry_closure_report(
         temporal_coverage=compose_temporal_coverage(authority=authority),

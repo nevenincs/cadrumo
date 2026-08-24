@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:2455c9d4da0c58d9fc361ef8fc6487288f0f704726cc25673f05130b52ba98d1'
+body_hash: 'sha256:bfc5698fdd7a13822b480535ded501c9b37fdd2b5688191c6543ba5d13412ca5'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -42,6 +42,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S60]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S61]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S62]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S63]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
@@ -166,6 +167,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P02-S60` - Replace the passive filing-export proof catalogue with a live fail-closed authority that re-hashes canonical manifest, semantic-map, render-profile, loader-semantic, generated-output, and emitted-payload evidence and verifies production export_draft offsets and execution at composition time, with fabricated and stale catalogue mutation regressions including Modelo 111
 - `2026-08-24-registry-completeness-closure-W01-P02-S61` - Require distinct official offset-probe identities and emitted byte positions in live filing-export acceptance, and prove duplicate probes cannot inflate checked-offset evidence with a mutation bite.
 - `2026-08-24-registry-completeness-closure-W01-P02-S62` - Remove the S60 audit and execution-record EOF blank lines and re-attest the committed Step surface with the scoped diff check.
+- `2026-08-24-registry-completeness-closure-W01-P02-S63` - Wire canonical live source-connectivity and filing-export proof authorities into the registry-conformance closure CLI, retain an explicit offline no-proof mode, type both injection ports precisely, and prove complete-live versus offline-refusal CLI outcomes.
 
 ### plan
 

@@ -62,9 +62,11 @@ from .pipeline._semantic_map_join import join_record_design_semantics
 from .pipeline._semantic_map_loader import load_semantic_map
 
 __all__ = [
+    "CANONICAL_LIVE_FILING_EXPORT_PROOF_ENTRIES",
     "FilingExportLiveProofEntry",
     "FilingExportOfficialOffsetProbe",
     "LiveFilingExportProofAuthority",
+    "canonical_live_filing_export_proof_authority",
     "verify_filing_export_payload_acceptance",
 ]
 
@@ -114,6 +116,12 @@ class FilingExportLiveProofEntry:
         probe_identities = tuple((probe.record_id, probe.field_id) for probe in self.official_offset_probes)
         if len(probe_identities) != len(set(probe_identities)):
             raise ValueError("filing export live proof official-offset probes must identify distinct fields")
+
+
+# Live filing proof is enrolled only after a revision has independently reviewed
+# generation inputs and emitted bytes.  An empty tuple is an honest authority
+# with no successful entries; it is not permission to infer proof from layouts.
+CANONICAL_LIVE_FILING_EXPORT_PROOF_ENTRIES: tuple[FilingExportLiveProofEntry, ...] = ()
 
 
 class LiveFilingExportProofAuthority:
@@ -291,6 +299,23 @@ class LiveFilingExportProofAuthority:
         if receipt.file_sha256 != sha256_hex(payload) or receipt.byte_size != len(payload):
             raise RegistryValidationError("production export receipt disagrees with the re-read emitted payload")
         return payload
+
+
+def canonical_live_filing_export_proof_authority(
+    *,
+    workspace_root: Path,
+    registry_root: Path,
+    source_root: Path,
+    authority: ValidatedRegistryAuthority,
+) -> LiveFilingExportProofAuthority:
+    """Bind the canonical live verifier to the currently enrolled proof entries."""
+    return LiveFilingExportProofAuthority(
+        workspace_root=workspace_root,
+        registry_root=registry_root,
+        source_root=source_root,
+        authority=authority,
+        entries=CANONICAL_LIVE_FILING_EXPORT_PROOF_ENTRIES,
+    )
 
 
 

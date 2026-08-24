@@ -56,7 +56,7 @@ from cadrumo.domain.calculations.registry import calculate_registry_snapshot
 from cadrumo.domain.invoices import PaymentStatus
 from cadrumo.domain.iva import InvoiceKind, IvaCategory
 from cadrumo.domain.modelos import CalculationRevision, WorkUnit, WorkUnitCatalogue, derive_work_unit_id
-from cadrumo.entrypoints.cli._common import _current_operator_surface_reconciliation
+from cadrumo.entrypoints.cli import current_operator_surface_reconciliation
 
 
 class ConnectedProofCompositionError(ValueError):
@@ -336,7 +336,7 @@ def _live_authority_for_fixtures(
         yield LiveSourceConnectivityProofAuthority(
             source_ownership=build_calculation_route_source_ownership_catalogue(),
             workflows=build_supported_modelo_calculation_workflow_catalogue(
-                _current_operator_surface_reconciliation(),
+                current_operator_surface_reconciliation(),
             ),
             calculation_revisions=revisions,
             evidence_verifier=RepositoryRootEvidenceDigestVerifier(repository_root=repository_root),

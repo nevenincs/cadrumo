@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:2bb3ce93a6d22719c0010ae4ef544eb1cbdedacf8789b084b3cbef8434f1e106'
+body_hash: 'sha256:e067734c8bd6527b9b514bd31c0d354ae3ebe367d9377e833f0fa3ad7b661649'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -76,7 +76,7 @@ Compose one typed cross-authority report from validated registry coverage, sourc
 - [x] `W01.P02.S60` - Replace the passive filing-export proof catalogue with a live fail-closed authority that re-hashes canonical manifest, semantic-map, render-profile, loader-semantic, generated-output, and emitted-payload evidence and verifies production export_draft offsets and execution at composition time, with fabricated and stale catalogue mutation regressions including Modelo 111; `src/cadrumo/application/registry/; dev/registry/; src/cadrumo/application/filing/tests/`.
 - [x] `W01.P02.S61` - Require distinct official offset-probe identities and emitted byte positions in live filing-export acceptance, and prove duplicate probes cannot inflate checked-offset evidence with a mutation bite.; `dev/registry/filing_export_proof.py; dev/registry/tests/test_filing_export_live_proof.py`.
 - [x] `W01.P02.S62` - Remove the S60 audit and execution-record EOF blank lines and re-attest the committed Step surface with the scoped diff check.; `.vault/audit/2026-08-24-registry-completeness-closure-s60-live-export-proof-review-audit.md; .vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S60.md`.
-- [ ] `W01.P02.S63` - Wire canonical live source-connectivity and filing-export proof authorities into the registry-conformance closure CLI, retain an explicit offline no-proof mode, type both injection ports precisely, and prove complete-live versus offline-refusal CLI outcomes.; `dev/registry/conformance/; dev/source_connectivity/; src/cadrumo/application/registry/; dev/registry/conformance/tests/`.
+- [x] `W01.P02.S63` - Wire canonical live source-connectivity and filing-export proof authorities into the registry-conformance closure CLI, retain an explicit offline no-proof mode, type both injection ports precisely, and prove complete-live versus offline-refusal CLI outcomes.; `dev/registry/conformance/; dev/source_connectivity/; src/cadrumo/application/registry/; dev/registry/conformance/tests/`.
 
 ## Wave `W02` - filing-gap adjudication and owner routing
 

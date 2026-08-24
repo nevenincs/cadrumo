@@ -41,6 +41,7 @@ See Also:
 
 from __future__ import annotations
 
+from .authorities import RegistryClosureAuthorities, canonical_live_registry_closure_authorities
 from .closure import (
     RegistryClosureJoinDisagreement,
     RegistryClosurePredicateRefusal,
@@ -77,6 +78,7 @@ __all__ = [
     "ConformanceBaseline",
     "ConformanceReport",
     "CoverageReport",
+    "RegistryClosureAuthorities",
     "RegistryClosureJoinDisagreement",
     "RegistryClosurePredicateRefusal",
     "RegistryClosureReleaseResult",
@@ -85,6 +87,7 @@ __all__ = [
     "build_conformance_report",
     "build_coverage_report",
     "build_registry_closure_report",
+    "canonical_live_registry_closure_authorities",
     "check_conformance_ratchet",
     "check_registry_closure_release",
     "load_baseline",

@@ -10,15 +10,21 @@ from typer.testing import CliRunner
 
 from cadrumo.application.registry import (
     FilingExportCoverageReport,
+    FilingExportEmissionProof,
+    FilingExportGenerationProof,
+    FilingExportProof,
+    GeneratedExportFileDigest,
     RegistryClosureEvidence,
     RegistryClosureLimb,
     SourceConnectivityCoverageReport,
     TemporalCoverageReport,
     TemporalRevisionCoverage,
 )
-from cadrumo.core import RegistryAuthorityGrade
+from cadrumo.core import RegistryAuthorityGrade, SourceConnectivityExecutableEvidence
+from cadrumo.domain.calculations.registry import ModeloId, RevisionId, bundled_authority
 
-from ..cli import app
+from ..authorities import RegistryClosureAuthorities
+from ..cli import app, emit_registry_closure_command
 from ..closure import (
     build_registry_closure_report,
     check_registry_closure_release,
@@ -28,6 +34,55 @@ from ..closure import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _AS_OF = date(2026, 8, 24)
+
+
+class _StrictSourceProofAuthority:
+    """Closed test authority satisfying the complete source-proof protocol."""
+
+    def source_is_enrolled(self, connection) -> bool:
+        return True
+
+    def operator_workflow_reaches_source(self, connection, proof) -> bool:
+        return True
+
+    def encrypted_revision_matches(self, proof) -> bool:
+        return True
+
+    def executable_evidence_digest(self, evidence: SourceConnectivityExecutableEvidence) -> str:
+        return evidence.content_digest
+
+
+class _StrictFilingProofAuthority:
+    """Closed test authority returning a complete typed proof for its exact request."""
+
+    def proof_for(
+        self,
+        *,
+        modelo: ModeloId,
+        revision: RevisionId,
+        layout_ids: tuple[str, ...],
+    ) -> FilingExportProof:
+        return FilingExportProof(
+            modelo=modelo,
+            revision=revision,
+            layout_ids=layout_ids,
+            generation=FilingExportGenerationProof(
+                authority="dev.registry.pipeline.verify_export_fragment_provenance_manifest",
+                manifest_locator="test-authority/generation.json",
+                manifest_sha256="a" * 64,
+                semantic_map_sha256="b" * 64,
+                render_profile_sha256="c" * 64,
+                loader_semantic_sha256="d" * 64,
+                output_files=(GeneratedExportFileDigest(relative_path="export.toml", sha256="e" * 64),),
+            ),
+            emission=FilingExportEmissionProof(
+                authority="cadrumo.application.filing.export_draft",
+                evidence_locator="test-authority/live-export",
+                payload_sha256="f" * 64,
+                emitted_bytes=1,
+                checked_official_offsets=1,
+            ),
+        )
 
 
 def _temporal(*, modelo: str = "303", revision: str = "2026", refused: bool = False) -> TemporalRevisionCoverage:
@@ -178,3 +233,49 @@ def test_cli_check_blocks_the_live_bundled_report() -> None:
     assert "release_eligible=false" in result.output
     assert "revisions=102" in result.output
     assert "reason=missing_evidence" in result.output
+
+
+def test_cli_live_injection_uses_proof_ports_instead_of_the_offline_refusal() -> None:
+    """The actual command can consume strict protocol authorities without losing live proof."""
+    authorities = RegistryClosureAuthorities(
+        registry=bundled_authority(),
+        source_connectivity=_StrictSourceProofAuthority(),
+        filing_export=_StrictFilingProofAuthority(),
+    )
+
+    result = CliRunner().invoke(app, ["closure", "--as-of", _AS_OF.isoformat()], obj=authorities)
+
+    assert result.exit_code == 0, result.output
+    assert "filing_outcome=satisfied" in result.output
+    assert "no canonical generation and production emitted-byte proof authority was supplied" not in result.output
+
+
+def test_cli_offline_mode_explicitly_restores_the_no_proof_refusal() -> None:
+    """Offline mode ignores even injected proof ports and keeps absence visible."""
+    authorities = RegistryClosureAuthorities(
+        registry=bundled_authority(),
+        source_connectivity=_StrictSourceProofAuthority(),
+        filing_export=_StrictFilingProofAuthority(),
+    )
+
+    result = CliRunner().invoke(
+        app,
+        ["closure", "--offline", "--as-of", _AS_OF.isoformat()],
+        obj=authorities,
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "no canonical generation and production emitted-byte proof authority was supplied" in result.output
+
+
+def test_complete_live_report_emits_a_successful_blocking_command_outcome(capsys) -> None:
+    """A complete typed live report makes the shared command emitter pass its gate."""
+    report = _report(
+        temporal=(_temporal(),),
+        source=(_limb(name="source_connectivity"),),
+        filing=(_limb(name="filing_export"),),
+    )
+
+    emit_registry_closure_command(report, check=True, as_json=False)
+
+    assert "release_eligible=true" in capsys.readouterr().out
