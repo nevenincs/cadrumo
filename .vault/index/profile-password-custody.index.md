@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:0090e1047dc712bcda171d94380cb03b770a5f9aa4284480460e299dcb6b0d27'
+body_hash: 'sha256:e96111525bf1b8e7a5f9df8c6d5ea6be5b7a45035b8f74e1048f2158112e757a'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -235,6 +235,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W06-P12-S224]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S225]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S226]]'
+  - '[[2026-08-13-profile-password-custody-W06-P12-S227]]'
   - '[[2026-08-13-profile-password-custody-plan]]'
   - '[[2026-08-13-profile-password-custody-research]]'
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
@@ -275,6 +276,7 @@ related:
   - '[[2026-08-24-profile-password-custody-s224-refusal-snapshot-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s225-capsule-source-anchor-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s226-foreign-launcher-review-audit]]'
+  - '[[2026-08-24-profile-password-custody-s227-workstation-docs-review-audit]]'
 ---
 
 # `profile-password-custody` feature index
@@ -326,6 +328,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-24-profile-password-custody-s224-refusal-snapshot-review-audit` - `profile-password-custody` audit: `S224 refusal snapshot review`
 - `2026-08-24-profile-password-custody-s225-capsule-source-anchor-review-audit` - `profile-password-custody` audit: `S225 capsule source anchor review`
 - `2026-08-24-profile-password-custody-s226-foreign-launcher-review-audit` - `profile-password-custody` audit: `S226 foreign launcher review`
+- `2026-08-24-profile-password-custody-s227-workstation-docs-review-audit` - `profile-password-custody` audit: `S227 workstation docs review`
 
 ### exec
 
@@ -556,6 +559,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W06-P12-S224` - Extend every machine-secret refusal and dispatch-state snapshot to include session and receipt artifacts while preserving unread-channel and cross-platform harness evidence
 - `2026-08-13-profile-password-custody-W06-P12-S225` - Replace the capsule-source symlink platform skip with a deterministic real-filesystem reparse-point-or-directory refusal witness while retaining linked-content non-adoption where symlinks are supported
 - `2026-08-13-profile-password-custody-W06-P12-S226` - Replace the Windows-only foreign-launcher plant with a platform-neutral real confined-venv launcher swap and prove the canonical path rejects a peer entry point on Windows and POSIX
+- `2026-08-13-profile-password-custody-W06-P12-S227` - Retire the unsupported workstation agent-materialisation sequence and stale agent-extra claims while preserving the separately owned harness and MCP guidance
 
 ### plan
 
