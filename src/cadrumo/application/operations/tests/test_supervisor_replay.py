@@ -29,12 +29,14 @@ from .. import (
     OperationExecutorContext,
     OperationExecutorFactory,
     OperationFrontendProjection,
+    OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
     OperationReplayPolicy,
     OperationReplayStatus,
     OperationRequest,
     OperationRequestStoragePolicy,
+    OperationSchemaBindingV1,
     OperationSecureReferenceStore,
     OperationSensitiveInputPolicy,
     OperationSupervisor,
@@ -86,24 +88,32 @@ def _capabilities() -> OperationCapabilities:
 
 def _registry() -> OperationRegistry:
     """Build the concrete registered operation that emits durable notice events."""
+    definition = OperationDefinition(
+        definition_id=_DEFINITION_ID,
+        request_type=ReplayRequest,
+        result_type=None,
+        executor_factory=OperationExecutorFactory(
+            request_type=ReplayRequest,
+            executor_type=ReplayNoticeExecutor,
+            build=ReplayNoticeExecutor,
+        ),
+        phase_codes=("operation.replay.phase",),
+        interaction_kinds=frozenset(),
+        capabilities=_capabilities(),
+        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
+    )
+    registration = OperationPublicDefinitionRegistrationV1.compose(
+        definition=definition,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id="operation.supervisor.replay.request",
+            schema_version=1,
+            model_type=ReplayRequest,
+        ),
+    )
     return OperationRegistry(
-        definitions=(
-            OperationDefinition(
-                definition_id=_DEFINITION_ID,
-                request_type=ReplayRequest,
-                result_type=None,
-                executor_factory=OperationExecutorFactory(
-                    request_type=ReplayRequest,
-                    executor_type=ReplayNoticeExecutor,
-                    build=ReplayNoticeExecutor,
-                ),
-                phase_codes=("operation.replay.phase",),
-                interaction_kinds=frozenset(),
-                capabilities=_capabilities(),
-                reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-                permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
-            ),
-        )
+        definitions=(definition,),
+        public_registrations=(registration,),
     )
 
 

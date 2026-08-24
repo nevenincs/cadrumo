@@ -37,7 +37,21 @@ is legitimate.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
+from ....application.operator_actions._preconditions import no_action_precondition_verdict
+from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ._errors import OutboundStorageValidationError
+
+
+def _validation_verdict(condition: str, facts: Mapping[str, str | bool]):
+    return no_action_precondition_verdict(
+        condition_id=condition,
+        facts=facts,
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        outcome=NoRecoveryOutcome.SAFETY,
+    )
+
 
 #: Backend-specific prefix for the translated-message keys, so a refusal keeps
 #: the identity of the backend that refused. Parameterised rather than
@@ -80,12 +94,16 @@ def assert_admissible_object_key_hmac(object_key_hmac: str, *, backend: str) -> 
         raise OutboundStorageValidationError(
             "object_key_hmac must not be blank",
             translated_message=f"{_MESSAGE_ROOT}.{backend}.errors.object_key_hmac_blank",
+            precondition_verdict=_validation_verdict("storage.key.present", {"present": False, "backend": backend}),
         )
     if not all(character.isalnum() or character in "-_" for character in cleaned):
         raise OutboundStorageValidationError(
             f"object_key_hmac {object_key_hmac!r} contains forbidden characters",
             context={"object_key_hmac": object_key_hmac},
             translated_message=f"{_MESSAGE_ROOT}.{backend}.errors.object_key_hmac_forbidden_characters",
+            precondition_verdict=_validation_verdict(
+                "storage.key.admissible", {"admissible": False, "backend": backend}
+            ),
         )
     return cleaned
 

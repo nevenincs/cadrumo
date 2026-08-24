@@ -71,6 +71,7 @@ def _snapshot(*, revision: int, sequence: int, updated_at: datetime) -> Operatio
     )
     return OperationPersistedSnapshot(
         identity=_IDENTITY,
+        definition_contract_digest="9" * 64,
         request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
         request_reference=_REQUEST_REFERENCE,
         revision=revision,

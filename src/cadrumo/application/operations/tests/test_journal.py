@@ -21,9 +21,14 @@ from .. import (
     OperationLeaseObservationDisposition,
     OperationLeaseRepository,
     OperationLeaseResult,
+    OperationObservationMaterialization,
+    OperationObservationReader,
     OperationOwnerLease,
     OperationPersistedSnapshot,
     OperationPhaseEvent,
+    OperationProgressEvent,
+    OperationProgressFoldCheckpoint,
+    OperationProgressFoldInput,
     OperationReplayLimit,
     OperationReplayPage,
     OperationReplayStatus,
@@ -39,6 +44,7 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SCOPE_REF = operation_conflict_scope_reference(definition_id="test.operation", subject_ref="subject")
+_DEFINITION_CONTRACT_DIGEST = "c" * 64
 
 
 class Operand(BaseModel):
@@ -75,6 +81,7 @@ def _persisted_snapshot() -> OperationPersistedSnapshot:
     )
     return OperationPersistedSnapshot(
         identity=runtime.identity,
+        definition_contract_digest=_DEFINITION_CONTRACT_DIGEST,
         request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
         request_reference="d" * 64,
         revision=runtime.revision,
@@ -113,6 +120,7 @@ def _terminal_persisted_snapshot() -> OperationPersistedSnapshot:
     )
     return OperationPersistedSnapshot(
         identity=identity,
+        definition_contract_digest=_DEFINITION_CONTRACT_DIGEST,
         request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
         request_reference="d" * 64,
         revision=receipt.revision,
@@ -144,11 +152,15 @@ def test_persisted_snapshot_is_versioned_and_excludes_the_runtime_request() -> N
     with pytest.raises(ValidationError, match="frozen_instance"):
         restored.revision = 1
     payload = persisted.model_dump()
-    for schema_version in (1, 2):
+    for schema_version in (1, 2, 3, 4):
         payload = persisted.model_dump(mode="json")
         payload["schema_version"] = schema_version
         with pytest.raises(ValidationError):
             OperationPersistedSnapshot.model_validate_json(json.dumps(payload))
+    missing_digest = persisted.model_dump(mode="json")
+    del missing_digest["definition_contract_digest"]
+    with pytest.raises(ValidationError):
+        OperationPersistedSnapshot.model_validate(missing_digest)
     for safety_field in (
         "execution_deadline",
         "cleanup_deadline",
@@ -341,6 +353,16 @@ def test_public_port_signatures_pin_explicit_lease_evidence_inputs() -> None:
         "operation_id",
         "cursor",
         "limit",
+    )
+    assert tuple(inspect.signature(OperationObservationReader.read_observation).parameters) == (
+        "self",
+        "operation_id",
+        "after_cursor",
+        "limit",
+    )
+    assert (
+        inspect.signature(OperationObservationReader.read_observation).parameters["limit"].kind
+        is inspect.Parameter.KEYWORD_ONLY
     )
     assert tuple(inspect.signature(OperationLeaseRepository.inspect).parameters) == (
         "self",
@@ -624,6 +646,88 @@ def test_replay_page_binds_ordered_events_to_next_cursor() -> None:
         OperationReplayPage(
             status=OperationReplayStatus.PAGE, requested_cursor=0, events=(first, second), next_cursor=1
         )
+
+
+def test_observation_materialization_binds_snapshot_replay_and_progress_to_one_anchor() -> None:
+    initial = _persisted_snapshot()
+    progress = OperationProgressEvent(
+        identity=initial.identity,
+        revision=initial.revision,
+        sequence=2,
+        timestamp=initial.updated_at,
+        code="progress.updated",
+        completed=3,
+        total=7,
+        unit_code="items",
+    )
+    snapshot = initial.model_copy(update={"event_cursor": 2, "events": (initial.events[0], progress)})
+    materialization = OperationObservationMaterialization(
+        snapshot=snapshot,
+        anchor_cursor=2,
+        replay=OperationReplayPage(
+            status=OperationReplayStatus.PAGE,
+            requested_cursor=0,
+            events=(initial.events[0], progress),
+            next_cursor=2,
+        ),
+        progress_fold=OperationProgressFoldInput(events=(initial.events[0], progress)),
+    )
+
+    assert materialization.snapshot.definition_contract_digest == _DEFINITION_CONTRACT_DIGEST
+    assert materialization.progress_fold.events[-1] == progress
+    assert OperationObservationMaterialization.model_validate_json(materialization.model_dump_json()) == materialization
+
+
+def test_observation_materialization_accepts_checkpoint_suffix_and_refuses_cross_anchor_state() -> None:
+    initial = _persisted_snapshot()
+    progress = OperationProgressEvent(
+        identity=initial.identity,
+        revision=initial.revision,
+        sequence=2,
+        timestamp=initial.updated_at,
+        code="progress.updated",
+        completed=1,
+        total=2,
+    )
+    snapshot = initial.model_copy(update={"event_cursor": 2, "events": (initial.events[0], progress)})
+    checkpoint = OperationProgressFoldCheckpoint(
+        identity=snapshot.identity,
+        through_cursor=1,
+        phase_code="phase.started",
+    )
+    materialization = OperationObservationMaterialization(
+        snapshot=snapshot,
+        anchor_cursor=2,
+        replay=OperationReplayPage(
+            status=OperationReplayStatus.CAUGHT_UP,
+            requested_cursor=2,
+            events=(),
+            next_cursor=2,
+        ),
+        progress_fold=OperationProgressFoldInput(checkpoint=checkpoint, events=(progress,)),
+    )
+    assert materialization.progress_fold.checkpoint == checkpoint
+
+    for mutation, message in (
+        ({"anchor_cursor": 1}, "snapshot cursor"),
+        (
+            {
+                "replay": OperationReplayPage(
+                    status=OperationReplayStatus.EXPIRED,
+                    requested_cursor=0,
+                    events=(),
+                    next_cursor=3,
+                    restart_cursor=3,
+                )
+            },
+            "cannot exceed its anchor",
+        ),
+        ({"progress_fold": OperationProgressFoldInput(checkpoint=checkpoint, events=())}, "cover every event"),
+    ):
+        with pytest.raises(ValidationError, match=message):
+            OperationObservationMaterialization.model_validate(
+                {**materialization.model_dump(), **mutation}
+            )
 
 
 def test_lease_transition_correlations_refuse_planted_identity_and_time_mutations() -> None:

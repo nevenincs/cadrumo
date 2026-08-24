@@ -132,6 +132,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         self, request: OperationRequest[BaseModel], *, operation_id: OperationId | None = None
     ) -> OperationId:
         definition = self._registry.lookup(request.definition_id)
+        definition_contract = self._registry.lookup_public_contract(request.definition_id)
         self._validate_request_payload(request, definition.request_type)
         now = self._clock()
         identity = OperationIdentity(
@@ -183,6 +184,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         self._leases_by_operation[identity.operation_id] = lease
         snapshot = OperationPersistedSnapshot(
             identity=identity,
+            definition_contract_digest=definition_contract.definition_contract_digest,
             request_storage=request_storage,
             request_reference=ref,
             credential_free_request_json=credential_free_request_json,
@@ -211,12 +213,20 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         if not isinstance(request.payload, request_type):
             raise ValueError("request payload does not match definition")
 
+    def _lookup_pinned_definition(self, snapshot: OperationPersistedSnapshot) -> OperationDefinition:
+        definition_id = snapshot.identity.definition_id
+        definition = self._registry.lookup(definition_id)
+        current_contract = self._registry.lookup_public_contract(definition_id)
+        if current_contract.definition_contract_digest != snapshot.definition_contract_digest:
+            raise ValueError("operation definition contract no longer reproduces its invocation digest")
+        return definition
+
     async def start(self, operation_id: OperationId) -> OperationPersistedSnapshot:
         """Start one owned registered executor from its declared request storage."""
         snapshot = await self.inspect(operation_id)
         if snapshot.lifecycle is not OperationLifecycle.CREATED:
             raise ValueError("only a created operation may be started")
-        definition = self._registry.lookup(snapshot.identity.definition_id)
+        definition = self._lookup_pinned_definition(snapshot)
         execution_deadline = self._execution_deadline_for(definition.capabilities.deadline)
         self._require_cleanup_timeout(definition.capabilities.cancellation)
         requirement = snapshot.secret_requirement
@@ -613,7 +623,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             events=(event,),
             consumed=(*snapshot.consumed_interactions, consumed),
         )
-        definition = self._registry.lookup(snapshot.identity.definition_id)
+        definition = self._lookup_pinned_definition(snapshot)
         if definition.reconciliation_policy is OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT:
             self._schedule_continuation(successor, definition, consumed)
         return consumed
@@ -667,7 +677,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
                 discard_ephemeral_secret=True,
             )
             return await self._settle_pre_entry_secret_wait(acknowledged, OperationTerminalCondition.CANCELLED)
-        cancellation = self._registry.lookup(snapshot.identity.definition_id).capabilities.cancellation
+        cancellation = self._lookup_pinned_definition(snapshot).capabilities.cancellation
         if cancellation is OperationCancellation.UNSUPPORTED:
             raise ValueError("operation does not support cancellation")
         self._require_cleanup_timeout(cancellation)
@@ -727,7 +737,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         snapshot = await self.inspect(operation_id)
         if receipt.identity != snapshot.identity or receipt.revision != snapshot.revision + 1:
             raise ValueError("terminal receipt does not match successor revision")
-        definition = self._registry.lookup(snapshot.identity.definition_id)
+        definition = self._lookup_pinned_definition(snapshot)
         if receipt.effect not in definition.capabilities.permitted_effects:
             raise OperationDeclarationError("terminal receipt effect is not declared by its definition")
         if (
@@ -852,7 +862,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         snapshot = await self.inspect(operation_id)
         if snapshot.lifecycle is OperationLifecycle.TERMINAL:
             return snapshot
-        definition = self._registry.lookup(snapshot.identity.definition_id)
+        definition = self._lookup_pinned_definition(snapshot)
         scope_ref = operation_conflict_scope_reference(
             definition_id=snapshot.identity.definition_id,
             subject_ref=snapshot.identity.subject_ref,

@@ -25,11 +25,13 @@ from .....application.operations import (
     OperationExecutorFactory,
     OperationFrontendProjection,
     OperationLifecycle,
+    OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
     OperationReplayPolicy,
     OperationRequest,
     OperationRequestStoragePolicy,
+    OperationSchemaBindingV1,
     OperationSecretRequirement,
     OperationSensitiveInputPolicy,
     OperationSupervisor,
@@ -174,6 +176,19 @@ def _request() -> OperationRequest[SafeUnlockRequest]:
     )
 
 
+def _registry(executor: ConsumingExecutor | BlockingExecutor) -> OperationRegistry:
+    definition = _definition(executor)
+    registration = OperationPublicDefinitionRegistrationV1.compose(
+        definition=definition,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id="profile.unlock.ephemeral.request",
+            schema_version=1,
+            model_type=SafeUnlockRequest,
+        ),
+    )
+    return OperationRegistry(definitions=(definition,), public_registrations=(registration,))
+
+
 def _supervisor(
     *,
     root: Path,
@@ -226,7 +241,7 @@ def test_registry_refuses_unmarked_credential_secret_binary_and_invalid_secret_c
     for request_type, message in (
         (UnmarkedRequest, "explicitly inherit"),
         (PasswordBearingRequest, "forbidden security meaning"),
-        (BinaryBearingRequest, "secret-capable format"),
+        (BinaryBearingRequest, "secret-capable"),
     ):
         payload = accepted.model_dump()
         payload["request_type"] = request_type
@@ -254,7 +269,7 @@ def test_registry_refuses_unmarked_credential_secret_binary_and_invalid_secret_c
 
 def test_exact_one_shot_submission_executes_once_and_never_reaches_filesystem(tmp_path: Path) -> None:
     executor = ConsumingExecutor()
-    registry = OperationRegistry(definitions=(_definition(executor),))
+    registry = _registry(executor)
     clock = [_NOW]
     supervisor = _supervisor(root=tmp_path, registry=registry, owner="1" * 64, token="2" * 64, clock=clock)
     assert isinstance(supervisor, EphemeralSecretSubmission)
@@ -305,7 +320,7 @@ def test_exact_one_shot_submission_executes_once_and_never_reaches_filesystem(tm
 
 def test_expiry_cancellation_and_shutdown_clear_pre_entry_secret_waits(tmp_path: Path) -> None:
     executor = ConsumingExecutor()
-    registry = OperationRegistry(definitions=(_definition(executor),))
+    registry = _registry(executor)
     clock = [_NOW]
     supervisor = _supervisor(root=tmp_path, registry=registry, owner="4" * 64, token="5" * 64, clock=clock)
 
@@ -349,7 +364,7 @@ def test_expiry_cancellation_and_shutdown_clear_pre_entry_secret_waits(tmp_path:
 def test_submission_and_cancellation_share_one_operation_boundary(tmp_path: Path) -> None:
     async def scenario() -> None:
         executor = ConsumingExecutor()
-        registry = OperationRegistry(definitions=(_definition(executor),))
+        registry = _registry(executor)
         clock = [_NOW]
         supervisor = _supervisor(root=tmp_path, registry=registry, owner="1" * 64, token="2" * 64, clock=clock)
         operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
@@ -383,7 +398,7 @@ def test_submission_and_cancellation_share_one_operation_boundary(tmp_path: Path
 def test_submission_and_terminal_settlement_share_one_operation_boundary(tmp_path: Path) -> None:
     async def scenario() -> None:
         executor = ConsumingExecutor()
-        registry = OperationRegistry(definitions=(_definition(executor),))
+        registry = _registry(executor)
         clock = [_NOW]
         supervisor = _supervisor(root=tmp_path, registry=registry, owner="7" * 64, token="8" * 64, clock=clock)
         operation_id = await supervisor.submit(_request(), operation_id="9" * 64)
@@ -423,7 +438,7 @@ def test_shutdown_zeroizes_secret_during_active_consumption(tmp_path: Path) -> N
         entered = asyncio.Event()
         release = asyncio.Event()
         executor = BlockingExecutor(entered, release)
-        registry = OperationRegistry(definitions=(_definition(executor),))
+        registry = _registry(executor)
         clock = [_NOW]
         supervisor = _supervisor(root=tmp_path, registry=registry, owner="4" * 64, token="5" * 64, clock=clock)
         operation_id = await supervisor.submit(_request(), operation_id="6" * 64)
@@ -451,7 +466,7 @@ def test_restart_before_entry_is_none_and_after_entry_is_unknown_without_reexecu
         entered = asyncio.Event()
         release = asyncio.Event()
         executor = BlockingExecutor(entered, release)
-        registry = OperationRegistry(definitions=(_definition(executor),))
+        registry = _registry(executor)
         clock = [_NOW]
         owner = _supervisor(root=tmp_path, registry=registry, owner="9" * 64, token="a" * 64, clock=clock)
 

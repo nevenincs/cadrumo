@@ -622,6 +622,13 @@ class OperationRegistry(BaseModel):
                 return definition
         raise KeyError(f"unknown operation definition ID: {definition_id!r}")
 
+    def lookup_public_contract(self, definition_id: str) -> OperationPublicDefinitionContractV1:
+        """Return the exact live public contract or refuse incomplete composition."""
+        for registration in self.public_registrations:
+            if registration.contract.definition_id == definition_id:
+                return registration.contract
+        raise KeyError(f"operation definition has no public contract: {definition_id!r}")
+
     def lookup_action(self, action: ActionReference) -> OperationDefinition:
         """Resolve an optional canonical action join without owning its catalogue."""
         for definition in self.definitions:

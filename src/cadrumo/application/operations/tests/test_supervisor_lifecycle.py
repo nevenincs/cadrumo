@@ -38,11 +38,13 @@ from .. import (
     OperationLifecycle,
     OperationOwnedResource,
     OperationPersistedSnapshot,
+    OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
     OperationReplayPolicy,
     OperationRequest,
     OperationRequestStoragePolicy,
+    OperationSchemaBindingV1,
     OperationSensitiveInputPolicy,
     OperationSupervisor,
     OperationTerminalCondition,
@@ -264,8 +266,21 @@ def _supervisor(
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
     )
+    registration = OperationPublicDefinitionRegistrationV1.compose(
+        definition=definition,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id="operation.supervisor.lifecycle.request",
+            schema_version=1,
+            model_type=LifecycleRequest,
+        ),
+        result_schema=OperationSchemaBindingV1.bind(
+            schema_id="operation.supervisor.lifecycle.result",
+            schema_version=1,
+            model_type=LifecycleResult,
+        ),
+    )
     return OperationSupervisor(
-        registry=OperationRegistry(definitions=(definition,)),
+        registry=OperationRegistry(definitions=(definition,), public_registrations=(registration,)),
         journal=journal,
         event_stream=journal,
         leases=leases,

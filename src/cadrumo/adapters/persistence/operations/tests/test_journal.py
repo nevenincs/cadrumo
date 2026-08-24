@@ -55,6 +55,7 @@ def _snapshot(*, revision: int, sequence: int) -> OperationPersistedSnapshot:
     )
     return OperationPersistedSnapshot(
         identity=identity,
+        definition_contract_digest="c" * 64,
         request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
         request_reference="d" * 64,
         revision=revision,
@@ -198,6 +199,13 @@ def test_operation_journal_commits_cas_transitions_and_refuses_mutations(tmp_pat
         asyncio.run(repository.commit(_snapshot(revision=1, sequence=3), expected_revision=0, lease=_lease()))
     assert path.read_bytes() == original_bytes
 
+    changed_contract = _snapshot(revision=1, sequence=2).model_copy(
+        update={"definition_contract_digest": "f" * 64}
+    )
+    with pytest.raises(RepositoryError, match="definition contract digest"):
+        asyncio.run(repository.commit(changed_contract, expected_revision=0, lease=_lease()))
+    assert path.read_bytes() == original_bytes
+
     successor = _snapshot(revision=1, sequence=2)
     asyncio.run(repository.commit(successor, expected_revision=0, lease=_lease()))
     reloaded = OperationJournalRepository(storage_root=tmp_path)
@@ -215,6 +223,7 @@ def test_operation_journal_requires_coherent_initial_history(tmp_path: Path) -> 
     identity = OperationIdentity(operation_id="a" * 64, definition_id="test.operation", subject_ref="subject")
     empty = OperationPersistedSnapshot(
         identity=identity,
+        definition_contract_digest="c" * 64,
         request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
         request_reference="d" * 64,
         revision=0,
