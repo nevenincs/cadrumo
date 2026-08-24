@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:aaa68f1ca54a86db1e89db1c9098491eed49bf909aaf9f34d4be43b7225eca1d'
+body_hash: 'sha256:fb61083308dce9cccebf0f743aec4b7e3d0833f7249d775b19b188ac7a226811'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
 ---
@@ -53,6 +53,15 @@ The execution record is truthful: S82 itself has no authority to close S73,
 S72, or S11, and the whole-census property remains separately blocked by the
 recorded `remaining-calculation-helpers` digest drift. The plan row remained
 unchecked during review.
+
+Focused execution passed the live catalogue/revision mutations and the M036
+one-owner mutation (two tests), and separately passed the Modelo 100-plus-`alta`
+construction mutation. Scoped Ruff is clean. The whole-census exact-one test
+still refuses before its assertions at the independently recorded helper-digest
+drift, with expected digest
+`sha256:1bd52137591b1878c9240528c0c9c63b753c074c0dca6a5e2b437f25a04ad541`
+and current digest
+`sha256:e5a85c1679b69c5d516fd4bc2fe4a93ef0067284f35a395dbe519f7ac0979709`.
 
 ## Recommendations
 
