@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:0180dd98fb38520b711268ae5f86c7e5d9f79c111ea3cf0c8c7dc3b005638a77'
+body_hash: 'sha256:b8d7f63878fc4f3289307aa55772f36084871c609d3dc6dd77e3ebdb3b3ab618'
 related:
   - "[[2026-08-24-deadline-window-revision-authority-plan]]"
   - "[[2026-08-24-deadline-window-revision-authority-W02-P04-S15]]"
@@ -29,7 +29,9 @@ Post-change exact diff and symbol review shows only registry rows, membership de
 
 ### m369-primary-authority | low | One stable legal rule grounds all supported rows
 
-BOE HAC/610/2021 article 3 requires presentation within the natural month following the end of the return period. Directive 2006/112/EC articles 364, 369f, and 369s establish quarterly exterior/union returns and monthly import returns, due by the end of the following month. AEAT's 2025 and 2026 taxpayer-calendar guidance expressly excludes Modelo 369 from weekend and holiday extensions. These primary sources ground deterministic materialisation through supported filing year 2026, including physical close dates in January 2027 for 2026 Q4/month 12.
+BOE HAC/610/2021 article 3 requires presentation within the natural month following the end of the return period. Directive 2006/112/EC articles 364, 369f, and 369s establish quarterly exterior/union returns and monthly import returns, due by the end of the following month. AEAT's taxpayer-calendar guidance expressly excludes Modelo 369 from weekend and holiday extensions. These primary sources ground deterministic materialisation for every supported filing year 2022-2026, including physical close dates in January 2027 for 2026 Q4/month 12.
+
+The post-extension exact corpus sweep proves `20` rows for each of 2022, 2023, 2024, 2025, and 2026 (`100` total). Exact-symbol review of the changed M369 surface finds only declarative rows, existing construct memberships, and tests; no function, class, enum, selector, resolver, parser, cadence map, horizon, or source catalogue was introduced.
 
 ## Recommendations
 
