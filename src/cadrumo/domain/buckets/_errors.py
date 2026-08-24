@@ -7,7 +7,16 @@ cover operator-facing bucket browse, export, import, rename, and delete flows.
 
 from __future__ import annotations
 
-from ...core.errors import CadrumoError
+from typing import TYPE_CHECKING
+
+from ...core.errors import CadrumoError, TerminalPreconditionErrorMixin
+
+if TYPE_CHECKING:
+    from ...application.operator_actions import PreconditionVerdict
+
+    _BucketDeletePreconditionErrorMixin = TerminalPreconditionErrorMixin[PreconditionVerdict]
+else:
+    _BucketDeletePreconditionErrorMixin = TerminalPreconditionErrorMixin
 
 
 class BucketsError(CadrumoError):
@@ -38,8 +47,14 @@ class BucketRenameError(BucketMaintenanceError):
     """Raised when a bucket rename violates uniqueness or addressing rules."""
 
 
-class BucketDeleteRefusedError(BucketMaintenanceError):
-    """Raised when a bucket delete is refused by a destructive-action gate."""
+class BucketDeleteRefusedError(_BucketDeletePreconditionErrorMixin, BucketMaintenanceError):
+    """Raised when a destructive-action gate refuses a bucket deletion.
+
+    The bucket-maintenance application boundary may attach a typed terminal
+    precondition verdict when it observes a safety condition with no safe
+    recovery command. The core-owned mixin carries that opaque application
+    record without making this domain taxonomy depend on application models.
+    """
 
 
 class BucketArchiveRefusedError(BucketMaintenanceError):

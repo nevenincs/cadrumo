@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-24'
-body_hash: 'sha256:a3eee7a65ece0d592a968e65e5d36109f025a1641f7e35ddd095ad113dfd049f'
+body_hash: 'sha256:5cfd84bf714f9d1dc0127dbaa200f6b109f066690781767614ba07248f0635f1'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -230,12 +230,12 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [ ] `W05.P10.S93` - Migrate residual MCP action producers and transport notices to the shared resolved action projection; `src/cadrumo-harness/src/cadrumo_harness/mcp/_tools.py; src/cadrumo-harness/src/cadrumo_harness/mcp/_transport.py; src/cadrumo-harness/src/cadrumo_harness/mcp/_resources.py`.
 - [x] `W05.P10.S94` - Migrate LLM optional-extra wrappers and continuations to preserve machine identities or application-owned typed outcomes, including the src/cadrumo/llm/tests/test_llm_vision_classifier.py consumer proof for S38 reader-unavailability verdicts, with no raw installation prose or compatibility.; `src/cadrumo/llm`.
 - [ ] `W05.P10.S98` - Migrate application-registry exception recovery producers and forwarding to the retired-error boundary and canonical typed actions; `src/cadrumo/application/registry/_diff.py; src/cadrumo/application/registry/__init__.py; src/cadrumo/application/registry/_conformance.py; src/cadrumo/application/registry/_corpus.py; src/cadrumo/application/registry/_corpus_manual_helpers.py`.
-- [ ] `W05.P10.S107` - Migrate bucket-maintenance recovery producers to typed conditions and canonical actions; `src/cadrumo/application/bucket_maintenance/_service.py; src/cadrumo/application/bucket_maintenance/_contracts.py; src/cadrumo/application/bucket_maintenance/tests`.
+- [x] `W05.P10.S107` - Migrate bucket-maintenance recovery producers to typed conditions and canonical actions; `src/cadrumo/application/bucket_maintenance/_service.py; src/cadrumo/application/bucket_maintenance/_contracts.py; src/cadrumo/application/bucket_maintenance/tests`.
 - [ ] `W05.P10.S108` - Migrate application invoice-lifecycle recovery producers to typed conditions and canonical actions; `src/cadrumo/application/invoices/_lifecycle.py`.
 - [ ] `W05.P10.S110` - Migrate application state-projection recovery producers to typed conditions and canonical actions; `src/cadrumo/application/state_projection.py`.
 - [ ] `W05.P10.S111` - Migrate core output-rendering recovery producers to typed conditions and canonical actions; `src/cadrumo/core/output_rendering.py`.
 - [x] `W05.P10.S112` - Migrate core topics recovery producers to typed conditions and canonical actions; `src/cadrumo/core/topics/__init__.py`.
-- [ ] `W05.P10.S113` - Migrate domain-bucket recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/buckets/_errors.py`.
+- [x] `W05.P10.S113` - Migrate domain-bucket recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/buckets/_errors.py`.
 - [x] `W05.P10.S114` - Unify shared CLI callback and terminal emitters around one typed projection mapping MissingOptionalExtraError and malformed aeat.pre303 CoreValidationError to exact machine-fact no-recovery outcomes through the CLI exception-precondition owner with no raw message matching or terminal bypass; `src/cadrumo/application/cli_exception_preconditions.py; src/cadrumo/entrypoints/cli/_common.py; src/cadrumo/entrypoints/cli/_errors.py; src/cadrumo/entrypoints/cli/_terminal_errors.py`.
 - [ ] `W05.P10.S115` - Migrate the active-session diagnostics recovery producer to typed conditions and canonical action or explicit no-recovery outcome; `src/cadrumo/application/diagnostics.py`.
 - [x] `W05.P10.S117` - Replace financial OFX optional-extra forwarding and notice consumers with typed machine facts and explicit no-recovery outcomes preserving capability classification without raw installation prose or wrapper compatibility; `src/cadrumo/adapters/inbound/financial/providers/_ofx.py`.

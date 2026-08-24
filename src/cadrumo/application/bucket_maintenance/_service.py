@@ -8,19 +8,22 @@ current implementation and are intentionally not exposed here.
 
 from __future__ import annotations
 
-from collections.abc import Generator, Iterable
+from collections.abc import Generator, Iterable, Mapping
 from contextlib import ExitStack, contextmanager
+from enum import StrEnum
 from pathlib import Path
 from uuid import UUID
 
 from ...adapters.persistence.storage import custody
 from ...application.filing import FilingRetentionAuthority
+from ...core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.hashing import CONTENT_DIGEST_PREFIX
 from ...core.time import now
 from ...domain.buckets import BucketDeleteRefusedError
 from ...domain.retention import RetentionFloorAssessment
 from ...domain.user_profile import ProfileNotFoundError
 from .._bucket_deletion_contracts import BucketDeletionFingerprint
+from ..operator_actions import ConditionEvidence, PreconditionVerdict
 from ..user_profile import (
     default_profile_bucket_storage,
 )
@@ -30,6 +33,51 @@ from ._contracts import (
     BucketDeletionAssessment,
 )
 from ._deletion_paths import validated_bucket_deletion_paths
+
+
+class BucketDeletionPreconditionCondition(StrEnum):
+    """Closed failed-condition identities for deletion-preflight refusals."""
+
+    CUSTODY_TARGET_UNLINKED = "bucket_maintenance.custody.target_unlinked"
+    LABEL_PROJECTION_PRESENT = "bucket_maintenance.custody.label_projection_present"
+    CAPSULE_INVENTORY_READABLE = "bucket_maintenance.custody.capsule_inventory_readable"
+    RETENTION_SNAPSHOT_ASSESSABLE = "bucket_maintenance.filing.retention_snapshot_assessable"
+
+
+def _bucket_deletion_no_recovery_verdict(
+    condition: BucketDeletionPreconditionCondition,
+    *,
+    facts: Mapping[str, str | int | bool],
+) -> PreconditionVerdict:
+    """Return a safety outcome for a deletion target with no safe repair verb."""
+    condition_id = condition.value
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            ConditionEvidence(
+                condition_id=condition_id,
+                evidence_id=f"{condition_id}.observation",
+                provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+                values=facts,
+            ),
+        ),
+        conditionality=ActionConditionality.NOT_APPLICABLE,
+        no_recovery_outcome=NoRecoveryOutcome.SAFETY,
+    )
+
+
+def _bucket_delete_refusal(
+    condition: BucketDeletionPreconditionCondition,
+    *,
+    bucket_id: str,
+    facts: Mapping[str, str | int | bool],
+) -> BucketDeleteRefusedError:
+    """Build the registered refusal carrying its exact typed condition."""
+    return BucketDeleteRefusedError(
+        translated_message="errors.error.error_storage_bucket",
+        context={"bucket_id": bucket_id},
+        precondition_verdict=_bucket_deletion_no_recovery_verdict(condition, facts=facts),
+    )
 
 
 class BucketMaintenanceService:
@@ -50,11 +98,15 @@ class BucketMaintenanceService:
             if missing_ok:
                 yield
                 return
-            raise ProfileNotFoundError("profile custody target does not exist") from exc
-        except ValueError as exc:
-            raise BucketDeleteRefusedError(
-                "bucket maintenance refuses a linked custody target",
+            raise ProfileNotFoundError(
+                translated_message="errors.refused.refused_profile_not_found",
                 context={"bucket_id": bucket_id},
+            ) from exc
+        except ValueError as exc:
+            raise _bucket_delete_refusal(
+                BucketDeletionPreconditionCondition.CUSTODY_TARGET_UNLINKED,
+                bucket_id=str(bucket_id),
+                facts={"bucket_id": str(bucket_id), "custody_target_unlinked": False},
             ) from exc
         storage = default_profile_bucket_storage()
         storage.acquire_lock(paths, wait_seconds=wait_seconds)
@@ -85,9 +137,10 @@ class BucketMaintenanceService:
                 except FileNotFoundError:
                     continue
                 except ValueError as exc:
-                    raise BucketDeleteRefusedError(
-                        "bucket maintenance refuses a linked custody target",
-                        context={"bucket_id": bucket_id},
+                    raise _bucket_delete_refusal(
+                        BucketDeletionPreconditionCondition.CUSTODY_TARGET_UNLINKED,
+                        bucket_id=str(bucket_id),
+                        facts={"bucket_id": str(bucket_id), "custody_target_unlinked": False},
                     ) from exc
                 storage.acquire_lock(paths, wait_seconds=wait_seconds)
                 stack.callback(storage.release_lock, paths)
@@ -118,15 +171,17 @@ class BucketMaintenanceService:
         except FileNotFoundError:
             return BucketDeletionAssessment(bucket_id=command.bucket_id, exists=False)
         except ValueError as exc:
-            raise BucketDeleteRefusedError(
-                "bucket deletion assessment refuses a linked target",
-                context={"bucket_id": command.bucket_id},
+            raise _bucket_delete_refusal(
+                BucketDeletionPreconditionCondition.CUSTODY_TARGET_UNLINKED,
+                bucket_id=str(command.bucket_id),
+                facts={"bucket_id": str(command.bucket_id), "custody_target_unlinked": False},
             ) from exc
         bucket = read_profile_bucket_by_id(command.bucket_id)
         if bucket is None:
-            raise BucketDeleteRefusedError(
-                "current custody target has no committed label projection",
-                context={"bucket_id": command.bucket_id},
+            raise _bucket_delete_refusal(
+                BucketDeletionPreconditionCondition.LABEL_PROJECTION_PRESENT,
+                bucket_id=str(command.bucket_id),
+                facts={"bucket_id": str(command.bucket_id), "custody_record_present": False},
             )
         profile_id = UUID(command.bucket_id)
         return BucketDeletionAssessment(
@@ -169,11 +224,10 @@ def _observed_deletion_fingerprint(
         inventory = custody.inventory_committed_profile_custody_capsule(profile_id, root=root)
     # Broad on purpose: any inventory failure at all must block, never soften.
     except Exception as exc:
-        raise BucketDeleteRefusedError(
-            "current custody deletion cannot fingerprint this target: its committed capsule "
-            "could not be inventoried, so a later resume could not tell whether the target "
-            "changed beneath the operation.",
-            context={"bucket_id": bucket_id, "unassessable": "capsule_inventory"},
+        raise _bucket_delete_refusal(
+            BucketDeletionPreconditionCondition.CAPSULE_INVENTORY_READABLE,
+            bucket_id=bucket_id,
+            facts={"bucket_id": bucket_id, "capsule_inventory_readable": False},
         ) from exc
     return BucketDeletionFingerprint(
         digest=inventory.digest.removeprefix(CONTENT_DIGEST_PREFIX),
@@ -217,29 +271,24 @@ def _assessed_filing_retention(
     try:
         return FilingRetentionAuthority(root=root).assess(profile_id, now=now())
     except FileNotFoundError as exc:
-        raise BucketDeleteRefusedError(
-            "current custody deletion cannot assess the legal retention floor: the filing "
-            "owner has recorded no filing catalogue snapshot for this profile, so whether "
-            "its filed records are still inside the four-year floor is unknown rather than "
-            "known to be clear. The snapshot is written when a profile is created and "
-            "refreshed whenever a modelo is filed; a profile with none cannot be erased.",
-            context={
+        raise _bucket_delete_refusal(
+            BucketDeletionPreconditionCondition.RETENTION_SNAPSHOT_ASSESSABLE,
+            bucket_id=bucket_id,
+            facts={
                 "bucket_id": bucket_id,
-                "unassessable": "filing_retention_floor",
-                "retention_snapshot": "absent",
+                "retention_snapshot_present": False,
+                "retention_snapshot_readable": False,
             },
         ) from exc
     # Broad on purpose: every unreadable shape is a non-answer, never a cleared one.
     except Exception as exc:
-        raise BucketDeleteRefusedError(
-            "current custody deletion cannot assess the legal retention floor: this "
-            "profile's filing catalogue snapshot exists but could not be read and "
-            "authenticated, so its retention position is unknown rather than known to be "
-            "clear. Restore or re-record the snapshot before erasing this profile.",
-            context={
+        raise _bucket_delete_refusal(
+            BucketDeletionPreconditionCondition.RETENTION_SNAPSHOT_ASSESSABLE,
+            bucket_id=bucket_id,
+            facts={
                 "bucket_id": bucket_id,
-                "unassessable": "filing_retention_floor",
-                "retention_snapshot": "unreadable",
+                "retention_snapshot_present": True,
+                "retention_snapshot_readable": False,
             },
         ) from exc
 
