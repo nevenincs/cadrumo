@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:029dd10da3df77340fb120ba6efb86d6d9049eb32b7de6de9b15a611c17c687e'
+body_hash: 'sha256:9a17ffe2f2147a39a5baf73fa7cf79142b28961cf162967522022b03c54864d0'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -65,6 +65,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W02-P03-S21]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P03-S22]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P03-S23]]'
+  - '[[2026-08-24-registry-completeness-closure-W02-P03-S24]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-audit]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-036-2025-filing-authority-reference]]'
@@ -79,6 +80,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-modelo-220-2025-open-window-design-coverage-reference]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-390-2021-casilla-and-filing-authority-reference]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-721-structured-message-design-and-filing-boundary-reference]]'
+  - '[[2026-08-24-registry-completeness-closure-modelo-763-design-era-and-filing-boundary-reference]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-redeclaration-rag-audit]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
@@ -274,6 +276,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W02-P03-S21` - Adjudicate Modelo 220 revision 2025-y-siguientes open-window design coverage
 - `2026-08-24-registry-completeness-closure-W02-P03-S22` - Adjudicate Modelo 390 revision 2021 casilla surface and exact annual filing authority
 - `2026-08-24-registry-completeness-closure-W02-P03-S23` - Adjudicate Modelo 721 revision 2023-y-siguientes record-design availability and supported filing boundary
+- `2026-08-24-registry-completeness-closure-W02-P03-S24` - Adjudicate Modelo 763 revision 2011-y-siguientes design-era coverage
 
 ### plan
 
@@ -293,6 +296,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-modelo-220-2025-open-window-design-coverage-reference` - `registry-completeness-closure` reference: `modelo 220 2025 open window design coverage`
 - `2026-08-24-registry-completeness-closure-modelo-390-2021-casilla-and-filing-authority-reference` - `registry-completeness-closure` reference: `Modelo 390 2021 casilla and filing authority`
 - `2026-08-24-registry-completeness-closure-modelo-721-structured-message-design-and-filing-boundary-reference` - `registry-completeness-closure` reference: `Modelo 721 structured message design and filing boundary`
+- `2026-08-24-registry-completeness-closure-modelo-763-design-era-and-filing-boundary-reference` - `registry-completeness-closure` reference: `Modelo 763 design-era and filing boundary`
 
 ### research
 
