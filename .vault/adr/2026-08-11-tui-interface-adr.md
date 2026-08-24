@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-interface'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:eee4a0f030358b127514f67a87da548b064c4082f4304a30c2839ef32db24ac7'
+body_hash: 'sha256:95b5208bbc5deda78a25c4feeead1743444141939fb396897d2fb24955cdd806'
 related:
   - "[[2026-08-11-tui-interface-research]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -34,11 +34,14 @@ Modelo ownership and the interface conditions for retiring the flat adapter
 inbound artefact adapter, a CLI subpackage, a top-level package, nor a backend
 service.
 
-The canonical CLI remains `cadrumo.entrypoints.cli`. Its package, command tree,
-invocation syntax, output contracts, composition role, and business-logic-free
-boundary are unchanged. This interface concern does not edit CLI modules;
-reverse-consumer migration remains an integration step in the accepted
-`tui-architecture` roll-up plan.
+The canonical CLI remains `cadrumo.entrypoints.cli`, and the dedicated future
+full-screen application remains `cadrumo.entrypoints.tui`. The CLI exposes one
+root-owned frontend request, `aeat --tui [COMMAND_PATH]`; leaf commands do not define
+independent TUI policy or a second local flag. `TuiCapability.AVAILABLE` means that the
+resolved command has a real callable full-screen interface today. It does not claim
+that the interface has already migrated to the dedicated entrypoint. A command without
+such an interface returns the localized typed `TUI_NOT_IMPLEMENTED` refusal instead of
+ignoring the request or falling back to line mode.
 
 This record does not redefine operation lifecycle, supervision, settlement,
 cancellation, profile reconciliation, flow semantics, redaction, error
@@ -81,6 +84,12 @@ classification, CLI behavior, or MCP behavior.
   innermost kernel and `shared` has no bounded ownership criterion.
 - **Preserve selection through a Python CLI-to-TUI facade.** Rejected: it makes
   one entrypoint import another and conflicts with the accepted topology.
+- **Add independently owned leaf-specific `--tui` flags.** Rejected: frontend-selection
+  policy would vary accidentally by command and could drift from the command graph.
+- **Add one root-owned `aeat --tui` request with per-command capability metadata.**
+  Chosen: the root captures one request, the resolved command declares whether a
+  callable full-screen interface exists, and genuinely unimplemented commands return
+  the same typed refusal.
 - **Use the dedicated installed TUI entrypoint selected by the topology
   authority.** Chosen: packaging calls the TUI launcher directly; older
   frontend-selection consumers are reconciled by the roll-up integration lane.
@@ -101,6 +110,18 @@ classification, CLI behavior, or MCP behavior.
 - No CLI, MCP, backend, shared test utility, or development tool may import,
   load, re-export, annotate against, or register from the TUI package. TUI also
   cannot import CLI or MCP. This interface lane does not edit CLI files.
+- `--tui` has one authority at the CLI root. Introspection (help, version,
+  completion, and equivalent metadata traversal) takes precedence and exits without
+  launching or refusing a frontend.
+- `TuiCapability.AVAILABLE` records present callable behavior, not completion of the
+  dedicated-entrypoint migration. `NOT_IMPLEMENTED` means no callable full-screen
+  interface exists for that resolved command.
+- Until the dedicated migration replaces them, the already-existing bounded CLI
+  imports of `cadrumo.adapters.inbound.tui` used by an `AVAILABLE` command are
+  authorized transitional consumers. This adds no new consumer and is not evidence
+  that the launcher, packaging, reverse-consumer migration, or legacy deletion is complete.
+- Explicit `--tui` never silently falls back to line mode: an `AVAILABLE` command
+  invokes its current full-screen interface and a `NOT_IMPLEMENTED` command refuses.
 - No top-level bootstrap package is introduced. TUI composition belongs in
   `cadrumo.entrypoints.tui.launcher`; shared frontend-neutral construction, if
   required, remains with the owning application facade and accepts ports.
@@ -289,20 +310,28 @@ annotations, dynamic strings, registrations, re-exports, and facade mirrors.
 
 ### D3 - Facades and dedicated launch behavior
 
-`cadrumo.entrypoints.tui.__init__` exposes launcher-level API only. No Python
-module outside the TUI imports that facade; packaging and out-of-process smoke
-tests are the external boundaries. Area facades are public only to sibling TUI
-composition and export presentation factories/contracts, never Textual screen
-internals, operation authority, repositories, or application services.
+`cadrumo.entrypoints.tui.__init__` will expose launcher-level API only after the
+dedicated migration creates that boundary. Packaging and out-of-process smoke tests
+remain its eventual external boundaries. Area facades remain public only to sibling
+TUI composition and export presentation factories or contracts, never operation
+authority, repositories, or application services.
 
-The dedicated installed command is `cadrumo-tui`, targeting
+The target dedicated installed command remains `cadrumo-tui`, targeting
 `cadrumo.entrypoints.tui.launcher:main`; `python -m cadrumo.entrypoints.tui`
-delegates to the same function. The launcher returns process status only after
+will delegate to the same function. This target is not yet implemented and this
+amendment does not mark it complete. The launcher returns process status only after
 the TUI application closes; authoritative operation outcomes remain supervisor
 receipts displayed in the application, not a CLI envelope or subprocess result
 protocol. Reconciliation of older full-screen selection behavior is owned by
 the roll-up integration lane and does not authorize this interface lane to edit
 CLI.
+
+Before that migration completes, `aeat --tui [COMMAND_PATH]` dispatches only commands
+whose graph metadata is `TuiCapability.AVAILABLE`. Such a declaration requires a real
+callable full-screen interface and may route through an existing bounded
+`cadrumo.adapters.inbound.tui` consumer. All other resolved commands return localized
+`TUI_NOT_IMPLEMENTED`. The migration lane must replace the transitional imports and
+remove the legacy tree; present availability is not migration evidence.
 
 ### D4 - Launcher and application composition
 
@@ -540,7 +569,11 @@ reservation avoids manufacturing an API.
 - The old inbound TUI adapter disappears without a facade.
 - This interface lane does not edit or restructure CLI; roll-up integration
   removes legacy TUI consumers under the accepted dedicated-launch contract.
-- TUI, CLI, and MCP do not import one another.
+- In the target topology TUI, CLI, and MCP do not import one another; the bounded
+  transitional imports above remain migration debt until replaced.
+- Existing callable profile and workflow screens may truthfully declare `AVAILABLE`
+  while they remain in the inbound TUI location. This transitional availability
+  neither narrows nor completes the accepted dedicated TUI migration.
 - `components` is the sole reusable TUI-local seam; no TUI core/shared exists.
 - No top-level bootstrap package is introduced.
 - Profile sync gains review without reconciliation/persistence authority.

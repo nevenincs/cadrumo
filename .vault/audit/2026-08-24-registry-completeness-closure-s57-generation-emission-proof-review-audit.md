@@ -5,31 +5,12 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:c2bce951e21be3dd679cb80794ceaabf83312e6e118351833f8ea504de1cafb9'
+body_hash: 'sha256:02451e28f371a4812535ecfe7f983da1c316fe0b0a073d54236aa01705974426'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
   - "[[2026-08-24-registry-completeness-closure-adr]]"
   - "[[2026-08-24-registry-completeness-closure-W01-P02-S57]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace registry-completeness-closure with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `registry-completeness-closure` audit: `S57 generation and emission proof review`
 
@@ -77,4 +58,3 @@ boundary.
 - Add fabricated, missing-file, changed-file, changed-payload, wrong-length,
   wrong-offset, and identity-conflict regressions, including a Modelo 111 case
   demonstrating that well-shaped invented proof cannot satisfy closure.
-

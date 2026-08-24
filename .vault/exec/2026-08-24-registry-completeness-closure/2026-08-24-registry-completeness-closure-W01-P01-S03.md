@@ -30,4 +30,3 @@ The roll-up's evidence-restoration step is complete. The temporal authority-grad
 ## Notes
 
 No production behavior changed. The next required action is the independent authority-grade ladder review; it must assess the implementation and record independently before temporal S03 is reconciled.
-

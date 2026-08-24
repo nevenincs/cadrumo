@@ -45,4 +45,3 @@ Delegation preserves one CLI envelope authority while removing backend-shaped co
 ## Consequences
 
 Future custody verbs must extend the existing action-envelope schema before exposure; they cannot introduce a parallel envelope.
-

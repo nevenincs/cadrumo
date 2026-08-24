@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#tui-architecture'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:0bb5c54eb266807c9513146d42cbcd0a7d9bdd0c003ef1b07f566f48e44b20b4'
+body_hash: 'sha256:ef63f70bebf75b97f0f79cb2aca5e5d5db686152a737b0d6ea87361c72ed7d42'
 step_id: 'S28'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -20,16 +20,19 @@ related:
 ## Description
 
 - Add a real encrypted-reference, filesystem-journal, and filesystem-lease recovery proof.
-- Prove detach leaves the durable interaction and ordered cursor replay authoritative.
-- Prove a consumed response remains single-use across detached supervisor restart.
-- Prove expired-owner checkpoint resumption and unknown interruption through real lease reconciliation.
+- Prove detach leaves the durable interaction and ordered cursor replay authoritative, including a fresh observer replaying only an event committed after a saved nonzero cursor.
+- Prove a consumed response remains single-use across detached same-owner supervisor reconstruction.
+- Prove cooperative cancellation and aggregate-deadline races persist their request, acknowledgement, settling state, and terminal settlement through the real journal.
+- Prove expired-owner checkpoint resumption reloads the durable successor and exact takeover lease; prove unknown interruption reloads the reconciliation event and released lease state.
 
 ## Outcome
 
-`uv run --no-sync pytest -q -n 0 -m integration src/cadrumo/application/operations/tests/test_supervisor_recovery.py` passed: 4 passed.
+`uv run --no-sync pytest -q -n 0 -m integration src/cadrumo/application/operations/tests/test_supervisor_recovery.py` passed: 6 passed in 3.25 seconds.
 
-S28 remains open and uncommitted for independent Sol review. The offline RAG waiver was used; grounding read the accepted architecture, implementation research, live supervisor and persistence/recovery authority, and targeted duplicate-test inventory.
+`uv run --no-sync ruff check src/cadrumo/application/operations/tests/test_supervisor_recovery.py` passed.
+
+S28 remains open and uncommitted for independent review. The shared plan row was deliberately left unchanged; semantic discovery grounded the accepted architecture, implementation research, live supervisor, real filesystem persistence authority, and targeted test inventory.
 
 ## Notes
 
-The pre-existing supervisor suite retains its focused cancellation and aggregate-deadline race proofs; this S28 file adds the missing dedicated durable recovery boundary rather than mirroring those S24 controls.
+The S28 module now owns its cancellation and aggregate-deadline race evidence rather than delegating those clauses to S24. The duplicate-response proof is intentionally limited to same-owner supervisor reconstruction; expired-owner takeover remains established only by the reconciliation cases.

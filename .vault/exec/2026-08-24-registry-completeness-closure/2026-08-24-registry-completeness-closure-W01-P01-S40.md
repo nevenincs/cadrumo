@@ -11,9 +11,6 @@ related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
 ---
 
-
-
-
 # Enforce requested authority grade at the selected-revision snapshot boundary and prove lower-grade escalation refuses
 
 ## Scope

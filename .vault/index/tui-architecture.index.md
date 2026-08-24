@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#tui-architecture'
-date: '2026-08-16'
-modified: '2026-08-16'
+date: '2026-08-24'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:99d785da6919ff43aa32155dba2012ced498f94cbef9796b5938f6dfe8682020'
+body_hash: 'sha256:070dd0ba49410940804ea5d9732f6afef89772395191f4d59e7e743e9cf0cd06'
 related:
   - '[[2026-08-11-tui-architecture-W01-P01-S01]]'
   - '[[2026-08-11-tui-architecture-W01-P01-S02]]'
@@ -35,6 +35,22 @@ related:
   - '[[2026-08-11-tui-architecture-W02-P05-S26]]'
   - '[[2026-08-11-tui-architecture-W02-P05-S27]]'
   - '[[2026-08-11-tui-architecture-W02-P05-S28]]'
+  - '[[2026-08-11-tui-architecture-W02-P18-S105]]'
+  - '[[2026-08-11-tui-architecture-W02-P18-S106]]'
+  - '[[2026-08-11-tui-architecture-W02-P18-S107]]'
+  - '[[2026-08-11-tui-architecture-W02-P18-S108]]'
+  - '[[2026-08-11-tui-architecture-W02-P18-S109]]'
+  - '[[2026-08-11-tui-architecture-W02-P18-S110]]'
+  - '[[2026-08-11-tui-architecture-W02-P18-S111]]'
+  - '[[2026-08-11-tui-architecture-W02-P18-S112]]'
+  - '[[2026-08-11-tui-architecture-W03-P06-S113]]'
+  - '[[2026-08-11-tui-architecture-W03-P06-S29]]'
+  - '[[2026-08-11-tui-architecture-W03-P06-S30]]'
+  - '[[2026-08-11-tui-architecture-W03-P06-S31]]'
+  - '[[2026-08-11-tui-architecture-W03-P06-S32]]'
+  - '[[2026-08-11-tui-architecture-W03-P06-S33]]'
+  - '[[2026-08-11-tui-architecture-W03-P07-S34]]'
+  - '[[2026-08-11-tui-architecture-W03-P07-S35]]'
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-11-tui-architecture-plan]]'
   - '[[2026-08-11-tui-architecture-research]]'
@@ -66,6 +82,19 @@ related:
   - '[[2026-08-14-tui-architecture-s25-review-audit]]'
   - '[[2026-08-14-tui-architecture-s26-review-audit]]'
   - '[[2026-08-14-tui-architecture-s27-review-audit]]'
+  - '[[2026-08-24-tui-architecture-censo-operation-authority-reconciliation-research]]'
+  - '[[2026-08-24-tui-architecture-command-enrollment-honesty-review-audit]]'
+  - '[[2026-08-24-tui-architecture-command-enrollment-parity-reference]]'
+  - '[[2026-08-24-tui-architecture-invocation-policy-review-audit]]'
+  - '[[2026-08-24-tui-architecture-s113-continuation-review-audit]]'
+  - '[[2026-08-24-tui-architecture-s28-recovery-review-audit]]'
+  - '[[2026-08-24-tui-architecture-s29-censal-executor-review-audit]]'
+  - '[[2026-08-24-tui-architecture-s30-operand-review-audit]]'
+  - '[[2026-08-24-tui-architecture-s31-exact-apply-review-audit]]'
+  - '[[2026-08-24-tui-architecture-s32-facade-review-audit]]'
+  - '[[2026-08-24-tui-architecture-s33-conformance-review-audit]]'
+  - '[[2026-08-24-tui-architecture-s34-filed-history-executor-review-audit]]'
+  - '[[2026-08-24-tui-architecture-s35-filed-history-dry-run-review-audit]]'
 ---
 
 # `tui-architecture` feature index
@@ -108,9 +137,21 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-14-tui-architecture-s25-review-audit` - `tui-architecture` audit: `S25 failure normalization and diagnostic correlation review`
 - `2026-08-14-tui-architecture-s26-review-audit` - `tui-architecture` audit: `W02.P05.S26 startup reconciliation final review`
 - `2026-08-14-tui-architecture-s27-review-audit` - `tui-architecture` audit: `S27 terminal lifecycle review`
+- `2026-08-24-tui-architecture-command-enrollment-honesty-review-audit` - `tui-architecture` audit: `TUI command enrollment honesty review`
+- `2026-08-24-tui-architecture-invocation-policy-review-audit` - `tui-architecture` audit: `invocation policy review`
+- `2026-08-24-tui-architecture-s113-continuation-review-audit` - `tui-architecture` audit: `S113 durable continuation safety review`
+- `2026-08-24-tui-architecture-s28-recovery-review-audit` - `tui-architecture` audit: `S28 recovery review`
+- `2026-08-24-tui-architecture-s29-censal-executor-review-audit` - `tui-architecture` audit: `S29 resumable censal executor review`
+- `2026-08-24-tui-architecture-s30-operand-review-audit` - `tui-architecture` audit: `S30 censal reviewed operand review`
+- `2026-08-24-tui-architecture-s31-exact-apply-review-audit` - `tui-architecture` audit: `S31 exact reviewed apply review`
+- `2026-08-24-tui-architecture-s32-facade-review-audit` - `tui-architecture` audit: `S32 census operation facade review`
+- `2026-08-24-tui-architecture-s33-conformance-review-audit` - `tui-architecture` audit: `S33 censal lifecycle conformance review`
+- `2026-08-24-tui-architecture-s34-filed-history-executor-review-audit` - `tui-architecture` audit: `S34 filed-history executor review`
+- `2026-08-24-tui-architecture-s35-filed-history-dry-run-review-audit` - `tui-architecture` audit: `S35 filed-history dry-run review`
 
 ### exec
 
+- `2026-08-11-tui-architecture-W03-P06-S32` - Export the census operation definition through the user-profile public facade
 - `2026-08-11-tui-architecture-W01-P01-S01` - Generate the exact legacy TUI migration manifest with module, symbol, consumer, owner lane, replacement, and deletion proof
 - `2026-08-11-tui-architecture-W01-P01-S02` - Enforce the hexagonal TUI boundary, launcher-only adapter wiring, and backend prohibition contracts
 - `2026-08-11-tui-architecture-W01-P01-S03` - Reject static, dynamic, type-only, re-export, registration, Textual-location, and private-facade bypasses
@@ -138,11 +179,31 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W02-P05-S26` - Reconcile non-terminal journal entries into resumed, recovered, interrupted, or orphaned states at startup
 - `2026-08-11-tui-architecture-W02-P05-S27` - Prove every terminal condition waits for resource cleanup and preserves the truthful effect axis
 - `2026-08-11-tui-architecture-W02-P05-S28` - Prove detach, cursor replay, duplicate response refusal, cancellation races, deadline races, and restart reconciliation with real journal storage
+- `2026-08-11-tui-architecture-W02-P18-S105` - Declare and capture the global --tui root option
+- `2026-08-11-tui-architecture-W02-P18-S106` - Refuse unenrolled TUI routes through a typed localized command-boundary error
+- `2026-08-11-tui-architecture-W02-P18-S107` - Remove the duplicate profile-local TUI option and align password boundary tests
+- `2026-08-11-tui-architecture-W02-P18-S108` - Prove global TUI refusal and locale parity across representative command facets
+- `2026-08-11-tui-architecture-W02-P18-S109` - Audit every production full-screen launch site and distinguish current callable availability from dedicated-entrypoint migration completion
+- `2026-08-11-tui-architecture-W02-P18-S110` - Enroll the complete existing eight-route TUI surface and remove the accidental leaf-local option
+- `2026-08-11-tui-architecture-W02-P18-S111` - Prove the graph-wide available-route fixed point, global-only option placement, implemented-route dispatch, and representative unimplemented refusals
+- `2026-08-11-tui-architecture-W02-P18-S112` - Reconcile the accepted availability decision with the still-open dedicated-entrypoint migration and complete a fresh honesty review
+- `2026-08-11-tui-architecture-W03-P06-S113` - Implement supervisor-owned post-submission secure checkpoint publication, durable response continuation scheduling, and restart recovery without reacquisition
+- `2026-08-11-tui-architecture-W03-P06-S29` - Implement the resumable census executor across preflight, Clave device wait, remote read, proposal construction, interaction wait, exact apply, and settlement
+- `2026-08-11-tui-architecture-W03-P06-S30` - Persist the encrypted reviewed observation, baseline revision and digest, field intents, and proposed-effect digest behind a secure reference
+- `2026-08-11-tui-architecture-W03-P06-S31` - Apply only the approved censal proposal through the existing cotejo authority and refuse stale baselines without effect
+- `2026-08-11-tui-architecture-W03-P06-S33` - Prove the complete censal operation lifecycle and effect boundaries
+- `2026-08-11-tui-architecture-W03-P07-S34` - Implement the recorded filed-history executor across discovery, register access, pair walk, capture, persistence, finalization, provenance, wallet, notifications, and settlement
+- `2026-08-11-tui-architecture-W03-P07-S35` - Expose dry-run on the composed filed-history operation with identical discovery scope and effect none
 
 ### plan
 
 - `2026-08-11-tui-architecture-plan` - `tui-architecture` plan
 
+### reference
+
+- `2026-08-24-tui-architecture-command-enrollment-parity-reference` - `tui-architecture` reference: `TUI command enrollment parity`
+
 ### research
 
 - `2026-08-11-tui-architecture-research` - `tui-architecture` research: `Canonical operation envelope and supervisor API`
+- `2026-08-24-tui-architecture-censo-operation-authority-reconciliation-research` - `tui-architecture` research: `Censo operation authority reconciliation`

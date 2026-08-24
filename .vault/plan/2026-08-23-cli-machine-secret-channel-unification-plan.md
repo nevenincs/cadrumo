@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#cli-machine-secret-channel-unification'
 date: '2026-08-23'
-modified: '2026-08-23'
-body_hash: 'sha256:18f1eb7982216f0c1acf3727da5f13b8b52574c084ac403769755d22159c640b'
+modified: '2026-08-24'
+body_hash: 'sha256:e9aa9de35f1c4a01770359fb19bd4f0a3f14a057bb8900ae29a3ff2277dbf082'
 tier: L3
 related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'

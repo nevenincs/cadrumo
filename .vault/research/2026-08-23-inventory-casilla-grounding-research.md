@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#inventory-casilla-grounding'
 date: '2026-08-23'
-modified: '2026-08-23'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:6f802210dda5700a4c78288fc5125b36879f7b4c532eda775859ca6650a03806'
+body_hash: 'sha256:8908e6dc5d0947e496b2c7e9451f54dc57b896b606fb0b73e404fcd8ddcdaef3'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
   - "[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]"

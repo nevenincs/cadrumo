@@ -43,4 +43,3 @@ sources from `record_design` to another valid source kind, proves
 source-kind guard makes the focused test red. Keep the proof in
 `test_embedded_envelope_source_authority.py` beside the existing identity and
 digest mutations.
-

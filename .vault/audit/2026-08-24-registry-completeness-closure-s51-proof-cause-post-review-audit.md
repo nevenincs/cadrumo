@@ -47,4 +47,3 @@ check.
 Repair S51's execution record through the owning execution-document flow,
 record the targeted command and result, and re-attest its scoped vault checks
 before treating the Step as complete.
-

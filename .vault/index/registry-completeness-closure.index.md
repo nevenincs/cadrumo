@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:985aa12032af089291f63617a09078c609e896827a283bea09dd72422a2452f4'
+body_hash: 'sha256:51f666d2c0e3ac849c764ec7ddf8c39207425c2f3bf382138bcfcfdf5f9b95c9'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -45,6 +45,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S63]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S64]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S65]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S66]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
@@ -180,6 +181,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P02-S63` - Wire canonical live source-connectivity and filing-export proof authorities into the registry-conformance closure CLI, retain an explicit offline no-proof mode, type both injection ports precisely, and prove complete-live versus offline-refusal CLI outcomes.
 - `2026-08-24-registry-completeness-closure-W01-P02-S64` - Remove fabricated strict proof authorities and digests from closure CLI tests, exercise the actual CLI with canonical live loaders and real evidence only, prove live-versus-offline refusal distinctions, keep eligibility unreachable until durable filing proof exists, prevent injected claims from bypassing the gate, and add a mutation bite rejecting canned proof
 - `2026-08-24-registry-completeness-closure-W01-P02-S65` - Add a hostile RegistryClosureAuthorities CLI context backed by eligible real protocol implementations, prove the shipped command ignores it, restore the exact former find_object authority branch for a mutation bite, and retain non-CLI loader injection
+- `2026-08-24-registry-completeness-closure-W01-P02-S66` - Repair S65 execution-record EOF whitespace and distinguish its scoped diff assertion from commit-wide git show --check, then re-attest both checks.
 
 ### plan
 

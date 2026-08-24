@@ -44,4 +44,3 @@ remain outside the explicit-path commit set.
 ## Recommendations
 
 Close S195 as witnessed. No remediation or follow-up finding is required.
-

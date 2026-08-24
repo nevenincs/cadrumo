@@ -43,4 +43,3 @@ Transport safety can remain stable while custody formats change through explicit
 ## Consequences
 
 Optional recovery never changes archive completeness. Transport code cannot choose an unlock mechanism.
-

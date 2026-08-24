@@ -69,4 +69,3 @@ not an exact per-revision source mapping.
 - Complete `W01.P02.S47`: add exact revision, filing-year, and period scope to
   census destinations, then prove the Modelo 100 and 193 decisions cannot
   cross-satisfy other revisions.
-

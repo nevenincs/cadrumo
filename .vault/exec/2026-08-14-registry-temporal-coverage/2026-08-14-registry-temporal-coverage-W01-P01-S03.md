@@ -31,4 +31,3 @@ The required S03 enforcement is already present in the live registry-build path 
 ## Notes
 
 No production or test files changed. The temporal-plan S03 row remains open intentionally: its independent review is owned by the roll-up W01.P01.S04, and only the subsequent reconciliation step may close the temporal row.
-

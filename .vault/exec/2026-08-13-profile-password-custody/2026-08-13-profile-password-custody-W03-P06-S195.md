@@ -45,4 +45,3 @@ The worktree contained extensive concurrent changes, including registry
 authority work. None was modified, staged, or captured by this Step. This
 record, the CLI-owned plan checkbox, generated feature index, and formal review
 are the only S195 changes.
-

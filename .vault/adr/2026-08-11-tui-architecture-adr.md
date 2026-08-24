@@ -3,18 +3,19 @@ tags:
   - '#adr'
   - '#tui-architecture'
 date: '2026-08-11'
-modified: '2026-08-15'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:ff3c08207c6716b6f43904092680cf4f4cc672ab4253fb16d8e296854647e144'
+body_hash: 'sha256:ccb2670aed7866750bcb595e97fde73702a03256c6ed1c42b652bde0c74aa750'
 related:
-  - "[[2026-08-11-tui-architecture-research]]"
-  - "[[2026-08-11-tui-interface-research]]"
-  - "[[2026-08-11-tui-interface-adr]]"
-  - "[[2026-07-23-tui-wizard-substrate-adr]]"
-  - "[[2026-08-09-cli-action-envelope-hardening-adr]]"
-  - "[[2026-07-24-profile-bundle-tui-adr]]"
-  - "[[2026-07-25-censal-profile-autofill-adr]]"
-  - "[[2026-08-08-sync-control-surface-adr]]"
+  - '[[2026-08-11-tui-architecture-research]]'
+  - '[[2026-08-11-tui-interface-research]]'
+  - '[[2026-08-11-tui-interface-adr]]'
+  - '[[2026-07-23-tui-wizard-substrate-adr]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
+  - '[[2026-07-24-profile-bundle-tui-adr]]'
+  - '[[2026-07-25-censal-profile-autofill-adr]]'
+  - '[[2026-08-08-sync-control-surface-adr]]'
+  - '[[2026-08-24-tui-architecture-censo-operation-authority-reconciliation-research]]'
 ---
 
 # `tui-architecture` adr: `Application-owned operation envelope and supervisor API` | (**status:** `accepted`)
@@ -312,6 +313,18 @@ exit-code contracts. MCP may relay progress and cancellation through transport
 facilities, but transport timeout or disconnection cannot falsely settle the
 application operation.
 
+The CLI exposes one root-owned global `--tui` request before command execution. After
+the complete path is resolved, `TuiCapability.AVAILABLE` means a real callable
+full-screen interface exists today and is invoked; `NOT_IMPLEMENTED` returns the
+localized typed `TUI_NOT_IMPLEMENTED` refusal. Explicit `--tui` never falls back to
+line mode. Help, version, completion, and equivalent introspection take precedence.
+
+Availability and migration state are separate facts. Until the dedicated
+`cadrumo.entrypoints.tui` launcher replaces them, the existing bounded CLI consumers
+of `cadrumo.adapters.inbound.tui` remain authorized for commands marked `AVAILABLE`.
+No new legacy consumer may be added. This transitional exception does not satisfy any
+dedicated-launcher, packaging, reverse-consumer, legacy-deletion, or campaign-close gate.
+
 ### D7a - Generic operation modal
 
 `OperationModal` is the operation-agnostic Textual projection of an
@@ -354,6 +367,13 @@ Opaque action callables, frontend-owned `asyncio.run`, direct outbound calls
 from inbound projections, and unregistered worker-based mutations fail the
 gate. Permanent allowlists and aggregate counts are insufficient.
 
+The command-graph gate distinguishes callable availability from dedicated-migration
+completion. It proves every `AVAILABLE` command joins a real full-screen interface,
+every `NOT_IMPLEMENTED` request returns the typed refusal, explicit requests never
+fall back to line mode, and introspection never launches a frontend. A separate
+migration gate remains red while an authorized transitional CLI-to-inbound-TUI import
+exists; capability tests cannot satisfy or waive that gate.
+
 The accepted recovery-action census remains separate and authoritative for
 `ActionReference`, verdict, command-leaf, result-schema, and MCP exposure joins.
 Where a recovery action dispatches an operation, a third join validates exactly
@@ -393,14 +413,30 @@ must span Cl@ve external-device waiting, remote read, durable review, apply, and
 resource settlement. The exact reviewed operand is applied through the existing
 `apply_cotejo` authority; this ADR creates no second census writer.
 
-This operational requirement does not silently choose among the conflicting
-accepted census snapshot/autofill policies. Before this ADR can be accepted, the
-Modelo 036 control decision must explicitly reconcile
-`2026-05-12-cli-workflow-redesign-modelo-036-037-foundation-adr`,
-`2026-07-25-censal-profile-autofill-adr`, and
-`2026-08-08-sync-control-surface-adr`, naming the surviving consent, snapshot,
-and apply authority. Until then, the census declaration is an acceptance target,
-not an authorization to change current merge policy.
+The accepted census policies are reconciled as follows. Explicit review remains
+mandatory because censo autofill reconciles AEAT observations with an
+operator's declarations; the generic sync-control ruling for mirrors and
+observation caches does not displace that consent boundary. The reviewed
+observation, baseline revision and digest, field intents, and proposed-effect
+digest form one encrypted, content-addressed operand. Approval binds the exact
+operand and baseline. Apply delegates exclusively to `apply_cotejo` inside the
+supervisor's irreversible section; no operation module may reproduce its merge
+or write path. A stale baseline returns to review or refuses with effect `NONE`.
+Resume consumes the persisted interaction checkpoint and secure operand and
+must not repeat the remote read after review. These refinements are grounded in
+`2026-08-24-tui-architecture-censo-operation-authority-reconciliation-research`.
+
+Checkpoint publication is supervisor-owned. The executor context exposes a
+typed secure-operand store for results produced after submission; publishing a
+review interaction atomically persists that operand and journals only its
+content digest. Consuming an apply or reject response durably records the
+continuation intent and schedules the registered executor from the same
+checkpoint. Startup reconciliation must recover both unconsumed review waits
+and consumed-but-unsettled continuations from that durable state. Initial
+execution may perform remote acquisition once; every review, response, and
+restart continuation resolves the stored operand and is forbidden to reacquire.
+The sole profile mutation remains the `apply_cotejo` compare-and-swap inside
+the supervisor's irreversible section.
 
 Register previous-filing history pull-all as one scoped `RECORDED` operation,
 not initially resumable. The nested bulk-capture service already supports
@@ -547,6 +583,17 @@ Packaging adds a dedicated console entry point targeting
 `cadrumo.entrypoints.tui.launcher:main` directly. CLI modules do not import the
 TUI to start it. The existing automatic CLI-to-TUI import path is retired rather
 than kept as a shim.
+
+The human CLI exposes `aeat --tui [COMMAND_PATH]` as one root-owned routing request.
+While the dedicated launcher remains incomplete, an `AVAILABLE` command may invoke its
+existing callable full-screen interface through the bounded legacy CLI-to-inbound-TUI
+seam. A genuinely unimplemented command refuses with `TUI_NOT_IMPLEMENTED`; explicit
+`--tui` never falls back to line mode. Introspection takes precedence.
+
+This temporary authorization is not the target topology. Packaging must still add the
+dedicated launcher, migrate every enrolled route and reverse consumer, remove CLI
+imports of TUI implementation, and delete the legacy inbound TUI without a compatibility
+facade. Current capability metadata cannot mark any of those steps complete.
 
 That retirement cannot land ahead of a replacement for the accepted frontend
 selection contract. Existing commands preserve line-mode fallback and

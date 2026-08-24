@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#profile-registration-password-policy'
 date: '2026-08-22'
-modified: '2026-08-22'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:ff27f48857f4e060ae56a9eb9ec2b6c177859f5020c30164ebbb99453811b79d'
+body_hash: 'sha256:ec38152a0d0a53d7ab04aaef5c647765aa43827dda282041adfc532d9aa65e1d'
 related:
   - "[[2026-08-22-profile-registration-password-policy-holistic-credential-capability-research]]"
   - "[[2026-08-13-profile-password-custody-rollup-adr]]"
@@ -57,7 +57,7 @@ custody guarantees accepted by `2026-08-13-profile-password-custody-rollup-adr`.
 
 ## Constraints
 
-- Profile passwords contain 15 through 256 Unicode scalar values and at most 1,024
+- Profile passwords contain 8 through 256 Unicode scalar values and at most 1,024
   strict UTF-8 bytes. Surrogates are refused. No normalization, trimming, folding,
   replacement, case conversion, or composition enforcement applies.
 - Core validation is pure and retains, logs, persists, hashes, or returns no password.
@@ -79,8 +79,9 @@ custody guarantees accepted by `2026-08-13-profile-password-custody-rollup-adr`.
 
 A public core profile-password contract owns the named scalar and byte bounds, a finite
 typed refusal-reason enumeration, and a pure assessment. Accepted assessment keeps the
-existing advisory strength band as independent information. The generic eight-character
-symbol no longer governs any profile capability, and obsolete profile aliases, duplicate
+existing advisory strength band as independent information. The profile-specific core
+contract owns its own eight-character minimum; it does not alias a generic credential
+constant even when the numeric value is equal. Obsolete profile aliases, duplicate
 constants, and compatibility paths are removed with their consumers.
 
 Registration and password change assess before any custody or transaction work, mapping
@@ -102,7 +103,7 @@ TUI and scripted CLI render only localized application messages. Expected typed 
 never receive generic INTERNAL guidance, and public envelopes never combine locale layers
 or expose raw password diagnostics.
 
-Acceptance requires scalar boundaries 14/15/256/257; independent byte boundaries
+Acceptance requires scalar boundaries 7/8/256/257; independent byte boundaries
 1,024/1,025; surrogate refusal; composed/decomposed exact preservation; no mutation on
 registration or rotation refusal; parity across direct application, live TUI feedback,
 TUI submission, and scripted CLI; non-oracular login and restore; unchanged operational

@@ -5,29 +5,10 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:e55c0697ad051abc1604e984dda39bbe6388a9d6afcdb43f7707164001cafebb'
+body_hash: 'sha256:a95a03c8af5b14544076f36d836f9b72c5ade7e1bfc250fa302a6df7575d24a6'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace registry-completeness-closure with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `registry-completeness-closure` audit: `S47 independent exact-scope post-review`
 
@@ -64,4 +45,3 @@ Focused evidence: Ruff passed for every changed Python file; 20 focused tests
 passed. Two census-discovery tests were blocked by concurrent uncommitted CLI
 command-spec work at `_modelo_work_command_specs.py:208`, matching the S47
 execution record and outside the reviewed commit.
-

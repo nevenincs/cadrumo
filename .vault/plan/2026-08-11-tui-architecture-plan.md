@@ -3,12 +3,12 @@ tags:
   - '#plan'
   - '#tui-architecture'
 date: '2026-08-11'
-modified: '2026-08-14'
-body_hash: 'sha256:5e738ed356dcfe11d2e0553f318d8acad8114dbb3fe2cba8e6654692944b4762'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-11-tui-architecture-research]]'
+modified: '2026-08-24'
+body_hash: 'sha256:3a587f13d2315bed2247b51d92ec5e6f97f11b7becb94932beaadc7426e4ff6e'
 ---
 
 # `tui-architecture` plan
@@ -85,7 +85,20 @@ Implement authoritative submission, observation, response, cancellation, deadlin
 - [x] `W02.P05.S25` - Normalize expected refusals and unexpected failures into safe terminal diagnostics while retaining correlation evidence; `src/cadrumo/application/operations/_supervisor.py`.
 - [x] `W02.P05.S26` - Reconcile non-terminal journal entries into resumed, recovered, interrupted, or orphaned states at startup; `src/cadrumo/application/operations/_supervisor.py`.
 - [x] `W02.P05.S27` - Prove every terminal condition waits for resource cleanup and preserves the truthful effect axis; `src/cadrumo/application/operations/tests/test_supervisor_lifecycle.py`.
-- [ ] `W02.P05.S28` - Prove detach, cursor replay, duplicate response refusal, cancellation races, deadline races, and restart reconciliation with real journal storage; `src/cadrumo/application/operations/tests/test_supervisor_recovery.py`.
+- [x] `W02.P05.S28` - Prove detach, cursor replay, duplicate response refusal, cancellation races, deadline races, and restart reconciliation with real journal storage; `src/cadrumo/application/operations/tests/test_supervisor_recovery.py`.
+
+### Phase `W02.P18` - Explicit TUI invocation contract
+
+Expose one global TUI request now, refuse every unenrolled command path explicitly, and preserve the dedicated sibling-entrypoint boundary.
+
+- [x] `W02.P18.S105` - Declare and capture the global --tui root option; `src/cadrumo/entrypoints/cli/_root_command_specs.py, src/cadrumo/entrypoints/cli/_root_cli.py`.
+- [x] `W02.P18.S106` - Refuse unenrolled TUI routes through a typed localized command-boundary error; `src/cadrumo/entrypoints/cli/_command_runtime.py, src/cadrumo/entrypoints/cli/_errors.py, src/cadrumo/core/errors/registry/_entrypoints.py`.
+- [x] `W02.P18.S107` - Remove the duplicate profile-local TUI option and align password boundary tests; `src/cadrumo/entrypoints/cli/_config, src/cadrumo/core, src/cadrumo/application/user_profile, src/cadrumo/adapters/inbound/tui`.
+- [x] `W02.P18.S108` - Prove global TUI refusal and locale parity across representative command facets; `src/cadrumo/entrypoints/cli/tests, src/cadrumo/locales`.
+- [x] `W02.P18.S109` - Audit every production full-screen launch site and distinguish current callable availability from dedicated-entrypoint migration completion; `.vault/reference/2026-08-24-tui-architecture-command-enrollment-parity-reference.md`.
+- [x] `W02.P18.S110` - Enroll the complete existing eight-route TUI surface and remove the accidental leaf-local option; `src/cadrumo/entrypoints/cli/_config, src/cadrumo/entrypoints/cli/_modelo_work_command_specs.py, src/cadrumo/entrypoints/cli/_modelo_nonwork_command_specs.py`.
+- [x] `W02.P18.S111` - Prove the graph-wide available-route fixed point, global-only option placement, implemented-route dispatch, and representative unimplemented refusals; `src/cadrumo/entrypoints/cli/tests/test_global_tui_request.py, src/cadrumo/entrypoints/cli/_config/tests`.
+- [x] `W02.P18.S112` - Reconcile the accepted availability decision with the still-open dedicated-entrypoint migration and complete a fresh honesty review; `.vault/adr/2026-08-11-tui-architecture-adr.md, .vault/adr/2026-08-11-tui-interface-adr.md, .vault/audit`.
 
 ## Wave `W03` - Application operation executors
 
@@ -95,18 +108,19 @@ Adapt current effectful workflows to the supervisor contract, beginning with cen
 
 Model Modelo 036 acquisition, Clave device waiting, exact review, apply or reject, and cleanup as one resumable operation.
 
-- [ ] `W03.P06.S29` - Implement the resumable census executor across preflight, Clave device wait, remote read, proposal construction, interaction wait, exact apply, and settlement; `src/cadrumo/application/user_profile/_censal_operation.py`.
-- [ ] `W03.P06.S30` - Persist the encrypted reviewed observation, baseline revision and digest, field intents, and proposed-effect digest behind a secure reference; `src/cadrumo/application/user_profile/_censal_operation.py`.
-- [ ] `W03.P06.S31` - Apply only the approved proposal through the existing cotejo authority and refuse a stale baseline without effect; `src/cadrumo/application/user_profile/_cotejo_apply.py`.
-- [ ] `W03.P06.S32` - Export the census operation definition through the user-profile public facade; `src/cadrumo/application/user_profile/__init__.py`.
-- [ ] `W03.P06.S33` - Prove no write before apply, per-field and apply-all exactness, reject, stale refusal, detach and resume, cancellation boundaries, and cleanup; `src/cadrumo/application/user_profile/tests/test_censal_operation.py`.
+- [x] `W03.P06.S113` - Implement supervisor-owned post-submission secure checkpoint publication, durable response continuation scheduling, and restart recovery without reacquisition; `src/cadrumo/application/operations/_executor.py, src/cadrumo/application/operations/_interactions.py, src/cadrumo/application/operations/_supervisor.py, src/cadrumo/application/operations/tests`.
+- [x] `W03.P06.S30` - Persist the encrypted reviewed observation, baseline revision and digest, field intents, and proposed-effect digest behind a secure reference; `src/cadrumo/application/user_profile/_censal_operation.py`.
+- [x] `W03.P06.S31` - Apply only the approved proposal through the existing cotejo authority and refuse a stale baseline without effect; `src/cadrumo/application/user_profile/_cotejo_apply.py`.
+- [x] `W03.P06.S29` - Implement the resumable census executor across preflight, Clave device wait, remote read, proposal construction, interaction wait, exact apply, and settlement; `src/cadrumo/application/user_profile/_censal_operation.py`.
+- [x] `W03.P06.S32` - Export the census operation definition through the user-profile public facade; `src/cadrumo/application/user_profile/__init__.py`.
+- [x] `W03.P06.S33` - Prove no write before apply, per-field and apply-all exactness, reject, stale refusal, detach and resume, cancellation boundaries, and cleanup; `src/cadrumo/application/user_profile/tests/test_censal_operation.py`.
 
 ### Phase `W03.P07` - Filed-history operation
 
 Model previous-filing history pull as one recorded, partial-effect operation with stage and unit progress.
 
-- [ ] `W03.P07.S34` - Implement the recorded filed-history executor across discovery, register access, pair walk, capture, persistence, finalization, provenance, wallet, notifications, and settlement; `src/cadrumo/application/live/_filed_history_operation.py`.
-- [ ] `W03.P07.S35` - Expose dry-run on the composed filed-history operation with identical discovery scope and effect none; `src/cadrumo/application/live/_filed_history_operation.py`.
+- [x] `W03.P07.S34` - Implement the recorded filed-history executor across discovery, register access, pair walk, capture, persistence, finalization, provenance, wallet, notifications, and settlement; `src/cadrumo/application/live/_filed_history_operation.py`.
+- [x] `W03.P07.S35` - Expose dry-run on the composed filed-history operation with identical discovery scope and effect none; `src/cadrumo/application/live/_filed_history_operation.py`.
 - [ ] `W03.P07.S36` - Emit ordered safe stage and unit progress with scoped refusals and truthful none, updated, partial, or unknown effects; `src/cadrumo/application/live/_filed_history_operation.py`.
 - [ ] `W03.P07.S37` - Export the filed-history operation definition through the live application facade; `src/cadrumo/application/live/__init__.py`.
 - [ ] `W03.P07.S38` - Prove dry-run parity, committed-unit accounting, child provenance references, unsupported cancellation and deadline claims, and cleanup before settlement; `src/cadrumo/application/live/tests/test_filed_history_operation.py`.

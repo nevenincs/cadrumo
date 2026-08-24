@@ -30,4 +30,3 @@ The all-non-null-grade contract is now explicit at both public construction path
 ## Notes
 
 `uv run --no-sync ruff check src/cadrumo/application/registry/tests/test_temporal_coverage.py` passed. `uv run --no-sync pytest -n 0 -q src/cadrumo/application/registry/tests/test_temporal_coverage.py` passed with 32 tests. The isolated in-memory weak-guard proof intentionally exited non-zero with `AssertionError`, listing direct and revalidated calculation and filing contradictions as admitted. No tracked production file was mutated.
-

@@ -5,28 +5,10 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:7c17c1b2abd2760703f1ba57f3cced71636f0a27348636c76178ee437a797bef'
+body_hash: 'sha256:3c2083bed85a144c158ffda13fe6a5322c1d5839fb696388fe074c2aa6e44b76'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
 ---
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace registry-completeness-closure with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `registry-completeness-closure` audit: `S10 live proof CLI review`
 
@@ -57,4 +39,3 @@ correctly fails closed rather than manufacturing success.
   precise source and filing proof protocols, add a canonical live-authority
   loader to the conformance command, retain an explicit offline/no-proof mode,
   and prove complete-live and offline-refusal command outcomes.
-

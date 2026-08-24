@@ -5,30 +5,11 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:142d2104bfc61052dff84f3df5182deedb4ef1feb4e5c69bd3ce315cbda47962'
+body_hash: 'sha256:fbace3919957d85b895f2c86a9879207bada78c4e825a9270ccb45a788130cfd'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
   - "[[2026-08-24-registry-completeness-closure-W01-P02-S63]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace registry-completeness-closure with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `registry-completeness-closure` audit: `S63 live closure authority wiring independent post-review`
 

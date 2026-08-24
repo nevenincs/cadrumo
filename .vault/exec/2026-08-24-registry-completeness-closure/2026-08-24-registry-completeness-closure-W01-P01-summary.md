@@ -5,44 +5,12 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:fa1513960a80a5f23155c8fc4675c4d047dd57075c74e3146e9b12af41cfc9d8'
+body_hash: 'sha256:9332eb8d36ad5339a1c3278b7d27280e4e310f0ffcac9fc5425dda113f8e9d0a'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace registry-completeness-closure with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- PHASE SUMMARY:
-     This file rolls up every <Step Record> belonging to one Phase
-     of the originating plan. Each Step (S##) in the Phase produces
-     one <Step Record> in `.vault/exec/`; this summary aggregates
-     them, lists modified / created files across the Phase, and
-     reports verification status. -->
-
 # `registry-completeness-closure` `W01.P01` summary
-
-<!-- Brief summary of overall progress across every Step in this Phase,
-     followed by a list of files touched across the Phase, e.g.:
-     - Modified: `{file1}`
-     - Created: `{file2}` -->
 
 ## Description
 
@@ -63,4 +31,3 @@ tests, 18 authority-grade tests, 31 snapshot enforcement tests, and 13
 cache-key regression tests; Ruff also passed on the implementation surfaces.
 The inherited temporal plan now records W01.P01.S02 and W01.P01.S03 as closed,
 so this phase leaves no hidden in-flight work behind.
-

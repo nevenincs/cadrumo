@@ -36,4 +36,3 @@ related:
 
 - `closure --check --as-of 2026-08-24` exits 1 by design: its refusal census is the current published support boundary, not a test regression.
 - S60, S61, and S62 independent review passed before this report's predicate was closed.
-

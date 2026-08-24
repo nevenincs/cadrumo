@@ -47,4 +47,3 @@ proven.
   operator-workflow-unsupported, and encrypted-provenance-mismatch. Assert each exact
   Pydantic error type and its `SourceConnectivityProofFailureCause` mapping, then
   rerun the selected S49 lane.
-

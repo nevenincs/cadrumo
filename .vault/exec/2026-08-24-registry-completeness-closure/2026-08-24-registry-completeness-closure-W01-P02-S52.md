@@ -29,4 +29,3 @@ The current committed `src/cadrumo/application/registry/_source_connectivity_cov
 ## Notes
 
 `git show --check 2cf4175917 -- src/cadrumo/application/registry/_source_connectivity_coverage.py` reproduces the recorded line-256 trailing-whitespace diagnostic. The removal is in `a4bd65ed1c` (S45). `git diff 2cf4175917..HEAD --check -- src/cadrumo/application/registry/_source_connectivity_coverage.py` and the Step-surface `git diff --check` return clean. The source file remains semantically unchanged by S52.
-
