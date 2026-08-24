@@ -46,6 +46,8 @@ from ..modelo import create_work_unit, discard_work_unit
 from ..overview import build_overview_status_report
 from ..state_projection import (
     ModeloReadinessRequest,
+    _registry_readiness_refusal,
+    _registry_readiness_revision_mismatch_refusal,
     build_operator_state_projection,
     modelo_requires_ledger_preflight,
 )
@@ -58,6 +60,20 @@ from ..wizard import WIZARD_FLOWS
 from ..workflow import WorkflowState, workflow_state_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def test_registry_readiness_refusals_have_no_authored_describe_command() -> None:
+    request = ModeloReadinessRequest(modelo="303", revision_id="rev", filing_year=2025)
+    period = "2025A"
+    first = _registry_readiness_refusal(request, period_token=period, exc=RuntimeError("missing"))
+    second = _registry_readiness_revision_mismatch_refusal(
+        request,
+        period_token=period,
+        resolved_revision_id="resolved",
+    )
+    for refusal in (first, second):
+        assert "aeat app modelo describe" not in refusal
+        assert "revision" in refusal
 
 _ACTIVE_STORAGE_STACK: ExitStack | None = None
 _PROFILE_SPAN_OPEN = False

@@ -873,8 +873,7 @@ def _registry_readiness_refusal(
     return (
         "registry snapshot unresolved for modelo "
         f"{request.modelo!r}, year {request.filing_year}, period {period_token!r}, "
-        f"revision {request.revision_id!r}: {detail}. "
-        f"Run 'aeat app modelo describe {request.modelo}' to inspect declared revision_ids and periods."
+        f"revision {request.revision_id!r}: {detail}."
     )
 
 
@@ -888,8 +887,7 @@ def _registry_readiness_revision_mismatch_refusal(
         "registry snapshot unresolved for modelo "
         f"{request.modelo!r}, year {request.filing_year}, period {period_token!r}, "
         f"revision {request.revision_id!r}: requested revision {request.revision_id!r} "
-        f"does not match law-determined revision {resolved_revision_id!r}. "
-        f"Run 'aeat app modelo describe {request.modelo}' to inspect declared revision_ids and periods."
+        f"does not match law-determined revision {resolved_revision_id!r}."
     )
 
 

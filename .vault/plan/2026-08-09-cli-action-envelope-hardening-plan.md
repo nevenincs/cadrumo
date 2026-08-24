@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-24'
-body_hash: 'sha256:a7272f766a55fb9eb92f2f39e7e9eecb8e80ef51b10c0475ba8281a049b7fb8e'
+body_hash: 'sha256:a7e74bc8c743ecdf73e94be21cc51c56906214f2caa523533b1f86eae11621e7'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -232,7 +232,7 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [ ] `W05.P10.S98` - Migrate application-registry exception recovery producers and forwarding to the retired-error boundary and canonical typed actions; `src/cadrumo/application/registry/_diff.py; src/cadrumo/application/registry/__init__.py; src/cadrumo/application/registry/_conformance.py; src/cadrumo/application/registry/_corpus.py; src/cadrumo/application/registry/_corpus_manual_helpers.py`.
 - [x] `W05.P10.S107` - Migrate bucket-maintenance recovery producers to typed conditions and canonical actions; `src/cadrumo/application/bucket_maintenance/_service.py; src/cadrumo/application/bucket_maintenance/_contracts.py; src/cadrumo/application/bucket_maintenance/tests`.
 - [x] `W05.P10.S108` - Migrate application invoice-lifecycle recovery producers to typed conditions and canonical actions; `src/cadrumo/application/invoices/_lifecycle.py`.
-- [ ] `W05.P10.S110` - Replace the remaining modelo-describe recovery strings in state projection with typed conditions and canonical actions or explicit no-recovery outcomes; `src/cadrumo/application/state_projection.py; src/cadrumo/application/tests`.
+- [x] `W05.P10.S110` - Replace the remaining modelo-describe recovery strings in state projection with typed conditions and canonical actions or explicit no-recovery outcomes; `src/cadrumo/application/state_projection.py; src/cadrumo/application/tests`.
 - [x] `W05.P10.S111` - Migrate core output-rendering recovery producers to typed conditions and canonical actions; `src/cadrumo/core/output_rendering.py`.
 - [x] `W05.P10.S112` - Migrate core topics recovery producers to typed conditions and canonical actions; `src/cadrumo/core/topics/__init__.py`.
 - [x] `W05.P10.S113` - Migrate domain-bucket recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/buckets/_errors.py`.
