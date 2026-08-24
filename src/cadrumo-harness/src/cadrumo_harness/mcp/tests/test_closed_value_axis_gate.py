@@ -76,14 +76,6 @@ _BY_PARAMETER_NAME: dict[str, tuple[AxisExemption, str]] = {
         AxisExemption.NAME_COLLISION,
         "A decimal recargo amount, unrelated to IvaComponentPresence.",
     ),
-    "source": (
-        AxisExemption.NAME_COLLISION,
-        "The source PROFILE name for duplicate/rename, not a source-kind taxonomy.",
-    ),
-    "root": (
-        AxisExemption.NAME_COLLISION,
-        "A filesystem registry root path, unrelated to RootSurfaceName.",
-    ),
     "iva_rate": (
         AxisExemption.NAME_COLLISION,
         'Carries a numeric rate, not a taxonomy token -- the help on these verbs reads "as a decimal, for example 0.21". IvaRate is a rate-band taxonomy and is not the accepted input set.',
