@@ -1,0 +1,81 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "config",
+        "logout"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.logout",
+        "notices": [],
+        "result": {
+          "already_logged_out": false,
+          "logged_out_profile": "docs-sequence-sandbox"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "config",
+        "profile",
+        "delete",
+        "docs-sequence-sandbox",
+        "--yes"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": null,
+        "command": "config.profile.delete",
+        "notices": [
+          {
+            "action": null,
+            "code": "config.profile.delete.deleted",
+            "context": {
+              "profile_id": "<profile-id>"
+            },
+            "message": "Profile deleted along with its local state.",
+            "severity": "info"
+          }
+        ],
+        "result": {
+          "completed_at": "2026-04-01T09:00:00+00:00",
+          "deleted": true,
+          "display_name": "docs-sequence-sandbox",
+          "earliest_safe_erase_date": null,
+          "fingerprint": {
+            "digest": "f3685a552d37b046c3b1b217810bdef01481371ca9aba09d1d1792d877a58ece",
+            "file_count": 5,
+            "schema_version": 1,
+            "total_bytes": 2534
+          },
+          "profile_id": "<profile-id>",
+          "retained_record_count": 0
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "profile-setup-delete"
+}
