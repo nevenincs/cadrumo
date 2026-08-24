@@ -1,4 +1,4 @@
-"""Credential-first profile registration: a label and a passphrase, nothing else.
+"""Credential-first profile registration with mandatory recovery possession.
 
 This is the door behind the terminal's first screen. It exists because
 profile creation used to be split across two surfaces that never met: the
@@ -29,6 +29,7 @@ from __future__ import annotations
 
 from base64 import b64encode
 from contextlib import ExitStack
+from hmac import compare_digest
 from secrets import token_bytes
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -112,13 +113,10 @@ class ProfileRegistrationOutcome(BaseModel):
     label: str
     setup_state: ProfileSetupState
     recovery_enrolled: bool
-    """Whether this profile was published carrying a recovery wrapper.
+    """Confirmation that the mandatory recovery wrapper was published.
 
-    Not a courtesy field. Recovery can only be installed while the capsule is
-    being published, so "not enrolled" is permanent for this profile, and a
-    surface that does not tell the operator has silently spent their only
-    chance. It carries no secret -- the 24 words never reach this model -- so
-    it is safe on every envelope the flag is meant to be reported on.
+    It carries no secret -- the 24 words never reach this model -- so it is
+    safe on every envelope the flag is meant to be reported on.
     """
 
 
@@ -127,7 +125,7 @@ def register_profile_with_credentials(
     label: str,
     passphrase: str,
     facts: tuple[UserProfileFact, ...] = (),
-    recovery_handover: Callable[[ProfileRecoveryEnrollment], None] | None = None,
+    recovery_handover: Callable[[ProfileRecoveryEnrollment], str],
 ) -> ProfileRegistrationOutcome:
     """Create a profile from a label and a passphrase, and unlock it.
 
@@ -154,10 +152,10 @@ def register_profile_with_credentials(
             this door is that a profile needs no tax data to exist.
         recovery_handover: The channel the 24 words reach the operator
             through, and the only one — they never touch the returned model,
-            an envelope, or a log. Supplying it enrolls recovery; omitting it
-            mints no wrapper AT ALL, and :attr:`recovery_enrolled` on the
-            result says which happened, so no surface can leave an operator
-            unaware that their one chance has passed.
+            an envelope, or a log. The callback must return the exact phrase
+            received from the operator as possession proof. Registration
+            refuses before publication when the proof differs or the callback
+            raises.
 
             Minting without a channel would be the worse failure rather than
             the safer one: the words would be wiped unshown, leaving a second
@@ -173,7 +171,8 @@ def register_profile_with_credentials(
             the callback is the sanctioned way to report a channel that could
             not deliver: it aborts the creation, so no profile is left holding
             a wrapper nobody received. A caller with no interactive terminal
-            should pass no handover at all rather than one that will refuse.
+            must provide a bounded two-way secret channel; it cannot create a
+            password-only profile.
 
     Returns:
         A :class:`ProfileRegistrationOutcome` for the newly-live profile.
@@ -200,7 +199,7 @@ def register_profile_with_credentials(
         # created profile for the operator to clean up by hand.
         raise ProfileRegistrationError(
             translated_message=password_refusal.translated_message,
-            context=password_refusal.context,
+            context=dict(password_refusal.context),
             password_refusal=password_refusal,
         )
 
@@ -226,28 +225,36 @@ def register_profile_with_credentials(
         # Minted ahead of the transaction, and entered on the scope so the
         # 24 words are zeroised on every exit -- the successful one, the
         # refused one, and the one where the handover itself raises.
-        enrollment: ProfileRecoveryEnrollment | None = None
-        if recovery_handover is not None:
-            enrollment = enroll_profile_recovery(profile_id=identity, dek=dek, dek_epoch=dek_epoch)
-            recovery_scope.enter_context(enrollment.recovery_key)
-            # Delivered BEFORE the capsule is published, and the ordering is
-            # the whole safety property. A channel can fail at the moment of
-            # writing rather than when it is chosen -- a detached process is
-            # handed a fresh console, so the device opens and the write lands
-            # on a surface nobody will ever see. Publishing first and
-            # discovering that second would leave a live profile carrying a
-            # recovery wrapper whose only key went nowhere: enrolled, reported
-            # enrolled, and permanently unopenable, with no second chance
-            # because a committed capsule cannot be enrolled afterwards.
-            #
-            # Delivering first inverts which way a failure falls. A refused
-            # channel now aborts creation outright, so there is no profile and
-            # no orphaned wrapper. The residual cost is the mirror case -- the
-            # operator copies down 24 words and the create transaction then
-            # refuses -- which leaves them holding a phrase for a profile that
-            # does not exist. That is discardable and it is visible, which the
-            # undeliverable-wrapper state is neither.
-            recovery_handover(enrollment)
+        enrollment = enroll_profile_recovery(profile_id=identity, dek=dek, dek_epoch=dek_epoch)
+        recovery_scope.enter_context(enrollment.recovery_key)
+        # Delivered BEFORE the capsule is published, and the ordering is
+        # the whole safety property. A channel can fail at the moment of
+        # writing rather than when it is chosen -- a detached process is
+        # handed a fresh console, so the device opens and the write lands
+        # on a surface nobody will ever see. Publishing first and
+        # discovering that second would leave a live profile carrying a
+        # recovery wrapper whose only key went nowhere: enrolled, reported
+        # enrolled, and permanently unopenable, with no second chance
+        # because a committed capsule cannot be enrolled afterwards.
+        #
+        # Delivering first inverts which way a failure falls. A refused
+        # channel now aborts creation outright, so there is no profile and
+        # no orphaned wrapper. The residual cost is the mirror case -- the
+        # operator copies down 24 words and the create transaction then
+        # refuses -- which leaves them holding a phrase for a profile that
+        # does not exist. That is discardable and it is visible, which the
+        # undeliverable-wrapper state is neither.
+        supplied_recovery_proof = recovery_handover(enrollment)
+        try:
+            if not isinstance(supplied_recovery_proof, str) or not compare_digest(
+                supplied_recovery_proof,
+                enrollment.recovery_key.mnemonic,
+            ):
+                raise ProfileRegistrationError(
+                    "recovery phrase possession proof did not match the enrolled phrase",
+                )
+        finally:
+            del supplied_recovery_proof
 
         try:
             try:
@@ -263,7 +270,7 @@ def register_profile_with_credentials(
                         setup_state=ProfileSetupState.INCOMPLETE,
                     ),
                     record_session=session,
-                    recovery_envelope=None if enrollment is None else enrollment.envelope,
+                    recovery_envelope=enrollment.envelope,
                 )
             except ProfileCustodyDisplacedSessionRetirementError as exc:
                 # Creating a profile displaces whichever one the pointer named, and
@@ -331,7 +338,7 @@ def register_profile_with_credentials(
             bucket_id=str(identity),
             label=resolved_label,
             setup_state=ProfileSetupState.INCOMPLETE,
-            recovery_enrolled=enrollment is not None,
+            recovery_enrolled=True,
         )
 
 

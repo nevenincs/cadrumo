@@ -157,6 +157,10 @@ class _ProfileCustodyTransactionCapability:
         only after the committed capsule is visible.  Every intermediate state
         is durable so recovery can resume at the last verified boundary.
         """
+        if publication_kind == "enroll" and recovery_envelope is None:
+            raise ProfileCustodyTransactionRefusalError(
+                "profile enrollment publication requires a recovery envelope"
+            )
         if password_envelope.profile_id != profile_id or sentinel.profile_id != profile_id:
             raise ProfileCustodyTransactionRefusalError("create custody material does not bind its target profile")
         try:

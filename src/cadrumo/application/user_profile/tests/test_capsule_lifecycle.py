@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from base64 import b64encode
+from functools import lru_cache
 from hashlib import sha256
 from multiprocessing import get_context
 from pathlib import Path
@@ -35,11 +36,13 @@ from ....domain.user_profile import (
 )
 from ....tests.user_profile import complete_profile_facts
 from .._capsule_record import ProfileRecordConflictError, ProfileRecordSession, ProfileRecordStore
+from .._custody_ports import ProfileCustodyRecoveryEnvelopePort
 from .._custody_repository import profile_custody_transaction_lock
-from .._custody_transactions import ProfileCustodyTransactionConflictError
+from .._custody_transactions import ProfileCustodyTransactionConflictError, ProfileCustodyTransactionRefusalError
 from .._lifecycle import ProfileCapsuleLifecycle
 from .._profile_record_repository import ProfileRecordRepository, bound_profile_record_session
 from .._profile_repository import CommittedProfileRepository
+from .._recovery_custody import enroll_profile_recovery
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -76,6 +79,18 @@ def _current_capsule_input(
         {"state/payload.bin": b"x"},
         dek,
     )
+
+
+@lru_cache
+def _recovery_envelope(profile_id: UUID, dek_epoch: str) -> ProfileCustodyRecoveryEnvelopePort:
+    """Mint one real recovery wrapper for lifecycle tests not about its secret."""
+    enrollment = enroll_profile_recovery(
+        profile_id=profile_id,
+        dek=bytes(range(32)),
+        dek_epoch=dek_epoch,
+    )
+    with enrollment.recovery_key:
+        return enrollment.envelope
 
 
 def _crash_between_label_record_and_head(root_text: str, profile_id_text: str) -> None:
@@ -118,6 +133,7 @@ def test_lifecycle_projects_only_its_committed_capsule_and_owns_selection(tmp_pa
         password_envelope=envelope,
         sentinel=sentinel,
         data_files=data_files,
+        recovery_envelope=_recovery_envelope(_PROFILE_ID, envelope.dek_epoch),
         initial_record=UserProfileRecord(profile_id=str(_PROFILE_ID), setup_state=ProfileSetupState.INCOMPLETE),
         record_session=record_session,
     )
@@ -134,6 +150,29 @@ def test_lifecycle_projects_only_its_committed_capsule_and_owns_selection(tmp_pa
         assert ProfileRecordRepository.for_current_session(_PROFILE_ID, root=tmp_path).load(
             _PROFILE_ID
         ).profile_id == str(_PROFILE_ID)
+
+
+def test_enrollment_publication_refuses_without_a_recovery_envelope(tmp_path) -> None:
+    """The custody writer cannot publish a password-only new profile."""
+    envelope, sentinel, data_files, dek = _current_capsule_input()
+    record_session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
+    try:
+        with pytest.raises(ProfileCustodyTransactionRefusalError, match="requires a recovery envelope"):
+            ProfileCapsuleLifecycle(root=tmp_path).create(
+                label="Recovery invariant operator",
+                profile_id=_PROFILE_ID,
+                password_envelope=envelope,
+                sentinel=sentinel,
+                data_files=data_files,
+                initial_record=UserProfileRecord(
+                    profile_id=str(_PROFILE_ID), setup_state=ProfileSetupState.INCOMPLETE
+                ),
+                record_session=record_session,
+            )
+    finally:
+        record_session.close()
+
+    assert not (tmp_path / "buckets" / str(_PROFILE_ID)).exists()
 
 
 def test_repository_refuses_retired_bucket_directories_without_treating_them_as_profiles(tmp_path) -> None:
@@ -158,6 +197,7 @@ def test_complete_setup_cas_replaces_only_the_current_authenticated_record(tmp_p
         password_envelope=envelope,
         sentinel=sentinel,
         data_files=data_files,
+        recovery_envelope=_recovery_envelope(_PROFILE_ID, envelope.dek_epoch),
         # The subject carries a complete answer set because promotion now
         # judges the record against the contract COMPLETE claims. This test is
         # about the compare-and-swap, so its subject has to be a record that
@@ -203,6 +243,7 @@ def test_fact_command_cas_publishes_the_record_and_authenticated_event_together(
         password_envelope=envelope,
         sentinel=sentinel,
         data_files=data_files,
+        recovery_envelope=_recovery_envelope(_PROFILE_ID, envelope.dek_epoch),
         initial_record=UserProfileRecord(profile_id=str(_PROFILE_ID), setup_state=ProfileSetupState.INCOMPLETE),
         record_session=record_session,
     )
@@ -249,6 +290,7 @@ def test_label_provenance_is_uuid_bound_and_revisioned_at_create(tmp_path: Path)
         password_envelope=envelope,
         sentinel=sentinel,
         data_files=data_files,
+        recovery_envelope=_recovery_envelope(_PROFILE_ID, envelope.dek_epoch),
         initial_record=UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=str(_PROFILE_ID)),
         record_session=session,
     )
@@ -274,6 +316,7 @@ def test_label_provenance_refuses_a_same_uuid_canonical_substitution(tmp_path: P
             password_envelope=envelope,
             sentinel=sentinel,
             data_files=data_files,
+            recovery_envelope=_recovery_envelope(profile_id, envelope.dek_epoch),
             initial_record=UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=str(profile_id)),
             record_session=session,
         )
@@ -297,6 +340,7 @@ def test_locked_label_read_refuses_a_fresh_canonical_same_uuid_substitution(tmp_
         password_envelope=envelope,
         sentinel=sentinel,
         data_files=data_files,
+        recovery_envelope=_recovery_envelope(_PROFILE_ID, envelope.dek_epoch),
         initial_record=UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=str(_PROFILE_ID)),
         record_session=session,
     )
@@ -323,6 +367,7 @@ def test_real_crash_between_label_and_head_recovers_the_durable_advance(tmp_path
         password_envelope=envelope,
         sentinel=sentinel,
         data_files=data_files,
+        recovery_envelope=_recovery_envelope(_PROFILE_ID, envelope.dek_epoch),
         initial_record=UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=str(_PROFILE_ID)),
         record_session=session,
     )
@@ -353,6 +398,7 @@ def test_committed_profile_view_keeps_facts_locked_until_the_current_session_aut
         password_envelope=envelope,
         sentinel=sentinel,
         data_files=data_files,
+        recovery_envelope=_recovery_envelope(_PROFILE_ID, envelope.dek_epoch),
         initial_record=UserProfileRecord(
             profile_id=str(_PROFILE_ID),
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),

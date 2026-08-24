@@ -3,8 +3,6 @@ tags:
   - '#plan'
   - '#profile-password-custody'
 date: '2026-08-13'
-modified: '2026-08-24'
-body_hash: 'sha256:bd49c417839ba9ca0438d44e5a2098eede71aaadb8a002c3e2a876197d14a9f4'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -20,6 +18,8 @@ related:
   - '[[2026-08-13-recovery-mnemonic-presentation-successor-adr]]'
   - '[[2026-08-13-sealed-archive-transport-successor-adr]]'
   - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
+modified: '2026-08-24'
+body_hash: 'sha256:93021a995ac727fd63855cd053f5090b419153a1869d36874b5357ac811a9c42'
 ---
 
 # `profile-password-custody` plan
@@ -311,7 +311,7 @@ Persist the approved recovery amendment and complete the plan's governing-decisi
 
 Make verified recovery a required application invariant, migrate every creation consumer, and remove claims that recovery can be absent or enrolled later.
 
-- [ ] `W06.P10.S213` - Require register_profile_with_credentials to receive a recovery handoff and publish a profile only after exact possession verification succeeds, with refusal or cancellation leaving no profile behind; `src/cadrumo/application/user_profile/_registration.py and src/cadrumo/application/user_profile/_custody_service.py`.
+- [x] `W06.P10.S213` - Require register_profile_with_credentials to receive a recovery handoff and publish a profile only after exact possession verification succeeds, with refusal or cancellation leaving no profile behind; `src/cadrumo/application/user_profile/_registration.py and src/cadrumo/application/user_profile/_custody_service.py`.
 - [ ] `W06.P10.S214` - Migrate the scripted CLI creation consumer to the required application recovery handoff while preserving bounded descriptor transfer, collision preflight, verification, and failure atomicity; `src/cadrumo/entrypoints/cli/_config/_scripted_registration.py and src/cadrumo/entrypoints/cli/_config/_profile_command_specs.py`.
 - [ ] `W06.P10.S215` - Migrate the terminal and TUI creation consumer to the required application recovery handoff while preserving masked exact re-entry and cancellation-before-publication; `src/cadrumo/entrypoints/cli/_config/_manager_frontend.py and src/cadrumo/adapters/inbound/tui/`.
 - [ ] `W06.P10.S216` - Migrate all remaining direct registration callers and their shared test provisioning doors to supply and verify recovery instead of constructing password-only profiles; `src/cadrumo/tests/ and src/cadrumo-harness/src/cadrumo_harness/`.
