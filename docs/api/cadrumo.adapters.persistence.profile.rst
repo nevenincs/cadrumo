@@ -14,7 +14,6 @@ Submodules
    :maxdepth: 4
 
    cadrumo.adapters.persistence.profile._filing_runtime
-   cadrumo.adapters.persistence.profile._modelo_runtime
    cadrumo.adapters.persistence.profile._secure_enveloped_document
    cadrumo.adapters.persistence.profile._secure_model_document
    cadrumo.adapters.persistence.profile.assets

@@ -20,6 +20,7 @@ Submodules
    cadrumo.application.live._filed_capture_finalizer
    cadrumo.application.live._filed_data
    cadrumo.application.live._filed_data_capture
+   cadrumo.application.live._filed_history_operation
    cadrumo.application.live._filed_observation_persistence
    cadrumo.application.live._iva_remote_state
    cadrumo.application.live._justificante
