@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:de45e275ded8b48a8fd819db7eee868f6f082d14e471b6ce31e2833f7d9b6c5f'
+body_hash: 'sha256:54631553c63144be91b23a4f9d19bd801e2ee7f94bc2ca7d9e60234410f9e131'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -246,6 +246,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W06-P12-S237]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S238]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S239]]'
+  - '[[2026-08-13-profile-password-custody-W06-P12-S240]]'
   - '[[2026-08-13-profile-password-custody-plan]]'
   - '[[2026-08-13-profile-password-custody-research]]'
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
@@ -297,6 +298,7 @@ related:
   - '[[2026-08-24-profile-password-custody-s237-harness-install-authority-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s238-sessionless-delete-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s239-path-specific-golden-mask-review-audit]]'
+  - '[[2026-08-24-profile-password-custody-s240-result-frame-expectation-review-audit]]'
 ---
 
 # `profile-password-custody` feature index
@@ -359,6 +361,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-24-profile-password-custody-s237-harness-install-authority-review-audit` - `profile-password-custody` audit: `s237 harness install authority review`
 - `2026-08-24-profile-password-custody-s238-sessionless-delete-review-audit` - `profile-password-custody` audit: `S238 sessionless profile delete review`
 - `2026-08-24-profile-password-custody-s239-path-specific-golden-mask-review-audit` - `profile-password-custody` audit: `s239 path specific golden mask review`
+- `2026-08-24-profile-password-custody-s240-result-frame-expectation-review-audit` - `profile-password-custody` audit: `s240 result frame expectation review`
 
 ### exec
 
@@ -600,6 +603,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W06-P12-S237` - Remove the retired cadrumo agent-extra installation claim from live harness docstrings and install hints while preserving the sibling cadrumo-harness distribution boundary
 - `2026-08-13-profile-password-custody-W06-P12-S238` - Remove inactive profile deletion from the root login gate while preserving active-profile refusal, explicit confirmation, custody preflight, and exact target binding in real subprocess execution
 - `2026-08-13-profile-password-custody-W06-P12-S239` - Add a central path-specific golden mask for only the profile-delete result fingerprint digest, retain generic digest visibility, and prove the mask is exactly the fresh-sandbox residual through real sequence replay
+- `2026-08-13-profile-password-custody-W06-P12-S240` - Add exact result-payload expectations to every newly enrolled result frame on the nine named documentation pages and tighten the baseline so future unasserted frames fail
 
 ### plan
 

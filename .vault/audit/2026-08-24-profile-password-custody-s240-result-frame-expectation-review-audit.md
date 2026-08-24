@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:d3aacc7e43f5f99937434929b76e2b9403678258ffc1ee6b99a306c5104aa2b8'
+body_hash: 'sha256:68367b6842bdef4d0249e5224aaf4a45375f4f968fe3781bb70aafa6b77d2c27'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -24,6 +24,14 @@ Structured success frames now assert stable operation, readiness, or recovery-en
 ### golden-ownership | resolved | S240 changes no generated transcript
 
 The delta edits sequence contracts and the central property gate only. Existing live/golden divergence remains visible for S241 adjudication and S242 owning-CLI regeneration.
+
+### dispatch-label-tautology | high | Three initial assertions proved only command routing
+
+Formal review found that the first dependency, observation, and filing assertions checked only each result's `operation` label. Those labels could remain correct while the documented outcome was wrong, so they did not satisfy the semantic payload contract.
+
+### dispatch-label-tautology-resolved | resolved | Outcome fields now prove dependency, observation, and filing meaning
+
+The dependency frame now proves a single target and required clean-state evaluation; the observation frame proves the saved draft state; and the filing frame proves an internal, non-live filing marker. These values are grounded in the committed real transcripts and fail when the documented outcome changes.
 
 ## Recommendations
 

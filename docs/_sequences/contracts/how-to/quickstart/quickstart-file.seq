@@ -9,4 +9,5 @@
 @step Record the local filed marker after you upload through AEAT yourself.
 @result aeat --format json app modelo work file --modelo 130 --year 2026 --period 1T
 @expect exit_code == 0
-@expect result.operation == "modelo.work.file"
+@expect result.kind == "internal_filing"
+@expect result.live_submission == false

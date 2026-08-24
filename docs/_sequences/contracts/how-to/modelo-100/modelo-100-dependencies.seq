@@ -3,4 +3,5 @@
   @step Show each source filing the declaration folds in and whether its evidence is satisfied.
   @result aeat --format json app modelo work dependencies --modelo 100 --year 2025 --period 0A
   @expect exit_code == 0
-  @expect result.operation == "modelo.work.dependencies"
+  @expect result.target_count == 1
+  @expect result.clean_state.requires_clean_state == true

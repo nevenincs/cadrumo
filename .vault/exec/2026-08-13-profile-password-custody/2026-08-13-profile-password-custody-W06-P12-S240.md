@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:aeeed30e1562cfea9d2ea12b3c1de3cda7f2e550355d9885f6d5412245ce9b1f'
+body_hash: 'sha256:938d5d3b5b74eb1dd8de81020b39633b8a5b3882c83092f26035aac7e556f4b2'
 step_id: 'S240'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -20,7 +20,7 @@ related:
 ## Description
 
 - Derived all 17 deficient result frames programmatically from the central assertion gate across the nine S233 pages.
-- Added exact success fields or refusal codes grounded in committed real transcripts to nine sequence contracts; retained existing exact refusal payload assertions on five others.
+- Added exact outcome fields or refusal codes grounded in committed real transcripts to nine sequence contracts; retained existing exact refusal payload assertions on five others.
 - Classified terminal `--help` frames as text-snapshot-owned because they deliberately emit no JSON envelope, while requiring their successful exit assertion.
 - Tightened the equality ratchet from five baseline entries to the two genuinely remaining legacy offenders, without hardcoded corpus counts.
 - Added parser property tests proving success/refusal payloads and terminal help pass while an exit-only structured command still fails.
