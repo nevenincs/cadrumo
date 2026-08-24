@@ -115,6 +115,70 @@ def test_workflow_gate_refusal_projects_its_persisted_action_to_json() -> None:
     assert action["argument_bindings"][0]["status"] == "missing"
 
 
+def test_corrupt_active_profile_pointer_projects_the_canonical_repair_action(tmp_path: Path) -> None:
+    """The core error contributes facts only; application policy resolves the repair action."""
+    pointer_file = tmp_path / "active-profile"
+    pointer_file.write_text("not = valid = toml", encoding="utf-8")
+    pointer_app = typer.Typer()
+
+    @pointer_app.command()
+    @command_error_boundary
+    def inspect_pointer(json_out: bool = typer.Option(False, "--json")) -> None:
+        del json_out
+        Settings(cadrumo_local_storage_root=tmp_path)
+
+    result = invoke_typer_app(pointer_app, ["--json"], catch_exceptions=False)
+
+    assert result.exit_code == get_error_exit_code(ErrorCategory.INTEGRITY), result.output
+    error = json.loads(result.stderr)["error"]
+    assert error["context"] == {
+        "path": str(pointer_file),
+        "pointer_corrupt": "true",
+        "root_fallback_refused": "true",
+    }
+    assert error["action"] == {
+        "failed_condition_id": "profile.active.pointer.valid",
+        "evidence": [
+            {
+                "condition_id": "profile.active.pointer.valid",
+                "evidence_id": "profile.active.pointer.corruption",
+                "provenance": "runtime_observation",
+                "values": {
+                    "path": str(pointer_file),
+                    "pointer_corrupt": True,
+                    "root_fallback_refused": True,
+                },
+            },
+        ],
+        "action": {
+            "action_id": "operator.profile.repair_active_pointer",
+            "target_command_key": "config.repair.profile",
+            "cli_path": ["config", "repair", "profile"],
+        },
+        "argument_bindings": [
+            {
+                "argument_name": "clear_active",
+                "status": "resolved",
+                "value": True,
+                "source": "operator_action.verdict_context",
+                "source_key": "clear_active",
+                "source_evidence_id": None,
+            },
+            {
+                "argument_name": "yes",
+                "status": "missing",
+                "value": None,
+                "source": None,
+                "source_key": None,
+                "source_evidence_id": None,
+            },
+        ],
+        "missing_argument_names": ["yes"],
+        "conditionality": "requires_arguments",
+        "no_recovery_outcome": None,
+    }
+
+
 @pytest.mark.parametrize("locale", SUPPORTED_OUTPUT_LANGUAGES)
 def test_nested_llm_request_validation_projects_its_terminal_verdict(locale: str) -> None:
     """The public callback boundary preserves a validator-owned refusal."""

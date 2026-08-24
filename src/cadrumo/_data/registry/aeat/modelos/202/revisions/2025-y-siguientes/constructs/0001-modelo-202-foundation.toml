@@ -11,6 +11,8 @@ legal_refs = [
 source_refs = [
     "aeat-dr-202-2025",
     "aeat-modelo-202-instructions",
+    "aeat-calendario-contribuyente-2025",
+    "aeat-calendario-contribuyente-2026",
     "boe-modelo-202-base-order",
     "boe-modelo-202-2025-amendment",
 ]

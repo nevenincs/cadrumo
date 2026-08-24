@@ -32,12 +32,14 @@ from ...operations import (
     OperationRejectResponse,
     OperationRequest,
     OperationSupervisor,
+    operation_public_schema_reference,
 )
 from .._capsule_record import ProfileRecordSession, ProfileRecordStore
 from .._censal_observation import CensalObservation, CensalObservationAddress, CensalObservationIdentity
 from .._censal_operation import (
     CENSAL_OPERATION_DEFINITION,
     CENSAL_PHASE_SETTLEMENT,
+    CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING,
     CensalFieldIntent,
     CensalOperationExecutor,
     CensalOperationRequest,
@@ -190,6 +192,9 @@ def test_censal_executor_acquires_once_recovers_review_and_applies_exact_operand
             pending = waiting.pending_interaction
             assert pending is not None
             assert pending.request.revision == waiting.revision
+            assert pending.request.response_schema_ref == operation_public_schema_reference(
+                CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING.identity
+            )
             assert acquisitions == 1
 
             recovery = _supervisor(

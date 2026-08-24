@@ -52,10 +52,14 @@ from .. import (
     OperationLeaseDisposition,
     OperationLifecycle,
     OperationNoticeEvent,
+    OperationObservationRequestV1,
+    OperationObservationService,
+    OperationObservationSuccessV1,
     OperationOwnedResource,
     OperationOwnerLease,
     OperationPendingInteraction,
     OperationPersistedSnapshot,
+    OperationPublicDefinitionRegistrationV1,
     OperationReconciliationEvent,
     OperationReconciliationOutcome,
     OperationReconciliationPolicy,
@@ -64,6 +68,7 @@ from .. import (
     OperationReplayPolicy,
     OperationRequest,
     OperationRequestStoragePolicy,
+    OperationSchemaBindingV1,
     OperationSecureReferenceStore,
     OperationSensitiveInputPolicy,
     OperationSupervisor,
@@ -634,13 +639,14 @@ def test_interrupted_settlement_refuses_known_live_executor_without_mutating_the
         asyncio.run(refuse_live_interruption())
 
 
-def test_filesystem_journal_refuses_v1_and_v2_operation_snapshots_without_rewrite(tmp_path: Path) -> None:
-    """Pre-release operation journals retain no reader migration path for pre-v3 snapshots."""
+def test_filesystem_journal_refuses_non_current_operation_snapshots_without_rewrite(tmp_path: Path) -> None:
+    """Pre-release operation journals reject a superseded snapshot without rewriting it."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
         journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
         supervisor = _supervisor(
-            registry=_registry(executor_type=IdleExecutor, build=IdleExecutor),
+            registry=registry,
             journal=journal,
             leases=leases,
             operands=operands,
@@ -648,24 +654,105 @@ def test_filesystem_journal_refuses_v1_and_v2_operation_snapshots_without_rewrit
             token="2" * 64,
         )
         operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        created = asyncio.run(journal.load(operation_id))
+        assert (
+            created.definition_contract_digest
+            == registry.lookup_public_contract(created.identity.definition_id).definition_contract_digest
+        )
         journal_path = storage_root / "operation-journals" / f"{operation_id}.json"
         current_record = json.loads(journal_path.read_text(encoding="utf-8"))
-        for schema_version in (1, 2):
-            old_record = json.loads(json.dumps(current_record))
-            snapshot = old_record["snapshot"]
-            snapshot["schema_version"] = schema_version
-            for safety_field in (
-                "execution_deadline",
-                "cleanup_deadline",
-                "cancellation_requested_at",
-                "cancellation_acknowledged_at",
-            ):
-                del snapshot[safety_field]
-            raw_old_record = json.dumps(old_record, sort_keys=True).encode("utf-8")
-            journal_path.write_bytes(raw_old_record)
-            with pytest.raises(RepositoryError):
-                asyncio.run(journal.load(operation_id))
-            assert journal_path.read_bytes() == raw_old_record
+        old_record = json.loads(json.dumps(current_record))
+        old_record["snapshot"]["schema_version"] = 5
+        raw_old_record = json.dumps(old_record, sort_keys=True).encode("utf-8")
+        journal_path.write_bytes(raw_old_record)
+        with pytest.raises(RepositoryError):
+            asyncio.run(journal.load(operation_id))
+        assert journal_path.read_bytes() == raw_old_record
+
+
+def test_supervisor_refuses_registry_drift_against_the_pinned_invocation_digest(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        storage_root = tmp_path / "durable-state"
+        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        original_registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = _supervisor(
+            registry=original_registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+        )
+        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        restarted = _supervisor(
+            registry=_drifted_registry(original_registry),
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+        )
+
+        with pytest.raises(ValueError, match="no longer reproduces"):
+            asyncio.run(restarted.start(operation_id))
+        assert asyncio.run(journal.load(operation_id)).lifecycle is OperationLifecycle.CREATED
+
+
+@pytest.mark.parametrize(
+    "route",
+    (
+        "inspect",
+        "observe",
+        "detach",
+        "replay",
+        "await_terminal",
+        "request_cancel",
+        "acknowledge_cancellation",
+        "escalate_cleanup_deadline",
+    ),
+)
+def test_loaded_snapshot_routes_refuse_definition_drift_before_return_or_mutation(
+    tmp_path: Path,
+    route: str,
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        storage_root = tmp_path / "durable-state"
+        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+        )
+        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        snapshot = asyncio.run(journal.load(operation_id))
+        journal_path = storage_root / "operation-journals" / f"{operation_id}.json"
+        original_bytes = journal_path.read_bytes()
+        restarted = _supervisor(
+            registry=_drifted_registry(registry),
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+        )
+
+        async def invoke() -> None:
+            if route == "replay":
+                await restarted.replay(operation_id, 0, limit=20)
+            elif route == "acknowledge_cancellation":
+                await restarted._acknowledge_cancellation(snapshot)
+            elif route == "escalate_cleanup_deadline":
+                await restarted._escalate_cleanup_deadline(operation_id)
+            else:
+                await getattr(restarted, route)(operation_id)
+
+        with pytest.raises(ValueError, match="no longer reproduces"):
+            asyncio.run(invoke())
+        assert journal_path.read_bytes() == original_bytes
 
 
 def _pending_interaction(identity: OperationIdentity) -> OperationPendingInteraction:
@@ -745,17 +832,69 @@ def _registry(
     interaction_kinds: frozenset[OperationInteractionKind] = frozenset(),
     reconciliation_policy: OperationReconciliationPolicy = OperationReconciliationPolicy.INTERRUPT,
 ) -> OperationRegistry:
-    return OperationRegistry(
-        definitions=(
-            _definition(
-                executor_type=executor_type,
-                build=build,
-                capabilities=capabilities,
-                interaction_kinds=interaction_kinds,
-                reconciliation_policy=reconciliation_policy,
-            ),
-        )
+    item = _definition(
+        executor_type=executor_type,
+        build=build,
+        capabilities=capabilities,
+        interaction_kinds=interaction_kinds,
+        reconciliation_policy=reconciliation_policy,
     )
+    request_schema = OperationSchemaBindingV1.bind(
+        schema_id="operation.supervisor.test.request",
+        schema_version=1,
+        model_type=SupervisorRequest,
+    )
+    result_schema = OperationSchemaBindingV1.bind(
+        schema_id="operation.supervisor.test.result",
+        schema_version=1,
+        model_type=SupervisorResult,
+    )
+    review_schema = (
+        OperationSchemaBindingV1.bind(
+            schema_id="operation.supervisor.test.review",
+            schema_version=1,
+            model_type=ReviewedOperand,
+        )
+        if OperationInteractionKind.REVIEW in interaction_kinds
+        else None
+    )
+
+    def review_projector(operand: BaseModel, interaction: OperationInteractionRequest) -> BaseModel:
+        del interaction
+        return ReviewedOperand.model_validate(operand)
+
+    registration = OperationPublicDefinitionRegistrationV1.compose(
+        definition=item,
+        request_schema=request_schema,
+        result_schema=result_schema,
+        review_projection_schema=review_schema,
+        reviewed_operand_type=ReviewedOperand if review_schema is not None else None,
+        review_projector=review_projector if review_schema is not None else None,
+    )
+    return OperationRegistry(
+        definitions=(item,),
+        public_registrations=(registration,),
+    )
+
+
+def _drifted_registry(registry: OperationRegistry) -> OperationRegistry:
+    item = registry.lookup("operation.supervisor.test").model_copy(
+        update={"permitted_frontends": frozenset({OperationFrontendProjection.CLI})}
+    )
+    registration = OperationPublicDefinitionRegistrationV1.compose(
+        definition=item,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id="operation.supervisor.test.request",
+            schema_version=1,
+            model_type=SupervisorRequest,
+        ),
+        result_schema=OperationSchemaBindingV1.bind(
+            schema_id="operation.supervisor.test.result",
+            schema_version=1,
+            model_type=SupervisorResult,
+        ),
+    )
+    return OperationRegistry(definitions=(item,), public_registrations=(registration,))
 
 
 def _supervisor(
@@ -1879,12 +2018,13 @@ def test_irreversible_section_allows_request_but_refuses_acknowledgement_until_e
         journal, leases, operands = _repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
+        registry = _registry(
+            executor_type=IrreversibleSectionExecutor,
+            build=lambda: executor,
+            capabilities=_capabilities(cancellation=OperationCancellation.COOPERATIVE),
+        )
         supervisor = _supervisor(
-            registry=_registry(
-                executor_type=IrreversibleSectionExecutor,
-                build=lambda: executor,
-                capabilities=_capabilities(cancellation=OperationCancellation.COOPERATIVE),
-            ),
+            registry=registry,
             journal=journal,
             leases=leases,
             operands=operands,
@@ -1896,6 +2036,13 @@ def test_irreversible_section_allows_request_but_refuses_acknowledgement_until_e
             operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
             start_task = asyncio.create_task(supervisor.start(operation_id))
             await executor.entered.wait()
+            observation = await OperationObservationService(reader=journal, registry=registry).observe(
+                OperationObservationRequestV1(operation_id=operation_id, after_cursor=0, page_limit=20)
+            )
+            assert isinstance(observation, OperationObservationSuccessV1)
+            assert observation.projection.lifecycle is OperationLifecycle.RUNNING
+            assert not observation.projection.cancellable_now
+            assert (await supervisor.inspect(operation_id)).cancellation_deferred
             requested = await supervisor.request_cancel(operation_id)
             assert executor.context is not None
             with pytest.raises(ValueError, match="irreversible section"):
@@ -1918,6 +2065,7 @@ def test_irreversible_section_allows_request_but_refuses_acknowledgement_until_e
                 ),
             )
         )
+        assert not terminal.cancellation_deferred
 
     assert settling.lifecycle is OperationLifecycle.SETTLING
     assert settling.cancellation_acknowledged_at is not None
@@ -2068,6 +2216,7 @@ def test_reconcile_foreign_expired_lease_orphans_target_without_mutating_foreign
                 definition_id=target.identity.definition_id,
                 subject_ref=target.identity.subject_ref,
             ),
+            definition_contract_digest=target.definition_contract_digest,
             request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
             request_reference=target.request_reference,
             revision=0,
@@ -2078,6 +2227,7 @@ def test_reconcile_foreign_expired_lease_orphans_target_without_mutating_foreign
             cleanup_deadline=None,
             cancellation_requested_at=None,
             cancellation_acknowledged_at=None,
+            cancellation_deferred=False,
         )
         asyncio.run(journal.create(foreign_snapshot, lease=foreign_lease))
         foreign_path = storage_root / "operation-journals" / f"{foreign_lease.operation_id}.json"
@@ -2259,7 +2409,7 @@ def test_resumed_executor_result_reference_settles_the_recovered_operation(tmp_p
     assert reloaded == terminal
 
 
-def test_reconcile_refuses_changed_undeclared_checkpoint_kind_before_reentry(tmp_path: Path) -> None:
+def test_reconcile_refuses_changed_definition_digest_before_reentry(tmp_path: Path) -> None:
     """A checkpoint valid for the old registry cannot enter a changed definition."""
     executors: list[ResumableReviewExecutor] = []
 
@@ -2313,16 +2463,20 @@ def test_reconcile_refuses_changed_undeclared_checkpoint_kind_before_reentry(tmp
             clock=lambda: _NOW + timedelta(minutes=2),
         )
 
-        terminal = asyncio.run(recovery.reconcile(operation_id))
-        replayed = asyncio.run(journal.read_after(operation_id, 0, limit=20))
+        journal_path = tmp_path / "durable-state" / "operation-journals" / f"{operation_id}.json"
+        before_response = journal_path.read_bytes()
+        with pytest.raises(ValueError, match="no longer reproduces"):
+            asyncio.run(
+                recovery.respond(_response(intent="apply", operation_id=operation_id, revision=waiting.revision))
+            )
+        assert journal_path.read_bytes() == before_response
+        with pytest.raises(ValueError, match="no longer reproduces"):
+            asyncio.run(recovery.reconcile(operation_id))
+        reloaded = asyncio.run(journal.load(operation_id))
 
     assert waiting.pending_interaction is not None
-    assert terminal.terminal_condition is OperationTerminalCondition.INTERRUPTED
-    assert terminal.effect is OperationEffect.UNKNOWN
+    assert reloaded == waiting
     assert len(executors) == 1
-    assert tuple(event.outcome for event in replayed.events if isinstance(event, OperationReconciliationEvent)) == (
-        OperationReconciliationOutcome.INTERRUPTED,
-    )
 
 
 def test_reconcile_refuses_resume_without_a_declared_valid_checkpoint(tmp_path: Path) -> None:

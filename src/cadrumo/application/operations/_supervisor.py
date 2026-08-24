@@ -132,6 +132,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         self, request: OperationRequest[BaseModel], *, operation_id: OperationId | None = None
     ) -> OperationId:
         definition = self._registry.lookup(request.definition_id)
+        definition_contract = self._registry.lookup_public_contract(request.definition_id)
         self._validate_request_payload(request, definition.request_type)
         now = self._clock()
         identity = OperationIdentity(
@@ -183,6 +184,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         self._leases_by_operation[identity.operation_id] = lease
         snapshot = OperationPersistedSnapshot(
             identity=identity,
+            definition_contract_digest=definition_contract.definition_contract_digest,
             request_storage=request_storage,
             request_reference=ref,
             credential_free_request_json=credential_free_request_json,
@@ -195,6 +197,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             cleanup_deadline=None,
             cancellation_requested_at=None,
             cancellation_acknowledged_at=None,
+            cancellation_deferred=False,
             idempotency_claim=claim,
         )
         try:
@@ -211,12 +214,26 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         if not isinstance(request.payload, request_type):
             raise ValueError("request payload does not match definition")
 
+    def _require_pinned_definition(self, snapshot: OperationPersistedSnapshot) -> OperationDefinition:
+        definition_id = snapshot.identity.definition_id
+        definition = self._registry.lookup(definition_id)
+        current_contract = self._registry.lookup_public_contract(definition_id)
+        if current_contract.definition_contract_digest != snapshot.definition_contract_digest:
+            raise ValueError("operation definition contract no longer reproduces its invocation digest")
+        return definition
+
+    async def _load_pinned_snapshot(self, operation_id: OperationId) -> OperationPersistedSnapshot:
+        """Load one invocation only after its immutable registry contract reproduces."""
+        snapshot = await self._journal.load(operation_id)
+        self._require_pinned_definition(snapshot)
+        return snapshot
+
     async def start(self, operation_id: OperationId) -> OperationPersistedSnapshot:
         """Start one owned registered executor from its declared request storage."""
         snapshot = await self.inspect(operation_id)
         if snapshot.lifecycle is not OperationLifecycle.CREATED:
             raise ValueError("only a created operation may be started")
-        definition = self._registry.lookup(snapshot.identity.definition_id)
+        definition = self._require_pinned_definition(snapshot)
         execution_deadline = self._execution_deadline_for(definition.capabilities.deadline)
         self._require_cleanup_timeout(definition.capabilities.cancellation)
         requirement = snapshot.secret_requirement
@@ -485,7 +502,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         await asyncio.wait((executor_task,), timeout=remaining_seconds)
 
     async def inspect(self, operation_id: OperationId) -> OperationPersistedSnapshot:
-        return await self._journal.load(operation_id)
+        return await self._load_pinned_snapshot(operation_id)
 
     async def observe(self, operation_id: OperationId) -> OperationPersistedSnapshot:
         """Return the latest durable operation observation."""
@@ -499,6 +516,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         limit: OperationReplayLimit,
     ) -> OperationReplayPage:
         """Read one bounded authoritative event page after an exclusive cursor."""
+        await self.inspect(operation_id)
         return await self._event_stream.read_after(operation_id, cursor, limit=limit)
 
     async def detach(self, operation_id: OperationId) -> OperationPersistedSnapshot:
@@ -541,9 +559,11 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         cleanup_deadline: datetime | None = None,
         cancellation_requested_at: datetime | None = None,
         cancellation_acknowledged_at: datetime | None = None,
+        cancellation_deferred: bool | None = None,
         executor_entered_at: datetime | None = None,
         discard_ephemeral_secret: bool = False,
     ) -> OperationPersistedSnapshot:
+        self._require_pinned_definition(snapshot)
         now = self._clock()
         async with self._lease_lock(snapshot.identity.operation_id):
             lease = await self._require_owned_lease_unlocked(snapshot.identity, now)
@@ -580,6 +600,9 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
                         if cancellation_acknowledged_at is None
                         else cancellation_acknowledged_at
                     ),
+                    "cancellation_deferred": (
+                        snapshot.cancellation_deferred if cancellation_deferred is None else cancellation_deferred
+                    ),
                     "executor_entered_at": (
                         snapshot.executor_entered_at if executor_entered_at is None else executor_entered_at
                     ),
@@ -613,7 +636,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             events=(event,),
             consumed=(*snapshot.consumed_interactions, consumed),
         )
-        definition = self._registry.lookup(snapshot.identity.definition_id)
+        definition = self._require_pinned_definition(snapshot)
         if definition.reconciliation_policy is OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT:
             self._schedule_continuation(successor, definition, consumed)
         return consumed
@@ -645,8 +668,15 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
     async def reject(self, response: OperationRejectResponse) -> OperationConsumedInteraction:
         return await self.respond(response)
 
-    async def request_cancel(self, operation_id: OperationId) -> OperationPersistedSnapshot:
+    async def request_cancel(
+        self,
+        operation_id: OperationId,
+        *,
+        expected_revision: int | None = None,
+    ) -> OperationPersistedSnapshot:
         snapshot = await self.inspect(operation_id)
+        if expected_revision is not None and snapshot.revision != expected_revision:
+            raise ValueError("operation cancellation expected revision is stale")
         if snapshot.secret_requirement is not None and snapshot.executor_entered_at is None:
             requested_at = self._clock()
             event = OperationNoticeEvent(
@@ -667,7 +697,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
                 discard_ephemeral_secret=True,
             )
             return await self._settle_pre_entry_secret_wait(acknowledged, OperationTerminalCondition.CANCELLED)
-        cancellation = self._registry.lookup(snapshot.identity.definition_id).capabilities.cancellation
+        cancellation = self._require_pinned_definition(snapshot).capabilities.cancellation
         if cancellation is OperationCancellation.UNSUPPORTED:
             raise ValueError("operation does not support cancellation")
         self._require_cleanup_timeout(cancellation)
@@ -712,6 +742,31 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             cancellation_acknowledged_at=self._clock(),
         )
 
+    async def _set_cancellation_deferred(
+        self,
+        context_snapshot: OperationPersistedSnapshot,
+        deferred: bool,
+    ) -> OperationPersistedSnapshot:
+        """Persist current cancellation availability across an irreversible section."""
+        while True:
+            current = await self.inspect(context_snapshot.identity.operation_id)
+            if current.identity != context_snapshot.identity:
+                raise ValueError("cancellation availability identity does not match current operation")
+            if deferred and current.cancellation_requested_at is not None:
+                raise ValueError("cancellation was requested before the irreversible section began")
+            if current.cancellation_deferred is deferred:
+                return current
+            try:
+                return await self._advance(
+                    current,
+                    lifecycle=current.lifecycle,
+                    cancellation_deferred=deferred,
+                )
+            except Exception:
+                latest = await self.inspect(current.identity.operation_id)
+                if latest.revision == current.revision:
+                    raise
+
     async def _escalate_cleanup_deadline(self, operation_id: OperationId) -> OperationPersistedSnapshot:
         """Retain uncertainty after the cleanup window without publishing a false terminal state."""
         snapshot = await self.inspect(operation_id)
@@ -727,7 +782,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         snapshot = await self.inspect(operation_id)
         if receipt.identity != snapshot.identity or receipt.revision != snapshot.revision + 1:
             raise ValueError("terminal receipt does not match successor revision")
-        definition = self._registry.lookup(snapshot.identity.definition_id)
+        definition = self._require_pinned_definition(snapshot)
         if receipt.effect not in definition.capabilities.permitted_effects:
             raise OperationDeclarationError("terminal receipt effect is not declared by its definition")
         if (
@@ -852,7 +907,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         snapshot = await self.inspect(operation_id)
         if snapshot.lifecycle is OperationLifecycle.TERMINAL:
             return snapshot
-        definition = self._registry.lookup(snapshot.identity.definition_id)
+        definition = self._require_pinned_definition(snapshot)
         scope_ref = operation_conflict_scope_reference(
             definition_id=snapshot.identity.definition_id,
             subject_ref=snapshot.identity.subject_ref,
@@ -1018,6 +1073,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             resources=self._resources,
             advance=self._advance,
             acknowledge_cancellation=self._acknowledge_cancellation,
+            set_cancellation_deferred=self._set_cancellation_deferred,
         )
 
     async def _record_reconciliation(

@@ -1,0 +1,121 @@
+# AEAT's 2023 contributor calendar publishes each presentation close below.
+
+[[revisions."2020-y-siguientes".deadline_windows]]
+id = "modelo-349-2023-01"
+filing_year = 2023
+period = "2023 01"
+period_kind = "monthly"
+opens_on = 2023-02-01
+closes_on = 2023-02-20
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-y-siguientes".deadline_windows]]
+id = "modelo-349-2023-02"
+filing_year = 2023
+period = "2023 02"
+period_kind = "monthly"
+opens_on = 2023-03-01
+closes_on = 2023-03-20
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-y-siguientes".deadline_windows]]
+id = "modelo-349-2023-03"
+filing_year = 2023
+period = "2023 03"
+period_kind = "monthly"
+opens_on = 2023-04-01
+closes_on = 2023-04-20
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-y-siguientes".deadline_windows]]
+id = "modelo-349-2023-04"
+filing_year = 2023
+period = "2023 04"
+period_kind = "monthly"
+opens_on = 2023-05-01
+closes_on = 2023-05-22
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-y-siguientes".deadline_windows]]
+id = "modelo-349-2023-05"
+filing_year = 2023
+period = "2023 05"
+period_kind = "monthly"
+opens_on = 2023-06-01
+closes_on = 2023-06-20
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-y-siguientes".deadline_windows]]
+id = "modelo-349-2023-06"
+filing_year = 2023
+period = "2023 06"
+period_kind = "monthly"
+opens_on = 2023-07-01
+closes_on = 2023-07-20
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-y-siguientes".deadline_windows]]
+id = "modelo-349-2023-07"
+filing_year = 2023
+period = "2023 07"
+period_kind = "monthly"
+opens_on = 2023-08-01
+closes_on = 2023-09-20
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-y-siguientes".deadline_windows]]
+id = "modelo-349-2023-08"
+filing_year = 2023
+period = "2023 08"
+period_kind = "monthly"
+opens_on = 2023-09-01
+closes_on = 2023-09-20
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-y-siguientes".deadline_windows]]
+id = "modelo-349-2023-09"
+filing_year = 2023
+period = "2023 09"
+period_kind = "monthly"
+opens_on = 2023-10-01
+closes_on = 2023-10-20
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-y-siguientes".deadline_windows]]
+id = "modelo-349-2023-10"
+filing_year = 2023
+period = "2023 10"
+period_kind = "monthly"
+opens_on = 2023-11-01
+closes_on = 2023-11-20
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-y-siguientes".deadline_windows]]
+id = "modelo-349-2023-11"
+filing_year = 2023
+period = "2023 11"
+period_kind = "monthly"
+opens_on = 2023-12-01
+closes_on = 2023-12-20
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-y-siguientes".deadline_windows]]
+id = "modelo-349-2023-12"
+filing_year = 2023
+period = "2023 12"
+period_kind = "monthly"
+opens_on = 2024-01-01
+closes_on = 2024-01-30
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2024"]

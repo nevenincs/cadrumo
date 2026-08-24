@@ -1,9 +1,10 @@
 """Structural contract gates over the enrolled ``cli-sequence`` corpus.
 
-The tightened @result contract: a ``@result`` frame must assert the
-result PAYLOAD — at least one ``@expect`` on a ``result.<path>`` / ``result[...]``
-json-path — not merely ``exit_code`` or the ``status`` spine field, so a sequence
-verifies the MEANING of its final output rather than only that the process ran.
+The tightened @result contract: a structured ``@result`` frame must assert its
+success or refusal payload through ``result.*`` or ``error.*``, not merely
+``exit_code`` or the ``status`` spine field. A terminal ``--help`` frame has no
+JSON envelope and instead proves successful help rendering; the CLI help snapshot
+gates own its exact text.
 
 The detection lives in the parser (``result_frame_asserts_result_payload``); this
 module enforces it as a ratcheting per-page gate. Each page's offender count must
@@ -50,7 +51,7 @@ _PUBLIC_DEVELOPMENT_METADATA_RE = re.compile(
 
 
 def _current_offender_counts() -> dict[str, int]:
-    """Return the per-page count of @result frames that assert no result payload."""
+    """Return per-page counts of @result frames with no semantic outcome assertion."""
     discovered, problems = discover_sequences(docs_root=default_docs_root())
     assert not problems, "sequence discovery reported problems:\n  " + "\n  ".join(problems)
     counts: dict[str, int] = {}
@@ -67,9 +68,8 @@ def _render_result_ratchet_problems(current: Mapping[str, int], baseline: Mappin
         if count > allowed:
             problems.append(
                 f"{page}: {count} @result frame(s) assert no result payload, baseline allows {allowed}. "
-                "A @result frame must carry at least one @expect on the result payload "
-                "(e.g. '@expect result.status == \"verified_complete\"' or "
-                "'@expect result.work_unit_id != null'), not only 'exit_code'/'status'; "
+                "A structured @result frame must assert result.* or error.* "
+                "(terminal --help text is snapshot-owned), not only exit_code/status; "
                 f"then tighten the entry in {_BASELINE_PATH.name}"
             )
         else:
@@ -110,7 +110,7 @@ def test_result_ratchet_bites_in_both_directions() -> None:
 
 
 def test_result_frames_assert_the_result_payload() -> None:
-    """Every enrolled page's payload-less @result count EQUALS its baseline entry.
+    """Every enrolled page's outcome-less @result count EQUALS its baseline entry.
 
     A ``@result`` frame asserting only ``exit_code`` (and/or ``status``) proves the
     command ran without proving it produced the right answer. The remaining debt is
@@ -128,7 +128,7 @@ def test_result_frames_assert_the_result_payload() -> None:
     baseline: dict[str, int] = json.loads(_BASELINE_PATH.read_text(encoding="utf-8"))
     problems = _render_result_ratchet_problems(_current_offender_counts(), baseline)
     assert not problems, (
-        "cli-sequence @result frames must assert their result payload "
+        "cli-sequence @result frames must assert their semantic outcome "
         "(ADR D4 result-assertion contract):\n  " + "\n  ".join(problems)
     )
 

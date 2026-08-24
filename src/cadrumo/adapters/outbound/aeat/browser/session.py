@@ -36,6 +36,7 @@ if TYPE_CHECKING:
         Response,
     )
 
+from .....core import NoRecoveryOutcome
 from .....core.async_cleanup import await_cancellation_complete
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
@@ -43,7 +44,12 @@ from .....core.logging import get_logger
 from .....core.time import now
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..auth import BrowserContextProvisioner
-from ._errors import BrowserError, BrowserFailureMode
+from ._errors import (
+    BrowserError,
+    BrowserFailureMode,
+    BrowserPreconditionCondition,
+    browser_no_action_verdict,
+)
 from ._site_health import (
     _URL_ADAPTER,
     SiteHealthEvidence,
@@ -123,9 +129,14 @@ class BrowserSession:
         async with self._lifecycle_lock:
             if self._browser is not None:
                 raise BrowserError(
-                    "BrowserSession already owns a live browser; call close() before create_context() again",
+                    "Browser session already owns a live browser",
                     failure_mode=BrowserFailureMode.SESSION_BUSY,
                     context={"profile": self.profile.name},
+                    precondition_verdict=browser_no_action_verdict(
+                        condition=BrowserPreconditionCondition.SESSION_AVAILABLE,
+                        facts={"browser_session_available": False},
+                        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                    ),
                 )
             logger.info(
                 "browser context create starting profile=%s channel=%s headless=%s has_proxy=%s",
@@ -169,9 +180,14 @@ class BrowserSession:
                     exc_info=True,
                 )
                 raise BrowserError(
-                    f"Failed to prepare browser context: {exc}",
+                    "Browser context preparation failed",
                     failure_mode=BrowserFailureMode.CONTEXT_CREATE_FAILED,
                     context={"profile": self.profile.name, "cause_type": type(exc).__name__},
+                    precondition_verdict=browser_no_action_verdict(
+                        condition=BrowserPreconditionCondition.CONTEXT_CREATABLE,
+                        facts={"browser_context_creatable": False},
+                        outcome=NoRecoveryOutcome.SAFETY,
+                    ),
                 ) from exc
 
     def _build_proxy_settings(self) -> ProxySettings | None:
@@ -207,24 +223,8 @@ class BrowserSession:
                 type(exc).__name__,
                 exc_info=True,
             )
-            # When the failure is a missing browser binary (the post-install
-            # `playwright install` step was skipped), name the exact fix for the
-            # CHANNEL THIS SESSION IS ACTUALLY CONFIGURED WITH — a bare
-            # 'playwright install chromium' hint misdirects an operator running
-            # the default 'chrome' channel to install the wrong browser.
-            hint = ""
-            if "executable doesn't exist" in str(exc).lower() or "playwright install" in str(exc).lower():
-                channel = self.settings.cadrumo_browser_channel
-                if channel == "chrome":
-                    hint = (
-                        " — run 'playwright install chrome' (installs/detects the system "
-                        "Google Chrome; on Linux this needs OS package-manager/root access) "
-                        "or 'just playwright-doctor' to diagnose"
-                    )
-                else:
-                    hint = f" — run 'playwright install {channel}' (or 'just playwright-doctor' to diagnose)"
             raise BrowserError(
-                f"Failed to launch browser: {exc}{hint}",
+                "Browser launch failed",
                 failure_mode=BrowserFailureMode.BROWSER_LAUNCH_FAILED,
                 context={
                     "profile": self.profile.name,
@@ -233,6 +233,11 @@ class BrowserSession:
                     "has_proxy": bool(self.settings.cadrumo_proxy_url),
                     "cause_type": type(exc).__name__,
                 },
+                precondition_verdict=browser_no_action_verdict(
+                    condition=BrowserPreconditionCondition.BROWSER_LAUNCHABLE,
+                    facts={"browser_launchable": False},
+                    outcome=NoRecoveryOutcome.SAFETY,
+                ),
             ) from exc
 
     def _build_context_kwargs(
@@ -305,7 +310,7 @@ class BrowserSession:
                 exc_info=True,
             )
             raise BrowserError(
-                f"Failed to create browser context: {exc}",
+                "Browser context creation failed",
                 failure_mode=BrowserFailureMode.CONTEXT_CREATE_FAILED,
                 context={
                     "profile": self.profile.name,
@@ -314,6 +319,15 @@ class BrowserSession:
                     "storage_state_source": _storage_state_source(context_kwargs),
                     "cause_type": type(exc).__name__,
                 },
+                precondition_verdict=browser_no_action_verdict(
+                    condition=BrowserPreconditionCondition.CONTEXT_CREATABLE,
+                    facts={
+                        "browser_context_creatable": False,
+                        "storage_state_supplied": "storage_state" in context_kwargs,
+                        "provisioner_supplied": "client_certificates" in context_kwargs,
+                    },
+                    outcome=NoRecoveryOutcome.SAFETY,
+                ),
             ) from exc
         finally:
             context_kwargs.pop("client_certificates", None)
@@ -332,13 +346,18 @@ class BrowserSession:
                 exc_info=True,
             )
             raise BrowserError(
-                f"Failed to apply browser evasion strategy: {exc}",
+                "Browser evasion setup failed",
                 failure_mode=BrowserFailureMode.EVASION_FAILED,
                 context={
                     "profile": self.profile.name,
                     "evasion_strategy": type(self.evasion_strategy).__name__,
                     "cause_type": type(exc).__name__,
                 },
+                precondition_verdict=browser_no_action_verdict(
+                    condition=BrowserPreconditionCondition.EVASION_APPLIED,
+                    facts={"browser_evasion_applied": False},
+                    outcome=NoRecoveryOutcome.SAFETY,
+                ),
             ) from exc
 
     async def close(self) -> None:
@@ -421,9 +440,14 @@ class BrowserSession:
                 exc_info=True,
             )
             raise BrowserError(
-                f"Failed to read navigated page content: {exc}",
+                "Navigated browser page content is unreadable",
                 failure_mode=BrowserFailureMode.PAGE_CONTENT_FAILED,
                 context={"url": url, "http_status": http_status, "cause_type": type(exc).__name__},
+                precondition_verdict=browser_no_action_verdict(
+                    condition=BrowserPreconditionCondition.PAGE_CONTENT_READABLE,
+                    facts={"browser_page_content_readable": False},
+                    outcome=NoRecoveryOutcome.SAFETY,
+                ),
             ) from exc
 
         result = probe_response(
@@ -509,6 +533,11 @@ class BrowserSession:
                 "Failed to close retained browser",
                 failure_mode=BrowserFailureMode.BROWSER_CLOSE_FAILED,
                 context={"profile": self.profile.name, "cause_type": type(exc).__name__},
+                precondition_verdict=browser_no_action_verdict(
+                    condition=BrowserPreconditionCondition.BROWSER_CLOSEABLE,
+                    facts={"browser_closeable": False},
+                    outcome=NoRecoveryOutcome.SAFETY,
+                ),
             ) from exc
         self._browser = None
 

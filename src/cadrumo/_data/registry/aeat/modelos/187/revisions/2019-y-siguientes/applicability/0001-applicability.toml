@@ -1,8 +1,12 @@
 [[revisions."2019-y-siguientes".applicability]]
 id = "m187-seed"
 applicable_entity_types = ["attribution_entity", "legal_entity", "natural_person"]
+# This is only Article 2's withholding/pay-on-account limb. Article 42 RGAT
+# creates an independent person/entity population that the current one-fact
+# applicability schema cannot decide; it remains explicitly incomplete rather
+# than being silently treated as a withholding predicate.
 required_payer_fact = "pays_capital_income_with_retencion"
-applicable_reason = "Modelo 187 (acciones y participaciones de IIC, resumen anual de retenciones): el contribuyente satisface rentas o ganancias de IIC sujetas a retencion y presenta el resumen anual."
-not_applicable_reason = "Modelo 187 no aplica: solo corresponde a quien satisface rentas o ganancias de IIC sujetas a retencion."
+applicable_reason = "Modelo 187 (acciones y participaciones de IIC, resumen anual de retenciones): el contribuyente satisface rentas o ganancias de IIC o derechos de suscripcion sujetas a retencion y cumple el supuesto de retenciones del articulo 2. El articulo 2 incorpora ademas, de forma independiente, a las personas o entidades del articulo 42 RGAT; esa poblacion requiere una decision de perfil aceptada antes de que Cadrumo pueda resolverla."
+not_applicable_reason = "Modelo 187 no aplica por este supuesto de retenciones; la poblacion independiente de personas o entidades del articulo 42 RGAT no se infiere de la ausencia de retencion y permanece sin resolver."
 cuota_bearing = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-hap-1608-2014:art-1"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-hap-1608-2014:art-1", "orden-hac-1417-2018:art-primero"]

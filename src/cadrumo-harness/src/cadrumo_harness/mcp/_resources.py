@@ -14,7 +14,7 @@ Like ``_tools`` / ``_meta_tools`` / ``_prompts``, this module is SDK-independent
 pure functions over typed models: ``_server`` adapts :class:`HarnessResourceRef`
 to the SDK ``Resource``, :class:`HarnessResourceTemplate` to ``ResourceTemplate``,
 and :class:`HarnessResourceContent` to the read result, so this module imports
-with or without the ``cadrumo[agent]`` extra and is unit-tested directly.
+with or without the harness distribution's MCP runtime and is unit-tested directly.
 """
 
 from __future__ import annotations

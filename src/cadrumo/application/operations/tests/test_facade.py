@@ -15,11 +15,13 @@ from .. import (
     OperationInteractionRequest,
     OperationLeaseObservation,
     OperationLeaseObservationDisposition,
+    OperationObservationService,
     OperationPersistedSnapshot,
     OperationPublicProjectionV1,
     OperationRegistry,
     OperationReplayPage,
     OperationRequest,
+    OperationReviewProjectionService,
     OperationSupervisor,
 )
 from .. import __all__ as public_names
@@ -49,6 +51,8 @@ def test_representative_contracts_resolve_from_public_facade() -> None:
     assert OperationExecutorContext.__module__.endswith("._executor")
     assert OperationInteractionRequest.__module__.endswith("._interactions")
     assert OperationRegistry.__module__.endswith("._registry")
+    assert OperationObservationService.__module__.endswith("._observation")
+    assert OperationReviewProjectionService.__module__.endswith("._projection_services")
     assert callable(OperationRegistry.resolve_request_json)
     assert callable(OperationRegistry.resolve_snapshot_json)
     assert OperationSupervisor.__module__.endswith("._supervisor")
@@ -69,7 +73,9 @@ def test_facade_does_not_import_frontend_or_adapter_modules() -> None:
         "_journal",
         "_leases",
         "_models",
+        "_observation",
         "_public",
+        "_projection_services",
         "_replay",
         "_registry",
         "_secret_submission",

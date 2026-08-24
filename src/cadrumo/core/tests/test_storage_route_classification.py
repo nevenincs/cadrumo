@@ -99,14 +99,20 @@ def test_pointer_resolved_bucket_database_route_is_detected(tmp_path: Path) -> N
 
 
 def test_corrupt_pointer_refuses_root_fallback(tmp_path: Path) -> None:
-    (tmp_path / "active-profile").write_text("not = valid = toml", encoding="utf-8")
+    pointer_file = tmp_path / "active-profile"
+    pointer_file.write_text("not = valid = toml", encoding="utf-8")
 
     with pytest.raises(ActiveProfilePointerError) as exc_info:
         Settings(cadrumo_local_storage_root=tmp_path)
 
-    assert "invalid active-profile pointer" in str(exc_info.value)
-    assert "refusing root storage fallback" in str(exc_info.value)
-    assert exc_info.value.__cause__ is not None
+    error = exc_info.value
+    assert error.args == ("errors.integrity.integrity_active_profile_pointer",)
+    assert error.context == {
+        "path": str(pointer_file),
+        "pointer_corrupt": True,
+        "root_fallback_refused": True,
+    }
+    assert error.__cause__ is not None
 
 
 def test_no_active_profile_classifies_root_fallback_database(tmp_path: Path) -> None:

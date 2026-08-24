@@ -1,0 +1,68 @@
+# Canonical early-2024 owner: monthly periods through August.  Exact dates and
+# direct-debit cutoffs are transcribed from AEAT's bundled 2024 calendar.
+
+[[revisions.2024-hasta-08-y-2t.deadline_windows]]
+id = "modelo-303-2024-02-mensual"
+filing_year = 2024
+period = "2024 02"
+period_kind = "monthly"
+opens_on = 2024-03-01
+closes_on = 2024-04-01
+payment_cutoff_on = 2024-03-25
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2024"]
+
+[[revisions.2024-hasta-08-y-2t.deadline_windows]]
+id = "modelo-303-2024-03-mensual"
+filing_year = 2024
+period = "2024 03"
+period_kind = "monthly"
+opens_on = 2024-04-01
+closes_on = 2024-04-30
+payment_cutoff_on = 2024-04-25
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2024"]
+
+[[revisions.2024-hasta-08-y-2t.deadline_windows]]
+id = "modelo-303-2024-04-mensual"
+filing_year = 2024
+period = "2024 04"
+period_kind = "monthly"
+opens_on = 2024-05-01
+closes_on = 2024-05-30
+payment_cutoff_on = 2024-05-27
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2024"]
+
+[[revisions.2024-hasta-08-y-2t.deadline_windows]]
+id = "modelo-303-2024-05-mensual"
+filing_year = 2024
+period = "2024 05"
+period_kind = "monthly"
+opens_on = 2024-06-01
+closes_on = 2024-07-01
+payment_cutoff_on = 2024-06-26
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2024"]
+
+[[revisions.2024-hasta-08-y-2t.deadline_windows]]
+id = "modelo-303-2024-07-mensual"
+filing_year = 2024
+period = "2024 07"
+period_kind = "monthly"
+opens_on = 2024-08-01
+closes_on = 2024-08-30
+payment_cutoff_on = 2024-08-27
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2024"]
+
+[[revisions.2024-hasta-08-y-2t.deadline_windows]]
+id = "modelo-303-2024-08-mensual"
+filing_year = 2024
+period = "2024 08"
+period_kind = "monthly"
+opens_on = 2024-09-01
+closes_on = 2024-09-30
+payment_cutoff_on = 2024-09-25
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2024"]

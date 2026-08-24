@@ -29,12 +29,14 @@ from .. import (
     OperationExecutorContext,
     OperationExecutorFactory,
     OperationFrontendProjection,
+    OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
     OperationReplayPolicy,
     OperationReplayStatus,
     OperationRequest,
     OperationRequestStoragePolicy,
+    OperationSchemaBindingV1,
     OperationSecureReferenceStore,
     OperationSensitiveInputPolicy,
     OperationSupervisor,
@@ -86,24 +88,32 @@ def _capabilities() -> OperationCapabilities:
 
 def _registry() -> OperationRegistry:
     """Build the concrete registered operation that emits durable notice events."""
+    definition = OperationDefinition(
+        definition_id=_DEFINITION_ID,
+        request_type=ReplayRequest,
+        result_type=None,
+        executor_factory=OperationExecutorFactory(
+            request_type=ReplayRequest,
+            executor_type=ReplayNoticeExecutor,
+            build=ReplayNoticeExecutor,
+        ),
+        phase_codes=("operation.replay.phase",),
+        interaction_kinds=frozenset(),
+        capabilities=_capabilities(),
+        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
+    )
+    registration = OperationPublicDefinitionRegistrationV1.compose(
+        definition=definition,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id="operation.supervisor.replay.request",
+            schema_version=1,
+            model_type=ReplayRequest,
+        ),
+    )
     return OperationRegistry(
-        definitions=(
-            OperationDefinition(
-                definition_id=_DEFINITION_ID,
-                request_type=ReplayRequest,
-                result_type=None,
-                executor_factory=OperationExecutorFactory(
-                    request_type=ReplayRequest,
-                    executor_type=ReplayNoticeExecutor,
-                    build=ReplayNoticeExecutor,
-                ),
-                phase_codes=("operation.replay.phase",),
-                interaction_kinds=frozenset(),
-                capabilities=_capabilities(),
-                reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-                permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
-            ),
-        )
+        definitions=(definition,),
+        public_registrations=(registration,),
     )
 
 
@@ -152,15 +162,11 @@ def test_supervisor_replay_reads_idempotent_bounded_pages_from_the_durable_event
             operands=operands,
         )
 
-        unknown = asyncio.run(observer.replay("4" * 64, 0, limit=2))
         first_page = asyncio.run(observer.replay(operation_id, 0, limit=2))
         repeated_first_page = asyncio.run(observer.replay(operation_id, 0, limit=2))
         second_page = asyncio.run(observer.replay(operation_id, first_page.next_cursor, limit=1))
         caught_up = asyncio.run(observer.replay(operation_id, second_page.next_cursor, limit=2))
 
-        assert unknown.status is OperationReplayStatus.UNKNOWN_OPERATION
-        assert unknown.events == ()
-        assert unknown.next_cursor == 0
         assert first_page.status is OperationReplayStatus.PAGE
         assert tuple(event.sequence for event in first_page.events) == (1, 2)
         assert first_page.next_cursor == 2

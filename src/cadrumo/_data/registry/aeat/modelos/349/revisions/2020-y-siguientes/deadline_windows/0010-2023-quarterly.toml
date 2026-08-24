@@ -1,0 +1,41 @@
+# AEAT's 2023 and 2024 contributor calendars publish these quarter closes.
+
+[[revisions."2020-y-siguientes".deadline_windows]]
+id = "modelo-349-2023-1t"
+filing_year = 2023
+period = "2023 1T"
+period_kind = "quarterly"
+opens_on = 2023-04-01
+closes_on = 2023-04-20
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-y-siguientes".deadline_windows]]
+id = "modelo-349-2023-2t"
+filing_year = 2023
+period = "2023 2T"
+period_kind = "quarterly"
+opens_on = 2023-07-01
+closes_on = 2023-07-20
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-y-siguientes".deadline_windows]]
+id = "modelo-349-2023-3t"
+filing_year = 2023
+period = "2023 3T"
+period_kind = "quarterly"
+opens_on = 2023-10-01
+closes_on = 2023-10-20
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-y-siguientes".deadline_windows]]
+id = "modelo-349-2023-4t"
+filing_year = 2023
+period = "2023 4T"
+period_kind = "quarterly"
+opens_on = 2024-01-01
+closes_on = 2024-01-30
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2024"]

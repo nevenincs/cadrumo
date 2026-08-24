@@ -22,7 +22,6 @@ msgid "Install Cadrumo"
 msgstr "A Cadrumo telepítése"
 
 #: ../../workstation-setup.md:3
-#, fuzzy
 msgid ""
 "This page covers installation only: get the package, install the `aeat` "
 "command, add the optional extras you want, and (if you use an AI "
@@ -34,15 +33,14 @@ msgid ""
 msgstr ""
 "Ez az oldal csak a telepítéssel foglalkozik: szerezze be a csomagot, "
 "telepítse az `aeat` parancsot, adja hozzá a kívánt opcionális "
-"kiegészítőket, és (ha AI-asszisztenst használ) telepítse az "
-"ügynökfelületet. Ha a Cadrumo még nincs a gépén, kezdje itt: [A Cadrumo "
+"kiegészítőket, és (ha AI-asszisztenst használ) telepítse a különálló "
+"ügynöki keretrendszert. Ha a Cadrumo még nincs a gépén, kezdje itt: [A Cadrumo "
 "beszerzése](download.md), amely bemutatja a beszerzési útvonalakat és "
 "azok aktuális elérhetőségét. A konfigurálás és az első használat a "
 "[gyorsindítóban](how-to/quickstart.md) kezdődik, miután a telepítési "
 "ellenőrzések sikeresen lefutottak."
 
 #: ../../workstation-setup.md:10
-#, fuzzy
 msgid ""
 "Cadrumo works without any optional service. Google export, on-host LLM "
 "vision, cloud LLM upload, and the separate agent harness are all opt-in. "
@@ -50,7 +48,7 @@ msgid ""
 msgstr ""
 "A Cadrumo bármilyen opcionális szolgáltatás nélkül működik. A Google "
 "export, a helyi (on-host) LLM-alapú képfeldolgozás, a felhőbeli LLM-"
-"feltöltés és az ügynökfelület mind választható. Az alapvető benyújtási "
+"feltöltés és a különálló ügynöki keretrendszer mind választható. Az alapvető benyújtási "
 "munkafolyamat egyikük nélkül is fut."
 
 #: ../../workstation-setup.md:14
@@ -124,27 +122,25 @@ msgid "Install optional extras from the checkout"
 msgstr "Opcionális kiegészítők telepítése a forráskód-kimásolásból"
 
 #: ../../workstation-setup.md:55
-#, fuzzy
 msgid ""
 "The core install is lean. Google export, the live AEAT browser, the "
 "Anthropic-API provider, and OFX/QFX bank-statement import are optional "
 "package extras. Name the extras you need when you install:"
 msgstr ""
 "Az alaptelepítés karcsú. A Google export, az élő AEAT-böngésző, az "
-"Anthropic-API szolgáltató, az OFX/QFX bankkivonat-importálás és az "
-"ügynökfelület opcionális csomagkiegészítők. A telepítéskor nevezze meg a "
+"Anthropic-API szolgáltató és az OFX/QFX bankkivonat-importálás opcionális "
+"csomagkiegészítők. A telepítéskor nevezze meg a "
 "szükséges kiegészítőket:"
 
 #: ../../workstation-setup.md:63
-#, fuzzy
 msgid ""
 "The available extras are `google`, `browser`, `anthropic`, `ofx`, and "
 "`all`. `aeat config check` lists each extra and prints the exact install "
 "command for any that is missing. A feature whose extra is not installed "
 "refuses with the same hint instead of failing obscurely."
 msgstr ""
-"Az elérhető kiegészítők: `google`, `browser`, `anthropic`, `ofx`, `agent`"
-" és `all`. Az `aeat config check` felsorolja az egyes kiegészítőket, és "
+"Az elérhető kiegészítők: `google`, `browser`, `anthropic`, `ofx` és `all`. "
+"Az `aeat config check` felsorolja az egyes kiegészítőket, és "
 "kiírja a pontos telepítési parancsot minden hiányzóhoz. Az a funkció, "
 "amelynek kiegészítője nincs telepítve, ugyanezzel a tippel utasítja el a "
 "kérést, ahelyett, hogy homályosan meghiúsulna."
@@ -196,7 +192,6 @@ msgid "Run the Model Context Protocol (MCP) surface"
 msgstr "A Model Context Protocol (MCP) felület futtatása"
 
 #: ../../workstation-setup.md:93
-#, fuzzy
 msgid ""
 "Cadrumo's separate `cadrumo-harness` distribution provides the MCP "
 "server, `cadrumo-mcp`, so an AI assistant can operate the same local, "
@@ -204,18 +199,20 @@ msgid ""
 "operator rules, taxpayer-situation skills, and scoped agent personas that"
 " keep the assistant inside the safety boundary."
 msgstr ""
-"A Cadrumo MCP-szervert, a `cadrumo-mcp` parancsot szállítja, így egy MI-"
-"asszisztens ugyanazokat a helyi, korlátozott parancsokat kezelheti, "
-"amelyeket a CLI kitesz, egy ügynöki hámesszal együtt: a kezelő szabályai,"
-" az adózói helyzethez tartozó készségek és a körülhatárolt "
-"ügynökszemélyiségek a biztonsági határon belül tartják az asszisztenst."
+"A Cadrumo különálló `cadrumo-harness` disztribúciója biztosítja a "
+"`cadrumo-mcp` MCP-kiszolgálót, így egy MI-asszisztens ugyanazokat a helyi, "
+"korlátozott parancsokat kezelheti, amelyeket a CLI elérhetővé tesz, egy "
+"ügynöki keretrendszerrel együtt: az operátori szabályok, az adózói "
+"helyzethez tartozó készségek és a meghatározott hatókörű ügynökszerepkörök "
+"a biztonsági határon belül tartják az asszisztenst."
 
 #: ../../workstation-setup.md:99
-#, fuzzy
 msgid ""
 "In the beta, synchronize that workspace member and run the server from "
 "the same repository checkout:"
-msgstr "A béta a projekt tárolójából települ:"
+msgstr ""
+"A bétában szinkronizálja ezt a munkaterületi tagot, és futtassa a "
+"kiszolgálót ugyanabból a repozitórium-munkapéldányból:"
 
 #: ../../workstation-setup.md:107
 msgid ""
@@ -339,4 +336,3 @@ msgstr "[Hibaelhárítás](how-to/troubleshooting.md)"
 
 #~ msgid "[Connect an agent](how-to/connect-an-agent.md)"
 #~ msgstr "[Ügynök csatlakoztatása](how-to/connect-an-agent.md)"
-

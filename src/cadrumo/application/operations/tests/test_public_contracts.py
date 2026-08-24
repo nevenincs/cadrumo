@@ -39,6 +39,7 @@ from cadrumo.application.operations import (
     OperationPublicContractSetV1,
     OperationPublicEventPageV1,
     OperationPublicPhaseEventV1,
+    OperationPublicProgressV1,
     OperationPublicProjectionV1,
     OperationReconciliationPolicy,
     OperationRegistry,
@@ -99,7 +100,11 @@ class ProjectionContractExecutor:
         return request.subject_ref
 
 
-def _projection_contract_set() -> OperationPublicContractSetV1:
+def _projection_contract_set(
+    *,
+    interaction_kinds: frozenset[OperationInteractionKind] = frozenset(),
+    cancellation: OperationCancellation = OperationCancellation.UNSUPPORTED,
+) -> OperationPublicContractSetV1:
     definition = OperationDefinition(
         definition_id="operations.public.projection",
         request_type=SafeProjection,
@@ -110,10 +115,10 @@ def _projection_contract_set() -> OperationPublicContractSetV1:
             build=ProjectionContractExecutor,
         ),
         phase_codes=("operations.public.running",),
-        interaction_kinds=frozenset(),
+        interaction_kinds=interaction_kinds,
         capabilities=OperationCapabilities(
             durability=OperationDurability.EPHEMERAL,
-            cancellation=OperationCancellation.UNSUPPORTED,
+            cancellation=cancellation,
             deadline=OperationDeadline.ABSENT,
             replay=OperationReplayPolicy.NONE,
             baseline=OperationBaselinePolicy.NONE,
@@ -146,8 +151,12 @@ def _projection_contract_set() -> OperationPublicContractSetV1:
     ).public_contract_set
 
 
-def _projection(**changes: object) -> OperationPublicProjectionV1:
-    contract_set = _projection_contract_set()
+def _projection(
+    *,
+    contract_set: OperationPublicContractSetV1 | None = None,
+    **changes: object,
+) -> OperationPublicProjectionV1:
+    contract_set = _projection_contract_set() if contract_set is None else contract_set
     contract = contract_set.definitions[0]
     values: dict[str, object] = {
         "operation_id": _OPERATION_ID,
@@ -260,6 +269,29 @@ def test_observation_success_requires_one_exact_projection_page_anchor() -> None
         )
 
 
+def test_observation_success_refuses_event_rows_newer_than_its_projection() -> None:
+    event = OperationPublicPhaseEventV1(
+        revision=5,
+        sequence=1,
+        timestamp=_NOW,
+        code="operations.public.advanced",
+        kind=OperationEventKind.PHASE,
+        phase_code="operations.public.running",
+    )
+    page = OperationPublicEventPageV1(
+        operation_id=_OPERATION_ID,
+        anchor_cursor=1,
+        requested_cursor=0,
+        status="page",
+        events=(event,),
+        next_cursor=1,
+        restart_cursor=None,
+    )
+
+    with pytest.raises(ValidationError, match="event row revision"):
+        OperationObservationSuccessV1(projection=_projection(anchor_cursor=1), event_page=page)
+
+
 def test_public_projection_refuses_terminal_pending_interaction_and_axis_drift() -> None:
     pending = OperationUnsupportedInteractionV1(
         interaction_kind=OperationInteractionKind.INPUT,
@@ -280,6 +312,49 @@ def test_public_projection_refuses_terminal_pending_interaction_and_axis_drift()
         _projection(terminal_condition=OperationTerminalCondition.FAILED)
     with pytest.raises(ValidationError, match="cancellation does not match"):
         _projection(cancellation=OperationCancellation.COOPERATIVE)
+
+
+def test_public_projection_refuses_progress_phase_and_pending_interaction_drift() -> None:
+    with pytest.raises(ValidationError, match="progress phase"):
+        _projection(
+            anchor_cursor=1,
+            progress=OperationPublicProgressV1(
+                completed=1,
+                total=2,
+                unit_code="operations.public.unit",
+                phase_code="operations.public.previous-phase",
+                event_sequence=1,
+                revision=4,
+            ),
+        )
+
+    declared_input_contracts = _projection_contract_set(
+        interaction_kinds=frozenset({OperationInteractionKind.INPUT}),
+    )
+    current_input = OperationUnsupportedInteractionV1(
+        interaction_kind=OperationInteractionKind.INPUT,
+        interaction_id=_INTERACTION_ID,
+        revision=4,
+        presentation_code="operations.public.input",
+        unsupported_code="operations.public.unsupported",
+        expires_at=None,
+    )
+    with pytest.raises(ValidationError, match="current operation revision"):
+        _projection(
+            contract_set=declared_input_contracts,
+            lifecycle=OperationLifecycle.WAITING_FOR_INTERACTION,
+            pending_interaction=current_input.model_copy(update={"revision": 3}),
+        )
+    with pytest.raises(ValidationError, match="declared by the definition contract"):
+        _projection(
+            lifecycle=OperationLifecycle.WAITING_FOR_INTERACTION,
+            pending_interaction=current_input,
+        )
+    with pytest.raises(ValidationError, match="waiting-for-interaction lifecycle"):
+        _projection(
+            contract_set=declared_input_contracts,
+            pending_interaction=current_input,
+        )
 
 
 @pytest.mark.parametrize(
@@ -307,6 +382,25 @@ def test_public_projection_refuses_cancellation_fact_drift() -> None:
         _projection(
             lifecycle=OperationLifecycle.TERMINAL,
             terminal_condition=OperationTerminalCondition.CANCELLED,
+        )
+
+
+def test_public_projection_refuses_cancellation_availability_drift() -> None:
+    cancellable_contracts = _projection_contract_set(cancellation=OperationCancellation.COOPERATIVE)
+
+    assert _projection(contract_set=cancellable_contracts, cancellable_now=True).cancellable_now
+    with pytest.raises(ValidationError, match="currently available after it is requested"):
+        _projection(
+            contract_set=cancellable_contracts,
+            cancellable_now=True,
+            cancellation_requested=True,
+            cleanup_deadline_at=_NOW + timedelta(seconds=1),
+        )
+    with pytest.raises(ValidationError, match="while settlement is underway"):
+        _projection(
+            contract_set=cancellable_contracts,
+            lifecycle=OperationLifecycle.SETTLING,
+            cancellable_now=True,
         )
 
 
@@ -346,6 +440,16 @@ def test_public_event_page_enforces_contiguous_bounded_rows_and_resynchronizatio
             anchor_cursor=4,
             requested_cursor=1,
             status="compacted",
+            events=(),
+            next_cursor=1,
+            restart_cursor=None,
+        )
+    with pytest.raises(ValidationError, match="equal its observation anchor cursor"):
+        OperationPublicEventPageV1(
+            operation_id=_OPERATION_ID,
+            anchor_cursor=2,
+            requested_cursor=1,
+            status="caught_up",
             events=(),
             next_cursor=1,
             restart_cursor=None,

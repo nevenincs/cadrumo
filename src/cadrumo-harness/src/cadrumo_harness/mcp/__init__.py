@@ -9,8 +9,8 @@ composes the application-layer manifest builder with the CLI's registered
 result-schema references. The human-in-the-loop confirmation tiers and the
 faithfulness check live here too.
 
-The protocol runtime (the MCP SDK) is an optional dependency gated behind the
-``cadrumo[agent]`` extra and imported lazily by :func:`main`; the tool-building,
+The protocol runtime (the MCP SDK) is supplied by the sibling
+``cadrumo-harness`` distribution and imported lazily by :func:`main`; the tool-building,
 annotation, HITL, faithfulness, and dispatch logic in this package is
 SDK-independent and fully unit-tested. A bare-core invocation of the ``cadrumo-mcp``
 console script refuses with the install hint rather than crashing - the same
@@ -74,8 +74,8 @@ __all__ = [
 def main() -> None:
     """Console-script entry point for the ``cadrumo-mcp`` server.
 
-    Lazily imports the MCP SDK runtime. If the ``cadrumo[agent]`` extra is not
-    installed, it refuses with the install hint and a non-zero exit rather than
+    Lazily imports the MCP SDK runtime. If the ``cadrumo-harness`` distribution's
+    runtime is incomplete, it refuses with the install hint and a non-zero exit rather than
     raising a raw ``ModuleNotFoundError``.
     """
     from ._server import serve

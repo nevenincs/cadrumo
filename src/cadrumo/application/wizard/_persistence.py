@@ -297,12 +297,11 @@ def _safe_entry_date(birth_raw: str, entry_raw: str | None) -> date | None:
     """Return the entry-event date only when it is a valid pair with birth.
 
     The cross-field entry-event invariants (entry >= birth, entry <= today) are
-    surfaced as review verdicts before submit, but the checkpoint
-    (save-and-exit) persist path runs no flow validators, so an out-of-order
-    date could still reach this projection. Dropping the invalid optional token
-    here keeps the checkpoint write from raising a raw ``DescendantInfo`` model
-    error; the review verdict still blocks the final submit until the operator
-    corrects it.
+    surfaced as review verdicts before submit, but a persistence projection can
+    still receive an out-of-order date. Dropping the invalid optional token
+    here keeps the projection from raising a raw ``DescendantInfo`` model error;
+    the review verdict still blocks final submission until the operator corrects
+    it.
     """
     if not entry_raw:
         return None
@@ -319,9 +318,9 @@ def _safe_relacion_and_entry_dates(
     """Read one instance's relación and the two entry dates it may legitimately carry.
 
     Drops an entry date the declared relación cannot carry, for the same reason
-    :func:`_safe_entry_date` drops an out-of-order one: the checkpoint path runs
-    no flow validators, so a stale answer left behind when the operator changed
-    the relación would otherwise raise a raw model error out of a save-and-exit.
+    :func:`_safe_entry_date` drops an out-of-order one: a stale answer left
+    behind when the operator changed the relación must not raise a raw model
+    error during persistence projection.
 
     Dropping is the safe direction here specifically. The dropped value is an
     Art. 58.2 window anchor, so losing it can only WITHHOLD the increase, never
@@ -359,8 +358,8 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
     (convivencia defaults to cohabiting, custodia to sole custody, the
     integer supplements to zero); the ISO date strings are coerced by the
     record's own field validators. An out-of-order or relación-incompatible
-    entry date is dropped (see :func:`_safe_relacion_and_entry_dates`) so a
-    checkpoint save never raw-raises.
+    entry date is dropped (see :func:`_safe_relacion_and_entry_dates`) so
+    persistence projection never raw-raises.
     """
     from ...domain.contribuyente import DescendantInfo, parse_meses_trabajo, relacion_kwarg
 
@@ -463,12 +462,12 @@ class _GuarderiaSpend(TypedDict):
 def _safe_guarderia_spend(row: Mapping[str, str]) -> _GuarderiaSpend:
     """Read one instance's two guardería answers into a pair the record accepts.
 
-    The checkpoint path runs no flow validators, so an answer map can reach here
-    carrying both an annual total and a monthly map, or a monthly map whose
-    grammar broke. The canonical record refuses both states, and raising out of
-    a save-and-exit would read as a crash rather than a correction — the same
-    reason :func:`_safe_relacion_and_entry_dates` drops rather than raises. The
-    review verdict still blocks the final submit, so the operator is told.
+    A persistence projection can receive both an annual total and a monthly
+    map, or a monthly map whose grammar broke. The canonical record refuses
+    both states, and a raw error would read as a crash rather than a correction
+    — the same reason :func:`_safe_relacion_and_entry_dates` drops rather than
+    raises. The review verdict still blocks final submission, so the operator
+    is told.
 
     Both resolutions follow the record's own ranking, not convenience:
 
@@ -542,10 +541,8 @@ def descendant_answers_from_record(record: UserProfileRecord | None) -> dict[str
     so a childless profile seeds no group.
 
     The per-field emission mirrors :func:`_descendant_from_row` exactly, so a
-    save-then-resume round-trip through
-    :func:`~cadrumo.application.wizard._checkpoint_store.checkpoint_facts_from_answers`
-    reconstructs an identical fact set: an absent optional field stays absent
-    on both legs, never coerced to a stored default.
+    facts-to-answers re-projection preserves an identical fact set: an absent
+    optional field stays absent on both legs, never coerced to a stored default.
 
     Args:
         record: The :class:`UserProfileRecord` whose descendant facts are
@@ -570,8 +567,7 @@ def _descendant_instance_answers(descendant: DescendantInfo, *, prefix: str) -> 
     """Emit one descendant's page-keyed answers under its instance prefix.
 
     An absent optional field emits NO answer rather than a stored default,
-    which is what keeps a save-then-resume round-trip reconstructing an
-    identical fact set on both legs.
+    which keeps a facts-to-answers re-projection identical on both legs.
     """
     from ...domain.contribuyente import serialise_guarderia_mensual, serialise_meses_trabajo
 

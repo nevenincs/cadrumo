@@ -17,7 +17,13 @@ from ...core import (
 from ...core.identity import ContentDigest
 from ...core.time import validate_utc_aware
 from ._capabilities import OperationRequestStoragePolicy
-from ._events import OperationEvent, OperationEventCode, OperationPhaseEvent, OperationTerminalEvent
+from ._events import (
+    OperationEvent,
+    OperationEventCode,
+    OperationPhaseEvent,
+    OperationProgressEvent,
+    OperationTerminalEvent,
+)
 from ._interactions import OperationConsumedInteraction, OperationPendingInteraction
 from ._leases import (
     OperationConflictScopeReference,
@@ -32,7 +38,12 @@ from ._models import (
     OperationRevision,
     OperationTerminalReceipt,
 )
-from ._replay import OperationEventCursor, OperationReplayLimit, OperationReplayPage
+from ._replay import (
+    OperationEventCursor,
+    OperationReplayLimit,
+    OperationReplayPage,
+    OperationReplayStatus,
+)
 from ._secret_submission import OperationSecretRequirement
 
 
@@ -46,8 +57,9 @@ class OperationPersistedSnapshot(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    schema_version: Literal[4] = 4
+    schema_version: Literal[6] = 6
     identity: OperationIdentity
+    definition_contract_digest: ContentDigest
     request_storage: OperationRequestStoragePolicy
     request_reference: ContentDigest
     credential_free_request_json: str | None = None
@@ -64,6 +76,7 @@ class OperationPersistedSnapshot(BaseModel):
     cleanup_deadline: datetime | None
     cancellation_requested_at: datetime | None
     cancellation_acknowledged_at: datetime | None
+    cancellation_deferred: bool
     event_cursor: OperationEventCursor = 0
     terminal_receipt: OperationTerminalReceipt | None = None
     events: tuple[OperationEvent, ...] = ()
@@ -89,6 +102,115 @@ class OperationPersistedSnapshot(BaseModel):
         _validate_checkpoint_state(self)
         _validate_events(self)
         return self
+
+
+class OperationProgressFoldCheckpoint(BaseModel):
+    """Compaction-safe progress state through one authoritative event cursor."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    identity: OperationIdentity
+    through_cursor: OperationEventCursor
+    phase_code: OperationEventCode | None = None
+    progress_event: OperationProgressEvent | None = None
+
+    @model_validator(mode="after")
+    def _validate_checkpoint(self) -> OperationProgressFoldCheckpoint:
+        progress = self.progress_event
+        if progress is not None:
+            if progress.identity != self.identity:
+                raise ValueError("progress checkpoint event does not match operation identity")
+            if progress.sequence > self.through_cursor:
+                raise ValueError("progress checkpoint event cannot exceed its checkpoint cursor")
+        return self
+
+
+class OperationProgressFoldInput(BaseModel):
+    """Exact checkpoint suffix needed to fold current progress through an anchor."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    checkpoint: OperationProgressFoldCheckpoint | None = None
+    events: tuple[OperationEvent, ...]
+
+
+class OperationObservationMaterialization(BaseModel):
+    """Snapshot, replay page, and progress input from one atomic journal read."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    snapshot: OperationPersistedSnapshot
+    anchor_cursor: OperationEventCursor
+    replay: OperationReplayPage
+    progress_fold: OperationProgressFoldInput
+
+    @model_validator(mode="after")
+    def _validate_materialization(self) -> OperationObservationMaterialization:
+        if self.anchor_cursor != self.snapshot.event_cursor:
+            raise ValueError("observation anchor must equal the current snapshot cursor")
+        if self.replay.status is OperationReplayStatus.UNKNOWN_OPERATION:
+            raise ValueError("an observation materialization cannot represent an unknown operation")
+        if self.replay.requested_cursor > self.anchor_cursor:
+            raise ValueError("observation replay cursor cannot exceed its anchor")
+        if self.replay.next_cursor > self.anchor_cursor:
+            raise ValueError("observation replay result cannot exceed its anchor")
+        if (
+            self.replay.status is OperationReplayStatus.CAUGHT_UP
+            and self.replay.next_cursor != self.anchor_cursor
+        ):
+            raise ValueError("caught-up observation replay must reach its authoritative anchor")
+        self._validate_event_set(self.replay.events, label="replay")
+        self._validate_progress_fold()
+        if self.replay.status in {OperationReplayStatus.EXPIRED, OperationReplayStatus.COMPACTED}:
+            checkpoint = self.progress_fold.checkpoint
+            if checkpoint is None or checkpoint.through_cursor != self.replay.restart_cursor:
+                raise ValueError("resynchronizing observation replay requires its exact progress checkpoint")
+        return self
+
+    def _validate_event_set(self, events: tuple[OperationEvent, ...], *, label: str) -> None:
+        if any(event.identity != self.snapshot.identity for event in events):
+            raise ValueError(f"observation {label} event does not match operation identity")
+        if any(event.revision > self.snapshot.revision for event in events):
+            raise ValueError(f"observation {label} event revision cannot exceed its snapshot")
+        if any(event.sequence > self.anchor_cursor for event in events):
+            raise ValueError(f"observation {label} event cannot exceed its anchor")
+
+    def _validate_progress_fold(self) -> None:
+        fold = self.progress_fold
+        checkpoint = fold.checkpoint
+        start_cursor = checkpoint.through_cursor if checkpoint is not None else 0
+        if checkpoint is not None:
+            if checkpoint.identity != self.snapshot.identity:
+                raise ValueError("progress checkpoint does not match operation identity")
+            if checkpoint.through_cursor > self.anchor_cursor:
+                raise ValueError("progress checkpoint cannot exceed the observation anchor")
+            if (
+                checkpoint.progress_event is not None
+                and checkpoint.progress_event.revision > self.snapshot.revision
+            ):
+                raise ValueError("progress checkpoint revision cannot exceed its snapshot")
+        self._validate_event_set(fold.events, label="progress-fold")
+        sequences = tuple(event.sequence for event in fold.events)
+        expected = tuple(range(start_cursor + 1, self.anchor_cursor + 1))
+        if sequences != expected:
+            raise ValueError("progress fold must cover every event after its checkpoint through the anchor")
+
+
+class OperationObservationUnknownOperationError(LookupError):
+    """The locked observation read found no journal for the requested operation."""
+
+    def __init__(self, operation_id: OperationId) -> None:
+        self.operation_id = operation_id
+        super().__init__("operation observation requires an existing operation")
+
+
+class OperationObservationCursorAheadError(ValueError):
+    """The caller cursor is beyond the authoritative anchor read under the journal lock."""
+
+    def __init__(self, *, requested_cursor: OperationEventCursor, anchor_cursor: OperationEventCursor) -> None:
+        self.requested_cursor = requested_cursor
+        self.anchor_cursor = anchor_cursor
+        super().__init__("operation observation cursor exceeds its authoritative anchor")
 
 
 def _validate_request_storage(snapshot: OperationPersistedSnapshot) -> None:
@@ -131,6 +253,14 @@ def _validate_deadline_and_cancellation_state(snapshot: OperationPersistedSnapsh
     cleanup_deadline = snapshot.cleanup_deadline
     requested_at = snapshot.cancellation_requested_at
     acknowledged_at = snapshot.cancellation_acknowledged_at
+
+    if snapshot.cancellation_deferred:
+        if snapshot.executor_entered_at is None:
+            raise ValueError("deferred cancellation requires executor entry")
+        if snapshot.lifecycle is OperationLifecycle.TERMINAL:
+            raise ValueError("terminal operation cannot defer cancellation")
+        if acknowledged_at is not None:
+            raise ValueError("acknowledged cancellation cannot remain deferred")
 
     for timestamp in (execution_deadline, cleanup_deadline, requested_at, acknowledged_at):
         if timestamp is not None:
@@ -338,6 +468,23 @@ class OperationEventStream(Protocol):
 
 
 @runtime_checkable
+class OperationObservationReader(Protocol):
+    """Read one internally consistent operation observation from persistence.
+
+    A missing operation raises :class:`OperationObservationUnknownOperationError`.
+    A cursor beyond the read anchor raises :class:`OperationObservationCursorAheadError`.
+    """
+
+    async def read_observation(
+        self,
+        operation_id: OperationId,
+        after_cursor: OperationEventCursor,
+        *,
+        limit: OperationReplayLimit,
+    ) -> OperationObservationMaterialization: ...
+
+
+@runtime_checkable
 class OperationLeaseRepository(Protocol):
     """Observe and transition one durable owner lease against explicit evidence time."""
 
@@ -383,6 +530,12 @@ __all__ = [
     "OperationEventStream",
     "OperationJournal",
     "OperationLeaseRepository",
+    "OperationObservationCursorAheadError",
+    "OperationObservationMaterialization",
+    "OperationObservationReader",
+    "OperationObservationUnknownOperationError",
     "OperationPersistedSnapshot",
+    "OperationProgressFoldCheckpoint",
+    "OperationProgressFoldInput",
     "OperationSecureReferenceStore",
 ]

@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import GoogleCredentialSourceKind
+from .....core import ActionConditionality, ActionEvidenceProvenance, GoogleCredentialSourceKind, NoRecoveryOutcome
 from .....core.config import override_settings
 from .....core.errors import resolve_error_message
 from .....core.i18n import tr
@@ -42,6 +42,27 @@ from .. import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+
+def _assert_factory_verdict(
+    error: OutboundStorageValidationError,
+    condition_id: str,
+    facts: dict[str, str | bool],
+) -> None:
+    verdict = error.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == condition_id
+    assert verdict.action is None
+    assert verdict.argument_bindings == ()
+    assert verdict.missing_argument_names == ()
+    assert verdict.conditionality is ActionConditionality.NOT_APPLICABLE
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+    assert len(verdict.evidence) == 1
+    evidence = verdict.evidence[0]
+    assert evidence.condition_id == condition_id
+    assert evidence.evidence_id == f"{condition_id}.observation"
+    assert evidence.provenance is ActionEvidenceProvenance.APPLICATION_STATE
+    assert dict(evidence.values) == facts
 
 
 def _hash(payload: bytes) -> str:
@@ -113,6 +134,11 @@ def test_factory_rejects_blank_provider_kind_with_localized_context() -> None:
     exc = raised.value
     assert exc.translated_message == "adapters.outbound.storage.factory.errors.kind_empty"
     assert exc.context == {"value": "   "}
+    _assert_factory_verdict(
+        exc,
+        "storage.factory.provider_kind.valid",
+        {"field": "cadrumo_storage_provider_kind", "valid": False},
+    )
     assert resolve_error_message(exc) == tr(exc.translated_message, **(exc.context or {}))
 
 
@@ -129,6 +155,11 @@ def test_factory_rejects_unknown_provider_kind_with_localized_context() -> None:
         "value": "not-a-provider",
         "expected": "google_drive, local_filesystem",
     }
+    _assert_factory_verdict(
+        exc,
+        "storage.factory.provider_kind.valid",
+        {"field": "cadrumo_storage_provider_kind", "valid": False},
+    )
     assert resolve_error_message(exc) == tr(exc.translated_message, **(exc.context or {}))
 
 
@@ -146,6 +177,11 @@ def test_factory_rejects_google_drive_without_root_before_loading_credentials(tm
     exc = raised.value
     assert exc.translated_message == "adapters.outbound.storage.factory.errors.drive_root_missing"
     assert exc.context == {"profile": "a5106137-0c0d-4f8f-9c58-606f5bd06dc8"}
+    _assert_factory_verdict(
+        exc,
+        "storage.factory.google_drive_root_folder_id.present",
+        {"backend": "google_drive", "field": "google_drive_root_folder_id", "valid": False},
+    )
 
 
 def test_drive_root_whitespace_override_uses_persisted_profile_configuration(tmp_path: Path) -> None:
@@ -172,6 +208,11 @@ def test_factory_rejects_google_drive_without_registered_client(tmp_path: Path) 
     exc = raised.value
     assert exc.translated_message == "adapters.outbound.storage.factory.errors.google_client_missing"
     assert exc.context == {"profile": "2e31b7b3-12da-4ae7-abf1-d1fe71bd81d4"}
+    _assert_factory_verdict(
+        exc,
+        "storage.factory.google_oauth_client.present",
+        {"backend": "google_drive", "field": "google_oauth_client", "valid": False},
+    )
 
 
 def test_factory_rejects_google_drive_without_persisted_token(tmp_path: Path) -> None:
@@ -200,6 +241,11 @@ def test_factory_rejects_google_drive_without_persisted_token(tmp_path: Path) ->
     exc = raised.value
     assert exc.translated_message == "adapters.outbound.storage.factory.errors.google_token_missing"
     assert exc.context == {"profile": "893af7b9-9656-466c-9d8a-5d638b189a20"}
+    _assert_factory_verdict(
+        exc,
+        "storage.factory.google_oauth_token.present",
+        {"backend": "google_drive", "field": "google_oauth_token", "valid": False},
+    )
 
 
 # ---------------------------------------------------------------------------

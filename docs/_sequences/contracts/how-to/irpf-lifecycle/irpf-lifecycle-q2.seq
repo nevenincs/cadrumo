@@ -21,11 +21,11 @@ aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 2
 @step Verify the second quarter, exactly as in the first.
 aeat --format json app modelo work verify --modelo 130 --year 2026 --period 2T
 @expect result.granted_verificado_completo == true
-@step Try to export the verified quarter. Modelo 130 has no fichero-BOE layout, so this refuses.
+@step Export the verified quarter to the registry-backed fichero-BOE layout.
 @result aeat --format json app modelo export --modelo 130 --year 2026 --period 2T --output ./modelo-130-2026-2T.boe
-@expect exit_code == 2
-@expect error.code == "REFUSED_MODELO_EXPORT_UNSUPPORTED"
-@expect error.context.modelo == "130"
+@expect exit_code == 0
+@expect result.modelo == "130"
+@expect result.format == "fichero-boe"
 @static aeat app modelo work file --modelo 130 --year 2026 --period 2T
 @blocked obligation-window Refused NO_PENDING_OBLIGATION, no pending filing obligation at the current date: the July window is shut at the sandbox's frozen 1 April instant.
 @static aeat app modelo reconcile pull --modelo 130 --year 2026 --period 2T

@@ -460,6 +460,7 @@ def public_registration(
             schema_version=1,
             model_type=RefreshTarget,
         ),
+        reviewed_operand_type=ReviewPayload,
         review_projector=review_projector,
         workspace_refresh_adapter=refresh_adapter,
     )
@@ -972,6 +973,9 @@ def test_registry_public_contract_is_a_live_definition_fixed_point() -> None:
         "44d6bb71a45ff1e0d67881d3dc26433de7c509e2c26cfcd25d4fa84937c373f2"
     )
     assert registry.public_contract_set.definitions == (registration.contract,)
+    assert registry.lookup_public_contract(item.definition_id) == registration.contract
+    with pytest.raises(KeyError, match="no public contract"):
+        OperationRegistry(definitions=(item,)).lookup_public_contract(item.definition_id)
     drifted = item.model_copy(update={"permitted_frontends": frozenset({OperationFrontendProjection.TUI})})
     with pytest.raises(ValidationError, match="not a live-registry fixed point"):
         OperationRegistry(definitions=(drifted,), public_registrations=(registration,))
@@ -984,6 +988,9 @@ def test_registry_refuses_missing_review_projector_and_refresh_adapter() -> None
     without_review = registration.model_copy(update={"review_projector": None})
     with pytest.raises(ValidationError, match="registered review projector"):
         OperationRegistry(definitions=(item,), public_registrations=(without_review,))
+    without_operand_type = registration.model_copy(update={"reviewed_operand_type": None})
+    with pytest.raises(ValidationError, match="registered reviewed operand type"):
+        OperationRegistry(definitions=(item,), public_registrations=(without_operand_type,))
     without_refresh = registration.model_copy(update={"workspace_refresh_adapter": None})
     with pytest.raises(ValidationError, match="schema and adapter"):
         OperationRegistry(definitions=(item,), public_registrations=(without_refresh,))

@@ -27,7 +27,9 @@ Forbidden, without exception:
   a layout rejoins it. A hardcoded tally would rot into a stale claim, which is the
   same failure mode in a new costume.
 
-The one legitimate way to change this test's result is to build an export layout.
+An authorable row leaves this test only after its layout and filing authority
+are actually built. A terminal row remains visible until its own stated
+reconsideration condition changes; it is not erased by a synthetic layout.
 
 BUILDING THE LAYOUT IS NECESSARY BUT NOT SUFFICIENT, and the reason is not visible in
 the failure message. Every revision currently on this list is ``authority_grade =
@@ -88,22 +90,78 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: Excluding it in the reader was tried and measured: it drops the record below its
 #: declared total and every sheet then reports a contiguity hole.
 #:
-#: So this waits on a terminator concept the export pipeline does not have -- a field a
-#: map may name and the renderer resolves to the transport's line ending. Recorded here
-#: rather than worked around, because each workaround corrupts the last two bytes of
-#: every record in the file.
+#: So this waits only on the missing generic semantic-map bridge: it must retain the
+#: official terminal-row anchor while delegating the one emitted CRLF to the existing
+#: record ``line_ending`` transport authority.  The canonical renderer already emits
+#: that transport terminator; a second table or Modelo-840-specific writer would
+#: redeclare it.  Recorded here rather than worked around, because each workaround
+#: corrupts the last two bytes of every record in the file.
 _TERMINATOR_IS_A_NUMBERED_FIELD = "aeat-dr-840"
 
 
-_OwnerRoute = Literal[
-    "W02.P04.S26 registry-temporal-coverage",
-    "W02.P04.S27 source-casilla-integration",
-    "W02.P04.S28 aeat-export-fragment-generator-authority",
+type _OwnerRoute = Literal[
+    "registry-temporal-coverage",
+    "source-casilla-integration",
+    "aeat-export-fragment-generator-authority",
 ]
 
-_TEMPORAL_OWNER: _OwnerRoute = "W02.P04.S26 registry-temporal-coverage"
-_SOURCE_CASILLA_OWNER: _OwnerRoute = "W02.P04.S27 source-casilla-integration"
-_EXPORT_OWNER: _OwnerRoute = "W02.P04.S28 aeat-export-fragment-generator-authority"
+
+_TEMPORAL_OWNER: _OwnerRoute = "registry-temporal-coverage"
+_SOURCE_CASILLA_OWNER: _OwnerRoute = "source-casilla-integration"
+_EXPORT_OWNER: _OwnerRoute = "aeat-export-fragment-generator-authority"
+_EXISTING_OWNER_DOMAINS = frozenset({_TEMPORAL_OWNER, _SOURCE_CASILLA_OWNER, _EXPORT_OWNER})
+
+_M038_OWNERS = (
+    _TEMPORAL_OWNER,
+    _EXPORT_OWNER,
+)
+_M182_OWNERS = (
+    _TEMPORAL_OWNER,
+    _SOURCE_CASILLA_OWNER,
+    _EXPORT_OWNER,
+)
+_M185_OWNERS = (_EXPORT_OWNER,)
+_M187_OWNERS = (
+    _TEMPORAL_OWNER,
+    _SOURCE_CASILLA_OWNER,
+    _EXPORT_OWNER,
+)
+_M188_OWNERS = (
+    _TEMPORAL_OWNER,
+    _SOURCE_CASILLA_OWNER,
+    _EXPORT_OWNER,
+)
+_M194_OWNERS = (
+    _TEMPORAL_OWNER,
+    _SOURCE_CASILLA_OWNER,
+    _EXPORT_OWNER,
+)
+_M220_2024_OWNERS = (
+    _SOURCE_CASILLA_OWNER,
+    _EXPORT_OWNER,
+)
+_M220_2025_OWNERS = (
+    _TEMPORAL_OWNER,
+    *_M220_2024_OWNERS,
+)
+_M390_OWNERS = (
+    _SOURCE_CASILLA_OWNER,
+    _EXPORT_OWNER,
+)
+_M721_OWNERS = (
+    _TEMPORAL_OWNER,
+    _SOURCE_CASILLA_OWNER,
+    _EXPORT_OWNER,
+)
+_M763_OWNERS = (
+    _TEMPORAL_OWNER,
+    _SOURCE_CASILLA_OWNER,
+    _EXPORT_OWNER,
+)
+_M840_OWNERS = (
+    _SOURCE_CASILLA_OWNER,
+    _EXPORT_OWNER,
+)
 
 
 @dataclass(frozen=True)
@@ -119,21 +177,28 @@ class _FilingCapabilityBlocker:
     obtains.
     """
 
-    disposition: Literal["terminal_no_authority", "authorable_gap"]
+    disposition: Literal["terminal_no_authority", "terminal_product_scope", "authorable_gap"]
     finding: str
     reconsideration: str
     owners: tuple[_OwnerRoute, ...] = ()
 
     def __post_init__(self) -> None:
-        if self.disposition == "terminal_no_authority" and self.owners:
-            raise ValueError("a terminal no-authority refusal must not claim an authorable owner")
+        if self.disposition in {"terminal_no_authority", "terminal_product_scope"} and self.owners:
+            raise ValueError("a terminal filing refusal must not claim an authorable owner")
         if self.disposition == "authorable_gap" and not self.owners:
             raise ValueError("an authorable filing gap must name at least one existing-plan owner")
+        if self.disposition == "authorable_gap" and not set(self.owners) <= _EXISTING_OWNER_DOMAINS:
+            raise ValueError("an authorable filing gap must name only an existing-plan owner domain")
 
     def report(self) -> str:
         if self.disposition == "terminal_no_authority":
             return (
                 f"TERMINAL NO-AUTHORITY: {self.finding}. No export layout is authorable now; "
+                f"reconsider only if {self.reconsideration}"
+            )
+        if self.disposition == "terminal_product_scope":
+            return (
+                f"TERMINAL PRODUCT-SCOPE: {self.finding}. No M036 filing artifact is authorable now; "
                 f"reconsider only if {self.reconsideration}"
             )
         return (
@@ -154,6 +219,31 @@ def _authorable(
         finding=finding,
         owners=owners,
         reconsideration=reconsideration,
+    )
+
+
+def _terminal_product_scope(modelo: object, revision: object) -> _FilingCapabilityBlocker | None:
+    """Return the accepted M036 product-scope refusal for its exact revision.
+
+    This is separate from :func:`_terminal_no_authority`: AEAT publishes an
+    exact M036 machine-readable design, but the current product does not
+    prepare a censo filing artifact. The classification is intentionally exact
+    to the one reviewed revision, rather than an inference from censo taxonomy,
+    applicability grade, or a missing producer namespace. Those facts cannot
+    silently expand the terminal boundary to another modelo or revision.
+    """
+    if getattr(modelo, "id", None) != Modelo.M036 or getattr(revision, "id", None) != "2025-02-03-y-siguientes":
+        return None
+    return _FilingCapabilityBlocker(
+        disposition="terminal_product_scope",
+        finding=(
+            "the shipped product supports censo applicability and records a human-filed declaration, "
+            "but does not prepare a Modelo 036 filing artifact"
+        ),
+        reconsideration=(
+            "a new accepted ADR expands M036 artifact scope and the existing source, grade, semantic-map, "
+            "render-profile, generated-tree, and emitted-byte prerequisites are independently satisfied"
+        ),
     )
 
 
@@ -197,7 +287,8 @@ def _terminal_no_authority(
         ),
         reconsideration=(
             "AEAT publishes a hash-pinned, revision-scoped machine-readable contract and "
-            f"{_EXPORT_OWNER} enrolls the semantic map, render profile, generated tree, and emitted-byte proof"
+            "the export plan receives an accepted, exact predecessor route for the semantic map, render profile, "
+            "generated tree, and emitted-byte proof"
         ),
     )
 
@@ -269,13 +360,13 @@ def _blocker(modelo: object, revision: object, sources: object) -> _FilingCapabi
     correctly grounds its sibling revision instead. A revision already citing a
     registered design is authorable now.
 
-    The exception is a reviewed *terminal no-authority refusal*. It is not an
-    authoring gap at all: Modelo 136's current official surface is an electronic
-    form with no machine-readable contract. The source-specific classifier is
-    deliberately evaluated before the generic directory test so the report does
-    not turn that refusal into a false instruction to write a layout. It is also
-    deliberately narrow: no other modelo inherits a terminal disposition from
-    its absence of a fixed-width design.
+    Two reviewed terminal refusals are classified before generic diagnosis. Modelo
+    136 is ``terminal_no_authority`` because its current official surface lacks a
+    machine-readable contract. Modelo 036 is ``terminal_product_scope`` because
+    the current product records human-filed censo events rather than preparing
+    their artifact, even though an exact machine-readable design exists. Neither
+    label is inferred from grade, taxonomy, or missing producers; each is exact
+    to its reviewed revision so no other row inherits it accidentally.
 
     Sequencing the remaining work needs that distinction, and deriving it costs
     one directory listing per line.
@@ -304,14 +395,24 @@ def _blocker(modelo: object, revision: object, sources: object) -> _FilingCapabi
     through the sibling gate, which fails loudly if the corpus changes.
     """
     modelo_id = str(modelo.id)
+    product_scope = _terminal_product_scope(modelo, revision)
+    if product_scope is not None:
+        return product_scope
     terminal = _terminal_no_authority(modelo, revision, sources)
     if terminal is not None:
         return terminal
     if modelo.id == Modelo.M136 and _modelo_136_has_machine_contract(revision, sources):
         return _authorable(
             "a machine-readable Modelo 136 contract is cited, but its semantic map and emitted-byte proof are absent",
+            # No current predecessor route may be claimed for a machine contract
+            # that does not yet exist.  The classifier must be re-adjudicated
+            # when the authority condition changes instead of borrowing S28's
+            # completed enrollment label.
             owners=(_EXPORT_OWNER,),
-            reconsideration="the export owner lands the reviewed map, render profile, generated tree, and emitted-byte proof",
+            reconsideration=(
+                "an accepted export-plan route lands the reviewed map, render profile, generated tree, and "
+                "emitted-byte proof"
+            ),
         )
     designs = _bundled_designs(modelo_id)
     registered = tuple(
@@ -327,6 +428,15 @@ def _blocker(modelo: object, revision: object, sources: object) -> _FilingCapabi
         if (source := sources.get(str(ref))) is not None and getattr(source, "kind", None) == "record_design"
     )
     if not designs:
+        if modelo.id == Modelo.M721:
+            return _authorable(
+                "no positional record design is bundled because the exact structured-message contract remains unacquired",
+                owners=_M721_OWNERS,
+                reconsideration=(
+                    "the three accepted predecessor routes acquire exact contract eras, value lifecycles, and the "
+                    "canonical locally-proven serializer"
+                ),
+            )
         return _authorable(
             "no record design is bundled for this modelo",
             owners=(_TEMPORAL_OWNER, _SOURCE_CASILLA_OWNER, _EXPORT_OWNER),
@@ -342,6 +452,18 @@ def _blocker(modelo: object, revision: object, sources: object) -> _FilingCapabi
             reconsideration="the temporal owner registers the official source with exact applicability before it becomes a source_ref",
         )
     if not cited:
+        if modelo.id == Modelo.M185:
+            return _authorable(
+                (
+                    "the registered 2026 record design is outside this historical revision; the 2003-2025 Annex-I "
+                    "authority has not yet been acquired and registered"
+                ),
+                owners=_M185_OWNERS,
+                reconsideration=(
+                    "the exact export predecessor acquires the historic Annex-I source, registers its bounded scope, "
+                    "then maps only its 120-position record types"
+                ),
+            )
         return _authorable(
             f"{len(registered)} record design(s) are registered for this modelo, but none is cited by this revision",
             owners=(_TEMPORAL_OWNER,),
@@ -354,8 +476,11 @@ def _blocker(modelo: object, revision: object, sources: object) -> _FilingCapabi
                 f"cites {_KNOWN_SELF_CONTRADICTING_DESIGN}, whose extraction places fields across bytes; "
                 "the bundled artefact is a form diagram rather than a trustworthy field table"
             ),
-            owners=(_TEMPORAL_OWNER, _EXPORT_OWNER),
-            reconsideration="the temporal and export owners acquire exact authority and a trustworthy layout before mapping bytes",
+            owners=_M038_OWNERS,
+            reconsideration=(
+                "the accepted temporal and export predecessors acquire exact authority and a trustworthy layout before "
+                "mapping bytes"
+            ),
         )
 
     if _TERMINATOR_IS_A_NUMBERED_FIELD in cited:
@@ -364,8 +489,11 @@ def _blocker(modelo: object, revision: object, sources: object) -> _FilingCapabi
                 f"{_TERMINATOR_IS_A_NUMBERED_FIELD} numbers the line break inside the record extent, while "
                 "the current renderer puts it on the transport; no current entry kind renders that field"
             ),
-            owners=(_EXPORT_OWNER,),
-            reconsideration="the export owner models the official terminator semantics and proves the emitted bytes",
+            owners=_M840_OWNERS,
+            reconsideration=(
+                "the accepted source and export predecessors model the generic terminator bridge, value lifecycle, and "
+                "emitted bytes"
+            ),
         )
 
     uncovered = _uncovered_claimed_years(revision, cited, sources)
@@ -376,8 +504,11 @@ def _blocker(modelo: object, revision: object, sources: object) -> _FilingCapabi
                 f"cites {cited[0]}, but ejercicio(s) {span} ({len(uncovered)} year(s)) fall outside every "
                 "cited design era"
             ),
-            owners=(_TEMPORAL_OWNER, _EXPORT_OWNER),
-            reconsideration="the temporal owner resolves the exact window and the export owner maps only evidenced offsets",
+            owners=_uncovered_design_owners(modelo),
+            reconsideration=(
+                "the accepted temporal, source, and export predecessors resolve the exact window and map only "
+                "evidenced values and offsets"
+            ),
         )
     short = _casilla_surface_shortfall(modelo, revision)
     if short is not None:
@@ -425,13 +556,17 @@ def _producer_vocabulary_gap(modelo: object) -> _FilingCapabilityBlocker | None:
     prefix = f"m{modelo.id}."
     if any(member.value.startswith(prefix) for member in FilingProducerKey):
         return None
+    owners = _M220_2024_OWNERS if modelo.id == Modelo.M220 else (_SOURCE_CASILLA_OWNER, _EXPORT_OWNER)
     return _authorable(
         (
             f"no FilingProducerKey is namespaced {prefix!r}, so non-casilla design fields have no canonical "
             "identity or application producer"
         ),
-        owners=(_SOURCE_CASILLA_OWNER, _EXPORT_OWNER),
-        reconsideration="the source/casilla owner supplies provenance-carrying producers before the export owner maps them",
+        owners=owners,
+        reconsideration=(
+            "the accepted source/casilla predecessor supplies provenance-carrying producers before the export "
+            "predecessor maps them"
+        ),
     )
 
 
@@ -461,13 +596,17 @@ def _casilla_surface_shortfall(modelo: object, revision: object) -> _FilingCapab
     ]
     if not peers or declared >= min(peers):
         return None
+    owners = _M390_OWNERS if modelo.id == Modelo.M390 else (_SOURCE_CASILLA_OWNER, _EXPORT_OWNER)
     return _authorable(
         (
             f"declares {declared} casilla(s) while every filing-grade sibling declares at least {min(peers)}; "
             "the cited era matches but the current surface cannot represent the declaration"
         ),
-        owners=(_SOURCE_CASILLA_OWNER, _EXPORT_OWNER),
-        reconsideration="the source/casilla owner completes the grounded surface before the export owner maps it",
+        owners=owners,
+        reconsideration=(
+            "the accepted source/casilla predecessor completes the grounded surface before the export predecessor "
+            "maps it"
+        ),
     )
 
 
@@ -475,6 +614,31 @@ def _casilla_surface_shortfall(modelo: object, revision: object) -> _FilingCapab
 #: :mod:`test_layout_design_applies_to_claimed_years`, which asks the same
 #: question about revisions that already declare a layout.
 _OPEN_ENDED_HORIZON = 2026
+
+
+def _uncovered_design_owners(modelo: object) -> tuple[_OwnerRoute, ...]:
+    """Return the accepted route bundle for a live design-era shortfall.
+
+    The condition is derived from the loaded revision and source catalogue.
+    These route bundles only point to the predecessor rows that the three plans
+    already accepted for each distinct evidence gap; they do not create a
+    parallel temporal, source, or export authority.
+    """
+    if modelo.id == Modelo.M182:
+        return _M182_OWNERS
+    if modelo.id == Modelo.M187:
+        return _M187_OWNERS
+    if modelo.id == Modelo.M188:
+        return _M188_OWNERS
+    if modelo.id == Modelo.M194:
+        return _M194_OWNERS
+    if modelo.id == Modelo.M220:
+        return _M220_2025_OWNERS
+    if modelo.id == Modelo.M763:
+        return _M763_OWNERS
+    # A new live shortfall must stay visibly unrouted until its own predecessor
+    # row is accepted; it may not inherit one of the reviewed Modelo routes.
+    return (_TEMPORAL_OWNER, _EXPORT_OWNER)
 
 
 def _uncovered_claimed_years(revision: object, cited: tuple[str, ...], sources: object) -> list[int]:
@@ -525,8 +689,8 @@ def test_every_registry_revision_can_produce_a_filing_artifact() -> None:
         f"{len(unable)} registry revision(s) across "
         f"{len({modelo for modelo, _revision, _blocker in unable})} modelo(s) declare no export layout, so this "
         "application cannot file them. This is the capability worklist, not a defect to suppress: an AUTHORABLE "
-        "GAP names its existing-plan owners, while a TERMINAL NO-AUTHORITY refusal names the exact evidence that "
-        "must change before an export task exists.\n"
+        "GAP names its existing-plan owners, while each distinct TERMINAL refusal names the exact authority or "
+        "product-scope condition that must change before an export task exists.\n"
         + "\n".join(
             f"  modelo {modelo} revision {revision}: no export layout -- {blocker.report()}"
             for modelo, revision, blocker in unable
@@ -534,8 +698,28 @@ def test_every_registry_revision_can_produce_a_filing_artifact() -> None:
     )
 
 
-def test_worklist_keeps_terminal_refusal_separate_from_owner_routed_gaps() -> None:
-    """Modelo 136 cannot be relabelled as an authorable layout backlog.
+def test_loaded_worklist_keeps_terminal_and_generic_owner_dispositions_distinct() -> None:
+    """Terminal refusals have no owner; authorable gaps retain real owner domains."""
+    unable = _revisions_that_cannot_emit()
+    allowed_owners = {_TEMPORAL_OWNER, _SOURCE_CASILLA_OWNER, _EXPORT_OWNER}
+
+    for modelo, revision, blocker in unable:
+        if blocker.disposition in {"terminal_no_authority", "terminal_product_scope"}:
+            assert blocker.owners == ()
+            continue
+        assert len(blocker.owners) == len(set(blocker.owners)), (
+            f"{modelo}/{revision} repeats a generic ownership domain"
+        )
+        assert set(blocker.owners) <= allowed_owners
+
+    by_revision = {(modelo, revision): blocker for modelo, revision, blocker in unable}
+    modelo_185 = by_revision[(Modelo.M185.value, "2003-2025")]
+    assert modelo_185.owners == _M185_OWNERS
+    assert "Annex-I authority" in modelo_185.finding
+
+
+def test_worklist_keeps_distinct_terminal_refusals_separate_from_owner_routed_gaps() -> None:
+    """M136 authority and M036 product scope cannot become layout backlogs.
 
     The test reads the same compiler-loaded corpus as the expected-failing worklist.
     It is a regression over the report's *classification*, not a second list of
@@ -549,6 +733,12 @@ def test_worklist_keeps_terminal_refusal_separate_from_owner_routed_gaps() -> No
     assert modelo_136.disposition == "terminal_no_authority"
     assert modelo_136.owners == ()
     assert "No export layout is authorable now" in modelo_136.report()
+
+    modelo_036 = by_revision[(Modelo.M036.value, "2025-02-03-y-siguientes")]
+    assert modelo_036.disposition == "terminal_product_scope"
+    assert modelo_036.owners == ()
+    assert "TERMINAL PRODUCT-SCOPE" in modelo_036.report()
+    assert "No M036 filing artifact is authorable now" in modelo_036.report()
 
     authorable = [blocker for blocker in by_revision.values() if blocker.disposition == "authorable_gap"]
     assert authorable, "the worklist no longer contains an owner-routed authorable gap to prove"
@@ -576,3 +766,32 @@ def test_modelo_136_terminal_refusal_becomes_owner_routed_when_machine_authority
     blocker = _blocker(modelo, revision, upgraded)
     assert blocker.disposition == "authorable_gap"
     assert blocker.owners == (_EXPORT_OWNER,)
+
+
+def test_modelo_036_product_scope_terminal_is_exact_to_the_reviewed_revision() -> None:
+    """MUTATION: an adjacent identity cannot inherit M036's product boundary."""
+    modelos, _catalogues = bundled_registry_tree()
+    modelo_036 = next(item for item in modelos if item.id == Modelo.M036)
+    reviewed_revision = modelo_036.revisions["2025-02-03-y-siguientes"]
+    modelo_038 = next(item for item in modelos if item.id == Modelo.M038)
+    other_revision = next(iter(modelo_038.revisions.values()))
+
+    terminal = _terminal_product_scope(modelo_036, reviewed_revision)
+    assert terminal is not None
+    assert terminal.disposition == "terminal_product_scope"
+    assert terminal.owners == ()
+
+    wrong_revision = reviewed_revision.model_copy(update={"id": "2025-02-04-y-siguientes"})
+    assert _terminal_product_scope(modelo_036, wrong_revision) is None
+    assert _terminal_product_scope(modelo_038, other_revision) is None
+
+
+def test_authorable_gap_rejects_an_unowned_domain() -> None:
+    """MUTATION: a fourth, undeclared owner domain cannot enter the worklist."""
+    with pytest.raises(ValueError, match="only an existing-plan owner domain"):
+        _FilingCapabilityBlocker(
+            disposition="authorable_gap",
+            finding="mutation-only finding",
+            reconsideration="mutation-only condition",
+            owners=("unowned-owner-domain",),
+        )

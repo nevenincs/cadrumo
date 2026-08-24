@@ -3,7 +3,7 @@
 @capture evidence_id result.evidence_id
 @step Remove an evidence record by id, confirming with --yes.
 aeat app ledger evidence remove {evidence_id} --yes
-@step The record is gone; listing evidence again returns an empty catalogue.
-@result aeat --format json app ledger evidence list
-@expect result.count == 0
-@expect exit_code == 0
+@step Confirm the removed evidence id is no longer addressable, regardless of other evidence already recorded on this page.
+@result aeat --format json app ledger evidence view {evidence_id}
+@expect error.code == "REFUSED_LEDGER_EVIDENCE_NOT_FOUND"
+@expect exit_code == 2

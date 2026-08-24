@@ -38,11 +38,13 @@ from .. import (
     OperationNoticeEvent,
     OperationOwnedResource,
     OperationPersistedSnapshot,
+    OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
     OperationReplayPolicy,
     OperationRequest,
     OperationRequestStoragePolicy,
+    OperationSchemaBindingV1,
     OperationSensitiveInputPolicy,
     OperationSupervisor,
     OperationTerminalCondition,
@@ -170,6 +172,19 @@ def _definition(*, executor_type: type[object], build: Callable[[], object]) -> 
     )
 
 
+def _registry(*, executor_type: type[object], build: Callable[[], object]) -> OperationRegistry:
+    definition = _definition(executor_type=executor_type, build=build)
+    registration = OperationPublicDefinitionRegistrationV1.compose(
+        definition=definition,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id="operation.executor.contract.request",
+            schema_version=1,
+            model_type=ExecutorContractRequest,
+        ),
+    )
+    return OperationRegistry(definitions=(definition,), public_registrations=(registration,))
+
+
 def _supervisor(
     *,
     registry: OperationRegistry,
@@ -238,9 +253,7 @@ def test_supervisor_context_refuses_undeclared_event_claims_without_journal_muta
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         supervisor = _supervisor(
-            registry=OperationRegistry(
-                definitions=(_definition(executor_type=type(executor), build=lambda: executor),)
-            ),
+            registry=_registry(executor_type=type(executor), build=lambda: executor),
             journal=journal,
             leases=leases,
             operands=operands,
@@ -268,9 +281,7 @@ def test_supervisor_context_refuses_undeclared_resource_ownership_without_journa
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         supervisor = _supervisor(
-            registry=OperationRegistry(
-                definitions=(_definition(executor_type=type(executor), build=lambda: executor),)
-            ),
+            registry=_registry(executor_type=type(executor), build=lambda: executor),
             journal=journal,
             leases=leases,
             operands=operands,

@@ -54,6 +54,11 @@ source_refs = [
     "aeat-dr-349-2020-current",
     "aeat-modelo-349-instructions",
     "aeat-modelo-349-procedure",
+    "aeat-calendario-contribuyente-2022",
+    "aeat-calendario-contribuyente-2023",
+    "aeat-calendario-contribuyente-2024",
+    "aeat-calendario-contribuyente-2025",
+    "aeat-calendario-contribuyente-2026",
 ]
 
 # --- Declarant header summary fields (Tipo 1, positions 138-185) ---

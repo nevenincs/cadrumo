@@ -3,3 +3,4 @@ aeat config profile edit docs-sequence-sandbox --quiet --address-postcode 28013
 @step Back up the profile to a sealed, encrypted archive.
 @result aeat --format json config profile archive export docs-sequence-sandbox --output docs-sequence-sandbox.cadrumo-bucket.tar.gz
 @expect exit_code == 0
+@expect result.recovery_enrolled == true

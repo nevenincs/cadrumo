@@ -5,6 +5,7 @@
 @step Export refuses for Modelo 100: AEAT's mandatory Aux VERSION is not published in any bundled source, and the tool will not invent one.
 @result aeat --format json app modelo export --modelo 100 --year 2025 --period 0A --output ./modelo-100.boe
 @expect exit_code == 5
+@expect error.code == "FAIL_MODELO_EXPORT"
 @step After you upload at the portal, record the local filed marker.
 @static aeat app modelo work file --modelo 100 --year 2025 --period 0A
 @blocked obligation-window The Renta 2025 window opens 2026-04-08 and the sandbox clock is 2026-04-01: "No pending filing obligation for this profile at the current date".

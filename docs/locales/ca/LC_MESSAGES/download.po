@@ -213,7 +213,7 @@ msgstr "Vies d'instal·lació per canal:"
 
 #: ../../download.md:100
 msgid "**Python package**: Any platform with Python 3.13+"
-msgstr "**Paquet de Python** - Qualsevol plataforma amb Python 3.13+"
+msgstr "**Paquet de Python**: Qualsevol plataforma amb Python 3.13+"
 
 #: ../../download.md:102
 msgid "The PyPI listing opens at public launch; until then, install the release-page artifact attached to the latest release."
@@ -223,7 +223,7 @@ msgstr ""
 
 #: ../../download.md:104
 msgid "**Scoop package**: Windows (x86-64)"
-msgstr "**Paquet de Scoop** - Windows (x86-64)"
+msgstr "**Paquet de Scoop**: Windows (x86-64)"
 
 #: ../../download.md:106
 msgid "The Scoop bucket opens at public launch; until then, install the release-page artifact attached to the latest release."
@@ -233,7 +233,7 @@ msgstr ""
 
 #: ../../download.md:108
 msgid "**Homebrew formula**: macOS (Apple silicon), Linux (x86-64 and arm64)"
-msgstr "**Fórmula de Homebrew** - macOS (Apple silicon), Linux (x86-64 i arm64)"
+msgstr "**Fórmula de Homebrew**: macOS (Apple silicon), Linux (x86-64 i arm64)"
 
 #: ../../download.md:110
 msgid "The Homebrew tap opens at public launch; until then, install the release-page artifact attached to the latest release."
@@ -403,4 +403,3 @@ msgstr "Permet que un assistent d'IA com ara Claude faci servir Cadrumo amb tu, 
 
 #~ msgid "Let an AI assistant such as Claude drive Cadrumo with you, on your machine."
 #~ msgstr "Deixa que un assistent d'IA com ara Claude faci servir Cadrumo amb tu, a la teva màquina."
-

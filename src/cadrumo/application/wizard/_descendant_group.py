@@ -248,7 +248,7 @@ _FORMAT_UNITS_LOCALE_KEY = "wizard.setup.format.units-count"
 _FORMAT_TAX_ID_LOCALE_KEY = "wizard.setup.format.tax-id"
 _NIF_INVALID_LOCALE_KEY = "wizard.errors.invalid_tax_id"
 
-# The rentas grammar refusal reuses the exact key the checkpoint-persistence
+# The rentas grammar refusal reuses the exact key the persistence-projection
 # path (`_persistence._descendant_from_row`) already raises for the same
 # malformed-amount case on the same field, rather than minting a second one:
 # the CLI `--descendiente RENTAS=` flag path carries it too
@@ -418,7 +418,7 @@ def _validate_rentas_nonneg(page: FlowPage, canonical: str) -> ValidationVerdict
     UNDECLARED and is the CLAIMING direction (Art. 58.1 reads an absent
     figure as non-excluding), so silently mapping a typo onto it would assert
     a mínimo the taxpayer never established -- the same over-claim this cap
-    guards against in the checkpoint-persistence and CLI flag paths that
+    guards against in the persistence-projection and CLI flag paths that
     already enforce it on the same field.
     """
     if not canonical:

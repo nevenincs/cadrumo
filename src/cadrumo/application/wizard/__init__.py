@@ -37,11 +37,6 @@ See Also:
 from . import _compiler as _compiler
 from . import _copy_sources as _copy_sources
 from ._catalogue import WIZARD_FLOWS
-from ._checkpoint_store import (
-    ProfileFactsCheckpointStore,
-    checkpoint_answers_from_record,
-    checkpoint_facts_from_answers,
-)
 from ._commands import (
     DEFAULT_PROFILE_NEXT_COMMAND,
     SETUP_OPTION_INFOS,
@@ -125,7 +120,6 @@ __all__ = [
     "ConfigProfileCreateResult",
     "ConfigProfileEditResult",
     "PageLegalZone",
-    "ProfileFactsCheckpointStore",
     "ProfileWizardStatus",
     "WizardChoice",
     "WizardCondition",
@@ -145,8 +139,6 @@ __all__ = [
     "build_taxpayer_projection_validator",
     "build_wizard_command",
     "build_wizard_status",
-    "checkpoint_answers_from_record",
-    "checkpoint_facts_from_answers",
     "descendant_answers_from_record",
     "descendant_facts_from_answers",
     "ensure_profile_keys_registered",

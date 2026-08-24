@@ -152,6 +152,11 @@ def _validate_advance_identity(
         RepositoryError,
     )
     _raise_if(
+        snapshot.definition_contract_digest != current.definition_contract_digest,
+        "operation journal transition cannot change the definition contract digest",
+        RepositoryError,
+    )
+    _raise_if(
         snapshot.request_reference != current.request_reference,
         "operation journal transition cannot change the request reference",
         RepositoryError,

@@ -8,10 +8,10 @@
 @setup aeat --format json app modelo work verify {calculation_revision_id}
 @step Ask for the verified saved calculation before exporting anything.
 aeat --format json app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-verified
-@step Try to export the verified calculation. Modelo 303 has no fichero-BOE layout, so this refuses.
+@step Try to export the verified calculation; it refuses without reviewed product/software identity authority.
 aeat --format json app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
-@expect exit_code == 2
-@expect error.code == "REFUSED_MODELO_EXPORT_UNSUPPORTED"
+@expect exit_code == 5
+@expect error.code == "FAIL_MODELO_EXPORT"
 @step Record the filing locally, only after the portal submission succeeds.
 @result aeat --format json app modelo work file --modelo 303 --year 2026 --period 1T
 @expect result.status == "vigente"

@@ -1,6 +1,6 @@
 """The descriptor-to-SDK-Tool adaptation builds correct MCP objects.
 
-When the MCP SDK (the ``cadrumo[agent]`` extra) is installed, this proves the
+When the harness distribution's MCP runtime is installed, this proves the
 mutability-to-annotation projection lands on the real ``ToolAnnotations`` hint
 fields. Without the SDK, the same test asserts the lazy import fails at the
 optional dependency boundary.

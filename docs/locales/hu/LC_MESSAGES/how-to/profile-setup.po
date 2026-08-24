@@ -1102,7 +1102,7 @@ msgstr ""
 
 #: ../../how-to/profile-setup.md:431
 msgid "Delete a profile permanently"
-msgstr ""
+msgstr "Profil végleges törlése"
 
 #: ../../how-to/profile-setup.md:433
 msgid ""
@@ -1112,6 +1112,11 @@ msgid ""
 "example comes after every profile operation in this guide because the "
 "deleted profile cannot be used again:"
 msgstr ""
+"Csak az aktív munkamenet lezárása után törölje végleg a profilt. A "
+"Cadrumo nem engedi az aktív profil törlését, ezért először jelentkezzen ki, "
+"majd erősítse meg a pontosan megnevezett profil visszafordíthatatlan "
+"törlését. Ez a befejező példa az útmutató összes profilművelete után "
+"szerepel, mert a törölt profil többé nem használható:"
 
 #: ../../how-to/profile-setup.md:443
 msgid "If setup looks wrong"
@@ -1300,4 +1305,3 @@ msgstr "[CLI-referencia](../cli/index.rst)"
 #~ "profilt. Ha a törölt profil aktív "
 #~ "volt, a Cadrumo törli az aktív-"
 #~ "profil mutatót."
-

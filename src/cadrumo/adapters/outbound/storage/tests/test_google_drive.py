@@ -15,6 +15,7 @@ from urllib.parse import parse_qs
 
 import pytest
 
+from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....core.errors import resolve_error_message
 from .....core.i18n import tr
 from ...google.tests._drive_media_server import drive_files_list_endpoint
@@ -22,6 +23,28 @@ from .. import OutboundStorageIntegrityError, OutboundStorageNetworkError, Outbo
 from .._google_drive import GoogleDriveProvider, _drive_storage_content_hash
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+
+def _assert_drive_verdict(
+    error: OutboundStorageValidationError,
+    condition_id: str,
+    facts: dict[str, str | bool],
+    provenance: ActionEvidenceProvenance = ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+) -> None:
+    verdict = error.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == condition_id
+    assert verdict.action is None
+    assert verdict.argument_bindings == ()
+    assert verdict.missing_argument_names == ()
+    assert verdict.conditionality is ActionConditionality.NOT_APPLICABLE
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+    assert len(verdict.evidence) == 1
+    evidence = verdict.evidence[0]
+    assert evidence.condition_id == condition_id
+    assert evidence.evidence_id == f"{condition_id}.observation"
+    assert evidence.provenance is provenance
+    assert dict(evidence.values) == facts
 
 
 def _provider() -> GoogleDriveProvider:
@@ -67,17 +90,21 @@ def test_google_drive_explicit_constructor_does_not_build_google_client() -> Non
 
 
 @pytest.mark.parametrize(
-    ("provider_kwargs", "message", "context"),
+    ("provider_kwargs", "message", "context", "condition_id", "facts"),
     (
         (
             {"credentials": object(), "root_folder_id": " ", "vault_folder_name": "cadrumo-vault"},
             "adapters.outbound.storage.google_drive.errors.root_folder_id_blank",
             {"root_folder_id": " "},
+            "storage.google_drive.root_folder_id.present",
+            {"backend": "google_drive", "field": "root_folder_id", "valid": False},
         ),
         (
             {"credentials": object(), "root_folder_id": "drive-root", "vault_folder_name": " "},
             "adapters.outbound.storage.google_drive.errors.vault_folder_name_blank",
             None,
+            "storage.google_drive.vault_folder_name.valid",
+            {"backend": "google_drive", "field": "vault_folder_name", "valid": False},
         ),
     ),
     ids=("blank-root-folder", "blank-vault-folder"),
@@ -86,6 +113,8 @@ def test_google_drive_provider_rejects_blank_constructor_values_with_localized_m
     provider_kwargs: dict[str, object],
     message: str,
     context: dict[str, str] | None,
+    condition_id: str,
+    facts: dict[str, str | bool],
 ) -> None:
     with pytest.raises(OutboundStorageValidationError) as raised:
         kwargs: Any = provider_kwargs
@@ -95,6 +124,7 @@ def test_google_drive_provider_rejects_blank_constructor_values_with_localized_m
     assert exc.translated_message == message
     assert exc.translated_message is not None
     assert exc.context == context
+    _assert_drive_verdict(exc, condition_id, facts)
     assert resolve_error_message(exc) == tr(exc.translated_message, **(exc.context or {}))
 
 
@@ -107,6 +137,11 @@ def test_google_drive_provider_refuses_the_former_product_vault_before_service_c
     assert exc.translated_message == "adapters.outbound.storage.google_drive.errors.former_vault_folder"
     assert exc.context == {"vault_folder_name": "aeat-vault"}
     assert exc.context is not None
+    _assert_drive_verdict(
+        exc,
+        "storage.google_drive.vault_folder_name.valid",
+        {"backend": "google_drive", "field": "vault_folder_name", "valid": False},
+    )
     assert resolve_error_message(exc) == tr(exc.translated_message, **exc.context)
 
 
@@ -139,6 +174,34 @@ def test_vault_resolution_follows_page_token_to_an_owned_folder() -> None:
 
     assert len(endpoint.requested_queries) == 2
     assert parse_qs(endpoint.requested_queries[1])["pageToken"] == ["vault-page-two"]
+
+
+def test_vault_resolution_refuses_a_vault_name_entry_that_is_not_a_folder() -> None:
+    with drive_files_list_endpoint(
+        pages=(
+            {
+                "files": [
+                    {
+                        "id": "not-a-folder",
+                        "name": "cadrumo-vault",
+                        "mimeType": "application/octet-stream",
+                    }
+                ]
+            },
+        )
+    ) as endpoint:
+        provider = _provider()
+        provider._service = endpoint.service
+        with pytest.raises(OutboundStorageValidationError) as raised:
+            provider._resolve_vault_folder()
+
+    exc = raised.value
+    assert exc.translated_message == "adapters.outbound.storage.google_drive.errors.vault_entry_not_folder"
+    _assert_drive_verdict(
+        exc,
+        "storage.google_drive.vault_entry.folder",
+        {"backend": "google_drive", "field": "vault_folder_entry", "valid": False},
+    )
 
 
 def test_namespace_resolution_follows_page_token_to_an_owned_folder() -> None:
@@ -269,11 +332,13 @@ def test_iter_objects_refuses_malformed_storage_app_properties(
 
 
 @pytest.mark.parametrize(
-    ("put_kwargs", "message"),
+    ("put_kwargs", "message", "condition_id", "facts"),
     (
         (
             {"namespace": "", "object_key_hmac": "a" * 64, "payload": b"x", "content_hash": "sha256-x", "label": "x"},
             "adapters.outbound.storage.google_drive.errors.namespace_blank",
+            "storage.google_drive.namespace.valid",
+            {"backend": "google_drive", "field": "namespace", "valid": False},
         ),
         (
             {
@@ -284,6 +349,8 @@ def test_iter_objects_refuses_malformed_storage_app_properties(
                 "label": "x",
             },
             "adapters.outbound.storage.google_drive.errors.object_key_hmac_blank",
+            "storage.key.present",
+            {"backend": "google_drive", "field": "object_key_hmac", "valid": False},
         ),
         (
             {
@@ -294,6 +361,8 @@ def test_iter_objects_refuses_malformed_storage_app_properties(
                 "label": "x",
             },
             "adapters.outbound.storage.google_drive.errors.content_hash_blank",
+            "storage.google_drive.content_hash.present",
+            {"backend": "google_drive", "field": "content_hash", "valid": False},
         ),
     ),
     ids=("blank-namespace", "blank-object-hmac", "blank-content-hash"),
@@ -301,6 +370,8 @@ def test_iter_objects_refuses_malformed_storage_app_properties(
 def test_google_drive_provider_rejects_blank_put_values_before_service_construction(
     put_kwargs: dict[str, object],
     message: str,
+    condition_id: str,
+    facts: dict[str, str | bool],
 ) -> None:
     with pytest.raises(OutboundStorageValidationError) as raised:
         kwargs: Any = put_kwargs
@@ -309,6 +380,7 @@ def test_google_drive_provider_rejects_blank_put_values_before_service_construct
     exc = raised.value
     assert exc.translated_message == message
     assert exc.translated_message is not None
+    _assert_drive_verdict(exc, condition_id, facts)
     assert resolve_error_message(exc) == tr(exc.translated_message, **(exc.context or {}))
 
 
@@ -319,6 +391,11 @@ def test_google_drive_provider_rejects_forbidden_namespace_before_service_constr
     exc = raised.value
     assert exc.translated_message == "adapters.outbound.storage.google_drive.errors.namespace_forbidden_characters"
     assert exc.context == {"namespace": "with/slash"}
+    _assert_drive_verdict(
+        exc,
+        "storage.google_drive.namespace.valid",
+        {"backend": "google_drive", "field": "namespace", "valid": False},
+    )
     assert resolve_error_message(exc) == tr(exc.translated_message, **(exc.context or {}))
 
 

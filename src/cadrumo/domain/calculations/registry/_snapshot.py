@@ -694,6 +694,20 @@ def _deadline_window_source_spans(
     return {source_id: tuple(windows) for source_id, windows in spans.items()}
 
 
+def _construct_source_ids_without_deadline_closure(revision: ModeloRevision) -> set[str]:
+    """Return construct sources that are not inherited only from deadline members."""
+    windows_by_id = {window.id: window for window in revision.deadline_windows}
+    source_ids: set[str] = set()
+    for construct in revision.constructs:
+        deadline_source_ids = {
+            source_id
+            for window_id in construct.deadline_windows
+            for source_id in windows_by_id[window_id].source_refs
+        }
+        source_ids.update(set(construct.source_refs) - deadline_source_ids)
+    return source_ids
+
+
 def _check_revision_scoped_source_windows(
     modelo: ModeloDefinition,
     revision: ModeloRevision,
@@ -729,7 +743,9 @@ def _check_revision_scoped_source_windows(
         modelo,
         revision,
         include_deadline_windows=False,
+        include_constructs=False,
     )
+    elsewhere_source_ids.update(_construct_source_ids_without_deadline_closure(revision))
     scoped_source_ids = revision_source_ids - set(modelo.source_refs)
     deadline_spans = _deadline_window_source_spans(revision)
     failures: list[str] = []
@@ -768,6 +784,7 @@ def collect_snapshot_ref_ids(
     revision: ModeloRevision,
     *,
     include_deadline_windows: bool = True,
+    include_constructs: bool = True,
 ) -> tuple[set[str], set[str]]:
     """Walk every record kind and return its (legal_ids, source_ids) pair.
 
@@ -815,7 +832,7 @@ def collect_snapshot_ref_ids(
         revision.workbook_parity_refs,
         revision.verification_expectations,
         revision.application_links,
-        revision.constructs,
+        *((revision.constructs,) if include_constructs else ()),
         revision.dependency_classifications,
     )
     for kind_records in flat_records:

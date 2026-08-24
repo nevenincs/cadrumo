@@ -5,9 +5,10 @@ period = "2026 1T"
 period_kind = "quarterly"
 opens_on = 2026-04-01
 closes_on = 2026-04-20
+payment_cutoff_on = 2026-04-15
 applicability_condition_mode = "any"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
-source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2026"]
 
 [[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "pays_rent_with_retencion"
@@ -24,9 +25,10 @@ period = "2026 2T"
 period_kind = "quarterly"
 opens_on = 2026-07-01
 closes_on = 2026-07-20
+payment_cutoff_on = 2026-07-15
 applicability_condition_mode = "any"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
-source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2026"]
 
 [[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "pays_rent_with_retencion"
@@ -43,9 +45,10 @@ period = "2026 3T"
 period_kind = "quarterly"
 opens_on = 2026-10-01
 closes_on = 2026-10-20
+payment_cutoff_on = 2026-10-15
 applicability_condition_mode = "any"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
-source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades", "boe-rirpf-art-108-retencion-deadline"]
+source_refs = ["aeat-modelo-115-guia-censal", "aeat-calendario-contribuyente-2026"]
 
 [[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
 field = "pays_rent_with_retencion"

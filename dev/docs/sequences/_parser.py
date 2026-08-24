@@ -546,27 +546,33 @@ def _enforce_result_contract(builders: list[_FrameBuilder], problems: list[str])
 #: A json-path addressing the result PAYLOAD (the ``result`` object of the
 #: envelope), as opposed to the ``exit_code`` process status or the ``status``
 #: envelope-spine field.
-_RESULT_PAYLOAD_PREFIXES: tuple[str, ...] = ("result.", "result[")
+_SEMANTIC_PAYLOAD_PREFIXES: tuple[str, ...] = ("result.", "result[", "error.", "error[")
 
 
 def result_frame_asserts_result_payload(sequence: ParsedSequence) -> bool:
     """Whether the sequence's ``@result`` frame asserts the result PAYLOAD.
 
     The tightened @result contract requires at least one ``@expect`` on
-    the result payload — a ``result.<path>`` / ``result[...]`` json-path — so a
-    sequence verifies the MEANING of its final output, not merely that the process
+    the structured success or refusal payload — a ``result.*`` or ``error.*``
+    json-path — so a sequence verifies the MEANING of its final output, not merely that the process
     exited (``exit_code``) or that the envelope status equals a value (``status``,
     a spine field). A frame asserting only ``exit_code`` (and/or ``status``) proves
     the command ran without proving it produced the right answer, the weak pattern
     this contract eliminates. An all-``@static`` sequence has no ``@result`` frame
     and is vacuously compliant.
     """
-    result = sequence.result_frame
-    if result is None:
+    frame = sequence.result_frame
+    if frame is None:
         return True
+    if frame.command_line.rstrip().endswith("--help"):
+        # Click help is deliberately human-readable text, not a JSON envelope.
+        # Its exact process-success assertion is the only available structured
+        # contract; text rendering itself is covered by the CLI help snapshots.
+        return any(assertion.json_path == "exit_code" and assertion.expected == 0 for assertion in frame.expects)
     return any(
-        assertion.json_path == "result" or assertion.json_path.startswith(_RESULT_PAYLOAD_PREFIXES)
-        for assertion in result.expects
+        assertion.json_path in {"result", "error"}
+        or assertion.json_path.startswith(_SEMANTIC_PAYLOAD_PREFIXES)
+        for assertion in frame.expects
     )
 
 

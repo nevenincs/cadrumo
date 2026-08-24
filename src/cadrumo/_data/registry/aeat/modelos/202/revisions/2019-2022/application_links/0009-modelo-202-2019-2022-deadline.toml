@@ -1,0 +1,7 @@
+[[revisions.2019-2022.application_links]]
+id = "modelo-202-2019-2022-deadline"
+surface = "deadline"
+consumer = "cadrumo.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-202-instructions-2018-2022"]

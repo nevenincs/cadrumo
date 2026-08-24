@@ -14,8 +14,13 @@ from ....application.operations import (
     OperationEventStream,
     OperationIdempotencyClaim,
     OperationJournal,
+    OperationObservationCursorAheadError,
+    OperationObservationMaterialization,
+    OperationObservationReader,
+    OperationObservationUnknownOperationError,
     OperationOwnerLease,
     OperationPersistedSnapshot,
+    OperationProgressFoldInput,
     OperationReplayLimit,
     OperationReplayPage,
     OperationReplayStatus,
@@ -43,9 +48,44 @@ class _OperationReplayRequest(BaseModel):
     limit: OperationReplayLimit
 
 
-def _parse_operation_journal_record(raw: str | bytes) -> OperationJournalRecord:
-    """Parse only the current credential-free operation journal schema."""
-    return OperationJournalRecord.model_validate_json(raw)
+def _replay_page_from_record(
+    record: OperationJournalRecord,
+    request: _OperationReplayRequest,
+) -> OperationReplayPage:
+    """Build one bounded replay page from the exact record already read."""
+    events = tuple(event for event in record.history if event.sequence > request.cursor)[: request.limit]
+    if not events:
+        return OperationReplayPage(
+            status=OperationReplayStatus.CAUGHT_UP,
+            requested_cursor=request.cursor,
+            events=(),
+            next_cursor=request.cursor,
+        )
+    return OperationReplayPage(
+        status=OperationReplayStatus.PAGE,
+        requested_cursor=request.cursor,
+        events=events,
+        next_cursor=events[-1].sequence,
+    )
+
+
+def _observation_materialization_from_record(
+    record: OperationJournalRecord,
+    request: _OperationReplayRequest,
+) -> OperationObservationMaterialization:
+    """Derive every observation fact from one immutable journal record."""
+    anchor_cursor = record.snapshot.event_cursor
+    if request.cursor > anchor_cursor:
+        raise OperationObservationCursorAheadError(
+            requested_cursor=request.cursor,
+            anchor_cursor=anchor_cursor,
+        )
+    return OperationObservationMaterialization(
+        snapshot=record.snapshot,
+        anchor_cursor=anchor_cursor,
+        replay=_replay_page_from_record(record, request),
+        progress_fold=OperationProgressFoldInput(events=record.history),
+    )
 
 
 class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
@@ -55,7 +95,7 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         super().__init__(
             journal_dirname=storage_location(StorageCategory.OPERATION_JOURNAL).subpath,
             storage_root=storage_root,
-            parse_operation=_parse_operation_journal_record,
+            parse_operation=OperationJournalRecord.model_validate_json,
             error_type=RepositoryError,
             not_found_type=RepositoryError,
             corrupt_type=RepositoryError,
@@ -69,6 +109,28 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         self._ensure_root()
         with exclusive_file_lock(self.lock_target):
             return self._resolve_idempotency_unlocked(claim)
+
+    def read_observation(
+        self,
+        operation_id: str,
+        request: _OperationReplayRequest,
+    ) -> OperationObservationMaterialization | None:
+        """Read one complete record and its observation under the journal lock."""
+        if not self._validate_existing_root():
+            return None
+        with exclusive_file_lock(self.lock_target):
+            try:
+                record = super().load(operation_id)
+            except RepositoryError:
+                if self._is_absent(operation_id):
+                    return None
+                raise
+            return _observation_materialization_from_record(record, request)
+
+    def _is_absent(self, operation_id: str) -> bool:
+        """Tell a missing record from a present but unreadable one."""
+        path = self.path_for(operation_id)
+        return not os.path.lexists(self.root) or not os.path.lexists(path)
 
     def _resolve_idempotency_unlocked(self, claim: OperationIdempotencyClaim) -> str | None:
         """Find one exact claim while the canonical journal lock is already held."""
@@ -126,7 +188,7 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         expected_revision: OperationRevision,
         lease: OperationOwnerLease,
     ) -> None:
-        """Atomically create or advance a snapshot after all transition checks pass."""
+        """Atomically advance an existing snapshot after all transition checks pass."""
         self._validate_lease(snapshot, lease)
         self._ensure_root()
         path = self.path_for(snapshot.operation_id)
@@ -137,15 +199,11 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
                 lease=lease,
                 observed_at=snapshot.updated_at,
             )
-            if path.exists():
-                current = super().load(snapshot.operation_id)
-                self._validate_advance(current.snapshot, snapshot, expected_revision)
-                record = OperationJournalRecord(snapshot=snapshot, history=(*current.history, *snapshot.events))
-            else:
-                if snapshot.idempotency_claim is not None:
-                    raise RepositoryError("idempotent operation creation requires the journal create protocol")
-                self._validate_create(snapshot, expected_revision)
-                record = OperationJournalRecord(snapshot=snapshot, history=snapshot.events)
+            if not os.path.lexists(path):
+                raise RepositoryError("operation journal commit requires an existing snapshot created via create")
+            current = super().load(snapshot.operation_id)
+            self._validate_advance(current.snapshot, snapshot, expected_revision)
+            record = OperationJournalRecord(snapshot=snapshot, history=(*current.history, *snapshot.events))
             self._write(path, record)
 
     @staticmethod
@@ -179,7 +237,7 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         validate_advance(current, snapshot, expected_revision)
 
 
-class OperationJournalRepository(OperationJournal, OperationEventStream):
+class OperationJournalRepository(OperationJournal, OperationEventStream, OperationObservationReader):
     """Async operation-journal port over the atomic filesystem substrate."""
 
     def __init__(self, *, storage_root: Path) -> None:
@@ -220,20 +278,24 @@ class OperationJournalRepository(OperationJournal, OperationEventStream):
                     next_cursor=request.cursor,
                 )
             raise
-        events = tuple(event for event in record.history if event.sequence > request.cursor)[: request.limit]
-        if not events:
-            return OperationReplayPage(
-                status=OperationReplayStatus.CAUGHT_UP,
-                requested_cursor=request.cursor,
-                events=(),
-                next_cursor=request.cursor,
-            )
-        return OperationReplayPage(
-            status=OperationReplayStatus.PAGE,
-            requested_cursor=request.cursor,
-            events=events,
-            next_cursor=events[-1].sequence,
+        return _replay_page_from_record(record, request)
+
+    @override
+    async def read_observation(
+        self,
+        operation_id: str,
+        after_cursor: OperationEventCursor,
+        *,
+        limit: OperationReplayLimit,
+    ) -> OperationObservationMaterialization:
+        """Return snapshot, replay, and progress facts anchored to one locked record."""
+        materialization = self._repository.read_observation(
+            operation_id,
+            _OperationReplayRequest(cursor=after_cursor, limit=limit),
         )
+        if materialization is None:
+            raise OperationObservationUnknownOperationError(operation_id)
+        return materialization
 
     @override
     async def commit(
@@ -243,13 +305,12 @@ class OperationJournalRepository(OperationJournal, OperationEventStream):
         expected_revision: OperationRevision,
         lease: OperationOwnerLease,
     ) -> None:
-        """Atomically create or advance the snapshot through the typed substrate."""
+        """Atomically advance an existing snapshot through the typed substrate."""
         self._repository.commit(snapshot, expected_revision=expected_revision, lease=lease)
 
     def _is_absent(self, operation_id: str) -> bool:
         """Distinguish an absent record from a present but unreadable record."""
-        path = self._repository.path_for(operation_id)
-        return not os.path.lexists(self._repository.root) or not os.path.lexists(path)
+        return self._repository._is_absent(operation_id)
 
 
 __all__ = ["OperationJournalRepository"]

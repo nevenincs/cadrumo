@@ -8,9 +8,8 @@ for self-employed activity under estimación directa; the registry's official
 title is "Impuesto sobre la Renta de las Personas Físicas. Actividades
 económicas en estimación directa. Pago fraccionado."
 
-`aeat` does not submit Modelo 130 to AEAT, and it cannot currently produce an
-upload file for it either: Modelo 130 has no fichero-BOE layout, so `export`
-refuses. Read the calculated box values back and enter them through the
+`aeat` does not submit Modelo 130 to AEAT. It can produce the registry-backed
+fichero-BOE upload file locally; you still present that file through the
 official AEAT channel yourself.
 
 The tool needs a master-key passphrase and prompts for it.
@@ -51,7 +50,7 @@ Load-bearing details:
   minus expense base - and a pago fraccionado (casilla `04`) of `100.00`,
   20 percent of the net.
 - `verify` reports `completeness complete` and `granted true`. `export` then
-  refuses, because Modelo 130 carries no fichero-BOE layout.
+  writes the local fichero-BOE artefact and reports its checksum.
 
 ## Before you create the draft
 
@@ -147,10 +146,10 @@ the supplier invoice and attaches it before it calculates. Attach in that
 order: a draft bundles its evidence when you verify it, so an invoice attached
 afterwards does not reach the filing.
 
-The sequence below shows `export` refusing, then the filed marker recording.
+The sequence below exports the verified draft, then records the filed marker.
 
 ```{cli-sequence} modelo-130-export-file
-:verify: Confirm the export refuses and the filing stays local.
+:verify: Confirm the local export succeeds and the filing marker remains an internal record.
 ```
 
 Recording the filed marker applies only while the obligation window is open. It

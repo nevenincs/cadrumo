@@ -11,6 +11,7 @@ from ._secure_objects_fixtures import secure_objects
 
 __all__ = ["secure_objects"]
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
@@ -341,7 +342,10 @@ def test_income_source_resolver_projects_withheld_amount_to_m130_casilla_06(
         revision=_m130_2026_q1_revision(),
     )
 
-    resolution = LedgerRentaIncomeAggregationSourceResolver(transaction_repository=tx_repo).resolve(context)
+    resolution = LedgerRentaIncomeAggregationSourceResolver(
+        transaction_repository=tx_repo,
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+    ).resolve(context)
 
     assert resolution.binding_values[_M130_RETENCIONES_BINDING] == Decimal("300.00")
     assert resolution.bound_inputs_by_casilla_id[_M130_RETENCIONES_CASILLA] == Decimal("300.00")
@@ -377,7 +381,10 @@ def test_a_revision_without_the_retenciones_binding_surfaces_the_lost_credit(
         revision=income_only,
     )
 
-    resolution = LedgerRentaIncomeAggregationSourceResolver(transaction_repository=tx_repo).resolve(context)
+    resolution = LedgerRentaIncomeAggregationSourceResolver(
+        transaction_repository=tx_repo,
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+    ).resolve(context)
 
     advisories = [
         diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_declarable_quantity"
@@ -401,7 +408,10 @@ def test_a_revision_without_the_retenciones_binding_surfaces_the_lost_credit(
 
     # Silence control: with the binding present the retención is drawn and the
     # advisory must not fire, or it would fire on every correct M130 filing.
-    complete = LedgerRentaIncomeAggregationSourceResolver(transaction_repository=tx_repo).resolve(
+    complete = LedgerRentaIncomeAggregationSourceResolver(
+        transaction_repository=tx_repo,
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+    ).resolve(
         CalculationSourceContext(
             bucket_id="test",
             modelo="130",
@@ -550,7 +560,10 @@ def test_cash_fallback_income_raises_the_ungrounded_substrate_advisory(
         revision=_m130_2026_q1_revision(),
     )
 
-    resolution = LedgerRentaIncomeAggregationSourceResolver(transaction_repository=tx_repo).resolve(context)
+    resolution = LedgerRentaIncomeAggregationSourceResolver(
+        transaction_repository=tx_repo,
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+    ).resolve(context)
 
     advisories = _ungrounded_diagnostics(resolution)
     assert len(advisories) == 1, "a base-less income row must raise exactly one ungrounded-substrate advisory"
@@ -590,7 +603,10 @@ def test_substrate_declared_income_raises_no_ungrounded_advisory(
         revision=_m130_2026_q1_revision(),
     )
 
-    resolution = LedgerRentaIncomeAggregationSourceResolver(transaction_repository=tx_repo).resolve(context)
+    resolution = LedgerRentaIncomeAggregationSourceResolver(
+        transaction_repository=tx_repo,
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+    ).resolve(context)
 
     assert _ungrounded_diagnostics(resolution) == (), (
         "a row declaring its taxable_base is grounded and must raise no ungrounded-substrate advisory"
@@ -627,7 +643,10 @@ def test_many_ungrounded_rows_raise_one_advisory_not_one_each(
         revision=_m130_2026_q1_revision(),
     )
 
-    resolution = LedgerRentaIncomeAggregationSourceResolver(transaction_repository=tx_repo).resolve(context)
+    resolution = LedgerRentaIncomeAggregationSourceResolver(
+        transaction_repository=tx_repo,
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+    ).resolve(context)
 
     advisories = _ungrounded_diagnostics(resolution)
     assert len(advisories) == 1, "three ungrounded rows must fold into one advisory, not three"

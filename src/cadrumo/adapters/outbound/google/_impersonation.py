@@ -76,8 +76,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG, GoogleCredentialSourceKind
-from ._errors import GoogleAuthError
+from ....core import STRICT_FROZEN_CONFIG, ActionEvidenceProvenance, GoogleCredentialSourceKind, NoRecoveryOutcome
+from ._errors import GoogleAuthError, GoogleAuthPreconditionCondition, google_auth_no_action_verdict
 from ._records import DRIVE_FILE_SCOPE, SHEETS_SCOPE
 
 if TYPE_CHECKING:
@@ -285,6 +285,12 @@ def resolve_impersonated_credentials(config: GoogleImpersonationConfig) -> Crede
         raise GoogleAuthAdcUnavailableError(
             f"google-auth is not importable: {exc}",
             context={"target_principal": config.target_principal},
+            precondition_verdict=google_auth_no_action_verdict(
+                condition=GoogleAuthPreconditionCondition.ADC_CLIENT_AVAILABLE,
+                facts={"adc_client_available": False},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         ) from exc
 
     try:
@@ -293,6 +299,12 @@ def resolve_impersonated_credentials(config: GoogleImpersonationConfig) -> Crede
         raise GoogleAuthAdcUnavailableError(
             f"Application Default Credentials not found: {exc}",
             context={"target_principal": config.target_principal},
+            precondition_verdict=google_auth_no_action_verdict(
+                condition=GoogleAuthPreconditionCondition.ADC_AVAILABLE,
+                facts={"adc_available": False},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         ) from exc
 
     _ensure_source_credential_is_fresh(
@@ -315,6 +327,12 @@ def resolve_impersonated_credentials(config: GoogleImpersonationConfig) -> Crede
         raise GoogleAuthImpersonationRefusedError(
             f"IAM refused to mint an impersonated token for {config.target_principal!r}: {exc}",
             context={"target_principal": config.target_principal},
+            precondition_verdict=google_auth_no_action_verdict(
+                condition=GoogleAuthPreconditionCondition.IAM_CREDENTIAL_MINTED,
+                facts={"iam_token_minted": False},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         ) from exc
 
     return impersonated
@@ -358,6 +376,12 @@ def _ensure_source_credential_is_fresh(
         raise GoogleAuthAdcStaleError(
             f"Application Default Credentials could not be refreshed: {exc}",
             context={"target_principal": target_principal},
+            precondition_verdict=google_auth_no_action_verdict(
+                condition=GoogleAuthPreconditionCondition.ADC_SOURCE_FRESH,
+                facts={"adc_source_fresh": False},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         ) from exc
 
 

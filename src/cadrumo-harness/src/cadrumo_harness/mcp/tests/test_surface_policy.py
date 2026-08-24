@@ -7,7 +7,7 @@ opt-out restores the flat per-verb surface, and a verb outside the advertised
 core stays reachable (``by_name`` spans every descriptor) so it is discovered,
 not lost. The SDK-independent policy is asserted directly; the advertised
 ``tools/list`` is asserted through the real built ``Server`` under both modes.
-When the ``cadrumo[agent]`` extra is absent the SDK-dependent build fails at the
+When the harness distribution's MCP runtime is absent the SDK-dependent build fails at the
 optional-dependency boundary rather than skipping, matching the sibling tests.
 """
 

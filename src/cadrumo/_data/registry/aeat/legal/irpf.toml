@@ -1901,6 +1901,26 @@ required_text = [
     "Aprobación del modelo 187 y de los diseños físicos y lógicos",
 ]
 
+[legal."orden-hac-1417-2018:art-primero"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1417-2018.html#a1"
+document_id = "BOE-A-2018-17997"
+article = "primero"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-17997#a1"
+published_at = 2018-12-29
+effective_from = 2018-12-30
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-24
+reviewed_by = "agent-authored from official BOE-A-2018-17997 article primero, checked live and against the bundled corpus; operator to re-stamp"
+notes = "Orden HAC/1417/2018 articulo primero redrafts articulo 2 of Orden HAP/1608/2014 for the 2019+ Modelo 187 regime. Its filing population has distinct withholding and Article 42 RGAT limbs; the latter cannot be represented by the existing single payer-fact selector and must not be silently collapsed into the former."
+required_text = [
+    "Se modifica el artículo 2, que queda redactado de la siguiente manera",
+    "Asimismo, se encuentran también obligadas a presentar el modelo 187",
+    "artículo 42 del Reglamento General",
+]
+
 [legal."orden-eha-3377-2011:art-5"]
 evidence_tier = "legal_authority"
 authority = "boe"

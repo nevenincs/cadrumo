@@ -2,11 +2,10 @@
 @setup aeat --format json app modelo work create --modelo 130 --year 2026 --period 1T
 @setup aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
 @setup aeat --format json app modelo work verify --modelo 130 --year 2026 --period 1T
-@step Try to export the verified draft. Modelo 130 has no fichero-BOE layout, so this refuses.
+@step Export the verified draft to the registry-backed fichero-BOE layout.
 aeat --format json app modelo export --modelo 130 --year 2026 --period 1T --output ./modelo-130.boe
-@expect exit_code == 2
-@expect error.code == "REFUSED_MODELO_EXPORT_UNSUPPORTED"
-@step Record the local filed marker in the obligation window. This is the supported end of the flow.
+@expect exit_code == 0
+@step Record the separate local filed marker in the obligation window.
 @result aeat --format json app modelo work file --modelo 130 --year 2026 --period 1T
 @expect exit_code == 0
 @expect result.kind == "internal_filing"

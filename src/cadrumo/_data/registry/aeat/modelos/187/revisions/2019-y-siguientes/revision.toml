@@ -1,11 +1,12 @@
 [revisions."2019-y-siguientes"]
-# Applicability grade: the collective-investment declaration is filed by the managing
-# company or depositary, never by the participant.
+# Applicability grade: Article 2 has independent withholding and RGAT Article 42
+# filer limbs; an ordinary participant is not itself made a filer by holding IIC
+# interests. The current single payer-fact selector only decides the former limb.
 authority_grade = "applicability"
 valid_from = 2019-01-01
 period_selector = { year_from = 2019, periods = ["0A"] }
 orden_aplicabilidad = ["orden-hap-1608-2014:art-1"]
-legal_refs = ["orden-hap-1608-2014:art-1", "ley-35-2006:art-99", "rd-439-2007:art-108"]
+legal_refs = ["orden-hap-1608-2014:art-1", "orden-hac-1417-2018:art-primero", "ley-35-2006:art-99", "rd-439-2007:art-108"]
 source_refs = ["aeat-modelo-187-procedure", "boe-modelo-187-form-layout", "aeat-dr-187-2022"]
 review_status = "agent_reviewed"
 reviewed_by = """\

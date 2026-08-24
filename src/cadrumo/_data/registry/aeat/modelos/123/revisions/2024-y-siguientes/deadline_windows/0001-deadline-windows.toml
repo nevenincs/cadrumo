@@ -8,7 +8,7 @@ closes_on = 2026-04-20
 payment_cutoff_on = 2026-04-15
 applicability_condition_mode = "any"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-modelo-123-procedure"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2026"]
 
 [[revisions."2024-y-siguientes".deadline_windows.applicability_conditions]]
 field = "pays_capital_income_with_retencion"
@@ -28,7 +28,7 @@ closes_on = 2026-07-20
 payment_cutoff_on = 2026-07-15
 applicability_condition_mode = "any"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-modelo-123-procedure"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2026"]
 
 [[revisions."2024-y-siguientes".deadline_windows.applicability_conditions]]
 field = "pays_capital_income_with_retencion"
@@ -48,7 +48,7 @@ closes_on = 2026-10-20
 payment_cutoff_on = 2026-10-15
 applicability_condition_mode = "any"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-modelo-123-procedure"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2026"]
 
 [[revisions."2024-y-siguientes".deadline_windows.applicability_conditions]]
 field = "pays_capital_income_with_retencion"
@@ -65,7 +65,6 @@ period = "2026 4T"
 period_kind = "quarterly"
 opens_on = 2027-01-01
 closes_on = 2027-01-20
-payment_cutoff_on = 2027-01-15
 applicability_condition_mode = "any"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-modelo-123-procedure"]
@@ -77,4 +76,3 @@ value = true
 explanation = "Autonomo que satisface rendimientos de capital mobiliario o determinadas rentas sujetas a retencion o ingreso a cuenta."
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-modelo-123-procedure"]
-

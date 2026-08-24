@@ -8,12 +8,11 @@ file at the portal yourself, signed with your own credentials. The `work file`
 command at the end records a local marker only; it does not and cannot file on
 your behalf.
 
-How you present depends on the modelo. Some carry an official fichero-BOE
-record layout, and for those you upload a file. Modelo 303 and Modelo 130 do
-not: the registry withdraws a layout whenever some field it contains cannot yet
-be produced from checked values, because a partial layout can under-declare
-without saying so. For those, `export` refuses and you key the calculated box
-values into the portal form.
+How you present depends on the modelo. Modelo 130 exports a local fichero-BOE
+file for upload. Modelo 303's registry layout also exists, but its export
+currently refuses because Cadrumo has no reviewed AEAT product/software
+identity authority with which to stamp the envelope; key its calculated box
+values into the portal form instead.
 
 ## Before you start
 
@@ -42,7 +41,7 @@ If you're new to the workflow as a whole, start with the
 
 The sequence below runs the machine half of the filing end to end: it prepares a
 classified, evidenced Modelo 303 for the first quarter of 2026, verifies it,
-confirms the verified revision, shows `export` refusing, and records the local
+confirms the verified revision, shows Modelo 303 `export` refusing, and records the local
 filed marker. Between the refusal and the marker, you present the figures at the
 AEAT portal yourself (steps 2 to 4 below). The final frame is the reconcile
 command you run once you have AEAT's justificante on disk; it is shown but not

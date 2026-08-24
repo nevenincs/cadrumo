@@ -11,6 +11,8 @@ legal_refs = [
 source_refs = [
     "aeat-dr-202-2023",
     "aeat-modelo-202-instructions-2023-2024",
+    "aeat-calendario-contribuyente-2023",
+    "aeat-calendario-contribuyente-2024",
     "boe-modelo-202-base-order",
     "boe-modelo-202-2023-amendment",
 ]
@@ -42,4 +44,5 @@ application_links = [
     "modelo-202-2023-2024-reconciliation",
     "modelo-202-2023-2024-export",
     "modelo-202-2023-2024-workflow",
+    "modelo-202-2023-2024-deadline",
 ]

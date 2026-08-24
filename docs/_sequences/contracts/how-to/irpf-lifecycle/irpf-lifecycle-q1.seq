@@ -16,11 +16,11 @@ aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 1
 @step Verify the instalment before exporting it.
 aeat --format json app modelo work verify --modelo 130 --year 2026 --period 1T
 @expect result.granted_verificado_completo == true
-@step Try to export the verified instalment. Modelo 130 has no fichero-BOE layout, so this refuses.
+@step Export the verified instalment to the registry-backed fichero-BOE layout.
 @result aeat --format json app modelo export --modelo 130 --year 2026 --period 1T --output ./modelo-130-2026-1T.boe
-@expect exit_code == 2
-@expect error.code == "REFUSED_MODELO_EXPORT_UNSUPPORTED"
-@expect error.context.modelo == "130"
+@expect exit_code == 0
+@expect result.modelo == "130"
+@expect result.format == "fichero-boe"
 @static aeat app modelo work file --modelo 130 --year 2026 --period 1T
 @blocked unconverted Runs clean on its own; this page's cumulative run files the quarter inside the next quarter's preparation, and one revision cannot be filed twice.
 @static aeat app modelo reconcile pull --modelo 130 --year 2026 --period 1T

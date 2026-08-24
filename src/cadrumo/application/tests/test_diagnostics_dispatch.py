@@ -78,7 +78,7 @@ def _wizard_status(
         profile_total_keys=profile_total_keys,
         auth_provider=auth_provider,
         login_ready=login_ready,
-        next_action="",
+        next_action=None,
     )
 
 

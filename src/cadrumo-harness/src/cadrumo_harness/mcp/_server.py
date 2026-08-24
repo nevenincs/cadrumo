@@ -1,7 +1,7 @@
 """MCP server shell: the thin protocol wiring over the SDK-independent core.
 
-The Model Context Protocol runtime is an optional dependency behind the
-``cadrumo[agent]`` extra. :func:`serve` imports it lazily and, when it is absent,
+The Model Context Protocol runtime is provided by the sibling
+``cadrumo-harness`` distribution. :func:`serve` imports it lazily and, when it is absent,
 refuses with the install hint and a non-zero exit instead of raising a raw
 ``ModuleNotFoundError`` - the same graceful-degradation contract the Google,
 browser, and Anthropic integrations follow. The tool list, annotations, and the
@@ -144,7 +144,7 @@ from ._transport import (
 )
 
 if TYPE_CHECKING:
-    # Typing-only: the MCP SDK is an optional runtime dependency (``cadrumo[agent]``),
+    # Typing-only: the MCP SDK is supplied by the sibling harness distribution,
     # so every real import of it is deferred to inside a function body (see the
     # module docstring). These names are never evaluated at runtime (deferred
     # annotations, `from __future__ import annotations`); they exist solely so
@@ -157,7 +157,10 @@ if TYPE_CHECKING:
     from mcp.server.models import InitializationOptions
     from mcp.types import ContentBlock, Tool
 
-_INSTALL_HINT = "the MCP server requires the agent extra: pip install 'cadrumo[agent]'"
+_INSTALL_HINT = (
+    "the MCP server is provided by the cadrumo-harness distribution: "
+    "pip install cadrumo-harness; launch it with cadrumo-mcp"
+)
 _REQUIRED_VERSION_ENV = f"{PRODUCT_IDENTITY.environment_prefix}MCP_REQUIRED_VERSION"
 _RUNTIME_COHORT = (PRODUCT_IDENTITY.distribution, *PRODUCT_IDENTITY.companion_distributions)
 
@@ -185,7 +188,7 @@ _META_DESCRIBE_TOOL = "describe"
 
 
 def emit_missing_sdk_refusal() -> None:
-    """Write the agent-extra install hint to stderr and exit non-zero.
+    """Write the harness-distribution install hint to stderr and exit non-zero.
 
     The graceful-degradation path taken when the MCP SDK is absent. Exposed so the
     refusal contract is unit-tested directly, in any environment, rather than
@@ -215,7 +218,9 @@ def enforce_required_runtime_cohort() -> None:
     sys.stderr.write(
         "Cadrumo MCP runtime cohort does not satisfy the installed integration: "
         f"required {required}; {'; '.join(details)}. "
-        f"Install cadrumo[agent]=={required} with both exact-version data companions.\n",
+        "Install the exact runtime cohort: "
+        f"pip install cadrumo-harness=={required} cadrumo=={required} "
+        f"cadrumo-data-manuals=={required} cadrumo-data-official=={required}\n",
     )
     raise SystemExit(4)
 
@@ -313,7 +318,7 @@ def build_sdk_tools(descriptors: tuple[McpToolDescriptor, ...]) -> list[Tool]:
     """Adapt the SDK-independent descriptors into MCP SDK ``Tool`` objects.
 
     Lazily imports the SDK types so the module still imports (and ``serve`` still
-    refuses gracefully) when the ``cadrumo[agent]`` extra is absent. Exposed at module
+    refuses gracefully) when the harness distribution's MCP runtime is absent. Exposed at module
     level so the adaptation - including the mutability-to-annotation projection -
     is unit-tested against the real SDK types when they are installed.
     """
@@ -352,7 +357,7 @@ def build_meta_sdk_tools() -> list[Tool]:
     """Build the SDK ``Tool`` objects for the core-surface meta-tools.
 
     Lazily imports the SDK ``Tool`` type so the module still imports when the
-    ``cadrumo[agent]`` extra is absent. Exposed at module level so the meta-tool
+    harness distribution's MCP runtime is absent. Exposed at module level so the meta-tool
     surface is unit-tested against the real SDK types when they are installed.
 
     Returns:
@@ -1239,7 +1244,7 @@ def _run_server(
 ) -> None:  # pragma: no cover - requires the SDK runtime
     """Build and run the MCP stdio server from the tool descriptors.
 
-    Exercised only when the ``cadrumo[agent]`` extra is installed; the descriptor,
+    Exercised only when the ``cadrumo-harness`` MCP runtime is installed; the descriptor,
     annotation, dispatch, block, and capability-registration logic it composes are
     unit-tested without the stdio transport via :func:`build_server`.
     """

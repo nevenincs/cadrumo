@@ -40,6 +40,7 @@ __all__ = ["secure_objects"]
 
 from ....adapters.inbound.financial.providers import ParsedLedgerRow
 from ....adapters.outbound.fx import EcbReferenceRateProvider
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.currency import (
@@ -112,6 +113,7 @@ def test_usd_import_populates_fx_rate_and_value_in_eur(
         bucket_id="test",
         parsed_rows=[_usd_parsed("usd-inv-001")],
         transaction_repository=repo,
+        bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
         currency_normalizer=normalizer,
     )
 
@@ -185,6 +187,7 @@ def test_missing_rate_leaves_fx_fields_absent(
         bucket_id="test",
         parsed_rows=[_usd_parsed("usd-norate-001")],
         transaction_repository=repo,
+        bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
         currency_normalizer=normalizer,
     )
 
@@ -219,6 +222,7 @@ def test_anti_tautology_mutated_rate_changes_value_in_eur(
         bucket_id="test",
         parsed_rows=[_usd_parsed("usd-antitauto-canonical")],
         transaction_repository=repo_canonical,
+        bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
         currency_normalizer=canonical_normalizer,
     )
     assert result_canonical.summary.imported == 1
@@ -229,6 +233,7 @@ def test_anti_tautology_mutated_rate_changes_value_in_eur(
         bucket_id="test",
         parsed_rows=[_usd_parsed("usd-antitauto-mutant")],
         transaction_repository=repo_mutant,
+        bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
         currency_normalizer=mutant_normalizer,
     )
     assert result_mutant.summary.imported == 1

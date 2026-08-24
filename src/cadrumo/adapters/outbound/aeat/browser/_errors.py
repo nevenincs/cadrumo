@@ -22,10 +22,42 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 
-from .....core.errors import CadrumoError
+from .....application.operator_actions import no_action_precondition_verdict
+from .....core import ActionEvidenceProvenance, NoRecoveryOutcome
+from .....core.errors import CadrumoError, TerminalPreconditionErrorMixin
 
 
-class BrowserError(CadrumoError):
+class BrowserPreconditionCondition(StrEnum):
+    """Stable failed conditions observed at the AEAT browser boundary."""
+
+    OPTIONAL_EXTRA_AVAILABLE = "aeat.browser.optional_extra.available"
+    RUNTIME_STARTABLE = "aeat.browser.runtime.startable"
+    RUNTIME_STOPPABLE = "aeat.browser.runtime.stoppable"
+    SESSION_AVAILABLE = "aeat.browser.session.available"
+    BROWSER_LAUNCHABLE = "aeat.browser.launchable"
+    CONTEXT_CREATABLE = "aeat.browser.context.creatable"
+    EVASION_SUPPORT_AVAILABLE = "aeat.browser.evasion_support.available"
+    EVASION_APPLIED = "aeat.browser.evasion.applied"
+    PAGE_CONTENT_READABLE = "aeat.browser.page_content.readable"
+    BROWSER_CLOSEABLE = "aeat.browser.closeable"
+
+
+def browser_no_action_verdict(
+    *,
+    condition: BrowserPreconditionCondition,
+    facts: Mapping[str, str | int | bool],
+    outcome: NoRecoveryOutcome,
+):
+    """Delegate one fact-only browser refusal to the public verdict authority."""
+    return no_action_precondition_verdict(
+        condition_id=condition.value,
+        facts=facts,
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        outcome=outcome,
+    )
+
+
+class BrowserError(TerminalPreconditionErrorMixin, CadrumoError):
     """Base class for browser-related failures.
 
     ``failure_mode`` may be a :class:`BrowserFailureMode` member or an existing
@@ -41,6 +73,7 @@ class BrowserError(CadrumoError):
         failure_mode: BrowserFailureMode | str | None = None,
         context: Mapping[str, object] | None = None,
         translated_message: str | None = None,
+        precondition_verdict: object | None = None,
     ) -> None:
         """Construct a browser error with an optional failure-mode tag."""
         enriched_context = dict(context) if context is not None else {}
@@ -56,6 +89,7 @@ class BrowserError(CadrumoError):
             message,
             context=enriched_context or None,
             translated_message=translated_message,
+            precondition_verdict=precondition_verdict,
         )
 
 
@@ -90,6 +124,9 @@ class BrowserFailureMode(StrEnum):
     """
 
     SESSION_BUSY = "session_busy"
+    OPTIONAL_EXTRA_UNAVAILABLE = "optional_extra_unavailable"
+    PLAYWRIGHT_RUNTIME_START_FAILED = "playwright_runtime_start_failed"
+    PLAYWRIGHT_RUNTIME_STOP_FAILED = "playwright_runtime_stop_failed"
     BROWSER_LAUNCH_FAILED = "browser_launch_failed"
     CONTEXT_CREATE_FAILED = "context_create_failed"
     EVASION_FAILED = "evasion_failed"

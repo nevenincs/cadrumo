@@ -8,10 +8,12 @@ import time
 import psutil
 import pytest
 
+from ......core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ......core.config import Settings
 from ...auth import BrowserSessionLike
 from ...tests import wait_for_process_exit
 from .. import BrowserError, Profile, create_browser_session, opened_browser_page, shared_playwright_runtime
+from .._errors import BrowserPreconditionCondition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -133,6 +135,29 @@ def _profile(name: str) -> Profile:
     )
 
 
+def _assert_terminal_contract(
+    error: BrowserError,
+    *,
+    condition: BrowserPreconditionCondition,
+    facts: dict[str, str | int | bool],
+    outcome: NoRecoveryOutcome,
+) -> None:
+    verdict = error.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == condition.value
+    assert verdict.action is None
+    assert verdict.argument_bindings == ()
+    assert verdict.missing_argument_names == ()
+    assert verdict.conditionality is ActionConditionality.NOT_APPLICABLE
+    assert verdict.no_recovery_outcome is outcome
+    assert len(verdict.evidence) == 1
+    evidence = verdict.evidence[0]
+    assert evidence.condition_id == condition.value
+    assert evidence.evidence_id == f"{condition.value}.observation"
+    assert evidence.provenance is ActionEvidenceProvenance.RUNTIME_OBSERVATION
+    assert dict(evidence.values) == facts
+
+
 @pytest.mark.asyncio
 async def test_default_browser_session_is_protocol_complete_and_reaps_runtime() -> None:
     """The production session owns Chromium and its Playwright driver."""
@@ -149,9 +174,16 @@ async def test_default_browser_session_is_protocol_complete_and_reaps_runtime() 
 
     live_descendants = await _wait_for_descendants(driver_pid, expect_non_empty=True)
     assert live_descendants
-    with pytest.raises(BrowserError, match=r"call close\(\) before create_context\(\) again") as excinfo:
+    with pytest.raises(BrowserError) as excinfo:
         await session.create_context()
+    assert "call close" not in str(excinfo.value).lower()
     assert excinfo.value.failure_mode == "session_busy"
+    _assert_terminal_contract(
+        excinfo.value,
+        condition=BrowserPreconditionCondition.SESSION_AVAILABLE,
+        facts={"browser_session_available": False},
+        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+    )
 
     await context.close()
     assert await _wait_for_descendants(driver_pid, expect_non_empty=True)
@@ -167,7 +199,7 @@ async def test_default_browser_session_reaps_browser_after_real_context_failure(
     session = await create_browser_session(Settings(), _profile("context-failure"))
     driver_pid = session._playwright._impl_obj._connection._transport._proc.pid
 
-    with pytest.raises(BrowserError):
+    with pytest.raises(BrowserError) as excinfo:
         await session.create_context(
             storage_state={
                 "cookies": "not-a-cookie-array",
@@ -175,26 +207,39 @@ async def test_default_browser_session_reaps_browser_after_real_context_failure(
             },
         )
 
+    _assert_terminal_contract(
+        excinfo.value,
+        condition=BrowserPreconditionCondition.CONTEXT_CREATABLE,
+        facts={
+            "browser_context_creatable": False,
+            "storage_state_supplied": True,
+            "provisioner_supplied": False,
+        },
+        outcome=NoRecoveryOutcome.SAFETY,
+    )
+
     assert await _wait_for_descendants(driver_pid, expect_non_empty=False) == ()
     await session.close()
     await wait_for_process_exit(driver_pid, after="session close")
 
 
 @pytest.mark.asyncio
-async def test_launch_failure_hint_names_the_configured_channel_not_a_hardcoded_one() -> None:
-    """A real missing-binary launch failure must name the CONFIGURED channel's own install command.
-
-    ``msedge-beta`` is a real Playwright channel that is not provisioned on the
-    test workstation, so this forces the genuine 'executable doesn't exist'
-    Playwright driver error the hint keys off, rather than a synthetic message.
-    """
+async def test_launch_failure_is_a_factual_typed_safety_outcome() -> None:
+    """A real unavailable channel must not author a local install command."""
     settings = Settings(cadrumo_browser_channel="msedge-beta")
     session = await create_browser_session(settings, _profile("launch-hint"))
     try:
-        with pytest.raises(BrowserError, match=r"playwright install msedge-beta") as excinfo:
+        with pytest.raises(BrowserError) as excinfo:
             await session.create_context()
-        assert "playwright install chromium" not in str(excinfo.value)
+        assert "playwright install" not in str(excinfo.value).lower()
+        assert "playwright-doctor" not in str(excinfo.value).lower()
         assert excinfo.value.failure_mode == "browser_launch_failed"
+        _assert_terminal_contract(
+            excinfo.value,
+            condition=BrowserPreconditionCondition.BROWSER_LAUNCHABLE,
+            facts={"browser_launchable": False},
+            outcome=NoRecoveryOutcome.SAFETY,
+        )
     finally:
         await session.close()
 

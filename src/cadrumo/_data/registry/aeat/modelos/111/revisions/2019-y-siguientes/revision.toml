@@ -4,7 +4,15 @@ valid_from = 2019-01-01
 period_selector = { year_from = 2019, periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "1T", "2T", "3T", "4T"] }
 orden_aplicabilidad = ["orden-eha-586-2011:art-1"]
 legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
-source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
+source_refs = [
+    "aeat-dr-111-2019-v18",
+    "aeat-modelo-111-instructions",
+    "aeat-calendario-contribuyente-2022",
+    "aeat-calendario-contribuyente-2023",
+    "aeat-calendario-contribuyente-2024",
+    "aeat-calendario-contribuyente-2025",
+    "aeat-calendario-contribuyente-2026",
+]
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19

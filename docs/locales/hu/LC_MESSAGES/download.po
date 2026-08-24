@@ -214,7 +214,7 @@ msgstr "Telepítési utak csatornánként:"
 
 #: ../../download.md:100
 msgid "**Python package**: Any platform with Python 3.13+"
-msgstr "**Python-csomag** - Bármely platform Python 3.13+ verzióval"
+msgstr "**Python-csomag**: Bármely platform Python 3.13+ verzióval"
 
 #: ../../download.md:102
 msgid "The PyPI listing opens at public launch; until then, install the release-page artifact attached to the latest release."
@@ -224,7 +224,7 @@ msgstr ""
 
 #: ../../download.md:104
 msgid "**Scoop package**: Windows (x86-64)"
-msgstr "**Scoop csomag** - Windows (x86-64)"
+msgstr "**Scoop csomag**: Windows (x86-64)"
 
 #: ../../download.md:106
 msgid "The Scoop bucket opens at public launch; until then, install the release-page artifact attached to the latest release."
@@ -234,7 +234,7 @@ msgstr ""
 
 #: ../../download.md:108
 msgid "**Homebrew formula**: macOS (Apple silicon), Linux (x86-64 and arm64)"
-msgstr "**Homebrew-formula** - macOS (Apple silicon), Linux (x86-64 és arm64)"
+msgstr "**Homebrew-formula**: macOS (Apple silicon), Linux (x86-64 és arm64)"
 
 #: ../../download.md:110
 msgid "The Homebrew tap opens at public launch; until then, install the release-page artifact attached to the latest release."
@@ -403,4 +403,3 @@ msgstr "Lehetővé teszi, hogy egy Claude-hoz hasonló MI-asszisztens veled egy�
 
 #~ msgid "Let an AI assistant such as Claude drive Cadrumo with you, on your machine."
 #~ msgstr "Hagyja, hogy egy MI-asszisztens, például a Claude, Önnel együtt vezérelje a Cadrumót a saját gépén."
-

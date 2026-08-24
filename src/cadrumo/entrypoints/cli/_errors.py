@@ -48,8 +48,9 @@ from pydantic import BaseModel, ValidationError
 
 from ...application.operator_actions import PreconditionVerdict
 from ...core import FormerProductStateError
-from ...core.click_context import json_output_requested
+from ...core.click_context import argv_requests_json, json_output_requested
 from ...core.errors import (
+    ActiveProfilePointerError,
     CadrumoError,
     get_error_exit_code,
     get_registered_error_code,
@@ -838,7 +839,7 @@ def _emit_error_and_exit(error: CadrumoError) -> Never:
     code = get_registered_error_code(error)
     payload = render_error_payload(
         error,
-        as_json=json_output_requested(),
+        as_json=json_output_requested() or argv_requests_json(sys.argv[1:]),
         command=command,
         action=action,
     )
@@ -1024,10 +1025,31 @@ def _project_cadrumo_error(error: Exception, callback: Callable[..., object]) ->
     )
     from ._common import attach_cli_policy_verdict
 
+    if isinstance(error, ActiveProfilePointerError):
+        verdict = _active_profile_pointer_error_verdict(error)
+        if verdict is not None:
+            return attach_cli_policy_verdict(error, verdict=verdict)
     verdict = nested_terminal_precondition_verdict(error)
     view = cli_exception_envelope_view(error)
     assert isinstance(view, CadrumoError)
     return view if verdict is None else attach_cli_policy_verdict(view, verdict=verdict)
+
+
+def _active_profile_pointer_error_verdict(error: ActiveProfilePointerError) -> PreconditionVerdict | None:
+    """Project the core pointer-corruption facts through application action policy."""
+    context = error.context
+    if not isinstance(context, Mapping):
+        return None
+    path = context.get("path")
+    if (
+        not isinstance(path, str)
+        or context.get("pointer_corrupt") is not True
+        or context.get("root_fallback_refused") is not True
+    ):
+        return None
+    from ...application.operator_actions import corrupt_active_profile_pointer_verdict
+
+    return corrupt_active_profile_pointer_verdict(path=path)
 
 
 def _project_validation_error(error: Exception, callback: Callable[..., object]) -> CadrumoError:

@@ -261,7 +261,8 @@ def _refuse_former_product_state_at_startup() -> None:
     )
     from ...core import FormerProductStateError
     from ...core.config import Settings
-    from ._errors import CliRefusedBoundaryError, _emit_error_and_exit
+    from ...core.errors import ActiveProfilePointerError
+    from ._errors import CliRefusedBoundaryError, _emit_error_and_exit, project_cli_boundary_error
 
     try:
         Settings()
@@ -274,6 +275,8 @@ def _refuse_former_product_state_at_startup() -> None:
                 ),
             )
         )
+    except ActiveProfilePointerError as error:
+        _emit_error_and_exit(project_cli_boundary_error(error, _refuse_former_product_state_at_startup))
 
 
 @contextmanager

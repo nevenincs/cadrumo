@@ -42,7 +42,13 @@ legal_refs = [
     "ley-37-1992:art-163-terdecies",
     "ley-37-1992:art-163-quinquiesdecies",
 ]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = [
+    "aeat-dr-303-2022",
+    "aeat-modelo-303-procedure",
+    "boe-modelo-303-2008-form",
+    "aeat-calendario-contribuyente-2022",
+    "aeat-calendario-contribuyente-2023",
+]
 casilla_ids = [
     "iva.repercutido.general",
     "iva.repercutido.reducido",
@@ -112,3 +118,9 @@ extraction_profiles = ["modelo-303-declaracion-pdf"]
 live_cross_references = ["modelo-303-static-documentation", "modelo-303-filed-declarations-read"]
 application_links = ["modelo-303-portal", "modelo-303-filing", "modelo-303-extractor", "modelo-303-review", "modelo-303-approval", "modelo-303-reconciliation", "modelo-303-workflow", "modelo-303-deadline", "modelo-303-calculation"]
 filing_schedules = ["modelo-303-trimestral"]
+deadline_windows = [
+    "modelo-303-2022-1t",
+    "modelo-303-2022-2t",
+    "modelo-303-2022-3t",
+    "modelo-303-2022-4t",
+]

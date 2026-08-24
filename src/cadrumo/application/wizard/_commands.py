@@ -53,11 +53,16 @@ import typer._click.types
 from pydantic import BaseModel, ValidationError
 from pydantic_core import ErrorDetails
 
-from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, Modelo
+from ...core import (
+    OBJECT_TUPLE_ADAPTER,
+    STR_KEYED_MAPPING_ADAPTER,
+    ActionEvidenceProvenance,
+    Modelo,
+    NoRecoveryOutcome,
+)
 from ...core.flows import CheckpointAvailability, FlowMode
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ..flows import (
-    CheckpointStore,
     FlowAnswerError,
     FlowDefinition,
     FlowPage,
@@ -69,9 +74,13 @@ from ..flows import (
     visible_sequence,
 )
 from ._catalogue import SETUP_FLOW
-from ._checkpoint_store import ProfileFactsCheckpointStore
 from ._descendant_group import attach_descendant_group
-from ._errors import WizardMissingFlagError, WizardValidationError
+from ._errors import (
+    WizardMissingFlagError,
+    WizardPreconditionCondition,
+    WizardValidationError,
+    wizard_no_action_verdict,
+)
 from ._format_hints import attach_format_hints
 from ._models import WizardFlow, WizardQuestion, WizardWidget
 from ._persistence import WizardPersistMode
@@ -91,15 +100,11 @@ _FLOW_MODE_BY_WIZARD_MODE: dict[WizardPersistMode, FlowMode] = {
     "edit": FlowMode.MODIFY,
 }
 
-#: Checkpoint posture for the setup flow (the facts-ARE-the-checkpoint model).
-#: CREATE offers save-and-exit and resume: the profile is minted early in
-#: ``SETUP_INCOMPLETE`` state and every answer persists as an effective-dated
-#: fact through the lifecycle authority, so the encrypted facts themselves are
-#: the checkpoint. MODIFY stays the declared no-op — a live profile must never
-#: hold a half-applied edit set — so the substrate refuses a save loudly rather
-#: than offer one it cannot honour.
+#: Neither setup mode offers a checkpoint.  Credential registration owns
+#: profile creation, and profile edits must never leave a half-applied fact
+#: set behind.
 _SETUP_CHECKPOINT: dict[FlowMode, CheckpointAvailability] = {
-    FlowMode.CREATE: CheckpointAvailability.AVAILABLE,
+    FlowMode.CREATE: CheckpointAvailability.UNAVAILABLE,
     FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
 }
 
@@ -957,7 +962,7 @@ def _question_parameters(flow: WizardFlow) -> tuple[inspect.Parameter, ...]:
     """Build one ``inspect.Parameter`` per descriptor question.
 
     Each question's ``rich_help_panel`` is the section's translated
-    title so ``aeat config profile create NAME --help`` renders one help panel per
+    title so the profile-create command's help renders one panel per
     :class:`WizardSection`.
     """
     parameters: list[inspect.Parameter] = []
@@ -1065,6 +1070,15 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
                 "missing": missing_baseline,
                 "missing_flags": _format_missing_flags(missing_baseline),
             },
+            precondition_verdict=wizard_no_action_verdict(
+                condition=WizardPreconditionCondition.FILING_BASELINE_COMPLETE,
+                facts={
+                    "filing_baseline_complete": False,
+                    "missing_flag_count": len(missing_baseline),
+                },
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            ),
         )
     apply_profile_fact_changes(
         profile_id=profile_id,
@@ -1084,21 +1098,18 @@ def _run_full_flow(
     profile_id: str,
     mode: WizardPersistMode,
     explicit_question_ids: frozenset[str] = frozenset(),
-    checkpoint_store: CheckpointStore | None = None,
 ) -> dict[str, str]:
     """Walk the full wizard flow and persist the resulting answer set.
 
-    Used for ``create`` (every path) and for an interactive ``edit``,
-    where the operator re-walks and confirms every visible question.
+    This is the full-flow path for an edit. Create is refused before any
+    console or checkpoint can be opened because credential registration owns
+    profile creation.
 
     ``explicit_question_ids`` names the questions whose flag the
     operator supplied on a non-interactive command line. Such a
     question is collected even when its ``visible_when`` gate would
     hide it, so an explicitly-given flag value is always honoured.
 
-    ``checkpoint_store`` is not a creation authority. Interactive creation
-    is unavailable until credential registration has established the current
-    authenticated profile.
     """
     from ...domain.user_profile import UserProfileFact
     from ..user_profile import (
@@ -1139,6 +1150,15 @@ def _run_full_flow(
                     "missing": missing,
                     "missing_flags": missing_flags,
                 },
+                precondition_verdict=wizard_no_action_verdict(
+                    condition=WizardPreconditionCondition.REQUIRED_FLAGS_SUPPLIED,
+                    facts={
+                        "required_flags_supplied": False,
+                        "missing_flag_count": len(missing),
+                    },
+                    provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                ),
             )
         answers = _run_scripted_walk(
             flow,
@@ -1157,17 +1177,29 @@ def _run_full_flow(
         # There is no interactive walk here any more. An operator at a
         # capable terminal was already diverted to the profile manager
         # before this command ran, so reaching this branch means the host
-        # cannot present a screen at all — and the answer for that host is
-        # the flag form, which is exactly what these refusals name.
+        # cannot present a screen at all.  The terminal verdict records that
+        # factual capability refusal without prescribing a replacement flow.
         from . import WizardEditUnsupportedConsoleError, WizardUnsupportedConsoleError
 
         if mode == "edit":
             raise WizardEditUnsupportedConsoleError(
                 translated_message="wizard.errors.unsupported_console_edit",
                 context={"profile_name": profile_name},
+                precondition_verdict=wizard_no_action_verdict(
+                    condition=WizardPreconditionCondition.INTERACTIVE_CONSOLE_AVAILABLE,
+                    facts={"interactive_console_available": False},
+                    provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                    outcome=NoRecoveryOutcome.SAFETY,
+                ),
             )
         raise WizardUnsupportedConsoleError(
             translated_message="wizard.errors.unsupported_console",
+            precondition_verdict=wizard_no_action_verdict(
+                condition=WizardPreconditionCondition.INTERACTIVE_CONSOLE_AVAILABLE,
+                facts={"interactive_console_available": False},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         )
 
     # `create` writes the full answer set. An interactive `edit` writes a
@@ -1187,6 +1219,15 @@ def _run_full_flow(
                 "missing": missing_baseline,
                 "missing_flags": _format_missing_flags(missing_baseline),
             },
+            precondition_verdict=wizard_no_action_verdict(
+                condition=WizardPreconditionCondition.FILING_BASELINE_COMPLETE,
+                facts={
+                    "filing_baseline_complete": False,
+                    "missing_flag_count": len(missing_baseline),
+                },
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            ),
         )
     from ...domain.deadlines import taxpayer_profile_from_mapping
 
@@ -1227,6 +1268,12 @@ def _require_profile_name(flow: WizardFlow, raw_profile_name: object) -> str:
     raise WizardMissingFlagError(
         translated_message="application.wizard.errors.profile_flag_required",
         context={"flow_id": flow.id, "missing": ("profile_name",)},
+        precondition_verdict=wizard_no_action_verdict(
+            condition=WizardPreconditionCondition.PROFILE_NAME_SUPPLIED,
+            facts={"profile_name_supplied": False},
+            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        ),
     )
 
 
@@ -1252,6 +1299,12 @@ def _resolve_profile_id_for_mode(flow: WizardFlow, mode: WizardPersistMode, prof
             raise WizardValidationError(
                 translated_message="application.wizard.errors.profile_label_taken",
                 context={"flow_id": flow.id, "label": profile_name},
+                precondition_verdict=wizard_no_action_verdict(
+                    condition=WizardPreconditionCondition.PROFILE_LABEL_AVAILABLE,
+                    facts={"profile_registration_available": False},
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                ),
             )
         return new_profile_id()
 
@@ -1261,6 +1314,12 @@ def _resolve_profile_id_for_mode(flow: WizardFlow, mode: WizardPersistMode, prof
     raise WizardMissingFlagError(
         translated_message="application.wizard.errors.profile_flag_required",
         context={"flow_id": flow.id, "missing": ("profile_name",)},
+        precondition_verdict=wizard_no_action_verdict(
+            condition=WizardPreconditionCondition.PROFILE_NAME_SUPPLIED,
+            facts={"profile_name_supplied": False},
+            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        ),
     )
 
 
@@ -1457,7 +1516,6 @@ def _run_wizard_persistence_path(
     accept_defaults: bool,
     profile_name: str,
     profile_id: str,
-    checkpoint_store: CheckpointStore | None = None,
 ) -> dict[str, str]:
     """Dispatch to patch-edit or full-flow persistence."""
     non_interactive = quiet or accept_defaults
@@ -1473,7 +1531,6 @@ def _run_wizard_persistence_path(
         profile_id=profile_id,
         mode=mode,
         explicit_question_ids=frozenset(explicit_flags),
-        checkpoint_store=checkpoint_store,
     )
 
 
@@ -1680,11 +1737,11 @@ def _echo_wizard_text(lines: list[str], *, payload: object) -> None:
     """Render wizard text lines through the output boundary and emit them.
 
     The single place this module's operator-facing text crosses into stdout.
-    Both the success surface and the save-and-exit disclosure funnel through
-    here, so the sandbox banner, the redaction pass and the reveal-identifiers
-    resolution are applied once rather than once per emitter. Two emitters each
-    holding a private copy of the render-and-echo pair is how one of them came
-    to bypass the boundary while its sibling did not.
+    Every identifier-bearing success disclosure funnels through here, so the
+    sandbox banner, the redaction pass and the reveal-identifiers resolution
+    are applied once rather than once per emitter. Two emitters each holding a
+    private copy of the render-and-echo pair is how one of them came to bypass
+    the boundary while its sibling did not.
     """
     import typer as _typer
 
@@ -1798,66 +1855,6 @@ def _wizard_success_notices(
     return notices
 
 
-_SAVE_EXIT_RESUME_CODE = "config.profile.create.saved_resume_later"
-
-
-def _emit_save_exit_notice(profile_name: str, *, message: str | None = None) -> None:
-    """Emit the create-mode save-and-exit disclosure ('saved — resume later').
-
-    A save-and-exit leaves the profile ``SETUP_INCOMPLETE``, so no
-    created/active success is emitted. Instead an ``info``-severity
-    :class:`Notice` states the setup was saved and its ``suggestion`` is the
-    resume command (``config profile create`` re-enters the in-progress
-    profile), so the operator is told how to continue rather than left with
-    a silent exit.
-
-    ``message`` carries the disclosure pre-rendered in the command-level
-    output language (see :func:`_emit_wizard_success`); ``None`` resolves it
-    now for the direct, walk-less callers.
-    """
-    from ...core.click_context import json_output_requested
-    from ...core.json_contract import Notice, NoticeSeverity
-    from ..operator_output import emit_operator_json_success
-    from ._results import ConfigProfileCreateResult, ProfileWizardStatus
-
-    resume_command = f"aeat config profile create {profile_name}"
-    if message is None:
-        message = tr("application.wizard.notices.setup_saved_resume_later", name=profile_name)
-    notice = Notice(
-        severity=NoticeSeverity.INFO,
-        code=_SAVE_EXIT_RESUME_CODE,
-        message=message,
-    )
-    # A save-and-exit leaves the profile SETUP_INCOMPLETE (never
-    # created/active), but it still emits under the "config.profile.create"
-    # command path, so the result is the SAME registered
-    # ConfigProfileCreateResult shape with a "saved" status and no
-    # active_profile — never a bespoke dict. Both arms render the same payload,
-    # so it is built once above the branch.
-    result = ConfigProfileCreateResult(
-        profile_name=profile_name,
-        status=ProfileWizardStatus.SAVED,
-        active_profile=None,
-    )
-    if json_output_requested():
-        # emit_operator_json_success is the one sanctioned direct route to
-        # the envelope — see _emit_wizard_success.
-        emit_operator_json_success(
-            "config.profile.create",
-            result,
-            notices=[notice],
-            active_profile=None,
-        )
-        return
-    # Same funnel as _echo_wizard_success_text: this payload interpolates
-    # profile_name into both the disclosure and the resume command, so it is
-    # identifier-bearing and must reach the operator through the shared
-    # renderer rather than a raw echo. Two channels emitting the same
-    # identifier under different redaction states is the drift being closed.
-    lines = [f"{message}\t{resume_command}"]
-    _echo_wizard_text(lines, payload=result)
-
-
 def _execute_wizard_command(
     flow: WizardFlow,
     mode: WizardPersistMode,
@@ -1884,16 +1881,7 @@ def _execute_wizard_command(
     # discipline the error path uses for a translated refusal.
     modify_no_resume_message = tr("application.wizard.notices.modify_no_resume")
     modify_descendants_message = tr("application.wizard.notices.modify_descendants_via_door")
-    save_exit_message = tr("application.wizard.notices.setup_saved_resume_later", name=profile_name)
     _refuse_foral_ccaa(canonical, explicit_flags)
-    # Interactive create is the facts-as-checkpoint path: the store mints
-    # the profile early in ``SETUP_INCOMPLETE`` state and persists each
-    # answered fact through the lifecycle authority, backing save-and-exit.
-    checkpoint_store = (
-        ProfileFactsCheckpointStore(flow, profile_id=profile_id, profile_name=profile_name)
-        if mode == "create" and not (quiet or accept_defaults)
-        else None
-    )
     try:
         profile_values = _run_wizard_persistence_path(
             flow,
@@ -1904,17 +1892,9 @@ def _execute_wizard_command(
             accept_defaults=accept_defaults,
             profile_name=profile_name,
             profile_id=profile_id,
-            checkpoint_store=checkpoint_store,
         )
     except ValidationError as exc:
         raise _wizard_validation_bad(flow, exc) from exc
-    if checkpoint_store is not None and checkpoint_store.save_exit_persisted:
-        # Save-and-exit: the frontend already surfaced the saved state and
-        # the profile stays SETUP_INCOMPLETE for a later resume. Emitting a
-        # created/active success here would be a lie, so the command surfaces
-        # only the "saved — resume later" info notice.
-        _emit_save_exit_notice(profile_name, message=save_exit_message)
-        return
     # Every interactive modify run carries the LOUD staged-only disclosure on
     # its final envelope: mid-flow save/resume is unavailable and an
     # interrupted modify discards its staged edits. Non-interactive patch
