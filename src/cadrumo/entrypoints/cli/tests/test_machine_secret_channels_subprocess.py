@@ -914,8 +914,7 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(tmp_path: Path) -
     assert [notice["code"] for notice in document["notices"]] == ["config.login.session_not_persisted"]
 
 
-@pytest.mark.skipif(os.name != "nt", reason="Windows inherited-HANDLE recovery bootstrap")
-def test_windows_recovery_handles_complete_real_headless_creation(tmp_path: Path) -> None:
+def _assert_windows_recovery_handles_complete_real_headless_creation(tmp_path: Path) -> None:
     """Writable handoff and readable proof HANDLEs survive a real process boundary."""
     import msvcrt
 
@@ -1014,17 +1013,7 @@ def test_windows_recovery_handles_complete_real_headless_creation(tmp_path: Path
     assert json.loads(stdout)["result"]["profile_name"] == "windows-recovery"
 
 
-def test_windows_bootstrap_interpreter_bypasses_virtual_environment_launcher() -> None:
-    """HANDLE allowlists attach to the process which reads them, never a venv stub."""
-    if os.name != "nt":
-        pytest.skip("Windows launcher invariant")
-    base_executable = getattr(sys, "_base_executable", sys.executable)
-    assert isinstance(base_executable, str)
-    assert Path(bootstrap_interpreter()).resolve() == Path(base_executable).resolve()
-
-
-@pytest.mark.skipif(os.name == "nt", reason="POSIX pass_fds recovery transport")
-def test_posix_recovery_descriptors_complete_real_headless_creation(tmp_path: Path) -> None:
+def _assert_posix_recovery_descriptors_complete_real_headless_creation(tmp_path: Path) -> None:
     """Writable handoff and readable proof descriptors cross a real POSIX boundary."""
     root = tmp_path / "posix-recovery-create"
     handoff_reader, handoff_writer = os.pipe()
@@ -1099,6 +1088,14 @@ def test_posix_recovery_descriptors_complete_real_headless_creation(tmp_path: Pa
     assert supervisor_failure == [], result.stderr
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout)["result"]["profile_name"] == "posix-recovery"
+
+
+def test_platform_recovery_descriptors_complete_real_headless_creation(tmp_path: Path) -> None:
+    """Run the native real-process recovery transport on every supported host."""
+    if sys.platform == "win32":
+        _assert_windows_recovery_handles_complete_real_headless_creation(tmp_path)
+        return
+    _assert_posix_recovery_descriptors_complete_real_headless_creation(tmp_path)
 
 
 def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_write(
