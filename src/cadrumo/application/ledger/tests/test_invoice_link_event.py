@@ -55,7 +55,9 @@ def test_link_appends_exactly_one_invoice_linked_event(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         invoice, transaction = _seed(profile.bucket_id)
         events = BucketEventHistoryRepository(objects=profile.repository)
-        assert events.load().events == {}
+        # The profile capsule emits its own bucket-created lifecycle event, so
+        # this asserts the DELTA this verb appends rather than an empty log.
+        baseline = set(events.load().events)
 
         link_manual_transaction_invoice(
             bucket_id=profile.bucket_id,
@@ -66,7 +68,7 @@ def test_link_appends_exactly_one_invoice_linked_event(tmp_path: Path) -> None:
             occurred_at=_NOW,
         )
 
-        appended = tuple(events.load().events.values())
+        appended = tuple(event for key, event in events.load().events.items() if key not in baseline)
         assert len(appended) == 1
         event = appended[0]
         assert event.event_type is BucketEventType.LEDGER_TRANSACTION_INVOICE_LINKED
@@ -99,6 +101,7 @@ def test_refused_link_appends_no_event(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         _invoice_unused, transaction = _seed(profile.bucket_id)
         events = BucketEventHistoryRepository(objects=profile.repository)
+        baseline = set(events.load().events)
 
         with pytest.raises(InvoiceLinkError):
             link_manual_transaction_invoice(
@@ -110,7 +113,7 @@ def test_refused_link_appends_no_event(tmp_path: Path) -> None:
                 occurred_at=_NOW,
             )
 
-        assert events.load().events == {}
+        assert set(events.load().events) == baseline
 
 
 def test_event_rolls_back_with_the_catalogues_on_a_mid_batch_failure(tmp_path: Path) -> None:
@@ -125,6 +128,7 @@ def test_event_rolls_back_with_the_catalogues_on_a_mid_batch_failure(tmp_path: P
         invoices_repo = InvoiceCatalogueRepository(bucket_id=profile.bucket_id)
         transactions_repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         events = BucketEventHistoryRepository(objects=profile.repository)
+        baseline = set(events.load().events)
         events.save(events.load())  # give the history row a revision to stale against
         result = link_invoice_transaction_catalogues(
             invoices_repo.load(),
@@ -156,7 +160,7 @@ def test_event_rolls_back_with_the_catalogues_on_a_mid_batch_failure(tmp_path: P
         assert stored_transaction is not None
         assert stored_invoice.linked_transaction_ids == ()
         assert stored_transaction.invoice_id is None
-        assert events.load().events == {}
+        assert set(events.load().events) == baseline
 
 
 def _seed(bucket_id: str) -> tuple[Invoice, Transaction]:
