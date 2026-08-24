@@ -96,6 +96,34 @@ _EXPECTED_REVISION: dict[str, object] = {
 }
 
 
+def _assert_hand_derived_values_survive(parsed: object) -> None:
+    """Assert every hand-derived value round-trips, without pinning registry prose.
+
+    The subject here is the PARSER, so the anchors are the value shapes a
+    parser swap would most plausibly corrupt. Full-document equality was the
+    original assertion and proved to be the wrong instrument: the registry
+    later gained authority_grade, review_status, reviewed_by, reviewed_at and a
+    family_dispositions table, and the parser test went red for a registry
+    edit it has no opinion about. Worse, those tables carry paragraphs of
+    prose, so pinning them would re-break on the next wording change.
+
+    Each hand-derived key is still compared EXACTLY; only the registry's
+    freedom to add keys is conceded, and the sibling test pins the two entry
+    points to each other across the whole document.
+    """
+    assert isinstance(parsed, dict)
+    expected_revisions = _EXPECTED_REVISION["revisions"]
+    actual_revisions = parsed["revisions"]
+    assert isinstance(expected_revisions, dict)
+    assert isinstance(actual_revisions, dict)
+    for revision_id, expected_revision in expected_revisions.items():
+        actual_revision = actual_revisions[revision_id]
+        assert isinstance(expected_revision, dict)
+        assert isinstance(actual_revision, dict)
+        for key, expected_value in expected_revision.items():
+            assert actual_revision[key] == expected_value, key
+
+
 def test_read_toml_reproduces_known_manifest_values() -> None:
     """``read_toml`` on the real M036 manifest matches hand-derived expected values."""
     assert _MANIFEST_PATH.is_file(), f"fixture moved or renamed: {_MANIFEST_PATH}"
@@ -113,7 +141,7 @@ def test_read_toml_reproduces_known_revision_values_including_date_and_inline_ta
     """
     assert _REVISION_PATH.is_file(), f"fixture moved or renamed: {_REVISION_PATH}"
     parsed = read_toml(_REVISION_PATH, error_factory=ValueError)
-    assert parsed == _EXPECTED_REVISION
+    _assert_hand_derived_values_survive(parsed)
 
     revisions = parsed["revisions"]
     assert isinstance(revisions, dict)
@@ -136,4 +164,9 @@ def test_parse_toml_text_reproduces_known_revision_values_from_the_same_bytes() 
     """
     text = _REVISION_PATH.read_text(encoding="utf-8")
     parsed = parse_toml_text(text, error_factory=ValueError)
-    assert parsed == _EXPECTED_REVISION
+    _assert_hand_derived_values_survive(parsed)
+
+    # The two entry points must agree on the WHOLE document, not merely on the
+    # hand-derived anchors: a coercion that differed only in an unpinned corner
+    # would otherwise slip through both.
+    assert parsed == read_toml(_REVISION_PATH, error_factory=ValueError)
