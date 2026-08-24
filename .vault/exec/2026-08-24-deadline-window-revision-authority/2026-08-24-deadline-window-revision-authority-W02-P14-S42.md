@@ -52,10 +52,19 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Lead discovery with Vaultspec RAG, read the complete M202 revision surfaces, and confirm canonical authorities with exact-symbol searches.
+- Extract the bundled official AEAT 2022-2024 contributor calendars and transcribe only their published M202/M222 filing and direct-debit dates.
+- Materialise the nine measured 2022-2024 `1P`/`2P`/`3P` windows in their `select_revision` owners.
+- Close revision, construct, source, and deadline-application-link provenance for all supported 2022-2026 M202 windows.
+- Add exact census, date, source, typed-period, and canonical-owner regressions.
+- Run focused registry validation, ownership/identity tests, Ruff, Vaultspec checks, and an isolated architecture review.
 
 ## Outcome
 
+Modelo 202 now has exactly fifteen supported-year deadline coordinates: three canonical instalment periods for each filing year from 2022 through 2026. The nine previously missing coordinates are grounded in the bundled official calendars; all fifteen rows carry their year-specific calendar citation and resolve to their containing revision through `select_revision`.
+
+No selector, resolver, period parser, cadence mapping, supported-year horizon, or deadline catalogue was introduced. The data and tests consume the existing `Period`, `registry_period_kind`, `PeriodKind`, and `select_revision` authorities.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+The earlier family dispositions incorrectly stated that the 2022 calendar was absent; the official PDF was already bundled and readable. Those dispositions were removed when their families became populated. The schema-level deadline `period_kind` remains `quarterly`, while canonical token classification correctly reports `PeriodKind.INSTALMENT`; this preserves the existing deadline schema and avoids creating a second cadence vocabulary.

@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#calculation-export-import-adjudication'
 date: '2026-07-14'
-modified: '2026-08-15'
-body_hash: 'sha256:3f235b1a13af34cb0468ddbc4f598925419e801f1ddafd33f4d2746ae5591733'
+modified: '2026-08-24'
+body_hash: 'sha256:610c5ca4bad1e921cbe66072353b187808f4f00817d09ed5ce825173369d2be9'
 related:
   - "[[2026-07-14-calculation-export-import-adjudication-research]]"
   - "[[2026-07-14-calculation-export-import-adjudication-reference]]"
 ---
-
 # `calculation-export-import-adjudication` adr: `Export and import backlog admission boundary` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -106,3 +105,28 @@ no production work.
   mandate or evidence is unavailable.
 - Future implementations remain constrained to registry data and canonical
   engines unless a separately approved ADR changes authority or ownership.
+
+## Amendment 2026-08-24 Ã¢â‚¬â€� Modelo 036 product boundary
+
+The Modelo 036 outbound candidate is **not-mandated** under this ADR's
+four-condition gate. The current product supports censo applicability,
+observation, and recording of a declaration the operator has already filed; it
+does not support preparing a Modelo 036 filing artifact. The governing
+adjudication is `2026-08-24-registry-completeness-closure-modelo-036-2025-filing-authority-reference`;
+its separate source disposition is recorded in
+`2026-08-24-registry-completeness-closure-modelo-036-source-connectivity-reference`.
+
+Accordingly, the capability worklist reports the exact 2025 Modelo 036 revision
+as a **terminal product-scope** refusal, distinct from a terminal
+no-authority refusal. It has no implementation owner while this scope holds:
+absence of an `m036.*` producer, semantic map, render profile, or layout is not
+an authorable backlog. The source-casilla disposition remains independent and
+must not be used to admit export work.
+
+Only a new accepted ADR that explicitly expands product scope to preparation of
+an M036 artifact may reopen the candidate. That decision must first name typed
+owners for every non-casilla and repeating-record value, then admit the existing
+canonical export path with exact source authority, source/casilla prerequisites,
+filing-grade promotion, reviewed semantic map and render profile, generated-tree
+validation, and emitted-byte proof. It must preserve the permanent prohibition
+on remote AEAT submission.

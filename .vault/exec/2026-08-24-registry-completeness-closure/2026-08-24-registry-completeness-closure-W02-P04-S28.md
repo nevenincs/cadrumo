@@ -5,12 +5,11 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:f38bb18f9cca67d0063fe13f7a0b54d8f655c92a9301939b3fa6a2cdc4da7057'
+body_hash: 'sha256:022a067580ca155aa9c901bdfaf8b0c320ec369286f7f9aa7bdf0f6fdb08858d'
 step_id: 'S28'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
 ---
-
 # Enroll every official-layout and emitted-byte remedy in aeat-export-fragment-generator-authority without duplicating closed work
 
 ## Scope
@@ -43,7 +42,14 @@ The export predecessor plan now has exactly one bounded route for every authorab
 | Modelo 763 | `W04.P07.S107` maps each law-selected era only after opening-period evidence and value ownership |
 | Modelo 840 | `W04.P07.S108` adds the one generic terminator bridge, then the map, profile, generation, and byte proof |
 
-Modelo 136 remains the sole current terminal no-machine-contract refusal. Modelo 036 remains terminal at the shipped product boundary: an export row can exist only after a separate accepted product-scope ADR. Neither is presented as an authorable layout task.
+Modelo 136 remains the **TERMINAL NO-AUTHORITY** refusal: a current
+machine-readable contract is absent. Modelo 036 is instead the distinct
+**TERMINAL PRODUCT-SCOPE** refusal: the shipped product supports censo
+applicability and human-filing recordkeeping, not preparation of an M036
+artifact. It has no export-plan owner while that decision holds. A new accepted
+scope-expansion ADR must precede any re-evaluation of its source, grade, map,
+profile, generated-tree, and emitted-byte prerequisites. Neither disposition is
+an authorable layout task, and neither permits remote AEAT submission.
 
 S28 remains open. Its enrollment work is complete, but each referenced predecessor row remains open and no selected revision has yet met the required layout, generated-tree, and emitted-byte acceptance evidence.
 

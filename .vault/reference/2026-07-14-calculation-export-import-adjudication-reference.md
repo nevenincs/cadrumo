@@ -3,28 +3,27 @@ tags:
   - '#reference'
   - '#calculation-export-import-adjudication'
 date: '2026-07-14'
-modified: '2026-08-15'
-body_hash: 'sha256:23e9c8d04e5c980406c2512e64b74c2cdc918e5d3482e56232cbfce8a6e70182'
+modified: '2026-08-24'
+body_hash: 'sha256:aba3dc8b04f26e638d321b471eca9509a27bfe5aebde1bb0e50de146d1de94e3'
 related:
   - "[[2026-07-12-calculation-truth-registry-plan]]"
   - "[[2026-07-12-calculation-truth-registry-classification-review-audit]]"
   - '[[2026-07-14-calculation-export-import-adjudication-plan]]'
   - '[[2026-07-14-calculation-export-import-adjudication-adr]]'
 ---
-
 # `calculation-export-import-adjudication` reference: `Export and import adjudication implementation map`
 
 ## Summary
 
 This reference adjudicates the apparent export-layout and declaration-extraction backlog against accepted decisions, registered legal authority, and the implementation that already exists. The system already has one validated registry authority, one generic registry-driven export renderer/parser pair, one generic declaration-PDF parser, and a separate sealed-archive persistence format. Missing registry data or source artefacts do not, by themselves, establish a product mandate.
 
-No export-layout candidate has yet passed the complete mandate gate. Modelos
-036, 184, 190, 193, 308, 322, 347, 353, 369, and 840 are conditional,
-authority-windowed candidates that require an explicit current product mandate
-before implementation. Modelos 309 and 360 have no legacy export mandate, and
-Modelo 037 is retired. The extraction candidates are evidence-gated except for
-Modelo 200's already generic submitted-file path; its declaration-PDF path
-remains evidence-gated.
+No export-layout candidate has yet passed the complete mandate gate. Modelo 036
+is not-mandated at the current product boundary; Modelos 184, 190, 193, 308,
+322, 347, 353, 369, and 840 are conditional, authority-windowed candidates that
+require an explicit current product mandate before implementation. Modelos 309
+and 360 have no legacy export mandate, and Modelo 037 is retired. The extraction
+candidates are evidence-gated except for Modelo 200's already generic
+submitted-file path; its declaration-PDF path remains evidence-gated.
 
 ## Definitions and adjudication gate
 
@@ -87,7 +86,7 @@ authorities, schema stores, or archive formats.
 
 | Concern | Canonical implementation | Verification anchors | Boundary |
 |---|---|---|---|
-| Registry authority | `ValidatedRegistryAuthority` in `src/cadrumo/domain/calculations/registry/_authority.py:36`; `StaticModeloRepository._resolve_authority` in `src/cadrumo/core/resources/_repos/modelos.py:38` | Registry authority and corpus tests under `src/cadrumo/domain/calculations/registry/tests/` | There is one authority. `StaticModeloRepository.authority` is a thin façade. |
+| Registry authority | `ValidatedRegistryAuthority` in `src/cadrumo/domain/calculations/registry/_authority.py:36`; `StaticModeloRepository._resolve_authority` in `src/cadrumo/core/resources/_repos/modelos.py:38` | Registry authority and corpus tests under `src/cadrumo/domain/calculations/registry/tests/` | There is one authority. `StaticModeloRepository.authority` is a thin faÃƒÂ§ade. |
 | Runtime schema provider | `build_runtime_schema_provider` in `src/cadrumo/application/filing/runtime.py:359`; cached helper at `:409` and `ValidatedRegistryAuthority.load(...)` at `:417` | Runtime filing tests exercise the typed `RegistrySchemaAccessor` projection | The provider projects the canonical snapshot; it must not become an independent schema store. |
 | Export layout resolution | `resolve_export_layout` in `src/cadrumo/domain/calculations/registry/_export.py:50` | Layout contract checks in `src/cadrumo/domain/calculations/registry/tests/test_registry_schema_part2.py:700` | Layouts are registry data selected for an applicable revision. |
 | Export rendering and verification | `export_draft` in `src/cadrumo/application/filing/_export.py:278`, `_render_export_layout` at `:514`, `_render_record` at `:645`, and `_render_field` at `:699` | Real round trips and mutation detection in `src/cadrumo/application/filing/tests/test_fichero_boe_export_roundtrip.py` | The renderer is generic. A missing layout is not grounds for a new renderer. |
@@ -102,7 +101,7 @@ The accepted registry-authority, declaration-extraction, and fichero-BOE decisio
 
 | Modelo | Mandate or goal | Applicable authority and window | Current state | Disposition |
 |---|---|---|---|---|
-| 036 | Legacy discovery and generic export-routing wording identify a possible machine-file surface, but do not establish current product scope. | The definitive v43 XLSX authority applies from 2025-02-03; provisional v42 must not ground the current revision. | Filing linkage and parity evidence exist, but no export layout. | **Conditional current candidate.** Confirm a current machine-file generation mandate before adding registry data. |
+| 036 | The current accepted product scope is censo applicability, observation, and recording a declaration already filed by the operator; it does not mandate a Cadrumo M036 artifact. | The definitive v43 XLSX authority applies from 2025-02-03; provisional v42 must not ground the current revision. | Censo linkage and parity evidence exist; no M036 export layout or producer lifecycle is shipped. | **Not-mandated current product scope.** Treat as terminal product-scope, not an authorable layout gap. Reopen only through an accepted scope-expansion ADR, then re-evaluate all four conditions. |
 | 037 | Accepted design retains 037 only as historical context after its suppression in favour of 036. | No active registry revision or record-design artefact; suppressed from 2025-02-03. | No active registry and no export layout. | **Retired.** Remove or refuse active entry points; do not author a layout. |
 | 184 | Legacy goal requires export/file generation only where official filing support requires it. | `aeat-dr-184-2025`, PDF record design, from 2025-01-01; registry revision currently starts in 2015. | Filing link and parity reference exist; no layout. | **Conditional current gap, 2025+ only.** Decide whether local fichero generation is a product feature before work. |
 | 190 | Legacy discovery and export-routing wording identify a possible outbound surface. | The registered 2025 PDF applies from 2025-01-01; bundled 2024 authority exists, and the accepted extraction ADR records the 2024 and 2025 EDI layouts as structurally identical under the current `2024-y-siguientes` revision. | Filing link and parity reference exist; no layout. | **Source-window-reconciliation-first, conditional candidate.** Confirm the product mandate and catalogue the 2024 source without splitting the revision unless a future official design diverges. |
