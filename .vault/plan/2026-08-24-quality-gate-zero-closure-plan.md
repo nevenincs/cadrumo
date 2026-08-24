@@ -12,37 +12,60 @@ related:
   - '[[2026-06-09-quality-hardening-campaign-adr]]'
   - '[[2026-06-04-repo-health-triage-adr]]'
 modified: '2026-08-24'
-body_hash: 'sha256:321dcc0157b2c4d23780f3e50324e2c8f792ebb135fe85037ccb9ad64ca10593'
+body_hash: 'sha256:db82aa658fe4b2b2082e2743d20e826f0e60be5f24992d484fdc61586ac34185'
 ---
-
 <!-- RETIRED: W01, W02, W03, W04, W05, W06, P01, P02, P03, P04, P05, P06, P07, P08, P09, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, S01, S02, S03, S04, S05, S06, S07, S08, S09, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19, S20, S21, S22, S23, S24, S25, S26, S27, S28, S29, S30, S31, S32, S33, S34, S35, S36, S37, S38, S39, S40, S41, S42, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57, S58, S59, S60, S61, S62, S63, S64, S65, S66, S67, S68, S69, S70, S71, S72, S73, S74, S75, S76, S77, S78, S79, S80, S81, S82, S83, S84, S85, S86, S87, S88, S89, S90, S91, S92 -->
 
 # `quality-gate-zero-closure` plan
 
 ## Description
 
-This L3 roll-up executes the accepted `2026-08-24-quality-gate-zero-closure-adr`, grounded by `2026-08-24-quality-gate-zero-closure-static-gate-matrix-research` and `2026-08-24-quality-gate-zero-closure-failure-cluster-topology-reference`. W01 owns the fresh non-baseline snapshot, joined evidence matrix, RAG discovery, and explicit owner handoffs. W02 repairs syntax, style, format, dependency, architecture-import, and relative-import surfaces. W03 repairs type root causes at shared boundaries. W04 routes every ratchet family and repairs Vault hard errors while keeping warnings visible. W05 drives security, complexity, duplication, checkout drift, corpus-text, semantic, and composed advisory surfaces toward measured green. W06 is the only closure authority and requires a clean verification snapshot, independent review, RAG redeclaration audit, and separate out-of-scope lane evidence.
+This L3 roll-up activates the accepted 2026-08-24-quality-gate-zero-closure-adr, grounded by 2026-08-24-quality-gate-zero-closure-static-gate-matrix-research and 2026-08-24-quality-gate-zero-closure-failure-cluster-topology-reference, alongside the standing decisions in related frontmatter. It does not close the evolving codebase or freeze a snapshot of current findings. It activates a durable rolling controller that observes the current HEAD, claims disjoint work, repairs owner-approved batches, rechecks affected and global gates, and publishes revision-scoped evidence.
 
-Active feature plans retain implementation authority for their paths. The coordinator records the command, owner, path scope, starting revision, dirty-path overlap, focused behavior proof, full-gate result, and disposition for every batch. No Step permits a baseline, threshold, new exclusion, suppression, skip, xfail, mock, monkeypatch, tautological assertion, or hidden allowlist to make a red signal disappear.
+The live owner queue, batch claims, revisions, path overlap, commands, outcomes, and dispositions belong in execution evidence rather than this plan. RAG redeclaration remains continuous against the indexed live source. No Step permits a baseline, threshold, new exclusion, suppression, skip, xfail, mock, monkeypatch, tautological assertion, or hidden allowlist to make a red signal disappear. Model routing is stable: Luna max owns audits, type and mechanical work, Terra xhigh owns fixes and refactors, and Sol handles architecture decisions only.
 
 ## Steps
 
+## Wave `W07` - activate the rolling ratchet controller
+
+Establish the durable observe, claim, repair, recheck, and evidence loop for the live branch. This Wave activates the operating mechanism only; recurring operation continues as the branch evolves and no codebase-sanity closure is claimed.
+
+### Phase `W07.P20` - observe and claim the live revision
+
+At each observation, capture the current HEAD and gate state, redeclare semantic ownership, and claim only current disjoint work. The live owner queue belongs in execution evidence, never in this plan.
+
+- [ ] `W07.P20.S93` - Observe the current branch revision, dirty paths, ownership context, and gate state, recording revision-scoped evidence without treating any result as a baseline (Luna max audit and mechanical); `.vault/exec/`.
+- [ ] `W07.P20.S94` - Redeclare semantic canonical homes and consumer ownership against the indexed live source, persisting only current RAG evidence (Luna max audit); `.vault/audit/`.
+- [ ] `W07.P20.S95` - Claim only currently disjoint work and write the live owner queue, starting revision, collision result, and handoff metadata to execution evidence rather than this plan (Luna max audit and mechanical); `.vault/exec/`.
+- [ ] `W07.P20.S96` - Amend or codify the standing ratchet rule when observation exposes a durable governance gap, routing architecture-only decisions to Sol and keeping rule maintenance evidence-backed (Luna max audit and mechanical); `.codex/rules/`.
+
+### Phase `W07.P21` - repair and recheck opportunistic batches
+
+Run owner-scoped repairs and focused proofs in opportunistic parallel batches, then rerun affected and global gates. Merge or rebase churn invalidates evidence only for affected batches, which re-enter observation.
+
+- [ ] `W07.P21.S97` - Dispatch opportunistic parallel batches from the live owner queue only when their current path scopes are disjoint, routing fixes and refactors to Terra xhigh, audits and mechanical work to Luna max, and architecture-only decisions to Sol (Luna max coordination); `.vault/exec/`.
+- [ ] `W07.P21.S98` - Repair each claimed batch with behavior-preserving changes and real focused proof, without baselines, suppressions, skips, xfails, mocks, monkeypatches, tautologies, or hidden allowlists (Terra xhigh fixes and refactors); `.vault/exec/`.
+- [ ] `W07.P21.S99` - Recheck the affected gates and then the global gate matrix for each repaired batch, recording commands, revisions, diagnostics, focused proof, and disposition (Luna max audit and mechanical); `.vault/audit/`.
+- [ ] `W07.P21.S100` - When merge or rebase churn changes the observed revision, invalidate only the affected batch evidence, refresh those claims, and preserve unaffected evidence with its revision identity (Luna max audit and mechanical); `.vault/exec/`.
+
+### Phase `W07.P22` - publish a revision-scoped green checkpoint
+
+When the observed revision supports it, publish a checkpoint with all gates green at one HEAD and a repeat confirmation, then continue the recurring loop. This is not permanent codebase-sanity closure.
+
+- [ ] `W07.P22.S101` - Run a revision-scoped green checkpoint only when the observed tree has all required gates green at one HEAD, then repeat the confirmation against that same HEAD before publishing it (Luna max audit and mechanical); `.vault/audit/`.
+- [ ] `W07.P22.S102` - Publish the checkpoint evidence with HEAD identity, dirty state, gate outcomes, owner scope, limitations, and unresolved lanes, explicitly describing it as revision-scoped rather than permanent codebase-sanity closure (Luna max audit and mechanical); `.vault/audit/`.
+- [ ] `W07.P22.S103` - Return to observation whenever the branch drifts and keep the ratchet loop recurring, completing this plan only after the operating mechanism is activated and never as a claim that future revisions are already green (Luna max audit and mechanical); `.vault/exec/`.
+
 ## Parallelization
 
-Waves are hard-sequenced: W01 snapshot and ownership must precede W02 hard static repair; W02 must precede W03 type closure; W03 must precede W04 ratchet and Vault closure; W04 must precede W05 advisory and corpus convergence; and W05 must precede W06 clean verification and review. Any revision or dirty-path change during a closure run invalidates the run and returns to W01 or W06 as appropriate.
+The phases form a recurring controller: observe and claim, repair and recheck, then publish a revision-scoped green checkpoint and return to observation. Within repair and recheck, batches may run opportunistically in parallel only when their current owner path scopes are disjoint. RAG redeclaration runs continuously at observation and after relevant branch churn.
 
-Within W01, P01 precedes P02. Within W02, P03 clears syntax before P04 and P05; P04 and P05 may then proceed in parallel only on disjoint, owner-accepted paths. Within W03, P06 establishes the diagnostic matrix before P07 and P08; those two boundary phases may run in parallel when their path ledgers do not overlap, and P09 is a barrier. Within W04, P10 and P11 may run in parallel after W03, while P12 waits for the Vault repair results and warning inventory. Within W05, P13 through P16 may run in parallel after W04 only when their scanner and production path scopes are disjoint; P16's dashboard consumes the completed scanner evidence. W06 is sequential: P17 runs the clean joined matrix, P18 independently reviews it, and P19 publishes the final evidence.
-
-Model routing is explicit in each Step: Luna max owns audits, normalized diagnostic triage, type-check reruns, mechanical sanity, Vault checks, and evidence review; Terra xhigh owns production coding, behavior-preserving refactors, and real-test repairs; Sol only handles an architecture refactor or boundary decision in W02.P04.S18 after the owning architecture plan accepts the handoff. No agent may silently edit a peer-owned path.
+Merge or rebase churn invalidates only the affected batch evidence; unaffected batch evidence remains valid with its revision identity. A changed or colliding claim returns to observation without invalidating unrelated work. A standing-rule amendment or codification is taken when the controller exposes a durable governance gap, and architecture-only decisions route to Sol. Luna max performs audits, type and mechanical checks, and evidence review; Terra xhigh performs fixes and refactors; Sol is reserved for architecture.
 
 ## Verification
 
-The plan is complete only when all 92 Steps are checked through their canonical execution records and the independent review artifacts agree with the current tree. Closure requires the following evidence from one unchanged clean verification snapshot:
+The plan is complete when the rolling ratchet mechanism is activated and each activation Step has its execution evidence. Completion of this plan does not assert permanent codebase sanity or close future work.
 
-- The canonical hard checks are exact zero: style, format, all configured type checkers, architecture imports, relative imports, dependency declarations, and every ratchet family. The local dashboard and CI-scope commands must agree, and no count reduction, threshold, baseline, exclusion, suppression, skip, xfail, or allowlist may substitute for zero.
-- `vaultspec-core vault check all --json` reports zero hard errors. The warning inventory remains separate and lists every warning with owner, disposition, next action, and residual risk, including annotations, orphans, feature-index drift, body hygiene, schema warnings, modified stamps, and encoding signals.
-- Security, complexity, duplication, checkout drift, and corpus-text reports are measured on the intended tree and green under their existing authorities. `check-security` proves that files were scanned and has no findings; complexity and duplication have no unresolved hotspots or clone clusters; checkout drift is zero without ceiling growth; and every manual-corpus sidecar is current.
-- RAG health and semantic checks are measured rather than skipped. The redeclaration audit verifies canonical homes and live consumers by meaning, records every true duplicate or justified divergence, and leaves no unowned finding or silent coordinator takeover.
-- The joined report records each exact command and environment, start and end HEAD, clean status, dirty-path overlap, exit status, full diagnostic count, focused behavior proof, active owner, path scope, and final disposition. Any revision or dirty-ledger change invalidates the matrix and requires a rerun.
-- The formal code review and fresh-context honesty review find no unactioned safety, intent, architecture, quality, provenance, or handoff issue. The review explicitly proves that no new suppression, baseline, skip, xfail, mock, monkeypatch, tautology, or hidden allowlist was introduced.
-- Unit, integration, packaging, external-advisory, and credential-gated lanes are reported separately with their actual evidence and are never presented as green by absence. A missing or unavailable lane is an explicit out-of-scope or blocked result, not a hard-gate pass.
+Each recurring cycle observes the current HEAD and dirty state without a baseline, redeclares RAG ownership, records the live owner queue in execution evidence, and dispatches only current disjoint batches. Terra xhigh repairs and refactors with real behavior proof; Luna max runs audits, type and mechanical checks, affected-gate checks, global gates, and evidence review; Sol handles architecture only. Every batch records its revision, scope, commands, focused proof, affected and global outcomes, and disposition. Branch merge or rebase churn invalidates only affected evidence and sends those claims back through observation.
+
+When the observed revision supports a green result, the controller runs a revision-scoped green checkpoint with all required gates green at one HEAD and a repeat confirmation against that same HEAD before publishing evidence. The checkpoint states warnings, unavailable lanes, limitations, and residual risk explicitly. Any later branch drift starts the next recurring cycle; a checkpoint never becomes a claim that future revisions are already green.
