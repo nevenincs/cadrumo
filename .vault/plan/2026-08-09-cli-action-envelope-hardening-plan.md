@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-24'
-body_hash: 'sha256:3bc74afec6a35b2bdca6bfc381313419ae0000c359d25da763fe6cc6a6d7dc4f'
+body_hash: 'sha256:a3eee7a65ece0d592a968e65e5d36109f025a1641f7e35ddd095ad113dfd049f'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -212,7 +212,7 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [ ] `W05.P10.S75` - Migrate filing continuation producers to typed conditions and canonical actions; `src/cadrumo/application/filing`.
 - [x] `W05.P10.S76` - Migrate inventory recovery producers to typed conditions and canonical actions; `src/cadrumo/application/inventory`.
 - [x] `W05.P10.S77` - Replace operator-output suggestion producers with resolved typed action projections; `src/cadrumo/application/operator_output`.
-- [ ] `W05.P10.S78` - Migrate residual operator-surface action producers outside the manifest and model owners; `src/cadrumo/application/operator_surface/_contract.py; src/cadrumo/application/operator_surface/_errors.py`.
+- [x] `W05.P10.S78` - Migrate residual operator-surface action producers outside the manifest and model owners; `src/cadrumo/application/operator_surface/_contract.py; src/cadrumo/application/operator_surface/_errors.py`.
 - [ ] `W05.P10.S79` - Migrate portal recovery producers to typed conditions and canonical actions; `src/cadrumo/application/portals`.
 - [x] `W05.P10.S80` - Migrate integrity-repair continuation producers to typed conditions and canonical actions; `src/cadrumo/application/repair_integrity.py`.
 - [x] `W05.P10.S81` - Migrate review action producers to typed conditions and canonical actions; `src/cadrumo/application/review`.
