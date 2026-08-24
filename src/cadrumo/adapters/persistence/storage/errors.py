@@ -129,9 +129,8 @@ class SessionExpiredError(SecretStoreError):
 
     The session was opened earlier in the process lifetime but the
     operator did not act before the configured idle-lock window
-    elapsed. The session is sealed; the operator must re-activate by
-    running ``aeat config login NAME`` (or a subsequent
-    bootstrap-exempt verb that opens a fresh session).
+    elapsed. The session is sealed. The CLI boundary may project a recovery
+    action only after it resolves a public profile target.
     """
 
 
@@ -155,15 +154,14 @@ class MasterKeyMaterialMissingError(MasterKeyUnavailableError):
     and a passphrase-derived file fallback -- was deleted with its providers,
     so the artefacts named here no longer exist to be absent. What survives is
     the same distinction at the current custody boundary: a bucket's data key
-    lives in that profile's own password custody and is unwrapped by
-    ``aeat config login``, so this class means no unlocked custody is
+    lives in that profile's own password custody, so this class means no
+    unlocked custody is
     available rather than a wrong passphrase, and it is raised without minting
     anything.
 
-    The operator's actionable next step is unchanged: set up or log in to a
-    profile. Ordinary load paths fail closed with this class rather than
-    provisioning on demand, which is what keeps "not provisioned" and
-    "authentication failed" separable at the surface.
+    Ordinary load paths fail closed with this class rather than provisioning
+    on demand, which is what keeps "not provisioned" and "authentication
+    failed" separable at the surface.
     """
 
 

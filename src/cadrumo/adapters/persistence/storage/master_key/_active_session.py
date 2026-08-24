@@ -35,9 +35,8 @@ import atexit as _atexit
 from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
-from typing import TypeGuard, override
+from typing import TypeGuard
 
-from .....core.errors import resolve_error_message
 from .....core.logging import get_logger
 from .....core.time import now
 from ..bucket import BucketLockedError
@@ -56,22 +55,18 @@ _active_session: ContextVar[BucketSession | None] = ContextVar(
 class NoActiveBucketSessionError(SecretStoreError):
     """Raised when the encrypt path runs outside an active session block.
 
-    Carries no payload — the diagnostic message names the
-    canonical remediation verb so operators see how to recover
-    without re-parsing the message.
+    The adapter establishes only the observed session state.  The CLI boundary
+    decides whether a public profile label makes the canonical login action
+    resolvable; this substrate must not manufacture that action from custody
+    internals.
     """
 
     def __init__(self, detail: str | None = None) -> None:
+        del detail
         super().__init__(
-            context={"detail": detail} if detail else None,
+            context={"active_bucket_session_available": False},
             translated_message="errors.refused.refused_storage_master_key_no_active_session",
         )
-        self._detail = detail
-
-    @override
-    def __str__(self) -> str:
-        """Render the locale-backed remediation message rather than the raw translation key."""
-        return resolve_error_message(self)
 
 
 @contextmanager
@@ -132,11 +127,7 @@ def _require_fresh_active_session() -> BucketSession:
     """
     session = _active_session.get()
     if session is None:
-        raise NoActiveBucketSessionError(
-            "no active bucket session; run `aeat config login NAME` "
-            "to unlock a profile before invoking commands that decrypt "
-            "stored records.",
-        )
+        raise NoActiveBucketSessionError()
     if session.is_expired(now()):
         bucket_id = session.bucket_id
         close_active_bucket_session()

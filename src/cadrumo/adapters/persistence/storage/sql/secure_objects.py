@@ -333,9 +333,9 @@ class SecureObjectRepository:
         Polls :func:`evaluate_idle` against the live
         :class:`BucketSession` registered in the active-session
         ContextVar. When the session is sealed or past its deadline,
-        raises :class:`SessionExpiredError` (translated by the CLI
-        error decorator into a refusal that names ``aeat config
-        unlock`` as the next action). On a fresh session,
+        raises :class:`SessionExpiredError`. The CLI boundary resolves a
+        recovery action only when it can prove a public profile target. On a
+        fresh session,
         calls :meth:`~adapters.persistence.storage.master_key.BucketSession` to roll the deadline
         forward by the configured idle window — the operator's
         active session remains usable for the next window's
@@ -361,7 +361,10 @@ class SecureObjectRepository:
         outcome = evaluate_idle(session=session, now=now)
         if outcome.expired:
             raise SessionExpiredError(
-                "the active profile session has expired; run `aeat config login NAME` to re-activate.",
+                context={
+                    "active_session_fresh": False,
+                    "session_expired": True,
+                },
             )
         if self._require_secure_active_session and session.unsecured_backend:
             raise runtime_not_ready_error(StorageRuntimeReadinessCode.UNSECURED_BACKEND)

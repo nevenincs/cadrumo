@@ -216,8 +216,8 @@ class BucketSession:
     ) -> BucketSession:
         """Re-open a session from a resumed persisted profile session.
 
-        The persisted ``aeat config login`` record session-wraps the DEK
-        only: the KEK stays login-scoped and is never placed in the OS
+        The persisted profile-session record session-wraps the DEK only: the
+        KEK stays profile-login-scoped and is never placed in the OS
         keychain, so a resumed session legitimately has no KEK. Column
         crypto reads the DEK, so the resumed session is fully functional;
         :attr:`kek` refuses with
@@ -321,9 +321,10 @@ class BucketSession:
             from ..errors import MasterKeyUnavailableError
 
             raise MasterKeyUnavailableError(
-                "this bucket session was resumed from a persisted profile session, which "
-                "session-wraps the DEK only; the KEK is login-scoped. Run `aeat config login` "
-                "to re-authenticate if key-encryption-key material is required.",
+                context={
+                    "resumed_profile_session": True,
+                    "resumed_session_kek_material_available": False,
+                },
                 translated_message="errors.auth.auth_storage_master_key_unavailable",
             )
         return bytes(self._kek_buffer)

@@ -12,6 +12,7 @@ from ......core.config import SecretStoreBackend, Settings, override_settings
 from ...bucket import (
     BucketLockedError,
 )
+from ...errors import MasterKeyUnavailableError
 from .._active_session import (
     NoActiveBucketSessionError,
     activate_session,
@@ -32,7 +33,29 @@ def test_missing_bucket_session_raises_translated_storage_error() -> None:
         get_active_master_key()
 
     assert exc_info.value.translated_message == "errors.refused.refused_storage_master_key_no_active_session"
-    assert "aeat config login" in str(exc_info.value)
+    assert exc_info.value.context == {"active_bucket_session_available": False}
+    assert "aeat config login" not in str(exc_info.value)
+
+
+def test_resumed_session_kek_refusal_carries_only_the_observed_key_facts() -> None:
+    """A resumed session reports unavailable KEK material without a local action."""
+    session = BucketSession.open_resumed(
+        bucket_id="resumed",
+        dek=_DEK,
+        idle_minutes=15,
+        opened_at=_OPENED_AT,
+        idle_deadline=_OPENED_AT + timedelta(minutes=15),
+        absolute_deadline=_OPENED_AT + timedelta(hours=8),
+    )
+
+    with pytest.raises(MasterKeyUnavailableError) as exc_info:
+        _ = session.kek
+
+    assert exc_info.value.translated_message == "errors.auth.auth_storage_master_key_unavailable"
+    assert exc_info.value.context == {
+        "resumed_profile_session": True,
+        "key_encryption_key_available": False,
+    }
 
 
 def test_locked_bucket_session_refuses_active_master_key_reads() -> None:

@@ -1017,7 +1017,7 @@ def _project_former_product_state(error: Exception, callback: Callable[..., obje
 
 
 def _project_cadrumo_error(error: Exception, callback: Callable[..., object]) -> CadrumoError:
-    """Forward a typed :class:`CadrumoError` verbatim."""
+    """Forward a typed error, attaching boundary-owned terminal policy when proven."""
     assert isinstance(error, CadrumoError)
     from ...application.cli_exception_preconditions import (
         cli_exception_envelope_view,
@@ -1029,6 +1029,9 @@ def _project_cadrumo_error(error: Exception, callback: Callable[..., object]) ->
         verdict = _active_profile_pointer_error_verdict(error)
         if verdict is not None:
             return attach_cli_policy_verdict(error, verdict=verdict)
+    storage_verdict = _storage_session_failure_verdict(error)
+    if storage_verdict is not None:
+        return attach_cli_policy_verdict(error, verdict=storage_verdict)
     verdict = nested_terminal_precondition_verdict(error)
     view = cli_exception_envelope_view(error)
     assert isinstance(view, CadrumoError)
@@ -1050,6 +1053,76 @@ def _active_profile_pointer_error_verdict(error: ActiveProfilePointerError) -> P
     from ...application.operator_actions import corrupt_active_profile_pointer_verdict
 
     return corrupt_active_profile_pointer_verdict(path=path)
+
+
+_STORAGE_SESSION_NO_ACTIONS: Final[
+    Mapping[str, tuple["CliExceptionPrecondition", Mapping[str, str | bool]]]
+] = {
+    "REFUSED_STORAGE_MASTER_KEY_NO_ACTIVE_SESSION": (
+        CliExceptionPrecondition.ACTIVE_BUCKET_SESSION_AVAILABLE,
+        {"active_bucket_session_available": False},
+    ),
+    "REFUSED_STORAGE_SESSION_EXPIRED": (
+        CliExceptionPrecondition.BUCKET_SESSION_FRESH,
+        {"active_session_fresh": False, "session_expired": True},
+    ),
+    "REFUSED_STORAGE_BUCKET_NO_ACTIVE": (
+        CliExceptionPrecondition.ACTIVE_BUCKET_SELECTED,
+        {"active_bucket_selected": False},
+    ),
+    "AUTH_STORAGE_MASTER_KEY_UNAVAILABLE": (
+        CliExceptionPrecondition.RESUMED_SESSION_KEK_MATERIAL_AVAILABLE,
+        {"resumed_profile_session": True, "resumed_session_kek_material_available": False},
+    ),
+    "AUTH_STORAGE_MASTER_KEY_MATERIAL_MISSING": (
+        CliExceptionPrecondition.MASTER_KEY_MATERIAL_AVAILABLE,
+        {"active_bucket_selected": True, "master_key_material_available": False},
+    ),
+    "LOCKED_STORAGE_BUCKET_SESSION": (
+        CliExceptionPrecondition.BUCKET_SESSION_UNLOCKED,
+        {"bucket_session_unlocked": False},
+    ),
+}
+
+
+def _storage_session_failure_verdict(error: CadrumoError) -> PreconditionVerdict | None:
+    """Project S70 storage observations without letting adapters author actions.
+
+    Only absence and idle expiry establish a real profile-session refusal.  A
+    login action is therefore valid only when the CLI can resolve the public
+    profile label the catalogue requires.  The remaining storage observations
+    are deliberately terminal, fact-only operator decisions.
+    """
+    code = get_registered_error_code(error).code
+    from ...application.cli_exception_preconditions import (
+        CliExceptionPrecondition,
+        cli_exception_no_recovery_verdict,
+    )
+
+    if code in {
+        "REFUSED_STORAGE_MASTER_KEY_NO_ACTIVE_SESSION",
+        "REFUSED_STORAGE_SESSION_EXPIRED",
+    }:
+        profile_name = active_profile_label_for_error()
+        if profile_name is not None:
+            from ...application.profile_preconditions import profile_session_failure_verdict
+            from ...core import ProfileSessionRefusalReason
+
+            reason = (
+                ProfileSessionRefusalReason.ABSENT
+                if code == "REFUSED_STORAGE_MASTER_KEY_NO_ACTIVE_SESSION"
+                else ProfileSessionRefusalReason.EXPIRED_IDLE
+            )
+            return profile_session_failure_verdict(reason, profile_name=profile_name)
+
+    no_action = _STORAGE_SESSION_NO_ACTIONS.get(code)
+    if no_action is None:
+        return None
+    condition, facts = no_action
+    return cli_exception_no_recovery_verdict(
+        condition,
+        facts=facts,
+    )
 
 
 def _project_validation_error(error: Exception, callback: Callable[..., object]) -> CadrumoError:
@@ -1105,7 +1178,7 @@ def _project_unexpected(error: Exception, callback: Callable[..., object]) -> Ca
     """
     wrapped = _unwrap_cadrumo_error(error)
     if wrapped is not None:
-        return wrapped
+        return _project_cadrumo_error(wrapped, callback)
     _log.error(
         "command_error_boundary: unexpected exception in %s",
         getattr(callback, "__name__", repr(callback)),
@@ -1134,7 +1207,7 @@ def project_cli_boundary_error(error: Exception, callback: Callable[..., object]
         if isinstance(error, exc_type):
             return project(error, callback)
     wrapped = _unwrap_cadrumo_error(error)
-    return wrapped if wrapped is not None else CliUnexpectedBoundaryError(error)
+    return _project_cadrumo_error(wrapped, callback) if wrapped is not None else CliUnexpectedBoundaryError(error)
 
 
 __all__ = [

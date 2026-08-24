@@ -237,23 +237,20 @@ def _provider_enter(
 
     bucket_id = resolve_active_bucket_id() or fallback_bucket_id
     if not bucket_id:
-        raise NoActiveBucketError(
-            "no active profile resolves; run `aeat config login NAME` before "
-            "invoking commands that decrypt stored records. `aeat config profile list` "
-            "shows which profiles exist.",
-        )
+        raise NoActiveBucketError()
 
     settings = load_settings()
     key_bytes = provider.get_master_key()
     if not isinstance(provider, UnsecuredMasterKeyProvider):
         # A secured provider yields a key-encryption key, never the bucket's
         # data key. The bucket DEK lives in the profile's own password custody
-        # and is unwrapped by `aeat config login`, which then binds the session
-        # this function would otherwise be opening blind.
+        # and is unwrapped by the profile-login boundary, which then binds the
+        # session this function would otherwise be opening blind.
         raise MasterKeyMaterialMissingError(
-            f"bucket {bucket_id!r} cannot be opened from a master-key provider; "
-            "run `aeat config login NAME` to unlock the profile's own custody "
-            "before invoking commands that decrypt or persist stored records.",
+            context={
+                "active_bucket_selected": True,
+                "master_key_material_available": False,
+            },
         )
     dek_bytes = key_bytes
     idle_minutes = settings.cadrumo_bucket_default_idle_lock_minutes
