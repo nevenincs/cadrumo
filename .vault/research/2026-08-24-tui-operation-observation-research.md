@@ -5,13 +5,15 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:51621c4e9c15d0be8785d25d8f25971d994027d55214b0fb084818ed6a094600'
+body_hash: 'sha256:2dc5bcd838c16d3678c629308368db30e44cf6c3b4dd4b1a44fa5d5ef401bd01'
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-08-24-tui-registry-api-gate-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-modelo-edit-contract-adr]]'
+  - '[[2026-07-09-compatibility-lifecycle-adr]]'
+  - '[[2026-08-10-current-schema-only-purge-adr]]'
 ---
 
 # `tui-operation-observation` research: `Public operation contract amendment staging`
@@ -268,6 +270,35 @@ introduce read-tolerance. `src/cadrumo/application/operations/_journal.py:49`,
 `.codex/rules/no-legacy-compatibility.md:8`,
 `.codex/rules/no-legacy-compatibility.md:36`.
 
+### PRE_RELEASE private-schema cutover is delete-and-refuse, not migration
+
+The repo-committed compatibility regime remains `PRE_RELEASE`. In that regime,
+the compatibility-lifecycle authority and the current-schema-only adjudication
+require exact current-version hydration: an older app-written private request,
+interaction, or journal shape is refused, and its readers, migrators, fixtures,
+and tests are deleted rather than retained for a conversion pass. A future
+post-release upgrader is governed only by the one-way compatibility checkpoint;
+operation architecture cannot authorize one while the checkpoint has not
+flipped. `src/cadrumo/core/compatibility_lifecycle.py:53`,
+`.vault/adr/2026-07-09-compatibility-lifecycle-adr.md:18`,
+`.vault/adr/2026-07-09-compatibility-lifecycle-adr.md:84`,
+`.vault/adr/2026-08-10-current-schema-only-purge-adr.md:152`,
+`.codex/rules/no-legacy-compatibility.md:8`,
+`.codex/rules/no-legacy-compatibility.md:54`.
+
+The accepted operation parent currently says recorded schemas are “versioned
+and migrated before acquisition.” That clause is existing corpus drift, not
+authority for an operation-specific exception. An in-place adoption must
+replace it with the PRE_RELEASE rule, require zero affected nonterminal
+invocations before a breaking definition/private-schema cutover, and forbid
+rewriting an old invocation or definition digest into the new shape. A
+current-shape invocation whose definition digest no longer matches can use the
+normal typed reconciliation path; a non-current persisted shape fails at
+hydration and is never interpreted as current.
+`.vault/adr/2026-08-11-tui-architecture-adr.md:305`,
+`.vault/audit/2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit.md:120`,
+`.vault/audit/2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit.md:125`.
+
 ### Observation and financial-operand cohorts need different receipts
 
 The canonical plan currently asks the TUI controller to call supervisor
@@ -358,6 +389,7 @@ receipt. Implementation and full-suite health remain for the canonical plan.
 - `.vault/adr/2026-08-11-tui-architecture-adr.md:248`
 - `.vault/adr/2026-08-11-tui-architecture-adr.md:282`
 - `.vault/adr/2026-08-11-tui-architecture-adr.md:301`
+- `.vault/adr/2026-08-11-tui-architecture-adr.md:305`
 - `.vault/adr/2026-08-11-tui-architecture-adr.md:328`
 - `.vault/adr/2026-08-11-tui-architecture-adr.md:726`
 - `.vault/adr/2026-08-11-tui-interface-adr.md:184`
@@ -365,6 +397,8 @@ receipt. Implementation and full-suite health remain for the canonical plan.
 - `.vault/adr/2026-08-24-tui-registry-api-gate-adr.md:307`
 - `.vault/adr/2026-08-24-tui-registry-api-gate-adr.md:409`
 - `.vault/audit/2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit.md:74`
+- `.vault/audit/2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit.md:120`
+- `.vault/audit/2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit.md:125`
 - `.vault/audit/2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit.md:163`
 - `.vault/plan/2026-08-11-tui-architecture-plan.md:177`
 - `.vault/plan/2026-08-11-tui-architecture-plan.md:178`
@@ -372,7 +406,12 @@ receipt. Implementation and full-suite health remain for the canonical plan.
 - `.vault/plan/2026-08-11-tui-architecture-plan.md:184`
 - `.codex/rules/no-legacy-compatibility.md:8`
 - `.codex/rules/no-legacy-compatibility.md:36`
+- `.codex/rules/no-legacy-compatibility.md:54`
 - `.codex/rules/sensitive-financial-data-secure-storage-only.md:8`
+- `.vault/adr/2026-07-09-compatibility-lifecycle-adr.md:18`
+- `.vault/adr/2026-07-09-compatibility-lifecycle-adr.md:84`
+- `.vault/adr/2026-08-10-current-schema-only-purge-adr.md:152`
+- `src/cadrumo/core/compatibility_lifecycle.py:53`
 - `src/cadrumo/core/operations.py:84`
 - `src/cadrumo/application/operations/_events.py:60`
 - `src/cadrumo/application/operations/_interactions.py:25`

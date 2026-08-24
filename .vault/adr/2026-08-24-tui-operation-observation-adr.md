@@ -5,13 +5,15 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:1d937574d833a3602785175229328e53ed959c559e6f1cbec209da584098df9b'
+body_hash: 'sha256:706b470fd08c55400db49ecc62d3f31e67dd8ba03b7aa0afa809619ee79cd3b4'
 related:
   - '[[2026-08-24-tui-operation-observation-research]]'
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-modelo-edit-contract-adr]]'
+  - '[[2026-07-09-compatibility-lifecycle-adr]]'
+  - '[[2026-08-10-current-schema-only-purge-adr]]'
 ---
 
 # `tui-operation-observation` adr: `public operation contract parent-amendment staging` | (**status:** `proposed`)
@@ -69,6 +71,10 @@ and option boundary are grounded in
   (`2026-08-24-tui-operation-observation-research`).
 - Python request/result classes are not public schema identities; a safe
   definition manifest and digest must bind every public projection seam
+  (`2026-08-24-tui-operation-observation-research`).
+- The repo remains `PRE_RELEASE`: private request, interaction, and journal
+  schemas accept only the current shape, and the accepted parent's contrary
+  migration sentence must be replaced during adoption
   (`2026-08-24-tui-operation-observation-research`).
 - The canonical TUI architecture plan is the only implementation plan; this
   amendment may gate and revise its steps but cannot create a parallel plan.
@@ -151,6 +157,12 @@ and option boundary are grounded in
 - The public contract is pre-release and current-only. A replacement updates
   every in-tree consumer atomically and deletes the old parser, model, projector,
   fixtures, and tests; no compatibility branch reads an older public version.
+- Private operation persistence is also current-only while the repo-committed
+  compatibility regime is `PRE_RELEASE`. A cutover requires zero affected
+  nonterminal invocations, refuses every non-current private shape, and deletes
+  the superseded readers, migrators, fixtures, and tests. This record cannot authorize a
+  post-release upgrader; only the compatibility-checkpoint authority can change
+  that regime.
 - No visual operation projection step opens until the dependency receipt
   defined here is present and validated against the live tree.
 
@@ -162,16 +174,23 @@ Reviewers approve or reject this staged amendment without changing this
 record's status to `accepted`. Approval authorizes one architecture change with
 this order and invariant:
 
-1. copy the approved clauses into the existing
+1. replace the accepted parent's D5 sentence “Recorded schemas are versioned
+   and migrated before acquisition” with the PRE_RELEASE contract: recorded
+   private schemas carry an explicit current marker; acquisition refuses every
+   non-current shape; a breaking cutover requires zero affected nonterminal
+   invocations and deletes the old readers, migrators, fixtures, and tests; and
+   future post-release upgrade behavior remains owned exclusively by the
+   compatibility-checkpoint authority;
+2. copy the approved clauses into the existing
    `2026-08-11-tui-architecture-adr` under its D0 through D7a, D10, and D13
    ownership; preserve that record's stem and `accepted` status;
-2. link the parent to this research and staging record as provenance, without a
+3. link the parent to this research and staging record as provenance, without a
    supersession edge;
-3. change this staging record from `proposed` to `rejected` and state that its
+4. change this staging record from `proposed` to `rejected` and state that its
    separate authority was rejected because the clauses now live in the parent;
-4. regenerate both affected feature indexes and run ADR-status, schema, link,
+5. regenerate both affected feature indexes and run ADR-status, schema, link,
    and feature checks; and
-5. amend the one canonical `tui-architecture` plan only after the parent body
+6. amend the one canonical `tui-architecture` plan only after the parent body
    hash and rejected staging state are final.
 
 No commit may mark this staging ADR `accepted`, and no receipt may cite it as
@@ -220,11 +239,14 @@ invocation identity checkpoint in the same atomic transition as the request
 reference and initial lifecycle event. It does not persist the public DTO or
 raw schema. Resume, observation, REVIEW resolution, response, refresh-target
 resolution, and reconciliation all require the current registry definition to
-reproduce that digest. A breaking definition cutover must first prove there are
-no affected nonterminal invocations or migrate their private request,
-interaction, and journal schemas in one explicit operation migration; it may
-not rewrite only the digest. An unmatched invocation refuses acquisition and
-enters normal reconciliation rather than being interpreted under a new model.
+reproduce that digest. A breaking definition or private-schema cutover must
+first prove there are zero affected nonterminal invocations. It then deletes
+the superseded private request, interaction, and journal readers, migrators,
+fixtures, and tests; acquisition refuses every non-current shape. It may not
+translate a stored invocation or rewrite only its digest. A current-shape
+invocation whose definition digest no longer matches refuses acquisition and
+enters normal reconciliation; a non-current private shape fails at hydration
+and is never interpreted or reconciled as current.
 
 ### Amendment to D0 and D10: public application boundary
 
@@ -531,8 +553,12 @@ the payload. Pre-release breaking change replaces the relevant V1 contracts and
 all in-tree producers/consumers in one cutover, deletes the old models,
 dispatchers, fixtures, and tests, and regenerates the contract-set digest. No
 reader, migration shim, fallback parser, or missing-field default preserves a
-legacy public version. Durable-schema evolution remains private and cannot
-broaden or silently downgrade a public version.
+legacy public version. While the compatibility regime is `PRE_RELEASE`, private
+durable-schema evolution follows the same current-only cutover: zero affected
+nonterminal invocations, exact-version refusal, and deletion of old readers,
+migrators, fixtures, and tests. A future post-release upgrade path may exist
+only after the compatibility-checkpoint authority flips the regime; this
+operation decision does not create or anticipate one.
 
 ### Exact C0 observation dependency receipt
 
@@ -573,7 +599,11 @@ The receipt is produced only from a clean implementation commit and records:
   process restart, every typed refusal, and proof that no caller-supplied result
   reference or stale Workspace baseline is accepted;
 - exact current-version round trips and endpoint-specific unsupported-version,
-  schema-mismatch, and definition-digest refusals; and
+  schema-mismatch, and definition-digest refusals;
+- PRE_RELEASE exact private-schema refusal, zero affected nonterminal
+  invocations at a breaking cutover, deletion of superseded operation readers,
+  migrators, fixtures, and tests, and replacement of the accepted parent's
+  conflicting D5 migration clause; and
 - forbidden imports plus sentinel non-retention across public DTOs, journal,
   events, receipts, diagnostics, traces, logs, exceptions, and persistence
   materializations.
@@ -691,4 +721,5 @@ the decisive ownership, consistency, security, and honesty criteria identified b
 - This record ends as rejected adoption provenance and creates no parallel
   authority or plan.
 - Public-contract changes and durable journal changes can proceed independently,
-  but each retains its own strict current-version cutover and conformance burden.
+  but each retains its own strict current-version cutover and conformance burden;
+  while `PRE_RELEASE`, no private-schema migration path survives either cutover.

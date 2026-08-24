@@ -135,6 +135,21 @@ derived lifecycle/action inventory and production-composition proof across the
 required viewport, locale, theme, focus, overflow, row-volume, and
 non-colour-only accessibility matrix.
 
+### code-redeclaration | high | Proposed contracts must remain adapters over existing canonical code owners
+
+A refreshed `vaultspec-rag` semantic audit found no existing production class
+with the proposed `ModeloWorkspaceProjection`, `ModeloEditContractV1`, public
+operation-observation, transient-financial-operand, or typed Workspace-refresh
+contract identities. It did find the load-bearing nearest owners:
+`OperatorStateProjection`, `ModeloWorkReview` and its sole builder,
+`CalculationRevisionProjectionFields`, `OperationPersistedSnapshot`, the
+operation supervisor, the canonical calculation and compare-and-swap writers,
+and the review-only workspace. Exact symbol search confirmed that the proposed
+identities have not been added to production code during this architecture
+campaign. Implementation is therefore new boundary work, not an already-landed
+surface, and must project, facet, adapt, or delegate to those owners rather than
+redeclare their state, readiness, review, persistence, or effect semantics.
+
 ## Recommendations
 
 1. Narrow the proposed registry API ADR to a read-only, versioned
@@ -163,3 +178,8 @@ non-colour-only accessibility matrix.
    plans with dependency receipts containing source ancestry, public contract
    versions, schema and action inventory digests, conformance results, secure
    non-retention proof, and the cohort opened.
+7. Add a code-redeclaration fixed-point gate to each dependency receipt: semantic
+   discovery plus exact symbol/producer inventory must prove that every new
+   public DTO or port names its canonical source, adapter, or delegated writer;
+   duplicate readiness assemblers, review producers, operation snapshots,
+   calculation payload authorities, and mutation writers fail the gate.

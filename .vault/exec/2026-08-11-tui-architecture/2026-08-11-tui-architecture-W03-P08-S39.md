@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:f3d4c03a1ce05b54c317971ec27a056dae8d104044e810113e64d8948c5a9b24'
+body_hash: 'sha256:cf73ee1b193f15d1454105e2893929a9a499d5fb8be7f85728f05095459ebba2'
 step_id: 'S39'
 related:
   - '[[2026-08-11-tui-architecture-plan]]'
@@ -18,19 +18,23 @@ related:
 ## Scope
 
 - `src/cadrumo/application/auth/_operation_definitions.py`
+- `src/cadrumo/application/auth/tests/test_operation_definitions.py`
+- `src/cadrumo/application/user_profile/_custody_ports.py`
 
 ## Description
 
-- Grounded every S39 auth, custody, CLI, TUI, operation, and persistence path through RAG and exact-symbol inspection.
-- Produced focused pre-custody-login research and code reference records.
-- Amended the accepted operation ADR with the generic credential-free request and supervisor-owned ephemeral-secret prerequisite.
-- Classified custody-port and auth-operation scatter, preserving existing canonical authorities.
-- Stopped S39 implementation when the coordinator inserted predecessor S114.
+- Composed six canonical operation definitions for S39's five auth families, keeping logout and reset as distinct authorities.
+- Bound profile login and passphrase rotation to S114's exact requirement-bound one-shot secret broker.
+- Bound active-profile auth authorities to an exact canonical `profile:<uuid>` operation subject.
+- Verified real filesystem-backed login, secret mismatch, pre-entry cancellation, restart interruption, and passphrase rotation through the operation supervisor.
+- Verified real active-profile custody execution for provider configuration, AEAT acquisition refusal before outbound access, logout, and reset; observed logout preservation and reset removal of configuration.
+- Re-audited the pre-existing passphrase rotation custody ports and normalized their public export ordering only.
+- Completed independent review and resolved its medium coverage finding with custody-backed supervisor proofs.
 
 ## Outcome
 
-S39 remains open. No production or test source was changed. Profile login and passphrase rotation may not be registered until S114 provides the generic `EphemeralSecretSubmission` substrate. Provider configuration, AEAT credential acquisition, and distinct logout/reset remain scoped S39 compositions after that prerequisite lands; their existing authorities remain unchanged.
+The implementation and independent audit are complete. `auth/_operation_definitions.py` is the single application owner for registered auth orchestration; it composes existing public user-profile and auth authorities without new facades, forwarding wrappers, frontend callback identity, or persisted secret fields. Login and rotation use credential-free recorded requests, `INTERRUPT` reconciliation, unsupported cancellation after entry, no deadline, and the exact S114 ephemeral-secret requirement. Provider configuration, session acquisition, logout, and reset remain non-secret credential-free operations; logout preserves configuration whereas reset clears it.
 
 ## Notes
 
-The plan now names S114 ahead of S39. A registered pre-custody login cannot use the active-profile operand store, persist a passphrase, carry a frontend callback identity, or be misdeclared as an effect-free ephemeral operation. `user_profile/_passphrase_rotation.py` still contains direct custody-adapter bypasses and its monkeypatch-based test remains in-scope cleanup for the later secret-bearing S39 implementation. No plan checkbox was changed.
+Verification passed: targeted Ruff on the S39 Python surface; `pytest -q -m integration src/cadrumo/application/auth/tests/test_operation_definitions.py` (5 passed); and `vault check all --feature tui-architecture` after regenerating the feature index. No plan checkbox was changed. The originally reported direct rotation custody fragmentation had already been consolidated in shared HEAD into purpose-specific `_custody_ports` functions by the time implementation resumed; the only local edit there is `__all__` ordering. The adjacent `user_profile/_recovery_custody.py` adapter-warning bridge does not intersect S39's auth/credential/rotation authority and remains out of scope.

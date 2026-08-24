@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:2a17321c8d9d8caeb67d33156751da847f3b9e8c36ac00ea9614aa1319d73192'
+body_hash: 'sha256:286bbbbb19815c2d78047e53e8bebca081fa358251537eab549f294d1f186f63'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-research]]"
   - "[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]"
@@ -128,15 +128,26 @@ domain value, add an editability rule, or call the effect executor directly.
 ### D1 — Exact version and compatibility boundary
 
 The dispatcher reads only the edit-contract version before parsing a target or
-financial input. V1 supports exactly this compatibility tuple:
+financial input. `ModeloEditCompatibilityTupleV1` then binds the admitted
+mutation to these distinct current-only axes:
 
 - Workspace contract version `1`;
 - edit contract version `1`;
-- public operation projection version `1`; and
-- `OperationTransientFinancialOperandProtocolV1` version `1`.
+- operation public-definition manifest version `1` and exact
+  `contract_set_digest`;
+- enrolled `OperationDefinitionId`, exact `definition_contract_digest`, and
+  request/result schema identities;
+- operation observation request/result/projection/event-page version `1`;
+- REVIEW-projection request/result version `1` plus the enrolled definition's
+  exact REVIEW and response schema identities, or explicit declared absence
+  when that definition has no REVIEW interaction;
+- Workspace-refresh-target request/result version `1` plus the exact
+  `ModeloWorkspaceRefreshTargetV1` schema identity and fingerprint; and
+- `OperationTransientFinancialOperandProtocolV1` version `1` plus the enrolled
+  operand schema identity and fingerprint.
 
-`ModeloEditCompatibilityTupleV1` names all four axes separately. It is never a
-generic shared `version` field. Admission refuses
+No member is collapsed into a generic shared `version`, and a manifest version
+never substitutes for a definition or contract-set digest. Admission refuses
 `unsupported_edit_contract_version` or `unsupported_edit_compatibility` before
 resolving secure state. Until the operation-owned financial-operand receipt is
 green, the sole tuple is structurally known but mutation capability is
@@ -279,8 +290,11 @@ The machine-readable C3 application prerequisite is
 schema `ModeloEditContractC3DependencyReceiptV1`, validated by
 `validate_modelo_edit_contract_c3_dependency_receipt`. It records this ADR's
 accepted status and ancestry; the public export and strict-schema digests; the
-sole compatibility tuple; schema and permitted-surface fingerprints; mutation
-capability and refusal inventories; real parse/preflight parity; real
+sole compatibility tuple with its public-definition manifest version,
+contract-set and definition digests, observation, REVIEW, refresh-target, and
+financial-operand axes and exact registered schema identities/fingerprints;
+schema and permitted-surface fingerprints; mutation capability and refusal
+inventories; real parse/preflight parity; real
 work/calculation/event/result-receipt atomicity and rollback under each stale
 coordinate; duplicate-result recovery; forbidden-import proof; and sensitive
 non-retention.

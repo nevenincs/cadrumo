@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:44eb9184aac38e979c7f1cfdfc1b8822505bdb8a0609d565a68306140ea4438e'
+body_hash: 'sha256:bcd2e2f98706940526346eb57e44c4502c6bdd6357b441ff416009849d4830af'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-research]]"
   - "[[2026-08-11-tui-interface-adr]]"
@@ -118,9 +118,11 @@ export authorities. The boundary and evidence are grounded in
 - This record does not authorize generic secret collection, recovery mnemonic
   display, live AEAT transmission, new registry semantics, or a compatibility
   layer. Those remain blocked by their own accepted decisions and receipts.
-- Workspace, edit, and operation contract versions are explicit refusal boundaries.
-  Breaking changes migrate all in-tree consumers atomically and delete the old
-  version; there is no dual-stack legacy adapter.
+- Workspace, edit, operation public-definition manifest and definition digests,
+  observation, REVIEW projection, Workspace refresh target, and transient
+  financial-operand protocol are distinct refusal boundaries. Breaking changes
+  migrate all in-tree consumers atomically and delete the old version; there is
+  no dual-stack legacy adapter.
 - A proposed dependency cannot open a cohort. Workspace reads wait for accepted
   Workspace V1 conformance; operation-backed actions wait for the accepted
   public operation projection and enrolled definitions; editing waits for an
@@ -163,7 +165,7 @@ The closed initial catalogue is:
 | `modelo.work.review` | C1 bounded rendering of canonical `ModeloWorkReview` | resolved visible work target |
 | `modelo.workspace.overview` | Identity, revision timeline, status, capability summary, and safe actions | resolved visible work target |
 | `modelo.workspace.inputs` | Input sections, values, repeated groups, and editor entry | resolved visible work target plus optional semantic section address |
-| `modelo.workspace.results` | Current calculated values and explicitly selected historical inspection | resolved visible work target plus optional application-issued calculation selection |
+| `modelo.workspace.results` | Current calculated values and explicitly selected historical inspection | resolved visible work target plus optional public `ModeloRevisionPick` |
 | `modelo.workspace.provenance` | Bounded causal and source disclosure | resolved visible work target plus optional semantic node address |
 | `modelo.workspace.verification` | Verification findings, readiness, and verify action | resolved visible work target |
 | `modelo.workspace.filing` | Filing state, history, export capability, and file action | resolved visible work target |
@@ -171,8 +173,11 @@ The closed initial catalogue is:
 
 Destination IDs are untranslated semantic constants. Route operands are typed,
 in-memory objects, not serialized strings, and contain no financial values.
-Advanced exact addressing may be entered through an explicit inspect control or
-received as an application-issued result reference; it is always visibly
+Advanced exact addressing may be entered through an explicit inspect control.
+Historical calculation inspection uses only the public
+`ModeloRevisionPick.explicit(...)`; post-operation return uses only the typed
+`ModeloWorkspaceRefreshTargetV1` resolved through D6. The frontend never
+interprets a generic result reference, and either exact target is visibly
 distinguished from the natural target.
 
 `modelo.work.review` is the only C1 Modelo detail destination and is implemented
@@ -189,11 +194,12 @@ separately capability-projected amendment mode. The chrome and
 `modelo.edit.review` always name the active mutation family, and an amendment
 session cannot reuse a calculate baseline or intents.
 
-An explicit historical calculation selection starts a labelled read-only
-inspection session through its existing public bounded query. It is not composed
-with current Workspace facets, does not inherit current capability, and cannot
-enter edit mode. Returning to current results establishes a fresh Workspace read
-session. Cross-revision comparison is not part of the initial catalogue.
+An explicit historical `ModeloRevisionPick` starts a labelled read-only
+inspection session through its existing public bounded query. It is not
+composed with current Workspace facets, does not inherit current capability,
+and cannot enter edit mode. Returning to current results establishes a fresh
+Workspace read session. Cross-revision comparison is not part of the initial
+catalogue.
 
 All workspace destinations share one feature-owned chrome: visible Modelo
 address; law-selected registry revision; current calculation-revision state;
@@ -434,8 +440,18 @@ The initial cohort mapping is:
 |---|---|---|
 | C1 | selection and bounded review | list, status, review, revisions, revision inspect, observations, dependencies, and refresh as direct queries |
 | C2 | all read destinations | bounded section/row/provenance traversal, capability detail, and refresh as direct queries |
-| C3 | selection, inputs, and edit review | create work plus calculate/recalculate through `ModeloEditContractV1` and enrolled operations |
+| C3 | selection, inputs, and edit review | calculate/recalculate through `ModeloEditContractV1` and enrolled operations |
 | C4 | overview, inputs, verification, and filing | rename, discard, verify, file, export, and amend only where independently enrolled, capability-projected, and receipted |
+
+`modelo.work.create` is a `DEFERRED` candidate owned by the existing
+`cadrumo.application.modelo` work-lifecycle boundary. The selection destination
+may render its deferred capability and reopening facts, but C1-C5 do not invoke
+it. Reopening requires a later accepted decision that defines absent-work
+admission, its domain capability and enrolled operation, the atomic work-unit
+and creation-event write set, an authoritative result/effect receipt, and the
+exact dependency and interface receipt proofs. Neither
+`ModeloEditContractC3DependencyReceiptV1` nor `ModeloWorkspaceC3ExitReceiptV1`
+authorizes creation.
 
 Discard is destructive and must declare the canonical exact approval
 interaction. File and any external handoff use their owning interaction and
@@ -503,16 +519,36 @@ pass.
 
 ### D9 — Version and compatibility behavior
 
-The TUI declares the exact Workspace, `ModeloEditContractV1`, public operation
-projection, and `OperationTransientFinancialOperandProtocolV1` versions it
-consumes. It accepts only the compatibility tuple published by the edit
-contract. Startup or route
-admission refuses an unsupported read tuple before a workspace is mounted;
-editor admission refuses an unsupported edit tuple before accepting a lexeme or
-opening an edit session. Read sessions pin the received contract version,
-selected revision, schema fingerprint, and Workspace baseline; edit sessions
-additionally pin the complete admitted edit baseline and compatibility tuple.
-An in-process version change follows the stale protocol.
+The TUI declares every compatibility coordinate it actually consumes rather
+than one generic operation version. C3 editor admission consumes the exact
+`ModeloEditCompatibilityTupleV1`: Workspace and edit contract versions;
+operation public-definition manifest version and `contract_set_digest`;
+enrolled `OperationDefinitionId`, `definition_contract_digest`, and declared
+request/result schema identities; observation request/result/projection/event-
+page version; REVIEW-projection request/result version and the definition's
+declared REVIEW/response schema identities or explicit absence;
+Workspace-refresh-target request/result version and exact
+`ModeloWorkspaceRefreshTargetV1` schema identity/fingerprint; and
+`OperationTransientFinancialOperandProtocolV1` version and enrolled operand
+schema identity/fingerprint. A public-definition version never substitutes for
+a definition digest, observation never substitutes for REVIEW or refresh, and
+no endpoint version substitutes for a registered payload schema identity.
+
+C0 operation surfaces pin their applicable public-definition, definition-
+digest, observation, REVIEW, and refresh-target coordinates. C1 and C2 read-
+only admission pins only the Workspace/review coordinates and any C0 operation
+surface it actually consumes; it does not require an edit or financial-operand
+contract. A missing or unaccepted axis leaves its dependent surface refused or
+unmounted and never becomes an implicit compatibility default.
+
+Startup or route admission refuses an unsupported read tuple before a workspace
+is mounted; editor admission refuses an unsupported edit tuple before accepting
+a lexeme or opening an edit session. Read sessions pin the received Workspace,
+public-definition, observation, REVIEW, and refresh coordinates they consume,
+plus selected revision, schema fingerprint, and Workspace baseline. Edit
+sessions additionally pin the complete admitted edit baseline, financial-
+operand coordinates, and compatibility tuple. An in-process version or digest
+change follows the stale protocol.
 
 TUI-local view models and route IDs are internal code contracts rather than a
 second serialized API version. A breaking in-tree change updates route factories,
@@ -528,18 +564,42 @@ substitute mocks, prose, or a proposed record for an unmet predecessor:
 | Cohort | Required entrance receipts | Canonical exit artifact, schema, and validator | Required proof |
 |---|---|---|---|
 | C0 — operation foundation | amended accepted `2026-08-11-tui-architecture-adr` | `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md`; `TuiOperationObservationDependencyReceiptV1`; `src/cadrumo/application/operations/tests/test_public_operation_dependency_receipt.py` | `OperationPublicDefinitionContractV1` and contract-set schema identities/digests; atomic observation fold; registered safe REVIEW resolver, typed refusals, and non-authority; typed result-to-Workspace refresh-target adapter from a fresh process; settlement, interaction, cancellation, effect, recovery, and production DI |
-| C1 — bounded review | accepted Casilla review and accepted interface migration lane | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt.md`; `ModeloWorkspaceC1ExitReceiptV1`; `validate_modelo_workspace_c1_exit_receipt` | canonical `modelo.work.review` relocation; four-locale/three-geometry/two-theme keyboard and non-colour proof; no legacy production import |
+| C1 — bounded review | this companion ADR accepted with exact stem, accepting commit, and body hash; accepted Casilla review; accepted interface migration lane | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt.md`; `ModeloWorkspaceC1ExitReceiptV1`; `validate_modelo_workspace_c1_exit_receipt` | canonical `modelo.work.review` relocation; four-locale/three-geometry/two-theme keyboard and non-colour proof; no legacy production import |
 | C2 — complex read workspace | C1 exit plus `.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md`; `ModeloWorkspaceC2DependencyReceiptV1`; `validate_modelo_workspace_c2_dependency_receipt` | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c2-exit-receipt.md`; `ModeloWorkspaceC2ExitReceiptV1`; `validate_modelo_workspace_c2_exit_receipt` | C1-route atomic replacement; destination/factory census; projection coverage; baseline facets; refusal states; large schema/row/provenance matrix; production composition |
 | C3 — staged editor | C0 and C2 exits; `.vault/reference/2026-08-24-modelo-edit-contract-c3-dependency-receipt.md`; `ModeloEditContractC3DependencyReceiptV1`; `validate_modelo_edit_contract_c3_dependency_receipt`; and `.vault/reference/2026-08-24-tui-operation-financial-operand-dependency-receipt.md`; `TuiOperationFinancialOperandDependencyReceiptV1`; `src/cadrumo/application/operations/tests/test_financial_operand_dependency_receipt.py` | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c3-exit-receipt.md`; `ModeloWorkspaceC3ExitReceiptV1`; `validate_modelo_workspace_c3_exit_receipt` | exact compatibility tuple; edit/row state machine; parse and validation focus; review-only submit; stale refusal; atomic-result refresh; locale switch; operation handoff consumption; sensitive non-retention |
 | C4 — lifecycle actions | C3 exit, green generated action denominator, and each owning domain capability and operation definition | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c4-exit-receipt.md`; `ModeloWorkspaceC4ExitReceiptV1`; `validate_modelo_workspace_c4_exit_receipt` | zero unclassified action candidates; exact interaction and terminal refresh; rename, discard, verify, file, export, and amend proofs independently; amendment-wizard disposition |
 | C5 — visual closure | C4 exit and every C1-C4 destination/action classified | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c5-exit-receipt.md`; `ModeloWorkspaceC5ExitReceiptV1`; `validate_modelo_workspace_c5_exit_receipt` | aggregate four-locale, three-geometry, two-theme, keyboard, non-colour, large-schema/row, refusal/conflict, route/action anti-vacuity, no-transitional-TUI, and installed root-app proof |
 
+`ModeloWorkspaceC1ExitReceiptV1` has a closed mandatory governing prefix: exact
+stem `2026-08-24-tui-modelo-workspace-interface-adr`, status `accepted`, its
+accepting commit, and its then-current body hash. Omission, proposed status,
+body-hash drift, or a non-ancestor accepting commit fails
+`validate_modelo_workspace_c1_exit_receipt`; the accepted parent migration lane
+or Casilla record cannot substitute for this companion identity.
+
+Every C1-C5 exit validator invokes
+`validate_modelo_workspace_action_denominator` against the same current-HEAD
+source tree before returning green. It records the generated artifact digest
+and rejects any missing, duplicate, stale, or unclassified candidate, any typed
+exclusion without its owner/reason/evidence/reopening facts, and any route or
+command whose `TuiCapability.AVAILABLE` state lacks its exact owning cohort exit
+proven green by the same validator invocation on current HEAD, including the
+exit receipt then under validation. Earlier cohorts classify future candidates
+as `FLOW_OWNED`, `DEFERRED`, or `NOT_VISUAL`; they never omit them. C4
+additionally proves the intended lifecycle rows are enrolled and receipted, and
+C5 proves no transitional TUI row remains.
+
 Every interface receipt carries its schema version, current-HEAD commit and
 ancestry, accepted governing-record identities, exact predecessor receipt
-digests, Workspace/edit/operation compatibility tuple, selected registry/schema
-fixtures, destination and action-denominator digests, locale/geometry/theme
-matrix, synthetic scale fixture, production composition path, and non-retention
-proof. A predecessor digest is mandatory and cannot be marked not applicable.
+digests, and the applicable distinct Workspace/edit/public-definition/
+definition-digest/observation/REVIEW/refresh-target/financial-protocol
+compatibility coordinates. An axis the cohort does not consume uses the typed
+`NOT_APPLICABLE` proof with owner, reason, evidence, and reopening condition;
+an applicable axis cannot. Receipts also carry selected registry/schema
+fixtures, destination and validated action-denominator digests, locale/
+geometry/theme matrix, synthetic scale fixture, production composition path,
+and non-retention proof. A predecessor digest is mandatory and cannot be marked
+not applicable.
 
 Each proof cell is the discriminated `ModeloWorkspaceReceiptProofV1`: `PASSED`
 contains the executable evidence identity and digest; `NOT_APPLICABLE` contains

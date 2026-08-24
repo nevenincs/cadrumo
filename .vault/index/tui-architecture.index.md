@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:df3f19f74c7be13731716480330b25d1ee0052cafc65d1d51797279d5c5ebf85'
+body_hash: 'sha256:b8719216e1f28533847462e8d218744919dcc2318e811c93dd79d7eee371252e'
 related:
   - '[[2026-08-11-tui-architecture-W01-P01-S01]]'
   - '[[2026-08-11-tui-architecture-W01-P01-S02]]'
@@ -106,6 +106,7 @@ related:
   - '[[2026-08-24-tui-architecture-s36-filed-history-progress-review-audit]]'
   - '[[2026-08-24-tui-architecture-s37-live-facade-audit]]'
   - '[[2026-08-24-tui-architecture-s38-filed-history-conformance-audit]]'
+  - '[[2026-08-24-tui-architecture-s39-auth-operations-audit]]'
 ---
 
 # `tui-architecture` feature index
@@ -163,6 +164,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-24-tui-architecture-s36-filed-history-progress-review-audit` - `tui-architecture` audit: `s36 filed history progress review`
 - `2026-08-24-tui-architecture-s37-live-facade-audit` - `tui-architecture` audit: `S37 live facade review`
 - `2026-08-24-tui-architecture-s38-filed-history-conformance-audit` - `tui-architecture` audit: `S38 filed-history conformance review`
+- `2026-08-24-tui-architecture-s39-auth-operations-audit` - `tui-architecture` audit: `s39 auth operations`
 
 ### exec
 

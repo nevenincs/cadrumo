@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:df779136007b13f5089974c945bd295063b6c2824826d30da64949cd6281c0cc'
+body_hash: 'sha256:7c06b41e68b75e4237eb821504ecf9d2598a032b13c9950160ed4d2ce8a5c7c2'
 related:
   - "[[2026-08-24-engineering-hygiene-gate-and-environment-reference]]"
 ---
@@ -28,3 +28,8 @@ The canonical `.vaultspec/workspace.json` and MCP descriptor select tool mode, w
 ## Recommendations
 
 Land the generated provider outputs atomically with the canonical tool-mode source. Treat the current Windows guard as fail-closed protection for existing readers, not as proof that future readers are excluded. A follow-on architecture decision is required before expanding every project-venv command into a shared-reader/exclusive-writer lease protocol; that broader command-surface change should not be smuggled into this hygiene repair.
+
+### validator-ratchet-extraction | low | no findings
+
+Independent review found the projection-endpoint extraction behavior-preserving, correctly contained within the registry package, equivalently typed, and covered by the focused projection and reviewability tests. No remediation is required.
+
