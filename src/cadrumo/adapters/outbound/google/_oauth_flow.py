@@ -139,8 +139,8 @@ def resolve_active_tax_id(profile_id: str) -> str:
 
     Raises:
         :exc:`adapters.outbound.google.GoogleAuthProfileUnboundError`:
-            When the profile bucket manifest or canonical profile record cannot
-            be resolved.
+            When the profile bucket manifest or canonical profile-record
+            session cannot be resolved.
     """
     from ....application.user_profile import ProfileRecordRepository, record_to_path_values
     from ....application.workflow import read_profile_bucket_by_id
@@ -162,12 +162,16 @@ def resolve_active_tax_id(profile_id: str) -> str:
         record = ProfileRecordRepository.for_current_session(pointer.bucket_id).load(profile_id)
     except ProfileNotFoundError as exc:
         raise GoogleAuthProfileUnboundError(
-            "google OAuth refused: active profile record could not be resolved",
-            context={"profile": profile_id, "bucket_id": pointer.bucket_id, "reason": "profile_record_missing"},
+            "google OAuth refused: active profile record session is unavailable",
+            context={
+                "profile": profile_id,
+                "bucket_id": pointer.bucket_id,
+                "reason": "profile_record_session_unavailable",
+            },
             translated_message="adapters.google.oauth_flow.errors.profile_state_unresolved",
             precondition_verdict=google_auth_no_action_verdict(
-                condition=GoogleAuthPreconditionCondition.PROFILE_IDENTITY_RESOLVED,
-                facts={"profile_record_present": False},
+                condition=GoogleAuthPreconditionCondition.PROFILE_RECORD_SESSION_AVAILABLE,
+                facts={"profile_record_session_available": False},
                 provenance=ActionEvidenceProvenance.APPLICATION_STATE,
                 outcome=NoRecoveryOutcome.OPERATOR_DECISION,
             ),

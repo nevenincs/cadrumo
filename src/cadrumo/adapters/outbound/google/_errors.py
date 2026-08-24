@@ -26,6 +26,7 @@ class GoogleAuthPreconditionCondition(StrEnum):
     INTERACTIVE_TERMINAL_AVAILABLE = "google.auth.interactive_terminal.available"
     CREDENTIAL_STORE_SECURED = "google.auth.credential_store.secured"
     PROFILE_IDENTITY_RESOLVED = "google.auth.profile_identity.resolved"
+    PROFILE_RECORD_SESSION_AVAILABLE = "google.auth.profile_record_session.available"
     REQUIRED_SCOPES_GRANTED = "google.auth.required_scopes.granted"
     OAUTHLIB_AVAILABLE = "google.auth.oauthlib.available"
     OAUTH_CLIENT_CONFIG_VALID = "google.auth.oauth_client_config.valid"

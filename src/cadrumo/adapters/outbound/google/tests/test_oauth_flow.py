@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from .....application.user_profile._capsule_record import ProfileRecordIntegrityError
 from .....core.config import override_settings
 from .....tests.secure_sql import isolated_runtime_profile, reset_secure_object_store
 from .._errors import (
@@ -198,22 +199,40 @@ def test_interactive_terminal_guard_refuses_a_non_tty_stdin() -> None:
     assert not hasattr(raised.value, "suggestion")
 
 
-def test_login_flow_refuses_missing_profile_record_before_oauth_network(tmp_path: Path) -> None:
+def test_login_flow_refuses_unavailable_profile_record_session_before_oauth_network(tmp_path: Path) -> None:
+    """A committed profile without a live record session reaches the typed refusal."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="1f54e86d-e8dd-4327-8651-cc6d9a44843c") as profile:
+        storage_root = profile.storage_root
+        profile_id = profile.bucket_id
+
     with (
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="1f54e86d-e8dd-4327-8651-cc6d9a44843c") as profile,
-        override_settings(cadrumo_secret_store_backend="unsecured"),
+        override_settings(
+            cadrumo_local_storage_root=storage_root,
+            cadrumo_active_profile=profile_id,
+            cadrumo_secret_store_backend="unsecured",
+        ),
         pytest.raises(GoogleAuthProfileUnboundError) as raised,
     ):
-        # A published test profile now carries its real incomplete profile
-        # record. Clear that concrete storage surface to exercise the actual
-        # missing-record branch this test names.
-        reset_secure_object_store(profile.repository)
-        run_login_flow(_valid_oauth_client(), profile.bucket_id)
+        run_login_flow(_valid_oauth_client(), profile_id)
 
     assert raised.value.context == {
         "profile": "1f54e86d-e8dd-4327-8651-cc6d9a44843c",
         "bucket_id": "1f54e86d-e8dd-4327-8651-cc6d9a44843c",
-        "reason": "profile_record_missing",
+        "reason": "profile_record_session_unavailable",
     }
     assert raised.value.translated_message == "adapters.google.oauth_flow.errors.profile_state_unresolved"
     assert not hasattr(raised.value, "suggestion")
+
+
+def test_login_flow_propagates_zero_row_profile_capsule_corruption_before_oauth_network(tmp_path: Path) -> None:
+    """Corrupt profile rows are integrity failures, never downgraded to an auth refusal."""
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="1f54e86d-e8dd-4327-8651-cc6d9a44843c") as profile,
+        override_settings(cadrumo_secret_store_backend="unsecured"),
+        pytest.raises(ProfileRecordIntegrityError) as raised,
+    ):
+        reset_secure_object_store(profile.repository)
+        run_login_flow(_valid_oauth_client(), profile.bucket_id)
+
+    assert str(raised.value) == "profile capsule must contain exactly one current record row; it holds 0"
+    assert not isinstance(raised.value, GoogleAuthProfileUnboundError)

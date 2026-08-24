@@ -15,6 +15,7 @@ from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecovery
 from .....core.config import override_settings
 from .....core.errors import TerminalPreconditionErrorMixin
 from .....tests.env_scope import scoped_env_var
+from .....tests.secure_sql import isolated_runtime_profile
 from .. import _active_profile as active_profile_module
 from .. import _impersonation as impersonation_module
 from .. import _oauth_flow as oauth_flow_module
@@ -27,6 +28,7 @@ from .._oauth_flow import (
     check_unsecured_mode_safety,
     credentials_to_records,
     require_interactive_terminal,
+    resolve_active_tax_id,
 )
 from .._records import REQUIRED_SCOPES
 
@@ -78,9 +80,9 @@ _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         ActionEvidenceProvenance.APPLICATION_STATE,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "_oauth_flow:resolve_active_tax_id:GoogleAuthProfileUnboundError:google OAuth refused: active profile record could not be resolved": _contract(
-        GoogleAuthPreconditionCondition.PROFILE_IDENTITY_RESOLVED,
-        (("profile_record_present", "False"),),
+    "_oauth_flow:resolve_active_tax_id:GoogleAuthProfileUnboundError:google OAuth refused: active profile record session is unavailable": _contract(
+        GoogleAuthPreconditionCondition.PROFILE_RECORD_SESSION_AVAILABLE,
+        (("profile_record_session_available", "False"),),
         ActionEvidenceProvenance.APPLICATION_STATE,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
@@ -335,6 +337,30 @@ def test_active_profile_refusal_has_an_exact_operator_decision_verdict(tmp_path)
         raised.value,
         condition=GoogleAuthPreconditionCondition.ACTIVE_PROFILE_RESOLVED,
         facts={"active_profile_resolved": False},
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+    )
+
+
+def test_profile_record_session_refusal_has_an_exact_operator_decision_verdict(tmp_path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="1f54e86d-e8dd-4327-8651-cc6d9a44843c") as profile:
+        storage_root = profile.storage_root
+        profile_id = profile.bucket_id
+
+    with (
+        override_settings(
+            cadrumo_local_storage_root=storage_root,
+            cadrumo_active_profile=profile_id,
+            cadrumo_secret_store_backend="unsecured",
+        ),
+        pytest.raises(GoogleAuthProfileUnboundError) as raised,
+    ):
+        resolve_active_tax_id(profile_id)
+
+    _assert_terminal_contract(
+        raised.value,
+        condition=GoogleAuthPreconditionCondition.PROFILE_RECORD_SESSION_AVAILABLE,
+        facts={"profile_record_session_available": False},
         provenance=ActionEvidenceProvenance.APPLICATION_STATE,
         outcome=NoRecoveryOutcome.OPERATOR_DECISION,
     )

@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-24'
-body_hash: 'sha256:9feb63d00c64aab05c0ebbc7f40758ad98c1de69ab5b39f96006ed563dd4c02c'
+body_hash: 'sha256:cfe0b2f800563f5e54ba35500592ff06b29dc0233f72bdc1618203a191b1700b'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -202,7 +202,7 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [x] `W05.P10.S60` - Migrate TUI recovery rendering to the shared resolved action projection; `src/cadrumo/adapters/inbound/tui`.
 - [x] `W05.P10.S61` - Migrate shipped agent harness action citations to canonical action identities; `src/cadrumo/_data/agent`.
 - [x] `W05.P10.S67` - Migrate inbound censo parse-refusal action producers to typed conditions and canonical actions; `src/cadrumo/adapters/inbound/censo/_parser.py`.
-- [ ] `W05.P10.S68` - Migrate Google profile, OAuth, and impersonation refusals to typed recoverable actions or explicit operator-decision and safety outcomes; `src/cadrumo/adapters/outbound/google/_active_profile.py; src/cadrumo/adapters/outbound/google/_oauth_flow.py; src/cadrumo/adapters/outbound/google/_impersonation.py; src/cadrumo/adapters/outbound/google/tests`.
+- [x] `W05.P10.S68` - Migrate Google profile, OAuth, and impersonation refusals to typed recoverable actions or explicit operator-decision and safety outcomes; `src/cadrumo/adapters/outbound/google/_active_profile.py; src/cadrumo/adapters/outbound/google/_oauth_flow.py; src/cadrumo/adapters/outbound/google/_impersonation.py; src/cadrumo/adapters/outbound/google/tests`.
 - [x] `W05.P10.S69` - Migrate local outbound-storage provider permission, path, conflict, not-found, and integrity failures to typed safety or operator-decision outcomes without inventing caller-owned recovery; `src/cadrumo/adapters/outbound/storage/_errors.py; src/cadrumo/adapters/outbound/storage/_local.py; src/cadrumo/adapters/outbound/storage/tests`.
 - [ ] `W05.P10.S70` - Migrate persistence adapter recovery producers to current typed actions and delete recovery-hint fields; `src/cadrumo/adapters/persistence`.
 - [ ] `W05.P10.S71` - Migrate aggregation recovery producers to typed conditions and canonical actions; `src/cadrumo/application/aggregation`.
