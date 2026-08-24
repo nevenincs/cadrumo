@@ -14,7 +14,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
 modified: '2026-08-24'
 body_schema: body-v1
-body_hash: 'sha256:492fcea43a136159c6b99a0bb129a667e198e44c359c4432c07931d2c210a7f2'
+body_hash: 'sha256:f07655ed3500c44779280ef346f537f7b9388ad44c3da8015fcab31c49103d6e'
 ---
 
 <!-- RETIRED: P06, P07, P09 -->
@@ -47,7 +47,7 @@ Type deadline identity through existing canonical vocabularies and shared tempor
 - [x] `W01.P01.S01` - Record the canonical shared temporal-coverage dependency in the approved deadline architecture; `.vault/adr/2026-08-24-deadline-window-revision-authority-adr.md`.
 - [x] `W01.P01.S02` - Add optional typed deadline qualifiers reusing ResultDisposition and official M210 tipo-renta code authority without a lossy TipoRentaIrnr projection; `src/cadrumo/domain/calculations/registry/_schema.py`.
 - [x] `W01.P01.S03` - Define the canonical deadline semantic coordinate from modelo, Period, ResultDisposition, and official tipo-renta code scope using existing period authorities; `src/cadrumo/domain/calculations/registry/`.
-- [ ] `W01.P01.S04` - Extend deadline-window loading and serialization for typed qualifiers while preserving unqualified rows and fragmented authoring ownership; `src/cadrumo/domain/calculations/registry/_loader.py; src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `W01.P01.S04` - Extend deadline-window loading and serialization for typed qualifiers while preserving unqualified rows and fragmented authoring ownership; `src/cadrumo/domain/calculations/registry/_loader.py; src/cadrumo/domain/calculations/registry/tests/`.
 
 ### Phase `W01.P02` - ownership and completeness gates
 
