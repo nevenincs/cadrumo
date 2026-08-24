@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import json
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import UUID
@@ -32,9 +33,7 @@ from ....core import read_pointer
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._bundle_export_contracts import (
     ProfileBundleExportPurpose,
-    ProfileBundleExportRequest,
     ProfileBundleExportResult,
-    ProfileBundleExportTransport,
 )
 from .._bundle_export_operation import ProfileBundleExportJournalRepository
 from .._custody_ports import profile_custody_secure_object_repository
@@ -52,6 +51,7 @@ from .._operation_definitions import (
     ProfileRepeatableRowMutationOperationRequest,
     ProfileRepeatableRowMutationOperationResult,
     ProfileRepeatableRowValue,
+    build_user_profile_operation_registrations,
 )
 from .._profile_record_repository import ProfileRecordRepository
 from .._projections import record_to_path_values
@@ -60,6 +60,8 @@ from .._registration import register_profile_with_credentials
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _PROFILE_PASSPHRASE = "s40-profile-operation-passphrase"  # noqa: S105 - synthetic test fixture
+
+
 def _supervisor(
     root: Path,
     *,
@@ -72,7 +74,10 @@ def _supervisor(
     journal = OperationJournalRepository(storage_root=root)
     return (
         OperationSupervisor(
-            registry=OperationRegistry(definitions=USER_PROFILE_OPERATION_DEFINITIONS),
+            registry=OperationRegistry(
+                definitions=USER_PROFILE_OPERATION_DEFINITIONS,
+                public_registrations=build_user_profile_operation_registrations(USER_PROFILE_OPERATION_DEFINITIONS),
+            ),
             journal=journal,
             event_stream=journal,
             leases=OperationLeaseFilesystemRepository(storage_root=root),
@@ -151,7 +156,10 @@ def _assert_not_durable(root: Path, secret: bytes) -> None:
 
 
 def test_profile_operation_families_have_one_secure_registered_definition_each() -> None:
-    registry = OperationRegistry(definitions=USER_PROFILE_OPERATION_DEFINITIONS)
+    registry = OperationRegistry(
+        definitions=USER_PROFILE_OPERATION_DEFINITIONS,
+        public_registrations=build_user_profile_operation_registrations(USER_PROFILE_OPERATION_DEFINITIONS),
+    )
     definition_ids = tuple(definition.definition_id for definition in USER_PROFILE_OPERATION_DEFINITIONS)
     assert definition_ids == (
         PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
@@ -167,6 +175,18 @@ def test_profile_operation_families_have_one_secure_registered_definition_each()
         and not registry.lookup(definition_id).capabilities.owned_resources
         for definition_id in definition_ids
     )
+    bundle_registration = registry.lookup_public_registration(PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID)
+    bundle_request_binding = next(
+        binding
+        for binding in bundle_registration.schema_bindings
+        if binding.identity.schema_id == f"{PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID}.request"
+    )
+    bundle_request_schema = bundle_request_binding.model_type.model_json_schema(mode="validation")
+
+    assert bundle_registration.contract.ephemeral_secret_required is True
+    assert bundle_registration.contract.request_schema == bundle_request_binding.identity
+    assert set(ProfileBundleExportOperationRequest.model_fields) == {"profile_id", "destination", "purpose"}
+    assert "passphrase" not in json.dumps(bundle_request_schema).lower()
 
 
 def test_field_mutation_runs_through_the_supervisor_and_real_encrypted_profile_store(tmp_path: Path) -> None:
@@ -247,12 +267,8 @@ def test_bundle_export_reuses_the_real_durable_publication_and_journal(tmp_path:
                     subject_ref=f"profile:{profile_id}",
                     payload=ProfileBundleExportOperationRequest(
                         profile_id=profile_id,
-                        export=ProfileBundleExportRequest(
-                            destination=destination,
-                            purpose=ProfileBundleExportPurpose.PORTABLE_TRANSFER,
-                            transport=ProfileBundleExportTransport.PASSPHRASE_ENCRYPTED,
-                            passphrase=None,
-                        ),
+                        destination=destination,
+                        purpose=ProfileBundleExportPurpose.PORTABLE_TRANSFER,
                     ),
                 ),
                 operation_id="c" * 64,

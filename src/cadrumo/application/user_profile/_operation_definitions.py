@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from pathlib import Path
 from uuid import UUID
 
-from pydantic import BaseModel, Field, SecretStr, field_validator, model_validator
+from pydantic import BaseModel, Field, SecretStr, field_validator
 
 from ...core import (
     STRICT_FROZEN_CONFIG,
@@ -27,15 +28,16 @@ from ..operations import (
     OperationExecutorContext,
     OperationExecutorFactory,
     OperationFrontendProjection,
+    OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationReplayPolicy,
     OperationRequest,
     OperationRequestStoragePolicy,
-    OperationPublicDefinitionRegistrationV1,
     OperationSchemaBindingV1,
     OperationSensitiveInputPolicy,
 )
 from ._bundle_export import (
+    ProfileBundleExportPurpose,
     ProfileBundleExportRequest,
     ProfileBundleExportResult,
     ProfileBundleExportTransport,
@@ -120,17 +122,8 @@ class ProfileBundleExportOperationRequest(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     profile_id: UUID
-    export: ProfileBundleExportRequest
-
-    @model_validator(mode="after")
-    def _forbid_a_second_profile_selector(self) -> ProfileBundleExportOperationRequest:
-        if self.export.profile_name is not None:
-            raise ValueError("profile bundle operation resolves its profile from the operation subject")
-        if self.export.passphrase is not None:
-            raise ValueError("profile bundle operation accepts its passphrase only through one-shot secret submission")
-        if self.export.transport is not ProfileBundleExportTransport.PASSPHRASE_ENCRYPTED:
-            raise ValueError("profile bundle operation requires passphrase-encrypted transport")
-        return self
+    destination: Path
+    purpose: ProfileBundleExportPurpose
 
 
 class ProfileMutationOperationResult(BaseModel):
@@ -268,11 +261,12 @@ class ProfileBundleExportOperationExecutor:
                 await context.events.effect(OperationEffect.UNKNOWN)
                 await context.events.phase(_PROFILE_BUNDLE_EXPORT_PHASES[2])
                 result = export_profile_bundle(
-                    payload.export.model_copy(
-                        update={
-                            "profile_name": None,
-                            "passphrase": SecretStr(passphrase),
-                        }
+                    ProfileBundleExportRequest(
+                        profile_name=None,
+                        destination=payload.destination,
+                        purpose=payload.purpose,
+                        transport=ProfileBundleExportTransport.PASSPHRASE_ENCRYPTED,
+                        passphrase=SecretStr(passphrase),
                     )
                 )
             finally:
