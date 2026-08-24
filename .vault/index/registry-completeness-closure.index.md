@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:2bd1a6f366ea58585b97d85ee2ddcb7a0b07398edee21978dc62b7ba70cc86f0'
+body_hash: 'sha256:ba177a1f8d84f10bdf9f4f6d9422c43352e9afa1a6c2c03802425403256c0a70'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -30,6 +30,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S50]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S51]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S52]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S53]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
@@ -110,8 +111,9 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P02-S48` - Prove undeclared-grade refusals reject a non-null declared grade through direct construction and revalidated mutation.
 - `2026-08-24-registry-completeness-closure-W01-P02-S49` - Replace substring-based connected-proof failure taxonomy with structured cause mapping that distinguishes missing proof from digest conflict, with real deletion and drift composer regressions.
 - `2026-08-24-registry-completeness-closure-W01-P02-S50` - Parameterize undeclared-grade refusal contradictions across every authority grade and prove weakened-guard regression refusal.
-- `2026-08-24-registry-completeness-closure-W01-P02-S51` - 2026-08-24-registry-completeness-closure-W01-P02-S51
+- `2026-08-24-registry-completeness-closure-W01-P02-S51` - Assert structured Pydantic proof-cause codes and composer taxonomy for source-enrollment, operator-workflow, and encrypted-provenance failures, with a ValueError-fallback mutation bite.
 - `2026-08-24-registry-completeness-closure-W01-P02-S52` - Remove the recorded source-connectivity composer trailing whitespace and prove the committed surface is whitespace-clean
+- `2026-08-24-registry-completeness-closure-W01-P02-S53` - Correct the S52 execution record repair provenance and EOF whitespace, then re-attest the clean Step-surface diff check.
 
 ### plan
 
