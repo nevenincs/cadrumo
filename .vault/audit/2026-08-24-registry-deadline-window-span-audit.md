@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:b1139e2dfc88783b289285d6f726a4a3cf60aa6dd22c3c6bc25c560f1cc4b57a'
+body_hash: 'sha256:cac0c033afe80b29838b2728910392168d97d7fe6d7083acc0797a43a7ec4145'
 related: []
 ---
 
@@ -293,6 +293,44 @@ two `MovementRecord` validation errors in `test_inventory_concurrent_write`; a
 source-mesh revision roundtrip; `test_package_module_allowlist` flagging
 `test_auth_preconditions.py` and siblings (new peer files); the operations
 facade export ordering; and `AuthDiagnosticDetail.operator_report_command`.
+
+## Open: a submitted-file fixture disagrees with the fixed-width codec
+
+Seven `TestSubmittedFileObservation` tests fail with:
+
+```
+signed export field 'modelo-130-casilla-03' must use ASCII space or N as its
+sign marker
+```
+
+`src/cadrumo/tests/fixtures/aeat-sede/submitted-files/modelo-130-2026-1T-redacted.txt`
+holds unbroken digit runs where the layout expects a sign position. The
+fixture is six weeks old and unchanged; the codec rule arrived two weeks ago
+with `6875cfeb625 feat(export): centralize fixed-width codec`. So one of the two
+is wrong and the newer one is the codec.
+
+Three things need an owner, and none should be guessed:
+
+1. **Is modelo 130 casilla 03 signed in the official design?** It carries the
+   rendimiento neto, which can be negative, so a sign position is plausible --
+   but plausible is not grounding, and inventing a fixed-width layout fact is
+   exactly what `aeat-calculation-grounding` forbids.
+2. **Is this fixture real or synthetic?** It is named `-redacted`, implying a
+   sanitised AEAT artefact, but its content reads synthetic: `CONTEXT TEST`,
+   `ANA`, NIF `I12345678Z`. That distinction decides the fix -- a real artefact
+   means the codec must accept what AEAT actually emits (external-world
+   variability is explicitly not this project's legacy), while a synthetic one
+   means the fixture encodes the field wrongly and should be regenerated from
+   the layout.
+3. **It carries no provenance sidecar.** `aeat-quality-gates` requires every
+   fixture to declare `real_corpus` or `synthetic_generated`, cross-checked
+   against physical evidence. This one declares nothing, which is why question 2
+   cannot be answered from the tree. The sibling
+   `modelo-100-2024-0A-carry-agreement-synthetic.json` shows the shape.
+
+The provenance gap is the root problem: had the fixture declared what it is, the
+codec change would have been checked against a known artefact class instead of
+turning seven tests red with an unanswerable question.
 
 ## Durable lesson
 
