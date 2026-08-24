@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:510c7aab697368cd86503f2c59e6f3c02e74c8214ecfa805881d6ace14daf0aa'
+body_hash: 'sha256:f3105780c85b12f3f765f143184e5c6d8a663458bb3d8d8951bc3a2636459472'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -138,7 +138,7 @@ Prove localization, binding, continuity, calculation, and export semantics acros
 
 Exercise the supported revision umbrella through localization, casilla continuity, binding and calculation resolution, and official export layout semantics.
 
-- [ ] `W03.P05.S30` - Verify every shipped modelo and revision localization key across supported output locales; `dev/locales/`.
+- [x] `W03.P05.S30` - Verify every shipped modelo and revision localization key across supported output locales; `dev/locales/`.
 - [x] `W03.P05.S31` - Verify casilla identity, semantic linkage, and continuity chains across every supported revision boundary; `src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W03.P05.S32` - Verify binding selectors, resolver enrollment, calculation paths, and provenance for every filing-grade revision; `src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W03.P05.S33` - Verify official export layout selection, mapped semantic owners, and emitted-byte offsets for every filing-grade revision; `src/cadrumo/application/filing/tests/`.
