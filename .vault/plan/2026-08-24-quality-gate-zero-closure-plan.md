@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#quality-gate-zero-closure'
 date: '2026-08-24'
+modified: '2026-08-24'
+body_hash: 'sha256:acf9a945338fe1d65cb6ea886f98c3707a23049b347920dca4e27a51d1cc1b06'
 tier: L3
 related:
   - '[[2026-08-24-quality-gate-zero-closure-adr]]'
@@ -11,9 +13,8 @@ related:
   - '[[2026-07-14-honest-all-green-adr]]'
   - '[[2026-06-09-quality-hardening-campaign-adr]]'
   - '[[2026-06-04-repo-health-triage-adr]]'
-modified: '2026-08-24'
-body_hash: 'sha256:db82aa658fe4b2b2082e2743d20e826f0e60be5f24992d484fdc61586ac34185'
 ---
+
 <!-- RETIRED: W01, W02, W03, W04, W05, W06, P01, P02, P03, P04, P05, P06, P07, P08, P09, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, S01, S02, S03, S04, S05, S06, S07, S08, S09, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19, S20, S21, S22, S23, S24, S25, S26, S27, S28, S29, S30, S31, S32, S33, S34, S35, S36, S37, S38, S39, S40, S41, S42, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57, S58, S59, S60, S61, S62, S63, S64, S65, S66, S67, S68, S69, S70, S71, S72, S73, S74, S75, S76, S77, S78, S79, S80, S81, S82, S83, S84, S85, S86, S87, S88, S89, S90, S91, S92 -->
 
 # `quality-gate-zero-closure` plan
@@ -34,7 +35,7 @@ Establish the durable observe, claim, repair, recheck, and evidence loop for the
 
 At each observation, capture the current HEAD and gate state, redeclare semantic ownership, and claim only current disjoint work. The live owner queue belongs in execution evidence, never in this plan.
 
-- [ ] `W07.P20.S93` - Observe the current branch revision, dirty paths, ownership context, and gate state, recording revision-scoped evidence without treating any result as a baseline (Luna max audit and mechanical); `.vault/exec/`.
+- [x] `W07.P20.S93` - Observe the current branch revision, dirty paths, ownership context, and gate state, recording revision-scoped evidence without treating any result as a baseline (Luna max audit and mechanical); `.vault/exec/`.
 - [ ] `W07.P20.S94` - Redeclare semantic canonical homes and consumer ownership against the indexed live source, persisting only current RAG evidence (Luna max audit); `.vault/audit/`.
 - [ ] `W07.P20.S95` - Claim only currently disjoint work and write the live owner queue, starting revision, collision result, and handoff metadata to execution evidence rather than this plan (Luna max audit and mechanical); `.vault/exec/`.
 - [ ] `W07.P20.S96` - Amend or codify the standing ratchet rule when observation exposes a durable governance gap, routing architecture-only decisions to Sol and keeping rule maintenance evidence-backed (Luna max audit and mechanical); `.codex/rules/`.

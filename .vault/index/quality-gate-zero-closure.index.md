@@ -6,8 +6,9 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:7cac66ab66a9b20b43f46344785ffb90428a07d256ee0ed078bd242216539a81'
+body_hash: 'sha256:9e6220f7428fa27058519167e0dcbd749c4e3f33edaf4e700b12448d89498bce'
 related:
+  - '[[2026-08-24-quality-gate-zero-closure-W07-P20-S93]]'
   - '[[2026-08-24-quality-gate-zero-closure-adr]]'
   - '[[2026-08-24-quality-gate-zero-closure-failure-cluster-topology-reference]]'
   - '[[2026-08-24-quality-gate-zero-closure-plan]]'
@@ -23,6 +24,10 @@ Auto-generated index of all documents tagged with `#quality-gate-zero-closure`.
 ### adr
 
 - `2026-08-24-quality-gate-zero-closure-adr` - `quality-gate-zero-closure` adr: `Perpetual rolling ratchet with revision-scoped exact-zero checkpoints` | (**status:** `accepted`)
+
+### exec
+
+- `2026-08-24-quality-gate-zero-closure-W07-P20-S93` - Observe the current branch revision, dirty paths, ownership context, and gate state, recording revision-scoped evidence without treating any result as a baseline (Luna max audit and mechanical)
 
 ### plan
 
