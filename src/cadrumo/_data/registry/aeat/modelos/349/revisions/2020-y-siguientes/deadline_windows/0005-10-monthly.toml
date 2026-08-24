@@ -107,13 +107,3 @@ opens_on = 2026-12-01
 closes_on = 2026-12-21
 legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2026"]
-
-[[revisions."2020-y-siguientes".deadline_windows]]
-id = "modelo-349-2026-12"
-filing_year = 2026
-period = "2026 12"
-period_kind = "monthly"
-opens_on = 2027-01-01
-closes_on = 2027-01-30
-legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
-source_refs = ["aeat-modelo-349-procedure"]

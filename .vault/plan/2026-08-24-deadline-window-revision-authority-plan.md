@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
+modified: '2026-08-24'
+body_hash: 'sha256:fcc16114c137d59f9dbd690656ad31f12ff2b32cad5179599fe9886e8a4bdd26'
 tier: L3
 related:
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
@@ -12,8 +14,6 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
-modified: '2026-08-24'
-body_hash: 'sha256:fcc16114c137d59f9dbd690656ad31f12ff2b32cad5179599fe9886e8a4bdd26'
 ---
 
 <!-- RETIRED: P06, P07, P09 -->

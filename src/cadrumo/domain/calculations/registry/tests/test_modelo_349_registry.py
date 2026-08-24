@@ -18,9 +18,11 @@ from .. import (
     RegistrySnapshot,
     RegistryValidator,
     build_snapshot,
+    bundled_authority,
     derive_export_layouts_from_bindings,
     parse_export_payload,
     resolve_export_layout,
+    select_revision,
 )
 from .._corpus_catalogue import verify_source_file
 from .._legal import verify_legal_catalogue
@@ -343,37 +345,119 @@ def test_committed_modelo_349_deadline_windows_cover_every_supported_period_per_
     for window in revision.deadline_windows:
         by_year.setdefault(window.filing_year, set()).add(window.period.registry_token)
 
-    assert set(by_year) == {2024, 2025, 2026}
+    assert len(revision.deadline_windows) == 78
+    assert set(by_year) == {2022, 2023, 2024, 2025, 2026}
     for filing_year, periods in by_year.items():
         missing = expected_periods - periods
-        assert periods == expected_periods, f"filing_year {filing_year} period coverage gap: {missing}"
+        expected_missing = {"12", "4T"} if filing_year == 2026 else set()
+        assert missing == expected_missing, f"filing_year {filing_year} unexpected period coverage gap: {missing}"
 
 
 def test_committed_modelo_349_deadline_windows_match_official_plazo_rules() -> None:
-    expected_windows = (
-        # Standard monthly window: 1st to 20th of the following month.
-        ("modelo-349-2025-03", date(2025, 4, 1), date(2025, 4, 20)),
-        # July monthly window has its closure extended to 20 September (BOE Orden EHA/769/2010 art-10).
-        ("modelo-349-2025-07", date(2025, 8, 1), date(2025, 9, 20)),
-        # December monthly window closes 30 January of the following year (extended).
-        ("modelo-349-2025-12", date(2026, 1, 1), date(2026, 1, 30)),
-        # Standard quarterly window: 1st to 20th of the month after the quarter ends.
-        ("modelo-349-2025-2t", date(2025, 7, 1), date(2025, 7, 20)),
-        # Fourth-quarter window closes 30 January of the following year (extended).
-        ("modelo-349-2025-4t", date(2026, 1, 1), date(2026, 1, 30)),
-        # Repeat the statutory monthly and quarterly plazo rules for the 2026 registry year.
-        ("modelo-349-2026-03", date(2026, 4, 1), date(2026, 4, 20)),
-        ("modelo-349-2026-07", date(2026, 8, 1), date(2026, 9, 20)),
-        ("modelo-349-2026-12", date(2027, 1, 1), date(2027, 1, 30)),
-        ("modelo-349-2026-2t", date(2026, 7, 1), date(2026, 7, 20)),
-        ("modelo-349-2026-4t", date(2027, 1, 1), date(2027, 1, 30)),
-    )
+    # These are explicit AEAT-calendar close facts, not a nominal-day
+    # calculation.  In particular, they preserve every published weekend or
+    # holiday shift.  December and 4T use the following physical calendar year.
+    expected_closes_by_year = {
+        2022: (
+            ("01", date(2022, 2, 21)), ("02", date(2022, 3, 21)),
+            ("03", date(2022, 4, 20)), ("04", date(2022, 5, 20)),
+            ("05", date(2022, 6, 20)), ("06", date(2022, 7, 20)),
+            ("07", date(2022, 9, 20)), ("08", date(2022, 9, 20)),
+            ("09", date(2022, 10, 20)), ("10", date(2022, 11, 21)),
+            ("11", date(2022, 12, 20)), ("12", date(2023, 1, 30)),
+            ("1T", date(2022, 4, 20)), ("2T", date(2022, 7, 20)),
+            ("3T", date(2022, 10, 20)), ("4T", date(2023, 1, 30)),
+        ),
+        2023: (
+            ("01", date(2023, 2, 20)), ("02", date(2023, 3, 20)),
+            ("03", date(2023, 4, 20)), ("04", date(2023, 5, 22)),
+            ("05", date(2023, 6, 20)), ("06", date(2023, 7, 20)),
+            ("07", date(2023, 9, 20)), ("08", date(2023, 9, 20)),
+            ("09", date(2023, 10, 20)), ("10", date(2023, 11, 20)),
+            ("11", date(2023, 12, 20)), ("12", date(2024, 1, 30)),
+            ("1T", date(2023, 4, 20)), ("2T", date(2023, 7, 20)),
+            ("3T", date(2023, 10, 20)), ("4T", date(2024, 1, 30)),
+        ),
+        2024: (
+            ("01", date(2024, 2, 20)), ("02", date(2024, 3, 20)),
+            ("03", date(2024, 4, 22)), ("04", date(2024, 5, 20)),
+            ("05", date(2024, 6, 20)), ("06", date(2024, 7, 22)),
+            ("07", date(2024, 9, 20)), ("08", date(2024, 9, 20)),
+            ("09", date(2024, 10, 21)), ("10", date(2024, 11, 20)),
+            ("11", date(2024, 12, 20)), ("12", date(2025, 1, 30)),
+            ("1T", date(2024, 4, 22)), ("2T", date(2024, 7, 22)),
+            ("3T", date(2024, 10, 21)), ("4T", date(2025, 1, 30)),
+        ),
+        2025: (
+            ("01", date(2025, 2, 20)), ("02", date(2025, 3, 20)),
+            ("03", date(2025, 4, 21)), ("04", date(2025, 5, 20)),
+            ("05", date(2025, 6, 20)), ("06", date(2025, 7, 21)),
+            ("07", date(2025, 9, 22)), ("08", date(2025, 9, 22)),
+            ("09", date(2025, 10, 20)), ("10", date(2025, 11, 20)),
+            ("11", date(2025, 12, 22)), ("12", date(2026, 1, 30)),
+            ("1T", date(2025, 4, 21)), ("2T", date(2025, 7, 21)),
+            ("3T", date(2025, 10, 20)), ("4T", date(2026, 1, 30)),
+        ),
+        2026: (
+            ("01", date(2026, 2, 20)), ("02", date(2026, 3, 20)),
+            ("03", date(2026, 4, 20)), ("04", date(2026, 5, 20)),
+            ("05", date(2026, 6, 22)), ("06", date(2026, 7, 20)),
+            ("07", date(2026, 9, 21)), ("08", date(2026, 9, 21)),
+            ("09", date(2026, 10, 20)), ("10", date(2026, 11, 20)),
+            ("11", date(2026, 12, 21)),
+            ("1T", date(2026, 4, 20)), ("2T", date(2026, 7, 20)),
+            ("3T", date(2026, 10, 20)),
+        ),
+    }
     revision = _modelo_349_revision()
 
-    for window_id, expected_open, expected_close in expected_windows:
-        window = next(w for w in revision.deadline_windows if w.id == window_id)
-        assert window.opens_on == expected_open, window_id
-        assert window.closes_on == expected_close, window_id
+    actual = {
+        year: tuple(
+            sorted(
+                (window.period.registry_token, window.closes_on)
+                for window in revision.deadline_windows
+                if window.filing_year == year
+            )
+        )
+        for year in expected_closes_by_year
+    }
+    expected = {
+        year: tuple(sorted(expected_closes))
+        for year, expected_closes in expected_closes_by_year.items()
+    }
+    assert actual == expected
+
+
+def test_committed_modelo_349_deadlines_have_calendar_provenance_and_canonical_projection() -> None:
+    modelo, _ = _load_modelo_349()
+    revision = modelo.revisions["2020-y-siguientes"]
+    expected_periods = {f"{month:02d}" for month in range(1, 13)} | {f"{quarter}T" for quarter in range(1, 5)}
+
+    for filing_year in range(2022, 2027):
+        windows = tuple(window for window in revision.deadline_windows if window.filing_year == filing_year)
+        expected_missing = {"12", "4T"} if filing_year == 2026 else set()
+        assert len(windows) == 16 - len(expected_missing)
+        assert {window.period.registry_token for window in windows} == expected_periods - expected_missing
+
+        for window in windows:
+            assert select_revision(
+                modelo,
+                filing_year=filing_year,
+                period=window.period.registry_token,
+            ).id == revision.id
+            if window.closes_on.year <= 2026:
+                assert f"aeat-calendario-contribuyente-{window.closes_on.year}" in window.source_refs
+
+        projected = bundled_authority().deadline_windows(filing_year, modelos=("349",))
+        assert len(projected) == 16 - len(expected_missing)
+        assert {window.period.registry_token for _, _, window in projected} == expected_periods - expected_missing
+        assert {owner.id for _, owner, _ in projected} == {revision.id}
+
+    construct = revision.constructs[0]
+    assert set(construct.deadline_windows) == {window.id for window in revision.deadline_windows}
+    calendar_refs = {f"aeat-calendario-contribuyente-{year}" for year in range(2022, 2027)}
+    assert calendar_refs <= set(revision.source_refs)
+    assert calendar_refs <= set(construct.source_refs)
 
 
 def test_committed_modelo_349_deadline_windows_are_unique_by_period() -> None:
