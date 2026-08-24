@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:18014f36e90ef83dcc94dd058f45d886d5e4091873bc072ce717a930df199391'
+body_hash: 'sha256:bd139a640ec2a05fad43efa612bf93cccae288d386e3599cab424a9098ece0f5'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -264,6 +264,7 @@ related:
   - '[[2026-08-24-profile-password-custody-s219-docs-audit]]'
   - '[[2026-08-24-profile-password-custody-s220-exec-evidence-audit]]'
   - '[[2026-08-24-profile-password-custody-s221-recovery-matrix-audit]]'
+  - '[[2026-08-24-profile-password-custody-s221-recovery-matrix-review-audit]]'
 ---
 
 # `profile-password-custody` feature index
@@ -309,6 +310,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-24-profile-password-custody-s219-docs-audit` - `profile-password-custody` audit: `S219 mandatory recovery documentation`
 - `2026-08-24-profile-password-custody-s220-exec-evidence-audit` - `profile-password-custody` audit: `S220 execution evidence adjudication`
 - `2026-08-24-profile-password-custody-s221-recovery-matrix-audit` - `profile-password-custody` audit: `S221 recovery matrix review`
+- `2026-08-24-profile-password-custody-s221-recovery-matrix-review-audit` - `profile-password-custody` audit: `S221 recovery-enrollment matrix review`
 
 ### exec
 
