@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:3ecba1e74d32322453bf9e0464b359ad00603631595fdc98d4408ffd8a4442cc'
+body_hash: 'sha256:360de1e258ab90e14f13ef3609613d9c2f189806f6a90eb8f9ebf69b2d2babdd'
 step_id: 'S03'
 related:
   - "[[2026-08-24-deadline-window-revision-authority-plan]]"
