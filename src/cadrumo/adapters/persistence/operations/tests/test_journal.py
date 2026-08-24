@@ -578,6 +578,7 @@ def test_operation_journal_refuses_every_superseded_snapshot_schema_without_byte
     repository, snapshots = _create_history(tmp_path)
     path = tmp_path / "operation-journals" / f"{snapshots[-1].operation_id}.json"
     document = json.loads(path.read_text(encoding="utf-8"))
+    assert document["snapshot"]["schema_version"] == 6
     document["snapshot"]["schema_version"] = schema_version
     path.write_text(json.dumps(document), encoding="utf-8")
     original_bytes = path.read_bytes()

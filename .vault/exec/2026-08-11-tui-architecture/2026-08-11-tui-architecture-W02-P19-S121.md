@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:84420d5d9568bded3a4306f3f552fb1cf530dd4a63c6a5673d1de3c6554da93d'
+body_hash: 'sha256:2ea5f83eab97ee1b0cf6216d98a447ad0bfbcac3f9bd90e52063e370365305ad'
 step_id: 'S121'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -16,21 +16,36 @@ related:
 
 - `src/cadrumo/application/operations` and `src/cadrumo/adapters/persistence/operations`
 
+## Provenance
+
+- The mixed-source tuple is `f7694d3ae2fb3d43c5b84c813af6daf49e837a25` (pre-mix) -> `7449ce08460b688e7e7147239c02570cbf5428e9` (shared S120/S121 source commit, `feat(operations): tighten lease and journal handling behind projection services`). This S121 follow-on attests and remediates only the current-only persistence surface; no history was rewritten.
+- Source digests at the mixed commit: `_lease.py` `9d7932f1695c3fedc2016fdc2171825f66802dfc`, `_journal.py` `d45023b1df340b49466d7380dfdb8a8b182a4a53`, `test_lease.py` `b9105b55ca35536e7569dc956fe711dac18d0ee9`, and `test_journal.py` `4925f4863580f43a09c58859c978352419660801`.
+- Final S121 attestation source digests: `_lease.py` `d83c44ddd540c0f14f4a57d972b6758a73095e90`, unchanged `_journal.py` `d45023b1df340b49466d7380dfdb8a8b182a4a53`, `test_lease.py` `a81d6687a97210b9d02ec0b7a9b166e8eb82b968`, and `test_journal.py` `5b69c69882e29e870d4928c42c62f4c83945ab13`.
+
 ## Description
 
-- Used Vaultspec RAG to locate the lease migration reader, acquisition hook, journal parser, and old-schema tests, then confirmed the full inventory with exact symbol searches.
+- Used Vaultspec RAG repeatedly to locate the canonical lease storage, journal parser, acquisition/inspection paths, and refusal tests; confirmed each finding with an exact repository census.
 - Confirmed the PRE_RELEASE delete-and-refuse rule in the governing research and accepted ADRs.
-- Ran a read-only workspace census before deletion. The sole ignored `operation-journals` artifact is a terminal user-profile handover record, not an `OperationJournalRecord` or lease record; no affected nonterminal operation invocation exists in the workspace.
-- Deleted the scope-less v1 lease record model, retired path helper, acquisition migrator and call, and the redundant journal parser shim.
-- Replaced the migration test with strict lease v1 and v3 refusal evidence that preserves durable bytes.
-- Added real-adapter journal v1 through v5 refusal evidence that preserves durable bytes across both load and replay.
+- Deleted `_OperationLeaseRecordV1`, `_legacy_path_for`, `migrate_legacy_before_acquisition`, its acquisition call, and the redundant `_parse_operation_journal_record` wrapper. The remaining persistence authorities hydrate lease schema v2 and journal snapshot schema v6 only.
+- Added one narrow refusal guard for a superseded operation-keyed lease path. Under the canonical lease lock, `inspect` and `acquire` compare the retired path with the current scope path and use only `lexists`; they do not open, parse, translate, delete, or rewrite retired bytes. A path collision where `scope_ref == operation_id` is deliberately allowed through the current v2 parser.
+- Replaced the synthetic v1-at-current-path fixture with a real historical operation-keyed filename and payload. The witness now requires both `inspect` and `acquire` to raise, preserves the historical bytes, and leaves no v2 successor. The valid current-v2 collision remains usable and byte-stable.
+- A read-only workspace census found no affected nonterminal operation invocation or durable operation lease/journal artifact requiring migration; the unrelated terminal profile handover artifact was left untouched.
 
 ## Outcome
 
-The canonical persistence readers accept only lease schema v2 and journal snapshot schema v6. Superseded shapes fail closed before interpretation, with persisted bytes unchanged. The exact post-edit census finds no `_OperationLeaseRecordV1`, `_legacy_path_for`, `migrate_legacy_before_acquisition`, or `_parse_operation_journal_record` declarations or call sites. Vaultspec RAG and exact searches converge on one current lease parser and one current journal-record parser.
+- `uv run --no-sync ruff check src/cadrumo/adapters/persistence/operations/_lease.py src/cadrumo/adapters/persistence/operations/_journal.py src/cadrumo/adapters/persistence/operations/tests/test_lease.py src/cadrumo/adapters/persistence/operations/tests/test_journal.py` passed.
+- `uv run --no-sync ty check src/cadrumo/adapters/persistence/operations/_lease.py src/cadrumo/adapters/persistence/operations/_journal.py` passed.
+- `uv run --no-sync pytest -q src/cadrumo/adapters/persistence/operations/tests/test_lease.py src/cadrumo/adapters/persistence/operations/tests/test_journal.py src/cadrumo/application/operations/tests/test_journal.py` passed: 50 tests.
+- Exact scoped searches return no `_OperationLeaseRecordV1`, `_legacy_path_for`, `migrate_legacy_before_acquisition`, `_parse_operation_journal_record`, or compatibility vocabulary in application/persistence operation code; the only expected retired-path symbol is the private refusal helper and its two call sites.
+- The aggregate application/persistence operation lane rerun recorded 306 passes and one unrelated persistence-facade export-inventory assertion from concurrent secure-reference work; the assertion concerns additional secure-reference exports and is outside the S121 paths.
+- Vaultspec RAG searches returned the canonical lease and journal authorities and their focused tests. The final semantic and exact census proves no duplicate current parser or redeclared retired reader/migrator remains.
 
-Focused current-only persistence tests pass: 50 tests. Scoped Ruff and production type checks pass. The complete application/persistence operation lanes report 306 passes and one persistence-facade export-inventory assertion that is outside the changed S121 paths and tracks the concurrent secure-reference export work.
+## Verification
+
+- The focused current-only matrix, scoped Ruff, and scoped type check above are the post-remediation gates.
+- `vault check all --feature tui-architecture` passed after feature-index regeneration and modified-stamp repair.
+- The S121 plan row was closed through the Vault CLI, preserving two unknown plan blocks.
 
 ## Notes
 
-No durable user data was deleted. The unrelated terminal handover artifact was left untouched. Removed source and test surfaces remain recoverable through the forthcoming S121 Git commit; no compatibility path or data rewrite was introduced.
+No durable user data was deleted. The historical witness is test-local and remains byte-for-byte unchanged on refusal. The deleted source surface is recoverable through the mixed source commit and this one follow-on Git commit; this follow-on carries no compatibility path, data rewrite, or history rewrite.

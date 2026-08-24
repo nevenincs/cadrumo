@@ -83,6 +83,18 @@ class OperationLeaseStorage(JournalRepositoryBase[_OperationLeaseRecord]):
         """Materialize the canonical secure journal root before locking it."""
         self._ensure_root()
 
+    def _refuse_retired_operation_path(
+        self,
+        *,
+        scope_ref: OperationConflictScopeReference,
+        operation_id: OperationId,
+    ) -> None:
+        """Refuse a superseded operation-keyed path without opening its bytes."""
+        current_path = self.path_for(scope_ref)
+        retired_path = super().path_for(operation_id).with_suffix(".lease.json")
+        if retired_path != current_path and os.path.lexists(retired_path):
+            raise RepositoryError("operation lease has a retired operation-keyed path")
+
     def _record_unlocked(self, scope_ref: OperationConflictScopeReference) -> _OperationLeaseRecord | None:
         """Load one current-format scope record while the caller owns :attr:`lock_target`."""
         path = self.path_for(scope_ref)
@@ -166,6 +178,10 @@ class OperationLeaseFilesystemRepository(OperationLeaseRepository):
         """Return absent, active, or expired durable lease state at ``observed_at``."""
         self._storage.ensure_root()
         with exclusive_file_lock(self._storage.lock_target):
+            self._storage._refuse_retired_operation_path(
+                scope_ref=scope_ref,
+                operation_id=operation_id,
+            )
             current = self._storage.current_unlocked(scope_ref)
             if current is None:
                 return OperationLeaseObservation(
@@ -192,6 +208,10 @@ class OperationLeaseFilesystemRepository(OperationLeaseRepository):
         """Acquire only an absent lease; live and expired predecessors remain unchanged."""
         self._storage.ensure_root()
         with exclusive_file_lock(self._storage.lock_target):
+            self._storage._refuse_retired_operation_path(
+                scope_ref=candidate.scope_ref,
+                operation_id=candidate.operation_id,
+            )
             current = self._storage.current_unlocked(candidate.scope_ref)
             if current is None:
                 result = OperationLeaseResult(

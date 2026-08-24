@@ -141,6 +141,8 @@ def test_lease_acquires_absent_state_and_persists_exact_reload(tmp_path: Path) -
     acquired = asyncio.run(repository.acquire(candidate, observed_at=_STARTED))
     assert acquired.disposition is OperationLeaseDisposition.ACQUIRED
     assert acquired.current == candidate
+    lease_path = tmp_path / "operation-journals" / f"{_SCOPE_REF}.lease.json"
+    assert json.loads(lease_path.read_text(encoding="utf-8"))["schema_version"] == 2
 
     reloaded = OperationLeaseFilesystemRepository(storage_root=tmp_path)
     observed = asyncio.run(reloaded.inspect(_SCOPE_REF, _OPERATION_ID, observed_at=_STARTED + timedelta(minutes=1)))
@@ -195,15 +197,39 @@ def test_lease_scope_conflicts_distinct_operations_for_one_subject_but_not_anoth
     assert (tmp_path / "operation-journals" / f"{other_subject_scope}.lease.json").exists()
 
 
-@pytest.mark.parametrize("schema_version", (1, 3))
-def test_lease_refuses_non_current_schema_without_byte_mutation(tmp_path: Path, schema_version: int) -> None:
-    """A superseded lease schema is rejected in place and remains unchanged."""
+def test_lease_refuses_retired_operation_path_without_byte_mutation(tmp_path: Path) -> None:
+    """A historical operation-keyed lease is refused without opening or rewriting it."""
     candidate = _lease()
+    storage = OperationLeaseStorage(storage_root=tmp_path)
+    storage.ensure_root()
+    retired_path = tmp_path / "operation-journals" / f"{candidate.operation_id}.lease.json"
+    retired_document = {
+        "schema_version": 1,
+        "operation_id": candidate.operation_id,
+        "recorded_at": candidate.acquired_at.isoformat(),
+        "lease": candidate.model_dump(mode="json"),
+    }
+    retired_path.write_text(json.dumps(retired_document), encoding="utf-8")
+    original_bytes = retired_path.read_bytes()
+    canonical_path = storage.path_for(candidate.scope_ref)
+    repository = OperationLeaseFilesystemRepository(storage_root=tmp_path)
+
+    with pytest.raises(RepositoryError, match="retired operation-keyed path"):
+        asyncio.run(repository.inspect(candidate.scope_ref, candidate.operation_id, observed_at=_STARTED))
+    with pytest.raises(RepositoryError, match="retired operation-keyed path"):
+        asyncio.run(repository.acquire(candidate, observed_at=_STARTED))
+    assert retired_path.read_bytes() == original_bytes
+    assert not canonical_path.exists()
+
+
+def test_lease_scope_operation_id_collision_keeps_current_v2_path_usable(tmp_path: Path) -> None:
+    """A valid v2 path shared by the scope and operation identity remains usable."""
+    candidate = _lease(operation_id=_SCOPE_REF, scope_ref=_SCOPE_REF)
     storage = OperationLeaseStorage(storage_root=tmp_path)
     storage.ensure_root()
     path = storage.path_for(candidate.scope_ref)
     document = {
-        "schema_version": schema_version,
+        "schema_version": 2,
         "scope_ref": candidate.scope_ref,
         "operation_id": candidate.operation_id,
         "recorded_at": candidate.acquired_at.isoformat(),
@@ -213,10 +239,12 @@ def test_lease_refuses_non_current_schema_without_byte_mutation(tmp_path: Path, 
     original_bytes = path.read_bytes()
     repository = OperationLeaseFilesystemRepository(storage_root=tmp_path)
 
-    with pytest.raises(RepositoryError, match="invalid operation lease"):
-        asyncio.run(repository.inspect(candidate.scope_ref, candidate.operation_id, observed_at=_STARTED))
-    with pytest.raises(RepositoryError, match="invalid operation lease"):
-        asyncio.run(repository.acquire(candidate, observed_at=_STARTED))
+    observed = asyncio.run(repository.inspect(candidate.scope_ref, candidate.operation_id, observed_at=_STARTED))
+    assert observed.disposition is OperationLeaseObservationDisposition.ACTIVE
+    assert observed.current == candidate
+    conflict = _lease(operation_id="e" * 64, scope_ref=_SCOPE_REF, owner_id="f" * 64, token="1" * 64)
+    acquired = asyncio.run(repository.acquire(conflict, observed_at=_STARTED))
+    assert acquired.disposition is OperationLeaseDisposition.CONFLICT
     assert path.read_bytes() == original_bytes
 
 
