@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:286bbbbb19815c2d78047e53e8bebca081fa358251537eab549f294d1f186f63'
+body_hash: 'sha256:d743e8879636be2062663a86127d41774eeedb66d6e57260d36d311589fa142e'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-research]]"
   - "[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]"

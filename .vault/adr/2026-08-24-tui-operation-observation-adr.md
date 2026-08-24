@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:706b470fd08c55400db49ecc62d3f31e67dd8ba03b7aa0afa809619ee79cd3b4'
+body_hash: 'sha256:e8f44be175c879eed50517f3590a50885714f8152b9d69892c9c97e05a29ac9a'
 related:
   - '[[2026-08-24-tui-operation-observation-research]]'
   - '[[2026-08-11-tui-architecture-adr]]'

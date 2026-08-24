@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:e53f0e41b1f7b57df2055c74ce6670eb2006b590b6f43d68ce7aa3e6b00afe01'
+body_hash: 'sha256:3ce7bcb387821446113626dde5d01cbdc44468fb9fb11ed52db83e282643e488'
 related:
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
   - "[[2026-08-24-tui-registry-api-gate-research]]"

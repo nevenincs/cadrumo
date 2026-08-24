@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:b8719216e1f28533847462e8d218744919dcc2318e811c93dd79d7eee371252e'
+body_hash: 'sha256:8a87029fece83ebc07210cc0a7597d6104a8fd650ee7938974e289bef1a574d1'
 related:
   - '[[2026-08-11-tui-architecture-W01-P01-S01]]'
   - '[[2026-08-11-tui-architecture-W01-P01-S02]]'
@@ -56,6 +56,7 @@ related:
   - '[[2026-08-11-tui-architecture-W03-P07-S38]]'
   - '[[2026-08-11-tui-architecture-W03-P08-S114]]'
   - '[[2026-08-11-tui-architecture-W03-P08-S39]]'
+  - '[[2026-08-11-tui-architecture-W03-P08-S40]]'
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-11-tui-architecture-plan]]'
   - '[[2026-08-11-tui-architecture-research]]'
@@ -216,6 +217,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W03-P07-S38` - Prove dry-run parity, committed-unit accounting, child provenance references, unsupported cancellation and deadline claims, and cleanup before settlement
 - `2026-08-11-tui-architecture-W03-P08-S114` - Implement credential-free non-secret operation requests and one-shot supervisor-owned ephemeral secret submission with exact binding, expiry, zeroisation, restart interruption, and no durable secret derivatives before registering login or passphrase operations
 - `2026-08-11-tui-architecture-W03-P08-S39` - Register login, provider configuration, credential acquisition, passphrase rotation, and auth teardown as application-owned operations
+- `2026-08-11-tui-architecture-W03-P08-S40` - Register profile field mutation, repeatable-row mutation, bundle export, and profile logout operations through existing user-profile authorities
 
 ### plan
 

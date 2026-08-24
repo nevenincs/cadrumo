@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:95b5208bbc5deda78a25c4feeead1743444141939fb396897d2fb24955cdd806'
+body_hash: 'sha256:755b357586150be6426884ff89f5f2d61fcc2923abe80276fa816fb8594e86b2'
 related:
   - "[[2026-08-11-tui-interface-research]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -15,6 +15,7 @@ related:
   - "[[2026-07-24-profile-bundle-tui-adr]]"
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
   - '[[2026-08-10-casilla-schema-plan]]'
+  - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
 ---
 # `tui-interface` adr: `Canonical modular Textual application surface` | (**status:** `accepted`)
 
@@ -127,10 +128,11 @@ classification, CLI behavior, or MCP behavior.
   required, remains with the owning application facade and accepts ports.
 - Operation supervision and the `operations` subtree remain governed by the
   sibling ADR. Profile reconciliation remains application-owned.
-- The later `tui-interface` plan starts only after both dependency campaigns close:
-  `2026-08-11-tui-architecture-plan` and
-  `2026-08-10-casilla-schema-plan`. An accepted interface decision does not
-  waive that execution gate.
+- Interface work is admitted by the narrow receipt for the surface it makes
+  callable. The accepted `2026-08-24-tui-modelo-workspace-interface-adr` owns
+  the exact C0-C5 Modelo cohort gates; completion of an entire architecture or
+  Casilla plan is neither a substitute receipt nor a blanket prerequisite for
+  unrelated interface work.
 - Secret collection requires a backend-owned, exact, single-use submission
   capability with ephemeral custody. The accepted operation ADR and roll-up
   plan do not yet name or schedule that capability. This record defines only
@@ -139,10 +141,11 @@ classification, CLI behavior, or MCP behavior.
   and reversible derivatives cannot enter durable operation or flow records.
 - Migration requires consumer-complete vertical slices and allows no facade,
   alias, dynamic bridge, duplicate package, or permanent allowlist.
-- Modelo view/edit names are reservations until the casilla-schema dependency
-  publishes its canonical read model and the TUI architecture dependency gives
-  the review surface a final canonical disposition. No placeholder package is
-  permitted before then.
+- Modelo view/edit packages remain absent until their exact cohort admits a
+  consumer-complete slice. The accepted
+  `2026-08-24-tui-modelo-workspace-interface-adr` is the authoritative
+  presentation decision for the later Modelo workspace and editor; this parent
+  retains only the common TUI boundary, ownership, and composition rules.
 
 ## Implementation
 
@@ -175,41 +178,27 @@ performs no CLI change.
 | profile sync renderer | `tui-interface` | Publishes a renderer factory; the integration `app` registers it. |
 | `EphemeralSecretSubmission` capability | `tui-architecture` operation lane after an operation ADR and plan amendment | Interface consumes the frozen public facade only and remains blocked beyond masked collection until its conformance suite is green. |
 
-The architecture decision can be accepted before its dependencies land. The
-dependency campaigns may execute their own interface and migration rows; this
-ADR blocks only the later `tui-interface` plan.
+The architecture decision can be accepted before its dependencies land.
+Execution is staged and a surface remains unregistered until its own receipt is
+green against current HEAD. The accepted companion is the sole owner of the
+Modelo destination catalogue, workspace view models, editor semantics, action
+denominator, accessibility matrix, and the following admission chain:
 
-Execution uses this dependency order:
+| Cohort | Admission evidence consumed by this parent |
+|---|---|
+| C0 — operation foundation | `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md` as `TuiOperationObservationDependencyReceiptV1` |
+| C1 — bounded review | accepted companion identity plus `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt.md` as `ModeloWorkspaceC1ExitReceiptV1` |
+| C2 — complex read workspace | C1 plus `.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md` as `ModeloWorkspaceC2DependencyReceiptV1`, then `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c2-exit-receipt.md` as `ModeloWorkspaceC2ExitReceiptV1` |
+| C3 — staged editor | C0 and C2 plus `.vault/reference/2026-08-24-modelo-edit-contract-c3-dependency-receipt.md` as `ModeloEditContractC3DependencyReceiptV1` and `.vault/reference/2026-08-24-tui-operation-financial-operand-dependency-receipt.md` as `TuiOperationFinancialOperandDependencyReceiptV1`, then `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c3-exit-receipt.md` as `ModeloWorkspaceC3ExitReceiptV1` |
+| C4 — lifecycle actions | C3, the green generated action denominator, each owning domain/operation capability, and `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c4-exit-receipt.md` as `ModeloWorkspaceC4ExitReceiptV1` |
+| C5 — visual closure | C4 plus `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c5-exit-receipt.md` as `ModeloWorkspaceC5ExitReceiptV1` |
 
-1. **Casilla-schema receipt.** `2026-08-10-casilla-schema-plan` reaches its S40
-   completion gate. `application.modelo` exports the canonical
-   `ModeloWorkReview`, and the campaign records the review screen it produced.
-2. **TUI architecture receipt.** After the casilla receipt, the
-   `2026-08-11-tui-architecture-plan` reaches its completion gate. Its final
-   migration absorbs the casilla review screen, resolves the D10/D12 ownership
-   conflict, and leaves no legacy TUI identity. If this campaign closes first,
-   it must be reopened or formally reconciled after casilla-schema lands.
-   That receipt is invalid for this campaign unless the owning architecture
-   ADR and plan have also added and closed two explicit gaps:
-   - migration of the casilla review screen to
-     `cadrumo.entrypoints.tui.modelo.view` as a read-only consumer of the
-     public `application.modelo.ModeloWorkReview`, with named outlier proof;
-   - an operation-owned public `EphemeralSecretSubmission` capability with
-     exact operation and interaction binding, expiry, single use, duplicate
-     and mismatch refusal, cancellation, cleanup, and non-retention tests.
-3. **Interface start gate.** The first interface-plan Phase records a
-   machine-readable dependency receipt at
-   `.vault/reference/2026-08-11-tui-interface-dependency-receipt.md`. It names
-   the casilla S40 and architecture S103 close evidence and commits, proves by
-   Git ancestry that the casilla receipt precedes the architecture receipt,
-   and records the settled public secret facade. A production test validates
-   the receipt against the live tree. It requires the canonical
-   `cadrumo.entrypoints.tui` package, public operation contracts,
-   `ModeloWorkReview`, the canonical Modelo view, the conformance-tested
-   secret capability, and zero legacy TUI implementation.
-
-Until the third gate passes, no later `tui-interface` component, profile,
-secret, flow, Modelo, launcher, or test step may start.
+The companion's named validators, predecessor digests, current-HEAD action
+denominator, compatibility coordinates, and per-cohort visual proofs are part
+of each gate and are not restated here. Plan completion, prose evidence, or an
+earlier cohort cannot make a later destination or action callable. Conversely,
+an unmet later Modelo cohort does not block independently owned components,
+profile, secret, or flow slices that satisfy this record's own contracts.
 
 ### D1 - Exact package tree
 
@@ -282,8 +271,8 @@ src/cadrumo/entrypoints/tui/
 
 | Reserved owner | Physical creation rule |
 |---|---|
-| `cadrumo.entrypoints.tui.modelo.view` | Create only after the `casilla-schema` campaign publishes its canonical `ModeloWorkReview` and the integration lane assigns the settled review surface here. |
-| `cadrumo.entrypoints.tui.modelo.edit` | Create only after a later accepted write-side ADR defines mutation, validation, and persistence contracts. |
+| `cadrumo.entrypoints.tui.modelo.view` | Create only in the consumer-complete slice admitted by the accepted companion's applicable C1 or C2 receipt. |
+| `cadrumo.entrypoints.tui.modelo.edit` | Create only in the consumer-complete slice admitted by the accepted companion's C3 receipt; the companion and accepted `ModeloEditContractV1` decision own editor and write-side semantics. |
 
 ### D2 - Exact import DAG
 
@@ -560,8 +549,9 @@ and the unbounded meaning of `shared`.
 The dedicated launcher follows the accepted topology and prevents one
 entrypoint from importing another. Keeping operation state,
 reconciliation, flow semantics, redaction, and error classification outside
-presentation prevents a second application layer. Decision-only Modelo
-reservation avoids manufacturing an API.
+presentation prevents a second application layer. Receipt-gated Modelo
+creation avoids manufacturing an API, while the accepted companion supplies
+the authoritative later workspace/editor decision.
 
 ## Consequences
 
@@ -583,10 +573,11 @@ reservation avoids manufacturing an API.
 - Logs/errors become reusable views while redaction/replay/classification stay
   upstream.
 - Generic flows retain application semantics.
-- Modelo names are reserved without physical placeholders.
-- Dependency migration remains consumer-complete. The interface plan starts
-  after both prerequisite campaigns, records their ordered commit receipts,
-  and does not duplicate their steps. An architecture close that lacks the
-  canonical Modelo migration or secret capability is not a valid receipt.
+- Modelo packages remain absent until their exact companion-owned cohort
+  receipt admits a consumer-complete slice; this parent does not duplicate the
+  workspace or editor contract.
+- Dependency migration remains consumer-complete. C0-C5 open only through the
+  companion's exact live-tree receipt chain; an entire-plan close cannot stand
+  in for a missing cohort receipt or block an independently admissible surface.
 - Cross-ADR conformance prevents conflicting roots, components, launch contracts,
   runtime construction, or operation trees.

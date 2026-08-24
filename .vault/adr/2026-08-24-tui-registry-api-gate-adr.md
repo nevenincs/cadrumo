@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:02718d99aaab9f34595afb0c1afcf7eac03e81fcd1a518ec4693bf0259512a25'
+body_hash: 'sha256:92dcaf6d0eb5cf6847150c401d83404410096c0cd9ee26c38fbb9b1636875a6e'
 related:
   - '[[2026-08-24-tui-registry-api-gate-research]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'

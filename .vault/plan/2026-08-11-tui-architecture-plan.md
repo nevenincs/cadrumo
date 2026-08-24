@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-24'
-body_hash: 'sha256:793d0e21a77329df61b0b279be67b5a5890335e441df1bac4be1f58c16a9e41c'
+body_hash: 'sha256:24647c3caaeefd3bbddcb2b60365a1cedd2fdf5f61fee8c440fd587af92536db'
 ---
 
 # `tui-architecture` plan
@@ -266,13 +266,19 @@ Join the independently green backend and frontend lanes, migrate every reverse c
 Enroll rename, discard, verify, local file, export, and amend one by one through their existing application writers, each with an independently proven capability, interaction, effect receipt, and typed Workspace refresh result.
 
 - [ ] `W06.P24.S150` - Enroll modelo.work.rename through the existing rename_work_unit single writer with exact approval and capability rules, declared atomic write set, safe effect and result receipt, and typed Workspace refresh target without recreating lifecycle policy; `src/cadrumo/application/modelo/_operation_definitions.py and src/cadrumo/application/modelo/_work_lifecycle.py`.
+- [ ] `W06.P24.S151` - Enroll modelo.work.discard through the existing discard_work_unit single writer with exact destructive approval, no-effect refusal, declared atomic write set, safe effect receipt, and typed selection refresh target without recreating lifecycle policy; `src/cadrumo/application/modelo/_operation_definitions.py and src/cadrumo/application/modelo/_work_lifecycle.py`.
+- [ ] `W06.P24.S152` - Enroll modelo.work.verify through the existing verify_modelo_revision authority with exact capability evidence, progress and REVIEW declarations, guarded persistence and event effects, safe result receipt, and typed Workspace refresh target; `src/cadrumo/application/modelo/_operation_definitions.py and src/cadrumo/application/modelo/_verification_actions.py`.
+- [ ] `W06.P24.S153` - Enroll modelo.work.file through the existing file_modelo_revision authority as local filing and human handoff only, with precondition refusal, exact approval, atomic filing effects, safe result receipt, and typed Workspace refresh target; `src/cadrumo/application/modelo/_operation_definitions.py and src/cadrumo/application/modelo/_filing_actions.py`.
+- [ ] `W06.P24.S154` - Enroll canonical modelo.export through the existing export_modelo_revision authority with capability and identity preconditions, transient output custody, safe effect/result evidence, and no remote AEAT submission or duplicate export writer; `src/cadrumo/application/modelo/_operation_definitions.py and src/cadrumo/application/modelo/_export.py`.
+- [ ] `W06.P24.S155` - Enroll modelo.work.amend through the existing amend_modelo_revision authority as the sole C4 amendment mutation, with baseline evidence, amendment-kind REVIEW, atomic catalogue/event effects, safe result receipt, typed Workspace refresh target, and an explicit amend-wizard denominator disposition; `src/cadrumo/application/modelo/_operation_definitions.py and src/cadrumo/application/modelo/_amendment_actions.py`.
+- [ ] `W06.P24.S156` - Prove the generated C4 action denominator and every enrolled lifecycle definition against canonical capability owners, exact interactions, single writers, effect receipts, refresh adapters, refusal behavior, non-retention, and semantic-plus-exact redeclaration census before any action becomes available; `src/cadrumo/application/modelo/tests/test_lifecycle_operation_conformance.py`.
 
 ### Phase `W06.P13` - Root composition and packaging
 
 Compose the independently green lanes in the TUI launcher and app, then expose the dedicated installed entrypoint.
 
 - [ ] `W06.P13.S72` - Compose every exported operation definition into one immutable production registry with concrete operation adapters, journals, resources, and the supervisor in the sole TUI composition root; `src/cadrumo/entrypoints/tui/launcher.py`.
-- [ ] `W06.P13.S73` - Join profile, secret, flow, and operation areas through navigation only after both implementation lanes are green; `src/cadrumo/entrypoints/tui/app.py`.
+- [ ] `W06.P13.S73` - Join profile, secret, flow, operation, and Modelo areas through navigation only after their exact receipts are green, composing the one closed Modelo route/action factory catalogue and keeping every non-green cohort unmounted; `src/cadrumo/entrypoints/tui/app.py`.
 - [ ] `W06.P13.S74` - Delegate module execution directly to the TUI launcher without importing the CLI; `src/cadrumo/entrypoints/tui/__main__.py`.
 - [ ] `W06.P13.S75` - Add the dedicated installed TUI console entry point targeting the launcher directly; `pyproject.toml`.
 
@@ -281,6 +287,7 @@ Compose the independently green lanes in the TUI launcher and app, then expose t
 Replace every CLI, application-test, and development import of the legacy TUI with backend facades or out-of-process invocation.
 
 - [ ] `W06.P14.S76` - Remove frontend-owned manager callbacks and consume registered operation APIs and application results only; `src/cadrumo/entrypoints/cli/_config/_manager_actions.py`.
+- [ ] `W06.P14.S157` - Replace the direct CLI profile-logout execution door with the composed public operation API and delete its application-authority call path without a compatibility branch; `src/cadrumo/entrypoints/cli/_config/_custody.py and focused CLI operation-projection tests`.
 - [ ] `W06.P14.S77` - Remove manager TUI construction and retain only CLI projection or frontend-neutral selection behavior; `src/cadrumo/entrypoints/cli/_config/_manager_frontend.py`.
 - [ ] `W06.P14.S78` - Remove login TUI construction and consume the application authentication operation contract; `src/cadrumo/entrypoints/cli/_config/_login_frontend.py`.
 - [ ] `W06.P14.S79` - Remove status-screen imports and project backend status through the CLI surface only; `src/cadrumo/entrypoints/cli/_config/_status_frontend.py`.

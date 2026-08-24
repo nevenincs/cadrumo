@@ -18,7 +18,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-research]]'
 modified: '2026-08-24'
-body_hash: 'sha256:df861645943491881269fc43b2142f8721639c66bfae6896d4007e1d258e7091'
+body_hash: 'sha256:d45a1fdbd11d8de5d0ad403449634200924bd0c435abbdc43afecd1aa5e04edb'
 ---
 
 <!-- RETIRED: P09, S26, S35 -->
@@ -29,7 +29,7 @@ Deliver the task-led, progressively disclosed TUI surface through receipt-gated 
 
 ## Description
 
-This L3 plan executes the accepted interface decision together with the accepted Workspace V1, ModeloEditContractV1, and Modelo workspace-interface decisions. W02-W04 preserve the existing profile, reusable component, secret, and guided-flow work. Modelo delivery is receipt-driven: W05.P10 is C1 bounded review; W05.P10a implements Workspace V1 and emits the C2 dependency receipt; W05.P11 is C2 complex read; W06.P12a implements the application edit boundary and emits the C3 dependency receipt; W06.P12b is the C3 memory-only editor; W06.P12c is C4 lifecycle actions; and W06.P12 plus W06.P13 close C5 accessibility and the final fixed point.
+This L3 plan executes the accepted interface decision together with the accepted Workspace V1, ModeloEditContractV1, and Modelo workspace-interface decisions. W02-W04 preserve the existing profile, reusable component, secret, and guided-flow work. Modelo delivery is receipt-driven: W05.P10 is C1 bounded review; W05.P10a consumes the architecture-owned C2 dependency receipt; W05.P11 is C2 complex read; W06.P12a consumes the architecture-owned operation, financial-operand, and Edit Contract C3 dependency receipts; W06.P12b is the C3 memory-only editor; W06.P12c is C4 lifecycle actions; and W06.P12 plus W06.P13 close C5 accessibility and the final fixed point.
 
 Cohort gates replace the former blanket architecture-close blockade. C1 waits for the accepted companion, accepted Casilla review, and architecture-owned migration-lane evidence. C2 waits for C1 and the Workspace receipt. C3 waits for the C0 operation observation exit, C2 exit, edit-contract receipt, and operation-owned financial-operand receipt. C4 waits for C3 plus each action's canonical capability and enrolled operation. C5 waits for C4 and the complete classified destination and action denominator. Operation observation, transient financial custody, root composition, launcher and packaging work, reverse migration, and legacy deletion remain in the architecture plan; this plan consumes their receipts and verifies installed composition. Workspace and edit application work delegates existing readiness, review, calculation, persistence, lifecycle, and operation authority and must not create a second producer, semantic join, capability owner, or mutation writer.
 
@@ -44,7 +44,7 @@ Establish exact current-HEAD receipt and generated action-denominator gates befo
 Create one exact receipt vocabulary and generated action denominator, then record the accepted bounded-review and migration-lane facts that alone admit C1.
 
 - [ ] `W01.P01.S01` - Record the C1 entrance receipt with the accepted companion stem, accepting commit and body hash, canonical Casilla review evidence, and architecture migration-lane commit ancestry; `.vault/reference/2026-08-11-tui-interface-dependency-receipt.md`.
-- [ ] `W01.P01.S02` - Implement strict current-HEAD Workspace C1-C5, Workspace C2, and edit C3 dependency receipt schemas and validators with exact predecessor digests, discriminated proofs, and distinct compatibility axes; `dev/quality/modelo_workspace_receipts.py`.
+- [ ] `W01.P01.S02` - Implement only the strict current-HEAD Modelo Workspace C1-C5 interface exit receipt schemas and validators with exact predecessor digests, discriminated proofs, distinct compatibility axes, and delegated validation of architecture-owned incoming receipts; `dev/quality/modelo_workspace_receipts.py`.
 - [ ] `W01.P01.S03` - Prove every receipt validator rejects reordered or drifting predecessors, non-accepted authorities, unsupported compatibility axes, unclassified actions, and availability before its owning exit is green; `dev/tests/test_modelo_workspace_receipts.py`.
 - [ ] `W01.P01.S36` - Build ModeloWorkspaceActionDenominatorV1 from the canonical action catalogue, operation definitions, complete command graph and TuiCapability values, direct effect sites, routes, action views, dispatch rows, and typed exclusions; `dev/quality/modelo_workspace_action_denominator.py`.
 - [ ] `W01.P01.S37` - Generate the current-HEAD action-denominator artifact with every C1 direct query classified, modelo.work.create DEFERRED under work-lifecycle ownership, modelo.work.amend a distinct future C4 mutation, and modelo.work.amend_wizard FLOW_OWNED pending C4 disposition; `.vault/reference/2026-08-24-tui-modelo-workspace-action-denominator.md`.
@@ -128,21 +128,11 @@ Register the one bounded review destination over the relocated canonical ModeloW
 - [ ] `W05.P10.S25` - Prove C1 review outliers, stable keyboard order, non-colour status, and all four locales, three geometries, and two themes before its route can become callable; `src/cadrumo/entrypoints/tui/modelo/tests/test_c1_bounded_review.py`.
 - [ ] `W05.P10.S38` - Emit and validate ModeloWorkspaceC1ExitReceiptV1 with the accepted-companion prefix, migration evidence, denominator digest, C1 accessibility matrix, production route, and availability fence; `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt.md`.
 
-### Phase `W05.P10a` - Workspace V1 and C2 dependency
+### Phase `W05.P10a` - Workspace C2 dependency handoff
 
-Implement the frontend-neutral read boundary behind application.modelo, prove canonical-owner and consistency parity, and mint the exact C2 dependency receipt before any complex TUI route consumes it.
+Consume the architecture-owned Workspace V1 receipt and independently verify its current-HEAD identity before any complex TUI route imports the public facade. This phase never implements or revalidates the application contract itself.
 
-- [ ] `W05.P10a.S39` - Define strict current-only Workspace V1 headers, request, admission, success, refusal, projection, baseline, bounded-facet, capability, and locale DTOs with minimal pre-parse version refusal; `src/cadrumo/application/modelo/_workspace_contract.py`.
-- [ ] `W05.P10a.S40` - Define stamped contributing-port contracts, producer stamps, ABA-safe epochs, and the generated one-owner producer-contract inventory without payload-hash or clock epochs; `src/cadrumo/application/modelo/_workspace_producers.py`.
-- [ ] `W05.P10a.S41` - Assemble static-inspection and exact-grade Workspace results from one captured contributor tuple, law-selected addressing, and post-assembly epoch and stamp validation before minting a baseline; `src/cadrumo/application/modelo/_workspace_projection.py`.
-- [ ] `W05.P10a.S42` - Facet the exact public build_modelo_work_review result and prove complete field, ordering, absence, and refusal parity so Workspace adds no second ModeloWorkReview join; `src/cadrumo/application/modelo/tests/test_workspace_work_review_parity.py`.
-- [ ] `W05.P10a.S43` - Project scalar and repeated-row coordinates, schema, relations, operands, materialization, lineage, safe provenance, and locale resolution from canonical owners into baseline-pinned bounded facets; `src/cadrumo/application/modelo/_workspace_facets.py`.
-- [ ] `W05.P10a.S44` - Project capability and refusal rows from canonical readiness, closure, action, and revision producers without inferring AVAILABLE from aggregate readiness, assessment, schema population, or unmeasured state; `src/cadrumo/application/modelo/_workspace_capabilities.py`.
-- [ ] `W05.P10a.S45` - Generate the recursive registry field-classification manifest and fail unclassified, duplicate, stale, or missing projected, derived, and backend-only field paths; `src/cadrumo/application/modelo/_workspace_field_manifest.py`.
-- [ ] `W05.P10a.S46` - Export only the Workspace V1 facade and declared producer ports from application.modelo without registry compiler, persistence, frontend, or private-module leakage; `src/cadrumo/application/modelo/__init__.py`.
-- [ ] `W05.P10a.S47` - Prove Workspace V1 round trips, addressing and revision assertions, admission grades, locale invariance, row and provenance identities, readiness and closure parity, facet pinning, torn reads, ABA invalidation, unsupported versions, and non-retention; `src/cadrumo/application/modelo/tests/test_workspace_v1_conformance.py`.
-- [ ] `W05.P10a.S48` - Fail any duplicate readiness assembler, ModeloWorkReview producer, Workspace semantic join, calculation projection authority, owner epoch, or public DTO redeclaration against the generated canonical-owner inventory; `src/cadrumo/application/modelo/tests/test_workspace_contract_ownership.py`.
-- [ ] `W05.P10a.S49` - Emit and validate ModeloWorkspaceC2DependencyReceiptV1 against C1, accepted decisions, producer contracts, field manifest, captured epoch tuple, Workspace schema fingerprint, conformance, current HEAD, and the exact routes it opens; `.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md`.
+- [ ] `W05.P10a.S49` - Verify and pin the exact green ModeloWorkspaceC2DependencyReceiptV1, its C1 predecessor, accepted authorities, schema fingerprint, producer and field inventories, conformance digest, current source ancestry, and declared C2 routes; `.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md`.
 
 ### Phase `W05.P11` - C2 complex read destinations
 
@@ -164,22 +154,11 @@ Atomically replace the C1 detail route with the closed Workspace destination cat
 
 After C0, C2, edit-contract, and financial-operand receipts are green, build the memory-only editor, independently gate lifecycle actions, and close the complete interface fixed point. Operation observation, transient custody, root composition, packaging, and migration remain owned by the architecture plan.
 
-### Phase `W06.P12a` - ModeloEditContractV1 application boundary
+### Phase `W06.P12a` - C3 application dependency handoff
 
-Implement current-only admission, parsing, preflight, intent, capability, compare-and-swap execution, and safe result-receipt contracts by delegating to canonical Modelo owners and consuming, never implementing, the operation-side receipts.
+Consume the architecture-owned C0, Workspace C2, Edit Contract, and transient-financial-operand receipts and independently pin their exact compatibility tuple before mounting an editor. This phase never declares DTOs, parsing, persistence, custody, or mutation services.
 
-- [ ] `W06.P12a.S60` - Define the strict current-only ModeloEditContractV1 DTO family and minimal version dispatcher with the exact Workspace, edit, public-definition manifest and digests, definition schemas, observation, REVIEW, refresh-target, and transient-financial compatibility tuple; `src/cadrumo/application/modelo/_edit_contract.py`.
-- [ ] `W06.P12a.S61` - Admit natural or exact work targets into a value-free ModeloEditBaselineV1 over work and calculation catalogue revisions, current calculation head, law-selected registry and schema identity, permitted surface digest, expiry, and mutation family; `src/cadrumo/application/modelo/_edit_admission.py`.
-- [ ] `W06.P12a.S62` - Delegate locale-aware lexeme parsing and authoritative field, section, row, cross-field, whole-intent, capability, and concurrency preflight to canonical application and domain validators without echoing raw input; `src/cadrumo/application/modelo/_edit_validation.py`.
-- [ ] `W06.P12a.S63` - Normalize exact scalar SET_TYPED_VALUE, CLEAR_DECLARED_VALUE, REMOVE_OVERRIDE, and UNCHANGED semantics plus complete ADD_ROW, UPDATE_ROW, DELETE_ROW, and permitted MOVE_ROW intents with stable semantic addresses; `src/cadrumo/application/modelo/_edit_intents.py`.
-- [ ] `W06.P12a.S64` - Project one closed mutation capability row per generated Modelo action candidate from canonical domain eligibility, action identity, operation enrollment, evidence, and refusal owners without inferring availability; `src/cadrumo/application/modelo/_edit_capabilities.py`.
-- [ ] `W06.P12a.S65` - Implement the operation-only edit execution service with full baseline revalidation and effect NONE on staleness, delegating calculation, content addressing, lifecycle events, and secure writes to the canonical Modelo writer; `src/cadrumo/application/modelo/_edit_execution.py`.
-- [ ] `W06.P12a.S66` - Extend the canonical calculation revision persistence transaction to co-commit the immutable revision, current pointer, calculation event, and safe edit-result receipt under every catalogue, head, registry, schema, and surface compare-and-swap guard; `src/cadrumo/application/modelo/_revision_persistence.py`.
-- [ ] `W06.P12a.S67` - Persist ModeloEditMutationResultReceiptV1 through the encrypted profile repository with operation and mutation identities only and strict round-trip plus corrupt-payload refusal; `src/cadrumo/adapters/persistence/profile/modelos_edit_receipts.py`.
-- [ ] `W06.P12a.S68` - Export only the current edit admission, parse, preflight, capability, submission, refusal, and result contracts through the public application.modelo facade; `src/cadrumo/application/modelo/__init__.py`.
-- [ ] `W06.P12a.S69` - Prove exact compatibility refusal before secure resolution, parse and preflight parity, scalar and row semantics, expiry, every stale coordinate, rollback, duplicate-result recovery, existing-revision handling, atomic result receipt, and sensitive non-retention; `src/cadrumo/application/modelo/tests/test_edit_contract_v1_conformance.py`.
-- [ ] `W06.P12a.S70` - Fail any duplicate parser, permitted-surface authority, mutation-capability assembler, calculation bundle builder, compare-and-swap writer, event emitter, result-receipt authority, or public edit DTO producer; `src/cadrumo/application/modelo/tests/test_edit_contract_ownership.py`.
-- [ ] `W06.P12a.S71` - Emit and validate ModeloEditContractC3DependencyReceiptV1 with the accepted ADR, C2 predecessor, exact compatibility tuple and schema digests, parse and preflight evidence, capability inventory, atomicity, rollback, recovery, import, redeclaration, and non-retention proofs; `.vault/reference/2026-08-24-modelo-edit-contract-c3-dependency-receipt.md`.
+- [ ] `W06.P12a.S71` - Verify and pin the exact green operation observation, Workspace C2, ModeloEditContractC3DependencyReceiptV1, and financial-operand receipts, including accepted authorities, predecessor digests, distinct schema/version axes, atomicity and non-retention proofs, current source ancestry, and the declared C3 destinations; `.vault/reference/2026-08-24-modelo-edit-contract-c3-dependency-receipt.md`.
 
 ### Phase `W06.P12b` - C3 memory-only editor
 
@@ -234,7 +213,7 @@ Close import, producer, writer, route, action, receipt, installed-composition, n
 
 W01 receipt infrastructure and the generated denominator run first. W02-W04 may then proceed over whichever architecture-owned public seams already have green receipts; those Waves do not waive any Modelo cohort gate. Within W05, C1 closes before Workspace V1 mints the C2 dependency receipt, and C2 closes only after both predecessors validate on current HEAD.
 
-W06.P12a implementation may proceed after the C2 dependency receipt while the architecture-owned financial protocol is completed independently, but its C3 dependency receipt cannot close over a missing C0 observation predecessor. W06.P12b starts only after the C0 and C2 exits, the edit-contract receipt, and the financial-operand receipt all validate. W06.P12c starts after C3; individual lifecycle action proofs may run in parallel only when their exact contracts and paths do not overlap, then join in the C4 receipt. C5 aggregate accessibility and fixed-point closure remain serialized after C4. Architecture-owned root composition stays in its sibling lane; this plan consumes its commit and receipt evidence rather than reimplementing it.
+W06.P12a performs only the dependency handoff after the architecture-owned C0, Workspace C2, edit-contract, and financial-protocol receipts are green. W06.P12b starts only after those receipts and the C2 interface exit validate. W06.P12c starts after C3; individual lifecycle action proofs may run in parallel only when their exact contracts and paths do not overlap, then join in the C4 receipt. C5 aggregate accessibility and fixed-point closure remain serialized after C4. Architecture-owned root composition stays in its sibling lane; this plan consumes its commit and receipt evidence rather than reimplementing it.
 
 ## Verification
 
