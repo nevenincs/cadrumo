@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:35947e67bce462f5dcf52c44550a2178b064e54f66b431667943f62cb67b9afd'
+body_hash: 'sha256:d6bd00a2a86b2459479ec9e32d290ad26dbe6b3fbce374eef339ff718538aebc'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -64,7 +64,7 @@ Compose one typed cross-authority report from validated registry coverage, sourc
 - [x] `W01.P02.S48` - Prove undeclared-grade refusals reject a non-null declared grade through direct construction and revalidated mutation.; `src/cadrumo/application/registry/tests/`.
 - [x] `W01.P02.S49` - Replace substring-based connected-proof failure taxonomy with structured cause mapping that distinguishes missing proof from digest conflict, with real deletion and drift composer regressions.; `src/cadrumo/application/registry/`.
 - [x] `W01.P02.S50` - Parameterize undeclared-grade refusal contradictions across every authority grade and prove weakened-guard regression refusal.; `src/cadrumo/application/registry/tests/`.
-- [ ] `W01.P02.S51` - Assert structured Pydantic proof-cause codes and composer taxonomy for source-enrollment, operator-workflow, and encrypted-provenance failures, with a ValueError-fallback mutation bite.; `src/cadrumo/core/tests/; src/cadrumo/application/registry/tests/`.
+- [x] `W01.P02.S51` - Assert structured Pydantic proof-cause codes and composer taxonomy for source-enrollment, operator-workflow, and encrypted-provenance failures, with a ValueError-fallback mutation bite.; `src/cadrumo/core/tests/; src/cadrumo/application/registry/tests/`.
 - [x] `W01.P02.S52` - Remove the recorded source-connectivity composer trailing whitespace and prove the committed surface is whitespace-clean; `src/cadrumo/application/registry/_source_connectivity_coverage.py`.
 
 ## Wave `W02` - filing-gap adjudication and owner routing

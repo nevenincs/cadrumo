@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:c3a78707be3557ac6bd80eec08c1a1b344f47af45d378c235b0e955f5ec830eb'
+body_hash: 'sha256:ae3fb956ec7dfea04c818d510c62a3e826f40332f076f33c0f0d35fd018b33e4'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -28,6 +28,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S48]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S49]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S50]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S51]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S52]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
@@ -105,6 +106,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P02-S48` - Prove undeclared-grade refusals reject a non-null declared grade through direct construction and revalidated mutation.
 - `2026-08-24-registry-completeness-closure-W01-P02-S49` - Replace substring-based connected-proof failure taxonomy with structured cause mapping that distinguishes missing proof from digest conflict, with real deletion and drift composer regressions.
 - `2026-08-24-registry-completeness-closure-W01-P02-S50` - Parameterize undeclared-grade refusal contradictions across every authority grade and prove weakened-guard regression refusal.
+- `2026-08-24-registry-completeness-closure-W01-P02-S51` - Assert structured Pydantic proof-cause codes and composer taxonomy for source-enrollment, operator-workflow, and encrypted-provenance failures, with a ValueError-fallback mutation bite.
 - `2026-08-24-registry-completeness-closure-W01-P02-S52` - Remove the recorded source-connectivity composer trailing whitespace and prove the committed surface is whitespace-clean
 
 ### plan
