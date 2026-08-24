@@ -82,6 +82,24 @@ from collections.abc import Callable
 from functools import partial
 from importlib import import_module
 from types import ModuleType
+from typing import TYPE_CHECKING, Literal, Protocol, overload
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from ._profile_bucket_models import ProfileBucketPointer
+
+
+class _ProfileBucketLookup(Protocol):
+    """Type the lazy committed-profile lookup exports without importing their scanner."""
+
+    def __call__(self, identifier: str, *, root: Path | None = None) -> ProfileBucketPointer | None: ...
+
+
+class _ProfileBucketCatalog(Protocol):
+    """Type the lazy committed-profile catalog export without importing its scanner."""
+
+    def __call__(self, *, root: Path | None = None) -> dict[str, ProfileBucketPointer]: ...
 
 _LAZY_EXPORTS: dict[str, str] = {
     **dict.fromkeys(
@@ -224,6 +242,20 @@ _LAZY_EXPORTS: dict[str, str] = {
 _LAZY_MODULE_LOADERS: dict[str, Callable[[], ModuleType]] = {
     module_path: partial(import_module, module_path, __name__) for module_path in frozenset(_LAZY_EXPORTS.values())
 }
+
+
+@overload
+def __getattr__(
+    name: Literal["read_profile_bucket", "read_profile_bucket_by_id", "resolve_profile_bucket"],
+) -> _ProfileBucketLookup: ...
+
+
+@overload
+def __getattr__(name: Literal["list_profile_buckets"]) -> _ProfileBucketCatalog: ...
+
+
+@overload
+def __getattr__(name: str) -> object: ...
 
 
 def __getattr__(name: str) -> object:
