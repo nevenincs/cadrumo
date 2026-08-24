@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#profile-password-custody'
 date: '2026-08-13'
+modified: '2026-08-24'
+body_hash: 'sha256:bd4fb15fd4bbc2a3f4aa77d8332fb8164e1777e344f63ae5d065ebb257ad2921'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -18,8 +20,6 @@ related:
   - '[[2026-08-13-recovery-mnemonic-presentation-successor-adr]]'
   - '[[2026-08-13-sealed-archive-transport-successor-adr]]'
   - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
-modified: '2026-08-24'
-body_hash: 'sha256:969e647af3ccc7203fac08454d6e7718fc6483781f4b5dad35b54ff48de79686'
 ---
 
 # `profile-password-custody` plan
@@ -357,3 +357,11 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 - [ ] `W06.P12.S246` - Repair the harness serial watchdog kill-switch and disarm lifecycle so the full integration suite terminates cleanly without weakening timeout enforcement; `src/cadrumo-harness/`.
 - [ ] `W06.P12.S247` - Resolve changed-surface Ruff import order and partition every remaining type diagnostic to its owning implementation or fixture until the scoped global proof is clean; `src/cadrumo/ and src/cadrumo-harness/ and dev/`.
 - [x] `W06.P12.S248` - Reconcile Modelo 303 2026 and Modelo 390 2022-2025 semantic-role constraint signatures against their official record-design authority so the shared-role validator passes without weakening compatibility checks; `src/cadrumo/_data/registry/aeat/modelos/303/ and src/cadrumo/_data/registry/aeat/modelos/390/ and src/cadrumo/domain/calculations/registry/tests/`.
+- [ ] `W06.P12.S249` - Reconcile profile and recovery provisioning sequences on check-aeat-notifications, quickstart, profile-setup, and troubleshooting with mandatory creation channels and current status/list composition; `docs/_sequences/contracts/ and docs/quickstart.md and docs/how-to/profile-setup.md and docs/troubleshooting.md`.
+- [ ] `W06.P12.S250` - Restore or truthfully re-document operation composition projections on classify-with-llm, import-bank-statements, Modelo 390, and troubleshooting before regenerating their sequences; `docs/_sequences/contracts/ and src/cadrumo/application/operations/`.
+- [ ] `W06.P12.S251` - Repair filing-spine cumulative state so reused seed identity resolves the latest draft target and its documentation sequence proves the intended state transition; `docs/_sequences/contracts/filing-spine/ and src/cadrumo/application/`.
+- [ ] `W06.P12.S252` - Adjudicate registry, revision, readiness, lifecycle, and modelo page contracts across the twelve residual registry-backed documentation pages against current authority; `docs/_sequences/contracts/ and docs/how-to/ and docs/reference/`.
+- [ ] `W06.P12.S253` - Replace stale ledger-evidence and invoice output assumptions with stable authority-backed dynamic witnesses on ledger-evidence and manage-invoices; `docs/_sequences/contracts/ledger-evidence/ and docs/_sequences/contracts/manage-invoices/`.
+- [ ] `W06.P12.S254` - Reconcile verification-report history and provenance sequences with current Modelo 303 identifiers and authoritative frame structure; `docs/_sequences/contracts/verification-reports/ and src/cadrumo/application/verification/`.
+- [ ] `W06.P12.S255` - Reconcile the censo-update sequence with the current censal projection and reviewed-apply authority; `docs/_sequences/contracts/censo-update/ and src/cadrumo/application/user_profile/`.
+- [ ] `W06.P12.S256` - Separate volatile workstation free-memory diagnostics from deterministic golden state while preserving real registry-integrity failures and host-health evidence; `docs/_sequences/contracts/workstation-setup/ and src/cadrumo/application/diagnostics.py and src/cadrumo/core/observability/`.
