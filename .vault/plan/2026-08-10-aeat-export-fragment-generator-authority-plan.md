@@ -9,7 +9,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-source-authority-research]]'
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
 modified: '2026-08-24'
-body_hash: 'sha256:97a69c8555174279b5269ee2026eae8df76c921426d44288a64e1d87515773cb'
+body_hash: 'sha256:930ea61cb7fecaee790c9d252ea09a31d4387d80889102b5af9c4a4f73aa835a'
 ---
 
 <!-- RETIRED: S19, S26, S65, S93 -->
@@ -88,6 +88,7 @@ Cover every authority boundary with positive and negative real-behavior tests.
 
 Verify generated layouts as loadable complete structures and as real emitted filing bytes.
 
+
 ## Wave `W04` - regenerate and release relayout waves
 
 Use the proven authority to replace unverified trees, close the blocked split spans, and restore architecture-consistent model bindings.
@@ -153,6 +154,9 @@ Regenerate the highest-priority calculation-model revisions and discharge the he
 - [ ] `W04.P07.S90` - Prepare the exact Modelo-390-only-two legal worklist after the Modelo 390 split, prove RDL 4/2024 article 1 is selected only for 2024, then require the human operator to review and attest each reference one at a time against live official authority. Refuse agent or bulk promotion and prove the partition remains exact; `src/cadrumo/_data/registry/aeat/legal/iva.toml, .vault/audit/`.
 - [ ] `W04.P07.S91` - Require one-at-a-time human operator signoff for Modelo 303 revisions 2023, 2024-hasta-08-y-2t, 2024-desde-09-y-3t, 2025, and 2026-y-siguientes and Modelo 390 revisions 2022, 2023, 2024, and 2025. Then build real filing-grade snapshots and prove selected revision and all selected legal references are operator-reviewed, the shared and model-only partitions are pairwise disjoint and exhaust the exact twenty-reference target union, every year selects its exact source, and Modelo 390 2026 refuses as unsupported. Complete the public M303 filing-instance renderer and authoritative real-byte proof here, never through inspection authority; `src/cadrumo/domain/calculations/registry/, src/cadrumo/application/filing/, src/cadrumo/application/modelo/, src/cadrumo/_data/registry/aeat/modelos/303/, src/cadrumo/_data/registry/aeat/modelos/390/, src/cadrumo/application/filing/tests/`.
 - [ ] `W04.P07.S96` - Acquire a trusted Modelo 038 layout only after its exact source era is resolved by deriving a complete non-overlapping coordinate intermediate from a hash-pinned official design, then require the existing reviewed semantic-map, render-profile, canonical-generator, provenance, and production emitted-byte proof gates before any filing-grade claim without guessed coordinates or a parallel writer.; `dev/registry/; dev/registry/mappings/modelo_038/; dev/registry/render_profiles/modelo_038/; src/cadrumo/_data/registry/aeat/modelos/038/revisions/; src/cadrumo/application/filing/tests/`.
+- [ ] `W04.P07.S97` - Define one typed source-artifact taxonomy and machine-filing-contract predicate, acquire and hash-pin Modelo 721's exact exercise-scoped WSDL/XSD packages, and replace positional-only publication checks without letting form specs, instructions, or Modelo 136's visual form qualify.; `src/cadrumo/core/; src/cadrumo/domain/calculations/registry/; src/cadrumo/_data/corpus/aeat_official/; src/cadrumo/_data/registry/aeat/legal/monedas-virtuales.toml; src/cadrumo/_data/registry/aeat/modelos/721/; src/cadrumo/domain/calculations/registry/tests/`.
+- [ ] `W04.P07.S98` - Extend the canonical export-layout and export_draft dispatcher with a source-pinned SOAP document/literal request-XML shape for Modelo 721, consuming the complete source/casilla owner surface, validating locally against the official schemas, and refusing remote submission, transport credentials, response acceptance, and any parallel XML writer.; `src/cadrumo/core/; src/cadrumo/domain/calculations/registry/; src/cadrumo/application/filing/; dev/registry/; src/cadrumo/_data/registry/aeat/modelos/721/; src/cadrumo/application/filing/tests/`.
+- [ ] `W04.P07.S99` - Promote only exact-source Modelo 721 exercise revisions after the structured-message serializer lands, then extend the canonical live filing-export proof with XSD-valid document-identity and semantic-path probes over production export_draft bytes while retaining fixed-width offset proof and Modelo 136's terminal refusal.; `dev/registry/filing_export_proof.py; dev/registry/tests/; src/cadrumo/application/registry/; src/cadrumo/domain/calculations/registry/; src/cadrumo/_data/registry/aeat/modelos/721/; src/cadrumo/application/filing/tests/`.
 
 ### Phase `W04.P08` - campaign integration and release
 

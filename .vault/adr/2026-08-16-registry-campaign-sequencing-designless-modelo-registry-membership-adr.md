@@ -3,12 +3,14 @@ tags:
   - '#adr'
   - '#registry-campaign-sequencing'
 date: '2026-08-16'
-modified: '2026-08-16'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:6163bab1bbe30f81a05fb805b412a81f876a5bbb8c6189bac2bc9fe8e824d90e'
+body_hash: 'sha256:b641f84d65ba46782da5849feb4315ead5e967b48405c72ca403c62d3689463b'
 related:
-  - "[[2026-08-14-registry-campaign-sequencing-adr]]"
-  - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
+  - '[[2026-08-14-registry-campaign-sequencing-adr]]'
+  - '[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-modelo-721-structured-message-design-and-filing-boundary-reference]]'
+  - '[[2026-08-24-registry-completeness-closure-adr]]'
 ---
 
 # `registry-campaign-sequencing` adr: `registry membership requires an AEAT-published machine filing format` | (**status:** `accepted`)
@@ -68,10 +70,11 @@ The decision needed is not an exemption. It is what registry membership *means*.
 
 ## Considered options
 
-- **Extend `ExportLayoutFormat` with a web-service/XSD member (rejected, for
-  now).** Correct eventually for the DAC-family modelos, which do have a
-  machine format. Rejected as the answer *here* because it does not address the
-  web-form-only modelos at all, and because
+- **Extend `ExportLayoutFormat` with a web-service/XSD member (deferred in the
+  original decision; adopted for source-backed structured messages by the
+  2026-08-24 amendment below).** Correct for modelos whose official filing
+  contract is a structured message rather than a positional record. It was not
+  the answer to the web-form-only modelos, and
   `2026-08-15-registry-temporal-coverage-structural-decisions-audit` shows the
   existing `xml_dictionary` renderer branches on `draft.modelo == Modelo.M100`
   at four points, so the second format member is Modelo 100's format with a
@@ -141,9 +144,11 @@ done — that fix would only apply had the modelo stayed in the registry, and
 recording it as a live-through-2023 revision the application still cannot file
 would reintroduce the exact state this record removes.
 
-**Group W — resolved, and it split in two.** The eight live web-form-only
-modelos were reviewed per entry against official AEAT and BOE sources, and they
-do not share one answer.
+**Group W — resolved at the time, and it split in two.** The eight modelos then
+treated as web-form-only were reviewed per entry against official AEAT and BOE
+sources, and they did not share one answer. The 2026-08-24 amendment below
+corrects Modelo 721 after its separately published structured-message contract
+was grounded; Modelo 136 retains the original disposition.
 
 *Relocated (six),* each out of scope by filer or by election rather than by
 format: M121, M140 and M143 are elective IRPF deduction trámites resolved in the
@@ -157,7 +162,8 @@ IRNR or M184, and AEAT accepts it in person or by post with no electronic file
 at all.
 
 *Kept (two), and this is the category this record did not anticipate.* M136 and
-M721 have no published design either, but both carry real calculation
+M721 had no enrolled machine design at this decision point, but both carry real
+calculation
 machinery the application exercises: M136 declares base-imponible,
 cuota-gravamen-especial and resultado-a-ingresar formulas; M721 has the
 foreign-asset threshold and cross-year redeclaration resolvers, the €50,000 and
@@ -207,6 +213,59 @@ cites its approving orden's anexo at `layout_authority` tier under an id ending
 distinction fictional. Both of those are pinned by tests that fail if the
 predicate drifts to the weaker reading.
 
+### Amendment (2026-08-24): structured-message filing contracts
+
+The accepted membership criterion is format-neutral. A machine filing format is
+either a positional `record_design` or an exact, hash-pinned structured-message
+contract whose schema and service description jointly define locally renderable
+request bytes. A printed `form_spec`, instructions page, observed browser request,
+dictionary without its validating schema, or model name is not such a contract.
+Grounding: `2026-08-24-registry-completeness-closure-modelo-721-structured-message-design-and-filing-boundary-reference`.
+
+Source taxonomy has one canonical typed owner. The existing source-artifact
+vocabulary is promoted from a repeated literal to a core enum and gains a
+`structured_message_contract` member for an immutable package whose reviewed
+inventory contains the governing WSDL and request/response XSDs. The source row
+pins the package digest and exact exercise scope; the package verifier pins its
+member inventory and digests. Existing `record_design`, `xsd`, `dictionary`, and
+`form_spec` meanings remain distinct. Consumers import one canonical predicate
+for machine filing authority rather than maintaining local sets of qualifying
+source strings.
+
+Modelo 721 is therefore an authorable filing gap, not a terminal absence. Its
+official SOAP 1.1 document/literal package is enrolled in separate 2023 and 2024
+evidence eras, and no open-ended technical-schema claim follows from the
+applicability revision's open window. Filing grade remains refused until the
+law-selected revision cites the exact contract for the selected exercise, the
+complete message field and producer surface is grounded, and local export and
+proof both pass. Modelo 136 remains terminal under present evidence because it
+cites only a visual form and procedure guidance; this amendment creates no
+modelo allowlist and no visual-form escape.
+
+The structured shape extends the existing `ExportLayoutFormat` vocabulary and
+the one `application.filing.export_draft` dispatcher. The new branch emits a
+local SOAP request XML document, validates it against the pinned official
+schemas, and returns the ordinary export receipt. It does not perform an HTTPS
+call, read a client certificate, claim AEAT acceptance, parse a response as a
+filing receipt, or create a Modelo-specific writer. The existing standalone
+`xml_dictionary` renderer may contribute genuinely shared XML primitives only
+when their constraints are a superset; it is not relabelled as the SOAP writer.
+
+The one live filing-export proof authority also remains canonical. Its
+format-specific acceptance probe becomes a typed union: fixed-width layouts
+retain official byte-offset probes, while structured-message layouts require
+successful XSD validation plus source-grounded document-identity and semantic
+path probes over bytes emitted by production `export_draft`. Generation
+manifest, semantic-map, render-profile, output digest, receipt, and live payload
+rehashing remain common gates. A schema-valid synthetic document, direct
+serializer call, remote response, or second proof store cannot satisfy closure.
+
+Implementation ownership stays in
+`2026-08-10-aeat-export-fragment-generator-authority-plan`, consuming the exact
+source/casilla surface owned by the source-casilla campaign. This amendment is
+architectural authorization, not self-executing promotion: Modelo 721 remains
+applicability-only until those owner rows land with local emitted-payload proof.
+
 ## Rationale
 
 The knockout is that the parent ADR's rejected option and this one differ in
@@ -247,13 +306,13 @@ owe these filings.
   and legal citations, and for M289 twenty legal refs tracking thirteen amending
   ordenes. That is a genuine loss, recoverable from history, and the reason
   relocation is per-modelo rather than a sweep.
-- The XSD channel question is deferred, not answered. If the product later
-  commits to rendering DAC-family submissions, those modelos return by normal
-  enrollment rather than by an exemption being revoked.
-- M136 and M721 go green as calculate-capable, unfileable modelos, and the
-  no-layout refusal now means something narrower and truer: *a design exists and
-  the layout has not been authored*. Every one of the remaining refusals is
-  actionable, which the previous reading could not claim.
+- The XSD channel is now answered for source-backed local structured-message
+  export: eligible modelos return through normal source, layout, grade, and live
+  proof enrollment, never by revoking an exemption or adding a parallel writer.
+- M136 remains calculate-capable and terminally unfileable under present
+  evidence. M721 remains applicability-only while its newly authorable owner
+  rows are open; it may leave that state only through exact source, serializer,
+  and live-proof enrollment.
 - The scoping is a real narrowing of the parent ADR's unconditional refusal, and
   is recorded as such rather than presented as a clarification. What it does not
   narrow: the refusal keeps full force over all forty-six modelos with a
