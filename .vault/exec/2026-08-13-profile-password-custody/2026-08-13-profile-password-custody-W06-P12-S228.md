@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:d6557546db68d04215ed6587312f08cce796e778e154337c85c7edd0d0a062a4'
+body_hash: 'sha256:662fb27860e75822a0b661d17f799e84e33e4349f6206593df4c01f8d8c5395a'
 step_id: 'S228'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -52,10 +52,31 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Replace the static blocked delete example with a visible logout followed by
+  the terminal exact-name delete command and a `deleted == true` assertion.
+- Correct the guide's false active-delete wording to require logout before the
+  exact irreversible deletion.
+- Run the real page refresh after the concurrent Modelo 303 and 322 authority
+  repairs landed.
+- Compare the subprocess refusal with the CLI admission registry and lifecycle
+  tests, and record the unresolved boundary contradiction for follow-on work.
 
 ## Outcome
 
+S228 remains open. The real runner proves logout succeeds but deletion then
+fails at the root login gate with exit 2, so no CLI-owned golden can be
+generated and the documented journey is not yet executable product truth.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+- Concurrent commits `d6d45d618c` and `32567777ce` captured the scaffold and
+  target documentation changes while this execution was in progress; they are
+  provenance, not successful closure.
+- Before the registry repairs, refresh, page check, and nitpicky docs setup were
+  blocked by missing Modelo 303/322 deadline-window authority. Commits
+  `29f9785808` and `c2f4334a5e` removed that external initialization blocker.
+- Focused profile-delete integration tests passed 5 tests and documented-command
+  conformance passed 349 tests, but those in-process results do not override the
+  real subprocess refusal observed by the sequence runner.
+- Formal review requires the missing generated golden and therefore remains
+  changes-required.
