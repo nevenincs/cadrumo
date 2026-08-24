@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:0c7bc902a59eef4955f0578048b6168a786523411b613cabdfd90537b2a7d5b8'
+body_hash: 'sha256:861611d0ef9893343e3238bfa6b82ca24f23dab07d6b06e17e3aec4b4ff36027'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -82,6 +82,8 @@ Compose one typed cross-authority report from validated registry coverage, sourc
 - [x] `W01.P02.S66` - Repair S65 execution-record EOF whitespace and distinguish its scoped diff assertion from commit-wide git show --check, then re-attest both checks.; `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S65.md`.
 - [x] `W01.P02.S67` - Normalize S65/S66 execution-record endings and S66 template annotations through canonical vault edits, then re-attest scoped markdown and annotations checks.; `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S65.md; .vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S66.md`.
 - [x] `W01.P02.S68` - Repair deferred S64/S65 audit-record hygiene through canonical vault edits, then re-attest markdown, annotations, and body fingerprints.; `.vault/audit/2026-08-24-registry-completeness-closure-s64-independent-post-review-audit.md; .vault/audit/2026-08-24-registry-completeness-closure-s65-context-authority-review-audit.md`.
+- [ ] `W01.P02.S69` - Prove complete, refused, stale-evidence, below-filing-grade, and cross-limb-disagreement outcomes through real composed authority limbs and guard-weakening bites.; `src/cadrumo/application/registry/tests/; dev/registry/conformance/tests/`.
+- [ ] `W01.P02.S70` - Correct S11 evidence and independent-review claims after successor proof passes, then re-attest the records.; `.vault/exec/2026-08-24-registry-completeness-closure/; .vault/audit/; .vault/index/`.
 
 ## Wave `W02` - filing-gap adjudication and owner routing
 
