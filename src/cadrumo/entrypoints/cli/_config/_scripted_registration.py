@@ -190,7 +190,7 @@ def _read_recovery_verification(descriptor: int) -> ProfileRecoveryVerification:
 def _recovery_handover(
     *,
     descriptors: tuple[int, int] | None,
-) -> Callable[[ProfileRecoveryEnrollment], None]:
+) -> Callable[[ProfileRecoveryEnrollment], str]:
     """Build an interactive or descriptor handoff with possession proof.
 
     Creation never falls through to a password-only profile. A terminal caller
@@ -209,8 +209,8 @@ def _recovery_handover(
             translated_message="cli.config.profile.create_recovery_channel_absent",
         )
 
-    def handover(enrollment: ProfileRecoveryEnrollment) -> None:
-        """Deliver once and refuse publication until possession is proved."""
+    def handover(enrollment: ProfileRecoveryEnrollment) -> str:
+        """Deliver once and return exact proof to the publication owner."""
         expected = enrollment.recovery_key.mnemonic
         if descriptors is None:
             write_to_controlling_terminal(
@@ -227,8 +227,8 @@ def _recovery_handover(
                 raise CliRefusedBoundaryError(
                     translated_message="cli.config.profile.create_recovery_verification_mismatch",
                 )
+            return supplied
         finally:
-            del supplied
             del expected
 
     return handover
