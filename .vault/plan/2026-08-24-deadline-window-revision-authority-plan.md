@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
+modified: '2026-08-24'
+body_hash: 'sha256:35904fdcfc117a830f6f29fe6a5fcee65c3e667a183b0c035af045f902fcad97'
 tier: L3
 related:
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
@@ -12,8 +14,6 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
-modified: '2026-08-24'
-body_hash: 'sha256:47b6caa309aec0d719bf8c6fd993b5327b5c4c19d41ba3015d00a6fe96a183a3'
 ---
 
 <!-- RETIRED: P06, P07, P09 -->
@@ -129,7 +129,7 @@ Extend the existing resolver for exact-one qualified matching.
 
 Keep the engine thin and resolve resultado-aware M210 deadlines post-calculation.
 
-- [ ] `W03.P11.S26` - Keep DeadlineEngine.compute thin and prove exact-one complete monthly and quarterly emission without local selection or deduplication; `src/cadrumo/domain/deadlines/_engine.py; src/cadrumo/domain/deadlines/tests/test_engine.py`.
+- [x] `W03.P11.S26` - Keep DeadlineEngine.compute thin and prove exact-one complete monthly and quarterly emission without local selection or deduplication; `src/cadrumo/domain/deadlines/_engine.py; src/cadrumo/domain/deadlines/tests/test_engine.py`.
 - [x] `W03.P11.S27` - Route calculated M210 ResultDisposition and official tipo code into canonical deadline resolution and the existing typed Notice channel; `src/cadrumo/application/modelo/`.
 - [x] `W03.P11.S28` - Prove M210 calculate and verify envelopes emit grounded qualified plazo notices and never claim an ungrounded tipo-28 offset; `src/cadrumo/application/modelo/tests/`.
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:5b6814d951dd280114f28ff3b31e4139c9e73c376db7566b39d3599bd9833eed'
+body_hash: 'sha256:6f55c898f6ed4aa58241c319090852a09a8737327c524189d6865a1256c8e961'
 related:
   - "[[2026-08-24-deadline-window-revision-authority-plan]]"
   - "[[2026-08-24-deadline-window-revision-authority-adr]]"
@@ -54,6 +54,23 @@ keeps resultado/tipo-renta-qualified M210 rows out of the pre-calculation
 schedule while the sole qualified resolver remains in
 `domain/deadlines/_plazo.py`.
 
+### engine-projection-remediation | low | APPROVE â€” HIGH and MEDIUM findings closed
+
+Independent remediation review approved the current S26 slice with no HIGH or
+MEDIUM findings. The expected projection now comes from the public canonical
+`ValidatedRegistryAuthority.deadline_windows`, `applicable_filing_schedules`, and
+`evaluate_profile_conditions` surfaces; it never calls the engine's private
+obligation builder or private applicability helpers. Filing years come directly from
+`authority.catalogues.supported_filing_years.years`.
+
+Exact `Counter` equality preserves omissions and multiplicity, and an explicit mutation
+control proves both a dropped applicable coordinate and a duplicate emitted coordinate
+raise. The exact M303 2025 quarterly and REDEME monthly assertions and qualified-M210
+pre-calculation exclusion remain. Vaultspec RAG followed by exact-symbol confirmation
+found no selector, resolver, parser, cadence authority, supported-year horizon, deadline
+catalogue, or deduplication path introduced by the remediation. Ruff passed and the
+full focused engine module passed 42 tests.
+
 ## Recommendations
 
 Approve `W03.P11.S26` without production changes.
@@ -69,3 +86,12 @@ For the medium finding, parametrize the test from the validated authority's
 canonical supported-filing-year catalogue. Keep the semantic-coordinate
 `Counter` comparison so multiplicity remains visible; do not replace it with a
 set or dictionary projection.
+
+Both recommendations are implemented and independently approved. Close S26.
+## Final remediation re-review
+
+APPROVE. The current remediation independently derives expected periodic coordinates from the bundled validated authority, the canonical supported-filing-year catalogue, and the public filing-schedule and profile-condition evaluators. It no longer calls `_obligation_for_window` or any other private engine applicability helper, and it declares no local year horizon.
+
+Exact Counter equality compares the entire applicable periodic projection with emitted periodic coordinates. The drop and duplicate mutation controls prove the assertion fails in both directions; the filter that separates periodic output is itself grounded in the complete authority coordinate set. The original Modelo 303 2025 assertions still require exactly four quarterly and twelve monthly rows.
+
+Vaultspec RAG plus exact-symbol confirmation found no deduplication, selector, cadence map, parser, supported-year horizon, or deadline catalogue added to the engine or remediation. Qualified M210 windows remain excluded from the pre-calculation engine and owned by the post-calculation plazo resolver. No findings remain open.

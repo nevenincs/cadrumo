@@ -8,7 +8,13 @@ from datetime import date
 import pytest
 
 from ....core import Modelo, Period
-from ...calculations.registry import deadline_semantic_coordinate
+from ...calculations.registry import (
+    DeadlineSemanticCoordinate,
+    applicable_filing_schedules,
+    bundled_authority,
+    deadline_semantic_coordinate,
+    evaluate_profile_conditions,
+)
 from .. import (
     DeadlineEngine,
     IrpfEstimationRegime,
@@ -56,6 +62,15 @@ def _profile(**overrides: object) -> TaxpayerProfile:
 
 def _engine() -> DeadlineEngine:
     return DeadlineEngine()
+
+
+def _assert_exact_once(
+    actual: list[DeadlineSemanticCoordinate],
+    expected: list[DeadlineSemanticCoordinate],
+) -> None:
+    actual_counts = Counter(actual)
+    assert actual_counts == Counter(expected)
+    assert all(multiplicity == 1 for multiplicity in actual_counts.values())
 
 
 class TestCompute:
@@ -229,11 +244,20 @@ class TestCompute:
 
         assert all(item.modelo != "210" for item in schedule.obligations)
 
-    @pytest.mark.parametrize("filing_year", range(2022, 2027))
+    def test_periodic_coordinate_gate_rejects_dropped_and_duplicate_rows(self) -> None:
+        expected = [
+            deadline_semantic_coordinate("303", _period(2025, "1T"), None, None),
+            deadline_semantic_coordinate("303", _period(2025, "2T"), None, None),
+        ]
+
+        with pytest.raises(AssertionError):
+            _assert_exact_once(expected[1:], expected)
+        with pytest.raises(AssertionError):
+            _assert_exact_once([*expected, expected[0]], expected)
+
     @pytest.mark.parametrize("monthly_iva", [False, True])
     def test_compute_preserves_each_applicable_authored_periodic_coordinate_once(
         self,
-        filing_year: int,
         monthly_iva: bool,
     ) -> None:
         profile = _profile(
@@ -246,37 +270,51 @@ class TestCompute:
                 hydrocarbon_deposit_advance_payment_deduction_entitled=False,
             ),
         )
-        engine = _engine()
-        projected = engine.deadline_windows(filing_year)
-        expected = []
-        for modelo, revision, window in projected:
-            if window.period_kind not in {"monthly", "quarterly"}:
-                continue
-            obligation = engine._obligation_for_window(
-                profile=profile,
-                modelo=modelo,
-                revision=revision,
-                window=window,
-                reference_today=date(filing_year, 1, 1),
-            )
-            if obligation is None:
-                continue
-            # Periodic filing schedules are pre-calculation obligations, so their
-            # authored identity has no resultado/tipo-renta qualifier. Reuse the
-            # canonical coordinate constructor instead of restating that identity.
-            assert window.resultado_scope is None
-            assert window.tipo_renta_scope is None
-            expected.append(deadline_semantic_coordinate(modelo, window.period, None, None))
+        authority = bundled_authority()
+        supported_years = authority.catalogues.supported_filing_years
+        assert supported_years is not None
 
-        schedule = engine.compute(profile, filing_year, today=date(filing_year, 1, 1))
-        actual = [
-            deadline_semantic_coordinate(item.modelo, item.period, None, None)
-            for item in schedule.obligations
-        ]
+        for filing_year in supported_years.years:
+            expected = []
+            periodic_coordinates = set()
+            for modelo, revision, window in authority.deadline_windows(filing_year):
+                if window.period_kind not in {"monthly", "quarterly"}:
+                    continue
+                # Periodic filing schedules are pre-calculation obligations, so their
+                # authored identity has no resultado/tipo-renta qualifier. Reuse the
+                # canonical coordinate constructor instead of restating that identity.
+                assert window.resultado_scope is None
+                assert window.tipo_renta_scope is None
+                coordinate = deadline_semantic_coordinate(modelo, window.period, None, None)
+                periodic_coordinates.add(coordinate)
 
-        actual_counts = Counter(actual)
-        assert Counter({coordinate: actual_counts[coordinate] for coordinate in expected}) == Counter(expected)
-        assert all(multiplicity == 1 for multiplicity in actual_counts.values())
+                schedule_applies = not revision.filing_schedules or bool(
+                    applicable_filing_schedules(
+                        revision,
+                        profile,
+                        period=window.period.registry_token,
+                    ),
+                )
+                conditions_apply = (
+                    evaluate_profile_conditions(
+                        window.applicability_conditions,
+                        profile,
+                        mode=window.applicability_condition_mode,
+                    )
+                    is not None
+                )
+                if schedule_applies and conditions_apply:
+                    expected.append(coordinate)
+
+            schedule = _engine().compute(profile, filing_year, today=date(filing_year, 1, 1))
+            actual = [
+                coordinate
+                for item in schedule.obligations
+                if (coordinate := deadline_semantic_coordinate(item.modelo, item.period, None, None))
+                in periodic_coordinates
+            ]
+
+            _assert_exact_once(actual, expected)
 
     def test_registry_condition_can_add_rental_withholding_deadline(self) -> None:
         schedule = _engine().compute(_profile(pays_rent_with_retencion=True), 2026, today=date(2026, 1, 1))

@@ -5,45 +5,11 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:1925b0fa818c3aa36c2806d83a9da9bb0510a5caad2c8f4003b129f477215b04'
+body_hash: 'sha256:a4b7db38483189bc70f354a55e28d7218878b17b466d9efba8f726acfc12d25b'
 step_id: 'S26'
 related:
   - "[[2026-08-24-deadline-window-revision-authority-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace deadline-window-revision-authority with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S26 and 2026-08-24-deadline-window-revision-authority-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Keep DeadlineEngine.compute thin and prove exact-one complete monthly and quarterly emission without local selection or deduplication and ## Scope
-
-- `src/cadrumo/domain/deadlines/_engine.py`
-- `src/cadrumo/domain/deadlines/tests/test_engine.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Keep DeadlineEngine.compute thin and prove exact-one complete monthly and quarterly emission without local selection or deduplication
 
@@ -83,6 +49,19 @@ module passed 49 tests. Independent re-review found one HIGH test-oracle weaknes
 one MEDIUM locally redeclared supported-year horizon, so this Step remains open pending
 their correction even though the production boundary itself was approved.
 
+The remediation replaces that private-helper oracle with an independent expectation
+derived from `ValidatedRegistryAuthority.deadline_windows`,
+`applicable_filing_schedules`, and `evaluate_profile_conditions`. It consumes
+`authority.catalogues.supported_filing_years.years`, so the regression carries no local
+year horizon. Exact `Counter` equality now compares all applicable authored periodic
+coordinates with emitted periodic coordinates, and an explicit mutation control proves
+the gate rejects both a dropped applicable row and a duplicate row. The exact M303 2025
+four-quarter/twelve-month assertions and the qualified-M210 exclusion remain intact.
+
+Remediation verification passed Ruff format, Ruff check, and all 42 tests in the full
+deadline-engine test module. S26 closes only after the independent remediation review
+records APPROVE.
+
 ## Notes
 
 The registry corpus still has exactly five deliberately unauthored filing-year-2026
@@ -93,7 +72,9 @@ currently project without adding inferred future dates. The fleet completeness g
 remains responsible for closing those corpus cells when authoritative evidence is
 enrolled.
 
-The current fleet regression derives expected applicability through the same private
-`_obligation_for_window` helper used by `compute`, so an erroneous helper exclusion can
-disappear from both sides. It also hard-codes 2022-2026 instead of consuming the shared
-supported-year authority. These review findings must be resolved before S26 closes.
+The original fleet regression derived expected applicability through the same private
+`_obligation_for_window` helper used by `compute`, so an erroneous helper exclusion
+could disappear from both sides. It also hard-coded 2022-2026 instead of consuming the
+shared supported-year authority. Both findings are now remediated through the public
+registry authorities named above; the original findings remain recorded here for audit
+continuity.
