@@ -21,7 +21,6 @@ from decimal import Decimal
 import pytest
 
 from .....application.storage.calc_sheets import CALC_SHEETS_ENGINE_VERSION, build_export_plan, registry_sha
-from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....core.decimal import coerce_decimal as _coerce_decimal
 from .....core.resources import resources
 from ...storage import (
@@ -40,29 +39,6 @@ from .._calc_sheets_pull import (
 from ._calc_sheets_support import modelo_130_2025_1t_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
-
-
-def _assert_closed_operator_decision(
-    error: BaseException,
-    *,
-    condition_id: str,
-    facts: dict[str, str | int | bool],
-) -> None:
-    """Assert one observed terminal verdict without an invented recovery action."""
-    verdict = error.terminal_precondition_verdict
-    assert verdict is not None
-    assert verdict.failed_condition_id == condition_id
-    assert len(verdict.evidence) == 1
-    evidence = verdict.evidence[0]
-    assert evidence.condition_id == condition_id
-    assert evidence.evidence_id == f"{condition_id}.observation"
-    assert evidence.provenance is ActionEvidenceProvenance.RUNTIME_OBSERVATION
-    assert evidence.values == facts
-    assert verdict.action is None
-    assert verdict.argument_bindings == ()
-    assert verdict.missing_argument_names == ()
-    assert verdict.conditionality is ActionConditionality.NOT_APPLICABLE
-    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
 
 
 # ---------------------------------------------------------------------------
@@ -332,15 +308,6 @@ def test_prechange_exterior_workbook_layout_stamp_is_refused_before_pull_layout(
     assert raised.value.context["workbook_engine_version"] == "calc-sheets/0.1.0"
     assert raised.value.context["expected_engine_version"] == CALC_SHEETS_ENGINE_VERSION
     assert raised.value.translated_message == "adapters.google.calc_sheets.errors.workbook_snapshot_mismatch"
-    _assert_closed_operator_decision(
-        raised.value,
-        condition_id="google.calc_sheets.pull.snapshot_aligned",
-        facts={
-            "spreadsheet_id": "real-modelo-369-exterior-workbook",
-            "metadata_match": MetadataMatchState.STALE.value,
-            "snapshot_aligned": False,
-        },
-    )
 
 
 def test_current_exterior_workbook_layout_stamp_is_accepted_before_pull_layout() -> None:

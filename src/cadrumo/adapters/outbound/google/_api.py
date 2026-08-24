@@ -20,8 +20,8 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING, Any, Protocol, TypedDict
 
-from ....application.operator_actions import ConditionEvidence, PreconditionVerdict
-from ....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ....application.operator_actions import PreconditionVerdict, no_action_precondition_verdict
+from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ..storage import (
     OutboundStorageError,
     OutboundStorageNetworkError,
@@ -45,22 +45,15 @@ _RATE_LIMIT_MARKERS = {
 
 def _external_verdict(condition_id: str, **facts: object) -> PreconditionVerdict:
     """Build one API-owned terminal verdict."""
-    return PreconditionVerdict(
-        failed_condition_id=condition_id,
-        evidence=(
-            ConditionEvidence(
-                condition_id=condition_id,
-                evidence_id=f"{condition_id}.observation",
-                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-                values={
-                    ("operation" if key == "action" else key): value
-                    for key, value in facts.items()
-                    if isinstance(value, (str, int, bool))
-                },
-            ),
-        ),
-        conditionality=ActionConditionality.NOT_APPLICABLE,
-        no_recovery_outcome=(
+    return no_action_precondition_verdict(
+        condition_id=condition_id,
+        facts={
+            ("operation" if key == "action" else key): value
+            for key, value in facts.items()
+            if isinstance(value, (str, int, bool))
+        },
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        outcome=(
             NoRecoveryOutcome.SAFETY
             if condition_id != "google.api.target_not_found"
             else NoRecoveryOutcome.OPERATOR_DECISION

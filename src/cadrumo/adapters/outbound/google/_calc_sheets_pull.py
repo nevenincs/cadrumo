@@ -59,7 +59,6 @@ if TYPE_CHECKING:
 
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
-from ....application.operator_actions import ConditionEvidence, PreconditionVerdict
 from ....application.storage.calc_sheets import (
     CALC_SHEETS_ENGINE_VERSION,
     OperatorInput,
@@ -72,7 +71,7 @@ from ....application.storage.calc_sheets import (
     registry_sha,
 )
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core import ActionConditionality, ActionEvidenceProvenance, CasillaId, NoRecoveryOutcome, Period
+from ....core import ActionEvidenceProvenance, CasillaId, NoRecoveryOutcome, Period
 from ....core.decimal import coerce_decimal, coerce_finite_european_decimal
 from ....core.time import coerce_utc_aware
 from ....domain.calculations.registry import (
@@ -98,6 +97,7 @@ from ..storage import (
     OutboundStorageValidationError,
 )
 from ._api import execute_request
+from ._preconditions import google_terminal_refusal
 
 _OWNERSHIP_KEY: Final[str] = "cadrumo_vault_app"
 _OWNERSHIP_VALUE: Final[str] = "cadrumo"
@@ -120,6 +120,7 @@ class CalcSheetsPullPreconditionCondition(StrEnum):
     """Closed terminal conditions owned by the calculation-sheet pull adapter."""
 
     API_CLIENT_AVAILABLE = "google.calc_sheets.pull.api_client_available"
+    SPREADSHEET_ID_VALID = "google.calc_sheets.pull.spreadsheet_id_valid"
     OWNERSHIP_METADATA_VALID = "google.calc_sheets.pull.ownership_metadata_valid"
     OWNERSHIP_ALIGNED = "google.calc_sheets.pull.ownership_aligned"
     DEVELOPER_METADATA_LIST_VALID = "google.calc_sheets.pull.developer_metadata_list_valid"
@@ -128,6 +129,9 @@ class CalcSheetsPullPreconditionCondition(StrEnum):
     SNAPSHOT_ALIGNED = "google.calc_sheets.pull.snapshot_aligned"
     RELATION_LEGAL_REFS_VALID = "google.calc_sheets.pull.relation_legal_refs_valid"
     RELATION_SOURCE_REFS_VALID = "google.calc_sheets.pull.relation_source_refs_valid"
+    EDIT_VALUE_FINITE = "google.calc_sheets.pull.edit_value_finite"
+    EDIT_CASILLA_DECLARED = "google.calc_sheets.pull.edit_casilla_declared"
+    EDIT_CASILLA_INPUT = "google.calc_sheets.pull.edit_casilla_input"
 
 
 def _calc_sheets_pull_terminal_refusal(
@@ -138,25 +142,12 @@ def _calc_sheets_pull_terminal_refusal(
     outcome: NoRecoveryOutcome,
 ) -> OutboundStorageError:
     """Return ``error`` with this adapter's fact-only terminal verdict."""
-    condition_id = condition.value
-    verdict = PreconditionVerdict(
-        failed_condition_id=condition_id,
-        evidence=(
-            ConditionEvidence(
-                condition_id=condition_id,
-                evidence_id=f"{condition_id}.observation",
-                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-                values=facts,
-            ),
-        ),
-        conditionality=ActionConditionality.NOT_APPLICABLE,
-        no_recovery_outcome=outcome,
-    )
-    return type(error)(
-        error.args[0] if error.args else None,
-        context=error.context,
-        translated_message=error.translated_message,
-        precondition_verdict=verdict,
+    return google_terminal_refusal(
+        error,
+        condition_id=condition.value,
+        facts=facts,
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        outcome=outcome,
     )
 
 # A single batch-get value-range entry from the Sheets API.
@@ -731,10 +722,16 @@ def pull_operator_edits(
             is exhausted, or the workbook fails the app-owned marker gate.
     """
     if not spreadsheet_id.strip():
-        raise OutboundStorageValidationError(
+        error = OutboundStorageValidationError(
             "spreadsheet_id must not be blank",
             context={"spreadsheet_id": spreadsheet_id},
             translated_message="adapters.google.calc_sheets.errors.spreadsheet_id_blank",
+        )
+        raise _calc_sheets_pull_terminal_refusal(
+            error,
+            CalcSheetsPullPreconditionCondition.SPREADSHEET_ID_VALID,
+            facts={"spreadsheet_id_present": False},
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
         )
 
     drive = _drive_service(credentials)
@@ -1373,16 +1370,22 @@ def _coerce_edit_value_to_decimal(value: Decimal | str | bool | None, *, input_k
     """
     if value is None:
         return Decimal("0")
-    if isinstance(value, Decimal):
+    if isinstance(value, Decimal) and value.is_finite():
         return value
     if isinstance(value, bool):
         return Decimal("1") if value else Decimal("0")
     parsed = coerce_finite_european_decimal(value)
     if parsed is not None:
         return parsed
-    raise OutboundStorageValidationError(
+    error = OutboundStorageValidationError(
         f"numeric spreadsheet edit {input_key!r} must be a finite decimal",
         context={"input_key": input_key, "value": str(value)},
+    )
+    raise _calc_sheets_pull_terminal_refusal(
+        error,
+        CalcSheetsPullPreconditionCondition.EDIT_VALUE_FINITE,
+        facts={"edit_value": str(value), "finite_decimal": False, "input_key": input_key},
+        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
     )
 
 
@@ -1399,17 +1402,49 @@ def _collect_input_casilla_values(
     )
     undeclared_edits = undeclared_casilla_ids(snapshot.revision, edits_by_casilla)
     non_input_edits = tuple(sorted(set(edits_by_casilla) - set(undeclared_edits) - input_ids))
-    invalid_edits = (*undeclared_edits, *non_input_edits)
-    if invalid_edits:
-        raise OutboundStorageValidationError(
+    if undeclared_edits:
+        error = OutboundStorageValidationError(
             "operator edits must reference canonical input casilla.id values declared by the workbook snapshot",
             context={
                 "modelo_id": snapshot.modelo.id,
                 "revision_id": snapshot.revision.id,
-                "casilla_ids": ",".join(invalid_edits),
+                "casilla_ids": ",".join((*undeclared_edits, *non_input_edits)),
                 "undeclared_casilla_ids": ",".join(undeclared_edits),
                 "non_input_casilla_ids": ",".join(non_input_edits),
             },
+        )
+        raise _calc_sheets_pull_terminal_refusal(
+            error,
+            CalcSheetsPullPreconditionCondition.EDIT_CASILLA_DECLARED,
+            facts={
+                "modelo_id": snapshot.modelo.id,
+                "revision_id": snapshot.revision.id,
+                "undeclared_casilla_count": len(undeclared_edits),
+                "workbook_edits_declared": False,
+            },
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        )
+    if non_input_edits:
+        error = OutboundStorageValidationError(
+            "operator edits must reference canonical input casilla.id values declared by the workbook snapshot",
+            context={
+                "modelo_id": snapshot.modelo.id,
+                "revision_id": snapshot.revision.id,
+                "casilla_ids": ",".join(non_input_edits),
+                "undeclared_casilla_ids": "",
+                "non_input_casilla_ids": ",".join(non_input_edits),
+            },
+        )
+        raise _calc_sheets_pull_terminal_refusal(
+            error,
+            CalcSheetsPullPreconditionCondition.EDIT_CASILLA_INPUT,
+            facts={
+                "modelo_id": snapshot.modelo.id,
+                "non_input_casilla_count": len(non_input_edits),
+                "revision_id": snapshot.revision.id,
+                "workbook_edits_input": False,
+            },
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
         )
     inputs: dict[CasillaId, Decimal] = {}
     for casilla in snapshot.revision.casillas:

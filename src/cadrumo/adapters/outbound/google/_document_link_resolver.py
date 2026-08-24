@@ -31,8 +31,7 @@ from typing import Any, Final, Protocol, cast
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
-from ....application.operator_actions import ConditionEvidence, PreconditionVerdict
-from ....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.external_constants import PDF_MIME_TYPE
 from ....domain.attachments import AttachmentSource
 from ..storage import (
@@ -43,6 +42,7 @@ from ..storage import (
     next_drive_page_token,
 )
 from ._api import execute_request
+from ._preconditions import google_terminal_refusal
 
 # .../d/<ID>/... (file, spreadsheets, document) | ...?id=<ID> | bare <ID>.
 # The bare form requires >=25 chars so a hyphenated English token (e.g.
@@ -92,25 +92,12 @@ def _document_link_terminal_refusal(
     outcome: NoRecoveryOutcome,
 ) -> OutboundStorageError:
     """Return ``error``'s typed equivalent carrying this adapter's terminal verdict."""
-    condition_id = condition.value
-    verdict = PreconditionVerdict(
-        failed_condition_id=condition_id,
-        evidence=(
-            ConditionEvidence(
-                condition_id=condition_id,
-                evidence_id=f"{condition_id}.observation",
-                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-                values=facts,
-            ),
-        ),
-        conditionality=ActionConditionality.NOT_APPLICABLE,
-        no_recovery_outcome=outcome,
-    )
-    return type(error)(
-        error.args[0] if error.args else None,
-        context=error.context,
-        translated_message=error.translated_message,
-        precondition_verdict=verdict,
+    return google_terminal_refusal(
+        error,
+        condition_id=condition.value,
+        facts=facts,
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        outcome=outcome,
     )
 
 

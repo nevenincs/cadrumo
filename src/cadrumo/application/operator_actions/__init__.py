@@ -18,6 +18,7 @@ from ._models import (
     DeclaredNextAction,
     PreconditionVerdict,
 )
+from ._preconditions import no_action_precondition_verdict
 
 __all__ = [
     "OPERATOR_ACTION_CATALOGUE",
@@ -32,4 +33,5 @@ __all__ = [
     "build_action_catalogue",
     "lookup_action",
     "next_action",
+    "no_action_precondition_verdict",
 ]

@@ -39,10 +39,10 @@ from collections.abc import Mapping
 from enum import StrEnum
 from typing import Any, Final
 
-from ....application.operator_actions import ConditionEvidence, PreconditionVerdict
-from ....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ..storage import OutboundStorageConflictError, OutboundStorageError, OutboundStorageValidationError
 from ._api import execute_request
+from ._preconditions import google_terminal_refusal
 
 OWNERSHIP_KEY: Final[str] = "cadrumo_vault_app"
 OWNERSHIP_VALUE: Final[str] = "cadrumo"
@@ -65,25 +65,12 @@ def _drive_entry_terminal_refusal(
     facts: Mapping[str, str | int | bool],
 ) -> OutboundStorageError:
     """Return ``error``'s operator-review equivalent without making up an action."""
-    condition_id = condition.value
-    verdict = PreconditionVerdict(
-        failed_condition_id=condition_id,
-        evidence=(
-            ConditionEvidence(
-                condition_id=condition_id,
-                evidence_id=f"{condition_id}.observation",
-                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-                values=facts,
-            ),
-        ),
-        conditionality=ActionConditionality.NOT_APPLICABLE,
-        no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
-    )
-    return type(error)(
-        error.args[0] if error.args else None,
-        context=error.context,
-        translated_message=error.translated_message,
-        precondition_verdict=verdict,
+    return google_terminal_refusal(
+        error,
+        condition_id=condition.value,
+        facts=facts,
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
     )
 
 
