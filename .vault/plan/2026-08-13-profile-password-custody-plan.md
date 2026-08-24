@@ -19,7 +19,7 @@ related:
   - '[[2026-08-13-sealed-archive-transport-successor-adr]]'
   - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
 modified: '2026-08-24'
-body_hash: 'sha256:c7dfec7997eb8a335a694e528d262bcd2630a4f0604be9b9f2b7ab04b0477167'
+body_hash: 'sha256:55645023dffd6fd9fb0fdee2fbf14b841ba6318e22ccdb77bca16380a40ad091'
 ---
 
 # `profile-password-custody` plan
@@ -344,7 +344,7 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 - [ ] `W06.P12.S233` - Run the complete documented-command, catalogue-drift, locale-completeness, localized-build, no-skip, native Windows, and WSL proof suite and persist fresh global evidence; `dev/docs/tests/ and dev/tests/test_no_skip_xfail.py and src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`.
 - [ ] `W06.P12.S234` - Use Vaultspec RAG semantic discovery plus targeted symbol and caller confirmation to audit recovery creation, handoff, export, restore, and refusal-witness responsibilities for redeclaration, consolidate substitutable implementations, and correct stale optional-recovery production prose; `src/cadrumo/application/user_profile/ and src/cadrumo/adapters/persistence/storage/custody/ and src/cadrumo/entrypoints/cli/`.
 - [ ] `W06.P12.S235` - Repeat the fresh-context campaign-close honesty review against every corrected finding and close the campaign only with no unresolved CRITICAL, HIGH, or MEDIUM result; `.vault/audit/`.
-- [ ] `W06.P12.S236` - Correct the S227 review audit into the canonical Scope, Findings, and Recommendations body schema without changing its substantive verdict; `.vault/audit/2026-08-24-profile-password-custody-s227-workstation-docs-review-audit.md`.
+- [x] `W06.P12.S236` - Correct the S227 review audit into the canonical Scope, Findings, and Recommendations body schema without changing its substantive verdict; `.vault/audit/2026-08-24-profile-password-custody-s227-workstation-docs-review-audit.md`.
 - [ ] `W06.P12.S237` - Remove the retired cadrumo agent-extra installation claim from live harness docstrings and install hints while preserving the sibling cadrumo-harness distribution boundary; `src/cadrumo-harness/src/cadrumo_harness/`.
 - [x] `W06.P12.S238` - Remove inactive profile deletion from the root login gate while preserving active-profile refusal, explicit confirmation, custody preflight, and exact target binding in real subprocess execution; `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py and src/cadrumo/entrypoints/cli/_config/_profile_delete.py and src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/application/config_reset.py and src/cadrumo/application/user_profile/_custody_repository.py and src/cadrumo/application/user_profile/_custody_service.py and src/cadrumo/application/user_profile/_custody_transactions.py and src/cadrumo/application/user_profile/_lifecycle.py and src/cadrumo/application/user_profile/tests/test_custody_transactions.py`.
 - [x] `W06.P12.S239` - Add a central path-specific golden mask for only the profile-delete result fingerprint digest, retain generic digest visibility, and prove the mask is exactly the fresh-sandbox residual through real sequence replay; `src/cadrumo/core/observability/ and dev/docs/sequences/ and dev/docs/tests/test_sequence_goldens.py`.

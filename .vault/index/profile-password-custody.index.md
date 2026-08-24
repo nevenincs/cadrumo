@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:806cd4a1458a3200350fe03f981e969a14a7c3475d88dc97965aa45ac10c3363'
+body_hash: 'sha256:b96e6ea91bdc8ba5b859719972bd89d538d4c16fbd48912871f19478b0b06eb7'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -241,6 +241,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W06-P12-S230]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S231]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S232]]'
+  - '[[2026-08-13-profile-password-custody-W06-P12-S236]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S238]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S239]]'
   - '[[2026-08-13-profile-password-custody-plan]]'
@@ -289,6 +290,7 @@ related:
   - '[[2026-08-24-profile-password-custody-s230-spanish-translation-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s231-catalan-translation-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s232-hungarian-translation-review-audit]]'
+  - '[[2026-08-24-profile-password-custody-s236-s227-audit-schema-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s238-sessionless-delete-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s239-path-specific-golden-mask-review-audit]]'
 ---
@@ -348,6 +350,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-24-profile-password-custody-s230-spanish-translation-review-audit` - `profile-password-custody` audit: `s230 spanish translation review`
 - `2026-08-24-profile-password-custody-s231-catalan-translation-review-audit` - `profile-password-custody` audit: `s231 catalan translation review`
 - `2026-08-24-profile-password-custody-s232-hungarian-translation-review-audit` - `profile-password-custody` audit: `s232 hungarian translation review`
+- `2026-08-24-profile-password-custody-s236-s227-audit-schema-review-audit` - `profile-password-custody` audit: `s236 s227 audit schema review`
 - `2026-08-24-profile-password-custody-s238-sessionless-delete-review-audit` - `profile-password-custody` audit: `S238 sessionless profile delete review`
 - `2026-08-24-profile-password-custody-s239-path-specific-golden-mask-review-audit` - `profile-password-custody` audit: `s239 path specific golden mask review`
 
@@ -586,6 +589,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W06-P12-S230` - Complete every blank or fuzzy Spanish user-page translation and correct download command-list punctuation without English fallback
 - `2026-08-13-profile-password-custody-W06-P12-S231` - Complete every blank or fuzzy Catalan user-page translation and correct download command-list punctuation without English fallback
 - `2026-08-13-profile-password-custody-W06-P12-S232` - Complete every blank or fuzzy Hungarian user-page translation and correct download command-list punctuation without English fallback
+- `2026-08-13-profile-password-custody-W06-P12-S236` - Correct the S227 review audit into the canonical Scope, Findings, and Recommendations body schema without changing its substantive verdict
 - `2026-08-13-profile-password-custody-W06-P12-S238` - Remove inactive profile deletion from the root login gate while preserving active-profile refusal, explicit confirmation, custody preflight, and exact target binding in real subprocess execution
 - `2026-08-13-profile-password-custody-W06-P12-S239` - Add a central path-specific golden mask for only the profile-delete result fingerprint digest, retain generic digest visibility, and prove the mask is exactly the fresh-sandbox residual through real sequence replay
 
