@@ -13,13 +13,18 @@
 # window. The resultado/tipo-dependent annual plazos of art 5 — arrendamiento
 # a-ingresar (20 primeros días de ABRIL del año siguiente), cuota cero (1-20 enero),
 # a devolver (desde el 1 de febrero, cuatro años), transmisiones de inmuebles
-# (art 14.4 Reglamento) and rentas imputadas tipo 02 (presentación todo el año
-# natural siguiente, 1 enero-31 diciembre; la domiciliación es 1 abril-23 diciembre) — depend
+# (art 14.4 Reglamento) and rentas imputadas tipo 02 (for 2025 devengos,
+# presentación todo el año natural siguiente, 1 enero-31 diciembre; any shorter domiciliación range is a
+# payment-modality cutoff, not the presentation window) — depend
 # on a computed RESULTADO and on the TIPO de renta, which a single period token
-# cannot express; they are not yet modelled here. These windows are calendar-declared
+# cannot express; their qualified rows land in the dedicated identity step. These
+# quarterly windows are calendar-declared
 # registry authority and resolve through `resolve_filing_closes_on`; operator M210
 # work-unit creation for these periods (period_selector) is not yet modelled, alongside
 # the agrupación grouped-rentas detail model.
+# Orden HAC/623/2026 changed the tipo-02 presentation interval on 24/06/2026.
+# That mid-year temporal rule must be represented by the qualified identity/data
+# work in S18; it is not retrojected into these 2025-devengo facts.
 
 [[revisions."2025".deadline_windows]]
 id = "modelo-210-2025-1t"

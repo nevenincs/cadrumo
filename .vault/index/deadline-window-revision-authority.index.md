@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:abb3f831be58def959dd9e62e71a11986394e18ec4abf8a771ecfdfd09c0fe5a'
+body_hash: 'sha256:f11f65351f09d93a4461070e81eccd16ec5ec000b3c2966363486395f029219e'
 related:
   - '[[2026-08-24-deadline-window-revision-authority-W01-P01-S01]]'
   - '[[2026-08-24-deadline-window-revision-authority-W01-P01-S02]]'
@@ -15,8 +15,10 @@ related:
   - '[[2026-08-24-deadline-window-revision-authority-W01-P02-S05]]'
   - '[[2026-08-24-deadline-window-revision-authority-W01-P02-S06]]'
   - '[[2026-08-24-deadline-window-revision-authority-W01-P02-S07]]'
+  - '[[2026-08-24-deadline-window-revision-authority-W01-P02-S09]]'
   - '[[2026-08-24-deadline-window-revision-authority-W02-P03-S10]]'
   - '[[2026-08-24-deadline-window-revision-authority-W02-P03-S11]]'
+  - '[[2026-08-24-deadline-window-revision-authority-W02-P05-S17]]'
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
   - '[[2026-08-24-deadline-window-revision-authority-audit]]'
   - '[[2026-08-24-deadline-window-revision-authority-plan]]'
@@ -47,8 +49,10 @@ Auto-generated index of all documents tagged with `#deadline-window-revision-aut
 - `2026-08-24-deadline-window-revision-authority-W01-P02-S05` - Enforce equality between deadline filing_year and Period.filing_year while preserving following-calendar-year physical dates
 - `2026-08-24-deadline-window-revision-authority-W01-P02-S06` - Enforce globally unique deadline IDs and semantic coordinates across every revision with independent bite tests
 - `2026-08-24-deadline-window-revision-authority-W01-P02-S07` - Enforce exact-one deadline ownership through canonical select_revision including period-sensitive cutovers
+- `2026-08-24-deadline-window-revision-authority-W01-P02-S09` - Prove deadline validation under cold construction and fingerprint-backed warm-load verdict paths with planted mutations
 - `2026-08-24-deadline-window-revision-authority-W02-P03-S10` - Re-adjudicate and repair Modelo 190 deadline identity against bundled and official AEAT authority while retaining following-January physical dates
 - `2026-08-24-deadline-window-revision-authority-W02-P03-S11` - Re-adjudicate and repair Modelo 193 deadline identity against bundled and official AEAT authority while retaining following-January physical dates
+- `2026-08-24-deadline-window-revision-authority-W02-P05-S17` - Re-adjudicate every Modelo 210 plazo case against bundled Orden EHA 3316/2010 article 5 and official authority including presentation versus domiciliacion
 
 ### plan
 

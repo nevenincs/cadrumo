@@ -7,7 +7,7 @@ from datetime import date
 
 import pytest
 
-from .....core import scan_directory
+from .....core import normalise_corpus_text, scan_directory
 from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
 from .._corpus_catalogue import verify_source_file
@@ -23,6 +23,32 @@ from ._catalogue_verification_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def test_m210_art_5_grounding_covers_each_distinct_presentation_case() -> None:
+    """M210 presentation periods stay distinct from payment domiciliacion cutoffs."""
+    catalogues = _catalogues()
+    reference = catalogues.legal["orden-eha-3316-2010:art-5"]
+
+    required_text = " ".join(reference.required_text)
+    assert "1 de abril al 31 de diciembre del año natural siguiente" in required_text
+    assert "tres meses una vez transcurrido el plazo de un mes" in required_text
+    assert "veinte primeros días naturales de los meses de abril, julio, octubre y enero" in required_text
+    assert "inmuebles arrendados o subarrendados" in required_text
+    assert "Autoliquidaciones de cuota cero" in required_text
+    assert "Autoliquidaciones con resultado a devolver" in required_text
+    assert "plazo de cuatro años" in required_text
+    assert "domicili" not in required_text.casefold()
+    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+
+    # The enrolled AEAT instructions govern the pre-HAC/623/2026 2025-devengo
+    # schedule. They state presentation throughout the following natural year
+    # and then name domiciliacion separately, proving the payment cutoff cannot
+    # be substituted for that presentation interval.
+    source = catalogues.sources["aeat-modelo-210-procedure"]
+    source_text = normalise_corpus_text((bundled_path() / source.corpus_path).read_text(encoding="utf-8"))
+    assert "el plazo de presentacion e ingreso sera el ano natural siguiente a la fecha de devengo" in source_text
+    assert "se podra domiciliar el pago del importe a ingresar" in source_text
 
 
 def test_lirpf_art_91_transparencia_fiscal_links_to_full_boe_corpus() -> None:
