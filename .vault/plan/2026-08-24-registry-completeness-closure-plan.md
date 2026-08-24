@@ -11,7 +11,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-22-source-casilla-integration-plan]]'
 modified: '2026-08-24'
-body_hash: 'sha256:88c3f2c5fe3bdbadc5a7ab4dc155d3bc22f589d981f116ef0a74b79ac3cbae40'
+body_hash: 'sha256:372905b0b388e00d316be21b657f7f3feb7ff25989251232d1c714e16fdcc3ac'
 ---
 
 # `registry-completeness-closure` plan
@@ -105,7 +105,7 @@ Classify each of the fourteen live filing gaps independently so missing authorit
 - [x] `W02.P03.S19` - Adjudicate Modelo 194 revision 2019-y-siguientes design-era coverage; `.vault/reference/`.
 - [x] `W02.P03.S20` - Adjudicate Modelo 220 revision 2024 producer vocabulary and exact design authority; `.vault/reference/`.
 - [x] `W02.P03.S21` - Adjudicate Modelo 220 revision 2025-y-siguientes open-window design coverage; `.vault/reference/`.
-- [ ] `W02.P03.S22` - Adjudicate Modelo 390 revision 2021 casilla surface and exact annual filing authority; `.vault/reference/`.
+- [x] `W02.P03.S22` - Adjudicate Modelo 390 revision 2021 casilla surface and exact annual filing authority; `.vault/reference/`.
 - [ ] `W02.P03.S23` - Adjudicate Modelo 721 revision 2023-y-siguientes record-design availability and supported filing boundary; `.vault/reference/`.
 - [ ] `W02.P03.S24` - Adjudicate Modelo 763 revision 2011-y-siguientes design-era coverage; `.vault/reference/`.
 - [ ] `W02.P03.S25` - Adjudicate Modelo 840 revision 2003-y-siguientes record-terminator semantics and official extent; `.vault/reference/`.
@@ -124,6 +124,7 @@ Add or reconcile the adjudicated remedies in each existing owning plan and prove
 - [ ] `W02.P04.S76` - Correct the aggregate filing-capability worklist assertion and report so terminal no-authority refusals such as Modelo 136 are never described as requiring an authorable layout, retain named owners for authorable gaps, and pass the terminal-versus-owner distinction to S29.; `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py; .vault/reference/`.
 - [ ] `W02.P04.S77` - Correct Modelo 182 statutory filer-population wording and reconsideration scope so recipients, political parties, and protected-estate holders or administrators remain distinct from donor detail rows.; `.vault/reference/2026-08-24-registry-completeness-closure-modelo-182-design-era-and-donor-row-reference.md; .vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W02-P03-S15.md`.
 - [ ] `W02.P04.S78` - Correct Modelo 187 Article-2 filer-population wording to include the separate Article 42 RGAT obligated-person/entity limb, update its prerequisite, reconsideration, and existing owner routes, and re-attest the reference and execution record.; `.vault/reference/2026-08-24-registry-completeness-closure-modelo-187-design-era-coverage-reference.md; .vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W02-P03-S17.md`.
+- [ ] `W02.P04.S79` - Correct Modelo 220/2024 reviewer-stamp record-design counts against the hash-verified parser measurement and re-attest the unchanged applicability-grade, non-fileable disposition.; `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/revision.toml; .vault/exec/2026-08-24-registry-completeness-closure/`.
 
 ## Wave `W03` - semantic proof and predecessor closure
 
