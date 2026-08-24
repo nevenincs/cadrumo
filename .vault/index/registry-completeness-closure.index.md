@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:dbbc3d52ef9d8ea4c7883b94663a03958b3b9f18d81c2d32b47250bbc5cad5b0'
+body_hash: 'sha256:c608412e7e5417075d76b5e93a345fdd8c687276a677139e2219fb5f9d21f38d'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -39,7 +39,9 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s42-temporal-refusal-invariants-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s43-active-refusal-disposition-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s44-temporal-refusal-invariants-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s45-connected-proof-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s46-terminal-expiry-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s48-undeclared-grade-guard-review-audit]]'
 ---
 
 # `registry-completeness-closure` feature index
@@ -65,7 +67,9 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s42-temporal-refusal-invariants-audit` - `registry-completeness-closure` audit: `S42 temporal refusal invariant review`
 - `2026-08-24-registry-completeness-closure-s43-active-refusal-disposition-review-audit` - `registry-completeness-closure` audit: `S43 active-refusal disposition review`
 - `2026-08-24-registry-completeness-closure-s44-temporal-refusal-invariants-review-audit` - `registry-completeness-closure` audit: `s44 temporal refusal invariants review`
+- `2026-08-24-registry-completeness-closure-s45-connected-proof-review-audit` - `registry-completeness-closure` audit: `S45 connected proof revalidation review`
 - `2026-08-24-registry-completeness-closure-s46-terminal-expiry-review-audit` - `registry-completeness-closure` audit: `S46 terminal expiry review`
+- `2026-08-24-registry-completeness-closure-s48-undeclared-grade-guard-review-audit` - `registry-completeness-closure` audit: `S48 undeclared-grade guard review`
 
 ### exec
 
