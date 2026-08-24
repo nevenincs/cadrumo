@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:49d6dd932712f5b10ef18e7edc3e8a3b42a443463ec9bee72cdbf17b602ee176'
+body_hash: 'sha256:809a9787f640ba122829750348b0f044fe36adb002ba502f6dad0355b9460265'
 related: []
 ---
 
@@ -118,6 +118,61 @@ official sources, which is why this is recorded rather than guessed.
 These two errors are the whole remaining registry-validation surface -- the
 count fell from 3183 to 2 -- and they gate the entire tree above core, because
 registry validation raises during collection.
+
+## The regression is systematic: sweep every revision id against its span
+
+Modelo 184 was not a one-off. A sweep of every revision whose directory id
+encodes a start year found seven disagreements between the id and the
+revision's own `valid_from` / `period_selector.year_from`. Two more were the
+same defect and are corrected in `34285f97b8`:
+
+  308  `2009-y-siguientes`  valid_from 2019-01-01, year_from 2019  -> 2009
+  309  `2004-y-siguientes`  valid_from 2023-01-01, year_from 2023  -> 2004
+
+Both are pinned by tests asserting the earlier start, which is the outside
+corroboration the 184 mistake taught me to require. Every one of these
+revisions carries `reviewed_at = 2026-08-19` and
+`reviewed_by = agent-prepared-pending-operator`, so one sweep appears to have
+narrowed several spans at once.
+
+Four disagreements are deliberately NOT touched, because an id is a label and
+the selector is the authority -- only evidence outside the file settles which
+is wrong:
+
+- **modelo 322 `2008-2022`** -- its own test asserts `valid_from == date(2022,
+  1, 1)`, the current value, so the directory name is merely a stale label and
+  the 2022 windows authored here are correct.
+- **modelos 151, 185 and 720** -- no test asserts a span either way. Recorded
+  for an owner rather than guessed at.
+
+## Domain layer remainder, owned elsewhere
+
+With the registry validating, the domain layer measures 83 failures, and every
+cluster traced back to another team's in-flight work rather than to a defect
+this campaign can close:
+
+- **~51, modelo 200** -- the revision was split, reverted 31 hours later, and
+  span-split progress folded in three hours ago; tests request `filing` grade
+  while the revision currently declares `calculation`.
+- **~14, revision-scoped source windows** -- modelos 193 and 353 cite
+  `aeat-calendario-contribuyente-2025/2026` sources whose `applies_from` falls
+  after the revision's `valid_to`. Both citations were added within the last
+  three hours. Worth noting for whoever owns it: a revision for ejercicio 2024
+  is FILED in 2025, so citing the 2025 calendar may well be correct and the
+  validator's devengo-span assumption the thing to revisit.
+- **~3, modelo 210 quarters** -- the quarterly `1T..4T` windows were replaced
+  wholesale with annual `0A` tipo-specific windows by the plazo-authority work;
+  the quarterly tests are stale against that new model.
+
+## A measurement note: the tree churns faster than a layer runs
+
+The domain layer takes roughly 22 minutes and peers committed six times during
+one run, so a whole-layer failure list is not evidence on its own. Two things
+were needed: a runner that records HEAD plus a refreshed tracked-tree hash
+before and after and refuses to report a number when they differ, and a
+two-pass protocol where the long run only NOMINATES candidates and a short
+second pass over just those modules confirms them. Reproduction across two runs
+at different HEADs is stronger evidence than tree-stability at either one.
 
 ## Durable lesson
 
