@@ -111,6 +111,9 @@ class FilingExportLiveProofEntry:
             raise ValueError("filing export live proof expected byte extent must be positive")
         if not self.official_offset_probes:
             raise ValueError("filing export live proof requires at least one official-offset probe")
+        probe_identities = tuple((probe.record_id, probe.field_id) for probe in self.official_offset_probes)
+        if len(probe_identities) != len(set(probe_identities)):
+            raise ValueError("filing export live proof official-offset probes must identify distinct fields")
 
 
 class LiveFilingExportProofAuthority:
@@ -305,6 +308,7 @@ def verify_filing_export_payload_acceptance(
     ordered = tuple(sorted(layout.records, key=lambda record: record.order))
     first = ordered[0]
     prefix_extent = layout.filing_envelope.prefix_extent if layout.filing_envelope is not None else 0
+    checked_positions: set[int] = set()
     for probe in entry.official_offset_probes:
         if probe.record_id != str(first.id) or not first.required or first.repeat is not None:
             raise RegistryValidationError(
@@ -315,6 +319,10 @@ def verify_filing_export_payload_acceptance(
             raise RegistryValidationError("official-offset probe must target a positioned literal field")
         expected = _literal_bytes(field, encoding=first.encoding)
         start = prefix_extent + field.offset - 1
+        field_positions = set(range(start, start + field.length))
+        if checked_positions.intersection(field_positions):
+            raise RegistryValidationError("official-offset probes must target distinct emitted byte positions")
+        checked_positions.update(field_positions)
         if payload[start : start + field.length] != expected:
             raise RegistryValidationError(
                 f"production export payload disagrees at official field {probe.record_id!r}/{probe.field_id!r}",

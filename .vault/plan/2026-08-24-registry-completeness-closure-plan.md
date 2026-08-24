@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:4056e4c20291b86d241ddca5ec8d0db127c7b6f96974e52bf0985146ceb3f932'
+body_hash: 'sha256:a7f59b26ac30cf12f0f475c50ce94a355c4a3fdd4cae8d9d6426c5c0be8bde43'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -74,7 +74,7 @@ Compose one typed cross-authority report from validated registry coverage, sourc
 - [x] `W01.P02.S58` - Validate and live-rehash filing-envelope and auxiliary-envelope-header source identities and digests against the catalogue, with missing, mismatched, and stale-digest mutation proof; `src/cadrumo/domain/calculations/registry/; src/cadrumo/application/registry/`.
 - [x] `W01.P02.S59` - Mutate filing-envelope and auxiliary-header catalogue source kinds away from record_design and prove snapshot refusal plus a weakened-guard mutation bite.; `src/cadrumo/domain/calculations/registry/tests/test_embedded_envelope_source_authority.py`.
 - [x] `W01.P02.S60` - Replace the passive filing-export proof catalogue with a live fail-closed authority that re-hashes canonical manifest, semantic-map, render-profile, loader-semantic, generated-output, and emitted-payload evidence and verifies production export_draft offsets and execution at composition time, with fabricated and stale catalogue mutation regressions including Modelo 111; `src/cadrumo/application/registry/; dev/registry/; src/cadrumo/application/filing/tests/`.
-- [ ] `W01.P02.S61` - Require distinct official offset-probe identities and emitted byte positions in live filing-export acceptance, and prove duplicate probes cannot inflate checked-offset evidence with a mutation bite.; `dev/registry/filing_export_proof.py; dev/registry/tests/test_filing_export_live_proof.py`.
+- [x] `W01.P02.S61` - Require distinct official offset-probe identities and emitted byte positions in live filing-export acceptance, and prove duplicate probes cannot inflate checked-offset evidence with a mutation bite.; `dev/registry/filing_export_proof.py; dev/registry/tests/test_filing_export_live_proof.py`.
 - [x] `W01.P02.S62` - Remove the S60 audit and execution-record EOF blank lines and re-attest the committed Step surface with the scoped diff check.; `.vault/audit/2026-08-24-registry-completeness-closure-s60-live-export-proof-review-audit.md; .vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S60.md`.
 
 ## Wave `W02` - filing-gap adjudication and owner routing

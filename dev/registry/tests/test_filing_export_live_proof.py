@@ -233,6 +233,13 @@ def test_current_generation_proof_does_not_hide_a_non_executable_production_expo
         )
 
 
+def test_live_proof_entry_refuses_duplicate_official_probe_identities() -> None:
+    probe = FilingExportOfficialOffsetProbe(record_id="m200-page-001", field_id="m200-2025.dp200001.f0001")
+
+    with pytest.raises(ValueError, match="probes must identify distinct fields"):
+        replace(_m200_entry(), official_offset_probes=(probe, probe))
+
+
 def test_payload_acceptance_rehashes_bytes_extent_and_official_offset(registry_authority) -> None:
     base = _m200_entry()
     layout = registry_authority.snapshot("200", filing_year=2025, period="0A").revision.export_layouts[0]
@@ -254,6 +261,41 @@ def test_payload_acceptance_rehashes_bytes_extent_and_official_offset(registry_a
     moved_entry = replace(entry, expected_payload_sha256=sha256_hex(moved))
     with pytest.raises(RegistryValidationError, match="disagrees at official field"):
         verify_filing_export_payload_acceptance(entry=moved_entry, layout=layout, payload=moved)
+
+
+def test_payload_acceptance_refuses_distinct_probe_ids_at_overlapping_emitted_bytes(registry_authority) -> None:
+    base = _m200_entry()
+    layout = registry_authority.snapshot("200", filing_year=2025, period="0A").revision.export_layouts[0]
+    first = min(layout.records, key=lambda record: record.order)
+    first_field = next(field for field in first.fields if str(field.id) == "m200-2025.dp200001.f0001")
+    overlapping_field = next(field for field in first.fields if str(field.id) == "m200-2025.dp200001.f0002")
+    overlapping_record = first.model_copy(
+        update={
+            "fields": tuple(
+                field.model_copy(update={"offset": 2}) if field == overlapping_field else field
+                for field in first.fields
+            ),
+        },
+    )
+    overlapping_layout = layout.model_copy(
+        update={
+            "records": tuple(record if record != first else overlapping_record for record in layout.records),
+        },
+    )
+    prefix_extent = layout.filing_envelope.prefix_extent
+    payload = b" " * prefix_extent + b"<T" + b" " * 8
+    entry = replace(
+        base,
+        expected_payload_sha256=sha256_hex(payload),
+        expected_emitted_bytes=len(payload),
+        official_offset_probes=(
+            FilingExportOfficialOffsetProbe(record_id=str(first.id), field_id=str(first_field.id)),
+            FilingExportOfficialOffsetProbe(record_id=str(first.id), field_id=str(overlapping_field.id)),
+        ),
+    )
+
+    with pytest.raises(RegistryValidationError, match="distinct emitted byte positions"):
+        verify_filing_export_payload_acceptance(entry=entry, layout=overlapping_layout, payload=payload)
 
 
 def _copy_m200_authored_proof_surface(root: Path) -> None:
