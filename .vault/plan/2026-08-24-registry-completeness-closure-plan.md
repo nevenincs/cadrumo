@@ -3,8 +3,6 @@ tags:
   - '#plan'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
-body_hash: 'sha256:dfaa4773a182543644e14315e7b41a7f3858495adbf9356371fa733a78735148'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -12,6 +10,8 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-22-source-casilla-integration-plan]]'
+modified: '2026-08-24'
+body_hash: 'sha256:d9419b9b16bb957d002d6f75d9fe8c49d187014b383ac8640ec0ea9b30788d41'
 ---
 
 # `registry-completeness-closure` plan
@@ -42,7 +42,7 @@ Independently review the landed schema-family and authority-grade contract, rest
 - [x] `W01.P01.S03` - Author the missing temporal-coverage W01.P01.S03 execution record from verified authority-grade ladder evidence; `.vault/exec/2026-08-14-registry-temporal-coverage/`.
 - [x] `W01.P01.S04` - Independently review the authority-grade ladder and its registry-build enrollment against W01.P01.S03; `.vault/audit/`.
 - [ ] `W01.P01.S05` - Reconcile temporal-coverage W01.P01.S03 through canonical plan state after its record and review pass; `.vault/plan/2026-08-14-registry-temporal-coverage-plan.md`.
-- [ ] `W01.P01.S40` - Enforce requested authority grade at the selected-revision snapshot boundary and prove lower-grade escalation refuses; `src/cadrumo/domain/calculations/registry/`.
+- [x] `W01.P01.S40` - Enforce requested authority grade at the selected-revision snapshot boundary and prove lower-grade escalation refuses; `src/cadrumo/domain/calculations/registry/`.
 
 ### Phase `W01.P02` - derived closure report
 

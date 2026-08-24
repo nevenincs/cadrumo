@@ -41,7 +41,7 @@ from ._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow, val
 from ._validate_references import check_all_id_references
 from ._validate_revision_identity import revision_reference_identity_failures
 
-_SnapshotCacheKey = tuple[int, int, str, int, str, date | None, str | None]
+_SnapshotCacheKey = tuple[int, int, str, int, str, date | None, str | None, RegistryAuthorityGrade]
 _SnapshotCacheValue = tuple[ModeloDefinition, RegistryCatalogues, RegistrySnapshot]
 _ValidationCacheKey = tuple[int, int, str]
 _ValidationCacheValue = tuple[ModeloDefinition, RegistryCatalogues]
@@ -292,6 +292,7 @@ def _build_validated_snapshot(
     """
     _install_cross_domain_snapshot_checks()
     revision = select_revision(modelo, filing_year=filing_year, period=period, on=on, revision_id=revision_id)
+    _check_snapshot_authority_grade(modelo, revision, requested_grade=grade)
     if grade is RegistryAuthorityGrade.FILING:
         _check_snapshot_revision_review_status(modelo, revision)
     legal_applicability_failures = validate_orden_aplicabilidad(
@@ -356,6 +357,37 @@ def _build_validated_snapshot(
     )
     check_all_id_references(snapshot)
     return snapshot
+
+
+def _check_snapshot_authority_grade(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    *,
+    requested_grade: RegistryAuthorityGrade,
+) -> None:
+    """Refuse a snapshot claim beyond the selected revision's declared reach.
+
+    Enum declaration order is the canonical authority ladder: each later member
+    includes the reach of every earlier member.  An absent declaration remains
+    distinguishable from the applicability floor because absence is no claim at
+    all and therefore cannot satisfy even an applicability-grade request.
+    """
+    if not revision.is_graded:
+        raise RegistryValidationError(
+            f"modelo {modelo.id} revision {revision.id} declares no authority_grade, so it cannot satisfy "
+            f"the requested {requested_grade.value!r} snapshot authority. Declare and validate the intended "
+            "authority grade before requesting a snapshot.",
+        )
+
+    ladder = tuple(RegistryAuthorityGrade)
+    declared_grade = revision.effective_authority_grade
+    if ladder.index(declared_grade) >= ladder.index(requested_grade):
+        return
+    raise RegistryValidationError(
+        f"modelo {modelo.id} revision {revision.id} declares {declared_grade.value!r} authority grade, "
+        f"which cannot satisfy the requested {requested_grade.value!r} snapshot authority. Validate and "
+        "attest the revision at the requested grade before retrying.",
+    )
 
 
 def _check_snapshot_revision_review_status(
