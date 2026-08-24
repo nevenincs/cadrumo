@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:add58c361da6b9291e9a8dbc4efa8ff2e19f4eb933e936c45c7144d8a06f1f5b'
+body_hash: 'sha256:49d6dd932712f5b10ef18e7edc3e8a3b42a443463ec9bee72cdbf17b602ee176'
 related: []
 ---
 
@@ -46,30 +46,43 @@ The fragment and its directory were removed.
 When a span sweep empties a fragment, delete the fragment and its directory in
 the same change; do not leave an empty file behind.
 
-## Fixed: modelo 184 windows no revision owned
+## Corrected: modelo 184 -- I deleted the wrong side of the disagreement
 
-`src/cadrumo/_data/registry/aeat/modelos/184/revisions/2015-2024/revision.toml`
-declares `valid_from = 2023-01-01`, `valid_to = 2024-12-31`,
-`period_selector = { year_from = 2023, year_to = 2024, periods = ["0A"] }`, and
-cites `aeat-dr-184-2023-2024`. Every declaration in the file says the revision
-governs 2023-2024. Only the directory name `2015-2024`, stale from the earlier
-`2015-y-siguientes` revision this one was split out of, says otherwise.
+`src/cadrumo/_data/registry/aeat/modelos/184/revisions/2015-2024/` declared
+`valid_from = 2023-01-01`, `valid_to = 2024-12-31` and
+`period_selector = { year_from = 2023, year_to = 2024 }`, while its fragment
+carried windows for 2018 through 2022 and its directory was named `2015-2024`.
+Five windows therefore failed canonical-owner resolution.
 
-Its fragment still carried windows for 2018 through 2022 -- years no revision in
-the modelo declares -- so each failed canonical-owner resolution:
+I read the revision file, saw the selector, both validity dates and the source
+reference all agreeing on 2023-2024, concluded the windows were unreachable
+orphans, and deleted them in `6a69b9715b`. That was wrong. The correct fix was
+the selector.
 
-```
-modelo 184 revision 2015-2024: deadline window 'modelo-184-2018-0a' has no unique
-canonical owner for filing coordinate (2018, '0A'): no revision for year=2018
-```
+The evidence was in the domain suite, which registry validation was blocking me
+from running at the time:
 
-This was first recorded here as needing an authority ruling, on the reading that
-choosing between widening the selector to 2015 and deleting five years of windows
-was a claim about what AEAT authorises. Reading the revision file settled it
-without a ruling: the selector, both validity dates and the source reference
-already agree on 2023-2024, and no revision covers 2018-2022, so those windows
-were unreachable data contradicting the span that governs them. Removing them
-makes the fragment agree with its own selector. Landed as `6a69b9715b`.
+- `test_modelo_184_revision_period_selector_starts_at_2015` asserts
+  `revision.valid_from == date(2015, 1, 1)` and
+  `revision.period_selector.year_from == 2015`.
+- `test_modelo_184_february_deadline_windows_match_hap_2250_2015_art_4` asserts
+  the split partitions as `{"2015-2024": 7, "2025-y-siguientes": 2}` -- seven
+  windows this revision must own, the five I deleted among them.
+- `test_modelo_184_snapshot_builds_for_each_published_filing_year` maps
+  ejercicios 2018 through 2024 to `2015-2024` by name.
+
+Orden HAC/1430/2025 partitioned this modelo at ejercicio 2025; it did not move
+its start. Reverted and corrected in `9d64e06332`.
+
+**The lesson, and it is the sharper one:** agreement among a revision file's own
+fields is not corroboration when a single regression sets all of them. The
+selector, both dates and the source ref agreed on 2023-2024 because one bad edit
+wrote them together; the directory name and the orphaned windows were the only
+surviving witnesses to the truth, and I treated them as the stale side precisely
+because they were outnumbered. Corroboration has to come from OUTSIDE the file
+-- here, the tests that name the expected span. When the suite that holds that
+evidence cannot run, that is a reason to defer the call, not to decide it from
+the file alone.
 
 ## Open, needs authored windows: modelos 303 and 322 filing-grade gaps
 
