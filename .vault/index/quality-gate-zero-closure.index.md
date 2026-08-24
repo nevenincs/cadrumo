@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:692f564556bd7fd554955600e35d115e340754c66f0b7f9cdea7518a9df264df'
+body_hash: 'sha256:7cac66ab66a9b20b43f46344785ffb90428a07d256ee0ed078bd242216539a81'
 related:
   - '[[2026-08-24-quality-gate-zero-closure-adr]]'
   - '[[2026-08-24-quality-gate-zero-closure-failure-cluster-topology-reference]]'
@@ -22,7 +22,7 @@ Auto-generated index of all documents tagged with `#quality-gate-zero-closure`.
 
 ### adr
 
-- `2026-08-24-quality-gate-zero-closure-adr` - `quality-gate-zero-closure` adr: `Exact zero closure protocol for static gates and Vault health` | (**status:** `accepted`)
+- `2026-08-24-quality-gate-zero-closure-adr` - `quality-gate-zero-closure` adr: `Perpetual rolling ratchet with revision-scoped exact-zero checkpoints` | (**status:** `accepted`)
 
 ### plan
 
