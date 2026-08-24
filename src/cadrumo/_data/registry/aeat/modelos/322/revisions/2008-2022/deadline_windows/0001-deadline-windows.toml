@@ -6,7 +6,47 @@ period_kind = "monthly"
 opens_on = 2022-02-01
 closes_on = 2022-02-28
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
-source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2008-2022".deadline_windows]]
+id = "modelo-322-2022-02"
+filing_year = 2022
+period = "2022 02"
+period_kind = "monthly"
+opens_on = 2022-03-01
+closes_on = 2022-03-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2008-2022".deadline_windows]]
+id = "modelo-322-2022-03"
+filing_year = 2022
+period = "2022 03"
+period_kind = "monthly"
+opens_on = 2022-04-01
+closes_on = 2022-05-02
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2008-2022".deadline_windows]]
+id = "modelo-322-2022-04"
+filing_year = 2022
+period = "2022 04"
+period_kind = "monthly"
+opens_on = 2022-05-01
+closes_on = 2022-05-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2008-2022".deadline_windows]]
+id = "modelo-322-2022-05"
+filing_year = 2022
+period = "2022 05"
+period_kind = "monthly"
+opens_on = 2022-06-01
+closes_on = 2022-06-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2022"]
 
 [[revisions."2008-2022".deadline_windows]]
 id = "modelo-322-2022-06"
@@ -14,9 +54,59 @@ filing_year = 2022
 period = "2022 06"
 period_kind = "monthly"
 opens_on = 2022-07-01
-closes_on = 2022-07-30
+closes_on = 2022-08-01
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
-source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2008-2022".deadline_windows]]
+id = "modelo-322-2022-07"
+filing_year = 2022
+period = "2022 07"
+period_kind = "monthly"
+opens_on = 2022-08-01
+closes_on = 2022-08-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2008-2022".deadline_windows]]
+id = "modelo-322-2022-08"
+filing_year = 2022
+period = "2022 08"
+period_kind = "monthly"
+opens_on = 2022-09-01
+closes_on = 2022-09-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2008-2022".deadline_windows]]
+id = "modelo-322-2022-09"
+filing_year = 2022
+period = "2022 09"
+period_kind = "monthly"
+opens_on = 2022-10-01
+closes_on = 2022-10-31
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2008-2022".deadline_windows]]
+id = "modelo-322-2022-10"
+filing_year = 2022
+period = "2022 10"
+period_kind = "monthly"
+opens_on = 2022-11-01
+closes_on = 2022-11-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2008-2022".deadline_windows]]
+id = "modelo-322-2022-11"
+filing_year = 2022
+period = "2022 11"
+period_kind = "monthly"
+opens_on = 2022-12-01
+closes_on = 2022-12-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2022"]
 
 [[revisions."2008-2022".deadline_windows]]
 id = "modelo-322-2022-12"
@@ -26,4 +116,4 @@ period_kind = "monthly"
 opens_on = 2023-01-01
 closes_on = 2023-01-30
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
-source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2023"]

@@ -10,6 +10,8 @@ legal_refs = [
 ]
 source_refs = [
     "aeat-dr-322-2022",
+    "aeat-calendario-contribuyente-2022",
+    "aeat-calendario-contribuyente-2023",
     "aeat-modelo-322-procedure",
     "boe-modelo-322-2007-form",
 ]
@@ -56,7 +58,16 @@ application_links = [
 filing_schedules = ["modelo-322-mensual"]
 deadline_windows = [
     "modelo-322-2022-01",
+    "modelo-322-2022-02",
+    "modelo-322-2022-03",
+    "modelo-322-2022-04",
+    "modelo-322-2022-05",
     "modelo-322-2022-06",
+    "modelo-322-2022-07",
+    "modelo-322-2022-08",
+    "modelo-322-2022-09",
+    "modelo-322-2022-10",
+    "modelo-322-2022-11",
     "modelo-322-2022-12",
 ]
 

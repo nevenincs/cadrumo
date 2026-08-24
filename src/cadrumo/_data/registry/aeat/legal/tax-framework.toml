@@ -326,6 +326,19 @@ reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "Ley 40/2015 art. 38: la sede electrónica de las Administraciones Públicas."
 required_text = ["La sede electrónica es aquella dirección electrónica, disponible"]
 
+[sources."aeat-calendario-contribuyente-2022"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/aeat_official/calendars/files/calendario-contribuyente-2022.pdf"
+sha256 = "8d84b3067cce798dd6bfb2c83de3cf68bcd6e199ad584802ab9ee09fb9e53a09"
+bytes = 1561600
+retrieved_at = 2026-08-24
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Calendario_Contribuyente/Anyos_anteriores/Calendario_del_contribuyente_2022_es_es.pdf"
+review_status = "reviewed"
+
 [sources."aeat-calendario-contribuyente-2023"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"
