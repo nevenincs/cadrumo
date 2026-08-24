@@ -189,11 +189,11 @@ msgstr "Cada campo devuelve uno de tres resultados."
 
 #: ../../how-to/censo-update.md:96
 msgid "**Adopted**: the profile had no answer, so AEAT's value fills it."
-msgstr "`**Adoptado**: el perfil no tenía respuesta, así que lo completa el valor de la AEAT.`"
+msgstr "**Adoptado**: el perfil no tenía respuesta, así que lo completa el valor de la AEAT."
 
 #: ../../how-to/censo-update.md:98
 msgid "**Unchanged**: you and AEAT already agree."
-msgstr "`**Sin cambios**: tú y la AEAT ya coincidís.`"
+msgstr "**Sin cambios**: tú y la AEAT ya coincidís."
 
 #: ../../how-to/censo-update.md:100
 msgid ""
@@ -201,9 +201,9 @@ msgid ""
 "then correct the profile or your censo. A value you declared is never overwritten. A field you deliberately cleared "
 "stays cleared, and the pull tells you AEAT still holds a value for it."
 msgstr ""
-"`**Divergente**: tú y la AEAT no coincidís. La obtención informa de la diferencia y no escribe nada. Decide cuál es "
+"**Divergente**: tú y la AEAT no coincidís. La obtención informa de la diferencia y no escribe nada. Decide cuál es "
 "correcto y corrige después el perfil o tu censo. Un valor que hayas declarado nunca se sobrescribe. Un campo que "
-"hayas borrado deliberadamente permanece borrado, y la obtención te indica si la AEAT aún conserva un valor para él.`"
+"hayas borrado deliberadamente permanece borrado, y la obtención te indica si la AEAT aún conserva un valor para él."
 
 #: ../../how-to/censo-update.md:105
 msgid ""

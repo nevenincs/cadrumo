@@ -35,7 +35,7 @@ msgstr "Gyorsindító"
 
 #: ../../index.md:118
 msgid "Connect an agent (MCP)"
-msgstr ""
+msgstr "Ügynök csatlakoztatása (MCP)"
 
 #: ../../index.md:118
 msgid "First quarterly filing"
@@ -222,45 +222,32 @@ msgid "Cadrumo documentation"
 msgstr "Cadrumo dokumentáció"
 
 #: ../../index.md:3
-msgid ""
-"Paper tax forms, an envelope, a keyboard, and a calculator arranged on a "
-"desk"
-msgstr ""
-"Papíralapú adóűrlapok, egy boríték, egy billentyűzet és egy számológép "
-"elrendezve egy íróasztalon"
+msgid "Paper tax forms, an envelope, a keyboard, and a calculator arranged on a desk"
+msgstr "Papíralapú adóűrlapok, egy boríték, egy billentyűzet és egy számológép elrendezve egy íróasztalon"
 
 #: ../../index.md:9
-#, fuzzy
 msgid ""
-"This is the documentation for Cadrumo and its `aeat` command-line "
-"interface (CLI). Cadrumo turns your records into checked modelo figures "
-"and an export file. You upload that file to the Agencia Estatal de "
-"Administración Tributaria (AEAT) yourself. For what Cadrumo is and who it"
-" is for, see the [product page](https://cadrumo.neve.md); the source is "
-"on [GitHub](https://github.com/nevenincs/cadrumo). Cadrumo is in beta - "
-"interfaces may still change between releases."
+"This is the documentation for Cadrumo and its `aeat` command-line interface (CLI). Cadrumo turns your records into "
+"checked modelo figures and an export file. You upload that file to the Agencia Estatal de Administración Tributaria "
+"(AEAT) yourself. For what Cadrumo is and who it is for, see the [product page](https://cadrumo.neve.md); the source "
+"is on [GitHub](https://github.com/nevenincs/cadrumo). Cadrumo is in beta - interfaces may still change between "
+"releases."
 msgstr ""
-"Ez a Cadrumo és `aeat` parancssori felületének (CLI) dokumentációja. A "
-"Cadrumo az Ön nyilvántartásait ellenőrzött modelo-adatokká és egy "
-"exportfájllá alakítja. Ezt a fájlt Ön maga tölti fel az Agencia Estatal "
-"de Administración Tributariához (AEAT). A forráskód a "
-"[GitHubon](https://github.com/nevenincs/cadrumo) érhető el. A Cadrumo "
-"béta állapotú; a felületek még változhatnak a kiadások között."
+"Ez a Cadrumo és `aeat` parancssori felületének (CLI) dokumentációja. A Cadrumo az Ön nyilvántartásait ellenőrzött "
+"modelo-adatokká és egy exportfájllá alakítja. Ezt a fájlt Ön maga tölti fel az Agencia Estatal de Administración "
+"Tributariához (AEAT). A forráskód a [GitHubon](https://github.com/nevenincs/cadrumo) érhető el. A Cadrumo béta "
+"állapotú; a felületek még változhatnak a kiadások között."
 
 #: ../../index.md:18
 msgid ""
-"Cadrumo is not tax advice, is not affiliated with AEAT, and does not "
-"replace AEAT's official tools or advice from a qualified professional. It"
-" builds, checks, and exports files locally. You file through official "
-"AEAT channels yourself and remain responsible for every declaration you "
-"submit. Read the [full disclaimer](disclaimer.md) before you rely on "
-"Cadrumo."
+"Cadrumo is not tax advice, is not affiliated with AEAT, and does not replace AEAT's official tools or advice from a "
+"qualified professional. It builds, checks, and exports files locally. You file through official AEAT channels "
+"yourself and remain responsible for every declaration you submit. Read the [full disclaimer](disclaimer.md) before "
+"you rely on Cadrumo."
 msgstr ""
-"A Cadrumo nem adótanácsadás, nem áll kapcsolatban az AEAT-tal, és nem "
-"helyettesíti az AEAT hivatalos eszközeit vagy egy képzett szakember "
-"tanácsát. Helyben építi, ellenőrzi és exportálja a fájlokat. Ön maga "
-"nyújt be a hivatalos AEAT-csatornákon keresztül, és Ön felel minden "
-"benyújtott declaraciónért. Olvassa el a [teljes jogi "
+"A Cadrumo nem adótanácsadás, nem áll kapcsolatban az AEAT-tal, és nem helyettesíti az AEAT hivatalos eszközeit vagy "
+"egy képzett szakember tanácsát. Helyben építi, ellenőrzi és exportálja a fájlokat. Ön maga nyújt be a hivatalos AEAT-"
+"csatornákon keresztül, és Ön felel minden benyújtott declaraciónért. Olvassa el a [teljes jogi "
 "nyilatkozatot](disclaimer.md), mielőtt a Cadrumóra támaszkodna."
 
 #: ../../index.md:25
@@ -269,17 +256,13 @@ msgstr "Hol kezdje"
 
 #: ../../index.md:27
 msgid ""
-"These guides cover the whole preparation cycle: setting up a taxpayer "
-"profile, importing and classifying bank records, checking what is due, "
-"and preparing, verifying, and exporting each modelo. The two worked years"
-" - one for income tax, one for IVA - walk the full cycle with real "
-"commands."
+"These guides cover the whole preparation cycle: setting up a taxpayer profile, importing and classifying bank "
+"records, checking what is due, and preparing, verifying, and exporting each modelo. The two worked years - one for "
+"income tax, one for IVA - walk the full cycle with real commands."
 msgstr ""
-"Ezek az útmutatók a teljes előkészítési ciklust lefedik: az adózói profil"
-" beállítását, a bankkivonatok importálását és besorolását, az esedékesség"
-" ellenőrzését, valamint az egyes modelók előkészítését, ellenőrzését és "
-"exportálását. A két kidolgozott év - az egyik a jövedelemadóra, a másik "
-"az IVA-ra - valós parancsokkal járja végig a teljes ciklust."
+"Ezek az útmutatók a teljes előkészítési ciklust lefedik: az adózói profil beállítását, a bankkivonatok importálását "
+"és besorolását, az esedékesség ellenőrzését, valamint az egyes modelók előkészítését, ellenőrzését és exportálását. A"
+" két kidolgozott év - az egyik a jövedelemadóra, a másik az IVA-ra - valós parancsokkal járja végig a teljes ciklust."
 
 #: ../../index.md:37
 msgid "Start from scratch"
@@ -287,21 +270,17 @@ msgstr "Kezdés a nulláról"
 
 #: ../../index.md:42
 msgid "Take the shortest path from an empty profile to an exported modelo file."
-msgstr ""
-"Tegye meg a legrövidebb utat egy üres profiltól egy exportált modelo "
-"fájlig."
+msgstr "Tegye meg a legrövidebb utat egy üres profiltól egy exportált modelo fájlig."
 
 #: ../../index.md:45
 msgid "Run through the income-tax year"
 msgstr "Végigfutás a jövedelemadó-éven"
 
 #: ../../index.md:50
-msgid ""
-"Follow a worked year of Modelo 130 quarters closing into the annual "
-"Modelo 100 Renta declaration, command by command."
+msgid "Follow a worked year of Modelo 130 quarters closing into the annual Modelo 100 Renta declaration, command by command."
 msgstr ""
-"Kövessen végig egy kidolgozott évet, amelyben a Modelo 130 negyedévei az "
-"éves Modelo 100 Renta-bevallásba zárulnak, parancsról parancsra."
+"Kövessen végig egy kidolgozott évet, amelyben a Modelo 130 negyedévei az éves Modelo 100 Renta-bevallásba zárulnak, "
+"parancsról parancsra."
 
 #: ../../index.md:54
 msgid "Run through the IVA year"
@@ -309,43 +288,31 @@ msgstr "Végigfutás az IVA-éven"
 
 #: ../../index.md:59
 msgid ""
-"Follow a worked year of Modelo 303 quarters, the Modelo 349 branch, and "
-"the annual Modelo 390 summary, command by command."
+"Follow a worked year of Modelo 303 quarters, the Modelo 349 branch, and the annual Modelo 390 summary, command by "
+"command."
 msgstr ""
-"Kövessen végig egy kidolgozott évet a Modelo 303 negyedéveivel, a Modelo "
-"349 ágával és az éves Modelo 390 összesítővel, parancsról parancsra."
+"Kövessen végig egy kidolgozott évet a Modelo 303 negyedéveivel, a Modelo 349 ágával és az éves Modelo 390 "
+"összesítővel, parancsról parancsra."
 
 #: ../../index.md:63
 msgid "Set up your taxpayer profile"
 msgstr "Állítsa be adózói profilját"
 
 #: ../../index.md:68
-msgid ""
-"Create the taxpayer profile and record the facts that decide which "
-"modelos apply."
-msgstr ""
-"Hozza létre az adózói profilt, és rögzítse azokat a tényeket, amelyek "
-"eldöntik, mely modelók vonatkoznak Önre."
+msgid "Create the taxpayer profile and record the facts that decide which modelos apply."
+msgstr "Hozza létre az adózói profilt, és rögzítse azokat a tényeket, amelyek eldöntik, mely modelók vonatkoznak Önre."
 
 #: ../../index.md:72
 msgid "Import and manage transactions"
 msgstr "Tranzakciók importálása és kezelése"
 
 #: ../../index.md:77
-msgid ""
-"Import bank statements, review the rows, and attach the evidence behind "
-"them."
-msgstr ""
-"Importálja a bankkivonatokat, tekintse át a sorokat, és csatolja a "
-"mögöttük álló bizonyítékokat."
+msgid "Import bank statements, review the rows, and attach the evidence behind them."
+msgstr "Importálja a bankkivonatokat, tekintse át a sorokat, és csatolja a mögöttük álló bizonyítékokat."
 
 #: ../../index.md:86
-msgid ""
-"Decide business, personal, or mixed use and set the category and tax "
-"fields on each row."
-msgstr ""
-"Döntse el az üzleti, személyes vagy vegyes felhasználást, és állítsa be a"
-" kategóriát és az adómezőket minden soron."
+msgid "Decide business, personal, or mixed use and set the category and tax fields on each row."
+msgstr "Döntse el az üzleti, személyes vagy vegyes felhasználást, és állítsa be a kategóriát és az adómezőket minden soron."
 
 #: ../../index.md:90
 msgid "Plan your filing calendar"
@@ -353,9 +320,7 @@ msgstr "Tervezze meg benyújtási naptárát"
 
 #: ../../index.md:95
 msgid "See which modelos are due and which period to prepare next."
-msgstr ""
-"Nézze meg, mely modelók esedékesek, és melyik időszakot készítse elő "
-"legközelebb."
+msgstr "Nézze meg, mely modelók esedékesek, és melyik időszakot készítse elő legközelebb."
 
 #: ../../index.md:98
 msgid "Prepare your filings"
@@ -363,11 +328,11 @@ msgstr "Készítse elő benyújtásait"
 
 #: ../../index.md:103
 msgid ""
-"Prepare, verify, export, file at AEAT, and reconcile - with a recipe per "
-"modelo: 036, 100 (Renta), 130, 303, 349, and 390."
+"Prepare, verify, export, file at AEAT, and reconcile - with a recipe per modelo: 036, 100 (Renta), 130, 303, 349, and"
+" 390."
 msgstr ""
-"Előkészítés, ellenőrzés, exportálás, benyújtás az AEAT-nál és egyeztetés "
-"- modelónként egy-egy recepttel: 036, 100 (Renta), 130, 303, 349 és 390."
+"Előkészítés, ellenőrzés, exportálás, benyújtás az AEAT-nál és egyeztetés - modelónként egy-egy recepttel: 036, 100 "
+"(Renta), 130, 303, 349 és 390."
 
 #: ../../index.md:108
 msgid "Search everything"
@@ -376,23 +341,16 @@ msgstr "Keressen mindenben"
 #: ../../index.md:110
 #, python-brace-format
 msgid ""
-"Press {kbd}`Ctrl+K` ({kbd}`Cmd+K` on macOS) on any page to search tax "
-"concepts, casillas, commands, and guides; exact term matches appear "
-"first. Use the [command-line reference](cli/index.rst) for commands and "
-"options, and [how it works](explanation/index.md) for how records become "
-"modelo figures and what checks run. Use [Import, export, and "
-"evidence](reference/import-export-and-evidence.md) to distinguish source "
-"data, review outputs, AEAT upload files, official filing proof, and audit"
-" packages."
+"Press {kbd}`Ctrl+K` ({kbd}`Cmd+K` on macOS) on any page to search tax concepts, casillas, commands, and guides; exact"
+" term matches appear first. Use the [command-line reference](cli/index.rst) for commands and options, and [how it "
+"works](explanation/index.md) for how records become modelo figures and what checks run. Use [Import, export, and "
+"evidence](reference/import-export-and-evidence.md) to distinguish source data, review outputs, AEAT upload files, "
+"official filing proof, and audit packages."
 msgstr ""
-"Nyomja meg a {kbd}`Ctrl+K` ({kbd}`Cmd+K` macOS-en) kombinációt bármely "
-"oldalon, hogy adózási fogalmakra, casillákra, parancsokra és útmutatókra "
-"keressen; a pontos kifejezésegyezések jelennek meg elsőként. Használja a "
-"[parancssori referenciát](cli/index.rst) a parancsokhoz és kapcsolókhoz, "
-"és a [hogyan működik](explanation/index.md) oldalt ahhoz, hogy a "
-"nyilvántartások miként válnak modelo-adatokká, és milyen ellenőrzések "
-"futnak. Használja az [Importálás, exportálás és bizonyítékok](reference"
-"/import-export-and-evidence.md) oldalt a forrásadatok, a felülvizsgálati "
-"kimenetek, az AEAT-feltöltési fájlok, a hivatalos benyújtási igazolás és "
-"az auditcsomagok megkülönböztetéséhez."
+"Nyomja meg a {kbd}`Ctrl+K` ({kbd}`Cmd+K` macOS-en) kombinációt bármely oldalon, hogy adózási fogalmakra, casillákra, "
+"parancsokra és útmutatókra keressen; a pontos kifejezésegyezések jelennek meg elsőként. Használja a [parancssori "
+"referenciát](cli/index.rst) a parancsokhoz és kapcsolókhoz, és a [hogyan működik](explanation/index.md) oldalt ahhoz,"
+" hogy a nyilvántartások miként válnak modelo-adatokká, és milyen ellenőrzések futnak. Használja az [Importálás, "
+"exportálás és bizonyítékok](reference/import-export-and-evidence.md) oldalt a forrásadatok, a felülvizsgálati "
+"kimenetek, az AEAT-feltöltési fájlok, a hivatalos benyújtási igazolás és az auditcsomagok megkülönböztetéséhez."
 

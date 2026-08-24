@@ -213,7 +213,7 @@ msgstr "Vías de instalación por canal:"
 
 #: ../../download.md:100
 msgid "**Python package**: Any platform with Python 3.13+"
-msgstr "**Paquete de Python** — Cualquier plataforma con Python 3.13+"
+msgstr "**Paquete de Python** - Cualquier plataforma con Python 3.13+"
 
 #: ../../download.md:102
 msgid "The PyPI listing opens at public launch; until then, install the release-page artifact attached to the latest release."
@@ -223,7 +223,7 @@ msgstr ""
 
 #: ../../download.md:104
 msgid "**Scoop package**: Windows (x86-64)"
-msgstr "**Paquete de Scoop** — Windows (x86-64)"
+msgstr "**Paquete de Scoop** - Windows (x86-64)"
 
 #: ../../download.md:106
 msgid "The Scoop bucket opens at public launch; until then, install the release-page artifact attached to the latest release."
@@ -233,7 +233,7 @@ msgstr ""
 
 #: ../../download.md:108
 msgid "**Homebrew formula**: macOS (Apple silicon), Linux (x86-64 and arm64)"
-msgstr "**Fórmula de Homebrew** — macOS (Apple silicon), Linux (x86-64 y arm64)"
+msgstr "**Fórmula de Homebrew** - macOS (Apple silicon), Linux (x86-64 y arm64)"
 
 #: ../../download.md:110
 msgid "The Homebrew tap opens at public launch; until then, install the release-page artifact attached to the latest release."
@@ -243,7 +243,7 @@ msgstr ""
 
 #: ../../download.md:112
 msgid "**Claude plugin**: Claude Code, Claude Desktop, Claude Cowork"
-msgstr "`**Complemento de Claude**: Claude Code, Claude Desktop, Claude Cowork`"
+msgstr "**Complemento de Claude**: Claude Code, Claude Desktop, Claude Cowork"
 
 #: ../../download.md:114
 msgid ""
@@ -255,7 +255,7 @@ msgstr ""
 
 #: ../../download.md:116
 msgid "**Claude Desktop extension (MCPB)**: Claude Desktop"
-msgstr "`**Extensión de Claude Desktop (MCPB)**: Claude Desktop"
+msgstr "**Extensión de Claude Desktop (MCPB)**: Claude Desktop"
 
 #: ../../download.md:118
 msgid ""
