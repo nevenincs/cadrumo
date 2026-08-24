@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:ea20325a6f570464d0c5c31e2e3d306a8b62b2e2200694865881b5730013a5be'
+body_hash: 'sha256:576011580d9b87bbad50ce310994793a1a5f040a3222c2315454edb6827009ec'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -120,6 +120,7 @@ Add or reconcile the adjudicated remedies in each existing owning plan and prove
 - [ ] `W02.P04.S29` - Prove every live filing gap has exactly one terminal refusal or one existing-plan owner and reconsideration condition; `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py`.
 - [ ] `W02.P04.S73` - Adjudicate real below-filing source-connectivity participation and evidence for candidate revisions starting with Modelo 036, route accepted evidence or an ADR-authorized disposition into source-casilla-integration, and return the canonical proof to S72 and S11 without treating an empty candidate set as satisfied; `.vault/reference/; .vault/adr/; .vault/plan/2026-08-22-source-casilla-integration-plan.md; src/cadrumo/_data/source_connectivity/census.toml`.
 - [ ] `W02.P04.S74` - Correct Modelo 036 human-filing wording and route its source and export reconsideration paths exactly.; `.vault/reference/; .vault/exec/; .vault/plan/`.
+- [ ] `W02.P04.S75` - Repair S13 Modelo 038 evidence handoff and EOF hygiene, correct its 2024-design-versus-2002 source-scope route, enroll exact temporal and export predecessor-plan owners for scope correction and trusted-layout acquisition, and retain the refusal until both routes close.; `.vault/reference/2026-08-24-registry-completeness-closure-modelo-038-design-extraction-reference.md; .vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W02-P03-S13.md; .vault/plan/2026-08-14-registry-temporal-coverage-plan.md; .vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md`.
 
 ## Wave `W03` - semantic proof and predecessor closure
 
