@@ -5,49 +5,48 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:1bbb6f55b40039c40e1f0ad7fd7043fa153d8fd3fa52b93434687facdc260f88'
+body_hash: 'sha256:cb42093ae2bb84a58b6c6507e829dc3786ec1e270f2c64bf38772a854f1444f7'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace registry-completeness-closure with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
 # `registry-completeness-closure` audit: `S26 temporal owner enrollment independent review`
 
 ## Scope
 
-<!-- What was audited and why -->
+Independent review of `3e40bfa548`, its execution record, the accepted closure
+ADR, the whole temporal-coverage plan, all fourteen filing-gap adjudications,
+and the current worklist and temporal-authority code. Vaultspec-RAG located the
+single canonical temporal composer, `compose_temporal_coverage`, followed by
+whole-file and exact-symbol confirmation. The commit changes only the closure
+plan, temporal plan, and S26 execution record; it neither adds code nor creates
+a second temporal authority.
+
+The matrix itself is complete: Modelo 038 retains existing `W02.P05.S43`;
+Modelos 182, 187, 188, 194, 220/2025, 721, and 763 receive `S44` through
+`S50` respectively; and Modelos 036, 136, 220/2024, 390, and 840 have no
+unowned temporal remedy. Modelo 185 likewise needs no temporal row because
+its 2003--2025/2026 boundary is already law-determined.
 
 ## Findings
 
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
+### stale-m185-temporal-route | high | The live worklist still assigns the historical Modelo 185 gap to S26
 
-       ### S26 temporal owner enrollment independent review | {level} | {summary}
-
-     followed by a paragraph carrying the detail. S26 temporal owner enrollment independent review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
+The plan enrollment is correct, but the current loaded worklist reports
+`185/2003-2025` as an authorable gap owned only by
+`W02.P04.S26 registry-temporal-coverage`: it sees the registered 2026 design
+and infers that the historical revision merely lacks a cited design. The
+Modelo 185 adjudication instead establishes the 2003--2025/2026 boundary as
+already law-determined and assigns official-image acquisition, source
+registration, semantic mapping, generation, and emitted-byte proof to
+`W02.P04.S28`. This is a stale owner route, not a reason to add a duplicate
+temporal row. S26 enrollment is complete; the stale route blocks only
+`W02.P04.S29`, which already owns the affected worklist correction and proof.
 
 ## Recommendations
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
+Before `W02.P04.S29` closes, make its live worklist classification preserve
+Modelo 185's adjudicated export ownership rather than routing the historical
+source acquisition through the temporal campaign. Add a direct loaded-corpus
+regression for `185/2003-2025` that rejects the stale temporal owner and
+requires the S28 route. Do not add a new temporal row or a Modelo-specific
+writer.
