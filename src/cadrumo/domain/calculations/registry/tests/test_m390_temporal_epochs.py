@@ -72,6 +72,28 @@ def test_m390_2021_parser_epoch_does_not_advertise_filing_capability() -> None:
     assert not revision.export_layouts
 
 
+def test_m390_2021_informational_compensation_roles_do_not_claim_filing_constraints() -> None:
+    modelo, _catalogues = _committed_modelo("390")
+    parser = modelo.revisions["2021"]
+    filing = modelo.revisions["2022"]
+    identities = (
+        ("iva.anual.compensacion-ultimo-periodo-97", "iva_anual_compensacion_ultimo_periodo"),
+        ("iva.anual.compensacion-generada-ejercicio-no-97", "iva_anual_compensacion_generada_ejercicio"),
+    )
+
+    for casilla_id, filing_role in identities:
+        observed = next(c for c in parser.casillas if c.id == casilla_id)
+        bound = next(c for c in filing.casillas if c.id == casilla_id)
+        assert observed.input_kind == "informational"
+        assert observed.constraints is None
+        assert observed.semantic_role == f"{filing_role}_2021_informational"
+        assert bound.input_kind == "bound"
+        assert bound.constraints is not None and bound.constraints.sign == "non_negative"
+        assert bound.semantic_role == filing_role
+        assert "aeat-dr-390-2021" in observed.source_refs
+        assert "aeat-dr-390-2022" in bound.source_refs
+
+
 #: Binding ids embed the revision year (`modelo-390-2024.page_5.223-239....`),
 #: so the same logical binding necessarily has a different id in every epoch.
 #: Comparing them raw reports all 175 page-scoped bindings as "dropped" every

@@ -308,7 +308,7 @@ def test_modelo_369_deadline_windows_close_last_day_next_natural_month() -> None
 
 
 def test_modelo_369_deadline_coordinates_are_complete_exact_and_canonically_owned() -> None:
-    """Every supported 2025/2026 OSS/IOSS period has one law-selected row.
+    """Every supported 2022-2026 OSS/IOSS period has one law-selected row.
 
     HAC/610/2021 article 3 fixes the window as the natural month following
     the return period.  This assertion covers all three scheme vocabularies,
@@ -322,7 +322,7 @@ def test_modelo_369_deadline_coordinates_are_complete_exact_and_canonically_owne
     }
     authority = bundled_authority()
 
-    for filing_year in (2025, 2026):
+    for filing_year in range(2022, 2027):
         projected = authority.deadline_windows(filing_year, modelos=("369",))
         assert len(projected) == 20
         projected_by_coordinate = {
@@ -373,6 +373,13 @@ def test_modelo_369_deadlines_do_not_shift_weekend_month_ends() -> None:
     assert windows[("esquema-importacion", "04")] == date(2025, 5, 31)  # Saturday
     assert windows[("esquema-importacion", "07")] == date(2025, 8, 31)  # Sunday
 
+    historical_windows = {
+        (revision.id, window.period.registry_token): window.closes_on
+        for _modelo, revision, window in authority.deadline_windows(2022, modelos=("369",))
+    }
+    assert historical_windows[("esquema-importacion", "03")] == date(2022, 4, 30)  # Saturday
+    assert historical_windows[("esquema-importacion", "06")] == date(2022, 7, 31)  # Sunday
+
 
 def test_modelo_369_deadline_materialisation_has_no_unpublished_filing_year() -> None:
     """Materialisation stops at the shared presently supported filing-year edge."""
@@ -381,7 +388,7 @@ def test_modelo_369_deadline_materialisation_has_no_unpublished_filing_year() ->
         window.filing_year
         for revision in modelo.revisions.values()
         for window in revision.deadline_windows
-    } == {2025, 2026}
+    } == set(range(2022, 2027))
 
 
 def test_modelo_369_live_cross_references_are_read_only() -> None:

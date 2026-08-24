@@ -51,6 +51,18 @@ application_links = [
 filing_schedules = ["modelo-369-union-trimestral"]
 extraction_profiles = ["modelo-369-union-declaracion-pdf"]
 deadline_windows = [
+    "modelo-369-union-2022-1t",
+    "modelo-369-union-2022-2t",
+    "modelo-369-union-2022-3t",
+    "modelo-369-union-2022-4t",
+    "modelo-369-union-2023-1t",
+    "modelo-369-union-2023-2t",
+    "modelo-369-union-2023-3t",
+    "modelo-369-union-2023-4t",
+    "modelo-369-union-2024-1t",
+    "modelo-369-union-2024-2t",
+    "modelo-369-union-2024-3t",
+    "modelo-369-union-2024-4t",
     "modelo-369-union-2025-1t",
     "modelo-369-union-2025-2t",
     "modelo-369-union-2025-3t",

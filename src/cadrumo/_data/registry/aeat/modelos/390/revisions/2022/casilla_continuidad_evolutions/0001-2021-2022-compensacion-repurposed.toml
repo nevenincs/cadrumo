@@ -1,0 +1,22 @@
+# The AEAT 2021 and 2022 designs retain casillas 97 and 662 as the same
+# annual compensation concepts. The registry surface changes from a 2021
+# informational observation to a 2022 bound non-negative filing field, so the
+# role boundary is explicit rather than silently conflating their constraints.
+
+[[revisions."2022".casilla_continuidad_evolutions]]
+id = "iva-anual-compensacion-ultimo-periodo-2021-2022-repurposed"
+continuidad_id = "iva-anual-compensacion-ultimo-periodo"
+from_revision = "2021"
+to_revision = "2022"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".casilla_continuidad_evolutions]]
+id = "iva-anual-compensacion-generada-ejercicio-2021-2022-repurposed"
+continuidad_id = "iva-anual-compensacion-generada-ejercicio"
+from_revision = "2021"
+to_revision = "2022"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]

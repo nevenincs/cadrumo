@@ -1318,6 +1318,22 @@ def test_modelo_303_workbook_parity_ref_anchors_record_design_layout() -> None:
     assert parity.fixture_id == "modelo-303-2022-record-design-layout"
 
 
+def test_modelo_303_2026_cnae_width_has_a_distinct_authority_role() -> None:
+    modelo, _ = _load_modelo_303()
+    historical = modelo.revisions["2025"]
+    current = modelo.revisions["2026-y-siguientes"]
+
+    for row, casilla_id in enumerate(("500", "505", "510", "515", "520"), start=1):
+        prior = next(c for c in historical.casillas if c.id == casilla_id)
+        widened = next(c for c in current.casillas if c.id == casilla_id)
+        assert prior.constraints is not None and prior.constraints.min_length == prior.constraints.max_length == 3
+        assert widened.constraints is not None and widened.constraints.min_length == widened.constraints.max_length == 4
+        assert prior.semantic_role == f"m303_prorrata_actividad_fila_{row}_cnae"
+        assert widened.semantic_role == f"m303_prorrata_actividad_fila_{row}_cnae_2026_four_digit"
+        assert "aeat-dr-303-2025" in prior.source_refs
+        assert "aeat-dr-303-2026" in widened.source_refs
+
+
 # The defect-C2 regression that pinned the no-volume prorrata default used one
 # filing-year sample. It is retired rather than widened because a dedicated
 # two-revision gate now owns the claim: measured by mutation, breaking the

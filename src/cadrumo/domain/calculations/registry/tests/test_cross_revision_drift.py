@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 
 from .....core.resources import bundled_path
-from .. import LegalRefId, load_modelo_directory
+from .. import CasillaConstraints, LegalRefId, load_modelo_directory
 from .._errors import RegistryValidationError
 from .._modelo_localization import casilla_occurrence_locale_key
 from .._schema import (
@@ -34,6 +34,7 @@ from .._validate import (
     RegistryValidator,
 )
 from .._validate_cross_revision import (
+    declared_cross_revision_continuity_semantic_linkage_failures,
     summarize_non_overlapping_cross_revision_casilla_drift,
     validate_cross_revision_casilla_consistency,
 )
@@ -577,6 +578,109 @@ class TestCrossRevisionConsistency:
         assert "missing" in failures[0]
         assert "no matching casilla continuity id" in failures[0]
 
+    def test_advisory_continuity_evolution_requires_a_target_surface(self) -> None:
+        source = _casilla(cid="0700", label="Base", continuidad_id="base")
+        target = _casilla(cid="0900", label="Unrelated")
+        modelo = _annual_modelo(
+            source,
+            target,
+            evolutions=_evolutions(_continuity_evolution(evolution_id="base-label-2025")),
+        )
+
+        failures = validate_registry_scope([modelo])
+
+        assert len(failures) == 1
+        assert "non-retired evolution has no target" in failures[0]
+
+    def test_continuity_evolution_rejects_duplicate_boundary_declarations(self) -> None:
+        source = _casilla(cid="0700", label="Base", continuidad_id="base")
+        target = _casilla(cid="0700", label="Base", continuidad_id="base")
+        modelo = _annual_modelo(
+            source,
+            target,
+            evolutions=_evolutions(
+                _continuity_evolution(evolution_id="base-label-2025"),
+                _continuity_evolution(evolution_id="base-label-repeat-2025"),
+            ),
+        )
+
+        failures = validate_registry_scope([modelo])
+
+        assert len(failures) == 1
+        assert "continuity evolution duplicate" in failures[0]
+
+    def test_repurposed_evolution_covers_a_versioned_width_boundary(self) -> None:
+        source = _casilla(
+            cid="0700",
+            semantic_role="historic_cnae",
+            continuidad_id="prorrata-cnae",
+        ).model_copy(
+            update={
+                "constraints": CasillaConstraints(
+                    min_length=3,
+                    max_length=3,
+                    legal_refs=("ley-58-2003:art-29",),
+                    source_refs=("aeat-manual",),
+                ),
+            },
+        )
+        target = _casilla(
+            cid="0700",
+            semantic_role="cnae_2026_four_digit",
+            continuidad_id="prorrata-cnae",
+        ).model_copy(
+            update={
+                "constraints": CasillaConstraints(
+                    min_length=4,
+                    max_length=4,
+                    legal_refs=("ley-58-2003:art-29",),
+                    source_refs=("aeat-manual",),
+                ),
+            },
+        )
+        modelo = _annual_modelo(
+            source,
+            target,
+            evolutions=_evolutions(
+                _continuity_evolution(evolution_kind="repurposed", continuidad_id="prorrata-cnae"),
+            ),
+            continuidad_validation={"2025": "strict"},
+        )
+
+        assert validate_registry_scope([modelo]) == ()
+
+    def test_continuity_semantic_linkage_requires_role_derived_id_when_role_is_unique(self) -> None:
+        source = _casilla(
+            cid="0700",
+            semantic_role="total_tax_due",
+            continuidad_id="unrelated-continuity-id",
+        )
+        target = _casilla(
+            cid="0700",
+            semantic_role="total_tax_due",
+            continuidad_id="unrelated-continuity-id",
+        )
+
+        failures = declared_cross_revision_continuity_semantic_linkage_failures([_annual_modelo(source, target)])
+
+        assert len(failures) == 1
+        assert "semantic linkage mismatch" in failures[0]
+        assert "total-tax-due" in failures[0]
+
+    def test_continuity_semantic_linkage_requires_roles_across_a_revision_boundary(self) -> None:
+        source = _casilla(cid="0700", continuidad_id="total-tax-due")
+        target = _casilla(
+            cid="0700",
+            semantic_role="total_tax_due",
+            continuidad_id="total-tax-due",
+        )
+
+        failures = declared_cross_revision_continuity_semantic_linkage_failures([_annual_modelo(source, target)])
+
+        assert len(failures) == 1
+        assert "semantic linkage missing" in failures[0]
+        assert "2024" in failures[0]
+
     def test_strict_continuity_validation_rejects_retired_decision_when_target_surface_remains(
         self,
     ) -> None:
@@ -735,6 +839,14 @@ def test_cross_revision_validator_accepts_committed_corpus(
 ) -> None:
     modelos, _catalogues = committed_registry
     validate_cross_revision_casilla_consistency(modelos)
+
+
+def test_committed_corpus_continuity_semantic_linkage_is_complete(
+    committed_registry: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    modelos, _catalogues = committed_registry
+
+    assert declared_cross_revision_continuity_semantic_linkage_failures(modelos) == ()
 
 
 def test_committed_corpus_non_overlapping_inventory_keeps_annual_m100_drift_visible(
