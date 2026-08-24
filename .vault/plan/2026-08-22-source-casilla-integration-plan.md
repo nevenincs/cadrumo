@@ -12,8 +12,8 @@ related:
   - '[[2026-08-23-amortization-casilla-mapping-adr]]'
   - '[[2026-08-23-inventory-casilla-grounding-research]]'
   - '[[2026-08-23-amortization-casilla-grounding-research]]'
-modified: '2026-08-23'
-body_hash: 'sha256:e4cc51cffedf93ccb2161d182c1902b9808e111680c4f14ff869f78490bd4daa'
+modified: '2026-08-24'
+body_hash: 'sha256:1325a4e832621b4844540035f8a003c9cda26d242ff7ad2c84f8fd9ca5654f6b'
 ---
 
 <!-- RETIRED: S52, S191, S193 -->
@@ -122,6 +122,7 @@ Close the formal review findings before any source candidate is promoted or inve
 - [x] `W01.P23.S160` - decide and implement the canonical live connected-proof gate composition; `src/cadrumo/application/registry`.
 - [x] `W01.P23.S161` - re-review the remediated census foundation and close every recorded finding; `.vault/audit/2026-08-22-source-casilla-integration-census-code-review-audit.md`.
 - [x] `W01.P23.S162` - extend ingress discovery across canonical command-spec declarations and adjudicate the resulting census drift; `dev/source_connectivity/discovery.py`.
+- [x] `W01.P23.S225` - Adjudicate Modelo 036's exact event-driven profile source as manual-by-design and retain the human-filed no-local-submission boundary; `src/cadrumo/application/registry/source_connectivity.py; src/cadrumo/_data/source_connectivity/census.toml; dev/source_connectivity/; .vault/reference/`.
 
 ## Wave `W02` - adjudicate and connect inventory first
 

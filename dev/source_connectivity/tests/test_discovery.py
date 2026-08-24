@@ -111,6 +111,51 @@ PROBE_COMMAND_SPECS = (
     ]
 
 
+def test_command_spec_leaf_resolves_declared_and_fallback_handlers_without_execution(tmp_path: Path) -> None:
+    """Structural discovery must retain `_leaf`'s exact handler declaration semantics."""
+    _write(
+        tmp_path,
+        "src/cadrumo/entrypoints/cli/_probe_command_specs.py",
+        '''PROBE_WRITE = ExecutionPolicySpec(
+    capabilities=frozenset({"encrypted-facts"}),
+    side_effects=frozenset({"local-state"}),
+    performance="local-io",
+    write_route="profile-bound",
+)
+
+def _leaf(token, module, policy, *, handler_name=None):
+    name = token.replace("-", "_")
+    return CommandSpec(
+        key=f"probe_{name}",
+        parent_key="probe",
+        token=token,
+        kind="leaf",
+        policy=policy,
+        handler=LazyBinding.available(
+            DeferredTarget(module, handler_name or f"work_{name}")
+        ),
+    )
+
+PROBE_COMMAND_SPECS = (
+    _leaf("fallback-handler", "cadrumo.entrypoints.cli._probe", PROBE_WRITE),
+    _leaf("explicit-handler", "cadrumo.entrypoints.cli._probe", PROBE_WRITE, handler_name="record_probe"),
+)
+''',
+    )
+    _write(
+        tmp_path,
+        "src/cadrumo/entrypoints/cli/_probe.py",
+        "def work_fallback_handler() -> None:\n    pass\n\ndef record_probe() -> None:\n    pass\n",
+    )
+
+    rows = discover_ingress_surfaces(tmp_path)
+
+    assert [(row.command_name, row.callback_name) for row in rows] == [
+        ("fallback-handler", "work_fallback_handler"),
+        ("explicit-handler", "record_probe"),
+    ]
+
+
 def test_new_exported_calculation_helper_is_detected_independently(tmp_path: Path) -> None:
     _write(
         tmp_path,

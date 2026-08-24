@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#source-casilla-integration'
 date: '2026-08-22'
-modified: '2026-08-23'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:8470e163ea42aa65595758630e7154aadd7f6e5daaa04fcd737566ab26450295'
+body_hash: 'sha256:ec53bd161019cedead17b6b00de7b5a236aa7c88087488fe9cb59eb4ad35a56a'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -35,7 +35,76 @@ related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S153]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S154]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S155]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P02-S06]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P02-S07]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P02-S08]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P02-S09]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P02-S10]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P03-S11]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P03-S12]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P03-S13]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P03-S14]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P03-S15]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P03-S16]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P04-S17]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P04-S18]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P04-S19]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P04-S20]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P04-S21]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P04-S22]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P04-S23]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P05-S24]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P05-S25]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P05-S26]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P05-S27]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P05-S28]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P05-S29]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P05-S30]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P23-S156]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P23-S157]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P23-S158]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P23-S159]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P23-S160]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P23-S161]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P23-S162]]'
+  - '[[2026-08-22-source-casilla-integration-W01-P23-S225]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P06-S31]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P06-S32]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P06-S33]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P06-S34]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P06-S35]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P07-S163]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P07-S164]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P07-S165]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P07-S166]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P07-S167]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P07-S168]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P07-S169]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P07-S36]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P07-S37]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P07-S38]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P07-S39]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P07-S40]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P07-S41]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P07-S42]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P08-S170]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P08-S171]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P08-S172]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P08-S173]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P08-S174]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P08-S175]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P08-S176]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P08-S185]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P08-S186]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P08-S187]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P08-S205]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P08-S43]]'
+  - '[[2026-08-22-source-casilla-integration-W03-P10-S56]]'
+  - '[[2026-08-22-source-casilla-integration-W03-P10-S57]]'
+  - '[[2026-08-22-source-casilla-integration-W03-P10-S58]]'
+  - '[[2026-08-22-source-casilla-integration-W03-P10-S59]]'
   - '[[2026-08-22-source-casilla-integration-adr]]'
+  - '[[2026-08-22-source-casilla-integration-census-code-review-audit]]'
   - '[[2026-08-22-source-casilla-integration-composite-provenance-research]]'
   - '[[2026-08-22-source-casilla-integration-plan]]'
   - '[[2026-08-22-source-casilla-integration-research]]'
@@ -59,6 +128,27 @@ related:
   - '[[2026-08-22-source-casilla-integration-w01-p01-s145-review-audit]]'
   - '[[2026-08-22-source-casilla-integration-w01-p01-s146-review-audit]]'
   - '[[2026-08-22-source-casilla-integration-w01-p01-s147-review-audit]]'
+  - '[[2026-08-23-source-casilla-integration-inventory-source-prerequisites-code-review-audit]]'
+  - '[[2026-08-23-source-casilla-integration-s163-acquisition-cost-review-audit]]'
+  - '[[2026-08-23-source-casilla-integration-s165-encrypted-roundtrip-review-audit]]'
+  - '[[2026-08-23-source-casilla-integration-s166-closing-authority-review-audit]]'
+  - '[[2026-08-23-source-casilla-integration-s167-secure-closing-authority-ingress-review-audit]]'
+  - '[[2026-08-23-source-casilla-integration-s168-inventory-projection-review-audit]]'
+  - '[[2026-08-23-source-casilla-integration-s170-row-source-identity-review-audit]]'
+  - '[[2026-08-23-source-casilla-integration-s171-encrypted-row-identity-review-audit]]'
+  - '[[2026-08-23-source-casilla-integration-s172-inventory-row-template-review-audit]]'
+  - '[[2026-08-23-source-casilla-integration-s173-filing-row-identity-review-audit]]'
+  - '[[2026-08-23-source-casilla-integration-s174-row-source-identity-replay-review-audit]]'
+  - '[[2026-08-23-source-casilla-integration-s175-cli-row-identity-redaction-review-audit]]'
+  - '[[2026-08-23-source-casilla-integration-s176-inventory-runtime-cohort-review-audit]]'
+  - '[[2026-08-23-source-casilla-integration-s34-inventory-projection-review-audit]]'
+  - '[[2026-08-23-source-casilla-integration-s36-inventory-source-kind-review-audit]]'
+  - '[[2026-08-23-source-casilla-integration-s37-activity-identity-review-audit]]'
+  - '[[2026-08-23-source-casilla-integration-s39-inventory-resolver-review-audit]]'
+  - '[[2026-08-23-source-casilla-integration-s40-inventory-enrollment-review-audit]]'
+  - '[[2026-08-23-source-casilla-integration-s41-inventory-runtime-composition-review-audit]]'
+  - '[[2026-08-23-source-casilla-integration-s42-inventory-source-ownership-review-audit]]'
+  - '[[2026-08-23-source-casilla-integration-s43-inventory-binding-templates-review-audit]]'
 ---
 
 # `source-casilla-integration` feature index
@@ -73,6 +163,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 
 ### audit
 
+- `2026-08-22-source-casilla-integration-census-code-review-audit` - `source-casilla-integration` audit: `census and ratchet foundation`
 - `2026-08-22-source-casilla-integration-s135-phase-quality-review-audit` - `source-casilla-integration` audit: `s135 phase quality review`
 - `2026-08-22-source-casilla-integration-s141-workflow-authority-review-audit` - `source-casilla-integration` audit: `s141 workflow authority review`
 - `2026-08-22-source-casilla-integration-s142-route-identity-review-audit` - `source-casilla-integration` audit: `s142 route identity review`
@@ -93,6 +184,27 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-w01-p01-s145-review-audit` - `source-casilla-integration` audit: `W01 P01 S145 resolver identity review`
 - `2026-08-22-source-casilla-integration-w01-p01-s146-review-audit` - `source-casilla-integration` audit: `W01.P01.S146 Calculation Route Identity Remediation Review`
 - `2026-08-22-source-casilla-integration-w01-p01-s147-review-audit` - `source-casilla-integration` audit: `W01 P01 S147 provenance identity correction review`
+- `2026-08-23-source-casilla-integration-inventory-source-prerequisites-code-review-audit` - `source-casilla-integration` audit: `inventory source prerequisites code review`
+- `2026-08-23-source-casilla-integration-s163-acquisition-cost-review-audit` - `source-casilla-integration` audit: `s163 acquisition cost review`
+- `2026-08-23-source-casilla-integration-s165-encrypted-roundtrip-review-audit` - `source-casilla-integration` audit: `s165 encrypted roundtrip review`
+- `2026-08-23-source-casilla-integration-s166-closing-authority-review-audit` - `source-casilla-integration` audit: `s166 closing authority review`
+- `2026-08-23-source-casilla-integration-s167-secure-closing-authority-ingress-review-audit` - `source-casilla-integration` audit: `s167 secure closing authority ingress review`
+- `2026-08-23-source-casilla-integration-s168-inventory-projection-review-audit` - `source-casilla-integration` audit: `s168 inventory projection review`
+- `2026-08-23-source-casilla-integration-s170-row-source-identity-review-audit` - `source-casilla-integration` audit: `s170 row source identity review`
+- `2026-08-23-source-casilla-integration-s171-encrypted-row-identity-review-audit` - `source-casilla-integration` audit: `s171 encrypted row identity review`
+- `2026-08-23-source-casilla-integration-s172-inventory-row-template-review-audit` - `source-casilla-integration` audit: `source-casilla-integration audit: s172 inventory row template review`
+- `2026-08-23-source-casilla-integration-s173-filing-row-identity-review-audit` - `source-casilla-integration` audit: `source-casilla-integration audit: s173 filing row identity review`
+- `2026-08-23-source-casilla-integration-s174-row-source-identity-replay-review-audit` - `source-casilla-integration` audit: `source-casilla-integration audit: s174 row source identity replay review`
+- `2026-08-23-source-casilla-integration-s175-cli-row-identity-redaction-review-audit` - `source-casilla-integration` audit: `source-casilla-integration audit: s175 cli row identity redaction review`
+- `2026-08-23-source-casilla-integration-s176-inventory-runtime-cohort-review-audit` - `source-casilla-integration` audit: `source-casilla-integration audit: s176 inventory runtime cohort review`
+- `2026-08-23-source-casilla-integration-s34-inventory-projection-review-audit` - `source-casilla-integration` audit: `S34 inventory projection formal code review`
+- `2026-08-23-source-casilla-integration-s36-inventory-source-kind-review-audit` - `source-casilla-integration` audit: `s36 inventory source kind review`
+- `2026-08-23-source-casilla-integration-s37-activity-identity-review-audit` - `source-casilla-integration` audit: `S37 activity identity remediation`
+- `2026-08-23-source-casilla-integration-s39-inventory-resolver-review-audit` - `source-casilla-integration` audit: `s39 inventory resolver review`
+- `2026-08-23-source-casilla-integration-s40-inventory-enrollment-review-audit` - `source-casilla-integration` audit: `s40 inventory enrollment review`
+- `2026-08-23-source-casilla-integration-s41-inventory-runtime-composition-review-audit` - `source-casilla-integration` audit: `s41 inventory runtime composition review`
+- `2026-08-23-source-casilla-integration-s42-inventory-source-ownership-review-audit` - `source-casilla-integration` audit: `s42 inventory source ownership review`
+- `2026-08-23-source-casilla-integration-s43-inventory-binding-templates-review-audit` - `source-casilla-integration` audit: `source-casilla-integration audit: s43 inventory binding templates review`
 
 ### exec
 
@@ -123,6 +235,74 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-W01-P01-S153` - make live connectivity authority accept exactly one resolver-matching primary and reject contributor-only, ambiguous, orphaned, drifted, or malformed provenance graphs
 - `2026-08-22-source-casilla-integration-W01-P01-S154` - verify composite and direct provenance identity, encrypted round trips, mutation refusal, wallet lineage, foreign-asset blocking, and semantic sentinel non-duplication
 - `2026-08-22-source-casilla-integration-W01-P01-S155` - correct composite-provenance documentation and validation language identified by formal review
+- `2026-08-22-source-casilla-integration-W01-P02-S06` - derive registry destination records from validated revision snapshots
+- `2026-08-22-source-casilla-integration-W01-P02-S07` - classify manual casillas without inferring substitutability from labels or numeric identifiers
+- `2026-08-22-source-casilla-integration-W01-P02-S08` - project declared bindings, typed selectors, aggregation operations, and target casillas
+- `2026-08-22-source-casilla-integration-W01-P02-S09` - project relations, formula dependencies, and existing source dispositions
+- `2026-08-22-source-casilla-integration-W01-P02-S10` - verify all loaded modelo revisions produce deterministic registry-side census records
+- `2026-08-22-source-casilla-integration-W01-P03-S11` - enumerate secure typed repositories and their aggregate grains
+- `2026-08-22-source-casilla-integration-W01-P03-S12` - enumerate supported CLI and worksheet ingress surfaces
+- `2026-08-22-source-casilla-integration-W01-P03-S13` - enumerate exported calculation helpers and explicit readiness declarations
+- `2026-08-22-source-casilla-integration-W01-P03-S14` - enumerate typed row assemblers and declared source-disposition ownership
+- `2026-08-22-source-casilla-integration-W01-P03-S15` - emit lexical destination matches as advisory findings only
+- `2026-08-22-source-casilla-integration-W01-P03-S16` - verify discovery detects a new repository, assembler, helper, and readiness declaration independently
+- `2026-08-22-source-casilla-integration-W01-P04-S17` - define the canonical machine-readable census manifest
+- `2026-08-22-source-casilla-integration-W01-P04-S18` - load and validate the census against the closed contract
+- `2026-08-22-source-casilla-integration-W01-P04-S19` - classify inventory as the first adjudication candidate with the obsolete 0155 hazard recorded
+- `2026-08-22-source-casilla-integration-W01-P04-S20` - classify amortization as the mandatory second adjudication candidate
+- `2026-08-22-source-casilla-integration-W01-P04-S21` - classify assets and fincas with separate evidence, grain, and substitutability questions
+- `2026-08-22-source-casilla-integration-W01-P04-S22` - classify each of the five deferred row sources as an independent candidate
+- `2026-08-22-source-casilla-integration-W01-P04-S23` - verify every discovered capability and accepted destination candidate has exactly one census row
+- `2026-08-22-source-casilla-integration-W01-P05-S24` - implement census generation and comparison commands
+- `2026-08-22-source-casilla-integration-W01-P05-S25` - reject unclassified new source capabilities and unexplained candidate disappearance
+- `2026-08-22-source-casilla-integration-W01-P05-S26` - reject expired blocked rows and unresolved rows without an owner and bounded follow-up
+- `2026-08-22-source-casilla-integration-W01-P05-S27` - reject connected claims without resolver ownership and encrypted revision proof
+- `2026-08-22-source-casilla-integration-W01-P05-S28` - prove each ratchet failure mode bites under an external mutation
+- `2026-08-22-source-casilla-integration-W01-P05-S29` - enroll the connectivity check in the repository quality-gate surface
+- `2026-08-22-source-casilla-integration-W01-P05-S30` - conduct a formal code review of the census and ratchet foundation
+- `2026-08-22-source-casilla-integration-W01-P23-S156` - replace advisory destination strings with typed registry-resolvable candidate identities and fail on absent or ambiguous destinations
+- `2026-08-22-source-casilla-integration-W01-P23-S157` - verify every reviewed capability locator remains re-fetchable and corresponds to its stable capability identity
+- `2026-08-22-source-casilla-integration-W01-P23-S158` - emit deterministic per-capability census membership and reviewed disposition evidence for aggregate coverage buckets
+- `2026-08-22-source-casilla-integration-W01-P23-S159` - make the census and ratchet modules clean on their intended static type-check surface
+- `2026-08-22-source-casilla-integration-W01-P23-S160` - decide and implement the canonical live connected-proof gate composition
+- `2026-08-22-source-casilla-integration-W01-P23-S161` - re-review the remediated census foundation and close every recorded finding
+- `2026-08-22-source-casilla-integration-W01-P23-S162` - extend ingress discovery across canonical command-spec declarations and adjudicate the resulting census drift
+- `2026-08-22-source-casilla-integration-W02-P06-S31` - ground M100 inventory increase, purchases, and decrease semantics against official AEAT and BOE sources
+- `2026-08-22-source-casilla-integration-W02-P06-S32` - adjudicate the mapping from opening stock, purchase movements, and closing stock to 0177, 0181, and 0182
+- `2026-08-22-source-casilla-integration-W02-P06-S33` - decide revision windows, activity aggregation, sign, rounding, missing-ledger behavior, and caller override policy
+- `2026-08-22-source-casilla-integration-W02-P06-S34` - remove or correct the stale Anexo D casilla 0155 intent after adjudication
+- `2026-08-22-source-casilla-integration-W02-P06-S35` - record the adjudicated inventory disposition and re-fetchable evidence
+- `2026-08-22-source-casilla-integration-W02-P07-S163` - define validated complete inventory acquisition-cost facts including attributable costs, non-recoverable IVA, and evidence completeness
+- `2026-08-22-source-casilla-integration-W02-P07-S164` - propagate complete acquisition-cost facts through inventory application and operator ingress
+- `2026-08-22-source-casilla-integration-W02-P07-S165` - prove complete acquisition-cost fields survive the encrypted inventory repository round trip
+- `2026-08-22-source-casilla-integration-W02-P07-S166` - replace bare closing-stock authority with a provenance-bearing physical-closing observation and prior-closing continuity contract
+- `2026-08-22-source-casilla-integration-W02-P07-S167` - propagate physical-closing authority and continuity evidence through secure inventory ingress
+- `2026-08-22-source-casilla-integration-W02-P07-S168` - produce the strict complete 0177, 0181, and 0182 inventory domain projection
+- `2026-08-22-source-casilla-integration-W02-P07-S169` - formally review the inventory source prerequisites before resolver implementation
+- `2026-08-22-source-casilla-integration-W02-P07-S36` - add the inventory source kind to the canonical taxonomy
+- `2026-08-22-source-casilla-integration-W02-P07-S37` - define and validate the typed inventory selector contract
+- `2026-08-22-source-casilla-integration-W02-P07-S38` - enroll inventory selector validation in registry binding construction
+- `2026-08-22-source-casilla-integration-W02-P07-S39` - implement inventory repository resolution, diagnostics, source identity, and fingerprint provenance
+- `2026-08-22-source-casilla-integration-W02-P07-S40` - enroll the inventory resolver and explicit source disposition
+- `2026-08-22-source-casilla-integration-W02-P07-S41` - supply the encrypted inventory repository through calculation orchestration
+- `2026-08-22-source-casilla-integration-W02-P07-S42` - enforce inventory source ownership and caller-override refusal
+- `2026-08-22-source-casilla-integration-W02-P08-S170` - add typed row-source identity coordinates to the canonical source-resolution carrier and collision merge
+- `2026-08-22-source-casilla-integration-W02-P08-S171` - persist typed row-source identity coordinates on encrypted CalculationRevision state
+- `2026-08-22-source-casilla-integration-W02-P08-S172` - define validated inventory operation row-template selectors without taxpayer activity identities
+- `2026-08-22-source-casilla-integration-W02-P08-S173` - carry typed row-source identity coordinates through ModeloBindingValue filing state
+- `2026-08-22-source-casilla-integration-W02-P08-S174` - propagate row-source identities through calculation replay and review assembly
+- `2026-08-22-source-casilla-integration-W02-P08-S175` - redact raw row-source identities while exposing safe cohort fingerprints in operator output
+- `2026-08-22-source-casilla-integration-W02-P08-S176` - enumerate canonical runtime inventory activities into deterministic atomic three-operation row cohorts
+- `2026-08-22-source-casilla-integration-W02-P08-S185` - ground which supported M100 filing formats carry repeated economic-activity casilla rows and their exact official coordinates
+- `2026-08-22-source-casilla-integration-W02-P08-S186` - add typed row-indexed casilla values and direct-materialization provenance to the canonical source-resolution carrier
+- `2026-08-22-source-casilla-integration-W02-P08-S187` - persist row-indexed casilla values and direct-materialization provenance through encrypted CalculationRevision state
+- `2026-08-22-source-casilla-integration-W02-P08-S205` - amend this plan with one renderer step and one proof step per grounded row-capable format, or record no renderer when no supported format qualifies
+- `2026-08-22-source-casilla-integration-W02-P08-S43` - add grounded inventory operation row-template bindings for supported M100 revisions without taxpayer activity identities
+- `2026-08-22-source-casilla-integration-W03-P10-S56` - ground amortization destinations, revision windows, eligible basis, rates, limits, and asset grain
+- `2026-08-22-source-casilla-integration-W03-P10-S57` - determine whether asset amortization is a direct filing source or a duplicate of transaction-ledger expenses
+- `2026-08-22-source-casilla-integration-W03-P10-S58` - determine whether finca amortization shares or requires a distinct source contract
+- `2026-08-22-source-casilla-integration-W03-P10-S59` - decide grain, precedence, absence semantics, rounding, and override policy
+- `2026-08-22-source-casilla-integration-W01-P23-S225` - Adjudicate Modelo 036's exact event-driven profile source as manual-by-design and retain the human-filed no-local-submission boundary
 
 ### plan
 

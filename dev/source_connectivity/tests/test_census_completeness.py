@@ -10,10 +10,14 @@ from cadrumo.application.registry.source_connectivity import (
     validate_census_destination_candidates,
 )
 from cadrumo.core import Period
-from cadrumo.core.resources import resources
+from cadrumo.core.resources import bundled_path, resources
+from cadrumo.domain.calculations.registry import CensoModeloEventKind
+from cadrumo.domain.calculations.registry._loader import load_modelo_directory
+from cadrumo.domain.calculations.registry._temporal import select_revision
 
 from ..discovery import (
     assign_capabilities_to_census,
+    discover_source_ownership,
     discovered_source_capability_ids,
     validate_census_completeness,
 )
@@ -69,6 +73,68 @@ def test_inventory_census_tracks_only_the_live_connection_gap() -> None:
     assert "schema-v3" in summaries
     assert "0181" in summaries
     assert "missing resolver" in summaries
+
+
+def test_modelo_036_manual_profile_evidence_uses_its_exact_event_coordinate() -> None:
+    """Keep M036's human-filed censo event out of ordinary filing-period tokens."""
+    manifest = load_source_connectivity_census()
+    entry = next(item for item in manifest.entries if item.candidate_id == "censo.modelo-036-profile-status")
+    destinations = entry.registry_destination_candidates
+
+    assert entry.disposition.value == "manual_by_design"
+    assert entry.capability_ids == ("source_ownership:profile",)
+    assert "must not submit an M036 artifact" in entry.review_condition
+    assert {candidate.kind for candidate in destinations} == {"binding_source", "casilla_semantic_role"}
+    assert {candidate.period for candidate in destinations} == {CensoModeloEventKind.ALTA}
+    assert {candidate.period_token for candidate in destinations} == {"alta"}
+
+    modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "036"))
+    revision = select_revision(modelo, filing_year=2025, period=destinations[0].period_token)
+
+    assert revision.id == "2025-02-03-y-siguientes"
+    assert any(binding.source.value == "profile" for binding in revision.bindings)
+    assert any(casilla.semantic_role == "tipo_evento_censal" for casilla in revision.casillas)
+
+
+def test_modelo_036_manual_profile_evidence_refuses_ad_hoc_period_substitution() -> None:
+    """An M036 event decision cannot be broadened into a generic ad-hoc period."""
+    manifest = load_source_connectivity_census()
+    entry = next(item for item in manifest.entries if item.candidate_id == "censo.modelo-036-profile-status")
+    destination = entry.registry_destination_candidates[0]
+    mutated = destination.model_copy(update={"period": Period.from_year_and_code(2025, "AD-HOC")})
+    modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "036"))
+
+    with pytest.raises(ValueError, match="no revision"):
+        select_revision(modelo, filing_year=2025, period=mutated.period_token)
+
+
+def test_modelo_036_profile_ownership_has_one_census_assignment_and_bites_on_remainder_drift() -> None:
+    """The manual M036 disposition owns profile without bypassing census completeness."""
+    manifest = load_source_connectivity_census()
+    entry = next(item for item in manifest.entries if item.candidate_id == "censo.modelo-036-profile-status")
+    ownership_entries = tuple(
+        item
+        for item in manifest.entries
+        if item.capability_selector == "remaining_source_ownership"
+        or (
+            item.capability_ids
+            and all(capability_id.startswith("source_ownership:") for capability_id in item.capability_ids)
+        )
+    )
+    ownership_manifest = manifest.model_copy(update={"entries": ownership_entries})
+    discovered = tuple(item.capability_id for item in discover_source_ownership())
+
+    assignments = assign_capabilities_to_census(discovered, ownership_manifest)
+
+    assert assignments[entry.candidate_id] == ("source_ownership:profile",)
+    assert "source_ownership:profile" not in assignments["coverage.remaining-source-ownership"]
+
+    misplaced = entry.model_copy(update={"capability_ids": ("source_ownership:manual_input",)})
+    mutated = ownership_manifest.model_copy(
+        update={"entries": tuple(misplaced if item == entry else item for item in ownership_entries)}
+    )
+    with pytest.raises(ValueError, match="capability coverage drift"):
+        assign_capabilities_to_census(discovered, mutated)
 
 
 def test_registry_destination_candidates_resolve_against_live_authority() -> None:

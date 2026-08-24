@@ -331,6 +331,24 @@ def _string_value(node: ast.AST, bindings: dict[str, ast.AST] | None = None) -> 
         return _string_value(bindings[node.id], bindings)
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
         return node.value
+    if isinstance(node, ast.BoolOp) and isinstance(node.op, ast.Or):
+        for value in node.values:
+            if (resolved := _string_value(value, bindings)) is not None:
+                return resolved
+        return None
+    if (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "replace"
+        and len(node.args) == 2
+        and not node.keywords
+    ):
+        source = _string_value(node.func.value, bindings)
+        old = _string_value(node.args[0], bindings)
+        new = _string_value(node.args[1], bindings)
+        if source is not None and old is not None and new is not None:
+            return source.replace(old, new)
+        return None
     if isinstance(node, ast.JoinedStr):
         parts: list[str] = []
         for value in node.values:
@@ -351,7 +369,26 @@ def _call_bindings(function: ast.FunctionDef, call: ast.Call) -> dict[str, ast.A
     names = [argument.arg for argument in function.args.args]
     bound: dict[str, ast.AST] = dict(zip(names, call.args, strict=False))
     bound.update({keyword.arg: keyword.value for keyword in call.keywords if keyword.arg is not None})
+    defaults = function.args.defaults
+    for argument, default in zip(function.args.args[-len(defaults) :], defaults, strict=False):
+        bound.setdefault(argument.arg, default)
+    for argument, default in zip(function.args.kwonlyargs, function.args.kw_defaults, strict=False):
+        if default is not None:
+            bound.setdefault(argument.arg, default)
     return bound
+
+
+def _function_bindings(function: ast.FunctionDef, call: ast.Call) -> dict[str, ast.AST]:
+    """Resolve declared defaults and local aliases without executing a command spec."""
+    bindings = _call_bindings(function, call)
+    for statement in function.body:
+        if (
+            isinstance(statement, ast.Assign)
+            and len(statement.targets) == 1
+            and isinstance(statement.targets[0], ast.Name)
+        ):
+            bindings[statement.targets[0].id] = statement.value
+    return bindings
 
 
 def _call_argument(
@@ -375,7 +412,7 @@ def _deferred_handler_target(
 ) -> tuple[str, str] | None:
     bindings = bindings or {}
     if isinstance(expression, ast.Call) and (helper := functions.get(_dotted_name(expression.func))) is not None:
-        return _deferred_handler_target(helper, functions, _call_bindings(helper, expression) | bindings)
+        return _deferred_handler_target(helper, functions, _function_bindings(helper, expression) | bindings)
     for node in ast.walk(expression):
         if not isinstance(node, ast.Call) or _dotted_name(node.func).rsplit(".", maxsplit=1)[-1] != "DeferredTarget":
             continue
@@ -419,7 +456,7 @@ def _command_spec_ingress(repo_root: Path, cli_root: Path) -> tuple[IngressCapab
             bindings: dict[str, ast.AST] = {}
             command_call = call
             if call_name == "_leaf" and leaf_wrapper is not None:
-                bindings = _call_bindings(leaf_wrapper, call)
+                bindings = _function_bindings(leaf_wrapper, call)
                 command_call = next(
                     (
                         child

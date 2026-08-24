@@ -7,6 +7,50 @@ census_id = "source-domain-to-casilla-connectivity"
 # not copy repository, selector, resolver, or casilla schemas.
 
 [[entries]]
+candidate_id = "censo.modelo-036-profile-status"
+disposition = "manual_by_design"
+owner = "source-connectivity-campaign"
+review_condition = "Modelo 036's alta, modificacion, and baja are human-filed at AEAT Sede or a competent AEAT office. Cadrumo must not submit an M036 artifact: decl.event-kind receives operator-authoritative profile censo.status through ProfileSourceResolver, while the M036 lifecycle records the declared human filing and audit separately. Reconsider only if an accepted decision replaces that manual profile authority with a distinct authoritative source and complete live connected proof."
+capability_locators = [
+  "src/cadrumo/application/aggregation/_source_profile.py:23",
+  "src/cadrumo/application/modelo/_m036_lifecycle.py:91",
+]
+capability_ids = ["source_ownership:profile"]
+advisory_destination_refs = [
+  "modelo:036:binding:profile:censo.status",
+  "modelo:036:semantic:tipo_evento_censal",
+]
+registry_destination_candidates = [
+  { kind = "binding_source", modelo_id = "036", revision_id = "2025-02-03-y-siguientes", filing_year = 2025, period = "alta", source_kind = "profile" },
+  { kind = "casilla_semantic_role", modelo_id = "036", revision_id = "2025-02-03-y-siguientes", filing_year = 2025, period = "alta", semantic_role = "tipo_evento_censal" },
+]
+
+[[entries.grounding]]
+locator_kind = "source_reference"
+reference = "aeat-modelo-036-procedure"
+summary = "The official procedure identifies Modelo 036 and its alta, modificacion, and baja lifecycle; it is the registry-cited source for the exact profile binding and event casilla."
+
+[[entries.grounding]]
+locator_kind = "repository"
+reference = "src/cadrumo/_data/registry/aeat/modelos/036/revisions/2025-02-03-y-siguientes/bindings/0001-profile-censo-status.toml:2"
+summary = "The validated M036 binding owns source=profile, selector censo.status, and the closed censo_event_kind enum under the official procedure citations."
+
+[[entries.grounding]]
+locator_kind = "repository"
+reference = "src/cadrumo/_data/registry/aeat/modelos/036/revisions/2025-02-03-y-siguientes/casillas/cdecl.event-kind__cdecl.vigencia-2025.toml:2"
+summary = "The exact decl.event-kind casilla is bound to the M036 profile status and declares semantic_role tipo_evento_censal."
+
+[[entries.grounding]]
+locator_kind = "repository"
+reference = "src/cadrumo/application/aggregation/_source_profile.py:23"
+summary = "The canonical ProfileSourceResolver owns the profile binding source and resolves profile-sourced values with provenance; no second resolver is introduced."
+
+[[entries.grounding]]
+locator_kind = "repository"
+reference = "src/cadrumo/application/modelo/_m036_lifecycle.py:91"
+summary = "The M036 lifecycle records a declaration already filed at Sede or in person and explicitly forbids any local filing action, preserving the manual-by-design boundary."
+
+[[entries]]
 candidate_id = "inventory.stock-valuation"
 disposition = "connect_candidate"
 owner = "source-connectivity-campaign"
@@ -361,7 +405,7 @@ disposition = "duplicate_or_stale"
 owner = "source-connectivity-campaign"
 capability_locators = ["dev/source_connectivity/discovery.py"]
 capability_selector = "remaining_source_ownership"
-expected_capability_digest = "sha256:613c8b032a49610ba8968ac35bba869a0b04e37ce84664b9572413a92411e8be"
+expected_capability_digest = "sha256:87442b19dc5e68aad02de7f4db20a287a1caf3ba26cb1f8e50706a2cf8093182"
 
 [[entries.grounding]]
 locator_kind = "repository"
