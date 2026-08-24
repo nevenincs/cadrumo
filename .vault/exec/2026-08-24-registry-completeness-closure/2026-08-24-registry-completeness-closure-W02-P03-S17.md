@@ -1,0 +1,36 @@
+---
+tags:
+  - '#exec'
+  - '#registry-completeness-closure'
+date: '2026-08-24'
+modified: '2026-08-24'
+body_schema: 'body-v1'
+body_hash: 'sha256:151dd50d980a629838bf59f601a98df73ce6d66f9a40287423240d070ef50bd8'
+step_id: 'S17'
+related:
+  - "[[2026-08-24-registry-completeness-closure-plan]]"
+---
+# Adjudicate Modelo 187 revision 2019-y-siguientes design-era coverage
+
+## Scope
+
+- `.vault/reference/`
+
+## Description
+
+- Re-fetch the BOE sources which change Modelo 187 record fields for 2020, 2021, and 2022.
+- Re-fetch AEAT's current design catalogue and Modelo 187 filing surface.
+- Compare those sources with the hash-pinned 2022 design, the selected source era, casillas, producer vocabulary, and worklist.
+- Record the refusal, owners, and reconsideration gates without production changes.
+
+## Outcome
+
+Modelo 187 remains applicability-only and non-fileable for every selected year. The current AEAT 2022 design is valid post-2022 evidence but cannot cover 2019--2021, which BOE shows contains real design changes. The revision also lacks the type-1/type-2 producer contract, semantic map, layout, generated tree, and emitted-byte proof.
+
+`W02.P04.S26` owns exact historical source eras and any split. `W02.P04.S28` owns producer assignment and export proof. The reference records official URLs, hashes, boundaries, and reconsideration conditions.
+
+## Notes
+
+- Focused committed-registry and source-grounding tests were run; they passed before the shared execution reached its reporting timeout.
+- The aggregate filing-capability worklist failed as designed and named `187/2019-y-siguientes` blocked on 2019--2021 design coverage. This is the asserted refusal, not a regression.
+- An early uncommitted reference draft encountered a shell encoding issue. The final reference was regenerated through the vault CLI and re-attested as UTF-8; no other file was changed to correct it.
