@@ -14,7 +14,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
 modified: '2026-08-24'
 body_schema: body-v1
-body_hash: 'sha256:685e7b8d77055ed9c7aebdc106ad3e7b3afdea8be9d6f565e0d63537bf9528aa'
+body_hash: 'sha256:7873bff1166a6ba21e3c5c484c6e88a7f580d05684c3bb7eed7d4f2ef4c0a1cf'
 ---
 
 <!-- RETIRED: P06, P07, P09 -->
@@ -56,7 +56,6 @@ Fail registry construction on identity, ownership, uniqueness, and periodic comp
 - [x] `W01.P02.S05` - Enforce equality between deadline filing_year and Period.filing_year while preserving following-calendar-year physical dates; `src/cadrumo/domain/calculations/registry/; src/cadrumo/domain/calculations/registry/tests/`.
 - [x] `W01.P02.S06` - Enforce globally unique deadline IDs and semantic coordinates across every revision with independent bite tests; `src/cadrumo/domain/calculations/registry/; src/cadrumo/domain/calculations/registry/tests/`.
 - [x] `W01.P02.S07` - Enforce exact-one deadline ownership through canonical select_revision including period-sensitive cutovers; `src/cadrumo/domain/calculations/registry/_validate_revision_rules.py; src/cadrumo/domain/calculations/registry/tests/`.
-- [ ] `W01.P02.S08` - Consume the canonical temporal-coverage supported-year projection to enforce complete periodic deadline cadence without a second horizon or cadence map; `src/cadrumo/domain/calculations/registry/; src/cadrumo/domain/calculations/registry/tests/`.
 - [x] `W01.P02.S09` - Prove deadline validation under cold construction and fingerprint-backed warm-load verdict paths with planted mutations; `src/cadrumo/domain/calculations/registry/tests/`.
 
 ## Wave `W02` - officially grounded corpus repair
@@ -74,11 +73,11 @@ Correct following-January annual identity without altering physical filing dates
 
 Remove stale copies and complete every officially supported periodic schedule.
 
-- [ ] `W02.P04.S12` - Re-adjudicate Modelo 303 deadlines, remove every non-owner copy, preserve the 2024 cutover, and materialise every supported monthly and quarterly row; `src/cadrumo/_data/registry/aeat/modelos/303/`.
-- [x] `W02.P04.S13` - Re-adjudicate Modelo 322 deadlines, remove stale 2023 copies, and materialise every supported periodic row; `src/cadrumo/_data/registry/aeat/modelos/322/`.
-- [ ] `W02.P04.S14` - Re-adjudicate Modelo 353 deadlines, remove stale 2025 copies, and materialise every supported periodic row; `src/cadrumo/_data/registry/aeat/modelos/353/`.
-- [x] `W02.P04.S15` - Re-adjudicate Modelo 369 deadlines and materialise every supported periodic row without modelo-specific cadence logic; `src/cadrumo/_data/registry/aeat/modelos/369/`.
-- [ ] `W02.P04.S16` - Generate an auditable before-and-after census accounting for every removed, corrected, retained, and materialised deadline coordinate and source; `dev/; .vault/audit/`.
+- [ ] `W02.P04.S12` - Re-adjudicate Modelo 303 deadlines for every supported filing year 2022-2026, remove every non-owner copy, preserve the 2024 cutover, and materialise all 22 measured missing monthly and quarterly cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/303/`.
+- [x] `W02.P04.S13` - Re-adjudicate Modelo 322 deadlines for every supported filing year 2022-2026, remove stale copies, and materialise all 42 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/322/`.
+- [ ] `W02.P04.S14` - Re-adjudicate Modelo 353 deadlines for every supported filing year 2022-2026, remove stale copies, and materialise all 37 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/353/`.
+- [x] `W02.P04.S15` - Re-adjudicate Modelo 369 deadlines for every supported filing year 2022-2026 and materialise all 60 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no modelo-specific selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/369/`.
+- [ ] `W02.P04.S16` - Generate an auditable 559-cell before-and-after census for supported filing years 2022-2026 that accounts for all 294 measured missing cells and every removed, corrected, retained, materialised, or still-blocked deadline coordinate with its official source, reconciling M369 60, M111 48, M322 42, M353 37, M349 32, M303 22, M115 16, M123 12, M202 9, M130 8, M131 4, and M216 4 exactly; `dev/; .vault/audit/`.
 
 ### Phase `W02.P05` - Modelo 210 qualified plazo repair
 
@@ -88,6 +87,25 @@ Complete M210 using canonical periods, ResultDisposition, and official tipo-rent
 - [x] `W02.P05.S18` - Replace invalid M210 quarter identities with canonical EVENT-N or 0A identities and author ResultDisposition plus official-code-qualified variants; `src/cadrumo/_data/registry/aeat/modelos/210/revisions/`.
 - [x] `W02.P05.S19` - Keep M210 tipo 28 event-shaped without a numeric offset until RD 1776/2004 article 14 is bundled and verified; `src/cadrumo/_data/registry/aeat/modelos/210/; src/cadrumo/_data/registry/aeat/legal/`.
 - [x] `W02.P05.S20` - Prove M210 qualifiers accept canonical ResultDisposition and official codes while rejecting lossy conceptual tipo authoring; `src/cadrumo/domain/calculations/registry/tests/`.
+
+### Phase `W02.P14` - remaining periodic fleet corpus repair
+
+Complete the measured non-IVA periodic corpus for supported filing years 2022-2026 from official sources, with one canonical-authority redeclaration audit per modelo.
+
+- [ ] `W02.P14.S37` - Re-adjudicate Modelo 111 deadlines for supported filing years 2022-2026 and materialise all 48 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/111/`.
+- [ ] `W02.P14.S38` - Re-adjudicate Modelo 115 deadlines for supported filing years 2022-2026 and materialise all 16 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/115/`.
+- [ ] `W02.P14.S39` - Re-adjudicate Modelo 123 deadlines for supported filing years 2022-2026 and materialise all 12 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/123/`.
+- [ ] `W02.P14.S40` - Re-adjudicate Modelo 130 deadlines for supported filing years 2022-2026 and materialise all 8 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/130/`.
+- [ ] `W02.P14.S41` - Re-adjudicate Modelo 131 deadlines for supported filing years 2022-2026 and materialise all 4 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/131/`.
+- [ ] `W02.P14.S42` - Re-adjudicate Modelo 202 deadlines for supported filing years 2022-2026 and materialise all 9 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/202/`.
+- [ ] `W02.P14.S43` - Re-adjudicate Modelo 216 deadlines for supported filing years 2022-2026 and materialise all 4 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/216/`.
+- [ ] `W02.P14.S44` - Re-adjudicate Modelo 349 deadlines for supported filing years 2022-2026 and materialise all 32 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/349/`.
+
+### Phase `W02.P15` - fleet periodic completeness hard gate
+
+After every source-grounded fleet corpus repair and its reconciled census, activate the canonical supported-year completeness invariant as the final corpus gate before projection and consumer work.
+
+- [ ] `W02.P15.S08` - After corpus Steps S12-S16 and S37-S44 complete, consume the canonical temporal-coverage supported-year projection and hard-fail incomplete periodic deadline cadence across all 559 expected 2022-2026 cells without a second horizon or cadence map, keeping this completeness gate last and proving it bites on a planted missing cell; `src/cadrumo/domain/calculations/registry/; src/cadrumo/domain/calculations/registry/tests/`.
 
 ## Wave `W03` - canonical projection and resolution
 
@@ -136,7 +154,7 @@ Close against fleet invariants, source evidence, repository rules, and architect
 - [ ] `W04.P13.S33` - Run the bundled-registry invariant proving zero ownership, identity, uniqueness, qualifier, period, and completeness violations; `src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W04.P13.S34` - Run exact historical engine and CLI scenarios for every repaired modelo against the adjudicated registry census; `src/cadrumo/domain/deadlines/tests/; src/cadrumo/entrypoints/cli/tests/; .vault/audit/`.
 - [ ] `W04.P13.S35` - Run Ruff, focused and full pytest, Vaultspec, registry validation, generated-reference drift, locale, and real CLI smoke gates; `src/cadrumo/; dev/; .vault/`.
-- [ ] `W04.P13.S36` - Perform formal code and architecture review for canonical reuse, source fidelity, warm-load enforcement, parity, and absence of superseded paths; `src/cadrumo/; .vault/exec/`.
+- [ ] `W04.P13.S36` - Perform formal code and architecture review for canonical reuse, source fidelity, warm-load enforcement, consumer parity, and absence of superseded paths, running Vaultspec RAG discovery followed by exact-symbol sweeps to prove no revision selector, filing-window resolver, period parser, cadence authority, supported-year horizon, deadline catalogue, qualifier vocabulary, or downstream deduplication has been redeclared; `src/cadrumo/; .vault/exec/; .vault/audit/`.
 
 ## Parallelization
 
