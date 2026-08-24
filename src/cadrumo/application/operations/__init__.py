@@ -98,6 +98,7 @@ from ._models import (
     OperationTerminalReceipt,
     new_operation_id,
 )
+from ._observation import OperationObservationService
 from ._public import (
     OperationCancellationRefusalCode,
     OperationCancellationRefusalV1,
@@ -257,6 +258,7 @@ __all__ = [
     "OperationObservationRefusalV1",
     "OperationObservationRequestV1",
     "OperationObservationResultV1",
+    "OperationObservationService",
     "OperationObservationSuccessV1",
     "OperationObservationUnknownOperationError",
     "OperationObservationVersionHeader",

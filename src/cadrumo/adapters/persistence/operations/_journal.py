@@ -121,6 +121,8 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         request: _OperationReplayRequest,
     ) -> OperationObservationMaterialization | None:
         """Read one complete record and its observation under the journal lock."""
+        if not self._validate_existing_root():
+            return None
         with exclusive_file_lock(self.lock_target):
             try:
                 record = super().load(operation_id)

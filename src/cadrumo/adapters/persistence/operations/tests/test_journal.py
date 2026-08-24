@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import multiprocessing
+import sys
 from datetime import UTC, datetime, timedelta
 from multiprocessing.queues import Queue
 from multiprocessing.synchronize import Event
@@ -229,18 +230,29 @@ def _observe_in_process(
     operation_id: str,
     after_cursor: int,
     limit: int,
-    attempting: Event,
+    lock_entered: Event,
     results: Queue[str],
 ) -> None:
-    """Read one real observation after announcing the same lock attempt."""
-    attempting.set()
-    materialization = asyncio.run(
-        OperationJournalRepository(storage_root=Path(storage_root)).read_observation(
-            operation_id,
-            after_cursor,
-            limit=limit,
+    """Read one real observation and signal entry to its actual lock context."""
+    def trace(frame: object, event: str, argument: object) -> object:
+        del argument
+        code = getattr(frame, "f_code", None)
+        if event == "call" and getattr(code, "co_name", None) == "exclusive_file_lock":
+            lock_entered.set()
+        return trace
+
+    previous_trace = sys.gettrace()
+    sys.settrace(trace)
+    try:
+        materialization = asyncio.run(
+            OperationJournalRepository(storage_root=Path(storage_root)).read_observation(
+                operation_id,
+                after_cursor,
+                limit=limit,
+            )
         )
-    )
+    finally:
+        sys.settrace(previous_trace)
     results.put(materialization.model_dump_json())
 
 
@@ -409,7 +421,7 @@ def test_operation_observation_is_one_locked_record_under_a_real_interleaved_tra
 
     context = multiprocessing.get_context("spawn")
     commit_attempting = context.Event()
-    observe_attempting = context.Event()
+    observe_lock_entered = context.Event()
     commit_results: Queue[str] = context.Queue()
     observe_results: Queue[str] = context.Queue()
     committer = context.Process(
@@ -424,13 +436,13 @@ def test_operation_observation_is_one_locked_record_under_a_real_interleaved_tra
     )
     observer = context.Process(
         target=_observe_in_process,
-        args=(str(tmp_path), initial.operation_id, 1, 2, observe_attempting, observe_results),
+        args=(str(tmp_path), initial.operation_id, 1, 3, observe_lock_entered, observe_results),
     )
     with exclusive_file_lock(storage.lock_target):
         committer.start()
         assert commit_attempting.wait(timeout=15)
         observer.start()
-        assert observe_attempting.wait(timeout=15)
+        assert observe_lock_entered.wait(timeout=15)
         with pytest.raises(Empty):
             commit_results.get(timeout=0.3)
         with pytest.raises(Empty):
@@ -450,12 +462,12 @@ def test_operation_observation_is_one_locked_record_under_a_real_interleaved_tra
     )
     assert observation_shape in {
         (initial.revision, initial.event_cursor, (2, 3), (1, 2, 3)),
-        (successor.revision, successor.event_cursor, (2, 3), (1, 2, 3, 4)),
+        (successor.revision, successor.event_cursor, (2, 3, 4), (1, 2, 3, 4)),
     }
     assert materialization.anchor_cursor == materialization.snapshot.event_cursor
     assert materialization.replay.status is OperationReplayStatus.PAGE
     assert materialization.replay.requested_cursor == 1
-    assert materialization.replay.next_cursor == 3
+    assert materialization.replay.next_cursor == materialization.anchor_cursor
 
 
 def test_operation_observation_has_exact_unknown_and_cursor_ahead_dispositions(tmp_path: Path) -> None:
@@ -471,6 +483,23 @@ def test_operation_observation_has_exact_unknown_and_cursor_ahead_dispositions(t
         asyncio.run(repository.read_observation(operation_id, snapshots[-1].event_cursor + 1, limit=2))
     assert ahead.value.requested_cursor == snapshots[-1].event_cursor + 1
     assert ahead.value.anchor_cursor == snapshots[-1].event_cursor
+
+
+def test_operation_observation_refuses_absent_or_linked_roots_without_creating_storage(tmp_path: Path) -> None:
+    """Unknown and redirected roots cannot create a journal directory or lock sidecar."""
+    repository = OperationJournalRepository(storage_root=tmp_path)
+    journal_root = tmp_path / "operation-journals"
+
+    with pytest.raises(OperationObservationUnknownOperationError):
+        asyncio.run(repository.read_observation("e" * 64, 0, limit=1))
+    assert not journal_root.exists()
+
+    redirected_root = tmp_path / "redirected-operation-journals"
+    redirected_root.mkdir()
+    journal_root.symlink_to(redirected_root, target_is_directory=True)
+    with pytest.raises(RepositoryError, match="symlink or junction"):
+        asyncio.run(repository.read_observation("e" * 64, 0, limit=1))
+    assert not (redirected_root / ".repository.lock").exists()
 
 
 def test_operation_observation_carries_the_complete_progress_fold_separately_from_its_bounded_page(
