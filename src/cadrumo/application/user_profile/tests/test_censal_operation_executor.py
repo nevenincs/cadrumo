@@ -29,6 +29,7 @@ from ....core import OperationEffect, OperationLifecycle, OperationTerminalCondi
 from ....core.classification import SensitivityClass
 from ....core.config import override_settings
 from ....domain.user_profile import UserProfileFact
+from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.secure_namespace_registration import registered_objects
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...operations import (
@@ -112,7 +113,7 @@ def _observation() -> CensalObservation:
         ),
         domicilio_notificacion=CensalObservationAddress(),
         captured_at=_NOW,
-        source_url="https://sede.agenciatributaria.gob.es/censo/consulta",
+        source_url=aeat_url("sede", "/censo/consulta"),
     )
 
 
