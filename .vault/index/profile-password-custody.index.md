@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#profile-password-custody'
-date: '2026-08-23'
-modified: '2026-08-23'
+date: '2026-08-24'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:2fe99df0f0fb69bd131a7089c89521568422b09d931a3817acb699dadca7880d'
+body_hash: 'sha256:ad3fa950cd27cf7836d99dfc32237b92e46f358284800f82d78076b64bd0d63e'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -243,6 +243,7 @@ related:
   - '[[2026-08-16-profile-password-custody-retired-custody-absence-audit]]'
   - '[[2026-08-18-profile-password-custody-campaign-close-audit]]'
   - '[[2026-08-18-profile-password-custody-storage-custody-green-sweep-audit]]'
+  - '[[2026-08-24-profile-password-custody-s206-recovery-parity-review-audit]]'
 ---
 
 # `profile-password-custody` feature index
@@ -281,6 +282,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-16-profile-password-custody-retired-custody-absence-audit` - `profile-password-custody` audit: `retired custody absence`
 - `2026-08-18-profile-password-custody-campaign-close-audit` - `profile-password-custody` audit: `campaign close`
 - `2026-08-18-profile-password-custody-storage-custody-green-sweep-audit` - `profile-password-custody` audit: `storage and custody green sweep`
+- `2026-08-24-profile-password-custody-s206-recovery-parity-review-audit` - `profile-password-custody` audit: `S206 recovery parity review`
 
 ### exec
 

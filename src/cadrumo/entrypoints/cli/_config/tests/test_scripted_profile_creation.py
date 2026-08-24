@@ -11,13 +11,19 @@ from __future__ import annotations
 
 import json
 import os
+import threading
+from contextlib import suppress
+from dataclasses import replace
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 
 from .....core.config import override_settings
 from .....core.i18n import tr
 from .....tests.cli_runner import invoke_cached_cli
+from ... import _command_specs
+from ..._command_spec import ArgumentSpec, CommandSpecGraph
 from ..._verb_input_schema import build_verb_input_schemas
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -36,6 +42,54 @@ def _creation_payload(passphrase: str = _PASSPHRASE) -> str:
     return json.dumps({"passphrase": passphrase, "passphrase_confirmation": passphrase})
 
 
+def _invoke_create_with_recovery(
+    arguments: tuple[str, ...],
+    *,
+    input: str | None = None,
+    verification_transform=lambda payload: payload,
+):
+    """Drive the real two-pipe handoff while the in-process CLI is running."""
+    handoff_reader, handoff_writer = os.pipe()
+    verification_reader, verification_writer = os.pipe()
+    observed: list[bytes] = []
+
+    def supervise() -> None:
+        payload = bytearray()
+        try:
+            while chunk := os.read(handoff_reader, 8193 - len(payload)):
+                payload.extend(chunk)
+            if payload:
+                observed.append(bytes(payload))
+                response = verification_transform(bytes(payload))
+                os.write(verification_writer, response)
+        finally:
+            payload[:] = b"\x00" * len(payload)
+            for descriptor in (handoff_reader, verification_writer):
+                with suppress(OSError):
+                    os.close(descriptor)
+
+    supervisor = threading.Thread(target=supervise, daemon=True)
+    supervisor.start()
+    try:
+        result = invoke_cached_cli(
+            (
+                *arguments,
+                "--recovery-handoff-fd",
+                str(handoff_writer),
+                "--recovery-verification-fd",
+                str(verification_reader),
+            ),
+            input=input,
+        )
+    finally:
+        for descriptor in (handoff_writer, verification_reader):
+            with suppress(OSError):
+                os.close(descriptor)
+        supervisor.join(timeout=5)
+    assert not supervisor.is_alive()
+    return result, observed
+
+
 def _fact_values(document: dict[str, object]) -> dict[str, str]:
     """Project a ``config profile show`` envelope into a path -> value mapping."""
     result = document["result"]
@@ -48,12 +102,13 @@ def _fact_values(document: dict[str, object]) -> dict[str, str]:
 def test_scripted_create_registers_a_real_profile(tmp_path: Path) -> None:
     """``create NAME --quiet`` brings a real, listable profile into existence."""
     with override_settings(**_storage_overrides(tmp_path, passphrase=_PASSPHRASE)):
-        created = invoke_cached_cli(
+        created, handoff = _invoke_create_with_recovery(
             ("--format", "json", "config", "profile", "create", "Scripted Operator", "--quiet", "--secrets-stdin"),
             input=_creation_payload(),
         )
 
         assert created.exit_code == 0, created.output
+        assert len(handoff) == 1
         document = json.loads(created.stdout)
         assert document["result"]["profile_name"] == "Scripted Operator"
         assert document["result"]["status"] == "created"
@@ -80,7 +135,7 @@ def test_scripted_create_persists_the_field_flags_it_was_given(tmp_path: Path) -
     written to avoid.
     """
     with override_settings(**_storage_overrides(tmp_path, passphrase=_PASSPHRASE)):
-        created = invoke_cached_cli(
+        created, _handoff = _invoke_create_with_recovery(
             (
                 "--format",
                 "json",
@@ -140,7 +195,7 @@ def test_scripted_create_refuses_a_foral_ccaa_flag_without_creating_a_profile(tm
     the run would strand.
     """
     with override_settings(**_storage_overrides(tmp_path, passphrase=_PASSPHRASE)):
-        refused = invoke_cached_cli(
+        refused, _handoff = _invoke_create_with_recovery(
             (
                 "--format",
                 "json",
@@ -166,17 +221,10 @@ def test_scripted_create_refuses_a_foral_ccaa_flag_without_creating_a_profile(tm
     assert json.loads(listed.stdout)["result"]["profiles"] == []
 
 
-def test_a_scripted_profile_warns_that_recovery_was_not_enrolled(tmp_path: Path) -> None:
-    """A run with no terminal enrolls no recovery, and SAYS so.
-
-    Recovery can only be installed while the capsule is being published, so an
-    operator who is not told at creation is never told at all -- they would
-    hold a profile whose passphrase is the single point of failure and believe
-    otherwise. The warning is the whole protection, and the 24 words must not
-    appear anywhere in the machine output.
-    """
+def test_a_scripted_profile_enrolls_recovery_without_leaking_it_to_normal_output(tmp_path: Path) -> None:
+    """The machine lane proves possession before creation and emits no words."""
     with override_settings(**_storage_overrides(tmp_path, passphrase=_PASSPHRASE)):
-        created = invoke_cached_cli(
+        created, handoff = _invoke_create_with_recovery(
             ("--format", "json", "config", "profile", "create", "No Terminal", "--quiet", "--secrets-stdin"),
             input=_creation_payload(),
         )
@@ -184,10 +232,122 @@ def test_a_scripted_profile_warns_that_recovery_was_not_enrolled(tmp_path: Path)
     assert created.exit_code == 0, created.output
     document = json.loads(created.stdout)
     codes = [notice["code"] for notice in document["notices"]]
-    assert "PROFILE_RECOVERY_NOT_ENROLLED" in codes
-    # The envelope must never be the transport for recovery material, whether
-    # or not a wrapper was minted.
+    assert "PROFILE_RECOVERY_ENROLLED" in codes
+    assert len(handoff) == 1
+    phrase = json.loads(handoff[0])["recovery_mnemonic"]
+    assert len(phrase.split()) == 24
+    assert phrase not in created.stdout + created.stderr
     assert "mnemonic" not in created.stdout.lower()
+
+
+def test_headless_create_without_recovery_descriptors_refuses_without_mutation(tmp_path: Path) -> None:
+    """A valid passphrase cannot buy a permanently password-only profile."""
+    with override_settings(**_storage_overrides(tmp_path, passphrase=None)):
+        refused = invoke_cached_cli(
+            ("--format", "json", "config", "profile", "create", "No Recovery Pipe", "--quiet", "--secrets-stdin"),
+            input=_creation_payload(),
+        )
+        listed = invoke_cached_cli(("--format", "json", "config", "profile", "list"))
+
+    assert refused.exit_code != 0
+    assert json.loads(refused.stderr)["error"]["message"] == tr(
+        "cli.config.profile.create_recovery_channel_absent"
+    )
+    assert json.loads(listed.stdout)["result"]["profiles"] == []
+
+
+def test_headless_create_refuses_a_wrong_possession_proof_without_publication(tmp_path: Path) -> None:
+    """The capsule is not published merely because the phrase was delivered."""
+
+    def wrong_phrase(payload: bytes) -> bytes:
+        document = json.loads(payload)
+        words = str(document["recovery_mnemonic"]).split()
+        words[0], words[1] = words[1], words[0]
+        document["recovery_mnemonic"] = " ".join(words)
+        return json.dumps(document).encode()
+
+    with override_settings(**_storage_overrides(tmp_path, passphrase=None)):
+        refused, handoff = _invoke_create_with_recovery(
+            ("--format", "json", "config", "profile", "create", "Wrong Proof", "--quiet", "--secrets-stdin"),
+            input=_creation_payload(),
+            verification_transform=wrong_phrase,
+        )
+        listed = invoke_cached_cli(("--format", "json", "config", "profile", "list"))
+
+    assert refused.exit_code != 0
+    assert len(handoff) == 1
+    phrase = json.loads(handoff[0])["recovery_mnemonic"]
+    assert phrase not in refused.stdout + refused.stderr
+    assert json.loads(listed.stdout)["result"]["profiles"] == []
+
+
+@pytest.mark.parametrize(
+    "proof",
+    (
+        b"not-json",
+        b'{"recovery_mnemonic":"one","recovery_mnemonic":"two"}',
+        b'{"recovery_mnemonic":"one","extra":"no"}',
+        b'{"missing":"recovery_mnemonic"}',
+        b"\xff\xfe",
+        b'{"recovery_mnemonic":"' + b"x" * 9000 + b'"}',
+    ),
+)
+def test_headless_recovery_proof_parser_refuses_without_publication(tmp_path: Path, proof: bytes) -> None:
+    with override_settings(**_storage_overrides(tmp_path, passphrase=None)):
+        refused, _handoff = _invoke_create_with_recovery(
+            ("config", "profile", "create", "Bad Recovery Proof", "--quiet", "--secrets-stdin"),
+            input=_creation_payload(),
+            verification_transform=lambda _payload: proof,
+        )
+        listed = invoke_cached_cli(("--format", "json", "config", "profile", "list"))
+    assert refused.exit_code != 0
+    assert json.loads(listed.stdout)["result"]["profiles"] == []
+
+
+@pytest.mark.parametrize(
+    ("extra", "message_key"),
+    (
+        (("--recovery-handoff-fd", "9"), "cli.config.profile.create_recovery_descriptor_pair_required"),
+        (("--recovery-verification-fd", "9"), "cli.config.profile.create_recovery_descriptor_pair_required"),
+        (("--recovery-handoff-fd", "-1", "--recovery-verification-fd", "9"), "cli.config.profile.create_recovery_descriptor_reserved"),
+        (("--recovery-handoff-fd", "1", "--recovery-verification-fd", "9"), "cli.config.profile.create_recovery_descriptor_reserved"),
+        (("--recovery-handoff-fd", "9", "--recovery-verification-fd", "9"), "cli.config.profile.create_recovery_descriptor_collision"),
+    ),
+)
+def test_recovery_descriptor_preflight_refuses_before_creation(
+    tmp_path: Path, extra: tuple[str, ...], message_key: str
+) -> None:
+    with override_settings(**_storage_overrides(tmp_path, passphrase=None)):
+        refused = invoke_cached_cli(
+            ("--format", "json", "config", "profile", "create", "Bad Descriptors", "--quiet", "--secrets-stdin", *extra),
+            input=_creation_payload(),
+        )
+        listed = invoke_cached_cli(("--format", "json", "config", "profile", "list"))
+    assert refused.exit_code != 0
+    assert json.loads(refused.stderr)["error"]["message"] == tr(message_key)
+    assert json.loads(listed.stdout)["result"]["profiles"] == []
+
+
+def test_unwritable_handoff_closes_both_recovery_descriptors_without_publication(tmp_path: Path) -> None:
+    handoff_reader, handoff_writer = os.pipe()
+    verification_reader, verification_writer = os.pipe()
+    os.close(handoff_writer)
+    os.close(verification_writer)
+    with override_settings(**_storage_overrides(tmp_path, passphrase=None)):
+        refused = invoke_cached_cli(
+            (
+                "config", "profile", "create", "Unwritable Handoff", "--quiet", "--secrets-stdin",
+                "--recovery-handoff-fd", str(handoff_reader),
+                "--recovery-verification-fd", str(verification_reader),
+            ),
+            input=_creation_payload(),
+        )
+        listed = invoke_cached_cli(("--format", "json", "config", "profile", "list"))
+    assert refused.exit_code != 0
+    for descriptor in (handoff_reader, verification_reader):
+        with pytest.raises(OSError):
+            os.fstat(descriptor)
+    assert json.loads(listed.stdout)["result"]["profiles"] == []
 
 
 def test_scripted_create_ignores_configured_passphrase_without_an_explicit_channel(tmp_path: Path) -> None:
@@ -213,7 +373,7 @@ def test_lazy_scripted_create_accepts_and_closes_the_canonical_descriptor_channe
     os.close(writer)
 
     with override_settings(**_storage_overrides(tmp_path, passphrase=None)):
-        created = invoke_cached_cli(
+        created, _handoff = _invoke_create_with_recovery(
             (
                 "--format",
                 "json",
@@ -242,7 +402,7 @@ def test_lazy_scripted_create_refuses_two_channels_before_read_or_mutation(tmp_p
     os.close(writer)
 
     with override_settings(**_storage_overrides(tmp_path, passphrase=None)):
-        refused = invoke_cached_cli(
+        refused, _handoff = _invoke_create_with_recovery(
             (
                 "config",
                 "profile",
@@ -265,9 +425,9 @@ def test_lazy_scripted_create_refuses_two_channels_before_read_or_mutation(tmp_p
 
 def test_scripted_create_localizes_a_typed_password_refusal_without_leaking(tmp_path: Path) -> None:
     """The machine credential channel reaches the same prospective refusal as the TUI."""
-    candidate = "a" * 14
+    candidate = "a" * 7
     with override_settings(**_storage_overrides(tmp_path, passphrase=None)):
-        refused = invoke_cached_cli(
+        refused, _handoff = _invoke_create_with_recovery(
             ("--format", "json", "config", "profile", "create", "Boundary Refusal", "--quiet", "--secrets-stdin"),
             input=json.dumps({"passphrase": candidate, "passphrase_confirmation": candidate}),
         )
@@ -298,22 +458,22 @@ def test_scripted_create_localizes_a_typed_password_refusal_without_leaking(tmp_
     assert error["retryable"] is False
     assert error["runbook_id"] is None
     assert error["context"] == {
-        "minimum_scalars": "15",
+        "minimum_scalars": "8",
         "reason": "too_few_scalars",
-        "scalar_count": "14",
-        "utf8_byte_count": "14",
+        "scalar_count": "7",
+        "utf8_byte_count": "7",
     }
     assert error["message"] == tr(
         "application.user_profile.errors.profile_password_too_few_scalars",
-        minimum_scalars=15,
+        minimum_scalars=8,
         reason="too_few_scalars",
-        scalar_count=14,
-        utf8_byte_count=14,
+        scalar_count=7,
+        utf8_byte_count=7,
     )
     assert "password_refusal" not in error["context"]
     assert "ProspectiveProfilePasswordRefusal" not in combined
     assert "profile_password_too_few_scalars" not in combined
-    assert "profile password must contain 15 to 256 Unicode scalars" not in combined
+    assert "profile password must contain 8 to 256 Unicode scalars" not in combined
     assert "Traceback" not in combined
     assert "INTERNAL" not in combined.upper()
     assert candidate not in combined
@@ -365,6 +525,8 @@ def test_lazy_create_help_declares_exactly_one_canonical_machine_secret_option_p
     assert help_result.exit_code == 0, help_result.output
     assert help_result.output.count("--secrets-stdin") == 1
     assert help_result.output.count("--secrets-fd") == 1
+    assert help_result.output.count("--recovery-handoff-fd") == 1
+    assert help_result.output.count("--recovery-verification-fd") == 1
     schema = build_verb_input_schemas(("config.profile.create",))["config.profile.create"]
     parameters = [parameter for parameter in schema.parameters if parameter.name == "secrets_stdin"]
     assert len(parameters) == 1
@@ -372,6 +534,83 @@ def test_lazy_create_help_declares_exactly_one_canonical_machine_secret_option_p
     descriptor_parameters = [parameter for parameter in schema.parameters if parameter.name == "secrets_fd"]
     assert len(descriptor_parameters) == 1
     assert descriptor_parameters[0].cli_flag == "--secrets-fd"
+    recovery_parameters = {
+        parameter.name: parameter.cli_flag
+        for parameter in schema.parameters
+        if parameter.name in {"recovery_handoff_fd", "recovery_verification_fd"}
+    }
+    assert recovery_parameters == {
+        "recovery_handoff_fd": "--recovery-handoff-fd",
+        "recovery_verification_fd": "--recovery-verification-fd",
+    }
+    contract = schema.recovery_handoff_contract
+    assert contract is not None
+    assert contract.required_together is True
+    assert contract.json_fields == ("recovery_mnemonic",)
+    assert contract.maximum_bytes == 8192
+    assert contract.reserved_descriptors == (0, 1, 2)
+    assert contract.descriptors_must_differ is True
+    assert contract.collides_with == ("--secrets-fd",)
+    assert contract.handoff_direction == "write"
+    assert contract.verification_direction == "read"
+
+
+def test_recovery_schema_projects_changed_command_graph_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
+    graph = _command_specs.COMMAND_GRAPH
+    create = graph.by_key()["config_profile_create"]
+    assert create.recovery_handoff is not None
+    changed = replace(
+        create,
+        recovery_handoff=replace(create.recovery_handoff, maximum_bytes=4096),
+    )
+    monkeypatch.setattr(
+        _command_specs,
+        "COMMAND_GRAPH",
+        CommandSpecGraph(tuple(changed if spec.key == create.key else spec for spec in graph.specs)),
+    )
+
+    schema = build_verb_input_schemas(("config.profile.create",))["config.profile.create"]
+
+    assert schema.recovery_handoff_contract is not None
+    assert schema.recovery_handoff_contract.maximum_bytes == 4096
+
+
+def test_recovery_descriptor_parameters_refuse_missing_or_stale_declaration() -> None:
+    create = _command_specs.COMMAND_GRAPH.by_key()["config_profile_create"]
+    assert create.recovery_handoff is not None
+    with pytest.raises(ValueError, match="require a recovery handoff spec"):
+        replace(create, recovery_handoff=None)
+    with pytest.raises(ValueError, match="references a missing command parameter"):
+        replace(
+            create,
+            recovery_handoff=replace(create.recovery_handoff, handoff_parameter="stale_handoff_fd"),
+        )
+
+
+@pytest.mark.parametrize(
+    ("field", "direction"),
+    (("handoff_direction", "read"), ("verification_direction", "write"), ("handoff_direction", "sideways")),
+)
+def test_recovery_handoff_refuses_invalid_runtime_directions(field: str, direction: str) -> None:
+    create = _command_specs.COMMAND_GRAPH.by_key()["config_profile_create"]
+    assert create.recovery_handoff is not None
+    with pytest.raises(ValueError, match="directions must be write then read"):
+        replace(create.recovery_handoff, **{field: cast(Any, direction)})
+
+
+def test_recovery_handoff_refuses_integer_argument_in_place_of_descriptor_option() -> None:
+    create = _command_specs.COMMAND_GRAPH.by_key()["config_profile_create"]
+    handoff = next(parameter for parameter in create.parameters if parameter.name == "recovery_handoff_fd")
+    argument = ArgumentSpec(
+        name=handoff.name,
+        value=handoff.value,
+        default=handoff.default,
+        help_key=handoff.help_key,
+    )
+    parameters = tuple(argument if parameter is handoff else parameter for parameter in create.parameters)
+
+    with pytest.raises(ValueError, match="must be command options"):
+        replace(create, parameters=parameters)
 
 
 def test_scripted_create_refuses_a_blank_name(tmp_path: Path) -> None:
@@ -392,13 +631,13 @@ def test_scripted_create_refuses_a_blank_name(tmp_path: Path) -> None:
 def test_scripted_create_is_refused_for_a_duplicate_label(tmp_path: Path) -> None:
     """Text success renders normally; a retry refuses without a second mutation."""
     with override_settings(**_storage_overrides(tmp_path, passphrase=_PASSPHRASE)):
-        first = invoke_cached_cli(
+        first, _handoff = _invoke_create_with_recovery(
             ("config", "profile", "create", "Only One", "--quiet", "--secrets-stdin"),
             input=_creation_payload(),
         )
         assert first.exit_code == 0, first.output
 
-        second = invoke_cached_cli(
+        second, _handoff = _invoke_create_with_recovery(
             ("config", "profile", "create", "Only One", "--quiet", "--secrets-stdin"),
             input=_creation_payload(),
         )

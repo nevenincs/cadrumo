@@ -21,6 +21,7 @@ from pathlib import Path
 from uuid import UUID
 
 import pytest
+from textual.css.query import NoMatches
 from textual.widgets import Input, Static
 
 from .....adapters.persistence.storage.custody import (
@@ -33,6 +34,7 @@ from .....core.i18n import tr
 from .....entrypoints.cli._config._manager_frontend import attempt_registration
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import RegistrationApp
+from .._recovery_words_screen import RecoveryWordsScreen
 from .._registration_screen import assessment_refusal
 from .._status_bar import PinnedStatusBar
 
@@ -97,7 +99,7 @@ async def test_live_submission_refusals_stay_typed_secret_free_and_create_nothin
             rendered_surface = live_rendered + str(status.message)
             assert candidate not in rendered_surface
             assert "INTERNAL" not in rendered_surface.upper()
-            assert "profile password must contain 15 to 256 Unicode scalars" not in rendered_surface
+            assert "profile password must contain 8 to 256 Unicode scalars" not in rendered_surface
             assert "Traceback" not in rendered_surface
             app.exit(None)
 
@@ -147,9 +149,27 @@ async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_p
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(pilot, username="Screen Subject", password=candidate, confirm=candidate)
             await pilot.click("#btn-create")
-            # Registration runs on a worker thread, so a bare pause only
-            # yields the event loop and may return before the profile
-            # exists; joining the worker is what makes this deterministic.
+            for _ in range(100):
+                if isinstance(pilot.app.screen, RecoveryWordsScreen):
+                    break
+                await pilot.pause(0.1)
+            assert isinstance(pilot.app.screen, RecoveryWordsScreen)
+            recovery = pilot.app.screen
+            words: Static | None = None
+            for _ in range(100):
+                try:
+                    words = recovery.query_one("#words-value", Static)
+                except NoMatches:
+                    await pilot.pause(0.05)
+                    continue
+                if str(words.render()):
+                    break
+                await pilot.pause(0.05)
+            assert words is not None
+            recovery.query_one("#field-recovery-verification", Input).value = str(
+                words.render()
+            )
+            await pilot.click("#btn-confirm-words")
             await app.workers.wait_for_complete()
             await pilot.pause()
 
@@ -211,9 +231,9 @@ async def test_mismatched_confirmation_refuses_and_creates_nothing(tmp_path) -> 
 
 
 @pytest.mark.asyncio
-async def test_original_fourteen_scalar_failure_is_typed_without_internal_diagnostics(tmp_path) -> None:
-    candidate = "a" * 14
-    assert len(candidate) == 14
+async def test_seven_scalar_failure_is_typed_without_internal_diagnostics(tmp_path) -> None:
+    candidate = "a" * 7
+    assert len(candidate) == 7
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         app = _screen()
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
@@ -223,7 +243,7 @@ async def test_original_fourteen_scalar_failure_is_typed_without_internal_diagno
             assert live_rendered
             assert candidate not in live_rendered
             assert "INTERNAL" not in live_rendered.upper()
-            assert "profile password must contain 15 to 256 Unicode scalars" not in live_rendered
+            assert "profile password must contain 8 to 256 Unicode scalars" not in live_rendered
             await pilot.click("#btn-create")
             await pilot.pause()
 
@@ -235,7 +255,7 @@ async def test_original_fourteen_scalar_failure_is_typed_without_internal_diagno
             assert rendered
             assert candidate not in rendered
             assert "INTERNAL" not in rendered.upper()
-            assert "profile password must contain 15 to 256 Unicode scalars" not in rendered
+            assert "profile password must contain 8 to 256 Unicode scalars" not in rendered
             assert "Traceback" not in rendered
             app.exit(None)
 
@@ -246,7 +266,7 @@ async def test_original_fourteen_scalar_failure_is_typed_without_internal_diagno
 async def test_unkeyed_unexpected_registration_failure_keeps_internal_classification(tmp_path) -> None:
     fault = RuntimeError("synthetic registration transport failure")
 
-    def fail_registration(_label: str, _password: str, _language: str):
+    def fail_registration(_label: str, _password: str, _language: str, _recovery_handover):
         raise fault
 
     with isolated_profile_storage_root(tmp_path=tmp_path):

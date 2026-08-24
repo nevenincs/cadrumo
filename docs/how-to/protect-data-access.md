@@ -37,23 +37,31 @@ deletes nothing and can be previewed before it runs. See
 
 ## Store your recovery phrase safely
 
-Cadrumo shows a 24-word recovery phrase once, at the moment it creates a
-profile, on your terminal only - and only when you create the profile at a
-terminal. It is never written to a file, an export, or a log, and Cadrumo
-keeps no copy. Nobody can show it to you again.
+Cadrumo hands over a 24-word recovery phrase once, at the moment it creates a
+profile. At a terminal it shows the phrase and requires you to re-enter it.
+For headless automation it writes one bounded secret JSON object to an
+explicit inherited descriptor and requires the exact phrase back through a
+second bounded descriptor. It never uses normal JSON output, standard output,
+standard error, arguments, environment variables, or logs, and Cadrumo keeps
+no copy. Nobody can show it to you again.
 
 Write it down when it appears. Store it apart from your passphrase and apart
 from the computer holding the data - anyone who has the phrase can open the
 profile without the passphrase.
 
-Whether you hold a phrase depends on the door that created the profile. A
-profile created at a terminal receives the phrase there, once. A profile
-created by a script or a scheduled job has no terminal to display the phrase
-on, so Cadrumo creates none and says so in that run's output. The full-screen
-profile screen cannot display the phrase without corrupting its own display,
-so it creates none either and says so - check the creation output before you
-assume a profile is recoverable. Recovery is installed only while the profile
-is being created, so a profile created without it cannot be given one later.
+Every creation door enrolls recovery. If the one-time handoff cannot complete,
+or if possession cannot be verified, creation refuses before publishing the
+profile. There is no supported password-only creation outcome and no
+post-creation enrollment command.
+
+For a headless create, provide both `--recovery-handoff-fd WRITE_FD` and
+`--recovery-verification-fd READ_FD`. Read exactly one object shaped as
+`{"recovery_mnemonic":"..."}` from the first pipe, store the phrase securely,
+then send the same strict object through the second pipe. Use distinct
+anonymous pipes and distinct descriptor numbers; neither descriptor may be
+0, 1, or 2 or collide with `--secrets-fd`. The process closes each descriptor
+after its one bounded operation. A missing half, malformed proof, mismatch,
+oversized payload, descriptor collision, or I/O failure leaves no profile.
 
 Keep the phrase even though you cannot yet use it on your own. The command that
 opens a profile from a recovery phrase is not available in this release. Until
@@ -185,11 +193,13 @@ are refused.
 On POSIX, start the process with the pipe's read descriptor in the child
 process's `pass_fds` allowlist, then pass that number to `--secrets-fd` or
 `--profile-secrets-fd`. On Windows, do not assume a numeric CRT descriptor is
-inherited directly. Allowlist an inheritable Windows HANDLE and use the
-supported bootstrap wrapper to convert it with `msvcrt.open_osfhandle`:
+inherited directly. Allowlist inheritable Windows HANDLEs and use the supported
+bootstrap wrapper to convert them with `msvcrt.open_osfhandle`. Recovery uses
+one writable handoff HANDLE and one readable verification HANDLE:
 
 ```text
 python -m cadrumo.entrypoints.cli._windows_profile_secret_bootstrap --profile-handle ROOT_HANDLE --secrets-handle LEAF_HANDLE -- config auth certificate secret set --name SOURCE
+python -m cadrumo.entrypoints.cli._windows_profile_secret_bootstrap --recovery-handoff-handle WRITE_HANDLE --recovery-verification-handle READ_HANDLE -- config profile create NAME --quiet --secrets-stdin
 ```
 
 Omit `--profile-handle` or `--secrets-handle` when the invocation needs only

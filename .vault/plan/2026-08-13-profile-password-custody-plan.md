@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#profile-password-custody'
 date: '2026-08-13'
-modified: '2026-08-23'
-body_hash: 'sha256:7f0320369e9363706ea14e48c3f2968278f393e746624d44c69ae316184acfba'
+modified: '2026-08-24'
+body_hash: 'sha256:7c9739752c9ad61c08d37b024e7e0b9f04806caa688f1f13c8c909f32b73127a'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -99,7 +99,7 @@ Separate safe deterministic transport from custody-authorized password restore a
 - [x] `W03.P05.S13` - Have Terra XHigh rebuild deterministic sealed archive transport framing without recovery.wrap, shared-master assumptions, or retired format parsing; `src/cadrumo/adapters/persistence/storage/bucket/`.
 - [x] `W03.P05.S14` - Have Terra XHigh implement password-only restore and the single explicit restore --artifact recovery-proof variant, wiring the exclusive recovery artifact export and import to the existing per-profile artifact module and republishing the restored capsule under its existing password envelope unchanged, while leaving lost-password reset and new-envelope lineage to the separately accepted canonical-credential decision; `src/cadrumo/application/bucket_maintenance/ and src/cadrumo/application/user_profile/ and src/cadrumo/adapters/persistence/storage/custody/_recovery_artifact.py`.
 - [x] `W03.P05.S15` - Have Sol Medium review archive roots, hostile transport refusal, artifact export-import warnings and proof, restore publication, and rollback limits; `src/cadrumo/application/bucket_maintenance/ and src/cadrumo/application/user_profile/`.
-- [ ] `W03.P05.S206` - Have Terra XHigh turn on recovery enrollment at the profile creation door, wiring the composable enrollment mint into the create transaction so a real operator's profile is enrolled at the moment it is created, since the accepted decision places enrollment at creation and the mint lands as a primitive its consumer must call, and the single line that activates it belongs to the transaction whose ordering guarantee closed the displaced-session leak rather than to the row that built the primitive; `src/cadrumo/application/user_profile/_registration.py and src/cadrumo/application/user_profile/_custody_service.py`.
+- [x] `W03.P05.S206` - Have Terra XHigh turn on recovery enrollment at the profile creation door, wiring the composable enrollment mint into the create transaction so a real operator's profile is enrolled at the moment it is created, since the accepted decision places enrollment at creation and the mint lands as a primitive its consumer must call, and the single line that activates it belongs to the transaction whose ordering guarantee closed the displaced-session leak rather than to the row that built the primitive; `src/cadrumo/application/user_profile/_registration.py and src/cadrumo/application/user_profile/_custody_service.py`.
 
 ### Phase `W03.P06` - CLI and TUI authority
 

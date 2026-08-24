@@ -26,12 +26,24 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
     from ....adapters.inbound.tui import FormPage, RegistrationAttempt
-    from ....application.user_profile import ProfileOverview, ProfileRegistrationOutcome
+    from ....application.user_profile import ProfileOverview, ProfileRecoveryEnrollment, ProfileRegistrationOutcome
     from ....core.json_contract import Notice
     from ....domain.user_profile import ProfileFieldDefinition, ProfileValueRefusalKind, UserProfileRecord
 
 
-_ROUTING_META_KEYS = frozenset({"ctx", "profile_name", "quiet", "accept_defaults"})
+_ROUTING_META_KEYS = frozenset(
+    {
+        "ctx",
+        "profile_name",
+        "quiet",
+        "accept_defaults",
+        "tui",
+        "secrets_stdin",
+        "secrets_fd",
+        "recovery_handoff_fd",
+        "recovery_verification_fd",
+    }
+)
 
 
 def _field_value_was_supplied(value: object) -> bool:
@@ -61,6 +73,7 @@ def manager_is_the_right_frontend(
     scripted: bool,
     explicit_fields: bool,
     full_screen: bool,
+    tui_requested: bool = False,
 ) -> bool:
     """Whether this invocation should open the manager instead of the wizard.
 
@@ -84,7 +97,7 @@ def manager_is_the_right_frontend(
       opening a screen would strand those values.
     - a host that cannot go full-screen has no manager to show.
     """
-    return not (scripted or explicit_fields or not full_screen)
+    return not (scripted or explicit_fields) and (tui_requested or full_screen)
 
 
 def host_can_run_full_screen() -> bool:
@@ -420,7 +433,12 @@ def present_form(
     return run_form_tui(page, rebuild=rebuild)
 
 
-def attempt_registration(label: str, passphrase: str, output_language: str) -> RegistrationAttempt:
+def attempt_registration(
+    label: str,
+    passphrase: str,
+    output_language: str,
+    recovery_handover: Callable[[ProfileRecoveryEnrollment], None],
+) -> RegistrationAttempt:
     """Create one profile, reporting a refusal as text rather than raising.
 
     Classifying a refusal is the application layer's job and displaying it
@@ -428,25 +446,26 @@ def attempt_registration(label: str, passphrase: str, output_language: str) -> R
     what keeps the screen from having to import — and recognise — the
     application's exception types.
     """
+    from ....adapters.inbound.tui import RecoveryHandoverCancelledError, RegistrationRefusal
     from ....adapters.inbound.tui import RegistrationAttempt as _Attempt
-    from ....adapters.inbound.tui import RegistrationRefusal
     from ....application.user_profile import (
-        ProfileRecoveryEnrollment,
         ProfileRegistrationError,
         register_profile_with_credentials,
     )
     from ....domain.user_profile import UserProfileFact
-
-    # The full-screen door shows the words itself, so the enrollment rides
-    # the attempt back to the screen; the screen owns the wipe.
-    captured: list[ProfileRecoveryEnrollment] = []
 
     try:
         outcome = register_profile_with_credentials(
             label=label,
             passphrase=passphrase,
             facts=(UserProfileFact(path="preferences.output_language", value=output_language),),
-            recovery_handover=captured.append,
+            recovery_handover=recovery_handover,
+        )
+    except RecoveryHandoverCancelledError:
+        return _Attempt(
+            expected_refusal=RegistrationRefusal(
+                message_key="cli.config.profile.create_recovery_verification_cancelled",
+            )
         )
     except ProfileRegistrationError as refusal:
         if refusal.translated_message is None:
@@ -458,7 +477,7 @@ def attempt_registration(label: str, passphrase: str, output_language: str) -> R
                 context=context,
             )
         )
-    return _Attempt(outcome=outcome, enrollment=captured[0] if captured else None)
+    return _Attempt(outcome=outcome)
 
 
 def present_registration(*, suggested_name: str | None = None) -> ProfileRegistrationOutcome | None:

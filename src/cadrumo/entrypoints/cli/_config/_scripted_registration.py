@@ -26,6 +26,9 @@ other: a command line is visible in the process table and in shell history.
 
 from __future__ import annotations
 
+import json
+import os
+from contextlib import suppress
 from typing import TYPE_CHECKING, cast
 
 import typer
@@ -50,6 +53,12 @@ class ProfileCreationSecrets(MachineSecretPayload):
 
     passphrase: SecretStr
     passphrase_confirmation: SecretStr
+
+
+class ProfileRecoveryVerification(MachineSecretPayload):
+    """Strict possession proof returned after the one-time handoff."""
+
+    recovery_mnemonic: SecretStr
 
 
 def resolve_creation_passphrase(*, secrets_stdin: bool = False, secrets_fd: int | None = None) -> str:
@@ -90,32 +99,137 @@ def resolve_creation_passphrase(*, secrets_stdin: bool = False, secrets_fd: int 
     )
 
 
-def _recovery_handover_or_none() -> Callable[[ProfileRecoveryEnrollment], None] | None:
-    """Return the channel the 24 words reach the operator through, if one exists.
-
-    Enrolment is only offered when there is somewhere safe to SHOW the result.
-    A recovery wrapper whose mnemonic was never displayed is worse than no
-    wrapper: the operator is told their profile is recoverable and holds
-    nothing that can recover it. So on a host with no interactive terminal --
-    a script, a CI job, a supervised child -- this returns ``None``, the
-    registration door mints no wrapper at all, and the caller reports that
-    through ``recovery_enrolled`` rather than leaving it to be assumed.
-
-    Returning ``None`` rather than refusing the whole creation is deliberate:
-    non-interactive profile creation is a supported operator path, and
-    breaking it to enforce recovery would trade a real capability for one the
-    operator can add no other way today.
-    """
-    from ._secure_input import terminal_can_prompt_for_secrets, write_to_controlling_terminal
-
-    if not terminal_can_prompt_for_secrets():
+def _validated_recovery_descriptors(
+    *,
+    passphrase_fd: int | None,
+    handoff_fd: int | None,
+    verification_fd: int | None,
+) -> tuple[int, int] | None:
+    """Preflight the headless handoff pair before any descriptor is consumed."""
+    if (handoff_fd is None) != (verification_fd is None):
+        raise CliRefusedBoundaryError(translated_message="cli.config.profile.create_recovery_descriptor_pair_required")
+    if handoff_fd is None or verification_fd is None:
         return None
+    descriptors = (handoff_fd, verification_fd)
+    if any(descriptor < 0 or descriptor in {0, 1, 2} for descriptor in descriptors):
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.profile.create_recovery_descriptor_reserved",
+        )
+    occupied = {descriptor for descriptor in (passphrase_fd,) if descriptor is not None}
+    if handoff_fd == verification_fd or any(descriptor in occupied for descriptor in descriptors):
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.profile.create_recovery_descriptor_collision",
+        )
+    return descriptors
+
+
+def _write_recovery_handoff(descriptor: int, mnemonic: str) -> None:
+    """Write one bounded secret document and close its descriptor on every exit."""
+    raw = bytearray(json.dumps({"recovery_mnemonic": mnemonic}, separators=(",", ":")).encode("utf-8") + b"\n")
+    try:
+        if len(raw) > 8192:
+            raise CliRefusedBoundaryError(
+                translated_message="cli.config.profile.create_recovery_handoff_too_large",
+            )
+        view = memoryview(raw)
+        written = 0
+        while written < len(view):
+            count = os.write(descriptor, view[written:])
+            if count <= 0:
+                raise OSError("recovery handoff descriptor accepted no bytes")
+            written += count
+    except OSError as exc:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.profile.create_recovery_handoff_unwritable",
+        ) from exc
+    finally:
+        raw[:] = b"\x00" * len(raw)
+        with suppress(OSError):
+            os.close(descriptor)
+
+
+def _read_recovery_verification(descriptor: int) -> ProfileRecoveryVerification:
+    """Read one newline-framed strict object without depending on pipe EOF."""
+    from ._secure_input import MACHINE_SECRET_MAX_BYTES, _validate_secrets_payload
+
+    raw = bytearray()
+    try:
+        while len(raw) <= MACHINE_SECRET_MAX_BYTES:
+            chunk = os.read(descriptor, min(1024, MACHINE_SECRET_MAX_BYTES + 1 - len(raw)))
+            if not chunk:
+                break
+            raw.extend(chunk)
+            newline = raw.find(b"\n")
+            if newline >= 0:
+                if newline != len(raw) - 1:
+                    raise CliRefusedBoundaryError(
+                        translated_message="cli.config.custody.errors.secrets_fd_invalid_json",
+                        context={"expected_fields": "recovery_mnemonic"},
+                    )
+                del raw[newline:]
+                break
+        if len(raw) > MACHINE_SECRET_MAX_BYTES:
+            raise CliRefusedBoundaryError(translated_message="cli.config.custody.errors.secrets_fd_too_large")
+        return _validate_secrets_payload(
+            raw,
+            ProfileRecoveryVerification,
+            invalid_json_key="cli.config.custody.errors.secrets_fd_invalid_json",
+            missing_fields_key="cli.config.custody.errors.secrets_fd_missing_fields",
+        )
+    except OSError as exc:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.custody.errors.secrets_fd_unreadable",
+            context={"descriptor": str(descriptor)},
+        ) from exc
+    finally:
+        raw[:] = b"\x00" * len(raw)
+        with suppress(OSError):
+            os.close(descriptor)
+
+
+def _recovery_handover(
+    *,
+    descriptors: tuple[int, int] | None,
+) -> Callable[[ProfileRecoveryEnrollment], None]:
+    """Build an interactive or descriptor handoff with possession proof.
+
+    Creation never falls through to a password-only profile. A terminal caller
+    must re-enter the phrase; a headless caller receives it on one bounded
+    descriptor and returns the exact phrase on another bounded descriptor.
+    Both proofs complete before the registration transaction can publish.
+    """
+    from ._secure_input import (
+        prompt_secret_no_echo,
+        terminal_can_prompt_for_secrets,
+        write_to_controlling_terminal,
+    )
+
+    if descriptors is None and not terminal_can_prompt_for_secrets():
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.profile.create_recovery_channel_absent",
+        )
 
     def handover(enrollment: ProfileRecoveryEnrollment) -> None:
-        """Show the mnemonic on the terminal device, and nowhere else."""
-        write_to_controlling_terminal(
-            f"{tr('cli.config.custody.data_loss_warning')}\n\n{enrollment.recovery_key.mnemonic}",
-        )
+        """Deliver once and refuse publication until possession is proved."""
+        expected = enrollment.recovery_key.mnemonic
+        if descriptors is None:
+            write_to_controlling_terminal(
+                f"{tr('cli.config.custody.data_loss_warning')}\n\n{expected}",
+            )
+            supplied = prompt_secret_no_echo(tr("cli.config.profile.create_recovery_verification_prompt"))
+        else:
+            handoff_fd, verification_fd = descriptors
+            _write_recovery_handoff(handoff_fd, expected)
+            proof = _read_recovery_verification(verification_fd)
+            supplied = proof.recovery_mnemonic.get_secret_value()
+        try:
+            if supplied != expected:
+                raise CliRefusedBoundaryError(
+                    translated_message="cli.config.profile.create_recovery_verification_mismatch",
+                )
+        finally:
+            del supplied
+            del expected
 
     return handover
 
@@ -149,33 +263,42 @@ def register_profile_from_scripted_invocation(
     # written through a second unlock once registration has closed it.
     facts = scripted_profile_facts(get_setup_flow(), kwargs)
     raw_secrets_fd = kwargs.get("secrets_fd")
-    passphrase = resolve_creation_passphrase(
-        secrets_stdin=bool(kwargs.get("secrets_stdin")),
-        secrets_fd=raw_secrets_fd if isinstance(raw_secrets_fd, int) else None,
+    secrets_fd = raw_secrets_fd if isinstance(raw_secrets_fd, int) else None
+    raw_handoff_fd = kwargs.get("recovery_handoff_fd")
+    raw_verification_fd = kwargs.get("recovery_verification_fd")
+    recovery_descriptors = _validated_recovery_descriptors(
+        passphrase_fd=secrets_fd,
+        handoff_fd=raw_handoff_fd if isinstance(raw_handoff_fd, int) else None,
+        verification_fd=raw_verification_fd if isinstance(raw_verification_fd, int) else None,
     )
+    passphrase: str | None = None
     try:
+        passphrase = resolve_creation_passphrase(
+            secrets_stdin=bool(kwargs.get("secrets_stdin")),
+            secrets_fd=secrets_fd,
+        )
         outcome = register_profile_with_credentials(
             label=label,
             passphrase=passphrase,
             facts=facts,
-            recovery_handover=_recovery_handover_or_none(),
+            recovery_handover=_recovery_handover(descriptors=recovery_descriptors),
         )
     finally:
-        del passphrase
+        if passphrase is not None:
+            del passphrase
+        if recovery_descriptors is not None:
+            for descriptor in recovery_descriptors:
+                with suppress(OSError):
+                    os.close(descriptor)
 
-    # A profile created without recovery is a supported outcome, not a silent
-    # one: the operator must learn from the run itself that the one chance to
-    # enrol has passed, because nothing can install a wrapper afterwards.
+    if not outcome.recovery_enrolled:
+        raise RuntimeError("profile creation returned without mandatory recovery enrollment")
     notices = (
-        ()
-        if outcome.recovery_enrolled
-        else (
-            Notice(
-                code="PROFILE_RECOVERY_NOT_ENROLLED",
-                severity=NoticeSeverity.WARNING,
-                message=tr("cli.config.profile.create_recovery_not_enrolled"),
-            ),
-        )
+        Notice(
+            code="PROFILE_RECOVERY_ENROLLED",
+            severity=NoticeSeverity.INFO,
+            message=tr("cli.config.profile.create_recovery_enrolled"),
+        ),
     )
     _emit_envelope(
         # CAST-RATIONALE-TYPER-CLICK-CONTEXT: ctx is the vendored

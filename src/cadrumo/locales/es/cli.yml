@@ -1835,6 +1835,7 @@ cli:
       profile_secrets_stdin_help: Lee la contraseña del perfil de destino exacto desde
         un objeto JSON acotado en la entrada estándar después de que falle la reanudación
         de la sesión.
+      recovery_words_cancel: Cancelar la creación
       recovery_words_confirm: Ya la he anotado
       recovery_words_heading: Guarda esta frase de recuperación
       recovery_words_warning: Solo se muestra una vez. Quien tenga esta frase puede
@@ -2168,9 +2169,31 @@ cli:
       create_passphrase_mismatch: La contraseña y su confirmación no coinciden; no
         se creó ningún perfil.
       create_passphrase_prompt: 'Contraseña del nuevo perfil: '
-      create_recovery_not_enrolled: 'No se creó ninguna frase de recuperación: esta
-        ejecución no tenía terminal donde mostrarla. La contraseña es ahora la única
-        vía de acceso a este perfil y la recuperación no puede añadirse después.'
+      create_recovery_channel_absent: La recuperación es obligatoria. En modo sin
+        terminal, proporcione --recovery-handoff-fd y --recovery-verification-fd;
+        no se creó ningún perfil.
+      create_recovery_descriptor_collision: La entrega, la verificación y la contraseña
+        deben usar descriptores distintos; no se leyó ningún descriptor.
+      create_recovery_descriptor_pair_required: --recovery-handoff-fd y --recovery-verification-fd
+        deben proporcionarse juntos.
+      create_recovery_descriptor_reserved: Los descriptores de recuperación deben
+        ser no negativos y no pueden ser la entrada, salida ni error estándar.
+      create_recovery_enrolled: La recuperación se inscribió tras verificar la posesión
+        de la frase de un solo uso.
+      create_recovery_handoff_fd_help: Escribe la frase de recuperación de un solo
+        uso como un objeto JSON secreto acotado en este descriptor heredado escribible.
+      create_recovery_handoff_too_large: La entrega de recuperación superó el límite
+        de 8192 bytes; no se creó ningún perfil.
+      create_recovery_handoff_unwritable: El descriptor de entrega no era un canal
+        heredado escribible; no se creó ningún perfil.
+      create_recovery_verification_fd_help: Lee la frase exacta como un objeto JSON
+        secreto acotado desde este descriptor heredado legible antes de publicar.
+      create_recovery_verification_cancelled: Se canceló la confirmación de recuperación;
+        no se creó ningún perfil.
+      create_recovery_verification_mismatch: No se pudo verificar la posesión de la
+        frase de recuperación; no se creó ningún perfil.
+      create_recovery_verification_prompt: 'Vuelva a introducir la frase de recuperación
+        para verificar su posesión: '
       delete:
         help: Elimina un perfil y su estado local; --yes confirma la eliminación
         name_help: Nombre del perfil que quieres eliminar
@@ -2476,6 +2499,8 @@ cli:
         next_step: 'Próximo paso: ejecuta `aeat app overview status` para revisar
           tu espacio de trabajo.'
         saved: Perfil '%{profile_name}' guardado.
+      tui_scripted_conflict: --tui no se puede combinar con --quiet, --accept-defaults
+        ni con opciones de campos del perfil.
     status:
       empty_profile: Sin perfil configurado. Ejecuta `aeat config profile create NAME`
         para empezar.
@@ -3446,6 +3471,7 @@ cli:
           solo lectura.
         section_command_families: Familias de comandos
         section_diagnostics: Diagnóstico
+        section_frontend_options: Opciones de interfaz
         section_profile_authentication_options: Opciones de autenticación del perfil
         section_recovery: Reanudar o recuperar
         section_start_resume: Empezar o continuar
@@ -3812,6 +3838,7 @@ cli:
     language_help: Idioma de la salida y del texto de ayuda (en, es, ca, hu).
     profile_help: Nombre del perfil activo.
     quiet_help: Mostrar solo los errores.
+    tui_help: Solicita la interfaz de pantalla completa para el comando seleccionado.
     verbose_help: Habilitar salida detallada.
     version_help: Mostrar el número de versión y salir.
   topic:

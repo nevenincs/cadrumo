@@ -58,10 +58,14 @@ def test_a_reused_name_is_refused_in_words_the_operator_can_act_on(tmp_path: Pat
     from .._manager_frontend import attempt_registration
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        first = attempt_registration(label=_LABEL, passphrase=_passphrase(), output_language="en")
+        first = attempt_registration(
+            label=_LABEL, passphrase=_passphrase(), output_language="en", recovery_handover=lambda _enrollment: None
+        )
         assert first.outcome is not None, first.refusal
 
-        second = attempt_registration(label=_LABEL, passphrase=_passphrase(), output_language="en")
+        second = attempt_registration(
+            label=_LABEL, passphrase=_passphrase(), output_language="en", recovery_handover=lambda _enrollment: None
+        )
 
     assert second.outcome is None
     assert second.refusal is not None
@@ -87,6 +91,7 @@ def test_a_successful_registration_reports_no_refusal(tmp_path: Path) -> None:
             label="Fresh Profile Name",
             passphrase=_passphrase(),
             output_language="en",
+            recovery_handover=lambda _enrollment: None,
         )
 
     assert attempt.outcome is not None

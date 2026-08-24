@@ -15,6 +15,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import threading
 from collections.abc import Iterator, Sequence
 from contextlib import suppress
 from pathlib import Path
@@ -34,6 +35,7 @@ from ....core.config import override_settings
 from ....tests import SRC_CADRUMO
 from ....tests.secure_sql import reap_profile_session_keys
 from ....tests.subprocess_cli import subprocess_cli_env
+from .._windows_profile_secret_bootstrap import bootstrap_interpreter
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -51,6 +53,11 @@ _PROMPTS = (
     "pkcs#12 passphrase (input hidden):",
     "recovery phrase (24 words):",
 )
+
+
+def _base_interpreter_pythonpath() -> str:
+    """Preserve the active environment's imports without launching its stub."""
+    return os.pathsep.join(entry for entry in sys.path if entry)
 
 _HARNESS = dedent(
     """
@@ -155,10 +162,12 @@ _WINDOWS_HANDLE_HARNESS = dedent(
     argv = bootstrap_argv(
         profile_handle=payload.get("profile_handle"),
         secrets_handle=payload.get("secrets_handle"),
+        recovery_handoff_handle=payload.get("recovery_handoff_handle"),
+        recovery_verification_handle=payload.get("recovery_verification_handle"),
         command=sys.argv[2:],
     )
     descriptors = []
-    for option in ("--profile-secrets-fd", "--secrets-fd"):
+    for option in ("--profile-secrets-fd", "--secrets-fd", "--recovery-handoff-fd", "--recovery-verification-fd"):
         if option in argv:
             descriptor = int(argv[argv.index(option) + 1])
             if descriptor not in descriptors:
@@ -403,7 +412,7 @@ def _run_windows_handles(
         }
         return subprocess.run(  # noqa: S603 - fixed interpreter and production bootstrap
             [
-                sys.executable,
+                bootstrap_interpreter(),
                 "-c",
                 _WINDOWS_HANDLE_HARNESS,
                 json.dumps(payload),
@@ -414,6 +423,7 @@ def _run_windows_handles(
                 strip_prefixes=("AEAT_", "CADRUMO_", "PYTEST_"),
                 extra={
                     "PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring",
+                    "PYTHONPATH": _base_interpreter_pythonpath(),
                     **(hostile_env or {}),
                 },
             ),
@@ -577,18 +587,97 @@ def test_login_succeeds_through_each_leaf_channel(tmp_path: Path, channel: str) 
         assert "S13_DESCRIPTOR_CLOSED" in result.stderr
 
 
+def _run_profile_create_with_recovery(root: Path, *, channel: str, payload: str) -> subprocess.CompletedProcess[str]:
+    passphrase_reader = passphrase_writer = -1
+    handoff_reader, handoff_writer = os.pipe()
+    verification_reader, verification_writer = os.pipe()
+    if channel == "fd":
+        passphrase_reader, passphrase_writer = os.pipe()
+        os.write(passphrase_writer, payload.encode())
+        os.close(passphrase_writer)
+        passphrase_writer = -1
+    supervisor_failure: list[BaseException] = []
+
+    def supervise() -> None:
+        handed = bytearray()
+        try:
+            while not handed.endswith(b"\n"):
+                chunk = os.read(handoff_reader, 8193 - len(handed))
+                if not chunk:
+                    break
+                handed.extend(chunk)
+            assert len(json.loads(handed)["recovery_mnemonic"].split()) == 24
+            os.write(verification_writer, handed)
+        except BaseException as exc:
+            supervisor_failure.append(exc)
+        finally:
+            handed[:] = b"\x00" * len(handed)
+            os.close(handoff_reader)
+            os.close(verification_writer)
+
+    supervisor = threading.Thread(target=supervise, daemon=True)
+    supervisor.start()
+    command = ["--format", "json", "config", "profile", "create", f"created-{channel}", "--quiet"]
+    env = subprocess_cli_env(
+        strip_prefixes=("AEAT_", "CADRUMO_", "PYTEST_"),
+        extra={"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring", "PYTHONPATH": _base_interpreter_pythonpath()},
+    )
+    settings = _settings(root)
+    try:
+        if os.name == "nt":
+            import msvcrt
+
+            handles = [msvcrt.get_osfhandle(handoff_writer), msvcrt.get_osfhandle(verification_reader)]
+            secrets_handle = None if channel == "stdin" else msvcrt.get_osfhandle(passphrase_reader)
+            if secrets_handle is not None:
+                handles.append(secrets_handle)
+            for handle in handles:
+                os.set_handle_inheritable(handle, True)
+            startup = subprocess.STARTUPINFO()
+            startup.lpAttributeList = {"handle_list": handles}
+            harness_payload = {
+                "settings": settings,
+                "secrets_handle": secrets_handle,
+                "recovery_handoff_handle": handles[0],
+                "recovery_verification_handle": handles[1],
+            }
+            args = [*command, *(('--secrets-stdin',) if channel == 'stdin' else ())]
+            result = subprocess.run(  # noqa: S603 - fixed interpreter and test-owned command
+                [bootstrap_interpreter(), "-c", _WINDOWS_HANDLE_HARNESS, json.dumps(harness_payload), *args],
+                cwd=SRC_CADRUMO, env=env, input=payload if channel == "stdin" else None,
+                text=True, encoding="utf-8", capture_output=True, check=False, timeout=45,
+                close_fds=True, startupinfo=startup,
+            )
+        else:
+            descriptors = [handoff_writer, verification_reader, *(() if channel == "stdin" else (passphrase_reader,))]
+            args = [*command, *(('--secrets-stdin',) if channel == 'stdin' else ('--secrets-fd', str(passphrase_reader))),
+                    '--recovery-handoff-fd', str(handoff_writer), '--recovery-verification-fd', str(verification_reader)]
+            harness_payload = {"settings": settings, "assert_closed_descriptors": descriptors}
+            result = subprocess.run(  # noqa: S603 - fixed interpreter and test-owned command
+                [sys.executable, "-c", _HARNESS, json.dumps(harness_payload), *args], cwd=SRC_CADRUMO, env=env,
+                input=payload if channel == "stdin" else None, text=True, encoding="utf-8", capture_output=True,
+                check=False, timeout=45, pass_fds=tuple(descriptors),
+            )
+    finally:
+        for descriptor in (handoff_writer, verification_reader, passphrase_reader, passphrase_writer):
+            if descriptor >= 0:
+                with suppress(OSError):
+                    os.close(descriptor)
+        supervisor.join(timeout=5)
+    assert not supervisor.is_alive()
+    assert supervisor_failure == []
+    return result
+
+
 @pytest.mark.parametrize("channel", ("stdin", "fd"))
 def test_profile_create_succeeds_through_each_leaf_channel(tmp_path: Path, channel: str) -> None:
     root = tmp_path / f"create-{channel}"
     payload = json.dumps({"passphrase": _PROFILE_SECRET, "passphrase_confirmation": _PROFILE_SECRET})
-    args = ["--format", "json", "config", "profile", "create", f"created-{channel}", "--quiet"]
-    result = (
-        _run(root, [*args, "--secrets-stdin"], stdin=payload)
-        if channel == "stdin"
-        else _run(root, [*args, "--secrets-fd", "{fd:0}"], inherited_payloads=(payload,), assert_closed_index=0)
-    )
+    result = _run_profile_create_with_recovery(root, channel=channel, payload=payload)
     document = _assert_success(result, root)
     assert document["result"]["status"] == "created"
+    if channel == "fd":
+        assert "S13_DESCRIPTOR_CLOSED" in result.stderr
 
 
 @pytest.mark.parametrize("channel", ("stdin", "fd"))
@@ -759,6 +848,7 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(tmp_path: Path) -
             strip_prefixes=("AEAT_", "CADRUMO_", "PYTEST_"),
             extra={
                 "PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring",
+                "PYTHONPATH": _base_interpreter_pythonpath(),
                 "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
                 "CADRUMO_SECRET_STORE_DIR": str(root / "fallback-store"),
                 "CADRUMO_SECRET_STORE_BACKEND": "auto",
@@ -767,7 +857,7 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(tmp_path: Path) -
         )
         result = subprocess.run(  # noqa: S603 - fixed interpreter and module
             [
-                sys.executable,
+                bootstrap_interpreter(),
                 "-m",
                 "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap",
                 "--profile-handle",
@@ -798,6 +888,191 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(tmp_path: Path) -
     document = _assert_success(result, root)
     assert document["command"] == "config.bucket.history"
     assert [notice["code"] for notice in document["notices"]] == ["config.login.session_not_persisted"]
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows inherited-HANDLE recovery bootstrap")
+def test_windows_recovery_handles_complete_real_headless_creation(tmp_path: Path) -> None:
+    """Writable handoff and readable proof HANDLEs survive a real process boundary."""
+    import msvcrt
+
+    root = tmp_path / "windows-recovery-create"
+    handoff_reader, handoff_writer = os.pipe()
+    verification_reader, verification_writer = os.pipe()
+    handoff_handle = msvcrt.get_osfhandle(handoff_writer)
+    verification_handle = msvcrt.get_osfhandle(verification_reader)
+    os.set_handle_inheritable(msvcrt.get_osfhandle(handoff_reader), False)
+    os.set_handle_inheritable(msvcrt.get_osfhandle(verification_writer), False)
+    os.set_handle_inheritable(handoff_handle, True)
+    os.set_handle_inheritable(verification_handle, True)
+    startup = subprocess.STARTUPINFO()
+    startup.lpAttributeList = {"handle_list": [handoff_handle, verification_handle]}
+    env = subprocess_cli_env(
+        strip_prefixes=("AEAT_", "CADRUMO_", "PYTEST_"),
+        extra={
+            "PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring",
+            "PYTHONPATH": _base_interpreter_pythonpath(),
+            "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
+            "CADRUMO_SECRET_STORE_DIR": str(root / "fallback-store"),
+            "CADRUMO_SECRET_STORE_BACKEND": "auto",
+            "CADRUMO_OUTPUT_LANGUAGE": "en",
+            "CADRUMO_PROFILE_KDF_MEASURE_CALIBRATION": "false",
+        },
+    )
+    process = subprocess.Popen(  # noqa: S603 - fixed interpreter and module
+        [
+            bootstrap_interpreter(),
+            "-m",
+            "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap",
+            "--recovery-handoff-handle",
+            str(handoff_handle),
+            "--recovery-verification-handle",
+            str(verification_handle),
+            "--",
+            "--format",
+            "json",
+            "config",
+            "profile",
+            "create",
+            "windows-recovery",
+            "--quiet",
+            "--secrets-stdin",
+        ],
+        cwd=SRC_CADRUMO,
+        env=env,
+        text=True,
+        encoding="utf-8",
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        close_fds=True,
+        startupinfo=startup,
+    )
+    os.close(handoff_writer)
+    os.close(verification_reader)
+    supervisor_failure: list[BaseException] = []
+    supervisor_state: list[str] = ["waiting-handoff"]
+
+    def supervise_recovery() -> None:
+        handed = bytearray()
+        try:
+            while chunk := os.read(handoff_reader, 8193 - len(handed)):
+                handed.extend(chunk)
+            supervisor_state[0] = "handoff-read"
+            document = json.loads(handed)
+            assert len(document["recovery_mnemonic"].split()) == 24
+            os.write(verification_writer, bytes(handed))
+            supervisor_state[0] = "verification-written"
+        except BaseException as exc:
+            supervisor_failure.append(exc)
+        finally:
+            handed[:] = b"\x00" * len(handed)
+            os.close(handoff_reader)
+            os.close(verification_writer)
+
+    supervisor = threading.Thread(target=supervise_recovery, daemon=True)
+    supervisor.start()
+    try:
+        stdout, stderr = process.communicate(
+            input=json.dumps({"passphrase": _PROFILE_SECRET, "passphrase_confirmation": _PROFILE_SECRET}),
+            timeout=45,
+        )
+    except subprocess.TimeoutExpired:
+        process.kill()
+        stdout, stderr = process.communicate()
+        raise AssertionError(
+            f"recovery bootstrap stalled at {supervisor_state[0]}; "
+            f"supervisor_failure={supervisor_failure!r}; stderr={stderr[-2000:]!r}"
+        ) from None
+    supervisor.join(timeout=5)
+    assert not supervisor.is_alive()
+    assert supervisor_failure == [], stderr
+    assert process.returncode == 0, stderr
+    assert json.loads(stdout)["result"]["profile_name"] == "windows-recovery"
+
+
+def test_windows_bootstrap_interpreter_bypasses_virtual_environment_launcher() -> None:
+    """HANDLE allowlists attach to the process which reads them, never a venv stub."""
+    if os.name != "nt":
+        pytest.skip("Windows launcher invariant")
+    assert Path(bootstrap_interpreter()).resolve() == Path(sys._base_executable).resolve()  # type: ignore[attr-defined]
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX pass_fds recovery transport")
+def test_posix_recovery_descriptors_complete_real_headless_creation(tmp_path: Path) -> None:
+    """Writable handoff and readable proof descriptors cross a real POSIX boundary."""
+    root = tmp_path / "posix-recovery-create"
+    handoff_reader, handoff_writer = os.pipe()
+    verification_reader, verification_writer = os.pipe()
+    supervisor_failure: list[BaseException] = []
+
+    def supervise_recovery() -> None:
+        handed = bytearray()
+        try:
+            while not handed.endswith(b"\n"):
+                chunk = os.read(handoff_reader, 8193 - len(handed))
+                if not chunk:
+                    break
+                handed.extend(chunk)
+            document = json.loads(handed)
+            assert len(document["recovery_mnemonic"].split()) == 24
+            os.write(verification_writer, bytes(handed))
+        except BaseException as exc:
+            supervisor_failure.append(exc)
+        finally:
+            handed[:] = b"\x00" * len(handed)
+            os.close(handoff_reader)
+            os.close(verification_writer)
+
+    supervisor = threading.Thread(target=supervise_recovery, daemon=True)
+    supervisor.start()
+    env = subprocess_cli_env(
+        strip_prefixes=("AEAT_", "CADRUMO_", "PYTEST_"),
+        extra={
+            "PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring",
+            "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
+            "CADRUMO_SECRET_STORE_DIR": str(root / "fallback-store"),
+            "CADRUMO_SECRET_STORE_BACKEND": "auto",
+            "CADRUMO_OUTPUT_LANGUAGE": "en",
+            "CADRUMO_PROFILE_KDF_MEASURE_CALIBRATION": "false",
+        },
+    )
+    try:
+        result = subprocess.run(  # noqa: S603 - fixed interpreter and module
+            [
+                sys.executable,
+                "-m",
+                "cadrumo.entrypoints.cli",
+                "--format",
+                "json",
+                "config",
+                "profile",
+                "create",
+                "posix-recovery",
+                "--quiet",
+                "--secrets-stdin",
+                "--recovery-handoff-fd",
+                str(handoff_writer),
+                "--recovery-verification-fd",
+                str(verification_reader),
+            ],
+            cwd=SRC_CADRUMO,
+            env=env,
+            input=json.dumps({"passphrase": _PROFILE_SECRET, "passphrase_confirmation": _PROFILE_SECRET}),
+            text=True,
+            encoding="utf-8",
+            capture_output=True,
+            check=False,
+            timeout=45,
+            pass_fds=(handoff_writer, verification_reader),
+        )
+    finally:
+        os.close(handoff_writer)
+        os.close(verification_reader)
+    supervisor.join(timeout=5)
+    assert not supervisor.is_alive()
+    assert supervisor_failure == []
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout)["result"]["profile_name"] == "posix-recovery"
 
 
 def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_write(
@@ -852,6 +1127,7 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
             strip_prefixes=("AEAT_", "CADRUMO_", "PYTEST_"),
             extra={
                 "PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring",
+                "PYTHONPATH": _base_interpreter_pythonpath(),
                 "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
                 "CADRUMO_SECRET_STORE_DIR": str(root / "fallback-store"),
                 "CADRUMO_SECRET_STORE_BACKEND": "auto",
@@ -860,7 +1136,7 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
         )
         result = subprocess.run(  # noqa: S603 - fixed interpreter and module
             [
-                sys.executable,
+                bootstrap_interpreter(),
                 "-m",
                 "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap",
                 "--profile-handle",

@@ -36,6 +36,26 @@ class VerbLeafKind(StrEnum):
     CALLBACK = "callback"
 
 
+class RecoveryHandoffContract(BaseModel):
+    """Value-free machine discovery for creation's two-way secret handoff."""
+
+    model_config = _FROZEN
+    handoff_option: str
+    handoff_direction: Literal["write"]
+    verification_option: str
+    verification_direction: Literal["read"]
+    required_together: bool
+    json_fields: tuple[str, ...]
+    maximum_bytes: int
+    strict_utf8_object: bool
+    duplicate_extra_missing_fields_refused: bool
+    descriptors_closed: bool
+    reserved_descriptors: tuple[int, ...]
+    descriptors_must_differ: bool
+    collides_with: tuple[str, ...]
+    windows_handle_bootstrap: str
+
+
 class VerbParameter(BaseModel):
     model_config = _FROZEN
     name: str = Field(min_length=1)
@@ -84,6 +104,7 @@ class VerbInputSchema(BaseModel):
     cli_path: tuple[str, ...]
     parameters: tuple[VerbParameter, ...] = ()
     machine_secret_payloads: tuple[MachineSecretPayloadMetadata, ...] = ()
+    recovery_handoff_contract: RecoveryHandoffContract | None = None
     profile_authentication: Literal["not-applicable", "resume-fallback", "self-authenticating"]
     profile_authentication_contract: ProfileAuthenticationContractMetadata
     help: str = ""
@@ -145,7 +166,11 @@ def assert_schema_coverage(resolution_errors: tuple[VerbLeafResolutionFailure, .
 
 
 def build_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInputSchema]:
+    from ._command_spec import OptionSpec
+    from ._command_specs import COMMAND_GRAPH
+
     rows = _rows()
+    specs = COMMAND_GRAPH.by_schema_identity()
     profile_contract = command_registration_projection().profile_authentication_contract
     schemas: dict[str, VerbInputSchema] = {}
     failures: list[VerbLeafResolutionFailure] = []
@@ -159,6 +184,34 @@ def build_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInp
             )
             continue
         parameters = next((values for _, values in row.parameters_by_language if values is not None), ())
+        spec = specs[key]
+        recovery = spec.recovery_handoff
+        option_by_name = {
+            parameter.name: parameter
+            for parameter in spec.parameters
+            if isinstance(parameter, OptionSpec)
+        }
+        recovery_contract = None
+        if recovery is not None:
+            recovery_contract = RecoveryHandoffContract(
+                handoff_option=option_by_name[recovery.handoff_parameter].declarations[0],
+                handoff_direction=recovery.handoff_direction,
+                verification_option=option_by_name[recovery.verification_parameter].declarations[0],
+                verification_direction=recovery.verification_direction,
+                required_together=recovery.required_together,
+                json_fields=recovery.json_fields,
+                maximum_bytes=recovery.maximum_bytes,
+                strict_utf8_object=recovery.strict_utf8_object,
+                duplicate_extra_missing_fields_refused=recovery.duplicate_extra_missing_fields_refused,
+                descriptors_closed=recovery.descriptors_closed,
+                reserved_descriptors=recovery.reserved_descriptors,
+                descriptors_must_differ=recovery.descriptors_must_differ,
+                collides_with=tuple(
+                    option_by_name[name].declarations[0]
+                    for name in recovery.collides_with_parameters
+                ),
+                windows_handle_bootstrap=recovery.windows_handle_bootstrap,
+            )
         schemas[key] = VerbInputSchema(
             command_key=key,
             cli_path=row.cli_path,
@@ -179,6 +232,7 @@ def build_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInp
                 for p in parameters
             ),
             machine_secret_payloads=row.machine_secret_payloads,
+            recovery_handoff_contract=recovery_contract,
             profile_authentication=row.profile_authentication,
             profile_authentication_contract=profile_contract,
             help=next((value for _, value in row.help_by_language), ""),

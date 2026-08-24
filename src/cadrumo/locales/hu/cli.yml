@@ -1806,6 +1806,7 @@ cli:
       profile_secrets_stdin_help: A pontos célprofil jelmondatának beolvasása egy
         korlátozott JSON-objektumból a szabványos bemeneten, miután a munkamenet folytatása
         sikertelen.
+      recovery_words_cancel: Létrehozás megszakítása
       recovery_words_confirm: Leírtam
       recovery_words_heading: Írd le ezt a helyreállítási kifejezést
       recovery_words_warning: Csak egyszer jelenik meg. Akinek megvan ez a kifejezés,
@@ -2145,10 +2146,32 @@ cli:
       create_passphrase_mismatch: A jelszó és a megerősítése nem egyezik; nem jött
         létre profil.
       create_passphrase_prompt: 'Az új profil jelszava: '
-      create_recovery_not_enrolled: 'Nem jött létre helyreállítási kifejezés: ennek
-        a futtatásnak nem volt terminálja a megjelenítéséhez. A jelszó mostantól az
-        egyetlen belépési mód ehhez a profilhoz, és a helyreállítás később nem adható
-        hozzá.'
+      create_recovery_channel_absent: A helyreállítás regisztrálása kötelező. Terminál
+        nélküli környezetben adja meg a --recovery-handoff-fd és --recovery-verification-fd
+        kapcsolót; profil nem jött létre.
+      create_recovery_descriptor_collision: A helyreállítás átadása, ellenőrzése és
+        a jelszó külön fájlleírókat igényel; egyiket sem olvastuk be.
+      create_recovery_descriptor_pair_required: A --recovery-handoff-fd és --recovery-verification-fd
+        kapcsolót együtt kell megadni.
+      create_recovery_descriptor_reserved: A helyreállítási fájlleírók nem lehetnek
+        negatívak, illetve nem lehetnek a szabványos bemenet, kimenet vagy hibakimenet.
+      create_recovery_enrolled: A helyreállítás regisztrálva lett az egyszer megjelenő
+        kifejezés birtoklásának ellenőrzése után.
+      create_recovery_handoff_fd_help: Az egyszer megjelenő helyreállítási kifejezést
+        egy korlátozott titkos JSON-objektumként írja erre az örökölt írható fájlleíróra.
+      create_recovery_handoff_too_large: A helyreállítási átadás túllépte a 8192 bájtos
+        korlátot; profil nem jött létre.
+      create_recovery_handoff_unwritable: Az átadási fájlleíró nem örökölt írható
+        csatorna; profil nem jött létre.
+      create_recovery_verification_fd_help: A pontos kifejezést korlátozott titkos
+        JSON-objektumként olvassa erről az örökölt olvasható fájlleíróról közzététel
+        előtt.
+      create_recovery_verification_cancelled: A helyreállítás megerősítése megszakadt;
+        profil nem jött létre.
+      create_recovery_verification_mismatch: A helyreállítási kifejezés birtoklása
+        nem volt ellenőrizhető; profil nem jött létre.
+      create_recovery_verification_prompt: 'A birtoklás ellenőrzéséhez írja be újra
+        a helyreállítási kifejezést: '
       delete:
         help: Töröl egy profilt és a helyi állapotát; a --yes megerősíti a törlést
         name_help: A törlendő profil neve
@@ -2451,6 +2474,8 @@ cli:
         next_step: 'Következő lépés: futtassa: `aeat app overview status` a munkaterület
           áttekintéséhez.'
         saved: A(z) '%{profile_name}' profil mentve.
+      tui_scripted_conflict: A --tui nem használható együtt a --quiet, a --accept-defaults
+        vagy a profilmezők kapcsolóival.
     status:
       empty_profile: 'Nincs beállított profil. Futtassa: `aeat config profile create
         NÉV` a kezdéshez.'
@@ -3410,6 +3435,7 @@ cli:
         recovery_repair: Adatmódosítás előtt futtasd ezt a csak olvasható állapotjelentést.
         section_command_families: Parancscsaládok
         section_diagnostics: Diagnosztika
+        section_frontend_options: Felületi beállítások
         section_profile_authentication_options: Profilhitelesítési beállítások
         section_recovery: Folytatás vagy helyreállítás
         section_start_resume: Kezdés vagy folytatás
@@ -3768,6 +3794,7 @@ cli:
     language_help: A kimenet és a súgószöveg nyelve (en, es, ca, hu).
     profile_help: Az aktív profil neve.
     quiet_help: Csak a hibák megjelenítése.
+    tui_help: A teljes képernyős felület kérése a kiválasztott parancshoz.
     verbose_help: Részletes kimenet engedélyezése.
     version_help: A verziószám megjelenítése és kilépés.
   topic:

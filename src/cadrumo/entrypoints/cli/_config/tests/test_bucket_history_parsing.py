@@ -142,6 +142,7 @@ def test_profile_history_without_name_resolves_the_active_profile(tmp_path) -> N
             "History Subject",
             "history-subject-operator-secret",
             "en",
+            lambda _enrollment: None,
         )
         assert attempt.outcome is not None, attempt.refusal
 

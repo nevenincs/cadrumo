@@ -15,9 +15,26 @@ import os
 import sys
 from collections.abc import Sequence
 from contextlib import suppress
+from pathlib import Path
 
 
-def descriptor_from_inherited_handle(handle: int) -> int:
+def bootstrap_interpreter() -> str:
+    """Return the real CPython executable that must inherit allowlisted HANDLEs.
+
+    A virtual-environment ``python.exe`` may be a launcher which creates a
+    second process without forwarding ``STARTUPINFOEX.handle_list``.  Windows
+    supervisors must therefore start the base interpreter directly.
+    """
+    candidate = getattr(sys, "_base_executable", None)
+    if not isinstance(candidate, str) or not candidate:
+        raise RuntimeError("the base CPython executable is unavailable")
+    resolved = Path(candidate).resolve(strict=True)
+    if resolved.name.lower() not in {"python.exe", "pythonw.exe"}:
+        raise RuntimeError("the base CPython executable is invalid")
+    return str(resolved)
+
+
+def descriptor_from_inherited_handle(handle: int, *, writable: bool = False) -> int:
     """Take ownership of one allowlisted inherited Windows HANDLE."""
     if sys.platform != "win32":
         raise RuntimeError("Windows profile-secret HANDLE bootstrap is only available on Windows")
@@ -25,20 +42,28 @@ def descriptor_from_inherited_handle(handle: int) -> int:
         raise ValueError("an inherited Windows HANDLE must be a positive integer")
     import msvcrt
 
-    return msvcrt.open_osfhandle(handle, os.O_RDONLY | os.O_BINARY)
+    access = os.O_WRONLY if writable else os.O_RDONLY
+    return msvcrt.open_osfhandle(handle, access | os.O_BINARY)
 
 
 def bootstrap_argv(
     *,
     profile_handle: int | None,
     secrets_handle: int | None,
+    recovery_handoff_handle: int | None = None,
+    recovery_verification_handle: int | None = None,
     command: Sequence[str],
 ) -> tuple[str, ...]:
     """Map allowlisted HANDLEs and build the matching canonical invocation."""
-    if profile_handle is None and secrets_handle is None:
+    if all(
+        handle is None
+        for handle in (profile_handle, secrets_handle, recovery_handoff_handle, recovery_verification_handle)
+    ):
         raise ValueError("at least one inherited secret HANDLE is required")
     profile_descriptor: int | None = None
     leaf_descriptor: int | None = None
+    recovery_handoff_descriptor: int | None = None
+    recovery_verification_descriptor: int | None = None
     try:
         if profile_handle is not None:
             profile_descriptor = descriptor_from_inherited_handle(profile_handle)
@@ -54,14 +79,35 @@ def bootstrap_argv(
                 if profile_handle is not None and secrets_handle == profile_handle
                 else descriptor_from_inherited_handle(secrets_handle)
             )
+        if recovery_handoff_handle is not None:
+            recovery_handoff_descriptor = descriptor_from_inherited_handle(recovery_handoff_handle, writable=True)
+        if recovery_verification_handle is not None:
+            recovery_verification_descriptor = descriptor_from_inherited_handle(recovery_verification_handle)
     except Exception:
-        if profile_descriptor is not None:
-            os.close(profile_descriptor)
+        for descriptor in (
+            profile_descriptor,
+            leaf_descriptor,
+            recovery_handoff_descriptor,
+            recovery_verification_descriptor,
+        ):
+            if descriptor is not None:
+                with suppress(OSError):
+                    os.close(descriptor)
         raise
 
     root = () if profile_descriptor is None else ("--profile-secrets-fd", str(profile_descriptor))
     leaf = () if leaf_descriptor is None else ("--secrets-fd", str(leaf_descriptor))
-    return ("aeat", *root, *command, *leaf)
+    handoff = (
+        ()
+        if recovery_handoff_descriptor is None
+        else ("--recovery-handoff-fd", str(recovery_handoff_descriptor))
+    )
+    verification = (
+        ()
+        if recovery_verification_descriptor is None
+        else ("--recovery-verification-fd", str(recovery_verification_descriptor))
+    )
+    return ("aeat", *root, *command, *leaf, *handoff, *verification)
 
 
 def main() -> None:
@@ -69,6 +115,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(prog="python -m cadrumo.entrypoints.cli._windows_profile_secret_bootstrap")
     parser.add_argument("--profile-handle", type=int)
     parser.add_argument("--secrets-handle", type=int)
+    parser.add_argument("--recovery-handoff-handle", type=int)
+    parser.add_argument("--recovery-verification-handle", type=int)
     parser.add_argument("command", nargs=argparse.REMAINDER)
     parsed = parser.parse_args()
     command = parsed.command
@@ -76,16 +124,33 @@ def main() -> None:
         command = command[1:]
     if not command:
         parser.error("an aeat command tail is required after --")
-    if parsed.profile_handle is None and parsed.secrets_handle is None:
-        parser.error("at least one of --profile-handle or --secrets-handle is required")
+    if all(
+        handle is None
+        for handle in (
+            parsed.profile_handle,
+            parsed.secrets_handle,
+            parsed.recovery_handoff_handle,
+            parsed.recovery_verification_handle,
+        )
+    ):
+        parser.error("at least one inherited HANDLE option is required")
     argv = bootstrap_argv(
         profile_handle=parsed.profile_handle,
         secrets_handle=parsed.secrets_handle,
+        recovery_handoff_handle=parsed.recovery_handoff_handle,
+        recovery_verification_handle=parsed.recovery_verification_handle,
         command=command,
     )
     descriptors = list(
         dict.fromkeys(
-            int(argv[argv.index(option) + 1]) for option in ("--profile-secrets-fd", "--secrets-fd") if option in argv
+            int(argv[argv.index(option) + 1])
+            for option in (
+                "--profile-secrets-fd",
+                "--secrets-fd",
+                "--recovery-handoff-fd",
+                "--recovery-verification-fd",
+            )
+            if option in argv
         )
     )
     sys.argv[:] = argv
@@ -103,4 +168,4 @@ if __name__ == "__main__":  # pragma: no cover - exercised as a process on Windo
     main()
 
 
-__all__ = ["bootstrap_argv", "descriptor_from_inherited_handle", "main"]
+__all__ = ["bootstrap_argv", "bootstrap_interpreter", "descriptor_from_inherited_handle", "main"]

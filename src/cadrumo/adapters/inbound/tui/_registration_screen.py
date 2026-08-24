@@ -37,6 +37,7 @@ from __future__ import annotations
 from contextlib import ExitStack
 from contextvars import copy_context
 from dataclasses import dataclass
+from threading import Event
 from typing import TYPE_CHECKING, Final, Protocol, cast, override
 
 from textual.app import ComposeResult
@@ -112,6 +113,10 @@ class RegistrationRefusal:
         return tr(self.message_key, **dict(self.context))
 
 
+class RecoveryHandoverCancelledError(Exception):
+    """The operator declined the one-time recovery possession gate."""
+
+
 @dataclass(frozen=True, slots=True)
 class RegistrationAttempt:
     """The outcome of asking the application to create a profile.
@@ -121,15 +126,13 @@ class RegistrationAttempt:
     that owns the rules, and leaves the screen doing what a screen does:
     show the operator what happened.
 
-    ``enrollment`` carries the recovery wrapper minted at creation, when one
-    was minted: the full-screen door shows the words itself, so the attempt
-    is the channel the wipeable container travels back through. The owner of
-    the attempt owns the wipe.
+    Recovery material never rides this post-registration result. The screen's
+    blocking handoff runs inside the application callback, before publication,
+    and the application owns wiping the material on every exit.
     """
 
     outcome: ProfileRegistrationOutcome | None = None
     expected_refusal: RegistrationRefusal | None = None
-    enrollment: ProfileRecoveryEnrollment | None = None
 
     @property
     def refusal(self) -> str | None:
@@ -221,7 +224,10 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
         self,
         *,
         assess: Callable[[str], ProfilePasswordVerdict],
-        register: Callable[[str, str, str], RegistrationAttempt],
+        register: Callable[
+            [str, str, str, Callable[[ProfileRecoveryEnrollment], None]],
+            RegistrationAttempt,
+        ],
         suggested_name: str | None = None,
     ) -> None:
         super().__init__()
@@ -249,8 +255,7 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
         and reports that back as a selection, and this is what tells the
         two apart."""
         self._language_overrides = ExitStack()
-        self._pending_enrollment: ProfileRecoveryEnrollment | None = None
-        """The wrapper minted by the creation just confirmed, awaiting its words display."""
+        self._pending_recovery_handoffs: set[Event] = set()
         """Holds the settings override the screen is rendering under.
 
         A stack rather than a bare handle so each choice closes the one
@@ -472,11 +477,10 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
                     username,
                     password_buffer.decode(UTF_8_ENCODING),
                     selected_language,
+                    self._confirm_recovery_possession,
                 )
             finally:
                 password_buffer[:] = b"\x00" * len(password_buffer)
-            if attempt.enrollment is not None:
-                self._pending_enrollment = attempt.enrollment
             return attempt
 
         self.start_attempt(_register)
@@ -489,6 +493,46 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
     def progress_message(self) -> str:
         return tr("flows.registration.create_button")
 
+    def _confirm_recovery_possession(self, enrollment: ProfileRecoveryEnrollment) -> None:
+        """Show words on the message thread and block publication until confirmed."""
+        resolved = Event()
+        self._pending_recovery_handoffs.add(resolved)
+        accepted = False
+
+        def _accept() -> None:
+            nonlocal accepted
+            accepted = True
+            resolved.set()
+
+        def _refuse() -> None:
+            resolved.set()
+
+        def _show() -> None:
+            from ._recovery_words_screen import RecoveryWordsScreen
+
+            self.push_screen(
+                RecoveryWordsScreen(
+                    enrollment=enrollment,
+                    on_confirm=_accept,
+                    on_cancel=_refuse,
+                )
+            )
+
+        try:
+            self.call_from_thread(_show)
+            # Shutdown explicitly releases this event in ``on_unmount``; the
+            # bound is a final guard for a failed message-loop lifecycle.
+            if not resolved.wait(timeout=30.0) or not accepted:
+                raise RecoveryHandoverCancelledError
+        finally:
+            self._pending_recovery_handoffs.discard(resolved)
+
+    def on_unmount(self) -> None:
+        """Release every pre-publication handoff when the application stops."""
+        for pending in tuple(self._pending_recovery_handoffs):
+            pending.set()
+        self._language_overrides.close()
+
     @override
     def leave(self, outcome: ProfileRegistrationOutcome | None) -> None:
         """Close the screen, releasing the language it was rendering under.
@@ -499,17 +543,6 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
         language of its own, so nothing downstream needs the override to
         survive the screen.
         """
-        if self._pending_enrollment is not None:
-            enrollment = self._pending_enrollment
-            self._pending_enrollment = None
-            from ._recovery_words_screen import RecoveryWordsScreen
-
-            def _then() -> None:
-                self._language_overrides.close()
-                super().leave(outcome)
-
-            self.push_screen(RecoveryWordsScreen(enrollment=enrollment, on_done=_then))
-            return
         self._language_overrides.close()
         super().leave(outcome)
 
@@ -526,7 +559,10 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
 def run_registration_tui(
     *,
     assess: Callable[[str], ProfilePasswordVerdict],
-    register: Callable[[str, str, str], RegistrationAttempt],
+    register: Callable[
+        [str, str, str, Callable[[ProfileRecoveryEnrollment], None]],
+        RegistrationAttempt,
+    ],
     suggested_name: str | None = None,
 ) -> ProfileRegistrationOutcome | None:
     """Run the registration screen and return the created profile, or ``None``.
@@ -542,6 +578,7 @@ def run_registration_tui(
 
 __all__ = [
     "ProfilePasswordVerdict",
+    "RecoveryHandoverCancelledError",
     "RegistrationApp",
     "RegistrationAttempt",
     "RegistrationRefusal",

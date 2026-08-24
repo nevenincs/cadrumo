@@ -388,6 +388,57 @@ class ProfileSecretSpec:
 
 
 @dataclass(frozen=True, slots=True)
+class RecoveryHandoffSpec:
+    """Strict two-way recovery possession protocol owned by one command leaf."""
+
+    handoff_parameter: str
+    handoff_direction: Literal["write"]
+    verification_parameter: str
+    verification_direction: Literal["read"]
+    required_together: bool
+    json_fields: tuple[str, ...]
+    maximum_bytes: int
+    strict_utf8_object: bool
+    duplicate_extra_missing_fields_refused: bool
+    descriptors_closed: bool
+    reserved_descriptors: tuple[int, ...]
+    descriptors_must_differ: bool
+    collides_with_parameters: tuple[str, ...]
+    windows_handle_bootstrap: str
+
+    def __post_init__(self) -> None:
+        if self.handoff_direction != "write" or self.verification_direction != "read":
+            raise ValueError("recovery handoff directions must be write then read")
+        for value in (self.handoff_parameter, self.verification_parameter, *self.collides_with_parameters):
+            _require_identifier(value, field="recovery handoff parameter")
+        if self.handoff_parameter == self.verification_parameter:
+            raise ValueError("recovery handoff descriptors must be distinct parameters")
+        if not self.json_fields or len(self.json_fields) != len(set(self.json_fields)):
+            raise ValueError("recovery handoff JSON fields must be non-empty and unique")
+        for field_name in self.json_fields:
+            _require_identifier(field_name, field="recovery handoff JSON field")
+        if self.maximum_bytes <= 0:
+            raise ValueError("recovery handoff maximum bytes must be positive")
+        if not all(
+            isinstance(value, bool)
+            for value in (
+                self.required_together,
+                self.strict_utf8_object,
+                self.duplicate_extra_missing_fields_refused,
+                self.descriptors_closed,
+                self.descriptors_must_differ,
+            )
+        ):
+            raise TypeError("recovery handoff protocol flags must be bools")
+        if not self.reserved_descriptors or any(value < 0 for value in self.reserved_descriptors):
+            raise ValueError("recovery handoff reserved descriptors must be non-negative")
+        if len(self.reserved_descriptors) != len(set(self.reserved_descriptors)):
+            raise ValueError("recovery handoff reserved descriptors must be unique")
+        if not self.windows_handle_bootstrap or any(character.isspace() for character in self.windows_handle_bootstrap):
+            raise ValueError("recovery handoff Windows bootstrap must be a non-empty token")
+
+
+@dataclass(frozen=True, slots=True)
 class ArgumentSpec:
     """One positional argument declaration, in command tuple order."""
 
@@ -504,6 +555,13 @@ class SchemaState(Enum):
     UNAVAILABLE = "unavailable"
 
 
+class TuiCapability(Enum):
+    """Closed TUI routing posture for one command-graph node."""
+
+    NOT_IMPLEMENTED = "not-implemented"
+    AVAILABLE = "available"
+
+
 @dataclass(frozen=True, slots=True)
 class ResultSchemaSpec:
     """Explicit result-schema target or intentional absence/unavailability."""
@@ -547,9 +605,11 @@ class CommandSpec:
     search_terms: tuple[str, ...] = ()
     machine_secret: MachineSecretSpec | None = None
     profile_secret: ProfileSecretSpec | None = None
+    recovery_handoff: RecoveryHandoffSpec | None = None
     profile_authentication: ProfileAuthenticationPosture = ProfileAuthenticationPosture.NOT_APPLICABLE
     profile_target_parameter: str | None = None
     allow_unregistered_profile_diagnostic: bool = False
+    tui_capability: TuiCapability = TuiCapability.NOT_IMPLEMENTED
 
     def __post_init__(self) -> None:
         _require_identifier(self.key, field="command key")
@@ -631,6 +691,32 @@ class CommandSpec:
                 or profile_secret_channels.count(ProfileSecretChannelKind.FILE_DESCRIPTOR) != 1
             ):
                 raise ValueError("root profile-secret contract requires exactly one stdin and file-descriptor channel")
+        recovery_parameter_names = {"recovery_handoff_fd", "recovery_verification_fd"}
+        declared_recovery_parameters = recovery_parameter_names.intersection(parameter_names)
+        if declared_recovery_parameters and self.recovery_handoff is None:
+            raise ValueError("recovery descriptor parameters require a recovery handoff spec")
+        if self.recovery_handoff is not None:
+            if self.kind != "leaf":
+                raise ValueError("recovery handoff specs belong only to command leaves")
+            referenced = {
+                self.recovery_handoff.handoff_parameter,
+                self.recovery_handoff.verification_parameter,
+                *self.recovery_handoff.collides_with_parameters,
+            }
+            if not referenced.issubset(parameter_names):
+                raise ValueError("recovery handoff spec references a missing command parameter")
+            descriptor_parameters = {
+                parameter.name: parameter
+                for parameter in self.parameters
+                if isinstance(parameter, OptionSpec) and parameter.name in referenced
+            }
+            if descriptor_parameters.keys() != referenced:
+                raise ValueError("recovery handoff parameters must be command options")
+            if any(
+                parameter.value.annotation != DeferredTarget("builtins", "int")
+                for parameter in descriptor_parameters.values()
+            ):
+                raise ValueError("recovery handoff parameters must be integer options")
 
 
 @dataclass(frozen=True, slots=True)
@@ -746,8 +832,10 @@ __all__ = [
     "ProfileAuthenticationPosture",
     "ProfileSecretChannelKind",
     "ProfileSecretSpec",
+    "RecoveryHandoffSpec",
     "ResultSchemaSpec",
     "SchemaState",
     "TranslationKey",
+    "TuiCapability",
     "ValueContract",
 ]

@@ -21,7 +21,7 @@ from textual import on
 from textual.app import ComposeResult
 from textual.containers import Container
 from textual.screen import Screen
-from textual.widgets import Button, Static
+from textual.widgets import Button, Input, Static
 
 from ....core.i18n import tr
 
@@ -50,10 +50,17 @@ class RecoveryWordsScreen(Screen[None]):
     #words-actions { height: auto; align-horizontal: right; }
     """
 
-    def __init__(self, *, enrollment: ProfileRecoveryEnrollment, on_done: Callable[[], None]) -> None:
+    def __init__(
+        self,
+        *,
+        enrollment: ProfileRecoveryEnrollment,
+        on_confirm: Callable[[], None],
+        on_cancel: Callable[[], None],
+    ) -> None:
         super().__init__()
         self._enrollment = enrollment
-        self._on_done = on_done
+        self._on_confirm = on_confirm
+        self._on_cancel = on_cancel
         self._wiped = False
 
     def compose(self) -> ComposeResult:
@@ -61,14 +68,47 @@ class RecoveryWordsScreen(Screen[None]):
             yield Static(tr("cli.config.custody.recovery_words_heading"), id="words-heading")
             yield Static(self._enrollment.recovery_key.mnemonic, id="words-value")
             yield Static(tr("cli.config.custody.recovery_words_warning"), id="words-warning")
+            yield Input(
+                password=True,
+                placeholder=tr("cli.config.profile.create_recovery_verification_prompt"),
+                id="field-recovery-verification",
+            )
             with Container(id="words-actions"):
+                yield Button(tr("cli.config.custody.recovery_words_cancel"), id="btn-cancel-words")
                 yield Button(tr("cli.config.custody.recovery_words_confirm"), id="btn-confirm-words")
 
     @on(Button.Pressed, "#btn-confirm-words")
     def _confirm(self) -> None:
         if self._wiped:
             return
+        supplied = self.query_one("#field-recovery-verification", Input).value
+        expected = self._enrollment.recovery_key.mnemonic
+        try:
+            if supplied != expected:
+                self._refuse_once()
+                self.dismiss(None)
+                return
+        finally:
+            self.query_one("#field-recovery-verification", Input).value = ""
+            del supplied
+            del expected
         self._wiped = True
         self._enrollment.recovery_key.wipe()
         self.dismiss(None)
-        self._on_done()
+        self._on_confirm()
+
+    @on(Button.Pressed, "#btn-cancel-words")
+    def _cancel(self) -> None:
+        self._refuse_once()
+        self.dismiss(None)
+
+    def on_unmount(self) -> None:
+        """Treat escape, shutdown, and every non-confirm exit as refusal."""
+        self._refuse_once()
+
+    def _refuse_once(self) -> None:
+        if self._wiped:
+            return
+        self._wiped = True
+        self._enrollment.recovery_key.wipe()
+        self._on_cancel()

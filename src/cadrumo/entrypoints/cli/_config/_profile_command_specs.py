@@ -18,9 +18,11 @@ from .._command_spec import (
     OptionSpec,
     ParameterConstraint,
     ParameterDefault,
+    RecoveryHandoffSpec,
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
+    TuiCapability,
     ValueContract,
 )
 from ._spec_policies import (
@@ -129,7 +131,9 @@ def _leaf(
     parameters: tuple[ArgumentSpec | OptionSpec, ...] = (),
     machine_secret: MachineSecretSpec | None = None,
     *,
+    recovery_handoff: RecoveryHandoffSpec | None = None,
     profile_target_parameter: str | None = None,
+    tui_capability: TuiCapability = TuiCapability.NOT_IMPLEMENTED,
 ) -> CommandSpec:
     return CommandSpec(
         key,
@@ -144,7 +148,9 @@ def _leaf(
         _handler(module, handler),
         _schema(schema_module, schema_name, key.replace("_", ".")),
         machine_secret=machine_secret,
+        recovery_handoff=recovery_handoff,
         profile_target_parameter=profile_target_parameter,
+        tui_capability=tui_capability,
     )
 
 
@@ -240,6 +246,18 @@ _WIZARD_CREATE_PARAMETERS = (
         "cli.config.custody.secrets_fd_help",
         machine_secret_channel=MachineSecretChannelKind.FILE_DESCRIPTOR,
     ),
+    _option(
+        "recovery_handoff_fd",
+        ("--recovery-handoff-fd",),
+        _INT,
+        "cli.config.profile.create_recovery_handoff_fd_help",
+    ),
+    _option(
+        "recovery_verification_fd",
+        ("--recovery-verification-fd",),
+        _INT,
+        "cli.config.profile.create_recovery_verification_fd_help",
+    ),
 )
 
 PROFILE_COMMAND_SPECS = (
@@ -267,6 +285,7 @@ PROFILE_COMMAND_SPECS = (
             "ConfigProfileDescendienteListResult",
             "config.profile.descendiente",
         ),
+        tui_capability=TuiCapability.AVAILABLE,
     ),
     _leaf(
         "config_profile_archive_export",
@@ -410,6 +429,23 @@ PROFILE_COMMAND_SPECS = (
                 ),
             )
         ),
+        recovery_handoff=RecoveryHandoffSpec(
+            handoff_parameter="recovery_handoff_fd",
+            handoff_direction="write",
+            verification_parameter="recovery_verification_fd",
+            verification_direction="read",
+            required_together=True,
+            json_fields=("recovery_mnemonic",),
+            maximum_bytes=8192,
+            strict_utf8_object=True,
+            duplicate_extra_missing_fields_refused=True,
+            descriptors_closed=True,
+            reserved_descriptors=(0, 1, 2),
+            descriptors_must_differ=True,
+            collides_with_parameters=("secrets_fd",),
+            windows_handle_bootstrap="cadrumo.entrypoints.cli._windows_profile_secret_bootstrap",
+        ),
+        tui_capability=TuiCapability.AVAILABLE,
     ),
     _leaf(
         "config_profile_delete",
@@ -484,6 +520,7 @@ PROFILE_COMMAND_SPECS = (
         "ConfigProfileEditResult",
         ENCRYPTED_WRITE,
         _WIZARD_BASE_PARAMETERS,
+        tui_capability=TuiCapability.AVAILABLE,
     ),
     _leaf(
         "config_profile_history",

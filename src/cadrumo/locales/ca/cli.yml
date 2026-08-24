@@ -1816,6 +1816,7 @@ cli:
       profile_secrets_stdin_help: Llegeix la contrasenya del perfil de destinació
         exacte des d'un objecte JSON acotat a l'entrada estàndard després que falli
         la represa de la sessió.
+      recovery_words_cancel: Cancel·la la creació
       recovery_words_confirm: Ja l'he anotada
       recovery_words_heading: Desa aquesta frase de recuperació
       recovery_words_warning: Només es mostra una vegada. Qui tingui aquesta frase
@@ -2146,9 +2147,31 @@ cli:
       create_passphrase_mismatch: La contrasenya i la seva confirmació no coincideixen;
         no s'ha creat cap perfil.
       create_passphrase_prompt: 'Contrasenya del nou perfil: '
-      create_recovery_not_enrolled: 'No s''ha creat cap frase de recuperació: aquesta
-        execució no tenia cap terminal on mostrar-la. La contrasenya és ara l''única
-        via d''accés a aquest perfil i la recuperació no es pot afegir més tard.'
+      create_recovery_channel_absent: La recuperació és obligatòria. En un host sense
+        terminal, proporcioneu --recovery-handoff-fd i --recovery-verification-fd;
+        no s'ha creat cap perfil.
+      create_recovery_descriptor_collision: El lliurament, la verificació i la contrasenya
+        han d'usar descriptors diferents; no s'ha llegit cap descriptor.
+      create_recovery_descriptor_pair_required: --recovery-handoff-fd i --recovery-verification-fd
+        s'han de proporcionar junts.
+      create_recovery_descriptor_reserved: Els descriptors de recuperació han de ser
+        no negatius i no poden ser l'entrada, la sortida ni l'error estàndard.
+      create_recovery_enrolled: La recuperació s'ha inscrit després de verificar la
+        possessió de la frase d'un sol ús.
+      create_recovery_handoff_fd_help: Escriu la frase de recuperació d'un sol ús
+        com un objecte JSON secret acotat en aquest descriptor heretat escrivible.
+      create_recovery_handoff_too_large: El lliurament de recuperació ha superat el
+        límit de 8192 bytes; no s'ha creat cap perfil.
+      create_recovery_handoff_unwritable: El descriptor de lliurament no era un canal
+        heretat escrivible; no s'ha creat cap perfil.
+      create_recovery_verification_fd_help: Llegeix la frase exacta com un objecte
+        JSON secret acotat des d'aquest descriptor heretat llegible abans de publicar.
+      create_recovery_verification_cancelled: S'ha cancel·lat la confirmació de recuperació;
+        no s'ha creat cap perfil.
+      create_recovery_verification_mismatch: No s'ha pogut verificar la possessió
+        de la frase de recuperació; no s'ha creat cap perfil.
+      create_recovery_verification_prompt: 'Torneu a introduir la frase de recuperació
+        per verificar-ne la possessió: '
       delete:
         help: Elimina un perfil i el seu estat local; --yes confirma l'eliminació
         name_help: Nom del perfil que vols eliminar
@@ -2447,6 +2470,8 @@ cli:
         next_step: 'Següent pas: executa `aeat app overview status` per revisar l''espai
           de treball.'
         saved: Perfil '%{profile_name}' desat.
+      tui_scripted_conflict: --tui no es pot combinar amb --quiet, --accept-defaults
+        ni amb opcions de camps del perfil.
     status:
       empty_profile: Cap perfil configurat. Executa `aeat config profile create NAME`
         per començar.
@@ -3409,6 +3434,7 @@ cli:
           només lectura.
         section_command_families: Famílies d'ordres
         section_diagnostics: Diagnòstic
+        section_frontend_options: Opcions d'interfície
         section_profile_authentication_options: Opcions d'autenticació del perfil
         section_recovery: Reprendre o recuperar
         section_start_resume: Començar o continuar
@@ -3774,6 +3800,7 @@ cli:
     language_help: Idioma de la sortida i del text d'ajuda (en, es, ca, hu).
     profile_help: Nom del perfil actiu.
     quiet_help: Mostra només els errors.
+    tui_help: Sol·licita la interfície de pantalla completa per a l'ordre seleccionada.
     verbose_help: Habilita la sortida detallada.
     version_help: Mostra el número de versió i surt.
   topic:

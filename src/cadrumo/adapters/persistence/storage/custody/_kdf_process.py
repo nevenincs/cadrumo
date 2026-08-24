@@ -118,6 +118,10 @@ def worker_environment(*, neutral_root: Path) -> dict[str, str]:
             raise _supervision_refusal()
         environment["SYSTEMROOT"] = system_root
         environment["USERPROFILE"] = str(neutral_root)
+        # A HANDLE-safe supervisor may itself run the resolved base CPython
+        # executable. Preserve its already-resolved import roots for the KDF
+        # child without relying on a virtual-environment launcher hop.
+        environment["PYTHONPATH"] = os.pathsep.join(entry for entry in sys.path if entry)
     else:
         environment["LC_ALL"] = "C"
     return environment
