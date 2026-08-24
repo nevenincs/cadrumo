@@ -40,7 +40,9 @@ _PASSPHRASE = "record-authority-retires-with-session-operator-secret"  # noqa: S
 def test_closing_the_bucket_session_leaves_no_readable_record_authority(tmp_path: Path) -> None:
     """One close, one state: no session means no authority and no facts."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        outcome = register_profile_with_credentials(label=_LABEL, passphrase=_PASSPHRASE)
+        outcome = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSPHRASE
+        )
         login_profile(name=outcome.label, passphrase_callback=lambda: _PASSPHRASE)
 
         # Precondition, not decoration: the authority has to be live and
@@ -65,7 +67,9 @@ def test_a_sealed_but_still_bound_session_serves_no_record_authority(tmp_path: P
     caller a decryptable-looking route over a session that cannot decrypt.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        outcome = register_profile_with_credentials(label=_LABEL, passphrase=_PASSPHRASE)
+        outcome = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSPHRASE
+        )
         login_profile(name=outcome.label, passphrase_callback=lambda: _PASSPHRASE)
 
         assert profile_record_session_if_authenticated(outcome.profile_id) is not None
@@ -90,7 +94,9 @@ def test_an_open_bucket_session_still_serves_its_record_authority(tmp_path: Path
     lock every logged-in operator out of their own facts.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        outcome = register_profile_with_credentials(label=_LABEL, passphrase=_PASSPHRASE)
+        outcome = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSPHRASE
+        )
         login_profile(name=outcome.label, passphrase_callback=lambda: _PASSPHRASE)
 
         first = profile_record_session_if_authenticated(outcome.profile_id)

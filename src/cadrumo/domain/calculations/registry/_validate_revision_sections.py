@@ -82,6 +82,7 @@ def _validate_revision_surface_sections(
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
+    source_root: Path | None,
     justificante_corpus_root: Path | None,
 ) -> None:
     """Append section-surface failures for one revision.
@@ -185,6 +186,7 @@ def _validate_revision_surface_sections(
             legal_refs=legal_refs,
             source_refs=source_refs,
             evidence=evidence,
+            source_root=source_root,
         ),
     )
     failures.extend(
@@ -267,6 +269,7 @@ def validate_revision_definition(
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
+    source_root: Path | None,
     justificante_corpus_root: Path | None,
 ) -> list[str]:
     """Return all registry validation failures for one modelo revision.
@@ -307,6 +310,7 @@ def validate_revision_definition(
         legal_refs=legal_refs,
         source_refs=source_refs,
         evidence=evidence,
+        source_root=source_root,
         justificante_corpus_root=justificante_corpus_root,
     )
     _validate_revision_closure_sections(

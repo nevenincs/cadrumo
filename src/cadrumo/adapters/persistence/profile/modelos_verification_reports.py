@@ -36,6 +36,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ....core import resolve_repository_bucket_id
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....domain.modelos import (
@@ -43,8 +44,7 @@ from ....domain.modelos import (
     VerificationReportPersistenceError,
     raise_catalogue_integrity_error,
 )
-from ..storage import MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE
-from ._modelo_runtime import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
+from ..storage import MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE, secure_object_repository_for_bucket
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
@@ -84,11 +84,11 @@ class VerificationReportCatalogueRepository:
         if objects is not None:
             self._objects = objects
         else:
-            self._bucket_id = resolve_modelo_repository_bucket_id(
+            self._bucket_id = resolve_repository_bucket_id(
                 bucket_id,
                 error_type=VerificationReportPersistenceError,
             )
-            self._objects = secure_objects_for_modelo_bucket(self._bucket_id)
+            self._objects = secure_object_repository_for_bucket(self._bucket_id)
         self._storage = ProfileEnvelopedModelSecurePersistence(
             objects=self._objects,
             definition=MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE,

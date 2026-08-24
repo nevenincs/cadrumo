@@ -50,6 +50,7 @@ import importlib
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ._bucket_id_fixture import bucket_id
 from ._collection_storage_root import (
     apply_collection_storage_root,
     collection_storage_root,
@@ -67,6 +68,7 @@ from ._inventory import (
     discover_test_control_modules,
     leaf_name,
     module_name,
+    modules_declaring_class,
     non_test_package_python_files,
     non_test_python_files_under,
     package_ast_items,
@@ -74,6 +76,7 @@ from ._inventory import (
     prime_ast_cache,
     production_ast_items,
     production_python_files,
+    python_files_under,
     qualified_name,
     repo_path,
     repo_relative,
@@ -123,6 +126,7 @@ __all__ = [
     "assert_path_matches_grammar",
     "assert_real_corpus",
     "ast_for_path",
+    "bucket_id",
     "build_limits",
     "callable_key",
     "collection_storage_root",
@@ -134,6 +138,7 @@ __all__ = [
     "measure_callable_lines",
     "measure_module_lines",
     "module_name",
+    "modules_declaring_class",
     "non_test_package_python_files",
     "non_test_python_files_under",
     "package_ast_items",
@@ -144,6 +149,7 @@ __all__ = [
     "production_ast_items",
     "production_python_files",
     "pytest_numbered_dir_root",
+    "python_files_under",
     "qualified_name",
     "reap_abandoned_numbered_dirs",
     "register_collection_storage_root_cleanup",

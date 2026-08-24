@@ -59,6 +59,7 @@ def _setup_subject(tmp_path: Path, *, facts: tuple[UserProfileFact, ...]) -> Gen
     """Register a real INCOMPLETE capsule carrying ``facts`` and bind its session."""
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Promotion subject",
             passphrase=_PASSPHRASE,
             facts=facts,

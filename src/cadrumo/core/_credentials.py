@@ -1,7 +1,7 @@
 """Canonical profile-password policy and independent strength guidance.
 
 Profile-password validity is an exact-sequence capability contract: accepted
-passwords contain 15 through 256 Unicode scalar values and encode to at most
+passwords contain 8 through 256 Unicode scalar values and encode to at most
 1,024 strict UTF-8 bytes. The assessment never normalises, rewrites, retains,
 or returns the submitted password. Its result contains only a finite refusal
 reason and numeric measurements that are safe for prospective-password
@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Final
 
-PROFILE_PASSWORD_MIN_SCALARS: Final[int] = 15
+PROFILE_PASSWORD_MIN_SCALARS: Final[int] = 8
 """Minimum Unicode scalar count for a profile password."""
 
 PROFILE_PASSWORD_MAX_SCALARS: Final[int] = 256

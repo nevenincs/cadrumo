@@ -13,8 +13,6 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.entrypoints.cli import is_exposable_command
-
 from .._dispatch import (
     TOOL_NAME_BUDGET,
     command_key_for_tool,
@@ -53,6 +51,8 @@ def test_abbreviated_names_reverse_to_their_command_key() -> None:
 def test_a_hypothetical_deep_verb_would_trip_the_budget_gate() -> None:
     # Anti-tautology: a synthetic very-deep command key with no abbreviation
     # overflows the budget, proving the gate has teeth.
+    # The key is deliberately not a registered command: exposability is decided by
+    # the live command graph, so only the budget arithmetic can be proven here.
     deep = "modelo.work.some_very_long_new_subcommand_that_would_overflow_the_budget"
-    assert is_exposable_command(deep)
     assert prefixed_tool_name_length(deep) > TOOL_NAME_BUDGET
+    assert prefixed_tool_name_length("modelo.work.calculate") <= TOOL_NAME_BUDGET

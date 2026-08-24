@@ -138,7 +138,9 @@ def _register(tmp_path: Path, handed: list[str]):
     return register_profile_with_credentials(
         label=f"{_LABEL} {tmp_path.name}",
         passphrase=_PASSPHRASE,
-        recovery_handover=lambda enrollment: handed.append(enrollment.recovery_key.mnemonic),
+        recovery_handover=lambda enrollment: (
+            handed.append(enrollment.recovery_key.mnemonic) or enrollment.recovery_key.mnemonic
+        ),
     )
 
 

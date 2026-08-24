@@ -86,7 +86,9 @@ def _create_profile(label: str = _LABEL, *, tax_id: str = "12345678Z") -> str:
     from ....application.user_profile import register_profile_with_credentials
 
     del tax_id  # Current registration creates the initial incomplete fact record.
-    created = register_profile_with_credentials(label=label, passphrase=_PASSPHRASE)
+    created = register_profile_with_credentials(
+        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=label, passphrase=_PASSPHRASE
+    )
     close_active_bucket_session()
     assert _bucket_id_or_none(label) == created.bucket_id
     return created.bucket_id

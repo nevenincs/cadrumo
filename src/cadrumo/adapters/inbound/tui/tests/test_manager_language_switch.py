@@ -24,8 +24,8 @@ from textual.widgets import DataTable, OptionList
 from textual.widgets._footer import FooterKey
 
 from .....application.user_profile import (
-    login_profile,
     build_profile_overview,
+    login_profile,
     register_profile_with_credentials,
 )
 from .....core import require_active_bucket_id
@@ -88,6 +88,7 @@ def _register_in(language: str) -> None:
     from .....domain.user_profile import UserProfileFact
 
     register_profile_with_credentials(
+        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label=_LABEL,
         passphrase=_PASSWORD,
         facts=(UserProfileFact(path=_OUTPUT_LANGUAGE_PATH, value=language),),

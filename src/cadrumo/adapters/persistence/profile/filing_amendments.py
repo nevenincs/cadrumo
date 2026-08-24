@@ -42,8 +42,8 @@ from ....domain.filing import (
     ModeloComplementaria,
     ModeloSustitutiva,
 )
-from ..storage import FILING_AMENDMENTS_NAMESPACE
-from ._filing_runtime import resolve_filing_repository_bucket_id, secure_objects_for_filing_bucket
+from ..storage import FILING_AMENDMENTS_NAMESPACE, secure_object_repository_for_bucket
+from ._filing_runtime import resolve_filing_repository_bucket_id
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import SecureObjectRepository
@@ -80,7 +80,7 @@ class ModeloAmendmentRepository:
             self._objects = objects
             return
         self._bucket_id = resolve_filing_repository_bucket_id(bucket_id)
-        self._objects = secure_objects_for_filing_bucket(self._bucket_id)
+        self._objects = secure_object_repository_for_bucket(self._bucket_id)
 
     @property
     def bucket_id(self) -> str | None:

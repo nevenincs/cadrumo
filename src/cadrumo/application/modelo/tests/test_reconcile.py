@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ...tests._profile_backend_fixtures import _isolated_backend
+from ...tests import isolated_profile_backend as _isolated_backend
 
 __all__ = ["_isolated_backend"]
 

@@ -58,7 +58,7 @@ from .._storage_taxonomy import StorageCategory
 from .._storage_taxonomy_locations import storage_path
 from ..atomic_write import atomic_write_best_effort_text
 from ..external_constants import UTF_8_ENCODING
-from ..hashing import content_hash_hex, sha256_hex
+from ..hashing import content_hash_hex
 
 _CACHE_FILENAME_PREFIX = "cadrumo_locale_catalogue_"
 _CACHE_SCHEMA_VERSION = "flat-catalogue-v1"
@@ -94,16 +94,6 @@ def _compute_payload_digest(flat: dict[str, str | None]) -> str:
     removal, or alteration of a key or value.
     """
     return content_hash_hex(flat)
-
-
-def compute_source_digest(raw_source: bytes) -> str:
-    """Return the hex SHA-256 digest of a locale catalogue's raw source bytes.
-
-    Hashing the raw bytes (not the parsed YAML) is cheap -- no parse is
-    needed to compute it -- and cannot be fooled by a semantically-equivalent
-    reformat of the same data producing a different hash.
-    """
-    return sha256_hex(raw_source)
 
 
 def compute_directory_source_digest(shards: list[tuple[str, bytes]]) -> str:
@@ -205,7 +195,6 @@ def _delete_catalogue_cache(path: Path) -> None:
 __all__ = [
     "catalogue_cache_path",
     "compute_directory_source_digest",
-    "compute_source_digest",
     "read_catalogue_cache",
     "write_catalogue_cache",
 ]

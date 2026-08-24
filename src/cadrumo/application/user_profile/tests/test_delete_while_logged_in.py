@@ -63,7 +63,9 @@ def _register_and_sign_in(root: Path) -> UUID:
     than a contrived one: it opens the capsule's own database connection, which
     is the thing whose sidecars land inside the inventoried tree.
     """
-    outcome = register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+    outcome = register_profile_with_credentials(
+        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+    )
     login_profile(name=outcome.profile_id, passphrase_callback=lambda: _PASSWORD)
     assert master_key.current_active_bucket_session() is not None, (
         "the login must be live, or nothing here reproduces the logged-in case"

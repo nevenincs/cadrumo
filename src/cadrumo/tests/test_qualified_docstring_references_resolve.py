@@ -69,7 +69,11 @@ def _resolves(target: str) -> bool:
     for cut in range(len(parts), 0, -1):
         try:
             obj = importlib.import_module(".".join(parts[:cut]))
-        except Exception:
+        except ImportError:
+            # A shorter prefix of a dotted reference is not always an importable
+            # module -- resolving ``pkg.mod.Class.attr`` walks prefixes until one
+            # imports. A prefix that does not is the normal case, not an error to
+            # report, so the walk continues to the next-shorter candidate.
             continue
         for attr in parts[cut:]:
             resolved = _member(obj, attr)

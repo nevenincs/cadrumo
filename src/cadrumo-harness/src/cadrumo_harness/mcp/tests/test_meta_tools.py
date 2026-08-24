@@ -11,6 +11,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.entrypoints.cli import VerbInputSchema, command_schema_refs
+from cadrumo.entrypoints.cli._command_schema import command_registration_projection
 
 from .._annotations import McpAnnotations
 from .._command_policy import CommandPolicyProjection
@@ -56,7 +57,20 @@ def _blocked_descriptor() -> McpToolDescriptor:
             live_write=True,
             open_world=True,
         ),
-        verb_schema=VerbInputSchema(command_key="x.submit", cli_path=("app", "x", "submit"), parameters=()),
+        verb_schema=VerbInputSchema(
+            command_key="x.submit",
+            cli_path=("app", "x", "submit"),
+            parameters=(),
+            # Both authentication fields are required on the schema now. The
+            # contract is READ from the live projection rather than hand-built:
+            # its field set comes from the root profile secret and its booleans
+            # are policy, so a fixture copy would be a second declaration of a
+            # product invariant, free to drift from the one that governs.
+            profile_authentication="not-applicable",
+            profile_authentication_contract=(
+                command_registration_projection().profile_authentication_contract
+            ),
+        ),
     )
 
 

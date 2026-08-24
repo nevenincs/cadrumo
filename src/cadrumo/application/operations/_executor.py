@@ -18,8 +18,13 @@ from ...core.async_cleanup import AsyncCloseable
 from ...core.identity import ContentDigest
 from ._capabilities import OperationOwnedResource
 from ._events import OperationDiagnosticReference, OperationEventCode, OperationLogSeverity
-from ._interactions import OperationPendingInteraction
-from ._models import OperationIdentity, OperationReference, OperationRequest
+from ._interactions import (
+    OperationConsumedInteraction,
+    OperationInteractionRequest,
+    OperationPendingInteraction,
+    OperationResponseToken,
+)
+from ._models import OperationIdentity, OperationReference, OperationRequest, OperationRevision
 
 
 @runtime_checkable
@@ -98,7 +103,11 @@ class OperationEventEmitter(Protocol):
 
 @runtime_checkable
 class OperationSecureOperandLookup(Protocol):
-    """Resolve confidential operands by canonical content digest."""
+    """Persist and resolve confidential operands by canonical content digest."""
+
+    async def put(self, operand: BaseModel, *, written_at: datetime) -> ContentDigest:
+        """Persist one typed operand in supervisor-owned secure storage."""
+        ...
 
     async def resolve[OperandT: BaseModel](
         self,
@@ -127,6 +136,18 @@ class OperationInteractionAccess(Protocol):
         """Publish a pending checkpoint; continuation arrives through supervisor respond."""
         ...
 
+    async def publish_review(
+        self,
+        *,
+        request: OperationInteractionRequest,
+        response_token: OperationResponseToken,
+        reviewed_operand: BaseModel,
+        baseline_digest: ContentDigest | None = None,
+        proposed_effect_digest: ContentDigest | None = None,
+    ) -> OperationPendingInteraction:
+        """Secure a typed reviewed operand before publishing its digest-bound checkpoint."""
+        ...
+
 
 @runtime_checkable
 class OperationExecutorContext(Protocol):
@@ -135,6 +156,11 @@ class OperationExecutorContext(Protocol):
     @property
     def identity(self) -> OperationIdentity:
         """Identity of the invocation receiving emitted facts and resources."""
+        ...
+
+    @property
+    def revision(self) -> OperationRevision:
+        """Current authoritative revision for an exact successor transition."""
         ...
 
     @property
@@ -188,7 +214,7 @@ class OperationResumableExecutor[RequestPayloadT: BaseModel](Protocol):
     async def resume(
         self,
         request: OperationRequest[RequestPayloadT],
-        checkpoint: OperationPendingInteraction,
+        checkpoint: OperationPendingInteraction | OperationConsumedInteraction,
         context: OperationExecutorContext,
     ) -> OperationReference | None:
         """Resume from the exact durable checkpoint under a new supervisor lease."""

@@ -1120,6 +1120,8 @@ errors:
     refused_topic_catalogue_empty: El catálogo de temas incluido no contiene ningún
       tema.
     refused_topic_not_found: No se encontró el tema solicitado.
+    refused_tui_not_implemented: La interfaz de pantalla completa todavía no está
+      implementada para {command}.
     refused_user_profile_validation: Un valor del perfil de usuario no es válido.
       Corrige el dato indicado.
     refused_wizard_answer_type: Un campo de respuesta del asistente recibió un tipo

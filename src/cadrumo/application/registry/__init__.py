@@ -101,6 +101,15 @@ from ...domain.calculations.registry import undeclared_casilla_ids as _undeclare
 from ...domain.calculations.registry import verification_tolerance_or_exact as _verification_tolerance_or_exact
 from ...domain.calculations.registry import verify_legal_catalogue as _verify_legal_catalogue
 from ...domain.period import calculation_filing_date as _calculation_filing_date
+from ._closure import (
+    RegistryClosureEvidence,
+    RegistryClosureLimb,
+    RegistryClosureLimbName,
+    RegistryClosureLimbOutcome,
+    RegistryClosureOwnerDisposition,
+    RegistryClosureRefusal,
+    RegistryClosureRefusalReason,
+)
 from ._conformance import (
     AnnualCasillaPopulationComparison,
     CoverageAuthorityScope,
@@ -158,6 +167,18 @@ from ._diff import (
     diff_registry_revisions,
 )
 from ._errors import RegistryApplicationError, RegistryApplicationInputError
+from ._filing_export_authority import (
+    FilingExportEmissionProof,
+    FilingExportGenerationProof,
+    FilingExportProof,
+    FilingExportProofAuthority,
+    FilingExportProofConflictError,
+    GeneratedExportFileDigest,
+)
+from ._filing_export_coverage import (
+    FilingExportCoverageReport,
+    compose_filing_export_coverage,
+)
 from ._source_connectivity_authority import (
     CalculationRouteManualSourceOwnership,
     CalculationRouteResolverSourceOwnership,
@@ -167,6 +188,15 @@ from ._source_connectivity_authority import (
     RepositoryEvidenceDigestVerifier,
     RepositoryRootEvidenceDigestVerifier,
     build_calculation_route_source_ownership_catalogue,
+)
+from ._source_connectivity_coverage import (
+    SourceConnectivityCoverageReport,
+    compose_source_connectivity_coverage,
+)
+from ._temporal_coverage import (
+    TemporalCoverageReport,
+    TemporalRevisionCoverage,
+    compose_temporal_coverage,
 )
 from .source_connectivity import (
     ManualCasillaRequirement,
@@ -580,7 +610,14 @@ __all__ = [
     "CasillaDiff",
     "CoverageAuthorityScope",
     "FiledStateVerificationReport",
+    "FilingExportCoverageReport",
+    "FilingExportEmissionProof",
+    "FilingExportGenerationProof",
+    "FilingExportProof",
+    "FilingExportProofAuthority",
+    "FilingExportProofConflictError",
     "FormulaDiff",
+    "GeneratedExportFileDigest",
     "LatestRevisionSupportProbe",
     "LiveSourceConnectivityProofAuthority",
     "LiveSourceConnectivityProofExpectation",
@@ -596,6 +633,13 @@ __all__ = [
     "RegistryCitationsListCommand",
     "RegistryCitationsListReport",
     "RegistryCitationsVerificationReport",
+    "RegistryClosureEvidence",
+    "RegistryClosureLimb",
+    "RegistryClosureLimbName",
+    "RegistryClosureLimbOutcome",
+    "RegistryClosureOwnerDisposition",
+    "RegistryClosureRefusal",
+    "RegistryClosureRefusalReason",
     "RegistryConformanceProfile",
     "RegistryCorpusIssueProjection",
     "RegistryDestinationCandidate",
@@ -629,11 +673,17 @@ __all__ = [
     "RevisionModelLawCoverage",
     "SourceConnectivityCensusEntry",
     "SourceConnectivityCensusManifest",
+    "SourceConnectivityCoverageReport",
+    "TemporalCoverageReport",
+    "TemporalRevisionCoverage",
     "audit_bundled_registry_conformance",
     "build_calculation_route_source_ownership_catalogue",
     "build_registry_conformance_profile",
     "compare_annual_casilla_population",
     "compare_annual_casilla_population_for_revision",
+    "compose_filing_export_coverage",
+    "compose_source_connectivity_coverage",
+    "compose_temporal_coverage",
     "derive_registry_binding_records",
     "derive_registry_destination_records",
     "derive_registry_formula_records",

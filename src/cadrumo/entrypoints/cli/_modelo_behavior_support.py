@@ -18,7 +18,6 @@ from ...application.modelo import (
     ModeloWorkVisibleTargetAmbiguousError,
     declared_modelo_period_tokens,
     get_work_unit,
-    guard_active_profile_foral_ccaa,
     modelo_work_address_from_operator_target,
     profile_requirements_for_binding,
     registry_bindings_for_scope,
@@ -160,11 +159,6 @@ def require_active_profile() -> None:
     """
     if resolve_active_bucket_id() is None:
         raise _no_active_profile_refusal()
-
-
-def guard_foral_profile_ccaa() -> None:
-    """Render the application foral-profile refusal for work creation."""
-    guard_active_profile_foral_ccaa()
 
 
 def _declared_period_tokens(modelo: str | None) -> tuple[str, ...]:
@@ -490,7 +484,6 @@ def missing_binding_guidance(error: RegistryValidationError, work_unit_id: str) 
 
 __all__ = [
     "bare_period_error",
-    "guard_foral_profile_ccaa",
     "missing_binding_guidance",
     "require_active_profile",
     "resolve_optional_cli_period",

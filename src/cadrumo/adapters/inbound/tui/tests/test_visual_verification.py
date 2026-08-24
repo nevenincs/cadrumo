@@ -32,8 +32,8 @@ from textual.widgets import Button, DataTable, Input, Static
 
 from .....application.flows import CopyRef, FlowDefinition, FlowPage, FlowSection
 from .....application.user_profile import (
-    login_profile,
     build_profile_overview,
+    login_profile,
     register_profile_with_credentials,
 )
 from .....core import require_active_bucket_id
@@ -151,7 +151,11 @@ def _manager(tmp_path: Path) -> Iterator[ProfileManagerApp]:
     from .....tests.secure_sql import isolated_profile_storage_root
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_VISUAL_LABEL, passphrase=_VISUAL_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=_VISUAL_LABEL,
+            passphrase=_VISUAL_PASSWORD,
+        )
         # Registration closes its own session, leaving the profile LOCKED. The
         # custody capsule is the sole profile authority, so the overview builder
         # and the write door below both need an authenticated one; logging in
@@ -186,7 +190,11 @@ def _login(tmp_path: Path) -> Iterator[LoginApp]:
     from .....tests.secure_sql import isolated_profile_storage_root
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_VISUAL_LABEL, passphrase=_VISUAL_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=_VISUAL_LABEL,
+            passphrase=_VISUAL_PASSWORD,
+        )
         logout_active_profile()
         yield LoginApp(
             choices=_login_choices(),
@@ -217,7 +225,11 @@ def _status_populated(tmp_path: Path) -> Iterator[StatusApp]:
     from .....entrypoints.cli._config._status_frontend import build_status_page_data
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_VISUAL_LABEL, passphrase=_VISUAL_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=_VISUAL_LABEL,
+            passphrase=_VISUAL_PASSWORD,
+        )
         yield StatusApp(build_status_page_data())
 
 
@@ -255,7 +267,11 @@ def _manager_populated(tmp_path: Path) -> Iterator[ProfileManagerApp]:
     from .....tests.profile_capsule import set_active_test_profile_facts
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_VISUAL_LABEL, passphrase=_VISUAL_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=_VISUAL_LABEL,
+            passphrase=_VISUAL_PASSWORD,
+        )
         # Same locked-capsule reason as the plain manager fixture: seeding facts
         # and building the overview both go through the capsule, which serves
         # neither without an authenticated session.
@@ -771,7 +787,11 @@ async def test_a_modal_secret_never_paints_its_value(tmp_path: Path) -> None:
     to viewport width at all.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_VISUAL_LABEL, passphrase=_VISUAL_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=_VISUAL_LABEL,
+            passphrase=_VISUAL_PASSWORD,
+        )
         record = load_test_profile_record(require_active_bucket_id())
         from .....entrypoints.cli._config._manager_actions import manager_actions
         from .....entrypoints.cli._config._manager_frontend import persist_active_profile_field

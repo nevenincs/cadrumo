@@ -39,7 +39,7 @@ from .....application.aggregation import (
 # The policy module made this name public; the underscore form it was imported
 # under no longer exists, which stopped this module COLLECTING at all -- a
 # gate running zero assertions rather than failing loudly.
-from .....application.modelo._calculation_source_policy import ENROLLED_SOURCE_KINDS
+from .....application.modelo import CALCULATION_ROUTE_ENROLLED_SOURCES
 from .....core import BindingSourceKind
 from .. import InputKind, PeriodSelector
 from .._authority import bundled_authority
@@ -79,7 +79,7 @@ def _scan() -> _ScanResult:
     source kind absent from it is a novel/dormant source.
     """
     authority = bundled_authority()
-    dispositions = build_binding_source_dispositions(ENROLLED_SOURCE_KINDS)
+    dispositions = build_binding_source_dispositions(CALCULATION_ROUTE_ENROLLED_SOURCES)
 
     modelos_scanned: set[str] = set()
     revisions_scanned = 0

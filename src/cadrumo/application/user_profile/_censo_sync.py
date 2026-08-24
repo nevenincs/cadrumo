@@ -37,11 +37,11 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import IdentityError, validate_spanish_tax_id
 from ...core.logging import get_logger
 from ...domain.user_profile import UserProfileFact
+from ._censal_observation import CensalObservation, CensalObservationAddress
 from ._censo_errors import CensoSyncError
 from ._cotejo_apply import CensoDivergence, apply_cotejo
 
 if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.sede import CensalDatosResult, CensalDomicilio
     from ...domain.user_profile import UserProfileRecord
     from ..workflow import WorkflowState
     from ._profile_record_repository import ProfileRecordRepository
@@ -190,7 +190,7 @@ class CensalReconciliation(BaseModel):
     divergences: tuple[tuple[str, str], ...] = ()
 
 
-def _compose_address(domicilio: CensalDomicilio) -> str | None:
+def _compose_address(domicilio: CensalObservationAddress) -> str | None:
     """Render the decomposed censal address as one display string.
 
     AEAT splits the address across a dozen positional fields; the profile
@@ -222,7 +222,7 @@ def _compose_address(domicilio: CensalDomicilio) -> str | None:
     return composed or None
 
 
-def censal_facts_from_read(result: CensalDatosResult) -> tuple[UserProfileFact, ...]:
+def censal_facts_from_read(result: CensalObservation) -> tuple[UserProfileFact, ...]:
     """Project an AEAT censal consulta read onto declared profile facts.
 
     Every emitted fact carries :data:`CENSO_SOURCE_TAG`, the declared
@@ -369,7 +369,7 @@ def reconcile_censal_read(
     return CensalReconciliation(adopted=tuple(adopted), divergences=tuple(divergences))
 
 
-def apply_censal_read(state: WorkflowState, result: CensalDatosResult) -> WorkflowState:
+def apply_censal_read(state: WorkflowState, result: CensalObservation) -> WorkflowState:
     """Commit a censal consulta read onto the active profile.
 
     Routes through :func:`~cadrumo.application.user_profile.apply_cotejo`,

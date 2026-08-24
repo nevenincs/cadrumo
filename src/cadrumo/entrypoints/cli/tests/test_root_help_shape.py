@@ -46,8 +46,26 @@ PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"logs"})
 """Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 
-def _invoke(args: list[str]):
-    return invoke_cached_cli(args)
+def _invoke(args: list[str], *, pin_language: str | None = "en"):
+    """Invoke the CLI, pinning the rendered language for curated-help assertions.
+
+    The tests below assert the ENGLISH curated help prose, while the configured
+    output language defaults to Spanish -- the same reason ``_console_env``
+    already pins ``en`` for the installed-console probes. Pass
+    ``pin_language=None`` where the invocation supplies its own ``--language``,
+    so the flag decides rather than a settings override outranking it.
+    """
+    from ....core.config import override_settings
+
+    if pin_language is None:
+        return invoke_cached_cli(args)
+    with override_settings(cadrumo_output_language=pin_language):
+        return invoke_cached_cli(args)
+
+
+def _option_row_count(output: str, option: str) -> int:
+    """Return how many times ``option`` heads a row of the rendered options table."""
+    return sum(1 for line in output.splitlines() if line.strip().startswith(option))
 
 
 def _console_env(tmp_path: Path) -> dict[str, str]:
@@ -115,11 +133,15 @@ def test_root_help_uses_curated_two_root_shape() -> None:
 
 @pytest.mark.parametrize("language", tuple(OutputLanguage))
 def test_root_help_projects_both_graph_owned_profile_secret_options_once(language: OutputLanguage) -> None:
-    result = _invoke(["--language", language.value, "--help"])
+    result = _invoke(["--language", language.value, "--help"], pin_language=None)
 
     assert result.exit_code == 0, result.output
-    assert result.output.count("--profile-secrets-stdin") == 1
-    assert result.output.count("--profile-secrets-fd") == 1
+    # Count OPTION ROWS, not raw occurrences: the root help prose also names both
+    # flags when telling the operator how to pass secrets, and that guidance is
+    # not a second projection. The invariant is that the graph projects each
+    # option exactly once into the options table.
+    assert _option_row_count(result.output, "--profile-secrets-stdin") == 1
+    assert _option_row_count(result.output, "--profile-secrets-fd") == 1
     assert tr("cli.config.custody.profile_secrets_stdin_help", locale=language) in result.output
     assert tr("cli.config.custody.profile_secrets_fd_help", locale=language) in result.output
 

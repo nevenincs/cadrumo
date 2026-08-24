@@ -56,7 +56,7 @@ from cadrumo.domain.calculations.registry import calculate_registry_snapshot
 from cadrumo.domain.invoices import PaymentStatus
 from cadrumo.domain.iva import InvoiceKind, IvaCategory
 from cadrumo.domain.modelos import CalculationRevision, WorkUnit, WorkUnitCatalogue, derive_work_unit_id
-from cadrumo.entrypoints.cli._common import _current_operator_surface_reconciliation
+from cadrumo.entrypoints.cli import current_operator_surface_reconciliation
 
 
 class ConnectedProofCompositionError(ValueError):
@@ -75,7 +75,7 @@ class ConnectedProofFixture:
     command_id: str
     route_id: ModeloCalculationRouteId
     canonical_cli_path: tuple[str, ...]
-    destination_identities: tuple[tuple[str, str, str], ...]
+    destination_identities: tuple[tuple[str, str, str, str, str, str], ...]
     modelo: str
     revision_id: str
     filing_year: int
@@ -227,6 +227,9 @@ def _execute_fixture(
         input_values_by_casilla_id=replay.input_values_by_casilla_id,
         binding_overrides=replay.binding_overrides,
         row_binding_values=replay.row_binding_values,
+        row_source_identities={},
+        row_casilla_values={},
+        row_casilla_provenance={},
         relation_overrides=replay.relation_overrides,
         casilla_values=dict(engine_result.values),
         source_transaction_ids=tuple(resolution.source_transaction_ids),
@@ -333,7 +336,7 @@ def _live_authority_for_fixtures(
         yield LiveSourceConnectivityProofAuthority(
             source_ownership=build_calculation_route_source_ownership_catalogue(),
             workflows=build_supported_modelo_calculation_workflow_catalogue(
-                _current_operator_surface_reconciliation(),
+                current_operator_surface_reconciliation(),
             ),
             calculation_revisions=revisions,
             evidence_verifier=RepositoryRootEvidenceDigestVerifier(repository_root=repository_root),

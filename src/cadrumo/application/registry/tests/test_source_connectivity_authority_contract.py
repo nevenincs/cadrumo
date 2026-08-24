@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from hashlib import sha256
 from pathlib import Path
 from types import SimpleNamespace
@@ -146,23 +145,16 @@ def test_repository_digest_verifier_rejects_malformed_repository_references(
 
 def test_repository_digest_verifier_rejects_descriptor_path_replacement(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     repository_root = tmp_path / "repository"
     target = repository_root / "src" / "cadrumo" / "tests" / "test_target.py"
     replacement = repository_root / "src" / "cadrumo" / "tests" / "test_replacement.py"
     target.parent.mkdir(parents=True)
-    target.write_bytes(b"target")
     replacement.write_bytes(b"replacement")
     verifier = RepositoryRootEvidenceDigestVerifier(repository_root=repository_root)
-    real_open = os.open
 
-    def redirect_open(path: os.PathLike[str] | str, flags: int) -> int:
-        if Path(path) == target:
-            return real_open(replacement, flags)
-        return real_open(path, flags)
-
-    monkeypatch.setattr(os, "open", redirect_open)
+    # A substituted in-root path has a different opened-descriptor identity.
+    target.symlink_to(replacement)
     assert verifier.digest("src/cadrumo/tests/test_target.py") is None
 
 

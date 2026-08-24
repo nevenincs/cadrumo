@@ -56,10 +56,6 @@ _ALLOWLIST: dict[tuple[str, str], str] = {
         "FALSE POSITIVE: M303 *casilla* 111, constructed through validated_casilla_id "
         "and named _M303_CASILLA_111. The casilla number collides with Modelo 111's code."
     ),
-    ("entrypoints/cli/_app_live_borrador_cli.py", "100"): (
-        'Typer command-name token (`name="100"`): a CLI surface literal naming '
-        "the borrador-100 subgroup, not program logic."
-    ),
 }
 
 

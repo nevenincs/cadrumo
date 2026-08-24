@@ -18,6 +18,7 @@ from datetime import date
 
 import pytest
 
+from ......application.user_profile import CensalObservation
 from ......core.config import Settings
 from ......core.i18n import tr
 from ......tests import FIXTURES_DIR
@@ -28,7 +29,6 @@ from ......tests.aeat_literal_fixtures import (
 )
 from .._censal_datos import (
     _FORBIDDEN_LANDING_MARKERS,
-    CensalDatosResult,
     _assert_read_http,
     _assert_read_landing,
     _censal_landing_url,
@@ -59,7 +59,7 @@ def _fixture_html() -> str:
     return _FIXTURE.read_text(encoding="utf-8")
 
 
-def _parsed() -> CensalDatosResult:
+def _parsed() -> CensalObservation:
     """Parse the captured page."""
     return parse_censal_datos(_fixture_html(), source_url=_CENSAL_URL)
 

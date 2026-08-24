@@ -5,33 +5,6 @@
         "aeat",
         "config",
         "profile",
-        "create",
-        "caps-demo",
-        "--quiet",
-        "--tax-residence-jurisdiction-scope",
-        "common_regime",
-        "--entity-type",
-        "natural_person",
-        "--tax-id",
-        "33333333P",
-        "--name",
-        "Caps",
-        "--surnames",
-        "Demo Perez"
-      ],
-      "captures": [],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": "Profile\tcaps-demo\nStatus\tcreated\nActive profile\tcaps-demo\nNext\taeat app modelo work create\nNo comunidad autónoma was chosen, so madrid was assumed for this profile. Autonomic deductions and the autonomic part of the tax scale are calculated for madrid. Set --tax-residence-ccaa to use a different comunidad.\n"
-    },
-    {
-      "argv": [
-        "aeat",
-        "config",
-        "profile",
         "capabilities",
         "show"
       ],
@@ -41,7 +14,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "llm_vision\tenabled\tprofile\tprofile opted in to llm_vision\ngoogle_export\tenabled\tprofile\tprofile opted in to google_export\ncloud_evidence_upload\tdisabled\tdefault\tcloud_evidence_upload is off by default (no profile opt-in)\n"
+      "text": "llm_vision\tenabled\tdefault\tllm_vision is on by default (no profile opt-in)\ngoogle_export\tenabled\tdefault\tgoogle_export is on by default (no profile opt-in)\ncloud_evidence_upload\tdisabled\tdefault\tcloud_evidence_upload is off by default (no profile opt-in)\n"
     },
     {
       "argv": [
@@ -73,7 +46,7 @@
       ],
       "captures": [],
       "envelope": {
-        "active_profile": "caps-demo",
+        "active_profile": "docs-sequence-sandbox",
         "command": "config.profile.capabilities.show",
         "notices": [],
         "result": {
@@ -87,8 +60,8 @@
             {
               "capability": "google_export",
               "enabled": true,
-              "reason": "profile opted in to google_export",
-              "source": "profile"
+              "reason": "google_export is on by default (no profile opt-in)",
+              "source": "default"
             },
             {
               "capability": "cloud_evidence_upload",

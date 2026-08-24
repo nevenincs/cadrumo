@@ -26,14 +26,8 @@ See Also:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from ....core import resolve_repository_bucket_id
 from ....domain.filing import ModeloDraftError
-from ..storage import secure_object_repository_for_bucket
-
-if TYPE_CHECKING:  # pragma: no cover — type-only imports
-    from ..storage import SecureObjectRepository
 
 
 def resolve_filing_repository_bucket_id(bucket_id: str | None) -> str:
@@ -41,17 +35,6 @@ def resolve_filing_repository_bucket_id(bucket_id: str | None) -> str:
     return resolve_repository_bucket_id(bucket_id, error_type=ModeloDraftError)
 
 
-def secure_objects_for_filing_bucket(bucket_id: str) -> SecureObjectRepository:
-    """Return runtime-created secure-object storage for ``bucket_id``.
-
-    Returns:
-        A :class:`~adapters.persistence.storage.SecureObjectRepository`
-        scoped to the given filing bucket.
-    """
-    return secure_object_repository_for_bucket(bucket_id)
-
-
 __all__ = [
     "resolve_filing_repository_bucket_id",
-    "secure_objects_for_filing_bucket",
 ]

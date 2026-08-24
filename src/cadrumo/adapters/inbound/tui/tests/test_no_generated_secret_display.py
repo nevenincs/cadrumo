@@ -38,8 +38,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 #: that either paints a minted secret or drives a terminal write out from under
 #: the compositor. Both are the failure this gate exists to catch.
 _MINTING_CALLABLES: tuple[tuple[str, str], ...] = (
-    ("cadrumo.application.user_profile", "create_profile_recovery_enrollment_material"),
-    ("cadrumo.application.user_profile", "enroll_profile_recovery"),
+    ("cadrumo.application.user_profile._custody_ports", "create_profile_recovery_enrollment_material"),
+    ("cadrumo.application.user_profile", "mint_profile_creation_recovery"),
     # The primitive beneath both, and a SECOND reachable path: it is exported from
     # the storage facade in its own right, so a prohibition naming only
     # application-layer callables could be walked around by importing this
@@ -121,10 +121,13 @@ class TestTheMintingPathIsUnreachableFromTheTui:
         Without this, a scan that silently parsed nothing — a changed package
         layout, an empty glob — would report a clean tree and read as proof.
         """
-        source = "from cadrumo.application.user_profile import enroll_profile_recovery\n"
-        assert "enroll_profile_recovery" in _imported_names(source)
-        aliased = "from cadrumo.application.user_profile import enroll_profile_recovery as _mint\n"
-        assert "enroll_profile_recovery" in _imported_names(aliased)
+        source = "from cadrumo.application.user_profile import mint_profile_creation_recovery\n"
+        assert "mint_profile_creation_recovery" in _imported_names(source)
+        aliased = (
+            "from cadrumo.application.user_profile "
+            "import mint_profile_creation_recovery as _mint\n"
+        )
+        assert "mint_profile_creation_recovery" in _imported_names(aliased)
         attribute = "import cadrumo\ncadrumo.adapters.persistence.storage.generate_recovery_key()\n"
         assert "generate_recovery_key" in _imported_names(attribute)
 
@@ -134,7 +137,7 @@ class TestTheMintingPathIsUnreachableFromTheTui:
         # proving the parser works against names no rule named. A control
         # decoupled from the rule it controls is decoration.
         prohibited = {symbol for _module, symbol in _MINTING_CALLABLES}
-        assert {"enroll_profile_recovery", "generate_recovery_key"} <= prohibited
+        assert {"mint_profile_creation_recovery", "generate_recovery_key"} <= prohibited
 
     def test_the_scan_reads_the_real_tui_corpus(self) -> None:
         """Scope control: the scan resolves and parses the ACTUAL package.

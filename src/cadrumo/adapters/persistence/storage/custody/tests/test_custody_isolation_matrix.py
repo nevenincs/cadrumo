@@ -23,8 +23,8 @@ from ......application.user_profile import (
     ProfileCapsuleLifecycle,
     ProfileRecordSession,
     create_profile_custody_registration_material,
-    enroll_profile_recovery,
     export_profile_recovery_artifact,
+    mint_profile_creation_recovery,
     register_profile_with_credentials,
     restore_profile_from_source_with_recovery_artifact,
     unlock_profile_custody_password,
@@ -45,7 +45,9 @@ _PASSPHRASE_B = "isolation-subject-b-operator-secret"  # noqa: S105 - synthetic 
 
 
 def _register(label: str, passphrase: str) -> UUID:
-    outcome = register_profile_with_credentials(label=label, passphrase=passphrase)
+    outcome = register_profile_with_credentials(
+        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=label, passphrase=passphrase
+    )
     return UUID(outcome.profile_id)
 
 
@@ -70,7 +72,7 @@ class _EnrolledProfile:
         assert isinstance(material.envelope, ProfileCustodyEnvelope)
         self.envelope = material.envelope
         self.sentinel = material.sentinel
-        self.enrollment = enroll_profile_recovery(
+        self.enrollment = mint_profile_creation_recovery(
             profile_id=self.profile_id,
             dek=self.dek,
             dek_epoch=dek_epoch,

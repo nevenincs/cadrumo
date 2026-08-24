@@ -60,6 +60,7 @@ Submodules
    cadrumo.domain.calculations.registry._handoffs
    cadrumo.domain.calculations.registry._identity
    cadrumo.domain.calculations.registry._ids
+   cadrumo.domain.calculations.registry._inventory_bindings
    cadrumo.domain.calculations.registry._invoice_bindings
    cadrumo.domain.calculations.registry._irnr_ledger_bindings
    cadrumo.domain.calculations.registry._iva_wallet_relation_targets

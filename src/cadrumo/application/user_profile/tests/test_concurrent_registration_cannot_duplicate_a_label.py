@@ -56,7 +56,11 @@ def _register_in_sibling(tmp_path_text: str, barrier, results: Queue) -> None:
     with isolated_profile_storage_root(tmp_path=_Path(tmp_path_text)):
         barrier.wait()
         try:
-            outcome = register_profile_with_credentials(label=_LABEL, passphrase=_PASSPHRASE)
+            outcome = register_profile_with_credentials(
+                recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+                label=_LABEL,
+                passphrase=_PASSPHRASE,
+            )
         except Exception as exc:
             results.put(("refused", type(exc).__name__))
         else:

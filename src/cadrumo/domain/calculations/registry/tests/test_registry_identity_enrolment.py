@@ -26,7 +26,7 @@ from pathlib import Path
 
 import pytest
 
-from .....tests._inventory import python_files_under
+from .....tests import python_files_under
 from .._identity import (
     REGISTRY_IDENTITY_STAMP_FILENAME,
     compute_installed_tree_digest,

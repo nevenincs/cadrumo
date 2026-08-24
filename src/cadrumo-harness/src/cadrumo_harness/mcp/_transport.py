@@ -370,7 +370,7 @@ def _warm_degradation_notice(*, command_key: str, wedged: bool) -> Notice:
         severity=NoticeSeverity.WARNING,
         code="mcp.serving.warm_transport_degraded",
         message=message,
-        context={"command": command_key, "transport": "subprocess", "reason": reason},
+        context={"command_key": command_key, "transport": "subprocess", "reason": reason},
     )
 
 

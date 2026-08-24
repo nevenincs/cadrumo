@@ -19,13 +19,16 @@ from ....adapters.persistence.storage.custody import (
     create_profile_custody_sentinel,
 )
 from ....application.state_projection import _build_active_profile
-from ....application.user_profile import active_profile_pointer_transaction
-from ....application.user_profile._capsule_record import ProfileRecordSession
-from ....application.user_profile._lifecycle import ProfileCapsuleLifecycle
-from ....application.user_profile._profile_record_repository import bound_profile_record_session
+from ....application.user_profile import (
+    ProfileCapsuleLifecycle,
+    ProfileRecordSession,
+    active_profile_pointer_transaction,
+    bound_profile_record_session,
+)
 from ....core import BucketPointer, read_pointer, write_pointer
 from ....core.config import override_settings
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import mint_test_profile_recovery_envelope
 from ...user_profile import profile_bind_bucket_session
 from .._profile_health import assess_active_profile_health, repair_active_profile_pointer
 from .._state_models import WorkflowState
@@ -84,6 +87,7 @@ def _create_current_profile(*, root: Path, facts: tuple[UserProfileFact, ...] = 
         password_envelope=envelope,
         sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
         data_files={},
+        recovery_envelope=mint_test_profile_recovery_envelope(identity, dek=_DEK, dek_epoch=envelope.dek_epoch),
         initial_record=UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=_PROFILE_ID, facts=facts),
         record_session=session,
     )
@@ -206,7 +210,11 @@ def test_health_observes_current_or_degraded_state_without_provider_or_recovery_
         cold_root / "buckets" / _PROFILE_ID / "custody" / "recovery.v1.json",
         malformed_root / "buckets" / _PROFILE_ID / "custody" / "recovery.v1.json",
     )
-    for path in (*secret_paths, *recovery_paths):
+    for path in secret_paths:
+        path.mkdir(parents=True, exist_ok=True)
+    for path in recovery_paths:
+        if path.is_file():
+            path.unlink()
         path.mkdir(parents=True, exist_ok=True)
 
     sensitive_accesses: list[str] = []
@@ -280,7 +288,7 @@ def test_health_observes_current_or_degraded_state_without_provider_or_recovery_
     assert ready.status == "ready"
     assert absent.status == "none"
     assert malformed.status == "capsule_unreadable"
-    assert cold.status == "profile_record_unreadable"
+    assert cold.status == "profile_locked"
     assert cold.precondition_verdict is not None
-    assert cold.precondition_verdict.failed_condition_id == "profile.active.record_readable"
+    assert cold.precondition_verdict.failed_condition_id == "profile.session.logged_in"
     assert sensitive_accesses == []

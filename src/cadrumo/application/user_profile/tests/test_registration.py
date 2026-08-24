@@ -74,6 +74,7 @@ def test_operator_passphrase_keys_the_bucket_not_the_ambient_setting(tmp_path: P
     """
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Registration Subject",
             passphrase=_OPERATOR_PASSPHRASE,
         )
@@ -106,6 +107,7 @@ def test_registration_creates_an_addressable_profile_with_no_tax_facts(tmp_path:
     """
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Minimal Subject",
             passphrase=_OPERATOR_PASSPHRASE,
         )
@@ -142,6 +144,7 @@ def test_registration_records_zero_known_open_legal_cases(tmp_path: Path) -> Non
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Legal Hold Subject",
             passphrase=_OPERATOR_PASSPHRASE,
         )
@@ -162,7 +165,11 @@ def test_registration_records_zero_known_open_legal_cases(tmp_path: Path) -> Non
 def test_blank_label_is_refused_before_any_bucket_is_created(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         with pytest.raises(ProfileRegistrationError):
-            register_profile_with_credentials(label="   ", passphrase=_OPERATOR_PASSPHRASE)
+            register_profile_with_credentials(
+                recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+                label="   ",
+                passphrase=_OPERATOR_PASSPHRASE,
+            )
         assert not list(storage_root.glob("*/manifest.json")), "no bucket may survive a refused registration"
 
 
@@ -177,6 +184,7 @@ def test_short_passphrase_is_refused_before_any_bucket_is_created(tmp_path: Path
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         with pytest.raises(ProfileRegistrationError):
             register_profile_with_credentials(
+                recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
                 label="Too Short",
                 passphrase="a" * (PROFILE_PASSWORD_MIN_SCALARS - 1),
             )
@@ -187,10 +195,10 @@ def test_short_passphrase_is_refused_before_any_bucket_is_created(tmp_path: Path
     ("candidate", "reason", "translated_message", "context"),
     (
         (
-            "a" * 14,
+            "a" * 7,
             ProfilePasswordRefusalReason.TOO_FEW_SCALARS,
             "application.user_profile.errors.profile_password_too_few_scalars",
-            {"reason": "too_few_scalars", "scalar_count": 14, "utf8_byte_count": 14, "minimum_scalars": 15},
+            {"reason": "too_few_scalars", "scalar_count": 7, "utf8_byte_count": 7, "minimum_scalars": 8},
         ),
         (
             "a" * (PROFILE_PASSWORD_MAX_SCALARS + 1),
@@ -234,7 +242,11 @@ def test_every_prospective_password_refusal_is_typed_safe_and_creates_nothing(
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         before = _storage_snapshot(storage_root)
         with pytest.raises(ProfileRegistrationError) as refused:
-            register_profile_with_credentials(label="Refused Candidate", passphrase=candidate)
+            register_profile_with_credentials(
+                recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+                label="Refused Candidate",
+                passphrase=candidate,
+            )
 
         assert _storage_snapshot(storage_root) == before
         payload = refused.value.password_refusal
@@ -263,7 +275,11 @@ def test_registration_refusal_bites_before_identity_randomness_and_custody(
     monkeypatch.setattr(registration_module, "create_profile_custody_registration_material", fail_if_called)
 
     with pytest.raises(ProfileRegistrationError):
-        register_profile_with_credentials(label="Ordering Bite", passphrase="a" * 14)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Ordering Bite",
+            passphrase="a" * 7,
+        )
 
 
 @pytest.mark.parametrize(
@@ -277,7 +293,11 @@ def test_registration_refusal_bites_before_identity_randomness_and_custody(
 def test_registration_accepts_scalar_and_byte_boundaries_exactly(tmp_path: Path, candidate: str) -> None:
     """The application accepts both scalar bounds and the 1,024-byte boundary."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        outcome = register_profile_with_credentials(label=f"Boundary {len(candidate)}", passphrase=candidate)
+        outcome = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=f"Boundary {len(candidate)}",
+            passphrase=candidate,
+        )
         material = load_committed_profile_password_material(UUID(outcome.profile_id))
         assert unlock_profile_custody_password(material, password=candidate).dek is not None
 
@@ -288,9 +308,15 @@ def test_registration_preserves_composed_and_decomposed_passwords_exactly(tmp_pa
     decomposed = "e\u0301" * PROFILE_PASSWORD_MIN_SCALARS
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        composed_profile = register_profile_with_credentials(label="Composed", passphrase=composed)
+        composed_profile = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label="Composed", passphrase=composed
+        )
         logout_active_profile()
-        decomposed_profile = register_profile_with_credentials(label="Decomposed", passphrase=decomposed)
+        decomposed_profile = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Decomposed",
+            passphrase=decomposed,
+        )
 
         composed_material = load_committed_profile_password_material(UUID(composed_profile.profile_id))
         decomposed_material = load_committed_profile_password_material(UUID(decomposed_profile.profile_id))
@@ -306,9 +332,17 @@ def test_registration_preserves_composed_and_decomposed_passwords_exactly(tmp_pa
 
 def test_duplicate_label_is_refused(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label="Same Label", passphrase=_OPERATOR_PASSPHRASE)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Same Label",
+            passphrase=_OPERATOR_PASSPHRASE,
+        )
         with pytest.raises(ProfileRegistrationError):
-            register_profile_with_credentials(label="Same Label", passphrase=_OPERATOR_PASSPHRASE)
+            register_profile_with_credentials(
+                recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+                label="Same Label",
+                passphrase=_OPERATOR_PASSPHRASE,
+            )
 
 
 # ── advisory banding ────────────────────────────────────────────────────────
@@ -327,7 +361,7 @@ def test_strength_is_advisory_and_profile_policy_is_the_hard_gate() -> None:
     assert not too_short.accepted
 
     long_enough = assess_profile_password("a" * PROFILE_PASSWORD_MIN_SCALARS)
-    assert long_enough.strength is PassphraseStrength.FAIR
+    assert long_enough.strength is PassphraseStrength.WEAK
     assert long_enough.accepted
 
 

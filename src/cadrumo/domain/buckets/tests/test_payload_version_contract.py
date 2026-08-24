@@ -80,7 +80,11 @@ def test_profile_lifecycle_events_persist_version_one(tmp_path: Path) -> None:
 
     label = "Payload version probe"
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=label, passphrase=_PROFILE_PASSPHRASE)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=label,
+            passphrase=_PROFILE_PASSPHRASE,
+        )
         # Registration closes the session it opened, so a freshly registered
         # profile is LOCKED and the event catalogue cannot be read back through
         # an authenticated session. Reading the event this test is about needs

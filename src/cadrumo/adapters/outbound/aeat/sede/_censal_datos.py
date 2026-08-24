@@ -28,8 +28,7 @@ it on a modification path. That runtime landing guard is the primary
 wall; the module-level string check in the sede write-surface gate is
 the weaker second one.
 
-Public surface: :class:`CensalDatosResult`, :class:`CensalIdentity`,
-:class:`CensalDomicilio`, :func:`parse_censal_datos`,
+Public surface: :func:`parse_censal_datos`,
 :func:`fetch_censal_datos`, :func:`censal_datos_url`, and the landing
 predicates :func:`is_forbidden_censal_landing` and
 :func:`forbidden_censal_landing_marker`, exported so conformance gates
@@ -40,14 +39,12 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterator, Mapping
-from datetime import date, datetime
-from typing import TYPE_CHECKING, Any, Final, Literal
+from typing import TYPE_CHECKING, Any, Final
 from urllib.parse import quote, urlsplit
 
 from bs4 import Tag
-from pydantic import AnyHttpUrl, BaseModel, Field
 
-from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....application.user_profile import CensalObservation, CensalObservationAddress, CensalObservationIdentity
 from .....core import fold_diacritics
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
@@ -195,138 +192,18 @@ _AFFIRMATIVE: Final[frozenset[str]] = frozenset({"si", "s", "true"})
 _NEGATIVE: Final[frozenset[str]] = frozenset({"no", "n", "false"})
 
 
-class CensalIdentity(BaseModel):
-    """The *Datos Identificativos del Contribuyente* group.
-
-    Every field is optional because AEAT renders a blank cell for data it
-    does not hold (an unrecorded ``Pasaporte`` arrives as ``&nbsp;``), and
-    a blank is a legitimate censal answer rather than a parse failure.
-
-    Attributes:
-        nif: Tax identifier verbatim from AEAT.
-        apellidos_y_nombre: Surnames and given names as one AEAT string.
-        administracion_domicilio_fiscal: Code and name of the AEAT
-            administración for the fiscal address.
-        lugar_nacimiento: Birthplace, AEAT-formatted as
-            ``"<town> Pais: <country>"``.
-        fecha_nacimiento: Birth date parsed from AEAT's ``DD/MM/YYYY``.
-        pasaporte: Passport number when recorded.
-        sexo: AEAT's Spanish label (``"Varón"`` / ``"Mujer"``), NOT a
-            Modelo 100 code — the caller maps it.
-        nacionalidad: Nationality as AEAT prints it.
-        estado_civil: AEAT's Spanish label (e.g. ``"No consta"``), NOT a
-            Modelo 100 code.
-        obligado_notificaciones_electronicas: Whether the taxpayer is
-            obliged to receive electronic notifications.
-        suscrito_voluntariamente_notificaciones_electronicas: Whether the
-            taxpayer voluntarily subscribed to them.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    nif: str | None = Field(default=None, max_length=32)
-    apellidos_y_nombre: str | None = Field(default=None, max_length=256)
-    administracion_domicilio_fiscal: str | None = Field(default=None, max_length=128)
-    lugar_nacimiento: str | None = Field(default=None, max_length=128)
-    fecha_nacimiento: date | None = None
-    pasaporte: str | None = Field(default=None, max_length=64)
-    sexo: str | None = Field(default=None, max_length=32)
-    nacionalidad: str | None = Field(default=None, max_length=64)
-    estado_civil: str | None = Field(default=None, max_length=64)
-    obligado_notificaciones_electronicas: bool | None = None
-    suscrito_voluntariamente_notificaciones_electronicas: bool | None = None
-
-
-class CensalDomicilio(BaseModel):
-    """One address group — *Domicilio Fiscal* or *Domicilio de Notificación*.
-
-    Both groups share the street/number/locality field set; only the
-    notification group renders ``destinatario`` and ``en_calidad_de``, so
-    those stay ``None`` on the fiscal address.
-
-    Attributes:
-        tipo_via: Road-type code (``CALLE``, ``CARRE``, ``AVDA``, …).
-        nombre_via: Street name.
-        tipo_numero: Number-type code (``NUM``, ``KM``, …).
-        numero_casa: House number.
-        calificacion_numero: Number qualifier (``BIS``, ``DUP``, …).
-        bloque: Block.
-        portal: Entrance.
-        escalera: Stairway.
-        planta: Floor.
-        puerta: Door.
-        complemento: Free-text address complement.
-        localidad: Locality when distinct from the municipio.
-        referencia_catastral: Cadastral reference of the property.
-        indicador_referencia_catastral: AEAT's prose explaining which
-            cadastral regime the reference belongs to.
-        codigo_postal: Postcode.
-        municipio: Municipality, AEAT-formatted as ``"<code> - <name>"``.
-        provincia: Province name.
-        destinatario: Addressee when distinct from the declarant
-            (notification address only).
-        en_calidad_de: Capacity in which the addressee receives
-            (notification address only).
-    """
-
-    model_config = _STRICT_FROZEN
-
-    tipo_via: str | None = Field(default=None, max_length=32)
-    nombre_via: str | None = Field(default=None, max_length=128)
-    tipo_numero: str | None = Field(default=None, max_length=32)
-    numero_casa: str | None = Field(default=None, max_length=32)
-    calificacion_numero: str | None = Field(default=None, max_length=32)
-    bloque: str | None = Field(default=None, max_length=32)
-    portal: str | None = Field(default=None, max_length=32)
-    escalera: str | None = Field(default=None, max_length=32)
-    planta: str | None = Field(default=None, max_length=32)
-    puerta: str | None = Field(default=None, max_length=32)
-    complemento: str | None = Field(default=None, max_length=128)
-    localidad: str | None = Field(default=None, max_length=128)
-    referencia_catastral: str | None = Field(default=None, max_length=32)
-    indicador_referencia_catastral: str | None = Field(default=None, max_length=256)
-    codigo_postal: str | None = Field(default=None, max_length=16)
-    municipio: str | None = Field(default=None, max_length=128)
-    provincia: str | None = Field(default=None, max_length=64)
-    destinatario: str | None = Field(default=None, max_length=256)
-    en_calidad_de: str | None = Field(default=None, max_length=128)
-
-
-class CensalDatosResult(BaseModel):
-    """One capture of AEAT's censal consulta surface.
-
-    Attributes:
-        identity: The *Datos Identificativos del Contribuyente* group.
-        domicilio_fiscal: The *Domicilio Fiscal* group.
-        domicilio_notificacion: The *Domicilio de Notificación* group.
-        captured_at: UTC timestamp at capture completion.
-        source_url: The sede URL the record was read from.
-        mode: Structural read-only marker.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    identity: CensalIdentity
-    domicilio_fiscal: CensalDomicilio
-    domicilio_notificacion: CensalDomicilio
-    captured_at: datetime
-    source_url: AnyHttpUrl
-    mode: Literal["read"] = "read"
-
-
 # ── Parsing ────────────────────────────────────────────────────────────────
 
 
-def parse_censal_datos(html: str, *, source_url: str) -> CensalDatosResult:
-    """Parse a censal consulta page into a :class:`CensalDatosResult`.
+def parse_censal_datos(html: str, *, source_url: str) -> CensalObservation:
+    """Parse a censal consulta page into a canonical censal observation.
 
     Args:
         html: Raw HTML body of a censal consulta page.
         source_url: URL the HTML was read from (recorded on the result).
 
     Returns:
-        A :class:`CensalDatosResult` carrying the identity group and both
-        address groups.
+        The application-owned observation carrying identity and both addresses.
 
     Raises:
         SedeParseError: When the HTML cannot be parsed at all, or carries
@@ -345,8 +222,7 @@ def parse_censal_datos(html: str, *, source_url: str) -> CensalDatosResult:
     tables_seen = 0
 
     for table in soup.find_all("table"):
-        if not isinstance(table, Tag):  # pragma: no cover — bs4 typing guard
-            continue
+        table = _require_tag(table, element="table")
         section = _section_of(table)
         if section is None:
             continue
@@ -365,12 +241,15 @@ def parse_censal_datos(html: str, *, source_url: str) -> CensalDatosResult:
             context={"source_url": source_url},
         )
 
-    return CensalDatosResult(
-        identity=_identity_from(identity_fields),
-        domicilio_fiscal=CensalDomicilio(**fiscal_fields),
-        domicilio_notificacion=CensalDomicilio(**notification_fields),
-        captured_at=now(),
-        source_url=AnyHttpUrl(source_url),
+    return CensalObservation.model_validate(
+        {
+            "identity": _identity_from(identity_fields),
+            "domicilio_fiscal": CensalObservationAddress(**fiscal_fields),
+            "domicilio_notificacion": CensalObservationAddress(**notification_fields),
+            "captured_at": now(),
+            "source_url": source_url,
+        },
+        strict=True,
     )
 
 
@@ -435,9 +314,8 @@ def _collect(table: Tag, labels: Mapping[str, str], into: dict[str, str]) -> Non
 def _rows_of(table: Tag) -> Iterator[tuple[list[str], list[str]]]:
     """Yield ``(labels, values)`` for each ``<td>``-bearing row of ``table``."""
     for row in table.find_all("tr"):
-        if not isinstance(row, Tag):  # pragma: no cover — bs4 typing guard
-            continue
-        cells = [cell for cell in row.find_all("td") if isinstance(cell, Tag)]
+        row = _require_tag(row, element="tr")
+        cells = [_require_tag(cell, element="td") for cell in row.find_all("td")]
         if not cells:
             continue
         row_labels: list[str] = []
@@ -449,6 +327,16 @@ def _rows_of(table: Tag) -> Iterator[tuple[list[str], list[str]]]:
             else:
                 row_values.append(text)
         yield row_labels, row_values
+
+
+def _require_tag(value: object, *, element: str) -> Tag:
+    """Fail closed if the HTML parser violates its declared element shape."""
+    if not isinstance(value, Tag):
+        raise SedeParseError(
+            f"censal parser returned a non-Tag {element} element",
+            failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
+        )
+    return value
 
 
 def _is_label_cell(cell: Tag) -> bool:
@@ -475,8 +363,8 @@ def _clean(value: str) -> str | None:
     return stripped or None
 
 
-def _identity_from(fields: Mapping[str, str]) -> CensalIdentity:
-    """Build a :class:`CensalIdentity`, typing the date and the two boolean flags."""
+def _identity_from(fields: Mapping[str, str]) -> CensalObservationIdentity:
+    """Build the application-owned identity projection from parsed fields."""
     typed: dict[str, Any] = {key: value for key, value in fields.items()}
     raw_birth = typed.pop("fecha_nacimiento", None)
     birth_date = parse_date(raw_birth, fmt="ddmmyyyy", on_error="none") if raw_birth else None
@@ -486,7 +374,7 @@ def _identity_from(fields: Mapping[str, str]) -> CensalIdentity:
     ):
         raw_flag = typed.pop(flag, None)
         typed[flag] = _parse_flag(raw_flag)
-    return CensalIdentity(fecha_nacimiento=birth_date, **typed)
+    return CensalObservationIdentity(fecha_nacimiento=birth_date, **typed)
 
 
 def _parse_flag(raw: str | None) -> bool | None:
@@ -509,7 +397,7 @@ async def fetch_censal_datos(
     *,
     taxpayer_nif: str,
     settings: Settings | None = None,
-) -> CensalDatosResult:
+) -> CensalObservation:
     """Read the censal consulta surface with the authenticated session.
 
     The read navigates to the consulta view and parses the rendered DOM.
@@ -525,7 +413,7 @@ async def fetch_censal_datos(
         settings: Optional :class:`core.config.Settings` override.
 
     Returns:
-        A :class:`CensalDatosResult` parsed from the live HTML.
+        The canonical application observation parsed from the live HTML.
 
     Raises:
         SedeNavigationError: When no persisted auth session exists, the
@@ -577,7 +465,7 @@ async def _navigate_and_parse(
     *,
     taxpayer_nif: str,
     settings: Settings,
-) -> CensalDatosResult:
+) -> CensalObservation:
     """Open the censal consulta through the access selector and parse the landing."""
     browser_session = await default_browser_session_factory(settings)
     context = None
@@ -820,9 +708,6 @@ def _censal_marker_present(html: str) -> bool:
 
 
 __all__ = [
-    "CensalDatosResult",
-    "CensalDomicilio",
-    "CensalIdentity",
     "censal_datos_url",
     "fetch_censal_datos",
     "forbidden_censal_landing_marker",

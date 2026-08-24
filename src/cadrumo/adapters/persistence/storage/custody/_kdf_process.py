@@ -96,10 +96,20 @@ def worker_command(
         common["startupinfo"] = startupinfo
         command.extend(("--request-handle", str(request_handle), "--result-handle", str(result_handle)))
     else:
+        descriptor_bound = os.sysconf("SC_OPEN_MAX")
         common["pass_fds"] = (request_read, result_write)
         common["start_new_session"] = True
         common["preexec_fn"] = apply_posix_worker_limits
-        command.extend(("--request-fd", str(request_read), "--result-fd", str(result_write)))
+        command.extend(
+            (
+                "--request-fd",
+                str(request_read),
+                "--result-fd",
+                str(result_write),
+                "--descriptor-bound",
+                str(descriptor_bound),
+            )
+        )
     return command, common
 
 
@@ -118,6 +128,10 @@ def worker_environment(*, neutral_root: Path) -> dict[str, str]:
             raise _supervision_refusal()
         environment["SYSTEMROOT"] = system_root
         environment["USERPROFILE"] = str(neutral_root)
+        # A HANDLE-safe supervisor may itself run the resolved base CPython
+        # executable. Preserve its already-resolved import roots for the KDF
+        # child without relying on a virtual-environment launcher hop.
+        environment["PYTHONPATH"] = os.pathsep.join(entry for entry in sys.path if entry)
     else:
         environment["LC_ALL"] = "C"
     return environment

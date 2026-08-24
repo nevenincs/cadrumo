@@ -79,6 +79,29 @@ def _text(pattern: str) -> Pattern[str]:
 
 ALLOWLIST: tuple[AllowlistRule, ...] = (
     AllowlistRule(
+        path=_path(r"^src/cadrumo/application/workflow/_state_models\.py$"),
+        reason=(
+            "the docstring documents the prohibition itself -- it states that declaration "
+            "state never keys by a combined token, and names the combined form as the "
+            "counter-example. Rewriting it would delete the explanation of why the "
+            "identity segment is stored as filing_year:registry_token"
+        ),
+        pattern_names=frozenset({"calendar quarter token"}),
+        text=_text(r"never keys by a combined token"),
+    ),
+    AllowlistRule(
+        path=_path(r"^src/cadrumo/_data/registry/aeat/modelos/"),
+        reason=(
+            "registry PROSE naming AEAT design editions and candidate revision identifiers. "
+            "A revision id legitimately carries a year and a period span -- 2011-y-siguientes "
+            "is a real one on this very modelo -- so a comment reasoning about how a modelo "
+            "SHOULD be partitioned must be able to name the partitions. These are comments, "
+            "never a value the loader parses as a period selector"
+        ),
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+        text=_text(r"^\s*#"),
+    ),
+    AllowlistRule(
         path=_path(r"^docs/_sequences/"),
         reason=(
             "captured CLI transcripts record the argv an author typed; the token is a "

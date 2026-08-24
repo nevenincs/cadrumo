@@ -110,7 +110,11 @@ def _create_profile(storage_root: Path) -> str:
     from ....core.config import override_settings
 
     with override_settings(cadrumo_local_storage_root=storage_root):
-        outcome = register_profile_with_credentials(label="session-operator", passphrase=_PASSPHRASE)
+        outcome = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="session-operator",
+            passphrase=_PASSPHRASE,
+        )
         close_active_bucket_session()
     return outcome.bucket_id
 

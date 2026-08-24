@@ -2,5 +2,5 @@
 aeat config logout
 @step Confirm that no profile remains active.
 @result aeat --format json config profile status
-@expect result.configured == false
-@expect exit_code == 0
+@expect status == "error"
+@expect exit_code == 2

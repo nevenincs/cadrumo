@@ -13,6 +13,7 @@ from ....core import BindingSourceKind, CalculationSourceLineageRole, CasillaId,
 from ....core.resources import resources
 from ....domain.calculations import DirectRowMaterializationProvenance
 from ....domain.calculations.registry import RevisionId
+from ....tests.aeat_literal_fixtures import IVA_WALLET_SOURCE_URL_FIXTURE
 from .. import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
@@ -597,7 +598,7 @@ def test_source_resolution_refuses_orphan_and_ambiguous_lineage_edges() -> None:
         contributor_source_kind="aeat_wallet",
         contributor_binding_source=None,
         lineage_role=CalculationSourceLineageRole.CONTRIBUTOR,
-        source_ref="https://sede.agenciatributaria.gob.es/wallet",
+        source_ref=IVA_WALLET_SOURCE_URL_FIXTURE,
         parent_source_ref=primary.source_ref,
     )
     valid = CalculationSourceResolution(

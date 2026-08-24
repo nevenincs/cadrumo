@@ -18,6 +18,7 @@ from .._command_spec import (
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
+    TuiCapability,
     ValueContract,
 )
 from ._spec_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_READ, ENCRYPTED_WRITE, STATE_FREE
@@ -105,6 +106,8 @@ def _leaf(
     policy: ExecutionPolicySpec,
     parameters: tuple[ArgumentSpec | OptionSpec, ...] = (),
     machine_secret: MachineSecretSpec | None = None,
+    *,
+    tui_capability: TuiCapability = TuiCapability.NOT_IMPLEMENTED,
 ) -> CommandSpec:
     return CommandSpec(
         key=key,
@@ -119,6 +122,7 @@ def _leaf(
         handler=_handler(module, handler),
         result_schema=_schema(schema, key.replace("_", ".")),
         machine_secret=machine_secret,
+        tui_capability=tui_capability,
     )
 
 
@@ -295,6 +299,7 @@ AUTH_COMMAND_SPECS = (
             ),
             _option("scope", ("--scope",), _STR, "cli.config.auth.apoderado.configure.scope_help", multiple=True),
         ),
+        tui_capability=TuiCapability.AVAILABLE,
     ),
     _leaf(
         "config_auth_apoderado_clear",

@@ -76,14 +76,6 @@ _BY_PARAMETER_NAME: dict[str, tuple[AxisExemption, str]] = {
         AxisExemption.NAME_COLLISION,
         "A decimal recargo amount, unrelated to IvaComponentPresence.",
     ),
-    "source": (
-        AxisExemption.NAME_COLLISION,
-        "The source PROFILE name for duplicate/rename, not a source-kind taxonomy.",
-    ),
-    "root": (
-        AxisExemption.NAME_COLLISION,
-        "A filesystem registry root path, unrelated to RootSurfaceName.",
-    ),
     "iva_rate": (
         AxisExemption.NAME_COLLISION,
         'Carries a numeric rate, not a taxonomy token -- the help on these verbs reads "as a decimal, for example 0.21". IvaRate is a rate-band taxonomy and is not the accepted input set.',
@@ -95,6 +87,12 @@ _BY_PARAMETER_NAME: dict[str, tuple[AxisExemption, str]] = {
     "kind": (
         AxisExemption.NAME_COLLISION,
         "The movement and amendment kinds are now pinned to their own enums. The one bare site left, registry.manuals.rules, filters on RegistryManualRulesCommand.kind -- a free-form str with no closed set behind it, so there is no enum to declare.",
+    ),
+    "iva_regime": (
+        AxisExemption.NORMALISING_PARSER,
+        "The answer validator constructs the enum from value.upper(), and IVARegime's members are "
+        "upper-case tokens, so the CLI accepts lower-case input ('general') that a Choice would "
+        "refuse. The five sibling wizard axes take the member value exactly and ARE pinned.",
     ),
     "valuation_method": (
         AxisExemption.INSTRUCTIVE_GUARD,

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ...core import Modelo
 from ._command_spec import (
     CommandSpec,
     DeferredTarget,
@@ -121,7 +122,7 @@ MODELO_PROJECTION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 ("--modelo",),
                 _MODELO,
                 "cli.app.modelo.compare.modelo_help",
-                default="100",
+                default=Modelo.M100.value,
             ),
         ),
         "ModeloCompareResult",

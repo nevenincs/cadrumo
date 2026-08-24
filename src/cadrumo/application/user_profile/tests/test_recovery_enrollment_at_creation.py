@@ -1,4 +1,4 @@
-"""Recovery enrollment happens at the creation door, or not at all.
+"""Recovery enrollment and possession proof gate every profile creation.
 
 A committed capsule has no in-place installation path for a second wrapper,
 so the only moment a recovery envelope can be published with a profile is
@@ -24,7 +24,7 @@ from ....adapters.persistence.storage.custody import (
     unlock_profile_custody_recovery,
 )
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import CommittedProfileRepository, register_profile_with_credentials
+from .. import CommittedProfileRepository, ProfileRegistrationError, register_profile_with_credentials
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -40,7 +40,7 @@ _BIP39_WORD_COUNT = 24
 
 
 def _recovery_envelope_path(profile_id: str) -> Path:
-    """Return the published capsule's optional recovery wrapper path."""
+    """Return the published capsule's mandatory recovery wrapper path."""
     material = load_committed_profile_password_material(UUID(profile_id))
     return material.capsule_path / "custody" / PROFILE_CUSTODY_RECOVERY_FILENAME
 
@@ -59,7 +59,9 @@ def test_a_registration_that_takes_the_handover_publishes_a_wrapper_its_words_op
         outcome = register_profile_with_credentials(
             label=_LABEL,
             passphrase=_PASSPHRASE,
-            recovery_handover=lambda enrollment: handed.append(enrollment.recovery_key.mnemonic),
+            recovery_handover=lambda enrollment: (
+                handed.append(enrollment.recovery_key.mnemonic) or enrollment.recovery_key.mnemonic
+            ),
         )
 
         assert len(handed) == 1
@@ -89,7 +91,9 @@ def test_a_different_minted_mnemonic_does_not_open_the_published_wrapper(tmp_pat
         outcome = register_profile_with_credentials(
             label=_LABEL,
             passphrase=_PASSPHRASE,
-            recovery_handover=lambda enrollment: handed.append(enrollment.recovery_key.mnemonic),
+            recovery_handover=lambda enrollment: (
+                handed.append(enrollment.recovery_key.mnemonic) or enrollment.recovery_key.mnemonic
+            ),
         )
 
         material = load_committed_profile_password_material(UUID(outcome.profile_id))
@@ -101,33 +105,22 @@ def test_a_different_minted_mnemonic_does_not_open_the_published_wrapper(tmp_pat
                 unlock_profile_custody_recovery(envelope, impostor.mnemonic, sentinel=material.sentinel)
 
 
-def test_a_registration_that_takes_no_handover_publishes_no_wrapper(tmp_path: Path) -> None:
-    """Converse control: enrollment is opt-in, and the default mints nothing.
-
-    Without this the sibling test would pass identically if the door enrolled
-    unconditionally, and an unconditional mint would publish a second door
-    whose words nobody was ever shown.
-    """
+def test_registration_requires_a_recovery_handover_contract(tmp_path: Path) -> None:
+    """The application door cannot be called into a password-only profile."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        outcome = register_profile_with_credentials(label=_LABEL, passphrase=_PASSPHRASE)
+        with pytest.raises(TypeError, match="recovery_handover"):
+            register_profile_with_credentials(label=_LABEL, passphrase=_PASSPHRASE)  # type: ignore[call-arg]
 
-        assert not _recovery_envelope_path(outcome.profile_id).exists()
-        assert outcome.recovery_enrolled is False
+        assert not any(view.label == _LABEL for view in CommittedProfileRepository().list())
 
 
-def test_the_outcome_reports_whether_recovery_was_actually_enrolled(tmp_path: Path) -> None:
-    """The absence must be legible to a surface, not inferable only from disk.
-
-    Enrollment is available exactly once, while the capsule is published, so
-    an operator who is not told it did not happen has silently lost the
-    option. The flag is what lets a surface say so, and it must track the
-    published wrapper rather than merely echo the caller's request.
-    """
+def test_the_outcome_confirms_that_recovery_was_enrolled(tmp_path: Path) -> None:
+    """The success outcome confirms the wrapper the boundary requires."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
         enrolled = register_profile_with_credentials(
             label=f"{_LABEL} enrolled",
             passphrase=_PASSPHRASE,
-            recovery_handover=lambda enrollment: None,
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         )
 
         assert enrolled.recovery_enrolled is True
@@ -146,12 +139,27 @@ def test_the_handed_over_key_is_wiped_by_the_time_registration_returns(tmp_path:
         register_profile_with_credentials(
             label=_LABEL,
             passphrase=_PASSPHRASE,
-            recovery_handover=retained.append,
+            recovery_handover=lambda enrollment: (
+                retained.append(enrollment) or enrollment.recovery_key.mnemonic
+            ),
         )
 
     assert len(retained) == 1
     assert set(retained[0].recovery_key.raw) == {0}
     assert set(retained[0].recovery_key.mnemonic.encode("utf-8")) == {0}
+
+
+def test_an_inexact_possession_proof_creates_no_profile(tmp_path: Path) -> None:
+    """Only the exact handed-over phrase authorises publication."""
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        with pytest.raises(ProfileRegistrationError):
+            register_profile_with_credentials(
+                label=_LABEL,
+                passphrase=_PASSPHRASE,
+                recovery_handover=lambda enrollment: f"{enrollment.recovery_key.mnemonic} wrong",
+            )
+
+        assert not any(view.label == _LABEL for view in CommittedProfileRepository().list())
 
 
 def test_a_channel_that_cannot_deliver_the_words_creates_no_profile(tmp_path: Path) -> None:

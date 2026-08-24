@@ -105,7 +105,7 @@ def test_the_anchor_keys_are_still_reached_through_a_table_and_not_a_literal() -
 def test_the_shipped_framework_keys_are_discoverable() -> None:
     source = _FRAMEWORK_MODULE.read_text(encoding="utf-8")
     discovered = scan_source_text(source, filename=str(_FRAMEWORK_MODULE))
-    assert _TABLE_ROUTED_KEYS <= discovered, sorted(_TABLE_ROUTED_KEYS - discovered)
+    assert discovered >= _TABLE_ROUTED_KEYS, sorted(_TABLE_ROUTED_KEYS - discovered)
 
 
 def test_a_row_table_read_by_the_translator_is_discovered() -> None:

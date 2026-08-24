@@ -50,7 +50,7 @@ def test_every_committed_export_layout_reconstructs_from_its_own_dump() -> None:
     for modelo_id, revision_id, layout in layouts:
         try:
             restored = ExportLayoutDefinition.model_validate(layout.model_dump())
-        except Exception as error:  # noqa: BLE001 -- the refusal itself is the finding
+        except Exception as error:
             failures.append(f"{modelo_id}/{revision_id}: {type(error).__name__}")
             continue
         if restored != layout:

@@ -82,6 +82,7 @@ if TYPE_CHECKING:
     )
     from ._filesystem import (
         PROFILE_CUSTODY_COMMIT_FILENAME,
+        PROFILE_CUSTODY_DATA_FILE_MAX_BYTES,
         clear_profile_custody_local_record,
         compare_and_clear_profile_custody_local_record,
         compare_and_replace_profile_custody_local_record,
@@ -127,7 +128,6 @@ if TYPE_CHECKING:
     from ._label_head_repository import ProfileLabelHeadRepository
     from ._paths import profile_custody_path
     from ._records import (
-        PROFILE_CUSTODY_DATA_FILE_MAX_BYTES,
         PROFILE_CUSTODY_ENVELOPE_MAX_BYTES,
         PROFILE_CUSTODY_ENVELOPE_SCHEMA_VERSION,
         PROFILE_CUSTODY_KDF_ITERATIONS,

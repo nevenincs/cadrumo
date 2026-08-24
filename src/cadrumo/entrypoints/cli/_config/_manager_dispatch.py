@@ -93,11 +93,32 @@ def with_manager_frontend(wizard_command, *, mode: WizardPersistMode):
             present_registration,
         )
 
+        context = kwargs.get("ctx")
+        if not isinstance(context, _TyperClickContext):
+            raise TypeError("profile frontend dispatch requires a Typer context")
+        from .._tui_policy import tui_was_requested
+
+        tui_requested = tui_was_requested(cast("typer.Context", context))
+        explicit_fields = has_explicit_profile_fields(kwargs)
+        scripted = any(
+            (
+                bool(kwargs.get("quiet")),
+                bool(kwargs.get("accept_defaults")),
+                bool(kwargs.get("secrets_stdin")),
+                kwargs.get("secrets_fd") is not None,
+                kwargs.get("recovery_handoff_fd") is not None,
+                kwargs.get("recovery_verification_fd") is not None,
+            )
+        )
+        if tui_requested and (scripted or explicit_fields):
+            raise typer.BadParameter(tr("cli.config.setup.tui_scripted_conflict"))
+
         if not manager_is_the_right_frontend(
             mode=mode,
-            scripted=bool(kwargs.get("quiet")) or bool(kwargs.get("accept_defaults")),
-            explicit_fields=has_explicit_profile_fields(kwargs),
+            scripted=scripted,
+            explicit_fields=explicit_fields,
             full_screen=host_can_run_full_screen(),
+            tui_requested=tui_requested,
         ):
             # The setup flow is not a creation authority and refuses `create`
             # outright, so the scripted arm of THIS verb has to reach the

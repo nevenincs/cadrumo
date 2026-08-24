@@ -25,7 +25,7 @@ an obligation rather than a guarantee.
 
 A format is not always a file. Discovery draws on three sources, and every one
 of them now ENUMERATES a production declaration: the path registry's file
-definitions, the three tier formats with no single path, and the record
+definitions, the four payload formats with no single path, and the record
 formats each secure-object namespace declares for the rows it carries.
 
 The third source used to be a hand-maintained table in this module, and so did
@@ -66,11 +66,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 #: Formats that are not single on-disk files and so carry no ``FILE`` path
 #: definition: the encrypted SQL secure-object table, the portable profile
-#: bundle (a transport payload), and the sealed archive (an export artefact).
+#: bundle, the sealed archive, and its independently versioned capsule payload.
 #: Each is a real persisted format with its own tier lineage gate, so each is
 #: discovered here explicitly rather than through the path registry.
 _NON_FILE_FORMAT_KEYS: Final[frozenset[str]] = frozenset(
-    {"secure_object", "bundle", "archive"},
+    {"secure_object", "bundle", "archive", "profile_capsule_archive_payload"},
 )
 
 
@@ -98,7 +98,7 @@ def _discovered_format_keys() -> frozenset[str]:
     Three sources, each enumerating a production declaration. The on-disk half
     comes from the path registry's ``FILE`` definitions — the inventory a new
     keystore, capsule, hold-evidence or state-root file must join. The non-file
-    half is the three tier formats that have no single path. The third is the
+    half is the four payload formats that have no single path. The third is the
     record formats the secure-object namespaces declare, which are formats by
     grammar rather than by file.
 

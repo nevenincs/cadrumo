@@ -36,6 +36,7 @@ def root_command(
     detail: bool = False,
     help_: bool = False,
     format_: OutputFormat = OutputFormat.TEXT,
+    tui: bool = False,
     quiet: bool = False,
     verbose: bool = False,
     debug: bool = False,
@@ -47,6 +48,7 @@ def root_command(
         ctx.with_resource(override_settings(cadrumo_output_language=language))
     state = cast("dict[str, object]", ctx.ensure_object(dict))
     state["format"] = format_
+    state["tui_requested"] = tui
     state["log_level"] = resolve_log_level(quiet=quiet, verbose=verbose, debug=debug)
     if version:
         _emit_version_report_and_exit(detail=detail)
@@ -57,6 +59,10 @@ def root_command(
     preserve_requested_cli_leaf(ctx)
     state["profile_override"] = profile
     if ctx.invoked_subcommand is None:
+        from ._command_specs import COMMAND_GRAPH
+        from ._tui_policy import enforce_tui_request
+
+        enforce_tui_request(ctx, spec=COMMAND_GRAPH.by_key()["root"])
         if profile is not None:
             _activate_profile_override(ctx, profile)
         else:
@@ -73,6 +79,10 @@ def root_command(
 def app_root(ctx: typer.Context, help_: bool = False) -> None:
     """Render app-level workflow help when requested."""
     if help_ or ctx.invoked_subcommand is None:
+        from ._command_specs import COMMAND_GRAPH
+        from ._tui_policy import enforce_tui_request
+
+        enforce_tui_request(ctx, spec=COMMAND_GRAPH.by_key()["app"])
         from ...application.operator_surface import build_help_document, render_help_text
         from ...core.json_contract import strict_round_trip
         from ._common import _emit_envelope

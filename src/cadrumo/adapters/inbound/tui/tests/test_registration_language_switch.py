@@ -29,6 +29,7 @@ from .....entrypoints.cli._config._manager_frontend import attempt_registration
 from .....tests.profile_capsule import load_test_profile_record
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import RegistrationApp
+from .._recovery_words_screen import RecoveryWordsScreen
 
 pytestmark = [
     pytest.mark.integration,
@@ -201,6 +202,16 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
             app.query_one("#field-confirm", Input).value = _PASSWORD
             await pilot.pause()
             await pilot.click("#btn-create")
+            for _ in range(100):
+                if isinstance(pilot.app.screen, RecoveryWordsScreen):
+                    break
+                await pilot.pause(0.1)
+            assert isinstance(pilot.app.screen, RecoveryWordsScreen)
+            recovery = pilot.app.screen
+            recovery.query_one("#field-recovery-verification", Input).value = str(
+                recovery.query_one("#words-value", Static).render()
+            )
+            await pilot.click("#btn-confirm-words")
             await app.workers.wait_for_complete()
             await pilot.pause()
 

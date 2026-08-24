@@ -95,7 +95,11 @@ try:
         # and must reach the passphrase channel to do it.
         from cadrumo.application.user_profile import logout_active_profile, register_profile_with_credentials
 
-        register_profile_with_credentials(label=label, passphrase=passphrase)
+        register_profile_with_credentials(
+            label=label,
+            passphrase=passphrase,
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+        )
         logout_active_profile()
         verdict["profile_registered"] = True
 

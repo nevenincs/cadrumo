@@ -11,6 +11,7 @@ from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLa
 from cadrumo.tests.cli_runner import invoke_typer_app
 from dev.locales import (
     DOCS_SRC_DIR,
+    HARNESS_SRC_DIR,
     LocaleError,
     LocaleManager,
     LocaleNode,
@@ -210,7 +211,7 @@ def manager():
     # Documentation generators live outside the package but render
     # operator-facing prose from this same catalogue, so the gate must see
     # their keys or it reports every one as an extra key with no codebase site.
-    return LocaleManager(SRC_DIR, LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR,))
+    return LocaleManager(SRC_DIR, LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR, HARNESS_SRC_DIR))
 
 
 def _committed_catalogues(manager) -> dict[str, Path]:

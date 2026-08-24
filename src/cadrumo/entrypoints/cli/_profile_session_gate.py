@@ -94,6 +94,14 @@ def activate_profile_session(
     authenticate_root: RootAuthenticator,
 ) -> None:
     """Apply write policy and exact-target session proof from parsed authority."""
+    from ._argument_only_refusals import refuse_on_arguments_alone
+
+    # A refusal the arguments alone settle must precede the profile-bound write
+    # gate below. Otherwise an unsupported modelo is answered with "no active
+    # profile", sending the operator to build an environment for a request that
+    # is refused regardless of it.
+    refuse_on_arguments_alone(spec, arguments)
+
     from ...adapters.persistence.storage import active_bucket_session_serves
     from ...application.storage_write_policy import inspect_storage_write_policy
     from ...core import resolve_active_bucket_id

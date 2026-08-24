@@ -1,5 +1,11 @@
 """AEAT registry authoring-tree developer tooling (not shipped in the wheel)."""
 
+from .filing_export_proof import (
+    FilingExportLiveProofEntry,
+    FilingExportOfficialOffsetProbe,
+    LiveFilingExportProofAuthority,
+    verify_filing_export_payload_acceptance,
+)
 from .pipeline._semantic_map import (
     EnvelopePrefixField,
     EnvelopeTotalAnchor,
@@ -21,6 +27,9 @@ __all__ = [
     "EnvelopePrefixField",
     "EnvelopeTotalAnchor",
     "FilingEnvelopePrefixRole",
+    "FilingExportLiveProofEntry",
+    "FilingExportOfficialOffsetProbe",
+    "LiveFilingExportProofAuthority",
     "SemanticMap",
     "SemanticMapAnchor",
     "SemanticMapEntry",
@@ -28,4 +37,5 @@ __all__ = [
     "SemanticMapRecord",
     "VariableEnvelopeSemantic",
     "load_semantic_map",
+    "verify_filing_export_payload_acceptance",
 ]

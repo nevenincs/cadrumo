@@ -1,5 +1,3 @@
-@step Create the profile whose capabilities you want to configure.
-@setup aeat config profile create caps-demo --quiet --tax-residence-jurisdiction-scope common_regime --entity-type natural_person --tax-id 33333333P --name "Caps" --surnames "Demo Perez"
 @step Show the resolved capability posture.
 aeat config profile capabilities show
 @step Turn the on-host vision model off for the active profile.

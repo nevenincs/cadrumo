@@ -1008,7 +1008,7 @@ def _resolve_export_model_profile(
     if modelo is Modelo.M202:
         return Modelo202ProducerProfile(taxpayer_profile=workflow_profile, activities=()), None
     if modelo is Modelo.M111:
-        return Modelo111ProfileFacts(colegio_concertado=None), None
+        return Modelo111ProfileFacts(colegio_concertado=workflow_profile.colegio_concertado), None
     return GeneralFilingProfileFacts(), None
 
 

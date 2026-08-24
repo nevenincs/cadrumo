@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from hashlib import sha256
 from pathlib import Path
 
@@ -26,6 +26,7 @@ from ....core import (
     SourceConnectivityGrounding,
     SourceConnectivityGroundingLocatorKind,
     SourceConnectivityOperatorReachabilityProof,
+    SourceConnectivityProofFailureCause,
     SourceConnectivityResolverOwnershipProof,
 )
 from ....domain.modelos import (
@@ -35,7 +36,7 @@ from ....domain.modelos import (
     CalculationSourceRef,
     derive_calculation_revision_id,
 )
-from ....entrypoints.cli._common import _current_operator_surface_reconciliation
+from ....entrypoints.cli import current_operator_surface_reconciliation
 from ...aggregation import BindingSourceDisposition
 from ...modelo import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
 from ...operator_surface import build_supported_modelo_calculation_workflow_catalogue
@@ -45,7 +46,10 @@ from .. import (
     LiveSourceConnectivityProofAuthority,
     LiveSourceConnectivityProofExpectation,
     RepositoryRootEvidenceDigestVerifier,
+    SourceConnectivityCensusEntry,
     build_calculation_route_source_ownership_catalogue,
+    compose_source_connectivity_coverage,
+    load_source_connectivity_census,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -70,7 +74,7 @@ _EVIDENCE_REFERENCES = {
 
 
 def _live_workflows():
-    return build_supported_modelo_calculation_workflow_catalogue(_current_operator_surface_reconciliation())
+    return build_supported_modelo_calculation_workflow_catalogue(current_operator_surface_reconciliation())
 
 
 def _persisted_revision(
@@ -239,7 +243,9 @@ def test_independent_expectation_rejects_census_owned_workflow_and_destination_m
         command_id=proof.operator_reachability.command_id,
         route_id=proof.operator_reachability.route_id,
         canonical_cli_path=proof.operator_reachability.canonical_cli_path,
-        destination_identities=(("casilla_semantic_role", "100", "inventory.increase"),),
+        destination_identities=(
+            ("casilla_semantic_role", "100", "2025", "2025", "0A", "inventory.increase"),
+        ),
     )
     constrained = replace(authority, independent_expectations=(expectation,))
 
@@ -373,25 +379,217 @@ def test_real_live_authority_refuses_changed_missing_and_wrong_role_evidence(
     evidence = proof.operator_reachability.evidence[0]
     wrong_digest = evidence.model_copy(update={"content_digest": "e" * 64})
     changed_operator = proof.operator_reachability.model_copy(update={"evidence": (wrong_digest,)})
-    with pytest.raises(ValidationError, match="absent or changed"):
+    with pytest.raises(ValidationError) as wrong_digest_error:
         SourceConnectivityCensusRow.validate_with_authority(
             _payload(connection, proof.model_copy(update={"operator_reachability": changed_operator})),
             authority=authority,
         )
+    assert wrong_digest_error.value.errors(include_url=False)[0]["type"] == (
+        SourceConnectivityProofFailureCause.EXECUTABLE_EVIDENCE_DIGEST_MISMATCH.value
+    )
 
     (root / evidence.locator.reference).write_bytes(b"changed after proof")
-    with pytest.raises(ValidationError, match="absent or changed"):
+    with pytest.raises(ValidationError) as drift_error:
         SourceConnectivityCensusRow.validate_with_authority(_payload(connection, proof), authority=authority)
+    assert drift_error.value.errors(include_url=False)[0]["type"] == (
+        SourceConnectivityProofFailureCause.EXECUTABLE_EVIDENCE_DIGEST_MISMATCH.value
+    )
 
     (root / evidence.locator.reference).unlink()
-    with pytest.raises(ValidationError, match="absent or changed"):
+    with pytest.raises(ValidationError) as deletion_error:
         SourceConnectivityCensusRow.validate_with_authority(_payload(connection, proof), authority=authority)
+    assert deletion_error.value.errors(include_url=False)[0]["type"] == (
+        SourceConnectivityProofFailureCause.EXECUTABLE_EVIDENCE_MISSING.value
+    )
 
     wrong_role = evidence.model_copy(update={"role": SourceConnectivityExecutableEvidenceRole.ENCRYPTED_REVISION})
     with pytest.raises(ValidationError, match="must carry role"):
         SourceConnectivityOperatorReachabilityProof.model_validate(
             proof.operator_reachability.model_dump() | {"evidence": (wrong_role,)},
         )
+
+
+@pytest.mark.parametrize(
+    ("mutation", "expected_reason", "expected_detail"),
+    (
+        ("digest_drift", "conflicting_evidence", "digest does not match"),
+        ("evidence_deletion", "missing_evidence", "evidence is missing"),
+    ),
+)
+def test_coverage_composer_classifies_live_executable_evidence_failures(
+    tmp_path: Path,
+    secure_objects: SecureObjectRepository,
+    registry_authority,
+    mutation: str,
+    expected_reason: str,
+    expected_detail: str,
+) -> None:
+    """Live proof deletion and digest drift must refuse through different closed causes."""
+    authority, connection, proof, root = _composition(tmp_path, secure_objects)
+    census = load_source_connectivity_census()
+    inventory = next(entry for entry in census.entries if entry.candidate_id == "inventory.stock-valuation")
+    connected = inventory.model_copy(
+        update={
+            "candidate_id": connection.candidate_id,
+            "disposition": SourceConnectivityDisposition.CONNECTED,
+            "connected_proof": proof,
+            "review_condition": None,
+            "bounded_follow_up": None,
+        },
+    )
+    connected_census = census.model_copy(update={"entries": (connected, *census.entries[1:])})
+
+    before_drift = compose_source_connectivity_coverage(
+        authority=registry_authority,
+        census=connected_census,
+        as_of=date(2026, 8, 24),
+        proof_authority=authority,
+    )
+    before_limb = next(limb for limb in before_drift.limbs if (limb.modelo, limb.revision) == ("100", "2025"))
+    assert (before_limb.outcome, before_limb.refusal) == ("satisfied", None)
+
+    evidence = proof.operator_reachability.evidence[0]
+    evidence_path = root / evidence.locator.reference
+    if mutation == "digest_drift":
+        evidence_path.write_bytes(b"changed after initial census validation")
+    else:
+        evidence_path.unlink()
+
+    after_drift = compose_source_connectivity_coverage(
+        authority=registry_authority,
+        census=connected_census,
+        as_of=date(2026, 8, 24),
+        proof_authority=authority,
+    )
+    after_limb = next(limb for limb in after_drift.limbs if (limb.modelo, limb.revision) == ("100", "2025"))
+
+    assert (after_limb.outcome, after_limb.refusal.reason) == ("refused", expected_reason)
+    assert expected_detail in after_limb.refusal.detail
+
+
+@pytest.mark.parametrize(
+    ("failure", "expected_cause", "expected_detail"),
+    (
+        (
+            "source_enrollment",
+            SourceConnectivityProofFailureCause.SOURCE_NOT_ENROLLED,
+            "source is not enrolled",
+        ),
+        (
+            "operator_workflow",
+            SourceConnectivityProofFailureCause.OPERATOR_WORKFLOW_UNSUPPORTED,
+            "workflow is not supported",
+        ),
+        (
+            "encrypted_provenance",
+            SourceConnectivityProofFailureCause.ENCRYPTED_PROVENANCE_MISMATCH,
+            "does not match persisted source provenance",
+        ),
+    ),
+)
+def test_coverage_composer_classifies_structured_live_proof_failures(
+    tmp_path: Path,
+    secure_objects: SecureObjectRepository,
+    registry_authority,
+    failure: str,
+    expected_cause: SourceConnectivityProofFailureCause,
+    expected_detail: str,
+) -> None:
+    """Every non-digest live-proof cause is a missing-evidence closure refusal."""
+    authority, connection, proof, _ = _composition(tmp_path, secure_objects)
+    if failure == "source_enrollment":
+        connection = connection.model_copy(update={"resolver_id": "rival-resolver"})
+        proof = _proof(tmp_path / "evidence-repository", connection)
+    elif failure == "operator_workflow":
+        operator = proof.operator_reachability.model_copy(update={"command_id": "modelo.work.wizard"})
+        proof = proof.model_copy(update={"operator_reachability": operator})
+    else:
+        encrypted_revision = proof.encrypted_revision.model_copy(
+            update={"persisted_source_fingerprint": "sha256:" + "d" * 64},
+        )
+        proof = proof.model_copy(update={"encrypted_revision": encrypted_revision})
+
+    with pytest.raises(ValidationError) as error:
+        SourceConnectivityCensusRow.validate_with_authority(_payload(connection, proof), authority=authority)
+    assert error.value.errors(include_url=False)[0]["type"] == expected_cause.value
+
+    census = load_source_connectivity_census()
+    inventory = next(entry for entry in census.entries if entry.candidate_id == "inventory.stock-valuation")
+    connected = inventory.model_copy(
+        update={
+            "candidate_id": connection.candidate_id,
+            "disposition": SourceConnectivityDisposition.CONNECTED,
+            "connected_proof": proof,
+            "review_condition": None,
+            "bounded_follow_up": None,
+        },
+    )
+    connected_census = census.model_copy(update={"entries": (connected, *census.entries[1:])})
+
+    report = compose_source_connectivity_coverage(
+        authority=registry_authority,
+        census=connected_census,
+        as_of=date(2026, 8, 24),
+        proof_authority=authority,
+    )
+    limb = next(limb for limb in report.limbs if (limb.modelo, limb.revision) == ("100", "2025"))
+
+    assert (limb.outcome, limb.refusal.reason) == ("refused", "missing_evidence")
+    assert expected_detail in limb.refusal.detail
+
+
+def test_coverage_composer_fails_closed_on_generic_live_proof_validation_error(
+    tmp_path: Path,
+    secure_objects: SecureObjectRepository,
+    registry_authority,
+) -> None:
+    """A malformed admitted proof must reach the fallback as a refused source limb."""
+    authority, connection, proof, _ = _composition(tmp_path, secure_objects)
+    census = load_source_connectivity_census()
+    inventory = next(entry for entry in census.entries if entry.candidate_id == "inventory.stock-valuation")
+    connected = inventory.model_copy(
+        update={
+            "candidate_id": connection.candidate_id,
+            "disposition": SourceConnectivityDisposition.CONNECTED,
+            "connected_proof": proof,
+            "review_condition": None,
+            "bounded_follow_up": None,
+        },
+    )
+    assert (
+        SourceConnectivityCensusEntry.validate_with_authority(
+            connected.model_dump(mode="python"),
+            authority=authority,
+        )
+        == connected
+    )
+
+    # Model a corrupted in-memory census record after its initial admission.
+    # The composer must revalidate rather than trusting this frozen-model instance.
+    object.__setattr__(connected, "connected_proof", None)
+    with pytest.raises(ValidationError) as validation_error:
+        SourceConnectivityCensusEntry.validate_with_authority(
+            connected.model_dump(mode="python"),
+            authority=authority,
+        )
+    error_type = validation_error.value.errors(include_url=False)[0]["type"]
+    assert error_type == "value_error"
+    assert (
+        SourceConnectivityProofFailureCause.from_validation_error_type(error_type)
+        is SourceConnectivityProofFailureCause.LIVE_PROOF_VALIDATION_FAILED
+    )
+
+    connected_census = census.model_copy(update={"entries": (connected, *census.entries[1:])})
+    report = compose_source_connectivity_coverage(
+        authority=registry_authority,
+        census=connected_census,
+        as_of=date(2026, 8, 24),
+        proof_authority=authority,
+    )
+    limb = next(limb for limb in report.limbs if (limb.modelo, limb.revision) == ("100", "2025"))
+
+    assert (limb.outcome, limb.refusal.reason) == ("refused", "missing_evidence")
+    assert "connected connectivity row requires complete connected_proof" in limb.refusal.detail
 
 
 def test_real_live_authority_refuses_deferred_reserved_and_missing_revision(

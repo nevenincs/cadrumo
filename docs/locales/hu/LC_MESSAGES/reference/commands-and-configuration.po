@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 18:31+0200\n"
+"POT-Creation-Date: 2026-08-23 19:58+0200\n"
 "PO-Revision-Date: 2026-07-18 13:20+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -30,7 +30,8 @@ msgstr "Parancs- és munkafolyamat-szakasz kikeresése"
 #, fuzzy
 msgid ""
 "The command-line interface (CLI) exposes live help as the command "
-"authority. The canonical executable is `aeat`."
+"authority. The canonical human executable is `aeat`. The separate Model "
+"Context Protocol (MCP) executable is `cadrumo-mcp`."
 msgstr ""
 "A parancssori felület (CLI) élő súgót tesz közzé a parancsok hivatkozási "
 "forrásaként. A kanonikus emberi végrehajtható a `aeat`. A különálló Model"
@@ -110,7 +111,7 @@ msgstr "Gyökér- és levélszintű súgó"
 msgid "[Automation reference](../cli/automation.rst)"
 msgstr "[Automatizálási referencia](../cli/automation.rst)"
 
-#: ../../reference/commands-and-configuration.md:16
+#: ../../reference/commands-and-configuration.md:17
 msgid ""
 "The filing stages relate as `calculate` → `review` → `verify` → `export` "
 "→ human upload → local record → reconcile. The stage names describe "
@@ -127,7 +128,7 @@ msgstr ""
 "különállók a szakaszok, és [a how-to útmutatókat](../how-to/index.md) a "
 "feladatsorokhoz."
 
-#: ../../reference/commands-and-configuration.md:22
+#: ../../reference/commands-and-configuration.md:23
 msgid "Configuration ownership"
 msgstr "Konfiguráció tulajdonlása"
 
@@ -175,7 +176,7 @@ msgstr ""
 "Hivatali végpontok, hivatali hitelesítő adatok, élő olvasás vezérlői és "
 "megőrzött hivatali terminológia"
 
-#: ../../reference/commands-and-configuration.md:29
+#: ../../reference/commands-and-configuration.md:30
 #, fuzzy
 msgid ""
 "Examples of product controls include `CADRUMO_LOCAL_STORAGE_ROOT`, "
@@ -199,7 +200,7 @@ msgstr ""
 " ezeket a parancsokat. A Python-mezőket a generált Cadrumo "
 "alkalmazásprogramozási felület ([API](../api/cadrumo.rst)) sorolja fel."
 
-#: ../../reference/commands-and-configuration.md:43
+#: ../../reference/commands-and-configuration.md:44
 msgid ""
 "Former product-owned `AEAT_*` state controls are not aliases for "
 "`CADRUMO_*`. Authority-owned `AEAT_*` integration controls remain valid "

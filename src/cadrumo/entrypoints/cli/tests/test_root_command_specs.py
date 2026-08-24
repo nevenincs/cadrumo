@@ -30,6 +30,7 @@ def test_root_specs_own_the_executable_namespace_and_parameter_contracts() -> No
         "detail",
         "help_",
         "format_",
+        "tui",
         "quiet",
         "verbose",
         "debug",

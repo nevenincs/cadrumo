@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 18:31+0200\n"
+"POT-Creation-Date: 2026-08-23 19:58+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
@@ -427,9 +427,9 @@ msgstr "LLM-javaslat használata"
 #: ../../how-to/classify-transactions.md:181
 #, fuzzy
 msgid ""
-"Cadrumo can use an AI assistant to suggest how to classify each "
-"transaction. The suggestion is a starting point. You must confirm or "
-"correct it. It does not fill in tax amounts such as taxable base, IVA "
+"Cadrumo can use a configured language model to suggest how to classify "
+"each transaction. The suggestion is a starting point. You must confirm or"
+" correct it. It does not fill in tax amounts such as taxable base, IVA "
 "rate, or IRPF category."
 msgstr ""
 "A Cadrumo egy beállított nyelvi modellt használhat az egyes tranzakciók "
@@ -437,7 +437,7 @@ msgstr ""
 "erősítenie vagy javítania kell. Nem tölti ki az adóösszegeket, például az"
 " adóalapot, az IVA-kulcsot vagy az IRPF-kategóriát."
 
-#: ../../how-to/classify-transactions.md:185
+#: ../../how-to/classify-transactions.md:186
 msgid ""
 "Use [Classify transactions with an LLM](classify-with-llm.md) for the "
 "full provider, preview, apply, and override flow."
@@ -446,11 +446,11 @@ msgstr ""
 "folyamathoz használja a [Tranzakciók osztályozása LLM-mel](classify-with-"
 "llm.md) útmutatót."
 
-#: ../../how-to/classify-transactions.md:189
+#: ../../how-to/classify-transactions.md:190
 msgid "See everything that still needs a decision"
 msgstr "Tekintsen meg mindent, ami még döntést igényel"
 
-#: ../../how-to/classify-transactions.md:191
+#: ../../how-to/classify-transactions.md:192
 msgid ""
 "The review queue is one profile-wide list of everything that still wants "
 "your attention before a filing: transactions without a classification, "
@@ -471,7 +471,7 @@ msgstr ""
 " paranccsal kijavítja. A sorozat importálja a negyedévet, majd beolvassa "
 "a sort:"
 
-#: ../../how-to/classify-transactions.md:203
+#: ../../how-to/classify-transactions.md:204
 msgid ""
 "Each row shows the item id, its kind, the affected record, the period, a "
 "severity (`critical`, `high`, `normal`, or `info`), and a final column "
@@ -482,7 +482,7 @@ msgstr ""
 "és egy utolsó oszlopot mutat a következőként futtatandó paranccsal. "
 "Szűkítse a listát típus, modelo vagy állapot szerint:"
 
-#: ../../how-to/classify-transactions.md:211
+#: ../../how-to/classify-transactions.md:212
 msgid ""
 "Accepted `--kind` tokens are `ledger_transaction`, "
 "`purchase_invoice_evidence`, `payable_invoice`, `collectible_invoice`, "
@@ -502,7 +502,7 @@ msgstr ""
 "használja a globális `--format json` kapcsolót (a parancs előtt) minden "
 "sorban egy `legal_refs` mezőért."
 
-#: ../../how-to/classify-transactions.md:219
+#: ../../how-to/classify-transactions.md:220
 msgid ""
 "Transaction items clear when you classify the row (this page). Invoice "
 "items clear when you link or update the invoice - see [Attach invoices "
@@ -517,11 +517,11 @@ msgstr ""
 "jelentett értékeket, és újra ellenőriz - lásd [Egy benyújtás ellenőrzése"
 "](verification-reports.md)."
 
-#: ../../how-to/classify-transactions.md:225
+#: ../../how-to/classify-transactions.md:226
 msgid "Confirm readiness"
 msgstr "Erősítse meg a felkészültséget"
 
-#: ../../how-to/classify-transactions.md:227
+#: ../../how-to/classify-transactions.md:228
 msgid ""
 "Run preflight after classification. The sequence imports and classifies "
 "the quarter, then runs preflight and reads the ledger status:"
@@ -530,7 +530,7 @@ msgstr ""
 "osztályozza a negyedévet, majd lefuttatja az előellenőrzést, és beolvassa"
 " a ledger állapotát:"
 
-#: ../../how-to/classify-transactions.md:234
+#: ../../how-to/classify-transactions.md:235
 msgid ""
 "Preflight names rows that still need category, taxable base, IVA amount, "
 "IVA rate, currency, or proportionality reference."
@@ -539,11 +539,11 @@ msgstr ""
 "adóalapra, IVA-összegre, IVA-kulcsra, pénznemre vagy arányossági "
 "hivatkozásra van szükségük."
 
-#: ../../how-to/classify-transactions.md:237
+#: ../../how-to/classify-transactions.md:238
 msgid "Correct a classification"
 msgstr "Egy osztályozás javítása"
 
-#: ../../how-to/classify-transactions.md:239
+#: ../../how-to/classify-transactions.md:240
 msgid ""
 "Re-run `classify` on the same transaction id. A manual decision replaces "
 "the previous classification. The sequence classifies a row as business, "
@@ -553,23 +553,23 @@ msgstr ""
 "döntés felülírja a korábbi osztályozást. A sorozat üzletiként osztályoz "
 "egy sort, majd személyesre javítja:"
 
-#: ../../how-to/classify-transactions.md:247
+#: ../../how-to/classify-transactions.md:248
 msgid "Inspect the row again with `ledger view` before calculating."
 msgstr "A számítás előtt vizsgálja meg újra a sort a `ledger view` paranccsal."
 
-#: ../../how-to/classify-transactions.md:249
+#: ../../how-to/classify-transactions.md:250
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/classify-transactions.md:251
+#: ../../how-to/classify-transactions.md:252
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Tranzakciók importálása és kezelése](import-bank-statements.md)"
 
-#: ../../how-to/classify-transactions.md:252
+#: ../../how-to/classify-transactions.md:253
 msgid "[Classify transactions with an LLM](classify-with-llm.md)"
 msgstr "[Tranzakciók osztályozása LLM-mel](classify-with-llm.md)"
 
-#: ../../how-to/classify-transactions.md:253
+#: ../../how-to/classify-transactions.md:254
 msgid ""
 "[How your records become tax figures](../explanation/from-records-to-"
 "figures.md)"
@@ -577,19 +577,19 @@ msgstr ""
 "[Hogyan válnak a nyilvántartásai adószámokká](../explanation/from-"
 "records-to-figures.md)"
 
-#: ../../how-to/classify-transactions.md:254
+#: ../../how-to/classify-transactions.md:255
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr ""
 "[Számítási bemenetek áttekintése és megadása](review-calculation-"
 "values.md)"
 
-#: ../../how-to/classify-transactions.md:255
+#: ../../how-to/classify-transactions.md:256
 msgid "[Review calculations with Google Sheets](review-with-google-sheets.md)"
 msgstr ""
 "[Számítások áttekintése Google Táblázatokkal](review-with-google-"
 "sheets.md)"
 
-#: ../../how-to/classify-transactions.md:256
+#: ../../how-to/classify-transactions.md:257
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[CLI-referencia](../cli/index.rst)"
 

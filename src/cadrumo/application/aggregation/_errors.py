@@ -84,16 +84,8 @@ class AggregationValidationError(AggregationError, CoreValidationError):
     """
 
 
-def t(message: str) -> tr:
-    """Build a multilingual :class:`core.i18n.Translatable` message payload.
-
-    Args:
-        message: The translation key.
-
-    Returns:
-        A :class:`core.i18n.Translatable` marker for the key.
-    """
-    return tr(message)
+# Local construction shorthand for this package's typed translation keys.
+t = tr
 
 
 __all__ = [

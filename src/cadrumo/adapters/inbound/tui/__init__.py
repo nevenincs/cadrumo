@@ -53,6 +53,7 @@ from ._manager_screen import (
 from ._modelo_work_review_screen import ModeloWorkReviewApp, ModeloWorkReviewScreen
 from ._registration_screen import (
     ProfilePasswordVerdict,
+    RecoveryHandoverCancelledError,
     RegistrationApp,
     RegistrationAttempt,
     RegistrationRefusal,
@@ -118,6 +119,7 @@ __all__ = [
     "PinnedStatusBar",
     "ProfileManagerApp",
     "ProfilePasswordVerdict",
+    "RecoveryHandoverCancelledError",
     "RegistrationApp",
     "RegistrationAttempt",
     "RegistrationRefusal",

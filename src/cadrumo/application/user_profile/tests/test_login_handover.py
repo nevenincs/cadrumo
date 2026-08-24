@@ -101,8 +101,16 @@ class _ResumeProbeResult(TypedDict):
 
 
 def _register_two_profiles(storage_root: Path) -> tuple[str, str]:
-    first = register_profile_with_credentials(label="Handover A", passphrase=_PASSWORD_A)
-    second = register_profile_with_credentials(label="Handover B", passphrase=_PASSWORD_B)
+    first = register_profile_with_credentials(
+        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+        label="Handover A",
+        passphrase=_PASSWORD_A,
+    )
+    second = register_profile_with_credentials(
+        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+        label="Handover B",
+        passphrase=_PASSWORD_B,
+    )
     return first.profile_id, second.profile_id
 
 
@@ -1018,7 +1026,11 @@ def test_same_profile_relogin_in_a_new_process_keeps_its_own_session_material(tm
     rather than the idempotent no-op that returns before it.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        profile = register_profile_with_credentials(label="Relogin", passphrase=_PASSWORD_A).profile_id
+        profile = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Relogin",
+            passphrase=_PASSWORD_A,
+        ).profile_id
 
         first = _login_in_separate_process(storage_root, profile, _PASSWORD_A)
         assert first["bucket_id"] == profile

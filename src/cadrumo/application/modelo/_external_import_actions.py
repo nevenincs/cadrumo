@@ -53,7 +53,14 @@ from ...core import CasillaId, Modelo, Period, validated_casilla_id
 from ...core.decimal import normalize_decimal_separators
 from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now
-from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
+from ...domain.buckets import (
+    BucketEventHistoryRepositoryProtocol,
+    BucketEventObjectType,
+    BucketEventType,
+)
+from ...domain.buckets import (
+    bucket_event_history_write as _bucket_event_write,
+)
 from ...domain.calculations.registry import BindingId, RegistryModeloObservation, RelationId
 from ...domain.justificante import Justificante
 from ...domain.modelos import (
@@ -82,7 +89,6 @@ from ._action_errors import ExternalModeloImportError
 from ._calculation_helpers import external_filing_observations as _external_filing_observations
 from ._registry_helpers import reject_unknown_import_casillas as _reject_unknown_import_casillas
 from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
-from ._revision_persistence import modelo_bucket_event_write as _bucket_event_write
 from ._revision_persistence import supersede_prior_current_filing as _supersede_prior_current_filing
 from ._work_addressing import resolve_registry_revision_for_work_target
 from ._work_lifecycle import ActiveWorkUnitUse, create_work_unit, require_active_work_unit

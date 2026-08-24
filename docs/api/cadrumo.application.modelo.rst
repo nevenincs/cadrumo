@@ -33,6 +33,7 @@ Submodules
    cadrumo.application.modelo._calculation_modelo_adjustments
    cadrumo.application.modelo._calculation_preparation
    cadrumo.application.modelo._calculation_resolution
+   cadrumo.application.modelo._calculation_route
    cadrumo.application.modelo._calculation_source_policy
    cadrumo.application.modelo._calculation_source_staging
    cadrumo.application.modelo._data_inventory
@@ -102,6 +103,7 @@ Submodules
    cadrumo.application.modelo._review_package_signing
    cadrumo.application.modelo._revision_persistence
    cadrumo.application.modelo._revision_replay_inputs
+   cadrumo.application.modelo._row_source_identity_replay
    cadrumo.application.modelo._selectors
    cadrumo.application.modelo._semantic_role_resolution
    cadrumo.application.modelo._settlement_grade_advisory

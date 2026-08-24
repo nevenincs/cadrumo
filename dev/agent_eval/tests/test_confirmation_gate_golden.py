@@ -48,6 +48,7 @@ from pathlib import Path
 
 import mcp.types as mcp_types
 import pytest
+from cadrumo.tests.declared_command_risk import declared_live_write
 from cadrumo_harness.mcp import (
     ConfirmationPolicy,
     McpToolDescriptor,
@@ -57,7 +58,6 @@ from cadrumo_harness.mcp import (
 )
 
 from cadrumo.tests import connected_server_and_client_session as connect
-from cadrumo.tests.declared_command_risk import declared_live_write
 
 from .. import ConfirmationGateCheck, ConfirmationTier, load_scenario, run_golden_scenario
 from ._real_cli_support import valid_cli_commands

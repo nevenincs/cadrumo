@@ -125,10 +125,20 @@ class OperationPendingInteraction(BaseModel):
         _validate_response_content(self, response)
         _validate_response_expiry(self.request, response)
         _validate_apply_response(self, response)
+        response_digest = content_hash_hex(response.model_dump(mode="json"))
         return OperationConsumedInteraction(
             interaction_id=self.request.interaction_id,
-            response_digest=content_hash_hex(response.model_dump(mode="json")),
+            intent=response.intent,
+            response_digest=response_digest,
             consumed_at=response.responded_at,
+            checkpoint=self,
+            continuation_proof_digest=_continuation_proof_digest(
+                interaction_id=self.request.interaction_id,
+                intent=response.intent,
+                response_digest=response_digest,
+                consumed_at=response.responded_at,
+                checkpoint=self,
+            ),
         )
 
 
@@ -175,18 +185,53 @@ def _validate_apply_response(
 
 
 class OperationConsumedInteraction(BaseModel):
-    """Safe durable proof that one response token was consumed exactly once."""
+    """Safe durable continuation intent bound to its exact consumed checkpoint."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     interaction_id: OperationInteractionId
+    intent: OperationResponseIntent
     response_digest: ContentDigest
     consumed_at: datetime
+    checkpoint: OperationPendingInteraction
+    continuation_proof_digest: ContentDigest
 
     @model_validator(mode="after")
     def _validate_consumed_at(self) -> OperationConsumedInteraction:
         validate_utc_aware(self.consumed_at)
+        if self.interaction_id != self.checkpoint.request.interaction_id:
+            raise ValueError("consumed interaction does not match its checkpoint identity")
+        expected_proof = _continuation_proof_digest(
+            interaction_id=self.interaction_id,
+            intent=self.intent,
+            response_digest=self.response_digest,
+            consumed_at=self.consumed_at,
+            checkpoint=self.checkpoint,
+        )
+        if self.continuation_proof_digest != expected_proof:
+            raise ValueError("consumed interaction continuation proof does not match its durable intent")
         return self
+
+
+def _continuation_proof_digest(
+    *,
+    interaction_id: OperationInteractionId,
+    intent: OperationResponseIntent,
+    response_digest: ContentDigest,
+    consumed_at: datetime,
+    checkpoint: OperationPendingInteraction,
+) -> ContentDigest:
+    """Bind every dispatch-relevant continuation fact into one hydration proof."""
+    return content_hash_hex(
+        {
+            "schema_version": 1,
+            "interaction_id": interaction_id,
+            "intent": intent,
+            "response_digest": response_digest,
+            "consumed_at": consumed_at.isoformat(),
+            "checkpoint": checkpoint.model_dump(mode="json"),
+        }
+    )
 
 
 __all__ = [

@@ -99,8 +99,13 @@ Each page explains its choices and shows the expected format for dates,
 amounts, and identifiers, and refuses an invalid value on the spot. A
 malformed date or tax identifier never reaches your stored profile.
 
-The wizard prompts for your master-key passphrase before it stores
-anything. For unattended runs, see
+The wizard prompts for the profile passphrase before it stores anything. It
+then shows a 24-word recovery phrase and requires exact re-entry before it
+publishes the profile. Creation refuses if this verification does not finish.
+Recovery cannot be added later, and it never participates in password login.
+
+For unattended runs, provide the separate recovery handoff and verification
+channels described in
 [Run without a passphrase prompt](protect-data-access.md#run-without-a-passphrase-prompt).
 
 Use `--language en`, `es`, `ca`, or `hu` for one command. A profile can also

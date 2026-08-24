@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 18:31+0200\n"
+"POT-Creation-Date: 2026-08-23 19:58+0200\n"
 "PO-Revision-Date: 2026-07-18 22:45+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -137,9 +137,11 @@ msgstr "Executa la comprovació de versió des de la còpia:"
 msgid ""
 "A version number confirms the install. Then run the full workstation "
 "check and add the optional extras you want (Google export, the live AEAT "
-"browser, and OFX/QFX import) by following [Install Cadrumo](workstation-"
-"setup.md), which covers the dependency report, platform checks, and per-"
-"extra install commands."
+"browser, OFX/QFX import, the agent surface) by following [Install Cadrumo"
+"](workstation-setup.md), which covers the dependency report, platform "
+"checks, and per-extra install commands. To let an AI assistant such as "
+"Claude drive Cadrumo, continue with [Connect an agent (MCP)](how-to"
+"/connect-an-agent.md)."
 msgstr ""
 "Un número de versió confirma la instal·lació. Després executa la "
 "comprovació completa de l'estació de treball i afegeix els extres "
@@ -150,11 +152,11 @@ msgstr ""
 "Per deixar que un assistent d'IA com ara Claude faci servir Cadrumo, "
 "continua amb [Connecta un agent (MCP)](how-to/connect-an-agent.md)."
 
-#: ../../download.md:62
+#: ../../download.md:64
 msgid "Install channels"
 msgstr "Canals d'instal·lació"
 
-#: ../../download.md:64
+#: ../../download.md:66
 msgid ""
 "Each release builds and install-tests a native package per channel. Beta "
 "participants get every artifact from the release page; each channel's "
@@ -167,64 +169,90 @@ msgstr ""
 " llançament públic, i aquesta pàgina mostra l'ordre d'instal·lació d'un "
 "canal quan aquest canal ja està actiu."
 
-#: ../../download.md:76
+#: ../../download.md:78
 msgid "Platform"
 msgstr "Plataforma"
 
-#: ../../download.md:77
+#: ../../download.md:79
 msgid "Channel"
 msgstr "Canal"
 
-#: ../../download.md:78
+#: ../../download.md:80
 msgid "How you get the current beta"
 msgstr "Com obtens la beta actual"
 
-#: ../../download.md:79
+#: ../../download.md:81
 msgid "Any platform with Python 3.13+"
 msgstr "Qualsevol plataforma amb Python 3.13+"
 
-#: ../../download.md:80
+#: ../../download.md:82
 msgid "Python package"
 msgstr "Paquet de Python"
 
-#: ../../download.md:81
+#: ../../download.md:83
 msgid "Release page artifact; PyPI listing at public launch"
 msgstr "Artefacte de la pàgina de la versió; llistat a PyPI al llançament públic"
 
-#: ../../download.md:82
+#: ../../download.md:84
 msgid "Windows (x86-64)"
 msgstr "Windows (x86-64)"
 
-#: ../../download.md:83
+#: ../../download.md:85
 msgid "Scoop package"
 msgstr "Paquet de Scoop"
 
-#: ../../download.md:84
+#: ../../download.md:86
 msgid "Release page artifact; Scoop bucket at public launch"
 msgstr "Artefacte de la pàgina de la versió; bucket de Scoop al llançament públic"
 
-#: ../../download.md:85
+#: ../../download.md:87
 msgid "macOS (Apple silicon), Linux (x86-64 and arm64)"
 msgstr "macOS (Apple silicon), Linux (x86-64 i arm64)"
 
-#: ../../download.md:86
+#: ../../download.md:88
 msgid "Homebrew formula"
 msgstr "Fórmula de Homebrew"
 
-#: ../../download.md:87
+#: ../../download.md:89
 msgid "Release page artifact; Homebrew tap at public launch"
 msgstr "Artefacte de la pàgina de la versió; tap de Homebrew al llançament públic"
 
 #: ../../download.md:90
+msgid "Claude Code, Claude Desktop, Claude Cowork"
+msgstr ""
+
+#: ../../download.md:91
+msgid "Claude plugin"
+msgstr ""
+
+#: ../../download.md:92
+#, fuzzy
+msgid "Release page artifact; neve marketplace listing at public launch"
+msgstr "Artefacte de la pàgina de la versió; llistat a PyPI al llançament públic"
+
+#: ../../download.md:93
+msgid "Claude Desktop"
+msgstr ""
+
+#: ../../download.md:94
+msgid "Claude Desktop extension (MCPB)"
+msgstr ""
+
+#: ../../download.md:95
+#, fuzzy
+msgid "Release page artifact; Claude Desktop extension directory at public launch"
+msgstr "Artefacte de la pàgina de la versió; bucket de Scoop al llançament públic"
+
+#: ../../download.md:98
 msgid "Per-channel install paths:"
 msgstr "Vies d'instal·lació per canal:"
 
-#: ../../download.md:92
+#: ../../download.md:100
 #, fuzzy
 msgid "**Python package**: Any platform with Python 3.13+"
 msgstr "**Paquet de Python** — Qualsevol plataforma amb Python 3.13+"
 
-#: ../../download.md:94
+#: ../../download.md:102
 msgid ""
 "The PyPI listing opens at public launch; until then, install the release-"
 "page artifact attached to the latest release."
@@ -232,12 +260,12 @@ msgstr ""
 "El llistat a PyPI s'obrirà amb el llançament públic; fins llavors, "
 "instal·la l'artefacte de la pàgina de la versió adjunt a l'última versió."
 
-#: ../../download.md:96
+#: ../../download.md:104
 #, fuzzy
 msgid "**Scoop package**: Windows (x86-64)"
 msgstr "**Paquet de Scoop** — Windows (x86-64)"
 
-#: ../../download.md:98
+#: ../../download.md:106
 msgid ""
 "The Scoop bucket opens at public launch; until then, install the release-"
 "page artifact attached to the latest release."
@@ -245,12 +273,12 @@ msgstr ""
 "El bucket de Scoop s'obrirà amb el llançament públic; fins llavors, "
 "instal·la l'artefacte de la pàgina de la versió adjunt a l'última versió."
 
-#: ../../download.md:100
+#: ../../download.md:108
 #, fuzzy
 msgid "**Homebrew formula**: macOS (Apple silicon), Linux (x86-64 and arm64)"
 msgstr "**Fórmula de Homebrew** — macOS (Apple silicon), Linux (x86-64 i arm64)"
 
-#: ../../download.md:102
+#: ../../download.md:110
 msgid ""
 "The Homebrew tap opens at public launch; until then, install the release-"
 "page artifact attached to the latest release."
@@ -258,7 +286,33 @@ msgstr ""
 "El tap de Homebrew s'obrirà amb el llançament públic; fins llavors, "
 "instal·la l'artefacte de la pàgina de la versió adjunt a l'última versió."
 
-#: ../../download.md:107
+#: ../../download.md:112
+msgid "**Claude plugin**: Claude Code, Claude Desktop, Claude Cowork"
+msgstr ""
+
+#: ../../download.md:114
+#, fuzzy
+msgid ""
+"The neve marketplace listing opens at public launch; until then, install "
+"the release-page artifact attached to the latest release."
+msgstr ""
+"El llistat a PyPI s'obrirà amb el llançament públic; fins llavors, "
+"instal·la l'artefacte de la pàgina de la versió adjunt a l'última versió."
+
+#: ../../download.md:116
+msgid "**Claude Desktop extension (MCPB)**: Claude Desktop"
+msgstr ""
+
+#: ../../download.md:118
+#, fuzzy
+msgid ""
+"The Claude Desktop extension directory opens at public launch; until "
+"then, install the release-page artifact attached to the latest release."
+msgstr ""
+"El bucket de Scoop s'obrirà amb el llançament públic; fins llavors, "
+"instal·la l'artefacte de la pàgina de la versió adjunt a l'última versió."
+
+#: ../../download.md:123
 msgid ""
 "Every published artifact carries the exact bytes that passed its "
 "platform's install-and-run checks for that release, and each release's "
@@ -269,17 +323,27 @@ msgstr ""
 "aquella versió, i les notes de cada versió a "
 "[Actualitzacions](updates.md) indiquen què ha canviat."
 
-#: ../../download.md:111
+#: ../../download.md:127
 msgid "After you install"
 msgstr "Després d'instal·lar"
 
-#: ../../download.md:118
+#: ../../download.md:133
 msgid "Quickstart"
 msgstr "Inici ràpid"
 
-#: ../../download.md:123
+#: ../../download.md:138
 msgid "Take the shortest path from an empty profile to an exported modelo file."
 msgstr "Fes el camí més curt d'un perfil buit a un fitxer de modelo exportat."
+
+#: ../../download.md:141
+msgid "Connect an agent (MCP)"
+msgstr ""
+
+#: ../../download.md:146
+msgid ""
+"Let an AI assistant such as Claude drive Cadrumo with you, on your "
+"machine."
+msgstr ""
 
 #~ msgid ""
 #~ "Cadrumo is pre-alpha. The one "

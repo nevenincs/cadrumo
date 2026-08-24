@@ -30,10 +30,10 @@ import pytest
 from textual.widgets import Input
 
 from .....application.user_profile import (
-    login_profile,
     MASKED_PLACEHOLDER,
     ProfileFieldView,
     build_profile_overview,
+    login_profile,
     register_profile_with_credentials,
 )
 from .....core import require_active_bucket_id
@@ -167,7 +167,9 @@ async def test_a_required_masked_field_holding_a_value_keeps_it_on_a_blank_save(
     two are worth reading together.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
         _persist(_MASKED_PATH, _MASKED_VALUE)
         assert _stored().get(_MASKED_PATH) == _MASKED_VALUE, "fixture must start with a value to lose"
 
@@ -192,7 +194,9 @@ async def test_the_dialog_explains_the_no_change_reading_wherever_it_applies(tmp
     same field, so neither half can drift alone.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
         _persist(_MASKED_PATH, _MASKED_VALUE)
 
         app = ProfileManagerApp(_live_overview(), persist=_persist)
@@ -227,7 +231,9 @@ async def test_a_required_masked_field_holding_nothing_refuses_a_blank_save(tmp_
     why saving it changed nothing.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
         assert _MASKED_PATH not in _stored(), "the field must start empty for this to be the case under test"
 
         app = ProfileManagerApp(_live_overview(), persist=_persist)
@@ -244,7 +250,9 @@ async def test_a_required_masked_field_holding_nothing_refuses_a_blank_save(tmp_
 async def test_whitespace_in_an_empty_required_masked_field_refuses_too(tmp_path) -> None:
     """Spaces read as blank everywhere else, so they must draw the same refusal."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
 
         app = ProfileManagerApp(_live_overview(), persist=_persist)
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
@@ -265,7 +273,9 @@ async def test_a_typed_value_still_reaches_the_record(tmp_path) -> None:
     unfillable -- a worse failure than the one being fixed.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
 
         app = ProfileManagerApp(_live_overview(), persist=_persist)
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
@@ -292,7 +302,9 @@ async def test_an_empty_optional_masked_field_behaves_like_any_other_empty_field
     and the outcome is the one every empty optional field already had.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
 
         app = ProfileManagerApp(_live_overview(), persist=_persist)
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
@@ -329,7 +341,9 @@ async def test_a_required_masked_field_is_never_offered_a_clear_button(tmp_path)
     outcome the dialog then has to take back.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
         _persist(_MASKED_PATH, _MASKED_VALUE)
 
         app = ProfileManagerApp(_live_overview(), persist=_persist)

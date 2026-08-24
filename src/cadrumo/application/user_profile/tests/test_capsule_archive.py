@@ -20,6 +20,7 @@ from .. import (
     ProfileCapsuleArchiveError,
     export_profile_capsule_archive,
     inspect_profile_capsule_archive,
+    profile_custody_recovery_envelope_path,
     read_profile_capsule_archive,
     register_profile_with_credentials,
     restore_profile_capsule_with_password,
@@ -48,7 +49,10 @@ def _register(handed: list[str] | None = None) -> str:
             UserProfileFact(path="identity.name", value=_NAME),
             UserProfileFact(path="identity.surnames", value=_SURNAMES),
         ),
-        recovery_handover=None if handed is None else (lambda e: handed.append(e.recovery_key.mnemonic)),
+        recovery_handover=lambda enrollment: (
+            (handed.append(enrollment.recovery_key.mnemonic) if handed is not None else None)
+            or enrollment.recovery_key.mnemonic
+        ),
     )
     return outcome.profile_id
 
@@ -98,64 +102,47 @@ def test_the_archive_leaks_no_identifying_field_outside_its_encrypted_members(tm
             assert secret.encode("utf-8") not in expanded, f"{secret!r} appears in the decompressed archive"
 
 
-def test_enrolment_is_not_inferable_from_the_archive_layout(tmp_path: Path) -> None:
-    """Whether a taxpayer keeps a recovery phrase is a fact about them.
-
-    The recovery slot is present and constant-width either way, so an
-    enrolled archive and an unenrolled one differ only in ciphertext the
-    holder cannot read. Comparing the two payload lengths is the direct
-    measurement of that, rather than an assertion that the slot exists.
-    """
+def test_discarding_words_does_not_create_a_password_only_source_profile(tmp_path: Path) -> None:
+    """Not retaining words in a fixture cannot bypass creation enrollment."""
     handed: list[str] = []
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         enrolled_id = _register(handed)
-        enrolled_archive = tmp_path / "enrolled.cadrumo-bucket.tar.gz"
-        export_profile_capsule_archive(profile_id=UUID(enrolled_id), target=enrolled_archive)
-        enrolled_source = read_profile_capsule_archive(enrolled_archive)
+        enrolled = load_committed_profile_password_material(UUID(enrolled_id))
 
     with isolated_profile_storage_root(tmp_path=tmp_path / "second"):
-        plain_id = _register()
-        plain_archive = tmp_path / "plain.cadrumo-bucket.tar.gz"
-        export_profile_capsule_archive(profile_id=UUID(plain_id), target=plain_archive)
-        plain_source = read_profile_capsule_archive(plain_archive)
+        unretained_id = _register()
+        unretained = load_committed_profile_password_material(UUID(unretained_id))
 
-    assert enrolled_source.recovery_envelope is not None
-    assert plain_source.recovery_envelope is None
-    # The slot is the same width in both, so the payloads differ only by the
-    # database and the identity strings -- never by the recovery member.
-    assert len(gzip.decompress(enrolled_archive.read_bytes())) == len(gzip.decompress(plain_archive.read_bytes())), (
-        "archive length differs with enrolment, so the layout signals it"
-    )
+    assert profile_custody_recovery_envelope_path(enrolled.capsule_path).exists()
+    assert profile_custody_recovery_envelope_path(unretained.capsule_path).exists()
 
 
-def test_the_recovery_wrapper_survives_the_archive_and_the_import(tmp_path: Path) -> None:
-    """An import is a publication, so it is the one-shot moment for recovery.
-
-    An archive that carried the wrapper but an import that dropped it would
-    close the operator's second door at the moment they were recovering.
-    """
+def test_the_recovery_wrapper_is_excluded_from_archive_and_import(tmp_path: Path) -> None:
+    """Normal backup transport never carries or installs recovery material."""
     handed: list[str] = []
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         profile_id = _register(handed)
-        original = (
+        original_path = (
             load_committed_profile_password_material(UUID(profile_id)).capsule_path / "custody" / "recovery.v1.json"
-        ).read_bytes()
+        )
+        assert original_path.exists()
         archive = tmp_path / "with-recovery.cadrumo-bucket.tar.gz"
         export_profile_capsule_archive(profile_id=UUID(profile_id), target=archive)
         destination = tmp_path / "imported"
 
+        archive_source = read_profile_capsule_archive(archive)
         restored = restore_profile_capsule_with_password(
             label="Imported keeping recovery",
-            capsule=read_profile_capsule_archive(archive),
+            capsule=archive_source,
             password=_PASSPHRASE,
             root=destination,
         )
 
-        assert restored.recovery_enrolled is True
+        assert restored.recovery_enrolled is False
         carried = destination / "buckets" / profile_id / "custody" / "recovery.v1.json"
-        assert carried.read_bytes() == original
+        assert not carried.exists()
 
 
 def test_inspect_reports_the_header_without_any_key(tmp_path: Path) -> None:

@@ -51,7 +51,9 @@ _PASSWORD_SECOND = "sequential-registration-password-two"  # noqa: S105 - real t
 
 def _register(label: str, password: str) -> str:
     """Create one profile through the production credential door."""
-    return register_profile_with_credentials(label=label, passphrase=password).profile_id
+    return register_profile_with_credentials(
+        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=label, passphrase=password
+    ).profile_id
 
 
 def _forge_interrupted_handover(*, storage_root: Path, profile_a: str, profile_b: str, phase: _HandoverPhase) -> None:

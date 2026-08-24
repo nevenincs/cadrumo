@@ -47,7 +47,7 @@ def _invoke_create(tmp_path: Path, candidate: str, *, locale: str = "en"):
 @pytest.mark.parametrize(
     "candidate",
     (
-        pytest.param("a" * 14, id="14-scalars"),
+        pytest.param("a" * 7, id="7-scalars"),
         pytest.param("a" * 257, id="257-scalars"),
         pytest.param("😀" * 255 + "abcde", id="1025-bytes"),
         pytest.param("a" * 15 + "\ud800", id="high-surrogate"),
@@ -65,23 +65,23 @@ def test_scripted_refusal_boundaries_are_localized_secret_safe_and_mutation_free
     assert candidate not in combined
     assert "profile_password_" not in combined
     assert "ProspectiveProfilePasswordRefusal" not in combined
-    assert "profile password must contain 15 to 256 Unicode scalars" not in combined
+    assert "profile password must contain 8 to 256 Unicode scalars" not in combined
     assert "Traceback" not in combined
     assert "INTERNAL" not in combined.upper()
     assert not list((tmp_path / "storage").glob("*/capsule.current.json"))
 
 
 @pytest.mark.parametrize("locale", ("en", "es", "ca", "hu"))
-def test_original_fourteen_scalar_refusal_is_real_in_every_language(tmp_path: Path, locale: str) -> None:
-    candidate = "x" * 14
+def test_seven_scalar_refusal_is_real_in_every_language(tmp_path: Path, locale: str) -> None:
+    candidate = "x" * 7
     refused = _invoke_create(tmp_path, candidate, locale=locale)
     combined = refused.stdout + refused.stderr
     error = json.loads(refused.stderr)["error"]
     context = {
-        "minimum_scalars": "15",
+        "minimum_scalars": "8",
         "reason": "too_few_scalars",
-        "scalar_count": "14",
-        "utf8_byte_count": "14",
+        "scalar_count": "7",
+        "utf8_byte_count": "7",
     }
     translations = {
         language: tr(
@@ -106,7 +106,7 @@ def test_original_fourteen_scalar_refusal_is_real_in_every_language(tmp_path: Pa
     assert candidate not in combined
     assert "application.user_profile.errors" not in combined
     assert "ProspectiveProfilePasswordRefusal" not in combined
-    assert "profile password must contain 15 to 256 Unicode scalars" not in combined
+    assert "profile password must contain 8 to 256 Unicode scalars" not in combined
     assert "Traceback" not in combined
     assert "INTERNAL" not in combined.upper()
     assert not list((tmp_path / "storage").glob("*/capsule.current.json"))
@@ -115,7 +115,7 @@ def test_original_fourteen_scalar_refusal_is_real_in_every_language(tmp_path: Pa
 @pytest.mark.parametrize(
     "candidate",
     (
-        pytest.param("a" * 15, id="15-scalars"),
+        pytest.param("a" * 8, id="8-scalars"),
         pytest.param("a" * 256, id="256-scalars"),
         pytest.param("😀" * 256, id="1024-bytes"),
         pytest.param("é" * 15, id="composed"),

@@ -22,6 +22,7 @@ Submodules
    cadrumo.application.aggregation._foreign_assets
    cadrumo.application.aggregation._grouping
    cadrumo.application.aggregation._impatriado_income_ledger
+   cadrumo.application.aggregation._inventory
    cadrumo.application.aggregation._invoice_devengo
    cadrumo.application.aggregation._invoice_kind
    cadrumo.application.aggregation._invoice_retencion

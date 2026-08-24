@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from ...core import Modelo
 from ._command_spec import (
     ArgumentSpec,
     CommandSpec,
@@ -1738,7 +1739,7 @@ LIVE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
         key="app_live_borrador_100",
         parent_key="app_live_borrador",
-        token="100",
+        token=Modelo.M100.value,
         kind="group",
         help_key=_key("cli.app.live.borrador.modelo_100_help"),
         short_help_key=None,

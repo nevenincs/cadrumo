@@ -212,6 +212,7 @@ def test_core_facade_exposes_every_connectivity_owner() -> None:
         "SourceConnectivityGroundingLocatorKind",
         "SourceConnectivityOperatorReachabilityProof",
         "SourceConnectivityProofAuthority",
+        "SourceConnectivityProofFailureCause",
         "SourceConnectivityResolverOwnershipProof",
     }
     assert expected <= set(dir(core))
@@ -564,13 +565,55 @@ def test_authority_refuses_an_arbitrary_operator_command_identity() -> None:
         )
 
 
+@pytest.mark.parametrize(
+    ("failure", "expected_cause"),
+    (
+        ("source_enrollment", core.SourceConnectivityProofFailureCause.SOURCE_NOT_ENROLLED),
+        ("operator_workflow", core.SourceConnectivityProofFailureCause.OPERATOR_WORKFLOW_UNSUPPORTED),
+        ("encrypted_provenance", core.SourceConnectivityProofFailureCause.ENCRYPTED_PROVENANCE_MISMATCH),
+    ),
+)
+def test_connected_proof_failures_emit_their_structured_pydantic_cause(
+    failure: str,
+    expected_cause: core.SourceConnectivityProofFailureCause,
+) -> None:
+    """Classified live-proof failures must not collapse to Pydantic's ``value_error`` fallback."""
+    connection = _connection()
+    proof = _connected_proof(connection)
+    authority = _CoreProtocolTestAuthority()
+    if failure == "source_enrollment":
+        authority = _CoreProtocolTestAuthority(enrolled=frozenset())
+    elif failure == "operator_workflow":
+        authority = _CoreProtocolTestAuthority(workflows=frozenset())
+    else:
+        encrypted_revision = proof.encrypted_revision.model_copy(
+            update={"persisted_source_fingerprint": "sha256:" + "d" * 64},
+        )
+        proof = proof.model_copy(update={"encrypted_revision": encrypted_revision})
+
+    with pytest.raises(ValidationError) as error:
+        core.SourceConnectivityCensusRow.validate_with_authority(
+            _connected_payload(connection=connection, proof=proof),
+            authority=authority,
+        )
+
+    error_type = error.value.errors(include_url=False)[0]["type"]
+    assert error_type == expected_cause.value
+    assert error_type != "value_error"
+    assert (
+        core.SourceConnectivityProofFailureCause.from_validation_error_type("value_error")
+        is core.SourceConnectivityProofFailureCause.LIVE_PROOF_VALIDATION_FAILED
+    )
+    assert core.SourceConnectivityProofFailureCause.from_validation_error_type(error_type) is expected_cause
+
+
 def test_authority_refuses_missing_or_changed_executable_evidence() -> None:
     connection = _connection()
     missing_proof = _connected_proof(
         connection,
         operator_reference="src/cadrumo/fake/tests/test_does_not_exist.py:999",
     )
-    with pytest.raises(ValidationError, match="absent or changed"):
+    with pytest.raises(ValidationError) as missing_error:
         core.SourceConnectivityCensusRow.validate_with_authority(
             _connected_payload(connection=connection, proof=missing_proof),
             authority=_CoreProtocolTestAuthority(
@@ -580,7 +623,10 @@ def test_authority_refuses_missing_or_changed_executable_evidence() -> None:
                 },
             ),
         )
-    with pytest.raises(ValidationError, match="absent or changed"):
+    assert missing_error.value.errors(include_url=False)[0]["type"] == (
+        core.SourceConnectivityProofFailureCause.EXECUTABLE_EVIDENCE_MISSING.value
+    )
+    with pytest.raises(ValidationError) as digest_mismatch_error:
         core.SourceConnectivityCensusRow.validate_with_authority(
             _connected_payload(connection=connection),
             authority=_CoreProtocolTestAuthority(
@@ -591,6 +637,12 @@ def test_authority_refuses_missing_or_changed_executable_evidence() -> None:
                 },
             ),
         )
+    assert digest_mismatch_error.value.errors(include_url=False)[0]["type"] == (
+        core.SourceConnectivityProofFailureCause.EXECUTABLE_EVIDENCE_DIGEST_MISMATCH.value
+    )
+    assert core.SourceConnectivityProofFailureCause.from_validation_error_type(
+        digest_mismatch_error.value.errors(include_url=False)[0]["type"],
+    ) is core.SourceConnectivityProofFailureCause.EXECUTABLE_EVIDENCE_DIGEST_MISMATCH
 
 
 def test_connected_proof_rejects_non_test_executable_evidence_shape() -> None:

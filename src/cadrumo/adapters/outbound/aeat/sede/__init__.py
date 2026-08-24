@@ -70,9 +70,6 @@ Navigation flow:
 from __future__ import annotations
 
 from ._censal_datos import (
-    CensalDatosResult,
-    CensalDomicilio,
-    CensalIdentity,
     censal_datos_url,
     fetch_censal_datos,
     forbidden_censal_landing_marker,
@@ -169,9 +166,6 @@ __all__ = [
     "IVA_COMPENSATION_WALLET_URL",
     "PRE303_PRESENTATION_SERVICE_URL",
     "BrowserAdapterTypeError",
-    "CensalDatosResult",
-    "CensalDomicilio",
-    "CensalIdentity",
     "Declaracion",
     "DeclaracionesRegisterSession",
     "Deuda",

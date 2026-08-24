@@ -5,52 +5,8 @@
         "aeat",
         "config",
         "profile",
-        "create",
-        "ana-2026",
-        "--quiet",
-        "--accept-defaults",
-        "--entity-type",
-        "natural_person",
-        "--tax-id",
-        "11111111H",
-        "--name",
-        "Ana",
-        "--surnames",
-        "Garcia Lopez",
-        "--irpf-income-categories",
-        "actividad_economica",
-        "--activity",
-        "diseno grafico",
-        "--iva-regime",
-        "GENERAL",
-        "--tax-residence-ccaa",
-        "madrid",
-        "--tax-residence-jurisdiction-scope",
-        "common_regime",
-        "--iva-m303-regime-composition",
-        "general",
-        "--no-iva-redeme-enrolled",
-        "--no-iva-cash-accounting-regime-enrolled",
-        "--no-iva-voluntary-sii-enrolled",
-        "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
-        "--output-language",
-        "en"
-      ],
-      "captures": [],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "command",
-      "stderr_text": null,
-      "text": "Profile\tana-2026\nStatus\tcreated\nActive profile\tana-2026\nNext\taeat app modelo work create\n"
-    },
-    {
-      "argv": [
-        "aeat",
-        "config",
-        "profile",
         "show",
-        "ana-2026"
+        "docs-sequence-sandbox"
       ],
       "captures": [],
       "envelope": null,
@@ -58,7 +14,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "Profile record is valid.\nrecord_validity\tvalid\tissues=0\nprofile_id\t<profile-id>\ndisplay_name\tana-2026\nstatus\tactive\nactivities.description\tdiseno grafico\ncapabilities.google_export\ttrue\ncapabilities.llm_vision\ttrue\ncenso.large_company\tfalse\ncenso.public_administration_budget_gt_6000000\tfalse\nidentity.name\tAna\nidentity.surnames\tGarcia Lopez\nidentity.tax_id\tsha256:33982da1\nirpf.art109_activity_income_withholding_ge_70pct\tfalse\niva.cash_accounting_regime_enrolled\tfalse\niva.does_intracomunitario\tfalse\niva.hydrocarbon_deposit_advance_payment_deduction_entitled\tfalse\niva.m303_regime_composition\tgeneral\niva.redeme_enrolled\tfalse\niva.regime\tGENERAL\niva.voluntary_sii_enrolled\tfalse\nobligations.bienes_extranjero_above_threshold\tfalse\nobligations.monedas_virtuales_extranjero_above_threshold\tfalse\nobligations.third_party_transactions_above_347_threshold\tfalse\npreferences.output_language\ten\nrenta_family.descendants_eu_eea_deduction\tfalse\nrenta_family.minor_children_in_unit\tfalse\nrenta_spouse.eu_eea_resident\tfalse\nrenta_spouse.non_resident_irpf\tfalse\ntax_residence.ccaa\tmadrid\ntax_residence.jurisdiction_scope\tcommon_regime\ntaxpayer_type.entity_type\tnatural_person\ntaxpayer_type.fiscal_residency\tresident_irpf\ntaxpayer_type.irpf_income_categories\tactividad_economica\nwithholding.has_employees\tfalse\nwithholding.pays_capital_income_with_retencion\tfalse\nwithholding.pays_professionals_with_retencion\tfalse\nwithholding.pays_rent_with_retencion\tfalse\n"
+      "text": "Profile record is valid.\nrecord_validity\tvalid\tissues=0\nprofile_id\t<profile-id>\ndisplay_name\tdocs-sequence-sandbox\nsetup_state\tcomplete\nactivities.description\tdocumentation examples\nidentity.name\tDocs\nidentity.surnames\tSandbox\nidentity.tax_id\tsha256:1c9f9632\niva.cash_accounting_regime_enrolled\tfalse\niva.hydrocarbon_deposit_advance_payment_deduction_entitled\tfalse\niva.m303_regime_composition\tgeneral\niva.redeme_enrolled\tfalse\niva.regime\tGENERAL\niva.voluntary_sii_enrolled\tfalse\ntax_residence.jurisdiction_scope\tcommon_regime\ntaxpayer_type.entity_type\tnatural_person\n"
     },
     {
       "argv": [
@@ -68,19 +24,19 @@
         "config",
         "profile",
         "validate",
-        "ana-2026"
+        "docs-sequence-sandbox"
       ],
       "captures": [],
       "envelope": {
-        "active_profile": "ana-2026",
+        "active_profile": "docs-sequence-sandbox",
         "command": "config.profile.validate",
         "notices": [],
         "result": {
-          "display_name": "ana-2026",
+          "display_name": "docs-sequence-sandbox",
           "issues": [],
           "profile_id": "<profile-id>",
-          "schema_version": 5,
-          "status": "active",
+          "schema_version": 6,
+          "setup_state": "complete",
           "valid": true
         },
         "schema_version": "2",

@@ -69,7 +69,9 @@ def _register_in_separate_process_child(
     settings, token = _child_settings(storage_root)
     _ = settings
     try:
-        outcome = register_profile_with_credentials(label=label, passphrase=password)
+        outcome = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=label, passphrase=password
+        )
         result_queue.put({"profile_id": outcome.profile_id, "label": outcome.label})
     finally:
         _close_child_login(token)
@@ -106,7 +108,9 @@ def _attempt_registration_in_separate_process_child(
     _ = settings
     try:
         try:
-            register_profile_with_credentials(label=label, passphrase=password)
+            register_profile_with_credentials(
+                recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=label, passphrase=password
+            )
         except ProfileRegistrationError as exc:
             result_queue.put(
                 {

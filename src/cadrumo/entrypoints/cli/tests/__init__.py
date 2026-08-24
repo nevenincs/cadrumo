@@ -9,10 +9,12 @@ package top level rather than reaching into the private
 
 from __future__ import annotations
 
+from ._ledger_ux_support import _open_ledger_ux_session as open_ledger_ux_session
 from ._profile_cli_support import create_quiet_profile, edit_quiet_profile, profile_rows
 
 __all__ = [
     "create_quiet_profile",
     "edit_quiet_profile",
+    "open_ledger_ux_session",
     "profile_rows",
 ]

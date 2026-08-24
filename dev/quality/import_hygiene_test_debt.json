@@ -459,15 +459,6 @@
         "reason": "White-box test of the private module-local UTC-now wrapper the calc-sheets record models call, confirming it delegates to the canonical clock. Internal indirection shim, not a public timestamp API."
       },
       {
-        "importer_path": "src/cadrumo/domain/calculations/registry/tests/test_binding_coverage_breadth.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.application.modelo._calculation_source_policy",
-        "imported_names": [
-          "_ENROLLED_SOURCE_KINDS"
-        ],
-        "reason": "White-box breadth test reading the private enrolled-source-kind set to confirm every registry binding source is routed or explicitly deferred (aeat-calculation-aggregation rule). The set is deliberately private so only the calculate-time gate consumes it as an enforcement mechanism, not a browsable public registry. Target module relocated from _calculation_actions to _calculation_source_policy; this entry tracks the relocation."
-      },
-      {
         "importer_path": "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_differentiated_deduction_endpoints.py",
         "occurrence": 1,
         "target_mod": "cadrumo.application.aggregation._iva_ledger",

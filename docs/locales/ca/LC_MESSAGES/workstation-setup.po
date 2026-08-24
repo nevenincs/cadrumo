@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 18:31+0200\n"
+"POT-Creation-Date: 2026-08-23 19:58+0200\n"
 "PO-Revision-Date: 2026-07-18 14:00+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -25,11 +25,11 @@ msgstr "Instal·la Cadrumo"
 #, fuzzy
 msgid ""
 "This page covers installation only: get the package, install the `aeat` "
-"command, and add the optional extras you want. If you do not have Cadrumo"
-" on your machine yet, start at [Get Cadrumo](download.md) for the "
-"acquisition paths and their current availability. Configuration and first"
-" use start in the [quickstart](how-to/quickstart.md) once the install "
-"checks pass."
+"command, add the optional extras you want, and (if you use an AI "
+"assistant) install the agent surface. If you do not have Cadrumo on your "
+"machine yet, start at [Get Cadrumo](download.md) for the acquisition "
+"paths and their current availability. Configuration and first use start "
+"in the [quickstart](how-to/quickstart.md) once the install checks pass."
 msgstr ""
 "Aquesta pàgina només tracta la instal·lació: obtén el paquet, instal·la "
 "l'ordre `aeat`, afegeix els extres opcionals que vulguis i (si utilitzes "
@@ -43,8 +43,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Cadrumo works without any optional service. Google export, on-host LLM "
-"vision, and cloud LLM upload are all opt-in. The core filing workflow "
-"runs with none of them."
+"vision, cloud LLM upload, and the agent surface are all opt-in. The core "
+"filing workflow runs with none of them."
 msgstr ""
 "Cadrumo funciona sense cap servei opcional. L'exportació a Google, la "
 "visió LLM al mateix equip, la pujada a un LLM al núvol i la superfície "
@@ -125,8 +125,9 @@ msgstr "Instal·la els extres opcionals des de la còpia del codi font"
 #, fuzzy
 msgid ""
 "The core install is lean. Google export, the live AEAT browser, the "
-"Anthropic-API provider and OFX/QFX bank-statement import are optional "
-"package extras. Name the extras you need when you install:"
+"Anthropic-API provider, OFX/QFX bank-statement import, and the agent "
+"surface are optional package extras. Name the extras you need when you "
+"install:"
 msgstr ""
 "La instal·lació bàsica és mínima. L'exportació a Google, el navegador "
 "AEAT en directe, el proveïdor de l'API d'Anthropic, la importació "
@@ -136,10 +137,10 @@ msgstr ""
 #: ../../workstation-setup.md:63
 #, fuzzy
 msgid ""
-"The available extras are `google`, `browser`, `anthropic`, `ofx`, and "
-"`all`. `aeat config check` lists each extra and prints the exact install "
-"command for any that is missing. A feature whose extra is not installed "
-"refuses with the same hint instead of failing obscurely."
+"The available extras are `google`, `browser`, `anthropic`, `ofx`, "
+"`agent`, and `all`. `aeat config check` lists each extra and prints the "
+"exact install command for any that is missing. A feature whose extra is "
+"not installed refuses with the same hint instead of failing obscurely."
 msgstr ""
 "Els extres disponibles són `google`, `browser`, `anthropic`, `ofx`, "
 "`agent` i `all`. `aeat config check` enumera cada extra i imprimeix "
@@ -190,10 +191,43 @@ msgstr ""
 "que la mancança està resolta."
 
 #: ../../workstation-setup.md:91
+msgid "Run the Model Context Protocol (MCP) surface"
+msgstr ""
+
+#: ../../workstation-setup.md:93
+msgid ""
+"Cadrumo ships an MCP server, `cadrumo-mcp`, so an AI assistant can "
+"operate the same local, gated commands the CLI exposes, together with an "
+"agent harness: the operator rules, taxpayer-situation skills, and scoped "
+"agent personas that keep the assistant inside the safety boundary."
+msgstr ""
+
+#: ../../workstation-setup.md:99
+#, fuzzy
+msgid "In the beta, run the server from the same repository checkout:"
+msgstr "La beta s'instal·la des del repositori del projecte:"
+
+#: ../../workstation-setup.md:106
+msgid ""
+"[Connect an agent](how-to/connect-an-agent.md) shows the source-checkout "
+"registration and explains what the agent can and cannot do."
+msgstr ""
+
+#: ../../workstation-setup.md:109
+msgid "Materialize the agent harness in a project workspace"
+msgstr ""
+
+#: ../../workstation-setup.md:111
+msgid ""
+"To place the harness (rules, personas, skills, and a `CLAUDE.md`) "
+"directly into a project directory, materialize it with the CLI:"
+msgstr ""
+
+#: ../../workstation-setup.md:118
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../workstation-setup.md:93
+#: ../../workstation-setup.md:120
 msgid ""
 "[Quickstart](how-to/quickstart.md) - from an empty profile to an exported"
 " modelo file."
@@ -201,7 +235,7 @@ msgstr ""
 "[Inici ràpid](how-to/quickstart.md) - d'un perfil buit a un fitxer de "
 "modelo exportat."
 
-#: ../../workstation-setup.md:95
+#: ../../workstation-setup.md:122
 msgid ""
 "[Set up a profile](how-to/profile-setup.md) - including the per-profile "
 "service capabilities (Google export, LLM vision, cloud evidence upload)."
@@ -210,7 +244,11 @@ msgstr ""
 "capacitats de servei per perfil (exportació a Google, visió LLM, pujada "
 "de proves al núvol)."
 
-#: ../../workstation-setup.md:97
+#: ../../workstation-setup.md:124
+msgid "[Connect an agent](how-to/connect-an-agent.md)"
+msgstr ""
+
+#: ../../workstation-setup.md:125
 msgid "[Troubleshooting](how-to/troubleshooting.md)"
 msgstr "[Resolució de problemes](how-to/troubleshooting.md)"
 

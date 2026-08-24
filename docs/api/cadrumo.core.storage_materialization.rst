@@ -1,7 +1,7 @@
-cadrumo.application.workflow._models module
+cadrumo.core.storage_materialization module
 ===========================================
 
-.. automodule:: cadrumo.application.workflow._models
+.. automodule:: cadrumo.core.storage_materialization
    :members:
    :show-inheritance:
    :ignore-module-all:

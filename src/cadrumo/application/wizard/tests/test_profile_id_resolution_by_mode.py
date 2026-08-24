@@ -56,6 +56,7 @@ def _flow() -> WizardFlow:
 
 def _register(label: str) -> None:
     register_profile_with_credentials(
+        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label=label,
         passphrase=_PASSPHRASE,
         facts=tuple(UserProfileFact(path=path, value=value) for path, value in _FACTS.items()),

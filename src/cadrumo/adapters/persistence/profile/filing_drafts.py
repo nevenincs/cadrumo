@@ -34,8 +34,14 @@ from collections.abc import Iterator
 from typing import TYPE_CHECKING, ClassVar, override
 
 from ....domain.filing import FilingValidationError, ModeloDraft, compute_modelo_draft_id
-from ..storage import FILING_DRAFTS_NAMESPACE, SecureBoundRepository, SecureObjectWrite, SensitivityClass
-from ._filing_runtime import resolve_filing_repository_bucket_id, secure_objects_for_filing_bucket
+from ..storage import (
+    FILING_DRAFTS_NAMESPACE,
+    SecureBoundRepository,
+    SecureObjectWrite,
+    SensitivityClass,
+    secure_object_repository_for_bucket,
+)
+from ._filing_runtime import resolve_filing_repository_bucket_id
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import SecureObjectRepository
@@ -65,7 +71,7 @@ class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
         self._bucket_id = bucket_id.strip() if bucket_id is not None else None
         if objects is None:
             self._bucket_id = resolve_filing_repository_bucket_id(bucket_id)
-            objects = secure_objects_for_filing_bucket(self._bucket_id)
+            objects = secure_object_repository_for_bucket(self._bucket_id)
         super().__init__(objects=objects)
 
     @override

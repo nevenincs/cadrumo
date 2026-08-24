@@ -121,6 +121,14 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 help_key=TranslationKey("cli.root.format_help"),
             ),
             OptionSpec(
+                name="tui",
+                declarations=("--tui",),
+                value=_BOOL,
+                default=ParameterDefault.value(False),
+                help_key=TranslationKey("cli.root.tui_help"),
+                is_flag=True,
+            ),
+            OptionSpec(
                 name="quiet",
                 declarations=("--quiet",),
                 value=_BOOL,

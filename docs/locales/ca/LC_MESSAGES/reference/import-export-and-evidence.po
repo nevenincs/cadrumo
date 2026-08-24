@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 18:31+0200\n"
+"POT-Creation-Date: 2026-08-24 14:57+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ca\n"
@@ -582,27 +582,22 @@ msgid ""
 msgstr ""
 
 #: ../../reference/import-export-and-evidence.md:160
-#, fuzzy
 msgid ""
-"The sealed custody archive is an encrypted full-custody recovery "
-"transport, not a structured, readable copy of one profile's records. It "
-"excludes process-local and rebuildable derivatives. Without a recovery "
-"passphrase, restoration requires the matching active bucket key. A "
-"recovery passphrase permits restoration into a fresh storage root."
+"The sealed custody archive is an encrypted profile backup, not a "
+"structured, readable copy of one profile's records. It excludes recovery "
+"material, process-local state, and rebuildable derivatives. Restore it "
+"with the profile passphrase. Recovery restore requires an externally "
+"provisioned matching artifact, its 24-word phrase, and the source "
+"capsule; the CLI does not currently export that artifact. The proof "
+"restores the data path only; it does not reset the passphrase or enroll "
+"recovery in the restored profile."
 msgstr ""
-"L'arxiu de custòdia segellat serveix una finalitat diferent. És un "
-"transport de recuperació de custòdia completa xifrat per a la custòdia "
-"duradora classificada. Els derivats locals del procés i reconstruïbles "
-"s'exclouen deliberadament. Sense una contrasenya de recuperació, la "
-"restauració requereix la clau del bucket actiu coincident. Una "
-"contrasenya de recuperació permet la restauració en una arrel "
-"d'emmagatzematge nova."
 
-#: ../../reference/import-export-and-evidence.md:166
+#: ../../reference/import-export-and-evidence.md:168
 msgid "What an audit export is for"
 msgstr "Per a què serveix una exportació d'auditoria"
 
-#: ../../reference/import-export-and-evidence.md:168
+#: ../../reference/import-export-and-evidence.md:170
 msgid ""
 "When an audit or professional review is requested, the audit evidence "
 "bundle is intended to let the recipient establish:"
@@ -610,33 +605,33 @@ msgstr ""
 "Quan es demana una auditoria o una revisió professional, el paquet "
 "d'evidència d'auditoria està pensat perquè el destinatari pugui establir:"
 
-#: ../../reference/import-export-and-evidence.md:171
+#: ../../reference/import-export-and-evidence.md:173
 msgid "Which original records supported the return."
 msgstr "Quins registres originals van donar suport a la declaració."
 
-#: ../../reference/import-export-and-evidence.md:172
+#: ../../reference/import-export-and-evidence.md:174
 msgid "Whether those bytes still match their recorded SHA-256 digests."
 msgstr ""
 "Si aquells bytes encara coincideixen amb els seus resums SHA-256 "
 "registrats."
 
-#: ../../reference/import-export-and-evidence.md:173
+#: ../../reference/import-export-and-evidence.md:175
 msgid "Which ledger facts contributed to which casillas."
 msgstr "Quines dades del ledger van contribuir a quines caselles."
 
-#: ../../reference/import-export-and-evidence.md:174
+#: ../../reference/import-export-and-evidence.md:176
 msgid "Which registry and legal references governed the calculation."
 msgstr "Quines referències de registre i legals van regir el càlcul."
 
-#: ../../reference/import-export-and-evidence.md:175
+#: ../../reference/import-export-and-evidence.md:177
 msgid "Which calculation revision and filing record were involved."
 msgstr "Quina revisió de càlcul i quin registre de presentació hi van intervenir."
 
-#: ../../reference/import-export-and-evidence.md:176
+#: ../../reference/import-export-and-evidence.md:178
 msgid "Whether later revisions superseded the original position."
 msgstr "Si revisions posteriors van substituir la posició original."
 
-#: ../../reference/import-export-and-evidence.md:178
+#: ../../reference/import-export-and-evidence.md:180
 msgid ""
 "The audit evidence bundle ZIP file contains reachable record bytes "
 "followed by `manifest.json`. Failed verification prevents export; "
@@ -654,7 +649,7 @@ msgstr ""
 " pot verificar els bytes dels registres referenciats perquè no es "
 "proporciona cap carregador de càrrega útil."
 
-#: ../../reference/import-export-and-evidence.md:185
+#: ../../reference/import-export-and-evidence.md:187
 #, fuzzy
 msgid ""
 "The current audit commands do not yet provide a complete one-command "
@@ -672,23 +667,23 @@ msgstr ""
 "forçada pot ometre registres i pot contenir només el manifest. No tractis"
 " aquella sortida com un paquet d'evidència complet."
 
-#: ../../reference/import-export-and-evidence.md:192
+#: ../../reference/import-export-and-evidence.md:194
 msgid "What a complete audit handoff means"
 msgstr "Què significa un lliurament d'auditoria complet"
 
-#: ../../reference/import-export-and-evidence.md:194
+#: ../../reference/import-export-and-evidence.md:196
 msgid "A genuinely complete audit handoff would normally combine:"
 msgstr "Un lliurament d'auditoria realment complet normalment combinaria:"
 
-#: ../../reference/import-export-and-evidence.md:196
+#: ../../reference/import-export-and-evidence.md:198
 msgid "Official AEAT evidence proving submission."
 msgstr "Evidència oficial de l'AEAT que demostri la tramesa."
 
-#: ../../reference/import-export-and-evidence.md:197
+#: ../../reference/import-export-and-evidence.md:199
 msgid "The exact submitted-file digest or captured filed copy."
 msgstr "El resum exacte del fitxer tramès o la còpia presentada capturada."
 
-#: ../../reference/import-export-and-evidence.md:198
+#: ../../reference/import-export-and-evidence.md:200
 msgid ""
 "A verified audit evidence bundle containing every referenced supporting "
 "record."
@@ -696,7 +691,7 @@ msgstr ""
 "Un paquet d'evidència d'auditoria verificat que contingui cada registre "
 "de suport referenciat."
 
-#: ../../reference/import-export-and-evidence.md:199
+#: ../../reference/import-export-and-evidence.md:201
 msgid ""
 "The calculation or review package explaining how those records produced "
 "the declared casillas."
@@ -704,7 +699,7 @@ msgstr ""
 "El paquet de càlcul o de revisió que expliqui com aquells registres van "
 "produir les caselles declarades."
 
-#: ../../reference/import-export-and-evidence.md:202
+#: ../../reference/import-export-and-evidence.md:204
 msgid ""
 "That combination supports both halves of the audit question: “Was this "
 "actually filed?” and “What facts, rules, and calculations produced it?”"
@@ -713,7 +708,7 @@ msgstr ""
 "d'auditoria: «Es va presentar això realment?» i «Quines dades, regles i "
 "càlculs el van produir?»."
 
-#: ../../reference/import-export-and-evidence.md:205
+#: ../../reference/import-export-and-evidence.md:207
 msgid ""
 "The audit evidence bundle does not currently include every item listed "
 "above. Assemble and verify the missing items separately; a bundle is "
@@ -725,11 +720,11 @@ msgstr ""
 "separat; un paquet només és complet quan cada registre de suport i "
 "càrrega útil referenciat hi és present."
 
-#: ../../reference/import-export-and-evidence.md:209
+#: ../../reference/import-export-and-evidence.md:211
 msgid "Important limitations"
 msgstr "Limitacions importants"
 
-#: ../../reference/import-export-and-evidence.md:211
+#: ../../reference/import-export-and-evidence.md:213
 msgid ""
 "Support is limited to Modelo and revision combinations backed by "
 "registered, authoritative layouts and real evidence. Consequently:"
@@ -738,7 +733,7 @@ msgstr ""
 "disposicions registrades i autoritzades i per evidència real. En "
 "conseqüència:"
 
-#: ../../reference/import-export-and-evidence.md:214
+#: ../../reference/import-export-and-evidence.md:216
 msgid ""
 "Import and export support must not be described as universal across all "
 "Modelos and periods."
@@ -746,13 +741,13 @@ msgstr ""
 "El suport d'importació i exportació no s'ha de descriure com a universal "
 "per a tots els models i períodes."
 
-#: ../../reference/import-export-and-evidence.md:216
+#: ../../reference/import-export-and-evidence.md:218
 msgid "Filed declaración-PDF extraction requires an exact registered profile."
 msgstr ""
 "L'extracció de PDF de declaració presentada requereix un perfil registrat"
 " exacte."
 
-#: ../../reference/import-export-and-evidence.md:217
+#: ../../reference/import-export-and-evidence.md:219
 msgid ""
 "An operator-supplied local observation, local export, checksum, Google "
 "Sheet, or review ZIP cannot prove AEAT acceptance. A locally held AEAT "
@@ -765,7 +760,7 @@ msgstr ""
 "pot esdevenir evidència oficial. Importa'l a través del flux d'evidència "
 "externa."
 
-#: ../../reference/import-export-and-evidence.md:221
+#: ../../reference/import-export-and-evidence.md:223
 msgid ""
 "Integrity proves that bytes have not changed; it does not establish "
 "signer identity or independent legal authenticity. Use the separate "
@@ -776,7 +771,7 @@ msgstr ""
 "flux separat de signatura del paquet de revisió quan la identitat de "
 "l'autor sigui important."
 
-#: ../../reference/import-export-and-evidence.md:224
+#: ../../reference/import-export-and-evidence.md:226
 msgid ""
 "Evidence is encrypted in normal custody. Base review and audit ZIPs are "
 "deliberate plaintext exports, so secure delivery becomes your "
@@ -786,7 +781,7 @@ msgstr ""
 "d'auditoria són exportacions de text pla deliberades, de manera que el "
 "lliurament segur passa a ser responsabilitat teva."
 
-#: ../../reference/import-export-and-evidence.md:226
+#: ../../reference/import-export-and-evidence.md:228
 msgid ""
 "A forced incomplete audit evidence bundle export is not a complete "
 "handoff."
@@ -794,7 +789,7 @@ msgstr ""
 "Una exportació incompleta forçada del paquet d'evidència d'auditoria no "
 "és un lliurament complet."
 
-#: ../../reference/import-export-and-evidence.md:227
+#: ../../reference/import-export-and-evidence.md:229
 msgid ""
 "`audit check` reruns bundle checks. Through the current command-line "
 "interface, it cannot verify referenced bytes, and it does not reproduce "
@@ -804,7 +799,7 @@ msgstr ""
 "la interfície de línia d'ordres actual, no pot verificar els bytes "
 "referenciats, i no reprodueix ni recalcula la decisió tributària."
 
-#: ../../reference/import-export-and-evidence.md:231
+#: ../../reference/import-export-and-evidence.md:233
 msgid ""
 "For storage, recovery, and external-access boundaries, see [Protect "
 "access to taxpayer data](../how-to/protect-data-access.md) and "
@@ -925,4 +920,45 @@ msgstr ""
 #~ "còpia de seguretat completa; per a "
 #~ "això, utilitza l'arxiu de custòdia "
 #~ "segellat."
+
+#~ msgid ""
+#~ "The sealed custody archive is an "
+#~ "encrypted full-custody recovery transport, "
+#~ "not a structured, readable copy of "
+#~ "one profile's records. It excludes "
+#~ "process-local and rebuildable derivatives. "
+#~ "Without a recovery passphrase, restoration "
+#~ "requires the matching active bucket key."
+#~ " A recovery passphrase permits restoration"
+#~ " into a fresh storage root."
+#~ msgstr ""
+#~ "L'arxiu de custòdia segellat serveix una"
+#~ " finalitat diferent. És un transport "
+#~ "de recuperació de custòdia completa "
+#~ "xifrat per a la custòdia duradora "
+#~ "classificada. Els derivats locals del "
+#~ "procés i reconstruïbles s'exclouen "
+#~ "deliberadament. Sense una contrasenya de "
+#~ "recuperació, la restauració requereix la "
+#~ "clau del bucket actiu coincident. Una"
+#~ " contrasenya de recuperació permet la "
+#~ "restauració en una arrel d'emmagatzematge "
+#~ "nova."
+
+#~ msgid ""
+#~ "The sealed custody archive is an "
+#~ "encrypted profile backup, not a "
+#~ "structured, readable copy of one "
+#~ "profile's records. It excludes recovery "
+#~ "material, process-local state, and "
+#~ "rebuildable derivatives. Restore it with "
+#~ "the profile passphrase. If the "
+#~ "passphrase is lost, use the explicit "
+#~ "restore command with a separately stored"
+#~ " recovery artifact and its 24-word "
+#~ "phrase. That proof restores the data "
+#~ "path only; it does not reset the"
+#~ " passphrase or enroll recovery in the"
+#~ " restored profile."
+#~ msgstr ""
 

@@ -3420,8 +3420,8 @@ def _recovered_record_identity(sheet: RecordDesignSheet) -> str | None:
         if candidate is not None and len(candidate) == page_field.length and page_field.length in _PAGE_CONSTANT_WIDTHS:
             declared_page = candidate
 
-    for field in reversed(sheet.fields):
-        for text in (field.content, field.description, field.validation):
+    for design_field in reversed(sheet.fields):
+        for text in (design_field.content, design_field.description, design_field.validation):
             if not text:
                 continue
             match = _PDF_RECORD_END_IDENTIFIER_RE.search(str(text))
@@ -3522,6 +3522,7 @@ class _PdfParseState:
         read = tuple(result.sheet for result in self.results if result.identified and result.sheet.fields)
         if not read:
             raise RegistryValidationError("record-design PDF did not contain parseable field rows")
+        read = _recover_inline_constants(read)
         # A sheet whose rows do not tile its own declared extent was not read as
         # published, so it is reported as SKIPPED rather than handed over as if
         # it were whole. See :func:`contiguity_failure`.
@@ -3860,8 +3861,8 @@ def _bracketed_payload_positions(sheet: RecordDesignSheet) -> set[int]:
     """
     openings: dict[str, RecordDesignField] = {}
     covered: set[int] = set()
-    for field in sorted(sheet.fields, key=lambda item: item.offset):
-        for text in (field.content, field.description, field.validation):
+    for design_field in sorted(sheet.fields, key=lambda item: item.offset):
+        for text in (design_field.content, design_field.description, design_field.validation):
             if not text:
                 continue
             match = _PDF_BRACKET_CONSTANT_RE.search(str(text))
@@ -3869,11 +3870,11 @@ def _bracketed_payload_positions(sheet: RecordDesignSheet) -> set[int]:
                 continue
             tag = match.group("tag")
             if not match.group("closing"):
-                openings[tag] = field
+                openings[tag] = design_field
             elif (opening := openings.pop(tag, None)) is not None:
                 start = opening.offset + opening.length
-                if start < field.offset and not _numbers_rows_inside(sheet, start, field.offset):
-                    covered.update(range(start, field.offset))
+                if start < design_field.offset and not _numbers_rows_inside(sheet, start, design_field.offset):
+                    covered.update(range(start, design_field.offset))
             break
     return covered
 
@@ -3892,7 +3893,44 @@ def _numbers_rows_inside(sheet: RecordDesignSheet, start: int, end: int) -> bool
     therefore NOT credited; it does not need to be, because those rows already
     tile it. Its ``<VECTOR>`` payload numbers none and is credited.
     """
-    return any(start <= field.offset < end for field in sheet.fields)
+    return any(start <= probe.offset < end for probe in sheet.fields)
+
+
+#: A constant AEAT states inside a field's own description, in its own quotes:
+#: ``Inicio del identificador de modelo y pagina. "<T840010>". OBLIGATORIO``.
+_INLINE_CONSTANT_RE = re.compile(r'"([^"]{1,40})"')
+
+
+def _recover_inline_constants(sheets: tuple[RecordDesignSheet, ...]) -> tuple[RecordDesignSheet, ...]:
+    """Return ``sheets`` with inline-stated constants surfaced as field content.
+
+    AEAT publishes most record designs with a Contenido column, and the reader fills
+    ``content`` from it. A few designs have no such column and state the constant
+    inside the description instead, so those fields arrive with ``content=None`` and
+    every consumer that needs the official constant -- the export generator's literal
+    fields above all -- has nothing to read.
+
+    SCOPED TO THE DOCUMENT, NOT TO A MODELO. The fallback fires only when NO field in
+    the whole extraction carries content, which is what "this design has no Contenido
+    column" means. That matters: measured across the bundled corpus, 210 designs have
+    the column and one does not, and a rule that fired per-field instead would have
+    given content to 1,625 fields across 13 modelos -- including modelo 210, where the
+    quoted text is an enumeration of alternatives ("Transferencia cuenta bancaria en
+    Espana"-"Transferencia...") and not a constant at all.
+    """
+    if any(existing.content for sheet in sheets for existing in sheet.fields):
+        return sheets
+    recovered: list[RecordDesignSheet] = []
+    for sheet in sheets:
+        fields = []
+        for design_field in sheet.fields:
+            match = _INLINE_CONSTANT_RE.search(design_field.description or "")
+            if match is None:
+                fields.append(design_field)
+                continue
+            fields.append(design_field.model_copy(update={"content": match.group(0)}))
+        recovered.append(sheet.model_copy(update={"fields": tuple(fields)}))
+    return tuple(recovered)
 
 
 def contiguity_failure(sheet: RecordDesignSheet) -> str | None:
@@ -4071,7 +4109,10 @@ def _split_glued_ordinal_position(
         ordinal=str(expected_ordinal),
         offset=expected_offset,
         length=int(match.group("length")),
-        type_code=match.group("type"),
+        # The normalised naturaleza, matching the sibling constructor above. It was
+        # computed here and then discarded in favour of the raw token, which is why
+        # the assignment read as dead.
+        type_code=naturaleza,
         description=match.group("text").strip(),
     )
 

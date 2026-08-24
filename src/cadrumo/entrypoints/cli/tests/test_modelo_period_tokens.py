@@ -39,10 +39,10 @@ def test_work_create_accepts_core_period_tokens(period: str, expected_normalized
 def test_optional_cli_period_requires_year() -> None:
     """A supplied ``--period`` must not be dropped when ``--year`` is absent."""
 
-    from .._modelo import _resolve_optional_cli_period
+    from .._modelo_behavior_support import resolve_optional_cli_period
 
     with pytest.raises(typer.BadParameter) as raised:
-        _resolve_optional_cli_period(year=None, period="1T", modelo="130")
+        resolve_optional_cli_period(year=None, period="1T", modelo="130")
 
     assert "--year" in str(raised.value)
     assert "1T" in str(raised.value)

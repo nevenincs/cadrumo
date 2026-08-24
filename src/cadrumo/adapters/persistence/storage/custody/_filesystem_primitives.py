@@ -197,12 +197,13 @@ def posix_directory_fd(path: Path) -> Generator[int]:
     try:
         components = path.parts[1:] if path.anchor else path.parts
         for component in components:
-            next_descriptor = os.open(component, flags, dir_fd=descriptor)
+            try:
+                next_descriptor = os.open(component, flags, dir_fd=descriptor)
+            except OSError as exc:
+                raise ProfileCustodyRecordError("profile capsule directory component is unsafe") from exc
             os.close(descriptor)
             descriptor = next_descriptor
         yield descriptor
-    except OSError as exc:
-        raise ProfileCustodyRecordError("profile capsule directory component is unsafe") from exc
     finally:
         os.close(descriptor)
 

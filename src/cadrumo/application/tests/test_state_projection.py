@@ -118,6 +118,7 @@ def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> s
         profile_overrides.update(overrides)
 
     outcome = register_profile_with_credentials(
+        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label="state projection operator",
         passphrase=_OPERATOR_PASSPHRASE,
     )

@@ -18,6 +18,7 @@ from uuid import UUID
 
 from ...adapters.persistence.storage import master_key
 from ...core.paths import effective_storage_root
+from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventType
 from ...domain.user_profile import ProfileNotFoundError, ProfileSetupState, UserProfileFact, UserProfileRecord
 from ._capsule_record import (
@@ -310,7 +311,7 @@ class ProfileRecordRepository:
         if current.setup_state is ProfileSetupState.COMPLETE:
             return current
         reject_invalid_profile_facts(str(identity), current.facts, require_complete=True)
-        occurred_at = (now or datetime.now(UTC)).astimezone(UTC)
+        occurred_at = (now or _utc_now()).astimezone(UTC)
         replacement = UserProfileRecord(
             schema_id=current.schema_id,
             schema_version=current.schema_version,
@@ -379,7 +380,7 @@ class ProfileRecordRepository:
         current = self.load(identity)
         if current.record_revision != expected_revision or current.content_digest != expected_content_digest:
             raise ProfileRecordConflictError("profile record revision compare-and-swap failed")
-        occurred_at = (now or datetime.now(UTC)).astimezone(UTC)
+        occurred_at = (now or _utc_now()).astimezone(UTC)
         replacement = UserProfileRecord(
             schema_id=current.schema_id,
             schema_version=current.schema_version,

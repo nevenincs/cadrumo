@@ -61,6 +61,10 @@ def test_a_host_that_cannot_go_full_screen_keeps_the_wizard() -> None:
     assert not _route(mode="create", full_screen=False)
 
 
+def test_explicit_tui_request_overrides_terminal_detection() -> None:
+    assert _route(mode="create", full_screen=False, tui_requested=True)
+
+
 def test_a_name_on_the_command_line_never_diverts_either_verb() -> None:
     """The rule takes no name at all, and that is the point.
 
@@ -83,6 +87,7 @@ def test_empty_repeated_option_default_does_not_block_bare_manager() -> None:
         "profile_name": "Primer Contacto",
         "quiet": False,
         "accept_defaults": False,
+        "tui": True,
         "irpf_income_categories": [],
     }
 

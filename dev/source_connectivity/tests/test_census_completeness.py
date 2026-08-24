@@ -9,6 +9,7 @@ from cadrumo.application.registry.source_connectivity import (
     load_source_connectivity_census,
     validate_census_destination_candidates,
 )
+from cadrumo.core import Period
 from cadrumo.core.resources import resources
 
 from ..discovery import (
@@ -73,7 +74,7 @@ def test_inventory_census_tracks_only_the_live_connection_gap() -> None:
 def test_registry_destination_candidates_resolve_against_live_authority() -> None:
     manifest = load_source_connectivity_census()
 
-    validate_census_destination_candidates(manifest, resources().modelos.authority.modelos)
+    validate_census_destination_candidates(manifest, resources().modelos.authority)
 
 
 def test_absent_registry_destination_candidate_is_rejected() -> None:
@@ -82,6 +83,9 @@ def test_absent_registry_destination_candidate_is_rejected() -> None:
     phantom = RegistryDestinationCandidate(
         kind="casilla_semantic_role",
         modelo_id="100",
+        revision_id="2025",
+        filing_year=2025,
+        period=Period.from_year_and_code(2025, "0A"),
         semantic_role="phantom_inventory_destination",
     )
     mutated = first.model_copy(
@@ -90,7 +94,7 @@ def test_absent_registry_destination_candidate_is_rejected() -> None:
     changed = manifest.model_copy(update={"entries": (mutated, *manifest.entries[1:])})
 
     with pytest.raises(ValueError, match="semantic role is absent"):
-        validate_census_destination_candidates(changed, resources().modelos.authority.modelos)
+        validate_census_destination_candidates(changed, resources().modelos.authority)
 
 
 def test_ambiguous_registry_destination_candidate_is_rejected() -> None:
@@ -99,6 +103,9 @@ def test_ambiguous_registry_destination_candidate_is_rejected() -> None:
     ambiguous = RegistryDestinationCandidate(
         kind="casilla_semantic_role",
         modelo_id="100",
+        revision_id="2025",
+        filing_year=2025,
+        period=Period.from_year_and_code(2025, "0A"),
         semantic_role="irpf_inmueble_base_amortizacion",
     )
     mutated = first.model_copy(
@@ -107,4 +114,28 @@ def test_ambiguous_registry_destination_candidate_is_rejected() -> None:
     changed = manifest.model_copy(update={"entries": (mutated, *manifest.entries[1:])})
 
     with pytest.raises(ValueError, match="semantic role is ambiguous"):
-        validate_census_destination_candidates(changed, resources().modelos.authority.modelos)
+        validate_census_destination_candidates(changed, resources().modelos.authority)
+
+
+def test_registry_destination_revision_must_match_its_law_selected_coordinate() -> None:
+    manifest = load_source_connectivity_census()
+    first = manifest.entries[0]
+    candidate = first.registry_destination_candidates[0]
+    mismatched = candidate.model_copy(update={"revision_id": "2024"})
+    changed_entry = first.model_copy(update={"registry_destination_candidates": (mismatched,)})
+    changed = manifest.model_copy(update={"entries": (changed_entry, *manifest.entries[1:])})
+
+    with pytest.raises(ValueError, match="revision does not match its law-selected filing coordinate"):
+        validate_census_destination_candidates(changed, resources().modelos.authority)
+
+
+def test_registry_destination_period_must_be_law_selectable() -> None:
+    manifest = load_source_connectivity_census()
+    first = manifest.entries[0]
+    candidate = first.registry_destination_candidates[0]
+    mismatched = candidate.model_copy(update={"period": Period.from_year_and_code(2025, "1T")})
+    changed_entry = first.model_copy(update={"registry_destination_candidates": (mismatched,)})
+    changed = manifest.model_copy(update={"entries": (changed_entry, *manifest.entries[1:])})
+
+    with pytest.raises(ValueError, match="filing coordinate is not law-selectable"):
+        validate_census_destination_candidates(changed, resources().modelos.authority)

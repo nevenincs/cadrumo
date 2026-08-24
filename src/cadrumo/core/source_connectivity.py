@@ -23,6 +23,7 @@ from typing import Annotated, Protocol, Self, runtime_checkable
 from urllib.parse import urlsplit
 
 from pydantic import BaseModel, Field, StringConstraints, ValidationInfo, model_validator
+from pydantic_core import PydanticCustomError
 
 from ._calculation_route import ModeloCalculationRouteId
 from ._models import STRICT_FROZEN_CONFIG
@@ -45,6 +46,7 @@ __all__ = [
     "SourceConnectivityGroundingLocatorKind",
     "SourceConnectivityOperatorReachabilityProof",
     "SourceConnectivityProofAuthority",
+    "SourceConnectivityProofFailureCause",
     "SourceConnectivityResolverOwnershipProof",
 ]
 
@@ -212,6 +214,23 @@ class SourceConnectivityExecutableEvidenceRole(StrEnum):
     RESOLVER_ENROLLMENT = "resolver_enrollment"
     ENCRYPTED_REVISION = "encrypted_revision"
     OPERATOR_REACHABILITY = "operator_reachability"
+
+
+class SourceConnectivityProofFailureCause(StrEnum):
+    """Closed live-proof failure causes carried through validation errors."""
+
+    LIVE_AUTHORITY_UNAVAILABLE = "source_connectivity_live_authority_unavailable"
+    SOURCE_NOT_ENROLLED = "source_connectivity_source_not_enrolled"
+    OPERATOR_WORKFLOW_UNSUPPORTED = "source_connectivity_operator_workflow_unsupported"
+    ENCRYPTED_PROVENANCE_MISMATCH = "source_connectivity_encrypted_provenance_mismatch"
+    EXECUTABLE_EVIDENCE_MISSING = "source_connectivity_executable_evidence_missing"
+    EXECUTABLE_EVIDENCE_DIGEST_MISMATCH = "source_connectivity_executable_evidence_digest_mismatch"
+    LIVE_PROOF_VALIDATION_FAILED = "source_connectivity_live_proof_validation_failed"
+
+    @classmethod
+    def from_validation_error_type(cls, error_type: str) -> SourceConnectivityProofFailureCause:
+        """Translate Pydantic's stable error type without inspecting prose."""
+        return cls._value2member_map_.get(error_type, cls.LIVE_PROOF_VALIDATION_FAILED)
 
 
 class SourceConnectivityExecutableEvidence(BaseModel):
@@ -468,17 +487,34 @@ class SourceConnectivityCensusRow(SourceConnectivityCandidateIdentity):
             raise ValueError("connected connectivity row requires complete connected_proof")
         connection = proof.connection
         if not authority.source_is_enrolled(connection):
-            raise ValueError("connected proof source is not enrolled by the live source mesh")
+            raise PydanticCustomError(
+                SourceConnectivityProofFailureCause.SOURCE_NOT_ENROLLED.value,
+                "connected proof source is not enrolled by the live source mesh",
+            )
         operator = proof.operator_reachability
         if not authority.operator_workflow_reaches_source(connection, operator):
-            raise ValueError("connected proof operator workflow is not supported")
+            raise PydanticCustomError(
+                SourceConnectivityProofFailureCause.OPERATOR_WORKFLOW_UNSUPPORTED.value,
+                "connected proof operator workflow is not supported",
+            )
         if not authority.encrypted_revision_matches(proof.encrypted_revision):
-            raise ValueError("connected proof encrypted revision does not match persisted source provenance")
+            raise PydanticCustomError(
+                SourceConnectivityProofFailureCause.ENCRYPTED_PROVENANCE_MISMATCH.value,
+                "connected proof encrypted revision does not match persisted source provenance",
+            )
         for evidence in _connected_executable_evidence(proof):
             verified_digest = authority.executable_evidence_digest(evidence)
-            if verified_digest is None or verified_digest != evidence.content_digest:
-                raise ValueError(
-                    f"connected proof executable evidence is absent or changed: {evidence.evidence_id}",
+            if verified_digest is None:
+                raise PydanticCustomError(
+                    SourceConnectivityProofFailureCause.EXECUTABLE_EVIDENCE_MISSING.value,
+                    "connected proof executable evidence is missing: {evidence_id}",
+                    {"evidence_id": evidence.evidence_id},
+                )
+            if verified_digest != evidence.content_digest:
+                raise PydanticCustomError(
+                    SourceConnectivityProofFailureCause.EXECUTABLE_EVIDENCE_DIGEST_MISMATCH.value,
+                    "connected proof executable evidence digest does not match: {evidence_id}",
+                    {"evidence_id": evidence.evidence_id},
                 )
 
     def expiry_posture(self, *, as_of: date) -> SourceConnectivityExpiryPosture:

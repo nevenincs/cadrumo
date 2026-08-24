@@ -28,9 +28,7 @@ from ....adapters.persistence.storage.custody import (
     ProfileCustodyWrappedDek,
     create_profile_custody_sentinel,
 )
-from ....application.user_profile._capsule_record import ProfileRecordSession
-from ....application.user_profile._lifecycle import ProfileCapsuleLifecycle
-from ....application.user_profile._profile_record_repository import bound_profile_record_session
+from ....application.user_profile import ProfileCapsuleLifecycle, ProfileRecordSession, bound_profile_record_session
 from ....core import (
     BucketPointer,
     ProfileRecordUnavailability,
@@ -42,6 +40,7 @@ from ....core import (
 from ....core.config import override_settings
 from ....core.errors import NoActiveProfileError, get_registered_error_code
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import mint_test_profile_recovery_envelope
 from ... import wizard as _wizard  # noqa: F401
 from .._profile_bucket_scan import resolve_profile_bucket
 from .._profile_health import assess_active_profile_health, repair_active_profile_pointer
@@ -82,6 +81,9 @@ def _current_profile_session(profile_id: str, *, root: Path, label: str) -> Prof
         password_envelope=envelope,
         sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_PROFILE_DEK),
         data_files={},
+        recovery_envelope=mint_test_profile_recovery_envelope(
+            identity, dek=_PROFILE_DEK, dek_epoch=envelope.dek_epoch
+        ),
         initial_record=UserProfileRecord(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=str(identity),
@@ -254,7 +256,7 @@ def test_resolve_profile_bucket_returns_none_for_an_unknown_identifier(tmp_path:
 
 def test_duplicate_label_is_refused_before_a_second_capsule_can_enter_discovery(tmp_path: Path) -> None:
     """Current projections never carry a legacy ambiguous-label state."""
-    from ...user_profile._custody_transactions import ProfileCustodyTransactionConflictError
+    from ...user_profile import ProfileCustodyTransactionConflictError
 
     first = _current_profile_session(
         "51c1fa97-28e1-4700-ac1e-ed7cf094d37b",

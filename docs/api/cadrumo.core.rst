@@ -43,6 +43,7 @@ Submodules
    cadrumo.core._authority_grade
    cadrumo.core._bucket_pointer
    cadrumo.core._bucket_pointer_io
+   cadrumo.core._calculation_route
    cadrumo.core._capabilities
    cadrumo.core._casilla_id
    cadrumo.core._casilla_value_kind
@@ -160,6 +161,8 @@ Submodules
    cadrumo.core.prose_elision
    cadrumo.core.secure_object_write
    cadrumo.core.setup_answers
+   cadrumo.core.source_connectivity
+   cadrumo.core.storage_materialization
    cadrumo.core.storage_route_guidance
    cadrumo.core.tabular
    cadrumo.core.text_fold

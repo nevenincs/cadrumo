@@ -18,6 +18,7 @@ from .._command_spec import (
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
+    TuiCapability,
     ValueContract,
 )
 from ._spec_policies import BOOTSTRAP_DESTRUCTIVE, BOOTSTRAP_WRITE, ENCRYPTED_DESTRUCTIVE, STATE_FREE
@@ -152,6 +153,7 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
                 ),
             )
         ),
+        tui_capability=TuiCapability.AVAILABLE,
     ),
     CommandSpec(
         key="config_logout",

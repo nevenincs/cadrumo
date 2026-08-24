@@ -18,6 +18,7 @@ from ...application.modelo import (
     WorkUnitNotFoundError,
     discard_work_unit,
     ensure_modelo_work_unit_for_active_target,
+    guard_active_profile_foral_ccaa,
     lifecycle_continuation_for_work_list,
     lifecycle_continuation_for_work_status,
     list_work_units,
@@ -42,7 +43,6 @@ from ._common import (
     resolve_lifecycle_continuation_notice,
 )
 from ._modelo_behavior_support import (
-    guard_foral_profile_ccaa,
     require_active_profile,
     resolve_work_unit_for_cli,
     resolve_year_period,
@@ -217,7 +217,7 @@ def work_create(
         modelo=modelo, filing_year=resolved_year, period=resolved_period, registry_revision_id=requested_revision
     )
     require_active_profile()
-    guard_foral_profile_ccaa()
+    guard_active_profile_foral_ccaa()
     _guard_modelo_applicability(modelo, allow_not_applicable=allow_not_applicable)
     resolved_bucket = resolve_explicit_or_active_bucket_id(bucket_id)
     resolved_actor = actor or resolve_default_actor()

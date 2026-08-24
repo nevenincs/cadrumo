@@ -299,6 +299,7 @@ class RegistryValidator:
             legal_refs=self._legal,
             source_refs=self._sources,
             evidence=self._evidence,
+            source_root=self._source_root,
             justificante_corpus_root=self._justificante_corpus_root,
         )
         for failure in _validate_producer_inventory(prefix, revision):

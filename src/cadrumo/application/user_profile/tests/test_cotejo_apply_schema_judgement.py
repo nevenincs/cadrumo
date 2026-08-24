@@ -70,6 +70,7 @@ def _cotejo_subject(tmp_path: Path, *, facts: tuple[UserProfileFact, ...] | None
     """Register a real capsule, bind its record session, and route the active profile."""
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Cotejo apply subject",
             passphrase=_PASSPHRASE,
             facts=facts if facts is not None else (UserProfileFact(path="identity.tax_id", value="12345678Z"),),

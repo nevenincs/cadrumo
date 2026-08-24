@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 18:31+0200\n"
+"POT-Creation-Date: 2026-08-23 19:58+0200\n"
 "PO-Revision-Date: 2026-07-19 10:00+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -34,6 +34,10 @@ msgid "Quickstart"
 msgstr "Gyorsindító"
 
 #: ../../index.md:118
+msgid "Connect an agent (MCP)"
+msgstr ""
+
+#: ../../index.md:118
 msgid "First quarterly filing"
 msgstr "Az első negyedéves benyújtás"
 
@@ -45,171 +49,171 @@ msgstr "A jövedelemadó-év"
 msgid "The IVA year"
 msgstr "Az IVA-év"
 
-#: ../../index.md:130
+#: ../../index.md:131
 msgid "Set up a profile"
 msgstr "Profil beállítása"
 
-#: ../../index.md:130
+#: ../../index.md:131
 msgid "Authenticate with AEAT"
 msgstr "Hitelesítés az AEAT-nál"
 
-#: ../../index.md:130
+#: ../../index.md:131
 msgid "Maintain census facts"
 msgstr "A censo adatainak karbantartása"
 
-#: ../../index.md:130
+#: ../../index.md:131
 msgid "Which modelos apply to you"
 msgstr "Mely modelók vonatkoznak Önre"
 
-#: ../../index.md:130
+#: ../../index.md:131
 msgid "Protect data access"
 msgstr "Az adathozzáférés védelme"
 
-#: ../../index.md:130
+#: ../../index.md:131
 msgid "Your profile"
 msgstr "Az Ön profilja"
 
-#: ../../index.md:141
+#: ../../index.md:142
 msgid "Filing calendar"
 msgstr "Benyújtási naptár"
 
-#: ../../index.md:141
+#: ../../index.md:142
 msgid "AEAT notifications"
 msgstr "AEAT-értesítések"
 
-#: ../../index.md:141
+#: ../../index.md:142
 msgid "Filing readiness"
 msgstr "Benyújtási készenlét"
 
-#: ../../index.md:141
+#: ../../index.md:142
 msgid "Your calendar"
 msgstr "Az Ön naptára"
 
-#: ../../index.md:150
+#: ../../index.md:151
 msgid "Work with transactions"
 msgstr "Munka a tranzakciókkal"
 
-#: ../../index.md:81 ../../index.md:150
+#: ../../index.md:81 ../../index.md:151
 msgid "Classify transactions"
 msgstr "Tranzakciók besorolása"
 
-#: ../../index.md:150
+#: ../../index.md:151
 msgid "Classify with an LLM"
 msgstr "Besorolás LLM-mel"
 
-#: ../../index.md:150
+#: ../../index.md:151
 msgid "Attach invoices and receipts"
 msgstr "Számlák és bizonylatok csatolása"
 
-#: ../../index.md:150
+#: ../../index.md:151
 msgid "Manage business invoices"
 msgstr "Üzleti számlák kezelése"
 
-#: ../../index.md:150
+#: ../../index.md:151
 msgid "Correct mistakes"
 msgstr "Hibák javítása"
 
-#: ../../index.md:150
+#: ../../index.md:151
 msgid "IVA prorrata deductions"
 msgstr "IVA prorrata-levonások"
 
-#: ../../index.md:150
+#: ../../index.md:151
 msgid "Your ledger"
 msgstr "Az Ön ledgere"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "The filing workflow"
 msgstr "A benyújtási munkafolyamat"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Modelo 036 (censo)"
 msgstr "Modelo 036 (censo)"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Modelo 100 (Renta)"
 msgstr "Modelo 100 (Renta)"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Modelo 130 (IRPF instalment)"
 msgstr "Modelo 130 (IRPF-előleg)"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Modelo 303 (IVA)"
 msgstr "Modelo 303 (IVA)"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Modelo 349 (intra-community)"
 msgstr "Modelo 349 (közösségen belüli)"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Modelo 390 (IVA summary)"
 msgstr "Modelo 390 (IVA-összesítő)"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Calculation inputs"
 msgstr "Számítási bemenetek"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Google Sheets review"
 msgstr "Felülvizsgálat Google Sheetsben"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Verify a filing"
 msgstr "Benyújtás ellenőrzése"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "File at AEAT"
 msgstr "Benyújtás az AEAT-nál"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Reconcile a filing"
 msgstr "Benyújtás egyeztetése"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Your filings"
 msgstr "Az Ön benyújtásai"
 
-#: ../../index.md:181
+#: ../../index.md:182
 msgid "Troubleshooting"
 msgstr "Hibaelhárítás"
 
-#: ../../index.md:181
+#: ../../index.md:182
 msgid "Disclaimer"
 msgstr "Jogi nyilatkozat"
 
-#: ../../index.md:181
+#: ../../index.md:182
 msgid "Help"
 msgstr "Súgó"
 
-#: ../../index.md:189
+#: ../../index.md:190
 msgid "Cadrumo reference"
 msgstr "Cadrumo referencia"
 
-#: ../../index.md:189
+#: ../../index.md:190
 msgid "Reference"
 msgstr "Referencia"
 
-#: ../../index.md:200
+#: ../../index.md:201
 msgid "Overview"
 msgstr "Áttekintés"
 
-#: ../../index.md:200
+#: ../../index.md:201
 msgid "How it works"
 msgstr "Hogyan működik"
 
-#: ../../index.md:207
+#: ../../index.md:208
 msgid "Updates and downloads"
 msgstr "Frissítések és letöltések"
 
-#: ../../index.md:207
+#: ../../index.md:208
 msgid "Architecture"
 msgstr "Architektúra"
 
-#: ../../index.md:207
+#: ../../index.md:208
 msgid "Authoring guide"
 msgstr "Szerzői útmutató"
 
-#: ../../index.md:207
+#: ../../index.md:208
 msgid "Project"
 msgstr "Projekt"
 

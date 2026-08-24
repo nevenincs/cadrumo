@@ -6,6 +6,7 @@ Render -> validate -> publish -> check, over three authored authorities
 """
 
 from ._export_tree import render_complete_export_tree
+from ._provenance_manifest import verify_export_fragment_provenance_manifest
 from ._tree_check import check_generated_export_tree
 from ._tree_publication import publish_validated_generated_export_tree
 from ._tree_validation import validate_generated_export_tree
@@ -15,4 +16,5 @@ __all__ = [
     "publish_validated_generated_export_tree",
     "render_complete_export_tree",
     "validate_generated_export_tree",
+    "verify_export_fragment_provenance_manifest",
 ]

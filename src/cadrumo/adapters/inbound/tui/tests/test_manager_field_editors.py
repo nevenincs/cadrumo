@@ -22,8 +22,8 @@ import pytest
 from textual.widgets import Input, Label, OptionList, Static
 
 from .....application.user_profile import (
-    login_profile,
     build_profile_overview,
+    login_profile,
     register_profile_with_credentials,
 )
 from .....core import require_active_bucket_id
@@ -124,7 +124,9 @@ def _open(app: ProfileManagerApp, path: str) -> None:
 async def test_a_boolean_field_is_picked_from_two_options_not_typed_into(tmp_path) -> None:
     """The operator must never have to guess how yes is spelled."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
 
         app = _manager()
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
@@ -150,7 +152,9 @@ async def test_picking_yes_stores_the_canonical_boolean(tmp_path) -> None:
     had to recognise a spelling only this surface could create.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
 
         app = _manager()
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
@@ -173,7 +177,9 @@ async def test_picking_no_stores_the_canonical_false(tmp_path) -> None:
     first option would pass the affirmative test above.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
 
         app = _manager()
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
@@ -192,7 +198,9 @@ async def test_picking_no_stores_the_canonical_false(tmp_path) -> None:
 async def test_an_enum_field_keeps_its_choice_editor(tmp_path) -> None:
     """The editor that already worked must not have been traded for the new one."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
 
         app = _manager()
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
@@ -212,7 +220,9 @@ async def test_a_plain_text_field_is_still_typed_into(tmp_path) -> None:
     the boolean tests would still pass.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
 
         app = _manager()
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
@@ -229,7 +239,9 @@ async def test_a_plain_text_field_is_still_typed_into(tmp_path) -> None:
 async def test_edit_dialog_uses_the_operator_label_without_exposing_the_schema_path(tmp_path) -> None:
     """A storage address is not usable guidance and must never enter the dialog."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
 
         app = _manager()
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
@@ -249,7 +261,9 @@ async def test_edit_dialog_uses_the_operator_label_without_exposing_the_schema_p
 async def test_a_date_box_says_which_layout_it_wants(tmp_path) -> None:
     """A typed box whose shape is not evident must state it before it is used."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
 
         app = _manager()
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
@@ -271,7 +285,9 @@ async def test_a_refused_value_holds_the_dialog_open_and_says_why(tmp_path) -> N
     the operator actually typed, and nothing may reach the record.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
 
         app = _manager()
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
@@ -300,7 +316,9 @@ async def test_an_acceptable_value_is_not_refused(tmp_path) -> None:
     which is the complaint this whole change answers.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        )
 
         app = _manager()
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:

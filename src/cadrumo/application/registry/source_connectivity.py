@@ -9,7 +9,7 @@ declarations.
 from __future__ import annotations
 
 import tomllib
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -21,6 +21,7 @@ from ...core import (
     BindingSourceKind,
     CasillaId,
     ModeloCalculationRouteId,
+    Period,
     SourceConnectivityCensusRow,
     SourceConnectivityDisposition,
     SourceConnectivityExecutableEvidenceRole,
@@ -36,7 +37,6 @@ from ...domain.calculations.registry import (
     InputKind,
     InputKindValue,
     LegalRefId,
-    ModeloDefinition,
     ModeloId,
     RegistrySnapshot,
     RelationConsumptionChannel,
@@ -44,12 +44,14 @@ from ...domain.calculations.registry import (
     RelationId,
     RevisionId,
     SourceRefId,
+    ValidatedRegistryAuthority,
     casillas_by_binding,
     expression_binding_refs,
     expression_casilla_refs,
     expression_relation_refs,
     relation_consumption_channels,
     relation_consumption_index,
+    select_revision,
 )
 from ..aggregation import BindingSourceDisposition
 from ..modelo import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
@@ -92,11 +94,16 @@ class RegistryDestinationCandidate(BaseModel):
 
     kind: RegistryDestinationCandidateKind
     modelo_id: ModeloId
+    revision_id: RevisionId
+    filing_year: int = Field(ge=1980, le=2200)
+    period: Period
     semantic_role: str | None = Field(default=None, min_length=1, max_length=256)
     source_kind: BindingSourceKind | None = None
 
     @model_validator(mode="after")
     def _require_kind_payload(self) -> RegistryDestinationCandidate:
+        if self.period.filing_year != self.filing_year:
+            raise ValueError("registry destination period must carry its declared filing_year")
         if self.kind == "casilla_semantic_role":
             if self.semantic_role is None or self.source_kind is not None:
                 raise ValueError("semantic-role destination requires only semantic_role")
@@ -105,10 +112,17 @@ class RegistryDestinationCandidate(BaseModel):
         return self
 
     @property
-    def identity(self) -> tuple[str, str, str]:
+    def identity(self) -> tuple[str, str, str, str, str, str]:
         """Return the canonical typed identity used for one-owner checks."""
         token = self.semantic_role if self.semantic_role is not None else self.source_kind.value
-        return self.kind, str(self.modelo_id), token
+        return (
+            self.kind,
+            str(self.modelo_id),
+            str(self.revision_id),
+            str(self.filing_year),
+            self.period.registry_token,
+            token,
+        )
 
 
 class SourceConnectivityCensusEntry(SourceConnectivityCensusRow):
@@ -181,10 +195,11 @@ def load_source_connectivity_census(
 
 def validate_census_destination_candidates(
     manifest: SourceConnectivityCensusManifest,
-    modelos: Iterable[ModeloDefinition],
+    authority: ValidatedRegistryAuthority,
 ) -> None:
-    """Resolve every accepted destination candidate against validated registry models."""
-    modelos_by_id = {modelo.id: modelo for modelo in modelos}
+    """Resolve every destination against its exact law-selected filing coordinate."""
+    authority.validate_registry()
+    modelos_by_id = {modelo.id: modelo for modelo in authority.modelos}
     for entry in manifest.entries:
         for candidate in entry.registry_destination_candidates:
             modelo = modelos_by_id.get(candidate.modelo_id)
@@ -192,32 +207,42 @@ def validate_census_destination_candidates(
                 raise ValueError(
                     f"census destination references absent modelo {candidate.modelo_id}: {entry.candidate_id}"
                 )
+            try:
+                revision = select_revision(
+                    modelo,
+                    filing_year=candidate.filing_year,
+                    period=candidate.period.registry_token,
+                )
+            except ValueError as error:
+                raise ValueError(
+                    "census destination filing coordinate is not law-selectable: "
+                    f"{candidate.modelo_id}/{candidate.filing_year}/{candidate.period.registry_token}: "
+                    f"{entry.candidate_id}"
+                ) from error
+            if revision.id != candidate.revision_id:
+                raise ValueError(
+                    "census destination revision does not match its law-selected filing coordinate: "
+                    f"declared {candidate.modelo_id}/{candidate.revision_id}, "
+                    f"selected {candidate.modelo_id}/{revision.id} for "
+                    f"{candidate.filing_year}/{candidate.period.registry_token}: {entry.candidate_id}"
+                )
             if candidate.kind == "casilla_semantic_role":
-                for revision in modelo.revisions.values():
-                    matches = tuple(
-                        casilla for casilla in revision.casillas if casilla.semantic_role == candidate.semantic_role
-                    )
-                    if len(matches) > 1:
-                        raise ValueError(
-                            f"census destination semantic role is ambiguous in {modelo.id}/{revision.id}: "
-                            f"{candidate.semantic_role}"
-                        )
-                if not any(
-                    casilla.semantic_role == candidate.semantic_role
-                    for revision in modelo.revisions.values()
-                    for casilla in revision.casillas
-                ):
+                matches = tuple(
+                    casilla for casilla in revision.casillas if casilla.semantic_role == candidate.semantic_role
+                )
+                if len(matches) > 1:
                     raise ValueError(
-                        f"census destination semantic role is absent from modelo {modelo.id}: "
+                        f"census destination semantic role is ambiguous in {modelo.id}/{revision.id}: "
                         f"{candidate.semantic_role}"
                     )
-            elif not any(
-                binding.source is candidate.source_kind
-                for revision in modelo.revisions.values()
-                for binding in revision.bindings
-            ):
+                if not matches:
+                    raise ValueError(
+                        f"census destination semantic role is absent from {modelo.id}/{revision.id}: "
+                        f"{candidate.semantic_role}"
+                    )
+            elif not any(binding.source is candidate.source_kind for binding in revision.bindings):
                 raise ValueError(
-                    f"census destination binding source is absent from modelo {modelo.id}: "
+                    f"census destination binding source is absent from {modelo.id}/{revision.id}: "
                     f"{candidate.source_kind.value}"
                 )
 
@@ -242,6 +267,8 @@ _CENSUS_TOKEN_TYPES = {
 
 def _hydrate_census_tokens(value: object, *, field_name: str | None = None) -> object:
     """Hydrate TOML strings into the census contract's strict closed enums."""
+    if field_name == "period" and isinstance(value, str):
+        return Period.from_string(value)
     token_type = _CENSUS_TOKEN_TYPES.get(field_name or "")
     if token_type is not None and isinstance(value, str):
         return token_type(value)

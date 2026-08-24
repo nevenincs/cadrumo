@@ -54,7 +54,9 @@ def _register_and_unlock() -> None:
     absent advisory these cases were written to catch would then look like the
     producer failing rather than the profile never having been opened.
     """
-    register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+    register_profile_with_credentials(
+        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+    )
     login_profile(name=_LABEL, passphrase_callback=lambda: _PASSWORD)
 
 

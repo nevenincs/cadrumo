@@ -15,7 +15,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ....application.user_profile import login_profile, CapabilitySource, register_profile_with_credentials
+from ....application.user_profile import CapabilitySource, login_profile, register_profile_with_credentials
 from ....core import ServiceCapability
 from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
@@ -34,6 +34,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         isolated_profile_storage_root(tmp_path=tmp_path),
     ):
         register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_PASSPHRASE,
         )

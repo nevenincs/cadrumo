@@ -20,8 +20,8 @@ from textual.widget import Widget
 from textual.widgets import DataTable, Input, Static
 
 from .....application.user_profile import (
-    login_profile,
     build_profile_overview,
+    login_profile,
     register_profile_with_credentials,
 )
 from .....core import require_active_bucket_id, resolve_active_bucket_id
@@ -51,6 +51,7 @@ def _live_overview(label: str = "Manager Subject"):
     login_profile(name=label, passphrase_callback=lambda: _PASSWORD)
     record = load_test_profile_record(require_active_bucket_id())
     return build_profile_overview(record, label=label)
+
 
 def _persist(path: str, value: str):
     """The production write door, so an edit here travels the real path."""
@@ -106,7 +107,11 @@ async def test_the_page_shows_every_declared_field_including_the_empty_ones(tmp_
     there to fill in.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Manager Subject",
+            passphrase=_PASSWORD,
+        )
         overview = _live_overview()
 
         app = ProfileManagerApp(overview, persist=_persist)
@@ -126,7 +131,11 @@ async def test_profile_context_names_missing_requirements_but_has_no_healthy_pla
     from textual.css.query import NoMatches
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Manager Subject",
+            passphrase=_PASSWORD,
+        )
         overview = _live_overview()
 
         app = ProfileManagerApp(overview, persist=_persist)
@@ -155,7 +164,11 @@ async def test_profile_body_renders_the_envelopes_typed_advisories(tmp_path) -> 
     from .. import PinnedStatusBar
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Manager Subject",
+            passphrase=_PASSWORD,
+        )
         overview = _live_overview().model_copy(
             update={
                 "notices": (
@@ -198,7 +211,11 @@ async def test_editing_a_row_writes_through_to_the_encrypted_record(tmp_path) ->
     as a write-through defect rather than as an under-waited test.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Manager Subject",
+            passphrase=_PASSWORD,
+        )
 
         app = ProfileManagerApp(_live_overview(), persist=_persist)
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
@@ -233,7 +250,11 @@ async def test_editing_one_field_repaints_that_row_without_rebuilding_the_tables
     ultimately show the right number.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Manager Subject",
+            passphrase=_PASSWORD,
+        )
 
         app = ProfileManagerApp(_live_overview(), persist=_persist)
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
@@ -288,7 +309,11 @@ async def test_a_second_edit_is_refused_before_its_dialog_opens(tmp_path) -> Non
     import threading
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Manager Subject",
+            passphrase=_PASSWORD,
+        )
         release = threading.Event()
 
         def _gated(path: str, value: str):
@@ -353,7 +378,11 @@ async def test_a_masked_field_opens_empty_rather_than_prefilled(tmp_path) -> Non
         required=False,
     )
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label="Masked Subject", passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Masked Subject",
+            passphrase=_PASSWORD,
+        )
         app = ProfileManagerApp(_live_overview("Masked Subject"), persist=_persist)
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             app.push_screen(FieldEditScreen(masked))
@@ -385,7 +414,11 @@ async def test_aeat_progress_replaces_the_inherited_stderr_sink_with_the_pinned_
         return ManagerActionOutcome(message="SYNC-COMPLETE")
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Manager Subject",
+            passphrase=_PASSWORD,
+        )
         app = ProfileManagerApp(
             _live_overview(),
             persist=_persist,
@@ -433,7 +466,11 @@ async def test_a_returned_refusal_is_not_styled_as_a_success(tmp_path) -> None:
         )
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Manager Subject",
+            passphrase=_PASSWORD,
+        )
         app = ProfileManagerApp(
             _live_overview(),
             persist=_persist,
@@ -477,7 +514,11 @@ async def test_censal_sync_projects_a_missing_route_as_actionable_schema_copy(tm
             cadrumo_clave_permanente_dni_nie=None,
         ),
     ):
-        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Manager Subject",
+            passphrase=_PASSWORD,
+        )
         _commit_auth_choice(
             {
                 _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
@@ -511,7 +552,11 @@ async def test_an_action_runs_and_reports_what_it_did(tmp_path) -> None:
     from .. import ManagerAction, ManagerActionOutcome
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Manager Subject",
+            passphrase=_PASSWORD,
+        )
         ran: list[str] = []
 
         def _run() -> ManagerActionOutcome:
@@ -540,7 +585,11 @@ async def test_an_action_that_changed_the_record_redraws_the_page(tmp_path) -> N
     from .. import ManagerAction, ManagerActionOutcome
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Manager Subject",
+            passphrase=_PASSWORD,
+        )
         _persist(_EDITED_PATH, "Before")
         app = ProfileManagerApp(_live_overview(), persist=_persist, actions=[])
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
@@ -584,7 +633,11 @@ async def test_a_refusing_action_reports_it_instead_of_taking_the_screen_down(tm
         raise RuntimeError("NO-CERTIFICATE-REGISTERED")
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Manager Subject",
+            passphrase=_PASSWORD,
+        )
         app = ProfileManagerApp(
             _live_overview(),
             persist=_persist,
@@ -611,7 +664,11 @@ async def test_a_registered_worker_error_is_localised_before_it_reaches_the_head
         raise NoActiveProfileError(translated_message="flows.manager.action.censal_pull_no_provider")
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Manager Subject",
+            passphrase=_PASSWORD,
+        )
         expected = tr("flows.manager.action.censal_pull_no_provider")
         app = ProfileManagerApp(
             _live_overview(),
@@ -663,7 +720,11 @@ async def test_a_failure_carrying_no_text_is_named_rather_than_shown_blank(
         raise raise_wordlessly
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Manager Subject",
+            passphrase=_PASSWORD,
+        )
         app = ProfileManagerApp(
             _live_overview(),
             persist=_persist,
@@ -699,7 +760,11 @@ async def test_a_write_failing_wordlessly_is_named_rather_than_shown_blank(tmp_p
         raise RuntimeError
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Manager Subject",
+            passphrase=_PASSWORD,
+        )
         app = ProfileManagerApp(_live_overview(), persist=_persist_wordlessly)
         expected = tr("flows.manager.edit.write_failed")
 
@@ -725,7 +790,11 @@ async def test_a_page_with_no_actions_renders_no_action_bar(tmp_path) -> None:
     from textual.css.query import NoMatches
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Manager Subject",
+            passphrase=_PASSWORD,
+        )
         app = ProfileManagerApp(_live_overview(), persist=_persist)
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
@@ -749,7 +818,11 @@ async def test_a_row_an_action_owns_opens_that_action_not_the_edit_box(tmp_path)
     from .. import ManagerAction, ManagerActionOutcome
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Manager Subject",
+            passphrase=_PASSWORD,
+        )
         owned = "auth.provider"
         ran: list[str] = []
 
@@ -783,7 +856,11 @@ async def test_an_unowned_row_still_opens_the_edit_box(tmp_path) -> None:
     from .. import ManagerAction, ManagerActionOutcome
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Manager Subject",
+            passphrase=_PASSWORD,
+        )
         ran: list[str] = []
 
         def _run() -> ManagerActionOutcome:
@@ -814,7 +891,11 @@ async def test_an_action_owning_nothing_leaves_every_row_editable(tmp_path) -> N
     from .. import ManagerAction, ManagerActionOutcome
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Manager Subject",
+            passphrase=_PASSWORD,
+        )
 
         action = ManagerAction(key="plain", label="Plain", run=lambda: ManagerActionOutcome(message="x"))
         app = ProfileManagerApp(_live_overview(), persist=_persist, actions=[action])
@@ -858,7 +939,11 @@ async def test_the_action_row_never_paints_past_a_floor_terminal(tmp_path) -> No
     ]
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Manager Subject",
+            passphrase=_PASSWORD,
+        )
 
         app = ProfileManagerApp(_live_overview(), persist=_persist, actions=actions)
         async with app.run_test(size=(80, 24)) as pilot:
@@ -895,7 +980,11 @@ async def test_a_long_field_label_never_pushes_the_value_off_screen(tmp_path) ->
     _long_label_field_path = "irpf.objective_estimation_prior_year_agri_livestock_forest_gross_eur"
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Manager Subject",
+            passphrase=_PASSWORD,
+        )
         _persist(_long_label_field_path, "12345.67")
 
         app = ProfileManagerApp(_live_overview(), persist=_persist)
@@ -934,7 +1023,11 @@ async def test_logout_closes_both_the_session_and_the_surface(tmp_path) -> None:
     from .....entrypoints.cli._config._manager_actions import logout_action
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        register_profile_with_credentials(
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label="Manager Subject",
+            passphrase=_PASSWORD,
+        )
         assert resolve_active_bucket_id() is not None, "the fixture must start logged in, or this proves nothing"
 
         app = ProfileManagerApp(_live_overview(), persist=_persist, actions=[logout_action()])

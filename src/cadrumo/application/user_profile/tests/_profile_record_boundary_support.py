@@ -31,6 +31,7 @@ from ....adapters.persistence.storage.custody import (
 )
 from ....domain.buckets import BucketEventType
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import mint_test_profile_recovery_envelope
 from .._capsule_record import ProfileRecordSession
 
 PROFILE_ID = UUID("3f8b1d42-6c07-4e59-9a13-2b7e5c04d8af")
@@ -154,6 +155,9 @@ def publish_capsule(root: Path) -> UserProfileRecord:
             password_envelope=envelope,
             sentinel=create_profile_custody_sentinel(envelope=envelope, dek=DEK),
             data_files={},
+            recovery_envelope=mint_test_profile_recovery_envelope(
+                PROFILE_ID, dek=DEK, dek_epoch=envelope.dek_epoch
+            ),
             initial_record=record,
             record_session=session,
         )
