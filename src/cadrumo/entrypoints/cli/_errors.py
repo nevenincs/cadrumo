@@ -46,6 +46,7 @@ import click
 import typer
 from pydantic import BaseModel, ValidationError
 
+from ...application.cli_exception_preconditions import CliExceptionPrecondition
 from ...application.operator_actions import PreconditionVerdict
 from ...core import FormerProductStateError
 from ...core.click_context import argv_requests_json, json_output_requested
@@ -1056,7 +1057,7 @@ def _active_profile_pointer_error_verdict(error: ActiveProfilePointerError) -> P
 
 
 _STORAGE_SESSION_NO_ACTIONS: Final[
-    Mapping[str, tuple["CliExceptionPrecondition", Mapping[str, str | bool]]]
+    Mapping[str, tuple[CliExceptionPrecondition, Mapping[str, str | bool]]]
 ] = {
     "REFUSED_STORAGE_MASTER_KEY_NO_ACTIVE_SESSION": (
         CliExceptionPrecondition.ACTIVE_BUCKET_SESSION_AVAILABLE,
@@ -1094,10 +1095,7 @@ def _storage_session_failure_verdict(error: CadrumoError) -> PreconditionVerdict
     are deliberately terminal, fact-only operator decisions.
     """
     code = get_registered_error_code(error).code
-    from ...application.cli_exception_preconditions import (
-        CliExceptionPrecondition,
-        cli_exception_no_recovery_verdict,
-    )
+    from ...application.cli_exception_preconditions import cli_exception_no_recovery_verdict
 
     if code in {
         "REFUSED_STORAGE_MASTER_KEY_NO_ACTIVE_SESSION",
