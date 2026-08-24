@@ -3,21 +3,6 @@
     {
       "argv": [
         "aeat",
-        "config",
-        "login",
-        "docs-sequence-sandbox"
-      ],
-      "captures": [],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": "active_profile\tdocs-sequence-sandbox\nprofile_id\t<profile-id>\nidle_deadline\t2026-04-01T09:15:00+00:00\nabsolute_deadline\t2026-04-01T13:00:00+00:00\nNo usable OS keychain found, so the session cannot be saved; this login applies to the current command only.\n"
-    },
-    {
-      "argv": [
-        "aeat",
         "--format",
         "json",
         "config",
@@ -33,11 +18,11 @@
         "result": {
           "dry_run": false,
           "fingerprint": {
-            "byte_length": 1459,
-            "reason_class": "readable",
+            "byte_length": null,
+            "reason_class": "absent",
             "recovered_bucket_id": "<profile-id>",
-            "schema_version": 1,
-            "written_at": "2026-04-01T09:00:00+00:00"
+            "schema_version": null,
+            "written_at": null
           },
           "reason": null,
           "reset": null

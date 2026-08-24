@@ -3,44 +3,26 @@
     {
       "argv": [
         "aeat",
+        "--format",
+        "json",
         "config",
         "profile",
         "list"
       ],
       "captures": [],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "command",
-      "stderr_text": null,
-      "text": "active_profile\tdocs-sequence-sandbox\n*\tdocs-sequence-sandbox\n"
-    },
-    {
-      "argv": [
-        "aeat",
-        "--format",
-        "json",
-        "config",
-        "profile",
-        "status"
-      ],
-      "captures": [],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
-        "command": "config.profile.status",
+        "command": "config.profile.list",
         "notices": [],
         "result": {
           "active_profile": "docs-sequence-sandbox",
-          "activity_present": true,
-          "configured": true,
-          "iva_regime": "GENERAL",
-          "precondition_action": null,
-          "profile_id": "<profile-id>",
-          "profile_record_error": null,
-          "profile_record_present": null,
-          "registered_profile": null,
-          "tax_id_present": true,
-          "tax_residence_ccaa": ""
+          "profiles": [
+            {
+              "active": true,
+              "bucket_id": "<bucket-id>",
+              "name": "docs-sequence-sandbox"
+            }
+          ]
         },
         "schema_version": "2",
         "status": "success"

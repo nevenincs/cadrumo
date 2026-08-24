@@ -1,5 +1,4 @@
 @step List the profiles and see which one is active.
-aeat config profile list
-@result aeat --format json config profile status
-@expect result.tax_id_present == true
+@result aeat --format json config profile list
+@expect result.profiles[0].active == true
 @expect exit_code == 0

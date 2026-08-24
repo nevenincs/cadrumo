@@ -25,12 +25,14 @@ another taxpayer, separate a test profile from a real one, or restore a copy
 under a different name. To understand why the tool is local-first and
 human-gated, see the [explanation guides](../explanation/index.md).
 
-List your profiles with `aeat config profile list`, see which one is active,
-add a second taxpayer, then switch to it. The example runs the whole flow: it
-lists the profiles, adds a second one, and switches the active context to it.
+List your profiles with `aeat config profile list` and see which one is active.
+Create each additional taxpayer interactively so its passphrase and one-time
+recovery phrase are both enrolled and verified, then switch by exact name.
+The executable example checks the current active-profile composition without
+fabricating another taxpayer or recovery phrase:
 
 ```{cli-sequence} profile-setup-multiple
-:verify: Confirm you can list profiles, add a second taxpayer, and switch the active context to it.
+:verify: Confirm the profile list identifies the active taxpayer exactly.
 ```
 
 Logging in changes which local ledger, modelo drafts, and filing markers `aeat
@@ -116,8 +118,9 @@ store its default output language.
 
 Stop a first-time setup at any point and keep what you answered. Choose *save
 and exit* on any page: every answer you gave is already stored, and the profile
-stays marked as setup-incomplete. `aeat config profile list` flags an
-incomplete profile so you can spot it later.
+stays marked as setup-incomplete. After unlocking it, `aeat config profile
+show` reports that setup state; `profile list` deliberately reports only the
+saved names and which profile is active.
 
 Resume by running the same create command again with the same profile name.
 The wizard picks up where you left off with your earlier answers in place.
@@ -377,14 +380,6 @@ and local filing history. Store it as sensitive tax data, and don't attach it to
 a support request. See
 [import, export, and evidence](../reference/import-export-and-evidence.md).
 
-Sign out without deleting the profile using `aeat config logout`.
-Logout closes the active storage session, discards its in-memory keys, disposes
-the bucket engines, and clears the local active-profile pointer:
-
-```{cli-sequence} profile-setup-logout
-:verify: Confirm logout closes the active session without deleting the profile.
-```
-
 ## Choose your service capabilities
 
 Each profile carries its own opt-in for three optional services. The setup
@@ -407,6 +402,15 @@ Turn any capability on or off with `aeat config profile capabilities set`.
 The example turns `llm_vision` off. Pass `cloud_evidence_upload on` to enable
 cloud upload. Missing package extras produce the exact install command. See
 [Install Cadrumo](../workstation-setup.md) for the extras.
+
+Sign out without deleting the profile using `aeat config logout` after the
+login-gated maintenance and capability checks above. Logout closes the active
+storage session, discards its in-memory keys, disposes the bucket engines, and
+clears the local active-profile pointer:
+
+```{cli-sequence} profile-setup-logout
+:verify: Confirm logout closes the active session without deleting the profile.
+```
 
 ## See what changed
 

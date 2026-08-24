@@ -7,46 +7,25 @@
         "json",
         "config",
         "profile",
-        "create",
-        "me",
-        "--quiet",
-        "--tax-residence-jurisdiction-scope",
-        "common_regime",
-        "--entity-type",
-        "natural_person",
-        "--tax-id",
-        "87654321X",
-        "--name",
-        "Ana",
-        "--surnames",
-        "Garcia Lopez",
-        "--activity",
-        "consultoria",
-        "--activity-start-date",
-        "2026-01-01"
+        "list"
       ],
       "captures": [],
       "envelope": {
-        "active_profile": "me",
-        "command": "config.profile.create",
-        "notices": [
-          {
-            "action": null,
-            "code": "config.profile.create.ccaa_defaulted",
-            "context": {
-              "assumed_ccaa": "madrid"
-            },
-            "message": "No comunidad autónoma was chosen, so madrid was assumed for this profile. Autonomic deductions and the autonomic part of the tax scale are calculated for madrid. Set --tax-residence-ccaa to use a different comunidad.",
-            "severity": "warning"
-          }
-        ],
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.profile.list",
+        "notices": [],
         "result": {
-          "active_profile": "me",
-          "profile_name": "me",
-          "status": "created"
+          "active_profile": "docs-sequence-sandbox",
+          "profiles": [
+            {
+              "active": true,
+              "bucket_id": "<bucket-id>",
+              "name": "docs-sequence-sandbox"
+            }
+          ]
         },
         "schema_version": "2",
-        "status": "warning"
+        "status": "success"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

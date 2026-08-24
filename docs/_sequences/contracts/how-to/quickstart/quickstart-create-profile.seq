@@ -1,5 +1,7 @@
-@step Create your taxpayer profile with your own details.
-@result aeat --format json config profile create me --quiet --tax-residence-jurisdiction-scope common_regime --entity-type natural_person --tax-id 87654321X --name "Ana" --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
-@expect result.status == "created"
-@expect result.active_profile == "me"
+@step Create your taxpayer profile interactively so the passphrase and one-time recovery phrase are both enrolled and verified.
+@static aeat config profile create me
+@blocked interactive-tty Profile creation must receive and verify the recovery phrase through an interactive terminal.
+@step Confirm the selected profile is active before adding taxpayer facts and ledger rows.
+@result aeat --format json config profile list
+@expect result.profiles[0].active == true
 @expect exit_code == 0

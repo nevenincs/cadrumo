@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:303364f4da0cf555e68123528ad1a905b497260a2a88fe235feb2bf889a6578c'
+body_hash: 'sha256:936688e5d1a6a76ec1d2f964cf981e53082753bc8ca0c78814dd3d7250af3f34'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -250,6 +250,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W06-P12-S241]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S242]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S248]]'
+  - '[[2026-08-13-profile-password-custody-W06-P12-S249]]'
   - '[[2026-08-13-profile-password-custody-plan]]'
   - '[[2026-08-13-profile-password-custody-research]]'
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
@@ -305,6 +306,7 @@ related:
   - '[[2026-08-24-profile-password-custody-s241-live-docs-authority-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s242-golden-regeneration-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s248-registry-semantic-role-review-audit]]'
+  - '[[2026-08-24-profile-password-custody-s249-provisioning-sequence-review-audit]]'
 ---
 
 # `profile-password-custody` feature index
@@ -371,6 +373,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-24-profile-password-custody-s241-live-docs-authority-review-audit` - `profile-password-custody` audit: `S241 live documentation authority review`
 - `2026-08-24-profile-password-custody-s242-golden-regeneration-review-audit` - `profile-password-custody` audit: `S242 golden regeneration formal review`
 - `2026-08-24-profile-password-custody-s248-registry-semantic-role-review-audit` - `profile-password-custody` audit: `S248 registry semantic-role review`
+- `2026-08-24-profile-password-custody-s249-provisioning-sequence-review-audit` - `profile-password-custody` audit: `S249 provisioning sequence review`
 
 ### exec
 
@@ -616,6 +619,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W06-P12-S241` - Adjudicate and correct live documentation sequence behavior for mandatory recovery creation, export product identity, registry and ledger evidence, binding counts, and required-casilla expectations against current production authority
 - `2026-08-13-profile-password-custody-W06-P12-S242` - Regenerate every affected documentation sequence golden through the owning CLI after live behavior is adjudicated and reconcile frame counts without hand-authored output
 - `2026-08-13-profile-password-custody-W06-P12-S248` - Reconcile Modelo 303 2026 and Modelo 390 2022-2025 semantic-role constraint signatures against their official record-design authority so the shared-role validator passes without weakening compatibility checks
+- `2026-08-13-profile-password-custody-W06-P12-S249` - Reconcile profile and recovery provisioning sequences on check-aeat-notifications, quickstart, profile-setup, and troubleshooting with mandatory creation channels and current status/list composition
 
 ### plan
 
