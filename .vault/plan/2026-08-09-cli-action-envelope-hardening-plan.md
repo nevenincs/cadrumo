@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-24'
-body_hash: 'sha256:b2046de5403a200a8627045de463bf26096bd9e893c8eb89eb3babfb4764df4e'
+body_hash: 'sha256:ccd42275236012f641401332c90ec8c8e56bdfbd405cadda8cf4dfa8db80d7b3'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -205,7 +205,7 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [x] `W05.P10.S68` - Migrate Google profile, OAuth, and impersonation refusals to typed recoverable actions or explicit operator-decision and safety outcomes; `src/cadrumo/adapters/outbound/google/_active_profile.py; src/cadrumo/adapters/outbound/google/_oauth_flow.py; src/cadrumo/adapters/outbound/google/_impersonation.py; src/cadrumo/adapters/outbound/google/tests`.
 - [x] `W05.P10.S69` - Migrate local outbound-storage provider permission, path, conflict, not-found, and integrity failures to typed safety or operator-decision outcomes without inventing caller-owned recovery; `src/cadrumo/adapters/outbound/storage/_errors.py; src/cadrumo/adapters/outbound/storage/_local.py; src/cadrumo/adapters/outbound/storage/tests`.
 - [ ] `W05.P10.S70` - Migrate persistence adapter recovery producers to current typed actions and delete recovery-hint fields; `src/cadrumo/adapters/persistence`.
-- [ ] `W05.P10.S71` - Migrate aggregation recovery producers to typed conditions and canonical actions; `src/cadrumo/application/aggregation`.
+- [x] `W05.P10.S71` - Migrate aggregation recovery producers to typed conditions and canonical actions; `src/cadrumo/application/aggregation`.
 - [ ] `W05.P10.S72` - Migrate calculation recovery producers to typed conditions and canonical actions; `src/cadrumo/application/calculations`.
 - [x] `W05.P10.S73` - Migrate corpus-search recovery producers to typed conditions and canonical actions; `src/cadrumo/application/corpus_search`.
 - [x] `W05.P10.S74` - Migrate evidence-service recovery producers to typed conditions and canonical actions; `src/cadrumo/application/evidence`.
