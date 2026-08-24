@@ -22,7 +22,6 @@ msgid "Install Cadrumo"
 msgstr "Instal·la Cadrumo"
 
 #: ../../workstation-setup.md:3
-#, fuzzy
 msgid ""
 "This page covers installation only: get the package, install the `aeat` "
 "command, add the optional extras you want, and (if you use an AI "
@@ -34,22 +33,21 @@ msgid ""
 msgstr ""
 "Aquesta pàgina només tracta la instal·lació: obtén el paquet, instal·la "
 "l'ordre `aeat`, afegeix els extres opcionals que vulguis i (si utilitzes "
-"un assistent d'IA) instal·la la superfície d'agent. Si encara no tens "
+"un assistent d'IA) instal·la l'arnès d'agent independent. Si encara no tens "
 "Cadrumo a la teva màquina, comença a [Obtén Cadrumo](download.md) per "
 "conèixer les vies d'adquisició i la seva disponibilitat actual. La "
 "configuració i el primer ús comencen a la [guia d'inici ràpid](how-"
 "to/quickstart.md) un cop passin les comprovacions d'instal·lació."
 
 #: ../../workstation-setup.md:10
-#, fuzzy
 msgid ""
 "Cadrumo works without any optional service. Google export, on-host LLM "
 "vision, cloud LLM upload, and the separate agent harness are all opt-in. "
 "The core filing workflow runs with none of them."
 msgstr ""
 "Cadrumo funciona sense cap servei opcional. L'exportació a Google, la "
-"visió LLM al mateix equip, la pujada a un LLM al núvol i la superfície "
-"d'agent són totes opcionals. El flux de treball de presentació bàsic "
+"visió LLM al mateix equip, la pujada a un LLM al núvol i l'arnès d'agent "
+"independent són opcionals. El flux de treball de presentació bàsic "
 "funciona sense cap d'aquestes."
 
 #: ../../workstation-setup.md:14
@@ -123,7 +121,6 @@ msgid "Install optional extras from the checkout"
 msgstr "Instal·la els extres opcionals des de la còpia del codi font"
 
 #: ../../workstation-setup.md:55
-#, fuzzy
 msgid ""
 "The core install is lean. Google export, the live AEAT browser, the "
 "Anthropic-API provider, and OFX/QFX bank-statement import are optional "
@@ -131,19 +128,18 @@ msgid ""
 msgstr ""
 "La instal·lació bàsica és mínima. L'exportació a Google, el navegador "
 "AEAT en directe, el proveïdor de l'API d'Anthropic, la importació "
-"d'extractes bancaris OFX/QFX i la superfície d'agent són extres opcionals"
-" del paquet. Indica els extres que necessites quan instal·les:"
+"d'extractes bancaris OFX/QFX són extres opcionals del paquet. Indica els "
+"extres que necessites quan instal·les:"
 
 #: ../../workstation-setup.md:63
-#, fuzzy
 msgid ""
 "The available extras are `google`, `browser`, `anthropic`, `ofx`, and "
 "`all`. `aeat config check` lists each extra and prints the exact install "
 "command for any that is missing. A feature whose extra is not installed "
 "refuses with the same hint instead of failing obscurely."
 msgstr ""
-"Els extres disponibles són `google`, `browser`, `anthropic`, `ofx`, "
-"`agent` i `all`. `aeat config check` enumera cada extra i imprimeix "
+"Els extres disponibles són `google`, `browser`, `anthropic`, `ofx` i `all`. "
+"`aeat config check` enumera cada extra i imprimeix "
 "l'ordre d'instal·lació exacta de qualsevol que falti. Una funcionalitat "
 "que necessita un extra no instal·lat es rebutja amb el mateix suggeriment"
 " en comptes de fallar de manera obscura."
@@ -195,7 +191,6 @@ msgid "Run the Model Context Protocol (MCP) surface"
 msgstr "Executa la superfície del Model Context Protocol (MCP)"
 
 #: ../../workstation-setup.md:93
-#, fuzzy
 msgid ""
 "Cadrumo's separate `cadrumo-harness` distribution provides the MCP "
 "server, `cadrumo-mcp`, so an AI assistant can operate the same local, "
@@ -203,18 +198,20 @@ msgid ""
 "operator rules, taxpayer-situation skills, and scoped agent personas that"
 " keep the assistant inside the safety boundary."
 msgstr ""
-"Cadrumo inclou un servidor MCP, `cadrumo-mcp`, perquè un assistent d'IA "
-"pugui operar les mateixes ordres locals i protegides que exposa la CLI, "
-"juntament amb un arnès d'agent: les regles de l'operador, les habilitats "
-"sobre la situació del contribuent i les persones d'agent acotades que "
-"mantenen l'assistent dins del límit de seguretat."
+"La distribució independent `cadrumo-harness` de Cadrumo proporciona el "
+"servidor MCP, `cadrumo-mcp`, perquè un assistent d'IA pugui operar les "
+"mateixes ordres locals i protegides que exposa la CLI, juntament amb un "
+"arnès d'agent: les regles de l'operador, les habilitats sobre la situació "
+"del contribuent i els perfils d'agent d'abast limitat que mantenen l'assistent "
+"dins del límit de seguretat."
 
 #: ../../workstation-setup.md:99
-#, fuzzy
 msgid ""
 "In the beta, synchronize that workspace member and run the server from "
 "the same repository checkout:"
-msgstr "La beta s'instal·la des del repositori del projecte:"
+msgstr ""
+"A la beta, sincronitza aquest membre de l'espai de treball i executa el "
+"servidor des de la mateixa còpia del repositori:"
 
 #: ../../workstation-setup.md:107
 msgid ""
@@ -341,4 +338,3 @@ msgstr "[Resolució de problemes](how-to/troubleshooting.md)"
 
 #~ msgid "[Connect an agent](how-to/connect-an-agent.md)"
 #~ msgstr "[Connecta un agent](how-to/connect-an-agent.md)"
-

@@ -1093,7 +1093,7 @@ msgstr ""
 
 #: ../../how-to/profile-setup.md:431
 msgid "Delete a profile permanently"
-msgstr ""
+msgstr "Elimina un perfil permanentment"
 
 #: ../../how-to/profile-setup.md:433
 msgid ""
@@ -1103,6 +1103,11 @@ msgid ""
 "example comes after every profile operation in this guide because the "
 "deleted profile cannot be used again:"
 msgstr ""
+"Elimina definitivament un perfil només després de tancar-ne la sessió activa. "
+"Cadrumo es nega a eliminar el perfil actiu, per tant, primer tanca la sessió "
+"i després confirma l'eliminació irreversible d'aquell perfil amb el nom "
+"exacte. Aquest exemple terminal apareix després de totes les operacions de "
+"perfil de la guia perquè el perfil eliminat no es pot tornar a utilitzar:"
 
 #: ../../how-to/profile-setup.md:443
 msgid "If setup looks wrong"
@@ -1294,4 +1299,3 @@ msgstr "[Referència de la CLI](../cli/index.rst)"
 #~ " Si el perfil eliminat era l'actiu,"
 #~ " Cadrumo esborra el punter del perfil"
 #~ " actiu."
-
