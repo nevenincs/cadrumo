@@ -32,6 +32,7 @@ from textual.widgets import Button, DataTable, Input, Static
 
 from .....application.flows import CopyRef, FlowDefinition, FlowPage, FlowSection
 from .....application.user_profile import (
+    login_profile,
     build_profile_overview,
     register_profile_with_credentials,
 )
@@ -151,6 +152,11 @@ def _manager(tmp_path: Path) -> Iterator[ProfileManagerApp]:
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(label=_VISUAL_LABEL, passphrase=_VISUAL_PASSWORD)
+        # Registration closes its own session, leaving the profile LOCKED. The
+        # custody capsule is the sole profile authority, so the overview builder
+        # and the write door below both need an authenticated one; logging in
+        # derives the same DEK the capsule was sealed under.
+        login_profile(name=_VISUAL_LABEL, passphrase_callback=lambda: _VISUAL_PASSWORD)
         yield ProfileManagerApp(
             build_active_profile_overview(),
             persist=persist_active_profile_field,
@@ -250,6 +256,10 @@ def _manager_populated(tmp_path: Path) -> Iterator[ProfileManagerApp]:
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(label=_VISUAL_LABEL, passphrase=_VISUAL_PASSWORD)
+        # Same locked-capsule reason as the plain manager fixture: seeding facts
+        # and building the overview both go through the capsule, which serves
+        # neither without an authenticated session.
+        login_profile(name=_VISUAL_LABEL, passphrase_callback=lambda: _VISUAL_PASSWORD)
         schema = load_user_profile_schema()
         section = next(item for item in schema.sections if item.key == "activities")
         facts = section_row_facts(
