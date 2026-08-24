@@ -11,7 +11,7 @@ application package or treating a layout declaration as emission evidence.
 from __future__ import annotations
 
 from pathlib import PurePosixPath
-from typing import Annotated, Literal, Protocol, runtime_checkable
+from typing import Annotated, ClassVar, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
@@ -108,6 +108,11 @@ class FilingExportProof(_ProofModel):
 
 class FilingExportProofConflictError(ValueError):
     """Live proof coordinate conflicts with the composing registry snapshot."""
+
+    __bare_base_rationale__: ClassVar[str] = (
+        "internal-filing-export-proof-conflict-carrier: coverage catches this by name and converts it "
+        "into a typed _LayoutEvidenceFailure value rather than raising to an operator"
+    )
 
 
 @runtime_checkable

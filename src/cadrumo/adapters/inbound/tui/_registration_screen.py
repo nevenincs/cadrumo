@@ -38,7 +38,7 @@ from contextlib import ExitStack
 from contextvars import copy_context
 from dataclasses import dataclass
 from threading import Event
-from typing import TYPE_CHECKING, Final, Protocol, cast, override
+from typing import TYPE_CHECKING, ClassVar, Final, Protocol, cast, override
 
 from textual.app import ComposeResult
 from textual.containers import Vertical
@@ -115,6 +115,11 @@ class RegistrationRefusal:
 
 class RecoveryHandoverCancelledError(Exception):
     """The operator declined the one-time recovery possession gate."""
+
+    __bare_base_rationale__: ClassVar[str] = (
+        "internal-recovery-handover-cancellation-signal: this reports a deliberate operator choice, not a "
+        "fault; the frontend catches it by name and renders a RegistrationRefusal message key"
+    )
 
 
 @dataclass(frozen=True, slots=True)

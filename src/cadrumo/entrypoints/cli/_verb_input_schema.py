@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from enum import StrEnum
-from typing import Any, Final, Literal, cast
+from typing import Any, ClassVar, Final, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -127,6 +127,12 @@ class VerbInputSchema(BaseModel):
 
 
 class SchemaResolutionError(RuntimeError):
+    __bare_base_rationale__: ClassVar[str] = (
+        "internal-schema-coverage-assertion-carrier: assert_schema_coverage raises this when the "
+        "command graph and the declared verb schemas disagree, which is a build-time consistency "
+        "failure for a developer, never a condition an operator can act on"
+    )
+
     def __init__(self, failures: tuple[VerbLeafResolutionFailure, ...]) -> None:
         self.failures = failures
         super().__init__("; ".join(f"{item.subject_leaf_key}: {item.reason}" for item in failures))
