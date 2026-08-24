@@ -1,0 +1,36 @@
+# AEAT's bundled 2022 calendar publishes the presentation and direct-debit
+# cutoffs for the first three quarterly Modelo 303 periods.  These are explicit
+# calendar facts, not dates generated from cadence arithmetic.
+
+[[revisions."2022".deadline_windows]]
+id = "modelo-303-2022-1t"
+filing_year = 2022
+period = "2022 1T"
+period_kind = "quarterly"
+opens_on = 2022-04-01
+closes_on = 2022-04-20
+payment_cutoff_on = 2022-04-15
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2022".deadline_windows]]
+id = "modelo-303-2022-2t"
+filing_year = 2022
+period = "2022 2T"
+period_kind = "quarterly"
+opens_on = 2022-07-01
+closes_on = 2022-07-20
+payment_cutoff_on = 2022-07-15
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2022".deadline_windows]]
+id = "modelo-303-2022-3t"
+filing_year = 2022
+period = "2022 3T"
+period_kind = "quarterly"
+opens_on = 2022-10-01
+closes_on = 2022-10-20
+payment_cutoff_on = 2022-10-15
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2022"]

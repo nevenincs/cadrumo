@@ -1,0 +1,101 @@
+# Exact monthly presentation and direct-debit cutoffs from AEAT's bundled 2025
+# calendar.  The canonical 2025 revision owns every coordinate below.
+
+[[revisions."2025".deadline_windows]]
+id = "modelo-303-2025-02-mensual"
+filing_year = 2025
+period = "2025 02"
+period_kind = "monthly"
+opens_on = 2025-03-01
+closes_on = 2025-03-31
+payment_cutoff_on = 2025-03-26
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2025".deadline_windows]]
+id = "modelo-303-2025-03-mensual"
+filing_year = 2025
+period = "2025 03"
+period_kind = "monthly"
+opens_on = 2025-04-01
+closes_on = 2025-04-30
+payment_cutoff_on = 2025-04-25
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2025".deadline_windows]]
+id = "modelo-303-2025-04-mensual"
+filing_year = 2025
+period = "2025 04"
+period_kind = "monthly"
+opens_on = 2025-05-01
+closes_on = 2025-05-30
+payment_cutoff_on = 2025-05-27
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2025".deadline_windows]]
+id = "modelo-303-2025-05-mensual"
+filing_year = 2025
+period = "2025 05"
+period_kind = "monthly"
+opens_on = 2025-06-01
+closes_on = 2025-06-30
+payment_cutoff_on = 2025-06-25
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2025".deadline_windows]]
+id = "modelo-303-2025-07-mensual"
+filing_year = 2025
+period = "2025 07"
+period_kind = "monthly"
+opens_on = 2025-08-01
+closes_on = 2025-09-01
+payment_cutoff_on = 2025-08-27
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2025".deadline_windows]]
+id = "modelo-303-2025-08-mensual"
+filing_year = 2025
+period = "2025 08"
+period_kind = "monthly"
+opens_on = 2025-09-01
+closes_on = 2025-09-30
+payment_cutoff_on = 2025-09-25
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2025".deadline_windows]]
+id = "modelo-303-2025-09-mensual"
+filing_year = 2025
+period = "2025 09"
+period_kind = "monthly"
+opens_on = 2025-10-01
+closes_on = 2025-10-30
+payment_cutoff_on = 2025-10-27
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2025".deadline_windows]]
+id = "modelo-303-2025-10-mensual"
+filing_year = 2025
+period = "2025 10"
+period_kind = "monthly"
+opens_on = 2025-11-01
+closes_on = 2025-12-01
+payment_cutoff_on = 2025-11-26
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2025".deadline_windows]]
+id = "modelo-303-2025-11-mensual"
+filing_year = 2025
+period = "2025 11"
+period_kind = "monthly"
+opens_on = 2025-12-01
+closes_on = 2025-12-30
+payment_cutoff_on = 2025-12-25
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2025"]

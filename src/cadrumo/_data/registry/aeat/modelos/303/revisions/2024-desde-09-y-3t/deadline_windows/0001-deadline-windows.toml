@@ -5,8 +5,9 @@ period = "2024 3T"
 period_kind = "quarterly"
 opens_on = 2024-10-01
 closes_on = 2024-10-21
+payment_cutoff_on = 2024-10-16
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
-source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2024"]
 
 [[revisions.2024-desde-09-y-3t.deadline_windows]]
 id = "modelo-303-2024-4t"
@@ -15,8 +16,9 @@ period = "2024 4T"
 period_kind = "quarterly"
 opens_on = 2025-01-01
 closes_on = 2025-01-30
+payment_cutoff_on = 2025-01-27
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
-source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2025"]
 
 [[revisions.2024-desde-09-y-3t.deadline_windows]]
 id = "modelo-303-2024-12-mensual"
@@ -25,5 +27,6 @@ period = "2024 12"
 period_kind = "monthly"
 opens_on = 2025-01-01
 closes_on = 2025-01-30
+payment_cutoff_on = 2025-01-27
 legal_refs = ["rd-1624-1992:art-71"]
-source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2025"]

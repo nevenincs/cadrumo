@@ -51,6 +51,8 @@ legal_refs = [
 source_refs = [
     "aeat-dr-303-2024-late",
     "aeat-modelo-303-procedure",
+    "aeat-calendario-contribuyente-2024",
+    "aeat-calendario-contribuyente-2025",
     "boe-modelo-303-2008-form",
     "boe-orden-hfp-1359-2023-iva-authority",
 ]
@@ -179,6 +181,9 @@ live_cross_references = ["modelo-303-static-documentation", "modelo-303-filed-de
 application_links = ["modelo-303-portal", "modelo-303-filing", "modelo-303-extractor", "modelo-303-review", "modelo-303-approval", "modelo-303-reconciliation", "modelo-303-workflow", "modelo-303-deadline", "modelo-303-calculation"]
 filing_schedules = ["modelo-303-trimestral", "modelo-303-mensual"]
 deadline_windows = [
+    "modelo-303-2024-09-mensual",
+    "modelo-303-2024-10-mensual",
+    "modelo-303-2024-11-mensual",
     "modelo-303-2024-12-mensual",
     "modelo-303-2024-3t",
     "modelo-303-2024-4t",

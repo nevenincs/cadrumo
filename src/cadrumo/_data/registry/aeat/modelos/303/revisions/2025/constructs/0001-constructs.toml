@@ -50,6 +50,8 @@ legal_refs = [
 source_refs = [
     "aeat-dr-303-2025",
     "aeat-modelo-303-procedure",
+    "aeat-calendario-contribuyente-2025",
+    "aeat-calendario-contribuyente-2026",
     "boe-modelo-303-2008-form",
     "boe-orden-hac-1347-2024-iva-authority",
 ]
@@ -179,7 +181,16 @@ application_links = ["modelo-303-portal", "modelo-303-filing", "modelo-303-extra
 filing_schedules = ["modelo-303-trimestral", "modelo-303-mensual"]
 deadline_windows = [
     "modelo-303-2025-01-mensual",
+    "modelo-303-2025-02-mensual",
+    "modelo-303-2025-03-mensual",
+    "modelo-303-2025-04-mensual",
+    "modelo-303-2025-05-mensual",
     "modelo-303-2025-06-mensual",
+    "modelo-303-2025-07-mensual",
+    "modelo-303-2025-08-mensual",
+    "modelo-303-2025-09-mensual",
+    "modelo-303-2025-10-mensual",
+    "modelo-303-2025-11-mensual",
     "modelo-303-2025-12-mensual",
     "modelo-303-2025-1t",
     "modelo-303-2025-2t",

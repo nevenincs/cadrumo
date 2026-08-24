@@ -1,0 +1,35 @@
+# Canonical late-2024 owner: monthly periods from September.  Exact dates and
+# direct-debit cutoffs are transcribed from AEAT's bundled 2024 calendar.
+
+[[revisions.2024-desde-09-y-3t.deadline_windows]]
+id = "modelo-303-2024-09-mensual"
+filing_year = 2024
+period = "2024 09"
+period_kind = "monthly"
+opens_on = 2024-10-01
+closes_on = 2024-10-30
+payment_cutoff_on = 2024-10-25
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2024"]
+
+[[revisions.2024-desde-09-y-3t.deadline_windows]]
+id = "modelo-303-2024-10-mensual"
+filing_year = 2024
+period = "2024 10"
+period_kind = "monthly"
+opens_on = 2024-11-01
+closes_on = 2024-12-02
+payment_cutoff_on = 2024-11-27
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2024"]
+
+[[revisions.2024-desde-09-y-3t.deadline_windows]]
+id = "modelo-303-2024-11-mensual"
+filing_year = 2024
+period = "2024 11"
+period_kind = "monthly"
+opens_on = 2024-12-01
+closes_on = 2024-12-30
+payment_cutoff_on = 2024-12-25
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2024"]

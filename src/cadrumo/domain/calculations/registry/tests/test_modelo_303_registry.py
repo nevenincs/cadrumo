@@ -32,6 +32,7 @@ from .. import (
     bundled_authority,
     expression_casilla_refs,
     resolve_available_bound_inputs_by_casilla_id,
+    select_revision,
     selector_as_dict,
 )
 from .._bindings import binding_source_casilla_ids, binding_source_modelo
@@ -452,6 +453,82 @@ def test_modelo_303_2023_deadline_coordinates_have_only_the_canonical_2023_owner
     }
 
     assert owners_by_period == {period: ["2023"] for period in expected_periods}
+
+
+def test_modelo_303_historical_deadline_census_is_exact_and_canonically_owned() -> None:
+    """Every published 2022/2024/2025 coordinate has one selected owner and exact dates."""
+    modelo, _ = _load_modelo_303()
+    expected = {
+        2022: {
+            "1T": (date(2022, 4, 1), date(2022, 4, 20), date(2022, 4, 15)),
+            "2T": (date(2022, 7, 1), date(2022, 7, 20), date(2022, 7, 15)),
+            "3T": (date(2022, 10, 1), date(2022, 10, 20), date(2022, 10, 15)),
+            "4T": (date(2023, 1, 1), date(2023, 1, 30), date(2023, 1, 25)),
+        },
+        2024: {
+            "1T": (date(2024, 4, 1), date(2024, 4, 22), date(2024, 4, 17)),
+            "2T": (date(2024, 7, 1), date(2024, 7, 22), date(2024, 7, 17)),
+            "3T": (date(2024, 10, 1), date(2024, 10, 21), date(2024, 10, 16)),
+            "4T": (date(2025, 1, 1), date(2025, 1, 30), date(2025, 1, 27)),
+            "01": (date(2024, 2, 1), date(2024, 2, 29), date(2024, 2, 26)),
+            "02": (date(2024, 3, 1), date(2024, 4, 1), date(2024, 3, 25)),
+            "03": (date(2024, 4, 1), date(2024, 4, 30), date(2024, 4, 25)),
+            "04": (date(2024, 5, 1), date(2024, 5, 30), date(2024, 5, 27)),
+            "05": (date(2024, 6, 1), date(2024, 7, 1), date(2024, 6, 26)),
+            "06": (date(2024, 7, 1), date(2024, 7, 30), date(2024, 7, 25)),
+            "07": (date(2024, 8, 1), date(2024, 8, 30), date(2024, 8, 27)),
+            "08": (date(2024, 9, 1), date(2024, 9, 30), date(2024, 9, 25)),
+            "09": (date(2024, 10, 1), date(2024, 10, 30), date(2024, 10, 25)),
+            "10": (date(2024, 11, 1), date(2024, 12, 2), date(2024, 11, 27)),
+            "11": (date(2024, 12, 1), date(2024, 12, 30), date(2024, 12, 25)),
+            "12": (date(2025, 1, 1), date(2025, 1, 30), date(2025, 1, 27)),
+        },
+        2025: {
+            "1T": (date(2025, 4, 1), date(2025, 4, 21), date(2025, 4, 15)),
+            "2T": (date(2025, 7, 1), date(2025, 7, 21), date(2025, 7, 16)),
+            "3T": (date(2025, 10, 1), date(2025, 10, 20), date(2025, 10, 15)),
+            "4T": (date(2026, 1, 1), date(2026, 1, 30), date(2026, 1, 27)),
+            "01": (date(2025, 2, 1), date(2025, 2, 28), date(2025, 2, 25)),
+            "02": (date(2025, 3, 1), date(2025, 3, 31), date(2025, 3, 26)),
+            "03": (date(2025, 4, 1), date(2025, 4, 30), date(2025, 4, 25)),
+            "04": (date(2025, 5, 1), date(2025, 5, 30), date(2025, 5, 27)),
+            "05": (date(2025, 6, 1), date(2025, 6, 30), date(2025, 6, 25)),
+            "06": (date(2025, 7, 1), date(2025, 7, 30), date(2025, 7, 25)),
+            "07": (date(2025, 8, 1), date(2025, 9, 1), date(2025, 8, 27)),
+            "08": (date(2025, 9, 1), date(2025, 9, 30), date(2025, 9, 25)),
+            "09": (date(2025, 10, 1), date(2025, 10, 30), date(2025, 10, 27)),
+            "10": (date(2025, 11, 1), date(2025, 12, 1), date(2025, 11, 26)),
+            "11": (date(2025, 12, 1), date(2025, 12, 30), date(2025, 12, 25)),
+            "12": (date(2026, 1, 1), date(2026, 1, 30), date(2026, 1, 27)),
+        },
+    }
+
+    for filing_year, expected_by_period in expected.items():
+        actual_by_period = {
+            window.period.registry_token: window
+            for revision in modelo.revisions.values()
+            for window in revision.deadline_windows
+            if window.filing_year == filing_year
+        }
+        assert set(actual_by_period) == set(expected_by_period)
+        for period, dates in expected_by_period.items():
+            owner = select_revision(modelo, filing_year=filing_year, period=period)
+            window = actual_by_period[period]
+            assert window in owner.deadline_windows
+            assert (window.opens_on, window.closes_on, window.payment_cutoff_on) == dates
+
+
+def test_modelo_303_only_unpublished_2026_month_12_remains_unmaterialised() -> None:
+    modelo, _ = _load_modelo_303()
+    revision = modelo.revisions["2026-y-siguientes"]
+    authored = {
+        window.period.registry_token
+        for window in revision.deadline_windows
+        if window.filing_year == 2026
+    }
+
+    assert authored == {"1T", "2T", "3T", "4T", *(f"{month:02d}" for month in range(1, 12))}
+    assert set(revision.period_selector.periods) - authored == {"12"}
 
 
 def test_modelo_303_sii_2026_monthly_deadlines_use_aeat_2026_calendar() -> None:
