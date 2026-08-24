@@ -41,6 +41,7 @@ from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
+from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
 from ....tests.profile_capsule import seed_test_profile_record
@@ -474,7 +475,12 @@ def test_direct_casilla_0611_cannot_bypass_or_overwrite_the_profile_producer(
     _seed_natural_person_profile(runtime_profile)
     _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=1-12")
 
-    exit_code, output = _calculate("--casilla", f"{_MATERNIDAD_CASILLA_ID}={attempted_value}")
+    # The word asserted below is catalogue text and the default output language
+    # is Spanish, so the language is pinned rather than assumed: the refusal
+    # otherwise says "casillas calculadas" and the assertion fails on a
+    # correctly-rendered envelope.
+    with override_settings(cadrumo_output_language="en"):
+        exit_code, output = _calculate("--casilla", f"{_MATERNIDAD_CASILLA_ID}={attempted_value}")
 
     assert exit_code != 0, output
     assert _MATERNIDAD_CASILLA_ID in output
