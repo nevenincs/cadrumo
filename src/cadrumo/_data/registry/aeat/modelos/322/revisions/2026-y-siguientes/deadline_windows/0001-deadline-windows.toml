@@ -6,4 +6,4 @@ period_kind = "monthly"
 opens_on = 2026-02-01
 closes_on = 2026-03-02
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
-source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2026-hasta-2-marzo"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2026", "aeat-calendario-contribuyente-2026-hasta-2-marzo"]

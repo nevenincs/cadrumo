@@ -1,0 +1,105 @@
+# Exact presentation dates transcribed from AEAT's bundled 2026 taxpayer
+# calendar. Modelo 322 is named explicitly beneath each deadline heading.
+# Period 12 is intentionally absent: its physical deadline belongs to the
+# unavailable 2027 official calendar and must not be inferred.
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-322-2026-02"
+filing_year = 2026
+period = "2026 02"
+period_kind = "monthly"
+opens_on = 2026-03-01
+closes_on = 2026-03-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2026"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-322-2026-03"
+filing_year = 2026
+period = "2026 03"
+period_kind = "monthly"
+opens_on = 2026-04-01
+closes_on = 2026-04-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2026"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-322-2026-04"
+filing_year = 2026
+period = "2026 04"
+period_kind = "monthly"
+opens_on = 2026-05-01
+closes_on = 2026-06-01
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2026"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-322-2026-05"
+filing_year = 2026
+period = "2026 05"
+period_kind = "monthly"
+opens_on = 2026-06-01
+closes_on = 2026-06-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2026"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-322-2026-06"
+filing_year = 2026
+period = "2026 06"
+period_kind = "monthly"
+opens_on = 2026-07-01
+closes_on = 2026-07-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2026"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-322-2026-07"
+filing_year = 2026
+period = "2026 07"
+period_kind = "monthly"
+opens_on = 2026-08-01
+closes_on = 2026-08-31
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2026"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-322-2026-08"
+filing_year = 2026
+period = "2026 08"
+period_kind = "monthly"
+opens_on = 2026-09-01
+closes_on = 2026-09-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2026"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-322-2026-09"
+filing_year = 2026
+period = "2026 09"
+period_kind = "monthly"
+opens_on = 2026-10-01
+closes_on = 2026-10-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2026"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-322-2026-10"
+filing_year = 2026
+period = "2026 10"
+period_kind = "monthly"
+opens_on = 2026-11-01
+closes_on = 2026-11-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2026"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-322-2026-11"
+filing_year = 2026
+period = "2026 11"
+period_kind = "monthly"
+opens_on = 2026-12-01
+closes_on = 2026-12-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2026"]
+

@@ -1,0 +1,214 @@
+# Exact presentation dates transcribed from AEAT's bundled 2024 and 2025
+# taxpayer calendars. Modelo 322 is named explicitly beneath each deadline
+# heading; payment cutoffs remain absent because the cited cutoff tables do not
+# explicitly list Modelo 322.
+
+[[revisions."2024-2025".deadline_windows]]
+id = "modelo-322-2024-01"
+filing_year = 2024
+period = "2024 01"
+period_kind = "monthly"
+opens_on = 2024-02-01
+closes_on = 2024-02-29
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2024-2025".deadline_windows]]
+id = "modelo-322-2024-02"
+filing_year = 2024
+period = "2024 02"
+period_kind = "monthly"
+opens_on = 2024-03-01
+closes_on = 2024-04-01
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2024-2025".deadline_windows]]
+id = "modelo-322-2024-03"
+filing_year = 2024
+period = "2024 03"
+period_kind = "monthly"
+opens_on = 2024-04-01
+closes_on = 2024-04-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2024-2025".deadline_windows]]
+id = "modelo-322-2024-04"
+filing_year = 2024
+period = "2024 04"
+period_kind = "monthly"
+opens_on = 2024-05-01
+closes_on = 2024-05-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2024-2025".deadline_windows]]
+id = "modelo-322-2024-05"
+filing_year = 2024
+period = "2024 05"
+period_kind = "monthly"
+opens_on = 2024-06-01
+closes_on = 2024-07-01
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2024-2025".deadline_windows]]
+id = "modelo-322-2024-06"
+filing_year = 2024
+period = "2024 06"
+period_kind = "monthly"
+opens_on = 2024-07-01
+closes_on = 2024-07-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2024-2025".deadline_windows]]
+id = "modelo-322-2024-07"
+filing_year = 2024
+period = "2024 07"
+period_kind = "monthly"
+opens_on = 2024-08-01
+closes_on = 2024-08-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2024-2025".deadline_windows]]
+id = "modelo-322-2024-08"
+filing_year = 2024
+period = "2024 08"
+period_kind = "monthly"
+opens_on = 2024-09-01
+closes_on = 2024-09-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2024-2025".deadline_windows]]
+id = "modelo-322-2024-09"
+filing_year = 2024
+period = "2024 09"
+period_kind = "monthly"
+opens_on = 2024-10-01
+closes_on = 2024-10-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2024-2025".deadline_windows]]
+id = "modelo-322-2024-10"
+filing_year = 2024
+period = "2024 10"
+period_kind = "monthly"
+opens_on = 2024-11-01
+closes_on = 2024-12-02
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2024-2025".deadline_windows]]
+id = "modelo-322-2024-11"
+filing_year = 2024
+period = "2024 11"
+period_kind = "monthly"
+opens_on = 2024-12-01
+closes_on = 2024-12-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2024-2025".deadline_windows]]
+id = "modelo-322-2024-12"
+filing_year = 2024
+period = "2024 12"
+period_kind = "monthly"
+opens_on = 2025-01-01
+closes_on = 2025-01-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2025"]
+[[revisions."2024-2025".deadline_windows]]
+id = "modelo-322-2025-02"
+filing_year = 2025
+period = "2025 02"
+period_kind = "monthly"
+opens_on = 2025-03-01
+closes_on = 2025-03-31
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2024-2025".deadline_windows]]
+id = "modelo-322-2025-03"
+filing_year = 2025
+period = "2025 03"
+period_kind = "monthly"
+opens_on = 2025-04-01
+closes_on = 2025-04-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2024-2025".deadline_windows]]
+id = "modelo-322-2025-04"
+filing_year = 2025
+period = "2025 04"
+period_kind = "monthly"
+opens_on = 2025-05-01
+closes_on = 2025-05-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2024-2025".deadline_windows]]
+id = "modelo-322-2025-05"
+filing_year = 2025
+period = "2025 05"
+period_kind = "monthly"
+opens_on = 2025-06-01
+closes_on = 2025-06-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2024-2025".deadline_windows]]
+id = "modelo-322-2025-07"
+filing_year = 2025
+period = "2025 07"
+period_kind = "monthly"
+opens_on = 2025-08-01
+closes_on = 2025-09-01
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2024-2025".deadline_windows]]
+id = "modelo-322-2025-08"
+filing_year = 2025
+period = "2025 08"
+period_kind = "monthly"
+opens_on = 2025-09-01
+closes_on = 2025-09-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2024-2025".deadline_windows]]
+id = "modelo-322-2025-09"
+filing_year = 2025
+period = "2025 09"
+period_kind = "monthly"
+opens_on = 2025-10-01
+closes_on = 2025-10-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2024-2025".deadline_windows]]
+id = "modelo-322-2025-10"
+filing_year = 2025
+period = "2025 10"
+period_kind = "monthly"
+opens_on = 2025-11-01
+closes_on = 2025-12-01
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2024-2025".deadline_windows]]
+id = "modelo-322-2025-11"
+filing_year = 2025
+period = "2025 11"
+period_kind = "monthly"
+opens_on = 2025-12-01
+closes_on = 2025-12-30
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2025"]
+

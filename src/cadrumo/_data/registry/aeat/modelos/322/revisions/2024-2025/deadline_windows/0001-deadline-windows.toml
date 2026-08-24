@@ -6,7 +6,7 @@ period_kind = "monthly"
 opens_on = 2025-02-01
 closes_on = 2025-02-28
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
-source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2025"]
 
 [[revisions."2024-2025".deadline_windows]]
 id = "modelo-322-2025-06"
@@ -16,7 +16,7 @@ period_kind = "monthly"
 opens_on = 2025-07-01
 closes_on = 2025-07-30
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
-source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2025"]
 
 [[revisions."2024-2025".deadline_windows]]
 id = "modelo-322-2025-12"
@@ -26,4 +26,4 @@ period_kind = "monthly"
 opens_on = 2026-01-01
 closes_on = 2026-01-30
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
-source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2026"]
