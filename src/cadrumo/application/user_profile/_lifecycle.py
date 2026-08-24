@@ -68,6 +68,8 @@ class ProfileCapsuleLifecycle:
         profile_id: UUID | None = None,
     ) -> CommittedProfileView:
         identity = profile_id or uuid4()
+        if recovery_envelope is None:
+            raise ValueError("profile lifecycle create requires creation recovery material")
         if password_envelope.profile_id != identity or sentinel.profile_id != identity:
             raise ValueError("profile lifecycle create material must bind the lifecycle UUID")
         if record_session.profile_id != identity:

@@ -92,8 +92,8 @@ def read_profile_capsule_source(source: Path) -> ProfileCapsuleSource:
     surfacing as a decryption failure against a capsule that has already been
     committed.
 
-    The recovery wrapper is optional transport input. Its absence says nothing
-    about creation enrollment because normal archives intentionally exclude it.
+    Recovery is not read here. Its presence, absence, or health says nothing
+    about whether this password/archive source is restorable.
 
     Raises:
         ProfileCapsuleSourceError: When a required member is missing or will

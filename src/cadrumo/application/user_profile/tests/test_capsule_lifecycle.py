@@ -175,6 +175,30 @@ def test_enrollment_publication_requires_a_recovery_envelope_argument(tmp_path) 
     assert not (tmp_path / "buckets" / str(_PROFILE_ID)).exists()
 
 
+def test_enrollment_publication_refuses_explicit_none_without_a_capsule(tmp_path) -> None:
+    """Runtime callers cannot bypass the mandatory type with explicit None."""
+    envelope, sentinel, data_files, dek = _current_capsule_input()
+    record_session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
+    try:
+        with pytest.raises(ValueError, match="requires creation recovery material"):
+            ProfileCapsuleLifecycle(root=tmp_path).create(
+                label="Explicit None recovery",
+                profile_id=_PROFILE_ID,
+                password_envelope=envelope,
+                sentinel=sentinel,
+                data_files=data_files,
+                recovery_envelope=None,  # type: ignore[arg-type] - runtime bypass probe
+                initial_record=UserProfileRecord(
+                    profile_id=str(_PROFILE_ID), setup_state=ProfileSetupState.INCOMPLETE
+                ),
+                record_session=record_session,
+            )
+    finally:
+        record_session.close()
+
+    assert not (tmp_path / "buckets" / str(_PROFILE_ID)).exists()
+
+
 def test_repository_refuses_retired_bucket_directories_without_treating_them_as_profiles(tmp_path) -> None:
     retired = tmp_path / "buckets" / str(_PROFILE_ID)
     retired.mkdir(parents=True)
