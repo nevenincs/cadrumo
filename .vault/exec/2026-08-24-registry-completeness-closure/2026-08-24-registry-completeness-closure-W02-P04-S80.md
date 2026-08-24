@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:563aec213478828b894ab6d07eb640d1bd9b34553814b279ab21836305b387cf'
+body_hash: 'sha256:1eb415a568a73e62f66025a39500a2cb579740e49bb5c78737fe080178bac762'
 step_id: 'S80'
 related:
   - '[[2026-08-24-registry-completeness-closure-plan]]'
@@ -54,22 +54,39 @@ proof branch ships today. S97 must first acquire distinct 2023 and 2024
 contract-package inventories, including exact package/member hashes and legal,
 revision, and law-selected filing-context scope. S98 and S99 must then add the
 single canonical export and proof branches against the selected package. All
-three Steps remain open, and this Step remains unchecked until its correction is
-independently re-reviewed.
+three Steps remain open.
+
+The independent correction re-review in
+`2026-08-24-registry-completeness-closure-s80-correction-rereview-audit`
+recorded no findings against corrected ADR commit `3a90ceb74a`. The normal
+plan-state reconciliation may therefore close S80: it has delivered the required
+accepted decision and exact owner routing, without treating the future S97--S99
+implementation as completed.
 
 Modelo 136 remains terminal under current evidence because a visual form and
 procedure guidance do not satisfy the machine-contract predicate. Modelo 721
 also remains applicability-only and non-fileable until S97-S99 and the separate
 source/casilla owner work land for each exact exercise era.
 
+## Verification
+
+- Vaultspec-RAG located the accepted membership ADR, the registry-completeness
+  plan and the canonical closure/export authorities. Targeted `rg` then confirmed
+  exactly one `SourceReference` declaration, `ExportLayoutFormat` declaration,
+  `application.filing.export_draft` writer, and `LiveFilingExportProofAuthority`.
+- The exact Modelo 721 census finds no structured-message source kind, source
+  package, typed layout, serializer, renderer, proof entry, or parallel proof
+  store. `application.calculations._foreign_asset_redeclaration` is a
+  registry-grounded, non-filing advisory for annual foreign-asset changes, not
+  export implementation and therefore no writer redeclaration.
+- The independent audit passed the six Modelo 721 registry tests and two Modelo
+  136 terminal-versus-owner worklist tests. This plan/record reconciliation does
+  not alter production code or rerun their unchanged proof surface.
+
 ## Notes
 
 - No production code, registry source row, filing grade, or output capability
   changed in this architecture/enrollment Step.
-- The redeclaration audit found no Modelo 721 writer, semantic map, render
-  profile, proof entry, or parallel proof store. The only adjacent duplicate
-  risk is today's repeated raw source-kind strings; S97 replaces them with the
-  canonical typed taxonomy and predicate rather than adding another local set.
 - The canonical-source audit confirms the current `SourceReference.kind` and
   `ExportLayoutFormat` vocabularies do not yet contain a structured-message
   member. The future taxonomy, selected-package authority, export branch, and
