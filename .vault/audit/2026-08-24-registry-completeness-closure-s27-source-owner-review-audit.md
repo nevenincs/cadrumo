@@ -5,49 +5,37 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:726fb2c043de4cf901aecc0c452452f3a26b0a535ffa0e8dc3a6d1e3e5d08536'
+body_hash: 'sha256:5dcd85a6d73758a0e3b3324b12042465b1a3b1e23e6361357d7446e369e8d230'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace registry-completeness-closure with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
 # `registry-completeness-closure` audit: `S27 source-owner enrollment review`
 
 ## Scope
 
-<!-- What was audited and why -->
+Independent review of S27's documentation-only enrollment of every
+source/casilla remedy. The review checked the fourteen-row matrix against the
+predecessor-plan rows, the live canonical calculation-route ownership projection,
+the single source-connectivity census and proof authority, and the roll-up's
+terminal-refusal and export/temporal boundaries.
+
+Vaultspec-RAG located the canonical code authority; its server index returned no
+vault hit for the narrow query, so targeted `rg` confirmation and whole-document
+reads -- not inferred absence -- completed the vault side. A live construction of
+`CalculationRouteSourceOwnershipCatalogue` also revalidated the single-owner
+projection: 23 resolver-source rows plus the one manual-input owner.
 
 ## Findings
 
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### S27 source-owner enrollment review | {level} | {summary}
-
-     followed by a paragraph carrying the detail. S27 source-owner enrollment review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
+No findings. The matrix assigns Modelo 036 to its closed manual-by-design
+owner, Modelo 182 to the non-lossy declarant-and-donor phase, and the remaining
+source-lifecycle work to exactly one of S226--S233. Its three no-action rows are
+correctly bounded to temporal/export-only or terminal refusals. Modelo 721's
+source-value lifecycle is distinct from the export plan's SOAP/XML
+artifact/serializer work, so it is not a second source owner.
 
 ## Recommendations
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
+No corrective action. Retain the S226--S233 fail-closed conditions: no source
+kind, binding, casilla, census candidate, producer, or writer may be introduced
+until the listed official fact, grain, and destination evidence is accepted.
