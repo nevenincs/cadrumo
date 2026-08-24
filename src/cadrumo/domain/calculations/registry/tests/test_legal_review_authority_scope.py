@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from .....core import LegalReviewStatus, RevisionReviewStatus
+from .....core import LegalReviewStatus, RegistryAuthorityGrade, RevisionReviewStatus
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from .. import ValidatedRegistryAuthority
@@ -44,9 +44,15 @@ def test_authority_refuses_real_m182_through_the_public_accessor() -> None:
         if ref in authority.catalogues.legal
     ), "the claim is about OPERATOR-reviewed references failing to promote the revision"
 
+    # Through the PUBLIC accessor the revision is untouched, so it still declares
+    # applicability grade and the newer authority-grade gate answers first. That is
+    # the refusal this modelo actually earns here: operator-reviewed legal refs do
+    # not promote it, which is the claim, and the grade names why more directly than
+    # the missing layout does. The sibling tests above clear the grade deliberately
+    # where the later gates are the subject.
     with pytest.raises(
         RegistryValidationError,
-        match=r"modelo 182 revision 2007-y-siguientes declares no export layout",
+        match=r"modelo 182 revision 2007-y-siguientes declares .applicability. authority grade",
     ):
         authority.snapshot("182", filing_year=2025, period="0A")
 
@@ -83,6 +89,12 @@ def test_build_validated_snapshot_refuses_real_m182_non_operator_revision(
             "review_status": review_status,
             "reviewed_by": reviewed_by,
             "reviewed_at": reviewed_at,
+            # The claim under test is about REVIEW status, and a newer
+            # authority-grade gate refuses this applicability-grade revision
+            # before the review gate runs. Clearing it keeps each case earning
+            # the refusal the parametrisation names, instead of collapsing both
+            # onto one grade refusal that distinguishes nothing.
+            "authority_grade": RegistryAuthorityGrade.FILING,
         },
     )
     mutated_modelo = modelo.model_copy(
@@ -125,6 +137,11 @@ def test_filing_grade_snapshot_refuses_a_reviewed_revision_that_declares_no_expo
             "review_status": RevisionReviewStatus.OPERATOR_REVIEWED,
             "reviewed_by": "operator",
             "reviewed_at": date(2026, 5, 5),
+            # A newer gate refuses an applicability-grade revision before the
+            # filing-capability check runs. This test is ABOUT that later check,
+            # so the fixture clears the grade gate deliberately rather than
+            # asserting the refusal that now arrives first.
+            "authority_grade": RegistryAuthorityGrade.FILING,
         },
     )
     mutated = modelo.model_copy(update={"revisions": {**modelo.revisions, reviewed.id: reviewed}})
@@ -188,6 +205,11 @@ def test_loader_tier_snapshots_in_this_module_carry_no_compiled_orden_authority(
             "review_status": RevisionReviewStatus.OPERATOR_REVIEWED,
             "reviewed_by": "operator",
             "reviewed_at": date(2026, 5, 5),
+            # A newer gate refuses an applicability-grade revision before the
+            # filing-capability check runs. This test is ABOUT that later check,
+            # so the fixture clears the grade gate deliberately rather than
+            # asserting the refusal that now arrives first.
+            "authority_grade": RegistryAuthorityGrade.FILING,
         },
     )
     mutated = modelo.model_copy(update={"revisions": {**modelo.revisions, reviewed.id: reviewed}})
