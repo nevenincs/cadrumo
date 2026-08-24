@@ -1088,8 +1088,28 @@ def resume_profile_session(
     """
     now = validate_utc_aware(now)
     path = profile_session_path(storage_root=storage_root, profile_id=profile_id)
+    retirement_path = _profile_session_retirement_path(storage_root=storage_root, profile_id=profile_id)
     try:
         _ensure_profile_session_directory(path)
+        # The ordinary logged-out path must stay observational.  The local
+        # lock is a durable kernel-owned leaf, so taking it merely to discover
+        # that neither session artifact exists would turn a refused root
+        # secret into a storage mutation.  A pending retirement journal is
+        # itself state that needs the locked recovery path, even when no
+        # receipt currently exists.
+        if (
+            read_optional_profile_custody_local_record(
+                path,
+                maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES,
+            )
+            is None
+            and read_optional_profile_custody_local_record(
+                retirement_path,
+                maximum_bytes=_PROFILE_SESSION_RETIREMENT_MAX_BYTES,
+            )
+            is None
+        ):
+            return _refusal(ProfileSessionRefusalReason.ABSENT)
         with profile_custody_local_lock(_profile_session_lock_path(path)):
             # A predecessor cleanup failure is non-authoritative: attempt
             # deterministic convergence before using the successor, but do

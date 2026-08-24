@@ -1086,10 +1086,7 @@ def _run_add_row() -> ManagerActionOutcome:
     """
     from ....adapters.inbound.tui import ManagerActionDisposition, ManagerActionOutcome
     from ....application.user_profile import (
-        ProfileFactWriteDoor,
-        apply_profile_fact_changes,
-        next_section_row_index,
-        section_row_facts,
+        add_profile_repeatable_section_row,
     )
     from ....core import require_active_bucket_id
     from ....domain.user_profile import ProfileSchemaValidationError, load_user_profile_schema
@@ -1111,24 +1108,11 @@ def _run_add_row() -> ManagerActionOutcome:
         return ManagerActionOutcome(message=tr("flows.manager.action.abandoned"))
 
     section = _chosen_section(sections, collected)
-    # Read presence from the page the operator is looking at: its rule for
-    # "this field has a value" is the shared one, so the row this numbers
-    # against is the row set they can see.
-    before = build_active_profile_overview()
-    present = frozenset(view.path for section_view in before.sections for view in section_view.fields if view.present)
-    row_index = next_section_row_index(section.key, present)
-    facts = section_row_facts(section, row_index=row_index, values=collected)
-    if not facts:
-        return ManagerActionOutcome(
-            message=tr("flows.manager.action.add_row_empty"),
-            disposition=ManagerActionDisposition.REFUSED,
-        )
-
     try:
-        apply_profile_fact_changes(
+        mutation = add_profile_repeatable_section_row(
             profile_id=require_active_bucket_id(),
-            changes=facts,
-            door=ProfileFactWriteDoor.MANAGER_ROW,
+            section_key=section.key,
+            values=collected,
         )
     except ProfileSchemaValidationError:
         return ManagerActionOutcome(
@@ -1138,9 +1122,9 @@ def _run_add_row() -> ManagerActionOutcome:
 
     return ManagerActionOutcome(
         message=tr(
-            "flows.manager.action.add_row_done",
-            section=profile_section_title(section),
-            index=row_index,
+                "flows.manager.action.add_row_done",
+                section=profile_section_title(section),
+                index=mutation.row_index,
         ),
         overview=build_active_profile_overview(),
     )

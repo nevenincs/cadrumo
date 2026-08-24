@@ -41,6 +41,7 @@ from .._acceleration_receipt import (
     PROFILE_SESSION_RECORD_MAX_BYTES,
     AccelerationReceiptRevocationError,
     _pending_retirement_bytes,
+    _profile_session_lock_path,
     _profile_session_retirement_path,
     _receipt_bytes,
     _write_acceleration_receipt,
@@ -184,6 +185,32 @@ class TestAnchoredReceiptBoundary:
         ensure_profile_custody_local_directory(path.parent.parent)
         ensure_profile_custody_local_directory(path.parent)
         return path
+
+    def test_absent_receipt_refusal_does_not_materialise_a_session_lock(self, tmp_path: Path) -> None:
+        """A logged-out probe must not leave a durable lock artifact behind.
+
+        Root-secret refusals first ask whether a resumable session exists.  If
+        that answer is the ordinary absence case, the probe must not create a
+        session-owned lock before the secret source is even validated.
+        """
+        profile_id = _profile_id()
+        path = self._path(tmp_path, profile_id)
+        lock_path = _profile_session_lock_path(path)
+        assert not path.exists()
+        assert not lock_path.exists()
+
+        outcome, dek = resume_profile_session(
+            storage_root=tmp_path,
+            profile_id=profile_id,
+            custody_generation=1,
+            dek_epoch=_EPOCH,
+            now=_NOW,
+        )
+
+        assert outcome.refusal is ProfileSessionRefusalReason.ABSENT
+        assert dek is None
+        assert not path.exists()
+        assert not lock_path.exists()
 
     def test_oversize_leaf_is_refused_before_any_keychain_operation(self, tmp_path: Path) -> None:
         profile_id = _profile_id()

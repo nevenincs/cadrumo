@@ -199,9 +199,8 @@ def persist_active_profile_field(path: str, value: str, *, label: str | None = N
     the previous view: the edit door may normalise or refuse a value, and
     the operator must see what was actually stored.
     """
-    from ....application.user_profile import ProfileFactWriteDoor, apply_profile_fact_changes
+    from ....application.user_profile import apply_manager_profile_field_mutation
     from ....core import require_active_bucket_id
-    from ....domain.user_profile import UserProfileFact
 
     # Strip before deciding blank-versus-value. An exact `!= ""` test persists a
     # whitespace-only submission as a VALUE, while every reader treats it as
@@ -209,11 +208,10 @@ def persist_active_profile_field(path: str, value: str, *, label: str | None = N
     # app-owned, converting the operator's write into one the app may overwrite
     # freely thereafter. The two surfaces have to agree on what spaces mean, and
     # this is the boundary that decides it.
-    fact = UserProfileFact(path=path, value=value.strip() or None)
-    apply_profile_fact_changes(
+    apply_manager_profile_field_mutation(
         profile_id=require_active_bucket_id(),
-        changes=(fact,),
-        door=ProfileFactWriteDoor.MANAGER_FIELD,
+        path=path,
+        value=value,
     )
     return build_active_profile_overview(label=label)
 
@@ -358,13 +356,12 @@ def _active_profile_manager_storage(
     """
     from ....application.user_profile import (
         CommittedProfileRepository,
-        ProfileFactWriteDoor,
         ProfileRecordRepository,
-        apply_profile_fact_changes,
+        apply_manager_profile_field_mutation,
         build_profile_overview,
     )
     from ....core import require_active_bucket_id
-    from ....domain.user_profile import UserProfileFact, load_user_profile_schema
+    from ....domain.user_profile import load_user_profile_schema
 
     profile_id = require_active_bucket_id()
     schema = load_user_profile_schema()
@@ -378,11 +375,10 @@ def _active_profile_manager_storage(
         return overview.model_copy(update={"notices": _overview_notices(record)})
 
     def _persist(path: str, value: str) -> ProfileOverview:
-        fact = UserProfileFact(path=path, value=value.strip() or None)
-        applied = apply_profile_fact_changes(
+        applied = apply_manager_profile_field_mutation(
             profile_id=profile_id,
-            changes=(fact,),
-            door=ProfileFactWriteDoor.MANAGER_FIELD,
+            path=path,
+            value=value,
         )
         return _page(applied)
 

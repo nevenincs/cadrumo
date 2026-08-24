@@ -75,7 +75,7 @@ _DURABLE_SNAPSHOT_SOURCE = dedent(
 
 _HARNESS = (
     dedent(
-    """
+        """
     import json
     import os
     import sys
@@ -148,7 +148,7 @@ _HARNESS = (
 
 _WINDOWS_HANDLE_HARNESS = (
     dedent(
-    """
+        """
     import json
     import os
     import sys
@@ -463,8 +463,7 @@ def _storage_snapshot(root: Path) -> dict[str, bytes]:
     return {
         path.relative_to(root).as_posix(): path.read_bytes()
         for path in root.rglob("*")
-        if path.is_file()
-        and "log" not in path.name.lower()
+        if path.is_file() and "log" not in path.name.lower()
     }
 
 
