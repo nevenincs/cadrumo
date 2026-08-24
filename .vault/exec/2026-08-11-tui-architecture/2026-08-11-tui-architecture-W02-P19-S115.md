@@ -5,11 +5,44 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:5f4909a25aa4fd3558b16ed9fd5c6b9f24ccec71fe53c6fd133f98c1caa37e8e'
+body_hash: 'sha256:51a46fa6b09acf117880dcdfc4ad2eade4710b63aaae8689faec501f394b42a5'
 step_id: 'S115'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
+
+<!-- FRONTMATTER RULES:
+     tags: one directory tag (hardcoded #exec) and one feature tag.
+     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
+     Additional tags may be appended below the required pair.
+
+     modified: CLI-maintained last-modified stamp; set at scaffold time,
+     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
+
+     step_id is the originating Step's canonical identifier, e.g. S01.
+     The S115 and 2026-08-11-tui-architecture-plan placeholders are machine-filled by
+     `vaultspec-core vault add exec`; do not fill them by hand.
+
+     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
+     parent plan.
+
+     DO NOT add fields beyond those scaffolded; metadata lives
+     only in the frontmatter. -->
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
+     - NEVER use [[wiki-links]] or markdown links in the document body.
+     - NEVER reference file paths in the body. If you must name a source file,
+       class, or function, use inline backtick code: `src/module.py`. -->
+
+<!-- STEP RECORD:
+     This file represents one Step from the originating plan. Identified
+     by its canonical leaf identifier (S##) and ancestor display path.
+     The Extend the immutable operation registry with OperationSchemaIdentityV1, OperationPublicDefinitionContractV1, OperationPublicContractSetV1, exact strict-model fingerprints, registered REVIEW and refresh adapters, deterministic definition digests, and contract-set fixed-point validation and ## Scope
+
+- `src/cadrumo/application/operations/_registry.py` placeholders below are machine-filled
+     by `vaultspec-core vault add exec` from the originating Step row;
+     do not fill them by hand. -->
 
 # Extend the immutable operation registry with OperationSchemaIdentityV1, OperationPublicDefinitionContractV1, OperationPublicContractSetV1, exact strict-model fingerprints, registered REVIEW and refresh adapters, deterministic definition digests, and contract-set fixed-point validation
 
@@ -19,22 +52,33 @@ related:
 
 ## Description
 
-- Publish strict V1 schema identity, definition manifest, and contract-set models through the sole operations facade.
-- Bind stable schema identities to exact strict Pydantic models and validate canonical JSON-schema fingerprints.
-- Register domain-owned REVIEW projector and Workspace-refresh adapter protocols outside the serializable manifest.
-- Derive definition and contract-set digests through the canonical core content-hash authority with explicitly sorted set fields.
-- Validate exact definition, schema, model, projector, adapter, and contract-set coverage as a live registry fixed point.
-- Consolidate credential-free request schema validation onto the same strict-model schema helper.
-- Add pinned fingerprint and digest witnesses, order-independence, tamper refusal, missing-adapter, model-rebinding, duplicate-identity, and incomplete-inventory gates.
+- Publish `OperationSchemaIdentityV1`, `OperationPublicDefinitionContractV1`, and `OperationPublicContractSetV1` through the operations facade.
+- Bind each public schema identity to one exact strict Pydantic model and canonical JSON-schema fingerprint.
+- Compose serializable definition contracts with runtime-only REVIEW projectors and Workspace-refresh adapters.
+- Derive deterministic definition and contract-set digests through `content_hash_hex`, sorting all manifest sets before serialization.
+- Validate exact definition, schema, model, projector, adapter, and contract-set coverage as a live-registry fixed point.
+- Reuse one canonical recursive strict operation-model graph validator for request deep immutability and public-schema admission.
+- Refuse lax nested models, untyped payloads, mutable containers, secret-capable schemas, schema-shape drift, unsafe hooks or serializers, unvalidated defaults, and invalid adapters before public registration.
+- Add positive and adversarial fixed-tuple, model-graph, schema-closure, digest, fixed-point, and callable-signature witnesses.
 
 ## Outcome
 
-The immutable registry can now publish a renderer-neutral, deterministic public contract set without leaking Python names, callables, raw schemas, or domain imports into the manifest. Runtime-only registrations bind each safe identity to one exact model and the optional domain adapter protocols; registry construction rejects drift between the live operation definition and its declared public row.
+The immutable registry now publishes renderer-neutral deterministic contracts without exposing Python class names, callables, raw schemas, or domain imports. Runtime registrations bind every safe identity to one exact immutable model graph and reject any drift from the live operation definition.
 
-Scoped Ruff passed. The registry contract suite passed 20 tests, and the broader operation, auth-definition, and profile-definition cohort passed 173 tests.
+Verification passed:
+
+- scoped Ruff;
+- scoped basedpyright: 0 errors, 0 warnings, 0 notes;
+- scoped `ty check`;
+- focused registry and operation-model tests: 57 passed;
+- all operation tests: 192 passed;
+- semantic RAG and exact declaration census: the public contract family exists only in `_registry.py`, and the reusable strict model-graph validator only in `_model_contract.py`.
 
 ## Notes
 
-Vaultspec RAG was run before implementation across public schema identity, definition digest, REVIEW projector, refresh adapter, and canonical hashing concepts. It found `cadrumo.core.hashing.content_hash_hex` as the existing digest authority, which this step reuses, and no competing operation public-contract implementation. The post-edit fixed-point search returned `_registry.py` as the sole operation public schema, registration, and digest authority. It also exposed the duplicated strict-schema validation in credential-free request handling; that duplicate block was deleted and both paths now share `_strict_model_json_schema`.
+A fresh pre-commit Vaultspec RAG redeclaration audit covered identity/fingerprint, definition/contract-set, REVIEW/refresh adapter, digest-producer, and facade-ownership semantics. Exact-symbol census found the V1 types, registration, strict-schema helper, and digest producers only in `_registry.py`; the facade only re-exports them, `_model_contract.py` owns the recursive strict-model validator, and `cadrumo.core.content_hash_hex` remains the sole digest authority. No competing S115 implementation exists.
 
-Production registry composition remains intentionally absent and belongs to `W02.P19.S122`; this step supplies and verifies its public contract substrate only.
+Production registry composition remains deliberately absent; it belongs to `W02.P19.S122`. The repository-wide import-hygiene gate still has one unrelated failure at `application.user_profile._custody_ports.load_profile_custody_password_material`; no S115-owned source participates in it.
+
+The independent review identified and the final hardening resolved recursive nested-model, untyped branch, mutable annotation, fixed-tuple, secret/write-only, schema drift, serializer, computed-field, default-validation, and adapter-callability gaps. Final review found no S115 production-code blocker.
+

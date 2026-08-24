@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:8a87029fece83ebc07210cc0a7597d6104a8fd650ee7938974e289bef1a574d1'
+body_hash: 'sha256:1d9a05756fc093060ecfd369d05bd547018496390a724e59947cedf54028c85a'
 related:
   - '[[2026-08-11-tui-architecture-W01-P01-S01]]'
   - '[[2026-08-11-tui-architecture-W01-P01-S02]]'
@@ -43,6 +43,7 @@ related:
   - '[[2026-08-11-tui-architecture-W02-P18-S110]]'
   - '[[2026-08-11-tui-architecture-W02-P18-S111]]'
   - '[[2026-08-11-tui-architecture-W02-P18-S112]]'
+  - '[[2026-08-11-tui-architecture-W02-P19-S115]]'
   - '[[2026-08-11-tui-architecture-W03-P06-S113]]'
   - '[[2026-08-11-tui-architecture-W03-P06-S29]]'
   - '[[2026-08-11-tui-architecture-W03-P06-S30]]'
@@ -96,6 +97,7 @@ related:
   - '[[2026-08-24-tui-architecture-pre-custody-login-secret-submission-reference]]'
   - '[[2026-08-24-tui-architecture-pre-custody-login-secret-submission-research]]'
   - '[[2026-08-24-tui-architecture-s113-continuation-review-audit]]'
+  - '[[2026-08-24-tui-architecture-s115-registry-review-audit]]'
   - '[[2026-08-24-tui-architecture-s28-recovery-review-audit]]'
   - '[[2026-08-24-tui-architecture-s29-censal-executor-review-audit]]'
   - '[[2026-08-24-tui-architecture-s30-operand-review-audit]]'
@@ -154,6 +156,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-24-tui-architecture-ephemeral-secret-submission-review-audit` - `tui-architecture` audit: `ephemeral secret submission code review`
 - `2026-08-24-tui-architecture-invocation-policy-review-audit` - `tui-architecture` audit: `invocation policy review`
 - `2026-08-24-tui-architecture-s113-continuation-review-audit` - `tui-architecture` audit: `S113 durable continuation safety review`
+- `2026-08-24-tui-architecture-s115-registry-review-audit` - `tui-architecture` audit: `W02.P19.S115 public registry review`
 - `2026-08-24-tui-architecture-s28-recovery-review-audit` - `tui-architecture` audit: `S28 recovery review`
 - `2026-08-24-tui-architecture-s29-censal-executor-review-audit` - `tui-architecture` audit: `S29 resumable censal executor review`
 - `2026-08-24-tui-architecture-s30-operand-review-audit` - `tui-architecture` audit: `S30 censal reviewed operand review`
@@ -205,6 +208,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W02-P18-S110` - Enroll the complete existing eight-route TUI surface and remove the accidental leaf-local option
 - `2026-08-11-tui-architecture-W02-P18-S111` - Prove the graph-wide available-route fixed point, global-only option placement, implemented-route dispatch, and representative unimplemented refusals
 - `2026-08-11-tui-architecture-W02-P18-S112` - Reconcile the accepted availability decision with the still-open dedicated-entrypoint migration and complete a fresh honesty review
+- `2026-08-11-tui-architecture-W02-P19-S115` - Extend the immutable operation registry with OperationSchemaIdentityV1, OperationPublicDefinitionContractV1, OperationPublicContractSetV1, exact strict-model fingerprints, registered REVIEW and refresh adapters, deterministic definition digests, and contract-set fixed-point validation
 - `2026-08-11-tui-architecture-W03-P06-S113` - Implement supervisor-owned post-submission secure checkpoint publication, durable response continuation scheduling, and restart recovery without reacquisition
 - `2026-08-11-tui-architecture-W03-P06-S29` - Implement the resumable census executor across preflight, Clave device wait, remote read, proposal construction, interaction wait, exact apply, and settlement
 - `2026-08-11-tui-architecture-W03-P06-S30` - Persist the encrypted reviewed observation, baseline revision and digest, field intents, and proposed-effect digest behind a secure reference

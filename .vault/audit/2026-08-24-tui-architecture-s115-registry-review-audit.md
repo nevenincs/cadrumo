@@ -5,23 +5,59 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:6b887f4c7e03e75be589f85b131420c30a59c357746489ba6ccd12ae4c746922'
+body_hash: 'sha256:7aa0c5e88717716623204a7626aff74c44015fb5369a15c2ad4c907231e5dc34'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
+
+<!-- FRONTMATTER RULES:
+     tags: one directory tag (hardcoded #audit) and one feature tag.
+     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
+     Additional tags may be appended below the required pair.
+
+     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
+
+     modified: CLI-maintained last-modified stamp; set at scaffold time,
+     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
+
+     DO NOT add fields beyond those scaffolded; metadata lives
+     only in the frontmatter. -->
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
+     - NEVER use [[wiki-links]] or markdown links in the document body.
+     - NEVER reference file paths in the body. If you must name a source file,
+       class, or function, use inline backtick code: `src/module.py`. -->
+
 # `tui-architecture` audit: `W02.P19.S115 public registry review`
 
 ## Scope
 
-Formal review of `W02.P19.S115` against the accepted operation architecture, its operation-observation research, and the approved plan row. The review covered the public V1 schema identity, definition manifest, contract-set manifest, runtime registrations, deterministic digest derivation, registry fixed point, facade exports, and the corresponding registry tests.
+Formal review of `W02.P19.S115` against accepted ADR clause D6 and the registry-API research. The review covers the V1 public schema identity, definition and contract-set manifests, runtime-only REVIEW and Workspace-refresh bindings, deterministic digest authority, fixed-point validation, facade exports, strict public-model admission, and focused tests.
 
 ## Findings
 
-### s115-recursive-public-schema-closure | high | Strictness and closed-payload guarantees stop at the outer Pydantic model
+### s115-recursive-public-schema-closure | high | Strictness and closed-payload guarantees originally stopped at the outer Pydantic model
 
-`_strict_model_json_schema` verifies `strict`, `frozen`, and `extra="forbid"` only on the top-level model, then walks its JSON schema solely for `additionalProperties` and `patternProperties`. A strict/frozen outer request type may therefore contain a default Pydantic child model: the child coerces values, ignores extras, and remains mutable, while its JSON schema contains no open-object marker and the public schema identity is accepted. The same walker accepts an `Any` field because Pydantic emits an empty property schema; this admits arbitrary untyped JSON behind an apparently closed, fingerprinted public contract. Both cases contradict the accepted requirement that public operation models are strict, frozen, and free of untyped payload bags. The focused test suite only exercises a non-strict outer type and a `dict[str, str]` open object, so it does not make this gate bite.
+The first public-schema implementation verified `strict`, `frozen`, and `extra="forbid"` only on the outer model and did not refuse an untyped JSON-schema branch. A strict outer request could therefore admit a mutable nested Pydantic model or an `Any` payload behind a fingerprinted public identity. That violated the closed, immutable public contract required by D6.
+
+### s115-current-strict-schema-gate | low | The first remediation required adversarial witnesses
+
+The initial remediation delegated nested models to the reusable strict model-graph check and rejected untyped schema branches, but it did not yet prove those guarantees with focused refusal tests for lax nested models and `Any` fields.
+
+### s115-schema-admission-hardening | resolved | Public identities now admit only exact immutable validation/serialization contracts
+
+The completed correction preserves the canonical registry and content-hash authorities while enforcing recursive strict/frozen/extra-forbid model graphs; rejecting mutable containers and TypedDict/JSON payload bags, unvalidated defaults, computed fields, serializers, custom schema hooks, secret/write-only branches, untyped values, and open tuples or objects. Validation and serialization schemas must match exactly, and fixed tuples must declare every item and both bounds. REVIEW and refresh adapters are checked synchronously for their required arities without invocation. Focused witnesses prove each refusal and the positive closed fixed-tuple case.
+
+### s115-final-review | resolved | No production-code blocker remains
+
+The final independent review verified the hardened implementation and its adversarial suite. It found no remaining production-code issue; the only evidence-record defect was repaired by recreating both records through their Vault CLI scaffolds and restoring this rolling review log.
+
+### s115-redeclaration-audit | resolved | Fresh semantic and exact-symbol census confirms one authority per S115 concern
+
+A fresh Vaultspec RAG audit covered strict schema identities and fingerprints, public definition and contract-set fixed points, REVIEW and refresh registration, digest producers, and facade ownership. Its exact-symbol census finds all three V1 public types, runtime registrations, strict-schema validation, and both contract-digest producers only in `_registry.py`; the public facade only re-exports those types. The recursive strict operation-model graph validator exists only in `_model_contract.py`, and digesting reuses the pre-existing `content_hash_hex` authority. No duplicate or competing S115 authority was found.
 
 ## Recommendations
 
-- Before `S115` can close, make the public-schema validator prove strict/frozen/extra-forbid semantics recursively for every reachable Pydantic model and reject unconstrained JSON-schema branches such as `Any`. Add adversarial registry tests for a lax nested model, nested mutation/coercion, and an `Any` field; each must be refused before fingerprinting or binding.
-- Re-run the S115 registry suite and the public-contract fixed-point tests after the validator is corrected.
+- No open S115 remediation remains. Preserve the focused refusal witnesses and canonical ownership boundaries when evolving public schema admission or adapter registration.
+
