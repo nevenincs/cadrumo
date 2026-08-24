@@ -671,7 +671,7 @@ mcp:
         presenta pel seu compte.'
       no_channel: '''{command}'' necessita una confirmació humana i aquest client
         no admet sol·licituds interactives. Executa''l des d''un client que pugui
-        fer-te preguntes o executa l''ordre equivalent de la CLI de Cadrumo directament
+        fer-te preguntes o executa l''ordre equivalent de Cadrumo CLI directament
         en un terminal.'
   faithfulness:
     advisory: 'AVÍS DE FIDELITAT: els arguments de la crida citen imports [{values}]

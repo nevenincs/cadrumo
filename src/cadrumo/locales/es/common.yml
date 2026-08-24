@@ -680,8 +680,8 @@ mcp:
         por su cuenta.'
       no_channel: '''{command}'' necesita una confirmación humana y este cliente no
         admite solicitudes interactivas. Ejecútalo desde un cliente que pueda hacerte
-        preguntas o ejecuta el comando equivalente de la CLI de Cadrumo directamente
-        en un terminal.'
+        preguntas o ejecuta el comando equivalente de Cadrumo CLI directamente en
+        un terminal.'
   faithfulness:
     advisory: 'AVISO DE FIDELIDAD: los argumentos de la llamada citan importes [{values}]
       que ningún resultado de herramienta de esta sesión ha producido. Verifica la
