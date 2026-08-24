@@ -31,4 +31,3 @@ The S52 record now names the actual repair commit and its own patch is whitespac
 
 - `git show --check 2cf4175917 -- src/cadrumo/application/registry/_source_connectivity_coverage.py` still reproduces the original line-256 trailing-whitespace diagnostic.
 - `git diff a4bd65ed1c^ a4bd65ed1c --check -- src/cadrumo/application/registry/_source_connectivity_coverage.py`, `git diff --check` for the live S52 record, and the feature-scoped vault check are clean for this correction. The feature-wide vault check reports existing warnings on other records; none is an error or belongs to S53's owned surface.
-
