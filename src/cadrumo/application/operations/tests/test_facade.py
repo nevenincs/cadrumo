@@ -22,6 +22,7 @@ from .. import (
     OperationPublicProjectionV1,
     OperationRegistry,
     OperationRequest,
+    OperationResponseCapability,
     OperationResumableExecutor,
     OperationResumeCheckpoint,
     OperationReviewProjectionService,
@@ -128,3 +129,8 @@ def test_owner_contracts_resolve_from_the_canonical_facade() -> None:
     assert OperationInteractionAccess.__module__.endswith("._executor")
     assert OperationResumableExecutor.__module__.endswith("._executor")
     assert OperationResumeCheckpoint.__module__.endswith("._executor")
+
+
+def test_response_capability_cannot_be_caller_constructed() -> None:
+    with pytest.raises(TypeError, match="issued only by production composition"):
+        OperationResponseCapability("1" * 64, "operator:caller", bytearray(b"forged"), _issuer=object())

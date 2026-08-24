@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from datetime import date
 
 import pytest
 
 from ....core import Modelo, Period
+from ...calculations.registry import deadline_semantic_coordinate
 from .. import (
     DeadlineEngine,
     IrpfEstimationRegime,
@@ -158,7 +160,9 @@ class TestCompute:
         )
         periods = [obligation.period for obligation in schedule.obligations if obligation.modelo == "349"]
 
-        assert periods == [_period(2026, "1T"), _period(2026, "2T"), _period(2026, "3T"), _period(2026, "4T")]
+        # Filing-year 2026 Q4 closes in 2027. It remains deliberately absent
+        # until the official 2027 taxpayer calendar is enrolled.
+        assert periods == [_period(2026, "1T"), _period(2026, "2T"), _period(2026, "3T")]
 
     def test_intracommunity_threshold_selects_monthly_modelo_349(self) -> None:
         schedule = _engine().compute(
@@ -191,8 +195,88 @@ class TestCompute:
             _period(2026, "09"),
             _period(2026, "10"),
             _period(2026, "11"),
-            _period(2026, "12"),
         ]
+
+    def test_modelo_303_2025_emits_exact_quarterly_or_monthly_cadence_from_profile(self) -> None:
+        quarterly = _engine().compute(_profile(), 2025, today=date(2025, 1, 1))
+        monthly = _engine().compute(
+            _profile(
+                iva=ModeloIVAProfile(
+                    tax_territory=M303TaxTerritory.COMMON_REGIME,
+                    regime_composition=M303RegimeComposition.GENERAL,
+                    redeme_enrolled=True,
+                    cash_accounting_regime_enrolled=False,
+                    voluntary_sii_enrolled=False,
+                    hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+                ),
+            ),
+            2025,
+            today=date(2025, 1, 1),
+        )
+
+        assert [item.period.registry_token for item in quarterly.obligations if item.modelo == "303"] == [
+            "1T",
+            "2T",
+            "3T",
+            "4T",
+        ]
+        assert [item.period.registry_token for item in monthly.obligations if item.modelo == "303"] == [
+            f"{month:02d}" for month in range(1, 13)
+        ]
+
+    def test_precalculation_schedule_does_not_emit_qualified_m210_variants(self) -> None:
+        schedule = _engine().compute(_profile(), 2025, today=date(2025, 1, 1))
+
+        assert all(item.modelo != "210" for item in schedule.obligations)
+
+    @pytest.mark.parametrize("filing_year", range(2022, 2027))
+    @pytest.mark.parametrize("monthly_iva", [False, True])
+    def test_compute_preserves_each_applicable_authored_periodic_coordinate_once(
+        self,
+        filing_year: int,
+        monthly_iva: bool,
+    ) -> None:
+        profile = _profile(
+            iva=ModeloIVAProfile(
+                tax_territory=M303TaxTerritory.COMMON_REGIME,
+                regime_composition=M303RegimeComposition.GENERAL,
+                redeme_enrolled=monthly_iva,
+                cash_accounting_regime_enrolled=False,
+                voluntary_sii_enrolled=False,
+                hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+            ),
+        )
+        engine = _engine()
+        projected = engine.deadline_windows(filing_year)
+        expected = []
+        for modelo, revision, window in projected:
+            if window.period_kind not in {"monthly", "quarterly"}:
+                continue
+            obligation = engine._obligation_for_window(
+                profile=profile,
+                modelo=modelo,
+                revision=revision,
+                window=window,
+                reference_today=date(filing_year, 1, 1),
+            )
+            if obligation is None:
+                continue
+            # Periodic filing schedules are pre-calculation obligations, so their
+            # authored identity has no resultado/tipo-renta qualifier. Reuse the
+            # canonical coordinate constructor instead of restating that identity.
+            assert window.resultado_scope is None
+            assert window.tipo_renta_scope is None
+            expected.append(deadline_semantic_coordinate(modelo, window.period, None, None))
+
+        schedule = engine.compute(profile, filing_year, today=date(filing_year, 1, 1))
+        actual = [
+            deadline_semantic_coordinate(item.modelo, item.period, None, None)
+            for item in schedule.obligations
+        ]
+
+        actual_counts = Counter(actual)
+        assert Counter({coordinate: actual_counts[coordinate] for coordinate in expected}) == Counter(expected)
+        assert all(multiplicity == 1 for multiplicity in actual_counts.values())
 
     def test_registry_condition_can_add_rental_withholding_deadline(self) -> None:
         schedule = _engine().compute(_profile(pays_rent_with_retencion=True), 2026, today=date(2026, 1, 1))

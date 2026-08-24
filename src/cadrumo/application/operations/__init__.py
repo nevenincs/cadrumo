@@ -20,7 +20,12 @@ from ._capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ._composition import OperationComposedServices, OperationSubmissionService, compose_operation_services
+from ._composition import (
+    OperationComposedServices,
+    OperationSubmission,
+    OperationSubmissionService,
+    compose_operation_services,
+)
 from ._events import OperationLogSeverity
 from ._executor import (
     OperationEventEmitter,
@@ -46,6 +51,7 @@ from ._observation import OperationObservationService
 from ._projection_services import (
     OperationCancellationService,
     OperationDetachService,
+    OperationResponseCapability,
     OperationResponseControlService,
     OperationReviewProjectionService,
     OperationWorkspaceRefreshTargetService,
@@ -209,6 +215,7 @@ __all__ = [
     "OperationRequest",
     "OperationRequestStoragePolicy",
     "OperationResponseApplyRequestV1",
+    "OperationResponseCapability",
     "OperationResponseControlRefusalCode",
     "OperationResponseControlRefusalV1",
     "OperationResponseControlRequestV1",
@@ -237,6 +244,7 @@ __all__ = [
     "OperationSecretKind",
     "OperationSecretRequirement",
     "OperationSensitiveInputPolicy",
+    "OperationSubmission",
     "OperationSubmissionReceiptV1",
     "OperationSubmissionService",
     "OperationTerminalCondition",

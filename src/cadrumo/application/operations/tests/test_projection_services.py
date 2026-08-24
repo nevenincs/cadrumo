@@ -647,6 +647,7 @@ def test_response_authority_is_unavailable_after_process_restart(tmp_path: Path)
     repository = OperationJournalRepository(storage_root=root)
     _write(root, repository, _waiting_snapshot(registry, pending))
     original_process = OperationResponseAuthorityBroker()
+    capability = original_process.reserve(_OPERATION_ID, "operator:reviewer")
     original_process.issue(pending, _TOKEN)
     original_process.close()
     restarted_process = OperationResponseAuthorityBroker()
@@ -656,7 +657,7 @@ def test_response_authority_is_unavailable_after_process_restart(tmp_path: Path)
         revision=0,
         actor_ref="operator:reviewer",
     )
-    authority = restarted_process.bind(request, pending, clock=lambda: _NOW)
+    authority = restarted_process.bind(request, pending, capability, clock=lambda: _NOW)
     supervisor = OperationSupervisor(
         registry=registry,
         journal=repository,
@@ -689,6 +690,7 @@ def test_public_response_service_consumes_runtime_authority(tmp_path: Path, resp
     repository = OperationJournalRepository(storage_root=root)
     _write(root, repository, _waiting_snapshot(registry, pending))
     broker = OperationResponseAuthorityBroker()
+    capability = broker.reserve(_OPERATION_ID, "operator:reviewer")
     broker.issue(pending, _TOKEN)
     control = OperationResponseControlRequestV1(
         operation_id=_OPERATION_ID,
@@ -696,7 +698,16 @@ def test_public_response_service_consumes_runtime_authority(tmp_path: Path, resp
         revision=0,
         actor_ref="operator:reviewer",
     )
-    authority = broker.bind(control, pending, clock=lambda: _NOW)
+    actor_mismatch = control.model_copy(update={"actor_ref": "operator:intruder"})
+    stale = control.model_copy(update={"revision": 1})
+    forged = OperationResponseAuthorityBroker().reserve(_OPERATION_ID, "operator:reviewer")
+    assert broker.bind(actor_mismatch, pending, capability, clock=lambda: _NOW).__class__.__name__.startswith(
+        "_Unavailable"
+    )
+    assert broker.bind(stale, pending, capability, clock=lambda: _NOW).__class__.__name__.startswith("_Unavailable")
+    assert broker.bind(control, pending, forged, clock=lambda: _NOW).__class__.__name__.startswith("_Unavailable")
+    authority = broker.bind(control, pending, capability, clock=lambda: _NOW)
+    assert broker.bind(control, pending, capability, clock=lambda: _NOW).__class__.__name__.startswith("_Unavailable")
     supervisor = OperationSupervisor(
         registry=registry,
         journal=repository,

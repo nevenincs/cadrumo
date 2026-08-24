@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import secrets
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -241,39 +242,120 @@ class _UnavailableOperationSecureResponseAuthority:
         """Close the empty authority idempotently."""
 
 
+_CAPABILITY_ISSUER = object()
+
+
+class OperationResponseCapability:
+    """Opaque process-local capability retained separately from observation."""
+
+    __slots__ = ("__actor_ref", "__closed", "__handle", "__operation_id")
+
+    def __init__(
+        self,
+        operation_id: OperationId,
+        actor_ref: OperationActorReference,
+        handle: bytearray,
+        *,
+        _issuer: object,
+    ) -> None:
+        if _issuer is not _CAPABILITY_ISSUER:
+            raise TypeError("response capabilities are issued only by production composition")
+        self.__operation_id = operation_id
+        self.__actor_ref = actor_ref
+        self.__handle = handle
+        self.__closed = False
+
+    def _matches(
+        self,
+        operation_id: OperationId,
+        actor_ref: OperationActorReference,
+        capability_digest: ContentDigest,
+    ) -> bool:
+        return (
+            not self.__closed
+            and self.__operation_id == operation_id
+            and self.__actor_ref == actor_ref
+            and compare_digest(content_hash_hex(self.__handle.hex()), capability_digest)
+        )
+
+    def close(self) -> None:
+        """Irrevocably release this caller-held response capability."""
+        zeroize_secret_buffer(self.__handle)
+        self.__closed = True
+
+
 class OperationResponseAuthorityBroker:
     """Process-local REVIEW bearer custody that cannot survive restart."""
 
     def __init__(self) -> None:
-        self._entries: dict[OperationId, tuple[OperationPendingInteraction, bytearray]] = {}
+        self._entries: dict[
+            OperationId,
+            tuple[OperationActorReference, ContentDigest, OperationPendingInteraction | None, bytearray | None],
+        ] = {}
         self._lock = RLock()
+
+    def reserve(
+        self,
+        operation_id: OperationId,
+        actor_ref: OperationActorReference,
+    ) -> OperationResponseCapability:
+        """Issue an actor-bound opaque handle before operation execution starts."""
+        handle = bytearray(secrets.token_bytes(32))
+        digest = content_hash_hex(handle.hex())
+        capability = OperationResponseCapability(operation_id, actor_ref, handle, _issuer=_CAPABILITY_ISSUER)
+        with self._lock:
+            if operation_id in self._entries:
+                capability.close()
+                raise ValueError("response capability is already reserved")
+            self._entries[operation_id] = (actor_ref, digest, None, None)
+        return capability
 
     def issue(self, pending: OperationPendingInteraction, response_token: OperationResponseToken) -> None:
         """Retain one mutable bearer only after its digest-bound checkpoint exists."""
         operation_id = pending.request.identity.operation_id
         token = bytearray(response_token, "ascii")
         with self._lock:
-            if operation_id in self._entries:
+            entry = self._entries.get(operation_id)
+            if entry is None:
+                zeroize_secret_buffer(token)
+                return
+            actor_ref, capability_digest, issued_pending, issued_token = entry
+            if issued_pending is not None or issued_token is not None:
                 zeroize_secret_buffer(token)
                 raise ValueError("response authority is already issued")
-            self._entries[operation_id] = (pending, token)
+            self._entries[operation_id] = (actor_ref, capability_digest, pending, token)
 
     def bind(
         self,
         request: OperationResponseControlRequestV1,
         pending: OperationPendingInteraction,
+        capability: OperationResponseCapability,
         *,
         clock: Callable[[], datetime],
     ) -> OperationSecureResponseAuthority:
         """Transfer one exact live bearer into an actor-bound response service."""
+        token: bytearray | None = None
         with self._lock:
-            entry = self._entries.pop(request.operation_id, None)
-        if entry is None:
-            return _UnavailableOperationSecureResponseAuthority()
-        issued_pending, token = entry
+            entry = self._entries.get(request.operation_id)
+            if entry is None:
+                return _UnavailableOperationSecureResponseAuthority()
+            actor_ref, capability_digest, issued_pending, issued_token = entry
+            valid = (
+                capability._matches(request.operation_id, actor_ref, capability_digest)
+                and request.actor_ref == actor_ref
+                and issued_pending == pending
+                and issued_token is not None
+                and pending.request.identity.operation_id == request.operation_id
+                and pending.request.interaction_id == request.interaction_id
+                and pending.request.revision == request.revision
+            )
+            if not valid:
+                return _UnavailableOperationSecureResponseAuthority()
+            self._entries.pop(request.operation_id)
+            token = issued_token
+        capability.close()
         try:
-            if issued_pending != pending:
-                raise ValueError("issued response authority does not match the current checkpoint")
+            assert token is not None
             return BoundOperationSecureResponseAuthority.bind(
                 operation_id=request.operation_id,
                 interaction_id=request.interaction_id,
@@ -293,8 +375,9 @@ class OperationResponseAuthorityBroker:
         with self._lock:
             entries = tuple(self._entries.values())
             self._entries.clear()
-        for _pending, token in entries:
-            zeroize_secret_buffer(token)
+        for _actor_ref, _capability_digest, _pending, token in entries:
+            if token is not None:
+                zeroize_secret_buffer(token)
 
 
 @dataclass(frozen=True, slots=True)

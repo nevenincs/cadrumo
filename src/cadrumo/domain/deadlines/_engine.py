@@ -238,14 +238,19 @@ class DeadlineEngine:
         Returns ``None`` when the window does not apply to this
         profile — either the revision has filing schedules and none
         match for the window's registry period, the applicability
-        conditions do not resolve, or the window falls outside the
-        profile's activity period. Otherwise builds the obligation
+        conditions do not resolve, the window requires post-calculation
+        qualifiers, or the window falls outside the profile's activity period.
+        Resultado/tipo-renta qualified windows cannot be selected from a static
+        taxpayer profile and are resolved by the canonical post-calculation plazo
+        path instead. Otherwise builds the obligation
         with its classified status and, for OVERDUE obligations with
         ≥1 day late, a registry-backed recovery payload (None when
         the recovery registry has no entry for the modelo).
         """
         from ..calculations.registry import applicable_filing_schedules
 
+        if window.resultado_scope is not None or window.tipo_renta_scope is not None:
+            return None
         registry_period = _window_registry_period(window)
         if revision.filing_schedules and not applicable_filing_schedules(
             revision,

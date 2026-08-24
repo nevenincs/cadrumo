@@ -6,8 +6,9 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from pydantic import BaseModel
+from pydantic import BaseModel, TypeAdapter
 
+from ._interactions import OperationActorReference
 from ._journal import (
     OperationEventStream,
     OperationJournal,
@@ -21,6 +22,7 @@ from ._projection_services import (
     OperationCancellationService,
     OperationDetachService,
     OperationResponseAuthorityBroker,
+    OperationResponseCapability,
     OperationResponseControlService,
     OperationReviewProjectionService,
     OperationWorkspaceRefreshTargetService,
@@ -34,24 +36,38 @@ from ._secret_submission import OperationSecretRequirement
 from ._supervisor import OperationSupervisor
 
 
+@dataclass(frozen=True, slots=True)
+class OperationSubmission:
+    """Durable receipt plus its separately held process-local response capability."""
+
+    receipt: OperationSubmissionReceiptV1
+    response_capability: OperationResponseCapability
+
+
 class OperationSubmissionService:
     """Public submit/start door over the private canonical supervisor."""
 
-    def __init__(self, supervisor: OperationSupervisor) -> None:
+    def __init__(self, supervisor: OperationSupervisor, authority_broker: OperationResponseAuthorityBroker) -> None:
         self._supervisor = supervisor
+        self._authority_broker = authority_broker
 
     async def submit(
         self,
         request: OperationRequest[BaseModel],
         *,
+        actor_ref: str,
         operation_id: OperationId | None = None,
-    ) -> OperationSubmissionReceiptV1:
+    ) -> OperationSubmission:
         """Durably submit one typed registered request without starting it."""
+        validated_actor = TypeAdapter(OperationActorReference).validate_python(actor_ref)
         submitted_id = await self._supervisor.submit(request, operation_id=operation_id)
         snapshot = await self._supervisor.inspect(submitted_id)
-        return OperationSubmissionReceiptV1(
-            operation_id=submitted_id,
-            secret_requirement=snapshot.secret_requirement,
+        receipt = OperationSubmissionReceiptV1(
+            operation_id=submitted_id, secret_requirement=snapshot.secret_requirement
+        )
+        return OperationSubmission(
+            receipt=receipt,
+            response_capability=self._authority_broker.reserve(submitted_id, validated_actor),
         )
 
     async def submit_secret(self, requirement: OperationSecretRequirement, secret: bytearray) -> None:
@@ -75,7 +91,7 @@ class OperationComposedServices:
     cancellation: OperationCancellationService
     detach: OperationDetachService
     _response_factory: Callable[
-        [OperationResponseControlRequestV1],
+        [OperationResponseControlRequestV1, OperationResponseCapability],
         Awaitable[OperationResponseControlService],
     ]
     _shutdown: Callable[[], Awaitable[None]]
@@ -87,9 +103,10 @@ class OperationComposedServices:
     async def response(
         self,
         request: OperationResponseControlRequestV1,
+        capability: OperationResponseCapability,
     ) -> OperationResponseControlService:
         """Bind caller identity to the exact process-local REVIEW authority."""
-        return await self._response_factory(request)
+        return await self._response_factory(request, capability)
 
 
 def compose_operation_services(
@@ -127,6 +144,7 @@ def compose_operation_services(
 
     async def bind_response(
         request: OperationResponseControlRequestV1,
+        capability: OperationResponseCapability,
     ) -> OperationResponseControlService:
         snapshot = await _read_snapshot(reader, request.operation_id)
         pending = (
@@ -135,7 +153,7 @@ def compose_operation_services(
         authority = (
             _UnavailableOperationSecureResponseAuthority()
             if pending is None
-            else authority_broker.bind(request, pending, clock=clock)
+            else authority_broker.bind(request, pending, capability, clock=clock)
         )
         return OperationResponseControlService(
             reader=reader,
@@ -149,7 +167,7 @@ def compose_operation_services(
         await supervisor.shutdown()
 
     return OperationComposedServices(
-        submission=OperationSubmissionService(supervisor),
+        submission=OperationSubmissionService(supervisor, authority_broker),
         observation=observation,
         review=OperationReviewProjectionService(reader=reader, registry=registry, operands=operands, clock=clock),
         refresh=OperationWorkspaceRefreshTargetService(reader=reader, registry=registry),
@@ -160,4 +178,9 @@ def compose_operation_services(
     )
 
 
-__all__ = ["OperationComposedServices", "OperationSubmissionService", "compose_operation_services"]
+__all__ = [
+    "OperationComposedServices",
+    "OperationSubmission",
+    "OperationSubmissionService",
+    "compose_operation_services",
+]

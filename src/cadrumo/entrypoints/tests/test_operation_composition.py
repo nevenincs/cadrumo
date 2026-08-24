@@ -21,7 +21,10 @@ from ...application.operations import (
     OperationDetachService,
     OperationObservationService,
     OperationPublicDefinitionRegistrationV1,
+    OperationRequest,
+    OperationResponseCapability,
     OperationReviewProjectionService,
+    OperationSubmission,
     OperationSubmissionService,
     OperationWorkspaceRefreshTargetService,
 )
@@ -103,6 +106,32 @@ def test_production_composition_is_available_before_profile_login(tmp_path: Path
 
         assert dependencies.observation.registry.lookup("auth.profile.login").definition_id == "auth.profile.login"
         asyncio.run(dependencies.shutdown())
+
+
+def test_submission_issues_actor_bound_opaque_response_capability(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        dependencies = compose_operation_dependencies()
+        definition = dependencies.observation.registry.lookup("auth.session.logout")
+        payload = definition.request_type()
+        request = OperationRequest(
+            definition_id=definition.definition_id,
+            subject_ref="profile:active",
+            payload=payload,
+        )
+
+        async def submit() -> OperationSubmission:
+            result = await dependencies.submission.submit(
+                request,
+                actor_ref="operator:composition-test",
+                operation_id="a" * 64,
+            )
+            await dependencies.shutdown()
+            return result
+
+        result = asyncio.run(submit())
+
+        assert result.receipt.operation_id == "a" * 64
+        assert isinstance(result.response_capability, OperationResponseCapability)
 
 
 def test_production_composition_exposes_only_public_services() -> None:
