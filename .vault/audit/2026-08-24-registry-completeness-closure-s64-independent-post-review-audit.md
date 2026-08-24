@@ -10,9 +10,6 @@ related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
   - "[[2026-08-24-registry-completeness-closure-W01-P02-S64]]"
 ---
-
-
-
 # `registry-completeness-closure` audit: `S64 independent post-review`
 
 ## Scope
@@ -50,4 +47,3 @@ CLI ignores it, then temporarily restore the exact former
 `find_object(RegistryClosureAuthorities)` branch and show that this same test
 fails before restoring production. Keep the programmatic loader injection ports
 unchanged. Do not accept S64 as independently closed until that follow-up passes.
-
