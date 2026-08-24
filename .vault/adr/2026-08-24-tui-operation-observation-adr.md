@@ -5,10 +5,13 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:e4c3da5e5c7e6dd5a91a63f0d3574ccbdd19f16ad1214684ab0b28563510d520'
+body_hash: 'sha256:1d937574d833a3602785175229328e53ed959c559e6f1cbec209da584098df9b'
 related:
-  - "[[2026-08-24-tui-operation-observation-research]]"
-  - "[[2026-08-11-tui-architecture-adr]]"
+  - '[[2026-08-24-tui-operation-observation-research]]'
+  - '[[2026-08-11-tui-architecture-adr]]'
+  - '[[2026-08-24-tui-registry-api-gate-adr]]'
+  - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
+  - '[[2026-08-24-modelo-edit-contract-adr]]'
 ---
 
 # `tui-operation-observation` adr: `public operation contract parent-amendment staging` | (**status:** `proposed`)
@@ -398,8 +401,9 @@ Add the current-only `OperationTransientFinancialOperandProtocolV1`, explicitly
 distinct from `OperationDurability.EPHEMERAL`, `EphemeralSecretSubmission`, and
 the persistent `OperationSecureOperandLookup`. A definition opting in binds one
 `OperationTransientFinancialOperandDeclarationV1`: exact typed operand model and
-schema identity, maximum lifetime, exact edit-baseline kind, reconciliation
-policy `INTERRUPT`, and an authoritative domain effect-receipt resolver. Registry
+schema identity, maximum lifetime, exact edit-baseline schema identity,
+reconciliation policy `INTERRUPT`, and an authoritative domain effect-receipt
+resolver. Registry
 construction permits it only for `RECORDED` operations that declare effect
 `NONE`, `UNKNOWN`, and every domain effect the writer can prove.
 
@@ -412,8 +416,11 @@ application call, is never serialized or returned to TUI, and is discarded
 after success or refusal. The durable
 `OperationTransientFinancialOperandRequirementV1` contains only operation and
 definition identity, invocation revision, random-grant fingerprint, operand
-schema identity, safe opaque Workspace edit-baseline token, and expiry. The
-fingerprint is over fresh high-entropy randomness and never over operand content.
+schema identity, the declaration's edit-baseline schema identity, a safe opaque
+domain edit-baseline reference, and expiry. The fingerprint is over fresh
+high-entropy randomness and never over operand content. For Modelo the reference
+identifies `ModeloEditBaselineV1`; the Workspace read baseline is never accepted
+as a substitute.
 
 The supervisor owns one in-memory entry per exact requirement and serializes
 submission, consumption, cancellation, expiry, and settlement under the same
@@ -436,9 +443,11 @@ zeroises mutable backing buffers where the declared model provides them and
 drops every other strong reference promptly; it must not claim that immutable
 Python object memory can be reliably erased.
 
-Expiry or cancellation before `delivery_started` discards the runtime entry and
-settles `INTERRUPTED` or `CANCELLED`, as applicable, with effect `NONE`. Once
-`delivery_started` is durable, expiry cannot revoke executor access and
+Expiry before `delivery_started` discards the runtime entry and settles
+`INTERRUPTED/NONE`; it is a submission bound, not an aggregate execution
+deadline. A pre-delivery cancellation discards the entry and, after supervisor
+acknowledgement and cleanup, settles `CANCELLED/NONE`. Once `delivery_started`
+is durable, expiry cannot revoke executor access and
 cancellation cannot claim a terminal outcome until the executor or
 reconciliation settles. On process loss, `awaiting_submission` or `bound` with
 no delivery start settles `INTERRUPTED/NONE`. `delivery_started`,
@@ -447,10 +456,10 @@ no delivery start settles `INTERRUPTED/NONE`. `delivery_started`,
 proves `NONE`, the exact committed effect, or `PARTIAL`. The transient operand
 is never reconstructed or resumed after owner loss.
 
-For a Modelo edit, the domain writer consumes the exact opaque Workspace edit
-baseline and performs one atomic compare-and-swap revalidation with the
-canonical encrypted mutation. Where the Modelo store and operation journal
-cannot share a transaction, the writer records an idempotent effect receipt,
+For a Modelo edit, the domain writer consumes the exact admitted
+`ModeloEditBaselineV1` and performs one atomic compare-and-swap revalidation
+with the canonical encrypted mutation. Where the Modelo store and operation
+journal cannot share a transaction, the writer records an idempotent effect receipt,
 keyed by the operation/handoff identity but containing no financial value, in
 the same transaction as the mutation; the supervisor records terminal state
 from that receipt. Absence or disagreement remains `UNKNOWN`, never inferred
@@ -586,8 +595,11 @@ ephemeral-secret conformance receipt.
 
 Its closed predecessor tuple contains the exact C0 receipt path, schema,
 producing commit, and content digest; the accepted parent's then-current body
-hash; the accepted Modelo edit-contract stem/body hash required by the C3
-cohort; and the implementation commit under validation. It records and proves:
+hash; accepted stem `2026-08-24-modelo-edit-contract-adr` and its body hash; the
+exact Workspace predecessor
+`.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md` as
+`ModeloWorkspaceC2DependencyReceiptV1` with producing commit and content digest;
+and the implementation commit under validation. It records and proves:
 
 - protocol version `1`, every enrolled declaration and operand schema identity,
   the affected operation-definition digests, and production registry/DI parity;
@@ -601,7 +613,7 @@ cohort; and the implementation commit under validation. It records and proves:
 - crash injection before binding, while bound, after delivery start, after
   acknowledgement, after release, and across terminal settlement, with exact
   `NONE`/`UNKNOWN` classification and domain effect-receipt narrowing;
-- an enrolled Modelo writer's atomic Workspace-baseline compare-and-swap,
+- an enrolled Modelo writer's atomic `ModeloEditBaselineV1` compare-and-swap,
   idempotent effect receipt co-commit, stale-baseline refusal, and no refreshed
   read masquerading as effect proof; and
 - unique-sentinel absence from every forbidden operation, frontend, filesystem,
@@ -647,7 +659,7 @@ the decisive ownership, consistency, security, and honesty criteria identified b
 ## Consequences
 
 - TUI operation work gains one frontend-safe atomic observation target without
-  learning journal V3 or secure checkpoint topology.
+  learning the private journal schema or secure checkpoint topology.
 - Progress, cursor replay, detach, reconnect, and resynchronization share one
   anchor and cannot be stitched from conflicting revisions.
 - Terminal condition remains visible independently from lifecycle, effect,

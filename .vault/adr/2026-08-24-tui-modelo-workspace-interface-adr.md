@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:e227588af58452391436103510f38942b43a4cdf242b549b5d075e03032259dc'
+body_hash: 'sha256:44eb9184aac38e979c7f1cfdfc1b8822505bdb8a0609d565a68306140ea4438e'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-research]]"
   - "[[2026-08-11-tui-interface-adr]]"
@@ -374,8 +374,12 @@ only. It performs no automatic merge, silent rebase, or field-level conflict
 resolution.
 
 Terminal operation state never patches the prior workspace. The controller
-folds the operation-owned observation to terminal settlement, then requests a
-new workspace projection using the safe result/origin reference. `UPDATED`
+folds the operation-owned observation to terminal settlement, then calls
+`OperationWorkspaceRefreshTargetRequestV1` with the operation identity,
+terminal revision, definition-contract digest, and declared refresh-target
+schema identity. A successful registered adapter returns the typed
+`ModeloWorkspaceRefreshTargetV1`; only that target is used for the new Workspace
+request. The frontend never interprets or submits `result_ref`. `UPDATED`
 effect routes to the action's declared result destination and announces the new
 authoritative state. `NONE` preserves the workspace and presents the canonical
 notice or refusal. Failed or cancelled no-effect settlement keeps the edit
@@ -500,8 +504,9 @@ pass.
 ### D9 — Version and compatibility behavior
 
 The TUI declares the exact Workspace, `ModeloEditContractV1`, public operation
-projection, and operation financial-operand versions it consumes. It accepts
-only the compatibility tuple published by the edit contract. Startup or route
+projection, and `OperationTransientFinancialOperandProtocolV1` versions it
+consumes. It accepts only the compatibility tuple published by the edit
+contract. Startup or route
 admission refuses an unsupported read tuple before a workspace is mounted;
 editor admission refuses an unsupported edit tuple before accepting a lexeme or
 opening an edit session. Read sessions pin the received contract version,
@@ -522,7 +527,7 @@ substitute mocks, prose, or a proposed record for an unmet predecessor:
 
 | Cohort | Required entrance receipts | Canonical exit artifact, schema, and validator | Required proof |
 |---|---|---|---|
-| C0 — operation foundation | amended accepted `2026-08-11-tui-architecture-adr` | `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md`; `TuiOperationObservationDependencyReceiptV1`; `src/cadrumo/application/operations/tests/test_public_operation_dependency_receipt.py` | public observation version and schema fingerprint; atomic fold; settlement, interaction, cancellation, effect, recovery, and production DI |
+| C0 — operation foundation | amended accepted `2026-08-11-tui-architecture-adr` | `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md`; `TuiOperationObservationDependencyReceiptV1`; `src/cadrumo/application/operations/tests/test_public_operation_dependency_receipt.py` | `OperationPublicDefinitionContractV1` and contract-set schema identities/digests; atomic observation fold; registered safe REVIEW resolver, typed refusals, and non-authority; typed result-to-Workspace refresh-target adapter from a fresh process; settlement, interaction, cancellation, effect, recovery, and production DI |
 | C1 — bounded review | accepted Casilla review and accepted interface migration lane | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt.md`; `ModeloWorkspaceC1ExitReceiptV1`; `validate_modelo_workspace_c1_exit_receipt` | canonical `modelo.work.review` relocation; four-locale/three-geometry/two-theme keyboard and non-colour proof; no legacy production import |
 | C2 — complex read workspace | C1 exit plus `.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md`; `ModeloWorkspaceC2DependencyReceiptV1`; `validate_modelo_workspace_c2_dependency_receipt` | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c2-exit-receipt.md`; `ModeloWorkspaceC2ExitReceiptV1`; `validate_modelo_workspace_c2_exit_receipt` | C1-route atomic replacement; destination/factory census; projection coverage; baseline facets; refusal states; large schema/row/provenance matrix; production composition |
 | C3 — staged editor | C0 and C2 exits; `.vault/reference/2026-08-24-modelo-edit-contract-c3-dependency-receipt.md`; `ModeloEditContractC3DependencyReceiptV1`; `validate_modelo_edit_contract_c3_dependency_receipt`; and `.vault/reference/2026-08-24-tui-operation-financial-operand-dependency-receipt.md`; `TuiOperationFinancialOperandDependencyReceiptV1`; `src/cadrumo/application/operations/tests/test_financial_operand_dependency_receipt.py` | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c3-exit-receipt.md`; `ModeloWorkspaceC3ExitReceiptV1`; `validate_modelo_workspace_c3_exit_receipt` | exact compatibility tuple; edit/row state machine; parse and validation focus; review-only submit; stale refusal; atomic-result refresh; locale switch; operation handoff consumption; sensitive non-retention |

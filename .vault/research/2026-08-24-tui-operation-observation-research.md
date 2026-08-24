@@ -5,10 +5,13 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:4ed819bb83f999eb20476c0c2b889503878c57e31d371e1b214387e520406458'
+body_hash: 'sha256:51621c4e9c15d0be8785d25d8f25971d994027d55214b0fb084818ed6a094600'
 related:
-  - "[[2026-08-11-tui-architecture-adr]]"
-  - "[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]"
+  - '[[2026-08-11-tui-architecture-adr]]'
+  - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
+  - '[[2026-08-24-tui-registry-api-gate-adr]]'
+  - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
+  - '[[2026-08-24-modelo-edit-contract-adr]]'
 ---
 
 # `tui-operation-observation` research: `Public operation contract amendment staging`
@@ -64,10 +67,10 @@ safe public definition. Python module and class identity is not a stable public
 schema contract, and the existing generic `OperationReference` does not say
 which schema or resolver owns a reference. The ADR must settle a canonical,
 registered public-definition manifest without publishing Python or persistence
-topology. `src/cadrumo/application/operations/_registry.py:121`,
-`src/cadrumo/application/operations/_registry.py:126`,
-`src/cadrumo/application/operations/_registry.py:128`,
-`src/cadrumo/application/operations/_registry.py:135`,
+topology. `src/cadrumo/application/operations/_registry.py:125`,
+`src/cadrumo/application/operations/_registry.py:130`,
+`src/cadrumo/application/operations/_registry.py:132`,
+`src/cadrumo/application/operations/_registry.py:139`,
 `src/cadrumo/application/operations/_models.py:42`.
 
 ### A REVIEW reference needs a registered safe resolver
@@ -86,8 +89,8 @@ observation authority and response bearer authority: rendering a review cannot
 grant APPLY or REJECT. `src/cadrumo/application/operations/_interactions.py:25`,
 `src/cadrumo/application/operations/_interactions.py:92`,
 `src/cadrumo/application/operations/_executor.py:140`,
-`src/cadrumo/application/operations/_supervisor.py:1038`,
-`src/cadrumo/application/operations/_registry.py:121`.
+`src/cadrumo/application/operations/_supervisor.py:1082`,
+`src/cadrumo/application/operations/_registry.py:125`.
 
 ### Financial edit operands require a distinct transient custody contract
 
@@ -114,8 +117,8 @@ only in encrypted secure storage. `.vault/adr/2026-08-11-tui-architecture-adr.md
 `.vault/adr/2026-08-11-tui-architecture-adr.md:248`,
 `.vault/adr/2026-08-11-tui-architecture-adr.md:282`,
 `src/cadrumo/application/operations/_secret_submission.py:58`,
-`src/cadrumo/application/operations/_secret_submission.py:85`,
-`src/cadrumo/application/operations/_executor.py:105`,
+`src/cadrumo/application/operations/_secret_submission.py:84`,
+`src/cadrumo/application/operations/_executor.py:106`,
 `.codex/rules/sensitive-financial-data-secure-storage-only.md:8`.
 
 ### An opaque operation result cannot drive a typed Workspace refresh
@@ -139,18 +142,19 @@ with the Workspace owner. `src/cadrumo/application/operations/_models.py:129`,
 
 `OperationSupervisor.inspect`, `observe`, and `detach` return
 `OperationPersistedSnapshot` directly. That type carries durable schema version
-3, a secure request reference, transition-local events, idempotency state, and
+4 in the current evolving tree, a secure request reference, transition-local
+events, idempotency state, and
 pending and consumed interaction checkpoints. These fields are valid for the
 journal and reconciliation boundary but exceed the modal's observation needs
 and make storage evolution a frontend change. `OperationSnapshot` is not a
 replacement: it retains the concrete request payload and omits deadlines,
 cancellation checkpoints, current progress, and pending interaction.
-`src/cadrumo/application/operations/_supervisor.py:366`,
-`src/cadrumo/application/operations/_supervisor.py:383`,
-`src/cadrumo/application/operations/_journal.py:37`,
-`src/cadrumo/application/operations/_journal.py:47`,
-`src/cadrumo/application/operations/_journal.py:63`,
-`src/cadrumo/application/operations/_journal.py:65`,
+`src/cadrumo/application/operations/_supervisor.py:481`,
+`src/cadrumo/application/operations/_supervisor.py:498`,
+`src/cadrumo/application/operations/_journal.py:39`,
+`src/cadrumo/application/operations/_journal.py:49`,
+`src/cadrumo/application/operations/_journal.py:69`,
+`src/cadrumo/application/operations/_journal.py:71`,
 `src/cadrumo/application/operations/_models.py:151`.
 
 ### Snapshot and event state require one atomic observation anchor
@@ -162,13 +166,14 @@ batch to it. The supervisor currently loads the snapshot and replays history
 through separate calls, so a commit between those calls can combine state and
 events from different revisions. A frontend-side retry cannot prove which
 combination was authoritative.
-`src/cadrumo/application/operations/_journal.py:50`,
-`src/cadrumo/application/operations/_journal.py:61`,
+`src/cadrumo/application/operations/_journal.py:56`,
+`src/cadrumo/application/operations/_journal.py:67`,
+`src/cadrumo/application/operations/_journal.py:69`,
 `src/cadrumo/adapters/persistence/operations/_journal_validation.py:25`,
 `src/cadrumo/adapters/persistence/operations/_journal_validation.py:31`,
 `src/cadrumo/adapters/persistence/operations/_journal.py:143`,
-`src/cadrumo/application/operations/_supervisor.py:369`,
-`src/cadrumo/application/operations/_supervisor.py:373`.
+`src/cadrumo/application/operations/_supervisor.py:482`,
+`src/cadrumo/application/operations/_supervisor.py:496`.
 
 The evidence favors an application port that returns the current internal
 snapshot and the requested bounded history slice from one persistence read.
@@ -190,7 +195,7 @@ filesystem adapter retains full history and does not yet exercise its modeled
 `EXPIRED` or `COMPACTED` replay statuses.
 `src/cadrumo/application/operations/_events.py:60`,
 `src/cadrumo/application/operations/_models.py:151`,
-`src/cadrumo/application/operations/_journal.py:37`,
+`src/cadrumo/application/operations/_journal.py:39`,
 `src/cadrumo/application/operations/_replay.py:18`,
 `src/cadrumo/application/operations/_replay.py:23`,
 `src/cadrumo/application/operations/_replay.py:89`,
@@ -206,7 +211,8 @@ condition to result/refusal or localized terminal copy loses an accepted state
 axis and cannot distinguish failed, cancelled, timed-out, and interrupted
 settlement. `.vault/adr/2026-08-11-tui-architecture-adr.md:175`,
 `src/cadrumo/application/operations/_models.py:160`,
-`src/cadrumo/application/operations/_journal.py:52`.
+`src/cadrumo/application/operations/_journal.py:58`,
+`src/cadrumo/application/operations/_journal.py:68`.
 
 ### Replay needs resynchronization semantics as well as a cursor
 
@@ -235,7 +241,7 @@ state, and the projection must never disclose that token or its digest.
 `src/cadrumo/application/operations/_interactions.py:46`,
 `src/cadrumo/application/operations/_interactions.py:86`,
 `src/cadrumo/application/operations/_interactions.py:98`,
-`src/cadrumo/application/operations/_supervisor.py:466`.
+`src/cadrumo/application/operations/_supervisor.py:585`.
 
 The implementable initial surface is review observation with apply/reject
 affordances enabled only when the caller separately holds the exact secure
@@ -248,7 +254,7 @@ while disabling unsupported response paths.
 
 ### Public version, envelope revision, and journal schema are distinct axes
 
-The persisted record's `schema_version = 3` governs durable hydration, while
+The live evolving record's `schema_version = 4` governs durable hydration, while
 operation revision is the optimistic lifecycle revision and event sequence is
 the replay cursor. None is a public observation contract version. A strict
 public V1 model alone also cannot return a typed unsupported-version refusal,
@@ -256,9 +262,9 @@ because validation fails before version-specific parsing. A minimal version
 header followed by exact model dispatch is needed, analogous to the operation
 registry's minimal definition header. Pre-release version changes must replace
 all in-tree consumers atomically and delete the old public model rather than
-introduce read-tolerance. `src/cadrumo/application/operations/_journal.py:47`,
+introduce read-tolerance. `src/cadrumo/application/operations/_journal.py:49`,
 `src/cadrumo/application/operations/_models.py:29`,
-`src/cadrumo/application/operations/_registry.py:19`,
+`src/cadrumo/application/operations/_registry.py:53`,
 `.codex/rules/no-legacy-compatibility.md:8`,
 `.codex/rules/no-legacy-compatibility.md:36`.
 
@@ -299,14 +305,16 @@ as `TuiOperationFinancialOperandDependencyReceiptV1`, validated by
 It must chain the exact C0 receipt digest and prove typed binding,
 single-consumer races, delivery/acknowledgement windows, expiry, cancellation,
 shutdown, process-loss classification, authoritative effect-receipt narrowing,
-Modelo baseline compare-and-swap integration, and raw-value non-retention. It
+`ModeloEditBaselineV1` compare-and-swap integration, and raw-value non-retention.
+It
 can open only the operation half of C3; the Workspace/editor decisions and
 receipts remain independent prerequisites.
 
 ### Alternatives have unequal authority and consistency costs
 
 - Directly expose `OperationPersistedSnapshot`: smallest implementation, but
-  publishes storage and checkpoint topology and binds frontends to journal V3.
+  publishes storage and checkpoint topology and binds frontends to the private
+  journal schema.
 - Let each frontend join `observe` and `replay`: reuses current calls, but
   creates a race and repeats the authoritative fold in TUI, CLI, and MCP.
 - Persist a complete frontend projection: offers one read, but introduces a
@@ -335,7 +343,7 @@ No authenticated browser operation, process cancellation, event compaction,
 slow-consumer load test, financial-operand crash injection, or Modelo effect
 write was executed. No retention policy beyond the current full-history
 filesystem adapter was evaluated. The accepted parent and operation epicentres
-were reread at commit `0a6400f216d94ce44847808bef5ab660286ae9c4` while
+were reread at commit `6122cae70f53b4ef8a2301d96524de3088d4df14` while
 uncommitted operation-platform work was present in the shared tree. That WIP is
 evidence of an evolving dependency, not accepted architecture or a completed
 receipt. Implementation and full-suite health remain for the canonical plan.
@@ -372,41 +380,41 @@ receipt. Implementation and full-suite health remain for the canonical plan.
 - `src/cadrumo/application/operations/_interactions.py:86`
 - `src/cadrumo/application/operations/_interactions.py:98`
 - `src/cadrumo/application/operations/_interactions.py:92`
-- `src/cadrumo/application/operations/_journal.py:37`
-- `src/cadrumo/application/operations/_journal.py:47`
-- `src/cadrumo/application/operations/_journal.py:50`
-- `src/cadrumo/application/operations/_journal.py:52`
-- `src/cadrumo/application/operations/_journal.py:61`
-- `src/cadrumo/application/operations/_journal.py:63`
-- `src/cadrumo/application/operations/_journal.py:65`
+- `src/cadrumo/application/operations/_journal.py:39`
+- `src/cadrumo/application/operations/_journal.py:49`
+- `src/cadrumo/application/operations/_journal.py:56`
+- `src/cadrumo/application/operations/_journal.py:58`
+- `src/cadrumo/application/operations/_journal.py:67`
+- `src/cadrumo/application/operations/_journal.py:68`
+- `src/cadrumo/application/operations/_journal.py:69`
+- `src/cadrumo/application/operations/_journal.py:71`
 - `src/cadrumo/application/operations/_models.py:29`
 - `src/cadrumo/application/operations/_models.py:42`
 - `src/cadrumo/application/operations/_models.py:129`
 - `src/cadrumo/application/operations/_models.py:139`
 - `src/cadrumo/application/operations/_models.py:151`
 - `src/cadrumo/application/operations/_models.py:160`
-- `src/cadrumo/application/operations/_registry.py:19`
-- `src/cadrumo/application/operations/_registry.py:121`
-- `src/cadrumo/application/operations/_registry.py:126`
-- `src/cadrumo/application/operations/_registry.py:128`
-- `src/cadrumo/application/operations/_registry.py:135`
+- `src/cadrumo/application/operations/_registry.py:53`
+- `src/cadrumo/application/operations/_registry.py:125`
+- `src/cadrumo/application/operations/_registry.py:130`
+- `src/cadrumo/application/operations/_registry.py:132`
+- `src/cadrumo/application/operations/_registry.py:139`
 - `src/cadrumo/application/operations/_replay.py:18`
 - `src/cadrumo/application/operations/_replay.py:23`
 - `src/cadrumo/application/operations/_replay.py:71`
 - `src/cadrumo/application/operations/_replay.py:89`
-- `src/cadrumo/application/operations/_supervisor.py:366`
-- `src/cadrumo/application/operations/_supervisor.py:369`
-- `src/cadrumo/application/operations/_supervisor.py:373`
-- `src/cadrumo/application/operations/_supervisor.py:383`
-- `src/cadrumo/application/operations/_supervisor.py:466`
-- `src/cadrumo/application/operations/_supervisor.py:1038`
-- `src/cadrumo/application/operations/_executor.py:105`
+- `src/cadrumo/application/operations/_supervisor.py:481`
+- `src/cadrumo/application/operations/_supervisor.py:482`
+- `src/cadrumo/application/operations/_supervisor.py:496`
+- `src/cadrumo/application/operations/_supervisor.py:498`
+- `src/cadrumo/application/operations/_supervisor.py:585`
+- `src/cadrumo/application/operations/_supervisor.py:1082`
+- `src/cadrumo/application/operations/_executor.py:106`
 - `src/cadrumo/application/operations/_executor.py:140`
 - `src/cadrumo/application/operations/_secret_submission.py:58`
-- `src/cadrumo/application/operations/_secret_submission.py:85`
+- `src/cadrumo/application/operations/_secret_submission.py:84`
 - `src/cadrumo/adapters/persistence/operations/_journal.py:143`
 - `src/cadrumo/adapters/persistence/operations/_journal.py:223`
 - `src/cadrumo/adapters/persistence/operations/_journal_validation.py:25`
 - `src/cadrumo/adapters/persistence/operations/_journal_validation.py:31`
-- commit `0a6400f216d94ce44847808bef5ab660286ae9c4`
-
+- commit `6122cae70f53b4ef8a2301d96524de3088d4df14`

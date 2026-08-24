@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:f1090ee6669ca58201f011e299027484949d8cfc2fdc3b61c01440b559230282'
+body_hash: 'sha256:df3f19f74c7be13731716480330b25d1ee0052cafc65d1d51797279d5c5ebf85'
 related:
   - '[[2026-08-11-tui-architecture-W01-P01-S01]]'
   - '[[2026-08-11-tui-architecture-W01-P01-S02]]'
@@ -54,6 +54,7 @@ related:
   - '[[2026-08-11-tui-architecture-W03-P07-S36]]'
   - '[[2026-08-11-tui-architecture-W03-P07-S37]]'
   - '[[2026-08-11-tui-architecture-W03-P07-S38]]'
+  - '[[2026-08-11-tui-architecture-W03-P08-S114]]'
   - '[[2026-08-11-tui-architecture-W03-P08-S39]]'
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-11-tui-architecture-plan]]'
@@ -89,6 +90,7 @@ related:
   - '[[2026-08-24-tui-architecture-censo-operation-authority-reconciliation-research]]'
   - '[[2026-08-24-tui-architecture-command-enrollment-honesty-review-audit]]'
   - '[[2026-08-24-tui-architecture-command-enrollment-parity-reference]]'
+  - '[[2026-08-24-tui-architecture-ephemeral-secret-submission-review-audit]]'
   - '[[2026-08-24-tui-architecture-invocation-policy-review-audit]]'
   - '[[2026-08-24-tui-architecture-pre-custody-login-secret-submission-reference]]'
   - '[[2026-08-24-tui-architecture-pre-custody-login-secret-submission-research]]'
@@ -147,6 +149,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-14-tui-architecture-s26-review-audit` - `tui-architecture` audit: `W02.P05.S26 startup reconciliation final review`
 - `2026-08-14-tui-architecture-s27-review-audit` - `tui-architecture` audit: `S27 terminal lifecycle review`
 - `2026-08-24-tui-architecture-command-enrollment-honesty-review-audit` - `tui-architecture` audit: `TUI command enrollment honesty review`
+- `2026-08-24-tui-architecture-ephemeral-secret-submission-review-audit` - `tui-architecture` audit: `ephemeral secret submission code review`
 - `2026-08-24-tui-architecture-invocation-policy-review-audit` - `tui-architecture` audit: `invocation policy review`
 - `2026-08-24-tui-architecture-s113-continuation-review-audit` - `tui-architecture` audit: `S113 durable continuation safety review`
 - `2026-08-24-tui-architecture-s28-recovery-review-audit` - `tui-architecture` audit: `S28 recovery review`
@@ -209,6 +212,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W03-P07-S36` - Emit ordered safe stage and unit progress with scoped refusals and truthful none, updated, partial, or unknown effects
 - `2026-08-11-tui-architecture-W03-P07-S37` - Export the filed-history operation definition through the live application facade
 - `2026-08-11-tui-architecture-W03-P07-S38` - Prove dry-run parity, committed-unit accounting, child provenance references, unsupported cancellation and deadline claims, and cleanup before settlement
+- `2026-08-11-tui-architecture-W03-P08-S114` - Implement credential-free non-secret operation requests and one-shot supervisor-owned ephemeral secret submission with exact binding, expiry, zeroisation, restart interruption, and no durable secret derivatives before registering login or passphrase operations
 - `2026-08-11-tui-architecture-W03-P08-S39` - Register login, provider configuration, credential acquisition, passphrase rotation, and auth teardown as application-owned operations
 
 ### plan

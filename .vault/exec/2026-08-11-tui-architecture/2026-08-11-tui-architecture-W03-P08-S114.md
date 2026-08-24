@@ -5,46 +5,11 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:dfb82f29540dab33a9deb4f204b661905ace8b59249991c05230aae13cdb1a8c'
+body_hash: 'sha256:27ed9cc7f61e7182f91e29649e6693c2bee417e1466b2d7acdf5e0f73d51d052'
 step_id: 'S114'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S114 and 2026-08-11-tui-architecture-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Implement credential-free non-secret operation requests and one-shot supervisor-owned ephemeral secret submission with exact binding, expiry, zeroisation, restart interruption, and no durable secret derivatives before registering login or passphrase operations and ## Scope
-
-- `src/cadrumo/application/operations`
-- `src/cadrumo/adapters/persistence/operations`
-- `and focused real persistence and lifecycle tests` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Implement credential-free non-secret operation requests and one-shot supervisor-owned ephemeral secret submission with exact binding, expiry, zeroisation, restart interruption, and no durable secret derivatives before registering login or passphrase operations
 
@@ -56,10 +21,35 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Add registry-owned request storage policy validation for secure references and strict credential-free request models.
+- Persist credential-free request JSON with its safe content digest while refusing secret-capable fields and serialization shapes.
+- Add the supervisor-owned one-shot `EphemeralSecretSubmission` port with exact durable requirement binding and mutable-buffer transfer.
+- Serialize secret submission with cancellation and terminal settlement under the operation boundary.
+- Permanently close runtime custody on shutdown and zeroize pending and actively consumed buffers.
+- Classify restart before executor entry as `INTERRUPTED/NONE` and retain ordinary `UNKNOWN` reconciliation after entry.
+- Consolidate the public contracts in `application.operations` and durable validation in persistence operations without login-specific policy or active-profile inference.
+- Prove the lifecycle on real filesystem repositories, including restart, mismatch, expiry, duplicate, race, byte-scan, and non-retention cases.
 
 ## Outcome
 
+Implemented the generic credential-free request journal and one-shot ephemeral
+secret substrate required before any login or passphrase operation can be
+registered. Durable state contains only registry-approved request values and
+credential-free secret requirement identity; submitted secret bytes, callbacks,
+and reversible derivatives remain absent from persistence and diagnostics.
+
+Verification passed:
+
+- Ruff: all checks passed on the S114 Python surface.
+- basedpyright: 0 errors, 0 warnings, 0 notes.
+- Application operation unit tests: 167 passed.
+- Focused real persistence tests: 11 passed, including 7 ephemeral-secret lifecycle tests.
+- Import migration identity proof: 1 passed.
+- Independent code review: the reported cleanup-serialization finding was remediated and closed after deterministic cancellation, settlement, shutdown, and active-consumption proofs; no S114 blocker remains.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+The initial independent review reproduced stale insertion after cancellation and
+submission after shutdown. The supervisor and broker synchronization was amended,
+and the reviewer independently verified the corrected behavior. No compatibility
+shim, forwarding wrapper, mock, fake, patch, or skipped test was introduced.

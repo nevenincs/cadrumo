@@ -5,10 +5,14 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:525187e863e3a90c448d30d2984ba15564b32c7cf48bfb88db048dc294955cca'
+body_hash: 'sha256:c3354aa7cb95bb5bed28da9bb53d427b6591ab3635cfa1ad2379613975cd8953'
 related:
   - "[[2026-08-11-tui-interface-adr]]"
   - "[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]"
+  - '[[2026-08-10-casilla-schema-read-model-adr]]'
+  - '[[2026-08-24-tui-registry-api-gate-adr]]'
+  - '[[2026-08-11-tui-architecture-adr]]'
+  - '[[2026-08-24-tui-operation-observation-adr]]'
 ---
 
 # `tui-modelo-workspace-interface` research: `Modelo workspace interface and editor`
@@ -121,9 +125,9 @@ contract is therefore still required behind `application.modelo` for version
 dispatch, admission, locale-aware parsing, authoritative preflight, normalized
 intents, capability/refusal, and execution result. Its current-only
 compatibility boundary must name Workspace, edit, public operation projection,
-and operation financial-operand versions independently; sharing one generic
-version or letting an operation definition stand in for the edit schema would
-hide incompatible seams.
+and `OperationTransientFinancialOperandProtocolV1` versions independently;
+sharing one generic version or letting an operation definition stand in for the
+edit schema would hide incompatible seams.
 
 ### The mutation baseline spans both catalogues and the selected registry schema
 

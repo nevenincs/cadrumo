@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:1fdb7869c22c53d5f6e5ab27f7765e9a9d89fee60030c7685d4fc5aed6a6c866'
+body_hash: 'sha256:2a17321c8d9d8caeb67d33156751da847f3b9e8c36ac00ea9614aa1319d73192'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-research]]"
   - "[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]"
@@ -133,7 +133,7 @@ financial input. V1 supports exactly this compatibility tuple:
 - Workspace contract version `1`;
 - edit contract version `1`;
 - public operation projection version `1`; and
-- operation financial-operand contract version `1`.
+- `OperationTransientFinancialOperandProtocolV1` version `1`.
 
 `ModeloEditCompatibilityTupleV1` names all four axes separately. It is never a
 generic shared `version` field. Admission refuses
@@ -293,8 +293,12 @@ prerequisite is separately
 `.vault/reference/2026-08-24-tui-operation-financial-operand-dependency-receipt.md`,
 schema `TuiOperationFinancialOperandDependencyReceiptV1`, validated by
 `src/cadrumo/application/operations/tests/test_financial_operand_dependency_receipt.py`.
-It must cite the amended accepted operation parent and chain the C0 observation
-receipt digest. Neither receipt can stand in for the other.
+Its closed predecessor tuple must cite the amended accepted operation parent;
+the exact C0 observation receipt path, schema, producing commit, and content
+digest; this accepted ADR's body hash; and the C2 Workspace dependency receipt
+path, `ModeloWorkspaceC2DependencyReceiptV1` schema, producing commit, and
+content digest. Neither operation receipt nor edit receipt can stand in for the
+other.
 
 Every proof field uses a discriminated `PASSED` or `NOT_APPLICABLE` result.
 `NOT_APPLICABLE` requires a stable code, owning authority, bounded reason, and
