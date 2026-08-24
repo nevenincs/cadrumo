@@ -53,7 +53,11 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from functools import partial
+from importlib import import_module
+from types import ModuleType
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -73,6 +77,15 @@ if TYPE_CHECKING:
         PersistedExpedientesSnapshot,
         expedientes_snapshot_object_key,
     )
+    from ._filed_history_operation import (
+        FILED_HISTORY_OPERATION_DEFINITION_ID as FILED_HISTORY_OPERATION_DEFINITION_ID,
+    )
+    from ._filed_history_operation import (
+        FiledHistoryOperationRequest as FiledHistoryOperationRequest,
+    )
+    from ._filed_history_operation import (
+        build_filed_history_operation_definition as build_filed_history_operation_definition,
+    )
     from ._notification_documents import (
         NotificationDocumentCustody,
         NotificationDocumentNotFoundError,
@@ -80,6 +93,7 @@ if TYPE_CHECKING:
         NotificationDocumentService,
         notification_document_object_key,
     )
+    from ._notification_ports import NotificationDocumentProtocol
     from ._notifications import (
         NotificationsService,
         PersistedNotificationsSnapshot,
@@ -594,70 +608,60 @@ async def capture_justificante_snapshot_outcome(
     return JustificanteCaptureOutcome(snapshot=persisted, justificante=justificante, filing_record=filing_record)
 
 
+#: Re-exported name -> owning module. This literal is the canonical lazy-facade
+#: manifest: every name previously handled by the resolution ladder is listed
+#: exactly once, alongside the filed-history operation contract.
+_LAZY_EXPORTS: dict[str, str] = {
+    "DeudasCapture": "._deudas",
+    "DeudasService": "._deudas",
+    "DeudasSnapshotNotFoundError": "._deudas",
+    "PersistedDeudasSnapshot": "._deudas",
+    "deudas_snapshot_object_key": "._deudas",
+    "ExpedientesCapture": "._expedientes",
+    "ExpedientesService": "._expedientes",
+    "PersistedExpedientesSnapshot": "._expedientes",
+    "expedientes_snapshot_object_key": "._expedientes",
+    "FILED_HISTORY_OPERATION_DEFINITION_ID": "._filed_history_operation",
+    "FiledHistoryOperationRequest": "._filed_history_operation",
+    "build_filed_history_operation_definition": "._filed_history_operation",
+    "NotificationDocumentCustody": "._notification_documents",
+    "NotificationDocumentNotFoundError": "._notification_documents",
+    "NotificationDocumentRecord": "._notification_documents",
+    "NotificationDocumentService": "._notification_documents",
+    "notification_document_object_key": "._notification_documents",
+    "NotificationDocumentProtocol": "._notification_ports",
+    "NotificationsService": "._notifications",
+    "PersistedNotificationsSnapshot": "._notifications",
+    "notifications_snapshot_object_key": "._notifications",
+    "VerifyObservation": "._verify",
+    "VerifyObservationRepository": "._verify",
+    "VerifyService": "._verify",
+    "VerifySurface": "._verify",
+    "VerifyVerdict": "._verify",
+    "verify_observation_object_key": "._verify",
+}
+
+_LAZY_MODULE_LOADERS: dict[str, Callable[[], ModuleType]] = {
+    module_path: partial(import_module, module_path, __name__) for module_path in frozenset(_LAZY_EXPORTS.values())
+}
+
+
 def __getattr__(name: str):
-    """Lazy-load the heavy service classes through the package boundary.
-
-    Promoted per the ``aeat-architecture-boundaries``
-    rule so CLI handlers and other consumers consume these symbols
-    through ``cadrumo.application.live`` rather than dotting into
-    ``_verify`` / ``_notifications`` / ``_expedientes``. Lazy
-    semantics preserve the existing module-load-time profile (the
-    services trigger their own heavy imports only on first
-    access).
-    """
-    if name in (
-        "VerifyService",
-        "VerifyVerdict",
-        "VerifySurface",
-        "VerifyObservation",
-        "VerifyObservationRepository",
-        "verify_observation_object_key",
-    ):
-        from . import _verify as _impl_mod
-
-        return getattr(_impl_mod, name)
-    if name in ("NotificationsService", "PersistedNotificationsSnapshot", "notifications_snapshot_object_key"):
-        from . import _notifications as _impl_mod
-
-        return getattr(_impl_mod, name)
-    if name in (
-        "NotificationDocumentService",
-        "NotificationDocumentCustody",
-        "NotificationDocumentRecord",
-        "NotificationDocumentNotFoundError",
-        "notification_document_object_key",
-    ):
-        from . import _notification_documents as _impl_mod
-
-        return getattr(_impl_mod, name)
-    if name == "NotificationDocumentProtocol":
-        from . import _notification_ports as _impl_mod
-
-        return getattr(_impl_mod, name)
-    if name in (
-        "DeudasService",
-        "DeudasCapture",
-        "DeudasSnapshotNotFoundError",
-        "PersistedDeudasSnapshot",
-        "deudas_snapshot_object_key",
-    ):
-        from . import _deudas as _impl_mod
-
-        return getattr(_impl_mod, name)
-    if name in (
-        "ExpedientesService",
-        "ExpedientesCapture",
-        "PersistedExpedientesSnapshot",
-        "expedientes_snapshot_object_key",
-    ):
-        from . import _expedientes as _impl_mod
-
-        return getattr(_impl_mod, name)
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    """Lazy-load the heavy service classes and operation contract exports."""
+    module_path = _LAZY_EXPORTS.get(name)
+    if module_path is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    loader = _LAZY_MODULE_LOADERS.get(module_path)
+    if loader is None:
+        raise RuntimeError(f"missing lazy loader for {module_path!r}")
+    value = getattr(loader(), name)
+    globals()[name] = value
+    return value
 
 
 __all__ = [
     "BORRADOR_100_SNAPSHOT_NAMESPACE",
+    "FILED_HISTORY_OPERATION_DEFINITION_ID",
     "FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE",
     "JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE",
     "JUSTIFICANTE_CAPTURE_SOURCE_KIND",
@@ -685,6 +689,7 @@ __all__ = [
     "FiledHistoryDiscoveryPair",
     "FiledHistoryDiscoveryReport",
     "FiledHistoryOnboardingRun",
+    "FiledHistoryOperationRequest",
     "FiledHistoryPairOutcome",
     "FiledJustificanteEnrollmentResult",
     "FiledJustificanteMetadataResult",
@@ -736,6 +741,7 @@ __all__ = [
     "VerifySurface",
     "VerifyVerdict",
     "borrador_100_snapshot_object_key",
+    "build_filed_history_operation_definition",
     "build_iva_remote_state_acquisition_report",
     "capture_expedientes_bulk",
     "capture_filed_data",
