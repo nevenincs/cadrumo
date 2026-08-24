@@ -17,8 +17,8 @@ and storage factory render the same localised repair guidance.
 
 from __future__ import annotations
 
-from ....core import resolve_active_bucket_id
-from ._errors import GoogleAuthProfileUnboundError
+from ....core import ActionEvidenceProvenance, NoRecoveryOutcome, resolve_active_bucket_id
+from ._errors import GoogleAuthPreconditionCondition, GoogleAuthProfileUnboundError, google_auth_no_action_verdict
 
 
 def resolve_active_profile() -> str:
@@ -42,6 +42,12 @@ def resolve_active_profile() -> str:
         "no active AEAT profile bound for Google OAuth",
         context={"active_profile": resolved or ""},
         translated_message="adapters.google.profile_binding.errors.no_active_profile",
+        precondition_verdict=google_auth_no_action_verdict(
+            condition=GoogleAuthPreconditionCondition.ACTIVE_PROFILE_RESOLVED,
+            facts={"active_profile_resolved": False},
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        ),
     )
 
 

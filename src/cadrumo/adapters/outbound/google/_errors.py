@@ -5,17 +5,61 @@ Every subclass is an :class:`core.errors.CadrumoError` with a stable
 That keeps the public CLI taxonomy explicit while
 :mod:`entrypoints.cli._config._google_errors` can map concrete
 :class:`GoogleAuthError` subclasses to localised refusal text. Constructors
-carry structured remediation context (``context={...}``) so renderers can
-surface actionable guidance without leaking the secret material handled by
-:mod:`adapters.outbound.google._oauth_flow`.
+carry structured diagnostic context (``context={...}``) without leaking the
+secret material handled by :mod:`adapters.outbound.google._oauth_flow`.
 """
 
 from __future__ import annotations
 
-from ....core.errors import CadrumoError
+from collections.abc import Mapping
+from enum import StrEnum
+
+from ....application.operator_actions import no_action_precondition_verdict
+from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.errors import CadrumoError, TerminalPreconditionErrorMixin
 
 
-class GoogleAuthError(CadrumoError):
+class GoogleAuthPreconditionCondition(StrEnum):
+    """Stable failed conditions observed by the Google authentication boundary."""
+
+    ACTIVE_PROFILE_RESOLVED = "google.auth.active_profile.resolved"
+    INTERACTIVE_TERMINAL_AVAILABLE = "google.auth.interactive_terminal.available"
+    CREDENTIAL_STORE_SECURED = "google.auth.credential_store.secured"
+    PROFILE_IDENTITY_RESOLVED = "google.auth.profile_identity.resolved"
+    REQUIRED_SCOPES_GRANTED = "google.auth.required_scopes.granted"
+    OAUTHLIB_AVAILABLE = "google.auth.oauthlib.available"
+    OAUTH_CLIENT_CONFIG_VALID = "google.auth.oauth_client_config.valid"
+    LOOPBACK_RECEIVER_BOUND = "google.auth.loopback_receiver.bound"
+    BROWSER_LAUNCHER_AVAILABLE = "google.auth.browser_launcher.available"
+    OAUTH_ENDPOINT_REACHABLE = "google.auth.oauth_endpoint.reachable"
+    OAUTH_FLOW_COMPLETED = "google.auth.oauth_flow.completed"
+    IDENTITY_ASSERTION_PRESENT = "google.auth.identity_assertion.present"
+    IDENTITY_ASSERTION_VERIFIER_AVAILABLE = "google.auth.identity_verifier.available"
+    IDENTITY_ASSERTION_VERIFIED = "google.auth.identity_assertion.verified"
+    IDENTITY_EMAIL_PRESENT = "google.auth.identity_email.present"
+    ADC_CLIENT_AVAILABLE = "google.auth.adc_client.available"
+    ADC_AVAILABLE = "google.auth.adc.available"
+    IAM_CREDENTIAL_MINTED = "google.auth.iam_credential.minted"
+    ADC_SOURCE_FRESH = "google.auth.adc_source.fresh"
+
+
+def google_auth_no_action_verdict(
+    *,
+    condition: GoogleAuthPreconditionCondition,
+    facts: Mapping[str, str | int | bool],
+    provenance: ActionEvidenceProvenance,
+    outcome: NoRecoveryOutcome,
+):
+    """Delegate a fact-only Google-auth refusal to the public verdict authority."""
+    return no_action_precondition_verdict(
+        condition_id=condition.value,
+        facts=facts,
+        provenance=provenance,
+        outcome=outcome,
+    )
+
+
+class GoogleAuthError(TerminalPreconditionErrorMixin, CadrumoError):
     """Base class for every Google OAuth Desktop authentication failure.
 
     Catch this at CLI boundaries that need one Google-auth refusal arm while
@@ -101,9 +145,11 @@ __all__ = [
     "GoogleAuthLoopbackBindError",
     "GoogleAuthNetworkError",
     "GoogleAuthNonInteractiveError",
+    "GoogleAuthPreconditionCondition",
     "GoogleAuthProfileUnboundError",
     "GoogleAuthRevokedError",
     "GoogleAuthScopeInsufficientError",
     "GoogleAuthUnsecuredModeRefusedError",
     "GoogleAuthValidationError",
+    "google_auth_no_action_verdict",
 ]

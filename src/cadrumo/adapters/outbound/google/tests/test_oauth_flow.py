@@ -12,7 +12,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.config import override_settings
-from .....tests.secure_sql import isolated_runtime_profile
+from .....tests.secure_sql import isolated_runtime_profile, reset_secure_object_store
 from .._errors import (
     GoogleAuthBrowserOpenError,
     GoogleAuthNetworkError,
@@ -204,6 +204,10 @@ def test_login_flow_refuses_missing_profile_record_before_oauth_network(tmp_path
         override_settings(cadrumo_secret_store_backend="unsecured"),
         pytest.raises(GoogleAuthProfileUnboundError) as raised,
     ):
+        # A published test profile now carries its real incomplete profile
+        # record. Clear that concrete storage surface to exercise the actual
+        # missing-record branch this test names.
+        reset_secure_object_store(profile.repository)
         run_login_flow(_valid_oauth_client(), profile.bucket_id)
 
     assert raised.value.context == {

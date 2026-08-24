@@ -31,6 +31,7 @@ from datetime import datetime
 from typing import NoReturn
 
 from ....adapters.persistence.storage.master_key import looks_like_real_tax_id
+from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.config import SecretStoreBackend, load_settings
 from ....core.time import now
 from ....core.tty import stdin_is_tty
@@ -40,9 +41,11 @@ from ._errors import (
     GoogleAuthLoopbackBindError,
     GoogleAuthNetworkError,
     GoogleAuthNonInteractiveError,
+    GoogleAuthPreconditionCondition,
     GoogleAuthProfileUnboundError,
     GoogleAuthScopeInsufficientError,
     GoogleAuthUnsecuredModeRefusedError,
+    google_auth_no_action_verdict,
 )
 from ._records import REQUIRED_SCOPES, OAuthClient, OAuthMetadata, OAuthToken
 
@@ -73,6 +76,12 @@ def require_interactive_terminal() -> None:
             "google OAuth refused: interactive browser consent requires a controlling terminal",
             context={"reason": "stdin_not_a_tty"},
             translated_message="adapters.google.oauth_flow.errors.non_interactive",
+            precondition_verdict=google_auth_no_action_verdict(
+                condition=GoogleAuthPreconditionCondition.INTERACTIVE_TERMINAL_AVAILABLE,
+                facts={"interactive_terminal_available": False},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         )
 
 
@@ -105,6 +114,12 @@ def check_unsecured_mode_safety(profile: str, tax_id: str) -> None:
             "google OAuth refused: secret store is unsecured and the active profile carries a real NIF",
             context={"profile": profile, "backend": "unsecured"},
             translated_message="adapters.google.oauth_flow.errors.unsecured_mode_refused",
+            precondition_verdict=google_auth_no_action_verdict(
+                condition=GoogleAuthPreconditionCondition.CREDENTIAL_STORE_SECURED,
+                facts={"secret_store_secured": False, "tax_id_present": True},
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         )
 
 
@@ -136,6 +151,12 @@ def resolve_active_tax_id(profile_id: str) -> str:
             "google OAuth refused: active profile bucket manifest could not be resolved",
             context={"profile": profile_id, "reason": "profile_bucket_manifest_missing"},
             translated_message="adapters.google.oauth_flow.errors.profile_state_unresolved",
+            precondition_verdict=google_auth_no_action_verdict(
+                condition=GoogleAuthPreconditionCondition.PROFILE_IDENTITY_RESOLVED,
+                facts={"profile_bucket_present": False},
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            ),
         )
     try:
         record = ProfileRecordRepository.for_current_session(pointer.bucket_id).load(profile_id)
@@ -144,6 +165,12 @@ def resolve_active_tax_id(profile_id: str) -> str:
             "google OAuth refused: active profile record could not be resolved",
             context={"profile": profile_id, "bucket_id": pointer.bucket_id, "reason": "profile_record_missing"},
             translated_message="adapters.google.oauth_flow.errors.profile_state_unresolved",
+            precondition_verdict=google_auth_no_action_verdict(
+                condition=GoogleAuthPreconditionCondition.PROFILE_IDENTITY_RESOLVED,
+                facts={"profile_record_present": False},
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            ),
         ) from exc
     return record_to_path_values(record).get("identity.tax_id") or ""
 
@@ -195,6 +222,12 @@ def credentials_to_records(
             f"consent screen returned without granting required scopes: {missing!r}",
             context={"missing_scopes": list(missing), "account_email": account_email},
             translated_message="adapters.google.oauth_flow.errors.scope_missing",
+            precondition_verdict=google_auth_no_action_verdict(
+                condition=GoogleAuthPreconditionCondition.REQUIRED_SCOPES_GRANTED,
+                facts={"required_scopes_granted": False, "missing_scope_count": len(missing)},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         )
     token = OAuthToken(refresh_token=refresh_token, token_uri=token_uri)
     metadata = OAuthMetadata(
@@ -266,6 +299,12 @@ def _run_local_server(client: OAuthClient) -> tuple[str, str, str, tuple[str, ..
         raise GoogleAuthNetworkError(
             f"google-auth-oauthlib not importable: {exc}",
             translated_message="adapters.google.oauth_flow.errors.oauthlib_not_importable",
+            precondition_verdict=google_auth_no_action_verdict(
+                condition=GoogleAuthPreconditionCondition.OAUTHLIB_AVAILABLE,
+                facts={"oauthlib_available": False},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         ) from exc
 
     client_config: dict[str, dict[str, object]] = {
@@ -285,6 +324,12 @@ def _run_local_server(client: OAuthClient) -> tuple[str, str, str, tuple[str, ..
         raise GoogleAuthNetworkError(
             f"OAuth client config refused: {exc}",
             translated_message="adapters.google.oauth_flow.errors.client_config_refused",
+            precondition_verdict=google_auth_no_action_verdict(
+                condition=GoogleAuthPreconditionCondition.OAUTH_CLIENT_CONFIG_VALID,
+                facts={"oauth_client_config_valid": False},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         ) from exc
 
     try:
@@ -293,6 +338,12 @@ def _run_local_server(client: OAuthClient) -> tuple[str, str, str, tuple[str, ..
         raise GoogleAuthLoopbackBindError(
             f"loopback receiver failed to bind: {exc}",
             translated_message="adapters.google.oauth_flow.errors.loopback_bind_failed",
+            precondition_verdict=google_auth_no_action_verdict(
+                condition=GoogleAuthPreconditionCondition.LOOPBACK_RECEIVER_BOUND,
+                facts={"loopback_receiver_bound": False},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         ) from exc
     except Exception as exc:
         _raise_local_server_error(exc)
@@ -317,16 +368,34 @@ def _raise_local_server_error(exc: Exception) -> NoReturn:
         raise GoogleAuthBrowserOpenError(
             f"OS browser launcher refused: {exc}",
             translated_message="adapters.google.oauth_flow.errors.browser_launcher_refused",
+            precondition_verdict=google_auth_no_action_verdict(
+                condition=GoogleAuthPreconditionCondition.BROWSER_LAUNCHER_AVAILABLE,
+                facts={"browser_launcher_available": False},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         ) from exc
     if "transport" in message or "connect" in message or "network" in message:
         raise GoogleAuthNetworkError(
             f"OAuth endpoint unreachable: {exc}",
             translated_message="adapters.google.oauth_flow.errors.endpoint_unreachable",
+            precondition_verdict=google_auth_no_action_verdict(
+                condition=GoogleAuthPreconditionCondition.OAUTH_ENDPOINT_REACHABLE,
+                facts={"oauth_endpoint_reachable": False},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         ) from exc
     raise GoogleAuthNetworkError(
         f"OAuth local server flow failed: {exc}",
         context={"error_type": type(exc).__name__},
         translated_message="adapters.google.oauth_flow.errors.endpoint_unreachable",
+        precondition_verdict=google_auth_no_action_verdict(
+            condition=GoogleAuthPreconditionCondition.OAUTH_FLOW_COMPLETED,
+            facts={"oauth_flow_completed": False},
+            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            outcome=NoRecoveryOutcome.SAFETY,
+        ),
     ) from exc
 
 
@@ -363,6 +432,12 @@ def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
             "Google did not return an id_token; the OAuth consent did not include the openid+email scopes",
             context={"audience": audience},
             translated_message="adapters.google.oauth_flow.errors.id_token_missing",
+            precondition_verdict=google_auth_no_action_verdict(
+                condition=GoogleAuthPreconditionCondition.IDENTITY_ASSERTION_PRESENT,
+                facts={"id_token_present": False},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         )
     try:
         from google.auth.transport import requests as auth_requests
@@ -371,6 +446,12 @@ def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
         raise GoogleAuthNetworkError(
             f"google-auth id_token module not importable: {exc}",
             translated_message="adapters.google.oauth_flow.errors.id_token_module_not_importable",
+            precondition_verdict=google_auth_no_action_verdict(
+                condition=GoogleAuthPreconditionCondition.IDENTITY_ASSERTION_VERIFIER_AVAILABLE,
+                facts={"id_token_verifier_available": False},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         ) from exc
     try:
         payload = id_token_module.verify_oauth2_token(id_token_jwt, auth_requests.Request(), audience)
@@ -379,6 +460,12 @@ def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
             f"id_token verification failed: {exc}",
             context={"audience": audience},
             translated_message="adapters.google.oauth_flow.errors.id_token_verification_failed",
+            precondition_verdict=google_auth_no_action_verdict(
+                condition=GoogleAuthPreconditionCondition.IDENTITY_ASSERTION_VERIFIED,
+                facts={"id_token_verified": False},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         ) from exc
     email = str(payload.get("email", ""))
     if not email:
@@ -386,6 +473,12 @@ def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
             "id_token verified but carries no `email` claim",
             context={"audience": audience},
             translated_message="adapters.google.oauth_flow.errors.email_claim_missing",
+            precondition_verdict=google_auth_no_action_verdict(
+                condition=GoogleAuthPreconditionCondition.IDENTITY_EMAIL_PRESENT,
+                facts={"id_token_email_present": False},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
         )
     return email
 
