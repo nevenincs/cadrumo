@@ -8431,3 +8431,30 @@ re-measurement, it reproduced in isolation, and the argument it declared carried
 REVIEW command's help key on a LIST command, appearing exactly once in the whole spec
 file. That is the shape of a real defect -- reproducible, attributable, and still there
 after the tree settles.
+
+## Handed back, not guessed: the unsupported-modelo guard runs after the profile gate
+
+`test_modelo_unsupported_work_refusal` states its contract in its own docstring: each
+unsupported modelo "refuses BEFORE active-profile resolution and names its legal route".
+Ten cases fail because the operator is told `No active profile` instead of why modelo
+151, 714, 721 or 650 is unsupported and which orden governs it.
+
+The handler is not at fault. `work_create` already calls
+`guard_unsupported_work_modelo(modelo)` before `require_active_profile()`, and the guard
+does cover all four -- each resolves to its own refusal key. What fires first is the
+command-boundary PREFLIGHT in `_profile_authentication_gate`, which authenticates before
+the handler body runs at all.
+
+This is not a regression. The gate was touched seven hours ago but only to move two
+imports from `core.config` to `core`; the ordering is longstanding, and the test is two
+weeks old, so the contract has simply never been honoured.
+
+It is left open deliberately. Making a modelo guard outrank profile authentication is a
+change to the auth posture of EVERY command, and the only existing escape --
+`allow_unregistered_profile_diagnostic` -- means something narrower (tolerate an active
+pointer with no registered record) and would be a misuse. The honest options are a new
+spec capability for pre-authentication refusals, or amending the test's contract to say
+authentication legitimately comes first. Both are decisions for whoever owns the CLI auth
+gate, and neither is worth guessing at from outside that campaign.
+
+Recorded here so the ten failures are attributable rather than mistaken for fixture rot.
