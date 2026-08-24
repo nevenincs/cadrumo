@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:25047d791cc2ecaaf7efa338ca1aac7d4ff615dd59e60c8ca59208e2cc521fa4'
+body_hash: 'sha256:a60ceea7cd53d2cb66e110b9a7a0a7c7ac86b485fcd384c8ed96051b59d29968'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -53,7 +53,11 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S70]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S71]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S72]]'
+  - '[[2026-08-24-registry-completeness-closure-W02-P03-S12]]'
+  - '[[2026-08-24-registry-completeness-closure-W02-P03-S13]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
+  - '[[2026-08-24-registry-completeness-closure-modelo-036-2025-filing-authority-reference]]'
+  - '[[2026-08-24-registry-completeness-closure-modelo-038-design-extraction-reference]]'
   - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
   - '[[2026-08-24-registry-completeness-closure-s01-schema-family-coverage-review-audit]]'
@@ -66,6 +70,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s10-live-proof-cli-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s11-independent-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s11-source-connectivity-ratchet-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s12-independent-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s41-cache-key-type-review-audit]]'
@@ -128,6 +133,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s10-live-proof-cli-review-audit` - `registry-completeness-closure` audit: `S10 live proof CLI review`
 - `2026-08-24-registry-completeness-closure-s11-independent-post-review-audit` - `registry-completeness-closure` audit: `S11 independent post review`
 - `2026-08-24-registry-completeness-closure-s11-source-connectivity-ratchet-audit` - `registry-completeness-closure` audit: `s11 source connectivity ratchet`
+- `2026-08-24-registry-completeness-closure-s12-independent-post-review-audit` - `registry-completeness-closure` audit: `Modelo 036 authority adjudication independent post-review`
 - `2026-08-24-registry-completeness-closure-s40-snapshot-authority-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot authority-grade enforcement review`
 - `2026-08-24-registry-completeness-closure-s40-snapshot-grade-enforcement-review-audit` - `registry-completeness-closure` audit: `S40 snapshot-grade enforcement review`
 - `2026-08-24-registry-completeness-closure-s41-cache-key-type-review-audit` - `registry-completeness-closure` audit: `S41 cache-key type review`
@@ -214,10 +220,17 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P02-S70` - Correct S11 evidence and independent-review claims after successor proof passes, then re-attest the records.
 - `2026-08-24-registry-completeness-closure-W01-P02-S71` - Replace the stale fixed completion-step total with a current-plan-derived closure criterion that remains valid as Steps are added
 - `2026-08-24-registry-completeness-closure-W01-P02-S72` - Make filing-export participation grade-scoped per the accepted ADR, revise closure eligibility so below-filing revisions are not filing refusals, prove a genuinely complete real composed below-grade row when canonical temporal and source evidence support it, and add durable mutation-bite evidence for complete, refused, stale-evidence, below-filing-grade, and cross-limb-disagreement guards
+- `2026-08-24-registry-completeness-closure-W02-P03-S12` - Adjudicate Modelo 036 revision 2025-02-03-y-siguientes producer vocabulary and official filing authority
+- `2026-08-24-registry-completeness-closure-W02-P03-S13` - Adjudicate Modelo 038 revision 2002-y-siguientes design extraction trust and fileability
 
 ### plan
 
 - `2026-08-24-registry-completeness-closure-plan` - `registry-completeness-closure` plan
+
+### reference
+
+- `2026-08-24-registry-completeness-closure-modelo-036-2025-filing-authority-reference` - `registry-completeness-closure` reference: `Modelo 036 2025 filing authority adjudication`
+- `2026-08-24-registry-completeness-closure-modelo-038-design-extraction-reference` - `registry-completeness-closure` reference: `modelo 038 design extraction`
 
 ### research
 
