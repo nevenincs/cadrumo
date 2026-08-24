@@ -143,7 +143,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import DirectoryEntryKind, PeriodKind, registry_period_kind, scan_directory
+from .....core import DirectoryEntryKind, PeriodKind, RegistryAuthorityGrade, registry_period_kind, scan_directory
 from .....core.external_constants import PDF_EXTENSION as _PDF_EXTENSION
 from .....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from .....core.resources import bundled_path
@@ -883,24 +883,28 @@ def _span_years(revision) -> set[int]:
     return set(range(selector.year_from, upper + 1))
 
 
-def _exporting_revisions() -> list[tuple[ModeloDefinition, str, object]]:
+def _filing_revisions() -> list[tuple[ModeloDefinition, str, object]]:
+    """Every revision that claims filing support, including incomplete claims.
+
+    Filing grade is the authority boundary. Filtering on populated layouts would
+    hide the exact genuine gap this suite must expose: a filing-supported revision
+    whose official export evidence or authored layout is still missing.
+    """
     return [
         (modelo, revision_id, revision)
         for modelo in _authority().modelos
         for revision_id, revision in modelo.revisions.items()
-        if revision.export_layouts
+        if revision.effective_authority_grade is RegistryAuthorityGrade.FILING
     ]
 
 
-def _all_declared_revisions() -> list[tuple[ModeloDefinition, str, object]]:
-    """Every modelo's every declared revision, regardless of export capability.
+def _filing_supported_revisions() -> list[tuple[ModeloDefinition, str, object]]:
+    """Every revision that explicitly claims filing support.
 
-    Distinct from :func:`_exporting_revisions`, which every other test in this
-    module uses to calibrate the relayout-detection signal against a known,
-    already-exporting subject set. This iterator serves the coverage-
-    completeness gate below, which asks the operator's actual question --
-    does EVERY modelo's declared span have corpus-proven grounding -- not a
-    signal-quality question scoped to the modelos that happen to export today.
+    Kept as the raw-loader counterpart to :func:`_filing_revisions`: operational
+    signal gates use validated authority, while the coverage-completeness gate
+    must still run and report the exact structural gap if unrelated validation is
+    red elsewhere in the tree.
 
     Reads through the raw loader (:func:`load_registry_tree`), never
     :func:`_authority`: the coverage-completeness question is structural
@@ -913,7 +917,12 @@ def _all_declared_revisions() -> list[tuple[ModeloDefinition, str, object]]:
     "the coverage gate reported clean".
     """
     modelos, _catalogues = bundled_registry_tree()
-    return [(modelo, revision_id, revision) for modelo in modelos for revision_id, revision in modelo.revisions.items()]
+    return [
+        (modelo, revision_id, revision)
+        for modelo in modelos
+        for revision_id, revision in modelo.revisions.items()
+        if revision.effective_authority_grade is RegistryAuthorityGrade.FILING
+    ]
 
 
 def _claimed_years(revision, design_years: set[int]) -> set[int]:
@@ -925,6 +934,68 @@ def _claimed_years(revision, design_years: set[int]) -> set[int]:
     if selector.year_to is None:
         return {year for year in design_years if year >= selector.year_from}
     return explicit & design_years
+
+
+@cache
+def _source_reference_by_id() -> dict[str, object]:
+    """Loaded source catalogue, used as the revision's dependency receipts."""
+    _modelos, catalogues = bundled_registry_tree()
+    return dict(catalogues.sources)
+
+
+def _record_design_receipts(revision) -> tuple[object, ...]:
+    """Record-design sources explicitly cited by this revision, never inferred by modelo."""
+    sources = _source_reference_by_id()
+    return tuple(
+        source
+        for ref in revision.source_refs
+        if (source := sources.get(str(ref))) is not None and source.kind == "record_design"
+    )
+
+
+def _receipt_covers_year(source, year: int) -> bool:
+    if source.applies_from is None or source.applies_from.year > year:
+        return False
+    if source.applies_to is not None and source.applies_to.year < year:
+        return False
+    selector = source.period_selector
+    return selector is None or selector.includes_year(year)
+
+
+def _source_epoch_proves_revision_span(revision) -> tuple[bool, str]:
+    """Whether cited record-design receipts cover the revision's declared year span.
+
+    An open revision needs an open receipt; a closed revision needs every claimed
+    year covered. This consumes authored source authority and never manufactures
+    extra annual designs merely to reach a count. Corpus-detected relayouts are
+    checked first by the caller and therefore always override this positive proof.
+    """
+    receipts = _record_design_receipts(revision)
+    if not receipts:
+        return False, "revision cites no record-design source receipt"
+    selector = revision.period_selector
+    if selector.years:
+        years = set(selector.years)
+    elif selector.year_from is not None and selector.year_to is not None:
+        years = set(range(selector.year_from, selector.year_to + 1))
+    elif selector.year_from is not None:
+        open_receipts = tuple(
+            source
+            for source in receipts
+            if source.applies_from is not None
+            and source.applies_from.year <= selector.year_from
+            and source.applies_to is None
+            and (source.period_selector is None or source.period_selector.includes_year(selector.year_from))
+        )
+        if open_receipts:
+            return True, f"open source epoch(s) {[source.id for source in open_receipts]!r}"
+        return False, "open revision has no cited open-ended record-design receipt"
+    else:
+        return False, "revision declares no filing-year span"
+    missing = sorted(year for year in years if not any(_receipt_covers_year(source, year) for source in receipts))
+    if missing:
+        return False, f"cited record-design receipts do not cover filing year(s) {missing!r}"
+    return True, f"bounded source epoch receipt(s) {[source.id for source in receipts]!r}"
 
 
 def test_the_design_parser_reads_every_markdown_design_it_claims() -> None:
@@ -939,7 +1010,7 @@ def test_the_design_parser_reads_every_markdown_design_it_claims() -> None:
     """
     blind_spots: list[str] = []
     measured = 0
-    for modelo, revision_id, revision in _exporting_revisions():
+    for modelo, revision_id, revision in _filing_revisions():
         designs, unreadable = _designs_for(modelo.id)
         measured += len(designs)
         if not unreadable:
@@ -1564,7 +1635,7 @@ def test_no_revision_spans_a_design_relayout() -> None:
     actually needs, so nobody has to union two lists by hand to act on it.
     """
     violations: list[str] = []
-    for modelo, revision_id, revision in _exporting_revisions():
+    for modelo, revision_id, revision in _filing_revisions():
         boundaries = _boundaries_for(modelo.id, revision)
         if not boundaries:
             continue
@@ -1620,7 +1691,7 @@ def test_both_occupancy_directions_have_a_positive_case_in_the_corpus() -> None:
     """
     retired_seen: list[str] = []
     revived_seen: list[str] = []
-    for modelo, _revision_id, revision in _exporting_revisions():
+    for modelo, _revision_id, revision in _filing_revisions():
         sources = dict(_sources_by_year(modelo.id))
         for earlier, later in pairwise(sorted(_claimed_years(revision, set(sources)))):
             before, after = _occupancy(sources[earlier]), _occupancy(sources[later])
@@ -1715,7 +1786,7 @@ def test_the_box_marker_is_the_registry_canonical_one_and_reads_every_modelo() -
 
     unread: list[str] = []
     measured = 0
-    for modelo_id in sorted({modelo.id for modelo, _, _ in _exporting_revisions()}):
+    for modelo_id in sorted({modelo.id for modelo, _, _ in _filing_revisions()}):
         ordered, _unorderable = _designs_in_publication_order(modelo_id)
         for path in ordered:
             bracketed = any(
@@ -1757,7 +1828,7 @@ def test_a_boundary_only_the_description_pass_sees_is_reported_and_marked_for_re
     """
     positive: list[str] = []
     alone: list[tuple[str, str, tuple[int, int]]] = []
-    for modelo, revision_id, revision in _exporting_revisions():
+    for modelo, revision_id, revision in _filing_revisions():
         for earlier, later in pairwise(_designs_claimed_by(modelo.id, revision)):
             if _description_flip_evidence(earlier, later):
                 positive.append(f"modelo {modelo.id} {_boundary_label(earlier, later)}")
@@ -1774,7 +1845,7 @@ def test_a_boundary_only_the_description_pass_sees_is_reported_and_marked_for_re
     for modelo_id, revision_id, key in alone:
         modelo, revision = next(
             (candidate, current)
-            for candidate, current_id, current in _exporting_revisions()
+            for candidate, current_id, current in _filing_revisions()
             if candidate.id == modelo_id and current_id == revision_id
         )
         boundaries = _boundaries_for(modelo.id, revision)
@@ -1977,7 +2048,7 @@ def test_the_verdict_names_a_mid_course_boundary_where_aeat_split_an_ejercicio()
     """
     mid_split_available: list[str] = []
     mid_course_reported: list[str] = []
-    for modelo, revision_id, revision in _exporting_revisions():
+    for modelo, revision_id, revision in _filing_revisions():
         # The availability side is derived from the raw publication-order enumeration
         # rather than from the span helper the verdict uses. Deriving both sides from one
         # function makes this test notice only that the function changed, so a defect in
@@ -2017,7 +2088,7 @@ def test_the_verdict_names_a_mid_course_boundary_where_aeat_split_an_ejercicio()
     # protection the original assertion gave when the tree still carried a
     # spanning revision.
     widened_reported: list[str] = []
-    for modelo, revision_id, revision in _exporting_revisions():
+    for modelo, revision_id, revision in _filing_revisions():
         if revision.valid_from is None or revision.valid_to is None:
             continue
         if revision.valid_from.year != revision.valid_to.year:
@@ -2438,10 +2509,22 @@ def test_a_bundled_design_whose_coverage_cannot_be_read_is_reported_unmeasured()
     """
     unattributed: list[str] = []
     attributed = 0
+    filing_revisions = _filing_revisions()
+    filing_modelos = {modelo.id for modelo, _revision_id, _revision in filing_revisions}
+    cited_design_paths = {
+        str(source.corpus_path)
+        for _modelo, _revision_id, revision in filing_revisions
+        for source in _record_design_receipts(revision)
+    }
     design_root = bundled_path(*_DESIGN_ROOT_PARTS)
     for directory in scan_directory(design_root, pattern="modelo_*", select=DirectoryEntryKind.DIRECTORIES):
         modelo_id = directory.name.removeprefix("modelo_")
+        if modelo_id not in filing_modelos:
+            continue
         for path in _design_sources(modelo_id):
+            relative = path.relative_to(bundled_path()).as_posix()
+            if relative not in cited_design_paths:
+                continue
             if _design_coverage_years(path):
                 attributed += 1
                 continue
@@ -2761,11 +2844,11 @@ def test_every_modelo_revision_span_is_corpus_proven() -> None:
     signal. This number moves as the bundled
     corpus grows; re-run rather than trust a stale figure.
     """
-    ordered_by_modelo = _ordered_revisions_by_modelo(_all_declared_revisions())
+    ordered_by_modelo = _ordered_revisions_by_modelo(_filing_supported_revisions())
 
     failures: list[str] = []
     single_signal_passes: list[str] = []
-    for modelo, revision_id, revision in _all_declared_revisions():
+    for modelo, revision_id, revision in _filing_supported_revisions():
         boundaries = _boundaries_for(modelo.id, revision)
         if boundaries:
             detail = "; ".join(
@@ -2798,6 +2881,13 @@ def test_every_modelo_revision_span_is_corpus_proven() -> None:
                     "BOE orden that authorises the later layout; do not attempt to satisfy this with "
                     "design evidence alone, and do not treat the gap as anything other than a failure",
                 )
+            continue
+
+        receipt_proven, _receipt_detail = _source_epoch_proves_revision_span(revision)
+        if receipt_proven:
+            # The revision cites an authoritative record-design dependency whose
+            # declared epoch covers its entire span. Requiring duplicate annual
+            # copies after this point would replace authority with a file count.
             continue
 
         if _declared_span_is_single_year(revision):

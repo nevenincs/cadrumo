@@ -51,6 +51,7 @@ class _ProfileShapeExclusion:
     path: str
     function: str | None
     reason: str
+    expected_count: int = 1
 
 
 # These are deliberately non-profile maps: censo-source labels, legal-reference
@@ -80,6 +81,22 @@ _LITERAL_NON_PROFILE_EXCLUSIONS = (
         "src/cadrumo/application/user_profile/tests/test_profile_key_schema_required_parity.py",
         None,
         "schema-divergence metadata",
+    ),
+    _ProfileShapeExclusion(
+        "src/cadrumo/application/user_profile/tests/test_filing_baseline_flag_spelling.py",
+        None,
+        "owed-axis metadata proves the filing baseline names the missing IVA flags",
+    ),
+    _ProfileShapeExclusion(
+        "src/cadrumo/application/user_profile/tests/test_iva_block_profile_completeness.py",
+        "test_declared_iva_regime_reports_the_whole_block_as_missing",
+        "deliberately incomplete profile proves the canonical IVA block is demanded",
+    ),
+    _ProfileShapeExclusion(
+        "src/cadrumo/application/user_profile/tests/test_iva_block_profile_completeness.py",
+        "test_completeness_demands_exactly_what_the_resolver_refuses_without",
+        "incremental incomplete maps compare completeness demands with resolver refusals",
+        expected_count=2,
     ),
     _ProfileShapeExclusion(
         "src/cadrumo/application/overview/tests/test_calendar.py",
@@ -182,7 +199,7 @@ def _fact_containers_with_enclosing_function(
 def test_every_claimed_current_iva_profile_has_the_canonical_required_axes() -> None:
     incomplete_fact_containers: Counter[tuple[str, str | None]] = Counter()
     incomplete_modelo_iva_constructors: list[tuple[str, int, frozenset[str]]] = []
-    incomplete_literal_maps: set[tuple[str, str | None]] = set()
+    incomplete_literal_maps: Counter[tuple[str, str | None]] = Counter()
 
     for path, module in _iter_modules():
         relative_path = _relative(path)
@@ -203,10 +220,15 @@ def test_every_claimed_current_iva_profile_has_the_canonical_required_axes() -> 
                 key.value for key in dict_node.keys if isinstance(key, ast.Constant) and isinstance(key.value, str)
             )
             if _IVA_REGIME_PATH in literal_paths and _REQUIRED_IVA_FACT_PATHS - literal_paths:
-                incomplete_literal_maps.add((relative_path, enclosing_function))
+                incomplete_literal_maps[(relative_path, enclosing_function)] += 1
 
     assert incomplete_fact_containers == Counter(
         (entry.path, entry.function) for entry in _FACT_CONTAINER_NON_PROFILE_EXCLUSIONS
     )
     assert incomplete_modelo_iva_constructors == []
-    assert incomplete_literal_maps == {(entry.path, entry.function) for entry in _LITERAL_NON_PROFILE_EXCLUSIONS}
+    assert incomplete_literal_maps == Counter(
+        {
+            (entry.path, entry.function): entry.expected_count
+            for entry in _LITERAL_NON_PROFILE_EXCLUSIONS
+        }
+    )

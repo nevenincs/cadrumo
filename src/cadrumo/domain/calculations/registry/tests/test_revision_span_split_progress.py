@@ -27,7 +27,7 @@ from typing import Final
 
 import pytest
 
-from .test_revision_span_matches_published_designs import _boundaries_for, _exporting_revisions
+from .test_revision_span_matches_published_designs import _boundaries_for, _filing_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -132,7 +132,7 @@ _KNOWN_SPANNING: Final[frozenset[tuple[str, str]]] = frozenset(
 def _spanning() -> set[tuple[str, str]]:
     return {
         (modelo.id, revision_id)
-        for modelo, revision_id, revision in _exporting_revisions()
+        for modelo, revision_id, revision in _filing_revisions()
         if _boundaries_for(modelo.id, revision)
     }
 

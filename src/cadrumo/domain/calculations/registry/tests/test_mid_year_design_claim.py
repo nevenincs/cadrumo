@@ -29,7 +29,7 @@ import pytest
 
 from .test_revision_span_matches_published_designs import (
     _boundaries_for,
-    _exporting_revisions,
+    _filing_revisions,
     _mid_year_span,
 )
 
@@ -47,7 +47,7 @@ _CROSS_YEAR_SPANS = {("200", "2024-y-siguientes")}
 
 
 def _by_subject() -> dict[tuple[str, str], dict]:
-    return {(modelo.id, rid): _boundaries_for(modelo.id, revision) for modelo, rid, revision in _exporting_revisions()}
+    return {(modelo.id, rid): _boundaries_for(modelo.id, revision) for modelo, rid, revision in _filing_revisions()}
 
 
 def test_a_half_year_revision_reports_no_boundary_inside_its_own_year() -> None:
@@ -65,7 +65,7 @@ def test_the_genuine_cross_year_spans_still_report() -> None:
 
 def test_only_a_partial_span_inside_one_year_is_narrowed() -> None:
     """Full-year, multi-year and open-ended revisions are untouched by construction."""
-    spans = {(modelo.id, rid): _mid_year_span(revision) for modelo, rid, revision in _exporting_revisions()}
+    spans = {(modelo.id, rid): _mid_year_span(revision) for modelo, rid, revision in _filing_revisions()}
 
     for subject in _MID_YEAR_HALVES:
         assert spans[subject] is not None, subject

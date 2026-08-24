@@ -136,6 +136,11 @@ from ._authority import (
     collect_registry_identity_fingerprints,
     stamp_bundled_registry_release,
 )
+from ._deadline_coordinate import (
+    DeadlineSemanticCoordinate,
+    deadline_semantic_coordinate,
+    deadline_window_semantic_coordinate,
+)
 from ._identity import (
     REGISTRY_IDENTITY_SCHEMA_VERSION,
     REGISTRY_IDENTITY_STAMP_FILENAME,
@@ -967,6 +972,7 @@ __all__ = [
     "CrossRevisionCasillaDivergence",
     "CrossRevisionCasillaDriftSummary",
     "DataBindingDefinition",
+    "DeadlineSemanticCoordinate",
     "DeadlineWindowDefinition",
     "DeadlineWindowId",
     "DecimalValue",
@@ -1269,6 +1275,8 @@ __all__ = [
     "compute_walked_tree_digest",
     "compute_withholding_totals_parity",
     "counterpart_binding_requirements",
+    "deadline_semantic_coordinate",
+    "deadline_window_semantic_coordinate",
     "declared_casilla_ids",
     "derive_calculation_completeness_casillas",
     "derive_diseno_coverage_casillas",
