@@ -64,7 +64,7 @@ def test_import_a_bank_statement_ranks_ledger_import_first(ranker: Callable[[str
 def test_file_my_quarterly_iva_surfaces_quickfile_in_the_top_hits(ranker: Callable[[str], list[str]]) -> None:
     ranked = ranker("file my quarterly VAT")
     assert ranked, "the query matched no commands"
-    assert "quickfile" in ranked[:5], f"expected quickfile in the top 5, got {ranked[:5]}"
+    assert "app.quickfile" in ranked[:5], f"expected app.quickfile in the top 5, got {ranked[:5]}"
 
 
 def test_outcome_phrasing_reaches_the_composite_quickfile_chain(ranker: Callable[[str], list[str]]) -> None:
@@ -72,7 +72,7 @@ def test_outcome_phrasing_reaches_the_composite_quickfile_chain(ranker: Callable
     # verb tokens of "do my taxes" appear in no command, yet the aliases route it
     # to the one-command filing chain.
     ranked = ranker("do my taxes")
-    assert "quickfile" in ranked[:5], f"expected quickfile in the top 5, got {ranked[:5]}"
+    assert "app.quickfile" in ranked[:5], f"expected app.quickfile in the top 5, got {ranked[:5]}"
 
 
 def test_no_retired_command_key_remains_searchable() -> None:
