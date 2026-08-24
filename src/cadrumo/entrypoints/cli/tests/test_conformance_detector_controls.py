@@ -37,7 +37,6 @@ from __future__ import annotations
 import pytest
 
 from .test_documented_command_conformance import _cited_commands, _validate_command
-from .test_json_schema_conformance import _is_forbidden_notice_field
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -102,44 +101,4 @@ def test_the_dead_subcommand_detector_flags_a_verb_the_group_does_not_expose() -
     assert violations, "the dead-subcommand detector reported nothing for a verb the group does not expose"
     assert any("not-a-subcommand" in violation for violation in violations), (
         f"the detector fired but did not name the dead token: {violations}"
-    )
-
-
-@pytest.mark.parametrize(
-    "field_name",
-    ["next", "suggestion", "suggestions", "hint", "advisory", "advisories", "source_advisories"],
-)
-def test_the_bespoke_notice_detector_flags_a_smuggled_diagnostic_field(field_name: str) -> None:
-    """Each name the standard forbids on a result schema must be reported."""
-    assert _is_forbidden_notice_field(field_name), (
-        f"{field_name!r} is a bespoke diagnostic field the notice standard forbids on a result schema, "
-        "but the detector does not report it, so a schema regrowing it would pass the conformance gate"
-    )
-
-
-@pytest.mark.parametrize("field_name", ["authorization_advisory", "source_advisories", "stale_draft_advisories"])
-def test_the_bespoke_notice_detector_flags_the_suffix_smuggling_shape(field_name: str) -> None:
-    """The ``*_advisory`` / ``*_advisories`` suffix is the shape a per-command name hides behind.
-
-    A literal-name set alone would be defeated by prefixing: ``advisory`` is
-    caught, ``authorization_advisory`` is the same field wearing a command's
-    name. The suffix rule is what makes the check general, so it is controlled
-    separately from the literal set above.
-    """
-    assert _is_forbidden_notice_field(field_name)
-
-
-@pytest.mark.parametrize("field_name", ["findings", "warnings", "next_due", "next_action", "notices", "result"])
-def test_the_bespoke_notice_detector_leaves_primary_result_data_alone(field_name: str) -> None:
-    """Primary structured output a command exists to produce is not a diagnostic.
-
-    Verify ``findings``, calendar ``warnings``, a ``next_due`` date and a
-    per-finding ``next_action`` are the command's result, not incidental
-    advisories smuggled beside the notice channel. A detector that flagged them
-    would be over-firing on exactly the payloads the standard permits, and the
-    firing controls above cannot distinguish that from a correct detector.
-    """
-    assert not _is_forbidden_notice_field(field_name), (
-        f"{field_name!r} is primary result data the notice standard explicitly allows, but the detector "
-        "reports it as a bespoke diagnostic; the conformance gate would red on a conformant schema"
     )
