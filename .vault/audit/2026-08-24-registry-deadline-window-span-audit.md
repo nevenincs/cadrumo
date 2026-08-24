@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:6ef2e2f9cd25ba0a5338f92cdeb2e1e6c1da39e7feb52e223fdc016a5df38464'
+body_hash: 'sha256:309b504942fb8d7af7393af13cd469a5912ba7059c367e4245e578d328bbb7f6'
 related: []
 ---
 
@@ -46,24 +46,30 @@ The fragment and its directory were removed.
 When a span sweep empties a fragment, delete the fragment and its directory in
 the same change; do not leave an empty file behind.
 
-## Open, needs an authority ruling: modelo 184 orphaned window years
+## Fixed: modelo 184 windows no revision owned
 
 `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2015-2024/revision.toml`
-declares `period_selector = { year_from = 2023, year_to = 2024, periods = ["0A"] }`,
-but the revision directory is named `2015-2024` and its fragment declares windows
-for 2018, 2019, 2020, 2021 and 2022. No revision claims those five years, so each
-window fails canonical-owner resolution:
+declares `valid_from = 2023-01-01`, `valid_to = 2024-12-31`,
+`period_selector = { year_from = 2023, year_to = 2024, periods = ["0A"] }`, and
+cites `aeat-dr-184-2023-2024`. Every declaration in the file says the revision
+governs 2023-2024. Only the directory name `2015-2024`, stale from the earlier
+`2015-y-siguientes` revision this one was split out of, says otherwise.
+
+Its fragment still carried windows for 2018 through 2022 -- years no revision in
+the modelo declares -- so each failed canonical-owner resolution:
 
 ```
 modelo 184 revision 2015-2024: deadline window 'modelo-184-2018-0a' has no unique
 canonical owner for filing coordinate (2018, '0A'): no revision for year=2018
 ```
 
-The directory name, the selector, and a third name (`2015-y-siguientes`) appearing
-in the revision's own prose disagree about the span. Resolving it means ruling on
-which filing years this application supports modelo 184 for -- widen the selector
-to 2015, or delete five years of windows. That is a claim about what AEAT
-authorises, so it is recorded here rather than guessed.
+This was first recorded here as needing an authority ruling, on the reading that
+choosing between widening the selector to 2015 and deleting five years of windows
+was a claim about what AEAT authorises. Reading the revision file settled it
+without a ruling: the selector, both validity dates and the source reference
+already agree on 2023-2024, and no revision covers 2018-2022, so those windows
+were unreachable data contradicting the span that governs them. Removing them
+makes the fragment agree with its own selector. Landed as `6a69b9715b`.
 
 ## Open, needs an authority ruling: modelo 322 `2008-2022` authority grade
 
