@@ -2,24 +2,54 @@
 
 from __future__ import annotations
 
+import inspect
 from collections.abc import Callable
 from enum import StrEnum
-from typing import cast
+from typing import Annotated, Literal, Protocol, TypedDict, cast, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field, PydanticInvalidForJsonSchema, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    PydanticInvalidForJsonSchema,
+    field_serializer,
+    field_validator,
+    model_validator,
+)
 
-from ...core import STRICT_FROZEN_CONFIG, OperationDurability, OperationEffect, OperationInteractionKind
+from ...core import (
+    STRICT_FROZEN_CONFIG,
+    OperationCancellation,
+    OperationClosePolicy,
+    OperationDeadline,
+    OperationDurability,
+    OperationEffect,
+    OperationInteractionKind,
+    content_hash_hex,
+)
+from ...core.identity import ContentDigest
 from ..operator_actions import ActionReference
-from ._capabilities import OperationCapabilities, OperationRequestStoragePolicy
+from ._capabilities import (
+    OperationBaselinePolicy,
+    OperationCapabilities,
+    OperationConflictScope,
+    OperationOwnedResource,
+    OperationReplayPolicy,
+    OperationRequestStoragePolicy,
+    OperationSensitiveInputPolicy,
+)
 from ._events import OperationEventCode
 from ._executor import OperationExecutor, OperationResumableExecutor
+from ._interactions import OperationInteractionRequest
 from ._models import (
     CredentialFreeOperationRequest,
     OperationDefinitionId,
     OperationIdentity,
     OperationRequest,
     OperationSnapshot,
+    OperationTerminalReceipt,
 )
+from ._model_contract import require_strict_frozen_operation_model_graph
 from ._secret_submission import OperationEphemeralSecretDeclaration
 
 _FORBIDDEN_CREDENTIAL_FREE_FIELD_PARTS = frozenset(
@@ -48,6 +78,124 @@ _FORBIDDEN_CREDENTIAL_FREE_FIELD_PARTS = frozenset(
     }
 )
 _FORBIDDEN_CREDENTIAL_FREE_SCHEMA_FORMATS = frozenset({"binary", "byte", "password"})
+_STRICT_RUNTIME_BINDING_CONFIG = ConfigDict(
+    strict=True,
+    frozen=True,
+    extra="forbid",
+    arbitrary_types_allowed=True,
+)
+
+OperationPublicSchemaId = Annotated[
+    str,
+    Field(min_length=3, max_length=160, pattern=r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)+$"),
+]
+
+
+class OperationSchemaIdentityV1(BaseModel):
+    """Stable public identity of one exact strict Pydantic JSON schema."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    schema_id: OperationPublicSchemaId
+    schema_version: Annotated[int, Field(ge=1)]
+    schema_fingerprint: ContentDigest
+
+    @classmethod
+    def from_model(
+        cls,
+        *,
+        schema_id: OperationPublicSchemaId,
+        schema_version: int,
+        model_type: type[BaseModel],
+    ) -> OperationSchemaIdentityV1:
+        """Derive the identity from the canonical closed schema of ``model_type``."""
+        schema = _strict_model_json_schema(model_type)
+        return cls(
+            schema_id=schema_id,
+            schema_version=schema_version,
+            schema_fingerprint=content_hash_hex(schema),
+        )
+
+
+class OperationPublicDefinitionContractV1(BaseModel):
+    """Renderer-neutral public manifest row for one operation definition."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    manifest_version: Literal[1] = 1
+    definition_id: OperationDefinitionId
+    action_reference: ActionReference | None
+    request_schema: OperationSchemaIdentityV1
+    result_schema: OperationSchemaIdentityV1 | None
+    review_projection_schema: OperationSchemaIdentityV1 | None
+    interaction_response_schema: OperationSchemaIdentityV1 | None
+    workspace_refresh_target_schema: OperationSchemaIdentityV1 | None
+    interaction_kinds: frozenset[OperationInteractionKind]
+    request_storage: OperationRequestStoragePolicy
+    durability: OperationDurability
+    cancellation: OperationCancellation
+    deadline: OperationDeadline
+    replay: OperationReplayPolicy
+    baseline: OperationBaselinePolicy
+    sensitive_input: OperationSensitiveInputPolicy
+    conflict_scope: OperationConflictScope
+    owned_resources: frozenset[OperationOwnedResource]
+    permitted_effects: frozenset[OperationEffect]
+    close_policy: OperationClosePolicy
+    reconciliation_policy: OperationReconciliationPolicy
+    permitted_frontends: frozenset[OperationFrontendProjection]
+    ephemeral_secret_required: bool
+    definition_contract_digest: ContentDigest
+
+    @field_serializer("interaction_kinds", "owned_resources", "permitted_effects", "permitted_frontends")
+    def _serialize_sets_in_canonical_order(self, value: frozenset[StrEnum]) -> tuple[str, ...]:
+        return tuple(sorted(item.value for item in value))
+
+    @model_validator(mode="after")
+    def _validate_digest(self) -> OperationPublicDefinitionContractV1:
+        expected = _definition_contract_digest(self)
+        if self.definition_contract_digest != expected:
+            raise ValueError("operation definition contract digest does not reproduce")
+        return self
+
+
+class OperationPublicContractSetV1(BaseModel):
+    """Canonical fixed-point inventory of all public operation contracts."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    contract_set_version: Literal[1] = 1
+    definitions: tuple[OperationPublicDefinitionContractV1, ...] = Field(min_length=1)
+    contract_set_digest: ContentDigest
+
+    @field_validator("definitions")
+    @classmethod
+    def _canonical_contracts(
+        cls,
+        value: tuple[OperationPublicDefinitionContractV1, ...],
+    ) -> tuple[OperationPublicDefinitionContractV1, ...]:
+        definition_ids = tuple(contract.definition_id for contract in value)
+        if len(set(definition_ids)) != len(definition_ids):
+            raise ValueError("public operation definition IDs must be unique")
+        if definition_ids != tuple(sorted(definition_ids)):
+            raise ValueError("public operation contracts must be sorted by definition ID")
+        return value
+
+    @model_validator(mode="after")
+    def _validate_digest(self) -> OperationPublicContractSetV1:
+        expected = _contract_set_digest(self.definitions)
+        if self.contract_set_digest != expected:
+            raise ValueError("operation public contract-set digest does not reproduce")
+        return self
+
+    @classmethod
+    def build(
+        cls,
+        definitions: tuple[OperationPublicDefinitionContractV1, ...],
+    ) -> OperationPublicContractSetV1:
+        """Build the canonical sorted set and its deterministic digest."""
+        canonical = tuple(sorted(definitions, key=lambda item: item.definition_id))
+        return cls(definitions=canonical, contract_set_digest=_contract_set_digest(canonical))
 
 
 class _OperationRequestResolutionHeader(BaseModel):
@@ -173,15 +321,7 @@ class OperationDefinition(BaseModel):
             raise ValueError(
                 "credential-free journal request type must explicitly inherit CredentialFreeOperationRequest"
             )
-        config = self.request_type.model_config
-        if config.get("strict") is not True or config.get("frozen") is not True or config.get("extra") != "forbid":
-            raise ValueError("credential-free journal request type must be strict, frozen, and forbid extra fields")
-        if self.request_type.__private_attributes__:
-            raise ValueError("credential-free journal request type must not declare private state")
-        try:
-            schema = self.request_type.model_json_schema()
-        except PydanticInvalidForJsonSchema as error:
-            raise ValueError("credential-free journal request type must have a closed JSON schema") from error
+        schema = _strict_model_json_schema(self.request_type)
         _validate_credential_free_schema(schema)
 
     def _validate_ephemeral_secret(self) -> None:
@@ -195,12 +335,176 @@ class OperationDefinition(BaseModel):
             raise ValueError("ephemeral secret operations must permit a pre-entry none effect")
 
 
+class _PublicDefinitionContractValues(TypedDict):
+    definition_id: OperationDefinitionId
+    action_reference: ActionReference | None
+    request_schema: OperationSchemaIdentityV1
+    result_schema: OperationSchemaIdentityV1 | None
+    review_projection_schema: OperationSchemaIdentityV1 | None
+    interaction_response_schema: OperationSchemaIdentityV1 | None
+    workspace_refresh_target_schema: OperationSchemaIdentityV1 | None
+    interaction_kinds: frozenset[OperationInteractionKind]
+    request_storage: OperationRequestStoragePolicy
+    durability: OperationDurability
+    cancellation: OperationCancellation
+    deadline: OperationDeadline
+    replay: OperationReplayPolicy
+    baseline: OperationBaselinePolicy
+    sensitive_input: OperationSensitiveInputPolicy
+    conflict_scope: OperationConflictScope
+    owned_resources: frozenset[OperationOwnedResource]
+    permitted_effects: frozenset[OperationEffect]
+    close_policy: OperationClosePolicy
+    reconciliation_policy: OperationReconciliationPolicy
+    permitted_frontends: frozenset[OperationFrontendProjection]
+    ephemeral_secret_required: bool
+
+
+class OperationSchemaBindingV1(BaseModel):
+    """Runtime-only binding from a public schema identity to its exact model."""
+
+    model_config = _STRICT_RUNTIME_BINDING_CONFIG
+
+    identity: OperationSchemaIdentityV1
+    model_type: type[BaseModel]
+
+    @model_validator(mode="after")
+    def _validate_fingerprint(self) -> OperationSchemaBindingV1:
+        schema = _strict_model_json_schema(self.model_type)
+        fingerprint = content_hash_hex(schema)
+        if fingerprint != self.identity.schema_fingerprint:
+            raise ValueError("registered operation schema fingerprint does not match its exact model")
+        return self
+
+    @classmethod
+    def bind(
+        cls,
+        *,
+        schema_id: OperationPublicSchemaId,
+        schema_version: int,
+        model_type: type[BaseModel],
+    ) -> OperationSchemaBindingV1:
+        """Bind one stable identity to the model that produces its fingerprint."""
+        return cls(
+            identity=OperationSchemaIdentityV1.from_model(
+                schema_id=schema_id,
+                schema_version=schema_version,
+                model_type=model_type,
+            ),
+            model_type=model_type,
+        )
+
+
+@runtime_checkable
+class OperationReviewProjector(Protocol):
+    """Domain-owned, side-effect-free safe REVIEW projection contract."""
+
+    def __call__(
+        self,
+        reviewed_operand: BaseModel,
+        interaction_facts: OperationInteractionRequest,
+        /,
+    ) -> BaseModel:
+        """Project one resolved operand and its current interaction facts."""
+        ...
+
+
+@runtime_checkable
+class OperationWorkspaceRefreshAdapter(Protocol):
+    """Domain-owned adapter from safe terminal facts to a refresh target."""
+
+    def __call__(self, terminal_receipt: OperationTerminalReceipt, /) -> BaseModel:
+        """Return the typed target derived from one settled receipt."""
+        ...
+
+
+class OperationPublicDefinitionRegistrationV1(BaseModel):
+    """Live models and adapters bound to one serializable public contract."""
+
+    model_config = _STRICT_RUNTIME_BINDING_CONFIG
+
+    contract: OperationPublicDefinitionContractV1
+    schema_bindings: tuple[OperationSchemaBindingV1, ...] = Field(min_length=1)
+    review_projector: OperationReviewProjector | None = None
+    workspace_refresh_adapter: OperationWorkspaceRefreshAdapter | None = None
+
+    @field_validator("schema_bindings")
+    @classmethod
+    def _unique_schema_bindings(
+        cls,
+        value: tuple[OperationSchemaBindingV1, ...],
+    ) -> tuple[OperationSchemaBindingV1, ...]:
+        keys = tuple((binding.identity.schema_id, binding.identity.schema_version) for binding in value)
+        if len(set(keys)) != len(keys):
+            raise ValueError("registered operation schema identities must be unique")
+        return tuple(sorted(value, key=lambda item: (item.identity.schema_id, item.identity.schema_version)))
+
+    @model_validator(mode="after")
+    def _validate_adapter_signatures(self) -> OperationPublicDefinitionRegistrationV1:
+        if self.review_projector is not None:
+            _require_positional_callable_signature(self.review_projector, arity=2, label="REVIEW projector")
+        if self.workspace_refresh_adapter is not None:
+            _require_positional_callable_signature(
+                self.workspace_refresh_adapter,
+                arity=1,
+                label="Workspace refresh adapter",
+            )
+        return self
+
+    @classmethod
+    def compose(
+        cls,
+        *,
+        definition: OperationDefinition,
+        request_schema: OperationSchemaBindingV1,
+        result_schema: OperationSchemaBindingV1 | None = None,
+        review_projection_schema: OperationSchemaBindingV1 | None = None,
+        interaction_response_schema: OperationSchemaBindingV1 | None = None,
+        workspace_refresh_target_schema: OperationSchemaBindingV1 | None = None,
+        review_projector: OperationReviewProjector | None = None,
+        workspace_refresh_adapter: OperationWorkspaceRefreshAdapter | None = None,
+    ) -> OperationPublicDefinitionRegistrationV1:
+        """Compose a manifest and its runtime-only bindings from one definition."""
+        bindings = tuple(
+            binding
+            for binding in (
+                request_schema,
+                result_schema,
+                review_projection_schema,
+                interaction_response_schema,
+                workspace_refresh_target_schema,
+            )
+            if binding is not None
+        )
+        contract = _public_contract_for_definition(
+            definition,
+            request_schema=request_schema.identity,
+            result_schema=result_schema.identity if result_schema is not None else None,
+            review_projection_schema=(
+                review_projection_schema.identity if review_projection_schema is not None else None
+            ),
+            interaction_response_schema=(
+                interaction_response_schema.identity if interaction_response_schema is not None else None
+            ),
+            workspace_refresh_target_schema=(
+                workspace_refresh_target_schema.identity if workspace_refresh_target_schema is not None else None
+            ),
+        )
+        return cls(
+            contract=contract,
+            schema_bindings=bindings,
+            review_projector=review_projector,
+            workspace_refresh_adapter=workspace_refresh_adapter,
+        )
+
+
 class OperationRegistry(BaseModel):
     """Deterministic definition registry with fail-closed immutable lookup."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     definitions: tuple[OperationDefinition, ...] = Field(min_length=1)
+    public_registrations: tuple[OperationPublicDefinitionRegistrationV1, ...] = ()
 
     @field_validator("definitions")
     @classmethod
@@ -212,6 +516,92 @@ class OperationRegistry(BaseModel):
         if len(set(action_ids)) != len(action_ids):
             raise ValueError("operator action references must map to at most one operation definition")
         return tuple(sorted(value, key=lambda item: item.definition_id))
+
+    @model_validator(mode="after")
+    def _validate_public_fixed_point(self) -> OperationRegistry:
+        if not self.public_registrations:
+            return self
+        registrations = tuple(sorted(self.public_registrations, key=lambda item: item.contract.definition_id))
+        if registrations != self.public_registrations:
+            raise ValueError("public operation registrations must be sorted by definition ID")
+        definition_ids = tuple(definition.definition_id for definition in self.definitions)
+        registration_ids = tuple(registration.contract.definition_id for registration in registrations)
+        if registration_ids != definition_ids:
+            raise ValueError("public operation registrations must exactly cover the immutable registry")
+        seen_schema_identities: dict[tuple[str, int], tuple[ContentDigest, type[BaseModel]]] = {}
+        contracts: list[OperationPublicDefinitionContractV1] = []
+        for definition, registration in zip(self.definitions, registrations, strict=True):
+            self._validate_public_registration(definition, registration)
+            contracts.append(registration.contract)
+            for binding in registration.schema_bindings:
+                key = (binding.identity.schema_id, binding.identity.schema_version)
+                current = (binding.identity.schema_fingerprint, binding.model_type)
+                existing = seen_schema_identities.setdefault(key, current)
+                if existing != current:
+                    raise ValueError("one operation schema identity must bind one exact model and fingerprint")
+        OperationPublicContractSetV1.build(tuple(contracts))
+        return self
+
+    @staticmethod
+    def _validate_public_registration(
+        definition: OperationDefinition,
+        registration: OperationPublicDefinitionRegistrationV1,
+    ) -> None:
+        contract = registration.contract
+        bindings = {
+            _schema_identity_key(binding.identity): binding.model_type
+            for binding in registration.schema_bindings
+        }
+        declared_identities = {
+            _schema_identity_key(identity)
+            for identity in (
+                contract.request_schema,
+                contract.result_schema,
+                contract.review_projection_schema,
+                contract.interaction_response_schema,
+                contract.workspace_refresh_target_schema,
+            )
+            if identity is not None
+        }
+        if set(bindings) != declared_identities:
+            raise ValueError("public operation schema bindings must exactly match the declared manifest")
+        if bindings[_schema_identity_key(contract.request_schema)] is not definition.request_type:
+            raise ValueError("public operation request schema must bind the definition request type")
+        if definition.result_type is None:
+            if contract.result_schema is not None:
+                raise ValueError("result-less operation definition cannot declare a public result schema")
+        elif (
+            contract.result_schema is None
+            or bindings[_schema_identity_key(contract.result_schema)] is not definition.result_type
+        ):
+            raise ValueError("public operation result schema must bind the definition result type")
+        declares_review = OperationInteractionKind.REVIEW in definition.interaction_kinds
+        if declares_review != (contract.review_projection_schema is not None):
+            raise ValueError("REVIEW operation definitions require one public review schema")
+        if declares_review != (registration.review_projector is not None):
+            raise ValueError("REVIEW operation definitions require one registered review projector")
+        declares_refresh = contract.workspace_refresh_target_schema is not None
+        if declares_refresh != (registration.workspace_refresh_adapter is not None):
+            raise ValueError("Workspace refresh schema and adapter must be declared together")
+        expected = _public_contract_for_definition(
+            definition,
+            request_schema=contract.request_schema,
+            result_schema=contract.result_schema,
+            review_projection_schema=contract.review_projection_schema,
+            interaction_response_schema=contract.interaction_response_schema,
+            workspace_refresh_target_schema=contract.workspace_refresh_target_schema,
+        )
+        if expected != contract:
+            raise ValueError("public operation definition contract is not a live-registry fixed point")
+
+    @property
+    def public_contract_set(self) -> OperationPublicContractSetV1:
+        """Return the validated public set; refuse an uncomposed internal registry."""
+        if not self.public_registrations:
+            raise RuntimeError("operation registry has no public contract composition")
+        return OperationPublicContractSetV1.build(
+            tuple(registration.contract for registration in self.public_registrations),
+        )
 
     def lookup(self, definition_id: str) -> OperationDefinition:
         """Return the exact registered definition or fail closed."""
@@ -271,10 +661,177 @@ def _validate_credential_free_schema(schema: object) -> None:
         _validate_credential_free_schema(value)
 
 
+def _strict_model_json_schema(model_type: type[BaseModel]) -> dict[str, object]:
+    """Return one exact closed schema after enforcing the public model baseline."""
+    require_strict_frozen_operation_model_graph(model_type, path="public schema")
+    try:
+        schema = model_type.model_json_schema()
+    except PydanticInvalidForJsonSchema as error:
+        raise ValueError("public operation schema model must have a closed JSON schema") from error
+    closed_schema = cast(dict[str, object], schema)
+    _validate_closed_json_schema(closed_schema, path=model_type.__name__)
+    return closed_schema
+
+
+def _validate_closed_json_schema(schema: dict[str, object], *, path: str) -> None:
+    """Refuse every untyped or open branch of one generated public schema."""
+    definitions = schema.get("$defs")
+    if isinstance(definitions, dict):
+        for definition_name, definition in cast(dict[str, object], definitions).items():
+            if not isinstance(definition, dict):
+                raise ValueError(f"public operation schema {path} has an invalid definition")
+            _validate_closed_json_schema(
+                cast(dict[str, object], definition),
+                path=f"{path}.$defs.{definition_name}",
+            )
+    if schema.get("patternProperties") is not None:
+        raise ValueError(f"public operation schema {path} contains a pattern-properties payload bag")
+    if "$ref" in schema or "enum" in schema or "const" in schema:
+        return
+    for combinator in ("anyOf", "oneOf", "allOf"):
+        branches = schema.get(combinator)
+        if branches is None:
+            continue
+        if not isinstance(branches, list) or not branches:
+            raise ValueError(f"public operation schema {path} has an invalid {combinator}")
+        for index, branch in enumerate(cast(list[object], branches)):
+            if not isinstance(branch, dict):
+                raise ValueError(f"public operation schema {path} has an invalid {combinator} branch")
+            _validate_closed_json_schema(
+                cast(dict[str, object], branch),
+                path=f"{path}.{combinator}[{index}]",
+            )
+        return
+    schema_type = schema.get("type")
+    if not isinstance(schema_type, str):
+        raise ValueError(f"public operation schema {path} contains an untyped branch")
+    if schema_type == "object":
+        if schema.get("additionalProperties") is not False:
+            raise ValueError(f"public operation schema {path} contains an open object branch")
+        properties = schema.get("properties", {})
+        if not isinstance(properties, dict):
+            raise ValueError(f"public operation schema {path} has invalid properties")
+        for field_name, field_schema in cast(dict[str, object], properties).items():
+            if not isinstance(field_schema, dict):
+                raise ValueError(f"public operation schema {path}.{field_name} is invalid")
+            _validate_closed_json_schema(
+                cast(dict[str, object], field_schema),
+                path=f"{path}.{field_name}",
+            )
+    elif schema_type == "array":
+        items = schema.get("items")
+        if not isinstance(items, dict):
+            raise ValueError(f"public operation schema {path} contains an untyped array")
+        _validate_closed_json_schema(cast(dict[str, object], items), path=f"{path}.items")
+
+
+def _definition_contract_digest(contract: OperationPublicDefinitionContractV1) -> ContentDigest:
+    return content_hash_hex(_definition_contract_value(contract, include_digest=False))
+
+
+def _contract_set_digest(
+    definitions: tuple[OperationPublicDefinitionContractV1, ...],
+) -> ContentDigest:
+    payload = {
+        "contract_set_version": 1,
+        "definitions": [
+            _definition_contract_value(definition, include_digest=True) for definition in definitions
+        ],
+    }
+    return content_hash_hex(payload)
+
+
+def _schema_identity_key(identity: OperationSchemaIdentityV1) -> tuple[str, int, ContentDigest]:
+    return identity.schema_id, identity.schema_version, identity.schema_fingerprint
+
+
+def _definition_contract_value(
+    contract: OperationPublicDefinitionContractV1,
+    *,
+    include_digest: bool,
+) -> dict[str, object]:
+    """Return the explicitly ordered, JSON-safe value governed by the digest."""
+    payload = cast(
+        dict[str, object],
+        contract.model_dump(mode="json", exclude={"definition_contract_digest"}),
+    )
+    if include_digest:
+        payload["definition_contract_digest"] = contract.definition_contract_digest
+    return payload
+
+
+def _require_positional_callable_signature(callable_value: object, *, arity: int, label: str) -> None:
+    if inspect.iscoroutinefunction(callable_value):
+        raise ValueError(f"operation {label} must be synchronous")
+    try:
+        signature = inspect.signature(callable_value)
+    except (TypeError, ValueError) as error:
+        raise ValueError(f"operation {label} must expose an inspectable signature") from error
+    parameters = tuple(signature.parameters.values())
+    positional_kinds = (inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD)
+    if len(parameters) != arity or any(parameter.kind not in positional_kinds for parameter in parameters):
+        raise ValueError(f"operation {label} must accept exactly {arity} positional arguments")
+
+
+def _public_contract_for_definition(
+    definition: OperationDefinition,
+    *,
+    request_schema: OperationSchemaIdentityV1,
+    result_schema: OperationSchemaIdentityV1 | None,
+    review_projection_schema: OperationSchemaIdentityV1 | None,
+    interaction_response_schema: OperationSchemaIdentityV1 | None,
+    workspace_refresh_target_schema: OperationSchemaIdentityV1 | None,
+) -> OperationPublicDefinitionContractV1:
+    capabilities = definition.capabilities
+    values: _PublicDefinitionContractValues = {
+        "definition_id": definition.definition_id,
+        "action_reference": definition.action_reference,
+        "request_schema": request_schema,
+        "result_schema": result_schema,
+        "review_projection_schema": review_projection_schema,
+        "interaction_response_schema": interaction_response_schema,
+        "workspace_refresh_target_schema": workspace_refresh_target_schema,
+        "interaction_kinds": definition.interaction_kinds,
+        "request_storage": capabilities.request_storage,
+        "durability": capabilities.durability,
+        "cancellation": capabilities.cancellation,
+        "deadline": capabilities.deadline,
+        "replay": capabilities.replay,
+        "baseline": capabilities.baseline,
+        "sensitive_input": capabilities.sensitive_input,
+        "conflict_scope": capabilities.conflict_scope,
+        "owned_resources": capabilities.owned_resources,
+        "permitted_effects": capabilities.permitted_effects,
+        "close_policy": capabilities.close_policy,
+        "reconciliation_policy": definition.reconciliation_policy,
+        "permitted_frontends": definition.permitted_frontends,
+        "ephemeral_secret_required": definition.ephemeral_secret is not None,
+    }
+    provisional = OperationPublicDefinitionContractV1.model_construct(
+        **values,
+        definition_contract_digest=cast(ContentDigest, "0" * 64),
+    )
+    return OperationPublicDefinitionContractV1(
+        **values,
+        definition_contract_digest=_definition_contract_digest(provisional),
+    )
+
+
+OperationPublicDefinitionContractV1.model_rebuild()
+
+
 __all__ = [
     "OperationDefinition",
     "OperationExecutorFactory",
     "OperationFrontendProjection",
+    "OperationPublicContractSetV1",
+    "OperationPublicDefinitionContractV1",
+    "OperationPublicDefinitionRegistrationV1",
+    "OperationPublicSchemaId",
     "OperationReconciliationPolicy",
     "OperationRegistry",
+    "OperationReviewProjector",
+    "OperationSchemaBindingV1",
+    "OperationSchemaIdentityV1",
+    "OperationWorkspaceRefreshAdapter",
 ]

@@ -296,6 +296,7 @@ def test_work_units_line_separates_discarded_from_active() -> None:
     assert "1" in work_unit_line
     assert "discarded" in work_unit_line.lower()
     assert "active" in work_unit_line.lower()
+    assert "aeat app modelo work list" not in work_unit_line
 
 
 def test_work_units_line_plain_when_none_discarded() -> None:
@@ -308,6 +309,7 @@ def test_work_units_line_plain_when_none_discarded() -> None:
     assert "discarded" not in joined.lower()
     work_unit_line = next(line for line in lines if line.lstrip().startswith("3 modelo"))
     assert "in progress" in work_unit_line.lower()
+    assert "aeat app modelo work list" not in work_unit_line
 
 
 def test_work_units_line_shown_when_only_discarded_exist() -> None:

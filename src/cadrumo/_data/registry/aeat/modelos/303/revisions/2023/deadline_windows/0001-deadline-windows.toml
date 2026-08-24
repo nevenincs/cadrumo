@@ -1,0 +1,180 @@
+# Exercise 2023 is owned exclusively by revision 2023. Exact presentation and
+# direct-debit dates come from AEAT's published 2023 taxpayer calendar. The
+# following-January windows for 4T and month 12 come from the 2024 calendar,
+# where AEAT publishes those two exercise-2023 coordinates explicitly.
+
+[[revisions.2023.deadline_windows]]
+id = "modelo-303-2023-1t"
+filing_year = 2023
+period = "2023 1T"
+period_kind = "quarterly"
+opens_on = 2023-04-01
+closes_on = 2023-04-20
+payment_cutoff_on = 2023-04-15
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions.2023.deadline_windows]]
+id = "modelo-303-2023-2t"
+filing_year = 2023
+period = "2023 2T"
+period_kind = "quarterly"
+opens_on = 2023-07-01
+closes_on = 2023-07-20
+payment_cutoff_on = 2023-07-15
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions.2023.deadline_windows]]
+id = "modelo-303-2023-3t"
+filing_year = 2023
+period = "2023 3T"
+period_kind = "quarterly"
+opens_on = 2023-10-01
+closes_on = 2023-10-20
+payment_cutoff_on = 2023-10-15
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions.2023.deadline_windows]]
+id = "modelo-303-2023-4t"
+filing_year = 2023
+period = "2023 4T"
+period_kind = "quarterly"
+opens_on = 2024-01-01
+closes_on = 2024-01-30
+payment_cutoff_on = 2024-01-25
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2024"]
+
+[[revisions.2023.deadline_windows]]
+id = "modelo-303-2023-01-mensual"
+filing_year = 2023
+period = "2023 01"
+period_kind = "monthly"
+opens_on = 2023-02-01
+closes_on = 2023-02-28
+payment_cutoff_on = 2023-02-23
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions.2023.deadline_windows]]
+id = "modelo-303-2023-02-mensual"
+filing_year = 2023
+period = "2023 02"
+period_kind = "monthly"
+opens_on = 2023-03-01
+closes_on = 2023-03-30
+payment_cutoff_on = 2023-03-25
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions.2023.deadline_windows]]
+id = "modelo-303-2023-03-mensual"
+filing_year = 2023
+period = "2023 03"
+period_kind = "monthly"
+opens_on = 2023-04-01
+closes_on = 2023-05-02
+payment_cutoff_on = 2023-04-25
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions.2023.deadline_windows]]
+id = "modelo-303-2023-04-mensual"
+filing_year = 2023
+period = "2023 04"
+period_kind = "monthly"
+opens_on = 2023-05-01
+closes_on = 2023-05-30
+payment_cutoff_on = 2023-05-25
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions.2023.deadline_windows]]
+id = "modelo-303-2023-05-mensual"
+filing_year = 2023
+period = "2023 05"
+period_kind = "monthly"
+opens_on = 2023-06-01
+closes_on = 2023-06-30
+payment_cutoff_on = 2023-06-25
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions.2023.deadline_windows]]
+id = "modelo-303-2023-06-mensual"
+filing_year = 2023
+period = "2023 06"
+period_kind = "monthly"
+opens_on = 2023-07-01
+closes_on = 2023-07-31
+payment_cutoff_on = 2023-07-26
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions.2023.deadline_windows]]
+id = "modelo-303-2023-07-mensual"
+filing_year = 2023
+period = "2023 07"
+period_kind = "monthly"
+opens_on = 2023-08-01
+closes_on = 2023-08-30
+payment_cutoff_on = 2023-08-25
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions.2023.deadline_windows]]
+id = "modelo-303-2023-08-mensual"
+filing_year = 2023
+period = "2023 08"
+period_kind = "monthly"
+opens_on = 2023-09-01
+closes_on = 2023-10-02
+payment_cutoff_on = 2023-09-27
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions.2023.deadline_windows]]
+id = "modelo-303-2023-09-mensual"
+filing_year = 2023
+period = "2023 09"
+period_kind = "monthly"
+opens_on = 2023-10-01
+closes_on = 2023-10-30
+payment_cutoff_on = 2023-10-25
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions.2023.deadline_windows]]
+id = "modelo-303-2023-10-mensual"
+filing_year = 2023
+period = "2023 10"
+period_kind = "monthly"
+opens_on = 2023-11-01
+closes_on = 2023-11-30
+payment_cutoff_on = 2023-11-25
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions.2023.deadline_windows]]
+id = "modelo-303-2023-11-mensual"
+filing_year = 2023
+period = "2023 11"
+period_kind = "monthly"
+opens_on = 2023-12-01
+closes_on = 2024-01-02
+payment_cutoff_on = 2023-12-26
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions.2023.deadline_windows]]
+id = "modelo-303-2023-12-mensual"
+filing_year = 2023
+period = "2023 12"
+period_kind = "monthly"
+opens_on = 2024-01-01
+closes_on = 2024-01-30
+payment_cutoff_on = 2024-01-25
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2024"]

@@ -26,13 +26,21 @@ from .. import (
     OperationFrontendProjection,
     OperationIdentity,
     OperationInteractionKind,
+    OperationInteractionRequest,
+    OperationOwnedResource,
+    OperationPublicContractSetV1,
+    OperationPublicDefinitionContractV1,
+    OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
     OperationReplayPolicy,
     OperationRequest,
     OperationRequestStoragePolicy,
+    OperationSchemaBindingV1,
+    OperationSchemaIdentityV1,
     OperationSensitiveInputPolicy,
     OperationSnapshot,
+    OperationTerminalReceipt,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -48,6 +56,34 @@ class ResultPayload(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     reference: str
+
+
+class ReviewPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    summary_code: str
+
+
+class RefreshTarget(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    subject_ref: str
+
+
+class AlternateRequestPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    count: int
+
+
+class NonStrictPayload(BaseModel):
+    value: str
+
+
+class OpenObjectPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    labels: dict[str, str]
 
 
 class Executor:
@@ -105,6 +141,49 @@ def definition(*, definition_id: str, action_id: str | None = None) -> Operation
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         action_reference=ActionReference(action_id=action_id) if action_id is not None else None,
+    )
+
+
+def review_projector(operand: BaseModel, interaction: OperationInteractionRequest) -> BaseModel:
+    del operand, interaction
+    return ReviewPayload(summary_code="profile.sync.review")
+
+
+def refresh_adapter(receipt: OperationTerminalReceipt) -> BaseModel:
+    del receipt
+    return RefreshTarget(subject_ref="profile:active")
+
+
+def public_registration(
+    item: OperationDefinition,
+    *,
+    request_type: type[BaseModel] = RequestPayload,
+    request_schema_id: str | None = None,
+) -> OperationPublicDefinitionRegistrationV1:
+    return OperationPublicDefinitionRegistrationV1.compose(
+        definition=item,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id=request_schema_id or f"{item.definition_id}.request",
+            schema_version=1,
+            model_type=request_type,
+        ),
+        result_schema=OperationSchemaBindingV1.bind(
+            schema_id=f"{item.definition_id}.result",
+            schema_version=1,
+            model_type=ResultPayload,
+        ),
+        review_projection_schema=OperationSchemaBindingV1.bind(
+            schema_id=f"{item.definition_id}.review",
+            schema_version=1,
+            model_type=ReviewPayload,
+        ),
+        workspace_refresh_target_schema=OperationSchemaBindingV1.bind(
+            schema_id=f"{item.definition_id}.refresh",
+            schema_version=1,
+            model_type=RefreshTarget,
+        ),
+        review_projector=review_projector,
+        workspace_refresh_adapter=refresh_adapter,
     )
 
 
@@ -358,3 +437,160 @@ def test_registry_resolvers_refuse_malformed_json_as_controlled_validation_error
     payload["permitted_frontends"] = frozenset()
     with pytest.raises(ValidationError):
         OperationDefinition.model_validate(payload)
+
+
+def test_public_schema_identity_is_exact_and_refuses_non_strict_models() -> None:
+    first = OperationSchemaIdentityV1.from_model(
+        schema_id="profile.sync.request",
+        schema_version=1,
+        model_type=RequestPayload,
+    )
+    second = OperationSchemaIdentityV1.from_model(
+        schema_id="profile.sync.request",
+        schema_version=1,
+        model_type=RequestPayload,
+    )
+
+    assert first == second
+    assert first.schema_fingerprint == "2d580ffa1af222cf9aba76e58220104f26fe5e3737b1fa1a674cde21fe93cee1"
+    with pytest.raises(ValueError, match="strict, frozen"):
+        OperationSchemaIdentityV1.from_model(
+            schema_id="profile.sync.unsafe",
+            schema_version=1,
+            model_type=NonStrictPayload,
+        )
+    with pytest.raises(ValueError, match="open object payload bags"):
+        OperationSchemaIdentityV1.from_model(
+            schema_id="profile.sync.open-object",
+            schema_version=1,
+            model_type=OpenObjectPayload,
+        )
+
+
+def test_public_definition_and_contract_set_digests_are_deterministic_and_self_validating() -> None:
+    first_definition = definition(definition_id="profile.alpha")
+    second_definition = definition(definition_id="profile.zeta")
+    first = public_registration(first_definition).contract
+    second = public_registration(second_definition).contract
+
+    contract_set = OperationPublicContractSetV1.build((second, first))
+    rebuilt = OperationPublicContractSetV1.build((first, second))
+
+    assert contract_set == rebuilt
+    assert tuple(item.definition_id for item in contract_set.definitions) == ("profile.alpha", "profile.zeta")
+    set_order_one = first_definition.model_copy(
+        update={
+            "interaction_kinds": frozenset(
+                [OperationInteractionKind.REVIEW],
+            ),
+            "permitted_frontends": frozenset(
+                [OperationFrontendProjection.CLI, OperationFrontendProjection.TUI],
+            ),
+            "capabilities": first_definition.capabilities.model_copy(
+                update={
+                    "owned_resources": frozenset(
+                        [OperationOwnedResource.ASYNC_TASK, OperationOwnedResource.PROCESS],
+                    ),
+                    "permitted_effects": frozenset(
+                        [OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN],
+                    ),
+                },
+            ),
+        },
+    )
+    set_order_two = first_definition.model_copy(
+        update={
+            "interaction_kinds": frozenset(
+                [OperationInteractionKind.REVIEW],
+            ),
+            "permitted_frontends": frozenset(
+                [OperationFrontendProjection.TUI, OperationFrontendProjection.CLI],
+            ),
+            "capabilities": first_definition.capabilities.model_copy(
+                update={
+                    "owned_resources": frozenset(
+                        [OperationOwnedResource.PROCESS, OperationOwnedResource.ASYNC_TASK],
+                    ),
+                    "permitted_effects": frozenset(
+                        [OperationEffect.UNKNOWN, OperationEffect.UPDATED, OperationEffect.NONE],
+                    ),
+                },
+            ),
+        },
+    )
+    assert public_registration(set_order_one).contract.definition_contract_digest == (
+        public_registration(set_order_two).contract.definition_contract_digest
+    )
+    tampered_contract = {field_name: getattr(first, field_name) for field_name in first.__class__.model_fields}
+    tampered_contract["permitted_frontends"] = frozenset({OperationFrontendProjection.TUI})
+    with pytest.raises(ValidationError, match="digest does not reproduce"):
+        OperationPublicDefinitionContractV1.model_validate(tampered_contract)
+    tampered_set = {field_name: getattr(contract_set, field_name) for field_name in contract_set.__class__.model_fields}
+    tampered_set["contract_set_digest"] = "f" * 64
+    with pytest.raises(ValidationError, match="contract-set digest does not reproduce"):
+        OperationPublicContractSetV1.model_validate(tampered_set)
+
+
+def test_registry_public_contract_is_a_live_definition_fixed_point() -> None:
+    item = definition(definition_id="profile.sync")
+    registration = public_registration(item)
+    registry = OperationRegistry(definitions=(item,), public_registrations=(registration,))
+
+    assert registration.contract.definition_contract_digest == (
+        "52cca15e062028441c31313f2337360487b878bb89fc90d8817a9848dabc7cb3"
+    )
+    assert registry.public_contract_set.contract_set_digest == (
+        "44d6bb71a45ff1e0d67881d3dc26433de7c509e2c26cfcd25d4fa84937c373f2"
+    )
+    assert registry.public_contract_set.definitions == (registration.contract,)
+    drifted = item.model_copy(update={"permitted_frontends": frozenset({OperationFrontendProjection.TUI})})
+    with pytest.raises(ValidationError, match="not a live-registry fixed point"):
+        OperationRegistry(definitions=(drifted,), public_registrations=(registration,))
+
+
+def test_registry_refuses_missing_review_projector_and_refresh_adapter() -> None:
+    item = definition(definition_id="profile.sync")
+    registration = public_registration(item)
+
+    without_review = registration.model_copy(update={"review_projector": None})
+    with pytest.raises(ValidationError, match="registered review projector"):
+        OperationRegistry(definitions=(item,), public_registrations=(without_review,))
+    without_refresh = registration.model_copy(update={"workspace_refresh_adapter": None})
+    with pytest.raises(ValidationError, match="schema and adapter"):
+        OperationRegistry(definitions=(item,), public_registrations=(without_refresh,))
+
+
+def test_registry_refuses_incomplete_public_inventory_and_request_model_rebinding() -> None:
+    first = definition(definition_id="profile.alpha")
+    second = definition(definition_id="profile.zeta")
+
+    with pytest.raises(ValidationError, match="exactly cover"):
+        OperationRegistry(definitions=(first, second), public_registrations=(public_registration(first),))
+    with pytest.raises(ValidationError, match="request schema"):
+        OperationRegistry(
+            definitions=(first,),
+            public_registrations=(public_registration(first, request_type=AlternateRequestPayload),),
+        )
+
+
+def test_registry_refuses_one_schema_identity_redeclared_for_different_models() -> None:
+    first = definition(definition_id="profile.alpha")
+    second = definition(definition_id="profile.zeta")
+    second_factory = OperationExecutorFactory(
+        request_type=AlternateRequestPayload,
+        executor_type=Executor,
+        build=executor_factory,
+    )
+    second = second.model_copy(update={"request_type": AlternateRequestPayload, "executor_factory": second_factory})
+    first_registration = public_registration(first, request_schema_id="profile.shared.request")
+    second_registration = public_registration(
+        second,
+        request_type=AlternateRequestPayload,
+        request_schema_id="profile.shared.request",
+    )
+
+    with pytest.raises(ValidationError, match="one exact model and fingerprint"):
+        OperationRegistry(
+            definitions=(first, second),
+            public_registrations=(first_registration, second_registration),
+        )

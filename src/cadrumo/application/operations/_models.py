@@ -22,6 +22,7 @@ from ...core import (
 )
 from ...core.identity import ContentDigest
 from ...core.time import validate_utc_aware
+from ._model_contract import require_strict_frozen_operation_model_graph
 
 OperationId = Hex64Str
 """Opaque 256-bit identity of one operation invocation."""
@@ -122,6 +123,7 @@ class OperationRequest[RequestPayloadT: BaseModel](BaseModel):
 
     @model_validator(mode="after")
     def _validate_payload_immutability(self) -> OperationRequest[RequestPayloadT]:
+        require_strict_frozen_operation_model_graph(type(self.payload), path="request payload")
         _require_deeply_immutable_payload(self.payload, path="payload", visiting=set())
         return self
 
@@ -220,7 +222,7 @@ def _require_deeply_immutable_payload(value: object, *, path: str, visiting: set
     if identity in visiting:
         raise ValueError(f"operation request {path} contains a cyclic reference")
     if isinstance(value, BaseModel):
-        _require_immutable_model_config(value, path=path)
+        require_strict_frozen_operation_model_graph(type(value), path=f"request {path}")
         visiting.add(identity)
         try:
             for field_name in type(value).model_fields:
@@ -244,21 +246,6 @@ def _require_deeply_immutable_payload(value: object, *, path: str, visiting: set
             _require_deeply_immutable_payload(item, path=f"{path}[{index}]", visiting=visiting)
     finally:
         visiting.remove(identity)
-
-
-def _require_immutable_model_config(model: BaseModel, *, path: str) -> None:
-    model_type = type(model)
-    config = model_type.model_config
-    if config.get("strict") is not True:
-        raise ValueError(f"operation request {path} model must set strict=True")
-    if config.get("frozen") is not True:
-        raise ValueError(f"operation request {path} model must set frozen=True")
-    if config.get("extra") != "forbid":
-        raise ValueError(f"operation request {path} model must set extra='forbid'")
-    if model_type.__private_attributes__:
-        raise ValueError(f"operation request {path} model must not declare private mutable state")
-
-
 __all__ = [
     "CredentialFreeOperationRequest",
     "OperationDefinitionId",
