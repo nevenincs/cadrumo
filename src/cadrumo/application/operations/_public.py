@@ -26,8 +26,10 @@ from ._models import (
     OperationDefinitionId,
     OperationDiagnosticReference,
     OperationId,
+    OperationReconciliationOutcome,
     OperationReference,
     OperationRevision,
+    validate_terminal_reference_meaning,
 )
 from ._registry import (
     OperationPublicDefinitionContractV1,
@@ -91,6 +93,48 @@ class OperationDetachRefusalCode(StrEnum):
     UNKNOWN_OPERATION = "unknown_operation"
     STALE_OPERATION_REVISION = "stale_operation_revision"
     DETACH_NOT_ALLOWED = "detach_not_allowed"
+
+
+class OperationObservationVersionHeader(BaseModel):
+    """Minimal header parsed before exact observation request dispatch."""
+
+    model_config = _PUBLIC_CONFIG
+    observation_version: Annotated[int, Field(ge=1)]
+
+
+class OperationReviewProjectionVersionHeader(BaseModel):
+    """Minimal header parsed before exact REVIEW request dispatch."""
+
+    model_config = _PUBLIC_CONFIG
+    review_projection_version: Annotated[int, Field(ge=1)]
+
+
+class OperationResponseControlVersionHeader(BaseModel):
+    """Minimal header parsed before exact response-control request dispatch."""
+
+    model_config = _PUBLIC_CONFIG
+    response_control_version: Annotated[int, Field(ge=1)]
+
+
+class OperationCancellationVersionHeader(BaseModel):
+    """Minimal header parsed before exact cancellation request dispatch."""
+
+    model_config = _PUBLIC_CONFIG
+    cancellation_version: Annotated[int, Field(ge=1)]
+
+
+class OperationDetachVersionHeader(BaseModel):
+    """Minimal header parsed before exact detach request dispatch."""
+
+    model_config = _PUBLIC_CONFIG
+    detach_version: Annotated[int, Field(ge=1)]
+
+
+class OperationWorkspaceRefreshTargetVersionHeader(BaseModel):
+    """Minimal header parsed before exact refresh-target request dispatch."""
+
+    model_config = _PUBLIC_CONFIG
+    refresh_target_version: Annotated[int, Field(ge=1)]
 
 
 class OperationObservationRequestV1(BaseModel):
@@ -236,9 +280,42 @@ class OperationPublicProjectionV1(BaseModel):
         validate_utc_aware(self.updated_at)
         if self.definition_contract.definition_id != self.definition_id:
             raise ValueError("public projection definition does not match its contract")
+        if self.close_policy is not self.definition_contract.close_policy:
+            raise ValueError("public projection close policy does not match its definition contract")
+        if self.cancellation is not self.definition_contract.cancellation:
+            raise ValueError("public projection cancellation does not match its definition contract")
+        if self.started_at is not None and self.started_at > self.updated_at:
+            raise ValueError("public operation start cannot follow its last update")
+        if (
+            self.started_at is not None
+            and self.execution_deadline_at is not None
+            and self.execution_deadline_at < self.started_at
+        ):
+            raise ValueError("public execution deadline cannot precede operation start")
+        if (
+            self.started_at is not None
+            and self.cleanup_deadline_at is not None
+            and self.cleanup_deadline_at < self.started_at
+        ):
+            raise ValueError("public cleanup deadline cannot precede operation start")
+        if isinstance(self.pending_interaction, OperationReviewAvailableInteractionV1):
+            pending = self.pending_interaction
+            contract = self.definition_contract
+            if pending.operation_id != self.operation_id or pending.revision != self.revision:
+                raise ValueError("public REVIEW interaction does not match the current operation revision")
+            if pending.review_reference.definition_contract_digest != contract.definition_contract_digest:
+                raise ValueError("public REVIEW reference does not match the current definition contract")
+            if pending.review_reference.review_projection_schema != contract.review_projection_schema:
+                raise ValueError("public REVIEW reference does not match the registered projection schema")
+            if pending.response_schema != contract.interaction_response_schema:
+                raise ValueError("public REVIEW interaction does not match the registered response schema")
         terminal = self.lifecycle is OperationLifecycle.TERMINAL
         if terminal != (self.terminal_condition is not None):
             raise ValueError("public terminal lifecycle requires exactly one terminal condition")
+        if terminal and not isinstance(self.pending_interaction, OperationNoPendingInteractionV1):
+            raise ValueError("public terminal projection cannot carry a pending interaction")
+        if terminal and self.cancellable_now:
+            raise ValueError("public terminal projection cannot remain cancellable")
         if self.result_ref is not None and self.refusal_ref is not None:
             raise ValueError("public projection cannot expose result and refusal references together")
         if self.terminal_condition is OperationTerminalCondition.SUCCEEDED and self.result_ref is None:
@@ -253,8 +330,31 @@ class OperationPublicProjectionV1(BaseModel):
             raise ValueError("public progress cannot exceed its projection anchor")
         if self.cancellation is OperationCancellation.UNSUPPORTED and self.cancellable_now:
             raise ValueError("unsupported cancellation cannot be currently available")
+        if self.cancellation is OperationCancellation.UNSUPPORTED and (
+            self.cancellation_requested or self.cancellation_acknowledged
+        ):
+            raise ValueError("unsupported cancellation cannot carry request or acknowledgement facts")
+        if self.cancellation_requested != (self.cleanup_deadline_at is not None):
+            raise ValueError("public cleanup deadline and cancellation request must be declared together")
+        if self.lifecycle is OperationLifecycle.CANCELLATION_REQUESTED and not self.cancellation_requested:
+            raise ValueError("cancellation-requested lifecycle requires its declared request fact")
+        if self.cancellation_requested and self.lifecycle in {
+            OperationLifecycle.CREATED,
+            OperationLifecycle.QUEUED,
+            OperationLifecycle.RUNNING,
+            OperationLifecycle.WAITING_FOR_INTERACTION,
+            OperationLifecycle.WAITING_FOR_EXTERNAL,
+        }:
+            raise ValueError("public cancellation request disagrees with the current lifecycle")
         if self.cancellation_acknowledged and not self.cancellation_requested:
             raise ValueError("cancellation acknowledgement requires a cancellation request")
+        if self.cancellation_acknowledged and self.lifecycle not in {
+            OperationLifecycle.SETTLING,
+            OperationLifecycle.TERMINAL,
+        }:
+            raise ValueError("cancellation acknowledgement requires settling or terminal lifecycle")
+        if self.terminal_condition is OperationTerminalCondition.CANCELLED and not self.cancellation_acknowledged:
+            raise ValueError("cancelled public operation requires cancellation acknowledgement")
         return self
 
 
@@ -308,7 +408,7 @@ class OperationPublicNoticeEventV1(_OperationPublicEventBase):
 
 class OperationPublicReconciliationEventV1(_OperationPublicEventBase):
     kind: Literal[OperationEventKind.RECONCILIATION] = OperationEventKind.RECONCILIATION
-    outcome_code: OperationEventCode
+    outcome: OperationReconciliationOutcome
 
 
 class OperationPublicDiagnosticEventV1(_OperationPublicEventBase):
@@ -328,6 +428,15 @@ class OperationPublicTerminalEventV1(_OperationPublicEventBase):
     result_ref: OperationReference | None
     refusal_ref: OperationReference | None
     diagnostic_ref: OperationDiagnosticReference | None
+
+    @model_validator(mode="after")
+    def _validate_settlement_references(self) -> OperationPublicTerminalEventV1:
+        validate_terminal_reference_meaning(
+            condition=self.condition,
+            result_ref=self.result_ref,
+            refusal_ref=self.refusal_ref,
+        )
+        return self
 
 
 OperationPublicEventV1 = Annotated[
@@ -615,17 +724,20 @@ __all__ = [
     "OperationCancellationRequestV1",
     "OperationCancellationResultV1",
     "OperationCancellationSuccessV1",
+    "OperationCancellationVersionHeader",
     "OperationDetachRefusalCode",
     "OperationDetachRefusalV1",
     "OperationDetachRequestV1",
     "OperationDetachResultV1",
     "OperationDetachSuccessV1",
+    "OperationDetachVersionHeader",
     "OperationNoPendingInteractionV1",
     "OperationObservationRefusalCode",
     "OperationObservationRefusalV1",
     "OperationObservationRequestV1",
     "OperationObservationResultV1",
     "OperationObservationSuccessV1",
+    "OperationObservationVersionHeader",
     "OperationPublicDiagnosticEventV1",
     "OperationPublicEffectEventV1",
     "OperationPublicEventPageV1",
@@ -645,6 +757,7 @@ __all__ = [
     "OperationResponseControlRequestV1",
     "OperationResponseControlResultV1",
     "OperationResponseControlSuccessV1",
+    "OperationResponseControlVersionHeader",
     "OperationReviewAvailableInteractionV1",
     "OperationReviewProjectionReferenceV1",
     "OperationReviewProjectionRefusalCode",
@@ -652,10 +765,12 @@ __all__ = [
     "OperationReviewProjectionRequestV1",
     "OperationReviewProjectionResultV1",
     "OperationReviewProjectionSuccessV1",
+    "OperationReviewProjectionVersionHeader",
     "OperationUnsupportedInteractionV1",
     "OperationWorkspaceRefreshTargetRefusalCode",
     "OperationWorkspaceRefreshTargetRefusalV1",
     "OperationWorkspaceRefreshTargetRequestV1",
     "OperationWorkspaceRefreshTargetResultV1",
     "OperationWorkspaceRefreshTargetSuccessV1",
+    "OperationWorkspaceRefreshTargetVersionHeader",
 ]

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from typing import Annotated
 
@@ -11,42 +11,63 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 
 import cadrumo.application.operations as public_operations
 from cadrumo.application.operations import (
+    OperationBaselinePolicy,
+    OperationCancellation,
     OperationCancellationRefusalCode,
     OperationCancellationRefusalV1,
+    OperationCancellationVersionHeader,
+    OperationCapabilities,
+    OperationClosePolicy,
+    OperationConflictScope,
+    OperationDeadline,
+    OperationDefinition,
     OperationDetachRefusalCode,
     OperationDetachRefusalV1,
+    OperationDetachVersionHeader,
+    OperationDurability,
+    OperationEffect,
+    OperationExecutorContext,
+    OperationExecutorFactory,
+    OperationFrontendProjection,
     OperationNoPendingInteractionV1,
     OperationObservationRefusalCode,
     OperationObservationRefusalV1,
     OperationObservationRequestV1,
     OperationObservationResultV1,
     OperationObservationSuccessV1,
-    OperationPublicDefinitionContractV1,
+    OperationObservationVersionHeader,
+    OperationPublicContractSetV1,
     OperationPublicEventPageV1,
     OperationPublicPhaseEventV1,
     OperationPublicProjectionV1,
+    OperationReconciliationPolicy,
+    OperationRegistry,
+    OperationReplayPolicy,
+    OperationRequest,
+    OperationRequestStoragePolicy,
     OperationResponseControlRefusalCode,
     OperationResponseControlRefusalV1,
+    OperationResponseControlVersionHeader,
     OperationReviewProjectionReferenceV1,
     OperationReviewProjectionRefusalCode,
     OperationReviewProjectionRefusalV1,
     OperationReviewProjectionResultV1,
     OperationReviewProjectionSuccessV1,
+    OperationReviewProjectionVersionHeader,
+    OperationSchemaBindingV1,
     OperationSchemaIdentityV1,
+    OperationSensitiveInputPolicy,
+    OperationTerminalCondition,
+    OperationUnsupportedInteractionV1,
     OperationWorkspaceRefreshTargetRefusalCode,
     OperationWorkspaceRefreshTargetRefusalV1,
     OperationWorkspaceRefreshTargetRequestV1,
     OperationWorkspaceRefreshTargetResultV1,
     OperationWorkspaceRefreshTargetSuccessV1,
+    OperationWorkspaceRefreshTargetVersionHeader,
 )
 from cadrumo.application.operations._model_contract import require_strict_frozen_operation_model_graph
-from cadrumo.core import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationEffect,
-    OperationEventKind,
-    OperationLifecycle,
-)
+from cadrumo.core import OperationEventKind, OperationInteractionKind, OperationLifecycle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -66,36 +87,97 @@ class SafeProjection(BaseModel):
     code: Annotated[str, Field(min_length=1)]
 
 
-def _projection(*, anchor_cursor: int = 0) -> OperationPublicProjectionV1:
-    contract = OperationPublicDefinitionContractV1.model_construct(definition_id="profile.sync")
-    return OperationPublicProjectionV1.model_construct(
-        observation_version=1,
-        operation_id=_OPERATION_ID,
-        definition_id="profile.sync",
-        subject_ref="profile:active",
-        revision=4,
-        anchor_cursor=anchor_cursor,
-        definition_contract=contract,
-        contract_set_digest=_DIGEST,
-        lifecycle=OperationLifecycle.RUNNING,
-        terminal_condition=None,
-        effect=OperationEffect.NONE,
-        phase_code="profile.sync",
-        started_at=_NOW,
-        updated_at=_NOW,
-        progress=None,
-        close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        cancellation=OperationCancellation.COOPERATIVE,
-        cancellable_now=True,
-        cancellation_requested=False,
-        cancellation_acknowledged=False,
-        execution_deadline_at=None,
-        cleanup_deadline_at=None,
-        pending_interaction=OperationNoPendingInteractionV1(),
-        result_ref=None,
-        refusal_ref=None,
-        diagnostic_ref=None,
+class ProjectionContractExecutor:
+    """Executable no-effect operation used to exercise the real registry contract path."""
+
+    async def execute(
+        self,
+        request: OperationRequest[BaseModel],
+        context: OperationExecutorContext,
+    ) -> str | None:
+        del context
+        return request.subject_ref
+
+
+def _projection_contract_set() -> OperationPublicContractSetV1:
+    definition = OperationDefinition(
+        definition_id="operations.public.projection",
+        request_type=SafeProjection,
+        result_type=SafeProjection,
+        executor_factory=OperationExecutorFactory(
+            request_type=SafeProjection,
+            executor_type=ProjectionContractExecutor,
+            build=ProjectionContractExecutor,
+        ),
+        phase_codes=("operations.public.running",),
+        interaction_kinds=frozenset(),
+        capabilities=OperationCapabilities(
+            durability=OperationDurability.EPHEMERAL,
+            cancellation=OperationCancellation.UNSUPPORTED,
+            deadline=OperationDeadline.ABSENT,
+            replay=OperationReplayPolicy.NONE,
+            baseline=OperationBaselinePolicy.NONE,
+            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
+            sensitive_input=OperationSensitiveInputPolicy.NONE,
+            conflict_scope=OperationConflictScope.NONE,
+            owned_resources=frozenset(),
+            permitted_effects=frozenset({OperationEffect.NONE}),
+            close_policy=OperationClosePolicy.DETACH_ALLOWED,
+        ),
+        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
     )
+    registration = public_operations.OperationPublicDefinitionRegistrationV1.compose(
+        definition=definition,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id="operations.public.projection.request",
+            schema_version=1,
+            model_type=SafeProjection,
+        ),
+        result_schema=OperationSchemaBindingV1.bind(
+            schema_id="operations.public.projection.result",
+            schema_version=1,
+            model_type=SafeProjection,
+        ),
+    )
+    return OperationRegistry(
+        definitions=(definition,),
+        public_registrations=(registration,),
+    ).public_contract_set
+
+
+def _projection(**changes: object) -> OperationPublicProjectionV1:
+    contract_set = _projection_contract_set()
+    contract = contract_set.definitions[0]
+    values: dict[str, object] = {
+        "operation_id": _OPERATION_ID,
+        "definition_id": contract.definition_id,
+        "subject_ref": "profile:active",
+        "revision": 4,
+        "anchor_cursor": 0,
+        "definition_contract": contract,
+        "contract_set_digest": contract_set.contract_set_digest,
+        "lifecycle": OperationLifecycle.RUNNING,
+        "terminal_condition": None,
+        "effect": OperationEffect.NONE,
+        "phase_code": "operations.public.running",
+        "started_at": _NOW,
+        "updated_at": _NOW,
+        "progress": None,
+        "close_policy": contract.close_policy,
+        "cancellation": contract.cancellation,
+        "cancellable_now": False,
+        "cancellation_requested": False,
+        "cancellation_acknowledged": False,
+        "execution_deadline_at": None,
+        "cleanup_deadline_at": None,
+        "pending_interaction": OperationNoPendingInteractionV1(),
+        "result_ref": None,
+        "refusal_ref": None,
+        "diagnostic_ref": None,
+    }
+    values.update(changes)
+    return OperationPublicProjectionV1.model_validate(values)
 
 
 def test_public_endpoint_versions_are_independent_strict_axes() -> None:
@@ -116,6 +198,15 @@ def test_public_endpoint_versions_are_independent_strict_axes() -> None:
     assert "version" not in observation.__class__.model_fields
     assert "version" not in refresh.__class__.model_fields
     assert "result_ref" not in refresh.__class__.model_fields
+    headers = (
+        OperationObservationVersionHeader(observation_version=2),
+        OperationReviewProjectionVersionHeader(review_projection_version=2),
+        OperationResponseControlVersionHeader(response_control_version=2),
+        OperationCancellationVersionHeader(cancellation_version=2),
+        OperationDetachVersionHeader(detach_version=2),
+        OperationWorkspaceRefreshTargetVersionHeader(refresh_target_version=2),
+    )
+    assert tuple(next(iter(header.model_dump().values())) for header in headers) == (2,) * 6
     with pytest.raises(ValidationError):
         OperationObservationRequestV1.model_validate(
             {
@@ -134,20 +225,9 @@ def test_public_endpoint_versions_are_independent_strict_axes() -> None:
         )
 
 
-def test_observation_result_is_closed_and_anchor_consistent() -> None:
-    page = OperationPublicEventPageV1(
-        operation_id=_OPERATION_ID,
-        anchor_cursor=0,
-        requested_cursor=0,
-        status="caught_up",
-        events=(),
-        next_cursor=0,
-        restart_cursor=None,
-    )
-    success = OperationObservationSuccessV1(projection=_projection(), event_page=page)
+def test_observation_result_is_a_closed_discriminated_union() -> None:
     adapter = TypeAdapter(OperationObservationResultV1)
 
-    assert adapter.validate_python(success) == success
     assert isinstance(
         adapter.validate_python(
             OperationObservationRefusalV1(
@@ -158,10 +238,75 @@ def test_observation_result_is_closed_and_anchor_consistent() -> None:
         ),
         OperationObservationRefusalV1,
     )
+    assert OperationObservationSuccessV1.model_fields["projection"].annotation is OperationPublicProjectionV1
+
+
+def test_observation_success_requires_one_exact_projection_page_anchor() -> None:
+    page = OperationPublicEventPageV1(
+        operation_id=_OPERATION_ID,
+        anchor_cursor=0,
+        requested_cursor=0,
+        status="caught_up",
+        events=(),
+        next_cursor=0,
+        restart_cursor=None,
+    )
+
+    assert OperationObservationSuccessV1(projection=_projection(), event_page=page).event_page == page
     with pytest.raises(ValidationError, match="share one anchor"):
         OperationObservationSuccessV1(
             projection=_projection(anchor_cursor=1),
             event_page=page,
+        )
+
+
+def test_public_projection_refuses_terminal_pending_interaction_and_axis_drift() -> None:
+    pending = OperationUnsupportedInteractionV1(
+        interaction_kind=OperationInteractionKind.INPUT,
+        interaction_id=_INTERACTION_ID,
+        revision=4,
+        presentation_code="operations.public.input",
+        unsupported_code="operations.public.unsupported",
+        expires_at=None,
+    )
+
+    with pytest.raises(ValidationError, match="cannot carry a pending interaction"):
+        _projection(
+            lifecycle=OperationLifecycle.TERMINAL,
+            terminal_condition=OperationTerminalCondition.FAILED,
+            pending_interaction=pending,
+        )
+    with pytest.raises(ValidationError, match="terminal lifecycle"):
+        _projection(terminal_condition=OperationTerminalCondition.FAILED)
+    with pytest.raises(ValidationError, match="cancellation does not match"):
+        _projection(cancellation=OperationCancellation.COOPERATIVE)
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"started_at": _NOW + timedelta(seconds=1)},
+        {"execution_deadline_at": _NOW - timedelta(seconds=1)},
+        {"cleanup_deadline_at": _NOW + timedelta(seconds=1)},
+    ],
+)
+def test_public_projection_refuses_deadline_and_timeline_drift(changes: dict[str, object]) -> None:
+    with pytest.raises(ValidationError, match=r"start|deadline"):
+        _projection(**changes)
+
+
+def test_public_projection_refuses_cancellation_fact_drift() -> None:
+    with pytest.raises(ValidationError, match="request or acknowledgement"):
+        _projection(
+            cancellation_requested=True,
+            cleanup_deadline_at=_NOW + timedelta(seconds=1),
+        )
+    with pytest.raises(ValidationError, match="requires its declared request fact"):
+        _projection(lifecycle=OperationLifecycle.CANCELLATION_REQUESTED)
+    with pytest.raises(ValidationError, match="requires cancellation acknowledgement"):
+        _projection(
+            lifecycle=OperationLifecycle.TERMINAL,
+            terminal_condition=OperationTerminalCondition.CANCELLED,
         )
 
 
@@ -284,23 +429,24 @@ def test_refresh_result_is_exactly_specialized_and_exported_from_the_facade() ->
     assert public_operations.OperationPublicProjectionV1 is OperationPublicProjectionV1
 
 
-@pytest.mark.parametrize(
-    "model_type",
-    [
-        OperationObservationRequestV1,
-        OperationObservationRefusalV1,
-        OperationPublicEventPageV1,
-        OperationReviewProjectionReferenceV1,
-        OperationResponseControlRefusalV1,
-        OperationCancellationRefusalV1,
-        OperationDetachRefusalV1,
-        OperationWorkspaceRefreshTargetRequestV1,
-        OperationWorkspaceRefreshTargetRefusalV1,
-        OperationReviewProjectionSuccessV1[SafeProjection],
-        OperationWorkspaceRefreshTargetSuccessV1[SafeProjection],
-    ],
-)
-def test_every_public_model_graph_is_strict_frozen_and_closed(model_type: type[BaseModel]) -> None:
+def _exported_public_model_types() -> tuple[type[BaseModel], ...]:
+    models: list[type[BaseModel]] = []
+    for name in public_operations.__all__:
+        candidate = getattr(public_operations, name)
+        if not isinstance(candidate, type) or not issubclass(candidate, BaseModel):
+            continue
+        if candidate.__module__ != "cadrumo.application.operations._public":
+            continue
+        if candidate is OperationReviewProjectionSuccessV1:
+            candidate = OperationReviewProjectionSuccessV1[SafeProjection]
+        elif candidate is OperationWorkspaceRefreshTargetSuccessV1:
+            candidate = OperationWorkspaceRefreshTargetSuccessV1[SafeProjection]
+        models.append(candidate)
+    return tuple(models)
+
+
+@pytest.mark.parametrize("model_type", _exported_public_model_types())
+def test_every_exported_public_model_graph_is_strict_frozen_and_closed(model_type: type[BaseModel]) -> None:
     require_strict_frozen_operation_model_graph(model_type, path="public DTO")
     OperationSchemaIdentityV1.from_model(
         schema_id="operations.public.contract",
