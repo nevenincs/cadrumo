@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:3affc5a65fb8b01e2798c8206718c74d73b8170c14a1db0f0973d644fec55ab7'
+body_hash: 'sha256:eaeee4e1024c0aa23fa522fa2891645ede1c522c1584583e6d20861741d0da4b'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -85,6 +85,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W03-P05-S30]]'
   - '[[2026-08-24-registry-completeness-closure-W03-P05-S31]]'
   - '[[2026-08-24-registry-completeness-closure-W03-P05-S32]]'
+  - '[[2026-08-24-registry-completeness-closure-W03-P05-S33]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-audit]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-036-2025-filing-authority-reference]]'
@@ -359,6 +360,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W03-P05-S30` - Verify every shipped modelo and revision localization key across supported output locales
 - `2026-08-24-registry-completeness-closure-W03-P05-S31` - Verify casilla identity, semantic linkage, and continuity chains across every supported revision boundary
 - `2026-08-24-registry-completeness-closure-W03-P05-S32` - Verify binding selectors, resolver enrollment, calculation paths, and provenance for every filing-grade revision
+- `2026-08-24-registry-completeness-closure-W03-P05-S33` - Verify official export layout selection, mapped semantic owners, and emitted-byte offsets for every filing-grade revision
 
 ### plan
 
