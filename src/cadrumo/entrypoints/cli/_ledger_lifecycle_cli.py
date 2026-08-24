@@ -159,6 +159,11 @@ def _stale_finalized_revision_notices(result: ManualLedgerTransactionResult) -> 
                 "filing_year": str(blocker.filing_year),
                 "period": blocker.period,
                 "reason": "finalized_revision_predates_evidence",
+                # Neither candidate verb is safe here, so this advisory
+                # carries no action. Saying so explicitly keeps a
+                # deliberate absence distinguishable from an action
+                # nobody got round to attaching.
+                "actionability": "finalized_revision_has_no_safe_recovery_action",
             },
         )
         for blocker in result.stale_finalized_revisions
