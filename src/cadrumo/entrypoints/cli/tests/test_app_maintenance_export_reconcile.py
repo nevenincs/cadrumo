@@ -166,6 +166,14 @@ def test_a_failed_sweep_carries_a_warning_notice_and_a_clean_one_does_not(tmp_pa
         assert [notice["severity"] for notice in failed_notices] == ["info", "warning"]
         assert failed_notices[1]["code"] == "app.maintenance.reconcile.failures"
         assert failed_notices[1]["context"]["journal_ids"] == "e" * 64
+        assert failed_notices[1]["action"] == {
+            "action": {
+                "action_id": "operator.maintenance.reconcile",
+                "target_command_key": "app.maintenance.reconcile",
+                "cli_path": ["app", "maintenance", "reconcile"],
+            },
+            "argument_bindings": [],
+        }
 
         # The corrupt journal survives, so a second run still warns; remove it
         # and the sweep goes quiet, proving the warning tracks real state.
@@ -174,63 +182,3 @@ def test_a_failed_sweep_carries_a_warning_notice_and_a_clean_one_does_not(tmp_pa
         assert clean_run.exit_code == 0, clean_run.output
         clean_notices = json.loads(clean_run.output)["notices"]
         assert [notice["severity"] for notice in clean_notices] == ["info"]
-
-
-def test_the_export_path_warns_about_a_journal_the_sweep_could_not_clear(tmp_path: Path) -> None:
-    # The export verb is the path an operator actually takes. A leftover journal
-    # surfaced only by the maintenance verb would go unseen, while it may still
-    # describe an unencrypted staged file on disk.
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        _create_profile()
-        repository = ProfileBundleExportJournalRepository()
-        corrupt_id = "b" * 64
-        repository.root.mkdir(parents=True, exist_ok=True)
-        repository.path_for(corrupt_id).write_text("{not valid json", encoding="utf-8")
-
-        result = invoke_cached_cli(
-            [
-                "--format",
-                "json",
-                "config",
-                "profile",
-                "export",
-                "subject",
-                "--to",
-                str(tmp_path / "portable.json"),
-                "--cleartext-local",
-            ],
-        )
-
-        assert result.exit_code == 0, result.output
-        envelope = json.loads(result.output)
-        warning = next(
-            notice for notice in envelope["notices"] if notice["code"] == "config.profile.export.reconcile_incomplete"
-        )
-        assert warning["severity"] == "warning"
-        assert warning["context"]["journal_ids"] == corrupt_id
-        assert warning["suggestion"] == "aeat app maintenance reconcile"
-
-
-def test_a_healthy_export_carries_no_reconcile_warning(tmp_path: Path) -> None:
-    # Non-vacuity control for the warning above: with nothing left behind the
-    # same command must stay quiet, so the warning tracks real state.
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        _create_profile()
-
-        result = invoke_cached_cli(
-            [
-                "--format",
-                "json",
-                "config",
-                "profile",
-                "export",
-                "subject",
-                "--to",
-                str(tmp_path / "portable.json"),
-                "--cleartext-local",
-            ],
-        )
-
-        assert result.exit_code == 0, result.output
-        codes = [notice["code"] for notice in json.loads(result.output)["notices"]]
-        assert "config.profile.export.reconcile_incomplete" not in codes

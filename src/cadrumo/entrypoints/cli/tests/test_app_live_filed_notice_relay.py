@@ -145,6 +145,18 @@ def test_the_transport_keeps_run_advisories_and_evidence_advisories_distinct() -
 
     assert FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE in codes
     assert "live.filed.pull_all.pairs_refused" in codes
+    refused_notice = next(
+        notice for notice in _filed_pull_all_notices(run) if notice.code == "live.filed.pull_all.pairs_refused"
+    )
+    assert refused_notice.action is not None
+    assert refused_notice.action.model_dump(mode="json") == {
+        "action": {
+            "action_id": "operator.live.filed.pull_all",
+            "target_command_key": "app.live.filed.pull_all",
+            "cli_path": ["app", "live", "filed", "pull-all"],
+        },
+        "argument_bindings": [],
+    }
 
 
 def test_a_run_that_reached_all_its_evidence_forwards_no_unreached_notice() -> None:
@@ -314,6 +326,15 @@ def test_a_sweep_that_hit_its_limit_warns_that_the_rest_was_not_walked() -> None
     assert len(truncation) == 1
     assert truncation[0].severity is NoticeSeverity.WARNING
     assert truncation[0].context == {"limit": "5", "reached_count": "5"}
+    assert truncation[0].action is not None
+    assert truncation[0].action.model_dump(mode="json") == {
+        "action": {
+            "action_id": "operator.live.filed.pull_all",
+            "target_command_key": "app.live.filed.pull_all",
+            "cli_path": ["app", "live", "filed", "pull-all"],
+        },
+        "argument_bindings": [],
+    }
 
 
 def test_the_truncation_warning_leads_the_channel() -> None:

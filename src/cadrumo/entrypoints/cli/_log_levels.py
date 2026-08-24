@@ -17,12 +17,12 @@ import logging  # LOGGING-STDLIB-CONSTANTS-ONLY-RATIONALE: constants-only; no lo
 from collections.abc import Mapping
 from enum import StrEnum
 
-from ...core import FormerProductStateError
-from ...core.errors import CadrumoError
+from ...core import ActionEvidenceProvenance, FormerProductStateError, NoRecoveryOutcome
+from ...core.errors import CadrumoError, TerminalPreconditionErrorMixin
 from ...core.logging import set_log_level
 
 
-class LogLevelResolutionError(CadrumoError):
+class LogLevelResolutionError(TerminalPreconditionErrorMixin, CadrumoError):
     """Raised when the requested CLI log-level inputs are contradictory.
 
     Examples include passing more than one of ``--quiet`` / ``--verbose``
@@ -54,6 +54,25 @@ _STDERR_LOG_LEVEL_BY_CLI_LEVEL: dict[LogLevel, int] = {
     LogLevel.VERBOSE: logging.INFO,
     LogLevel.DEBUG: logging.DEBUG,
 }
+
+
+def _invalid_environment_log_level_error(*, allowed: str, value: str) -> LogLevelResolutionError:
+    """Return the typed refusal for an unrecognised log-level environment value."""
+    from ...application.operator_actions import no_action_precondition_verdict
+
+    return LogLevelResolutionError(
+        translated_message="cli.log_levels.errors.invalid_env_value",
+        context={"allowed": allowed, "value": value},
+        precondition_verdict=no_action_precondition_verdict(
+            condition_id="cli.log_level.environment_value.recognised",
+            facts={
+                "environment_variable": "CADRUMO_LOG_LEVEL",
+                "environment_value_recognised": False,
+            },
+            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        ),
+    )
 
 
 def resolve_log_level(
@@ -117,10 +136,7 @@ def resolve_log_level(
         return LogLevel(raw_value)
     except ValueError as exc:
         allowed = ", ".join(level.value for level in LogLevel)
-        raise LogLevelResolutionError(
-            translated_message="cli.log_levels.errors.invalid_env_value",
-            context={"allowed": allowed, "value": raw_value},
-        ) from exc
+        raise _invalid_environment_log_level_error(allowed=allowed, value=raw_value) from exc
 
 
 def apply_to_root_logger(level: LogLevel) -> None:
