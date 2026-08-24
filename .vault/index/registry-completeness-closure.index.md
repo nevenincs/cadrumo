@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:1097712403364f3a36b5fd2a9876eb994b02c2a503a562c1011ae4f9916932a0'
+body_hash: 'sha256:e49b2b1e1ecdeacc7a9f9b84564b311e5e06066d454b8f654af509ab7688c2e4'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -20,6 +20,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S07]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S08]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S09]]'
+  - '[[2026-08-24-registry-completeness-closure-W01-P02-S10]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S42]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S43]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P02-S44]]'
@@ -76,6 +77,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s59-embedded-envelope-source-kind-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s60-independent-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s60-live-export-proof-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s61-distinct-offset-probes-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s62-post-review-audit]]'
 ---
 
@@ -123,6 +125,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s59-embedded-envelope-source-kind-review-audit` - `registry-completeness-closure` audit: `S59 embedded envelope source kind review`
 - `2026-08-24-registry-completeness-closure-s60-independent-post-review-audit` - `registry-completeness-closure` audit: `S60 independent post-review`
 - `2026-08-24-registry-completeness-closure-s60-live-export-proof-review-audit` - `registry-completeness-closure` audit: `S60 live export proof review`
+- `2026-08-24-registry-completeness-closure-s61-distinct-offset-probes-audit` - `registry-completeness-closure` audit: `S61 distinct offset probes`
 - `2026-08-24-registry-completeness-closure-s62-post-review-audit` - `registry-completeness-closure` audit: `S62 post review`
 
 ### exec
@@ -139,6 +142,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W01-P02-S07` - Compose the temporal coverage and authority-grade limb from validated law-selected registry revisions
 - `2026-08-24-registry-completeness-closure-W01-P02-S08` - Compose the source-connectivity limb from the canonical evidence-backed census authority
 - `2026-08-24-registry-completeness-closure-W01-P02-S09` - Compose the filing-export limb from exact layout capability and official-byte evidence
+- `2026-08-24-registry-completeness-closure-W01-P02-S10` - Publish the derived cross-authority closure report and blocking release predicate through registry conformance
 - `2026-08-24-registry-completeness-closure-W01-P02-S42` - Constrain temporal evidence identity, period, and filing-year fields to registry semantics and add mutation proof for every composer refusal outcome
 - `2026-08-24-registry-completeness-closure-W01-P02-S43` - Reject resolved owner dispositions on active closure refusals and prove the contradiction fails validation
 - `2026-08-24-registry-completeness-closure-W01-P02-S44` - Encode branch-specific TemporalRevisionCoverage refusal invariants and add construction and mutation-bite tests.
