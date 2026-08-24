@@ -118,33 +118,31 @@ def test_discarding_words_does_not_create_a_password_only_source_profile(tmp_pat
     assert profile_custody_recovery_envelope_path(unretained.capsule_path).exists()
 
 
-def test_the_recovery_wrapper_survives_the_archive_and_the_import(tmp_path: Path) -> None:
-    """An import is a publication, so it is the one-shot moment for recovery.
-
-    An archive that carried the wrapper but an import that dropped it would
-    close the operator's second door at the moment they were recovering.
-    """
+def test_the_recovery_wrapper_is_excluded_from_archive_and_import(tmp_path: Path) -> None:
+    """Normal backup transport never carries or installs recovery material."""
     handed: list[str] = []
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         profile_id = _register(handed)
-        original = (
+        original_path = (
             load_committed_profile_password_material(UUID(profile_id)).capsule_path / "custody" / "recovery.v1.json"
-        ).read_bytes()
+        )
+        assert original_path.exists()
         archive = tmp_path / "with-recovery.cadrumo-bucket.tar.gz"
         export_profile_capsule_archive(profile_id=UUID(profile_id), target=archive)
         destination = tmp_path / "imported"
 
+        archive_source = read_profile_capsule_archive(archive)
         restored = restore_profile_capsule_with_password(
             label="Imported keeping recovery",
-            capsule=read_profile_capsule_archive(archive),
+            capsule=archive_source,
             password=_PASSPHRASE,
             root=destination,
         )
 
-        assert restored.recovery_enrolled is True
+        assert restored.recovery_enrolled is False
         carried = destination / "buckets" / profile_id / "custody" / "recovery.v1.json"
-        assert carried.read_bytes() == original
+        assert not carried.exists()
 
 
 def test_inspect_reports_the_header_without_any_key(tmp_path: Path) -> None:

@@ -40,8 +40,8 @@ from .._lifecycle import ProfileCapsuleLifecycle
 from .._recovery_custody import (
     ProfileRecoveryArtifactReceipt,
     ProfileRecoveryEnrollment,
-    enroll_profile_recovery,
     export_profile_recovery_artifact,
+    mint_profile_creation_recovery,
     restore_profile_from_recovery_artifact,
     restore_profile_with_password,
 )
@@ -75,7 +75,7 @@ class _EnrolledProfile:
         assert isinstance(envelope, ProfileCustodyEnvelope)
         self.envelope = envelope
         self.sentinel = material.sentinel
-        self.enrollment = enroll_profile_recovery(
+        self.enrollment = mint_profile_creation_recovery(
             profile_id=self.profile_id,
             dek=self.dek,
             dek_epoch=dek_epoch,
@@ -492,6 +492,7 @@ def test_restore_refuses_a_database_key_the_committed_sentinel_does_not_commit_t
                 setup_state=ProfileSetupState.INCOMPLETE,
             ),
             record_session=divergent_session,
+            recovery_envelope=enrolled.enrollment.envelope,
         )
         divergent_database = (source_root / "buckets" / str(enrolled.profile_id) / "db" / "cadrumo.db").read_bytes()
 

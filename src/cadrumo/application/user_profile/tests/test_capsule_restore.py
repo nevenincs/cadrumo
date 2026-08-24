@@ -12,7 +12,10 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage.custody import load_committed_profile_password_material
+from ....adapters.persistence.storage.custody import (
+    load_committed_profile_password_material,
+    parse_profile_custody_recovery_envelope,
+)
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import (
     ProfileCapsuleSourceError,
@@ -62,20 +65,13 @@ def test_a_capsule_directory_restores_under_its_own_password(tmp_path: Path) -> 
         assert restored.authority == "password"
 
 
-def test_a_restore_carries_the_recovery_wrapper_forward(tmp_path: Path) -> None:
-    """A restored profile must not silently lose its second door.
-
-    Recovery is installable only at publication, and a restore IS one, so a
-    republished capsule that dropped the wrapper it had would leave the
-    operator recovered and unrecoverable, with nothing said. This asserts the
-    wrapper is on disk in the restored capsule and byte-identical, and that
-    the outcome reports it.
-    """
+def test_password_restore_does_not_install_the_source_recovery_wrapper(tmp_path: Path) -> None:
+    """A local wrapper is not normal password-restore cargo."""
     handed: list[str] = []
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         profile_id, capsule = _published_capsule(tmp_path, handed)
-        original = profile_custody_recovery_envelope_path(capsule).read_bytes()
+        assert profile_custody_recovery_envelope_path(capsule).exists()
         destination = tmp_path / "recovery-preserved"
 
         restored = restore_profile_from_source_with_password(
@@ -85,9 +81,9 @@ def test_a_restore_carries_the_recovery_wrapper_forward(tmp_path: Path) -> None:
             root=destination,
         )
 
-        assert restored.recovery_enrolled is True
+        assert restored.recovery_enrolled is False
         carried = destination / "buckets" / profile_id / "custody" / "recovery.v1.json"
-        assert carried.read_bytes() == original
+        assert not carried.exists()
 
 
 def test_password_restore_does_not_require_retained_recovery_words(tmp_path: Path) -> None:
@@ -125,10 +121,11 @@ def test_a_lost_password_is_recovered_through_the_artifact_and_the_source(tmp_pa
         from .._recovery_custody import ProfileRecoveryEnrollment
 
         material = load_committed_profile_password_material(UUID(profile_id))
-        source = read_profile_capsule_source(capsule)
-        assert source.recovery_envelope is not None
+        recovery_envelope = parse_profile_custody_recovery_envelope(
+            profile_custody_recovery_envelope_path(capsule).read_bytes()
+        )
         receipt = export_profile_recovery_artifact(
-            ProfileRecoveryEnrollment(envelope=source.recovery_envelope, recovery_key=_ReplayedKey(handed[0])),
+            ProfileRecoveryEnrollment(envelope=recovery_envelope, recovery_key=_ReplayedKey(handed[0])),
             current_password=_PASSPHRASE,
             password_envelope=material.envelope,
             sentinel=material.sentinel,
@@ -146,7 +143,8 @@ def test_a_lost_password_is_recovered_through_the_artifact_and_the_source(tmp_pa
 
         assert restored.profile_id == profile_id
         assert restored.authority == "recovery_artifact"
-        assert restored.recovery_enrolled is True
+        assert restored.recovery_enrolled is False
+        assert not (tmp_path / "artifact-restored" / "buckets" / profile_id / "custody" / "recovery.v1.json").exists()
 
 
 def test_a_source_missing_a_required_member_is_refused_by_name(tmp_path: Path) -> None:

@@ -10,8 +10,8 @@ one thing knows how to turn that into a published profile.
 **Nothing here encrypts anything, and that is the design rather than an
 omission.** Every member is already ciphertext under the operator's password:
 the database is authenticated-encrypted under the profile's data key, and the
-password envelope, the sentinel and the recovery wrapper are that data key
-wrapped under supervised Argon2id. Wrapping the bundle a second time under the
+password envelope and sentinel protect that data key under supervised
+Argon2id. Recovery is deliberately external. Wrapping the bundle a second time under the
 same password would double the derivation cost at both ends, guard nothing an
 attacker was not already facing, and mint a second key schedule over one
 secret. The archive is exactly as strong as the password that already protects
@@ -19,11 +19,9 @@ the profile, and no stronger claim is made for it.
 
 Three properties are enforced rather than documented.
 
-The member set is INVARIANT. The recovery slot is always present and always
-the same size, carrying an explicit absent marker for a profile that never
-enrolled. Presence would otherwise be inferable from structure by anyone
-holding the file, and whether a taxpayer keeps a recovery phrase is a fact
-about them.
+The member set is INVARIANT. The schema-v1 recovery slot remains constant-size
+but is required to carry the absent marker. Recovery artifacts are separate
+restore proofs and never normal backup cargo.
 
 The label never enters the archive. It lives in the published capsule as a
 plaintext projection beside the ciphertext, so an archive built by copying the
@@ -54,7 +52,6 @@ from ...adapters.persistence.storage.bucket import (
 )
 from ...adapters.persistence.storage.custody import (
     parse_profile_custody_envelope,
-    parse_profile_custody_recovery_envelope,
 )
 from ...core import PRODUCT_IDENTITY
 from ...core.errors import CadrumoError
@@ -63,11 +60,10 @@ from ...core.hashing import bounded_canonical_json_bytes, sha256_hex
 from ...core.identity import BucketId
 from ...core.time import now as _now
 from ._capsule_restore import ProfileCapsuleSource, read_profile_capsule_source
+from ._custody_ports import profile_custody_recovery_envelope_path
 
 if TYPE_CHECKING:
     from pathlib import Path
-
-    from ._custody_ports import ProfileCustodyRecoveryEnvelopePort
 
 _CAPSULE_ARCHIVE_PAYLOAD_SCHEMA_VERSION: Final[int] = 1
 
@@ -108,10 +104,10 @@ class ProfileCapsuleArchiveReceipt(BaseModel):
     target: str
     archive_schema_version: int
     recovery_enrolled: bool
-    """Whether the archived capsule carried a recovery wrapper.
+    """Whether the source profile was enrolled when the archive was made.
 
-    Reported to the operator who asked for the backup, and deliberately NOT
-    inferable from the archive itself: the slot is the same size either way.
+    Recovery itself is never archive cargo; this receipt reports only the
+    source state already visible to the authenticated local operator.
     """
 
 
@@ -171,7 +167,7 @@ def export_profile_capsule_archive(
         bucket_id=str(profile_id),
         target=str(target),
         archive_schema_version=ARCHIVE_SCHEMA_VERSION,
-        recovery_enrolled=source.recovery_envelope is not None,
+        recovery_enrolled=profile_custody_recovery_envelope_path(material.capsule_path).exists(),
     )
 
 
@@ -235,8 +231,12 @@ def _encode_payload(source: ProfileCapsuleSource) -> bytes:
 
 
 def _encode_recovery_slot(source: ProfileCapsuleSource) -> bytes:
-    """Return the constant-width recovery slot, enrolled or not."""
-    body = b"" if source.recovery_envelope is None else source.recovery_envelope.canonical_json_bytes()
+    """Return the permanently empty recovery slot.
+
+    The slot remains in schema v1 for layout stability, but portable recovery
+    is a separate restore proof and never travels inside a normal archive.
+    """
+    body = b""
     capacity = RECOVERY_SLOT_BYTES - _SLOT_LENGTH_PREFIX_BYTES
     if len(body) > capacity:
         raise ProfileCapsuleArchiveError("recovery wrapper exceeds the archive's constant recovery slot")
@@ -262,28 +262,24 @@ def _decode_payload(payload: bytes, *, expected_bucket_id: str) -> ProfileCapsul
     envelope = parse_profile_custody_envelope(_member(payload, "password_envelope"))
     sentinel = custody.parse_profile_custody_sentinel_record(_member(payload, "sentinel"))
     database_bytes = _member(payload, "database")
-    recovery = _decode_recovery_slot(_member(payload, "recovery_slot"))
+    _decode_recovery_slot(_member(payload, "recovery_slot"))
     if str(envelope.profile_id) != expected_bucket_id or sentinel.profile_id != envelope.profile_id:
         raise ProfileCapsuleArchiveError("archive members do not agree on one profile identity")
     return ProfileCapsuleSource(
         password_envelope=envelope,
         sentinel=sentinel,
         database_bytes=database_bytes,
-        recovery_envelope=recovery,
     )
 
 
-def _decode_recovery_slot(slot: bytes) -> ProfileCustodyRecoveryEnvelopePort | None:
-    """Return the wrapper the slot carries, or ``None`` when it marks absence."""
+def _decode_recovery_slot(slot: bytes) -> None:
+    """Require the archive's recovery slot to be empty."""
     if len(slot) != RECOVERY_SLOT_BYTES:
         raise ProfileCapsuleArchiveError("archive recovery slot is not the constant width")
     length = int.from_bytes(slot[:_SLOT_LENGTH_PREFIX_BYTES], "big")
     if length == _ABSENT_RECOVERY_LENGTH:
         return None
-    body = slot[_SLOT_LENGTH_PREFIX_BYTES : _SLOT_LENGTH_PREFIX_BYTES + length]
-    if len(body) != length:
-        raise ProfileCapsuleArchiveError("archive recovery slot declares more content than it carries")
-    return parse_profile_custody_recovery_envelope(body)
+    raise ProfileCapsuleArchiveError("archive recovery slot must not carry recovery material")
 
 
 def _member(decoded: dict[str, object], key: str) -> bytes:

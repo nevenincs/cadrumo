@@ -11,13 +11,11 @@ the shape an operator holds after copying ``buckets/<profile-id>/`` out of a
 backup, or after a publication was interrupted -- and hands the parsed material
 to the door that proves the key.
 
-Two properties are preserved deliberately rather than incidentally.
-
-The recovery wrapper travels with the capsule. Recovery can only be installed
-at publication, and a restore IS a publication, so a restore that read the
-wrapper and did not republish it would silently close the operator's second
-door at the moment they were recovering. The outcome reports whether the
-restored profile carries one, for the same reason registration reports it.
+Recovery material is deliberately not publication cargo. A source directory
+may contain its local creation wrapper, while a restorative archive never
+does; neither normal password restore nor artifact restore installs that
+wrapper in the destination. The artifact is proof for the explicit recovery
+door only.
 
 The artifact stays identity-bound. It is proved against the envelope read from
 THIS source, so an artifact minted for another profile or another DEK epoch is
@@ -35,10 +33,8 @@ from ...adapters.persistence.storage import custody
 from ...adapters.persistence.storage.custody import (
     PROFILE_CUSTODY_DATA_FILE_MAX_BYTES,
     PROFILE_CUSTODY_ENVELOPE_MAX_BYTES,
-    PROFILE_CUSTODY_RECOVERY_MAX_BYTES,
     PROFILE_CUSTODY_SENTINEL_MAX_BYTES,
     parse_profile_custody_envelope,
-    parse_profile_custody_recovery_envelope,
 )
 from ...core.errors import CadrumoError
 from ...core.identity import ProfileId
@@ -51,12 +47,10 @@ if TYPE_CHECKING:
     from ._aggregate import CommittedProfileView
     from ._custody_ports import (
         ProfileCustodyEnvelopePort,
-        ProfileCustodyRecoveryEnvelopePort,
         ProfileCustodySentinelPort,
     )
 
 _ENVELOPE_RELATIVE = ("custody", "envelope.v1.json")
-_RECOVERY_RELATIVE = ("custody", "recovery.v1.json")
 _SENTINEL_RELATIVE = ("data", "dek.sentinel.v1.json")
 _DATABASE_RELATIVE = ("db", "cadrumo.db")
 
@@ -72,7 +66,6 @@ class ProfileCapsuleSource:
     password_envelope: ProfileCustodyEnvelopePort
     sentinel: ProfileCustodySentinelPort
     database_bytes: bytes
-    recovery_envelope: ProfileCustodyRecoveryEnvelopePort | None
 
 
 class ProfileRestoreOutcome(BaseModel):
@@ -88,13 +81,7 @@ class ProfileRestoreOutcome(BaseModel):
     label: str
     authority: ProfileRestoreAuthority
     recovery_enrolled: bool
-    """Whether the restored capsule was published carrying a recovery wrapper.
-
-    A restore is the only remaining moment recovery could be installed, so a
-    profile restored without one has permanently lost its second door. It is
-    reported for the same reason registration reports its own: an operator who
-    is not told cannot act on it.
-    """
+    """Always false: restore proofs never install recovery in the destination."""
 
 
 def read_profile_capsule_source(source: Path) -> ProfileCapsuleSource:
@@ -105,8 +92,8 @@ def read_profile_capsule_source(source: Path) -> ProfileCapsuleSource:
     surfacing as a decryption failure against a capsule that has already been
     committed.
 
-    The recovery wrapper is the one optional member: its absence is a profile
-    that never enrolled, which is a legitimate state and not a damaged source.
+    The recovery wrapper is optional transport input. Its absence says nothing
+    about creation enrollment because normal archives intentionally exclude it.
 
     Raises:
         ProfileCapsuleSourceError: When a required member is missing or will
@@ -121,19 +108,12 @@ def read_profile_capsule_source(source: Path) -> ProfileCapsuleSource:
     database_bytes = _require_member(
         source, _DATABASE_RELATIVE, "profile database", PROFILE_CUSTODY_DATA_FILE_MAX_BYTES
     )
-    recovery_payload = custody.read_optional_profile_custody_local_record(
-        source.joinpath(*_RECOVERY_RELATIVE), maximum_bytes=PROFILE_CUSTODY_RECOVERY_MAX_BYTES
-    )
-    recovery = None if recovery_payload is None else parse_profile_custody_recovery_envelope(recovery_payload)
     if sentinel.profile_id != envelope.profile_id:
         raise ProfileCapsuleSourceError("capsule source sentinel names a different profile than its envelope")
-    if recovery is not None and recovery.profile_id != envelope.profile_id:
-        raise ProfileCapsuleSourceError("capsule source recovery wrapper names a different profile than its envelope")
     return ProfileCapsuleSource(
         password_envelope=envelope,
         sentinel=sentinel,
         database_bytes=database_bytes,
-        recovery_envelope=recovery,
     )
 
 
@@ -153,8 +133,7 @@ def restore_profile_from_source_with_password(
         root: Storage root override; the effective root when omitted.
 
     Returns:
-        A :class:`ProfileRestoreOutcome` naming the proving door and whether
-        recovery survived.
+        A :class:`ProfileRestoreOutcome` naming the proving door.
     """
     return restore_profile_capsule_with_password(
         label=label,
@@ -187,7 +166,6 @@ def restore_profile_capsule_with_password(
         password_envelope=material.password_envelope,
         sentinel=material.sentinel,
         database_bytes=material.database_bytes,
-        recovery_envelope=material.recovery_envelope,
         root=root,
     )
     return _outcome(view, material, authority="password")
@@ -217,8 +195,7 @@ def restore_profile_from_source_with_recovery_artifact(
         root: Storage root override; the effective root when omitted.
 
     Returns:
-        A :class:`ProfileRestoreOutcome` naming the proving door and whether
-        recovery survived.
+        A :class:`ProfileRestoreOutcome` naming the proving door.
     """
     return restore_profile_capsule_with_recovery_artifact(
         label=label,
@@ -250,7 +227,6 @@ def restore_profile_capsule_with_recovery_artifact(
         password_envelope=material.password_envelope,
         sentinel=material.sentinel,
         database_bytes=material.database_bytes,
-        recovery_envelope=material.recovery_envelope,
         root=root,
     )
     return _outcome(view, material, authority="recovery_artifact")
@@ -267,7 +243,7 @@ def _outcome(
         profile_id=view.profile_id,
         label=view.label,
         authority=authority,
-        recovery_enrolled=material.recovery_envelope is not None,
+        recovery_enrolled=False,
     )
 
 

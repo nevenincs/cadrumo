@@ -38,11 +38,11 @@ from ....tests.user_profile import complete_profile_facts
 from .._capsule_record import ProfileRecordConflictError, ProfileRecordSession, ProfileRecordStore
 from .._custody_ports import ProfileCustodyRecoveryEnvelopePort
 from .._custody_repository import profile_custody_transaction_lock
-from .._custody_transactions import ProfileCustodyTransactionConflictError, ProfileCustodyTransactionRefusalError
+from .._custody_transactions import ProfileCustodyTransactionConflictError
 from .._lifecycle import ProfileCapsuleLifecycle
 from .._profile_record_repository import ProfileRecordRepository, bound_profile_record_session
 from .._profile_repository import CommittedProfileRepository
-from .._recovery_custody import enroll_profile_recovery
+from .._recovery_custody import mint_profile_creation_recovery
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -84,7 +84,7 @@ def _current_capsule_input(
 @lru_cache
 def _recovery_envelope(profile_id: UUID, dek_epoch: str) -> ProfileCustodyRecoveryEnvelopePort:
     """Mint one real recovery wrapper for lifecycle tests not about its secret."""
-    enrollment = enroll_profile_recovery(
+    enrollment = mint_profile_creation_recovery(
         profile_id=profile_id,
         dek=bytes(range(32)),
         dek_epoch=dek_epoch,
@@ -152,12 +152,12 @@ def test_lifecycle_projects_only_its_committed_capsule_and_owns_selection(tmp_pa
         ).profile_id == str(_PROFILE_ID)
 
 
-def test_enrollment_publication_refuses_without_a_recovery_envelope(tmp_path) -> None:
-    """The custody writer cannot publish a password-only new profile."""
+def test_enrollment_publication_requires_a_recovery_envelope_argument(tmp_path) -> None:
+    """The lifecycle signature has no password-only creation lane."""
     envelope, sentinel, data_files, dek = _current_capsule_input()
     record_session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
     try:
-        with pytest.raises(ProfileCustodyTransactionRefusalError, match="requires a recovery envelope"):
+        with pytest.raises(TypeError, match="recovery_envelope"):
             ProfileCapsuleLifecycle(root=tmp_path).create(
                 label="Recovery invariant operator",
                 profile_id=_PROFILE_ID,

@@ -64,7 +64,7 @@ class ProfileCapsuleLifecycle:
         data_files: Mapping[str, bytes],
         initial_record: UserProfileRecord,
         record_session: ProfileRecordSession,
-        recovery_envelope: ProfileCustodyRecoveryEnvelopePort | None = None,
+        recovery_envelope: ProfileCustodyRecoveryEnvelopePort,
         profile_id: UUID | None = None,
     ) -> CommittedProfileView:
         identity = profile_id or uuid4()
@@ -100,7 +100,6 @@ class ProfileCapsuleLifecycle:
         record_session: ProfileRecordSession,
         database_bytes: bytes,
         authority: ProfileRestoreAuthority,
-        recovery_envelope: ProfileCustodyRecoveryEnvelopePort | None = None,
     ) -> CommittedProfileView:
         """Publish one restored capsule under a named, proven restore authority.
 
@@ -146,7 +145,7 @@ class ProfileCapsuleLifecycle:
             sentinel=sentinel,
             data_files=data_files,
             label=label,
-            recovery_envelope=recovery_envelope,
+            recovery_envelope=None,
             publication_kind="restore",
             stage_initializer=lambda stage_path: self._stage_and_validate_restore_database(
                 stage_path=stage_path,

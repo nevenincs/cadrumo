@@ -247,6 +247,39 @@ if TYPE_CHECKING:
     from ._capsule_restore import (
         restore_profile_from_source_with_recovery_artifact as restore_profile_from_source_with_recovery_artifact,
     )
+    from ._censal_observation import (
+        CensalObservation as CensalObservation,
+    )
+    from ._censal_observation import (
+        CensalObservationAddress as CensalObservationAddress,
+    )
+    from ._censal_observation import (
+        CensalObservationIdentity as CensalObservationIdentity,
+    )
+    from ._censal_operation import (
+        CENSAL_OPERATION_DEFINITION as CENSAL_OPERATION_DEFINITION,
+    )
+    from ._censal_operation import (
+        CENSAL_OPERATION_DEFINITION_ID as CENSAL_OPERATION_DEFINITION_ID,
+    )
+    from ._censal_operation import (
+        CensalFieldIntent as CensalFieldIntent,
+    )
+    from ._censal_operation import (
+        CensalOperationOutcome as CensalOperationOutcome,
+    )
+    from ._censal_operation import (
+        CensalOperationRequest as CensalOperationRequest,
+    )
+    from ._censal_operation import (
+        CensalOperationResult as CensalOperationResult,
+    )
+    from ._censal_operation import (
+        CensalProfileBaseline as CensalProfileBaseline,
+    )
+    from ._censal_operation import (
+        CensalReviewedFieldIntent as CensalReviewedFieldIntent,
+    )
     from ._censo_errors import (
         CensoSyncError as CensoSyncError,
     )
@@ -438,9 +471,6 @@ if TYPE_CHECKING:
     )
     from ._custody_ports import (
         create_profile_custody_registration_material as create_profile_custody_registration_material,
-    )
-    from ._custody_ports import (
-        create_profile_recovery_enrollment_material as create_profile_recovery_enrollment_material,
     )
     from ._custody_ports import (
         default_profile_bucket_event_history_repository as default_profile_bucket_event_history_repository,
@@ -713,10 +743,10 @@ if TYPE_CHECKING:
         ProfileRecoveryEnrollment as ProfileRecoveryEnrollment,
     )
     from ._recovery_custody import (
-        enroll_profile_recovery as enroll_profile_recovery,
+        export_profile_recovery_artifact as export_profile_recovery_artifact,
     )
     from ._recovery_custody import (
-        export_profile_recovery_artifact as export_profile_recovery_artifact,
+        mint_profile_creation_recovery as mint_profile_creation_recovery,
     )
     from ._recovery_custody import (
         restore_profile_from_recovery_artifact as restore_profile_from_recovery_artifact,
@@ -804,10 +834,10 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfileRecordEncryptedBlob": "._custody_ports",
     "ProfileSecureObjectInventoryPort": "._custody_ports",
     "create_profile_custody_registration_material": "._custody_ports",
-    "create_profile_recovery_enrollment_material": "._custody_ports",
     "default_profile_bucket_event_history_repository": "._custody_ports",
     "default_profile_record_crypto_port": "._custody_ports",
     "export_profile_recovery_artifact": "._recovery_custody",
+    "mint_profile_creation_recovery": "._recovery_custody",
     "profile_advance_session_idle_deadline": "._custody_ports",
     "profile_custody_record_session_material": "._custody_ports",
     "profile_custody_secure_object_namespace": "._custody_ports",
@@ -833,6 +863,17 @@ _LAZY_EXPORTS: dict[str, str] = {
     "default_profile_secure_object_inventory": "._custody_ports",
     "profile_bind_bucket_session": "._custody_ports",
     "CENSAL_ADOPTABLE_PATHS": "._censo_sync",
+    "CensalObservation": "._censal_observation",
+    "CensalObservationAddress": "._censal_observation",
+    "CensalObservationIdentity": "._censal_observation",
+    "CENSAL_OPERATION_DEFINITION": "._censal_operation",
+    "CENSAL_OPERATION_DEFINITION_ID": "._censal_operation",
+    "CensalFieldIntent": "._censal_operation",
+    "CensalOperationOutcome": "._censal_operation",
+    "CensalOperationRequest": "._censal_operation",
+    "CensalOperationResult": "._censal_operation",
+    "CensalProfileBaseline": "._censal_operation",
+    "CensalReviewedFieldIntent": "._censal_operation",
     "CENSO_CERTIFICATE_AXIS_PREFIX": "._cotejo_apply",
     "CENSO_DIVERGENCE_NOTICE_CODE": "._cotejo_apply",
     "CENSO_DIVERGENCE_PREFIX": "._cotejo_apply",
@@ -946,7 +987,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "deserialize_profile_bundle": "._bundle",
     "divergence_facts": "._cotejo_apply",
     "encrypt_profile_bundle_for_passphrase": "._bundle_encryption",
-    "enroll_profile_recovery": "._recovery_custody",
     "export_profile_bundle": "._bundle_export",
     "fact_value": "._projections",
     "facts_to_values": "._projections",
@@ -1036,6 +1076,8 @@ def __getattr__(name: str):
 
 __all__ = [
     "CENSAL_ADOPTABLE_PATHS",
+    "CENSAL_OPERATION_DEFINITION",
+    "CENSAL_OPERATION_DEFINITION_ID",
     "CENSO_CERTIFICATE_AXIS_PREFIX",
     "CENSO_DIVERGENCE_NOTICE_CODE",
     "CENSO_DIVERGENCE_PREFIX",
@@ -1049,8 +1091,17 @@ __all__ = [
     "USER_PROFILE_SNAPSHOT_NAMESPACE",
     "CapabilityDecision",
     "CapabilitySource",
+    "CensalFieldIntent",
     "CensalIdentityMismatchError",
+    "CensalObservation",
+    "CensalObservationAddress",
+    "CensalObservationIdentity",
+    "CensalOperationOutcome",
+    "CensalOperationRequest",
+    "CensalOperationResult",
+    "CensalProfileBaseline",
     "CensalReconciliation",
+    "CensalReviewedFieldIntent",
     "CensoDivergence",
     "CensoSyncError",
     "CensoSyncService",
@@ -1159,7 +1210,6 @@ __all__ = [
     "deserialize_profile_bundle",
     "divergence_facts",
     "encrypt_profile_bundle_for_passphrase",
-    "enroll_profile_recovery",
     "export_profile_bundle",
     "export_profile_capsule_archive",
     "export_profile_recovery_artifact",
@@ -1174,6 +1224,7 @@ __all__ = [
     "login_profile",
     "logout_active_profile",
     "mask_profile_field",
+    "mint_profile_creation_recovery",
     "missing_filing_baseline_flags",
     "missing_required_field_paths",
     "next_section_row_index",

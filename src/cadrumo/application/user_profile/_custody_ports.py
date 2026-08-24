@@ -129,6 +129,7 @@ class ProfileCustodyPasswordMaterialPort(Protocol):
         """The committed password envelope for this profile."""
         ...
 
+
     @property
     def sentinel(self) -> ProfileCustodySentinelPort:
         """The committed DEK sentinel proving an unwrap succeeded."""
@@ -138,12 +139,23 @@ class ProfileCustodyPasswordMaterialPort(Protocol):
     def capsule_path(self) -> Path:
         """Where the recognized capsule this material was read from lives.
 
-        The application does not open custody files by path -- the provider
-        owns that -- but it does need to ask whether an OPTIONAL member is
-        present, and the recovery wrapper is the one member whose absence is a
-        legitimate state rather than a fault. Recomputing the location here
-        instead would be a second answer to where a capsule lives.
+        The application does not open custody files by path; the provider owns
+        those reads. The path identifies the exact recognized capsule.
         """
+        ...
+
+
+class _ProfileCustodyPasswordProofMaterialPort(Protocol):
+    """Only the two records a password proof reads."""
+
+    @property
+    def envelope(self) -> ProfileCustodyEnvelopePort:
+        """The password envelope to unwrap."""
+        ...
+
+    @property
+    def sentinel(self) -> ProfileCustodySentinelPort:
+        """The sentinel that proves the unwrapped DEK."""
         ...
 
 
@@ -617,7 +629,7 @@ class ProfileCustodyRecordSessionMaterial:
 
 @dataclass(frozen=True, slots=True)
 class ProfileCustodyRecoveryEnrollmentMaterial:
-    """One optional recovery wrapper and the minted secret that opens it.
+    """Creation-only recovery wrapper and the minted secret that opens it.
 
     The secret is handed back in its wipeable container rather than as a
     ``str``, because the operator holds it across an interactive
@@ -882,7 +894,7 @@ def create_profile_recovery_enrollment_material(
     dek_epoch: str,
     salt: bytes,
 ) -> ProfileCustodyRecoveryEnrollmentMaterial:
-    """Mint the optional recovery wrapper and its secret at the custody boundary.
+    """Mint the mandatory creation wrapper and its secret at the custody boundary.
 
     The secret is a 24-word BIP-39 mnemonic over 256 bits of entropy rather
     than an operator-typed string. That choice is what makes the wrapper
@@ -992,12 +1004,12 @@ def verify_profile_custody_dek_against_sentinel(
 
 
 def profile_custody_recovery_envelope_path(capsule_path: Path) -> Path:
-    """Return where a committed capsule keeps its optional recovery wrapper."""
+    """Return where a creation-published capsule keeps its recovery wrapper."""
     return capsule_path / "custody" / custody.PROFILE_CUSTODY_RECOVERY_FILENAME
 
 
 def unlock_profile_custody_password(
-    material: ProfileCustodyPasswordMaterialPort,
+    material: _ProfileCustodyPasswordProofMaterialPort,
     *,
     password: str,
 ) -> ProfileCustodyUnlockPort:

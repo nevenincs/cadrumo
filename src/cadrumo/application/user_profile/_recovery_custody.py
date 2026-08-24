@@ -115,13 +115,13 @@ class _SuppliedPasswordMaterial:
     sentinel: ProfileCustodySentinelPort
 
 
-def enroll_profile_recovery(
+def mint_profile_creation_recovery(
     *,
     profile_id: UUID,
     dek: bytes,
     dek_epoch: str,
 ) -> ProfileRecoveryEnrollment:
-    """Mint one optional recovery wrapper over a profile's existing key.
+    """Mint the mandatory recovery wrapper during profile creation.
 
     Enrollment wraps the DEK the caller already holds; it does not generate,
     replace, or re-derive one. That is what makes it additive rather than a
@@ -193,7 +193,6 @@ def restore_profile_with_password(
     password_envelope: ProfileCustodyEnvelopePort,
     sentinel: ProfileCustodySentinelPort,
     database_bytes: bytes,
-    recovery_envelope: ProfileCustodyRecoveryEnvelopePort | None = None,
     root: Path | None = None,
 ) -> CommittedProfileView:
     """Republish one capsule proving nothing but the profile's own password.
@@ -225,7 +224,6 @@ def restore_profile_with_password(
         database_bytes=database_bytes,
         authority="password",
         root=root,
-        recovery_envelope=recovery_envelope,
     )
 
 
@@ -237,7 +235,6 @@ def restore_profile_from_recovery_artifact(
     password_envelope: ProfileCustodyEnvelopePort,
     sentinel: ProfileCustodySentinelPort,
     database_bytes: bytes,
-    recovery_envelope: ProfileCustodyRecoveryEnvelopePort | None = None,
     root: Path | None = None,
 ) -> CommittedProfileView:
     """Republish one capsule proving a portable artifact instead of the password.
@@ -283,7 +280,6 @@ def restore_profile_from_recovery_artifact(
         database_bytes=database_bytes,
         authority="recovery_artifact",
         root=root,
-        recovery_envelope=recovery_envelope,
     )
 
 
@@ -296,18 +292,11 @@ def _publish_restored_capsule(
     database_bytes: bytes,
     authority: ProfileRestoreAuthority,
     root: Path | None,
-    recovery_envelope: ProfileCustodyRecoveryEnvelopePort | None = None,
 ) -> CommittedProfileView:
     """Bind a proved key to one record session and publish exactly once.
 
-    ``recovery_envelope`` is carried forward rather than dropped. Recovery is
-    installable only at publication, and a restore IS a publication -- so a
-    republished capsule that omitted the wrapper it had would leave the
-    operator with a working profile whose second door had silently closed,
-    with no way to reopen it and nothing said. Passing it through is what
-    makes a restore preserve the profile rather than merely reproduce its
-    records; the wrapper is unchanged material, so the phrase the operator
-    already holds keeps working.
+    Recovery proof authorizes only the explicit artifact door. Publication
+    never installs a source wrapper or artifact as enrolled recovery.
     """
     session = ProfileRecordSession.from_envelope(envelope=password_envelope, dek=dek)
     try:
@@ -319,7 +308,6 @@ def _publish_restored_capsule(
             record_session=session,
             database_bytes=database_bytes,
             authority=authority,
-            recovery_envelope=recovery_envelope,
         )
     finally:
         session.close()
@@ -328,8 +316,8 @@ def _publish_restored_capsule(
 __all__ = [
     "ProfileRecoveryArtifactReceipt",
     "ProfileRecoveryEnrollment",
-    "enroll_profile_recovery",
     "export_profile_recovery_artifact",
+    "mint_profile_creation_recovery",
     "restore_profile_from_recovery_artifact",
     "restore_profile_with_password",
 ]

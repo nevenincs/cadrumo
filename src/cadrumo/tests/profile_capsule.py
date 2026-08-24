@@ -158,13 +158,24 @@ def _test_recovery_envelope(
     dek_epoch: str,
 ) -> Iterator[ProfileCustodyRecoveryEnvelopePort]:
     """Mint a production recovery wrapper and bound its secret lifetime."""
-    from ..application.user_profile._recovery_custody import _mint_profile_creation_recovery
+    from ..application.user_profile import mint_profile_creation_recovery
 
-    enrollment = _mint_profile_creation_recovery(profile_id=profile_id, dek=dek, dek_epoch=dek_epoch)
+    enrollment = mint_profile_creation_recovery(profile_id=profile_id, dek=dek, dek_epoch=dek_epoch)
     try:
         yield enrollment.envelope
     finally:
         enrollment.recovery_key.wipe()
+
+
+def mint_test_profile_recovery_envelope(
+    profile_id: UUID,
+    *,
+    dek: bytes,
+    dek_epoch: str,
+) -> ProfileCustodyRecoveryEnvelopePort:
+    """Mint a creation wrapper while immediately wiping the fixture mnemonic."""
+    with _test_recovery_envelope(profile_id, dek=dek, dek_epoch=dek_epoch) as envelope:
+        return envelope
 
 
 def _record_session(profile_id: UUID, *, root: Path) -> ProfileRecordSession:
@@ -486,6 +497,7 @@ __all__ = [
     "bound_test_profile_record",
     "forge_colliding_capsule_label",
     "load_test_profile_record",
+    "mint_test_profile_recovery_envelope",
     "open_test_profile_session",
     "publish_test_profile_capsule",
     "replace_test_profile_record",

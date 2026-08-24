@@ -46,7 +46,7 @@ from ._validation import reject_invalid_profile_facts
 if TYPE_CHECKING:
     from ...domain.censo import CertificadoSituacionCensal
     from ...domain.user_profile import UserProfileRecord
-    from ..workflow import WorkflowState
+    from ._censal_operation import CensalReviewedOperand
 
 #: Schema field family the deferred divergence rows persist under, indexed
 #: as ``censo.divergencia.{n}.{axis,artefact_value,source}``. This is the
@@ -246,12 +246,13 @@ def censo_divergence_notice(record: UserProfileRecord | None) -> Notice | None:
     )
 
 
-def apply_cotejo(
-    state: WorkflowState,
+def apply_cotejo[StateT](
+    state: StateT,
     *,
-    adopted: Sequence[UserProfileFact],
-    divergences: Sequence[CensoDivergence],
-) -> WorkflowState:
+    adopted: Sequence[UserProfileFact] | None = None,
+    divergences: Sequence[CensoDivergence] | None = None,
+    reviewed_proposal: CensalReviewedOperand | None = None,
+) -> StateT:
     """Commit a cotejo reconciliation: adopt certificate values, record divergences.
 
     Publishes, in one revision-bound record command:
@@ -295,6 +296,12 @@ def apply_cotejo(
     profile_id = require_active_bucket_id()
     repository = ProfileRecordRepository.for_current_session(profile_id)
     record = repository.load(profile_id)
+    if reviewed_proposal is not None:
+        if adopted is not None or divergences is not None:
+            raise ValueError("a reviewed censal proposal cannot be combined with direct cotejo effects")
+        adopted, divergences = _reviewed_censal_effects(reviewed_proposal, record)
+    elif adopted is None or divergences is None:
+        raise ValueError("direct cotejo apply requires both adopted facts and divergences")
     fresh = divergence_facts(divergences)
     fresh_paths = {fact.path for fact in fresh}
     clearing = tuple(
@@ -328,6 +335,43 @@ def apply_cotejo(
             "cotejo apply did not advance the profile record by exactly one revision",
         )
     return state
+
+
+def _reviewed_censal_effects(
+    proposal: CensalReviewedOperand,
+    record: UserProfileRecord,
+) -> tuple[tuple[UserProfileFact, ...], tuple[CensoDivergence, ...]]:
+    """Verify one approved operand and derive only its explicitly reviewed effects."""
+    from ._censal_operation import CensalFieldIntent, CensalReviewedOperand
+    from ._censo_sync import CENSO_SOURCE_TAG, censal_facts_from_read
+
+    verified = CensalReviewedOperand.model_validate_json(proposal.model_dump_json(), strict=True)
+    baseline = verified.baseline
+    if (
+        baseline.profile_id != record.profile_id
+        or baseline.record_revision != record.record_revision
+        or baseline.content_digest != record.content_digest
+    ):
+        raise ProfileRecordConflictError("reviewed censal proposal baseline is stale")
+
+    observed = {fact.path: fact for fact in censal_facts_from_read(verified.observation)}
+    adopted: list[UserProfileFact] = []
+    divergences: list[CensoDivergence] = []
+    for field_intent in verified.field_intents:
+        fact = observed.get(field_intent.path)
+        if fact is None:
+            continue
+        if field_intent.intent is CensalFieldIntent.ADOPT:
+            adopted.append(fact)
+        else:
+            divergences.append(
+                CensoDivergence(
+                    axis=field_intent.path,
+                    artefact_value=str(fact.value),
+                    source=CENSO_SOURCE_TAG,
+                )
+            )
+    return tuple(adopted), tuple(divergences)
 
 
 __all__ = [

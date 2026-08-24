@@ -52,7 +52,7 @@ from ._custody_transactions import (
 )
 from ._lifecycle import ProfileCapsuleLifecycle
 from ._prospective_password import ProspectiveProfilePasswordRefusal, prospective_profile_password_refusal
-from ._recovery_custody import enroll_profile_recovery
+from ._recovery_custody import mint_profile_creation_recovery
 from ._validation import reject_invalid_profile_facts
 
 if TYPE_CHECKING:
@@ -225,7 +225,7 @@ def register_profile_with_credentials(
         # Minted ahead of the transaction, and entered on the scope so the
         # 24 words are zeroised on every exit -- the successful one, the
         # refused one, and the one where the handover itself raises.
-        enrollment = enroll_profile_recovery(profile_id=identity, dek=dek, dek_epoch=dek_epoch)
+        enrollment = mint_profile_creation_recovery(profile_id=identity, dek=dek, dek_epoch=dek_epoch)
         recovery_scope.enter_context(enrollment.recovery_key)
         # Delivered BEFORE the capsule is published, and the ordering is
         # the whole safety property. A channel can fail at the moment of

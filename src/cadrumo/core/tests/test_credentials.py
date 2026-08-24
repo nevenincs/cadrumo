@@ -19,8 +19,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 @pytest.mark.parametrize(
     ("candidate", "accepted", "reason", "scalar_count", "utf8_byte_count"),
     [
-        ("a" * 14, False, ProfilePasswordRefusalReason.TOO_FEW_SCALARS, 14, 14),
-        ("a" * 15, True, None, 15, 15),
+        ("a" * 7, False, ProfilePasswordRefusalReason.TOO_FEW_SCALARS, 7, 7),
+        ("a" * 8, True, None, 8, 8),
         ("a" * 256, True, None, 256, 256),
         ("a" * 257, False, ProfilePasswordRefusalReason.TOO_MANY_SCALARS, 257, 257),
         ("\U0001f512" * 256, True, None, 256, 1024),
@@ -79,7 +79,7 @@ def test_composed_and_decomposed_sequences_are_assessed_without_normalisation() 
 
 
 def test_assessment_exposes_only_typed_secret_free_facts() -> None:
-    assessment = assess_profile_password("a" * 14)
+    assessment = assess_profile_password("a" * 7)
 
     assert isinstance(assessment.reason, ProfilePasswordRefusalReason)
     assert isinstance(assessment.scalar_count, int)
@@ -97,10 +97,10 @@ def test_assessment_exposes_only_typed_secret_free_facts() -> None:
 
 
 def test_advisory_strength_neither_accepts_nor_refuses_a_password() -> None:
-    strong_but_too_short = assess_profile_password("Aa1!" + "x" * 10)
-    fair_but_valid = assess_profile_password("x" * 15)
+    strong_but_too_short = assess_profile_password("Aa1!xxx")
+    weak_but_valid = assess_profile_password("x" * 8)
 
-    assert strong_but_too_short.strength is PassphraseStrength.STRONG
+    assert strong_but_too_short.strength is PassphraseStrength.FAIR
     assert strong_but_too_short.reason is ProfilePasswordRefusalReason.TOO_FEW_SCALARS
-    assert fair_but_valid.strength is PassphraseStrength.FAIR
-    assert fair_but_valid.accepted is True
+    assert weak_but_valid.strength is PassphraseStrength.WEAK
+    assert weak_but_valid.accepted is True
