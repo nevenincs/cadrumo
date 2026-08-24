@@ -11,7 +11,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-22-source-casilla-integration-plan]]'
 modified: '2026-08-24'
-body_hash: 'sha256:b594824f628c3fffb10b437cd0659f8282d0b9cdd1a6add42af982bd06de7b54'
+body_hash: 'sha256:5df53d61e307f233b8cbc9cd4393f332d4017f7f4eee8cd24b4994f07f5c3feb'
 ---
 
 # `registry-completeness-closure` plan
@@ -115,7 +115,7 @@ Classify each of the fourteen live filing gaps independently so missing authorit
 Add or reconcile the adjudicated remedies in each existing owning plan and prove no gap is orphaned, duplicated, or tracked only by the roll-up.
 
 - [x] `W02.P04.S26` - Enroll every temporal-window and authority-grade remedy in registry-temporal-coverage without duplicating closed work; `.vault/plan/2026-08-14-registry-temporal-coverage-plan.md`.
-- [ ] `W02.P04.S27` - Enroll every source and casilla remedy in source-casilla-integration without duplicating closed work; `.vault/plan/2026-08-22-source-casilla-integration-plan.md`.
+- [x] `W02.P04.S27` - Enroll every source and casilla remedy in source-casilla-integration without duplicating closed work; `.vault/plan/2026-08-22-source-casilla-integration-plan.md`.
 - [ ] `W02.P04.S28` - Enroll every official-layout and emitted-byte remedy in aeat-export-fragment-generator-authority without duplicating closed work; `.vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md`.
 - [ ] `W02.P04.S29` - Prove every live filing gap has exactly one terminal refusal or one existing-plan owner and reconsideration condition; `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py`.
 - [ ] `W02.P04.S73` - Adjudicate real below-filing source-connectivity participation and evidence for candidate revisions starting with Modelo 036, route accepted evidence or an ADR-authorized disposition into source-casilla-integration, and return the canonical proof to S72 and S11 without treating an empty candidate set as satisfied; `.vault/reference/; .vault/adr/; .vault/plan/2026-08-22-source-casilla-integration-plan.md; src/cadrumo/_data/source_connectivity/census.toml`.

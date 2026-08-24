@@ -13,7 +13,7 @@ related:
   - '[[2026-08-23-inventory-casilla-grounding-research]]'
   - '[[2026-08-23-amortization-casilla-grounding-research]]'
 modified: '2026-08-24'
-body_hash: 'sha256:1325a4e832621b4844540035f8a003c9cda26d242ff7ad2c84f8fd9ca5654f6b'
+body_hash: 'sha256:bf46fc515de0f874578a5afeacc9f5917060e072cbdf56a09326393f84a7b002'
 ---
 
 <!-- RETIRED: S52, S191, S193 -->
@@ -323,14 +323,18 @@ Adjudicate, connect or close, persist, and review the M360 row source.
 - [ ] `W05.P16.S98` - prove row persistence, diagnostics, provenance, replay, review, and export for M360; `src/cadrumo/application/modelo/tests/test_m360_row_source.py`.
 - [ ] `W05.P16.S99` - close the M360 census disposition and obtain formal review; `.vault/audit/2026-08-22-m360-row-source-code-review.md`.
 
-### Phase `W05.P17` - resolve M182 donor rows
+### Phase `W05.P17` - resolve Modelo 182 donor and declarant record facts
 
-Adjudicate, connect or close, persist, and review the M182 row source.
+Adjudicate, connect or close, persist, and review donor-detail and Article-3
+declarant facts without collapsing type-1 filer/header facts into type-2 donor
+rows. Recipient entities, political-party cases, and protected-estate holders or
+administrators remain separate filing-population limbs until official evidence
+settles their source and record semantics.
 
-- [ ] `W05.P17.S100` - adjudicate M182 donor-row semantics and source ownership from official evidence; `.vault/research/2026-08-22-m182-row-source-grounding-research.md`.
-- [ ] `W05.P17.S101` - enroll the donor resolver and remove its deferral; `src/cadrumo/application/aggregation/_source_mesh.py`.
-- [ ] `W05.P17.S102` - prove row persistence, diagnostics, provenance, replay, review, and export for M182; `src/cadrumo/application/modelo/tests/test_m182_row_source.py`.
-- [ ] `W05.P17.S103` - close the M182 census disposition and obtain formal review; `.vault/audit/2026-08-22-m182-row-source-code-review.md`.
+- [ ] `W05.P17.S100` - adjudicate Modelo 182 donor-detail and Article-3 declarant/header source semantics, including type-1 nature `3` and administrator-holder identity, from official evidence; `.vault/research/2026-08-22-m182-row-source-grounding-research.md`.
+- [ ] `W05.P17.S101` - enroll only the resolver paths that preserve the non-substitutable type-1 declarant/header and type-2 donor-detail facts, then remove their deferrals; `src/cadrumo/application/aggregation/_source_mesh.py`.
+- [ ] `W05.P17.S102` - prove Modelo 182 declarant and donor-detail persistence, diagnostics, provenance, replay, review, and supported export without a lossy fold; `src/cadrumo/application/modelo/tests/test_m182_row_source.py`.
+- [ ] `W05.P17.S103` - close the Modelo 182 census disposition and obtain formal review only after every accepted declarant and donor source path has proof; `.vault/audit/2026-08-22-m182-row-source-code-review.md`.
 
 ### Phase `W05.P18` - resolve M193 contributor-expense rows
 
@@ -364,6 +368,14 @@ Repeat discovery and bounded delivery until the census reaches a stable, fully a
 - [ ] `W06.P20.S115` - classify every rejected or blocked candidate with evidence, owner, review condition, and bounded follow-up; `src/cadrumo/_data/source_connectivity/census.toml`.
 - [ ] `W06.P20.S116` - rerun discovery until two consecutive runs produce no unclassified or unactioned candidate; `.vault/audit/2026-08-22-source-casilla-connectivity-close-audit.md`.
 - [ ] `W06.P20.S117` - prove the final census has no expired deferral, unexplained disappearance, or unsupported connected claim; `dev/source_connectivity/tests/test_campaign_close.py`.
+- [ ] `W06.P20.S226` - Adjudicate Modelo 187's non-substitutable payer and Article 42 RGAT entity/IIC value paths, including required type-1/type-2 filer facts, before defining a canonical source, binding, casilla, provenance, collision policy, or census disposition.; `.vault/research/; .vault/adr/; src/cadrumo/_data/source_connectivity/census.toml; src/cadrumo/_data/registry/aeat/modelos/187/`.
+- [ ] `W06.P20.S227` - Adjudicate the Modelo 220 2024 and 2025 group-value origins, grain, source identity, provenance, and absence semantics before any m220 producer key, binding, casilla, or filing layout is introduced.; `.vault/research/; .vault/adr/; src/cadrumo/_data/source_connectivity/census.toml; src/cadrumo/_data/registry/aeat/modelos/220/`.
+- [ ] `W06.P20.S228` - Adjudicate Modelo 390 2021's complete annual casilla and value-arrival surface, including the source facts and filing omissions beyond its parser-only boxes, before any source taxonomy, registry linkage, producer, or layout is authored.; `.vault/research/; .vault/adr/; src/cadrumo/_data/source_connectivity/census.toml; src/cadrumo/_data/registry/aeat/modelos/390/`.
+- [ ] `W06.P20.S229` - Adjudicate Modelo 721's source facts, casillas, and value-arrival lifecycle separately for each exact structured-message contract era, without treating the XML/SOAP contract or export-plan S97-S99 as source evidence.; `.vault/research/; .vault/adr/; src/cadrumo/_data/source_connectivity/census.toml; src/cadrumo/_data/registry/aeat/modelos/721/`.
+- [ ] `W06.P20.S230` - After Modelo 763's period-aware eras are selected, determine whether any non-header filing value has a distinct authoritative source lifecycle and add a candidate only when its fact, grain, and destination are evidenced.; `.vault/research/; src/cadrumo/_data/source_connectivity/census.toml; src/cadrumo/_data/registry/aeat/modelos/763/`.
+- [ ] `W06.P20.S231` - Adjudicate Modelo 840 source and repeated-row value lifecycles independently from the generic CRLF transport bridge, then add only evidenced canonical bindings, provenance, and census dispositions without an M840-specific writer.; `.vault/research/; .vault/adr/; src/cadrumo/_data/source_connectivity/census.toml; src/cadrumo/_data/registry/aeat/modelos/840/`.
+- [ ] `W06.P20.S232` - After Modelo 188's exact historic design eras are selected, determine whether any required external value lifecycle exists and add no source kind, binding, casilla, or census candidate until official fact-to-destination evidence settles it.; `.vault/research/; src/cadrumo/_data/source_connectivity/census.toml; src/cadrumo/_data/registry/aeat/modelos/188/`.
+- [ ] `W06.P20.S233` - After Modelo 194's 2019-2024 source eras are selected, determine whether any required external value lifecycle exists and add no source kind, binding, casilla, or census candidate until official fact-to-destination evidence settles it.; `.vault/research/; src/cadrumo/_data/source_connectivity/census.toml; src/cadrumo/_data/registry/aeat/modelos/194/`.
 
 ### Phase `W06.P21` - synchronize operator and developer documentation
 
