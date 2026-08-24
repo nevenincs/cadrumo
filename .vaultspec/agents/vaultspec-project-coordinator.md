@@ -58,8 +58,7 @@ Provision feature worktrees following the project's convention:
 ```
 git worktree add -b feature/{N}-{name} ../{name} main
 cd ../{name}
-uv sync --dev
-uv run vaultspec-core install
+just bootstrap
 ```
 
 Scaffolding scope: virtual environment creation, dependency installation, and framework
