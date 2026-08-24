@@ -2511,8 +2511,8 @@ def test_a_bundled_design_whose_coverage_cannot_be_read_is_reported_unmeasured()
     attributed = 0
     filing_revisions = _filing_revisions()
     filing_modelos = {modelo.id for modelo, _revision_id, _revision in filing_revisions}
-    cited_design_paths = {
-        str(source.corpus_path)
+    cited_design_sources = {
+        str(source.corpus_path): source
         for _modelo, _revision_id, revision in filing_revisions
         for source in _record_design_receipts(revision)
     }
@@ -2523,11 +2523,15 @@ def test_a_bundled_design_whose_coverage_cannot_be_read_is_reported_unmeasured()
             continue
         for path in _design_sources(modelo_id):
             relative = path.relative_to(bundled_path()).as_posix()
-            if relative not in cited_design_paths:
+            source_receipt = cited_design_sources.get(relative)
+            if source_receipt is None:
                 continue
             if _design_coverage_years(path):
                 attributed += 1
                 continue
+            if source_receipt.record_design_epoch is not None:
+                attributed += 1
+                continue  # catalogue receipt states the epoch the filename omits
             if (modelo_id, path.name) in _NON_EJERCICIO_COVERAGE_AXIS:
                 continue  # coverage stated on a declared non-ejercicio axis
             if (modelo_id, path.name) in _OPEN_BOUNDED_ERA_DESIGNS:
