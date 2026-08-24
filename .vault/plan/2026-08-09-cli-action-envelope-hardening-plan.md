@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-24'
-body_hash: 'sha256:a0b948329056fe0f727740e20d8f055282e8ee662a113f8203685a66131d2e30'
+body_hash: 'sha256:780da1cbf9af72db9051596134f44b267c65eda7d53f076a05a1685bb4c12f60'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -247,7 +247,7 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [ ] `W05.P10.S126` - Migrate the Google Drive storage-provider network, validation, conflict, not-found, integrity, and translated HTTP failures to typed external-system outcomes, excluding the S121-owned Google API boundary; `src/cadrumo/adapters/outbound/storage/_google_drive.py; src/cadrumo/adapters/outbound/storage/tests`.
 - [ ] `W05.P10.S127` - Migrate outbound-storage integrity and mirror-manifest mismatch, malformed-schema, and corruption failures to typed safety or validation outcomes; `src/cadrumo/adapters/outbound/storage/_integrity.py; src/cadrumo/adapters/outbound/storage/_mirror_manifest.py; src/cadrumo/adapters/outbound/storage/tests`.
 - [ ] `W05.P10.S128` - Classify outbound-storage provider selection, key, path, and configuration validation carriers and attach typed no-recovery facts only where they are reachable from operator input; `src/cadrumo/adapters/outbound/storage/_key_validation.py; src/cadrumo/adapters/outbound/storage/_factory.py; src/cadrumo/adapters/outbound/storage/_local.py; src/cadrumo/adapters/outbound/storage/_google_drive.py; src/cadrumo/adapters/outbound/storage/tests`.
-- [ ] `W05.P10.S129` - Migrate outbound-storage Drive pagination transport failures to typed external-system safety outcomes without local retry guidance; `src/cadrumo/adapters/outbound/storage/_drive_pagination.py; src/cadrumo/adapters/outbound/storage/tests`.
+- [x] `W05.P10.S129` - Migrate outbound-storage Drive pagination transport failures to typed external-system safety outcomes without local retry guidance; `src/cadrumo/adapters/outbound/storage/_drive_pagination.py; src/cadrumo/adapters/outbound/storage/tests`.
 
 ## Wave `W06` - Prove action chains and close honestly
 
