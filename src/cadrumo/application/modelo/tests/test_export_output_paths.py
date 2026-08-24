@@ -38,6 +38,8 @@ from ....domain.deadlines import (
     TaxpayerProfile,
 )
 from ....domain.modelos import (
+    CalculationRevisionAmendmentIdentity,
+    derive_calculation_revision_id_from_revision,
     CalculationRevisionAmendmentKind,
     ExternalEvidence,
     ExternalEvidenceKind,
@@ -193,14 +195,30 @@ def test_public_domiciliacion_export_selects_typed_charge_account_for_did_only(
     assert "ES9121000418450200051332" not in event_json
 
 
+def _with_rederived_id(revision):
+    """Re-stamp a copied revision with the id its new content derives to.
+
+    `model_copy` changes content without touching calculation_revision_id, and
+    the id is content addressed over the amendment identity, so a copy that adds
+    one carries an id the catalogue rejects as not matching its own content.
+    """
+    return revision.model_copy(
+        update={"calculation_revision_id": derive_calculation_revision_id_from_revision(revision)},
+    )
+
+
 def _rectificativa_with_nota_three(verified):
-    return verified.model_copy(
+    amended = verified.model_copy(
         update={
-            "amendment_kind": CalculationRevisionAmendmentKind.RECTIFICATIVA,
-            "amends_filing_record_id": "a" * 64,
+            "amendment_identity": CalculationRevisionAmendmentIdentity(
+                kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+                amends_filing_record_id="a" * 64,
+                m303_rectificativa_motive=None,
+            ),
             "amendment_reason": "correct bank-transfer credit declared in casilla 111",
         }
     )
+    return _with_rederived_id(amended)
 
 
 def _nota_three_profile(*, taxpayer_nif: str, refund_account: RefundAccount | None) -> TaxpayerProfile:
@@ -395,13 +413,17 @@ def test_prior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_p
             ),
         )
     )
-    rectificativa = verified.model_copy(
+    _amended = verified.model_copy(
         update={
-            "amendment_kind": CalculationRevisionAmendmentKind.RECTIFICATIVA,
-            "amends_filing_record_id": baseline.filing_record_id,
+            "amendment_identity": CalculationRevisionAmendmentIdentity(
+                kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+                amends_filing_record_id=baseline.filing_record_id,
+                m303_rectificativa_motive=None,
+            ),
             "amendment_reason": "correct prior direct-debit election",
         },
     )
+    rectificativa = _with_rederived_id(_amended)
     calc_repo.save(upsert_calculation_revision(calc_repo.load(), rectificativa))
 
     output_path = tmp_path / "modelo-303-prior-domiciliation.txt"
