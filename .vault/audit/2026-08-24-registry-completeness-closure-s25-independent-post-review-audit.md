@@ -10,8 +10,6 @@ related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
 ---
 
-
-
 # `registry-completeness-closure` audit: `S25 Modelo 840 independent post-review`
 
 ## Scope

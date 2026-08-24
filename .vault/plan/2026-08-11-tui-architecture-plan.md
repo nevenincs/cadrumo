@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-24'
-body_hash: 'sha256:24647c3caaeefd3bbddcb2b60365a1cedd2fdf5f61fee8c440fd587af92536db'
+body_hash: 'sha256:93029a6b4a63af4b758a3522f0f74d37e6e1d2d27b2ffdeb87b2b96f9a2eb980'
 ---
 
 # `tui-architecture` plan
@@ -288,6 +288,7 @@ Replace every CLI, application-test, and development import of the legacy TUI wi
 
 - [ ] `W06.P14.S76` - Remove frontend-owned manager callbacks and consume registered operation APIs and application results only; `src/cadrumo/entrypoints/cli/_config/_manager_actions.py`.
 - [ ] `W06.P14.S157` - Replace the direct CLI profile-logout execution door with the composed public operation API and delete its application-authority call path without a compatibility branch; `src/cadrumo/entrypoints/cli/_config/_custody.py and focused CLI operation-projection tests`.
+- [ ] `W06.P14.S158` - Delete remaining ad-hoc canonical JSON and SHA-256 redeclarations in operation-adjacent flow and filing paths by preserving their domain payload normalization while routing digest mechanics exclusively through core.hashing, with byte-parity and semantic RAG fixed-point tests; `src/cadrumo/application/flows/_definition.py and src/cadrumo/application/filing/_review.py`.
 - [ ] `W06.P14.S77` - Remove manager TUI construction and retain only CLI projection or frontend-neutral selection behavior; `src/cadrumo/entrypoints/cli/_config/_manager_frontend.py`.
 - [ ] `W06.P14.S78` - Remove login TUI construction and consume the application authentication operation contract; `src/cadrumo/entrypoints/cli/_config/_login_frontend.py`.
 - [ ] `W06.P14.S79` - Remove status-screen imports and project backend status through the CLI surface only; `src/cadrumo/entrypoints/cli/_config/_status_frontend.py`.
