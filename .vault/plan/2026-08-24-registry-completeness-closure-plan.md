@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:2be8312c4527c84586785db70d23875f14166eb14ed27834c9b78fa6b531e738'
+body_hash: 'sha256:3b748225c8bc32b5c41c5ed5897ba22aac1033d79af38414fd1e940a8f487b12'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -70,6 +70,8 @@ Compose one typed cross-authority report from validated registry coverage, sourc
 - [x] `W01.P02.S54` - Drive a generic ValueError through live connected-proof revalidation and prove the closure composer maps the fallback cause to a fail-closed missing-evidence refusal with a mutation bite.; `src/cadrumo/application/registry/tests/; src/cadrumo/core/tests/`.
 - [x] `W01.P02.S55` - Repair W01.P02.S51 execution-record Description, Outcome, and Notes through the canonical execution-document flow and re-attest its scoped checks.; `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S51.md`.
 - [x] `W01.P02.S56` - Reconcile S51's checked state and execution record with independently reviewed S54 live fallback evidence, closing the S55 high tracking finding without rewriting history.; `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S51.md; .vault/plan/2026-08-24-registry-completeness-closure-plan.md; .vault/audit/`.
+- [ ] `W01.P02.S57` - Require canonical generator provenance, exact semantic-map and render-profile identities, generated-fragment integrity, and successful emitted-byte evidence before filing-export closure can satisfy, with a Modelo 111 refusal regression; `src/cadrumo/application/registry/; dev/registry/; src/cadrumo/application/filing/tests/`.
+- [ ] `W01.P02.S58` - Validate and live-rehash filing-envelope and auxiliary-envelope-header source identities and digests against the catalogue, with missing, mismatched, and stale-digest mutation proof; `src/cadrumo/domain/calculations/registry/; src/cadrumo/application/registry/`.
 
 ## Wave `W02` - filing-gap adjudication and owner routing
 
