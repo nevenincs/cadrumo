@@ -1,8 +1,8 @@
 # Protect access to your data
 
-Cadrumo encrypts every profile, transaction, piece of evidence, and filing
-under one master key. Your passphrase opens that key. Lose it with no recovery
-phrase and the data cannot be decrypted by anyone, including you.
+Cadrumo encrypts each profile under its own data key. The profile passphrase
+opens that key for normal login and daily work. Recovery never participates in
+password login.
 
 Use this guide to store the passphrase and recovery phrase safely, change the
 passphrase, run commands without an interactive prompt, log out safely, and
@@ -26,8 +26,9 @@ Your passphrase opens the key to your encrypted data. Treat it accordingly:
 - Keep a second copy somewhere you can still reach after a disk failure.
 - Never store it in a shared shell profile, a committed script, or a log.
 
-If you lose the passphrase and hold no recovery phrase, the encrypted data is
-permanently unreadable. The only way forward is a reset, which deletes it.
+If you lose the passphrase and the separately stored recovery proof, the
+encrypted data is permanently unreadable. The only way forward is a reset,
+which deletes it.
 
 Do not reset when only *some* records fail to open. Quarantine them first.
 Quarantine moves each unreadable record, still encrypted, into an archive
@@ -51,8 +52,9 @@ profile without the passphrase.
 
 Every creation door enrolls recovery. If the one-time handoff cannot complete,
 or if possession cannot be verified, creation refuses before publishing the
-profile. There is no supported password-only creation outcome and no
-post-creation enrollment command.
+profile. Recovery cannot be added after creation. Losing or damaging recovery
+does not block password login, passphrase changes, normal backup, or normal
+password restore.
 
 For a headless create, provide both `--recovery-handoff-fd WRITE_FD` and
 `--recovery-verification-fd READ_FD`. Read exactly one object shaped as
@@ -63,10 +65,10 @@ anonymous pipes and distinct descriptor numbers; neither descriptor may be
 after its one bounded operation. A missing half, malformed proof, mismatch,
 oversized payload, descriptor collision, or I/O failure leaves no profile.
 
-Keep the phrase even though you cannot yet use it on your own. The command that
-opens a profile from a recovery phrase is not available in this release. Until
-it ships, your passphrase is the working key and the phrase is what preserves
-your ability to recover once it does.
+Keep the phrase with its separately exported recovery artifact. Use both only
+with the explicit `profile restore --artifact` door. The artifact and phrase
+prove a restore; they do not log in, reset the passphrase, enroll recovery in
+the restored profile, or travel inside a normal backup archive.
 
 ## Change your passphrase
 

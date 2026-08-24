@@ -2137,7 +2137,8 @@ cli:
         general --no-iva-redeme-enrolled --no-iva-cash-accounting-regime-enrolled
         --no-iva-voluntary-sii-enrolled --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled
         --quiet --accept-defaults'
-      create_help: Új aktív profil inicializálása.
+      create_help: Hozzon létre aktív profilt kötelező, ellenőrzött helyreállítással.
+        A helyreállítás később nem adható hozzá, és nem vesz részt a jelszavas bejelentkezésben.
       create_name_required: 'Profilnév szükséges. Futtassa: ''aeat config profile
         create NÉV''.'
       create_passphrase_channel_absent: Nem érhető el jelszócsatorna. Futtassa ezt
@@ -2155,19 +2156,21 @@ cli:
         kapcsolót együtt kell megadni.
       create_recovery_descriptor_reserved: A helyreállítási fájlleírók nem lehetnek
         negatívak, illetve nem lehetnek a szabványos bemenet, kimenet vagy hibakimenet.
-      create_recovery_enrolled: A helyreállítás regisztrálva lett az egyszer megjelenő
-        kifejezés birtoklásának ellenőrzése után.
+      create_recovery_enrolled: A helyreállítás a profil létrehozásakor, a pontos
+        birtoklás ellenőrzése után lett regisztrálva. Később nem adható hozzá; a kifejezés
+        kizárólag kifejezett visszaállítási bizonyíték, a jelszavas bejelentkezés
+        pedig független marad.
       create_recovery_handoff_fd_help: Az egyszer megjelenő helyreállítási kifejezést
         egy korlátozott titkos JSON-objektumként írja erre az örökölt írható fájlleíróra.
       create_recovery_handoff_too_large: A helyreállítási átadás túllépte a 8192 bájtos
         korlátot; profil nem jött létre.
       create_recovery_handoff_unwritable: Az átadási fájlleíró nem örökölt írható
         csatorna; profil nem jött létre.
+      create_recovery_verification_cancelled: A helyreállítás megerősítése megszakadt;
+        profil nem jött létre.
       create_recovery_verification_fd_help: A pontos kifejezést korlátozott titkos
         JSON-objektumként olvassa erről az örökölt olvasható fájlleíróról közzététel
         előtt.
-      create_recovery_verification_cancelled: A helyreállítás megerősítése megszakadt;
-        profil nem jött létre.
       create_recovery_verification_mismatch: A helyreállítási kifejezés birtoklása
         nem volt ellenőrizhető; profil nem jött létre.
       create_recovery_verification_prompt: 'A birtoklás ellenőrzéséhez írja be újra

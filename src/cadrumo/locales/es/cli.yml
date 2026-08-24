@@ -2161,7 +2161,9 @@ cli:
         general --no-iva-redeme-enrolled --no-iva-cash-accounting-regime-enrolled
         --no-iva-voluntary-sii-enrolled --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled
         --quiet --accept-defaults'
-      create_help: Inicializa un nuevo perfil activo.
+      create_help: Crea un perfil activo con recuperación obligatoria y verificada.
+        La recuperación no puede añadirse después ni participa en el inicio de sesión
+        con contraseña.
       create_name_required: Se requiere un nombre de perfil. Ejecuta 'aeat config
         profile create NOMBRE'.
       create_passphrase_channel_absent: No hay ningún canal de contraseña disponible.
@@ -2178,18 +2180,20 @@ cli:
         deben proporcionarse juntos.
       create_recovery_descriptor_reserved: Los descriptores de recuperación deben
         ser no negativos y no pueden ser la entrada, salida ni error estándar.
-      create_recovery_enrolled: La recuperación se inscribió tras verificar la posesión
-        de la frase de un solo uso.
+      create_recovery_enrolled: La recuperación se inscribió al crear el perfil tras
+        verificar la posesión exacta. No puede añadirse después; la frase es una prueba
+        explícita de restauración y el inicio de sesión con contraseña sigue siendo
+        independiente.
       create_recovery_handoff_fd_help: Escribe la frase de recuperación de un solo
         uso como un objeto JSON secreto acotado en este descriptor heredado escribible.
       create_recovery_handoff_too_large: La entrega de recuperación superó el límite
         de 8192 bytes; no se creó ningún perfil.
       create_recovery_handoff_unwritable: El descriptor de entrega no era un canal
         heredado escribible; no se creó ningún perfil.
-      create_recovery_verification_fd_help: Lee la frase exacta como un objeto JSON
-        secreto acotado desde este descriptor heredado legible antes de publicar.
       create_recovery_verification_cancelled: Se canceló la confirmación de recuperación;
         no se creó ningún perfil.
+      create_recovery_verification_fd_help: Lee la frase exacta como un objeto JSON
+        secreto acotado desde este descriptor heredado legible antes de publicar.
       create_recovery_verification_mismatch: No se pudo verificar la posesión de la
         frase de recuperación; no se creó ningún perfil.
       create_recovery_verification_prompt: 'Vuelva a introducir la frase de recuperación

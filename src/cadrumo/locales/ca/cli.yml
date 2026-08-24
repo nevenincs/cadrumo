@@ -2139,7 +2139,9 @@ cli:
         general --no-iva-redeme-enrolled --no-iva-cash-accounting-regime-enrolled
         --no-iva-voluntary-sii-enrolled --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled
         --quiet --accept-defaults'
-      create_help: Inicialitza un perfil actiu nou.
+      create_help: Crea un perfil actiu amb recuperació obligatòria i verificada.
+        La recuperació no es pot afegir després ni participa en l'inici de sessió
+        amb contrasenya.
       create_name_required: Cal un nom de perfil. Executa 'aeat config profile create
         NOM'.
       create_passphrase_channel_absent: No hi ha cap canal de contrasenya disponible.
@@ -2156,18 +2158,20 @@ cli:
         s'han de proporcionar junts.
       create_recovery_descriptor_reserved: Els descriptors de recuperació han de ser
         no negatius i no poden ser l'entrada, la sortida ni l'error estàndard.
-      create_recovery_enrolled: La recuperació s'ha inscrit després de verificar la
-        possessió de la frase d'un sol ús.
+      create_recovery_enrolled: La recuperació s'ha inscrit en crear el perfil després
+        de verificar-ne la possessió exacta. No es pot afegir després; la frase és
+        una prova explícita de restauració i l'inici de sessió amb contrasenya continua
+        sent independent.
       create_recovery_handoff_fd_help: Escriu la frase de recuperació d'un sol ús
         com un objecte JSON secret acotat en aquest descriptor heretat escrivible.
       create_recovery_handoff_too_large: El lliurament de recuperació ha superat el
         límit de 8192 bytes; no s'ha creat cap perfil.
       create_recovery_handoff_unwritable: El descriptor de lliurament no era un canal
         heretat escrivible; no s'ha creat cap perfil.
-      create_recovery_verification_fd_help: Llegeix la frase exacta com un objecte
-        JSON secret acotat des d'aquest descriptor heretat llegible abans de publicar.
       create_recovery_verification_cancelled: S'ha cancel·lat la confirmació de recuperació;
         no s'ha creat cap perfil.
+      create_recovery_verification_fd_help: Llegeix la frase exacta com un objecte
+        JSON secret acotat des d'aquest descriptor heretat llegible abans de publicar.
       create_recovery_verification_mismatch: No s'ha pogut verificar la possessió
         de la frase de recuperació; no s'ha creat cap perfil.
       create_recovery_verification_prompt: 'Torneu a introduir la frase de recuperació

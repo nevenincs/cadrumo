@@ -1997,7 +1997,8 @@ cli:
         general --no-iva-redeme-enrolled --no-iva-cash-accounting-regime-enrolled
         --no-iva-voluntary-sii-enrolled --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled
         --quiet --accept-defaults'
-      create_help: Initialize a new active profile.
+      create_help: Create an active profile with mandatory verified recovery. Recovery
+        cannot be added later and never participates in password login.
       create_name_required: A profile name is required. Run 'aeat config profile create
         NAME'.
       create_passphrase_channel_absent: No passphrase channel is available. Run this
@@ -2014,19 +2015,20 @@ cli:
         must be supplied together.
       create_recovery_descriptor_reserved: Recovery descriptors must be non-negative
         and cannot be standard input, standard output, or standard error.
-      create_recovery_enrolled: Recovery was enrolled after possession of the one-time
-        phrase was verified.
+      create_recovery_enrolled: Recovery was enrolled at creation after exact possession
+        verification. It cannot be added later; the phrase is an explicit restore
+        proof and password login remains independent.
       create_recovery_handoff_fd_help: Write the one-time recovery phrase as one bounded
         secret JSON object to this inherited writable descriptor.
       create_recovery_handoff_too_large: The recovery handoff exceeded its 8192-byte
         bound; no profile was created.
       create_recovery_handoff_unwritable: The recovery handoff descriptor was not
         an inherited writable channel; no profile was created.
+      create_recovery_verification_cancelled: Recovery confirmation was cancelled;
+        no profile was created.
       create_recovery_verification_fd_help: Read the exact recovery phrase back as
         one bounded secret JSON object from this inherited readable descriptor before
         publication.
-      create_recovery_verification_cancelled: Recovery confirmation was cancelled;
-        no profile was created.
       create_recovery_verification_mismatch: Recovery phrase possession could not
         be verified; no profile was created.
       create_recovery_verification_prompt: 'Re-enter the recovery phrase to verify
