@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:4e5f8767df5606eae4c2648c7570da7ccd507eeae23afcc3bea33c518f447637'
+body_hash: 'sha256:6e174026feb2b6e419cb4dd37ef343e4f2526f868d4ddad92d27e5b107f0d24a'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -56,6 +56,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W02-P03-S12]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P03-S13]]'
   - '[[2026-08-24-registry-completeness-closure-W02-P03-S14]]'
+  - '[[2026-08-24-registry-completeness-closure-W02-P03-S15]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-036-2025-filing-authority-reference]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-038-design-extraction-reference]]'
@@ -230,6 +231,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W02-P03-S12` - Adjudicate Modelo 036 revision 2025-02-03-y-siguientes producer vocabulary and official filing authority
 - `2026-08-24-registry-completeness-closure-W02-P03-S13` - Adjudicate Modelo 038 revision 2002-y-siguientes design extraction trust and fileability
 - `2026-08-24-registry-completeness-closure-W02-P03-S14` - Adjudicate Modelo 136 revision 2026 record-design availability and supported filing boundary
+- `2026-08-24-registry-completeness-closure-W02-P03-S15` - Adjudicate Modelo 182 revision 2007-y-siguientes design-era coverage and donor-row prerequisites
 
 ### plan
 

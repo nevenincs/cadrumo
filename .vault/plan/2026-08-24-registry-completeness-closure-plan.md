@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:3e912dad9ce9ef77b4c59f0a850ce13c99b85a3f6b232c2caec12935b547c82b'
+body_hash: 'sha256:388020a2b998fac30c5ac1574bbac0a980e599648baa51329b370487ea3d3095'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -98,7 +98,7 @@ Classify each of the fourteen live filing gaps independently so missing authorit
 - [x] `W02.P03.S12` - Adjudicate Modelo 036 revision 2025-02-03-y-siguientes producer vocabulary and official filing authority; `.vault/reference/`.
 - [x] `W02.P03.S13` - Adjudicate Modelo 038 revision 2002-y-siguientes design extraction trust and fileability; `.vault/reference/`.
 - [x] `W02.P03.S14` - Adjudicate Modelo 136 revision 2026 record-design availability and supported filing boundary; `.vault/reference/`.
-- [ ] `W02.P03.S15` - Adjudicate Modelo 182 revision 2007-y-siguientes design-era coverage and donor-row prerequisites; `.vault/reference/`.
+- [x] `W02.P03.S15` - Adjudicate Modelo 182 revision 2007-y-siguientes design-era coverage and donor-row prerequisites; `.vault/reference/`.
 - [ ] `W02.P03.S16` - Adjudicate Modelo 185 revision 2003-2025 exact historical design authority; `.vault/reference/`.
 - [ ] `W02.P03.S17` - Adjudicate Modelo 187 revision 2019-y-siguientes design-era coverage; `.vault/reference/`.
 - [ ] `W02.P03.S18` - Adjudicate Modelo 188 revision 2019-y-siguientes design-era coverage; `.vault/reference/`.
