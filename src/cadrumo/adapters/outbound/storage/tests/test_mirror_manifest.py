@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core import iter_directory, scan_directory
+from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome, iter_directory, scan_directory
 from .....tests.secure_sql import isolated_runtime_profile
 from ....persistence.storage import STORAGE_NAMESPACE_REGISTRY, StorageRemoteMirrorPolicy
 from .. import (
@@ -30,6 +30,19 @@ from .. import (
 from .._local import LocalFileSystemProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+
+def _assert_manifest_verdict(verdict, condition_id: str, facts: dict[str, object], outcome: NoRecoveryOutcome) -> None:
+    assert verdict.failed_condition_id == condition_id
+    assert verdict.action is None
+    assert verdict.argument_bindings == ()
+    assert verdict.conditionality is ActionConditionality.NOT_APPLICABLE
+    assert verdict.no_recovery_outcome is outcome
+    assert len(verdict.evidence) == 1
+    evidence = verdict.evidence[0]
+    assert evidence.evidence_id == f"{condition_id}.observation"
+    assert evidence.provenance in (ActionEvidenceProvenance.RUNTIME_OBSERVATION, ActionEvidenceProvenance.APPLICATION_STATE)
+    assert dict(evidence.values) == facts
 
 
 def test_remote_mirror_manifest_persists_ciphertext_hashes_and_revision_watermark(tmp_path: Path) -> None:
@@ -273,8 +286,14 @@ def test_remote_mirror_manifest_loader_wraps_malformed_payload_in_storage_error(
         label="malformed",
     )
 
-    with pytest.raises(OutboundStorageIntegrityError, match="remote mirror manifest"):
+    with pytest.raises(OutboundStorageIntegrityError, match="remote mirror manifest") as raised:
         get_remote_mirror_namespace_manifest(provider, manifest.namespace)
+    _assert_manifest_verdict(
+        raised.value.terminal_precondition_verdict,
+        "storage.mirror.manifest.schema_valid",
+        {"namespace": manifest.namespace, "manifest_valid": False},
+        NoRecoveryOutcome.SAFETY,
+    )
 
 
 def test_remote_mirror_manifest_loader_refuses_unsupported_schema_version(tmp_path: Path) -> None:
@@ -302,6 +321,16 @@ def test_remote_mirror_manifest_loader_refuses_unsupported_schema_version(tmp_pa
         "manifest_schema_version": unsupported_schema_version,
         "supported_manifest_schema_version": REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION,
     }
+    _assert_manifest_verdict(
+        error.value.terminal_precondition_verdict,
+        "storage.mirror.manifest.schema_supported",
+        {
+            "namespace": manifest.namespace,
+            "manifest_schema_version": unsupported_schema_version,
+            "supported_manifest_schema_version": REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION,
+        },
+        NoRecoveryOutcome.SAFETY,
+    )
 
 
 def test_duplicate_object_keys_in_a_remote_manifest_fail_closed_on_load(tmp_path: Path) -> None:
@@ -640,3 +669,18 @@ def test_manifest_refuses_a_mixed_namespace_object_set() -> None:
             object_count=2,
             objects=(_entry("target", "a"), _entry("smuggled", "c")),
         )
+
+
+def test_namespace_mismatch_is_an_explicit_operator_decision_verdict(tmp_path: Path) -> None:
+    local = _single_object_manifest(tmp_path)
+    remote = local.model_copy(update={"namespace": "other-namespace"})
+    from .._errors import OutboundStorageValidationError
+
+    with pytest.raises(OutboundStorageValidationError) as raised:
+        compare_remote_mirror_manifests(local=local, remote=remote)
+    _assert_manifest_verdict(
+        raised.value.terminal_precondition_verdict,
+        "storage.mirror.manifest.namespaces_match",
+        {"local_namespace": local.namespace, "remote_namespace": remote.namespace},
+        NoRecoveryOutcome.OPERATOR_DECISION,
+    )
