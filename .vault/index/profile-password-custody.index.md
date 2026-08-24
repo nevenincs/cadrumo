@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:1b9929ecb7e9112a7fa47ed4e82b758680e31ebf07847bd1b896a0146d23ccdc'
+body_hash: 'sha256:47b52966e717cdb078403cf8890f7f197111efd21379c6b170cc1d9332d339f9'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -220,6 +220,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W05-P08-S25]]'
   - '[[2026-08-13-profile-password-custody-W06-P09-S210]]'
   - '[[2026-08-13-profile-password-custody-W06-P09-S211]]'
+  - '[[2026-08-13-profile-password-custody-W06-P09-S212]]'
   - '[[2026-08-13-profile-password-custody-plan]]'
   - '[[2026-08-13-profile-password-custody-research]]'
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
@@ -508,6 +509,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W03-P06-summary` - `profile-password-custody` `W03.P06` summary
 - `2026-08-13-profile-password-custody-W06-P09-S210` - Persist the approved in-place amendment requiring verified recovery enrollment at every profile creation, mandatory application-level recovery handoff, password-login independence, and restore-only recovery artifacts
 - `2026-08-13-profile-password-custody-W06-P09-S211` - Add the accepted machine-secret channel decision to the plan's governing related set and regenerate the feature index
+- `2026-08-13-profile-password-custody-W06-P09-S212` - Mark the 2026-08-18 campaign close as historical without rewriting its measurements or dispositions, and point readers to the current reconciliation and successor honesty review
 
 ### plan
 

@@ -3,16 +3,20 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-18'
-modified: '2026-08-18'
+modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:6d80b803c96f8d0f1b2c0d0236922899edd0cdd86f783f1674c442f46228fbaf'
+body_hash: 'sha256:1d6a7173015e066f0dd4186f764857a1a6f63d9e5390ffc589107df502ab3a27'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
 
 # `profile-password-custody` audit: `campaign close`
 
+> Historical status (2026-08-24): this record preserves the measurements and dispositions observed on 2026-08-18. Its premise that full-screen recovery enrollment remained deferred is stale because S206 later recovered verified enrollment across the creation lanes. Current reconciliation is governed by Wave W06 of `2026-08-13-profile-password-custody-plan`; the successor honesty findings are recorded in `2026-08-24-profile-password-custody-fresh-context-campaign-close-audit`. This document is evidence of the earlier close attempt, not the current terminal closure.
+
 ## Scope
+
+This historical audit records the 2026-08-18 campaign-close measurement, its then-open carry-forwards, and the dispositions available at that date. The notice above supplies successor context without altering those observations.
 
 ## Findings
 
