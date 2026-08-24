@@ -32,11 +32,11 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
+from .....core import CasillaId, PeriodKind, registry_period_kind, validated_casilla_id
 from .....core.resources import bundled_path
-from .._authority import bundled_authority
 from .._formula_runtime import calculate_registry_snapshot
 from .._snapshot import build_snapshot
+from .._temporal import select_revision
 from .._validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo
 
@@ -50,6 +50,21 @@ _RET_ESPECIE: CasillaId = validated_casilla_id("12", surface="_RET_ESPECIE")
 _RET_TOTAL: CasillaId = validated_casilla_id("13", surface="_RET_TOTAL")
 _ANTERIORES: CasillaId = validated_casilla_id("20", surface="_ANTERIORES")
 _RESULTADO: CasillaId = validated_casilla_id("21", surface="_RESULTADO")
+
+_EXPECTED_DEADLINES = {
+    (2024, "1T"): (date(2024, 4, 1), date(2024, 4, 22), date(2024, 4, 17)),
+    (2024, "2T"): (date(2024, 7, 1), date(2024, 7, 22), date(2024, 7, 17)),
+    (2024, "3T"): (date(2024, 10, 1), date(2024, 10, 21), date(2024, 10, 16)),
+    (2024, "4T"): (date(2025, 1, 1), date(2025, 1, 20), date(2025, 1, 15)),
+    (2025, "1T"): (date(2025, 4, 1), date(2025, 4, 21), date(2025, 4, 15)),
+    (2025, "2T"): (date(2025, 7, 1), date(2025, 7, 21), date(2025, 7, 16)),
+    (2025, "3T"): (date(2025, 10, 1), date(2025, 10, 20), date(2025, 10, 15)),
+    (2025, "4T"): (date(2026, 1, 1), date(2026, 1, 20), date(2026, 1, 15)),
+    (2026, "1T"): (date(2026, 4, 1), date(2026, 4, 20), date(2026, 4, 15)),
+    (2026, "2T"): (date(2026, 7, 1), date(2026, 7, 20), date(2026, 7, 15)),
+    (2026, "3T"): (date(2026, 10, 1), date(2026, 10, 20), date(2026, 10, 15)),
+    (2026, "4T"): (date(2027, 1, 1), date(2027, 1, 20), None),
+}
 
 
 def _load_modelo_216():
@@ -85,25 +100,48 @@ def test_modelo_216_deadline_provision_is_orden_eha_3290_2008_art_4() -> None:
     assert plazo.document_id == "BOE-A-2008-18497"
 
 
-def test_modelo_216_trimestral_windows_open_and_close_on_day_20() -> None:
-    """Orden EHA/3290/2008 art 4: first twenty natural days of Apr/Jul/Oct/Jan.
-
-    Derived strictly from the statutory plazo (the immediately preceding natural
-    quarter, filed in the first 20 natural days of the following opening month),
-    not copied from engine output.
-    """
-    authority = bundled_authority()
-    windows = {w.id: w for _, _, w in authority.deadline_windows(2025, modelos=("216",))}
-    expected = {
-        "modelo-216-2025-1t": (date(2025, 4, 1), date(2025, 4, 20)),
-        "modelo-216-2025-2t": (date(2025, 7, 1), date(2025, 7, 20)),
-        "modelo-216-2025-3t": (date(2025, 10, 1), date(2025, 10, 20)),
-        "modelo-216-2025-4t": (date(2026, 1, 1), date(2026, 1, 20)),
+def test_modelo_216_has_exact_supported_deadline_census_and_dates() -> None:
+    modelo, _catalogues = _load_modelo_216()
+    observed = {
+        (window.period.filing_year, window.period.registry_token): (
+            window.opens_on,
+            window.closes_on,
+            window.payment_cutoff_on,
+        )
+        for revision in modelo.revisions.values()
+        for window in revision.deadline_windows
+        if 2022 <= window.period.filing_year <= 2026
     }
-    assert set(expected) <= set(windows)
-    for window_id, (opens, closes) in expected.items():
-        assert windows[window_id].opens_on == opens
-        assert windows[window_id].closes_on == closes
+    assert observed == _EXPECTED_DEADLINES
+
+
+def test_modelo_216_windows_use_canonical_periods_sources_and_owner() -> None:
+    modelo, catalogues = _load_modelo_216()
+    revision = modelo.revisions["2024-y-siguientes"]
+    assert len(revision.deadline_windows) == len(_EXPECTED_DEADLINES) == 12
+
+    for window in revision.deadline_windows:
+        filing_year = window.period.filing_year
+        period = window.period.registry_token
+        physical_calendar_year = window.closes_on.year
+        calendar_ref = f"aeat-calendario-contribuyente-{physical_calendar_year}"
+
+        assert window.id == f"modelo-216-{filing_year}-{period.lower()}"
+        assert window.filing_year == filing_year
+        assert registry_period_kind(period) is PeriodKind.QUARTERLY
+        assert window.period.kind is PeriodKind.QUARTERLY
+        assert window.period_kind == "quarterly"
+        assert select_revision(modelo, filing_year=filing_year, period=period) is revision
+
+        if physical_calendar_year <= 2026:
+            assert calendar_ref in window.source_refs
+            assert calendar_ref in revision.source_refs
+            assert calendar_ref in revision.constructs[0].source_refs
+            source = catalogues.sources[calendar_ref]
+            assert (source.authority, source.evidence_tier) == ("aeat", "official_source_guidance")
+            assert (bundled_path() / source.corpus_path).is_file()
+        else:
+            assert window.payment_cutoff_on is None
 
 
 def test_modelo_216_resultado_is_retenciones_total_minus_anteriores() -> None:
