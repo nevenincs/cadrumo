@@ -6,7 +6,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:7f1872927af10044943263789d1fbe03e1c6dc8db1370b86324b78adb51e11b8'
+body_hash: 'sha256:66d1d289fd2f6b00a55d47082ccfc3be2423ce3e0a0bb240df6553a229e05696'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -83,6 +83,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s61-distinct-offset-probes-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s62-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s63-independent-post-review-audit]]'
+  - '[[2026-08-24-registry-completeness-closure-s64-independent-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s64-real-cli-proof-review-audit]]'
 ---
 
@@ -134,6 +135,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s61-distinct-offset-probes-audit` - `registry-completeness-closure` audit: `S61 distinct offset probes`
 - `2026-08-24-registry-completeness-closure-s62-post-review-audit` - `registry-completeness-closure` audit: `S62 post review`
 - `2026-08-24-registry-completeness-closure-s63-independent-post-review-audit` - `registry-completeness-closure` audit: `S63 live closure authority wiring independent post-review`
+- `2026-08-24-registry-completeness-closure-s64-independent-post-review-audit` - `registry-completeness-closure` audit: `S64 independent post-review`
 - `2026-08-24-registry-completeness-closure-s64-real-cli-proof-review-audit` - `registry-completeness-closure` audit: `S64 real CLI proof review`
 
 ### exec

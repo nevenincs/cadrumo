@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-24'
-body_hash: 'sha256:5779889e5cd4a1aac8eb50b4f2c4f40fd690215888d84f38c6e1c43d521d1087'
+body_hash: 'sha256:7c17622b370debf6b66b2f40f29fad5599568e67d8b2bbd91de409af6f1f0c1c'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -78,6 +78,7 @@ Compose one typed cross-authority report from validated registry coverage, sourc
 - [x] `W01.P02.S62` - Remove the S60 audit and execution-record EOF blank lines and re-attest the committed Step surface with the scoped diff check.; `.vault/audit/2026-08-24-registry-completeness-closure-s60-live-export-proof-review-audit.md; .vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S60.md`.
 - [x] `W01.P02.S63` - Wire canonical live source-connectivity and filing-export proof authorities into the registry-conformance closure CLI, retain an explicit offline no-proof mode, type both injection ports precisely, and prove complete-live versus offline-refusal CLI outcomes.; `dev/registry/conformance/; dev/source_connectivity/; src/cadrumo/application/registry/; dev/registry/conformance/tests/`.
 - [x] `W01.P02.S64` - Remove fabricated strict proof authorities and digests from closure CLI tests, exercise the actual CLI with canonical live loaders and real evidence only, prove live-versus-offline refusal distinctions, keep eligibility unreachable until durable filing proof exists, prevent injected claims from bypassing the gate, and add a mutation bite rejecting canned proof; `dev/registry/conformance/; dev/source_connectivity/; dev/registry/; src/cadrumo/application/registry/`.
+- [ ] `W01.P02.S65` - Add a hostile RegistryClosureAuthorities CLI context backed by eligible real protocol implementations, prove the shipped command ignores it, restore the exact former find_object authority branch for a mutation bite, and retain non-CLI loader injection; `dev/registry/conformance/tests/test_closure.py; dev/registry/conformance/cli.py; dev/registry/conformance/authorities.py; dev/registry/conformance/closure.py`.
 
 ## Wave `W02` - filing-gap adjudication and owner routing
 
