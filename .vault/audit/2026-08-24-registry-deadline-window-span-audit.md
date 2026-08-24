@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-24'
 body_schema: 'body-v1'
-body_hash: 'sha256:9c04c3e0b3062511f5dda6edc27c2b82c3b7eba3a2c4bdf8388b656fd3edbf99'
+body_hash: 'sha256:b1139e2dfc88783b289285d6f726a4a3cf60aa6dd22c3c6bc25c560f1cc4b57a'
 related: []
 ---
 
@@ -240,6 +240,59 @@ What would make upward measurement possible, in rough order of cost:
 
 Until one of those exists, an "all-green" claim for any layer above core is a
 statement about one lucky minute, not about the tree.
+
+## The committed tree is red; the green reading lives in one working tree
+
+Measuring from an isolated `git worktree` at a frozen commit settled a question
+the shared tree could not answer, and the answer was not the expected one.
+
+Running the registry-validity check two ways at the same moment:
+
+- main's WORKING TREE: passes.
+- commit `cf04b1f274`, checked out in a separate worktree: FAILS, on modelo 390
+  semantic-role constraint incompatibility across the 2022, 2023, 2024 and 2025
+  casillas against the 2021 canonical.
+
+The difference is three uncommitted paths in main: a modified 2021 casilla
+fragment, a modified `2022/revision.toml`, and an UNTRACKED
+`2022/casilla_continuidad_evolutions/` directory. The repair exists only as
+work-in-progress in one working tree. The committed state of this repository
+does not load a valid registry.
+
+That matters beyond this session: a fresh clone, a CI run, or any worktree
+created from HEAD gets the red registry. The green readings that made this
+campaign look nearly finished were reading one person's uncommitted work.
+
+I had this backwards twice before getting it right. First I inferred from
+`git status` that dirty files CAUSED the breakage; then, when main passed, I
+corrected that to "the repair is committed". Both were wrong, and only running
+the same check against a frozen checkout distinguished them. A working tree
+cannot testify about what is committed.
+
+## Layer measurements from the isolated worktree
+
+Taken at the frozen red-registry commit, so the registry-caused share is
+separated rather than mixed in:
+
+| layer | failures | registry-caused | genuine |
+|---|---|---|---|
+| core (main worktree) | 0 of 2233 | -- | 0 |
+| adapters | 346 | 333 | 13 |
+| entrypoints | 31 | few | ~20 |
+
+**96 per cent of the adapter layer's redness was one registry defect.** The same
+almost certainly applies to the application layer's 715 and much of domain's 83.
+Layer counts above core measure shared-artefact validity far more than they
+measure the layer, which is why fixing registry validation (3183 -> 0 earlier in
+this campaign) moved more tests than any test-level work.
+
+The adapters' 13 genuine failures: a TUI width limit on
+`_recovery_words_screen.py`; two `en-copy`/`es-copy` locale assertions in
+`test_flow_tui_app`; a custody test not raising `ProfileCustodyPasswordError`;
+two `MovementRecord` validation errors in `test_inventory_concurrent_write`; a
+source-mesh revision roundtrip; `test_package_module_allowlist` flagging
+`test_auth_preconditions.py` and siblings (new peer files); the operations
+facade export ordering; and `AuthDiagnosticDetail.operator_report_command`.
 
 ## Durable lesson
 
