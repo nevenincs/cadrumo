@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:e4d43eba241bdfaa1d1e15280051428c1354470e19618817e4634ca54a008872'
+body_hash: 'sha256:382f52145ee8b12a974c5a0e0814c112d1719c197cbad5ef6ba003cfa92182a1'
 step_id: 'S96'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
@@ -48,7 +48,7 @@ related:
 
 ## Scope
 
-- `.vault/research/2026-08-22-m360-row-source-grounding-research.md`
+- `.vault/research/2026-08-22-source-casilla-integration-m360-row-source-grounding-research.md`
 
 ## Description
 

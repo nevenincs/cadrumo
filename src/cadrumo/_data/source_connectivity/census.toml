@@ -239,7 +239,7 @@ completion_criterion = "A source owner supplies direction, relationship type, st
 candidate_id = "rows.refund-operation"
 disposition = "ingress_blocked"
 owner = "source-connectivity-campaign"
-review_condition = "Modelo 360 declares refund-operation row bindings and the worksheet pull has a typed assembler, but assembled observations have no durable source repository and calculation-revision handoff owned by a live resolver."
+review_condition = "Retain deferral until one secure owner preserves Modelo 360 request country/year/period, official document identity and operation type, issue date, taxable base, VAT quota, deductible proportion, requested amount, currency, nature, supplier identity/address, durable identity, and fingerprint; then S97-S99 prove the real encrypted resolver, replay/review, and supported repeated-record export route."
 expires_on = 2026-12-31
 capability_locators = [
   "src/cadrumo/application/calculations/_row_set_assembly.py:174",
@@ -263,7 +263,7 @@ summary = "Worksheet rows dispatch to the typed refund-operation observation ass
 [entries.bounded_follow_up]
 action_id = "source-casilla.rows-refund-ingress"
 deadline = 2026-11-30
-completion_criterion = "A bounded slice persists assembled refund observations securely and proves resolver ownership, diagnostics, provenance, encrypted revision round trip, and operator reachability."
+completion_criterion = "One secure source owner preserves the complete official document-detail and request axes with immutable identity and fingerprint; S97 proves resolver ownership and refusal semantics, S98 proves encrypted revision/replay, diagnostics, review and supported repeated-record export, and S99 independently reviews the evidence before any connected claim."
 
 [[entries]]
 candidate_id = "rows.donativo-donor"

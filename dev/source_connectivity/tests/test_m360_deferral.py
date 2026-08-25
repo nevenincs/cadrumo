@@ -1,0 +1,82 @@
+from datetime import date
+
+import pytest
+
+from cadrumo.application.aggregation import collect_unhandled_source_diagnostics
+from cadrumo.application.modelo import CALCULATION_ROUTE_RESOLVER_OWNERSHIP, CALCULATION_ROUTE_SOURCE_DISPOSITIONS
+from cadrumo.application.registry.source_connectivity import load_source_connectivity_census
+from cadrumo.core import BindingSourceKind
+from cadrumo.core.resources import bundled_path
+from cadrumo.domain.calculations.registry import CasillaFieldKind, load_modelo_directory
+
+from ..check import SourceConnectivityCheckError, check_census_governance
+from ..live_proof import CONNECTED_PROOF_FIXTURES, connected_candidate_ids
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def test_m360_remains_measurably_ingress_blocked_until_its_missing_authority_exists() -> None:
+    entry = next(
+        item for item in load_source_connectivity_census().entries if item.candidate_id == "rows.refund-operation"
+    )
+
+    assert entry.disposition.value == "ingress_blocked"
+    assert entry.bounded_follow_up is not None
+    assert entry.bounded_follow_up.action_id == "source-casilla.rows-refund-ingress"
+    assert entry.follow_up_owner() == "source-connectivity-campaign"
+    assert entry.expires_on is not None
+    assert "request country/year/period" in entry.review_condition
+    assert "official document identity" in entry.review_condition
+    assert "taxable base, VAT quota, deductible proportion" in entry.review_condition
+    assert "supplier identity/address" in entry.review_condition
+    assert "S97-S99" in entry.review_condition
+    assert "immutable identity and fingerprint" in entry.bounded_follow_up.completion_criterion
+    assert "S97 proves resolver ownership and refusal semantics" in entry.bounded_follow_up.completion_criterion
+    assert "S98 proves encrypted revision/replay" in entry.bounded_follow_up.completion_criterion
+    assert "S99 independently reviews the evidence" in entry.bounded_follow_up.completion_criterion
+
+
+def test_m360_deferred_source_has_no_connected_downstream_lifecycle() -> None:
+    """M360 worksheet rows stay blocked before any persistent source claim can form."""
+    source_kind = BindingSourceKind.REFUND_OPERATION
+    candidate_id = "rows.refund-operation"
+    modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "360"))
+    revision = modelo.revisions["2010-y-siguientes"]
+
+    assert any(binding.source is source_kind for binding in revision.bindings)
+    assert CALCULATION_ROUTE_SOURCE_DISPOSITIONS[source_kind].value == "deferred"
+    assert all(source_kind not in owner.owned_sources for owner in CALCULATION_ROUTE_RESOLVER_OWNERSHIP)
+
+    handled_sources = frozenset(
+        kind.value
+        for kind, disposition in CALCULATION_ROUTE_SOURCE_DISPOSITIONS.items()
+        if disposition.value == "enrolled"
+    )
+    diagnostics = collect_unhandled_source_diagnostics(revision, handled_sources=handled_sources)
+    assert any(
+        diagnostic.source_kind == source_kind.value and diagnostic.reason == "unhandled_binding_source"
+        for diagnostic in diagnostics
+    )
+
+    assert candidate_id not in connected_candidate_ids()
+    assert all(fixture.candidate_id != candidate_id for fixture in CONNECTED_PROOF_FIXTURES)
+
+    assert all(
+        record.repeat != "projection_rows"
+        and all(field.kind is not CasillaFieldKind.PROJECTION for field in record.fields)
+        for layout in revision.export_layouts
+        for record in layout.records
+    )
+
+
+def test_m360_terminal_deferral_is_rejected_after_its_expiry() -> None:
+    """The bounded M360 deferral cannot remain current after 2026-12-31."""
+    census = load_source_connectivity_census()
+    entry = next(item for item in census.entries if item.candidate_id == "rows.refund-operation")
+    expired = entry.model_copy(update={"expires_on": date(2027, 1, 1)})
+    expired_census = census.model_copy(
+        update={"entries": tuple(expired if item is entry else item for item in census.entries)},
+    )
+
+    with pytest.raises(SourceConnectivityCheckError, match="expired without adjudication"):
+        check_census_governance(expired_census, as_of=date(2027, 1, 1))
