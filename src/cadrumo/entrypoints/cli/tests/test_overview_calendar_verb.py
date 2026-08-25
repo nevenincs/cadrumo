@@ -178,6 +178,39 @@ def test_calendar_accepts_censo_stamped_enrolment() -> None:
     assert modelo_303["censo_enrolment_state"] == "verified"
 
 
+def test_calendar_json_preserves_exact_modelo_303_2025_quarterly_coordinates() -> None:
+    """The real CLI must expose four, and only four, M303 quarterly rows for 2025."""
+    result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            "2025-01-01",
+            "--to",
+            "2026-02-28",
+            "--allow-incomplete",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    entries = json.loads(result.output)["result"]["entries"]
+    coordinates = tuple(
+        (entry["modelo"], entry["period"])
+        for entry in entries
+        if entry["modelo"] == "303" and entry["period"].startswith("2025 ")
+    )
+
+    assert coordinates == (
+        ("303", "2025 1T"),
+        ("303", "2025 2T"),
+        ("303", "2025 3T"),
+        ("303", "2025 4T"),
+    )
+
+
 def test_calendar_text_localizes_shift_label_but_json_keeps_token() -> None:
     text_result = _invoke(
         [
