@@ -94,7 +94,7 @@ def test_interactive_cli_doors_use_the_application_line_frontend() -> None:
     assert "run_descendant_door(record)" in descendant
     assert "run_apoderado_flow" in apoderado
     assert "from ....application.wizard import" not in descendant
-    assert "from ....application.auth import apoderado_answers_from_state" not in apoderado
+    assert "from ....application.auth.apoderado_flow import run_apoderado_flow" in apoderado
 
 
 def test_retired_manager_frontend_symbols_are_not_redeclared() -> None:

@@ -46,7 +46,7 @@ from cadrumo.application.operations.registry import (
 )
 
 from ...adapters.persistence.storage import SecureObjectRepository
-from ...application.auth import build_auth_operation_definitions
+from ...application.auth.operation_definitions import build_auth_operation_definitions
 from ...application.export import build_google_sheets_export_operation_definition
 from ...application.user_profile import (
     CENSAL_ADOPTABLE_PATHS,

@@ -111,23 +111,22 @@ def test_production_composition_imports_user_profile_operations_from_its_canonic
     assert not any(module.endswith("_filed_history_operation") for module in imported_modules)
 
 
-def test_production_composition_imports_only_the_inbound_safe_operation_facade() -> None:
+def test_production_composition_imports_only_public_operation_defining_modules() -> None:
     source_path = Path(__file__).parents[1] / "_operation_composition.py"
     tree = ast.parse(source_path.read_text(encoding="utf-8"))
     operation_imports = tuple(
         node
         for node in ast.walk(tree)
-        if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("application.operations")
+        if isinstance(node, ast.ImportFrom)
+        and (node.module or "").startswith("cadrumo.application.operations")
     )
 
-    assert len(operation_imports) == 1
-    assert operation_imports[0].module == "application.operations"
-    assert operation_imports[0].level == 2
-    assert {item.name for item in operation_imports[0].names} == {
-        "OperationComposedServices",
-        "OperationDefinition",
-        "OperationRegistry",
-        "compose_operation_services",
+    assert operation_imports
+    assert not any(node.module == "application.operations" for node in operation_imports)
+    assert all(node.level == 0 for node in operation_imports)
+    assert {node.module for node in operation_imports} == {
+        "cadrumo.application.operations.composition",
+        "cadrumo.application.operations.registry",
     }
 
 

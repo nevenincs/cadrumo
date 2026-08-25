@@ -130,9 +130,9 @@ def _destroy(bucket_id: str, *, label: str) -> str:
     """
     from uuid import UUID
 
-    from ....application.user_profile import ProfileCapsuleLifecycle, active_profile_pointer_transaction
+    from ....application.user_profile import ProfileCapsuleLifecycle, activeprofile_pointer
 
-    with active_profile_pointer_transaction():
+    with activeprofile_pointer():
         # Revalidate under the canonical root/pointer lock and retain it until
         # every journalled owner effect completes. A concurrent login cannot
         # activate the target between this decision and tombstone removal.

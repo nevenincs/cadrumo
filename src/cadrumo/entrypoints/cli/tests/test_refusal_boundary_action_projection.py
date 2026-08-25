@@ -12,7 +12,7 @@ import pytest
 import typer
 from pydantic import TypeAdapter
 
-from ....application.auth import acquire_auth_acquisition_lock
+from ....application.auth.acquisition_lock import acquire_auth_acquisition_lock
 from ....application.modelo import ModeloWorkflowGateError
 from ....application.operator_actions import (
     ActionArgumentBinding,

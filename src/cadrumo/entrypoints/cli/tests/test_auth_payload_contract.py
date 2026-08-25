@@ -7,12 +7,8 @@ import json
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from ....application.auth import (
-    AuthLoginResult,
-    AuthStatusResult,
-    AuthTestResult,
-    ProviderProbeResult,
-)
+from ....application.auth.operator_results import AuthLoginResult, AuthStatusResult, AuthTestResult
+from ....application.auth.probes import ProviderProbeResult
 from ....application.operator_actions import (
     ConditionEvidence,
     PreconditionVerdict,

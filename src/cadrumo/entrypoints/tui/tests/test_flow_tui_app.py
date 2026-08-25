@@ -28,19 +28,17 @@ from pydantic import BaseModel
 from textual.containers import Vertical
 from textual.widgets import Button, DataTable, Input, Label, OptionList, ProgressBar, Static
 
-from ....application.flows import (
+from ....application.flows.definition import (
     CopyRef,
-    FlowCheckpointError,
     FlowChoice,
     FlowCondition,
     FlowDefinition,
     FlowLegalRef,
     FlowPage,
     FlowSection,
-    answer,
-    page_status,
-    start_flow,
 )
+from ....application.flows.engine import answer, page_status, start_flow
+from ....application.flows.errors import FlowCheckpointError
 from ....core.config import TuiAppearance
 from ....core.flows import (
     CheckpointAvailability,
@@ -1225,13 +1223,8 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from cadrumo.entrypoints.tui.flows.app import run_flow_tui
-from cadrumo.application.flows import (
-    CopyRef,
-    FlowCheckpointError,
-    FlowDefinition,
-    FlowPage,
-    FlowSection,
-)
+from cadrumo.application.flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
+from cadrumo.application.flows.errors import FlowCheckpointError
 from cadrumo.core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from cadrumo.tests.locales_root_fixture import locales_root_scope
 

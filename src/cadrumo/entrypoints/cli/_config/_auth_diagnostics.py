@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import typer
 
-from ....application.auth import AuthDiagnosticPhoneState
+from ....application.auth.diagnostics import AuthDiagnosticPhoneState
 from ....core.external_constants import OutputLanguage
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._common import emit_envelope
@@ -17,7 +17,7 @@ def auth_diagnostics_list(
 ) -> None:
     """List encrypted auth diagnostics without revealing captured HTML/screenshots."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import list_auth_diagnostics
+    from ....application.auth.diagnostics import list_auth_diagnostics
     from .._config_payloads import AuthDiagnosticsListResult
 
     report = list_auth_diagnostics()
@@ -51,7 +51,7 @@ def auth_diagnostics_show(
 ) -> None:
     """Show one encrypted auth diagnostic by id with sensitive bodies redacted."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import load_auth_diagnostic
+    from ....application.auth.diagnostics import load_auth_diagnostic
 
     detail = load_auth_diagnostic(diagnostic_id)
     if detail is None:
@@ -119,7 +119,7 @@ def auth_diagnostics_report(
 ) -> None:
     """Record the human-observed Cl@ve app state for a captured diagnostic."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import AUTH_DIAGNOSTIC_PHONE_STATES, record_auth_diagnostic_phone_state
+    from ....application.auth.diagnostics import AUTH_DIAGNOSTIC_PHONE_STATES, record_auth_diagnostic_phone_state
 
     try:
         result = record_auth_diagnostic_phone_state(diagnostic_id, phone_state)

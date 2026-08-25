@@ -130,7 +130,7 @@ if TYPE_CHECKING:
     from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
     from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-    from ...application.auth import AuthProviderListing
+    from ...application.auth.catalogue import AuthProviderListing
     from ...application.modelo import ModeloWorkLifecycleContinuation
     from ...application.operator_actions import (
         ActionArgumentBinding,

@@ -30,7 +30,7 @@ from textual.containers import ScrollableContainer
 from textual.css.query import NoMatches
 from textual.widgets import Button, Input, Static
 
-from ....application.flows import CopyRef, FlowDefinition, FlowPage, FlowSection
+from ....application.flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 from ....application.user_profile import (
     apply_manager_profile_field_mutation,
     build_profile_overview,

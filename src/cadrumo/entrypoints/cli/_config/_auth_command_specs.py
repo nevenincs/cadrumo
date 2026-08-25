@@ -28,7 +28,7 @@ _INT = ValueContract(DeferredTarget("builtins", "int"))
 _PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 _STR = ValueContract(DeferredTarget("builtins", "str"))
 _OUTPUT_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core", "OutputLanguage"))
-_PHONE_STATE = ValueContract(DeferredTarget("cadrumo.application.auth", "AuthDiagnosticPhoneState"))
+_PHONE_STATE = ValueContract(DeferredTarget("cadrumo.application.auth.diagnostics", "AuthDiagnosticPhoneState"))
 
 
 def _key(value: str) -> TranslationKey:

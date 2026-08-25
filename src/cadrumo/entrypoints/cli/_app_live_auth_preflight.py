@@ -6,7 +6,8 @@ from collections.abc import Callable
 
 import typer
 
-from ...application.auth import LiveAuthPreflightReport, build_live_auth_preflight_report
+from ...application.auth.operator import build_live_auth_preflight_report
+from ...application.auth.operator_results import LiveAuthPreflightReport
 from ...core.redaction import redact_for_cli_output
 
 

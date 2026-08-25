@@ -687,7 +687,7 @@ def _live_iva_evidence_pull_command_timeout_ms(*, year_from: int, year_to: int) 
 def _live_iva_auth_watchdog_context(*, stage: str) -> dict[str, object]:
     """Return redacted local auth-session state for live IVA watchdog diagnostics."""
     try:
-        from ...application.auth import build_live_auth_preflight_report
+        from ...application.auth.operator import build_live_auth_preflight_report
 
         report = build_live_auth_preflight_report()
     except Exception:

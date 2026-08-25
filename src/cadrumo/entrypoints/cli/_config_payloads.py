@@ -21,16 +21,10 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import ConfigDict, Field, field_validator, model_validator
 
-from ...application.auth import (
-    AuthDiagnosticDetail,
-    AuthDiagnosticPhoneState,
-    AuthDiagnosticSummary,
-    AuthLoginResult,
-    AuthProviderListing,
-    AuthStatusResult,
-    AuthTestResult,
-    ProviderProbeResult,
-)
+from ...application.auth.catalogue import AuthProviderListing
+from ...application.auth.diagnostics import AuthDiagnosticDetail, AuthDiagnosticPhoneState, AuthDiagnosticSummary
+from ...application.auth.operator_results import AuthLoginResult, AuthStatusResult, AuthTestResult
+from ...application.auth.probes import ProviderProbeResult
 from ...application.bucket_maintenance import BucketDeletionFingerprint
 from ...application.config_reset import (
     ConfigResetOperationStatus,
@@ -58,7 +52,7 @@ from ...domain.user_profile import ProfileSetupState
 # guard.
 
 if TYPE_CHECKING:
-    from ...application.auth import AuthConfigureResult
+    from ...application.auth.operator_results import AuthConfigureResult
     from ...application.config_reset import ConfigResetOperation
 
 # Shared nested models (not direct CommandSpec schema targets)

@@ -9,7 +9,7 @@ process can honestly reach:
 
 * the non-interactive refusal (a piped caller with outstanding steps), and
 * the substrate's scripted driver
-  (:func:`~cadrumo.application.flows.run_scripted_flow`) walking the wizard's
+  (:func:`~cadrumo.application.flows.scripted.run_scripted_flow`) walking the wizard's
   own discovered steps and projected definition, then feeding those answers
   through the identical ``work calculate`` composition the wizard uses.
 
@@ -27,7 +27,10 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....application.flows import FlowCopyResolutionError, FlowPage, assemble_page_copy, run_scripted_flow
+from ....application.flows.copy import assemble_page_copy
+from ....application.flows.definition import FlowPage
+from ....application.flows.errors import FlowCopyResolutionError
+from ....application.flows.scripted import run_scripted_flow
 from ....application.modelo import modelo_work_wizard_retry_exhausted_precondition
 from ....application.modelo.work_wizard import ModeloWorkWizardStep, open_modelo_work_wizard
 from ....core import ActionConditionality, NoRecoveryOutcome, resolve_active_bucket_id

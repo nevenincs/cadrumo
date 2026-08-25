@@ -12,7 +12,7 @@ exercise the wizard at the surfaces a non-terminal test process can
 honestly reach:
 
 * the substrate's scripted driver
-  (:func:`~cadrumo.application.flows.run_scripted_flow`) walking the
+  (:func:`~cadrumo.application.flows.scripted.run_scripted_flow`) walking the
   wizard's own projected selection and values/kind/reason definitions,
   then feeding those answers through the identical ``work amend``
   composition the wizard uses, and
@@ -37,7 +37,9 @@ from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....adapters.inbound.pdf import source_pdf_reference_path
 from ....adapters.persistence.profile.justificante import JustificanteRepository
-from ....application.flows import FlowAnswerError, FlowPage, run_scripted_flow
+from ....application.flows.definition import FlowPage
+from ....application.flows.errors import FlowAnswerError
+from ....application.flows.scripted import run_scripted_flow
 from ....application.modelo import amendment_evidence_missing_precondition, get_calculation_revision, get_filing_record
 from ....core import (
     STR_KEYED_MAPPING_ADAPTER,
