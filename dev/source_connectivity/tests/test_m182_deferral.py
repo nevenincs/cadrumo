@@ -9,6 +9,7 @@ from cadrumo.application.registry import compose_source_connectivity_coverage
 from cadrumo.application.registry.source_connectivity import load_source_connectivity_census
 from cadrumo.core import BindingSourceKind, RegistryAuthorityGrade
 from cadrumo.core.resources import resources
+from cadrumo.domain.calculations.registry import InputKind
 
 from ..check import (
     SourceConnectivityCheckError,
@@ -66,7 +67,15 @@ def test_m182_remains_measurably_ingress_blocked_until_its_missing_authority_exi
 
 
 def test_m182_deferred_source_has_no_connected_downstream_lifecycle() -> None:
-    """The partial donor carrier cannot form a declaration lifecycle on its own."""
+    """Refuse the partial donor carrier without suppressing direct manual casillas.
+
+    A connected fixture is the only source-connectivity path that exercises
+    encrypted revision persistence, primary provenance, replay, and review.
+    The deferred donor family has neither that fixture nor a calculation-route
+    owner. Its standing diagnostic and refused closure limb therefore remain
+    visible, while the separately declared type-2 manual casillas retain their
+    real direct-entry route.
+    """
     source_kind = BindingSourceKind.DONATIVO_DONOR
     candidate_id = "rows.donativo-donor"
     census = load_source_connectivity_census()
@@ -78,6 +87,14 @@ def test_m182_deferred_source_has_no_connected_downstream_lifecycle() -> None:
         grade=RegistryAuthorityGrade.APPLICABILITY,
     )
 
+    assert snapshot.revision.authority_grade is RegistryAuthorityGrade.APPLICABILITY
+    assert {str(casilla.id) for casilla in snapshot.revision.casillas if casilla.input_kind is InputKind.MANUAL} == {
+        "tipo2.donante-nif",
+        "tipo2.donante-nombre",
+        "tipo2.importe-donado",
+        "tipo2.porcentaje-deduccion",
+        "tipo2.recurrencia",
+    }
     assert any(binding.source is source_kind for binding in snapshot.revision.bindings)
     assert CALCULATION_ROUTE_SOURCE_DISPOSITIONS[source_kind].value == "deferred"
     assert all(source_kind not in owner.owned_sources for owner in CALCULATION_ROUTE_RESOLVER_OWNERSHIP)
