@@ -300,6 +300,7 @@ def test_source_mesh_scopes_m720_prior_baselines_to_the_intended_work_unit_coord
             transaction_repository=None,
             invoice_repository=None,
             foreign_asset_observations=(),
+            foreign_asset_row_observations=(),
         )
         resolution_n2 = _resolve_bucket_source_mesh(
             snapshot_n2,
@@ -307,6 +308,7 @@ def test_source_mesh_scopes_m720_prior_baselines_to_the_intended_work_unit_coord
             transaction_repository=None,
             invoice_repository=None,
             foreign_asset_observations=(),
+            foreign_asset_row_observations=(),
         )
 
     assert work_unit_n1.work_unit_id != work_unit_n2.work_unit_id
