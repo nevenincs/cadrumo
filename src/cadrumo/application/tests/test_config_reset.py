@@ -136,7 +136,7 @@ def _write_active_pointer(root: Path, bucket_id: str) -> None:
 
     write_pointer(
         root,
-        BucketPointer(bucket_id=bucket_id, schema_version=1),
+        BucketPointer.selected(bucket_id=bucket_id, transition_revision=0),
     )
 
 
