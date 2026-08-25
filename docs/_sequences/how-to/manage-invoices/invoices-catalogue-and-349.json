@@ -248,12 +248,19 @@
             "iva-349-declarante-numero-rectificaciones": "0",
             "iva-349-declarante-numero-rectificaciones-adquisicion": "0"
           },
-          "calculation_revision_id": "f144e5b7cbe826ee3e785fe192672cdcfd74b34959fc9419bd6d054ce35669e7",
+          "calculation_revision_id": "b1fb81e8f73a2c32298546f15a87a354286ca7a3a2fc4c2665ae2aa1fb1650e4",
           "casilla_values": {
+            "decl.cambio-periodicidad": "0",
+            "decl.complementaria-sustitutiva": "0",
             "decl.importe-operaciones": "2000.00",
             "decl.importe-rectificaciones": "0",
+            "decl.nif-representante-legal": "0",
+            "decl.numero-identificativo": "0",
+            "decl.numero-identificativo-anterior": "0",
             "decl.numero-operadores": "1",
-            "decl.numero-rectificaciones": "0"
+            "decl.numero-rectificaciones": "0",
+            "sustituto.apellidos-razon-social": "0",
+            "sustituto.nif": "0"
           },
           "created_at": "2026-04-01T09:00:00+00:00",
           "deadline": {
@@ -295,6 +302,44 @@
           "observations": [
             {
               "absent_by_design": false,
+              "casilla_id": "decl.cambio-periodicidad",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-eha-769-2010:art-1",
+                "orden-hac-174-2020:art-1",
+                "ley-58-2003:art-93",
+                "rd-1624-1992:art-81"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-349-2020-current"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "decl.complementaria-sustitutiva",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-eha-769-2010:art-1",
+                "orden-hac-174-2020:art-1",
+                "ley-58-2003:art-93",
+                "rd-1624-1992:art-81"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-349-2020-current"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
               "casilla_id": "decl.importe-operaciones",
               "formula_id": null,
               "legal_refs": [
@@ -328,6 +373,63 @@
               "source_refs": [
                 "aeat-dr-349-2020-current",
                 "aeat-modelo-349-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "decl.nif-representante-legal",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-eha-769-2010:art-1",
+                "orden-hac-174-2020:art-1",
+                "ley-58-2003:art-93",
+                "rd-1624-1992:art-81"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-349-2020-current"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "decl.numero-identificativo",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-eha-769-2010:art-1",
+                "orden-hac-174-2020:art-1",
+                "ley-58-2003:art-93",
+                "rd-1624-1992:art-81"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-349-2020-current"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "decl.numero-identificativo-anterior",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-eha-769-2010:art-1",
+                "orden-hac-174-2020:art-1",
+                "ley-58-2003:art-93",
+                "rd-1624-1992:art-81"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-349-2020-current"
               ],
               "value": "0"
             },
@@ -368,22 +470,62 @@
                 "aeat-modelo-349-procedure"
               ],
               "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "sustituto.apellidos-razon-social",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-eha-769-2010:art-1",
+                "orden-hac-174-2020:art-1",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-349-2020-current"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "sustituto.nif",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-eha-769-2010:art-1",
+                "orden-hac-174-2020:art-1",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-349-2020-current"
+              ],
+              "value": "0"
             }
           ],
           "operation": "modelo.work.calculate",
           "relation_overrides": {},
-          "result_summary": [],
-          "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision f144e5b7cbe826ee3e785fe192672cdcfd74b34959fc9419bd6d054ce35669e7 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 349 --year 2026 --period 02` and re-inspect this one with `aeat app modelo work revision f144e5b7cbe826ee3e785fe192672cdcfd74b34959fc9419bd6d054ce35669e7`.",
-          "source_provenance": [
+          "result_summary": [
             {
-              "binding_source": "collectible_invoice",
-              "dependency_treatment": "",
-              "fingerprint": "sha256:b0582e6ac9a65b6cecb7e11399b2b6d4d541b52e45f58690a3b32ac5f143f5de",
-              "source_kind": "collectible_invoice",
-              "source_ref": "collectible_invoice:5f6226984e838fa553b9647364c5e3199cb833d79c8932072b9a67bc39eabc17"
+              "casilla_id": "decl.numero-operadores",
+              "label": "Total number of intra-Community operators",
+              "role": "key_figure",
+              "value": "1"
+            },
+            {
+              "casilla_id": "decl.importe-operaciones",
+              "label": "Amount of intra-Community transactions",
+              "role": "key_figure",
+              "value": "2000.00"
             }
           ],
+          "saved": true,
+          "saved_confirmation": "Saved as draft calculation revision b1fb81e8f73a2c32298546f15a87a354286ca7a3a2fc4c2665ae2aa1fb1650e4 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 349 --year 2026 --period 02` and re-inspect this one with `aeat app modelo work revision b1fb81e8f73a2c32298546f15a87a354286ca7a3a2fc4c2665ae2aa1fb1650e4`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",

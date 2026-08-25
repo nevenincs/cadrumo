@@ -8,5 +8,7 @@
 aeat app ledger link {transaction_id} --invoice-id {invoice_id}
 @step Confirm the catalogue invoice now records the linked transaction.
 @result aeat --format json app ledger invoice view {invoice_id}
+@expect result.invoice_id == "{invoice_id}"
+@expect result.linked_transaction_ids[0] == "{transaction_id}"
 @expect result.operation_type == "E"
 @expect exit_code == 0

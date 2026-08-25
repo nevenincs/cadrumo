@@ -3,5 +3,6 @@
 @capture invoice_id result.invoice_id
 @step Remove the unlinked catalogue invoice.
 @result aeat --format json app ledger invoice remove {invoice_id} --yes
+@expect result.invoice_id == "{invoice_id}"
 @expect result.invoice_number == "EU-CAT-099"
 @expect exit_code == 0

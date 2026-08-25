@@ -8,5 +8,6 @@
 aeat app ledger attach {transaction_id} --purchase-invoice-evidence-id {evidence_id}
 @step Confirm the transaction now carries the purchase-invoice evidence.
 @result aeat --format json app ledger view {transaction_id}
+@expect result.transaction.transaction_id == "{transaction_id}"
 @expect result.transaction.purchase_invoice_evidence_id == "{evidence_id}"
 @expect exit_code == 0
