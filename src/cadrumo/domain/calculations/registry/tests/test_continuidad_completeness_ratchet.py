@@ -84,6 +84,10 @@ _MIN_DIRECTORIES = 40
 #: +1,066 is newly authored export-schema and casilla content arriving
 #: un-reviewed, which is the arm the gate's own message calls legitimate.
 _UNGROUNDED_BASELINE: dict[str, int] = {
+    # `d2809391b7` split Modelo 038 at the grounded June 2024 boundary. The
+    # two repeated groups belong to that newly authored split and remain
+    # unreviewed; no source has yet adjudicated their continuity identities.
+    "038": 2,
     "100": 1518,
     "123": 8,
     "131": 10,
@@ -95,6 +99,10 @@ _UNGROUNDED_BASELINE: dict[str, int] = {
     "185": 2,
     "190": 70,
     "193": 52,
+    # `8824172d83` split Modelo 194 into the published 2019, 2023, and 2024
+    # revisions. These five repeated groups are the split's unreviewed backlog,
+    # not a missing stamp on a previously grounded chain.
+    "194": 5,
     "202": 13,
     # Split at devengos from 2026 (AEAT record design "a partir del
     # 01-01-2026"): the later half repeats the earlier half's casilla ids,
@@ -115,6 +123,12 @@ _UNGROUNDED_BASELINE: dict[str, int] = {
     "490": 477,
     "604": 42,
     "714": 111,
+    # `0598215cab` split Modelo 721 into 2023 and 2024 revisions, and
+    # `5ccbc15a69` split Modelo 763 into its six published revisions. Their
+    # repeated groups are explicitly recorded as unreviewed backlog until
+    # official evidence adjudicates continuity; no continuidad_id is inferred.
+    "721": 7,
+    "763": 2,
 }
 
 
