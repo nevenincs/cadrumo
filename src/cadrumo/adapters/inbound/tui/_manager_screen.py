@@ -46,12 +46,10 @@ from ....core.i18n import tr
 from ....entrypoints.tui.components.theme import (
     BASE_CSS,
     NOTICE_BAND_CSS,
-    ContentDataTable,
-    ContentScroll,
-    NoticeBand,
     install_cadrumo_themes,
     toggle_appearance,
 )
+from ....entrypoints.tui.components.widgets import ContentDataTable, ContentScroll, NoticeBand
 from ._field_edit_screen import FieldEditScreen
 from ._form_screen import FormScreen, presenting_forms_through
 from ._status_bar import PinnedStatusBar

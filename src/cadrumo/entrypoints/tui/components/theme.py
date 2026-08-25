@@ -9,20 +9,13 @@ Reusable Textual widgets that consume these tokens live in
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Final, override
+from typing import TYPE_CHECKING, Final
 
-from textual.app import ComposeResult
-from textual.containers import Vertical, VerticalScroll
-from textual.geometry import Size
 from textual.theme import Theme
-from textual.widgets import DataTable, Static
 
 from ....core.config import TuiAppearance
-from ....core.json_contract import Notice, NoticeSeverity, ResolvedNoticeAction
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-
     from textual.app import App
 
 
@@ -168,63 +161,6 @@ NOTICE_BAND_CSS: Final[str] = """
     .cadrumo-notice-warning { color: $warning; text-style: bold; }
     .cadrumo-notice-action { color: $text-muted; margin: 0 0 1 2; }
 """
-"""Styling for :class:`NoticeBand`; severity is also rendered as a glyph."""
-
-
-class ContentScroll(VerticalScroll, can_focus=False):
-    """The scroll host every Cadrumo surface puts its content column in."""
-
-
-class ContentDataTable[CellType](DataTable[CellType]):
-    """A table that expands to its rows inside the shared scroll host."""
-
-    def watch_virtual_size(self, size: Size) -> None:
-        """Keep the layout box equal to the current rows and header."""
-        self.styles.height = max(1, size.height)
-
-
-_NOTICE_GLYPH: Final[dict[NoticeSeverity, str]] = {
-    NoticeSeverity.INFO: "ⓘ",
-    NoticeSeverity.WARNING: "⚠",
-}
-
-
-def _notice_action_target(notice: Notice) -> str | None:
-    """Return the typed executable target supplied by a notice producer."""
-    action = notice.action
-    if not isinstance(action, ResolvedNoticeAction) or action.action.cli_path is None or action.argument_bindings:
-        return None
-    return "aeat " + " ".join(action.action.cli_path)
-
-
-class NoticeBand(Vertical, can_focus=False):
-    """Render already-resolved notices without adding interaction state."""
-
-    def __init__(self, notices: Sequence[Notice], *, id: str | None = None) -> None:
-        """Store the immutable notice projection for rendering."""
-        super().__init__(id=id)
-        self._notices = tuple(notices)
-
-    @override
-    def compose(self) -> ComposeResult:
-        for index, notice in enumerate(self._notices):
-            glyph = _NOTICE_GLYPH.get(notice.severity, "•")
-            yield Static(
-                f"{glyph} {notice.message}",
-                classes=f"cadrumo-notice cadrumo-notice-{notice.severity.value}",
-                id=f"notice-{index}",
-                markup=False,
-            )
-            action_target = _notice_action_target(notice)
-            if action_target is not None:
-                yield Static(
-                    action_target,
-                    classes="cadrumo-notice-action",
-                    id=f"notice-{index}-action",
-                    markup=False,
-                )
-
-
 def resolve_theme_name(appearance: TuiAppearance, *, host_prefers_dark: bool = True) -> str:
     """Return the registered theme name for an operator appearance choice."""
     if appearance is TuiAppearance.LIGHT:
@@ -265,9 +201,6 @@ __all__ = [
     "CADRUMO_THEMES",
     "CONTENT_WIDTH_PERCENT",
     "NOTICE_BAND_CSS",
-    "ContentDataTable",
-    "ContentScroll",
-    "NoticeBand",
     "install_cadrumo_themes",
     "resolve_theme_name",
     "toggle_appearance",

@@ -38,11 +38,10 @@ from textual.widgets import Button, DataTable, Footer, Input, Label, OptionList,
 from ....core.i18n import tr
 from ....entrypoints.tui.components.theme import (
     BASE_CSS,
-    ContentDataTable,
-    ContentScroll,
     install_cadrumo_themes,
     toggle_appearance,
 )
+from ....entrypoints.tui.components.widgets import ContentDataTable, ContentScroll
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator, Mapping, Sequence

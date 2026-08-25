@@ -33,8 +33,8 @@ from textual.widgets import Button, DataTable, Input, Static
 from cadrumo.entrypoints.tui.components.theme import (
     CADRUMO_DARK_THEME_NAME,
     CADRUMO_LIGHT_THEME_NAME,
-    ContentScroll,
 )
+from cadrumo.entrypoints.tui.components.widgets import ContentScroll
 
 from .....application.flows import CopyRef, FlowDefinition, FlowPage, FlowSection
 from .....application.user_profile import (

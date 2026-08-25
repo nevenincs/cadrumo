@@ -31,9 +31,9 @@ from textual.widgets import Button, DataTable, Input, Label, OptionList, Progres
 from cadrumo.entrypoints.tui.components.theme import (
     CADRUMO_DARK_THEME_NAME,
     CADRUMO_LIGHT_THEME_NAME,
-    ContentScroll,
     install_cadrumo_themes,
 )
+from cadrumo.entrypoints.tui.components.widgets import ContentScroll
 
 from .....application.flows import (
     CopyRef,

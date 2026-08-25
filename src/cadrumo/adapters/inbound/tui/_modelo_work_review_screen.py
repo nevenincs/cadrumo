@@ -43,11 +43,10 @@ from ....domain.modelos import (
 )
 from ....entrypoints.tui.components.theme import (
     BASE_CSS,
-    ContentDataTable,
-    ContentScroll,
     install_cadrumo_themes,
     toggle_appearance,
 )
+from ....entrypoints.tui.components.widgets import ContentDataTable, ContentScroll
 
 _PRESENT = "present"
 _ABSENT = "absent"
