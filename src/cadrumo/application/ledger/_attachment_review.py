@@ -13,7 +13,7 @@ from ...domain.attachments import Attachment, AttachmentSource, AttachmentStoreP
 
 __all__ = ["AttachmentReviewItem", "get_attachment_review_item", "list_attachment_review_queue"]
 
-_DRIVE_FILE_ID_RE: Final[re.Pattern[str]] = re.compile(r"[A-Za-z0-9_-]{10,}")
+_DRIVE_FILE_ID_RE: Final[re.Pattern[str]] = re.compile(r"[A-Za-z0-9_-]{25,}")
 
 
 class AttachmentReviewItem(BaseModel):
