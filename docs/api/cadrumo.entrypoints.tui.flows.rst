@@ -14,7 +14,3 @@ Submodules
    :maxdepth: 4
 
    cadrumo.entrypoints.tui.flows.app
-   cadrumo.entrypoints.tui.flows.confirm_screen
-   cadrumo.entrypoints.tui.flows.question_screen
-   cadrumo.entrypoints.tui.flows.review_screen
-   cadrumo.entrypoints.tui.flows.select

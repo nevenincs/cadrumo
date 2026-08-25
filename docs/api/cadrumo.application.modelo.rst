@@ -117,10 +117,9 @@ Submodules
    cadrumo.application.modelo._work_create_policy
    cadrumo.application.modelo._work_lifecycle
    cadrumo.application.modelo._work_plazo
-   cadrumo.application.modelo._work_review
-   cadrumo.application.modelo._work_review_projection
    cadrumo.application.modelo._workflow_gate
    cadrumo.application.modelo._workspace_manifest
    cadrumo.application.modelo._workspace_models
    cadrumo.application.modelo._workspace_producers
+   cadrumo.application.modelo.work_review_projection
    cadrumo.application.modelo.work_wizard
