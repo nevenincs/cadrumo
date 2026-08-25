@@ -21,9 +21,7 @@ def test_modelo_182_deadline_is_owned_only_by_the_evidenced_2025_revision() -> N
     assert tuple(window.id for window in revision.deadline_windows) == ("modelo-182-2025-0a",)
     window = revision.deadline_windows[0]
     assert (window.filing_year, window.period.registry_token) == (2025, "0A")
-    snapshot = authority.snapshot(
-        "182", filing_year=2025, period="0A", grade=revision.effective_authority_grade
-    )
+    snapshot = authority.snapshot("182", filing_year=2025, period="0A", grade=revision.effective_authority_grade)
     assert snapshot.revision.id == "2025"
     assert tuple(item[2].id for item in authority.deadline_windows(2025, modelos=("182",))) == (window.id,)
 

@@ -819,6 +819,7 @@ def test_create_recovery_refuses_a_label_claimed_while_its_real_stage_waited(tmp
         sentinel=sentinel,
         data_files=data_files,
         label="CRASH LABEL",
+        publication_kind="restore",
         now=_INSTANT,
     )
 

@@ -1,8 +1,8 @@
 """Nothing removes a deletion tombstone without verifying it first.
 
-``remove_profile_custody_deletion_tombstone`` deletes a directory tree. The
+``remove_deletion_tombstone`` deletes a directory tree. The
 adapter-level guards that decide WHICH tree may be destroyed live in
-``verify_profile_custody_deletion_tombstone``, and they are only worth anything
+``verify_deletion_tombstone``, and they are only worth anything
 if the removal is actually preceded by that verification on the live path.
 
 That ordering is the whole protection, and it is invisible to the adapter tests:
@@ -27,22 +27,22 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_REMOVE = "remove_profile_custody_deletion_tombstone"
-_VERIFY = "verify_profile_custody_deletion_tombstone"
+_REMOVE = "remove_deletion_tombstone"
+_VERIFY = "verify_deletion_tombstone"
 
 #: The application package whose delete flow owns the ordering.
 _PACKAGE = Path(__file__).resolve().parents[1]
 
 #: A delete step that destroys without checking, used to prove the detector.
 _UNGUARDED_SAMPLE = (
-    "def remove_step(self):\n    self._adapters.remove_profile_custody_deletion_tombstone(profile_id=1)\n"
+    "def remove_step(self):\n    self._adapters.remove_deletion_tombstone(profile_id=1)\n"
 )
 
 #: The same step with the verification restored ahead of it.
 _GUARDED_SAMPLE = (
     "def remove_step(self):\n"
-    "    self._adapters.verify_profile_custody_deletion_tombstone(profile_id=1)\n"
-    "    self._adapters.remove_profile_custody_deletion_tombstone(profile_id=1)\n"
+    "    self._adapters.verify_deletion_tombstone(profile_id=1)\n"
+    "    self._adapters.remove_deletion_tombstone(profile_id=1)\n"
 )
 
 

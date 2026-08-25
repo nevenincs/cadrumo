@@ -300,6 +300,7 @@ if TYPE_CHECKING:
     )
     from ._censal_operation import CensalReviewResponse as CensalReviewResponse
     from ._censal_operation import build_censal_operation_definition as build_censal_operation_definition
+    from ._censal_operation import build_censal_operation_registration as build_censal_operation_registration
     from ._censal_operation import build_censal_operation_request as build_censal_operation_request
     from ._censo_errors import (
         CensoSyncError as CensoSyncError,
@@ -422,7 +423,13 @@ if TYPE_CHECKING:
         ProfileCustodyBucketEventHistoryPort as ProfileCustodyBucketEventHistoryPort,
     )
     from ._custody_ports import (
+        ProfileCustodyCapsuleLabelPort as ProfileCustodyCapsuleLabelPort,
+    )
+    from ._custody_ports import (
         ProfileCustodyCapsuleSourceMaterial as ProfileCustodyCapsuleSourceMaterial,
+    )
+    from ._custody_ports import (
+        ProfileCustodyCommitPort as ProfileCustodyCommitPort,
     )
     from ._custody_ports import (
         ProfileCustodyEnvelopePort as ProfileCustodyEnvelopePort,
@@ -700,6 +707,12 @@ if TYPE_CHECKING:
     from ._overview import (
         MASKED_PLACEHOLDER as MASKED_PLACEHOLDER,
     )
+    from ._operation_definitions import (
+        build_user_profile_operation_definitions as build_user_profile_operation_definitions,
+    )
+    from ._operation_definitions import (
+        build_user_profile_operation_registrations as build_user_profile_operation_registrations,
+    )
     from ._overview import (
         ProfileFieldChoice as ProfileFieldChoice,
     )
@@ -911,7 +924,9 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfileCapsuleArchiveContentsMaterial": "._custody_ports",
     "ProfileCapsuleArchiveHeaderMaterial": "._custody_ports",
     "ProfileCustodyBucketEventHistoryPort": "._custody_ports",
+    "ProfileCustodyCapsuleLabelPort": "._custody_ports",
     "ProfileCustodyCapsuleSourceMaterial": "._custody_ports",
+    "ProfileCustodyCommitPort": "._custody_ports",
     "ProfileCustodyInventoryPort": "._custody_ports",
     "ProfileCustodyRecordSessionMaterial": "._custody_ports",
     "ProfileCustodyPasswordProofMaterialPort": "._custody_ports",
@@ -1261,7 +1276,9 @@ __all__ = [
     "ProfileCapsuleSource",
     "ProfileCapsuleSourceError",
     "ProfileCustodyBucketEventHistoryPort",
+    "ProfileCustodyCapsuleLabelPort",
     "ProfileCustodyCapsuleSourceMaterial",
+    "ProfileCustodyCommitPort",
     "ProfileCustodyDeleteConfirmation",
     "ProfileCustodyEnvelopePort",
     "ProfileCustodyHoldAssessment",

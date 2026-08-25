@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator, Mapping
 from contextlib import AbstractContextManager, contextmanager
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
-from typing import NoReturn
+from typing import Literal, NoReturn
 from uuid import UUID
 
 from ....application.user_profile import (
@@ -15,6 +15,7 @@ from ....application.user_profile import (
     ProfileCapsuleArchiveContentsMaterial,
     ProfileCapsuleArchiveHeaderMaterial,
     ProfileCustodyBucketEventHistoryPort,
+    ProfileCustodyCapsuleLabelPort,
     ProfileCustodyCapsuleSourceMaterial,
     ProfileCustodyEnvelopePort,
     ProfileCustodyInventoryPort,
@@ -264,6 +265,168 @@ class _PersistenceProfileCustody:
         root: Path | None = None,
     ) -> ProfileCustodyInventoryPort:
         return custody.inventory_committed_profile_custody_capsule(profile_id, root=root)
+
+    def create_capsule_label(self, *, profile_id: UUID, label: str) -> ProfileCustodyCapsuleLabelPort:
+        return custody.ProfileCustodyCapsuleLabel.create(profile_id=profile_id, label=label)
+
+    def staging_path(self, *, profile_id: UUID, transaction_id: UUID, root: Path) -> Path:
+        return custody.profile_custody_staging_path(
+            profile_id=profile_id,
+            transaction_id=transaction_id,
+            root=root,
+        )
+
+    def deletion_path(self, *, profile_id: UUID, transaction_id: UUID, root: Path) -> Path:
+        return custody.profile_custody_deletion_path(
+            profile_id=profile_id,
+            transaction_id=transaction_id,
+            root=root,
+        )
+
+    def committed_capsule_path(self, profile_id: UUID, *, root: Path) -> Path | None:
+        return custody.recognize_current_profile_capsule(profile_id, root=root)
+
+    def list_committed_profile_ids(self, *, root: Path) -> tuple[UUID, ...]:
+        return custody.list_current_profile_custody_capsule_ids(root=root)
+
+    def load_committed_capsule_label(self, profile_id: UUID, *, root: Path) -> ProfileCustodyCapsuleLabelPort:
+        return custody.load_committed_profile_custody_label_record(profile_id, root=root)
+
+    def load_staged_capsule_label(
+        self,
+        profile_id: UUID,
+        transaction_id: UUID,
+        *,
+        root: Path,
+    ) -> ProfileCustodyCapsuleLabelPort:
+        return custody.load_staged_profile_custody_label_record(
+            profile_id,
+            transaction_id,
+            root=root,
+        )
+
+    def stage_capsule(
+        self,
+        *,
+        profile_id: UUID,
+        transaction_id: UUID,
+        publication_kind: Literal["enroll", "restore"],
+        password_envelope: ProfileCustodyEnvelopePort,
+        sentinel: ProfileCustodySentinelPort,
+        data_files: Mapping[str, bytes],
+        label_record: ProfileCustodyCapsuleLabelPort,
+        recovery_envelope: ProfileCustodyRecoveryEnvelopePort | None,
+        root: Path,
+        published_at: datetime,
+        stage_initializer: Callable[[Path], None] | None,
+    ) -> Path:
+        return custody.publish_profile_custody_capsule(
+            profile_id=profile_id,
+            transaction_id=transaction_id,
+            publication_kind=publication_kind,
+            password_envelope=_substrate_handle(
+                password_envelope,
+                custody.ProfileCustodyEnvelope,
+                "password envelope",
+            ),
+            sentinel=_substrate_handle(sentinel, custody.ProfileCustodySentinelRecord, "DEK sentinel"),
+            data_files={
+                **data_files,
+                custody.PROFILE_CUSTODY_LABEL_FILENAME: label_record.canonical_json_bytes(),
+            },
+            recovery_envelope=(
+                None
+                if recovery_envelope is None
+                else _substrate_handle(
+                    recovery_envelope,
+                    custody.ProfileCustodyRecoveryEnvelope,
+                    "recovery envelope",
+                )
+            ),
+            root=root,
+            published_at=published_at,
+            stage_only=True,
+            stage_initializer=stage_initializer,
+        )
+
+    def inventory_staged(
+        self,
+        *,
+        profile_id: UUID,
+        transaction_id: UUID,
+        root: Path,
+    ) -> ProfileCustodyInventoryPort:
+        return custody.inventory_staged_profile_custody_capsule(
+            profile_id=profile_id,
+            transaction_id=transaction_id,
+            root=root,
+        )
+
+    def publish_staged(self, *, profile_id: UUID, transaction_id: UUID, root: Path) -> Path:
+        return custody.publish_staged_profile_custody_capsule(
+            profile_id=profile_id,
+            transaction_id=transaction_id,
+            root=root,
+        )
+
+    def write_deletion_marker(
+        self,
+        *,
+        profile_id: UUID,
+        transaction_id: UUID,
+        inventory_digest: str,
+        root: Path,
+    ) -> None:
+        custody.write_profile_custody_deletion_marker(
+            profile_id=profile_id,
+            transaction_id=transaction_id,
+            inventory_digest=inventory_digest,
+            root=root,
+        )
+
+    def verify_deletion_marker(
+        self,
+        *,
+        profile_id: UUID,
+        transaction_id: UUID,
+        inventory_digest: str,
+        root: Path,
+    ) -> None:
+        custody.verify_profile_custody_deletion_marker(
+            profile_id=profile_id,
+            transaction_id=transaction_id,
+            inventory_digest=inventory_digest,
+            root=root,
+        )
+
+    def verify_deletion_tombstone(
+        self,
+        *,
+        profile_id: UUID,
+        transaction_id: UUID,
+        inventory_digest: str,
+        root: Path,
+    ) -> None:
+        custody.verify_profile_custody_deletion_tombstone(
+            profile_id=profile_id,
+            transaction_id=transaction_id,
+            inventory_digest=inventory_digest,
+            root=root,
+        )
+
+    def rename_capsule_for_deletion(self, *, profile_id: UUID, transaction_id: UUID, root: Path) -> Path:
+        return custody.rename_profile_custody_capsule_for_deletion(
+            profile_id=profile_id,
+            transaction_id=transaction_id,
+            root=root,
+        )
+
+    def remove_deletion_tombstone(self, *, profile_id: UUID, transaction_id: UUID, root: Path) -> None:
+        custody.remove_profile_custody_deletion_tombstone(
+            profile_id=profile_id,
+            transaction_id=transaction_id,
+            root=root,
+        )
 
     def bucket_storage(self) -> ProfileBucketStoragePort:
         return _PersistenceProfileBucketStorage()

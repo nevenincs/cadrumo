@@ -54,6 +54,7 @@ from cadrumo.adapters.persistence.storage import master_key
 from cadrumo.application.user_profile import close_profile_session_artefacts, register_profile_with_credentials
 from cadrumo.core.config import DEV_TEST_DATABASE_PASSWORD
 from cadrumo.tests import temporary_env
+from cadrumo.tests.profile_persistence import composed_profile_persistence_ports
 
 from .._call_runtime import tier_for
 from .._dispatch import tool_name_for_command
@@ -193,11 +194,14 @@ def _provisioned_profile_env(tmp_path: Path) -> Iterator[None]:
     the warm runtime then starts against that real encrypted state. Both resolve
     the same environment-backed storage and secret-store configuration.
     """
-    with temporary_env(
-        CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path / "storage"),
-        CADRUMO_SECRET_STORE_BACKEND="auto",  # noqa: S106 - env var name, not a credential
-        CADRUMO_SECRET_STORE_DIR=str(tmp_path / "fallback-store"),
-        CADRUMO_SECRET_PASSPHRASE=DEV_TEST_DATABASE_PASSWORD,
+    with (
+        temporary_env(
+            CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path / "storage"),
+            CADRUMO_SECRET_STORE_BACKEND="auto",  # noqa: S106 - env var name, not a credential
+            CADRUMO_SECRET_STORE_DIR=str(tmp_path / "fallback-store"),
+            CADRUMO_SECRET_PASSPHRASE=DEV_TEST_DATABASE_PASSWORD,
+        ),
+        composed_profile_persistence_ports(),
     ):
         created = register_profile_with_credentials(
             label="operator",

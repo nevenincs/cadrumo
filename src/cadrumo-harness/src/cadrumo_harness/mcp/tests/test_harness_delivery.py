@@ -33,6 +33,7 @@ from cadrumo.application.user_profile import (
     profile_bind_bucket_session,
     register_profile_with_credentials,
 )
+from cadrumo.tests.profile_persistence import composed_profile_persistence_ports
 
 from ... import iter_operator_rules, iter_personas, iter_skill_documents, operator_rules_text
 from .._harness_tools import (
@@ -281,7 +282,10 @@ def test_whoami_identity_resolves_the_active_profile_label(tmp_path: Any) -> Non
     """The identity probe reads an explicitly authenticated current capsule."""
     from cadrumo.tests.secure_sql import isolated_profile_storage_root
 
-    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
+        composed_profile_persistence_ports(),
+    ):
         outcome = register_profile_with_credentials(
             recovery_handover=verify_recovery_handover,
             label="Erika",
@@ -368,7 +372,10 @@ def test_whoami_tool_call_returns_the_active_profile_label(tmp_path: Any) -> Non
             build_server(descriptors)
         return
 
-    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
+        composed_profile_persistence_ports(),
+    ):
         outcome = register_profile_with_credentials(
             recovery_handover=verify_recovery_handover,
             label="Erika",
@@ -409,7 +416,10 @@ def test_floor_response_carries_the_active_identity_block(tmp_path: Any) -> None
             build_server(descriptors)
         return
 
-    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
+        composed_profile_persistence_ports(),
+    ):
         outcome = register_profile_with_credentials(
             recovery_handover=verify_recovery_handover,
             label="Erika",

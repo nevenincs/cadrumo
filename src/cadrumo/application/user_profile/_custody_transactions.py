@@ -18,7 +18,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError, field_validator, model_validator
 
-from ...adapters.persistence.storage.custody import read_profile_custody_local_record
 from ...core import (
     STRICT_FROZEN_CONFIG,
 )
@@ -36,7 +35,7 @@ from ._custody_hold_models import (
     ProfileCustodyRetentionOverride,
 )
 from ._custody_pointer import ProfileCustodyPointerSnapshot
-from ._custody_ports import ProfileCustodyInventoryPort
+from ._custody_ports import ProfileCustodyInventoryPort, default_profile_custody_local_record_store
 
 CUSTODY_TRANSACTION_SCHEMA_VERSION = 1
 CUSTODY_TRANSACTION_MAX_BYTES = 16 * 1024
@@ -153,7 +152,7 @@ def read_profile_custody_record(path: Path, *, maximum_bytes: int, subject: str)
     if not os.path.lexists(path):
         raise ProfileCustodyTransactionConflictError(f"{subject} is absent")
     try:
-        return read_profile_custody_local_record(path, maximum_bytes=maximum_bytes)
+        return default_profile_custody_local_record_store().read(path, maximum_bytes=maximum_bytes)
     except Exception as exc:
         raise ProfileCustodyTransactionCorruptError(f"{subject} cannot be opened") from exc
 
