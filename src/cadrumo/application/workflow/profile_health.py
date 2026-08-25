@@ -54,9 +54,9 @@ from ..operator_actions import (
 )
 from ..profile_preconditions import inspect_active_profile_precondition, profile_session_failure_verdict
 from ..user_profile.keys_validation import list_profile_key_records, validate_profile_values
+from ..user_profile.profile_pointer import active_profile_pointer_transaction
 from ..user_profile.profile_record_repository import profile_record_session_if_authenticated
 from ..user_profile.projections import record_to_path_values
-from ..user_profile.profile_pointer import active_profile_pointer_transaction
 from .persistence import workflow_state_repository
 from .profile_bucket_scan import list_profile_buckets, resolve_profile_bucket
 from .state_models import WorkflowState
