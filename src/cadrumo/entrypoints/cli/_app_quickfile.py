@@ -21,7 +21,10 @@ from pathlib import Path
 
 import typer
 
-from ...application.modelo import QuickfileCommand, run_modelo_quickfile
+from ...application.modelo._quickfile import (
+    QuickfileCommand,
+    run_modelo_quickfile,
+)
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from ...core import OutputLanguage, PaymentElection, Period, PeriodError, PriorDomiciliationElection, RefundElection
 from ...core.i18n import tr
@@ -177,7 +180,10 @@ def _quickfile_notices(result) -> list[Notice]:
     notices so the operator sees the exact blocking findings and their next
     actions, identical to what ``aeat app modelo work verify`` would surface.
     """
-    from ...application.modelo import QuickfileStage, QuickfileStageStatus
+    from ...application.modelo._quickfile import (
+        QuickfileStage,
+        QuickfileStageStatus,
+    )
 
     notices: list[Notice] = []
     for outcome in result.stages:

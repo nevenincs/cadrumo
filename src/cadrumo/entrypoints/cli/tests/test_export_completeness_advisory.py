@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.modelo import ModeloExportResult
+from ....application.modelo._export import ModeloExportResult
 from ....core import Period
 from ....core.json_contract import NoticeSeverity
 from .._modelo_export_cli import _export_notices

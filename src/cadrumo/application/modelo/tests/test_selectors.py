@@ -31,7 +31,6 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import create_work_unit
 from .._action_errors import CalculationRevisionStateError
 from .._selectors import (
     ModeloCalculationRevisionSelector,
@@ -42,6 +41,7 @@ from .._selectors import (
     select_exportable_revision,
     select_modelo_calculation_revision,
 )
+from .._work_lifecycle import create_work_unit
 from ..work_addressing import (
     ModeloWorkAddress,
     ModeloWorkRevisionConflictError,
@@ -366,6 +366,22 @@ def test_strict_work_unit_id_selector_refuses_operator_display_handles() -> None
         ModeloWorkSelectorRequest(work_unit_id="a" * 12)
     with pytest.raises(ValidationError, match="operator_work_unit_id"):
         ModeloWorkSelectorRequest(operator_work_unit_id="a")
+    with pytest.raises(ValidationError, match="operator_work_unit_id"):
+        ModeloWorkSelectorRequest(operator_work_unit_id="a" * 64)
+
+
+def test_selector_defends_the_operator_only_twelve_character_boundary(
+    work_repo: WorkUnitCatalogueRepository,
+) -> None:
+    """Even a validation-bypassing request cannot turn a full id into a prefix lookup."""
+    unit = _seed_work_unit(work_repo)
+
+    with pytest.raises(ModeloWorkSelectorContradictionError):
+        select_modelo_work_resolution(
+            ModeloWorkSelectorRequest.model_construct(operator_work_unit_id=unit.work_unit_id),
+            catalogue=work_repo.load(),
+            bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID,
+        )
 
 
 def test_explicit_work_unit_id_validates_supplied_natural_key_flags(work_repo: WorkUnitCatalogueRepository) -> None:
@@ -685,15 +701,32 @@ def test_addressed_revision_policy_resolvers_enforce_command_specific_state(
     wu_repo.save(upsert_work_unit(wu_repo.load(), current_draft))
     address = ModeloWorkAddress(modelo="130", filing_year=2026, period=_P_2026_1T)
 
-    assert resolve_verifiable_modelo_calculation_revision_address(address=address) == draft
+    catalogue = wu_repo.load()
+    assert (
+        resolve_verifiable_modelo_calculation_revision_address(
+            address=address,
+            catalogue=catalogue,
+            resolved_bucket_id=work_unit.bucket_id,
+        )
+        == draft
+    )
     assert (
         resolve_fileable_modelo_calculation_revision_address(
             address=address,
             selector=ModeloCalculationRevisionSelector.LATEST_VERIFIED,
+            catalogue=catalogue,
+            resolved_bucket_id=work_unit.bucket_id,
         )
         == verified
     )
-    assert resolve_exportable_modelo_calculation_revision_address(address=address) == filed
+    assert (
+        resolve_exportable_modelo_calculation_revision_address(
+            address=address,
+            catalogue=catalogue,
+            resolved_bucket_id=work_unit.bucket_id,
+        )
+        == filed
+    )
 
     # The verify resolver no longer gates state: an explicitly-addressed verified
     # revision is returned (not refused) so verify_modelo_revision can collapse it
@@ -702,6 +735,8 @@ def test_addressed_revision_policy_resolvers_enforce_command_specific_state(
         resolve_verifiable_modelo_calculation_revision_address(
             address=ModeloWorkAddress(),
             calculation_revision_id=verified.calculation_revision_id,
+            catalogue=catalogue,
+            resolved_bucket_id=work_unit.bucket_id,
         )
         == verified
     )
@@ -709,6 +744,8 @@ def test_addressed_revision_policy_resolvers_enforce_command_specific_state(
         resolve_fileable_modelo_calculation_revision_address(
             address=address,
             selector=ModeloCalculationRevisionSelector.LATEST_DRAFT,
+            catalogue=catalogue,
+            resolved_bucket_id=work_unit.bucket_id,
         )
     failure = raised.value.precondition_failure
     assert failure is not None

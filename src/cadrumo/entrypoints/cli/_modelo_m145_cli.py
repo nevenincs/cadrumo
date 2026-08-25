@@ -27,7 +27,7 @@ from __future__ import annotations
 import typer
 
 from ...adapters.outbound.aeat.export import RegistryFixedWidthRecordRenderer
-from ...application.modelo import (
+from ...application.modelo._m145_communication_records import (
     M145CommunicationPeriod,
     create_m145_communication_record,
     export_m145_communication_record,

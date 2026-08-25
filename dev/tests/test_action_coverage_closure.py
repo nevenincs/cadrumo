@@ -13,7 +13,7 @@ from dataclasses import dataclass, replace
 
 import pytest
 
-from cadrumo.application.modelo import MODELO_PRECONDITION_PROFILES
+from cadrumo.application.modelo._preconditions import MODELO_PRECONDITION_PROFILES
 from cadrumo.application.modelo._preconditions import build_modelo_precondition_failure_for_scenario
 from cadrumo.application.operator_actions import OPERATOR_ACTION_CATALOGUE, ActionCatalogue
 from cadrumo.application.operator_surface import (

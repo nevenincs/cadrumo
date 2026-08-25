@@ -24,7 +24,7 @@ from ....adapters.outbound.aeat.export import RegistryFixedWidthRecordRenderer
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
+from .._m145_communication_records import (
     M145CommunicationCreateCommand,
     create_m145_communication_record,
     export_m145_communication_record,

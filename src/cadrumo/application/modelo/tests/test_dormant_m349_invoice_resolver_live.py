@@ -18,11 +18,11 @@ from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus, derive_invoice_id
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
+from .._calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-    create_work_unit,
 )
+from .._work_lifecycle import create_work_unit
 from ._dormant_resolver_live_support import _T0, _T1, _revision, _seed_ready_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

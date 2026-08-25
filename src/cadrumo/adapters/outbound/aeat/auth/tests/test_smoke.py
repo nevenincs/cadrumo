@@ -5,9 +5,9 @@ import inspect
 
 import pytest
 
+from ......core.errors import AuthError
 from ..authenticator import AeatAuthenticator
 from ..clave_movil import ClaveMovilAuthProvider
-from ..errors import AuthError
 from ..provider_selection import select_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

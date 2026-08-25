@@ -104,7 +104,7 @@ def config_status(
         )
         emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
         return
-    from ....application.modelo import modelo_work_profile_baseline_missing_paths
+    from ....application.modelo._profile_readiness_gate import modelo_work_profile_baseline_missing_paths
 
     if modelo_work_profile_baseline_missing_paths(record):
         result, blocked_lines = blocked_readiness_status(

@@ -568,7 +568,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.auth.errors.AuthError",
+        "cadrumo.core.errors.AuthError",
         ErrorCode(
             code="AUTH_AUTH",
             category=ErrorCategory.AUTH,

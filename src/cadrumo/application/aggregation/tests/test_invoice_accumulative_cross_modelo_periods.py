@@ -78,11 +78,9 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import CalculationObservationRepository, IvaWalletDecisionRepository
 from ...invoices import build_catalogue_invoice, link_invoice_transaction_catalogues
-from ...modelo import (
-    calculate_modelo_revision_from_bucket_aggregation,
-    create_work_unit,
-    persist_filed_revision_observation,
-)
+from ...modelo._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
+from ...modelo._filed_revision_observation import persist_filed_revision_observation
+from ...modelo._work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

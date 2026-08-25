@@ -4,15 +4,14 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.application.user_profile.completeness import conditional_profile_missing_required
-from cadrumo.application.user_profile.keys_validation import validate_profile_values
-from cadrumo.application.user_profile.preflight import ProfilePreflightService
-from cadrumo.application.user_profile.validation import ProfileValidationService
-
 from ....core import Period
 from ....core.resources import resources
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ...wizard import compiler as _wizard  # noqa: F401 - registers compiled profile keys
+from ..completeness import conditional_profile_missing_required
+from ..keys_validation import validate_profile_values
+from ..preflight import ProfilePreflightService
+from ..validation import ProfileValidationService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

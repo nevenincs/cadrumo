@@ -15,12 +15,12 @@ from ...calculations import (
     CalculationObservationRepository,
     reconcile_modelo_303_iva_compensation,
 )
-from .. import (
+from .._calculation_actions import calculate_modelo_revision
+from .._iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,
-    calculate_modelo_revision,
     require_persisted_iva_compensation_decision_matches_revision,
-    verify_modelo_revision,
 )
+from .._verification_actions import verify_modelo_revision
 from ._iva_wallet_engine_support import (
     _DECIDED_AT,
     _M303_COMPENSACION_APLICADA_CASILLA,

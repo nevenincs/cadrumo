@@ -9,11 +9,10 @@ from typing import TYPE_CHECKING
 from ...core.presentation import NoticePresentation
 
 if TYPE_CHECKING:
-    from cadrumo.application.workflow.state_models import WorkflowState
-
     from ...core.json_contract import Notice
     from ...domain.user_profile.schema import ProfileSchemaDefinition
     from ...domain.user_profile.values import UserProfileRecord
+    from ..workflow.state_models import WorkflowState
     from .overview import ProfileFieldView
 
 
@@ -94,9 +93,8 @@ def _guarded_read_errors() -> tuple[type[BaseException], ...]:
 
 def _resolve_active_identity() -> tuple[str | None, str | None]:
     """Return the active profile identifier and display label, or no identity."""
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
-
     from ...core.bucket_pointer import resolve_active_bucket_id
+    from ..workflow.profile_bucket_scan import read_profile_bucket_by_id
 
     try:
         active_uuid = resolve_active_bucket_id()
@@ -110,7 +108,7 @@ def _resolve_active_identity() -> tuple[str | None, str | None]:
 
 def _load_workflow_state() -> WorkflowState | None:
     """Load workflow state without turning unavailable custody into a failure."""
-    from cadrumo.application.workflow.persistence import workflow_state_repository
+    from ..workflow.persistence import workflow_state_repository
 
     try:
         return workflow_state_repository().load()
@@ -134,7 +132,7 @@ def _build_profile_rows(
     record: UserProfileRecord | None = None,
 ) -> tuple[StatusProfileRow, ...]:
     """Project registered buckets while keeping locked records opaque."""
-    from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
+    from ..workflow.profile_bucket_scan import list_profile_buckets
 
     try:
         pointers = sorted(list_profile_buckets().values(), key=lambda pointer: pointer.label.casefold())

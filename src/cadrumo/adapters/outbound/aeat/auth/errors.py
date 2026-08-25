@@ -16,17 +16,7 @@ See Also:
 
 from __future__ import annotations
 
-from .....core.errors import CadrumoError
-
-
-class AuthError(CadrumoError):
-    """Base class for every outbound AEAT authentication domain error.
-
-    Catch this at adapter or CLI boundaries that need one AEAT-auth arm while
-    preserving concrete subclasses such as :class:`AuthConfigurationError`,
-    :class:`AeatLoginAssertionError`, and :class:`AeatSessionExpiredError` for
-    more specific handling.
-    """
+from .....core.errors import AuthError
 
 
 class AuthConfigurationError(AuthError):
@@ -55,18 +45,6 @@ class AuthValidationError(AuthError, ValueError):
     """
 
 
-class AeatLoginAssertionError(AuthError):
-    """Raised when an AEAT login assertion cannot be produced or trusted.
-
-    Providers raise this when a structural precondition blocks
-    :class:`adapters.outbound.aeat.auth.AeatLoginAssertion` creation, when
-    a fresh login probe is invalid, or when persisted session metadata cannot
-    be resumed safely. Call sites preserve ``translated_message`` so CLI and
-    locale renderers can surface the specific refusal key without parsing the
-    human-readable message.
-    """
-
-
 class AeatSessionExpiredError(AuthError):
     """Raised when an authenticated AEAT session is no longer usable.
 
@@ -80,10 +58,8 @@ class AeatSessionExpiredError(AuthError):
 
 
 __all__ = [
-    "AeatLoginAssertionError",
     "AeatSessionExpiredError",
     "AuthConfigurationError",
-    "AuthError",
     "AuthProviderCleanupError",
     "AuthValidationError",
 ]

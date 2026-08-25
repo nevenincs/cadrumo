@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+from importlib import import_module
+
 import pytest
 
-import dev.docs.sequences as sequences_package
-from dev.docs.sequences import errors
-
+from .. import errors
 from ..errors import (
     SequenceEngineError,
     SequenceExecutionError,
@@ -16,6 +16,8 @@ from ..errors import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
+
+sequences_package = import_module("..", __package__)
 
 
 def test_errors_live_in_public_defining_module_without_facade_reexports() -> None:

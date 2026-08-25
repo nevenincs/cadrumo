@@ -19,7 +19,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ....application.modelo import (
+from ....application.modelo._m145_communication_records import (
     M145CommunicationExportResult,
     M145CommunicationPeriod,
     M145CommunicationRecord,

@@ -29,11 +29,9 @@ from ....domain.modelos import (
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
-    create_work_unit,
-    get_calculation_revision,
-    import_external_filing_evidence,
-)
+from .._calculation_actions import get_calculation_revision
+from .._external_import_actions import import_external_filing_evidence
+from .._work_lifecycle import create_work_unit
 from .justificante_metadata import persist_justificante_metadata
 
 _Repos = tuple[

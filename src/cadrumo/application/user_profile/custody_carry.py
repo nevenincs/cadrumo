@@ -93,13 +93,15 @@ from ..live.iva_remote_state import IvaRemoteStateAcquisitionManifestRepository
 from ..live.justificante import JustificanteCaptureSnapshot, justificante_capture_snapshot_object_key
 from ..live.notifications import PersistedNotificationsSnapshot, notifications_snapshot_object_key
 from ..live.verify import VerifyObservation, verify_observation_object_key
-from ..modelo import (
+from ..modelo._m036_lifecycle import (
     M036DeclarationResult,
-    M145CommunicationRecord,
-    ModeloReconciliationRecordRepository,
     m036_declaration_object_key,
+)
+from ..modelo._m145_communication_records import (
+    M145CommunicationRecord,
     m145_communication_record_object_key,
 )
+from ..modelo._reconciliation_records import ModeloReconciliationRecordRepository
 from .repository import user_profile_snapshot_object_key
 
 if TYPE_CHECKING:

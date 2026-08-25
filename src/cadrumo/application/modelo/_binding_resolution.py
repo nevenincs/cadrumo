@@ -46,7 +46,7 @@ from ...domain.calculations.registry import (
 from ...domain.modelos import ModeloError
 from ..aggregation import CalculationSourceResolution
 from ._borrador_binding import Modelo100BorradorSourceResolver
-from ._calculation_route import require_calculation_route_resolver
+from .calculation_route import require_calculation_route_resolver
 
 if TYPE_CHECKING:
     from ..live.borrador_100 import Borrador100SnapshotRepository

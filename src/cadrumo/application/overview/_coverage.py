@@ -161,7 +161,7 @@ def build_obligation_coverage(
     # Deferred to break a module-load cycle: application.modelo is a heavier
     # sibling package and importing it at module scope would couple overview's
     # import graph to it. The lookup itself is cheap (cached authority).
-    from ..modelo import registry_modelo_codes
+    from ..modelo._registry_discovery import registry_modelo_codes
 
     surfaced_set = frozenset(surfaced_modelos)
     registry_codes = frozenset(registry_modelo_codes())

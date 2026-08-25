@@ -25,7 +25,7 @@ from sphinx.deprecation import RemovedInSphinx90Warning
 _PROJECT_ROOT = Path(os.environ.get("CADRUMO_DOCS_PROJECT_ROOT", Path(__file__).resolve().parents[1])).resolve()
 sys.path.insert(0, str(_PROJECT_ROOT / "src"))
 
-from cadrumo.core import scan_directory  # noqa: E402
+from cadrumo.core.directory_scan import scan_directory  # noqa: E402
 from cadrumo.core.external_constants import OutputLanguage  # noqa: E402
 from cadrumo.core.product_identity import PRODUCT_IDENTITY  # noqa: E402
 

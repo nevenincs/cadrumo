@@ -7,20 +7,27 @@ from dataclasses import dataclass
 
 import typer
 
-from ...application.modelo import (
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ...application.modelo._action_errors import (
     WorkUnitAlreadyDiscardedError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
-    discard_work_unit,
+)
+from ...application.modelo._profile_readiness_gate import (
+    require_existing_profile_baseline_ready_for_modelo_work,
+    require_profile_ready_for_modelo_work,
+)
+from ...application.modelo._work_create_policy import (
     guard_active_profile_foral_ccaa,
+    modelo_work_create_applicability_refusal,
+    modelo_work_create_refusal_locale_key,
+)
+from ...application.modelo._work_lifecycle import (
+    discard_work_unit,
     lifecycle_continuation_for_work_list,
     lifecycle_continuation_for_work_status,
     list_work_units,
-    modelo_work_create_applicability_refusal,
-    modelo_work_create_refusal_locale_key,
     rename_work_unit,
-    require_existing_profile_baseline_ready_for_modelo_work,
-    require_profile_ready_for_modelo_work,
 )
 from ...application.modelo.work_addressing import (
     ModeloWorkRegistryYearMismatchError,
@@ -253,6 +260,7 @@ def work_create(
             actor=resolved_actor,
             causante_ccaa=causante_ccaa,
             enforce_applicability=not allow_not_applicable,
+            catalogue=WorkUnitCatalogueRepository(bucket_id=resolved_bucket).load(),
         )
     except (ModeloWorkRegistryYearMismatchError, RegistrySnapshotError) as exc:
         raise typer.BadParameter(str(exc)) from exc

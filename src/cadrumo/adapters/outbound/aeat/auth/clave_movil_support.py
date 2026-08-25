@@ -18,14 +18,14 @@ from uuid import uuid4
 from pydantic import SecretStr
 
 from .....core import OperatorProgress
-from .....core.errors import resolve_error_message
+from .....core.errors import AuthError, resolve_error_message
 from .....core.hashing import sha256_hex
 from .....core.identity import IdentityError, validate_spanish_tax_id
 from .....core.logging import get_logger
 from .....domain.calculations.registry import RemoteStateGuardPolicy
 from ....persistence.storage import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
 from ..operator_progress import emit_operator_progress
-from .errors import AuthConfigurationError, AuthError
+from .errors import AuthConfigurationError
 
 if TYPE_CHECKING:
     from .....core.config import Settings

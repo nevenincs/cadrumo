@@ -13,7 +13,7 @@ screen:
 * :func:`wait_for_own_name_representation_selector` -- waiting for AEAT to
   render the own-name selector, parameterised by the settings-derived
   selector strings and by the caller's own error identity, so
-  :class:`~adapters.outbound.aeat.auth.authenticator_types.AeatLoginAssertionError`
+  :class:`~cadrumo.core.errors.AeatLoginAssertionError`
   and :class:`~adapters.outbound.aeat.sede.SedeNavigationError` remain
   distinct domain errors rather than being collapsed into one.
 * :func:`continue_button_selectors` / :func:`click_first_matching_selector`
@@ -291,4 +291,3 @@ __all__ = [
     "own_name_representation_selectors",
     "wait_for_own_name_representation_selector",
 ]
-

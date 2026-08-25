@@ -17,9 +17,9 @@ surface.
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 from urllib.parse import urlsplit
 
 from .....core.async_cleanup import close_async_resources
@@ -42,16 +42,16 @@ from ._browser_constants import (
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
 )
+from ._parse import parse_expediente_detail, parse_resumen_tree
+from ._schema import Expediente, JustificanteRef, SedeCapture
 from .errors import (
     ExpedienteNotFoundError,
     SedeFailureMode,
     SedeNavigationError,
 )
-from ._parse import parse_expediente_detail, parse_resumen_tree
-from ._schema import Expediente, JustificanteRef, SedeCapture
 
 if TYPE_CHECKING:
-    from ..auth.authenticator_types import AeatSession
+    from .....application.auth.session_types import AeatSession
 
 
 log = get_logger(__name__)
@@ -63,6 +63,15 @@ _AEAT_HOST_SUFFIX = _EXTERNAL.aeat.domains.host_suffix
 _RESUMEN_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.expedientes_resumen}"
 
 DEFAULT_EXPAND_TIMEOUT_MS: int = 10_000
+
+
+@runtime_checkable
+class _HtmlSnapshotPage(Protocol):
+    """Structural page surface required to capture a Sede HTML snapshot."""
+
+    async def content(self) -> object:
+        """Return the current page markup."""
+        ...
 
 
 # The walker navigates to URLs it did NOT construct. ``Expediente.detail_url``
@@ -187,7 +196,7 @@ async def _goto_guarded(page: Any, url: str) -> None:
 async def _open_browser_page(
     session: AeatSession,
     settings: Settings,
-) -> AsyncIterator[tuple[Any, Any]]:
+) -> AsyncGenerator[tuple[Any, Any]]:
     """Yield ``(context, page)`` for a fresh authenticated Playwright session.
 
     Centralises the open / null-guard / context.close / browser.close
@@ -442,9 +451,8 @@ async def _snapshot_html(page: object) -> str:
     """
     import asyncio as _asyncio
 
-    content = getattr(page, "content", None)
     wait_for_load_state = getattr(page, "wait_for_load_state", None)
-    if content is None or not callable(content):
+    if not isinstance(page, _HtmlSnapshotPage):
         raise SedeNavigationError("page does not expose content(); cannot snapshot HTML")
     last_exc: BaseException | None = None
     for _ in range(8):
@@ -457,7 +465,7 @@ async def _snapshot_html(page: object) -> str:
                     wait_exc,
                 )
         try:
-            html = await content()
+            html = await page.content()
             if isinstance(html, str):
                 return html
             raise SedeNavigationError("page content() returned a non-text payload; cannot snapshot HTML")

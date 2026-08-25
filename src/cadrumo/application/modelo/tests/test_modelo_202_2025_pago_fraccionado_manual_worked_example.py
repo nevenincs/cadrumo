@@ -95,11 +95,11 @@ from ....domain.calculations.registry import BindingId, ValidatedRegistryAuthori
 from ....domain.period import calculation_filing_date
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from .. import (
+from .._calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-    create_work_unit,
 )
+from .._work_lifecycle import create_work_unit
 from .._revision_replay_inputs import revision_filing_replay_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

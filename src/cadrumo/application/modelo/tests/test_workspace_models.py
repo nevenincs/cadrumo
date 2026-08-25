@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import importlib
+import sys
+from pathlib import Path
+
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
@@ -16,7 +20,7 @@ from ....core import (
 from ....domain.modelos import CalculationSourceRef
 from ...registry import RegistryClosureLimb, RegistryClosureOwnerDisposition, RegistryClosureRefusal
 from ..work_addressing import ModeloVisibleFilingTarget
-from .._workspace_models import (
+from ..workspace_models import (
     ModeloWorkspaceBaselineV1,
     ModeloWorkspaceBoundedFacetV1,
     ModeloWorkspaceCapabilityDisposition,
@@ -25,6 +29,7 @@ from .._workspace_models import (
     ModeloWorkspaceCasillaReferenceV1,
     ModeloWorkspaceContributorIdentityV1,
     ModeloWorkspaceCountFactValueV1,
+    ModeloWorkspaceCursorV1,
     ModeloWorkspaceEvidenceFactV1,
     ModeloWorkspaceEvidenceHorizonV1,
     ModeloWorkspaceFacetName,
@@ -35,12 +40,15 @@ from .._workspace_models import (
     ModeloWorkspaceProjectionV1,
     ModeloWorkspaceProvenanceRecordV1,
     ModeloWorkspaceReadinessV1,
+    ModeloWorkspaceRefusalV1,
     ModeloWorkspaceRefusedResultV1,
     ModeloWorkspaceRequestV1,
     ModeloWorkspaceResolvedTargetV1,
     ModeloWorkspaceResultV1,
     ModeloWorkspaceRevisionAssertionDisposition,
+    ModeloWorkspaceRevisionAssertionSource,
     ModeloWorkspaceRevisionAssertionV1,
+    ModeloWorkspaceRevisionMismatchRefusalV1,
     ModeloWorkspaceScalarMaterializationRecordV1,
     ModeloWorkspaceSchemaClassification,
     ModeloWorkspaceSchemaIdentityV1,
@@ -67,8 +75,13 @@ def _target(*, revision_id: str = _REVISION_ID) -> ModeloWorkspaceResolvedTarget
         period=Period.from_year_and_code(2025, "1T"),
         law_selected_revision_id=revision_id,
         review_status=RevisionReviewStatus.PENDING_REVIEW,
-        revision_assertion=ModeloWorkspaceRevisionAssertionV1(
-            disposition=ModeloWorkspaceRevisionAssertionDisposition.NOT_REQUESTED,
+        requested_revision_assertion=ModeloWorkspaceRevisionAssertionV1(
+            source=ModeloWorkspaceRevisionAssertionSource.REQUESTED,
+            disposition=ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT,
+        ),
+        stored_revision_assertion=ModeloWorkspaceRevisionAssertionV1(
+            source=ModeloWorkspaceRevisionAssertionSource.STORED,
+            disposition=ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT,
         ),
     )
 
@@ -88,6 +101,7 @@ def _baseline(
     return ModeloWorkspaceBaselineV1(
         token=_DIGEST,
         contributor_stamp_digest=_DIGEST,
+        contributor_epoch_digest=_DIGEST,
         target=target,
         selected_revision_id=target.law_selected_revision_id,
         schema_identity=schema_identity,
@@ -111,10 +125,28 @@ def _schema_facet(
         selected_revision_id=target.law_selected_revision_id if selected_revision_id is None else selected_revision_id,
         schema_identity=schema_identity,
         baseline=baseline,
+        contributor_epoch_digest=baseline.contributor_epoch_digest,
         contributors=contributors,
         facet=ModeloWorkspaceFacetName.SCHEMA,
         disposition=ModeloWorkspaceCapabilityDisposition.UNMEASURED,
         page_size=1,
+    )
+
+
+def _cursor(
+    target: ModeloWorkspaceResolvedTargetV1,
+    schema_identity: ModeloWorkspaceSchemaIdentityV1,
+    baseline: ModeloWorkspaceBaselineV1,
+    *,
+    facet: ModeloWorkspaceFacetName = ModeloWorkspaceFacetName.SCHEMA,
+) -> ModeloWorkspaceCursorV1:
+    return ModeloWorkspaceCursorV1(
+        baseline=baseline,
+        selected_revision_id=target.law_selected_revision_id,
+        schema_identity=schema_identity,
+        facet=facet,
+        contributor_epoch_digest=baseline.contributor_epoch_digest,
+        continuation="next-page",
     )
 
 
@@ -279,12 +311,13 @@ def test_workspace_bounded_facet_pins_all_root_consistency_coordinates() -> None
             selected_revision_id=target.law_selected_revision_id,
             schema_identity=schema_identity,
             baseline=baseline,
+            contributor_epoch_digest=baseline.contributor_epoch_digest,
             contributors=contributors,
             facet=ModeloWorkspaceFacetName.SCHEMA,
             disposition=ModeloWorkspaceCapabilityDisposition.UNMEASURED,
             page_size=1,
             has_more=True,
-            next_cursor="next",
+            next_cursor=_cursor(target, schema_identity, baseline),
         )
 
 
@@ -468,18 +501,9 @@ def test_workspace_rejects_unbounded_localized_text_cursor_and_capability_revisi
     target = _target()
     schema_identity = _schema_identity()
     baseline = _baseline(target, schema_identity)
-    contributors = _contributors()
     with pytest.raises(ValidationError):
-        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1](
-            selected_revision_id=target.law_selected_revision_id,
-            schema_identity=schema_identity,
-            baseline=baseline,
-            contributors=contributors,
-            facet=ModeloWorkspaceFacetName.SCHEMA,
-            disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
-            page_size=1,
-            has_more=True,
-            next_cursor="x" * 257,
+        ModeloWorkspaceCursorV1.model_validate(
+            {**_cursor(target, schema_identity, baseline).model_dump(), "continuation": "x" * 257}
         )
     with pytest.raises(ValidationError, match="selected_revision_id"):
         ModeloWorkspaceCapabilityV1(
@@ -490,3 +514,189 @@ def test_workspace_rejects_unbounded_localized_text_cursor_and_capability_revisi
             producer_owner="workspace",
             producer="workspace.capability",
         )
+
+
+def test_workspace_revision_assertion_axes_are_required_independent_and_current_only() -> None:
+    requested = ModeloWorkspaceRevisionAssertionV1(
+        source=ModeloWorkspaceRevisionAssertionSource.REQUESTED,
+        disposition=ModeloWorkspaceRevisionAssertionDisposition.MATCHED,
+        asserted_revision_id=_REVISION_ID,
+    )
+    stored = ModeloWorkspaceRevisionAssertionV1(
+        source=ModeloWorkspaceRevisionAssertionSource.STORED,
+        disposition=ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT,
+    )
+    target = ModeloWorkspaceResolvedTargetV1.model_validate(
+        {
+            **_target().model_dump(),
+            "requested_revision_assertion": requested,
+            "stored_revision_assertion": stored,
+        }
+    )
+
+    assert ModeloWorkspaceResolvedTargetV1.model_validate_json(target.model_dump_json()) == target
+    with pytest.raises(ValidationError, match="asserted_revision_id"):
+        ModeloWorkspaceRevisionAssertionV1(
+            source=ModeloWorkspaceRevisionAssertionSource.REQUESTED,
+            disposition=ModeloWorkspaceRevisionAssertionDisposition.MATCHED,
+        )
+    with pytest.raises(ValidationError, match="requested source"):
+        ModeloWorkspaceResolvedTargetV1.model_validate(
+            {
+                **target.model_dump(),
+                "requested_revision_assertion": stored,
+            }
+        )
+    with pytest.raises(ValidationError):
+        ModeloWorkspaceResolvedTargetV1.model_validate(
+            {
+                **target.model_dump(),
+                "revision" + "_assertion": {
+                    "source": "requested",
+                    "disposition": "not_present",
+                },
+            }
+        )
+
+
+def test_workspace_revision_mismatch_refusal_preserves_both_axes_and_every_mismatching_source() -> None:
+    requested = ModeloWorkspaceRevisionAssertionV1(
+        source=ModeloWorkspaceRevisionAssertionSource.REQUESTED,
+        disposition=ModeloWorkspaceRevisionAssertionDisposition.MISMATCHED,
+        asserted_revision_id="2024-y-siguientes",
+    )
+    stored = ModeloWorkspaceRevisionAssertionV1(
+        source=ModeloWorkspaceRevisionAssertionSource.STORED,
+        disposition=ModeloWorkspaceRevisionAssertionDisposition.MISMATCHED,
+        asserted_revision_id="2023-y-siguientes",
+    )
+    selected_target = ModeloWorkspaceResolvedTargetV1.model_validate(
+        {
+            **_target().model_dump(),
+            "requested_revision_assertion": requested,
+            "stored_revision_assertion": stored,
+        }
+    )
+    requested_target = ModeloWorkspaceVisibleFilingTargetV1(
+        target=ModeloVisibleFilingTarget(
+            modelo=selected_target.modelo,
+            filing_year=selected_target.filing_year,
+            period=selected_target.period,
+        )
+    )
+    refusal = ModeloWorkspaceRevisionMismatchRefusalV1(
+        requested_target=requested_target,
+        selected_target=selected_target,
+        requested_revision_assertion=requested,
+        stored_revision_assertion=stored,
+        mismatching_sources=(
+            ModeloWorkspaceRevisionAssertionSource.REQUESTED,
+            ModeloWorkspaceRevisionAssertionSource.STORED,
+        ),
+        responsible_owner="application.modelo.work_addressing",
+        reconsideration_condition="supply assertions that match the selected revision",
+    )
+
+    decoded = TypeAdapter(ModeloWorkspaceRefusalV1).validate_json(refusal.model_dump_json())
+
+    assert decoded == refusal
+    assert decoded.mismatching_sources == (
+        ModeloWorkspaceRevisionAssertionSource.REQUESTED,
+        ModeloWorkspaceRevisionAssertionSource.STORED,
+    )
+    with pytest.raises(ValidationError, match="every and only mismatching source"):
+        ModeloWorkspaceRevisionMismatchRefusalV1(
+            requested_target=requested_target,
+            selected_target=selected_target,
+            requested_revision_assertion=requested,
+            stored_revision_assertion=stored,
+            mismatching_sources=(ModeloWorkspaceRevisionAssertionSource.REQUESTED,),
+            responsible_owner="application.modelo.work_addressing",
+            reconsideration_condition="supply assertions that match the selected revision",
+        )
+
+
+def test_workspace_cursor_binds_each_baseline_coordinate_and_unavailable_facets_have_no_cursor() -> None:
+    target = _target()
+    schema_identity = _schema_identity()
+    baseline = _baseline(target, schema_identity)
+    contributors = _contributors()
+    cursor = _cursor(target, schema_identity, baseline)
+    available = ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1](
+        selected_revision_id=target.law_selected_revision_id,
+        schema_identity=schema_identity,
+        baseline=baseline,
+        contributor_epoch_digest=baseline.contributor_epoch_digest,
+        contributors=contributors,
+        facet=ModeloWorkspaceFacetName.SCHEMA,
+        disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
+        page_size=1,
+        has_more=True,
+        next_cursor=cursor,
+    )
+
+    assert ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1].model_validate_json(
+        available.model_dump_json()
+    ) == available
+    with pytest.raises(ValidationError, match="complete facet consistency coordinate"):
+        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1](
+            **{
+                **available.model_dump(),
+                "next_cursor": cursor.model_copy(update={"facet": ModeloWorkspaceFacetName.PROVENANCE}),
+            }
+        )
+    with pytest.raises(ValidationError, match="contributor epoch digest"):
+        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1](
+            **{
+                **available.model_dump(),
+                "contributor_epoch_digest": "b" * 64,
+            }
+        )
+    with pytest.raises(ValidationError, match="unavailable workspace facets"):
+        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1](
+            selected_revision_id=target.law_selected_revision_id,
+            schema_identity=schema_identity,
+            baseline=baseline,
+            contributor_epoch_digest=baseline.contributor_epoch_digest,
+            contributors=contributors,
+            facet=ModeloWorkspaceFacetName.SCHEMA,
+            disposition=ModeloWorkspaceCapabilityDisposition.UNMEASURED,
+            page_size=1,
+            has_more=True,
+            next_cursor=cursor,
+        )
+
+
+def test_workspace_models_have_one_public_module_and_no_private_or_package_binding_remnant() -> None:
+    public_module = importlib.import_module("cadrumo.application.modelo.workspace_models")
+    package = importlib.import_module("cadrumo.application.modelo")
+    private_module = ".".join((*public_module.__name__.split(".")[:-1], "_workspace" + "_models"))
+    sys.modules.pop(private_module, None)
+
+    assert public_module.ModeloWorkspaceBaselineV1 is ModeloWorkspaceBaselineV1
+    assert ModeloWorkspaceBaselineV1.__module__ == public_module.__name__
+    assert package.__all__ == ()
+    assert not hasattr(package, "ModeloWorkspaceBaselineV1")
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module(private_module)
+
+
+def test_workspace_model_docs_and_active_tree_reach_the_public_module_fixed_point() -> None:
+    repository = Path(__file__).resolve().parents[5]
+    private_module = "_workspace" + "_models"
+    public_module = "workspace_models"
+    scanned_paths = (
+        *sorted((repository / "src").rglob("*.py")),
+        *sorted((repository / "docs").rglob("*.rst")),
+        *sorted((repository / "dev").rglob("*.py")),
+        *sorted((repository / "dev").rglob("*.toml")),
+    )
+    remnants = tuple(
+        path.relative_to(repository)
+        for path in scanned_paths
+        if path != Path(__file__).resolve() and private_module in path.read_text(encoding="utf-8")
+    )
+
+    assert not remnants
+    assert (repository / "docs" / "api" / f"cadrumo.application.modelo.{public_module}.rst").is_file()
+    assert public_module in (repository / "docs" / "api" / "cadrumo.application.modelo.rst").read_text(encoding="utf-8")

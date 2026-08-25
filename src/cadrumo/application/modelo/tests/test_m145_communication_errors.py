@@ -22,7 +22,7 @@ import pytest
 
 from ....core.errors import get_registered_error_code
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
+from .._m145_communication_records import (
     M145CommunicationCreateCommand,
     M145CommunicationRecordAmbiguousError,
     M145CommunicationRecordExportError,

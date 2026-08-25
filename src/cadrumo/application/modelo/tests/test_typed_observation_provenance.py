@@ -37,7 +37,7 @@ from ....domain.modelos import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from .. import CasillaProvenanceMissingError
+from .._action_errors import CasillaProvenanceMissingError
 from .._calculation_helpers import (
     amendment_observations as _amendment_observations,
 )

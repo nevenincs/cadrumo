@@ -75,9 +75,9 @@ from typing import Any, cast
 
 import pytest
 
+from ......application.auth.protocols import BrowserPagePort
 from ......core.config import Settings, load_settings
 from ..._playwright import Page
-from ...auth.authenticator_types import BrowserPageLike
 from ...auth.clave_movil import ClaveMovilAuthProvider
 from .._iva_compensation_wallet import _dismiss_pre303_alert_modal_if_present as _wallet_dismiss
 
@@ -174,7 +174,7 @@ async def _run_auth(page: _ScriptedPage) -> None:
     # The fake implements only the two members the delegation path touches; the
     # declared page protocol is wider than that path needs, so the substitution is
     # asserted here rather than loosening the production annotation to fit a double.
-    await provider._dismiss_pre303_alert_modal_if_present(cast("BrowserPageLike", page))
+    await provider._dismiss_pre303_alert_modal_if_present(cast("BrowserPagePort", page))
 
 
 async def _run_wallet(page: _ScriptedPage) -> None:

@@ -251,18 +251,22 @@ class ProfileRecordRepository:
     """Read exactly one encrypted current record through an authenticated session."""
 
     def __init__(self, *, session: ProfileRecordSession, root: Path | None = None) -> None:
+        """Initialize a session-bound repository at the effective storage root."""
         self.session = session
         self._root = effective_storage_root(root)
 
     @classmethod
     def for_current_session(cls, profile_id: str | UUID, *, root: Path | None = None) -> ProfileRecordRepository:
+        """Create a repository using the authenticated session for this profile."""
         return cls(session=require_profile_record_session(profile_id), root=root)
 
     @property
     def profile_id(self) -> UUID:
+        """Return the UUID served by the authenticated record session."""
         return self.session.profile_id
 
     def load(self, profile_id: str | UUID) -> UserProfileRecord:
+        """Load and authenticate the current record for the requested UUID."""
         identity = UUID(str(profile_id))
         if identity != self.session.profile_id:
             raise ProfileNotFoundError("profile record session does not serve the requested UUID")

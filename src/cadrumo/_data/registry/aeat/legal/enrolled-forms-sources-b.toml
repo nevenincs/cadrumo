@@ -79,6 +79,20 @@ applies_from = 2020-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_20/126v01e2020_v1.07.xlsx"
 review_status = "reviewed"
 
+[sources."aeat-dr-126-2015-2019"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2015"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_126/files/02-126-orden-eha-3435-2007-ejercicios-2015-a-2019.pdf"
+sha256 = "8d848f670a8d8c3492506958c1938b687547a3213a5aecade3d2e3391c5ebaee"
+bytes = 28876
+retrieved_at = 2026-08-25
+applies_from = 2015-01-01
+applies_to = 2019-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR-126e16_v1.05.pdf"
+review_status = "reviewed"
+
 [sources."boe-modelo-296-form-text"]
 evidence_tier = "official_source_guidance"
 authority = "boe"
@@ -181,6 +195,20 @@ bytes = 112732
 retrieved_at = 2026-07-21
 applies_from = 2020-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_20/128v01e2020_v1.07.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-128-2015-2019"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2015"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_128/files/02-128-orden-eha-3435-2007-ejercicios-2015-a-2019.pdf"
+sha256 = "b7813c21a5e1d93e6ab592807747bcc5fad8a99d2597730ffa5fcd409a80bf13"
+bytes = 28381
+retrieved_at = 2026-08-25
+applies_from = 2015-01-01
+applies_to = 2019-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR-128e16_v1.05.pdf"
 review_status = "reviewed"
 
 [sources."boe-modelo-128-form-text"]

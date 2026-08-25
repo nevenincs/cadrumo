@@ -5,11 +5,6 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .._workspace_models import (
-    ModeloWorkspaceContributorIdentityV1,
-    ModeloWorkspaceLocaleSummaryV1,
-    ModeloWorkspaceSchemaIdentityV1,
-)
 from .._workspace_producers import (
     ModeloWorkspaceContributingProjectionV1,
     ModeloWorkspaceContributorKindV1,
@@ -18,6 +13,11 @@ from .._workspace_producers import (
     ModeloWorkspaceProducerContractV1,
     ModeloWorkspaceProducerStampV1,
     modelo_workspace_projection_schema_fingerprint,
+)
+from ..workspace_models import (
+    ModeloWorkspaceContributorIdentityV1,
+    ModeloWorkspaceLocaleSummaryV1,
+    ModeloWorkspaceSchemaIdentityV1,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

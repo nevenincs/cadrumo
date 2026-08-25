@@ -48,14 +48,14 @@ def _is_test_module_name(name: str) -> bool:
 def python_files_under(root: Path, *, include_data: bool = True) -> tuple[Path, ...]:
     """Return every ``.py`` file under ``root``, sorted, walked once per process.
 
-    The walk goes through :func:`~cadrumo.core.scan_directory` rather than
+    The walk goes through :func:`~cadrumo.core.directory_scan.scan_directory` rather than
     :meth:`pathlib.Path.rglob`. The measurement that first motivated moving off
     ``rglob`` was taken here, over this tree: 0.28s for 4,984 files against a
     ``scandir`` walk, because ``rglob`` materialised a ``Path`` per entry and
     re-stat'ed it to decide whether to descend while ``scandir`` answers
     ``is_dir`` from the directory entry the operating system already returned.
     Python 3.13 rewrote globbing onto ``os.scandir`` and closed most of that
-    gap; :func:`~cadrumo.core.scan_directory` carries the current numbers.
+    gap; :func:`~cadrumo.core.directory_scan.scan_directory` carries the current numbers.
 
     What has not changed is pruning, which ``rglob`` cannot express at all:
     it happens BEFORE descending, so an excluded directory costs one ``is_dir``

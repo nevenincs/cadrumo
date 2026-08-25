@@ -4,18 +4,20 @@ from __future__ import annotations
 
 import ast
 from inspect import signature
+from importlib import import_module
 from pathlib import Path
 
 import pytest
 
 from ....core.directory_scan import scan_directory
-from ...modelo import ModeloExportCommand
-from ...modelo import _export as modelo_export
-from ...modelo import _m303_filing_evidence as m303_filing_evidence
+from ...modelo._export import ModeloExportCommand
 from ...modelo._m303_regimen_simplificado_scope import m303_regimen_simplificado_scope_for_profile
 from .. import export_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+modelo_export = import_module("cadrumo.application.modelo._export")
+m303_filing_evidence = import_module("cadrumo.application.modelo._m303_filing_evidence")
 
 _CANONICAL_S56_OWNER = "cadrumo/domain/modelos/_calculation_revision.py"
 _S56_ACTIVITY_ROW_CLASS = "M303Exonerado390ActivityRowEvidence"

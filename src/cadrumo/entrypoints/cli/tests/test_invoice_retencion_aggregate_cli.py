@@ -27,7 +27,10 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....application.aggregation import AggregationValidationError, RetencionObservationRepository
 from ....application.invoices import build_catalogue_invoice, create_catalogue_invoice
-from ....application.modelo import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics, create_work_unit
+from ....application.modelo._calculation_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
+from ....application.modelo._work_lifecycle import create_work_unit
 from ....core import Period
 from ....core.resources import resources
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus, iva_rate_percentage

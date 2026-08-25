@@ -1,7 +1,7 @@
 """Shared authenticated-landing navigation probe for AEAT auth providers.
 
 The Cl@ve Móvil and Cl@ve Permanente providers both re-probe a persisted
-browser session by navigating an owned :class:`BrowserContextLike` to a
+browser session by navigating an owned :class:`BrowserContextPort` to a
 target URL and deciding whether the final landing page is an authenticated
 AEAT surface. The navigation state machine — open a page, ``goto`` the probe
 URL, read the status and landing URL, optionally run a provider-specific
@@ -33,7 +33,7 @@ from .....core import STRICT_FROZEN_CONFIG
 from .....core.logging import get_logger
 
 if TYPE_CHECKING:
-    from .authenticator_types import BrowserContextLike, BrowserPageLike
+    from .....application.auth.protocols import BrowserContextPort, BrowserPagePort
 
 log = get_logger(__name__)
 
@@ -41,7 +41,7 @@ log = get_logger(__name__)
 AuthenticatedLandingPredicate = Callable[[str, str], bool]
 """``(landing_url, target_path) -> bool`` provider landing classifier."""
 
-OnLandingHook = Callable[["BrowserPageLike", str, str], Awaitable[bool]]
+OnLandingHook = Callable[["BrowserPagePort", str, str], Awaitable[bool]]
 """``(page, landing_url, target_path) -> acted`` post-landing dispatch hook.
 
 Returning ``True`` signals the probe that the hook navigated the page, so the
@@ -76,7 +76,7 @@ class SessionProbeOutcome(BaseModel):
 
 
 async def run_authenticated_landing_probe(
-    context: BrowserContextLike,
+    context: BrowserContextPort,
     *,
     probe_url: str,
     target_path: str,
@@ -100,7 +100,7 @@ async def run_authenticated_landing_probe(
     landing_url: str | None = None
     session_cookie_present = False
     error_message: str | None = None
-    page: BrowserPageLike | None = None
+    page: BrowserPagePort | None = None
     try:
         page = await context.new_page()
         response = await page.goto(probe_url, timeout=navigation_timeout_ms)

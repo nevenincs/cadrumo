@@ -21,7 +21,10 @@ from collections.abc import Callable
 
 import typer
 
-from ...application.modelo import M145CommunicationCreateCommand, M145CommunicationPeriod
+from ...application.modelo._m145_communication_records import (
+    M145CommunicationCreateCommand,
+    M145CommunicationPeriod,
+)
 from ...core import CasillaId
 from ...core.i18n import tr
 

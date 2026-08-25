@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
+from .....application.auth.protocols import BrowserContextPort, BrowserSessionPort
 from .....core.config import Settings
-from .authenticator_types import BrowserContextLike, BrowserSessionLike
 from .browser_lifecycle import close_owned_browser_context, close_owned_browser_session
 
 if TYPE_CHECKING:
@@ -38,7 +38,7 @@ def verification_probe_url(
 # logging.Logger or a structured logger wrapper that is duck-type
 # compatible but does not satisfy the Logger protocol statically.
 async def close_clave_context(
-    context: BrowserContextLike | None,
+    context: BrowserContextPort | None,
     *,
     settings: Settings,
     logger: Logger | Any,
@@ -55,7 +55,7 @@ async def close_clave_context(
 
 # KWARGS-ANY-RATIONALE-LOGGER-DUCK-TYPE: see close_clave_context above.
 async def close_clave_browser_session(
-    session: BrowserSessionLike | None,
+    session: BrowserSessionPort | None,
     *,
     settings: Settings,
     logger: Logger | Any,

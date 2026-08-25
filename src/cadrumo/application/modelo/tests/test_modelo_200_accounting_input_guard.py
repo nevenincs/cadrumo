@@ -36,12 +36,12 @@ from ....domain.transactions import (
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ...tests import register_wizard_catalogue
-from .. import (
+from .._action_errors import ModeloAggregationBindingError
+from .._calculation_actions import (
     BucketAggregationCalculationResult,
-    ModeloAggregationBindingError,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-    create_work_unit,
 )
+from .._work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -13,23 +13,27 @@ import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
 
 from ......application.auth.diagnostics import load_auth_diagnostic
 from ......application.auth.providers import AuthProvider
+from ......application.auth.session_types import (
+    AeatSession,
+    CertificateSessionDetail,
+    ClaveMovilLoginAssertionDetail,
+    ClaveMovilSessionDetail,
+)
 from ......application.auth_credentials import unnamed_certificate_credentials
 from ......core import AuthProviderKind
 from ......core.async_cleanup import AsyncResourceCleanupError
 from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 from ......core.config import AEAT_CERTIFICATE_PROTECTED_URL, Settings
+from ......core.errors import AeatLoginAssertionError, AuthError
 from ......tests.secure_sql import isolated_runtime_profile
 from ...browser.tests.real_http_boundary import LocalHttpBoundary, opened_http_boundary, real_browser_factory
 from ..authenticator import AEAT_SESSION_IDLE_TTL
-from ..authenticator_types import AeatSession
 from ..clave_movil import ClaveMovilAuthProvider
 from ..clave_movil_metadata import ClaveMovilSessionMetadata
 from ..clave_movil_support import ClaveMovilApprovalTimeoutError, ClaveMovilFailureMode
 from ..clave_permanente_metadata import ClavePermanenteSessionMetadata
 from ..clave_permanente_support import ClavePermanenteFailureMode
-from ..errors import AeatLoginAssertionError, AuthError
 from ..provider_selection import select_provider
-from ..providers import CertificateSessionDetail, ClaveMovilLoginAssertionDetail, ClaveMovilSessionDetail
 from ._authenticator_support import SECRET_PASSPHRASE, _build_bundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

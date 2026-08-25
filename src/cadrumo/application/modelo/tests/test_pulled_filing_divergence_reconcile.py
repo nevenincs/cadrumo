@@ -79,7 +79,10 @@ from ....domain.modelos import (
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, ObservationSourceKind
-from .. import CasillaDivergenceKind, detect_casilla_divergences
+from .._reconcile_casilla import (
+    CasillaDivergenceKind,
+    detect_casilla_divergences,
+)
 from .._pulled_filing_reconcile import pulled_filing_divergence_findings
 from .._reconcile_population import _CARRY_SOURCE_KINDS as _PRODUCTION_CARRY_SOURCE_KINDS
 

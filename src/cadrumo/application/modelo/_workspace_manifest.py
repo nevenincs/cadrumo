@@ -17,11 +17,11 @@ from ...domain.calculations.registry import (
     derive_export_layouts_from_bindings,
     selector_model_for_source,
 )
-from ._workspace_models import ModeloWorkspaceContributorIdentityV1, ModeloWorkspaceSchemaClassification
 from ._workspace_producers import (
     ModeloWorkspaceContributorKindV1,
     ModeloWorkspaceProducerContractV1,
 )
+from .workspace_models import ModeloWorkspaceContributorIdentityV1, ModeloWorkspaceSchemaClassification
 
 _MANIFEST_VERSION = 1
 _REGISTRY_ROOT_FIELDS = frozenset(

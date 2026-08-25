@@ -22,7 +22,7 @@ import pytest
 
 from ....adapters.outbound.aeat.export import RegistryFixedWidthRecordRenderer
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
+from .._m145_communication_records import (
     M145CommunicationCreateCommand,
     M145CommunicationRecordState,
     create_m145_communication_record,

@@ -24,11 +24,11 @@ from ...calculations import (
     CalculationObservationRepository,
     reconcile_modelo_303_iva_compensation,
 )
-from .. import (
+from .._calculation_actions import calculate_modelo_revision
+from .._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from .._iva_wallet_seed import (
     ModeloIvaWalletOverrideFreshWalletError,
     ModeloIvaWalletOverrideSealedError,
-    ModeloIvaWalletReconciliationBlocked,
-    calculate_modelo_revision,
     record_iva_compensation_override_for_bucket,
 )
 from ._iva_wallet_engine_support import (

@@ -79,11 +79,15 @@ class ProfileCustodyTransactionCorruptError(ProfileCustodyTransactionError):
 
 
 class ProfileCustodyTransactionOperation(StrEnum):
+    """Operation recorded by a local custody transaction journal."""
+
     CREATE = "create"
     DELETE = "delete"
 
 
 class ProfileCustodyTransactionState(StrEnum):
+    """Durable lifecycle state recorded by a local custody transaction journal."""
+
     PREPARED = "prepared"
     STAGE_VERIFIED = "stage_verified"
     CAPSULE_PUBLISHED = "capsule_published"
@@ -163,6 +167,7 @@ class CustodyDigestModel(BaseModel):
 
     @property
     def computed_self_digest(self) -> str:
+        """Compute the digest of this record without its stored self-digest field."""
         return _computed_self_digest(
             self,
             maximum_bytes=self._digest_maximum_bytes,
@@ -170,6 +175,7 @@ class CustodyDigestModel(BaseModel):
         )
 
     def canonical_json_bytes(self) -> bytes:
+        """Serialize this record using its bounded canonical JSON representation."""
         return canonical_model_bytes(
             self,
             maximum_bytes=self._digest_maximum_bytes,
@@ -215,6 +221,7 @@ class ProfileCustodyInventoryWitness(BaseModel):
 
     @classmethod
     def from_inventory(cls, inventory: ProfileCustodyInventoryPort) -> ProfileCustodyInventoryWitness:
+        """Bind the inventory digest and exact member totals into a witness."""
         return cls(
             digest=inventory.digest,
             file_count=len(inventory.digest_entries),
@@ -361,13 +368,16 @@ class ProfileCustodyTransactionJournal(CustodyDigestModel):
 
     @property
     def canonical_payload(self) -> dict[str, object]:
+        """Return the journal payload excluding the self-digest field."""
         return _payload_without_self_digest(self)
 
     @classmethod
     def create(cls, **values: Any) -> ProfileCustodyTransactionJournal:
+        """Construct a journal with a canonical self-digest."""
         return cls._create_with_self_digest(values, "cannot construct custody journal")
 
     def with_update(self, **changes: object) -> ProfileCustodyTransactionJournal:
+        """Return a new journal with changes and a recomputed self-digest."""
         payload = dict(self.__dict__)
         payload.update(changes)
         payload.pop("self_digest")
@@ -408,6 +418,7 @@ class ProfileCustodyTransactionReceipt(CustodyDigestModel):
 
     @classmethod
     def create(cls, **values: Any) -> ProfileCustodyTransactionReceipt:
+        """Construct a receipt with a canonical self-digest."""
         return cls._create_with_self_digest(values, "cannot construct custody receipt")
 
 

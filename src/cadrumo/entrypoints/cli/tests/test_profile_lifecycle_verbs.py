@@ -132,7 +132,7 @@ def test_registering_a_second_profile_uses_its_own_identity_while_the_first_is_a
     scripted ``profile create``; the door moved to credential registration
     and the invariant did not.
     """
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
+    from ....application.workflow.profile_bucket_scan import read_profile_bucket
 
     register_cli_profile(
         label="alpha",
@@ -257,7 +257,7 @@ def test_config_profile_create_refuses_existing_profile() -> None:
 
 
 def test_config_profile_edit_refuses_missing_profile_without_creating_bucket() -> None:
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
+    from ....application.workflow.profile_bucket_scan import read_profile_bucket
 
     result = _invoke_profile_app(
         (
@@ -289,7 +289,7 @@ def test_config_login_emits_profile_activated_event() -> None:
     """
 
     from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
+    from ....application.workflow.profile_bucket_scan import read_profile_bucket
     from ....domain.buckets import BucketEventType
 
     # Registered through the real credential door: ``seed`` provisions a raw
@@ -426,7 +426,7 @@ def test_config_profile_show_reports_a_tombstoned_profile_as_tombstoned() -> Non
 def test_config_profile_show_inspects_a_tombstoned_profile_by_label_and_uuid() -> None:
     """``show`` preserves tombstoned inspect behavior for label and UUID targets."""
 
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
+    from ....application.workflow.profile_bucket_scan import read_profile_bucket
 
     # Registered but deliberately NOT activated: deleting the ACTIVE profile is
     # refused, so a login here would block the verb under test.

@@ -99,7 +99,7 @@ class TestResultSummaryNarrowing:
 
     def test_cadrumo_error_from_get_work_unit_returns_none(self) -> None:
         """An CadrumoError from get_work_unit is caught and returns None."""
-        from .. import calculation_result_summary
+        from .._result_summary import calculation_result_summary
 
         def _raising(work_unit_id: str) -> NoReturn:
             del work_unit_id
@@ -111,7 +111,7 @@ class TestResultSummaryNarrowing:
 
     def test_lookup_error_from_get_work_unit_returns_none(self) -> None:
         """A LookupError from get_work_unit returns None."""
-        from .. import calculation_result_summary
+        from .._result_summary import calculation_result_summary
 
         def _raising(work_unit_id: str) -> NoReturn:
             del work_unit_id
@@ -123,7 +123,7 @@ class TestResultSummaryNarrowing:
 
     def test_runtime_error_from_get_work_unit_propagates(self) -> None:
         """A RuntimeError from get_work_unit propagates — not swallowed."""
-        from .. import calculation_result_summary
+        from .._result_summary import calculation_result_summary
 
         def _raising(work_unit_id: str) -> NoReturn:
             del work_unit_id

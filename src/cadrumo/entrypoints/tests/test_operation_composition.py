@@ -9,21 +9,20 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.operations.composition import (
+from ...adapters.persistence.storage import current_active_bucket_session
+from ...application.operations.composition import (
     OperationComposedServices,
     OperationSubmission,
     OperationSubmissionService,
 )
-from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.observation import OperationObservationService
-from cadrumo.application.operations.projection_services import (
+from ...application.operations.models import OperationRequest
+from ...application.operations.observation import OperationObservationService
+from ...application.operations.projection_services import (
     OperationCancellationService,
     OperationDetachService,
     OperationReviewProjectionService,
     OperationWorkspaceRefreshTargetService,
 )
-
-from ...adapters.persistence.storage import current_active_bucket_session
 from ...tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from .. import build_production_operation_registry
 from .._operation_composition import compose_operation_dependencies

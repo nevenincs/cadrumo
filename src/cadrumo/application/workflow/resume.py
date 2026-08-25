@@ -58,8 +58,10 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import HEX_PATTERN_16, HEX_PATTERN_64, STRICT_FROZEN_CONFIG, Period
 from ...core.identity import CalculationRevisionId, WorkUnitId
+from ...domain.modelos import WorkUnitCatalogue
 from .errors import WorkflowError
 from .persistence import list_runs, load_run
 from .run_models import WorkflowAbortReason, WorkflowObligationFacts, WorkflowResult, WorkflowStage
@@ -118,6 +120,14 @@ _NON_RESUMABLE_REASONS: frozenset[WorkflowAbortReason] = frozenset(
         WorkflowAbortReason.USER_CANCELLED,
     },
 )
+
+
+def _captured_work_catalogue(bucket_id: str | None) -> tuple[WorkUnitCatalogue, str]:
+    """Capture the catalogue once at the workflow operation boundary."""
+    from ..modelo.work_addressing import ModeloWorkSelectorRequest, resolve_modelo_work_bucket
+
+    resolved_bucket_id = resolve_modelo_work_bucket(ModeloWorkSelectorRequest(bucket_id=bucket_id))
+    return (WorkUnitCatalogueRepository(bucket_id=resolved_bucket_id).load(), resolved_bucket_id)
 _WORKFLOW_RUN_ID_RE = re.compile(HEX_PATTERN_16)
 _WORK_UNIT_ID_RE = re.compile(HEX_PATTERN_64)
 
@@ -333,7 +343,8 @@ def _workflow_run_id_resolution(run_id: str, *, source: str) -> WorkflowResumeTa
 def _resolve_resume_from_calculation_revision(
     calculation_revision_id: CalculationRevisionId,
 ) -> WorkflowResumeTargetResolution:
-    from ..modelo import get_calculation_revision, get_work_unit
+    from ..modelo._calculation_actions import get_calculation_revision
+    from ..modelo._work_lifecycle import get_work_unit
 
     revision = get_calculation_revision(calculation_revision_id)
     work_unit = get_work_unit(revision.work_unit_id)
@@ -348,10 +359,11 @@ def _resolve_resume_from_work_unit_id(work_unit_id: str, *, selector: object | N
     from ..modelo.work_addressing import ModeloExactWorkUnitTarget, resolve_modelo_work_address_unit
 
     target = ModeloExactWorkUnitTarget(work_unit_id=work_unit_id)
+    catalogue, bucket_id = _captured_work_catalogue(None)
     if selector is not None:
-        _resolve_revision_for_resume_target(target=target, selector=selector)
+        _resolve_revision_for_resume_target(target=target, selector=selector, catalogue=catalogue, bucket_id=bucket_id)
     return _resolve_resume_from_work_unit(
-        resolve_modelo_work_address_unit(target.to_work_address()),
+        resolve_modelo_work_address_unit(target.to_work_address(), catalogue=catalogue, bucket_id=bucket_id),
         source="work_unit_id",
         latest=True,
     )
@@ -380,11 +392,21 @@ def _resolve_resume_from_visible_target(
         registry_revision_id=registry_revision_id,
         bucket_id=bucket_id,
     )
+    catalogue, resolved_bucket_id = _captured_work_catalogue(bucket_id)
     if selector is not None:
-        revision = _resolve_revision_for_resume_target(target=target, selector=selector)
+        revision = _resolve_revision_for_resume_target(
+            target=target,
+            selector=selector,
+            catalogue=catalogue,
+            bucket_id=resolved_bucket_id,
+        )
         exact_target = ModeloExactWorkUnitTarget(work_unit_id=revision.work_unit_id)
         resolution = _resolve_resume_from_work_unit(
-            resolve_modelo_work_address_unit(exact_target.to_work_address()),
+            resolve_modelo_work_address_unit(
+                exact_target.to_work_address(),
+                catalogue=catalogue,
+                bucket_id=resolved_bucket_id,
+            ),
             source="visible_target_revision_selector",
         )
         return resolution.model_copy(
@@ -397,6 +419,8 @@ def _resolve_resume_from_visible_target(
     return resolve_modelo_workflow_run_for_resume(
         target,
         source="visible_target",
+        catalogue=catalogue,
+        bucket_id=resolved_bucket_id,
     )
 
 
@@ -404,8 +428,10 @@ def _resolve_revision_for_resume_target(
     *,
     target: ModeloWorkTarget,
     selector: object,
+    catalogue: WorkUnitCatalogue,
+    bucket_id: str,
 ) -> ModeloResolvedRevisionProjection:
-    from ..modelo import ModeloCalculationRevisionSelector
+    from ..modelo._selectors import ModeloCalculationRevisionSelector
     from ..modelo.work_addressing import ModeloRevisionPick, resolve_modelo_revision_pick
 
     try:
@@ -419,7 +445,12 @@ def _resolve_revision_for_resume_target(
             translated_message="application.workflow.errors.resume_revision_selector_invalid",
             context={"selector": str(selector)},
         ) from exc
-    return resolve_modelo_revision_pick(target=target, pick=ModeloRevisionPick(selector=revision_selector))
+    return resolve_modelo_revision_pick(
+        target=target,
+        pick=ModeloRevisionPick(selector=revision_selector),
+        catalogue=catalogue,
+        resolved_bucket_id=bucket_id,
+    )
 
 
 def _resolve_visible_period(*, modelo: str, year: int, period: Period) -> Period:
@@ -506,6 +537,8 @@ def resolve_modelo_workflow_run_for_resume(
     target: ModeloWorkTarget,
     *,
     source: str = "modelo_work_target",
+    catalogue: WorkUnitCatalogue,
+    bucket_id: str,
 ) -> WorkflowResumeTargetResolution:
     """Resolve a modelo work target to a resume target resolution.
 
@@ -521,7 +554,7 @@ def resolve_modelo_workflow_run_for_resume(
     """
     from ..modelo.work_addressing import ModeloExactWorkUnitTarget, ModeloWorkAddress, resolve_modelo_work_target
 
-    resolution = resolve_modelo_work_target(target)
+    resolution = resolve_modelo_work_target(target, catalogue=catalogue, bucket_id=bucket_id)
     assert resolution.work_unit is not None
     exact_target = isinstance(target, ModeloExactWorkUnitTarget) or (
         isinstance(target, ModeloWorkAddress) and target.work_unit_id is not None
@@ -552,14 +585,18 @@ def resolve_modelo_visible_workflow_run_for_resume(
     """
     from ..modelo.work_addressing import ModeloVisibleFilingTarget
 
-    return resolve_modelo_workflow_run_for_resume(
-        ModeloVisibleFilingTarget(
+    target = ModeloVisibleFilingTarget(
             modelo=modelo,
             filing_year=filing_year,
             period=period,
             registry_revision_id=registry_revision_id,
             bucket_id=bucket_id,
-        ),
+    )
+    catalogue, resolved_bucket_id = _captured_work_catalogue(bucket_id)
+    return resolve_modelo_workflow_run_for_resume(
+        target,
+        catalogue=catalogue,
+        bucket_id=resolved_bucket_id,
     )
 
 
@@ -579,8 +616,12 @@ def resolve_modelo_exact_workflow_run_for_resume(
     """
     from ..modelo.work_addressing import ModeloExactWorkUnitTarget
 
+    target = ModeloExactWorkUnitTarget(work_unit_id=work_unit_id, bucket_id=bucket_id)
+    catalogue, resolved_bucket_id = _captured_work_catalogue(bucket_id)
     return resolve_modelo_workflow_run_for_resume(
-        ModeloExactWorkUnitTarget(work_unit_id=work_unit_id, bucket_id=bucket_id),
+        target,
+        catalogue=catalogue,
+        bucket_id=resolved_bucket_id,
     )
 
 
@@ -591,7 +632,7 @@ def _resolve_resume_from_work_unit(
     latest: bool = False,
     calculation_revision_id: CalculationRevisionId | None = None,
 ) -> WorkflowResumeTargetResolution:
-    from ..modelo import workflow_period_for_work_unit
+    from ..modelo._workflow_gate import workflow_period_for_work_unit
     from ..modelo.work_addressing import project_modelo_work_unit
 
     projection = project_modelo_work_unit(work_unit)

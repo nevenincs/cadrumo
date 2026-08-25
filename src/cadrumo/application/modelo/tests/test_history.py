@@ -20,9 +20,9 @@ from ....domain.modelos import ModeloError
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
-    WorkUnitNotFoundError,
-    assemble_work_unit_history,
+from .._action_errors import WorkUnitNotFoundError
+from .._history import assemble_work_unit_history
+from .._work_lifecycle import (
     create_work_unit,
     discard_work_unit,
 )

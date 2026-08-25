@@ -30,7 +30,10 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ....core.resources import resources
-from .. import CasillaDivergenceKind, detect_casilla_divergences
+from .._reconcile_casilla import (
+    CasillaDivergenceKind,
+    detect_casilla_divergences,
+)
 
 if TYPE_CHECKING:
     from ....domain.calculations.registry import RegistrySnapshot

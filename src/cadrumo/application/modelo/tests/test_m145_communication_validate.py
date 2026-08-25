@@ -22,7 +22,7 @@ import pytest
 from ....domain.calculations.registry import CasillaDefinition, casillas_by_id, select_revision
 from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
+from .._m145_communication_records import (
     M145CommunicationCreateCommand,
     M145CommunicationValidationIssueKind,
     create_m145_communication_record,

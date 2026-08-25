@@ -375,7 +375,9 @@ def test_finalise_reconciliation_issues_exactly_one_batched_save() -> None:
     import ast
     import inspect
 
-    from .. import _reconcile as reconcile_module
+    from importlib import import_module
+
+    reconcile_module = import_module("cadrumo.application.modelo._reconcile")
 
     source = inspect.getsource(reconcile_module._finalise_reconciliation)
     tree = ast.parse(textwrap.dedent(source))

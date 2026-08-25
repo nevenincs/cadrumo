@@ -42,11 +42,9 @@ from ...calculations import (
     IvaWalletDecisionRepository,
     cross_period_dependency_requirements,
 )
-from .. import (
-    calculate_modelo_revision,
-    create_work_unit,
-    verify_modelo_revision,
-)
+from .._calculation_actions import calculate_modelo_revision
+from .._verification_actions import verify_modelo_revision
+from .._work_lifecycle import create_work_unit
 from .._calculation_helpers import external_filing_observations
 from ._export_test_support import _seed_profile, _synthetic_valid_nif
 from .justificante_metadata import persist_justificante_metadata

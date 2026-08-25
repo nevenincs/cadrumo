@@ -21,10 +21,20 @@ from collections.abc import Callable
 import typer
 from pydantic import BaseModel, ValidationError
 
-from ...application.ledger.llm_review_workflow import LlmReviewDecision, LlmReviewInvocationOrigin, execute_reviewed_decision
-from ...application.ledger.models import ManualLedgerTransactionResult
-from ...application.ledger.llm_classification import apply_evidence_classification, derive_operator_iva_substrate, saturate_llm_classification, suggest_evidence_split, suggest_llm_classification
 from ...application.ledger.actions_manual import ledger_transaction_payload
+from ...application.ledger.llm_classification import (
+    apply_evidence_classification,
+    derive_operator_iva_substrate,
+    saturate_llm_classification,
+    suggest_evidence_split,
+    suggest_llm_classification,
+)
+from ...application.ledger.llm_review_workflow import (
+    LlmReviewDecision,
+    LlmReviewInvocationOrigin,
+    execute_reviewed_decision,
+)
+from ...application.ledger.models import ManualLedgerTransactionResult
 from ...application.ledger.review_projection import ledger_transaction_review_status
 from ...core import provenance_stamp_transport
 from ...core.bucket_pointer import resolve_active_bucket_id
@@ -36,7 +46,13 @@ from ...domain.transactions import (
     TransactionCatalogueRepositoryProtocol,
     TransactionValidationError,
 )
-from ...llm.suggestions import LLMClassificationSuggestion, LLMSaturatedSuggestion, LLMSplitApplyResult, LLMSplitSuggestion, LLMSuggestionRejectionResult
+from ...llm.suggestions import (
+    LLMClassificationSuggestion,
+    LLMSaturatedSuggestion,
+    LLMSplitApplyResult,
+    LLMSplitSuggestion,
+    LLMSuggestionRejectionResult,
+)
 from ._common import _bad, _state, _tx_repo, emit_envelope
 from ._ledger_support import (
     _ledger_transaction_validation_no_recovery,

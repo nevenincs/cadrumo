@@ -1,8 +1,17 @@
-"""Structural fixed-point proof for captured Modelo work selection."""
+"""Current-tree fixed-point proof for the sole captured Modelo work selector.
+
+The accompanying S170 Vaultspec-RAG query is deliberately semantic: it locates
+candidate work-unit scans, repository-owning wrappers, and stale addressing
+paths. This test is its fail-closed exact-AST complement: it proves every
+current Python consumer reaches the canonical defining module directly, rather
+than relying on a reviewed, hand-maintained consumer list.
+"""
 
 from __future__ import annotations
 
 import ast
+from collections.abc import Iterable
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -10,77 +19,55 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CADRUMO_ROOT = Path(__file__).resolve().parents[3]
+_REPOSITORY_ROOT = _CADRUMO_ROOT.parents[1]
+_SOURCE_ROOTS = (_CADRUMO_ROOT, _REPOSITORY_ROOT / "dev")
 _SELECTION_SOURCE = _CADRUMO_ROOT / "application/modelo/work_addressing.py"
 _RETIRED_SELECTION_SOURCE = _CADRUMO_ROOT / "application/modelo/_selectors.py"
 _REMOVED_PRIVATE_ADDRESSING_SOURCE = _CADRUMO_ROOT / "application/modelo/_work_addressing.py"
 _REMOVED_SELECTOR_SOURCE = _CADRUMO_ROOT / "application/modelo/work_unit_selection.py"
 _PACKAGE_INIT = _CADRUMO_ROOT / "application/modelo/__init__.py"
-_SCAN_REPLACEMENT_CONSUMERS = (
-    _CADRUMO_ROOT / "application/modelo/work_review_projection.py",
-    _CADRUMO_ROOT / "application/modelo/_external_import_actions.py",
-    _CADRUMO_ROOT / "application/modelo/_calculate_input.py",
-    _CADRUMO_ROOT / "application/overview/_data_prep.py",
-)
-_BOUNDARY_SELECTOR_CONSUMERS = (
-    _CADRUMO_ROOT / "application/modelo/_history.py",
-    _CADRUMO_ROOT / "application/modelo/_reconcile.py",
-    _CADRUMO_ROOT / "application/modelo/_taxation_comparison.py",
-)
-_PUBLIC_ADDRESSING_CONSUMERS = (
-    _CADRUMO_ROOT / "application/modelo/_calculate_input.py",
-    _CADRUMO_ROOT / "application/modelo/_external_import_actions.py",
-    _CADRUMO_ROOT / "application/modelo/_history.py",
-    _CADRUMO_ROOT / "application/modelo/_quickfile.py",
-    _CADRUMO_ROOT / "application/modelo/_reconcile.py",
-    _CADRUMO_ROOT / "application/modelo/_taxation_comparison.py",
-    _CADRUMO_ROOT / "application/modelo/_work_lifecycle.py",
-    _CADRUMO_ROOT / "application/modelo/_workspace_models.py",
-    _CADRUMO_ROOT / "application/modelo/work_review_projection.py",
-    _CADRUMO_ROOT / "application/overview/_data_prep.py",
-    _CADRUMO_ROOT / "application/workflow/resume.py",
-    _CADRUMO_ROOT / "application/workflow/tests/test_resume.py",
-    _CADRUMO_ROOT / "entrypoints/cli/_config/_profile_inspect.py",
-    _CADRUMO_ROOT / "entrypoints/cli/_modelo.py",
-    _CADRUMO_ROOT / "entrypoints/cli/_modelo_behavior_support.py",
-    _CADRUMO_ROOT / "entrypoints/cli/_modelo_cli_support.py",
-    _CADRUMO_ROOT / "entrypoints/cli/_modelo_export_cli.py",
-    _CADRUMO_ROOT / "entrypoints/cli/_modelo_review_package_cli.py",
-    _CADRUMO_ROOT / "entrypoints/cli/_modelo_work_lifecycle_cli.py",
-    _CADRUMO_ROOT / "entrypoints/cli/_modelo_work_revision_cli.py",
-    _CADRUMO_ROOT / "entrypoints/cli/tests/_modelo_review_package_support.py",
-    _CADRUMO_ROOT / "entrypoints/cli/tests/test_config_preflight_revision_default.py",
-    _CADRUMO_ROOT / "entrypoints/tui/devtools/modelo_work_wizard.py",
-    _CADRUMO_ROOT / "tests/registry_revision.py",
-    _CADRUMO_ROOT / "application/modelo/tests/test_calculate_input_error_localization.py",
-    _CADRUMO_ROOT / "application/modelo/tests/test_profile_readiness_gate.py",
-    _CADRUMO_ROOT / "application/modelo/tests/test_revision_id_d1_contract.py",
-    _CADRUMO_ROOT / "application/modelo/tests/test_selectors.py",
-    _CADRUMO_ROOT / "application/modelo/tests/test_work_addressing.py",
-    _CADRUMO_ROOT / "application/modelo/tests/test_work_period_normalization.py",
-    _CADRUMO_ROOT / "application/modelo/tests/test_workspace_models.py",
+_CANONICAL_MODULE = "cadrumo.application.modelo.work_addressing"
+_FACADE_MODULE = "cadrumo.application.modelo"
+_RETIRED_MODULES = frozenset(
+    {
+        "cadrumo.application.modelo._work_addressing",
+        "cadrumo.application.modelo.work_unit_selection",
+    }
 )
 _RETIRED_WORK_SELECTION_SYMBOLS = frozenset(
     {
         "ModeloWorkResolution",
         "ModeloWorkSelectorRequest",
         "select_modelo_work_resolution",
-    },
-)
-_PUBLIC_SELECTOR_SYMBOLS = _RETIRED_WORK_SELECTION_SYMBOLS | frozenset(
-    {
-        "ModeloWorkRevisionConflictError",
-        "ModeloWorkSelectionMode",
-        "ModeloWorkSelectorContradictionError",
-        "ModeloWorkSelectorError",
-        "ModeloWorkSelectorState",
-        "ModeloWorkUnitCandidate",
-        "ModeloWorkUnitNotFoundError",
-        "ModeloWorkVisibleTargetAmbiguousError",
-        "resolve_modelo_work_bucket",
-    },
+    }
 )
 
 
+def _all_sources() -> Iterable[Path]:
+    return (path for root in _SOURCE_ROOTS for path in root.rglob("*.py"))
+
+
+@cache
+def _sources() -> tuple[Path, ...]:
+    """Return every source that can carry the addressing/facade contract.
+
+    Every application module is parsed because relative ``from ..modelo``
+    imports have no useful raw module string. Elsewhere, the lexical prefilter
+    is fail-closed for this contract's names, direct module paths, and retired
+    paths, then exact AST resolves the retained candidates.
+    """
+    addressing_names = _defined_addressing_symbols(_tree(_SELECTION_SOURCE))
+    needles = (*addressing_names, "application.modelo", "work_addressing", "_work_addressing", "work_unit_selection")
+    application_root = _CADRUMO_ROOT / "application"
+    candidates = []
+    for path in _all_sources():
+        text = path.read_text(encoding="utf-8")
+        if path.is_relative_to(application_root) or any(needle in text for needle in needles):
+            candidates.append(path)
+    return tuple(sorted(candidates))
+
+
+@cache
 def _tree(path: Path) -> ast.Module:
     return ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
 
@@ -93,102 +80,197 @@ def _call_name(call: ast.Call) -> str | None:
     return None
 
 
-def _selector_calls(tree: ast.Module) -> list[ast.Call]:
-    return [
-        node
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call) and _call_name(node) == "select_modelo_work_resolution"
-    ]
+def _calls(tree: ast.AST, name: str) -> tuple[ast.Call, ...]:
+    return tuple(
+        node for node in ast.walk(tree) if isinstance(node, ast.Call) and _call_name(node) == name
+    )
 
 
-def _imports_pure_selector(tree: ast.Module) -> bool:
-    return any(
-        isinstance(node, ast.ImportFrom)
-        and node.module is not None
-        and node.module.endswith("work_addressing")
-        and any(alias.name == "select_modelo_work_resolution" for alias in node.names)
+def _resolved_import_module(path: Path, node: ast.ImportFrom) -> str | None:
+    """Resolve a static import to an absolute module without importing source."""
+    if node.level == 0:
+        return node.module
+    try:
+        relative = path.relative_to(_CADRUMO_ROOT).with_suffix("")
+    except ValueError:
+        return None
+    package = ("cadrumo", *relative.parts[:-1])
+    parent = package[: len(package) - (node.level - 1)]
+    suffix = tuple(node.module.split(".")) if node.module else ()
+    return ".".join((*parent, *suffix))
+
+
+def _imported_modules(path: Path, tree: ast.Module) -> frozenset[str]:
+    modules: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            if (module := _resolved_import_module(path, node)) is not None:
+                modules.add(module)
+        elif isinstance(node, ast.Import):
+            modules.update(alias.name for alias in node.names)
+    return frozenset(modules)
+
+
+def _direct_canonical_import(path: Path, tree: ast.Module) -> bool:
+    return _CANONICAL_MODULE in _imported_modules(path, tree) or any(
+        isinstance(node, ast.Call)
+        and _call_name(node) == "import_module"
+        and node.args
+        and isinstance(node.args[0], ast.Constant)
+        and node.args[0].value == _CANONICAL_MODULE
         for node in ast.walk(tree)
     )
 
 
-def _imports_defining_addressing_module(tree: ast.Module) -> bool:
-    return any(
-        (
-            isinstance(node, ast.ImportFrom)
-            and node.module is not None
-            and node.module.endswith("work_addressing")
-        )
-        or (
-            isinstance(node, ast.Import)
-            and any(alias.name.endswith(".work_addressing") for alias in node.names)
-        )
-        for node in ast.walk(tree)
+def _defined_addressing_symbols(tree: ast.Module) -> frozenset[str]:
+    return frozenset(
+        node.name
+        for node in tree.body
+        if isinstance(node, (ast.ClassDef, ast.FunctionDef)) and not node.name.startswith("_")
     )
 
 
-def _imported_module_names(tree: ast.Module) -> set[str]:
-    return {
-        module
-        for node in ast.walk(tree)
-        for module in (
-            ((node.module,) if node.module is not None else ())
-            if isinstance(node, ast.ImportFrom)
-            else tuple(alias.name for alias in node.names)
-            if isinstance(node, ast.Import)
-            else ()
-        )
-    }
+def _used_names(tree: ast.Module) -> frozenset[str]:
+    return frozenset(node.id for node in ast.walk(tree) if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load))
 
 
-def test_work_selection_fixed_point_has_one_pure_owner_and_every_substitutable_consumer() -> None:
-    """The selector owns candidate scans; consumers call it exactly once per path."""
+def _function_nodes(tree: ast.Module) -> Iterable[ast.FunctionDef | ast.AsyncFunctionDef]:
+    """Return module-level callables, where application selector wrappers live."""
+    return (node for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)))
+
+
+def _has_catalogue_get(function: ast.AST) -> bool:
+    return any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "get"
+        and isinstance(node.func.value, ast.Name)
+        and node.func.value.id == "catalogue"
+        for node in ast.walk(function)
+    )
+
+
+def _has_repository_read(function: ast.AST) -> bool:
+    """Return whether a selector function creates the work catalogue repository itself."""
+    return any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "WorkUnitCatalogueRepository"
+        for node in ast.walk(function)
+    )
+
+
+def _substitutable_natural_scan(function: ast.AST) -> bool:
+    """Identify a work-unit candidate scan outside the canonical selector.
+
+    The shape is semantic rather than path-based: a catalogue iteration that
+    compares a candidate across at least two visible natural coordinates. It
+    discovers a future M303-style first-match loop without an allowlist.
+    """
+    for node in ast.walk(function):
+        if not isinstance(node, (ast.For, ast.GeneratorExp, ast.ListComp, ast.SetComp, ast.DictComp)):
+            continue
+        if not any(
+            isinstance(call, ast.Call)
+            and isinstance(call.func, ast.Attribute)
+            and call.func.attr == "values"
+            and isinstance(call.func.value, ast.Name)
+            and call.func.value.id == "catalogue"
+            for call in ast.walk(node)
+        ):
+            continue
+        attributes = {
+            child.attr
+            for child in ast.walk(node)
+            if isinstance(child, ast.Attribute)
+            and isinstance(child.value, ast.Name)
+            and child.value.id in {"unit", "work_unit", "candidate"}
+        }
+        if len(attributes & {"modelo", "filing_year", "period"}) >= 2:
+            return True
+    return False
+
+
+def test_work_selection_fixed_point_has_one_pure_owner_and_no_parallel_scan_or_read_authority() -> None:
+    """Only the canonical pure selector may scan supplied work-unit candidates."""
     selection_tree = _tree(_SELECTION_SOURCE)
-    selector_nodes = [
+    selectors = [
         node
         for node in selection_tree.body
         if isinstance(node, ast.FunctionDef) and node.name == "select_modelo_work_resolution"
     ]
-    assert len(selector_nodes) == 1
-    assert {_call_name(node) for node in ast.walk(selector_nodes[0]) if isinstance(node, ast.Call)}.isdisjoint(
-        {"load", "load_revisioned", "resolve_active_bucket_id"}
+    assert len(selectors) == 1
+    assert not _has_repository_read(selectors[0])
+    assert {_call_name(node) for node in ast.walk(selectors[0]) if isinstance(node, ast.Call)}.isdisjoint(
+        {"resolve_active_bucket_id"}
     )
-    public_definitions = {
-        node.name for node in selection_tree.body if isinstance(node, (ast.ClassDef, ast.FunctionDef))
+    assert "WorkUnitCatalogueRepository" not in {
+        node.id for node in ast.walk(selection_tree) if isinstance(node, ast.Name)
     }
-    assert {"resolve_active_natural_modelo_work_unit", "resolve_modelo_work_unit"}.isdisjoint(public_definitions)
 
-    for consumer in _SCAN_REPLACEMENT_CONSUMERS:
-        consumer_tree = _tree(consumer)
-        assert len(_selector_calls(consumer_tree)) == 1, consumer
-        assert "for unit in" not in consumer.read_text(encoding="utf-8"), consumer
-        assert _imports_pure_selector(consumer_tree), consumer
+    selector_definitions = [
+        (path, function)
+        for path in _sources()
+        for function in _function_nodes(_tree(path))
+        if _calls(function, "select_modelo_work_resolution")
+    ]
+    assert selector_definitions, "the canonical selector has no consumer census"
+    assert all(
+        path == _SELECTION_SOURCE or "tests" in path.parts or not _has_repository_read(function)
+        for path, function in selector_definitions
+    ), selector_definitions
+    assert all(
+        path == _SELECTION_SOURCE or not _has_catalogue_get(function)
+        for path, function in selector_definitions
+    ), selector_definitions
 
-    for consumer in _BOUNDARY_SELECTOR_CONSUMERS:
-        consumer_tree = _tree(consumer)
-        assert len(_selector_calls(consumer_tree)) == 1, consumer
-        assert _imports_pure_selector(consumer_tree), consumer
+    parallel_scans = [
+        (path, function.name)
+        for path in _sources()
+        if path != _SELECTION_SOURCE
+        for function in _function_nodes(_tree(path))
+        if _substitutable_natural_scan(function)
+    ]
+    assert parallel_scans == [], parallel_scans
 
     retired_tree = _tree(_RETIRED_SELECTION_SOURCE)
-    retired_definitions = {node.name for node in retired_tree.body if isinstance(node, (ast.ClassDef, ast.FunctionDef))}
+    retired_definitions = {
+        node.name for node in retired_tree.body if isinstance(node, (ast.ClassDef, ast.FunctionDef))
+    }
     assert _RETIRED_WORK_SELECTION_SYMBOLS.isdisjoint(retired_definitions)
     assert not _REMOVED_PRIVATE_ADDRESSING_SOURCE.exists()
     assert not _REMOVED_SELECTOR_SOURCE.exists()
 
-    package_exports = {
-        alias.name for node in _tree(_PACKAGE_INIT).body if isinstance(node, ast.ImportFrom) for alias in node.names
-    }
-    assert _PUBLIC_SELECTOR_SYMBOLS.isdisjoint(package_exports)
 
+def test_every_current_addressing_consumer_uses_direct_defining_import_and_modelo_namespace_is_inert() -> None:
+    """Census production, tests, tooling, annotations, registrations, and dynamic consumers."""
+    addressing_symbols = _defined_addressing_symbols(_tree(_SELECTION_SOURCE))
+    facade_imports: list[Path] = []
+    stale_imports: list[tuple[Path, str]] = []
+    indirect_consumers: list[Path] = []
 
-def test_every_current_addressing_consumer_directly_imports_the_sole_defining_module() -> None:
-    """Census static, local, type-only, test, CLI, TUI, and workflow imports."""
-    for consumer in _PUBLIC_ADDRESSING_CONSUMERS:
-        assert _imports_defining_addressing_module(_tree(consumer)), consumer
+    for source in _sources():
+        tree = _tree(source)
+        modules = _imported_modules(source, tree)
+        if _FACADE_MODULE in modules:
+            facade_imports.append(source)
+        stale_imports.extend((source, module) for module in modules & _RETIRED_MODULES)
+        if source != _SELECTION_SOURCE and _used_names(tree) & addressing_symbols and not _direct_canonical_import(source, tree):
+            indirect_consumers.append(source)
 
-    for source in _CADRUMO_ROOT.rglob("*.py"):
-        imported_modules = _imported_module_names(_tree(source))
-        assert not any(
-            module in {"_work_addressing", "work_unit_selection"}
-            or module.endswith(("._work_addressing", ".work_unit_selection"))
-            for module in imported_modules
-        ), source
+    assert facade_imports == [], facade_imports
+    assert stale_imports == [], stale_imports
+    assert indirect_consumers == [], indirect_consumers
+
+    package_tree = _tree(_PACKAGE_INIT)
+    assert not any(
+        isinstance(node, ast.Import)
+        or (isinstance(node, ast.ImportFrom) and node.module != "__future__")
+        for node in package_tree.body
+    )
+    assert all(
+        isinstance(node, (ast.Expr, ast.Assign, ast.AnnAssign))
+        or (isinstance(node, ast.ImportFrom)
+        and node.module == "__future__")
+        for node in package_tree.body
+    )

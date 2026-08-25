@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from decimal import Decimal
+from importlib import import_module
 
 import pytest
 
@@ -11,16 +12,17 @@ from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.modelos import ModeloError
-from .. import _art20_advisory as art20_advisory
-from .. import _binding_resolution as binding_resolution
-from .. import _calculate_input as calculate_input
-from .. import _dt12_advisory as dt12_advisory
-from .. import _taxation_comparison as taxation_comparison
 from .._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,
     casilla_id_for_unique_revision_semantic_role,
     casilla_id_for_unique_semantic_role,
 )
+
+art20_advisory = import_module("cadrumo.application.modelo._art20_advisory")
+binding_resolution = import_module("cadrumo.application.modelo._binding_resolution")
+calculate_input = import_module("cadrumo.application.modelo._calculate_input")
+dt12_advisory = import_module("cadrumo.application.modelo._dt12_advisory")
+taxation_comparison = import_module("cadrumo.application.modelo._taxation_comparison")
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _M100_RESULTADO_CASILLA: CasillaId = validated_casilla_id("0610", surface="_M100_RESULTADO_CASILLA")

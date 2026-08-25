@@ -20,7 +20,9 @@ from ....domain.modelos import (
     VerificationCompletenessStatus,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from ...modelo import calculate_modelo_revision, create_work_unit, verify_modelo_revision
+from ...modelo._calculation_actions import calculate_modelo_revision
+from ...modelo._verification_actions import verify_modelo_revision
+from ...modelo._work_lifecycle import create_work_unit
 from .. import (
     CalculationObservationRepository,
     CrossPeriodCleanStateBlocker,

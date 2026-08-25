@@ -9,13 +9,13 @@ from datetime import date
 
 import typer
 
-from ...application.modelo import (
+from ...application.modelo._binding_readiness import profile_resolvable_binding_ids
+from ...application.modelo._data_inventory import (
     DataInventoryCasilla,
     DataInventoryChecklist,
-    ceded_autonomic_modelo_locale_key,
     data_inventory_checklist,
-    modelo_work_create_refusal_locale_key,
-    profile_resolvable_binding_ids,
+)
+from ...application.modelo._registry_discovery import (
     registry_bindings,
     registry_bindings_for_scope,
     registry_bindings_for_year,
@@ -30,6 +30,10 @@ from ...application.modelo import (
     registry_list_modelos,
     registry_modelo_codes,
     registry_support_matrix,
+)
+from ...application.modelo._work_create_policy import (
+    ceded_autonomic_modelo_locale_key,
+    modelo_work_create_refusal_locale_key,
 )
 from ...application.operator_actions import ActionReference
 from ...application.state_projection import CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS

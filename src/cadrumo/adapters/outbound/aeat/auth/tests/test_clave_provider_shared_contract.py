@@ -47,6 +47,7 @@ import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
 
 from ......core import AuthProviderKind
 from ......core.config import Settings
+from ......core.errors import AeatLoginAssertionError
 from ......tests.aeat_literal_fixtures import (
     INWINVOC_LANDING_PATH_CANARY,
     INWINVOC_SIBLING_PATH_CANARY,
@@ -59,7 +60,6 @@ from ..clave_movil import ClaveMovilAuthProvider
 from ..clave_movil_metadata import ClaveMovilSessionMetadata
 from ..clave_permanente import ClavePermanenteAuthProvider
 from ..clave_permanente_metadata import ClavePermanenteSessionMetadata
-from ..errors import AeatLoginAssertionError
 from ._clave_movil_support import _settings_for as _movil_settings_for
 from ._clave_permanente_support import _settings_for as _permanente_settings_for
 

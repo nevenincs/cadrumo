@@ -17,7 +17,7 @@ from ...calculations import (
     resolve_relations_from_local_store,
     validate_normalized_m303_carry_observation_envelope,
 )
-from .. import record_operator_local_observation
+from .._local_observation_actions import record_operator_local_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

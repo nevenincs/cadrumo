@@ -28,7 +28,7 @@ from ....domain.iva_compensation import (
     IvaCompensationReconciliationDecision,
 )
 from ....domain.modelos import CalculationRevisionState, ModeloExportError
-from .. import (
+from .._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloCrossPeriodCleanStateError,

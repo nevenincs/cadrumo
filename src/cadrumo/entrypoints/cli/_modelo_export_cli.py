@@ -8,36 +8,39 @@ import typer
 
 from cadrumo.application.workflow.persistence import workflow_state_repository
 
-from ...application.modelo import (
+from ...application.modelo._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
-    ModeloCalculationRevisionSelector,
-    ModeloCalculationRevisionSelectorAmbiguousError,
-    ModeloCalculationRevisionSelectorNotFoundError,
-    ModeloCalculationRevisionSelectorStateError,
-    ModeloExportCommand,
-    ModeloExportCrossBucketRefusedError,
-    ModeloExportNoActiveBucketError,
-    ModeloExportOutputPathError,
-    ModeloExportResult,
-    ModeloIvaWalletReconciliationBlocked,
     ModeloPaymentElectionCapabilityRefusedError,
     ModeloPaymentElectionIncompatibleError,
     ModeloPriorDomiciliationElectionRefusedError,
     ModeloRefundElectionNotEligibleError,
     WorkUnitNotFoundError,
+)
+from ...application.modelo._export import (
+    ModeloExportCommand,
+    ModeloExportCrossBucketRefusedError,
+    ModeloExportNoActiveBucketError,
+    ModeloExportOutputPathError,
+    ModeloExportResult,
     export_modelo_revision,
+)
+from ...application.modelo._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from ...application.modelo._selectors import (
+    ModeloCalculationRevisionSelector,
+    ModeloCalculationRevisionSelectorAmbiguousError,
+    ModeloCalculationRevisionSelectorNotFoundError,
+    ModeloCalculationRevisionSelectorStateError,
 )
 from ...application.modelo.work_addressing import (
     ModeloWorkAddressNotFoundError,
     ModeloWorkPeriodTokenError,
-    resolve_modelo_revision_for_operator_target,
 )
 from ...core import PaymentElection, PriorDomiciliationElection, RefundElection
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ._common import _filing_taxpayer_or_refuse, emit_envelope
-from ._modelo_behavior_support import resolve_optional_cli_period
+from ._modelo_behavior_support import resolve_optional_cli_period, resolve_revision_for_cli
 from ._modelo_cli_support import (
     bad_parameter_from_error,
     parse_revision_selector,
@@ -134,13 +137,13 @@ def modelo_export_verb(
         )
     try:
         typed_period = resolve_optional_cli_period(year=year, period=period, modelo=modelo)
-        selected_revision = resolve_modelo_revision_for_operator_target(
+        selected_revision = resolve_revision_for_cli(
             calculation_revision_id=validate_calculation_revision_id(revision) if revision is not None else None,
             work_unit_id=validate_work_unit_id(work_unit_id) if work_unit_id is not None else None,
             modelo=modelo,
             year=year,
             period=typed_period,
-            registry_revision_id=registry_revision,
+            registry_revision=registry_revision,
             bucket_id=bucket_id,
             selector=parse_revision_selector(select),
             default_for="export",

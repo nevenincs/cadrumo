@@ -23,7 +23,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....domain.buckets import BucketEventType
 from ....tests.secure_sql import isolated_runtime_profile
 from ....tests.write_unit_recorder import WriteUnitRecorder
-from .. import (
+from .._m145_communication_records import (
     M145CommunicationCreateCommand,
     M145CommunicationRecordState,
     create_m145_communication_record,

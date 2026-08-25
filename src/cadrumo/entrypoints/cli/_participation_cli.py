@@ -108,7 +108,7 @@ def _participation_lines(
 
 def participation_rebuild(ctx: typer.Context) -> None:
     """Run :func:`rebuild_participation_index` for the active bucket."""
-    from ...application.modelo import rebuild_participation_index
+    from ...application.modelo._participation_index_rebuild import rebuild_participation_index
     from ._ledger_payloads import LedgerParticipationRebuildResult
 
     bucket_id = _active_bucket_id_or_bad(_state())

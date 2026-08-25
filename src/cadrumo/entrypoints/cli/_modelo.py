@@ -15,7 +15,7 @@ from decimal import Decimal
 
 import typer
 
-from ...application.modelo import (
+from ...application.modelo._action_errors import (
     AmendmentComplementariaLiabilityDecreaseError,
     AmendmentEvidenceMissingError,
     AmendmentKindNotPermittedError,
@@ -25,9 +25,9 @@ from ...application.modelo import (
     CalculationRevisionStateError,
     ModeloRecordNotFoundError,
     WorkUnitNotFoundError,
-    amend_modelo_revision,
-    lifecycle_continuation_for_work_history,
 )
+from ...application.modelo._amendment_actions import amend_modelo_revision
+from ...application.modelo._work_lifecycle import lifecycle_continuation_for_work_history
 from ...application.modelo.work_addressing import (
     ModeloWorkAddressNotFoundError,
     ModeloWorkRevisionConflictError,
@@ -118,9 +118,9 @@ def work_compare_taxation(
 
     activate_subcommand_output_language(ctx, output_language)
 
-    from ...application.modelo import (
+    from ...application.modelo._action_errors import WorkUnitNotFoundError
+    from ...application.modelo._taxation_comparison import (
         TaxationComparisonError,
-        WorkUnitNotFoundError,
         compare_taxation_for_work_address,
     )
 
@@ -236,7 +236,7 @@ def work_history(
     report, filing record). Emits no bucket event.
     """
     activate_subcommand_output_language(ctx, output_language)
-    from ...application.modelo import assemble_work_unit_history
+    from ...application.modelo._history import assemble_work_unit_history
 
     _require_active_profile()
     unit = _resolve_work_unit_for_cli(

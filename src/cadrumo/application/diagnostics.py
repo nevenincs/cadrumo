@@ -87,12 +87,11 @@ from .operator_actions import (
 # Importing them lazily inside the functions that actually run keeps the
 # version surface off the heavy import graph.
 if TYPE_CHECKING:
-    from cadrumo.application.workflow.profile_health import ActiveProfileHealth
-    from cadrumo.application.workflow.state_models import WorkflowState
-
     from ..adapters.outbound.aeat.browser import SiteHealthStatus
     from ..adapters.persistence.storage import SecureObjectNamespaceIntegrity
     from .wizard.status import WizardStatusReport
+    from .workflow.profile_health import ActiveProfileHealth
+    from .workflow.state_models import WorkflowState
 
 _log = get_logger(__name__)
 
@@ -492,10 +491,9 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
 
     setup_report: WizardStatusReport | None = None
     try:
-        from cadrumo.application.workflow.persistence import workflow_state_repository
-        from cadrumo.application.workflow.profile_health import assess_active_profile_health
-
         from .wizard.status import build_wizard_status
+        from .workflow.persistence import workflow_state_repository
+        from .workflow.profile_health import assess_active_profile_health
 
         # Read the secure state through whatever session the operator already
         # holds. This probe deliberately opens none of its own: it used to enter
@@ -521,7 +519,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
         checks.append(_profile_check(setup_report, profile_health=profile_health, state=state))
         checks.append(_auth_check(setup_report))
     except Exception as exc:  # pragma: no cover - concrete failure mode depends on local secure backend.
-        from cadrumo.application.workflow.profile_health import assess_active_profile_health
+        from .workflow.profile_health import assess_active_profile_health
 
         _log.debug("config repair secure state probe failed", exc_info=True)
         profile_health = assess_active_profile_health()

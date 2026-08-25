@@ -28,6 +28,7 @@ from .....core.auth_session_keys import (
     former_product_auth_session_path_for,
     is_former_product_auth_session_path,
 )
+from .....core.errors import AuthError
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import content_hash_hex
 from .....core.time import now
@@ -36,7 +37,6 @@ from ....persistence.storage import (
     SecureObjectRepository,
     secure_object_repository_for_active_bucket,
 )
-from .errors import AuthError
 
 _SESSION_VERSION = AEAT_BROWSER_SESSION_NAMESPACE.schema_version
 type JsonObject = Mapping[str, JsonValue]
@@ -111,7 +111,7 @@ def save(path: Path, *, storage_state: Mapping[str, object], metadata: Mapping[s
     classification and schema version. ``storage_state``/``metadata`` are
     validated JSON-safe here (mirroring :func:`_storage_state_sha256`) so the
     caller-facing boundary stays the wide ``Mapping[str, object]`` shape
-    :class:`~.authenticator_types.BrowserContextLike` exposes.
+    :class:`~cadrumo.application.auth.protocols.BrowserContextPort` exposes.
     """
     repository = _repository_for_path(path)
     payload = PersistedBrowserSession(
@@ -208,9 +208,32 @@ def _storage_state_sha256(storage_state: Mapping[str, object]) -> str:
     return content_hash_hex(validated)
 
 
+class AeatSessionStoreAdapter:
+    """Application-port adapter over the canonical encrypted store functions."""
+
+    def exists(self, path: Path) -> bool:
+        """Return whether the logical session exists."""
+        return exists(path)
+
+    def load(self, path: Path) -> PersistedBrowserSession | None:
+        """Load the persisted session at ``path``."""
+        return load(path)
+
+    def delete(self, path: Path) -> bool:
+        """Delete the persisted session at ``path``."""
+        return delete(path)
+
+
+def build_session_store() -> AeatSessionStoreAdapter:
+    """Build the stateless concrete application-port adapter."""
+    return AeatSessionStoreAdapter()
+
+
 __all__ = [
+    "AeatSessionStoreAdapter",
     "FormerProductAuthSessionStateError",
     "PersistedBrowserSession",
+    "build_session_store",
     "delete",
     "exists",
     "load",

@@ -679,7 +679,7 @@ def _build_modelo_readiness(
     from ..core.i18n import tr
     from ..core.resources import resources
     from ..domain.user_profile.values import ProfileSetupState
-    from .modelo import (
+    from .modelo._profile_readiness_gate import (
         modelo_applicability_refusal,
         modelo_work_profile_preflight_report,
         pre_activity_period_refusal,
@@ -919,7 +919,7 @@ def _missing_calculation_bindings_for_readiness(
         revision_date_binding_ids,
     )
     from .calculations import relation_prefill_period_zero_default_binding_ids
-    from .modelo import (
+    from .modelo._profile_binding import (
         ProfileBindingResolutionError,
         profile_resolved_binding_ids,
         resolve_profile_sourced_bindings,

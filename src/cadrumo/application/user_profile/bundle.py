@@ -451,7 +451,7 @@ def _rebuild_participation_index(*, target_bucket_id: str) -> None:
     ``aeat-ledger-contract``); it is regenerated from
     the restored revision, work-unit, and filing catalogues.
     """
-    from ..modelo import rebuild_participation_index
+    from ..modelo._participation_index_rebuild import rebuild_participation_index
 
     rebuild_participation_index(bucket_id=target_bucket_id)
 

@@ -291,10 +291,12 @@ class ProfileSectionView(BaseModel):
 
     @property
     def present_count(self) -> int:
+        """Return the number of fields carrying values in this section."""
         return sum(1 for field in self.fields if field.present)
 
     @property
     def total_count(self) -> int:
+        """Return the number of declared fields in this section."""
         return len(self.fields)
 
 
@@ -313,10 +315,12 @@ class ProfileOverview(BaseModel):
 
     @property
     def present_count(self) -> int:
+        """Return the total number of fields carrying values across sections."""
         return sum(section.present_count for section in self.sections)
 
     @property
     def total_count(self) -> int:
+        """Return the total number of declared fields across sections."""
         return sum(section.total_count for section in self.sections)
 
     @property

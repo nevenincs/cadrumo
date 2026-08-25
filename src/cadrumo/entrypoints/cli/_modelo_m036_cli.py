@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import typer
 
-from ...application.modelo import (
+from ...application.modelo._m036_lifecycle import (
     M036DeclarationCommand,
     M036DeclarationResult,
     list_m036_declarations,

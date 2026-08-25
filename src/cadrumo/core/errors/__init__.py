@@ -148,6 +148,14 @@ class CadrumoError(Exception):
         self.translated_message: str | None = translated_message
 
 
+class AuthError(CadrumoError):
+    """Base class for every AEAT authentication boundary failure."""
+
+
+class AeatLoginAssertionError(AuthError):
+    """Raised when an AEAT login assertion cannot be produced or trusted."""
+
+
 class TerminalPreconditionErrorMixin[VerdictT]:
     """Carry one typed terminal verdict without coupling core to application models.
 
@@ -345,6 +353,8 @@ def __getattr__(name: str) -> object:
 __all__ = [
     "ERROR_REGISTRY",
     "ActiveProfilePointerError",
+    "AeatLoginAssertionError",
+    "AuthError",
     "BaseSeverity",
     "CadrumoError",
     "CadrumoObservabilityError",

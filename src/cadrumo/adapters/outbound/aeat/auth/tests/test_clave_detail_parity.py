@@ -19,13 +19,13 @@ import pytest
 from pydantic import BaseModel, ValidationError
 from pydantic.fields import FieldInfo
 
-from ......core import AuthProviderKind
-from ..providers import (
+from ......application.auth.session_types import (
     ClaveMovilLoginAssertionDetail,
     ClaveMovilSessionDetail,
     ClavePermanenteLoginAssertionDetail,
     ClavePermanenteSessionDetail,
 )
+from ......core import AuthProviderKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

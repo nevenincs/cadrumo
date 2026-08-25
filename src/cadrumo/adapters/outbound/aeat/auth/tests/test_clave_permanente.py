@@ -8,7 +8,9 @@ from urllib.parse import urlsplit
 import pytest
 from pydantic import AnyUrl
 
+from ......application.auth.session_types import AeatSession, ClavePermanenteSessionDetail
 from ......core import AuthProviderKind
+from ......core.errors import AeatLoginAssertionError
 from ......domain.calculations.registry import (
     RegistryValidationError,
     RemoteOperation,
@@ -17,8 +19,7 @@ from ......domain.calculations.registry import (
 from ......tests.secure_sql import isolated_runtime_profile
 from ..clave_permanente import ClavePermanenteAuthProvider
 from ..clave_permanente_support import clave_permanente_auth_browser_action_policy
-from ..errors import AeatLoginAssertionError, AuthConfigurationError
-from ..providers import ClavePermanenteSessionDetail
+from ..errors import AuthConfigurationError
 from ._clave_permanente_support import (
     _DOMAINS,
     _aeat_url,
@@ -236,7 +237,6 @@ class TestVerify:
 
         async def run() -> None:
             from ......core.time import now
-            from ..authenticator_types import AeatSession
 
             attempted_at = now()
             session_without_context = AeatSession(

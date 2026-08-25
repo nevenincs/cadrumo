@@ -69,64 +69,80 @@ from ...adapters.persistence.profile.recipient_replay_guard import (
     RecipientPackageReplayedError,
     RecipientReplayGuardRepository,
 )
-from ...application.modelo import (
+from ...application.modelo._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
-    CounterSignedReceipt,
-    FeedbackCounterSignatureInvalidError,
-    ModeloCalculationRevisionSelector,
-    ModeloCalculationRevisionSelectorAmbiguousError,
-    ModeloCalculationRevisionSelectorNotFoundError,
-    ModeloCalculationRevisionSelectorStateError,
-    ModeloExportCommand,
-    ModeloExportCrossBucketRefusedError,
-    ModeloExportNoActiveBucketError,
-    ModeloExportOutputPathError,
-    ModeloIvaWalletReconciliationBlocked,
     ModeloPaymentElectionCapabilityRefusedError,
     ModeloPaymentElectionIncompatibleError,
     ModeloPriorDomiciliationElectionRefusedError,
     ModeloRefundElectionNotEligibleError,
+    WorkUnitNotFoundError,
+)
+from ...application.modelo._export import (
+    ModeloExportCommand,
+    ModeloExportCrossBucketRefusedError,
+    ModeloExportNoActiveBucketError,
+    ModeloExportOutputPathError,
+    export_modelo_revision,
+)
+from ...application.modelo._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from ...application.modelo._review_package import (
+    ReviewPackageError,
+    ReviewPackageIntegrityError,
+    ReviewPackageRevisionStateError,
+    build_review_package,
+    verify_review_package,
+)
+from ...application.modelo._review_package_collab_audit import emit_collab_feedback_countersign_attached_event
+from ...application.modelo._review_package_counter_sign import (
+    CounterSignedReceipt,
+    ReviewPackageCounterSigningError,
+    counter_sign_review_package,
+    verify_counter_signed_receipt,
+)
+from ...application.modelo._review_package_feedback import (
+    FeedbackCounterSignatureInvalidError,
+    ReviewPackageFeedbackError,
+    build_feedback_package,
+    encrypt_feedback_package_for_originator,
+    import_feedback_package,
+)
+from ...application.modelo._review_package_recipient_encryption import (
     RecipientDecryptionError,
     RecipientEncryptedPackage,
     RecipientEncryptionError,
-    RecipientFingerprintRegistryRepository,
-    RecipientNotRegisteredError,
-    ReviewPackageCounterSigningError,
-    ReviewPackageError,
-    ReviewPackageFeedbackError,
-    ReviewPackageIntegrityError,
-    ReviewPackageRevisionStateError,
-    ReviewPackageSigningError,
-    SignedReviewPackage,
-    WorkUnitNotFoundError,
-    build_feedback_package,
-    build_review_package,
-    counter_sign_review_package,
     decrypt_review_package_for_recipient,
-    emit_collab_feedback_countersign_attached_event,
-    encrypt_feedback_package_for_originator,
     encrypt_review_package_for_recipient,
     ensure_recipient_encryption_keypair,
+)
+from ...application.modelo._review_package_recipient_registry import (
+    RecipientFingerprintRegistryRepository,
+    RecipientNotRegisteredError,
+)
+from ...application.modelo._review_package_signing import (
+    ReviewPackageSigningError,
+    SignedReviewPackage,
     ensure_review_package_signing_keypair,
-    export_modelo_revision,
-    get_work_unit,
-    import_feedback_package,
     review_package_signing_public_key,
     sign_review_package,
-    verify_counter_signed_receipt,
-    verify_review_package,
     verify_review_package_signature,
 )
+from ...application.modelo._selectors import (
+    ModeloCalculationRevisionSelector,
+    ModeloCalculationRevisionSelectorAmbiguousError,
+    ModeloCalculationRevisionSelectorNotFoundError,
+    ModeloCalculationRevisionSelectorStateError,
+)
+from ...application.modelo._work_lifecycle import get_work_unit
 from ...application.modelo.work_addressing import (
     ModeloWorkAddressNotFoundError,
     ModeloWorkPeriodTokenError,
-    resolve_modelo_revision_for_operator_target,
 )
 from ...core import PaymentElection, Period, PriorDomiciliationElection, RefundElection
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr
 from ._common import _filing_taxpayer_or_refuse, emit_envelope
+from ._modelo_behavior_support import resolve_revision_for_cli
 from ._modelo_cli_support import (
     parse_revision_selector,
     resolve_default_actor,
@@ -180,13 +196,13 @@ def review_package_build(
         )
     try:
         typed_period = _resolve_optional_cli_period(year=year, period=period)
-        selected_revision = resolve_modelo_revision_for_operator_target(
+        selected_revision = resolve_revision_for_cli(
             calculation_revision_id=validate_calculation_revision_id(revision) if revision is not None else None,
             work_unit_id=validate_work_unit_id(work_unit_id) if work_unit_id is not None else None,
             modelo=modelo,
             year=year,
             period=typed_period,
-            registry_revision_id=registry_revision,
+            registry_revision=registry_revision,
             bucket_id=bucket_id,
             selector=parse_revision_selector(select),
             default_for="export",

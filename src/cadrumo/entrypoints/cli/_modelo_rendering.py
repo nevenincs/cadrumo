@@ -21,10 +21,10 @@ from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...application.modelo import (
+from ...application.modelo._result_summary import calculation_result_summary
+from ...application.modelo._verification_preconditions import VerificationFindingPreconditionProjection
+from ...application.modelo._work_plazo import (
     ModeloWorkDeadlinePosture,
-    VerificationFindingPreconditionProjection,
-    calculation_result_summary,
     modelo_work_deadline_posture,
 )
 from ...core import CasillaId

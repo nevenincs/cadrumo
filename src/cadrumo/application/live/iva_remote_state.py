@@ -38,7 +38,6 @@ from typing import ClassVar, override
 
 from pydantic import BaseModel
 
-from ...adapters.outbound.aeat.auth.authenticator_types import AeatSession as _AeatSession
 from ...adapters.outbound.aeat.sede import PRE303_PRESENTATION_SERVICE_URL as _PRE303_PRESENTATION_SERVICE_URL
 from ...adapters.outbound.aeat.sede import Declaracion as _Declaracion
 from ...adapters.outbound.aeat.sede import FiledDeclaracionObservation as _FiledDeclaracionObservation
@@ -59,6 +58,7 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage import (
     secure_object_repository_for_active_bucket as _secure_object_repository_for_active_bucket,
 )
+from ...application.auth.session_types import AeatSession as _AeatSession
 from ...application.auth.sessions import AuthenticatedAeatSessionResult as _AuthenticatedAeatSessionResult
 from ...application.auth.sessions import ensure_authenticated_aeat_session as _ensure_authenticated_aeat_session
 from ...application.calculations import CalculationObservationRepository as _CalculationObservationRepository

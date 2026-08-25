@@ -781,7 +781,7 @@ def overview_prepare(
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ...application.ledger.evidence import PurchaseInvoiceEvidenceService
     from ...application.ledger.preflight import preflight_ledger_tax_readiness
-    from ...application.modelo import registry_describe_modelo_for_scope
+    from ...application.modelo._registry_discovery import registry_describe_modelo_for_scope
     from ...application.overview import build_data_prep_walkthrough
     from ...domain.calculations.registry import RegistrySnapshotError
 
@@ -845,7 +845,9 @@ def overview_pipeline(
     from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ...application.ledger.actions_manual import summarize_manual_transactions
-    from ...application.modelo import get_calculation_revision, list_verification_reports, list_work_units
+    from ...application.modelo._calculation_actions import get_calculation_revision
+    from ...application.modelo._filing_actions import list_verification_reports
+    from ...application.modelo._work_lifecycle import list_work_units
     from ...application.overview import build_pipeline_health_report
     from ...domain.modelos import CalculationRevision, VerificationReport
     from ._ledger_payloads import LedgerStatusResult

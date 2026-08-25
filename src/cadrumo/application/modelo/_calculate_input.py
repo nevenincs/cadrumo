@@ -80,6 +80,7 @@ from ...domain.modelos import (
     ModeloDetailRow,
     ModeloError,
     WorkUnit,
+    WorkUnitCatalogue,
     compute_dt12_reduccion_plan_pensiones,
     compute_sal_reserva_especial_dotacion,
     dt12_regime_window_eligibility,
@@ -342,7 +343,12 @@ def calculate_modelo_work_revision(
         filing_instance_evidence=inputs.filing_instance_evidence,
     )
     revision = calculation.revision
-    work_unit = _captured_work_unit(revision.work_unit_id)
+    catalogue, bucket_id = _capture_work_catalogue(revision.work_unit_id)
+    work_unit = _selected_work_unit(
+        work_unit_id=revision.work_unit_id,
+        catalogue=catalogue,
+        bucket_id=bucket_id,
+    )
     plazo_notices: tuple[Notice, ...] = ()
     if work_unit.modelo == Modelo.M210:
         from ._m303_regimen_simplificado_scope import active_taxpayer_profile
@@ -414,7 +420,8 @@ def build_work_calculate_input_bundle(
     :func:`cadrumo.application.modelo.apply_calculation_shortcut_inputs`.
     """
     _validate_detail_rows(detail_rows)
-    work_unit = _captured_work_unit(work_unit_id)
+    catalogue, bucket_id = _capture_work_catalogue(work_unit_id)
+    work_unit = _selected_work_unit(work_unit_id=work_unit_id, catalogue=catalogue, bucket_id=bucket_id)
     revision = _revision_for_work_unit(work_unit)
     revision_casillas_by_id = casillas_by_id(revision)
     casilla_inputs: dict[CasillaId, Decimal] = {}
@@ -718,11 +725,16 @@ def is_detail_casilla_override_key(key: str) -> bool:
     return key.strip().lower().startswith(_DETAIL_CASILLA_OVERRIDE_PREFIXES)
 
 
-def _captured_work_unit(work_unit_id: str) -> WorkUnit:
-    """Capture and exactly resolve one work unit through the canonical selector."""
+def _capture_work_catalogue(work_unit_id: str) -> tuple[WorkUnitCatalogue, str]:
+    """Capture the active work catalogue before a caller invokes the pure selector."""
     request = ModeloWorkSelectorRequest(work_unit_id=work_unit_id)
     bucket_id = resolve_modelo_work_bucket(request)
-    catalogue = WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
+    return WorkUnitCatalogueRepository(bucket_id=bucket_id).load(), bucket_id
+
+
+def _selected_work_unit(*, work_unit_id: str, catalogue: WorkUnitCatalogue, bucket_id: str) -> WorkUnit:
+    """Translate canonical exact-selection absence for calculation input callers."""
+    request = ModeloWorkSelectorRequest(work_unit_id=work_unit_id)
     resolution = select_modelo_work_resolution(request, catalogue=catalogue, bucket_id=bucket_id)
     if resolution.state is not ModeloWorkSelectorState.RESOLVED or resolution.work_unit is None:
         raise LookupError(f"work unit {work_unit_id!r} not found")

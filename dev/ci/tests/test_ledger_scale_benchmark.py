@@ -88,11 +88,9 @@ from cadrumo.application.aggregation import (
 from cadrumo.application.aggregation.tests._iva_authority_support import aggregate_iva_ledger_observations
 from cadrumo.application.bienes_inversion import BienesInversionIvaRegister
 from cadrumo.application.calculations import CalculationObservationRepository
-from cadrumo.application.modelo import (
-    calculate_modelo_revision_from_bucket_aggregation,
-    create_work_unit,
-    persist_filed_revision_observation,
-)
+from cadrumo.application.modelo._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
+from cadrumo.application.modelo._filed_revision_observation import persist_filed_revision_observation
+from cadrumo.application.modelo._work_lifecycle import create_work_unit
 from cadrumo.core import CasillaId, Period, validated_casilla_id
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.domain.calculations.registry import RegistryModeloObservation

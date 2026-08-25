@@ -133,7 +133,7 @@ if TYPE_CHECKING:
     from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...application.auth.catalogue import AuthProviderListing
-    from ...application.modelo import ModeloWorkLifecycleContinuation
+    from ...application.modelo._work_lifecycle import ModeloWorkLifecycleContinuation
     from ...application.operator_actions import (
         ActionArgumentBinding,
         ActionArgumentBindingSpecification,

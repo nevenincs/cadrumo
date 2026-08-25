@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from ....application.calculations import CalculationObservationRepository
-from ....application.modelo import APP_FILING_SOURCE_KIND
+from ....application.modelo._filed_revision_observation import APP_FILING_SOURCE_KIND
 from ....domain.calculations.registry import RegistryModeloObservation
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord

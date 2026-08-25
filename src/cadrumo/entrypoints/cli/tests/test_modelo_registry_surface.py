@@ -31,7 +31,7 @@ from pathlib import Path
 import pytest
 import typer
 
-from ....application.modelo import WorkUnitNotFoundError
+from ....application.modelo._action_errors import WorkUnitNotFoundError
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....domain.user_profile.values import ProfileSetupState
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
@@ -446,7 +446,7 @@ def test_discovery_bad_parameter_lists_declared_ids_as_facts_not_an_action() -> 
 def test_work_calculate_missing_m200_m202_relation_prefill_is_advisory(tmp_path) -> None:
     """The live M200 relation-prefill path warns rather than refusing calculation."""
 
-    from ....application.modelo import create_work_unit
+    from ....application.modelo._work_lifecycle import create_work_unit
     from ....core import Period
     from ....domain.user_profile.values import UserProfileFact, UserProfileRecord
     from ....tests.profile_capsule import seed_test_profile_record

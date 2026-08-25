@@ -33,14 +33,14 @@ from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 from ...live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository
 from ...live.snapshot_base import SnapshotLifecycleState
-from .. import (
+from .._borrador_binding import (
     Modelo100BorradorBindingCommand,
     Modelo100BorradorBindingError,
     Modelo100BorradorSourceResolver,
-    calculate_modelo_revision,
-    create_work_unit,
     resolve_modelo_100_borrador_bindings,
 )
+from .._calculation_actions import calculate_modelo_revision
+from .._work_lifecycle import create_work_unit
 from .._borrador_binding import _decimal_value
 from .._registry_helpers import validate_casilla_input_ids
 

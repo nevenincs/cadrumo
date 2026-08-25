@@ -50,8 +50,8 @@ source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-13798"
 review_status = "reviewed"
 
 # Retiered 2026-08-15: this 1094-byte orden excerpt carries no annex section
-# and no record-layout vocabulary, so it was never layout authority -- the
-# real Diseño de Registro is aeat-dr-165-2026 below. The excerpt remains a
+# and no record-layout vocabulary, so it was never layout authority. The
+# bundled Diseños de Registro below are the layout evidence. The excerpt remains a
 # genuine official_source_guidance citation (the orden that approves the
 # form), just not the layout's home.
 [sources."enrolled-modelo-165-layout"]
@@ -65,6 +65,43 @@ retrieved_at = 2026-07-04
 published_at = 2013-12-27
 applies_from = 2013-12-28
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-13798"
+review_status = "reviewed"
+
+# AEAT's historical index publishes the original design under the approving
+# Orden's title. BOE-A-2013-13798 states first application to ejercicio 2013;
+# Orden HFP/1822/2016 supersedes it from ejercicio 2016. The PDF's type-2 table
+# itself has an official 102-103 hole, so it is catalogued as evidence but is
+# deliberately not joined to the live export layout until that corpus defect is
+# adjudicated without inventing those two bytes.
+[sources."aeat-dr-165-2013-2015"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2013"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_165/files/02-165-orden-hap-2455-2013.pdf"
+sha256 = "053f93614de9ca37a481a416f74236277422be3efb79211a45eaa1819d1f974b"
+bytes = 184442
+retrieved_at = 2026-08-25
+applies_from = 2013-01-01
+applies_to = 2015-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DLogicos_mod_165.pdf"
+review_status = "reviewed"
+
+# AEAT labels this historical PDF as the 2013 Orden updated by HFP/1822/2016.
+# That Orden's final provision states first use for declaraciones of ejercicio
+# 2016; the later 2023 amendment starts a distinct subsequent epoch.
+[sources."aeat-dr-165-2016-2022"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2016"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_165/files/03-165-orden-hap-2455-2013-actualizado-por-orden-hfp-1822-2016.pdf"
+sha256 = "2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5"
+bytes = 69005
+retrieved_at = 2026-08-25
+applies_from = 2016-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR165_2016.pdf"
 review_status = "reviewed"
 
 [sources."aeat-dr-165-2026"]

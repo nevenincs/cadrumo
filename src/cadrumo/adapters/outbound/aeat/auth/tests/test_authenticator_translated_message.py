@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
+from ......core.errors import AeatLoginAssertionError
 from ......core.i18n import tr
-from ..errors import AeatLoginAssertionError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

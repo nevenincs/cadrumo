@@ -20,7 +20,8 @@ from pathlib import Path
 
 import typer
 
-from ...application.modelo import ModeloReconciliationEvidenceKind, ModeloReconciliationReport
+from ...application.modelo._reconcile import ModeloReconciliationReport
+from ...application.modelo._reconciliation_records import ModeloReconciliationEvidenceKind
 from ...core.i18n import tr
 from ...domain.modelos import WorkUnit
 from ._common import active_bucket_id_or_refuse, emit_envelope
@@ -153,7 +154,10 @@ def reconcile_file_verb(
     kind: ModeloReconciliationEvidenceKind | None = None,
 ) -> None:
     """Reconcile a work unit against a local justificante or declaración PDF file."""
-    from ...application.modelo import ModeloReconciliationCommand, modelo_reconcile
+    from ...application.modelo._reconcile import (
+        ModeloReconciliationCommand,
+        modelo_reconcile,
+    )
 
     resolved_actor = actor.strip() if actor else _resolve_default_actor_value()
     resolved_kind = kind if kind is not None else ModeloReconciliationEvidenceKind.JUSTIFICANTE
@@ -171,7 +175,7 @@ def reconcile_file_verb(
 
 def reconcile_history_verb(ctx: typer.Context, work_unit_id: str | None = None) -> None:
     """List past reconciliations recorded in the active profile."""
-    from ...application.modelo import list_modelo_reconciliations
+    from ...application.modelo._reconciliation_records import list_modelo_reconciliations
     from ._modelo_payloads_m036 import ModeloReconciliationHistoryResult, ModeloReconciliationHistoryRowPayload
 
     _require_profile()

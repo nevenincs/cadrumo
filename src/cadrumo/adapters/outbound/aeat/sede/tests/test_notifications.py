@@ -7,12 +7,13 @@ actual column shape AEAT serves.
 
 from __future__ import annotations
 
-from typing import cast
+from typing import Literal, cast
 from urllib.parse import urlsplit
 
 import pytest
 from pydantic import AnyUrl
 
+from ......application.auth.session_types import AeatSession
 from ......core.config import Settings
 from ......domain.calculations.registry import (
     RegistryValidationError,
@@ -24,7 +25,6 @@ from ......tests.aeat_literal_fixtures import (
     NOTIFICATION_ACKNOWLEDGE_PATH_CANARY,
     NOTIFICATION_COMPARECER_PATH_CANARY,
 )
-from ...auth.authenticator_types import AeatSession
 from ...browser.tests.real_http_boundary import opened_http_boundary, real_browser_factory
 from ..errors import SedeNavigationError
 from ..notifications import (
@@ -472,7 +472,12 @@ class TestNotificationsQueryWindow:
         assert configured > 4, "the search window no longer outreaches the four-year prescription period"
 
 
-def _row(*, leida, tipo="notificacion", fecha_notificacion=None):
+def _row(
+    *,
+    leida: bool | None,
+    tipo: Literal["comunicacion", "notificacion", "pendiente", "unknown"] = "notificacion",
+    fecha_notificacion=None,
+):
     """Return one notification row differing only in its read/served state."""
     from datetime import date as _date
 

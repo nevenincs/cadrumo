@@ -23,10 +23,12 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....application.modelo import (
+from ....application.modelo._action_errors import (
     WorkUnitAlreadyDiscardedError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
+)
+from ....application.modelo._work_lifecycle import (
     create_work_unit,
     discard_work_unit,
     get_work_unit,

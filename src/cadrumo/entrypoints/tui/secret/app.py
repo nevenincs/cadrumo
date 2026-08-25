@@ -25,7 +25,7 @@ See Also:
     :func:`~cadrumo.application.user_profile.register_profile_with_credentials`
         The application door this screen drives; it creates the profile,
         provisions the key material, and leaves the session unlocked.
-    :func:`~cadrumo.core.assess_profile_password`
+    :func:`~cadrumo.core.credentials.assess_profile_password`
         The canonical assessment behind validation and the live strength line.
     :class:`LoginApp`
         The other credential surface; the two share their attempt
@@ -61,11 +61,11 @@ from ....entrypoints.tui.components.widgets import ContentScroll
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
+    from ....application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
     from ....application.user_profile.login_session import ProfileLoginOutcome
+    from ....application.user_profile.prospective_password import ProspectiveProfilePasswordRefusal
     from ....application.user_profile.recovery_custody import ProfileRecoveryEnrollment
     from ....application.user_profile.registration import ProfileRegistrationOutcome
-    from ....application.user_profile.prospective_password import ProspectiveProfilePasswordRefusal
-    from ....application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
 
 
 CREDENTIAL_PANEL_CSS: Final[str] = """

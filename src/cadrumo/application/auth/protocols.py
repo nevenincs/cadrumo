@@ -10,9 +10,99 @@ records to the persisted-session service.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Generator, Mapping
+from contextlib import contextmanager
+from contextvars import ContextVar
 from pathlib import Path
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
+
+if TYPE_CHECKING:
+    from ...core.config import Settings
+
+
+@runtime_checkable
+class BrowserResponsePort(Protocol):
+    """Minimal response surface needed to classify an authentication probe."""
+
+    @property
+    def ok(self) -> bool:
+        """Whether the browser classified the response as successful."""
+        ...
+
+    @property
+    def status(self) -> int:
+        """HTTP status observed by the browser."""
+        ...
+
+
+@runtime_checkable
+class BrowserPagePort(Protocol):
+    """Minimal page surface consumed by authentication providers."""
+
+    @property
+    def url(self) -> str:
+        """Final page URL after redirects."""
+        ...
+
+    async def goto(
+        self,
+        url: str,
+        *,
+        timeout: float | None = None,
+    ) -> BrowserResponsePort | None:
+        """Navigate to ``url`` and return its response, if any."""
+        ...
+
+    async def click(self, selector: str) -> None:
+        """Click one selector while driving an authentication flow."""
+        ...
+
+    async def close(self) -> None:
+        """Close the page after the authentication probe completes."""
+        ...
+
+
+@runtime_checkable
+class BrowserContextPort(Protocol):
+    """Minimal browser context used by authentication providers."""
+
+    async def new_page(self) -> BrowserPagePort:
+        """Create a page for a live verification flow."""
+        ...
+
+    async def storage_state(self) -> Mapping[str, object]:
+        """Return the in-memory browser storage state."""
+        ...
+
+    async def close(self) -> None:
+        """Close the context during provider teardown."""
+        ...
+
+
+@runtime_checkable
+class BrowserSessionPort(Protocol):
+    """Browser lifecycle required by concrete authentication providers."""
+
+    async def create_context(
+        self,
+        *,
+        provisioner: object | None = None,
+        storage_state: Mapping[str, object] | None = None,
+    ) -> BrowserContextPort:
+        """Create a context with optional provider or persisted state."""
+        ...
+
+    async def close(self) -> None:
+        """Close the owned browser process."""
+        ...
+
+
+class BrowserSessionFactoryPort(Protocol):
+    """Async browser-session constructor accepted by auth composition."""
+
+    async def __call__(self, settings: Settings) -> BrowserSessionPort:
+        """Create the concrete outbound browser session for ``settings``."""
+        ...
 
 
 @runtime_checkable
@@ -50,7 +140,35 @@ class SessionStoreProtocol(Protocol):
         ...
 
 
+_BOUND_SESSION_STORE: ContextVar[SessionStoreProtocol] = ContextVar("cadrumo_auth_session_store")
+
+
+@contextmanager
+def bind_session_store(store: SessionStoreProtocol) -> Generator[SessionStoreProtocol]:
+    """Bind the encrypted outbound session store for one runtime scope."""
+    token = _BOUND_SESSION_STORE.set(store)
+    try:
+        yield store
+    finally:
+        _BOUND_SESSION_STORE.reset(token)
+
+
+def session_store() -> SessionStoreProtocol:
+    """Return the session store installed by outward composition."""
+    try:
+        return _BOUND_SESSION_STORE.get()
+    except LookupError as exc:
+        raise RuntimeError("AEAT authentication session-store composition is not bound") from exc
+
+
 __all__ = [
+    "BrowserContextPort",
+    "BrowserPagePort",
+    "BrowserResponsePort",
+    "BrowserSessionFactoryPort",
+    "BrowserSessionPort",
     "PersistedSessionDataProtocol",
     "SessionStoreProtocol",
+    "bind_session_store",
+    "session_store",
 ]

@@ -38,7 +38,7 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, IvaWalletDecisionRepository
-from .. import create_work_unit
+from .._work_lifecycle import create_work_unit
 
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _TAXPAYER_NIF = "12345678Z"

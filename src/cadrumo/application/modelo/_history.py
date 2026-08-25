@@ -56,9 +56,11 @@ from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
     VerificationReportCatalogueRepositoryProtocol,
+    WorkUnitCatalogue,
 )
 from ._action_errors import WorkUnitNotFoundError
 from .work_addressing import (
+    ModeloWorkResolution,
     ModeloWorkSelectorRequest,
     ModeloWorkSelectorState,
     resolve_modelo_work_bucket,
@@ -88,6 +90,16 @@ class WorkUnitHistory(BaseModel):
     bucket_id: BucketId
     work_unit_id: WorkUnitId
     events: tuple[WorkUnitHistoryEvent, ...] = Field(default_factory=tuple)
+
+
+def _select_history_work_unit(
+    request: ModeloWorkSelectorRequest,
+    *,
+    catalogue: WorkUnitCatalogue,
+    bucket_id: str,
+) -> ModeloWorkResolution:
+    """Select a history root from the caller-captured catalogue."""
+    return select_modelo_work_resolution(request, catalogue=catalogue, bucket_id=bucket_id)
 
 
 def assemble_work_unit_history(
@@ -133,7 +145,7 @@ def assemble_work_unit_history(
             context={"work_unit_id": work_unit_id},
         ) from exc
     bucket_id = wu_repo.bucket_id or resolve_modelo_work_bucket(request)
-    resolution = select_modelo_work_resolution(
+    resolution = _select_history_work_unit(
         request,
         catalogue=wu_repo.load(),
         bucket_id=bucket_id,

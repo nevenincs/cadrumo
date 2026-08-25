@@ -34,7 +34,7 @@ from ...operator_actions import (
 )
 from cadrumo.application.workflow.abort import WorkflowAbortReason
 from cadrumo.application.workflow.run_models import WorkflowResult, WorkflowStage, WorkflowStep
-from .. import ModeloWorkflowGateError
+from .._action_errors import ModeloWorkflowGateError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -45,7 +45,7 @@ from .....application.live.borrador_100 import (
     derive_borrador_100_snapshot_id,
 )
 from .....application.live.snapshot_base import SnapshotLifecycleState
-from .....application.modelo import RecipientFingerprintRegistryRepository
+from .....application.modelo._review_package_recipient_registry import RecipientFingerprintRegistryRepository
 from .....application.repair_integrity import (
     RepairRemediationDecision,
     RepairRemediationDecisionRepository,
@@ -132,7 +132,7 @@ from .....tests.aeat_literal_fixtures import (
     aeat_url,
 )
 from .....tests.master_key import EphemeralMasterKeyProvider
-from ....outbound.aeat.auth import _session_store as _session_store
+from ....outbound.aeat.auth import session_store as _session_store
 from ....outbound.aeat.sede import ExpedienteNotFoundError, FiledDeclaracionArtefact, FiledDeclaracionObservationStore
 from ....outbound.google import (
     REQUIRED_SCOPES,

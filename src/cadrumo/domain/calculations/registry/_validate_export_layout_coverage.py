@@ -124,7 +124,6 @@ from typing import Final
 from ....core import ExportLayoutFormat
 from ....core.resources import resolve_corpus_binary
 from .._export_field_kind import CasillaFieldKind
-from .errors import RegistryValidationError
 from ._export import derive_export_layouts_from_bindings
 from ._record_design import _naturaleza_or_none, extract_record_design
 from ._record_design_schema import RecordDesignField, RecordDesignSheet
@@ -137,6 +136,7 @@ from ._schema import (
     ModeloRevision,
     SourceReference,
 )
+from .errors import RegistryValidationError
 
 #: AEAT's own obligatoriness marking, read from the column its designs head
 #: ``Oblig.`` (which the parser lands in ``RecordDesignField.validation``).
@@ -469,13 +469,17 @@ def _declared_fill_naturaleza(field: RecordDesignField) -> bool:
 
 
 def _position(sheet_name: str, field: RecordDesignField) -> _RequiredPosition:
+    description_tail = re.split(r"[.;:]\s*", field.description.strip())[-1] if field.description else ""
     return _RequiredPosition(
         sheet=sheet_name,
         offset=field.offset,
         length=field.length,
         description=field.description,
         obligatorio=bool(_OBLIGATORIO.search(field.validation or "")),
-        declared_blank=bool(field.content and _DECLARED_FILL.match(field.content.strip())),
+        declared_blank=bool(
+            (field.content and _DECLARED_FILL.match(field.content.strip()))
+            or (description_tail and _DECLARED_FILL.match(description_tail))
+        ),
     )
 
 

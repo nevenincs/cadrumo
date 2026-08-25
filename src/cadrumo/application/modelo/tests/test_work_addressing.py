@@ -36,9 +36,9 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
-    CalculationRevisionNotFoundError,
-    ModeloCalculationRevisionSelector,
+from .._action_errors import CalculationRevisionNotFoundError
+from .._selectors import ModeloCalculationRevisionSelector
+from .._work_lifecycle import (
     create_work_unit,
     discard_work_unit,
 )
@@ -253,17 +253,23 @@ def test_visible_and_exact_work_targets_round_trip_to_same_work_unit(
     )
     exact = ModeloExactWorkUnitTarget(work_unit_id=work_unit.work_unit_id, bucket_id=bucket_id)
 
-    assert resolve_modelo_work_unit_id(visible) == work_unit.work_unit_id
-    assert resolve_modelo_work_unit_id(exact) == work_unit.work_unit_id
+    catalogue = work_repository.load()
+    assert resolve_modelo_work_unit_id(visible, catalogue=catalogue, bucket_id=bucket_id) == work_unit.work_unit_id
+    assert resolve_modelo_work_unit_id(exact, catalogue=catalogue, bucket_id=bucket_id) == work_unit.work_unit_id
 
-    projected = project_modelo_work_target(visible)
+    projected = project_modelo_work_target(visible, catalogue=catalogue, bucket_id=bucket_id)
     assert projected.work_unit_id == work_unit.work_unit_id
     assert projected.short_work_unit_id == work_unit.work_unit_id[-12:]
     assert projected.modelo == "130"
     assert projected.filing_year == 2026
     assert projected.period == Period.from_year_and_code(2026, "1T")
 
-    current_pick = resolve_modelo_revision_pick(target=visible, pick=ModeloRevisionPick(default_for="verify"))
+    current_pick = resolve_modelo_revision_pick(
+        target=visible,
+        pick=ModeloRevisionPick(default_for="verify"),
+        catalogue=catalogue,
+        resolved_bucket_id=bucket_id,
+    )
     assert current_pick.calculation_revision_id == draft.calculation_revision_id
     assert current_pick.work_unit_id == work_unit.work_unit_id
     assert current_pick.short_calculation_revision_id == draft.calculation_revision_id[-12:]
@@ -271,6 +277,8 @@ def test_visible_and_exact_work_targets_round_trip_to_same_work_unit(
     explicit_pick = resolve_modelo_revision_pick(
         target=exact,
         pick=ModeloRevisionPick.explicit(draft.calculation_revision_id),
+        catalogue=catalogue,
+        resolved_bucket_id=bucket_id,
     )
     assert explicit_pick.calculation_revision_id == draft.calculation_revision_id
     assert explicit_pick.work_unit_id == work_unit.work_unit_id
@@ -321,8 +329,19 @@ def test_revision_pick_defaults_are_command_specific_under_one_work_unit(
         ),
     )
 
-    verify_pick = resolve_modelo_revision_pick(target=visible, pick=ModeloRevisionPick(default_for="verify"))
-    export_pick = resolve_modelo_revision_pick(target=visible, pick=ModeloRevisionPick(default_for="export"))
+    catalogue = work_repository.load()
+    verify_pick = resolve_modelo_revision_pick(
+        target=visible,
+        pick=ModeloRevisionPick(default_for="verify"),
+        catalogue=catalogue,
+        resolved_bucket_id=bucket_id,
+    )
+    export_pick = resolve_modelo_revision_pick(
+        target=visible,
+        pick=ModeloRevisionPick(default_for="export"),
+        catalogue=catalogue,
+        resolved_bucket_id=bucket_id,
+    )
 
     assert verify_pick.calculation_revision_id == draft.calculation_revision_id
     assert export_pick.calculation_revision_id == filed.calculation_revision_id
@@ -339,7 +358,12 @@ def test_revision_pick_defaults_are_command_specific_under_one_work_unit(
         ),
     )
 
-    file_pick = resolve_modelo_revision_pick(target=visible, pick=ModeloRevisionPick(default_for="file"))
+    file_pick = resolve_modelo_revision_pick(
+        target=visible,
+        pick=ModeloRevisionPick(default_for="file"),
+        catalogue=work_repository.load(),
+        resolved_bucket_id=bucket_id,
+    )
     assert file_pick.calculation_revision_id == verified.calculation_revision_id
     assert file_pick.work_unit_id == work_unit.work_unit_id
 
@@ -367,6 +391,8 @@ def test_exact_work_unit_id_in_calculation_revision_slot_has_only_the_canonical_
             registry_revision_id=None,
             selector=ModeloCalculationRevisionSelector.CURRENT,
             default_for=default_for,
+            catalogue=work_repository.load(),
+            resolved_bucket_id=bucket_id,
         )
 
     failure = raised.value.precondition_failure
@@ -425,6 +451,8 @@ def test_positional_work_unit_id_resolves_its_current_revision_after_calculation
         registry_revision_id=None,
         selector=ModeloCalculationRevisionSelector.CURRENT,
         default_for=default_for,
+        catalogue=work_repository.load(),
+        resolved_bucket_id=bucket_id,
     )
 
     assert resolved == revision
@@ -461,6 +489,8 @@ def test_discarded_work_unit_id_in_calculation_revision_slot_is_a_terminal_appli
             registry_revision_id=None,
             selector=ModeloCalculationRevisionSelector.CURRENT,
             default_for=default_for,
+            catalogue=work_repository.load(),
+            resolved_bucket_id=bucket_id,
         )
 
     failure = raised.value.precondition_failure

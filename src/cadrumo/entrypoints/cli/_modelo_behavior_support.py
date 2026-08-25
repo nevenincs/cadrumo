@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import typer
 
-from ...application.modelo import (
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ...application.modelo._registry_discovery import declared_modelo_period_tokens
+from ...application.modelo._selectors import (
     ModeloCalculationRevisionDefault,
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
     ModeloCalculationRevisionSelectorNotFoundError,
     ModeloCalculationRevisionSelectorStateError,
-    declared_modelo_period_tokens,
 )
 from ...application.modelo.work_addressing import (
     ModeloWorkAddressNotFoundError,
@@ -28,7 +29,7 @@ from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.errors import CadrumoError
 from ...core.i18n import tr
 from ...core.logging import get_logger
-from ...domain.modelos import CalculationRevision, WorkUnit
+from ...domain.modelos import CalculationRevision, WorkUnit, WorkUnitCatalogue
 from ._common import _no_active_profile_refusal
 from ._modelo_cli_support import (
     bad_parameter_from_localized_context,
@@ -40,6 +41,15 @@ from ._modelo_cli_support import (
 )
 
 _log = get_logger(__name__)
+
+
+def _captured_work_catalogue(bucket_id: str | None) -> tuple[WorkUnitCatalogue, str]:
+    """Capture the caller-owned work catalogue under one explicit bucket."""
+    resolved_bucket_id = bucket_id or resolve_active_bucket_id()
+    if resolved_bucket_id is None:
+        require_active_profile()
+        raise AssertionError("require_active_profile must refuse without a bucket")
+    return (WorkUnitCatalogueRepository(bucket_id=resolved_bucket_id).load(), resolved_bucket_id)
 
 
 def work_address_for_cli(
@@ -77,6 +87,7 @@ def resolve_work_unit_for_cli(
 ) -> WorkUnit:
     exact_id = validate_work_unit_id(work_unit_id) if work_unit_id is not None else None
     typed_period = resolve_optional_cli_period(year=year, period=period, modelo=modelo)
+    catalogue, resolved_bucket_id = _captured_work_catalogue(bucket_id)
     try:
         return resolve_modelo_work_unit_for_operator_target(
             work_unit_id=exact_id,
@@ -85,6 +96,8 @@ def resolve_work_unit_for_cli(
             period=typed_period,
             registry_revision_id=revision,
             bucket_id=bucket_id,
+            catalogue=catalogue,
+            resolved_bucket_id=resolved_bucket_id,
         )
     except (
         ModeloWorkUnitNotFoundError,
@@ -103,7 +116,7 @@ def resolve_revision_for_cli(
     work_unit_id: str | None,
     modelo: str | None,
     year: int | None,
-    period: str | None,
+    period: str | Period | None,
     registry_revision: str | None,
     bucket_id: str | None = None,
     selector: str = ModeloCalculationRevisionSelector.CURRENT.value,
@@ -114,7 +127,12 @@ def resolve_revision_for_cli(
         validate_calculation_revision_id(calculation_revision_id) if calculation_revision_id is not None else None
     )
     exact_work_id = validate_work_unit_id(work_unit_id) if work_unit_id is not None else None
-    typed_period = resolve_optional_cli_period(year=year, period=period, modelo=modelo)
+    typed_period = (
+        period
+        if isinstance(period, Period)
+        else resolve_optional_cli_period(year=year, period=period, modelo=modelo)
+    )
+    catalogue, resolved_bucket_id = _captured_work_catalogue(bucket_id)
     try:
         return resolve_modelo_revision_for_operator_target(
             calculation_revision_id=validated_revision_id,
@@ -126,6 +144,8 @@ def resolve_revision_for_cli(
             bucket_id=bucket_id,
             selector=parsed_selector,
             default_for=default_for,
+            catalogue=catalogue,
+            resolved_bucket_id=resolved_bucket_id,
         )
     except ModeloWorkAddressNotFoundError as exc:
         if exc.precondition_failure is not None:
@@ -292,7 +312,7 @@ def _date_binding_profile_requirements(unit: WorkUnit | None, binding_id: str) -
     if unit is None:
         return binding_id
 
-    from ...application.modelo import profile_requirements_for_binding
+    from ...application.modelo._data_inventory import profile_requirements_for_binding
 
     return (
         profile_requirements_for_binding(

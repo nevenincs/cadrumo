@@ -25,19 +25,23 @@ from ....domain.modelos import (
     upsert_work_unit,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
+from .._action_errors import (
     AmendmentEvidenceMissingError,
     CalculationRevisionNotFoundError,
     ExternalModeloImportError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
-    amend_modelo_revision,
+)
+from .._amendment_actions import amend_modelo_revision
+from .._calculation_actions import (
     calculate_modelo_revision,
+    get_calculation_revision,
+    mark_revision_verificado_completo,
+)
+from .._external_import_actions import import_external_filing_evidence
+from .._work_lifecycle import (
     create_work_unit,
     discard_work_unit,
-    get_calculation_revision,
-    import_external_filing_evidence,
-    mark_revision_verificado_completo,
 )
 from ._import_flow_support import (
     _IMPORT_INCOME_CASILLA,

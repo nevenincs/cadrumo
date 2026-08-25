@@ -14,8 +14,8 @@ from urllib.parse import urlsplit
 from playwright.async_api import BrowserContext, Playwright, Route, async_playwright
 from playwright.async_api import Error as PlaywrightError
 
+from ......application.auth.protocols import BrowserSessionFactoryPort
 from ......core.config import AEAT_CERTIFICATE_PROTECTED_PATH, AEAT_CERTIFICATE_PROTECTED_URL, Settings
-from ...auth.authenticator_types import BrowserSessionFactory
 from .. import BrowserSession, DefaultBrowserSession, PlaywrightStealthEvasion, Profile
 
 _EXTERNAL = Settings.external_constants()
@@ -296,7 +296,7 @@ def real_browser_factory(
     *,
     boundary: LocalHttpBoundary,
     profile_name: str,
-) -> BrowserSessionFactory:
+) -> BrowserSessionFactoryPort:
     """Return a factory composed entirely from the production browser adapters."""
 
     async def factory(settings: Settings) -> DefaultBrowserSession:

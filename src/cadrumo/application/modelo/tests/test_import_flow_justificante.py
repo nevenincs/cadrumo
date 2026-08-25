@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....domain.modelos import ExternalEvidenceKind
-from .. import ExternalModeloImportError
+from .._action_errors import ExternalModeloImportError
 from ._import_flow_support import (
     _T1,
     _TAX_ID,

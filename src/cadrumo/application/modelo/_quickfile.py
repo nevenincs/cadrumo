@@ -45,6 +45,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import AeatProductSoftwareIdentity, PaymentElection, Period, PriorDomiciliationElection, RefundElection
 from ...core.errors import CadrumoError
@@ -287,6 +288,7 @@ def run_modelo_quickfile(
             period=command.period,
             registry_revision_id=command.registry_revision_id,
             actor=command.actor,
+            catalogue=WorkUnitCatalogueRepository(bucket_id=command.bucket_id).load(),
         )
     except CadrumoError as exc:
         return _halted(

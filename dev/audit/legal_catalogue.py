@@ -29,11 +29,9 @@ from cadrumo.core.directory_scan import scan_directory
 
 from .._paths import UTF_8
 
-#: Sourced from ``dev._paths`` so the dev harness has one owner for it, not
-#: because ``cadrumo.core`` is off limits: the sanctioned direction is that
-#: ``src/cadrumo`` declares and ``dev/`` imports, through the package's public
-#: ``__all__`` facade — which is exactly what the ``scan_directory`` import
-#: above does. Only a package-private ``cadrumo.core._module`` path is barred.
+#: Sourced from ``dev._paths`` so the dev harness has one owner for it. The
+#: directory walk is imported from its canonical defining module above; no
+#: package facade, re-export, or private core path participates.
 _UTF_8: Final[str] = UTF_8
 
 #: The catalogue's authoring tree, relative to the repository root.

@@ -20,7 +20,8 @@ from cadrumo.application.workflow.run_models import (
     WorkflowStep,
 )
 
-from ....application.modelo import create_work_unit, workflow_period_for_work_unit
+from ....application.modelo._work_lifecycle import create_work_unit
+from ....application.modelo._workflow_gate import workflow_period_for_work_unit
 from ....application.operator_actions import (
     ActionArgumentBinding,
     ActionReference,

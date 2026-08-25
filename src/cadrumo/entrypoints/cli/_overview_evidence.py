@@ -169,7 +169,7 @@ def _local_modelo_work_units(bucket_id: str) -> tuple[tuple[WorkUnit, ...], Noti
     """
     try:
         from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-        from ...application.modelo import list_work_units
+        from ...application.modelo._work_lifecycle import list_work_units
 
         repository = WorkUnitCatalogueRepository(bucket_id=bucket_id)
         return list_work_units(bucket_id=bucket_id, include_discarded=False, repository=repository), None

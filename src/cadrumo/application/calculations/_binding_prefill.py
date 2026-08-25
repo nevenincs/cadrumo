@@ -933,7 +933,7 @@ def extract_modelo_303_local_iva_compensation_recurrence(
     :class:`BindingPrefillReport`.
     """
     if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != Modelo.M303.value:
-        from ..modelo import ModeloApplicabilityFilterError
+        from ..modelo._action_errors import ModeloApplicabilityFilterError
 
         raise ModeloApplicabilityFilterError(
             translated_message="application.calculations.iva_compensation.errors.local_recurrence_modelo_303_only",

@@ -39,7 +39,8 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ...modelo import calculate_modelo_revision, create_work_unit
+from ...modelo._calculation_actions import calculate_modelo_revision
+from ...modelo._work_lifecycle import create_work_unit
 from .._observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

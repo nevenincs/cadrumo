@@ -22,7 +22,7 @@ from decimal import Decimal
 
 import pytest
 
-from .. import resolve_calculation_binding_channels
+from .._calculation_resolution import resolve_calculation_binding_channels
 from .._calculation_resolution import build_calculation_replay_payloads
 from .._calculation_resolution import (
     resolve_calculation_binding_channels as _owner_resolve_calculation_binding_channels,
