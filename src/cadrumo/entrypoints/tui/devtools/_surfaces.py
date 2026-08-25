@@ -49,19 +49,19 @@ class Surface:
 
 
 def _registration() -> App[Any]:
-    from cadrumo.core import assess_profile_password
-    from cadrumo.entrypoints.tui.secret.app import RegistrationApp
+    from ....core import assess_profile_password
+    from ....entrypoints.tui.secret.app import RegistrationApp
 
     return RegistrationApp(assess=assess_profile_password, register=registration_attempt)
 
 
 def _login() -> App[Any]:
-    from cadrumo.application.user_profile.login_interaction import (
+    from ....application.user_profile.login_interaction import (
         attempt_profile_login,
         preselected_profile_login_id,
         profile_login_choices,
     )
-    from cadrumo.entrypoints.tui.secret.app import LoginApp
+    from ....entrypoints.tui.secret.app import LoginApp
 
     return LoginApp(
         choices=profile_login_choices(),
@@ -71,17 +71,17 @@ def _login() -> App[Any]:
 
 
 def _manager() -> App[Any]:
-    from cadrumo.application.operations import ManagerAction, ManagerActionOutcome
-    from cadrumo.application.user_profile import (
+    from ....application.operations import ManagerAction, ManagerActionOutcome
+    from ....application.user_profile import (
         CommittedProfileRepository,
         ProfileRecordRepository,
         apply_manager_profile_field_mutation,
         build_profile_overview,
         logout_active_profile,
     )
-    from cadrumo.core import require_active_bucket_id
-    from cadrumo.core.i18n import tr
-    from cadrumo.entrypoints.tui.profile.overview import ProfileManagerApp
+    from ....core import require_active_bucket_id
+    from ....core.i18n import tr
+    from ....entrypoints.tui.profile.overview import ProfileManagerApp
 
     profile_id = require_active_bucket_id()
     profiles = ProfileRecordRepository.for_current_session(profile_id)
@@ -113,8 +113,8 @@ def _manager() -> App[Any]:
 
 
 def _status() -> App[Any]:
-    from cadrumo.application.user_profile.status_projection import build_status_page_data
-    from cadrumo.entrypoints.tui.profile.status import StatusApp
+    from ....application.user_profile.status_projection import build_status_page_data
+    from ....entrypoints.tui.profile.status import StatusApp
 
     return StatusApp(build_status_page_data())
 
@@ -137,9 +137,9 @@ def _form() -> App[Any]:
     # layout of two plain text fields, or wording is a finding about the
     # harness, never about the application. Drive one of the real callers
     # above instead when the thing under evaluation is an actual form.
-    from cadrumo.core.i18n import tr
-    from cadrumo.core.presentation import FormField, FormPage
-    from cadrumo.entrypoints.tui.components.form_screen import FormApp
+    from ....core.i18n import tr
+    from ....core.presentation import FormField, FormPage
+    from ....entrypoints.tui.components.form_screen import FormApp
 
     return FormApp(
         FormPage(
