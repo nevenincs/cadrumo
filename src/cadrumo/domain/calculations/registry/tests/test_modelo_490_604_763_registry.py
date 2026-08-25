@@ -28,10 +28,15 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
-from .....core import TaxDomain
+from .....core import RegistryAuthorityGrade, TaxDomain
 from .....core.resources import bundled_path
+from .._errors import NoRevisionForPeriodError
+from .._snapshot import build_snapshot
+from .._temporal import select_revision
 from .._validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo
 
@@ -107,11 +112,73 @@ def test_committed_definition_legal_authority_and_deadline_windows(
     assert declared, f"modelo {mid} declares no deadline windows at all"
     assert all(plazo in window.legal_refs for window in declared)
 
+    expected_periods_by_year: dict[int, tuple[str, ...]] = {}
     by_year: dict[int, list[str]] = {}
     for window in declared:
         by_year.setdefault(window.filing_year, []).append(window.period.code)
+        expected_periods_by_year.setdefault(window.filing_year, codes)
+    if mid == "763":
+        # AEAT's historical catalogue names only 2T/3T for 2012. The missing
+        # first and fourth quarters are refused rather than completed from the
+        # otherwise quarterly cadence.
+        expected_periods_by_year[2012] = ("2T", "3T")
     for year, found in sorted(by_year.items()):
-        assert sorted(found) == sorted(codes), (
+        assert sorted(found) == sorted(expected_periods_by_year[year]), (
             f"modelo {mid} filing year {year} declares periods {sorted(found)}, "
-            f"not the complete cadence {sorted(codes)}; a filing period is missing or doubled"
+            f"not the supported cadence {sorted(expected_periods_by_year[year])}; "
+            "a filing period is missing, doubled, or unsupported"
         )
+
+
+@pytest.mark.parametrize(
+    ("filing_year", "period", "revision_id", "layout_source", "deadline_id", "opens_on", "closes_on"),
+    [
+        (2012, "2T", "2012-2t-3t", "aeat-dr-763-2012", "modelo-763-2012-2t", date(2012, 7, 1), date(2012, 7, 31)),
+        (2012, "3T", "2012-2t-3t", "aeat-dr-763-2012", "modelo-763-2012-3t", date(2012, 10, 1), date(2012, 10, 31)),
+        (2013, "1T", "2013-2014", "aeat-dr-763-2012", "modelo-763-2013-1t", date(2013, 4, 1), date(2013, 4, 30)),
+        (2014, "4T", "2013-2014", "aeat-dr-763-2012", "modelo-763-2014-4t", date(2015, 1, 1), date(2015, 1, 31)),
+        (2015, "1T", "2015-2017", "aeat-dr-763-2015", "modelo-763-2015-1t", date(2015, 4, 1), date(2015, 4, 30)),
+        (2017, "4T", "2015-2017", "aeat-dr-763-2015", "modelo-763-2017-4t", date(2018, 1, 1), date(2018, 1, 31)),
+        (2018, "3T", "2018-1t-3t", "aeat-dr-763-2015", "modelo-763-2018-3t", date(2018, 10, 1), date(2018, 10, 31)),
+        (2018, "4T", "2018-4t", "enrolled-modelo-763-layout", "modelo-763-2018-4t", date(2019, 1, 1), date(2019, 1, 31)),
+        (2019, "1T", "2019-y-siguientes", "enrolled-modelo-763-layout", "modelo-763-2019-1t", date(2019, 4, 1), date(2019, 4, 30)),
+        (2026, "4T", "2019-y-siguientes", "enrolled-modelo-763-layout", "modelo-763-2026-4t", date(2027, 1, 1), date(2027, 1, 31)),
+    ],
+)
+def test_modelo_763_selects_each_evidenced_design_era_with_its_deadline(
+    filing_year: int,
+    period: str,
+    revision_id: str,
+    layout_source: str,
+    deadline_id: str,
+    opens_on: date,
+    closes_on: date,
+) -> None:
+    """The selector and deadline stay coupled at every evidence boundary."""
+    modelo, catalogues = _committed_modelo("763")
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=filing_year,
+        period=period,
+        grade=RegistryAuthorityGrade.APPLICABILITY,
+    )
+
+    assert snapshot.revision.id == revision_id
+    assert snapshot.revision.effective_authority_grade is RegistryAuthorityGrade.APPLICABILITY
+    assert layout_source in snapshot.revision.source_refs
+    assert layout_source in snapshot.sources
+    window = next(item for item in snapshot.revision.deadline_windows if item.id == deadline_id)
+    assert (window.opens_on, window.closes_on) == (opens_on, closes_on)
+
+
+@pytest.mark.parametrize("filing_year,period", [(2011, "4T"), (2012, "1T"), (2012, "4T")])
+def test_modelo_763_refuses_the_unevidenced_opening_coordinates(filing_year: int, period: str) -> None:
+    """The historical design title admits 2012 2T/3T only; no cadence inference fills gaps."""
+    modelo, _catalogues = _committed_modelo("763")
+
+    with pytest.raises(NoRevisionForPeriodError):
+        select_revision(modelo, filing_year=filing_year, period=period)

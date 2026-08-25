@@ -1,10 +1,7 @@
-# Modelo 763 declaration-header casillas (scheduling/applicability-grade). Only
-# the declaration header is declared, grounded in orden-eha-1881-2011 art 1. No
-# numbered form casilla is invented — the authoritative Modelo 763 diseño de
-# registro IS bundled (enrolled-modelo-763-layout) but no casilla-to-position
-# mapping has been authored from it yet.
+# Modelo 763 declaration-header casillas only. No numbered form casilla or filing
+# layout is asserted for this applicability-grade revision.
 
-[[revisions."2011-y-siguientes".casillas]]
+[[revisions."2013-2014".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
 section = ["declarante"]
@@ -15,7 +12,7 @@ input_kind = "informational"
 legal_refs = ["orden-eha-1881-2011:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-763-procedure"]
 
-[[revisions."2011-y-siguientes".casillas]]
+[[revisions."2013-2014".casillas]]
 id = "decl.periodo"
 number = "periodo"
 section = ["declarante"]
@@ -25,3 +22,4 @@ required = true
 input_kind = "informational"
 legal_refs = ["orden-eha-1881-2011:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-763-procedure"]
+

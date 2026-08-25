@@ -1,0 +1,22 @@
+[[revisions."2015-2017".constructs]]
+id = "modelo-763-autoliquidacion"
+legal_refs = ["orden-eha-1881-2011:art-1", "orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure", "aeat-dr-763-2015"]
+casilla_ids = ["decl.ejercicio", "decl.periodo"]
+application_links = ["modelo-763-filing", "modelo-763-deadline"]
+workbook_parity_refs = ["modelo-763-2015-2017-static-layout"]
+deadline_windows = [
+    "modelo-763-2015-1t",
+    "modelo-763-2015-2t",
+    "modelo-763-2015-3t",
+    "modelo-763-2015-4t",
+    "modelo-763-2016-1t",
+    "modelo-763-2016-2t",
+    "modelo-763-2016-3t",
+    "modelo-763-2016-4t",
+    "modelo-763-2017-1t",
+    "modelo-763-2017-2t",
+    "modelo-763-2017-3t",
+    "modelo-763-2017-4t",
+]
+

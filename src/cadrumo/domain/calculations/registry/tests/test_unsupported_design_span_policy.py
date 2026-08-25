@@ -15,7 +15,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _KNOWN_UNSUPPORTED_SPANS = frozenset(
     {
         ("200", "2024-y-siguientes"),
-        ("763", "2011-y-siguientes"),
     },
 )
 

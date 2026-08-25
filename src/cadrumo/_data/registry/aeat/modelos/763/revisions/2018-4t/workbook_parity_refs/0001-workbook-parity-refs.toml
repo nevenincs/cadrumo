@@ -1,0 +1,13 @@
+# The era's official record design is retained as a static-layout anchor only.
+# No casilla-to-position mapping or filing capability is claimed.
+
+[[revisions."2018-4t".workbook_parity_refs]]
+id = "modelo-763-2018-4t-static-layout"
+workbook_source = "enrolled-modelo-763-layout"
+fixture_id = "modelo-763-2018-4t-layout"
+formula_coverage = "static_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-eha-1881-2011:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-layout"]
+

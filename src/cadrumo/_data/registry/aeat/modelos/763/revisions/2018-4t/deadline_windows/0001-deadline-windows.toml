@@ -1,0 +1,14 @@
+# Modelo 763 quarterly deadline windows. Orden EHA/1881/2011 art 4 fixes
+# presentation during the month following each natural quarter. Only periods
+# selected by this revision are declared.
+
+[[revisions."2018-4t".deadline_windows]]
+id = "modelo-763-2018-4t"
+filing_year = 2018
+period = "2018 4T"
+period_kind = "quarterly"
+opens_on = 2019-01-01
+closes_on = 2019-01-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+

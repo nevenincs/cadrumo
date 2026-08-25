@@ -1,0 +1,324 @@
+# Modelo 763 quarterly deadline windows. Orden EHA/1881/2011 art 4 fixes
+# presentation during the month following each natural quarter. Only periods
+# selected by this revision are declared.
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2019-1t"
+filing_year = 2019
+period = "2019 1T"
+period_kind = "quarterly"
+opens_on = 2019-04-01
+closes_on = 2019-04-30
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2019-2t"
+filing_year = 2019
+period = "2019 2T"
+period_kind = "quarterly"
+opens_on = 2019-07-01
+closes_on = 2019-07-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2019-3t"
+filing_year = 2019
+period = "2019 3T"
+period_kind = "quarterly"
+opens_on = 2019-10-01
+closes_on = 2019-10-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2019-4t"
+filing_year = 2019
+period = "2019 4T"
+period_kind = "quarterly"
+opens_on = 2020-01-01
+closes_on = 2020-01-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2020-1t"
+filing_year = 2020
+period = "2020 1T"
+period_kind = "quarterly"
+opens_on = 2020-04-01
+closes_on = 2020-04-30
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2020-2t"
+filing_year = 2020
+period = "2020 2T"
+period_kind = "quarterly"
+opens_on = 2020-07-01
+closes_on = 2020-07-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2020-3t"
+filing_year = 2020
+period = "2020 3T"
+period_kind = "quarterly"
+opens_on = 2020-10-01
+closes_on = 2020-10-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2020-4t"
+filing_year = 2020
+period = "2020 4T"
+period_kind = "quarterly"
+opens_on = 2021-01-01
+closes_on = 2021-01-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2021-1t"
+filing_year = 2021
+period = "2021 1T"
+period_kind = "quarterly"
+opens_on = 2021-04-01
+closes_on = 2021-04-30
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2021-2t"
+filing_year = 2021
+period = "2021 2T"
+period_kind = "quarterly"
+opens_on = 2021-07-01
+closes_on = 2021-07-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2021-3t"
+filing_year = 2021
+period = "2021 3T"
+period_kind = "quarterly"
+opens_on = 2021-10-01
+closes_on = 2021-10-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2021-4t"
+filing_year = 2021
+period = "2021 4T"
+period_kind = "quarterly"
+opens_on = 2022-01-01
+closes_on = 2022-01-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2022-1t"
+filing_year = 2022
+period = "2022 1T"
+period_kind = "quarterly"
+opens_on = 2022-04-01
+closes_on = 2022-04-30
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2022-2t"
+filing_year = 2022
+period = "2022 2T"
+period_kind = "quarterly"
+opens_on = 2022-07-01
+closes_on = 2022-07-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2022-3t"
+filing_year = 2022
+period = "2022 3T"
+period_kind = "quarterly"
+opens_on = 2022-10-01
+closes_on = 2022-10-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2022-4t"
+filing_year = 2022
+period = "2022 4T"
+period_kind = "quarterly"
+opens_on = 2023-01-01
+closes_on = 2023-01-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2023-1t"
+filing_year = 2023
+period = "2023 1T"
+period_kind = "quarterly"
+opens_on = 2023-04-01
+closes_on = 2023-04-30
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2023-2t"
+filing_year = 2023
+period = "2023 2T"
+period_kind = "quarterly"
+opens_on = 2023-07-01
+closes_on = 2023-07-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2023-3t"
+filing_year = 2023
+period = "2023 3T"
+period_kind = "quarterly"
+opens_on = 2023-10-01
+closes_on = 2023-10-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2023-4t"
+filing_year = 2023
+period = "2023 4T"
+period_kind = "quarterly"
+opens_on = 2024-01-01
+closes_on = 2024-01-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2024-1t"
+filing_year = 2024
+period = "2024 1T"
+period_kind = "quarterly"
+opens_on = 2024-04-01
+closes_on = 2024-04-30
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2024-2t"
+filing_year = 2024
+period = "2024 2T"
+period_kind = "quarterly"
+opens_on = 2024-07-01
+closes_on = 2024-07-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2024-3t"
+filing_year = 2024
+period = "2024 3T"
+period_kind = "quarterly"
+opens_on = 2024-10-01
+closes_on = 2024-10-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2024-4t"
+filing_year = 2024
+period = "2024 4T"
+period_kind = "quarterly"
+opens_on = 2025-01-01
+closes_on = 2025-01-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2025-1t"
+filing_year = 2025
+period = "2025 1T"
+period_kind = "quarterly"
+opens_on = 2025-04-01
+closes_on = 2025-04-30
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2025-2t"
+filing_year = 2025
+period = "2025 2T"
+period_kind = "quarterly"
+opens_on = 2025-07-01
+closes_on = 2025-07-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2025-3t"
+filing_year = 2025
+period = "2025 3T"
+period_kind = "quarterly"
+opens_on = 2025-10-01
+closes_on = 2025-10-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2025-4t"
+filing_year = 2025
+period = "2025 4T"
+period_kind = "quarterly"
+opens_on = 2026-01-01
+closes_on = 2026-01-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2026-1t"
+filing_year = 2026
+period = "2026 1T"
+period_kind = "quarterly"
+opens_on = 2026-04-01
+closes_on = 2026-04-30
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2026-2t"
+filing_year = 2026
+period = "2026 2T"
+period_kind = "quarterly"
+opens_on = 2026-07-01
+closes_on = 2026-07-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2026-3t"
+filing_year = 2026
+period = "2026 3T"
+period_kind = "quarterly"
+opens_on = 2026-10-01
+closes_on = 2026-10-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-763-2026-4t"
+filing_year = 2026
+period = "2026 4T"
+period_kind = "quarterly"
+opens_on = 2027-01-01
+closes_on = 2027-01-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+

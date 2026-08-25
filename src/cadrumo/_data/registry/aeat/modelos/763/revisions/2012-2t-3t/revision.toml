@@ -1,0 +1,31 @@
+[revisions."2012-2t-3t"]
+authority_grade = "applicability"
+# The selector follows the exact AEAT/BOE era boundary. This scheduling-only
+# revision keeps the declaration header and does not claim a filing layout.
+id = "2012-2t-3t"
+valid_from = 2012-04-01
+valid_to = 2012-09-30
+period_selector = { years = [2012], periods = ["2T", "3T"] }
+orden_aplicabilidad = ["orden-eha-1881-2011:art-1"]
+legal_refs = [
+    "orden-eha-1881-2011:art-1",
+    "orden-eha-1881-2011:art-4",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-763-procedure",
+    "aeat-dr-763-2012",
+]
+
+[revisions."2012-2t-3t".family_dispositions.casilla_continuidad_evolutions]
+reason = """Revision '2012-2t-3t' has no earlier Modelo 763 sibling, so a within-modelo continuidad transition cannot land here."""
+legal_refs = [
+    "orden-eha-1881-2011:art-1",
+    "orden-eha-1881-2011:art-4",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-763-procedure",
+    "aeat-dr-763-2012",
+]
+

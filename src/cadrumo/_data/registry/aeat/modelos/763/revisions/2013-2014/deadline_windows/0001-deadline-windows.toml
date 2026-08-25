@@ -1,0 +1,84 @@
+# Modelo 763 quarterly deadline windows. Orden EHA/1881/2011 art 4 fixes
+# presentation during the month following each natural quarter. Only periods
+# selected by this revision are declared.
+
+[[revisions."2013-2014".deadline_windows]]
+id = "modelo-763-2013-1t"
+filing_year = 2013
+period = "2013 1T"
+period_kind = "quarterly"
+opens_on = 2013-04-01
+closes_on = 2013-04-30
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2013-2014".deadline_windows]]
+id = "modelo-763-2013-2t"
+filing_year = 2013
+period = "2013 2T"
+period_kind = "quarterly"
+opens_on = 2013-07-01
+closes_on = 2013-07-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2013-2014".deadline_windows]]
+id = "modelo-763-2013-3t"
+filing_year = 2013
+period = "2013 3T"
+period_kind = "quarterly"
+opens_on = 2013-10-01
+closes_on = 2013-10-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2013-2014".deadline_windows]]
+id = "modelo-763-2013-4t"
+filing_year = 2013
+period = "2013 4T"
+period_kind = "quarterly"
+opens_on = 2014-01-01
+closes_on = 2014-01-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2013-2014".deadline_windows]]
+id = "modelo-763-2014-1t"
+filing_year = 2014
+period = "2014 1T"
+period_kind = "quarterly"
+opens_on = 2014-04-01
+closes_on = 2014-04-30
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2013-2014".deadline_windows]]
+id = "modelo-763-2014-2t"
+filing_year = 2014
+period = "2014 2T"
+period_kind = "quarterly"
+opens_on = 2014-07-01
+closes_on = 2014-07-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2013-2014".deadline_windows]]
+id = "modelo-763-2014-3t"
+filing_year = 2014
+period = "2014 3T"
+period_kind = "quarterly"
+opens_on = 2014-10-01
+closes_on = 2014-10-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2013-2014".deadline_windows]]
+id = "modelo-763-2014-4t"
+filing_year = 2014
+period = "2014 4T"
+period_kind = "quarterly"
+opens_on = 2015-01-01
+closes_on = 2015-01-31
+legal_refs = ["orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
