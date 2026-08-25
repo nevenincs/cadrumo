@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:ad9b5dfe81f132d324e585efc3f37594cc142087bd0bb5f37bd30d24aef8b78c'
+body_hash: 'sha256:423f283aaeca21467bc161144ac06dfec1678e164defd41ba8a5f4bf58b8f57f'
 step_id: 'S108'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
@@ -79,4 +79,11 @@ it creates no runtime or census change.
 - The source-kind spelling is not a dormant name mismatch: `withholding296`
   is present in the taxonomy and candidate. The dormant defect is the lossy
   grouping/synthetic record identifier and absence of a durable secure owner.
-- Verification results are appended after focused tests and feature checks.
+- `pytest -n 0 -q src/cadrumo/domain/calculations/registry/tests/test_modelo_296_registry.py`
+  passed 3 tests. Focused Ruff checks passed.
+- The repeated-record module is integration-marked. Its integration invocation
+  exceeded the shared runner's 30-second output-capture limit and exited
+  without a terminal summary, so this record does not claim that test as
+  passed. The feature Vault hard gates were clean; its remaining warnings are
+  pre-existing template, markdown, and two unrelated research-reference
+  warnings.
