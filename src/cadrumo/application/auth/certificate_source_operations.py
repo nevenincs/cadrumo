@@ -85,10 +85,9 @@ from .operator_scope import (
 if TYPE_CHECKING:
     from datetime import datetime
 
-    from cadrumo.application.workflow.persistence import WorkflowStateRepository
-    from cadrumo.application.workflow.state_models import WorkflowState
-
     from ...domain.buckets import BucketEvent, BucketEventType
+    from ..workflow.persistence import WorkflowStateRepository
+    from ..workflow.state_models import WorkflowState
     from .models import CertificateSourceRecord
 
 
@@ -102,10 +101,9 @@ def _gate_active_bucket() -> str:
     Returns:
         The active bucket id.
     """
-    from cadrumo.application.workflow.persistence import workflow_state_repository
-    from cadrumo.application.workflow.profile_health import assess_active_profile_health
-
     from ...core.bucket_pointer import resolve_active_bucket_id
+    from ..workflow.persistence import workflow_state_repository
+    from ..workflow.profile_health import assess_active_profile_health
 
     if resolve_active_bucket_id() is None:
         raise AuthConfigureNoActiveBucketError(
@@ -148,7 +146,7 @@ def _certificate_mutation_span(*, resume_certificate_secret: bool = False) -> Ge
             )
         with auth_mutation_span(settings=settings, bucket_id=bucket_id):
             active_bucket_id = _gate_active_bucket()
-            from cadrumo.application.workflow.persistence import workflow_state_repository
+            from ..workflow.persistence import workflow_state_repository
 
             current = workflow_state_repository().load()
             if resume_certificate_secret:
@@ -166,7 +164,7 @@ def _persist_with_event(
     object_id: str,
     payload: dict[str, str],
 ) -> WorkflowState:
-    from cadrumo.application.workflow.persistence import workflow_state_repository
+    from ..workflow.persistence import workflow_state_repository
 
     occurred_at = now()
     state_repo = workflow_state_repository()
@@ -235,7 +233,7 @@ def list_operator_certificate_sources() -> CertificateSourceListResult:
     Returns:
         A :class:`~application.auth.CertificateSourceListResult`.
     """
-    from cadrumo.application.workflow.persistence import workflow_state_repository
+    from ..workflow.persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
     active_record = active_certificate_source(state)
@@ -276,7 +274,7 @@ def select_operator_certificate_source(*, name: str) -> CertificateSourceMutatio
 
     normalized_name = name.strip()
     with _certificate_mutation_span() as active_bucket_id:
-        from cadrumo.application.workflow.persistence import workflow_state_repository
+        from ..workflow.persistence import workflow_state_repository
 
         current = workflow_state_repository().load()
         record = current.auth.certificate_sources.get(normalized_name)
@@ -316,9 +314,8 @@ def remove_operator_certificate_source(*, name: str) -> CertificateSourceMutatio
     Returns:
         A :class:`~application.auth.CertificateSourceMutationResult`.
     """
-    from cadrumo.application.workflow.persistence import workflow_state_repository
-
     from ...domain.buckets import BucketEventType
+    from ..workflow.persistence import workflow_state_repository
 
     normalized_name = name.strip()
     with _certificate_mutation_span() as active_bucket_id:
@@ -368,7 +365,7 @@ def check_operator_certificate_sources(*, settings: Settings | None = None) -> C
         registered source, sorted by name (matching
         :func:`~application.auth.list_operator_certificate_sources`).
     """
-    from cadrumo.application.workflow.persistence import workflow_state_repository
+    from ..workflow.persistence import workflow_state_repository
 
     resolved_settings = settings or load_settings()
     with active_profile_storage_span(resolved_settings) as active_bucket_id:
@@ -475,7 +472,7 @@ def certificate_source_tax_id(
         The uppercase NIF/NIE the certificate's subject carries, or ``""``
         when it cannot be read.
     """
-    from cadrumo.application.workflow.persistence import workflow_state_repository
+    from ..workflow.persistence import workflow_state_repository
 
     resolved_settings = settings or load_settings()
     with active_profile_storage_span(resolved_settings) as active_bucket_id:
@@ -545,7 +542,7 @@ def set_operator_certificate_source_secret(
     Returns:
         A :class:`~application.auth.CertificateSourceSecretMutationResult`.
     """
-    from cadrumo.application.workflow.persistence import workflow_state_repository
+    from ..workflow.persistence import workflow_state_repository
 
     normalized_name = name.strip()
     with _certificate_mutation_span(resume_certificate_secret=True) as active_bucket_id:
@@ -595,7 +592,7 @@ def remove_operator_certificate_source_secret(*, name: str) -> CertificateSource
     """
     normalized_name = name.strip()
     with _certificate_mutation_span(resume_certificate_secret=True) as active_bucket_id:
-        from cadrumo.application.workflow.persistence import workflow_state_repository
+        from ..workflow.persistence import workflow_state_repository
 
         backend = SecureStorageCertificateSecretBackend(bucket_id=active_bucket_id)
         repository = workflow_state_repository()
