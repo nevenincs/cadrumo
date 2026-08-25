@@ -45,8 +45,10 @@ from ._entries._common import build_entry, portal_path
 from ._errors import (
     PortalIntegrityError,
     PortalRegistryError,
+    PortalRegistryInvariant,
     PortalValidationError,
     UnknownPortalError,
+    portal_integrity_error,
 )
 from ._hosts import portal_host_name
 
@@ -106,6 +108,7 @@ __all__ = (
     "PortalIntegrityError",
     "PortalMetadata",
     "PortalRegistryError",
+    "PortalRegistryInvariant",
     "PortalValidationError",
     "UnknownPortalError",
     "UrlStability",
@@ -113,6 +116,7 @@ __all__ = (
     "evaluate_portal_drift",
     "get_portal",
     "portal_host_name",
+    "portal_integrity_error",
     "portal_path",
     "portals_by_category",
     "portals_for_modelo",
