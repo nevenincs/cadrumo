@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from cadrumo.core import scan_directory
@@ -12,7 +14,7 @@ from ..manager import ApiStubManager, DriftResult, ScaffoldResult
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def test_public_type_aliases_have_one_canonical_facade_target(tmp_path: pytest.TempPathFactory) -> None:
+def test_public_type_aliases_have_one_canonical_facade_target(tmp_path: Path) -> None:
     """Public PEP 695 aliases are indexed once at their intended facades."""
     manager = ApiStubManager(src_cadrumo=REPO_ROOT / "src" / "cadrumo", docs_api=tmp_path / "api")
 
@@ -34,7 +36,7 @@ def test_public_type_aliases_have_one_canonical_facade_target(tmp_path: pytest.T
     assert all_stub_text.count(".. py:function:: collect_registry_tree_fingerprints\n") == 1
 
 
-def test_imported_generic_models_are_excluded_only_at_consumers(tmp_path: pytest.TempPathFactory) -> None:
+def test_imported_generic_models_are_excluded_only_at_consumers(tmp_path: Path) -> None:
     """Pydantic generic consumers must not re-index their defining objects."""
     manager = ApiStubManager(src_cadrumo=REPO_ROOT / "src" / "cadrumo", docs_api=tmp_path / "api")
     manager.scaffold()
@@ -47,7 +49,7 @@ def test_imported_generic_models_are_excluded_only_at_consumers(tmp_path: pytest
     assert ":exclude-members: LedgerAggregationResultBase" in consumer
 
 
-def test_scaffold_produces_conformant_tree(tmp_path: pytest.TempPathFactory) -> None:
+def test_scaffold_produces_conformant_tree(tmp_path: Path) -> None:
     """scaffold() followed by check() returns an empty DriftResult.
 
     A freshly scaffolded tree must be immediately conformant: every
@@ -71,7 +73,7 @@ def test_scaffold_produces_conformant_tree(tmp_path: pytest.TempPathFactory) -> 
     )
 
 
-def test_check_detects_missing_stub(tmp_path: pytest.TempPathFactory) -> None:
+def test_check_detects_missing_stub(tmp_path: Path) -> None:
     """check() reports a module as missing when its stub file is absent.
 
     After scaffolding, deleting one stub file causes check() to report
@@ -95,7 +97,7 @@ def test_check_detects_missing_stub(tmp_path: pytest.TempPathFactory) -> None:
     assert not drift.is_conformant
 
 
-def test_check_detects_orphan_stub(tmp_path: pytest.TempPathFactory) -> None:
+def test_check_detects_orphan_stub(tmp_path: Path) -> None:
     """check() reports an RST file as orphaned when no module backs it.
 
     Injecting a stub for a non-existent module causes check() to list it
@@ -117,7 +119,7 @@ def test_check_detects_orphan_stub(tmp_path: pytest.TempPathFactory) -> None:
     assert not drift.is_conformant
 
 
-def test_check_detects_stale_stub_content(tmp_path: pytest.TempPathFactory) -> None:
+def test_check_detects_stale_stub_content(tmp_path: Path) -> None:
     """check() reports a generated stub whose content was hand-edited."""
 
     repo_root = REPO_ROOT
@@ -135,7 +137,7 @@ def test_check_detects_stale_stub_content(tmp_path: pytest.TempPathFactory) -> N
     assert not drift.is_conformant
 
 
-def test_check_detects_a_terminator_translated_stub(tmp_path: pytest.TempPathFactory) -> None:
+def test_check_detects_a_terminator_translated_stub(tmp_path: Path) -> None:
     """check() reports a stub whose terminators were translated after it was written.
 
     This is the case a decoded-text comparison structurally cannot reach.
@@ -171,7 +173,7 @@ def test_check_detects_a_terminator_translated_stub(tmp_path: pytest.TempPathFac
     assert not drift.is_conformant
 
 
-def test_scaffold_writes_line_feed_terminators(tmp_path: pytest.TempPathFactory) -> None:
+def test_scaffold_writes_line_feed_terminators(tmp_path: Path) -> None:
     """Every stub the generator writes carries line feeds, on every platform.
 
     Without the explicit newline the writer translates on write, which is how
@@ -193,7 +195,7 @@ def test_scaffold_writes_line_feed_terminators(tmp_path: pytest.TempPathFactory)
     assert not translated, f"the generator translated terminators in {len(translated)} stubs: {translated[:5]}"
 
 
-def test_scaffold_rewrites_a_terminator_translated_stub(tmp_path: pytest.TempPathFactory) -> None:
+def test_scaffold_rewrites_a_terminator_translated_stub(tmp_path: Path) -> None:
     """scaffold() restores a translated stub instead of counting it unchanged.
 
     The skip-if-current branch shares the comparison with check(), so a text
@@ -218,7 +220,7 @@ def test_scaffold_rewrites_a_terminator_translated_stub(tmp_path: pytest.TempPat
     assert target.read_bytes() == canonical
 
 
-def test_scaffold_removes_stale_stub(tmp_path: pytest.TempPathFactory) -> None:
+def test_scaffold_removes_stale_stub(tmp_path: Path) -> None:
     """scaffold() removes stubs whose backing module no longer exists.
 
     A pre-existing stub for a phantom module is deleted on the next scaffold
@@ -240,7 +242,7 @@ def test_scaffold_removes_stale_stub(tmp_path: pytest.TempPathFactory) -> None:
     assert not phantom.exists()
 
 
-def test_scaffold_leaves_unchanged_stubs_untouched(tmp_path: pytest.TempPathFactory) -> None:
+def test_scaffold_leaves_unchanged_stubs_untouched(tmp_path: Path) -> None:
     """A second scaffold run writes no files when the tree is already current."""
 
     repo_root = REPO_ROOT
@@ -256,7 +258,7 @@ def test_scaffold_leaves_unchanged_stubs_untouched(tmp_path: pytest.TempPathFact
     assert second.unchanged == first.written
 
 
-def test_audit_returns_conformant_message_after_scaffold(tmp_path: pytest.TempPathFactory) -> None:
+def test_audit_returns_conformant_message_after_scaffold(tmp_path: Path) -> None:
     """audit() includes a conformant message after a successful scaffold."""
 
     repo_root = REPO_ROOT
