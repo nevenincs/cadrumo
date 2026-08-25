@@ -344,6 +344,7 @@ class FilingExportSecureReplayReceipt(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
+    receipt_id: UUID
     coordinate: FilingExportProofCoordinate
     provenance: FilingExportPublicProvenance
     source_authority_id: _Token
@@ -505,6 +506,7 @@ def prove_secure_export_replay(
         raise ValueError("secure replay custody did not persist the canonical writer payload")
     _require_custody_record(request, evidence, result, record)
     return FilingExportSecureReplayReceipt(
+        receipt_id=record.receipt_id,
         coordinate=request.coordinate,
         provenance=evidence.provenance,
         source_authority_id=request.source_authority_id,

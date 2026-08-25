@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:ed525b300e42f94e1075ebab3c8856a0afa6c3b22e3e5feae89bec4fc8e6d696'
+body_hash: 'sha256:0d896f6f272260d09764daa04d6527bf1356344ea62dfc3e67dcbd7b420eade7'
 step_id: 'S84'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
@@ -15,26 +15,30 @@ related:
 ## Scope
 
 - `src/cadrumo/application/filing/`
+- `src/cadrumo/adapters/persistence/profile/`
+- `src/cadrumo/adapters/persistence/storage/`
 - `dev/registry/`
 
 ## Description
 
 - Added strict public conformance, secure replay, composite proof, assessment, and per-channel refusal contracts.
 - Extended the canonical `export_draft` writer with an exactly-one destination contract for filesystem output or synchronous validated in-memory custody.
-- Bound secure replay inputs to a source authority so callers cannot inject a draft or producer snapshot.
-- Required encrypted custody to accept the validated in-memory payload before issuing a secret-free replay receipt.
-- Added live development conformance verification over law-selected layouts, official source bytes, generated provenance, semantic ownership, extent, and distinct literal probes.
-- Added a dynamic canonical authority that refuses conformance and secure replay independently while S85 enrollment remains empty.
+- Made the committed conformance vector coordinate/provenance/probe metadata only. Taxpayer-capable draft, producer, dictionary, election, and product inputs are absent from its model and can only be materialised transiently by the separately enrolled mechanism builder.
+- Removed caller-supplied replay receipts from the canonical authority. It now invokes the named source authority and custody itself, validates the source evidence and canonical writer result against the reloaded internal custody record, then projects a public receipt carrying only its opaque identity and non-secret claims.
+- Added the `cadrumo.application.filing.export_replay_proofs` financial structured-custody namespace and a concrete `SecureBoundRepository` adapter. Custody persists the internal record through the existing encrypted profile substrate and requires an exact re-read before returning it.
+- Disabled the legacy source-owned live-proof route fail-closed so it cannot write a taxpayer-bearing payload through a plaintext temporary path.
+- Kept canonical conformance and replay enrollment empty; S85 owns enrollment.
 
 ## Outcome
 
-The S84 proof-port and custody boundary are implemented. Both channels route through `export_draft`; secure replay creates no plaintext output path. Public replay receipts exclude taxpayer values, draft and producer state, payload bytes, payload digest, path, and emitted extent while attesting approval, source ownership, value arrival, applicability, repeated-record order, extent, and source-pinned probes. The external proof coordinate is revision/layout based so administrative registry selectors remain visible in the dynamic denominator.
+The S84 proof-port and custody boundary are implemented. Both channels use the sole `export_draft` writer. Secure replay uses the typed in-memory destination and encrypted profile custody without a plaintext output path. The canonical authority cannot accept a public receipt as input, and missing source/custody authorities produce explicit secure-replay refusal. Public conformance vectors cannot carry taxpayer-capable filing inputs. Public replay receipts exclude taxpayer values, draft and producer state, payload bytes, payload digest, output path, and emitted extent.
 
-Implementation was captured in two shared-tree commits: application contracts in `b7852e8196`, then registry integration and this execution record in the following scoped commit. S85 still owns generated-provenance/vector enrollment, so the canonical S84 authority honestly returns explicit missing-evidence refusals for both channels.
+The original implementation was captured across shared-tree commits `b7852e8196` (application contract) and `f5af07f91f` (registry integration and initial execution record). Independent audit `8fd32b7853` then found HIGH caller receipt self-attestation, HIGH taxpayer-capable public conformance inputs, and MEDIUM legacy plaintext-temporary exposure. S84 was reopened through the Vault CLI. Remediation was captured by shared writer commit `44a055dcaf`, which also included concurrent non-S84 filing/modelo/operator-output/wizard/core files; this provenance is recorded without rewriting shared history. The remaining opaque receipt identity and negative public-API assertion were committed separately. Independent re-review remains separate.
 
-Verification: focused application and dynamic registry tests passed (`6 passed`); the application executor's broader sequential filing set passed (`19 passed`); scoped Ruff passed. Vault feature/schema/plan checks were run after the S84 row was closed through the CLI.
+Verification after remediation: scoped Ruff passed; focused application/registry/custody tests passed (`10 passed`); encrypted storage namespace/lineage tests passed (`49 passed`). The custody tests use the real isolated bucket runtime and existing encryption, verify exact round-trip, scan for plaintext canaries, and refuse a validly re-encrypted receipt-identity substitution. The canonical API test proves a preconstructed receipt keyword is refused at runtime. A later current-head rerun was blocked during collection by concurrent bucket-pointer WIP (`exclusive_file_lock` missing and a `None` bucket id); those files are outside S84 ownership. S84 therefore remains CLI-open pending a stable-head re-run and independent review.
 
 ## Notes
 
-- No filing revision, representative year, taxpayer fixture, payload digest, or secure replay receipt was enrolled by this step.
-- S33 remains open; S85 and S86 retain enrollment and dual-channel release-gate ownership.
+- No filing revision, representative year, taxpayer fixture, accepted payload digest, or replay receipt was enrolled by this step.
+- The storage-only custody fixture uses a deliberately non-registry coordinate and is not acceptance evidence.
+- S33 remains open; S85 and S86 retain dynamic enrollment and dual-channel release-gate ownership.

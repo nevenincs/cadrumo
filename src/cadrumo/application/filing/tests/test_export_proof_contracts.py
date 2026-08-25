@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from uuid import UUID
 
 import pytest
 from pydantic import ValidationError
@@ -143,6 +144,7 @@ def test_conformance_request_cannot_carry_caller_supplied_filing_inputs() -> Non
 def test_public_replay_receipt_excludes_secret_payload_facts() -> None:
     attested_at = now()
     receipt = FilingExportSecureReplayReceipt(
+        receipt_id=UUID("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"),
         coordinate=_coordinate(),
         provenance=_provenance(),
         source_authority_id="calculation-revision-source",
@@ -161,6 +163,7 @@ def test_public_replay_receipt_excludes_secret_payload_facts() -> None:
     assert receipt.repeated_record_order
     assert receipt.emitted_extent
     assert receipt.source_pinned_probes
+    assert public_fields["receipt_id"] == UUID("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa")
     assert not {"draft", "producer_snapshot", "payload", "payload_sha256", "output_path", "emitted_bytes"}.intersection(
         public_fields,
     )

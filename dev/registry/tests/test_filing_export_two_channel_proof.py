@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from inspect import signature
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 
@@ -27,6 +28,17 @@ def test_canonical_authority_cannot_accept_a_preconstructed_replay_receipt() -> 
 
     assert "secure_replay_receipts" not in parameters
     assert {"secure_replay_source", "secure_replay_custody"} <= set(parameters)
+
+    with pytest.raises(TypeError, match="secure_replay_receipts"):
+        cast(Any, canonical_two_channel_filing_export_proof_authority)(
+            workspace_root=_REPOSITORY_ROOT,
+            registry_root=bundled_path("registry", "aeat"),
+            source_root=bundled_path(),
+            authority=bundled_authority(),
+            secure_replay_source=None,
+            secure_replay_custody=None,
+            secure_replay_receipts=(object(),),
+        )
 
 
 def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() -> None:
