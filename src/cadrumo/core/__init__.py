@@ -275,7 +275,7 @@ if TYPE_CHECKING:
     from ._modelo import NON_REGISTRY_MODELOS, OUT_OF_SCOPE_OBLIGATIONS, UNMODELED_OBLIGATIONS, Modelo
     from ._modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
     from ._modelo_work_progress_state import ModeloWorkProgressState
-    from ._models import STRICT_FROZEN_CONFIG
+    from ._models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     from ._notificacion_estado_servicio import (
         NotificacionEstadoServicio,
         resolve_notificacion_estado_servicio,
@@ -579,6 +579,7 @@ __all__: list[str] = [
     "STORAGE_ROOT_SETTINGS_FIELD",
     "STORAGE_TAXONOMY",
     "STRICT_FROZEN_CONFIG",
+    "STRICT_FROZEN_HIDDEN_INPUT_CONFIG",
     "STRUCTURED_DOCUMENT_SHAPES",
     "STR_KEYED_MAPPING_ADAPTER",
     "UNDECLARED_REGISTRY_AUTHORITY_GRADE",
@@ -1159,6 +1160,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "STORAGE_ROOT_SETTINGS_FIELD": "._storage_taxonomy",
     "STORAGE_TAXONOMY": "._storage_taxonomy",
     "STRICT_FROZEN_CONFIG": "._models",
+    "STRICT_FROZEN_HIDDEN_INPUT_CONFIG": "._models",
     "STRUCTURED_DOCUMENT_SHAPES": "._document_shape",
     "STR_KEYED_MAPPING_ADAPTER": "._type_adapters",
     "SectorDiferenciadoLetra": "._prorrata_register",

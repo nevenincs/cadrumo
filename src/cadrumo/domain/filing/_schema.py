@@ -14,7 +14,6 @@ from enum import StrEnum
 
 from pydantic import (
     BaseModel,
-    ConfigDict,
     Field,
     SerializationInfo,
     SerializerFunctionWrapHandler,
@@ -23,7 +22,14 @@ from pydantic import (
     model_validator,
 )
 
-from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, Hex16Str, Period
+from ...core import (
+    STRICT_FROZEN_CONFIG,
+    STRICT_FROZEN_HIDDEN_INPUT_CONFIG,
+    BindingSourceKind,
+    CasillaId,
+    Hex16Str,
+    Period,
+)
 from ...core.errors import BaseSeverity
 from ...core.hashing import content_hash_hex
 from ...core.i18n import Translatable as tr
@@ -133,7 +139,7 @@ class ModeloBindingValue(BaseModel):
         row_index: 1-based row index for multi-row (detail-record) bindings.
     """
 
-    model_config = ConfigDict(**{**STRICT_FROZEN_CONFIG, "hide_input_in_errors": True})
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     binding_id: BindingId
     value: ModeloScalar

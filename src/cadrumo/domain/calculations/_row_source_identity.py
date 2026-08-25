@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator
 
-from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind
+from ...core import STRICT_FROZEN_HIDDEN_INPUT_CONFIG, BindingSourceKind
 from ...core.identity import ContentDigest
 from .registry import BindingId
 
@@ -17,7 +17,7 @@ OpaqueSourceRowIdentity = Annotated[str, StringConstraints(min_length=1, max_len
 class RowSourceIdentity(BaseModel):
     """Opaque, fingerprinted identity of a source row."""
 
-    model_config = ConfigDict(**{**STRICT_FROZEN_CONFIG, "hide_input_in_errors": True})
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     source_kind: BindingSourceKind
     source_row_identity: OpaqueSourceRowIdentity = Field(repr=False)

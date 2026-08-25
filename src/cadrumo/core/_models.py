@@ -38,4 +38,14 @@ from pydantic import ConfigDict
 #: registry.
 STRICT_FROZEN_CONFIG: ConfigDict = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-__all__ = ["STRICT_FROZEN_CONFIG"]
+#: Canonical strict, frozen, no-extra-fields configuration that also prevents
+#: Pydantic from echoing rejected input in validation errors. Use it for models
+#: whose values can contain opaque or sensitive source identifiers.
+STRICT_FROZEN_HIDDEN_INPUT_CONFIG: ConfigDict = ConfigDict(
+    strict=True,
+    frozen=True,
+    extra="forbid",
+    hide_input_in_errors=True,
+)
+
+__all__ = ["STRICT_FROZEN_CONFIG", "STRICT_FROZEN_HIDDEN_INPUT_CONFIG"]

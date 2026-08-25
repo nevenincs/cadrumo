@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, CasillaId
+from ...core import STRICT_FROZEN_HIDDEN_INPUT_CONFIG, CasillaId
 from ._row_source_identity import RowSourceIdentity
 from .registry import BindingId, RevisionId
 
@@ -14,7 +14,7 @@ RowCasillaKey = tuple[CasillaId, int]
 class DirectRowMaterializationProvenance(BaseModel):
     """Registry-owned proof that one binding row directly supplied a casilla row."""
 
-    model_config = ConfigDict(**{**STRICT_FROZEN_CONFIG, "hide_input_in_errors": True})
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     source_binding_id: BindingId
     source_row_index: int = Field(ge=1)
