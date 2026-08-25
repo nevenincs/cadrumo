@@ -116,7 +116,7 @@ def _build_executor() -> ObservationExecutor:
     return ObservationExecutor()
 
 
-class ReviewProjection(BaseModel):
+class ObservationReviewProjection(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
     summary_code: str
 
@@ -133,7 +133,7 @@ class ReviewResponse(BaseModel):
 
 def _review_projector(operand: BaseModel, interaction: OperationInteractionRequest) -> BaseModel:
     del operand, interaction
-    return ReviewProjection(summary_code="observation.review")
+    return ObservationReviewProjection(summary_code="observation.review")
 
 
 def _capabilities() -> OperationCapabilities:
@@ -214,7 +214,7 @@ def _review_registry(
             review_projection_schema=OperationSchemaBindingV1.bind(
                 schema_id="operations.observation.review",
                 schema_version=1,
-                model_type=ReviewProjection,
+                model_type=ObservationReviewProjection,
             ),
             interaction_response_schema=OperationSchemaBindingV1.bind(
                 schema_id="operations.observation.response",
