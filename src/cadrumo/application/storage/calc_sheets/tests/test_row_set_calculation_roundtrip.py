@@ -9,7 +9,8 @@ from pathlib import Path
 import pytest
 from openpyxl import load_workbook
 
-from .....adapters.outbound.google._calc_sheets_pull import RowSetEdit, _decode_row_set_block
+from .....adapters.outbound.google import RowSetEdit
+from .....adapters.outbound.google._calc_sheets_pull import _decode_row_set_block
 from .....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from .....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from .....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -91,9 +92,14 @@ def test_real_worksheet_pull_calculation_roundtrips_m720_row_source_through_encr
     workbook = load_workbook(BytesIO(serialize_offline_workbook(plan)))
     worksheet = workbook[row_set.tab.value]
     for column in row_set.columns:
-        worksheet.cell(row=row_set.first_data_row, column=column.header_address.column).value = values[str(column.binding)]
+        worksheet.cell(row=row_set.first_data_row, column=column.header_address.column).value = values[
+            str(column.binding)
+        ]
     rows = [
-        [worksheet.cell(row=row_set.first_data_row + offset, column=column).value for column in range(1, len(row_set.columns) + 1)]
+        [
+            worksheet.cell(row=row_set.first_data_row + offset, column=column).value
+            for column in range(1, len(row_set.columns) + 1)
+        ]
         for offset in range(50)
     ]
     cells, cells_read = _decode_row_set_block(rows, row_set)

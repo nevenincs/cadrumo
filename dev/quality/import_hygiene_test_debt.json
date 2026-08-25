@@ -175,6 +175,15 @@
         "reason": "White-box test of the private formula-expression evaluator and its private unresolved-dependency exception, exercising the non-blocking unresolved-binding diagnostic channel. Internal formula-runtime primitives, not the public calculate_registry_snapshot entry point."
       },
       {
+        "importer_path": "src/cadrumo/application/storage/calc_sheets/tests/test_row_set_calculation_roundtrip.py",
+        "occurrence": 1,
+        "target_mod": "cadrumo.adapters.outbound.google._calc_sheets_pull",
+        "imported_names": [
+          "_decode_row_set_block"
+        ],
+        "reason": "White-box test reach: the roundtrip proof drives a REAL local .xlsx through the actual worksheet decode step and on into assemble_row_sets_for_snapshot and an encrypted revision, without standing up Google I/O. `_decode_row_set_block` is the decode step; its only production caller is its own module. Deliberately NOT promoted -- publishing it would put an adapter-internal worksheet decoder on the outbound.google facade, where any package could bind to a shape that exists to serve one pull implementation. The public type the same test needs (RowSetEdit) WAS already exported and is now imported from the facade, so this entry covers only the private decoder."
+      },
+      {
         "importer_path": "src/cadrumo/application/tests/test_error_class_registration.py",
         "occurrence": 1,
         "target_mod": "cadrumo.application.auth._diagnostics",
