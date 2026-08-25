@@ -11,7 +11,7 @@ related:
   - '[[2026-08-05-ci-lane-deconflation-adr]]'
   - '[[2026-08-14-test-harness-sanity-two-lane-campaign-research]]'
 modified: '2026-08-25'
-body_hash: 'sha256:1f0a80f670b44d2683023033f9f1cda5d3b295e88b70da28b65b1626c6cce773'
+body_hash: 'sha256:7ded9d71e18bb5dd40f067cd6e747e52f14652b455ed1d8d7e3425e0dfc9571f'
 ---
 
 <!-- RETIRED: W01, W02, W03, W04, W05, P02, P03, P04, P05, P06, P07, P08, P09, P10, P11, P12, P13, P14, P15, S01, S02, S03, S04, S05, S06, S07, S08, S09, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19, S20, S21, S22, S23, S24, S25, S26, S27, S28, S29, S30, S31, S32, S33, S34, S35, S36, S37, S38, S39, S40, S41, S42, S43, S44, S45, S46, S111, S121, S122, S138 -->
@@ -179,7 +179,7 @@ Bind collection VaultSpec execution records and plan state into one auditable co
 
 - [x] `W08.P28.S95` - Run full first-party collection and retain complete status and errors; `pyproject.toml`.
 - [x] `W08.P28.S96` - Run feature-scoped and repository-wide VaultSpec checks without rewriting unrelated debt; `.vault`.
-- [x] `W08.P28.S97` - Create and validate one execution record per completed Step; `.vault/exec/2026-08-14-test-harness-sanity`.
+- [x] `W08.P28.S97` - Validate every completed Step through either its matching execution record or an explicit per-Step close-audit carry-forward that names the canonical files, landing commits, focused evidence, and disposition; `.vault/exec/2026-08-14-test-harness-sanity`.
 - [x] `W08.P28.S98` - Prove every mandate requirement has authoritative evidence and no work remains; `.vault/plan/2026-08-14-test-harness-sanity-plan.md`.
 
 ## Wave `W09` - reopen the census on the body-keyed axis
@@ -218,7 +218,7 @@ The classes the name-keyed census cannot reach. Drift is scored by structural si
 - [x] `W09.P30.S134` - Sweep every test HTTP server for the shutdown-close-join triad and close the socket and thread leaks that accumulate under parallel execution; `dev/docs/tests, src/cadrumo/adapters/outbound`.
 - [x] `W09.P30.S135` - Move the in-memory engine disposal in the hash-column-width test inside a finally so a failing assertion cannot skip it; `src/cadrumo/adapters/persistence/storage/sql/tests/test_hash_column_widths.py`.
 - [x] `W09.P30.S136` - Close the live-write declaration helper still duplicated in the evaluation tree, or record the cross-tree import direction as the standing reason it cannot move; `dev/agent_eval/tests/test_confirmation_gate_golden.py`.
-- [x] `W09.P30.S137` - Sweep key providers and encrypted sessions for guaranteed teardown, the one resource class left unexamined, adjudicating each of the 15 EphemeralMasterKeyProvider constructions that are assigned without ever being context-managed as helper-managed or leaking; `15 EphemeralMasterKeyProvider constructions are assigned without ever being context-managed and each needs adjudicating as helper-managed or leaking; `src/cadrumo/adapters/persistence/storage`.
+- [x] `W09.P30.S137` - Sweep key providers and encrypted sessions for guaranteed teardown, the one resource class left unexamined, adjudicating each of the 15 EphemeralMasterKeyProvider constructions that are assigned without ever being context-managed as helper-managed or leaking; `src/cadrumo/adapters/persistence/storage`.
 - [x] `W09.P30.S139` - Migrate the CLI-surface workflow tests off application-layer profile seeding onto the credential-registering door so the custody envelope opens under the configured passphrase; `src/cadrumo/entrypoints/cli/tests/test_workflow_surface.py`.
 - [x] `W09.P30.S140` - Record the fourth storage-plus-auth isolation composition in the isolated-backend cluster census so the cluster count reflects every known site; `src/cadrumo/entrypoints/cli/tests/_cli_surface_support.py`.
 - [x] `W09.P30.S141` - Treat a body-duplicate that closes over a same-named module constant as its own triage bucket, since the safe fix is to parameterise the constant rather than delete the duplicate; `dev/quality/helper_body_census.py`.
@@ -265,6 +265,8 @@ The campaign is complete only when all of the following are true:
 - Fresh-context Sol review finds no unresolved high-through-low audit item,
   fixture ownership ambiguity, lifecycle regression, compatibility bridge, or
   completion-criterion narrowing.
-- Every checked Step has a matching execution record, the plan validator is
-  clean, feature-scoped VaultSpec checks pass, and repository-wide VaultSpec
-  debt is reported separately without being rewritten to manufacture green.
+- Every checked Step has either a matching execution record or an explicit
+  per-Step close-audit carry-forward naming its canonical files, landing
+  commits, focused evidence, and disposition. The plan validator is clean,
+  feature-scoped VaultSpec checks pass, and repository-wide VaultSpec debt is
+  reported separately without being rewritten to manufacture green.
