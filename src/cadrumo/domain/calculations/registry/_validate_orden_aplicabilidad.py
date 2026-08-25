@@ -29,6 +29,7 @@ from dataclasses import dataclass
 from datetime import date
 
 from ._schema import LegalReference, ModeloRevision
+from ._schema_references import governed_period_span
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,10 +62,21 @@ class RevisionLegalApplicabilityWindow:
         )
 
     def overlaps(self, reference: LegalReference) -> bool:
-        """Return whether ``reference`` is effective anywhere in this interval."""
-        if reference.effective_to is not None and reference.effective_to < self.starts_on:
+        """Return whether ``reference`` reaches anywhere in this interval.
+
+        A norm that takes effect AFTER this window closes can still ground it:
+        an informativa Orden published at the end of December is effective the
+        following January while governing the ejercicio just ended. The
+        catalogue states that explicitly through ``governs_periods_from``,
+        which the reference schema enforces to be strictly earlier than
+        ``effective_from`` precisely because it declares retroactive reach.
+        Comparing ``effective_from`` alone therefore refuses a citation the
+        catalogue already says governs these periods.
+        """
+        governs_from, governs_to = governed_period_span(reference)
+        if governs_to is not None and governs_to < self.starts_on:
             return False
-        return self.closes_on is None or reference.effective_from <= self.closes_on
+        return self.closes_on is None or governs_from <= self.closes_on
 
 
 def validate_orden_aplicabilidad(
