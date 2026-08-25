@@ -158,7 +158,10 @@ def _read_pointer_bytes(target: Path) -> bytes | None:
             if current != signature:
                 signature = current
                 deadline = now + _POINTER_READ_RETRY_SECONDS
-            if not is_windows_contention(exc) or now >= deadline or now >= ceiling:
+            transient_windows_refusal = sys.platform == "win32" and (
+                is_windows_contention(exc) or getattr(exc, "winerror", None) is None
+            )
+            if not transient_windows_refusal or now >= deadline or now >= ceiling:
                 raise
             time.sleep(_POINTER_READ_POLL_SECONDS)
 
@@ -172,6 +175,7 @@ def read_pointer(root: Path) -> BucketPointer:
 
 
 def _await_uncontended(operation: Callable[[], None]) -> None:
+    """Retry a bounded Windows sharing refusal without masking permanent failures."""
     from ._windows_contention import is_windows_contention
 
     deadline = time.monotonic() + _POINTER_WRITE_RETRY_SECONDS
@@ -179,7 +183,15 @@ def _await_uncontended(operation: Callable[[], None]) -> None:
         try:
             operation()
         except PermissionError as exc:
-            if not is_windows_contention(exc) or time.monotonic() >= deadline:
+            # Windows can surface a sharing refusal from ``os.open`` without a
+            # populated ``winerror``. A bounded retry is safe for every
+            # Windows PermissionError: an ACL or directory refusal remains a
+            # refusal once the short contention window expires, while a peer's
+            # reader handle releases and permits the atomic publication.
+            transient_windows_refusal = sys.platform == "win32" and (
+                is_windows_contention(exc) or getattr(exc, "winerror", None) is None
+            )
+            if not transient_windows_refusal or time.monotonic() >= deadline:
                 raise
             time.sleep(_POINTER_READ_POLL_SECONDS)
             continue

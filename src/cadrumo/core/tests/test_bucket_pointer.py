@@ -7,8 +7,7 @@ from typing import get_args
 import pytest
 from pydantic import ValidationError
 
-from .. import BucketPointer, pointer_path, read_pointer, write_pointer
-from ..bucket_pointer import POINTER_SCHEMA_VERSION
+from ..bucket_pointer import POINTER_SCHEMA_VERSION, BucketPointer, pointer_path, read_pointer, write_pointer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

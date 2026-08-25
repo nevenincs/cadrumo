@@ -126,7 +126,7 @@ _CRASH_HARNESS = _SETTINGS_PREAMBLE + dedent(
     # * deletion anchors on the capsule lifecycle, which is where the erase
     #   moved when the custody capsule became the sole profile authority.
     effect_return_by_boundary = {
-        "auth_clearing_after_effect": ("_operator_cleanup.py", "clear_operator_auth_acquisition_locks"),
+        "auth_clearing_after_effect": ("operator_cleanup.py", "clear_operator_auth_acquisition_locks"),
         "pointer_reconciling_after_effect": ("profile_pointer.py", "clear"),
         "deleting_after_effect": ("_lifecycle.py", "delete"),
     }
