@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:7726c8be4cf0f2ba67350b78bbf0ce6024ede51e1f3019b5c0ba6cfa4e9cc169'
+body_hash: 'sha256:2a7991f1b269d9accebf46444b6af28299125ecee023251538f421b8687df49a'
 related:
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -55,3 +55,43 @@ The configuration exception is observably racy. `_active_profile_pointer_fingerp
 ## Disposition
 
 FAIL. There are no CRITICAL findings, but the three HIGH findings require S168 to reopen. The passing transition, durability, cross-process, typed-journal, sole-writer, and no-follow evidence remains useful and should be preserved while the canonical-home, reader/cache, and stale-reset defects are corrected.
+
+## Remediation re-review
+
+### Scope and frozen endpoint
+
+The independent remediation review is frozen at S168 endpoint `d1e6ce71a82ec47806d3892d69f9c8ecf8363320`, including the named remediation lineage through `d64845fbf1`, `56dea1fa90`, `5975b39f3b`, `25259e7249`, `85ab2a5365`, `b9e1e690ec`, `bd9b29d2b5`, `7aca40289d`, and `620f9f577a`. Later shared-branch workflow relocations are outside this endpoint and were not allowed to move the review baseline.
+
+Discovery again began with semantic Vaultspec RAG over implementation and accepted decisions, then narrowed to whole-file inspection and exact Git/AST census. The committed endpoint census parsed all 6,100 Python files under `src/cadrumo` and `dev`. It found exactly the 11 pointer definitions in the two accepted defining modules, no retired module, package-symbol import, package re-export, star import, competing definition, foreign owner, public alias, shim, fallback, or legacy string reference. Seven direct defining-module imports use private local `as` names only; none is exported, reassigned as an authority, or exposed through `__all__`, so they are ordinary consumer-local bindings rather than semantic aliases or alternate API homes.
+
+### Canonical defining-module cutover
+
+The prior `canonical-defining-module-cutover` HIGH is closed. `core.bucket_pointer` singularly owns `BucketPointer`, pointer path/IO, and resolver functions; `application.user_profile.profile_pointer` singularly owns the transaction and observation authority. The former private modules are absent, both package namespaces are inert for these symbols, all consumers import their defining module directly, and the authority tests now enforce the accepted no-re-export boundary.
+
+### Reader cutover and configuration coordinate
+
+The prior `reader-cutover-and-config-coordinate` HIGH is closed. Configuration captures one typed pointer observation and carries that same record into both the cache coordinate and database-route construction. This review found one additional biting relative-root defect during remediation: before `d1e6ce71a8`, a relative configured root was read once relatively and then again after normalization, allowing A's cache coordinate to contain B's route. `d1e6ce71a8` normalizes the root before the first observation and before cache/context capture. The deterministic relative-root A-to-B interleaving now observes exactly one read, as does the absolute-root case, and the route remains derived from that same record.
+
+The canonical reader is strict current-only schema version 2, rejects earlier schema versions and malformed or oversized input, performs bounded regular-file/no-follow reads, and uses atomic replacement for writes. The transaction remains the sole production low-level writer, advances each real transition exactly once, preserves idempotent same-state operations, and compares the complete pointer record. Spawned-process A-to-B-to-A coverage proves that a numerically repeated bucket selection cannot hide intervening transitions.
+
+### Reset stale-absence reconciliation
+
+The prior `config-reset-stale-absence` HIGH is closed. Resume now accepts only the exact predecessor or the exact expected successor: clearing a selected predecessor requires the absent tombstone at precisely predecessor revision plus one, while an already-absent predecessor must remain the same exact record. Any selected replacement, ABA transition, or later absent tombstone updates the journaled snapshot and pauses with `POINTER_CHANGED`; the crash-recovery regression covers an external selection followed by a later tombstone and proves refusal.
+
+### Windows reader/writer sharing
+
+`620f9f577a` closes the Windows sharing-race defect encountered during remediation. Pointer reads and replacement use bounded retry for recognized transient Windows sharing `PermissionError` conditions, while retaining the current-only, regular-file, no-follow, and atomicity checks. Deterministic retry coverage and the real concurrent reader/writer suite pass.
+
+### Implementation traceability
+
+The historical LOW remains. The initial/public-move remediation commits contain broad unrelated shared-tree work, and `620f9f577a` accidentally includes an unrelated staged change to `dev/quality/modelo_branch_classification.toml`. This mixed provenance is not a pointer semantic defect and does not reopen any HIGH finding, but it prevents commit boundaries alone from serving as path-pure S168 evidence.
+
+### Validation and shared-tree isolation
+
+The final focused pointer/configuration run passed 81 tests in parallel, and the serial pointer/configuration/storage-route run passed 51 tests. Additional remediation evidence passed 15 serial pointer/race tests, 10 storage-route tests, the reset authorization-clear crash test, and Ruff. Exact endpoint census found zero prohibited remnants and zero Python parse errors.
+
+The specifically requested `_login_session.py:842` indentation blocker is not present at the frozen endpoint: the file parses, and line 842 is a valid direct workflow import. A later live-tree attempt to collect the broader application/reset batch instead intersected an unrelated workflow relocation that had deleted `workflow/_engine_helpers.py` while `run_models.py` still imported it. That shared-tree collection blocker is outside `d1e6ce71a8` and outside S168; it is not evidence against the focused passing endpoint results.
+
+### Remediation disposition
+
+PASS at frozen endpoint `d1e6ce71a8`. No CRITICAL, HIGH, or MEDIUM S168 defect remains. All three historical HIGH findings are closed; the remaining LOW concerns mixed commit provenance only and does not block acceptance.
