@@ -1022,7 +1022,7 @@ kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
 
 [[decision]]
-path = "src/cadrumo/application/modelo/_selectors.py"
+path = "src/cadrumo/application/modelo/work_addressing.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
