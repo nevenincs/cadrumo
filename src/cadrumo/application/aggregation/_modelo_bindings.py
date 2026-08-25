@@ -1279,6 +1279,29 @@ def _raise_if_invoice_iva_would_be_silent(
         ledger_observations=ledger_observations,
         invoice_repository=invoice_repository,
     )
+    return _raise_if_screened_invoice_iva_would_be_silent(
+        context=context,
+        screened_bindings=screened_bindings,
+        screened=screened,
+        transaction_binding_values=transaction_binding_values,
+        prorrata_apportionment=prorrata_apportionment,
+    )
+
+
+def _raise_if_screened_invoice_iva_would_be_silent(
+    *,
+    context: CalculationSourceContext,
+    screened_bindings: tuple[BindingId, ...],
+    screened: _ScreenedInvoiceIva,
+    transaction_binding_values: Mapping[BindingId, Decimal],
+    prorrata_apportionment: IvaLedgerProrrataApportionment | None,
+) -> _InvoiceIvaSilenceReport:
+    """Compare screened invoice facts with the canonical ledger projection.
+
+    The repository-backed wrapper owns acquisition and period screening. This
+    deterministic half owns the one refusal policy over that frozen result, so
+    callers and proofs use the same IVA binding projector and terminal facts.
+    """
     # Withholding an unauthorised input row is unconditional; REFUSING the whole
     # filing over it is not. This guard's criterion, stated in its own docstring,
     # is invoice IVA that would EXCEED the transaction-ledger cuota -- that is the
