@@ -32,7 +32,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ...core import Modelo, Period
+from ...core import ActionEvidenceProvenance, Modelo, Period
 from ...domain.iva_compensation import (
     IvaCompensationPeriodState,
     IvaCompensationReconciliationDecision,
@@ -41,6 +41,7 @@ from ...domain.iva_compensation import (
 from ...domain.modelos import CalculationRevisionState, ModeloError
 from ..calculations import correct_iva_compensation_period, seed_iva_compensation_period
 from ._iva_wallet_gate import taxpayer_nif_for_bucket
+from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 
 #: Sealed (already-filed) revision states that consume the IVA compensation
 #: basis. A correction of a seeded period whose carry-forward fed any sealed
@@ -58,12 +59,25 @@ _SEALED_REVISION_STATES = frozenset(
 class ModeloIvaWalletSeedError(ModeloError):
     """Base class for Modelo IVA wallet seed, correction, and override errors."""
 
-    def __init__(self, *, translated_message: str, context: dict[str, object] | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        translated_message: str,
+        context: dict[str, object] | None = None,
+        precondition_failure: ModeloPreconditionFailure | None = None,
+    ) -> None:
         super().__init__(
             translated_message,
             translated_message=translated_message,
             context=context,
         )
+        self._precondition_failure = precondition_failure
+
+    @property
+    def terminal_precondition_verdict(self):
+        """Expose the application-owned refusal without adding CLI recovery prose."""
+        failure = self._precondition_failure
+        return None if failure is None else failure.verdict
 
 
 class ModeloIvaWalletSeedNoTaxpayerError(ModeloIvaWalletSeedError):
@@ -83,9 +97,23 @@ class ModeloIvaWalletCorrectionNoRecordError(ModeloIvaWalletSeedError):
     """Raised when a correction targets a period that has no seeded record yet.
 
     Correction re-writes an existing opening balance; an absent period is a
-    seed, not a correction. The refusal surfaces the seed-first guidance so the
-    operator runs ``iva-wallet seed`` before ``iva-wallet correct``.
+    seed, not a correction. The refusal carries this factual distinction only.
     """
+
+
+def _missing_taxpayer_error(*, bucket_id: str, subject_leaf_key: str) -> ModeloIvaWalletSeedNoTaxpayerError:
+    """Return the closed application outcome when no taxpayer identity is available."""
+    return ModeloIvaWalletSeedNoTaxpayerError(
+        translated_message="application.modelo.iva_wallet.seed_no_nif",
+        context={"bucket_id": bucket_id},
+        precondition_failure=build_modelo_precondition_failure_for_scenario(
+            subject_leaf_key=subject_leaf_key,
+            scenario_id=f"{subject_leaf_key}.taxpayer_identity_missing",
+            evidence_id="modelo.iva_wallet.taxpayer",
+            evidence_values={"bucket_id": bucket_id, "taxpayer_identity_available": False},
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        ),
+    )
 
 
 class ModeloIvaWalletCorrectionSealedError(ModeloIvaWalletSeedError):
@@ -160,10 +188,7 @@ def seed_iva_compensation_period_for_bucket(
     _require_non_negative_wallet_amount(amount)
     taxpayer_nif = taxpayer_nif_for_bucket(bucket_id)
     if taxpayer_nif is None:
-        raise ModeloIvaWalletSeedNoTaxpayerError(
-            translated_message="application.modelo.iva_wallet.seed_no_nif",
-            context={"bucket_id": bucket_id},
-        )
+        raise _missing_taxpayer_error(bucket_id=bucket_id, subject_leaf_key="modelo.iva_wallet.seed")
     return seed_iva_compensation_period(
         taxpayer_nif=taxpayer_nif,
         period=period,
@@ -264,10 +289,7 @@ def correct_iva_compensation_period_for_bucket(
     _require_non_negative_wallet_amount(amount)
     taxpayer_nif = taxpayer_nif_for_bucket(bucket_id)
     if taxpayer_nif is None:
-        raise ModeloIvaWalletSeedNoTaxpayerError(
-            translated_message="application.modelo.iva_wallet.seed_no_nif",
-            context={"bucket_id": bucket_id},
-        )
+        raise _missing_taxpayer_error(bucket_id=bucket_id, subject_leaf_key="modelo.iva_wallet.correct")
 
     from ..calculations import IvaCompensationHistoryRepository
 
@@ -427,10 +449,7 @@ def record_iva_compensation_override_for_bucket(
     _require_non_negative_wallet_amount(amount)
     taxpayer_nif = taxpayer_nif_for_bucket(bucket_id)
     if taxpayer_nif is None:
-        raise ModeloIvaWalletSeedNoTaxpayerError(
-            translated_message="application.modelo.iva_wallet.seed_no_nif",
-            context={"bucket_id": bucket_id},
-        )
+        raise _missing_taxpayer_error(bucket_id=bucket_id, subject_leaf_key="modelo.iva_wallet.override")
 
     blocker = _sealed_modelo_303_blocker_for_period(bucket_id=bucket_id, period=period)
     if blocker is not None:

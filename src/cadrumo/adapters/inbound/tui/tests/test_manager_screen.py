@@ -485,62 +485,16 @@ async def test_a_returned_refusal_is_not_styled_as_a_success(tmp_path) -> None:
 
 
 @pytest.mark.asyncio
-async def test_censal_sync_projects_a_missing_route_as_actionable_schema_copy(tmp_path) -> None:
-    """The mounted shipped action must never expose a missing profile path as a KeyError."""
-    from .....core import AuthProviderKind
-    from .....core.config import override_settings
-    from .....domain.user_profile import load_user_profile_schema, profile_field_label
-    from .....entrypoints.cli._config._manager_actions import (
-        _AUTH_CLAVE_MOVIL_ROUTE_PATH,
-        _AUTH_DNI_NIE_PATH,
-        _AUTH_FECHA_VALIDEZ_PATH,
-        _AUTH_PROVIDER_PATH,
-        _AUTH_SOPORTE_PATH,
-        _commit_auth_choice,
-        censal_pull_action,
-    )
+async def test_censal_apply_refuses_without_reading_or_writing(tmp_path) -> None:
+    """The shipped manager action forecloses before any profile or AEAT access."""
+    del tmp_path
+    from .....entrypoints.cli._config._manager_actions import censal_pull_action
+    from .. import ManagerActionDisposition
 
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        override_settings(
-            cadrumo_output_language="en",
-            cadrumo_clave_prefer_non_qr=False,
-            cadrumo_clave_movil_dni_nie=None,
-            cadrumo_clave_movil_nie_soporte=None,
-            cadrumo_clave_movil_dni_fecha=None,
-            cadrumo_clave_permanente_dni_nie=None,
-        ),
-    ):
-        register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
-            label="Manager Subject",
-            passphrase=_PASSWORD,
-        )
-        _commit_auth_choice(
-            {
-                _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
-                _AUTH_DNI_NIE_PATH: "00000000T",
-                _AUTH_SOPORTE_PATH: "",
-                _AUTH_FECHA_VALIDEZ_PATH: "",
-            },
-        )
-        app = ProfileManagerApp(
-            _live_overview(),
-            persist=_persist,
-            actions=[censal_pull_action()],
-        )
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
-            await pilot.click("#action-censal-pull")
-            await wait_until_settled(app, pilot)
-
-            message = app.query_one("#manager-status", PinnedStatusBar).message
-            schema = load_user_profile_schema()
-            section, _field = _AUTH_CLAVE_MOVIL_ROUTE_PATH.split(".", 1)
-            assert profile_field_label(section, schema.field(_AUTH_CLAVE_MOVIL_ROUTE_PATH)) in message
-            assert "retry sync" in message
-            assert "auth." not in message
-            app.exit(None)
+    outcome = censal_pull_action().run()
+    assert outcome.disposition is ManagerActionDisposition.REFUSED
+    assert outcome.message == tr("flows.manager.action.censal_pull_review_unavailable")
+    assert outcome.overview is None
 
 
 @pytest.mark.asyncio

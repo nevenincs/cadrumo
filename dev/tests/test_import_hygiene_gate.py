@@ -104,10 +104,13 @@ from dev.quality.import_hygiene_scan import (
     _ACCEPTED_TUI_TEXTUAL_EDGE_SHA256,
     CANONICAL_TUI_PACKAGE,
     DEMOTED_REGISTRY_LOADER_SYMBOLS,
+    LEGACY_TUI_PACKAGE,
     PKG_ROOT,
     REGISTRY_LOADER_PACKAGE,
     ImportSite,
     TuiBoundaryViolationKind,
+    TuiMigrationRow,
+    TuiMigrationRowKind,
     discover_facades,
     find_delegate_wrapper_shims,
     find_dev_tooling_import_violations,
@@ -130,6 +133,28 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _BASELINE_PATH: Final[Path] = REPO_ROOT / "dev" / "quality" / "import_hygiene_baseline.json"
 _TEST_DEBT_PATH: Final[Path] = REPO_ROOT / "dev" / "quality" / "import_hygiene_test_debt.json"
+_COMPONENTS_PACKAGE: Final[str] = f"{CANONICAL_TUI_PACKAGE}.components"
+_COMPONENTS_ROOT: Final[Path] = PKG_ROOT / "entrypoints" / "tui" / "components"
+_COMPONENT_FORBIDDEN_PREFIXES: Final[tuple[str, ...]] = (
+    "cadrumo.adapters",
+    "cadrumo.application",
+    "cadrumo.entrypoints.cli",
+    "cadrumo.feature",
+    "cadrumo.features",
+    "cadrumo.repository",
+    "cadrumo.repositories",
+)
+_COMPONENT_FORBIDDEN_SEGMENTS: Final[frozenset[str]] = frozenset(
+    {"repository", "repositories", "timer", "timers", "task", "tasks", "work", "worker", "workers", "lifecycle"}
+)
+_MOVED_LEGACY_COMPONENT_EXPORTS: Final[frozenset[tuple[str, str]]] = frozenset(
+    {
+        (module, symbol)
+        for module in (LEGACY_TUI_PACKAGE, f"{LEGACY_TUI_PACKAGE}._form_screen")
+        for symbol in ("ChoiceEditScreen", "OneChoiceEditScreen", "TextEditScreen")
+    }
+    | {(module, "PinnedStatusBar") for module in (LEGACY_TUI_PACKAGE, f"{LEGACY_TUI_PACKAGE}._status_bar")}
+)
 
 
 @dataclass(frozen=True)
@@ -275,6 +300,42 @@ def _package_py_files() -> list[Path]:
 def _package_import_sites() -> list[ImportSite]:
     """Return every import site, rebuilt per caller from the cached pass."""
     return list(_scanned_import_sites())
+
+
+def _component_import_policy_violations(
+    py_files: list[Path],
+    *,
+    src_root: Path,
+) -> tuple[ImportSite, ...]:
+    """Filter the canonical AST import census for non-presentation component dependencies."""
+    violations: list[ImportSite] = []
+    for path in py_files:
+        for site in walk_module_imports(path, src_root=src_root):
+            target = site.target_mod
+            target_parts = tuple(part.lstrip("_") for part in target.split("."))
+            is_tui_feature = target == CANONICAL_TUI_PACKAGE or (
+                target.startswith(CANONICAL_TUI_PACKAGE + ".")
+                and target != _COMPONENTS_PACKAGE
+                and not target.startswith(_COMPONENTS_PACKAGE + ".")
+            )
+            is_components_facade = target == _COMPONENTS_PACKAGE and not site.is_test
+            is_forbidden_prefix = any(
+                target == prefix or target.startswith(prefix + ".") for prefix in _COMPONENT_FORBIDDEN_PREFIXES
+            )
+            if (
+                is_tui_feature
+                or is_components_facade
+                or is_forbidden_prefix
+                or bool(set(target_parts) & _COMPONENT_FORBIDDEN_SEGMENTS)
+            ):
+                violations.append(site)
+    return tuple(violations)
+
+
+@cache
+def _tui_migration_manifest() -> tuple[TuiMigrationRow, ...]:
+    """Build the canonical legacy census once for all TUI boundary proofs."""
+    return generate_tui_migration_manifest()
 
 
 def _current_production_family1_sites() -> tuple[_BaselineSite, ...]:
@@ -1025,7 +1086,7 @@ def _scan_planted_tui_boundary(tmp_path: Path, dotted_rel: str, body: str):
 
 
 def test_tui_boundary_is_clean_against_the_accepted_legacy_census() -> None:
-    generate_tui_migration_manifest()
+    _tui_migration_manifest()
     source_files = scan_directory(PKG_ROOT, pattern="*.py", recursive=True)
     dev_files = sorted(
         path for path in scan_directory(REPO_ROOT / "dev", pattern="*.py", recursive=True) if "tests" not in path.parts
@@ -1049,6 +1110,77 @@ def test_tui_boundary_is_clean_against_the_accepted_legacy_census() -> None:
     ]
 
     assert violations == []
+
+
+def test_components_import_only_presentation_dependencies() -> None:
+    """Canonical components do not reach feature, lifecycle, or work-owning layers."""
+    component_files = scan_directory(_COMPONENTS_ROOT, pattern="*.py", recursive=True)
+    forbidden_imports = _component_import_policy_violations(component_files, src_root=REPO_ROOT / "src")
+
+    assert forbidden_imports == ()
+    assert find_tui_boundary_violations(component_files, src_root=REPO_ROOT / "src") == []
+    assert find_shim_modules(component_files, discover_facades()) == []
+
+
+def test_components_facade_has_no_imports_or_exports() -> None:
+    """The namespace is intentionally inert; consumers name defining modules directly."""
+    facade_path = _COMPONENTS_ROOT / "__init__.py"
+    sites = walk_module_imports(facade_path, src_root=REPO_ROOT / "src")
+
+    assert [(site.target_mod, site.imported_names) for site in sites] == [("__future__", ["annotations"])]
+
+
+def test_components_have_no_legacy_consumers_or_republished_moved_symbols() -> None:
+    """The canonical census proves relocated presentation has no legacy duplicate or reach."""
+    rows = _tui_migration_manifest()
+    legacy_consumers = [row for row in rows if row.consumer.startswith(_COMPONENTS_PACKAGE)]
+    legacy_exports = {
+        (row.legacy_module, row.symbol)
+        for row in rows
+        if row.kind is TuiMigrationRowKind.EXPORT and row.symbol is not None
+    }
+
+    assert legacy_consumers == []
+    assert _MOVED_LEGACY_COMPONENT_EXPORTS.isdisjoint(legacy_exports)
+
+
+@pytest.mark.parametrize(
+    ("body", "expected_target"),
+    (
+        ("from cadrumo.entrypoints.tui.profile import ProfileScreen\n", "cadrumo.entrypoints.tui.profile"),
+        ("from cadrumo.application.operations import _registry\n", "cadrumo.application.operations"),
+        ("from cadrumo.adapters.inbound.tui import LegacyScreen\n", "cadrumo.adapters.inbound.tui"),
+        ("from cadrumo.entrypoints.cli import app\n", "cadrumo.entrypoints.cli"),
+        ("from cadrumo.core.repository import Repository\n", "cadrumo.core.repository"),
+        ("from cadrumo.core.timers import Timer\n", "cadrumo.core.timers"),
+        ("from cadrumo.core.tasks import Task\n", "cadrumo.core.tasks"),
+        ("from cadrumo.core.work import Work\n", "cadrumo.core.work"),
+        ("from cadrumo.core.lifecycle import Lifecycle\n", "cadrumo.core.lifecycle"),
+        ("from cadrumo.entrypoints.tui.components import FormField\n", _COMPONENTS_PACKAGE),
+    ),
+)
+def test_components_boundary_rejects_nonpresentation_imports(
+    tmp_path: Path,
+    body: str,
+    expected_target: str,
+) -> None:
+    """Each forbidden dependency family is rejected through the shared AST census."""
+    planted = _plant_module(tmp_path, "cadrumo/entrypoints/tui/components/planted.py", body)
+
+    violations = _component_import_policy_violations([planted], src_root=tmp_path)
+
+    assert [site.target_mod for site in violations] == [expected_target]
+
+
+def test_components_boundary_allows_a_direct_canonical_component_import(tmp_path: Path) -> None:
+    """Direct imports from a defining component module remain the permitted shape."""
+    planted = _plant_module(
+        tmp_path,
+        "cadrumo/entrypoints/tui/components/planted.py",
+        "from cadrumo.entrypoints.tui.components.forms import FormField\n",
+    )
+
+    assert _component_import_policy_violations([planted], src_root=tmp_path) == ()
 
 
 @pytest.mark.parametrize(

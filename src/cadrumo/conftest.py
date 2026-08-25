@@ -144,6 +144,19 @@ def _skip_profile_kdf_grid_measurement() -> Iterator[None]:
 
 
 @pytest.fixture(autouse=True)
+def _compose_profile_login_session_port() -> Iterator[None]:
+    """Compose the real login-session adapter for tests that load its app owner."""
+    if "cadrumo.application.user_profile._login_session" not in sys.modules:
+        yield
+        return
+    from .adapters.persistence.storage import build_profile_login_session_port
+    from .application.user_profile import bind_profile_login_session_port
+
+    with bind_profile_login_session_port(build_profile_login_session_port()):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def _evict_test_bound_bucket_session() -> Iterator[None]:
     """Evict a bucket session a test bound itself, so none crosses into the next test.
 

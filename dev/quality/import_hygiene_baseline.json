@@ -74,67 +74,12 @@
       {
         "path": "src/cadrumo/application/user_profile/_custody_ports.py",
         "function": "_PersistenceProfileCustodyLocalRecordStore.root_lock",
-        "reason": "Instance method on a port adapter (_PersistenceProfileLoginSession, documented as composing the real custody and live-session adapters behind one application-owned Protocol, and instantiated as the default provider). The delegation IS the decision: it binds one concrete persistence implementation to an application-declared port, which is the hexagonal seam this package exists to hold. Deleting it and pointing callers at the owning facade would make application.user_profile import adapters.persistence directly and invert the dependency."
+        "reason": "Instance method on a port adapter (_PersistenceProfileCustodyLocalRecordStore / _PersistenceProfileBucketStorage, both documented as adapting the persistence facade to an application-owned Protocol, both instantiated as the default provider). This family's stated harm is 'a second import path to a symbol that already has a canonical home' -- a consumer holds the PORT object and calls through the interface, so there is no import site to move, and the family's own remedy ('point the consumers at the owning facade and delete the wrapper') would delete the Protocol implementation rather than an alias. Pure delegation is what a port adapter over a matching facade looks like. Whether the port itself should exist is a live design question about the 21 MODULE-LEVEL forwards in this module, which are deliberately left undocumented so the gate keeps naming them."
       },
       {
         "path": "src/cadrumo/application/user_profile/_custody_ports.py",
         "function": "_PersistenceProfileCustodyLocalRecordStore.write",
         "reason": "Instance method on a port adapter (_PersistenceProfileCustodyLocalRecordStore / _PersistenceProfileBucketStorage, both documented as adapting the persistence facade to an application-owned Protocol, both instantiated as the default provider). This family's stated harm is 'a second import path to a symbol that already has a canonical home' -- a consumer holds the PORT object and calls through the interface, so there is no import site to move, and the family's own remedy ('point the consumers at the owning facade and delete the wrapper') would delete the Protocol implementation rather than an alias. Pure delegation is what a port adapter over a matching facade looks like. Whether the port itself should exist is a live design question about the 21 MODULE-LEVEL forwards in this module, which are deliberately left undocumented so the gate keeps naming them."
-      },
-      {
-        "path": "src/cadrumo/application/user_profile/_custody_ports.py",
-        "function": "_PersistenceProfileLoginSession.acceleration_receipt_path",
-        "reason": "Instance method on a port adapter (_PersistenceProfileLoginSession, documented as composing the real custody and live-session adapters behind one application-owned Protocol, and instantiated as the default provider). The delegation IS the decision: it binds one concrete persistence implementation to an application-declared port, which is the hexagonal seam this package exists to hold. Deleting it and pointing callers at the owning facade would make application.user_profile import adapters.persistence directly and invert the dependency."
-      },
-      {
-        "path": "src/cadrumo/application/user_profile/_custody_ports.py",
-        "function": "_PersistenceProfileLoginSession.close_active_session",
-        "reason": "Instance method on a port adapter (_PersistenceProfileLoginSession, documented as composing the real custody and live-session adapters behind one application-owned Protocol, and instantiated as the default provider). The delegation IS the decision: it binds one concrete persistence implementation to an application-declared port, which is the hexagonal seam this package exists to hold. Deleting it and pointing callers at the owning facade would make application.user_profile import adapters.persistence directly and invert the dependency."
-      },
-      {
-        "path": "src/cadrumo/application/user_profile/_custody_ports.py",
-        "function": "_PersistenceProfileLoginSession.current_session",
-        "reason": "Instance method on a port adapter (_PersistenceProfileLoginSession, documented as composing the real custody and live-session adapters behind one application-owned Protocol, and instantiated as the default provider). The delegation IS the decision: it binds one concrete persistence implementation to an application-declared port, which is the hexagonal seam this package exists to hold. Deleting it and pointing callers at the owning facade would make application.user_profile import adapters.persistence directly and invert the dependency."
-      },
-      {
-        "path": "src/cadrumo/application/user_profile/_custody_ports.py",
-        "function": "_PersistenceProfileLoginSession.delete_acceleration_receipt",
-        "reason": "Instance method on a port adapter (_PersistenceProfileLoginSession, documented as composing the real custody and live-session adapters behind one application-owned Protocol, and instantiated as the default provider). The delegation IS the decision: it binds one concrete persistence implementation to an application-declared port, which is the hexagonal seam this package exists to hold. Deleting it and pointing callers at the owning facade would make application.user_profile import adapters.persistence directly and invert the dependency."
-      },
-      {
-        "path": "src/cadrumo/application/user_profile/_custody_ports.py",
-        "function": "_PersistenceProfileLoginSession.evaluate_throttle",
-        "reason": "Instance method on a port adapter (_PersistenceProfileLoginSession, documented as composing the real custody and live-session adapters behind one application-owned Protocol, and instantiated as the default provider). The delegation IS the decision: it binds one concrete persistence implementation to an application-declared port, which is the hexagonal seam this package exists to hold. Deleting it and pointing callers at the owning facade would make application.user_profile import adapters.persistence directly and invert the dependency."
-      },
-      {
-        "path": "src/cadrumo/application/user_profile/_custody_ports.py",
-        "function": "_PersistenceProfileLoginSession.mint_acceleration_receipt",
-        "reason": "Instance method on a port adapter (_PersistenceProfileLoginSession, documented as composing the real custody and live-session adapters behind one application-owned Protocol, and instantiated as the default provider). The delegation IS the decision: it binds one concrete persistence implementation to an application-declared port, which is the hexagonal seam this package exists to hold. Deleting it and pointing callers at the owning facade would make application.user_profile import adapters.persistence directly and invert the dependency."
-      },
-      {
-        "path": "src/cadrumo/application/user_profile/_custody_ports.py",
-        "function": "_PersistenceProfileLoginSession.open_resumed_session",
-        "reason": "Instance method on a port adapter (_PersistenceProfileLoginSession, documented as composing the real custody and live-session adapters behind one application-owned Protocol, and instantiated as the default provider). The delegation IS the decision: it binds one concrete persistence implementation to an application-declared port, which is the hexagonal seam this package exists to hold. Deleting it and pointing callers at the owning facade would make application.user_profile import adapters.persistence directly and invert the dependency."
-      },
-      {
-        "path": "src/cadrumo/application/user_profile/_custody_ports.py",
-        "function": "_PersistenceProfileLoginSession.record_login_failure",
-        "reason": "Instance method on a port adapter (_PersistenceProfileLoginSession, documented as composing the real custody and live-session adapters behind one application-owned Protocol, and instantiated as the default provider). The delegation IS the decision: it binds one concrete persistence implementation to an application-declared port, which is the hexagonal seam this package exists to hold. Deleting it and pointing callers at the owning facade would make application.user_profile import adapters.persistence directly and invert the dependency."
-      },
-      {
-        "path": "src/cadrumo/application/user_profile/_custody_ports.py",
-        "function": "_PersistenceProfileLoginSession.reset_throttle",
-        "reason": "Instance method on a port adapter (_PersistenceProfileLoginSession, documented as composing the real custody and live-session adapters behind one application-owned Protocol, and instantiated as the default provider). The delegation IS the decision: it binds one concrete persistence implementation to an application-declared port, which is the hexagonal seam this package exists to hold. Deleting it and pointing callers at the owning facade would make application.user_profile import adapters.persistence directly and invert the dependency."
-      },
-      {
-        "path": "src/cadrumo/application/user_profile/_custody_ports.py",
-        "function": "_PersistenceProfileLoginSession.resume_acceleration_receipt",
-        "reason": "Instance method on a port adapter (_PersistenceProfileLoginSession, documented as composing the real custody and live-session adapters behind one application-owned Protocol, and instantiated as the default provider). The delegation IS the decision: it binds one concrete persistence implementation to an application-declared port, which is the hexagonal seam this package exists to hold. Deleting it and pointing callers at the owning facade would make application.user_profile import adapters.persistence directly and invert the dependency."
-      },
-      {
-        "path": "src/cadrumo/application/user_profile/_custody_ports.py",
-        "function": "_PersistenceProfileLoginSession.zeroise_owned_buffer",
-        "reason": "Instance method on a port adapter (_PersistenceProfileLoginSession, documented as composing the real custody and live-session adapters behind one application-owned Protocol, and instantiated as the default provider). The delegation IS the decision: it binds one concrete persistence implementation to an application-declared port, which is the hexagonal seam this package exists to hold. Deleting it and pointing callers at the owning facade would make application.user_profile import adapters.persistence directly and invert the dependency."
       },
       {
         "path": "src/cadrumo/application/user_profile/_custody_ports.py",

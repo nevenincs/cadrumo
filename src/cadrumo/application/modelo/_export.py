@@ -158,7 +158,11 @@ from ._export_amendment_evidence import resolve_persisted_amendment_export_evide
 from ._iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from ._ledger_evidence_gate import deductible_iva_evidence_gap_transaction_ids
 from ._m303_regimen_simplificado_scope import m303_regimen_simplificado_scope_for_profile
-from ._preconditions import build_modelo_precondition_failure
+from ._preconditions import (
+    ModeloPreconditionFailure,
+    build_modelo_precondition_failure,
+    build_modelo_precondition_failure_for_scenario,
+)
 from ._prior_domiciliation import resolve_prior_domiciliation_election
 from ._profile_export_binding import (
     resolve_declaration_contact,
@@ -193,6 +197,61 @@ _COMPLETENESS_UNVERIFIED_MESSAGE = (
     "manifest, so the structural-parity gate could not confirm every required casilla reached disk. The file may "
     "be structurally thin. Review the exported casillas against the official Diseño de Registros before filing."
 )
+
+
+class ModeloExportReadinessRefusal(BaseModel):
+    """Application-owned readiness fact and its declared operator outcome."""
+
+    model_config = _STRICT_FROZEN
+
+    reason: str
+    context: dict[str, str]
+    precondition_failure: ModeloPreconditionFailure
+
+
+def modelo_export_readiness_refusal(
+    *,
+    modelo: str,
+    filing_year: int,
+    period: Period,
+    registry_ready: bool,
+) -> ModeloExportReadinessRefusal | None:
+    """Return the one declared readiness outcome when local export is unavailable.
+
+    The application evaluates layout renderability and chooses the declared
+    action.  The CLI may only resolve this returned verdict against its live
+    surface before presentation.
+    """
+    if not registry_ready:
+        return None
+    provider = build_runtime_schema_provider(
+        filing_year=filing_year,
+        period=period,
+        modelos=(modelo,),
+    )
+    subview = provider.get_subview(modelo)
+    layout = subview.export_layouts[0] if subview.export_layouts else None
+    reason = export_layout_renderability_reason(modelo, layout)
+    if reason is None:
+        return None
+    context = {"modelo": modelo, "reason": reason}
+    if layout is not None:
+        context["layout_id"] = str(layout.id)
+        context["layout_format"] = str(layout.format)
+    return ModeloExportReadinessRefusal(
+        reason=reason,
+        context=context,
+        precondition_failure=build_modelo_precondition_failure_for_scenario(
+            subject_leaf_key="modelo.readiness",
+            scenario_id="modelo.readiness.export_layout.unrenderable",
+            evidence_id="modelo.readiness.export_layout",
+            evidence_values=context,
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+            action_argument_values={"modelo": modelo},
+        ),
+    )
+
+
 type _Sha256Ref = Annotated[str, Field(min_length=71, max_length=71, pattern=r"^sha256:[0-9a-f]{64}$")]
 
 

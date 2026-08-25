@@ -1,6 +1,6 @@
 """The full-screen creation door shows the recovery words and wipes them.
 
-The S206 close: a profile created at the full-screen door is enrolled at
+The security boundary: a profile created at the full-screen door is enrolled at
 creation, the 24 words render on the screen itself (the terminal-direct
 channel cannot render inside a full-screen app), and the wipeable
 container is zeroised at the operator's confirmation.
