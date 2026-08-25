@@ -4,7 +4,7 @@ tags:
   - '#source-casilla-integration'
 date: '2026-08-22'
 modified: '2026-08-25'
-body_hash: 'sha256:564f79b3230617fbdedd66e66b7e00a6a6081d8f90814b0f0b6cee955d6221aa'
+body_hash: 'sha256:f42adcff16dbdec8e28536afdb6adab0dabbf63cb023e1a24f22d2fe144a4c8a'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -237,7 +237,7 @@ Prove the real encrypted and operator-facing path, including negative and confli
 - [ ] `W02.P09.S179` - prove replay and review preserve inventory activity cohorts and safe cohort fingerprints; `src/cadrumo/application/modelo/tests/test_inventory_replay_review.py`.
 - [ ] `W02.P09.S184` - prove ordinary CLI output redacts raw inventory source-row identities; `src/cadrumo/entrypoints/cli/tests/test_output_surface_inventory.py`.
 - [ ] `W02.P09.S53` - update inventory readiness to reflect only capabilities proven by the landed slice; `src/cadrumo/application/inventory/_source_readiness.py`.
-- [ ] `W02.P09.S54` - promote inventory to connected only when a grounded row-capable format and every connected proof pass, otherwise record the evidence-backed blocked disposition with an owned follow-up; `src/cadrumo/_data/source_connectivity/census.toml`.
+- [x] `W02.P09.S54` - promote inventory to connected only when a grounded row-capable format and every connected proof pass, otherwise record the evidence-backed blocked disposition with an owned follow-up; `src/cadrumo/_data/source_connectivity/census.toml`.
 - [ ] `W02.P09.S55` - conduct a formal code review of the inventory vertical slice; `.vault/audit/2026-08-22-inventory-casilla-connection-code-review.md`.
 
 ## Wave `W03` - adjudicate and connect amortization second

@@ -5,44 +5,11 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:c0498b12a193d55618bd30808b7b50916dc19662cd1e2fa195d54d84db16dd23'
+body_hash: 'sha256:1b6af8e94e9b21d1b59acf32e7844aaf48415ee4be231feea1057351049b38ad'
 step_id: 'S54'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace source-casilla-integration with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S54 and 2026-08-22-source-casilla-integration-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The promote inventory to connected only when a grounded row-capable format and every connected proof pass, otherwise record the evidence-backed blocked disposition with an owned follow-up and ## Scope
-
-- `src/cadrumo/_data/source_connectivity/census.toml` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # promote inventory to connected only when a grounded row-capable format and every connected proof pass, otherwise record the evidence-backed blocked disposition with an owned follow-up
 
@@ -52,10 +19,17 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Reconcile the inventory candidate against the accepted row-casilla mapping decision and the live resolver, mesh, bindings, and persistence path.
+- Refuse promotion to connected because registry-owned row-casilla materialization and supported official activity-row rendering remain absent.
+- Replace the indefinite candidate state with an owned, expiring `registry_blocked` disposition and preserve the existing bounded follow-up.
+- Update the census and closure-composer regressions to pin the terminal blocked classification and visible missing-evidence refusal.
 
 ## Outcome
 
+Inventory is not represented as connected. Its legal three-casilla semantics, source resolver, governed ingress, registry row bindings, encrypted source state, and calculation orchestration remain acknowledged, while filing linkage is terminally `registry_blocked` through 2026-12-31. Reopening requires the already accepted row-casilla materialization and official-format proof without fabricated activity-envelope facts.
+
+The canonical census comparison remains a 478-capability, 478-assignment match over 15 rows. The focused composer suite passed 7 tests; census completeness plus the permanent campaign-close gate passed 22 tests; Ruff passed. Independent review rejected one stale expected refusal reason, which was corrected before final re-review.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+The initial census, test, and scaffold changes were captured by concurrent mixed commit `718caf5911`. This record preserves that provenance rather than attributing the shared commit solely to S54. No registry binding, source resolver, source taxonomy, casilla, export layout, or proof authority was added.

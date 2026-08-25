@@ -30,7 +30,8 @@ def test_source_connectivity_coverage_retains_every_revision_and_live_census_ref
     assert all(limb.name == "source_connectivity" for limb in report.limbs)
     inventory = next(limb for limb in report.limbs if (limb.modelo, limb.revision) == ("100", "2025"))
     assert inventory.refusal is not None
-    assert (inventory.outcome, inventory.refusal.reason) == ("refused", "unreviewed_evidence")
+    assert (inventory.outcome, inventory.refusal.reason) == ("refused", "missing_evidence")
+    assert inventory.refusal.disposition.state == "blocked"
     assert inventory.refusal.disposition.work_item == "source-casilla.inventory-grounding"
 
 

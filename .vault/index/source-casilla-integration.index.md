@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:76ec8af4c26251dd9209d6e9dc9535560a500cd6be0ac43b0ea8e608663e8c23'
+body_hash: 'sha256:4e2f629fca9d517cc77e10d013a8c76c8b2605ff3b72391d1ba8ef2ff5a28e90'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -99,6 +99,7 @@ related:
   - '[[2026-08-22-source-casilla-integration-W02-P08-S187]]'
   - '[[2026-08-22-source-casilla-integration-W02-P08-S205]]'
   - '[[2026-08-22-source-casilla-integration-W02-P08-S43]]'
+  - '[[2026-08-22-source-casilla-integration-W02-P09-S54]]'
   - '[[2026-08-22-source-casilla-integration-W03-P10-S56]]'
   - '[[2026-08-22-source-casilla-integration-W03-P10-S57]]'
   - '[[2026-08-22-source-casilla-integration-W03-P10-S58]]'
@@ -233,6 +234,7 @@ related:
   - '[[2026-08-25-source-casilla-integration-s231-m840-source-owner-deferral-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s232-m188-no-candidate-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s233-m194-no-candidate-review-audit]]'
+  - '[[2026-08-25-source-casilla-integration-s54-inventory-terminal-refusal-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s87-independent-post-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s88-google-pull-post-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s89-row-source-identity-review-audit]]'
@@ -337,6 +339,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-25-source-casilla-integration-s231-m840-source-owner-deferral-review-audit` - `source-casilla-integration` audit: `S231 M840 source-owner deferral review`
 - `2026-08-25-source-casilla-integration-s232-m188-no-candidate-review-audit` - `source-casilla-integration` audit: `S232 M188 no-candidate review`
 - `2026-08-25-source-casilla-integration-s233-m194-no-candidate-review-audit` - `source-casilla-integration` audit: `S233 M194 no-candidate review`
+- `2026-08-25-source-casilla-integration-s54-inventory-terminal-refusal-review-audit` - `source-casilla-integration` audit: `S54 inventory terminal refusal review`
 - `2026-08-25-source-casilla-integration-s87-independent-post-review-audit` - `source-casilla-integration` audit: `S87 snapshot-bound row assembly independent review`
 - `2026-08-25-source-casilla-integration-s88-google-pull-post-review-audit` - `source-casilla-integration` audit: `s88 google pull post review`
 - `2026-08-25-source-casilla-integration-s89-row-source-identity-review-audit` - `source-casilla-integration` audit: `S89 row source identity review`
@@ -458,6 +461,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-W03-P10-S58` - determine whether finca amortization shares or requires a distinct source contract
 - `2026-08-22-source-casilla-integration-W03-P10-S59` - decide grain, precedence, absence semantics, rounding, and override policy
 - `2026-08-22-source-casilla-integration-W01-P23-S225` - Adjudicate Modelo 036's exact event-driven profile source as manual-by-design and retain the human-filed no-local-submission boundary
+- `2026-08-22-source-casilla-integration-W02-P09-S54` - promote inventory to connected only when a grounded row-capable format and every connected proof pass, otherwise record the evidence-backed blocked disposition with an owned follow-up
 - `2026-08-22-source-casilla-integration-W05-P14-S87` - define the application command that accepts assembled typed row observations for calculation
 - `2026-08-22-source-casilla-integration-W05-P14-S88` - route Google Sheets pull output into the governed calculation input boundary
 - `2026-08-22-source-casilla-integration-W05-P14-S89` - preserve grouping, row index, binding identity, source identity, and fingerprint through ingress
