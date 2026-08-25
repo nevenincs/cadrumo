@@ -619,9 +619,8 @@ ignore_imports =
     #    filing out of its bytes is inbound-adapter work and this layer
     #    consumes the answer -- the same class as the einvoice pins above,
     #    previously admitted by the wildcard without review. ──
-    cadrumo.application.live -> cadrumo.adapters.outbound.aeat.sede
-    cadrumo.application.live._borrador_100 -> cadrumo.adapters.persistence.**
-    cadrumo.application.live._errors -> cadrumo.adapters.outbound.aeat.sede
+    cadrumo.application.live.borrador_100 -> cadrumo.adapters.persistence.**
+    cadrumo.application.live.errors -> cadrumo.adapters.outbound.aeat.sede
     # ── live-snapshot family: concrete relocated, construction edge retained ──
     # SecureSnapshotRepository -- the encrypted secure-object backend these
     # services persist through -- now lives in the persistence adapter, as
@@ -640,23 +639,23 @@ ignore_imports =
     # The sede pins are a different axis: they carry AEAT boundary DTOs
     # (Deuda, Declaracion, NotificationsSnapshot) as payload shapes, shared
     # with live modules that are not snapshot services at all.
-    cadrumo.application.live._deudas -> cadrumo.adapters.outbound.aeat.sede
-    cadrumo.application.live._deudas -> cadrumo.adapters.persistence.**
-    cadrumo.application.live._expedientes -> cadrumo.adapters.outbound.aeat.sede
-    cadrumo.application.live._expedientes -> cadrumo.adapters.persistence.**
-    cadrumo.application.live._filed_capture_finalizer -> cadrumo.adapters.outbound.aeat.sede
-    cadrumo.application.live._filed_data -> cadrumo.adapters.outbound.aeat.sede
-    cadrumo.application.live._filed_data_capture -> cadrumo.adapters.outbound.aeat.sede
-    cadrumo.application.live._filed_observation_persistence -> cadrumo.adapters.inbound.justificante
-    cadrumo.application.live._filed_observation_persistence -> cadrumo.adapters.outbound.aeat.sede
-    cadrumo.application.live._filed_observation_persistence -> cadrumo.adapters.persistence.**
-    cadrumo.application.live._iva_remote_state -> cadrumo.adapters.outbound.aeat.sede
-    cadrumo.application.live._iva_remote_state -> cadrumo.adapters.persistence.**
-    cadrumo.application.live._justificante -> cadrumo.adapters.inbound.justificante
-    cadrumo.application.live._justificante -> cadrumo.adapters.persistence.**
-    cadrumo.application.live._notifications -> cadrumo.adapters.outbound.aeat.sede
-    cadrumo.application.live._notifications -> cadrumo.adapters.persistence.**
-    cadrumo.application.live._verify -> cadrumo.adapters.persistence.**
+    cadrumo.application.live.deudas -> cadrumo.adapters.outbound.aeat.sede
+    cadrumo.application.live.deudas -> cadrumo.adapters.persistence.**
+    cadrumo.application.live.expedientes -> cadrumo.adapters.outbound.aeat.sede
+    cadrumo.application.live.expedientes -> cadrumo.adapters.persistence.**
+    cadrumo.application.live.filed_capture_finalizer -> cadrumo.adapters.outbound.aeat.sede
+    cadrumo.application.live.filed_data -> cadrumo.adapters.outbound.aeat.sede
+    cadrumo.application.live.filed_data_capture -> cadrumo.adapters.outbound.aeat.sede
+    cadrumo.application.live.filed_observation_persistence -> cadrumo.adapters.inbound.justificante
+    cadrumo.application.live.filed_observation_persistence -> cadrumo.adapters.outbound.aeat.sede
+    cadrumo.application.live.filed_observation_persistence -> cadrumo.adapters.persistence.**
+    cadrumo.application.live.iva_remote_state -> cadrumo.adapters.outbound.aeat.sede
+    cadrumo.application.live.iva_remote_state -> cadrumo.adapters.persistence.**
+    cadrumo.application.live.justificante -> cadrumo.adapters.inbound.justificante
+    cadrumo.application.live.justificante -> cadrumo.adapters.persistence.**
+    cadrumo.application.live.notifications -> cadrumo.adapters.outbound.aeat.sede
+    cadrumo.application.live.notifications -> cadrumo.adapters.persistence.**
+    cadrumo.application.live.verify -> cadrumo.adapters.persistence.**
     cadrumo.application.modelo._borrador_binding -> cadrumo.adapters.persistence.**
     cadrumo.application.modelo._m036_lifecycle -> cadrumo.adapters.persistence.**
     # Reconciliation compares a filed declaracion and its justificante against
@@ -688,7 +687,6 @@ ignore_imports =
     cadrumo.tests.master_key -> cadrumo.adapters.**
     # The shared justificante parse-cache test helper imports the inbound
     # justificante adapter for roundtrip-discipline fixtures; same rationale.
-    cadrumo.tests._justificante_parse_cache -> cadrumo.adapters.**
     # ── core/resources/_repos deferred loader imports ──
     # Function-local imports inside Repository._load / _resolve_authority
     # methods. The resource-management-api ADR (2026-05-16) places the
@@ -777,8 +775,8 @@ ignore_imports =
     #    the concrete BucketEventHistoryRepository moved to the persistence
     #    adapter behind BucketEventHistoryRepositoryProtocol ──
     cadrumo.application.inventory._service -> cadrumo.adapters.persistence.profile.buckets
-    cadrumo.application.live._filed_observation_persistence -> cadrumo.adapters.persistence.profile.buckets
-    cadrumo.application.live._justificante -> cadrumo.adapters.persistence.profile.buckets
+    cadrumo.application.live.filed_observation_persistence -> cadrumo.adapters.persistence.profile.buckets
+    cadrumo.application.live.justificante -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo._amendment_actions -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo._calculation_actions -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo._export -> cadrumo.adapters.persistence.profile.buckets
