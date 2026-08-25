@@ -73,7 +73,7 @@ _RECOVERY_KDF_SALT_BYTES = 16
 
 @dataclass(frozen=True, slots=True)
 class ProfileRecoveryEnrollment:
-    """One optional recovery wrapper and the secret that opens it.
+    """One creation-enrolled recovery wrapper and the secret that opens it.
 
     The secret rides in its wipeable container rather than as a ``str``: the
     operator holds it across an interactive confirmation lasting as long as

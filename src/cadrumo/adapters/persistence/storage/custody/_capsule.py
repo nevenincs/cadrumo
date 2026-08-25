@@ -1071,7 +1071,7 @@ def load_committed_profile_password_material(
     settings: Settings | None = None,
     root: Path | None = None,
 ) -> ProfileCustodyPasswordMaterial:
-    """Read normal-password authority without even resolving optional recovery paths."""
+    """Read normal-password authority without resolving the separate recovery path."""
     trace: list[ProfileCustodyPasswordReadOperation] = []
     capsule_path = recognize_current_profile_capsule(profile_id, settings=settings, root=root, _trace=trace)
     if capsule_path is None:
@@ -1143,7 +1143,7 @@ def _validate_publication_identity(
     if recovery_envelope is not None and (
         recovery_envelope.profile_id != profile_id or recovery_envelope.dek_epoch != password_envelope.dek_epoch
     ):
-        raise ProfileCustodyRecordError("optional recovery identity does not match password custody")
+        raise ProfileCustodyRecordError("recovery identity does not match password custody")
 
 
 __all__ = [

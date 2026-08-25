@@ -502,6 +502,39 @@ def _locally_authored_export_names(source: str) -> tuple[str, ...]:
     return tuple(names)
 
 
+def _composed_export_names(source: str) -> tuple[str, ...]:
+    """Return CommandSpec exports composed only from imported declaration tuples.
+
+    A subtree's public tuple composer deliberately has no local ``CommandSpec``
+    call: it preserves one declaration authority in its focused siblings while
+    keeping the public import path small.  The enrollment walk must still
+    traverse that composer to reach those siblings, but it must not mistake the
+    composition itself for another authored declaration source.
+    """
+    names: list[str] = []
+    for node in ast.parse(source).body:
+        if isinstance(node, ast.Assign):
+            targets = node.targets
+            value = node.value
+        elif isinstance(node, ast.AnnAssign):
+            targets = [node.target]
+            value = node.value
+        else:
+            continue
+        if not isinstance(value, (ast.Tuple, ast.List)) or not value.elts:
+            continue
+        if not all(isinstance(child, ast.Starred) for child in value.elts):
+            continue
+        names.extend(
+            target.id
+            for target in targets
+            if isinstance(target, ast.Name)
+            and target.id.isupper()
+            and target.id.endswith(("_COMMAND_SPEC", "_COMMAND_SPECS"))
+        )
+    return tuple(names)
+
+
 def _assert_authored_objects_enrolled(authored: tuple[CommandSpec, ...], aggregate: tuple[CommandSpec, ...]) -> None:
     assert Counter(id(spec) for spec in authored) == Counter(id(spec) for spec in aggregate)
 
@@ -519,7 +552,7 @@ def test_every_distributed_spec_module_is_enrolled_by_the_aggregate() -> None:
         if "tests" in path.parts:
             continue
         source = path.read_text(encoding="utf-8")
-        if path.name == "_command_specs.py" or _locally_authored_export_names(source):
+        if path.name == "_command_specs.py" or _locally_authored_export_names(source) or _composed_export_names(source):
             module_name = "cadrumo.entrypoints.cli." + ".".join(path.relative_to(cli_root).with_suffix("").parts)
             sources[module_name] = source
     root = "cadrumo.entrypoints.cli._command_specs"

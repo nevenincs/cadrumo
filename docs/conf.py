@@ -15,7 +15,7 @@ os.environ["CADRUMO_OUTPUT_LANGUAGE"] = "en"
 
 import sys
 from pathlib import Path
-from typing import Annotated, get_origin
+from typing import Annotated, get_origin, override
 
 from docutils import nodes
 from docutils.parsers.rst import Directive
@@ -36,11 +36,16 @@ def _project_metadata() -> dict[str, object]:
     """Load project metadata from ``pyproject.toml`` for Sphinx display fields."""
     pyproject = _PROJECT_ROOT / "pyproject.toml"
     with pyproject.open("rb") as stream:
-        return tomllib.load(stream)["project"]
+        project_metadata = tomllib.load(stream).get("project")
+    if not isinstance(project_metadata, dict) or not all(isinstance(key, str) for key in project_metadata):
+        raise ValueError("pyproject.toml must declare a string-keyed [project] table")
+    return {key: value for key, value in project_metadata.items()}
 
 
 _PYPROJECT = _project_metadata()
 _PROJECT_URLS = _PYPROJECT.get("urls", {})
+if not isinstance(_PROJECT_URLS, dict):
+    raise ValueError("pyproject.toml [project.urls] must be a table")
 _DOCS_BASE_URL = os.environ.get("CADRUMO_DOCS_BASE_URL", "").rstrip("/")
 # Cadrumo documentation type ramp: Instrument Serif for display headings,
 # Hanken Grotesk for text, JetBrains Mono for code.
@@ -56,7 +61,12 @@ _LATEST_RELEASE_URL = f"{_RELEASES_URL}/latest" if _RELEASES_URL else ""
 
 # ── Project metadata ────────────────────────────────────────────────────────
 project = PRODUCT_IDENTITY.display_name
-author = ", ".join(author["name"] for author in _PYPROJECT.get("authors", []))
+_PROJECT_AUTHORS = _PYPROJECT.get("authors", [])
+if not isinstance(_PROJECT_AUTHORS, list) or not all(
+    isinstance(item, dict) and isinstance(item.get("name"), str) for item in _PROJECT_AUTHORS
+):
+    raise ValueError("pyproject.toml project authors must be named tables")
+author = ", ".join(item["name"] for item in _PROJECT_AUTHORS)
 # Human-facing footer credit; the packaging author handle stays in pyproject.
 copyright = f"2026, the {PRODUCT_IDENTITY.prose_name} authors"
 release = str(_PYPROJECT["version"])
@@ -1243,6 +1253,7 @@ class _LegacyDirective(Directive):
     optional_arguments = 0
     final_argument_whitespace = True
 
+    @override
     def run(self):
         """Build a generic ``Legacy`` admonition from the directive body.
 

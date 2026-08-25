@@ -58,7 +58,7 @@ An annotated template with the same variables lives at `env/.env.example` in
 the repository. The application itself reads only the process environment;
 `env/.env` is not a production source. For local development and the test
 suite, the repository's `conftest.py` bridges `env/.env` into the process
-environment before tests run, filling only variables not already set — a
+environment before tests run, filling only variables not already set; a
 value already present in your shell always wins.
 
 | Variable | Type | Default | What it controls |

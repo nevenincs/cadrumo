@@ -1,4 +1,4 @@
-"""Independent optional recovery envelopes and portable recovery artifacts."""
+"""Independent creation-enrolled recovery envelopes and portable recovery artifacts."""
 
 from __future__ import annotations
 
@@ -94,7 +94,7 @@ class _RecoveryPayload(BaseModel):
 
 
 class ProfileCustodyRecoveryEnvelope(_RecoveryPayload):
-    """One optional, independently current-format recovery wrapper."""
+    """One creation-enrolled, independently current-format recovery wrapper."""
 
     self_digest: str
 
@@ -169,7 +169,7 @@ class ProfileCustodyRecoveryEnvelope(_RecoveryPayload):
 
 
 def parse_profile_custody_recovery_envelope(value: bytes) -> ProfileCustodyRecoveryEnvelope:
-    """Parse exactly one bounded canonical optional recovery envelope."""
+    """Parse exactly one bounded canonical recovery envelope."""
     if len(value) > PROFILE_CUSTODY_RECOVERY_MAX_BYTES:
         raise ProfileCustodyRecordError("profile recovery envelope exceeds its canonical byte limit")
     try:
@@ -216,7 +216,7 @@ def create_profile_custody_recovery_envelope(
     previous_recovery_digest: str | None = None,
     settings: Settings | None = None,
 ) -> ProfileCustodyRecoveryEnvelope:
-    """Create optional recovery only through the supervised S03 KDF owner."""
+    """Create the mandatory creation-time recovery wrapper through the supervised S03 KDF owner."""
     aad = profile_custody_recovery_aad_for(
         profile_id=profile_id,
         dek_epoch=dek_epoch,

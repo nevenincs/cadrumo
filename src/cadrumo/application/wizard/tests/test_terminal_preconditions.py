@@ -6,21 +6,25 @@ import ast
 import inspect
 from dataclasses import dataclass
 from pathlib import Path
-from types import ModuleType, SimpleNamespace
+from types import ModuleType
+from typing import override
 
 import pytest
 
 from ....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.errors import TerminalPreconditionErrorMixin
-from ... import user_profile as user_profile_module
-from ... import workflow as workflow_module
 from ...user_profile import ProfileRegistrationError
 from ...workflow import WorkflowState
 from .. import _commands as commands_module
-from .. import _persistence as persistence_module
 from .. import _status as status_module
 from .._catalogue import SETUP_FLOW
-from .._commands import _require_profile_name, _resolve_profile_id_for_mode, _run_full_flow, _run_patch_edit
+from .._commands import (
+    _missing_filing_baseline_flags,
+    _require_filing_baseline,
+    _require_profile_label_available,
+    _require_profile_name,
+    _run_full_flow,
+)
 from .._errors import (
     WizardEditUnsupportedConsoleError,
     WizardError,
@@ -28,7 +32,12 @@ from .._errors import (
     WizardPreconditionCondition,
     WizardValidationError,
 )
-from .._status import WizardStatusError, _next_wizard_action, load_active_taxpayer_profile
+from .._status import (
+    WizardStatusError,
+    _next_wizard_action,
+    _require_active_profile_tax_id,
+    load_active_taxpayer_profile,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -60,15 +69,15 @@ _WIZARD_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         ActionEvidenceProvenance.APPLICATION_STATE,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "_status:load_active_taxpayer_profile:WizardStatusError:2": _contract(
+    "_status:_require_active_profile_tax_id:WizardStatusError:1": _contract(
         WizardPreconditionCondition.ACTIVE_PROFILE_TAX_ID_DECLARED,
         (("active_profile_tax_id_declared", "False"),),
         ActionEvidenceProvenance.APPLICATION_STATE,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "_commands:_run_patch_edit:WizardMissingFlagError:1": _contract(
+    "_commands:_require_filing_baseline:WizardMissingFlagError:1": _contract(
         WizardPreconditionCondition.FILING_BASELINE_COMPLETE,
-        (("filing_baseline_complete", "False"), ("missing_flag_count", "len(missing_baseline)")),
+        (("filing_baseline_complete", "False"), ("missing_flag_count", "len(missing)")),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
@@ -90,19 +99,13 @@ _WIZARD_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "_commands:_run_full_flow:WizardMissingFlagError:2": _contract(
-        WizardPreconditionCondition.FILING_BASELINE_COMPLETE,
-        (("filing_baseline_complete", "False"), ("missing_flag_count", "len(missing_baseline)")),
-        ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-        NoRecoveryOutcome.OPERATOR_DECISION,
-    ),
     "_commands:_require_profile_name:WizardMissingFlagError:1": _contract(
         WizardPreconditionCondition.PROFILE_NAME_SUPPLIED,
         (("profile_name_supplied", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "_commands:_resolve_profile_id_for_mode:WizardValidationError:1": _contract(
+    "_commands:_require_profile_label_available:WizardValidationError:1": _contract(
         WizardPreconditionCondition.PROFILE_LABEL_AVAILABLE,
         (("profile_registration_available", "False"),),
         ActionEvidenceProvenance.APPLICATION_STATE,
@@ -145,24 +148,31 @@ def _wizard_carriers() -> dict[str, ast.Call]:
                 self.owner = "<module>"
                 self.occurrences: dict[tuple[str, str], int] = {}
 
+            @override
             def visit_ClassDef(self, node: ast.ClassDef) -> None:
                 prior_owner = self.owner
                 self.owner = node.name if prior_owner == "<module>" else f"{prior_owner}.{node.name}"
                 self.generic_visit(node)
                 self.owner = prior_owner
 
-            def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+            def _visit_function(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
                 prior_owner = self.owner
                 self.owner = node.name if prior_owner == "<module>" else f"{prior_owner}.{node.name}"
                 self.generic_visit(node)
                 self.owner = prior_owner
 
-            def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
-                self.visit_FunctionDef(node)
+            @override
+            def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+                self._visit_function(node)
 
+            @override
+            def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+                self._visit_function(node)
+
+            @override
             def visit_Call(self, node: ast.Call) -> None:
                 error_name = _call_name(node.func)
-                if error_name in error_names:
+                if error_name is not None and error_name in error_names:
                     verdict = next(
                         (keyword.value for keyword in node.keywords if keyword.arg == "precondition_verdict"),
                         None,
@@ -350,16 +360,13 @@ def test_missing_active_profile_has_an_exact_application_state_operator_decision
     )
 
 
-def test_missing_active_tax_id_has_an_exact_application_state_operator_decision_verdict(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(status_module, "record_to_path_values", lambda _record: {})
-    monkeypatch.setattr(status_module, "resolve_active_bucket_id", lambda: "profile-id")
-    monkeypatch.setattr(status_module, "_grounded_tax_id_requirement", lambda: "Tax identifier")
-    state = SimpleNamespace(active_profile_record=lambda: object())
-
+def test_missing_active_tax_id_has_an_exact_application_state_operator_decision_verdict() -> None:
     with pytest.raises(WizardStatusError) as raised:
-        load_active_taxpayer_profile(state)
+        _require_active_profile_tax_id(
+            {},
+            active_profile="profile-id",
+            requirement="Tax identifier",
+        )
 
     _assert_terminal_contract(
         raised.value,
@@ -407,41 +414,30 @@ def test_quiet_missing_required_flags_has_an_exact_runtime_operator_decision_ver
     )
 
 
-def test_missing_filing_baseline_has_an_exact_runtime_operator_decision_verdict(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Exercise the edit boundary after its read projection, before any write."""
-
-    class _Repository:
-        @staticmethod
-        def for_current_session(_profile_id: str) -> SimpleNamespace:
-            return SimpleNamespace(load=lambda _profile_id: object())
-
-    monkeypatch.setattr(user_profile_module, "ProfileRecordRepository", _Repository)
-    monkeypatch.setattr(user_profile_module, "record_to_path_values", lambda _record: {})
-    monkeypatch.setattr(persistence_module, "profile_values_from_patch", lambda _flow, _flags: {})
-    monkeypatch.setattr(persistence_module, "project_answers", lambda _flow, _values: {})
-    monkeypatch.setattr(commands_module, "_missing_filing_baseline_flags", lambda _flow, _answers: ("a", "b"))
+def test_missing_filing_baseline_has_an_exact_runtime_operator_decision_verdict() -> None:
+    answers = SETUP_FLOW.answers_model.model_validate({"tax_id": "00000000T"})
+    missing = _missing_filing_baseline_flags(SETUP_FLOW, answers)
+    assert missing
 
     with pytest.raises(WizardMissingFlagError) as raised:
-        _run_patch_edit(SETUP_FLOW, {}, profile_id="profile-id")
+        _require_filing_baseline(SETUP_FLOW, answers)
 
     _assert_terminal_contract(
         raised.value,
         condition=WizardPreconditionCondition.FILING_BASELINE_COMPLETE,
-        facts={"filing_baseline_complete": False, "missing_flag_count": 2},
+        facts={"filing_baseline_complete": False, "missing_flag_count": len(missing)},
         provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         outcome=NoRecoveryOutcome.OPERATOR_DECISION,
     )
 
 
-def test_taken_profile_label_has_an_exact_application_state_operator_decision_verdict(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(workflow_module, "read_profile_bucket", lambda _label: object())
-
+def test_taken_profile_label_has_an_exact_application_state_operator_decision_verdict() -> None:
     with pytest.raises(WizardValidationError) as raised:
-        _resolve_profile_id_for_mode(SETUP_FLOW, "create", "Taken profile")
+        _require_profile_label_available(
+            SETUP_FLOW,
+            "Taken profile",
+            label_is_registered=True,
+        )
 
     _assert_terminal_contract(
         raised.value,

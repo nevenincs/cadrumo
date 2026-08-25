@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from ._secure_objects_fixtures import secure_objects
+from ._secure_objects_fixtures import SECURE_OBJECTS_BUCKET_ID, secure_objects
 
 __all__ = ["secure_objects"]
 from pydantic import ValidationError
@@ -154,7 +154,7 @@ def test_q1_window_sums_jan_mar_expense_bases() -> None:
     apr = _gasto_transaction("apr", value_date=date(2024, 4, 1), taxable_base=Decimal("999.00"))
     catalogue = TransactionCatalogue.from_transactions((jan, feb, mar, apr))
 
-    result = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    result = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     observation_ids = {o.transaction_id for o in result.observations}
     assert observation_ids == {jan.transaction_id, feb.transaction_id, mar.transaction_id}
@@ -177,7 +177,7 @@ def test_q2_window_accumulates_jan_through_jun() -> None:
     jul = _gasto_transaction("jul", value_date=date(2024, 7, 1), taxable_base=Decimal("400.00"))
     catalogue = TransactionCatalogue.from_transactions((jan, may, jul))
 
-    result = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q2_2024)
+    result = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q2_2024)
 
     observation_ids = {o.transaction_id for o in result.observations}
     assert observation_ids == {jan.transaction_id, may.transaction_id}
@@ -203,7 +203,7 @@ def test_taxable_base_preferred_over_gross_for_deductible_amount() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    result = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     assert result.observations[0].deductible_amount == Decimal("100.00")
     assert result.casilla_aggregation.casilla_values[_M130_GASTOS_CASILLA] == Decimal("100.00")
@@ -220,7 +220,7 @@ def test_untagged_expense_is_surfaced_not_gross_folded() -> None:
     tx = _gasto_transaction("untagged", value_date=date(2024, 2, 1), amount=Decimal("80.00"), taxable_base=None)
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    result = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     assert result.observations == ()
     assert len(result.issues) == 1
@@ -239,7 +239,7 @@ def test_mixed_classification_applies_business_pct() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    result = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     assert result.observations[0].deductible_amount == Decimal("100.00")
 
@@ -254,7 +254,7 @@ def test_personal_outgoing_is_skipped_silently() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    result = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     assert result.observations == ()
     assert result.issues == ()
@@ -287,7 +287,7 @@ def test_irpf_actividad_economica_gasto_flows_despite_unclassified_business() ->
     )
     catalogue = TransactionCatalogue.from_transactions((tagged, untagged))
 
-    result = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    result = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     assert {observation.transaction_id for observation in result.observations} == {tagged.transaction_id}
     assert result.observations[0].deductible_amount == actividad_base
@@ -306,7 +306,7 @@ def test_reviewed_excluded_irpf_actividad_gasto_stays_excluded() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    result = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     assert result.observations == ()
     assert result.issues == ()
@@ -323,7 +323,7 @@ def test_incoming_transaction_is_not_a_gasto() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    result = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     assert result.observations == ()
     assert result.issues == ()
@@ -339,7 +339,7 @@ def test_inactive_transaction_skipped_silently() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    result = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     assert result.observations == ()
     assert result.issues == ()
@@ -352,7 +352,7 @@ def test_all_observations_target_casilla_02() -> None:
     ]
     catalogue = TransactionCatalogue.from_transactions(transactions)
 
-    result = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    result = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     assert all(o.target_casilla_id == _M130_GASTOS_CASILLA for o in result.observations)
     assert result.casilla_aggregation.modelo == "130"
@@ -364,7 +364,7 @@ def test_gasto_observation_rejects_legacy_target_casilla_key() -> None:
     ]
     result = aggregate_renta_gasto_ledger(
         TransactionCatalogue.from_transactions(transactions),
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
     )
     payload = result.observations[0].model_dump()
@@ -392,14 +392,18 @@ def test_repository_backed_aggregation_emits_casilla_02_sum(
     q1_b = _gasto_transaction("q1-b", value_date=date(2024, 3, 15), taxable_base=q1_b_base)
     q2_only = _gasto_transaction("q2-only", value_date=date(2024, 5, 10), taxable_base=q2_base)
 
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions((q1_a, q1_b, q2_only)))
 
     result_q1 = aggregate_renta_gasto_ledger_from_repositories(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        prorrata_register_repository=ProrrataRegisterRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
     )
     # Q1 window excludes the May row; expected = the two Q1 input bases.
     assert result_q1.casilla_aggregation.casilla_values[_M130_GASTOS_CASILLA] == sum(
@@ -416,10 +420,14 @@ def test_repository_backed_aggregation_emits_casilla_02_sum(
     assert result_q1.out_of_window_summary.max_filing_date == date(2024, 5, 10)
 
     result_q2 = aggregate_renta_gasto_ledger_from_repositories(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q2_2024,
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        prorrata_register_repository=ProrrataRegisterRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
     )
     # Q2 cumulative window includes all three input bases.
     expected_q2 = sum((q1_a_base, q1_b_base, q2_base), Decimal("0"))
@@ -445,14 +453,18 @@ def test_repository_backed_aggregation_summarizes_previously_silent_out_of_windo
         taxable_base=Decimal("90.00"),
         direction=TransactionDirection.INCOMING,
     )
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions((in_window, wrong_direction_out_of_window)))
 
     result = aggregate_renta_gasto_ledger_from_repositories(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        prorrata_register_repository=ProrrataRegisterRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
     )
 
     assert {o.transaction_id for o in result.observations} == {in_window.transaction_id}
@@ -482,16 +494,20 @@ def test_repository_backed_aggregation_partition_matches_full_scan(
         direction=TransactionDirection.INCOMING,
     )
     catalogue = TransactionCatalogue.from_transactions((q1_row, q3_row, wrong_direction_q3_row))
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     tx_repo.save(catalogue)
 
     partitioned = aggregate_renta_gasto_ledger_from_repositories(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        prorrata_register_repository=ProrrataRegisterRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
     )
-    full_scan = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    full_scan = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     assert set(partitioned.observations) == set(full_scan.observations)
     assert partitioned.casilla_aggregation.casilla_values == full_scan.casilla_aggregation.casilla_values
@@ -529,7 +545,7 @@ def test_domain_resolver_folds_gasto_observations_into_the_m130_casilla_02_bindi
     feb = _gasto_transaction("feb", value_date=date(2024, 2, 1), taxable_base=feb_base)
     apr = _gasto_transaction("apr", value_date=date(2024, 4, 2), taxable_base=apr_base)
     catalogue = TransactionCatalogue.from_transactions((feb, apr))
-    aggregation = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q2_2024)
+    aggregation = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q2_2024)
 
     resolved = resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values(
         revision, aggregation.observations
@@ -566,11 +582,11 @@ def test_actividad_marked_row_accepted_by_m130_is_visibly_held_by_m100() -> None
     )
     catalogue = TransactionCatalogue.from_transactions((transaction,))
 
-    quarterly = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    quarterly = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
     annual = aggregate_renta_ledger_expenses(
         catalogue,
         InvoiceCatalogue(),
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_period(2024, "0A"),
         profile_year=2024,
     )
@@ -602,11 +618,11 @@ def test_reviewed_business_row_is_accepted_by_both_projections() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((transaction,))
 
-    quarterly = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    quarterly = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
     annual = aggregate_renta_ledger_expenses(
         catalogue,
         InvoiceCatalogue(),
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_period(2024, "0A"),
         profile_year=2024,
     )
@@ -633,7 +649,7 @@ def test_unmarked_unclassified_row_still_reports_the_generic_state() -> None:
     annual = aggregate_renta_ledger_expenses(
         catalogue,
         InvoiceCatalogue(),
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_period(2024, "0A"),
         profile_year=2024,
     )
@@ -683,17 +699,21 @@ def test_repository_wrapper_exento_iva_regime_joins_the_full_iva_to_the_quarterl
         taxable_base=Decimal("8000.00"),
         iva_amount=Decimal("1600.00"),
     )
-    TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+    TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
         TransactionCatalogue.from_transactions((row,)),
     )
 
     def _run(profile_record: UserProfileRecord | None) -> Decimal:
         result = aggregate_renta_gasto_ledger_from_repositories(
-            bucket_id="test",
+            bucket_id=SECURE_OBJECTS_BUCKET_ID,
             period=_Q1_2024,
-            transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+            transaction_repository=TransactionCatalogueRepository(
+                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+            ),
             profile_record=profile_record,
-            prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+            prorrata_register_repository=ProrrataRegisterRepository(
+                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+            ),
         )
         assert result.issues == ()
         return result.casilla_aggregation.casilla_values[_M130_GASTOS_CASILLA]
@@ -738,10 +758,10 @@ def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_s
         taxable_base=Decimal("1000.00"),
         iva_amount=Decimal("210.00"),
     )
-    TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+    TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
         TransactionCatalogue.from_transactions((row,)),
     )
-    ProrrataRegisterRepository(bucket_id="test", objects=secure_objects).upsert_entry(
+    ProrrataRegisterRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).upsert_entry(
         ProrrataRegisterEntry(
             ejercicio=2024,
             regime=ProrrataRegisterRegime.GENERAL,
@@ -752,10 +772,14 @@ def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_s
     )
 
     result = aggregate_renta_gasto_ledger_from_repositories(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        prorrata_register_repository=ProrrataRegisterRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
     )
 
     assert result.issues == ()
@@ -779,18 +803,22 @@ def test_repository_wrapper_ninguna_prorrata_regime_is_byte_identical_to_absent_
         taxable_base=Decimal("1000.00"),
         iva_amount=Decimal("210.00"),
     )
-    TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+    TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
         TransactionCatalogue.from_transactions((row,)),
     )
-    ProrrataRegisterRepository(bucket_id="test", objects=secure_objects).upsert_entry(
+    ProrrataRegisterRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).upsert_entry(
         ProrrataRegisterEntry(ejercicio=2024, regime=ProrrataRegisterRegime.NINGUNA, especial_transition=None),
     )
 
     result = aggregate_renta_gasto_ledger_from_repositories(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        prorrata_register_repository=ProrrataRegisterRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
     )
 
     assert result.issues == ()
@@ -816,10 +844,10 @@ def test_m130_and_m100_resolve_the_same_iva_deduction_ratio_for_the_same_ejercic
         taxable_base=Decimal("1000.00"),
         iva_amount=Decimal("210.00"),
     )
-    TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+    TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
         TransactionCatalogue.from_transactions((row,)),
     )
-    ProrrataRegisterRepository(bucket_id="test", objects=secure_objects).upsert_entry(
+    ProrrataRegisterRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).upsert_entry(
         ProrrataRegisterEntry(
             ejercicio=2024,
             regime=ProrrataRegisterRegime.GENERAL,
@@ -830,21 +858,29 @@ def test_m130_and_m100_resolve_the_same_iva_deduction_ratio_for_the_same_ejercic
     )
 
     m130_result = aggregate_renta_gasto_ledger_from_repositories(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        prorrata_register_repository=ProrrataRegisterRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
     )
     assert m130_result.issues == ()
     assert m130_result.casilla_aggregation.casilla_values[_M130_GASTOS_CASILLA] == Decimal("1063.00")
 
     m100_result = aggregate_renta_ledger_expenses_from_repositories(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_period(2024, "0A"),
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
         profile_year=2024,
-        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+        prorrata_register_repository=ProrrataRegisterRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
     )
     assert m100_result.issues == ()
     assert m100_result.observations[0].deductible_amount == Decimal("1063.00")

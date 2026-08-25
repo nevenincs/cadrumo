@@ -39,7 +39,7 @@ from pathlib import Path
 
 import pytest
 
-from ..core.errors import declared_error_codes
+from ..core.errors import ErrorCode, declared_error_codes
 from ._inventory import SRC_CADRUMO, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -70,14 +70,14 @@ _ROUTED_SAMPLE = (
 
 def _divergent_subclasses() -> dict[str, set[str]]:
     """Map each registered error name to subclasses answering ``retryable`` differently."""
-    resolved: dict[type, object] = {}
+    resolved: dict[type[BaseException], ErrorCode] = {}
     for qualname, code in declared_error_codes():
         module_name, _, class_name = qualname.rpartition(".")
         try:
             candidate = getattr(importlib.import_module(module_name), class_name, None)
         except Exception:
             candidate = None
-        if isinstance(candidate, type):
+        if isinstance(candidate, type) and issubclass(candidate, BaseException):
             resolved[candidate] = code
 
     divergent: dict[str, set[str]] = {}
@@ -85,7 +85,7 @@ def _divergent_subclasses() -> dict[str, set[str]]:
         for parent, parent_code in resolved.items():
             if child is parent or not issubclass(child, parent):
                 continue
-            if child_code.retryable != parent_code.retryable:  # type: ignore[attr-defined]
+            if child_code.retryable != parent_code.retryable:
                 divergent.setdefault(parent.__name__, set()).add(child.__name__)
     return divergent
 

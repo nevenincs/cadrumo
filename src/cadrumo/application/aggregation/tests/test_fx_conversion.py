@@ -34,7 +34,7 @@ from pathlib import Path
 
 import pytest
 
-from ._secure_objects_fixtures import secure_objects
+from ._secure_objects_fixtures import SECURE_OBJECTS_BUCKET_ID, secure_objects
 
 __all__ = ["secure_objects"]
 
@@ -107,10 +107,10 @@ def test_usd_import_populates_fx_rate_and_value_in_eur(
     rate.
     """
     normalizer = CurrencyNormalizationService(rate_provider=_ecb_provider())
-    repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
 
     result = import_ledger_transactions(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         parsed_rows=[_usd_parsed("usd-inv-001")],
         transaction_repository=repo,
         bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
@@ -181,10 +181,10 @@ def test_missing_rate_leaves_fx_fields_absent(
     """
 
     normalizer = CurrencyNormalizationService(rate_provider=_ecb_provider(usd_quote=None))
-    repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
 
     result = import_ledger_transactions(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         parsed_rows=[_usd_parsed("usd-norate-001")],
         transaction_repository=repo,
         bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
@@ -216,10 +216,10 @@ def test_anti_tautology_mutated_rate_changes_value_in_eur(
         rate_provider=_ecb_provider(usd_quote=_ECB_2024_01_15_USD_QUOTE * Decimal("2")),
     )
 
-    repo_canonical = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    repo_canonical = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
 
     result_canonical = import_ledger_transactions(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         parsed_rows=[_usd_parsed("usd-antitauto-canonical")],
         transaction_repository=repo_canonical,
         bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
@@ -228,9 +228,9 @@ def test_anti_tautology_mutated_rate_changes_value_in_eur(
     assert result_canonical.summary.imported == 1
 
     # Re-use the same repo but with a different provider_id so it gets a fresh row
-    repo_mutant = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    repo_mutant = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     result_mutant = import_ledger_transactions(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         parsed_rows=[_usd_parsed("usd-antitauto-mutant")],
         transaction_repository=repo_mutant,
         bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),

@@ -286,9 +286,9 @@ def unlock_imported_profile_custody_recovery_artifact(
 ) -> ProfileCustodyRecoveryUnlock:
     """Prove an imported artifact with its named identity and committed sentinel.
 
-    This does not install or overwrite optional recovery.  A later explicit
-    recovery owner decides whether a successfully proved artifact may be
-    enrolled, preserving the import collision boundary.
+    This does not install, overwrite, or re-enroll recovery. Recovery is
+    enrolled only while the profile is created; an imported artifact proves
+    the existing wrapper without opening a second installation path.
     """
     if artifact.profile_id != expected_profile_id or artifact.dek_epoch != expected_dek_epoch:
         raise ProfileCustodyRecordError("recovery artifact UUID or DEK epoch does not match its named target")

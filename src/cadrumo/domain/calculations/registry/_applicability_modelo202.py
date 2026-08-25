@@ -13,6 +13,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field, StringConstraints
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core import Modelo
 from ....core.external_constants import MODELO_202_ART_40_3_INCN_THRESHOLD_EUR
 from ...deadlines import EntityType, TaxpayerProfile
 from ._errors import RegistryFailureClassification, RegistryFailureCondition
@@ -107,7 +108,7 @@ def modelo_202_modality_from_inputs(
             failure=RegistryFailureClassification(
                 condition=RegistryFailureCondition.MODELO_202_INCN_DECLARED,
                 facts={
-                    "modelo": "202",
+                    "modelo": Modelo.M202.value,
                     "incn_prior_12_months_declared": False,
                     "entity_type_legal": True,
                 },

@@ -125,7 +125,7 @@ def _registry_aligned_cases_for_both_variants(
     applicability_verdict: ExternalLayoutRegistryApplicabilityVerdict,
     expected: _MeasuredOutcome,
 ) -> tuple[_RegistryAlignedCandidateCase, _RegistryAlignedCandidateCase]:
-    return tuple(
+    plain_case, fillable_case = tuple(
         _RegistryAlignedCandidateCase(
             modelo=modelo,
             candidate_kind=candidate_kind,
@@ -137,6 +137,7 @@ def _registry_aligned_cases_for_both_variants(
         )
         for candidate_kind in ("plain", "fillable")
     )
+    return plain_case, fillable_case
 
 
 def _out_of_revision_exercises_for_both_variants(
@@ -145,7 +146,7 @@ def _out_of_revision_exercises_for_both_variants(
     parser_exercise_period: str,
     expected: _MeasuredOutcome,
 ) -> tuple[_OutOfRevisionParserExercise, _OutOfRevisionParserExercise]:
-    return tuple(
+    plain_case, fillable_case = tuple(
         _OutOfRevisionParserExercise(
             modelo=modelo,
             candidate_kind=candidate_kind,
@@ -155,6 +156,7 @@ def _out_of_revision_exercises_for_both_variants(
         )
         for candidate_kind in ("plain", "fillable")
     )
+    return plain_case, fillable_case
 
 
 _MATRIX = (

@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from ._secure_objects_fixtures import secure_objects
+from ._secure_objects_fixtures import SECURE_OBJECTS_BUCKET_ID, secure_objects
 
 __all__ = ["secure_objects"]
 
@@ -65,7 +65,7 @@ def test_renta_income_observation_preserves_es_source_jurisdiction() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     assert len(result.observations) == 1
     assert result.observations[0].source_jurisdiction == "ES"
@@ -102,7 +102,7 @@ def test_renta_income_aggregation_mixes_es_and_foreign_source() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((es_row, fr_row))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     # Art. 8 universal-base: both rows enter the casilla aggregation.
     assert len(result.observations) == 2
@@ -132,7 +132,7 @@ def test_m100_annual_income_sums_full_ejercicio_into_casilla_0171() -> None:
     prior = _income_transaction("m100-prior", value_date=date(2023, 12, 31), amount=Decimal("999.00"))
     catalogue = TransactionCatalogue.from_transactions((jan, dec, prior))
 
-    result = aggregate_renta_m100_income_ledger(catalogue, bucket_id="test", period=_ANNUAL_2024)
+    result = aggregate_renta_m100_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_ANNUAL_2024)
 
     assert all(o.target_casilla_id == _M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA for o in result.observations)
     assert result.casilla_aggregation.modelo == "100"
@@ -161,14 +161,16 @@ def test_repository_backed_m100_aggregation_reports_out_of_period_catalogue_tran
     jan_amount, prior_amount = Decimal("3000.00"), Decimal("999.00")
     jan = _income_transaction("m100-repo-jan", value_date=date(2024, 1, 20), amount=jan_amount)
     prior = _income_transaction("m100-repo-prior", value_date=date(2023, 12, 31), amount=prior_amount)
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions((jan, prior)))
 
     result = aggregate_renta_m100_income_ledger_from_repositories(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2024,
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
     )
 
     assert {o.transaction_id for o in result.observations} == {jan.transaction_id}
@@ -193,16 +195,18 @@ def test_repository_backed_m100_aggregation_partition_matches_full_scan(
     in_year = _income_transaction("m100-parity-in-year", value_date=date(2024, 6, 1), amount=Decimal("4000.00"))
     prior_year = _income_transaction("m100-parity-prior-year", value_date=date(2023, 12, 31), amount=Decimal("999.00"))
     catalogue = TransactionCatalogue.from_transactions((in_year, prior_year))
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     tx_repo.save(catalogue)
 
     partitioned = aggregate_renta_m100_income_ledger_from_repositories(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2024,
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
     )
-    full_scan = aggregate_renta_m100_income_ledger(catalogue, bucket_id="test", period=_ANNUAL_2024)
+    full_scan = aggregate_renta_m100_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_ANNUAL_2024)
 
     assert set(partitioned.observations) == set(full_scan.observations)
     assert partitioned.casilla_aggregation.casilla_values == full_scan.casilla_aggregation.casilla_values
@@ -224,7 +228,7 @@ def test_m100_annual_income_rejects_non_annual_period() -> None:
 
     catalogue = TransactionCatalogue.from_transactions(())
     with pytest.raises(AggregationPeriodError):
-        aggregate_renta_m100_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+        aggregate_renta_m100_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
 
 def test_m100_revision_binds_0171_to_income_source_and_resolves() -> None:
@@ -244,7 +248,7 @@ def test_m100_revision_binds_0171_to_income_source_and_resolves() -> None:
     base = Decimal("4200.00")
     tx = _income_transaction("m100-res", value_date=date(2024, 6, 1), amount=base)
     catalogue = TransactionCatalogue.from_transactions((tx,))
-    aggregation = aggregate_renta_m100_income_ledger(catalogue, bucket_id="test", period=_ANNUAL_2024)
+    aggregation = aggregate_renta_m100_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_ANNUAL_2024)
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
     assert resolved[binding.id] == base

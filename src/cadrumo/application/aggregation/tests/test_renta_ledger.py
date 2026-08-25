@@ -9,7 +9,7 @@ from typing import Any, cast
 
 import pytest
 
-from ._secure_objects_fixtures import secure_objects
+from ._secure_objects_fixtures import SECURE_OBJECTS_BUCKET_ID, secure_objects
 
 __all__ = ["secure_objects"]
 
@@ -186,7 +186,7 @@ def _transaction(
 def _invoice(
     tx_id: str,
     *,
-    bucket_id: str = "test",
+    bucket_id: str = SECURE_OBJECTS_BUCKET_ID,
     kind: InvoiceKind = InvoiceKind.RECEIVED,
     issued_at: date = date(2025, 4, 1),
     grand_total: Decimal = Decimal("121.00"),
@@ -227,18 +227,22 @@ def test_repository_backed_aggregation_loads_persisted_catalogues_and_emits_casi
     initial = _transaction("row-linked")
     invoice = _invoice(initial.transaction_id)
     linked = _transaction("row-linked", purchase_invoice_evidence_id=invoice.invoice_id)
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
-    invoice_repo = InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions((linked,)))
     invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
 
     result = aggregate_renta_ledger_expenses_from_repositories(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
         profile_year=2025,
-        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+        prorrata_register_repository=ProrrataRegisterRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
     )
 
     assert result.issues == ()
@@ -263,19 +267,23 @@ def test_repository_backed_aggregation_binds_default_invoice_repository_to_reque
         "row-default-invoice-repository",
         purchase_invoice_evidence_id=invoice.invoice_id,
     )
-    TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+    TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
         TransactionCatalogue.from_transactions((linked,)),
     )
-    InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+    InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
         InvoiceCatalogue.from_invoices((invoice,)),
     )
 
     result = aggregate_renta_ledger_expenses_from_repositories(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
         profile_year=2025,
-        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+        prorrata_register_repository=ProrrataRegisterRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
     )
 
     assert result.issues == ()
@@ -291,19 +299,23 @@ def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects:
         amount=Decimal("121.00"),
         category=SpendingCategory.ASESORIA_FISCAL,
     )
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
-    invoice_repo = InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions((transaction,)))
     invoice_repo.save(InvoiceCatalogue())
 
     revision = _m100_2025_renta_expense_revision()
     resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
-        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
+        prorrata_register_repository=ProrrataRegisterRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
     ).resolve(
         CalculationSourceContext(
-            bucket_id="test",
+            bucket_id=SECURE_OBJECTS_BUCKET_ID,
             modelo="100",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "0A"),
@@ -339,19 +351,23 @@ def test_renta_filing_aggregation_routes_office_software_and_marketing_to_m100_e
             category=SpendingCategory.PUBLICIDAD_MARKETING,
         ),
     )
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
-    invoice_repo = InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions(transactions))
     invoice_repo.save(InvoiceCatalogue())
 
     revision = _m100_2025_renta_expense_revision()
     resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
-        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
+        prorrata_register_repository=ProrrataRegisterRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
     ).resolve(
         CalculationSourceContext(
-            bucket_id="test",
+            bucket_id=SECURE_OBJECTS_BUCKET_ID,
             modelo="100",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "0A"),
@@ -372,24 +388,28 @@ def test_renta_filing_aggregation_loads_usage_ratios_for_mobile_phone_expenses(
         amount=Decimal("121.00"),
         category=SpendingCategory.TELEFONIA_MOVIL,
     )
-    TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+    TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
         TransactionCatalogue.from_transactions((phone,)),
     )
-    InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects).save(InvoiceCatalogue())
+    InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(InvoiceCatalogue())
     save_usage_ratios(
         UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.50")}),
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         objects=secure_objects,
     )
 
     revision = _m100_2025_renta_expense_revision()
     resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
-        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
+        prorrata_register_repository=ProrrataRegisterRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
     ).resolve(
         CalculationSourceContext(
-            bucket_id="test",
+            bucket_id=SECURE_OBJECTS_BUCKET_ID,
             modelo="100",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "0A"),
@@ -439,17 +459,21 @@ def test_m100_expense_aggregation_uses_taxable_base_for_iva_bearing_business_exp
             iva_amount=Decimal("168.00"),
         ),
     )
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions(transactions))
-    InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects).save(InvoiceCatalogue())
+    InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(InvoiceCatalogue())
 
     result = aggregate_renta_ledger_expenses_from_repositories(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
         profile_year=2025,
-        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+        prorrata_register_repository=ProrrataRegisterRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
     )
 
     expected_taxable_base = office_base + software_base + marketing_base
@@ -496,23 +520,31 @@ def test_m100_and_m130_expense_aggregations_reconcile_on_taxable_base_for_same_l
             iva_amount=Decimal("168.00"),
         ),
     )
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions(transactions))
-    InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects).save(InvoiceCatalogue())
+    InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(InvoiceCatalogue())
 
     m100_result = aggregate_renta_ledger_expenses_from_repositories(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
         profile_year=2025,
-        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+        prorrata_register_repository=ProrrataRegisterRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
     )
     m130_result = aggregate_renta_gasto_ledger_from_repositories(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2025,
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        prorrata_register_repository=ProrrataRegisterRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
     )
 
     expected_taxable_base = sum(bases, Decimal("0"))
@@ -535,46 +567,52 @@ def test_repository_backed_aggregation_rejects_transaction_repository_bucket_mis
 
     with pytest.raises(AggregationValidationError, match="bucket"):
         aggregate_renta_ledger_expenses_from_repositories(
-            bucket_id="test",
+            bucket_id=SECURE_OBJECTS_BUCKET_ID,
             period=_ANNUAL_2025,
             transaction_repository=repo,
-            invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+            invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
             profile_year=2025,
-            prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+            prorrata_register_repository=ProrrataRegisterRepository(
+                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+            ),
         )
 
 
 def test_repository_backed_aggregation_rejects_invoice_repository_bucket_mismatch(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id="other", objects=secure_objects)
 
     with pytest.raises(AggregationValidationError, match="invoice_bucket_mismatch"):
         aggregate_renta_ledger_expenses_from_repositories(
-            bucket_id="test",
+            bucket_id=SECURE_OBJECTS_BUCKET_ID,
             period=_ANNUAL_2025,
             transaction_repository=tx_repo,
             invoice_repository=invoice_repo,
             profile_year=2025,
-            prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+            prorrata_register_repository=ProrrataRegisterRepository(
+                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+            ),
         )
 
 
 def test_repository_backed_aggregation_rejects_unbound_invoice_repository(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
 
     with pytest.raises(AggregationValidationError, match="invoice_bucket_mismatch"):
         aggregate_renta_ledger_expenses_from_repositories(
-            bucket_id="test",
+            bucket_id=SECURE_OBJECTS_BUCKET_ID,
             period=_ANNUAL_2025,
             transaction_repository=tx_repo,
             invoice_repository=invoice_repo,
             profile_year=2025,
-            prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+            prorrata_register_repository=ProrrataRegisterRepository(
+                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+            ),
         )
 
 
@@ -591,7 +629,7 @@ def test_mixed_business_percentage_scales_transaction_only_expenses() -> None:
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((mixed,)),
         InvoiceCatalogue(),
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
         profile_year=2025,
     )
@@ -624,7 +662,7 @@ def test_archived_and_stashed_transactions_do_not_feed_renta_expense_aggregation
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((active, archived, stashed)),
         InvoiceCatalogue(),
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
         profile_year=2025,
     )
@@ -647,7 +685,7 @@ def test_manual_transaction_tax_fields_feed_renta_observation_without_invoice_ca
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((manual,)),
         InvoiceCatalogue(),
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
         profile_year=2025,
     )
@@ -668,7 +706,7 @@ def test_usage_ratio_phone_requires_ratio_before_routing_to_other_expenses() -> 
     missing_ratio = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((phone,)),
         InvoiceCatalogue(),
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
         profile_year=2025,
     )
@@ -680,7 +718,7 @@ def test_usage_ratio_phone_requires_ratio_before_routing_to_other_expenses() -> 
     with_ratio = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((phone,)),
         InvoiceCatalogue(),
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
         profile_year=2025,
         usage_ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.25")},
@@ -699,7 +737,7 @@ def test_linked_invoice_issue_date_controls_period_filtering() -> None:
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((linked,)),
         InvoiceCatalogue.from_invoices((invoice,)),
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
         profile_year=2025,
     )
@@ -751,18 +789,22 @@ def test_repository_backed_aggregation_admits_a_transaction_whose_invoice_date_i
         value_date=date(2024, 12, 15),
         purchase_invoice_evidence_id=invoice.invoice_id,
     )
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
-    invoice_repo = InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions((linked,)))
     invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
 
     result = aggregate_renta_ledger_expenses_from_repositories(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
         profile_year=2025,
-        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+        prorrata_register_repository=ProrrataRegisterRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
     )
 
     assert len(result.observations) == 1
@@ -784,16 +826,20 @@ def test_repository_backed_aggregation_reports_out_of_period_catalogue_transacti
     """
     in_year = _transaction("row-in-2025", booked_date=date(2025, 4, 5), value_date=date(2025, 4, 5))
     out_of_year = _transaction("row-in-2023", booked_date=date(2023, 6, 10), value_date=date(2023, 6, 10))
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions((in_year, out_of_year)))
 
     result = aggregate_renta_ledger_expenses_from_repositories(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
         profile_year=2025,
-        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+        prorrata_register_repository=ProrrataRegisterRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
     )
 
     assert {o.transaction_id for o in result.observations} == {in_year.transaction_id}
@@ -811,7 +857,7 @@ def test_multi_transaction_invoice_link_is_excluded_from_first_slice() -> None:
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((linked,)),
         InvoiceCatalogue.from_invoices((invoice,)),
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
         profile_year=2025,
     )
@@ -831,7 +877,7 @@ def test_purchase_invoice_evidence_from_other_bucket_is_reported_as_issue() -> N
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((linked,)),
         InvoiceCatalogue.from_invoices((invoice,)),
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
         profile_year=2025,
     )
@@ -858,7 +904,7 @@ def test_linked_incoming_refund_becomes_negative_binding_value() -> None:
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((refund,)),
         InvoiceCatalogue.from_invoices((invoice,)),
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
         profile_year=2025,
     )
@@ -907,7 +953,7 @@ def test_transaction_only_renta_expense_buckets_on_value_date_caja_basis() -> No
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((caja_in_year, caja_out_of_year)),
         InvoiceCatalogue(),
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
         profile_year=2025,
     )
@@ -935,7 +981,7 @@ def test_non_eur_transaction_is_reported_as_issue_before_fact_creation() -> None
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((usd_expense,)),
         InvoiceCatalogue(),
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
         profile_year=2025,
     )
@@ -957,7 +1003,7 @@ def test_zero_business_amount_is_reported_as_invalid_fact_issue() -> None:
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((zero_business,)),
         InvoiceCatalogue(),
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
         profile_year=2025,
     )
@@ -1008,12 +1054,12 @@ def test_non_regional_category_profile_preserves_result_across_region() -> None:
     catalogue = TransactionCatalogue.from_transactions((row,))
 
     without_region = aggregate_renta_ledger_expenses(
-        catalogue, InvoiceCatalogue(), bucket_id="test", period=_ANNUAL_2025, profile_year=2025
+        catalogue, InvoiceCatalogue(), bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_ANNUAL_2025, profile_year=2025
     )
     with_region = aggregate_renta_ledger_expenses(
         catalogue,
         InvoiceCatalogue(),
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
         profile_year=2025,
         residence_ccaa=CCAA.MADRID,
@@ -1038,7 +1084,7 @@ def test_region_override_selected_when_residence_matches() -> None:
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((row,)),
         InvoiceCatalogue(),
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
         profile_year=2025,
         residence_ccaa=CCAA.CANARIAS,
@@ -1060,7 +1106,7 @@ def test_region_override_undeclared_residence_fails_closed() -> None:
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((row,)),
         InvoiceCatalogue(),
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
         profile_year=2025,
         residence_ccaa=None,
@@ -1099,22 +1145,26 @@ def test_repository_wrapper_residence_ccaa_is_byte_identical_while_override_empt
     """
     invoice = _invoice(_transaction("row-region-wrapper-inert").transaction_id)
     linked = _transaction("row-region-wrapper-inert", purchase_invoice_evidence_id=invoice.invoice_id)
-    TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+    TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
         TransactionCatalogue.from_transactions((linked,)),
     )
-    InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+    InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
         InvoiceCatalogue.from_invoices((invoice,)),
     )
 
     def _run(profile_record: UserProfileRecord | None) -> RentaLedgerExpenseAggregation:
         return aggregate_renta_ledger_expenses_from_repositories(
-            bucket_id="test",
+            bucket_id=SECURE_OBJECTS_BUCKET_ID,
             period=_ANNUAL_2025,
-            transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-            invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+            transaction_repository=TransactionCatalogueRepository(
+                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+            ),
+            invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
             profile_year=2025,
             profile_record=profile_record,
-            prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+            prorrata_register_repository=ProrrataRegisterRepository(
+                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+            ),
         )
 
     with_madrid = _run(_profile_with_ccaa("madrid"))
@@ -1141,7 +1191,7 @@ def test_repository_wrapper_threads_profile_residence_into_region_override_selec
         amount=Decimal("100.00"),
         category=SpendingCategory.GASTOS_BANCARIOS,
     )
-    TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+    TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
         TransactionCatalogue.from_transactions((row,)),
     )
     overrides = {
@@ -1150,14 +1200,18 @@ def test_repository_wrapper_threads_profile_residence_into_region_override_selec
 
     def _run(profile_record: UserProfileRecord | None) -> RentaLedgerExpenseAggregation:
         return aggregate_renta_ledger_expenses_from_repositories(
-            bucket_id="test",
+            bucket_id=SECURE_OBJECTS_BUCKET_ID,
             period=_ANNUAL_2025,
-            transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-            invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+            transaction_repository=TransactionCatalogueRepository(
+                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+            ),
+            invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
             profile_year=2025,
             profile_record=profile_record,
             region_category_overrides=overrides,
-            prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+            prorrata_register_repository=ProrrataRegisterRepository(
+                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+            ),
         )
 
     matched = _run(_profile_with_ccaa("canarias"))
@@ -1208,19 +1262,23 @@ def test_repository_wrapper_exento_iva_regime_joins_the_full_iva_to_deductible_c
         taxable_base=Decimal("8000.00"),
         iva_amount=Decimal("1600.00"),
     )
-    TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+    TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
         TransactionCatalogue.from_transactions((row,)),
     )
 
     def _run(profile_record: UserProfileRecord | None) -> RentaLedgerExpenseAggregation:
         return aggregate_renta_ledger_expenses_from_repositories(
-            bucket_id="test",
+            bucket_id=SECURE_OBJECTS_BUCKET_ID,
             period=_ANNUAL_2025,
-            transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-            invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+            transaction_repository=TransactionCatalogueRepository(
+                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+            ),
+            invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
             profile_year=2025,
             profile_record=profile_record,
-            prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+            prorrata_register_repository=ProrrataRegisterRepository(
+                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+            ),
         )
 
     exento = _run(
@@ -1269,10 +1327,10 @@ def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_s
         taxable_base=Decimal("1000.00"),
         iva_amount=Decimal("210.00"),
     )
-    TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+    TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
         TransactionCatalogue.from_transactions((row,)),
     )
-    ProrrataRegisterRepository(bucket_id="test", objects=secure_objects).upsert_entry(
+    ProrrataRegisterRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).upsert_entry(
         ProrrataRegisterEntry(
             ejercicio=2025,
             regime=ProrrataRegisterRegime.GENERAL,
@@ -1283,12 +1341,16 @@ def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_s
     )
 
     result = aggregate_renta_ledger_expenses_from_repositories(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
         profile_year=2025,
-        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+        prorrata_register_repository=ProrrataRegisterRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
     )
 
     assert result.issues == ()
@@ -1313,20 +1375,24 @@ def test_repository_wrapper_ninguna_prorrata_regime_is_byte_identical_to_absent_
         taxable_base=Decimal("1000.00"),
         iva_amount=Decimal("210.00"),
     )
-    TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+    TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
         TransactionCatalogue.from_transactions((row,)),
     )
-    ProrrataRegisterRepository(bucket_id="test", objects=secure_objects).upsert_entry(
+    ProrrataRegisterRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).upsert_entry(
         ProrrataRegisterEntry(ejercicio=2025, regime=ProrrataRegisterRegime.NINGUNA, especial_transition=None),
     )
 
     result = aggregate_renta_ledger_expenses_from_repositories(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
         profile_year=2025,
-        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
+        prorrata_register_repository=ProrrataRegisterRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
     )
 
     assert result.issues == ()
@@ -1395,7 +1461,7 @@ def test_repository_wrapper_refuses_an_implicit_prorrata_repository() -> None:
     """No public Renta repository path can silently recreate a register store."""
     with pytest.raises(TypeError, match="prorrata_register_repository"):
         cast(Any, aggregate_renta_ledger_expenses_from_repositories)(
-            bucket_id="test",
+            bucket_id=SECURE_OBJECTS_BUCKET_ID,
             period=_ANNUAL_2025,
             transaction_repository=None,
             invoice_repository=None,

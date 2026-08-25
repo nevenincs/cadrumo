@@ -301,6 +301,19 @@ _CHECK_MODE_PENDING: dict[str, str] = {
     #
     # Whoever stamps one of these must expect the window refusal next, and fix it
     # rather than re-pin it.
+    # 200 is behind a DELIBERATE downgrade, not a reviewer stamp. Its single
+    # revision spans the incompatible 2024 and 2025 AEAT layouts, so
+    # its authority_grade was lowered to "calculation" to hold the filing boundary
+    # shut until layout-correct revisions exist. Check mode validates the
+    # candidate through the real authority and therefore asks for filing grade,
+    # so it cannot run for 200 at all while that stands.
+    #
+    # Recorded so the byte-equality half of this gate keeps working: without an
+    # entry the row fails blind, and an unguarded published tree is free to
+    # drift -- which is exactly what 347's map did unnoticed, per the note
+    # above. The entry retires itself the day the split lands and check mode
+    # passes.
+    "m200-2024-y-siguientes": "cannot satisfy the requested 'filing' snapshot authority",
     "m202-2019-2022": "appears on exactly one casilla",
     "m202-2023-2024": "appears on exactly one casilla",
     "m202-2025-y-siguientes": "lacks exact source revision coverage",

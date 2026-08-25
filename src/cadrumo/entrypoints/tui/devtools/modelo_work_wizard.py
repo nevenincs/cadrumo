@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 
 from ....application.modelo import ensure_modelo_work_unit_for_active_target
 from ....application.modelo.work_wizard import ModeloWorkWizardRun, open_modelo_work_wizard
-from ....core import Period
+from ....core import Modelo, Period
 from ....core.flows import FlowMode
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....domain.user_profile import UserProfileFact
@@ -26,7 +26,7 @@ from .fixture import harness_storage, passphrase
 if TYPE_CHECKING:
     from ....domain.modelos import WorkUnit
 
-_MODELO = "130"
+_MODELO = Modelo.M130.value
 _FILING_YEAR = 2025
 _PERIOD_CODE = "1T"
 _PROFILE_LABEL = "Modelo Work Wizard fixture"

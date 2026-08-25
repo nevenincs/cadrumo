@@ -9,8 +9,11 @@ from ....tests.aeat_literal_fixtures import aeat_url
 from .. import (
     RegistryClosureEvidence,
     RegistryClosureLimb,
+    RegistryClosureLimbName,
+    RegistryClosureLimbOutcome,
     RegistryClosureOwnerDisposition,
     RegistryClosureRefusal,
+    RegistryClosureRefusalReason,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -23,7 +26,11 @@ def _evidence() -> RegistryClosureEvidence:
     )
 
 
-def _refusal(*, limb: str = "filing_export", reason: str = "missing_evidence") -> RegistryClosureRefusal:
+def _refusal(
+    *,
+    limb: RegistryClosureLimbName = "filing_export",
+    reason: RegistryClosureRefusalReason = "missing_evidence",
+) -> RegistryClosureRefusal:
     return RegistryClosureRefusal(
         reason=reason,
         detail="The selected revision lacks evidence required for this capability.",
@@ -154,8 +161,8 @@ def test_not_applicable_is_a_filing_only_non_capability_state() -> None:
     (("refused", "missing_evidence"), ("unmeasured", "unmeasured")),
 )
 def test_active_closure_refusal_cannot_claim_a_resolved_owner_disposition(
-    outcome: str,
-    reason: str,
+    outcome: RegistryClosureLimbOutcome,
+    reason: RegistryClosureRefusalReason,
 ) -> None:
     refusal = _refusal(limb="source_connectivity", reason=reason).model_copy(
         update={

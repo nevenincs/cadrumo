@@ -68,6 +68,8 @@ _PROSE_KEYS = {
         "provisioning.model.licence.non_commercial_advisory",
         "docs.legal.index.intro",
         "docs.legal.page.intro",
+        "mcp.call.timeout",
+        "mcp.elicitation.refusal.no_channel",
     },
     "en": {
         "errors.auth.auth_former_product_session_state",
@@ -82,6 +84,8 @@ _PROSE_KEYS = {
         "provisioning.model.licence.non_commercial_advisory",
         "docs.legal.index.intro",
         "docs.legal.page.intro",
+        "mcp.call.timeout",
+        "mcp.elicitation.refusal.no_channel",
     },
     "es": {
         "errors.auth.auth_former_product_session_state",
@@ -94,6 +98,8 @@ _PROSE_KEYS = {
         "provisioning.model.licence.non_commercial_advisory",
         "docs.legal.index.intro",
         "docs.legal.page.intro",
+        "mcp.call.timeout",
+        "mcp.elicitation.refusal.no_channel",
     },
     "hu": {
         "errors.auth.auth_former_product_session_state",
@@ -106,6 +112,8 @@ _PROSE_KEYS = {
         "provisioning.model.licence.non_commercial_advisory",
         "docs.legal.index.intro",
         "docs.legal.page.intro",
+        "mcp.call.timeout",
+        "mcp.elicitation.refusal.no_channel",
     },
 }
 

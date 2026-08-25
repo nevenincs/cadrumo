@@ -20,6 +20,7 @@ from decimal import Decimal
 import pytest
 
 from ....core import Period
+from ...calculations.registry import RegistrySnapshotError
 from .._plazo import resolve_filing_closes_on
 from .._recargo import (
     build_recovery_for_overdue,
@@ -122,10 +123,19 @@ def test_resolve_filing_closes_on_m130_2026_q1_returns_date() -> None:
     assert closes_on.month in (4, 5)  # April/May for Q1 plazo
 
 
-def test_resolve_filing_closes_on_unknown_modelo_returns_none() -> None:
-    """A modelo with no registry deadline windows returns None gracefully."""
-    result = resolve_filing_closes_on("999", 2026, Period.from_year_and_code(2026, "1T"))
-    assert result is None
+def test_resolve_filing_closes_on_refuses_an_unknown_modelo() -> None:
+    """An id that is not a modelo REFUSES; it is not "deadline data unavailable".
+
+    ``None`` is reserved for the two causes the contract names -- no window for
+    the year, or a non-matching period token -- and callers continue without a
+    close date on it. An absent modelo is a different class of fact, and
+    production only reaches here through the ``Modelo`` enum, so the id can only
+    come from a caller bug or unvalidated input. Degrading gracefully would give
+    that caller no deadline, and the extemporaneidad computed from it would drop
+    the recargo silently.
+    """
+    with pytest.raises(RegistrySnapshotError, match=r"modelo '999' is not present in the calculation registry"):
+        resolve_filing_closes_on("999", 2026, Period.from_year_and_code(2026, "1T"))
 
 
 def test_resolve_filing_closes_on_wrong_period_returns_none() -> None:
