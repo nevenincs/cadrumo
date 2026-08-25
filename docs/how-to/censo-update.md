@@ -77,12 +77,22 @@ guess a regime or a start date.
 ## Pull your census facts from AEAT
 
 AEAT publishes your current census position at *Mis Datos Censales*. Pull it
-into the active profile. The first step previews; the second records:
+into the active profile. The first step previews; the second performs a new
+authenticated read and records that read's eligible facts:
 
 ```{cli-sequence} censo-update-censo-pull
 ```
 
 Nothing is written until you add `--apply`.
+
+```{warning}
+The current CLI does not turn the first command's preview into a saved approval.
+The `--apply` command reads AEAT again and applies that new observation. Review
+the `--apply` result itself before relying on the updated profile. Work is in
+progress to expose the application's captured, exact-baseline reviewed-apply
+lifecycle on this command; until that lands, do not treat the earlier preview
+as the operand that was applied.
+```
 
 Authenticate first; see
 [Authenticate with AEAT](authenticate-with-aeat.md). The pull reads your own
@@ -93,7 +103,9 @@ point it at another taxpayer.
 
 Every field comes back as one of three outcomes.
 
-**Adopted**: the profile had no answer, so AEAT's value fills it.
+**Adopted**: the profile had no answer, or the value came from an earlier
+censal read, so `--apply` writes AEAT's current value. A preview only reports
+what would be eligible.
 
 **Unchanged**: you and AEAT already agree.
 
