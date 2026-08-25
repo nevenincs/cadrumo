@@ -16,7 +16,7 @@ import pytest
 from ..adapters.persistence.storage.bucket import (
     bucket_paths,
 )
-from ..core import resolve_active_bucket_id
+from ..core.bucket_pointer import resolve_active_bucket_id
 from .secure_sql import isolated_two_bucket_runtime
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

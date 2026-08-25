@@ -30,10 +30,13 @@ from ...tests import REPO_ROOT
 from ...tests.env_scope import isolated_aeat_env as _isolated_aeat_env
 from ...tests.env_scope import scoped_env_var, settings_without_env_file
 from .. import AuthProviderKind, StateRootInputs, StorageCategory, platform_user_data_root, storage_location
+from ..bucket_pointer import BucketPointer
 from ..config import (
     Settings,
     StorageRouteKind,
     classify_storage_route,
+    load_settings,
+    reset_settings_cache,
 )
 from ..external_constants import load_external_constants
 
@@ -459,6 +462,41 @@ class TestDatabaseUrlDerivation:
 
         expected = f"sqlite:///{bucket_paths(storage_root, 'acme').database_file.as_posix()}"
         assert settings.cadrumo_database_url == expected
+
+    def test_load_settings_routes_from_its_single_atomic_pointer_observation(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """A switch after the cache observation cannot construct B under A's key."""
+        from .. import bucket_pointer, config
+
+        storage_root = tmp_path / "aeat-state"
+        observed = [
+            BucketPointer.selected(bucket_id="profile-a", transition_revision=4),
+            BucketPointer.selected(bucket_id="profile-b", transition_revision=5),
+        ]
+        calls = 0
+
+        def switch_after_observation(root: Path) -> BucketPointer:
+            nonlocal calls
+            assert root == storage_root
+            selected = observed[min(calls, 1)]
+            calls += 1
+            return selected
+
+        monkeypatch.setattr(bucket_pointer, "read_pointer", switch_after_observation)
+        override_token = config._settings_override.set(None)
+        reset_settings_cache()
+        try:
+            with _isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=storage_root.as_posix()):
+                settings = load_settings()
+        finally:
+            reset_settings_cache()
+            config._settings_override.reset(override_token)
+
+        assert calls == 1
+        assert classify_storage_route(settings).bucket_id == "profile-a"
 
     def test_env_example_leaves_normal_profile_storage_on_the_bucket_route(self, tmp_path: Path) -> None:
         """The shipped environment template must not force a global database route.

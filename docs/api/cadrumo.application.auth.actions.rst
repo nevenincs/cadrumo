@@ -1,5 +1,5 @@
 cadrumo.application.auth.actions module
-========================================
+=======================================
 
 .. automodule:: cadrumo.application.auth.actions
    :members:

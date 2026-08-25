@@ -50,7 +50,6 @@ Submodules
    cadrumo.application.user_profile._preflight
    cadrumo.application.user_profile._presentation
    cadrumo.application.user_profile._profile_pointer_ports
-   cadrumo.application.user_profile._profile_pointer_transaction
    cadrumo.application.user_profile._profile_record_repository
    cadrumo.application.user_profile._profile_repository
    cadrumo.application.user_profile._projections
@@ -63,4 +62,5 @@ Submodules
    cadrumo.application.user_profile._validation
    cadrumo.application.user_profile.login_interaction
    cadrumo.application.user_profile.operations
+   cadrumo.application.user_profile.profile_pointer
    cadrumo.application.user_profile.status_projection

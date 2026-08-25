@@ -1,5 +1,5 @@
 cadrumo.application.auth.operator_probes module
-================================================
+===============================================
 
 .. automodule:: cadrumo.application.auth.operator_probes
    :members:

@@ -17,11 +17,7 @@ the lazily resolved :class:`BindingSourceKind` registry-source taxonomy.
 Obligation-coverage mappings expose :data:`OUT_OF_SCOPE_OBLIGATIONS` and
 :data:`UNMODELED_OBLIGATIONS`, the codified AEAT modelo sets the overview
 coverage report reads to distinguish product-scope exclusions from
-registry gaps. Active-bucket context uses the plaintext :class:`BucketPointer` value object
-plus :func:`pointer_path`, :func:`read_pointer`, and :func:`write_pointer`,
-:func:`exclusive_file_lock`,
-:func:`resolve_active_bucket_id`, :func:`require_active_bucket_id`, and
-:func:`resolve_repository_bucket_id`. :func:`pid_is_alive` is the shared
+registry gaps. :func:`pid_is_alive` is the shared
 cross-platform PID-liveness probe consumed by every crash-recoverable
 lockfile (bucket lockfile, auth-acquisition lock), and :func:`unlink_lockfile`
 is the matching shared removal primitive those same locks use to survive the
@@ -39,10 +35,8 @@ casilla/refund predicates. Service and operator-adjacent primitives include
 closed :class:`GoogleCredentialSourceKind` taxonomy governs which mechanism
 :mod:`adapters.outbound.google` uses to obtain Google API credentials.
 
-``BindingSourceKind``, ``BucketPointer``, and the active-bucket IO helpers are
-resolved through ``__getattr__`` so storage, config, and aggregation callers
-can import the public core facade without recreating the cycles those helpers
-break internally.
+``BindingSourceKind`` is resolved through ``__getattr__`` so callers can
+import the public core facade without eagerly paying for registry taxonomy.
 
 Major subpackages remain the specialised homes for broader contracts:
 :mod:`core.config` owns :class:`core.config.Settings` and storage route
@@ -56,10 +50,6 @@ sensitivity policy.
 See Also:
     :class:`Period`: Canonical filing year plus registry period-code value used
         across registry, deadline, and workflow boundaries.
-    :class:`BucketPointer`: Typed value for the plaintext
-        ``active-profile`` pointer file.
-    :func:`resolve_active_bucket_id`: Central active-bucket precedence resolver
-        for storage and CLI startup paths.
     :func:`read_toml`: Shared committed-TOML loader with caller-owned error
         wrapping.
     :class:`ResultDisposition`: Codified fichero result-disposition
@@ -428,15 +418,6 @@ if TYPE_CHECKING:
         CalculationSourceLineageRole,
         IntracomOperationType,
     )
-    from .bucket_pointer import (
-        BucketPointer,
-        pointer_path,
-        read_pointer,
-        require_active_bucket_id,
-        resolve_active_bucket_id,
-        resolve_repository_bucket_id,
-        write_pointer,
-    )
     from .compatibility_lifecycle import (
         COMPATIBILITY_REGIME,
         PERSISTED_FORMATS,
@@ -618,7 +599,6 @@ __all__: list[str] = [
     "AuthProviderKind",
     "BindingAggregationOp",
     "BindingSourceKind",
-    "BucketPointer",
     "CalculationSourceLineageRole",
     "CasillaId",
     "CasillaValueKind",
@@ -870,23 +850,18 @@ __all__: list[str] = [
     "permitted_amendment_kind_values",
     "pid_is_alive",
     "platform_user_data_root",
-    "pointer_path",
     "post_filing_event_is_actionable",
     "project_m210_tipo_renta_code",
     "provenance_stamp_transport",
     "provenance_transport_label",
-    "read_pointer",
     "read_toml",
     "record_design_epoch_year",
     "registry_period_kind",
     "render_corpus_sidecar_text",
-    "require_active_bucket_id",
     "require_optional_extra",
-    "resolve_active_bucket_id",
     "resolve_amendment_kind_regime",
     "resolve_anchored_extracted_unit",
     "resolve_notificacion_estado_servicio",
-    "resolve_repository_bucket_id",
     "result_disposition_casilla_ids",
     "result_disposition_is_refund",
     "result_disposition_requires_bank_account",
@@ -908,7 +883,6 @@ __all__: list[str] = [
     "unlink_lockfile",
     "validated_casilla_id",
     "validated_casilla_id_map",
-    "write_pointer",
 ]
 
 
@@ -959,7 +933,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "BROWSER_EXTRA": "._optional_extras",
     "BindingAggregationOp": ".aggregation",
     "BindingSourceKind": ".aggregation",
-    "BucketPointer": ".bucket_pointer",
     "CalculationSourceLineageRole": ".aggregation",
     "COMPATIBILITY_REGIME": ".compatibility_lifecycle",
     "CasillaId": "._casilla_id",
@@ -1281,18 +1254,13 @@ _LAZY_EXPORTS: dict[str, str] = {
     "project_m210_tipo_renta_code": "._irnr",
     "provenance_stamp_transport": "._provenance_stamp",
     "provenance_transport_label": "._provenance_stamp",
-    "pointer_path": ".bucket_pointer",
-    "read_pointer": ".bucket_pointer",
     "read_toml": "._toml",
     "registry_period_kind": "._period",
     "render_corpus_sidecar_text": "._corpus_sidecar",
-    "require_active_bucket_id": ".bucket_pointer",
     "require_optional_extra": "._optional_extras",
-    "resolve_active_bucket_id": ".bucket_pointer",
     "resolve_amendment_kind_regime": "._amendment_kind_regime",
     "resolve_anchored_extracted_unit": ".corpus_text",
     "resolve_notificacion_estado_servicio": "._notificacion_estado_servicio",
-    "resolve_repository_bucket_id": ".bucket_pointer",
     "result_disposition_casilla_ids": "._result_disposition",
     "result_disposition_is_refund": "._result_disposition",
     "result_disposition_requires_bank_account": "._result_disposition",
@@ -1315,7 +1283,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "unlink_lockfile": "._lockfile_unlink",
     "validated_casilla_id": "._casilla_id",
     "validated_casilla_id_map": "._casilla_id",
-    "write_pointer": ".bucket_pointer",
 }
 
 

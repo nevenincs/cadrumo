@@ -63,8 +63,9 @@ def test_bucket_lockfile_and_acquisition_lock_share_one_probe() -> None:
     the moment either module re-grows a private duplicate, even if that
     duplicate happens to behave identically at first.
     """
-    from ...adapters.persistence.storage.bucket import _lockfile
     import cadrumo.application.auth.acquisition_lock as acquisition_lock
+
+    from ...adapters.persistence.storage.bucket import _lockfile
 
     assert not hasattr(_lockfile, "_pid_is_alive")
     assert not hasattr(acquisition_lock, "_pid_is_running_windows")

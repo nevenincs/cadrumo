@@ -1,5 +1,5 @@
 cadrumo.application.auth.diagnostics module
-============================================
+===========================================
 
 .. automodule:: cadrumo.application.auth.diagnostics
    :members:

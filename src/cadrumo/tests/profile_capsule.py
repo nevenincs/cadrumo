@@ -281,7 +281,7 @@ def set_active_test_profile_facts(
     that forgot to select a profile fails here instead of silently writing to
     a different capsule.
     """
-    from ..core import resolve_active_bucket_id
+    from ..core.bucket_pointer import resolve_active_bucket_id
 
     active = resolve_active_bucket_id()
     if active is None:

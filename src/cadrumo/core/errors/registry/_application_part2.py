@@ -362,7 +362,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="INTERNAL_ACTIVE_PROFILE_POINTER_TRANSACTION",
             category=ErrorCategory.INTERNAL,
-            message_key="errors.internal.internal_activeprofile_pointer",
+            message_key="errors.internal.internal_active_profile_pointer_transaction",
             retryable=False,
             runbook_id=None,
         ),

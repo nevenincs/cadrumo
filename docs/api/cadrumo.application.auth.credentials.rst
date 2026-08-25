@@ -1,5 +1,5 @@
 cadrumo.application.auth.credentials module
-======================================================
+===========================================
 
 .. automodule:: cadrumo.application.auth.credentials
    :members:

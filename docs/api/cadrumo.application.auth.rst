@@ -13,12 +13,16 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.application.auth._mutation
+   cadrumo.application.auth._workflow_repository
    cadrumo.application.auth.acquisition_lock
    cadrumo.application.auth.actions
+   cadrumo.application.auth.apoderado_flow
+   cadrumo.application.auth.apoderado_service
    cadrumo.application.auth.catalogue
    cadrumo.application.auth.certificate_secret_backend
-   cadrumo.application.auth.certificate_sources
    cadrumo.application.auth.certificate_source_operations
+   cadrumo.application.auth.certificate_sources
    cadrumo.application.auth.credentials
    cadrumo.application.auth.diagnostics
    cadrumo.application.auth.errors
@@ -32,5 +36,3 @@ Submodules
    cadrumo.application.auth.protocols
    cadrumo.application.auth.providers
    cadrumo.application.auth.sessions
-   cadrumo.application.auth.apoderado_flow
-   cadrumo.application.auth.apoderado_service

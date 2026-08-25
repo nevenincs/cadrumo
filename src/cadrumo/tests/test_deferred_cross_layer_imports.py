@@ -85,14 +85,14 @@ _DOCUMENTED_LOADERS: frozenset[tuple[str, str]] = frozenset(
 #: Everything else the inventory found. Present and running; judged by nobody.
 _UNADJUDICATED: frozenset[tuple[str, str]] = frozenset(
     {
-        ("application/auth/_operator_probes.py", "_classify_bundle_health"),
-        ("application/auth/_operator_probes.py", "_live_auth_identity_kind"),
-        ("application/auth/_operator_probes.py", "_probe_certificate_bundle"),
-        ("application/auth/_operator_probes.py", "_probe_clave_movil_identity"),
-        ("application/auth/_sessions.py", "_active_profile_auth_facts"),
-        ("application/auth/_sessions.py", "_build_provider"),
-        ("application/auth/_sessions.py", "_ensure_authenticated_aeat_session_locked"),
-        ("application/auth/_sessions.py", "require_verified_aeat_session"),
+        ("application/auth/operator_probes.py", "_classify_bundle_health"),
+        ("application/auth/operator_probes.py", "live_auth_identity_kind"),
+        ("application/auth/operator_probes.py", "probe_certificate_bundle"),
+        ("application/auth/operator_probes.py", "_probe_clave_movil_identity"),
+        ("application/auth/sessions.py", "_active_profile_auth_facts"),
+        ("application/auth/sessions.py", "_build_provider"),
+        ("application/auth/sessions.py", "_ensure_authenticated_aeat_session_locked"),
+        ("application/auth/sessions.py", "require_verified_aeat_session"),
         ("application/bucket_maintenance/_service.py", "_assess_retention_floor"),
         ("application/bucket_maintenance/_service.py", "_event_repository_for_bucket"),
         ("application/bucket_maintenance/_service.py", "_preserve_existing_import_target"),
