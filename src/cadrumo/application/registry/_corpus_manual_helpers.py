@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import get_args
 
+from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.config import Settings
 from ...core.errors import BaseSeverity
 from ...core.logging import get_logger
@@ -25,7 +26,7 @@ from ...domain.manuals import (
     load_manual,
     resolve_part_root,
 )
-from ._errors import RegistryApplicationInputError
+from ._errors import RegistryPreconditionCondition, registry_terminal_refusal
 
 _LOGGER = get_logger(__name__)
 
@@ -202,13 +203,17 @@ def manual_rule_kind(kind: str | None) -> RuleKind | None:
             "registry_allowed_rule_kinds": allowed,
         },
     )
-    raise RegistryApplicationInputError(
+    raise registry_terminal_refusal(
+        condition=RegistryPreconditionCondition.MANUAL_RULE_KIND_SUPPORTED,
         translated_message="application.registry.errors.invalid_manual_rule_kind",
         context={
             "registry_service": "registry.manuals.rules",
             "rule_kind": kind,
             "allowed_rule_kinds": allowed,
         },
+        facts={"manual_rule_kind_supported": False},
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
     )
 
 

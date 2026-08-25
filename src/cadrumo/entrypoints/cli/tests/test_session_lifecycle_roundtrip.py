@@ -4,8 +4,8 @@ The session lifecycle contract wires the idle-timeout lifecycle into the
 secure-object repository: every repository call polls the active
 :class:`BucketSession` against its idle deadline, touches it forward
 on success, and raises :class:`SessionExpiredError` once the window
-has elapsed. The CLI error decorator translates that into an operator
-refusal that names ``aeat config login`` as the recovery verb.
+has elapsed. The CLI boundary resolves a recovery action only if it can
+prove the public profile target required by the action catalogue.
 
 This roundtrip drives the full cycle with real adapters — a real
 bucket-session helper that opens and activates a real
@@ -17,8 +17,8 @@ bucket-session helper that opens and activates a real
    (the ``touch`` contract).
 3. Expire the session and confirm the next repository call refuses
    with ``SessionExpiredError``.
-4. Confirm the expiry refusal names the ``config login`` recovery
-   verb — no traceback, no generic catch-all.
+4. Confirm the expiry refusal carries only factual session state — no
+   traceback, no generic catch-all, and no locally authored command.
 
 No mocks: the expiry is forced by rolling the live session's own idle
 deadline into the past, the same state a wall-clock idle timeout
@@ -133,8 +133,13 @@ def test_expired_session_refuses_the_next_verb(_runtime_profile: TestRuntimeProf
     session.touch(datetime.now(UTC) - timedelta(hours=1))
     assert session.is_expired(datetime.now(UTC))
 
-    with pytest.raises(SessionExpiredError):
+    with pytest.raises(SessionExpiredError) as exc_info:
         _load(repository)
+
+    assert exc_info.value.context == {
+        "active_session_current": False,
+        "session_expired": True,
+    }
 
 
 def test_session_lifecycle_full_roundtrip_open_verb_expiry_refusal(_runtime_profile: TestRuntimeProfile) -> None:
@@ -159,23 +164,6 @@ def test_session_lifecycle_full_roundtrip_open_verb_expiry_refusal(_runtime_prof
     # Verb 2 — expired session: refuses.
     with pytest.raises(SessionExpiredError):
         _load(repository)
-
-
-def test_expired_session_refusal_names_login_recovery_verb() -> None:
-    """The expiry refusal renders an operator message naming ``config login``.
-
-    The session lifecycle contract requires the idle-expiry refusal to name a
-    recovery verb that actually works. ``SessionExpiredError`` carries
-    that message; the CLI error decorator surfaces it without a
-    traceback.
-    """
-
-    error = SessionExpiredError(
-        "the active profile session has expired; run `aeat config login NAME` to re-activate.",
-    )
-    rendered = str(error)
-    assert "config login" in rendered
-    assert "expired" in rendered
 
 
 def test_profile_bound_repository_without_active_session_fails_closed(

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import secrets
 from collections.abc import Awaitable, Callable, Coroutine
 from datetime import datetime, timedelta
 from typing import cast
@@ -14,6 +15,7 @@ from ...core import (
     OperationCancellation,
     OperationDeadline,
     OperationEffect,
+    OperationInteractionKind,
     OperationLifecycle,
     OperationTerminalCondition,
     content_hash_hex,
@@ -38,7 +40,6 @@ from ._interactions import (
     OperationInteractionRequest,
     OperationPendingInteraction,
     OperationRejectResponse,
-    OperationResponseToken,
 )
 from ._journal import (
     OperationEventStream,
@@ -63,6 +64,7 @@ from ._models import (
     OperationTerminalReceipt,
     new_operation_id,
 )
+from ._projection_services import OperationResponseAuthorityIssuer
 from ._registry import OperationDefinition, OperationReconciliationPolicy, OperationRegistry
 from ._replay import OperationEventCursor, OperationReplayLimit, OperationReplayPage
 from ._secret_submission import (
@@ -75,6 +77,11 @@ from ._supervisor_lease import OperationSupervisorLeaseMixin
 
 _AWAIT_TERMINAL_INITIAL_BACKOFF_SECONDS = 0.025
 _AWAIT_TERMINAL_MAX_BACKOFF_SECONDS = 0.25
+
+
+def _new_response_token() -> str:
+    """Create one unpersisted capability bearer for an exact REVIEW checkpoint."""
+    return secrets.token_hex(32)
 
 
 class OperationSupervisor(OperationSupervisorLeaseMixin):
@@ -92,6 +99,8 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         lease_duration: timedelta,
         execution_timeout: timedelta | None = None,
         cleanup_timeout: timedelta | None = None,
+        response_authority_issuer: OperationResponseAuthorityIssuer | None = None,
+        response_token_factory: Callable[[], str] = _new_response_token,
     ) -> None:
         self._registry = registry
         self._journal = journal
@@ -104,6 +113,8 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         self._lease_duration = lease_duration
         self._execution_timeout = execution_timeout
         self._cleanup_timeout = cleanup_timeout
+        self._response_authority_issuer = response_authority_issuer
+        self._response_token_factory = response_token_factory
         self._leases_by_operation: dict[OperationId, OperationOwnerLease] = {}
         self._lease_locks: dict[OperationId, asyncio.Lock] = {}
         self._resources: dict[OperationId, list[AsyncCloseable]] = {}
@@ -276,6 +287,8 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
                 clock=self._clock,
             ),
             clock=self._clock,
+            response_authority_issuer=self._response_authority_issuer,
+            response_token_factory=self._response_token_factory,
         )
         self._contexts[operation_id] = context
         executor = definition.executor_factory.create()
@@ -1050,6 +1063,8 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
                 clock=self._clock,
             ),
             clock=self._clock,
+            response_authority_issuer=self._response_authority_issuer,
+            response_token_factory=self._response_token_factory,
         )
         self._contexts[snapshot.identity.operation_id] = context
         try:
@@ -1136,10 +1151,14 @@ class _SupervisorInteractionAccess:
         request_pending: Callable[[OperationPendingInteraction], Awaitable[None]],
         operands: OperationSecureReferenceStore | None,
         clock: Callable[[], datetime],
+        response_authority_issuer: OperationResponseAuthorityIssuer | None,
+        response_token_factory: Callable[[], str],
     ) -> None:
         self._request_pending = request_pending
         self._operands = operands
         self._clock = clock
+        self._response_authority_issuer = response_authority_issuer
+        self._response_token_factory = response_token_factory
 
     async def request(self, pending: OperationPendingInteraction) -> None:
         await self._request_pending(pending)
@@ -1147,24 +1166,44 @@ class _SupervisorInteractionAccess:
     async def publish_review(
         self,
         *,
-        request: OperationInteractionRequest,
-        response_token: OperationResponseToken,
+        interaction_id: str,
+        identity: OperationIdentity,
+        revision: int,
+        presentation_code: str,
+        response_schema_ref: str,
+        continuation_digest: str,
+        expires_at: datetime | None,
         reviewed_operand: BaseModel,
         baseline_digest: str | None = None,
         proposed_effect_digest: str | None = None,
-    ) -> OperationPendingInteraction:
+    ) -> None:
         if self._operands is None:
             raise ValueError("secure review publication requires an operand store")
         reference = await self._operands.put(reviewed_operand, written_at=self._clock())
-        pending = OperationPendingInteraction.bind(
-            request=request,
-            response_token=response_token,
-            reviewed_proposal_digest=reference,
-            baseline_digest=baseline_digest,
-            proposed_effect_digest=proposed_effect_digest,
+        request = OperationInteractionRequest(
+            interaction_id=interaction_id,
+            identity=identity,
+            revision=revision,
+            kind=OperationInteractionKind.REVIEW,
+            presentation_code=presentation_code,
+            response_schema_ref=response_schema_ref,
+            continuation_digest=continuation_digest,
+            expires_at=expires_at,
         )
-        await self._request_pending(pending)
-        return pending
+        response_token = self._response_token_factory()
+        try:
+            pending = OperationPendingInteraction.bind(
+                request=request,
+                response_token=response_token,
+                reviewed_proposal_digest=reference,
+                baseline_digest=baseline_digest,
+                proposed_effect_digest=proposed_effect_digest,
+            )
+            await self._request_pending(pending)
+            if self._response_authority_issuer is not None:
+                self._response_authority_issuer.issue(pending, response_token)
+        finally:
+            response_token = ""
 
 
 class _SupervisorExecutorContext:
@@ -1177,6 +1216,8 @@ class _SupervisorExecutorContext:
         operands: OperationSecureReferenceStore | None,
         ephemeral_secret: BoundEphemeralSecretAccess,
         clock: Callable[[], datetime],
+        response_authority_issuer: OperationResponseAuthorityIssuer | None,
+        response_token_factory: Callable[[], str],
     ) -> None:
         self.identity = context.identity
         self.cancellation = context.cancellation
@@ -1189,6 +1230,8 @@ class _SupervisorExecutorContext:
             request_pending=context.interactions.request,
             operands=operands,
             clock=clock,
+            response_authority_issuer=response_authority_issuer,
+            response_token_factory=response_token_factory,
         )
         self._context = context
 

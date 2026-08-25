@@ -64,6 +64,23 @@ from ._diagnostics_payloads import (
 )
 
 
+def _llm_no_run_data_notice(*, code: str):
+    """Return the factual no-run notice with the catalogue-owned classifier action."""
+    from ...application.operator_actions import ActionReference
+    from ...core.json_contract import Notice, NoticeSeverity
+    from ._common import resolve_notice_action
+
+    return Notice(
+        severity=NoticeSeverity.INFO,
+        code=code,
+        message=tr(
+            "cli.diagnostics.llm_run_data_observed",
+            default="No LLM run telemetry was recorded for this report.",
+        ),
+        action=resolve_notice_action(action=ActionReference(action_id="operator.ledger.classify")),
+    )
+
+
 def diagnostics_root(ctx: typer.Context) -> None:
     """Render the ``aeat app diagnostics`` group help when invoked bare.
 
@@ -135,14 +152,12 @@ def diagnostics_run_health(
         session_stale=report.session_stale,
     )
 
+    no_run_data_notice = (
+        _llm_no_run_data_notice(code="diagnostics.run_health.no_run_data") if not report.has_run_data else None
+    )
     lines: list[str] = [tr("cli.diagnostics.run_health.header", default="LLM run health:")]
-    if not report.has_run_data:
-        lines.append(
-            tr(
-                "cli.diagnostics.run_health.no_run_data",
-                default="No LLM run telemetry recorded yet. Run an LLM-assisted classification to populate it.",
-            ),
-        )
+    if no_run_data_notice is not None:
+        lines.append(no_run_data_notice.message)
     else:
         for row in report.llm_providers:
             lines.append(
@@ -161,6 +176,8 @@ def diagnostics_run_health(
     lines.append(f"persisted_session_state\t{report.persisted_session_state}")
 
     notices: list[Notice] = []
+    if no_run_data_notice is not None:
+        notices.append(no_run_data_notice)
     if report.session_stale:
         notice = Notice(
             severity=NoticeSeverity.WARNING,
@@ -200,7 +217,7 @@ def diagnostics_runs(
 ) -> None:
     """List recent local LLM run-timing records, most-recent-first."""
     from ...application.diagnostics_run_health import list_recent_runs
-    from ...core.json_contract import Notice, NoticeSeverity
+    from ...core.json_contract import Notice
 
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
@@ -229,14 +246,10 @@ def diagnostics_runs(
         has_run_data=bool(rows),
     )
 
+    no_run_data_notice = _llm_no_run_data_notice(code="diagnostics.runs.no_run_data") if not rows else None
     lines: list[str] = [tr("cli.diagnostics.runs.header", default="Recent LLM runs:")]
-    if not rows:
-        lines.append(
-            tr(
-                "cli.diagnostics.runs.no_run_data",
-                default="No LLM run telemetry recorded yet. Run an LLM-assisted classification to populate it.",
-            ),
-        )
+    if no_run_data_notice is not None:
+        lines.append(no_run_data_notice.message)
     else:
         for row in rows:
             outcome = "ok" if row.succeeded else f"failed({row.error_kind})"
@@ -245,17 +258,8 @@ def diagnostics_runs(
             )
 
     notices: list[Notice] = []
-    if not rows:
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.INFO,
-                code="diagnostics.runs.no_run_data",
-                message=tr(
-                    "cli.diagnostics.runs.no_run_data",
-                    default="No LLM run telemetry recorded yet. Run an LLM-assisted classification to populate it.",
-                ),
-            ),
-        )
+    if no_run_data_notice is not None:
+        notices.append(no_run_data_notice)
 
     _emit_envelope(ctx, command="diagnostics.runs", result=result, lines=lines, notices=notices)
 
@@ -268,7 +272,7 @@ def diagnostics_latency(
 ) -> None:
     """Report P50/P95/P99 duration percentiles over recent local LLM runs."""
     from ...application.diagnostics_run_health import build_latency_report
-    from ...core.json_contract import Notice, NoticeSeverity
+    from ...core.json_contract import Notice
 
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
@@ -309,12 +313,9 @@ def diagnostics_latency(
     lines: list[str] = [tr("cli.diagnostics.latency.header", default="LLM run latency:")]
     notices: list[Notice] = []
     if not report.has_run_data:
-        message = tr(
-            "cli.diagnostics.latency.no_run_data",
-            default="No LLM run telemetry recorded yet. Run an LLM-assisted classification to populate it.",
-        )
-        lines.append(message)
-        notices.append(Notice(severity=NoticeSeverity.INFO, code="diagnostics.latency.no_run_data", message=message))
+        no_run_data_notice = _llm_no_run_data_notice(code="diagnostics.latency.no_run_data")
+        lines.append(no_run_data_notice.message)
+        notices.append(no_run_data_notice)
     else:
         overall = report.overall
         lines.append(
@@ -386,7 +387,7 @@ def diagnostics_llm_usage(
 ) -> None:
     """Report LLM run-usage totals (counts, durations, success rate) by provider and model."""
     from ...application.diagnostics_run_health import build_llm_usage_report
-    from ...core.json_contract import Notice, NoticeSeverity
+    from ...core.json_contract import Notice
 
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
@@ -435,12 +436,9 @@ def diagnostics_llm_usage(
     lines: list[str] = [tr("cli.diagnostics.llm_usage.header", default="LLM run usage:")]
     notices: list[Notice] = []
     if not report.has_run_data:
-        message = tr(
-            "cli.diagnostics.llm_usage.no_run_data",
-            default="No LLM run telemetry recorded yet. Run an LLM-assisted classification to populate it.",
-        )
-        lines.append(message)
-        notices.append(Notice(severity=NoticeSeverity.INFO, code="diagnostics.llm_usage.no_run_data", message=message))
+        no_run_data_notice = _llm_no_run_data_notice(code="diagnostics.llm_usage.no_run_data")
+        lines.append(no_run_data_notice.message)
+        notices.append(no_run_data_notice)
     else:
         for row in result.by_provider:
             lines.append(
@@ -455,7 +453,6 @@ def diagnostics_llm_usage(
                 )
 
     _emit_envelope(ctx, command="diagnostics.llm_usage", result=result, lines=lines, notices=notices)
-
 
 
 __all__ = [

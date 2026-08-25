@@ -13,12 +13,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....domain.filing_evidence import FilingEvidenceReference
 from .....domain.contribuyente.inventory import (
-    InventoryAcquisitionCompleteness,
-    InventoryAcquisitionCost,
-    InventoryAcquisitionEvidence,
-    InventoryAcquisitionEvidenceKind,
     InventoryLedger,
     InventoryLedgerError,
     MovementKind,
@@ -28,63 +23,13 @@ from .....domain.contribuyente.inventory import (
 from .....tests.secure_sql import TestRuntimeProfile
 from ...tests.runtime_profile_fixture import _runtime_profile
 from ..inventory import InventoryLedgerRepository, load_inventory, record_movement, save_inventory
+from ._inventory_acquisition_fixture import (
+    acquisition_for as _acquisition_for,
+)
 
 __all__ = ["_runtime_profile"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-
-def _ref(value: str) -> FilingEvidenceReference:
-    return FilingEvidenceReference(reference=value)
-
-
-def _acquisition_for(value: Decimal, *, iva_rate: Decimal, ratio: Decimal) -> InventoryAcquisitionCost:
-    """Return the complete acquisition cost a purchase movement now requires.
-
-    A purchase must carry consideration equal to its own value, IVA equal to its
-    own rate applied to that value, and a matching recoverability ratio -- the
-    record refuses any other combination. Every completeness attestation must
-    also resolve to a real evidence entry, so the two review references have
-    evidence rows of their own rather than naming documents that do not exist.
-    """
-    iva = (value * iva_rate / Decimal("100")).quantize(Decimal("0.01"))
-    return InventoryAcquisitionCost(
-        consideration_excluding_iva=value,
-        consideration_iva_amount=iva,
-        consideration_deductible_iva_ratio=ratio,
-        attributable_cost_components=(),
-        evidence=(
-            InventoryAcquisitionEvidence(
-                reference=_ref(_PURCHASE_INVOICE_REFERENCE),
-                evidence_kind=InventoryAcquisitionEvidenceKind.PURCHASE_INVOICE,
-                content_digest="a1" * 32,
-            ),
-            InventoryAcquisitionEvidence(
-                reference=_ref(_COST_REVIEW_REFERENCE),
-                evidence_kind=InventoryAcquisitionEvidenceKind.ATTRIBUTABLE_COST_REVIEW,
-                content_digest="a2" * 32,
-            ),
-            InventoryAcquisitionEvidence(
-                reference=_ref(_IVA_REVIEW_REFERENCE),
-                evidence_kind=InventoryAcquisitionEvidenceKind.IVA_RECOVERABILITY_REVIEW,
-                content_digest="a3" * 32,
-            ),
-        ),
-        completeness=InventoryAcquisitionCompleteness(
-            consideration_evidence=_ref(_PURCHASE_INVOICE_REFERENCE),
-            attributable_cost_review_evidence=_ref(_COST_REVIEW_REFERENCE),
-            iva_recoverability_review_evidence=_ref(_IVA_REVIEW_REFERENCE),
-        ),
-        directly_attributable_cost_total=Decimal("0.00"),
-        nonrecoverable_iva_included=Decimal("0.00"),
-        recoverable_iva_excluded=iva,
-        total_acquisition_cost=value,
-    )
-
-
-_PURCHASE_INVOICE_REFERENCE = "INVENTORY-PURCHASE-INVOICE"
-_COST_REVIEW_REFERENCE = "INVENTORY-ATTRIBUTABLE-COST-REVIEW"
-_IVA_REVIEW_REFERENCE = "INVENTORY-IVA-RECOVERABILITY-REVIEW"
 
 
 def _movement(kind: MovementKind, quantity: str, unit_cost: str, day: int) -> MovementRecord:

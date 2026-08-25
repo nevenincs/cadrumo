@@ -49,7 +49,3 @@ reason = "Modelo 303 applicability is defined by filing_schedules and orden_apli
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2026"]
 
-[revisions."2026-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
-reason = "Casilla numbering in Modelo 303 remains continuous without within-modelo renumbered casilla evolutions."
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2026"]

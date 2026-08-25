@@ -24,6 +24,7 @@ from ._errors import RegistryValidationError
 from ._ids import RevisionId
 from ._schema import (
     CasillaContinuidadEvolutionDefinition,
+    CasillaDefinition,
     ModeloDefinition,
     ModeloRevision,
 )
@@ -40,6 +41,7 @@ from ._validate_cross_revision_contiguity import strict_continuity_chain_contigu
 
 __all__ = (
     "CrossRevisionCasillaDriftSummary",
+    "declared_cross_revision_continuity_semantic_linkage_failures",
     "summarize_non_overlapping_cross_revision_casilla_drift",
     "validate_cross_revision_casilla_consistency",
 )
@@ -56,6 +58,70 @@ def validate_cross_revision_casilla_consistency(modelos: Iterable[ModeloDefiniti
         raise RegistryValidationError(
             "cross-revision casilla drift detected:\n" + "\n".join(f" - {failure}" for failure in failures),
         )
+
+
+def declared_cross_revision_continuity_semantic_linkage_failures(
+    modelos: Iterable[ModeloDefinition],
+) -> tuple[str, ...]:
+    """Report semantic-linkage gaps on chains that cross a real revision boundary.
+
+    The registry records an id as a continuity assertion, not as a label
+    heuristic. This audit consequently requires a semantic role for every
+    casilla on a chain that appears in two non-overlapping revisions. It only
+    derives the id from the role when that role is unique throughout that
+    chain; changed or ambiguous roles remain evidence questions rather than
+    being silently renamed.
+    """
+    failures: list[str] = []
+    for modelo in modelos:
+        casillas_by_continuidad_id: dict[str, list[tuple[ModeloRevision, CasillaDefinition]]] = defaultdict(list)
+        for revision in modelo.revisions.values():
+            for casilla in revision.casillas:
+                if casilla.continuidad_id is not None:
+                    casillas_by_continuidad_id[casilla.continuidad_id].append((revision, casilla))
+
+        for continuidad_id, occurrences in sorted(casillas_by_continuidad_id.items()):
+            chain_revisions = tuple(dict.fromkeys(revision.id for revision, _casilla in occurrences))
+            if not any(
+                not revisions_overlap(modelo.revisions[left_revision_id], modelo.revisions[right_revision_id])
+                for index, left_revision_id in enumerate(chain_revisions)
+                for right_revision_id in chain_revisions[index + 1 :]
+            ):
+                continue
+
+            missing_roles = [
+                (revision, casilla)
+                for revision, casilla in occurrences
+                if casilla.semantic_role is None
+            ]
+            for revision, casilla in missing_roles:
+                failures.append(
+                    "cross-revision continuity semantic linkage missing: "
+                    f"modelo {modelo.id} continuidad_id {continuidad_id!r} "
+                    f"revision {revision.id!r} casilla {casilla.id!r} has no semantic_role",
+                )
+            if missing_roles:
+                continue
+
+            semantic_roles = {casilla.semantic_role for _revision, casilla in occurrences}
+            if len(semantic_roles) != 1:
+                continue
+            semantic_role = semantic_roles.pop()
+            if any(
+                sum(casilla.semantic_role == semantic_role for casilla in revision.casillas) != 1
+                for revision_id in chain_revisions
+                for revision in (modelo.revisions[revision_id],)
+            ):
+                continue
+
+            expected_continuidad_id = semantic_role.lower().replace("_", "-")
+            if continuidad_id != expected_continuidad_id:
+                failures.append(
+                    "cross-revision continuity semantic linkage mismatch: "
+                    f"modelo {modelo.id} role-unique continuity chain {continuidad_id!r} "
+                    f"must equal semantic-role-derived id {expected_continuidad_id!r}",
+                )
+    return tuple(failures)
 
 
 def _validate_cross_revision_casilla_consistency(
@@ -134,20 +200,60 @@ def _validate_strict_cross_revision_casilla_continuity(
 
 
 def _validate_strict_continuity_evolution_references(modelo: ModeloDefinition) -> tuple[str, ...]:
-    """Validate declared strict continuity evolutions against real casilla surfaces."""
+    """Validate every declared continuity evolution against its real casilla surfaces.
+
+    Declaring an evolution is an authority assertion even when either endpoint
+    keeps advisory continuity validation.  Strictness still governs the
+    separate requirement to declare a retirement for a disappearing surface.
+    """
     continuidad_ids_by_revision = _continuidad_ids_by_revision(modelo)
     failures: list[str] = []
-    for declaring_revision_id, evolution in _iter_declared_continuity_evolutions(modelo):
+    declared_evolutions = _iter_declared_continuity_evolutions(modelo)
+    evolutions_by_boundary: dict[
+        tuple[str, RevisionId, RevisionId],
+        list[CasillaContinuidadEvolutionDefinition],
+    ] = defaultdict(list)
+    for _declaring_revision_id, evolution in declared_evolutions:
+        evolutions_by_boundary[(evolution.continuidad_id, evolution.from_revision, evolution.to_revision)].append(
+            evolution,
+        )
+    for (continuidad_id, from_revision, to_revision), evolutions in sorted(evolutions_by_boundary.items()):
+        if len(evolutions) > 1:
+            failures.append(
+                "continuity evolution duplicate: "
+                f"modelo {modelo.id} continuidad_id {continuidad_id!r} "
+                f"revisions {from_revision!r}->{to_revision!r} has overlapping declarations "
+                f"{tuple(sorted(evolution.id for evolution in evolutions))!r}",
+            )
+
+    for declaring_revision_id, evolution in declared_evolutions:
         revision_pair = _revision_pair_for_evolution(modelo, evolution)
         if revision_pair is None:
+            failures.append(
+                _format_unmatched_continuity_evolution_failure(
+                    modelo.id,
+                    declaring_revision_id,
+                    evolution,
+                    "evolution references a revision that the modelo does not declare",
+                ),
+            )
             continue
         left_revision, right_revision = revision_pair
-        if not _is_strict_non_overlapping_revision_pair(left_revision, right_revision):
-            continue
+        if declaring_revision_id != evolution.to_revision:
+            failures.append(
+                _format_unmatched_continuity_evolution_failure(
+                    modelo.id,
+                    declaring_revision_id,
+                    evolution,
+                    "evolution must be declared under its target revision",
+                ),
+            )
 
         left_ids = continuidad_ids_by_revision[left_revision.id]
         right_ids = continuidad_ids_by_revision[right_revision.id]
-        if evolution.continuidad_id not in left_ids and evolution.continuidad_id not in right_ids:
+        source_present = evolution.continuidad_id in left_ids
+        target_present = evolution.continuidad_id in right_ids
+        if not source_present and not target_present:
             failures.append(
                 _format_unmatched_continuity_evolution_failure(
                     modelo.id,
@@ -158,24 +264,43 @@ def _validate_strict_continuity_evolution_references(modelo: ModeloDefinition) -
             )
             continue
 
-        if evolution.evolution_kind != "retired":
+        if evolution.evolution_kind == "retired":
+            if not source_present:
+                failures.append(
+                    _format_unmatched_continuity_evolution_failure(
+                        modelo.id,
+                        declaring_revision_id,
+                        evolution,
+                        "retired evolution has no source casilla continuity id",
+                    ),
+                )
+            if target_present:
+                failures.append(
+                    _format_unmatched_continuity_evolution_failure(
+                        modelo.id,
+                        declaring_revision_id,
+                        evolution,
+                        "retired evolution target revision still declares the continuity id",
+                    ),
+                )
             continue
-        if evolution.continuidad_id not in left_ids:
+
+        if not source_present:
             failures.append(
                 _format_unmatched_continuity_evolution_failure(
                     modelo.id,
                     declaring_revision_id,
                     evolution,
-                    "retired evolution has no source casilla continuity id",
+                    "non-retired evolution has no source casilla continuity id",
                 ),
             )
-        if evolution.continuidad_id in right_ids:
+        if not target_present:
             failures.append(
                 _format_unmatched_continuity_evolution_failure(
                     modelo.id,
                     declaring_revision_id,
                     evolution,
-                    "retired evolution target revision still declares the continuity id",
+                    "non-retired evolution has no target casilla continuity id",
                 ),
             )
     return tuple(failures)

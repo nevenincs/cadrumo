@@ -33,6 +33,7 @@ from ...application.calculations import (
 from ...application.modelo import (
     ModeloCalculationRevisionSelector,
     ModeloVerifySelector,
+    calculated_m210_plazo_notice,
     file_modelo_revision,
     get_calculation_revision,
     get_work_unit,
@@ -256,6 +257,13 @@ def work_verify(
         ),
     ]
     notices = verification_report_notices(report)
+    plazo_notice = calculated_m210_plazo_notice(
+        work_unit=get_work_unit(selected_revision.work_unit_id),
+        revision=selected_revision,
+        workflow_profile=workflow_profile,
+    )
+    if plazo_notice is not None:
+        notices.append(plazo_notice)
     if already_verified:
         noop_message = tr(
             "cli.app.modelo.work.verify_idempotent_noop", calculation_revision_id=report.calculation_revision_id

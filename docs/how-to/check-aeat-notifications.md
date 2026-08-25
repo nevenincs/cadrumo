@@ -32,15 +32,15 @@ configured. Configure a provider first. See
 
 You need:
 - an [active profile](profile-setup.md#what-the-active-profile-means). Create
-  one non-interactively:
+  one at a terminal so you can record and verify its one-time recovery phrase:
 
   ```{cli-sequence} check-notifications-profile
-  :verify: Confirm a taxpayer profile can be created non-interactively.
+  :verify: Confirm profile creation requires the interactive recovery handoff and leaves a selected profile active.
   ```
 
 - the taxpayer's fiscal ID (generalized as NIF, CIF, DNI, NIE, or NII) saved in that profile
-- the master-key passphrase that protects your local store; the tool
-  prompts for it.
+- the profile passphrase that unwraps this profile's independent encryption
+  key; the tool prompts for it.
 - AEAT live-read authentication configured; see [Authenticate with AEAT](authenticate-with-aeat.md)
 
 ---

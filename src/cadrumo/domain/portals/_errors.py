@@ -13,11 +13,69 @@ failure modes surfaced to external callers:
 
 from __future__ import annotations
 
-from ...core.errors import CadrumoError, get_registered_error_code
+from collections.abc import Mapping
+from dataclasses import dataclass
+from enum import StrEnum
+
+from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ...core.errors import CadrumoError, TerminalPreconditionErrorMixin, get_registered_error_code
 
 
-class PortalRegistryError(CadrumoError):
-    """Base class for every error raised from :mod:`cadrumo.domain.portals`."""
+class PortalRegistryPrecondition(StrEnum):
+    """Closed failed-condition identities for portal registry refusals."""
+
+    PORTAL_REGISTERED = "portals.registry.portal.registered"
+    MODELO_CODE_RECOGNISED = "portals.registry.modelo_code.recognised"
+    INTEGRITY_VALID = "portals.registry.integrity.valid"
+
+
+class PortalRegistryInvariant(StrEnum):
+    """The internal portal-registry properties that must hold at assembly."""
+
+    REPLACED_BY_TARGET_REGISTERED = "replaced_by_target_registered"
+    PORTAL_ENTRY_UNIQUE = "portal_entry_unique"
+    PORTAL_ENUM_COVERAGE_COMPLETE = "portal_enum_coverage_complete"
+    ENTRY_PORTAL_MATCHES_MAPPING_KEY = "entry_portal_matches_mapping_key"
+    PORTAL_ENUM_CONSUMER_RESOLVES = "portal_enum_consumer_resolves"
+    PORTAL_ID_CONSUMER_RESOLVES = "portal_id_consumer_resolves"
+    REGISTRY_PORTAL_BINDINGS_AVAILABLE = "registry_portal_bindings_available"
+
+
+@dataclass(frozen=True)
+class PortalFailureClassification:
+    """Domain facts that the application boundary must project as a terminal refusal."""
+
+    condition: PortalRegistryPrecondition
+    facts: Mapping[str, str | int | bool]
+    provenance: ActionEvidenceProvenance
+    outcome: NoRecoveryOutcome
+
+
+class PortalRegistryError(TerminalPreconditionErrorMixin, CadrumoError):
+    """Base error carrying a domain classification and optional boundary verdict."""
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        portal_failure: PortalFailureClassification | None = None,
+        precondition_verdict: object | None = None,
+    ) -> None:
+        """Retain domain facts without constructing an application-owned verdict."""
+        super().__init__(
+            message=message,
+            context=context,
+            translated_message=translated_message,
+            precondition_verdict=precondition_verdict,
+        )
+        self._portal_failure = portal_failure
+
+    @property
+    def portal_failure(self) -> PortalFailureClassification | None:
+        """Return the domain-owned failure classification for a boundary to project."""
+        return self._portal_failure
 
 
 class UnknownPortalError(PortalRegistryError):
@@ -40,9 +98,16 @@ class UnknownPortalError(PortalRegistryError):
 
     def __init__(self, portal: str) -> None:
         """Initialise from the offending portal identifier alone."""
+        facts = {"portal": portal, "portal_registered": False}
         super().__init__(
-            context={"portal": portal},
+            context=facts,
             translated_message=get_registered_error_code(type(self)).message_key,
+            portal_failure=PortalFailureClassification(
+                condition=PortalRegistryPrecondition.PORTAL_REGISTERED,
+                facts=facts,
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            ),
         )
         self.portal = portal
 
@@ -65,9 +130,48 @@ class PortalValidationError(PortalRegistryError, ValueError):
     """
 
 
+def unknown_modelo_error(modelo: str) -> PortalValidationError:
+    """Return the terminal refusal for an invalid portal-list modelo request."""
+    facts = {"modelo": modelo, "modelo_code_recognised": False}
+    return PortalValidationError(
+        context=facts,
+        translated_message=get_registered_error_code(PortalValidationError).message_key,
+        portal_failure=PortalFailureClassification(
+            condition=PortalRegistryPrecondition.MODELO_CODE_RECOGNISED,
+            facts=facts,
+            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        ),
+    )
+
+
+def portal_integrity_error(
+    invariant: PortalRegistryInvariant,
+    *,
+    facts: Mapping[str, str | int | bool],
+) -> PortalIntegrityError:
+    """Return a redacted structural-invariant refusal for portal assembly."""
+    context = {"invariant": invariant.value, **facts}
+    return PortalIntegrityError(
+        context=context,
+        translated_message=get_registered_error_code(PortalIntegrityError).message_key,
+        portal_failure=PortalFailureClassification(
+            condition=PortalRegistryPrecondition.INTEGRITY_VALID,
+            facts=context,
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+            outcome=NoRecoveryOutcome.SAFETY,
+        ),
+    )
+
+
 __all__ = [
+    "PortalFailureClassification",
     "PortalIntegrityError",
     "PortalRegistryError",
+    "PortalRegistryInvariant",
+    "PortalRegistryPrecondition",
     "PortalValidationError",
     "UnknownPortalError",
+    "portal_integrity_error",
+    "unknown_modelo_error",
 ]

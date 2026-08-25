@@ -3,5 +3,5 @@
 @blocked interactive-tty Profile creation must receive and verify the recovery phrase through an interactive terminal.
 @step Confirm a profile is active before configuring AEAT authentication.
 @result aeat --format json config profile list
-@expect result.count == 1
+@expect result.profiles[0].active == true
 @expect exit_code == 0

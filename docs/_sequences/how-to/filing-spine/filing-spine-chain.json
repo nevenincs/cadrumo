@@ -293,7 +293,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88",
+          "calculation_revision_id": "c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -413,7 +413,6 @@
             "98": "0",
             "99": "0",
             "decl.ejercicio": "2026",
-            "decl.periodo": "0",
             "iva.autoconsumo.promotor.base": "0",
             "iva.autoconsumo.promotor.cuota": "0.00",
             "iva.autorepercutido.interior.deducible": "0",
@@ -2982,7 +2981,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "0"
+              "value": "1T"
             },
             {
               "absent_by_design": false,
@@ -3793,30 +3792,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88`.",
-          "source_provenance": [
-            {
-              "binding_source": "ledger_iva_aggregation",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "source_kind": "ledger_iva_aggregation",
-              "source_ref": "transaction:71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
-            },
-            {
-              "binding_source": "ledger_iva_aggregation",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "source_kind": "ledger_iva_aggregation",
-              "source_ref": "transaction:e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
-            },
-            {
-              "binding_source": "prorrata_regularizacion",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "source_kind": "prorrata_regularizacion",
-              "source_ref": "303:2026:1T,2T,3T,4T:prorrata-current-year-values"
-            }
-          ],
+          "saved_confirmation": "Saved as draft calculation revision c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
@@ -3905,7 +3881,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88",
+          "calculation_revision_id": "c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1",
           "completeness_status": "complete",
           "findings": [
             {
@@ -3963,7 +3939,7 @@
           "operation": "modelo.work.verify",
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "ad42793fd3e8c9d909427312a5a688838f8146f88b3cf40993813ce49ac2d693",
+          "verification_report_id": "a575bc9c279f26b88706a8d6bff90dc95e7bf394e28f46c64201daa856a536f8",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -3995,16 +3971,15 @@
       "captures": [],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
-        "command": "app.modelo.export",
+        "command": "modelo.export",
         "error": {
           "action": null,
-          "category": "REFUSED",
-          "code": "REFUSED_MODELO_EXPORT_UNSUPPORTED",
+          "category": "FAIL",
+          "code": "FAIL_MODELO_EXPORT",
           "context": {
-            "modelo": "303",
-            "reason": "the registry snapshot has no complete export_layouts definition"
+            "calculation_revision_id": "c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1"
           },
-          "message": "Modelo 303 cannot be exported to fichero-BOE because the registry snapshot has no complete export_layouts definition. Calculation, verification, and local filing records may still exist, but this command cannot produce an AEAT upload file for this modelo and does not certify BOE/export correctness.",
+          "message": "Modelo 303 export requires explicit product/software identity authority",
           "retryable": false,
           "runbook_id": null,
           "trace_id": null
@@ -4014,7 +3989,7 @@
         "status": "error"
       },
       "envelope_source": "stderr",
-      "exit_code": 2,
+      "exit_code": 5,
       "kind": "result",
       "stderr_text": null,
       "text": null

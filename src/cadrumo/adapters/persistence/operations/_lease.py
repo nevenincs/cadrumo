@@ -9,17 +9,17 @@ from typing import Literal, override
 
 from pydantic import BaseModel, model_validator
 
-from ....application.operations import (
-    JournalRepositoryBase,
+from ....application import JournalRepositoryBase
+from ....application.operations._journal import OperationLeaseRepository
+from ....application.operations._leases import (
     OperationConflictScopeReference,
-    OperationId,
     OperationLeaseDisposition,
     OperationLeaseObservation,
     OperationLeaseObservationDisposition,
-    OperationLeaseRepository,
     OperationLeaseResult,
     OperationOwnerLease,
 )
+from ....application.operations._models import OperationId
 from ....core import STRICT_FROZEN_CONFIG, StorageCategory, exclusive_file_lock, is_link_like, storage_location
 from ....core.time import validate_utc_aware
 from ..storage import RepositoryError

@@ -88,24 +88,23 @@ def _require_model_config(
         )
     decorators = model_type.__pydantic_decorators__
     coercive_field_validators = tuple(
-        validator
-        for validator in decorators.field_validators.values()
-        if validator.info.mode != "after"
+        validator for validator in decorators.field_validators.values() if validator.info.mode != "after"
     )
     coercive_model_validators = tuple(
-        validator
-        for validator in decorators.model_validators.values()
-        if validator.info.mode != "after"
+        validator for validator in decorators.model_validators.values() if validator.info.mode != "after"
     )
     if coercive_field_validators or coercive_model_validators:
         raise ValueError(f"operation {path} model must not declare coercive before, plain, or wrap validators")
     if decorators.field_serializers or decorators.model_serializers:
         raise ValueError(f"operation {path} model must not declare serializers that drift from validation schema")
-    if require_validated_defaults and any(
-        not field.is_required() for field in model_type.model_fields.values()
-    ) and config.get(
-        "validate_default",
-    ) is not True:
+    if (
+        require_validated_defaults
+        and any(not field.is_required() for field in model_type.model_fields.values())
+        and config.get(
+            "validate_default",
+        )
+        is not True
+    ):
         raise ValueError(f"operation {path} model with defaults must set validate_default=True")
 
 
@@ -138,9 +137,7 @@ def _require_nonstructural_json_schema_extra(extra: object, *, path: str) -> Non
         raise ValueError(f"operation {path} must not use callable JSON schema customization")
     typed_extra = cast(dict[object, object], extra)
     unsupported = {
-        key
-        for key in typed_extra
-        if not isinstance(key, str) or key not in _NONSTRUCTURAL_JSON_SCHEMA_EXTRA_KEYS
+        key for key in typed_extra if not isinstance(key, str) or key not in _NONSTRUCTURAL_JSON_SCHEMA_EXTRA_KEYS
     }
     if unsupported:
         raise ValueError(f"operation {path} JSON schema extras must be nonstructural annotations only")

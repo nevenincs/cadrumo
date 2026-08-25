@@ -302,6 +302,7 @@ capability_locators = [
 capability_ids = ["row_assembler:per_gasto193_contribuyente"]
 advisory_destination_refs = ["modelo:193:rows:gasto-contributor"]
 registry_destination_candidates = [
+  { kind = "binding_source", modelo_id = "193", revision_id = "2024", filing_year = 2024, period = "2024 0A", source_kind = "gasto193_contributor" },
   { kind = "binding_source", modelo_id = "193", revision_id = "2025-y-siguientes", filing_year = 2025, period = "2025 0A", source_kind = "gasto193_contributor" },
 ]
 

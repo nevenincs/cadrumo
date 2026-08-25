@@ -14,12 +14,11 @@ from ....core import OperationEffect, OperationLifecycle, OperationTerminalCondi
 from ....domain.buckets import BucketEventType
 from ....tests import FIXTURES_DIR
 from ...operations import (
-    OperationApplyResponse,
-    OperationRejectResponse,
     OperationRequest,
     OperationTerminalReceipt,
-    operation_conflict_scope_reference,
 )
+from ...operations._interactions import OperationApplyResponse, OperationRejectResponse
+from ...operations._leases import operation_conflict_scope_reference
 from .._capsule_record import ProfileRecordStore
 from .._censal_operation import (
     CENSAL_OPERATION_DEFINITION,
@@ -36,6 +35,7 @@ from .test_censal_operation_executor import (
     _NOW,
     _RESPONSE_TOKEN,
     _payload,
+    _start,
     _subject,
     _supervisor,
     _wait_for_phase,
@@ -197,7 +197,7 @@ def test_censal_operation_exact_apply_matrix_detaches_resumes_and_cleans_up(
 
         async def run():
             operation_id = await owner.submit(request, operation_id="3" * 64)
-            waiting = await owner.start(operation_id)
+            waiting = await _start(owner, operation_id)
             assert waiting.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION
             assert waiting.effect is OperationEffect.NONE
             assert ProfileRecordRepository.for_current_session(profile_id).load(profile_id) == before
@@ -274,7 +274,7 @@ def test_censal_operation_reject_and_stale_paths_never_apply_reviewed_effects(tm
                 token="7" * 64,
             )
             operation_id = await supervisor.submit(_request(profile_id, frozenset(_PATHS)), operation_id="8" * 64)
-            waiting = await supervisor.start(operation_id)
+            waiting = await _start(supervisor, operation_id)
             pending = waiting.pending_interaction
             assert pending is not None
             await supervisor.respond(
@@ -321,7 +321,7 @@ def test_censal_operation_reject_and_stale_paths_never_apply_reviewed_effects(tm
                 token="a" * 64,
             )
             operation_id = await supervisor.submit(_request(profile_id, frozenset(_PATHS)), operation_id="b" * 64)
-            waiting = await supervisor.start(operation_id)
+            waiting = await _start(supervisor, operation_id)
             pending = waiting.pending_interaction
             assert pending is not None
             await supervisor.respond(_apply_response(operation_id, pending))
@@ -353,7 +353,7 @@ def test_censal_operation_detach_takeover_reuses_operand_and_releases_each_owner
 
         async def run() -> None:
             operation_id = await owner.submit(_request(profile_id, frozenset(_PATHS)), operation_id="c" * 64)
-            waiting = await owner.start(operation_id)
+            waiting = await _start(owner, operation_id)
             assert waiting.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION
             assert waiting.effect is OperationEffect.NONE
             assert acquisition.calls == 1
@@ -435,7 +435,7 @@ def test_censal_operation_cancellation_before_irreversible_entry_cleans_up_witho
 
         async def run() -> None:
             operation_id = await supervisor.submit(_request(profile_id, frozenset(_PATHS)), operation_id="e" * 64)
-            waiting = await supervisor.start(operation_id)
+            waiting = await _start(supervisor, operation_id)
             pending = waiting.pending_interaction
             assert pending is not None
             await supervisor.respond(_apply_response(operation_id, pending))

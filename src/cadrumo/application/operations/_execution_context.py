@@ -111,9 +111,7 @@ class DefinitionBoundContext:
         resources: dict[OperationId, list[AsyncCloseable]],
         advance: Callable[..., Awaitable[OperationPersistedSnapshot]],
         acknowledge_cancellation: Callable[[OperationPersistedSnapshot], Awaitable[OperationPersistedSnapshot]],
-        set_cancellation_deferred: Callable[
-            [OperationPersistedSnapshot, bool], Awaitable[OperationPersistedSnapshot]
-        ],
+        set_cancellation_deferred: Callable[[OperationPersistedSnapshot, bool], Awaitable[OperationPersistedSnapshot]],
     ) -> None:
         self.registry = registry
         self.clock = clock

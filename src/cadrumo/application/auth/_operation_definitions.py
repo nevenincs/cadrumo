@@ -7,10 +7,11 @@ from datetime import timedelta
 from pathlib import Path
 from uuid import UUID
 
-from pydantic import BaseModel, SecretStr
+from pydantic import BaseModel, ConfigDict, SecretStr
 
 from ...core import (
     STRICT_FROZEN_CONFIG,
+    AuthProviderKind,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -19,6 +20,7 @@ from ...core import (
     OperationInteractionKind,
     require_active_bucket_id,
 )
+from ...core.time import now
 from ..operations import (
     CredentialFreeOperationRequest,
     OperationBaselinePolicy,
@@ -29,6 +31,7 @@ from ..operations import (
     OperationExecutorContext,
     OperationExecutorFactory,
     OperationFrontendProjection,
+    OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationReplayPolicy,
     OperationRequest,
@@ -50,6 +53,7 @@ AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID = "auth.session.acquire"
 AUTH_LOGOUT_OPERATION_DEFINITION_ID = "auth.session.logout"
 AUTH_RESET_OPERATION_DEFINITION_ID = "auth.session.reset"
 PROFILE_PASSPHRASE_ROTATION_OPERATION_DEFINITION_ID = "auth.profile.passphrase-rotate"  # noqa: S105
+_PUBLIC_REQUEST_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
 
 class ProfileLoginOperationRequest(CredentialFreeOperationRequest):
@@ -57,24 +61,24 @@ class ProfileLoginOperationRequest(CredentialFreeOperationRequest):
 
 
 class AuthConfigureOperationRequest(BaseModel):
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = _PUBLIC_REQUEST_CONFIG
 
-    provider: str
+    provider: AuthProviderKind
     certificate_path: Path | None = None
 
 
 class AuthSessionAcquireOperationRequest(BaseModel):
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = _PUBLIC_REQUEST_CONFIG
 
-    provider: str | None = None
+    provider: AuthProviderKind | None = None
     fresh: bool = False
     reset_lock: bool = False
 
 
 class AuthTeardownOperationRequest(BaseModel):
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = _PUBLIC_REQUEST_CONFIG
 
-    provider: str | None = None
+    provider: AuthProviderKind | None = None
     all_providers: bool = False
 
 
@@ -98,12 +102,12 @@ def _profile_subject(profile_id: UUID) -> str:
     return f"profile:{profile_id}"
 
 
-def _require_profile_subject(request: OperationRequest[BaseModel], profile_id: UUID) -> None:
+def _require_profile_subject[PayloadT: BaseModel](request: OperationRequest[PayloadT], profile_id: UUID) -> None:
     if request.subject_ref != _profile_subject(profile_id):
         raise ValueError("auth operation subject does not match its exact profile")
 
 
-def _require_active_profile_subject(request: OperationRequest[BaseModel]) -> str:
+def _require_active_profile_subject[PayloadT: BaseModel](request: OperationRequest[PayloadT]) -> str:
     """Bind active-profile authorities to the operation's exact profile subject."""
     try:
         profile_id = UUID(request.subject_ref.removeprefix("profile:"))
@@ -123,7 +127,7 @@ async def _result_reference(result: BaseModel, context: OperationExecutorContext
         PROFILE_PASSPHRASE_ROTATION_OPERATION_DEFINITION_ID,
     }:
         return context.identity.subject_ref
-    return await context.operands.put(result, written_at=context.snapshot.updated_at)
+    return await context.operands.put(result, written_at=now())
 
 
 class ProfileLoginOperationExecutor:
@@ -189,7 +193,10 @@ class AuthConfigureOperationExecutor:
         await context.events.phase("auth.configure.preflight")
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase("auth.configure.execute")
-        result = configure_operator_auth(request.payload.provider, certificate_path=request.payload.certificate_path)
+        result = configure_operator_auth(
+            request.payload.provider.value,
+            certificate_path=request.payload.certificate_path,
+        )
         await context.events.effect(OperationEffect.UPDATED)
         await context.events.phase("auth.configure.settlement")
         return await _result_reference(result, context)
@@ -206,7 +213,7 @@ class AuthSessionAcquireOperationExecutor:
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase("auth.acquire.execute")
         result = await login_operator_auth(
-            request.payload.provider,
+            request.payload.provider.value if request.payload.provider is not None else None,
             fresh=request.payload.fresh,
             reset_lock=request.payload.reset_lock,
         )
@@ -226,7 +233,7 @@ class AuthLogoutOperationExecutor:
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase("auth.logout.execute")
         result = logout_operator_auth(
-            provider=request.payload.provider,
+            provider=request.payload.provider.value if request.payload.provider is not None else None,
             all_providers=request.payload.all_providers,
             target_bucket_id=target_bucket_id,
         )
@@ -247,7 +254,7 @@ class AuthResetOperationExecutor:
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase("auth.reset.execute")
         result = reset_operator_auth(
-            provider=request.payload.provider,
+            provider=request.payload.provider.value if request.payload.provider is not None else None,
             all_providers=request.payload.all_providers,
             target_bucket_id=target_bucket_id,
         )
@@ -300,7 +307,9 @@ def _definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        permitted_frontends=frozenset(
+            {OperationFrontendProjection.CLI, OperationFrontendProjection.MCP, OperationFrontendProjection.TUI}
+        ),
         ephemeral_secret=(
             None
             if secret_kind is None
@@ -369,4 +378,26 @@ def build_auth_operation_definitions() -> tuple[OperationDefinition, ...]:
     return AUTH_OPERATION_DEFINITIONS
 
 
-__all__ = ["AUTH_OPERATION_DEFINITIONS", "build_auth_operation_definitions"]
+def build_auth_operation_registrations(
+    definitions: tuple[OperationDefinition, ...],
+) -> tuple[OperationPublicDefinitionRegistrationV1, ...]:
+    """Bind the auth-owned definitions to their stable public schemas."""
+    return tuple(
+        sorted(
+            (
+                OperationPublicDefinitionRegistrationV1.compose_request_only(
+                    definition=definition,
+                    request_schema_id=f"{definition.definition_id}.request",
+                )
+                for definition in definitions
+            ),
+            key=lambda item: item.contract.definition_id,
+        )
+    )
+
+
+__all__ = [
+    "AUTH_OPERATION_DEFINITIONS",
+    "build_auth_operation_definitions",
+    "build_auth_operation_registrations",
+]

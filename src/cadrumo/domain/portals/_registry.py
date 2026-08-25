@@ -17,7 +17,7 @@ from ...core.logging import get_logger
 from ...core.resources import resources
 from ...domain.calculations.registry import RevisionId
 from ..calculations.registry import RegistryError, RegistrySnapshotError
-from ..modelos import ModeloCode
+from ..modelos import ModeloCode, ModeloValidationError
 from ._categories import PortalCategory
 from ._codes import Portal
 from ._entries import (
@@ -63,7 +63,12 @@ from ._entries import (
     portal_renta_web_borrador,
     portal_sede_root,
 )
-from ._errors import PortalIntegrityError, PortalValidationError, UnknownPortalError
+from ._errors import (
+    PortalRegistryInvariant,
+    UnknownPortalError,
+    portal_integrity_error,
+    unknown_modelo_error,
+)
 from ._metadata import PortalMetadata
 
 _LOG = get_logger(__name__)
@@ -142,7 +147,14 @@ def _check_replaced_by(entries: Mapping[Portal, PortalMetadata]) -> None:
                 portal.value,
                 target.value,
             )
-            raise PortalIntegrityError(f"portal {portal.value} replaced_by {target.value} which is not in the registry")
+            raise portal_integrity_error(
+                PortalRegistryInvariant.REPLACED_BY_TARGET_REGISTERED,
+                facts={
+                    "portal": portal.value,
+                    "replaced_by": target.value,
+                    "target_registered": False,
+                },
+            )
 
 
 def _finalise_registry(
@@ -165,18 +177,27 @@ def _finalise_registry(
     for entry in entries:
         if entry.portal in materialised:
             _LOG.error("portal registry: duplicate entry for portal %s", entry.portal.value)
-            raise PortalIntegrityError(f"duplicate registry entry for portal {entry.portal.value}")
+            raise portal_integrity_error(
+                PortalRegistryInvariant.PORTAL_ENTRY_UNIQUE,
+                facts={"portal": entry.portal.value, "entry_unique": False},
+            )
         materialised[entry.portal] = entry
     missing = set(Portal) - set(materialised)
     if missing:
         missing_values = sorted(p.value for p in missing)
         _LOG.error("portal registry: missing entries for portals %s", missing_values)
-        raise PortalIntegrityError(f"registry is missing entries for portals: {missing_values}")
+        raise portal_integrity_error(
+            PortalRegistryInvariant.PORTAL_ENUM_COVERAGE_COMPLETE,
+            facts={"missing_count": len(missing_values), "enum_coverage_complete": False},
+        )
     extra = set(materialised) - set(Portal)
     if extra:
         extra_values = sorted(p.value for p in extra)
         _LOG.error("portal registry: unknown portals in entries %s", extra_values)
-        raise PortalIntegrityError(f"registry contains unknown portals: {extra_values}")
+        raise portal_integrity_error(
+            PortalRegistryInvariant.PORTAL_ENUM_COVERAGE_COMPLETE,
+            facts={"extra_count": len(extra_values), "enum_coverage_complete": False},
+        )
     for key, metadata in materialised.items():
         if metadata.portal is not key:
             _LOG.error(
@@ -184,7 +205,14 @@ def _finalise_registry(
                 key.value,
                 metadata.portal.value,
             )
-            raise PortalIntegrityError(f"entry for {key.value} has mismatched portal {metadata.portal.value}")
+            raise portal_integrity_error(
+                PortalRegistryInvariant.ENTRY_PORTAL_MATCHES_MAPPING_KEY,
+                facts={
+                    "mapping_portal": key.value,
+                    "entry_portal": metadata.portal.value,
+                    "portal_matches_mapping_key": False,
+                },
+            )
     _check_replaced_by(materialised)
     _LOG.debug("loaded %d portal entries", len(materialised))
     return MappingProxyType(materialised)
@@ -201,15 +229,25 @@ def _portal_consumer_binding(modelo_id: str, revision_id: RevisionId, consumer: 
             try:
                 return Portal[member_name]
             except KeyError as exc:
-                raise PortalIntegrityError(
-                    f"modelo {modelo_id} revision {revision_id} binds unknown portal enum {consumer!r}",
+                raise portal_integrity_error(
+                    PortalRegistryInvariant.PORTAL_ENUM_CONSUMER_RESOLVES,
+                    facts={
+                        "modelo": modelo_id,
+                        "revision_id": str(revision_id),
+                        "portal_enum_consumer_resolves": False,
+                    },
                 ) from exc
     if consumer.startswith("portal_"):
         try:
             return Portal(consumer)
         except ValueError as exc:
-            raise PortalIntegrityError(
-                f"modelo {modelo_id} revision {revision_id} binds unknown portal {consumer!r}",
+            raise portal_integrity_error(
+                PortalRegistryInvariant.PORTAL_ID_CONSUMER_RESOLVES,
+                facts={
+                    "modelo": modelo_id,
+                    "revision_id": str(revision_id),
+                    "portal_id_consumer_resolves": False,
+                },
             ) from exc
     return None
 
@@ -264,7 +302,14 @@ def _registry_portal_bindings_for_modelo(code: ModeloCode) -> frozenset[Portal]:
                     bound.add(portal)
         return frozenset(bound)
     except RegistryError as exc:
-        raise PortalIntegrityError(f"registry-backed portal lookup failed: {exc}") from exc
+        raise portal_integrity_error(
+            PortalRegistryInvariant.REGISTRY_PORTAL_BINDINGS_AVAILABLE,
+            facts={
+                "modelo": str(code),
+                "registry_portal_bindings_available": False,
+                "registry_error_type": type(exc).__name__,
+            },
+        ) from exc
 
 
 def portals_for_modelo(code: ModeloCode | str) -> tuple[PortalMetadata, ...]:
@@ -291,8 +336,8 @@ def portals_for_modelo(code: ModeloCode | str) -> tuple[PortalMetadata, ...]:
     else:
         try:
             member = ModeloCode(code)
-        except KeyError as exc:
-            raise PortalValidationError(f"unknown modelo code: {code!r}") from exc
+        except ModeloValidationError as exc:
+            raise unknown_modelo_error(str(code)) from exc
     bound_portals = _registry_portal_bindings_for_modelo(member)
     matches = [
         metadata

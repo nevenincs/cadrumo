@@ -26,14 +26,13 @@ from ....domain.user_profile import UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...operations import (
-    OperationApplyResponse,
     OperationExecutorFactory,
     OperationRegistry,
-    OperationRejectResponse,
     OperationRequest,
-    OperationSupervisor,
     operation_public_schema_reference,
 )
+from ...operations._interactions import OperationApplyResponse, OperationRejectResponse
+from ...operations._supervisor import OperationSupervisor
 from .._capsule_record import ProfileRecordSession, ProfileRecordStore
 from .._censal_observation import CensalObservation, CensalObservationAddress, CensalObservationIdentity
 from .._censal_operation import (
@@ -46,6 +45,7 @@ from .._censal_operation import (
     CensalProfileBaseline,
     CensalReviewedFieldIntent,
     CensalReviewedOperand,
+    build_censal_operation_registration,
 )
 from .._cotejo_apply import apply_cotejo
 from .._custody_ports import profile_custody_secure_object_repository
@@ -57,6 +57,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 _NOW = datetime(2026, 8, 24, 18, tzinfo=UTC)
 _PASSPHRASE = "censal-operation-executor-passphrase"  # noqa: S105 - synthetic fixture
 _RESPONSE_TOKEN = "a" * 64
+
+
 @contextmanager
 def _subject(tmp_path: Path) -> Generator[tuple[str, object, ProfileRecordSession]]:
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
@@ -112,7 +114,6 @@ def _payload(profile_id: str) -> CensalOperationRequest:
                 "contact.fiscal_address_cadastral_reference",
             )
         ),
-        response_token=_RESPONSE_TOKEN,
     )
 
 
@@ -137,7 +138,10 @@ def _supervisor(
     )
     journal = OperationJournalRepository(storage_root=root)
     return OperationSupervisor(
-        registry=OperationRegistry(definitions=(definition,)),
+        registry=OperationRegistry(
+            definitions=(definition,),
+            public_registrations=(build_censal_operation_registration(definition),),
+        ),
         journal=journal,
         event_stream=journal,
         leases=OperationLeaseFilesystemRepository(storage_root=root),
@@ -148,6 +152,7 @@ def _supervisor(
         lease_duration=timedelta(minutes=1),
         execution_timeout=timedelta(minutes=5),
         cleanup_timeout=timedelta(minutes=1),
+        response_token_factory=lambda: _RESPONSE_TOKEN,
     )
 
 
@@ -158,6 +163,10 @@ async def _wait_for_phase(supervisor: OperationSupervisor, operation_id: str, ph
             return snapshot
         await asyncio.sleep(0)
     raise AssertionError(f"operation did not reach {phase}")
+
+
+async def _start(supervisor: OperationSupervisor, operation_id: str):
+    return await supervisor.start(operation_id)
 
 
 def test_censal_executor_acquires_once_recovers_review_and_applies_exact_operand(tmp_path: Path) -> None:
@@ -183,10 +192,11 @@ def test_censal_executor_acquires_once_recovers_review_and_applies_exact_operand
             subject_ref=profile_id,
             payload=_payload(profile_id),
         )
+        assert "response_token" not in request.payload.model_dump()
 
         async def run() -> None:
             operation_id = await owner.submit(request, operation_id="3" * 64)
-            waiting = await owner.start(operation_id)
+            waiting = await _start(owner, operation_id)
             assert waiting.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION
             assert waiting.effect is OperationEffect.NONE
             pending = waiting.pending_interaction
@@ -230,6 +240,9 @@ def test_censal_executor_acquires_once_recovers_review_and_applies_exact_operand
             assert acquisitions == 1
 
         asyncio.run(run())
+        assert all(
+            _RESPONSE_TOKEN.encode() not in path.read_bytes() for path in durable_root.rglob("*") if path.is_file()
+        )
         record = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
         assert record.record_revision == request.payload.baseline.record_revision + 1
 
@@ -256,7 +269,7 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
                 payload=_payload(profile_id),
             )
             operation_id = await supervisor.submit(request, operation_id="8" * 64)
-            waiting = await supervisor.start(operation_id)
+            waiting = await _start(supervisor, operation_id)
             pending = waiting.pending_interaction
             assert pending is not None
             await supervisor.respond(
@@ -297,7 +310,7 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
                 payload=_payload(profile_id),
             )
             operation_id = await supervisor.submit(request, operation_id="f" * 64)
-            waiting = await supervisor.start(operation_id)
+            waiting = await _start(supervisor, operation_id)
             pending = waiting.pending_interaction
             assert pending is not None
             await supervisor.respond(
@@ -342,7 +355,7 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
                 payload=_payload(profile_id),
             )
             operation_id = await supervisor.submit(request, operation_id="c" * 64)
-            waiting = await supervisor.start(operation_id)
+            waiting = await _start(supervisor, operation_id)
             pending = waiting.pending_interaction
             assert pending is not None
             await supervisor.respond(
@@ -402,7 +415,7 @@ def test_censal_executor_cancellation_before_irreversible_entry_keeps_none_and_w
 
         async def run() -> None:
             operation_id = await supervisor.submit(request, operation_id="3" * 64)
-            waiting = await supervisor.start(operation_id)
+            waiting = await _start(supervisor, operation_id)
             pending = waiting.pending_interaction
             assert pending is not None
             await supervisor.respond(

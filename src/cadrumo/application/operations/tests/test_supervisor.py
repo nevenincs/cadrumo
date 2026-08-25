@@ -29,54 +29,54 @@ from ....core.errors import CoreError, get_registered_error_code
 from ....tests.aeat_literal_fixtures import REDACTION_TOKEN_QUERY_URL_CANARY
 from ....tests.secure_sql import isolated_ephemeral_secure_sql, isolated_runtime_profile
 from .. import (
-    OperationApplyResponse,
     OperationBaselinePolicy,
     OperationCancellation,
     OperationCapabilities,
     OperationClosePolicy,
     OperationConflictScope,
-    OperationConsumedInteraction,
     OperationDeadline,
-    OperationDeclarationError,
     OperationDefinition,
-    OperationDiagnosticEvent,
     OperationDurability,
     OperationEffect,
-    OperationExecutor,
-    OperationExecutorContext,
     OperationExecutorFactory,
     OperationFrontendProjection,
     OperationIdentity,
     OperationInteractionKind,
-    OperationInteractionRequest,
-    OperationLeaseDisposition,
     OperationLifecycle,
-    OperationNoticeEvent,
     OperationObservationRequestV1,
     OperationObservationService,
     OperationObservationSuccessV1,
     OperationOwnedResource,
-    OperationOwnerLease,
-    OperationPendingInteraction,
-    OperationPersistedSnapshot,
     OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationEvent,
     OperationReconciliationOutcome,
     OperationReconciliationPolicy,
     OperationRegistry,
-    OperationRejectResponse,
     OperationReplayPolicy,
     OperationRequest,
     OperationRequestStoragePolicy,
     OperationSchemaBindingV1,
-    OperationSecureReferenceStore,
     OperationSensitiveInputPolicy,
-    OperationSupervisor,
     OperationTerminalCondition,
-    OperationTerminalEvent,
     OperationTerminalReceipt,
-    operation_conflict_scope_reference,
 )
+from .._events import (
+    OperationDiagnosticEvent,
+    OperationNoticeEvent,
+    OperationReconciliationEvent,
+    OperationTerminalEvent,
+)
+from .._execution_context import OperationDeclarationError
+from .._executor import OperationExecutor, OperationExecutorContext
+from .._interactions import (
+    OperationApplyResponse,
+    OperationConsumedInteraction,
+    OperationInteractionRequest,
+    OperationPendingInteraction,
+    OperationRejectResponse,
+)
+from .._journal import OperationPersistedSnapshot, OperationSecureReferenceStore
+from .._leases import OperationLeaseDisposition, OperationOwnerLease, operation_conflict_scope_reference
+from .._supervisor import OperationSupervisor
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -144,18 +144,14 @@ class DurableContinuationExecutor:
     ) -> str | None:
         del request
         type(self).acquisitions += 1
-        interaction = OperationInteractionRequest(
+        await context.interactions.publish_review(
             interaction_id="f" * 64,
             identity=context.identity,
             revision=context.revision + 1,
-            kind=OperationInteractionKind.REVIEW,
             presentation_code="operation.review.ready",
             response_schema_ref="schema:operation-review",
             continuation_digest=_CONTINUATION_DIGEST,
-        )
-        await context.interactions.publish_review(
-            request=interaction,
-            response_token=_RESPONSE_TOKEN,
+            expires_at=None,
             reviewed_operand=ReviewedOperand(observation="encrypted post-submission observation"),
             baseline_digest=_BASELINE_DIGEST,
             proposed_effect_digest=_PROPOSED_EFFECT_DIGEST,
@@ -922,6 +918,7 @@ def _supervisor(
         lease_duration=lease_duration,
         execution_timeout=execution_timeout,
         cleanup_timeout=cleanup_timeout,
+        response_token_factory=lambda: _RESPONSE_TOKEN,
     )
 
 

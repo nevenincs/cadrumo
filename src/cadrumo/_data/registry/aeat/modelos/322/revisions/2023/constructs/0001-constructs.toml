@@ -12,6 +12,8 @@ source_refs = [
     "aeat-dr-322-2023",
     "aeat-modelo-322-procedure",
     "boe-modelo-322-2007-form",
+    "aeat-calendario-contribuyente-2023",
+    "aeat-calendario-contribuyente-2024",
 ]
 casilla_ids = [
     "iva.repercutido.general",
@@ -55,6 +57,18 @@ application_links = [
 ]
 filing_schedules = ["modelo-322-mensual"]
 deadline_windows = [
+    "modelo-322-2023-01",
+    "modelo-322-2023-02",
+    "modelo-322-2023-03",
+    "modelo-322-2023-04",
+    "modelo-322-2023-05",
+    "modelo-322-2023-06",
+    "modelo-322-2023-07",
+    "modelo-322-2023-08",
+    "modelo-322-2023-09",
+    "modelo-322-2023-10",
+    "modelo-322-2023-11",
+    "modelo-322-2023-12",
 ]
 
 # Calculation-completeness manifest for revision 2008-2025: the

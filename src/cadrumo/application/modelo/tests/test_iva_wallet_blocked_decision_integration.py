@@ -35,6 +35,17 @@ from .test_iva_wallet_engine_integration import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+#: The blocked-decision reasons the refusal carries, keyed by the divergence
+#: the decision reports. Both wallet directions share one reason: the
+#: taxonomy distinguishes divergence from staleness, not which side is higher.
+_BLOCKED_REASON_KEY_BY_DIVERGENCE = {
+    "wallet_higher": "application.iva_wallet.decision_reason.wallet_local_recurrence_divergence",
+    "wallet_lower": "application.iva_wallet.decision_reason.wallet_local_recurrence_divergence",
+    "wallet_stale": "application.iva_wallet.decision_reason.stale_wallet_local_recurrence_requires_override",
+    "missing": "application.iva_wallet.decision_reason.no_usable_authority",
+}
+
+
 def _assert_blocked_wallet_decision_refuses_real_modelo_303_calculation(
     *,
     snapshot: RegistrySnapshot,
@@ -42,7 +53,13 @@ def _assert_blocked_wallet_decision_refuses_real_modelo_303_calculation(
     expected_divergence: str,
 ) -> None:
     work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
-    with pytest.raises(ModeloIvaWalletReconciliationBlocked, match=expected_divergence):
+    # The refusal names its decision reason, and that taxonomy no longer
+    # distinguishes a higher wallet from a lower one -- both are one
+    # divergence reason. Direction is still proven, by the
+    # `decision.divergence` assertion each caller makes; this asserts the
+    # refusal the operator actually receives.
+    expected_reason_key = _BLOCKED_REASON_KEY_BY_DIVERGENCE[expected_divergence]
+    with pytest.raises(ModeloIvaWalletReconciliationBlocked) as blocked:
         calculate_modelo_revision(
             work_unit.work_unit_id,
             actor="operator",
@@ -59,6 +76,7 @@ def _assert_blocked_wallet_decision_refuses_real_modelo_303_calculation(
             ),
         )
     assert len(calc_repo.load()) == 0
+    assert blocked.value.translated_message == expected_reason_key
 
 
 def _blocked_wallet_decision(

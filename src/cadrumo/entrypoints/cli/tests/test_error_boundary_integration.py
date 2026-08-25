@@ -22,6 +22,8 @@ that lock the test to the authoritative registry record.
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from ....core.errors import (
@@ -123,3 +125,33 @@ def test_log_level_resolution_error_exits_refused(
         f"Stderr envelope must carry the sentence-case `Refused.` prefix for {trigger_description!r}. "
         f"Output:\n{result.output}"
     )
+
+
+def test_invalid_log_level_environment_value_reaches_the_json_boundary_with_no_action() -> None:
+    """The configuration-value refusal keeps its typed no-action contract at the root boundary."""
+    from ....core.config import override_settings
+
+    with override_settings(cadrumo_output_language="en", cadrumo_log_level="NOT_A_VALID_LEVEL"):
+        result = invoke_cached_cli(["--format", "json", "config", "repair"], catch_exceptions=False)
+
+    assert result.exit_code == _REFUSED_EXIT, result.output
+    envelope = json.loads(result.output)
+    assert envelope["error"]["action"] == {
+        "failed_condition_id": "cli.log_level.environment_value.recognised",
+        "evidence": [
+            {
+                "condition_id": "cli.log_level.environment_value.recognised",
+                "evidence_id": "cli.log_level.environment_value.recognised.observation",
+                "provenance": "runtime_observation",
+                "values": {
+                    "environment_variable": "CADRUMO_LOG_LEVEL",
+                    "environment_value_recognised": False,
+                },
+            }
+        ],
+        "action": None,
+        "argument_bindings": [],
+        "missing_argument_names": [],
+        "conditionality": "not_applicable",
+        "no_recovery_outcome": "operator_decision",
+    }

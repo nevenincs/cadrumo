@@ -1,0 +1,230 @@
+# Casillas 500, 505, 510, 515 and 520 retain their row number and Prorratas
+# Código CNAE identity. The official 2026 design widens each from the
+# three-character preceding surface to the four-character CNAE-2025 surface,
+# so the 2026 semantic role is versioned and every non-overlapping prior pair
+# records the constraint-bearing boundary here, under its target revision.
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m303-prorrata-actividad-fila-1-cnae-2022-2026-repurposed"
+continuidad_id = "m303-prorrata-actividad-fila-1-cnae"
+from_revision = "2022"
+to_revision = "2026-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m303-prorrata-actividad-fila-1-cnae-2023-2026-repurposed"
+continuidad_id = "m303-prorrata-actividad-fila-1-cnae"
+from_revision = "2023"
+to_revision = "2026-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m303-prorrata-actividad-fila-1-cnae-2024-hasta-08-y-2t-2026-repurposed"
+continuidad_id = "m303-prorrata-actividad-fila-1-cnae"
+from_revision = "2024-hasta-08-y-2t"
+to_revision = "2026-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m303-prorrata-actividad-fila-1-cnae-2024-desde-09-y-3t-2026-repurposed"
+continuidad_id = "m303-prorrata-actividad-fila-1-cnae"
+from_revision = "2024-desde-09-y-3t"
+to_revision = "2026-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m303-prorrata-actividad-fila-1-cnae-2025-2026-repurposed"
+continuidad_id = "m303-prorrata-actividad-fila-1-cnae"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m303-prorrata-actividad-fila-2-cnae-2022-2026-repurposed"
+continuidad_id = "m303-prorrata-actividad-fila-2-cnae"
+from_revision = "2022"
+to_revision = "2026-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m303-prorrata-actividad-fila-2-cnae-2023-2026-repurposed"
+continuidad_id = "m303-prorrata-actividad-fila-2-cnae"
+from_revision = "2023"
+to_revision = "2026-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m303-prorrata-actividad-fila-2-cnae-2024-hasta-08-y-2t-2026-repurposed"
+continuidad_id = "m303-prorrata-actividad-fila-2-cnae"
+from_revision = "2024-hasta-08-y-2t"
+to_revision = "2026-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m303-prorrata-actividad-fila-2-cnae-2024-desde-09-y-3t-2026-repurposed"
+continuidad_id = "m303-prorrata-actividad-fila-2-cnae"
+from_revision = "2024-desde-09-y-3t"
+to_revision = "2026-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m303-prorrata-actividad-fila-2-cnae-2025-2026-repurposed"
+continuidad_id = "m303-prorrata-actividad-fila-2-cnae"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m303-prorrata-actividad-fila-3-cnae-2022-2026-repurposed"
+continuidad_id = "m303-prorrata-actividad-fila-3-cnae"
+from_revision = "2022"
+to_revision = "2026-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m303-prorrata-actividad-fila-3-cnae-2023-2026-repurposed"
+continuidad_id = "m303-prorrata-actividad-fila-3-cnae"
+from_revision = "2023"
+to_revision = "2026-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m303-prorrata-actividad-fila-3-cnae-2024-hasta-08-y-2t-2026-repurposed"
+continuidad_id = "m303-prorrata-actividad-fila-3-cnae"
+from_revision = "2024-hasta-08-y-2t"
+to_revision = "2026-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m303-prorrata-actividad-fila-3-cnae-2024-desde-09-y-3t-2026-repurposed"
+continuidad_id = "m303-prorrata-actividad-fila-3-cnae"
+from_revision = "2024-desde-09-y-3t"
+to_revision = "2026-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m303-prorrata-actividad-fila-3-cnae-2025-2026-repurposed"
+continuidad_id = "m303-prorrata-actividad-fila-3-cnae"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m303-prorrata-actividad-fila-4-cnae-2022-2026-repurposed"
+continuidad_id = "m303-prorrata-actividad-fila-4-cnae"
+from_revision = "2022"
+to_revision = "2026-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m303-prorrata-actividad-fila-4-cnae-2023-2026-repurposed"
+continuidad_id = "m303-prorrata-actividad-fila-4-cnae"
+from_revision = "2023"
+to_revision = "2026-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m303-prorrata-actividad-fila-4-cnae-2024-hasta-08-y-2t-2026-repurposed"
+continuidad_id = "m303-prorrata-actividad-fila-4-cnae"
+from_revision = "2024-hasta-08-y-2t"
+to_revision = "2026-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m303-prorrata-actividad-fila-4-cnae-2024-desde-09-y-3t-2026-repurposed"
+continuidad_id = "m303-prorrata-actividad-fila-4-cnae"
+from_revision = "2024-desde-09-y-3t"
+to_revision = "2026-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m303-prorrata-actividad-fila-4-cnae-2025-2026-repurposed"
+continuidad_id = "m303-prorrata-actividad-fila-4-cnae"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m303-prorrata-actividad-fila-5-cnae-2022-2026-repurposed"
+continuidad_id = "m303-prorrata-actividad-fila-5-cnae"
+from_revision = "2022"
+to_revision = "2026-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m303-prorrata-actividad-fila-5-cnae-2023-2026-repurposed"
+continuidad_id = "m303-prorrata-actividad-fila-5-cnae"
+from_revision = "2023"
+to_revision = "2026-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m303-prorrata-actividad-fila-5-cnae-2024-hasta-08-y-2t-2026-repurposed"
+continuidad_id = "m303-prorrata-actividad-fila-5-cnae"
+from_revision = "2024-hasta-08-y-2t"
+to_revision = "2026-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m303-prorrata-actividad-fila-5-cnae-2024-desde-09-y-3t-2026-repurposed"
+continuidad_id = "m303-prorrata-actividad-fila-5-cnae"
+from_revision = "2024-desde-09-y-3t"
+to_revision = "2026-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m303-prorrata-actividad-fila-5-cnae-2025-2026-repurposed"
+continuidad_id = "m303-prorrata-actividad-fila-5-cnae"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]

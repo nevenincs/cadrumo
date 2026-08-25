@@ -43,6 +43,18 @@ application_links = [
 ]
 filing_schedules = ["modelo-369-exterior-trimestral"]
 deadline_windows = [
+    "modelo-369-exterior-2022-ext-1t",
+    "modelo-369-exterior-2022-ext-2t",
+    "modelo-369-exterior-2022-ext-3t",
+    "modelo-369-exterior-2022-ext-4t",
+    "modelo-369-exterior-2023-ext-1t",
+    "modelo-369-exterior-2023-ext-2t",
+    "modelo-369-exterior-2023-ext-3t",
+    "modelo-369-exterior-2023-ext-4t",
+    "modelo-369-exterior-2024-ext-1t",
+    "modelo-369-exterior-2024-ext-2t",
+    "modelo-369-exterior-2024-ext-3t",
+    "modelo-369-exterior-2024-ext-4t",
     "modelo-369-exterior-2025-ext-1t",
     "modelo-369-exterior-2025-ext-2t",
     "modelo-369-exterior-2025-ext-3t",

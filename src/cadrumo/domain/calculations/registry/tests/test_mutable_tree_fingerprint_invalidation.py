@@ -122,10 +122,23 @@ def _modelo_text(number: str) -> str:
     return _MODELO_TEXT.replace(_CASILLA_NUMBER_SENTINEL, number)
 
 
+#: The one registry-wide declaration the loader requires of any tree.
+_SUPPORTED_FILING_YEARS_TEXT = "[supported_filing_years]\nyears = [2025]\n"
+
+
 def _write_registry_tree(tmp_path: Path, *, number: str) -> Path:
     """Materialise (or rewrite) the synthetic authoring tree and return its root."""
     registry_root = tmp_path / "registry" / "aeat"
-    (registry_root / "legal").mkdir(parents=True, exist_ok=True)
+    legal_dir = registry_root / "legal"
+    legal_dir.mkdir(parents=True, exist_ok=True)
+    # The loader requires every authoring tree to declare its supported
+    # filing years, so a synthetic tree omitting it fails to load before
+    # this test can observe anything about fingerprint caching.
+    (legal_dir / "supported-filing-years.toml").write_text(
+        _SUPPORTED_FILING_YEARS_TEXT,
+        encoding="utf-8",
+        newline="\n",
+    )
     modelos_dir = registry_root / "modelos"
     modelos_dir.mkdir(parents=True, exist_ok=True)
     (modelos_dir / "999.toml").write_text(_modelo_text(number), encoding="utf-8", newline="\n")

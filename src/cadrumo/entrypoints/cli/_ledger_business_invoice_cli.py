@@ -19,8 +19,8 @@ from enum import Enum
 from pathlib import Path
 
 import typer
+from pydantic import ValidationError
 
-from ...application.cli_exception_preconditions import CliExceptionPrecondition
 from ...application.invoices import (
     CatalogueInvoicePatch,
     build_catalogue_invoice,
@@ -56,7 +56,7 @@ from ._ledger_catalogue_invoice_payloads import (
     CatalogueInvoiceViewResult,
     CatalogueInvoiceWizardResult,
 )
-from ._ledger_support import _ledger_cli_no_recovery
+from ._ledger_support import _ledger_invoice_validation_no_recovery
 
 _OPERATION_TYPE_TO_IVA_CATEGORY: dict[IntracomOperationType, IvaCategory] = {
     IntracomOperationType.E: IvaCategory.INTRA_COMMUNITY_SUPPLY,
@@ -294,8 +294,6 @@ def invoice_add(
     ``modelo aggregate --received-invoice-retencion`` routes to Modelo 111 for
     a received invoice.
     """
-    from ...domain.invoices import InvoiceValidationError
-
     bucket_id = _business_invoice_bucket_id()
     # An explicitly stated treatment WINS over the one derived from the M349
     # clave. The derivation exists so an intracomunitaria is not left
@@ -330,12 +328,10 @@ def invoice_add(
             recargo_amount=parse_optional_decimal_amount(recargo, label="recargo"),
         )
         result = create_catalogue_invoice(invoice=invoice)
-    except InvoiceValidationError as exc:
-        raise _ledger_cli_no_recovery(
-            exc,
-            condition=CliExceptionPrecondition.LEDGER_INVOICE_VALID,
-            facts={"error_type": type(exc).__name__},
-        ) from None
+    except (InvoiceValidationError, ValidationError) as exc:
+        if (refusal := _ledger_invoice_validation_no_recovery(exc)) is not None:
+            raise refusal from None
+        raise
 
     _emit_envelope(
         ctx,
@@ -384,7 +380,6 @@ def invoice_wizard(
     (``aeat-cli-contract``).
     """
     from ...application.invoices import create_invoice_via_wizard
-    from ...domain.invoices import InvoiceValidationError
 
     bucket_id = _business_invoice_bucket_id()
     resolved_iva_category = iva_category or _catalogue_iva_category_for_operation_type(operation_type)
@@ -407,12 +402,10 @@ def invoice_wizard(
             retention_rate=retention_rate,
             retention_amount=retention_amount,
         )
-    except InvoiceValidationError as exc:
-        raise _ledger_cli_no_recovery(
-            exc,
-            condition=CliExceptionPrecondition.LEDGER_INVOICE_VALID,
-            facts={"error_type": type(exc).__name__},
-        ) from None
+    except (InvoiceValidationError, ValidationError) as exc:
+        if (refusal := _ledger_invoice_validation_no_recovery(exc)) is not None:
+            raise refusal from None
+        raise
 
     payload = _catalogue_invoice_payload(wizard_result.invoice)
     payload["already_existed"] = wizard_result.already_existed
@@ -462,8 +455,6 @@ def invoice_import(
     with its row number and the failing field; the remaining valid rows still
     import.
     """
-    from ...domain.invoices import InvoiceValidationError
-
     bucket_id = _business_invoice_bucket_id()
     if not file.exists():
         raise _bad(
@@ -478,12 +469,10 @@ def invoice_import(
             kind=kind,
             declared_country=country.strip().upper() if country else None,
         )
-    except InvoiceValidationError as exc:
-        raise _ledger_cli_no_recovery(
-            exc,
-            condition=CliExceptionPrecondition.LEDGER_INVOICE_VALID,
-            facts={"error_type": type(exc).__name__},
-        ) from None
+    except (InvoiceValidationError, ValidationError) as exc:
+        if (refusal := _ledger_invoice_validation_no_recovery(exc)) is not None:
+            raise refusal from None
+        raise
 
     lines = [
         f"bucket\t{bucket_id}",
@@ -735,12 +724,10 @@ def invoice_update(
     )
     try:
         result = update_catalogue_invoice(bucket_id=bucket_id, invoice_id=invoice_id, patch=patch)
-    except InvoiceValidationError as exc:
-        raise _ledger_cli_no_recovery(
-            exc,
-            condition=CliExceptionPrecondition.LEDGER_INVOICE_VALID,
-            facts={"error_type": type(exc).__name__},
-        ) from None
+    except (InvoiceValidationError, ValidationError) as exc:
+        if (refusal := _ledger_invoice_validation_no_recovery(exc)) is not None:
+            raise refusal from None
+        raise
 
     payload = _catalogue_invoice_payload(result.invoice)
     payload["bucket_event_ids"] = list(result.bucket_event_ids)

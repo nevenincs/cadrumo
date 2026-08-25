@@ -156,6 +156,13 @@ def _write_scratch_tree(root: Path, *, applicable_reason: str) -> None:
     write_extracted_corpus_sidecar(legal_corpus, anchor="a1", text="test provision text")
 
     (legal_dir / "catalogue.toml").write_text(_CATALOGUE_TOML, encoding="utf-8")
+    # The loader requires every authoring tree to declare its supported
+    # filing years, so a scratch tree omitting it fails to load before the
+    # applicability rule this test mutates can be observed at all.
+    (legal_dir / "supported-filing-years.toml").write_text(
+        "[supported_filing_years]\nyears = [2025]\n",
+        encoding="utf-8",
+    )
     (registry_root / "modelos" / "100" / "manifest.toml").write_text(_MANIFEST_TOML, encoding="utf-8")
 
     write_fragmented_revision(

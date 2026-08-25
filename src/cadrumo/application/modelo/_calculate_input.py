@@ -47,6 +47,7 @@ from ...core import (
 )
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CadrumoError
+from ...core.json_contract import Notice
 from ...core.resources import bundled_path, resources
 from ...domain.calculations.registry import (
     BindingId,
@@ -294,6 +295,7 @@ class ModeloWorkCalculationServiceResult:
     modality: Modelo202ModalitySummary | None = None
     authorization_advisory: ModeloAuthorizationAdvisorySummary | None = None
     source_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
+    plazo_notices: tuple[Notice, ...] = ()
 
 
 def calculate_modelo_work_revision(
@@ -335,12 +337,25 @@ def calculate_modelo_work_revision(
     )
     revision = calculation.revision
     work_unit = get_work_unit(revision.work_unit_id)
+    plazo_notices: tuple[Notice, ...] = ()
+    if work_unit.modelo == Modelo.M210:
+        from ._m303_regimen_simplificado_scope import active_taxpayer_profile
+        from ._work_plazo import calculated_m210_plazo_notice
+
+        notice = calculated_m210_plazo_notice(
+            work_unit=work_unit,
+            revision=revision,
+            workflow_profile=active_taxpayer_profile(work_unit),
+        )
+        if notice is not None:
+            plazo_notices = (notice,)
     return ModeloWorkCalculationServiceResult(
         revision=revision,
         work_unit=work_unit,
         modality=modelo_202_modality_for_work_unit(work_unit),
         authorization_advisory=authorization_advisory_for_modelo(str(work_unit.modelo)),
         source_diagnostics=(*inputs.shortcut_diagnostics, *calculation.source_diagnostics),
+        plazo_notices=plazo_notices,
     )
 
 

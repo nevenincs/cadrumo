@@ -82,6 +82,9 @@ class _ProbeResult(TypedDict, total=False):
     directions: list[str]
     raised: str | None
     message: str
+    #: The refusal renders its install command downstream from these facts
+    #: rather than embedding one in the message, so the probe carries them.
+    refused_extra: str | None
 
 
 class _ProbeMessage(TypedDict):
@@ -126,6 +129,9 @@ def _probe_worker(
             except BaseException as exc:
                 result["raised"] = type(exc).__name__
                 result["message"] = str(exc)
+                context = getattr(exc, "context", None) or {}
+                refused = context.get("extra")
+                result["refused_extra"] = str(refused) if refused is not None else None
         results.put({"payload": result, "error": None})
     except BaseException as exc:
         results.put({"payload": None, "error": f"{type(exc).__name__}: {exc}"})
@@ -191,7 +197,11 @@ def test_unknown_vocabulary_refuses_at_the_mapping_call_naming_the_extra(tmp_pat
         f"the mapping call must refuse instructively; got {result['raised']!r}"
     )
     message = str(result["message"])
-    assert "cadrumo[llm]" in message, f"the refusal must name the install that resolves it; got {message!r}"
+    # The refusal names the extra in its context and the install command is
+    # rendered downstream from it, so the fact is what this pins.
+    assert result["refused_extra"] == "llm", (
+        f"the refusal must name the extra that resolves it; got {result['refused_extra']!r}"
+    )
     assert "column roles could not be established" not in message, (
         "the refusal must not blame the operator's file for an absent capability"
     )

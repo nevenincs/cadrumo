@@ -6,8 +6,10 @@ import logging
 
 import pytest
 
+from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.errors import TerminalPreconditionErrorMixin
 from ....core.logging import configure_logging, set_log_level
-from .._log_levels import LogLevel, apply_to_root_logger, resolve_log_level
+from .._log_levels import LogLevel, LogLevelResolutionError, apply_to_root_logger, resolve_log_level
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -22,6 +24,42 @@ def _restore_default_log_level():
 
 def test_resolve_log_level_defaults_to_default_mode() -> None:
     assert resolve_log_level(env={}) is LogLevel.DEFAULT
+
+
+def test_invalid_environment_level_has_the_exact_no_action_terminal_contract() -> None:
+    with pytest.raises(LogLevelResolutionError) as raised:
+        resolve_log_level(env={"CADRUMO_LOG_LEVEL": "not-a-level"})
+
+    error = raised.value
+    assert isinstance(error, TerminalPreconditionErrorMixin)
+    verdict = error.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.model_dump(mode="json") == {
+        "failed_condition_id": "cli.log_level.environment_value.recognised",
+        "evidence": [
+            {
+                "condition_id": "cli.log_level.environment_value.recognised",
+                "evidence_id": "cli.log_level.environment_value.recognised.observation",
+                "provenance": ActionEvidenceProvenance.RUNTIME_OBSERVATION.value,
+                "values": {
+                    "environment_variable": "CADRUMO_LOG_LEVEL",
+                    "environment_value_recognised": False,
+                },
+            }
+        ],
+        "action": None,
+        "argument_bindings": [],
+        "missing_argument_names": [],
+        "conditionality": "not_applicable",
+        "no_recovery_outcome": NoRecoveryOutcome.OPERATOR_DECISION.value,
+    }
+
+
+def test_mutually_exclusive_verbosity_flags_remain_native_parse_validation() -> None:
+    with pytest.raises(LogLevelResolutionError) as raised:
+        resolve_log_level(quiet=True, verbose=True, env={})
+
+    assert raised.value.terminal_precondition_verdict is None
 
 
 def test_apply_log_level_updates_stderr_handlers() -> None:

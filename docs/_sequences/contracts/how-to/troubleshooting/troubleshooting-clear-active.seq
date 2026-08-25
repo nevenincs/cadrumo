@@ -1,7 +1,10 @@
-@setup aeat config profile create me --quiet --tax-residence-jurisdiction-scope common_regime --entity-type natural_person --tax-id 87654321X --name "Ana" --surnames "Garcia Lopez"
-@step Clear the active setting when it points at unreadable profile state.
-aeat config repair profile --clear-active --yes
-@step Log in to a good profile by name.
-@result aeat --format json config login me
-@expect result.active_profile == "me"
+@step List the exact profile name that remains available for login.
+@result aeat --format json config profile list
+@expect result.profiles[0].active == true
 @expect exit_code == 0
+@step Clear the active setting only when the preceding repair check reports unreadable profile state.
+@static aeat config repair profile --clear-active --yes
+@blocked operator-artifact Needs a genuinely unreadable active-profile pointer; the documentation sandbox must not corrupt encrypted taxpayer state to fabricate one.
+@step Log in to the good profile by its exact name, supplying the passphrase through a prompt or machine secret channel.
+@static aeat config login <profile-name>
+@blocked interactive-tty Login requires the profile passphrase through an interactive prompt when no machine secret channel is supplied.

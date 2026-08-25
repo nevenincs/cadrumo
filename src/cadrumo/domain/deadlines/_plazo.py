@@ -15,7 +15,7 @@ from datetime import date
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
-from ...core import M210_TIPO_RENTA_CODE_PROJECTION, Modelo, Period, ResultDisposition
+from ...core import M210_TIPO_RENTA_CODE_PROJECTION, Modelo, Period, PeriodKind, ResultDisposition
 from ._errors import DeadlineValidationError
 
 if TYPE_CHECKING:
@@ -67,7 +67,7 @@ def resolve_filing_closes_on(modelo: str, filing_year: int, period: Period) -> d
     return None if window is None else window.closes_on
 
 
-@lru_cache(maxsize=256)
+@lru_cache(maxsize=256, typed=True)
 def resolve_filing_window(
     modelo: str,
     filing_year: int,
@@ -162,18 +162,42 @@ def _resolve_projected_filing_window(
     # Registry applicability imports this deadline facade, so defer the public
     # registry-facade import until resolution time to keep that dependency cycle
     # out of module initialisation.
-    from ..calculations.registry import deadline_semantic_coordinate, deadline_window_semantic_coordinates
+    from ..calculations.registry import (
+        deadline_semantic_coordinate,
+        deadline_window_semantic_coordinates,
+        selector_period_matches_request,
+    )
 
     requested = deadline_semantic_coordinate(modelo, period, resultado, tipo_renta_code)
     if requested.filing_year != filing_year:
         return None
 
-    matches = tuple(
-        window
-        for projected_modelo, _revision, window in windows
-        if projected_modelo == modelo
-        and requested in deadline_window_semantic_coordinates(projected_modelo, window)
+    qualified_m210_event = (
+        modelo == Modelo.M210
+        and selector_period_matches_request("EVENT-N", period.registry_token)
+        and (resultado is not None or tipo_renta_code is not None)
     )
+    matches: tuple[DeadlineWindowDefinition, ...]
+    if qualified_m210_event:
+        matches = tuple(
+            window
+            for projected_modelo, _revision, window in windows
+            if projected_modelo == modelo
+            and window.period.kind is PeriodKind.ANNUAL
+            and any(
+                coordinate.filing_year == filing_year
+                and coordinate.resultado_scope == resultado
+                and coordinate.tipo_renta_code == tipo_renta_code
+                for coordinate in deadline_window_semantic_coordinates(projected_modelo, window)
+            )
+        )
+    else:
+        matches = tuple(
+            window
+            for projected_modelo, _revision, window in windows
+            if projected_modelo == modelo
+            and requested in deadline_window_semantic_coordinates(projected_modelo, window)
+        )
     if not matches:
         return None
     if len(matches) > 1:

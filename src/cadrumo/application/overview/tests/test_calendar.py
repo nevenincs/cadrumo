@@ -572,7 +572,7 @@ def test_expedientes_snapshot_for_wrong_identity_does_not_project_filing_event()
         bucket_id=_BUCKET_ID,
         captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
         source_url=_SOURCE_URL,
-        authenticated_identity="Y7654321Z",
+        authenticated_identity="Y7654321G",
         declarations=(
             Declaracion(
                 modelo="303",

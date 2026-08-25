@@ -211,7 +211,12 @@ def _run_work_calculate(
         command="modelo.work.calculate",
         result=result,
         lines=lines,
-        notices=[*authorization_notices, *source_advisory_notices, *deadline_notices],
+        notices=[
+            *authorization_notices,
+            *source_advisory_notices,
+            *calculation_result.plazo_notices,
+            *deadline_notices,
+        ],
     )
 
 

@@ -39,13 +39,17 @@ class NoActiveBucketError(BucketError):
     """Raised when no active bucket can be resolved.
 
     The precedence chain is exhausted (no ``--profile`` flag and no
-    pointer file, so nothing is logged in), and the process refuses to
-    proceed.
+    pointer file), and the process refuses to proceed. The adapter records
+    that selection fact only; a boundary with a verified public profile label
+    owns any action projection.
     """
 
     def __init__(self, detail: str | None = None) -> None:
-        super().__init__(translated_message="errors.refused.refused_storage_bucket_no_active")
-        self._detail = detail
+        del detail
+        super().__init__(
+            context={"active_bucket_selected": False},
+            translated_message="errors.refused.refused_storage_bucket_no_active",
+        )
 
 
 class BucketBusyError(BucketError):
@@ -101,13 +105,14 @@ class BucketPathTooLongError(BucketError):
 class BucketLockedError(BucketError):
     """Raised when an operation requires an unlocked :class:`BucketSession`.
 
-    Carries the locked bucket id so the diagnostic can point the
-    operator at ``aeat config login NAME``.
+    Carries the storage identity and the failed unlocked-state observation.
+    Recovery policy belongs to the boundary because a bucket id is not a
+    verified public profile-action argument.
     """
 
     def __init__(self, *, bucket_id: str) -> None:
         super().__init__(
-            context={"bucket_id": bucket_id},
+            context={"bucket_id": bucket_id, "bucket_session_unlocked": False},
             translated_message="errors.locked.locked_storage_bucket_session",
         )
         self.bucket_id = bucket_id

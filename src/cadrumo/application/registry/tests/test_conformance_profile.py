@@ -454,7 +454,7 @@ def test_missing_grounding_row_refuses_rather_than_dropping_the_revision(
     with pytest.raises(RegistryApplicationInputError) as excinfo:
         _compose((modelo,), external_grounding=truncated)
 
-    assert dropped_revision in str(excinfo.value)
+    assert excinfo.value.context == {"modelo": modelo.id, "revision_id": dropped_revision}
 
 
 def test_empty_coverage_gap_list_is_separable_from_unmeasured_coverage(
@@ -624,7 +624,7 @@ def test_a_modelo_absent_from_the_classification_audit_is_refused(
     assert classification.rows, "the classification fold must produce a row to drop"
     emptied = classification.model_copy(update={"rows": ()})
 
-    with pytest.raises(RegistryApplicationInputError, match="classification audit carries no row for modelo"):
+    with pytest.raises(RegistryApplicationInputError) as excinfo:
         build_registry_conformance_profile(
             modelos,
             external_grounding=grounding,
@@ -632,6 +632,8 @@ def test_a_modelo_absent_from_the_classification_audit_is_refused(
             scope_diagnostics=(),
             registry_validated=False,
         )
+
+    assert excinfo.value.context == {"modelo": _GROUNDED_MODELO}
 
 
 __all__ = ["degraded_profile", "validated_profile"]

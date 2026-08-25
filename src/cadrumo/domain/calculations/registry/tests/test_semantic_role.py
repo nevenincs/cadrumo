@@ -263,6 +263,27 @@ class TestValidateSemanticRoleConsistency:
         failures = _validate_semantic_role_consistency([m1, m2])
         assert any("constraints" in f for f in failures)
 
+    def test_record_design_width_change_must_use_a_distinct_role(self) -> None:
+        legal = ("orden-eha-3786-2008:art-1",)
+        historical = _casilla(
+            cid=validated_casilla_id("historical-cnae", surface="semantic-role-width-test"),
+            semantic_role="m303_prorrata_actividad_fila_1_cnae",
+            data_type="text",
+            constraints=CasillaConstraints(min_length=3, max_length=3, legal_refs=legal, source_refs=("aeat-dr-303-2025",)),
+        )
+        widened = _casilla(
+            cid=validated_casilla_id("widened-cnae", surface="semantic-role-width-test"),
+            semantic_role="m303_prorrata_actividad_fila_1_cnae",
+            data_type="text",
+            constraints=CasillaConstraints(min_length=4, max_length=4, legal_refs=legal, source_refs=("aeat-dr-303-2026",)),
+        )
+
+        failures = _validate_semantic_role_consistency(
+            [_registry_modelo("303", "2025", [historical]), _registry_modelo("303", "2026", [widened])]
+        )
+
+        assert any("constraints incompatible" in failure for failure in failures)
+
 
 class TestValidateSemanticRoleCardinality:
     def test_intentional_singleton_role_with_single_occurrence_passes(self) -> None:

@@ -29,11 +29,15 @@ with:
 If it is not, [Install Cadrumo](../workstation-setup.md) covers the full
 setup, including the package download and optional integrations.
 
-## The master-key passphrase
+## The passphrase and recovery phrase
 
-`aeat` encrypts your local data with a master key derived from a passphrase.
-The first command that touches the store asks for the passphrase and the tool
-reuses it for the rest of the session. For unattended runs, see
+`aeat` encrypts each profile under its own random key, wrapped by that
+profile's passphrase.
+Profile creation also shows a one-time recovery phrase and requires you to
+enter it back before the profile is published. Store that phrase separately:
+it cannot be enrolled later. The first command that touches the store asks for
+the passphrase and the tool reuses it for the rest of the session. For
+unattended runs after creation, see
 [Run without a passphrase prompt](protect-data-access.md#run-without-a-passphrase-prompt).
 
 The CLI emits its help and messages in Spanish. The English text on this page
@@ -45,13 +49,12 @@ A profile is your personal taxpayer record inside the tool. Create it with your
 own details:
 
 ```{cli-sequence} quickstart-create-profile
-:verify: Confirm the profile is created and becomes the active profile.
+:verify: Confirm the interactive recovery handoff is required and the selected profile is active.
 ```
 
-The name and surnames are required (filing refuses without them), and
-the activity start date scopes out prior periods so a first filing has no
-earlier quarter to depend on. `--quiet` runs without the interactive setup
-wizard.
+The wizard collects the name and surnames that filing requires and the activity
+start date that scopes out prior periods. It does not publish a password-only
+profile: creation completes only after you copy and verify the recovery phrase.
 
 Confirm the active profile is configured and ready:
 

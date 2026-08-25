@@ -61,6 +61,8 @@ source_refs = [
         "aeat-dr-322-2024-2025",
     "aeat-modelo-322-procedure",
     "boe-modelo-322-2007-form",
+    "aeat-calendario-contribuyente-2024",
+    "aeat-calendario-contribuyente-2025",
 ]
 
 

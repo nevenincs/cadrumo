@@ -8,11 +8,10 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Final, Literal
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...core import (
     STRICT_FROZEN_CONFIG,
-    Hex64Str,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -29,19 +28,17 @@ from ..operations import (
     OperationBaselinePolicy,
     OperationCapabilities,
     OperationConflictScope,
-    OperationConsumedInteraction,
     OperationDefinition,
     OperationExecutorContext,
     OperationExecutorFactory,
     OperationFrontendProjection,
-    OperationInteractionRequest,
     OperationOwnedResource,
-    OperationPendingInteraction,
+    OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationReplayPolicy,
     OperationRequest,
     OperationRequestStoragePolicy,
-    OperationResponseIntent,
+    OperationResumeCheckpoint,
     OperationSchemaBindingV1,
     OperationSensitiveInputPolicy,
     operation_public_schema_reference,
@@ -125,7 +122,7 @@ CENSAL_REVIEWED_OPERAND_SCHEMA_VERSION: Final[int] = 1
 class CensalReviewedOperand(BaseModel):
     """Encrypted exact preimage approved or rejected by the operator."""
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
     schema_version: Literal[1] = CENSAL_REVIEWED_OPERAND_SCHEMA_VERSION
     observation: CensalObservation
@@ -169,13 +166,12 @@ class CensalReviewedOperand(BaseModel):
 
 
 class CensalOperationRequest(BaseModel):
-    """Exact preflight baseline, review choices, and caller-held response token."""
+    """Exact preflight baseline and review choices with no bearer material."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     baseline: CensalProfileBaseline
     field_intents: tuple[CensalReviewedFieldIntent, ...]
-    response_token: Hex64Str
 
     @field_validator("field_intents")
     @classmethod
@@ -209,7 +205,26 @@ class CensalReviewResponse(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     response_version: Literal[1]
-    intent: OperationResponseIntent
+    intent: Literal["apply", "reject"]
+
+
+class CensalReviewFieldProjectionV1(BaseModel):
+    """One safe censo field displayed for an exact REVIEW decision."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    path: str = Field(min_length=3, max_length=160)
+    intent: CensalFieldIntent
+    observed_value: str | None
+
+
+class CensalReviewProjectionV1(BaseModel):
+    """Bearer-free public projection of the encrypted censal proposal."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    projection_version: Literal[1]
+    fields: tuple[CensalReviewFieldProjectionV1, ...]
 
 
 CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING = OperationSchemaBindingV1.bind(
@@ -217,6 +232,52 @@ CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING = OperationSchemaBindingV1.bind(
     schema_version=1,
     model_type=CensalReviewResponse,
 )
+
+CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING = OperationSchemaBindingV1.bind(
+    schema_id="user-profile.censo-review.projection",
+    schema_version=1,
+    model_type=CensalReviewProjectionV1,
+)
+
+
+def _project_censal_review(
+    operand: BaseModel,
+    interaction: object,
+) -> BaseModel:
+    """Project only reviewed field values; discard custody and bearer facts."""
+    del interaction
+    reviewed = CensalReviewedOperand.model_validate(operand, strict=True)
+    observed = {fact.path: str(fact.value) for fact in censal_facts_from_read(reviewed.observation)}
+    return CensalReviewProjectionV1(
+        projection_version=1,
+        fields=tuple(
+            CensalReviewFieldProjectionV1(
+                path=item.path,
+                intent=item.intent,
+                observed_value=observed.get(item.path),
+            )
+            for item in reviewed.field_intents
+        ),
+    )
+
+
+def build_censal_operation_registration(
+    definition: OperationDefinition,
+) -> OperationPublicDefinitionRegistrationV1:
+    """Bind the canonical censal definition to its public REVIEW contract."""
+    return OperationPublicDefinitionRegistrationV1.compose(
+        definition=definition,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id="user-profile.censo-review.request",
+            schema_version=1,
+            model_type=CensalOperationRequest,
+        ),
+        result_schema=None,
+        review_projection_schema=CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING,
+        interaction_response_schema=CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING,
+        reviewed_operand_type=CensalReviewedOperand,
+        review_projector=_project_censal_review,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -310,20 +371,14 @@ class CensalOperationExecutor:
                 "proposed_effect_digest": operand.proposed_effect_digest,
             }
         )
-        interaction = OperationInteractionRequest(
+        await context.interactions.publish_review(
             interaction_id=secrets.token_hex(32),
             identity=context.identity,
             revision=context.revision + 1,
-            kind=OperationInteractionKind.REVIEW,
             presentation_code="censo.review.ready",
-            response_schema_ref=operation_public_schema_reference(
-                CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING.identity
-            ),
+            response_schema_ref=operation_public_schema_reference(CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING.identity),
             continuation_digest=continuation_digest,
-        )
-        await context.interactions.publish_review(
-            request=interaction,
-            response_token=request.payload.response_token,
+            expires_at=None,
             reviewed_operand=operand,
             baseline_digest=content_hash_hex(operand.baseline.model_dump(mode="json")),
             proposed_effect_digest=operand.proposed_effect_digest,
@@ -333,17 +388,17 @@ class CensalOperationExecutor:
     async def resume(
         self,
         request: OperationRequest[CensalOperationRequest],
-        checkpoint: OperationPendingInteraction | OperationConsumedInteraction,
+        checkpoint: OperationResumeCheckpoint,
         context: OperationExecutorContext,
     ) -> str | None:
         del request
         if await _acknowledge_if_cancelled(context):
             return None
-        if isinstance(checkpoint, OperationPendingInteraction):
+        if not checkpoint.consumed:
             return None
-        proposal_digest = checkpoint.checkpoint.reviewed_proposal_digest
+        proposal_digest = checkpoint.reviewed_proposal_digest
         operand = await context.operands.resolve(proposal_digest, CensalReviewedOperand)
-        if checkpoint.intent is OperationResponseIntent.REJECT:
+        if checkpoint.response_action == "reject":
             await context.events.phase(CENSAL_PHASE_REJECT)
             await context.events.effect(OperationEffect.NONE)
             await context.events.phase(CENSAL_PHASE_SETTLEMENT)
@@ -380,7 +435,10 @@ async def _pull_censal_datos() -> CensalObservation:
     """Acquire through the sole public live application door."""
     from ..live import pull_censal_datos
 
-    return await pull_censal_datos()
+    observation = await pull_censal_datos()
+    if not isinstance(observation, CensalObservation):
+        raise TypeError("censal acquisition returned an invalid observation")
+    return observation
 
 
 def _require_current_operand_baseline(operand: CensalReviewedOperand) -> None:
@@ -431,13 +489,16 @@ CENSAL_OPERATION_DEFINITION = OperationDefinition(
         close_policy=OperationClosePolicy.DETACH_ALLOWED,
     ),
     reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
-    permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+    permitted_frontends=frozenset(
+        {OperationFrontendProjection.CLI, OperationFrontendProjection.MCP, OperationFrontendProjection.TUI}
+    ),
 )
 
 
 __all__ = [
     "CENSAL_OPERATION_DEFINITION",
     "CENSAL_OPERATION_DEFINITION_ID",
+    "CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING",
     "CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING",
     "CensalFieldIntent",
     "CensalOperationAcquisition",
@@ -446,7 +507,10 @@ __all__ = [
     "CensalOperationRequest",
     "CensalOperationResult",
     "CensalProfileBaseline",
+    "CensalReviewFieldProjectionV1",
+    "CensalReviewProjectionV1",
     "CensalReviewResponse",
     "CensalReviewedFieldIntent",
     "CensalReviewedOperand",
+    "build_censal_operation_registration",
 ]

@@ -28,7 +28,6 @@ from ....core import (
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
-    BoundOperationSecureResponseAuthority,
     OperationBaselinePolicy,
     OperationCancellationRefusalCode,
     OperationCancellationRequestV1,
@@ -40,27 +39,23 @@ from .. import (
     OperationDetachRequestV1,
     OperationDetachService,
     OperationDetachSuccessV1,
-    OperationExecutorContext,
     OperationExecutorFactory,
     OperationFrontendProjection,
     OperationIdentity,
-    OperationInteractionEvent,
-    OperationInteractionRequest,
     OperationOwnedResource,
-    OperationOwnerLease,
-    OperationPendingInteraction,
-    OperationPersistedSnapshot,
-    OperationPhaseEvent,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
     OperationReplayPolicy,
     OperationRequest,
     OperationRequestStoragePolicy,
+    OperationResponseApplyRequestV1,
+    OperationResponseControlRefusalCode,
     OperationResponseControlRequestV1,
     OperationResponseControlService,
     OperationResponseControlSuccessV1,
-    OperationResponseIntent,
+    OperationResponseMutationSuccessV1,
+    OperationResponseRejectRequestV1,
     OperationReviewProjectionReferenceV1,
     OperationReviewProjectionRefusalCode,
     OperationReviewProjectionRequestV1,
@@ -69,17 +64,21 @@ from .. import (
     OperationReviewProjectionVersionHeader,
     OperationSchemaBindingV1,
     OperationSensitiveInputPolicy,
-    OperationSupervisor,
-    OperationTerminalEvent,
     OperationTerminalReceipt,
     OperationWorkspaceRefreshTargetRefusalCode,
     OperationWorkspaceRefreshTargetRequestV1,
     OperationWorkspaceRefreshTargetService,
     OperationWorkspaceRefreshTargetSuccessV1,
     OperationWorkspaceRefreshTargetVersionHeader,
-    operation_conflict_scope_reference,
     operation_public_schema_reference,
 )
+from .._events import OperationInteractionEvent, OperationPhaseEvent, OperationTerminalEvent
+from .._executor import OperationExecutorContext
+from .._interactions import OperationInteractionRequest, OperationPendingInteraction, OperationResponseIntent
+from .._journal import OperationPersistedSnapshot
+from .._leases import OperationOwnerLease, operation_conflict_scope_reference
+from .._projection_services import BoundOperationSecureResponseAuthority, OperationResponseAuthorityBroker
+from .._supervisor import OperationSupervisor
 
 _NOW = datetime(2026, 8, 24, 12, tzinfo=UTC)
 _OPERATION_ID = "1" * 64
@@ -260,6 +259,8 @@ def _pending(registry: OperationRegistry, *, proposal: str = _PROPOSAL) -> Opera
         request=request,
         response_token=_TOKEN,
         reviewed_proposal_digest=proposal,
+        baseline_digest="9" * 64,
+        proposed_effect_digest="a" * 64,
     )
 
 
@@ -610,17 +611,136 @@ def test_response_control_requires_separately_bound_runtime_bearer(tmp_path: Pat
         revision=0,
         actor_ref="operator:reviewer",
     )
-    service = OperationResponseControlService(reader=repository, registry=registry, authority=authority)
+    supervisor = OperationSupervisor(
+        registry=registry,
+        journal=repository,
+        event_stream=repository,
+        leases=OperationLeaseFilesystemRepository(storage_root=root),
+        operands=None,
+        owner_id="5" * 64,
+        lease_token_factory=lambda: "6" * 64,
+        clock=lambda: _NOW,
+        lease_duration=timedelta(minutes=1),
+    )
+    service = OperationResponseControlService(
+        reader=repository,
+        registry=registry,
+        authority=authority,
+        supervisor=supervisor,
+    )
 
     result = asyncio.run(service.inspect(request))
     authority.close()
     closed = asyncio.run(service.inspect(request))
 
     assert isinstance(result, OperationResponseControlSuccessV1)
-    assert result.available and result.permitted_intents == frozenset(OperationResponseIntent)
+    assert result.available and result.permitted_intents == frozenset({"apply", "reject"})
     assert closed.outcome == "refused"
     assert all(value == 0 for value in authority._token)
     assert _TOKEN not in result.model_dump_json()
+
+
+def test_response_authority_is_unavailable_after_process_restart(tmp_path: Path) -> None:
+    root = tmp_path / "durable"
+    registry = _registry()
+    pending = _pending(registry)
+    repository = OperationJournalRepository(storage_root=root)
+    _write(root, repository, _waiting_snapshot(registry, pending))
+    original_process = OperationResponseAuthorityBroker()
+    capability = original_process.reserve(_OPERATION_ID, "operator:reviewer")
+    original_process.issue(pending, _TOKEN)
+    original_process.close()
+    restarted_process = OperationResponseAuthorityBroker()
+    request = OperationResponseControlRequestV1(
+        operation_id=_OPERATION_ID,
+        interaction_id=_INTERACTION_ID,
+        revision=0,
+        actor_ref="operator:reviewer",
+    )
+    authority = restarted_process.bind(request, pending, capability, clock=lambda: _NOW)
+    supervisor = OperationSupervisor(
+        registry=registry,
+        journal=repository,
+        event_stream=repository,
+        leases=OperationLeaseFilesystemRepository(storage_root=root),
+        operands=None,
+        owner_id="7" * 64,
+        lease_token_factory=lambda: "8" * 64,
+        clock=lambda: _NOW,
+        lease_duration=timedelta(minutes=1),
+    )
+    service = OperationResponseControlService(
+        reader=repository,
+        registry=registry,
+        authority=authority,
+        supervisor=supervisor,
+    )
+
+    result = asyncio.run(service.inspect(request))
+
+    assert result.outcome == "refused"
+    assert result.code is OperationResponseControlRefusalCode.RESPONSE_AUTHORITY_UNAVAILABLE
+
+
+@pytest.mark.parametrize("response_action", ["apply", "reject"])
+def test_public_response_service_consumes_runtime_authority(tmp_path: Path, response_action: str) -> None:
+    root = tmp_path / response_action
+    registry = _registry()
+    pending = _pending(registry)
+    repository = OperationJournalRepository(storage_root=root)
+    _write(root, repository, _waiting_snapshot(registry, pending))
+    broker = OperationResponseAuthorityBroker()
+    capability = broker.reserve(_OPERATION_ID, "operator:reviewer")
+    broker.issue(pending, _TOKEN)
+    control = OperationResponseControlRequestV1(
+        operation_id=_OPERATION_ID,
+        interaction_id=_INTERACTION_ID,
+        revision=0,
+        actor_ref="operator:reviewer",
+    )
+    actor_mismatch = control.model_copy(update={"actor_ref": "operator:intruder"})
+    stale = control.model_copy(update={"revision": 1})
+    forged = OperationResponseAuthorityBroker().reserve(_OPERATION_ID, "operator:reviewer")
+    assert broker.bind(actor_mismatch, pending, capability, clock=lambda: _NOW).__class__.__name__.startswith(
+        "_Unavailable"
+    )
+    assert broker.bind(stale, pending, capability, clock=lambda: _NOW).__class__.__name__.startswith("_Unavailable")
+    assert broker.bind(control, pending, forged, clock=lambda: _NOW).__class__.__name__.startswith("_Unavailable")
+    authority = broker.bind(control, pending, capability, clock=lambda: _NOW)
+    assert broker.bind(control, pending, capability, clock=lambda: _NOW).__class__.__name__.startswith("_Unavailable")
+    supervisor = OperationSupervisor(
+        registry=registry,
+        journal=repository,
+        event_stream=repository,
+        leases=OperationLeaseFilesystemRepository(storage_root=root),
+        operands=None,
+        owner_id="5" * 64,
+        lease_token_factory=lambda: "6" * 64,
+        clock=lambda: _NOW,
+        lease_duration=timedelta(minutes=1),
+    )
+    service = OperationResponseControlService(
+        reader=repository,
+        registry=registry,
+        authority=authority,
+        supervisor=supervisor,
+    )
+
+    if response_action == "apply":
+        mutation = OperationResponseApplyRequestV1(**control.model_dump(), responded_at=_NOW)
+        result = asyncio.run(service.apply(mutation))
+    else:
+        mutation = OperationResponseRejectRequestV1(
+            **control.model_dump(),
+            responded_at=_NOW,
+            reason_code="operator.rejected",
+        )
+        result = asyncio.run(service.reject(mutation))
+
+    assert isinstance(result, OperationResponseMutationSuccessV1)
+    assert result.response_action == response_action
+    consumed = asyncio.run(supervisor.inspect(_OPERATION_ID)).consumed_interactions
+    assert len(consumed) == 1 and consumed[0].intent.value == response_action
 
 
 def test_cancellation_and_detach_delegate_to_real_supervisor_ports(tmp_path: Path) -> None:

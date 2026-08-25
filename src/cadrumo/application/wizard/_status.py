@@ -162,7 +162,7 @@ def _next_wizard_action(
     if not auth_provider:
         return None
     if not login_ready:
-        from ..overview._next_actions import declare_next_action
+        from ..overview import declare_next_action
 
         return declare_next_action("operator.auth.login", provider=auth_provider)
     return None

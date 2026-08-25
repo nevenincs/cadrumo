@@ -9,6 +9,7 @@ function under test):
 - M111/M115/M123: I/U/G/N — no credit code; non-positive → N.
 - M200: I/U/N/D/R/G/V/X — credit → D by canonical DP200014B:00599.
 - M202: I/U/G/N — active modality result casilla → I/N.
+- M210: I/N/D — signed cuota diferencial → ingreso/cuota cero/devolución.
 """
 
 from __future__ import annotations
@@ -45,6 +46,9 @@ _M200_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id(
 )
 _M202_402_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id("03", surface="test result-disposition casilla id")
 _M202_403_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id("34", surface="test result-disposition casilla id")
+_M210_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id(
+    "cuota_diferencial", surface="test result-disposition casilla id"
+)
 
 
 def _values(casilla_id: CasillaId, amount: str) -> dict[CasillaId, Decimal]:
@@ -112,6 +116,9 @@ def test_codified_result_disposition_cases() -> None:
             },
             ResultDisposition.NEGATIVA,
         ),
+        ("m210-positive", "210", _values(_M210_RESULT_CASILLA, "1"), ResultDisposition.INGRESO),
+        ("m210-zero", "210", _values(_M210_RESULT_CASILLA, "0"), ResultDisposition.NEGATIVA),
+        ("m210-refund", "210", _values(_M210_RESULT_CASILLA, "-1"), ResultDisposition.DEVOLUCION),
     ):
         assert derive_result_disposition(modelo, values) is expected, case_id
 

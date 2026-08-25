@@ -43,6 +43,7 @@ from ._common import activate_subcommand_output_language as _activate_subcommand
 if TYPE_CHECKING:
     from ...application.user_profile import ProfileBundleExportReconciliation
 
+
 def app_maintenance_reconcile(
     ctx: typer.Context,
     output_language: OutputLanguage | None = None,
@@ -141,8 +142,7 @@ def _reconcile_notices(outcome: ProfileBundleExportReconciliation) -> tuple[Noti
                     default=(
                         "{count} interrupted profile-bundle export(s) could not be "
                         "cleared and were kept for a later attempt. An unencrypted "
-                        "staged file may remain on disk for each. Run this command "
-                        "again once the cause is resolved."
+                        "staged file may remain on disk for each."
                     ),
                     count=str(len(outcome.failures)),
                 ),

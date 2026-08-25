@@ -12,6 +12,7 @@ from ....iva import IvaLedgerObservationRole
 from .. import (
     ModeloDefinition,
     RegistryCatalogues,
+    RegistryValidationError,
     RegistryValidator,
     build_snapshot,
     bundled_authority,
@@ -76,6 +77,42 @@ def test_modelo_353_january_deadline_uses_official_calendar_shift() -> None:
     assert "aeat-calendario-contribuyente-2026-domiciliacion" in jan_2026.source_refs
 
 
+def test_modelo_353_2025_december_calendar_is_window_scoped_not_revision_scoped() -> None:
+    """The following-year calendar grounds its deadline, not the 2025 revision generally."""
+    modelo, catalogues = _load_modelo_353()
+    revision = modelo.revisions["2008-2025"]
+    calendar_id = "aeat-calendario-contribuyente-2026-domiciliacion"
+    december = next(window for window in revision.deadline_windows if window.id == "modelo-353-2025-12")
+    calendar = catalogues.sources[calendar_id]
+
+    assert revision.valid_to is not None
+    assert calendar.applies_from is not None
+    assert calendar.applies_from > revision.valid_to
+    assert december.closes_on <= calendar.applies_to
+    assert calendar_id in december.source_refs
+    assert calendar_id not in revision.source_refs
+
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="12")
+
+    assert calendar_id in snapshot.sources
+
+    incorrectly_revision_scoped = revision.model_copy(
+        update={"source_refs": (*revision.source_refs, calendar_id)},
+    )
+    incorrectly_scoped_modelo = modelo.model_copy(
+        update={"revisions": {**modelo.revisions, revision.id: incorrectly_revision_scoped}},
+    )
+
+    with pytest.raises(RegistryValidationError, match=calendar_id):
+        build_snapshot(
+            incorrectly_scoped_modelo,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=2025,
+            period="12",
+        )
+
+
 def test_modelo_353_other_months_close_at_30_days_following_month() -> None:
     modelo, _ = _load_modelo_353()
     revision = modelo.revisions["2008-2025"]
@@ -85,10 +122,246 @@ def test_modelo_353_other_months_close_at_30_days_following_month() -> None:
     assert jun.closes_on == date(2025, 7, 30)
 
 
+@pytest.mark.parametrize(
+    ("filing_year", "expected"),
+    [
+        (
+            2022,
+            {
+                "01": (
+                    date.fromisoformat("2022-02-01"),
+                    date.fromisoformat("2022-02-28"),
+                    date.fromisoformat("2022-02-23"),
+                ),
+                "02": (
+                    date.fromisoformat("2022-03-01"),
+                    date.fromisoformat("2022-03-30"),
+                    date.fromisoformat("2022-03-25"),
+                ),
+                "03": (
+                    date.fromisoformat("2022-04-01"),
+                    date.fromisoformat("2022-05-02"),
+                    date.fromisoformat("2022-04-27"),
+                ),
+                "04": (
+                    date.fromisoformat("2022-05-01"),
+                    date.fromisoformat("2022-05-30"),
+                    date.fromisoformat("2022-05-25"),
+                ),
+                "05": (
+                    date.fromisoformat("2022-06-01"),
+                    date.fromisoformat("2022-06-30"),
+                    date.fromisoformat("2022-06-25"),
+                ),
+                "06": (
+                    date.fromisoformat("2022-07-01"),
+                    date.fromisoformat("2022-08-01"),
+                    date.fromisoformat("2022-07-27"),
+                ),
+                "07": (
+                    date.fromisoformat("2022-08-01"),
+                    date.fromisoformat("2022-08-30"),
+                    date.fromisoformat("2022-08-25"),
+                ),
+                "08": (
+                    date.fromisoformat("2022-09-01"),
+                    date.fromisoformat("2022-09-30"),
+                    date.fromisoformat("2022-09-25"),
+                ),
+                "09": (
+                    date.fromisoformat("2022-10-01"),
+                    date.fromisoformat("2022-10-31"),
+                    date.fromisoformat("2022-10-26"),
+                ),
+                "10": (
+                    date.fromisoformat("2022-11-01"),
+                    date.fromisoformat("2022-11-30"),
+                    date.fromisoformat("2022-11-25"),
+                ),
+                "11": (
+                    date.fromisoformat("2022-12-01"),
+                    date.fromisoformat("2022-12-30"),
+                    date.fromisoformat("2022-12-25"),
+                ),
+                "12": (
+                    date.fromisoformat("2023-01-01"),
+                    date.fromisoformat("2023-01-30"),
+                    date.fromisoformat("2023-01-25"),
+                ),
+            },
+        ),
+        (
+            2023,
+            {
+                "01": (
+                    date.fromisoformat("2023-02-01"),
+                    date.fromisoformat("2023-02-28"),
+                    date.fromisoformat("2023-02-23"),
+                ),
+                "02": (
+                    date.fromisoformat("2023-03-01"),
+                    date.fromisoformat("2023-03-30"),
+                    date.fromisoformat("2023-03-25"),
+                ),
+                "03": (
+                    date.fromisoformat("2023-04-01"),
+                    date.fromisoformat("2023-05-02"),
+                    date.fromisoformat("2023-04-25"),
+                ),
+                "04": (
+                    date.fromisoformat("2023-05-01"),
+                    date.fromisoformat("2023-05-30"),
+                    date.fromisoformat("2023-05-25"),
+                ),
+                "05": (
+                    date.fromisoformat("2023-06-01"),
+                    date.fromisoformat("2023-06-30"),
+                    date.fromisoformat("2023-06-25"),
+                ),
+                "06": (
+                    date.fromisoformat("2023-07-01"),
+                    date.fromisoformat("2023-07-31"),
+                    date.fromisoformat("2023-07-26"),
+                ),
+                "07": (
+                    date.fromisoformat("2023-08-01"),
+                    date.fromisoformat("2023-08-30"),
+                    date.fromisoformat("2023-08-25"),
+                ),
+                "08": (
+                    date.fromisoformat("2023-09-01"),
+                    date.fromisoformat("2023-10-02"),
+                    date.fromisoformat("2023-09-27"),
+                ),
+                "09": (
+                    date.fromisoformat("2023-10-01"),
+                    date.fromisoformat("2023-10-30"),
+                    date.fromisoformat("2023-10-25"),
+                ),
+                "10": (
+                    date.fromisoformat("2023-11-01"),
+                    date.fromisoformat("2023-11-30"),
+                    date.fromisoformat("2023-11-25"),
+                ),
+                "11": (
+                    date.fromisoformat("2023-12-01"),
+                    date.fromisoformat("2024-01-02"),
+                    date.fromisoformat("2023-12-26"),
+                ),
+                "12": (
+                    date.fromisoformat("2024-01-01"),
+                    date.fromisoformat("2024-01-30"),
+                    date.fromisoformat("2024-01-25"),
+                ),
+            },
+        ),
+        (
+            2024,
+            {
+                "01": (
+                    date.fromisoformat("2024-02-01"),
+                    date.fromisoformat("2024-02-29"),
+                    date.fromisoformat("2024-02-26"),
+                ),
+                "02": (
+                    date.fromisoformat("2024-03-01"),
+                    date.fromisoformat("2024-04-01"),
+                    date.fromisoformat("2024-03-25"),
+                ),
+                "03": (
+                    date.fromisoformat("2024-04-01"),
+                    date.fromisoformat("2024-04-30"),
+                    date.fromisoformat("2024-04-25"),
+                ),
+                "04": (
+                    date.fromisoformat("2024-05-01"),
+                    date.fromisoformat("2024-05-30"),
+                    date.fromisoformat("2024-05-27"),
+                ),
+                "05": (
+                    date.fromisoformat("2024-06-01"),
+                    date.fromisoformat("2024-07-01"),
+                    date.fromisoformat("2024-06-26"),
+                ),
+                "06": (
+                    date.fromisoformat("2024-07-01"),
+                    date.fromisoformat("2024-07-30"),
+                    date.fromisoformat("2024-07-25"),
+                ),
+                "07": (
+                    date.fromisoformat("2024-08-01"),
+                    date.fromisoformat("2024-08-30"),
+                    date.fromisoformat("2024-08-27"),
+                ),
+                "08": (
+                    date.fromisoformat("2024-09-01"),
+                    date.fromisoformat("2024-09-30"),
+                    date.fromisoformat("2024-09-25"),
+                ),
+                "09": (
+                    date.fromisoformat("2024-10-01"),
+                    date.fromisoformat("2024-10-30"),
+                    date.fromisoformat("2024-10-25"),
+                ),
+                "10": (
+                    date.fromisoformat("2024-11-01"),
+                    date.fromisoformat("2024-12-02"),
+                    date.fromisoformat("2024-11-27"),
+                ),
+                "11": (
+                    date.fromisoformat("2024-12-01"),
+                    date.fromisoformat("2024-12-30"),
+                    date.fromisoformat("2024-12-25"),
+                ),
+                "12": (
+                    date.fromisoformat("2025-01-01"),
+                    date.fromisoformat("2025-01-30"),
+                    date.fromisoformat("2025-01-27"),
+                ),
+            },
+        ),
+    ],
+)
+def test_modelo_353_historical_deadlines_exactly_match_official_aeat_calendars(
+    filing_year: int,
+    expected: dict[str, tuple[date, date, date]],
+) -> None:
+    modelo, _ = _load_modelo_353()
+    revision = modelo.revisions["2008-2025"]
+    windows = {
+        window.period.registry_token: window
+        for window in revision.deadline_windows
+        if window.filing_year == filing_year
+    }
+
+    assert len(windows) == len(expected) == 12
+    assert set(windows) == set(expected) == set(revision.period_selector.periods)
+    for period, dates in expected.items():
+        window = windows[period]
+        assert window.id == f"modelo-353-{filing_year}-{period}"
+        assert window.filing_year == window.period.filing_year == filing_year
+        assert window.period_kind == "monthly"
+        assert (window.opens_on, window.closes_on, window.payment_cutoff_on) == dates
+        # The annual AEAT calendar publishes the period-11 deadline with that
+        # ejercicio's December table even when a holiday pushes the physical
+        # close into January. Period 12 is the following calendar's January
+        # filing, so it alone uses the next year's source.
+        calendar_year = filing_year + 1 if period == "12" else filing_year
+        assert set(window.source_refs) == {
+            "boe-modelo-353-2007-form",
+            "aeat-modelo-353-procedure",
+            f"aeat-calendario-contribuyente-{calendar_year}",
+        }
+
+
 def test_modelo_353_2025_deadlines_exactly_match_the_official_aeat_calendars() -> None:
     modelo, _ = _load_modelo_353()
     revision = modelo.revisions["2008-2025"]
-    windows = {window.period.registry_token: window for window in revision.deadline_windows}
+    windows = {
+        window.period.registry_token: window
+        for window in revision.deadline_windows
+        if window.filing_year == 2025
+    }
     expected = {
         "01": (date(2025, 2, 1), date(2025, 2, 28), date(2025, 2, 25)),
         "02": (date(2025, 3, 1), date(2025, 3, 31), date(2025, 3, 26)),
@@ -159,6 +432,9 @@ def test_modelo_353_2026_deadlines_stop_at_the_officially_published_calendar_hor
 @pytest.mark.parametrize(
     ("filing_year", "revision_id", "expected_periods"),
     [
+        (2022, "2008-2025", tuple(f"{month:02d}" for month in range(1, 13))),
+        (2023, "2008-2025", tuple(f"{month:02d}" for month in range(1, 13))),
+        (2024, "2008-2025", tuple(f"{month:02d}" for month in range(1, 13))),
         (2025, "2008-2025", tuple(f"{month:02d}" for month in range(1, 13))),
         (2026, "2026-y-siguientes", tuple(f"{month:02d}" for month in range(1, 12))),
     ],

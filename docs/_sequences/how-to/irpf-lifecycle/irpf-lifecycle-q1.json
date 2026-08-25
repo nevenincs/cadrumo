@@ -252,7 +252,7 @@
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "b1671a3e6e17861361b59524813a948619239903d95ae5ef9f068f1e0afe5483",
+          "calculation_revision_id": "cc60ddfe6b3a65ef5a708d1f10f407d2972b1848033cedc9589f8478c1d0d254",
           "casilla_values": {
             "01": "1000",
             "02": "500",
@@ -867,30 +867,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision b1671a3e6e17861361b59524813a948619239903d95ae5ef9f068f1e0afe5483 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision b1671a3e6e17861361b59524813a948619239903d95ae5ef9f068f1e0afe5483`.",
-          "source_provenance": [
-            {
-              "binding_source": "ledger_renta_income_aggregation",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "source_kind": "ledger_renta_income_aggregation",
-              "source_ref": "transaction:32ecfd70d4feaa1dc4abe5c9e7b4a0b6b699fc23e2e83436be83780d3cc1469e"
-            },
-            {
-              "binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "source_kind": "ledger_renta_gastos_pago_fraccionado_aggregation",
-              "source_ref": "transaction:ff6973af70780f2feec6cbe7746745c0b0ffb2e1eb0a308f7aebc24e62b09dd7"
-            },
-            {
-              "binding_source": "previous_filing",
-              "dependency_treatment": "factual_evidence",
-              "fingerprint": null,
-              "source_kind": "previous_filing",
-              "source_ref": "100:2025:0A:irpf.previous_year_economic_activity_net_income"
-            }
-          ],
+          "saved_confirmation": "Saved as draft calculation revision cc60ddfe6b3a65ef5a708d1f10f407d2972b1848033cedc9589f8478c1d0d254 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision cc60ddfe6b3a65ef5a708d1f10f407d2972b1848033cedc9589f8478c1d0d254`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
@@ -962,7 +939,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "b1671a3e6e17861361b59524813a948619239903d95ae5ef9f068f1e0afe5483",
+          "calculation_revision_id": "cc60ddfe6b3a65ef5a708d1f10f407d2972b1848033cedc9589f8478c1d0d254",
           "completeness_status": "complete",
           "findings": [
             {
@@ -1002,7 +979,7 @@
           "operation": "modelo.work.verify",
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "e729d476a65f97e0a5ec8a840700417f8fae8c528d12d593603f553f14a656f7",
+          "verification_report_id": "53077bfce69c27f1c19eab87f3880cdab7800377ba0d66865416d3f5c8b4799e",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -1034,26 +1011,53 @@
       "captures": [],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
-        "command": "app.modelo.export",
-        "error": {
-          "action": null,
-          "category": "REFUSED",
-          "code": "REFUSED_MODELO_EXPORT_UNSUPPORTED",
-          "context": {
-            "modelo": "130",
-            "reason": "the registry snapshot has no complete export_layouts definition"
+        "command": "modelo.export",
+        "notices": [
+          {
+            "action": null,
+            "code": "modelo.export.local_export_not_official_evidence",
+            "context": {
+              "evidence_status": "local_export_not_official_aeat_filing_evidence",
+              "filing_year": "2026",
+              "modelo": "130",
+              "period": "1T"
+            },
+            "message": "The local export is not official filing evidence.",
+            "severity": "warning"
+          }
+        ],
+        "result": {
+          "bucket_event_id": "9c7190a825d0356f16fd6775e3b7588868e0535956e63700eca30a810adbb5ae",
+          "bucket_id": "<bucket-id>",
+          "byte_size": 928,
+          "calculation_revision_id": "cc60ddfe6b3a65ef5a708d1f10f407d2972b1848033cedc9589f8478c1d0d254",
+          "file_sha256": "3a40d734c456fd2acaa3e33b7b0d1bd2832eccdecb1997d2146c7f544b808262",
+          "filing_year": 2026,
+          "format": "fichero-boe",
+          "modelo": "130",
+          "operation": "modelo.export",
+          "output_path": "modelo-130-2026-1T.boe",
+          "payment_election": null,
+          "period": {
+            "code": "1T",
+            "filing_year": 2026
           },
-          "message": "Modelo 130 cannot be exported to fichero-BOE because the registry snapshot has no complete export_layouts definition. Calculation, verification, and local filing records may still exist, but this command cannot produce an AEAT upload file for this modelo and does not certify BOE/export correctness.",
-          "retryable": false,
-          "runbook_id": null,
-          "trace_id": null
+          "prior_domiciliation_election": {
+            "baseline_evidence_reference_id": null,
+            "baseline_filing_record_id": null,
+            "baseline_result_disposition": null,
+            "baseline_source_header_locator": null,
+            "election": "keep"
+          },
+          "refund_election": null,
+          "resolved_result_disposition": "N",
+          "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         },
-        "notices": [],
         "schema_version": "2",
-        "status": "error"
+        "status": "warning"
       },
-      "envelope_source": "stderr",
-      "exit_code": 2,
+      "envelope_source": "stdout",
+      "exit_code": 0,
       "kind": "result",
       "stderr_text": null,
       "text": null

@@ -12,6 +12,7 @@ source_refs = [
     "aeat-dr-322-2026",
     "aeat-modelo-322-procedure",
     "boe-modelo-322-2007-form",
+    "aeat-calendario-contribuyente-2026",
     "aeat-calendario-contribuyente-2026-hasta-2-marzo",
 ]
 casilla_ids = [
@@ -58,6 +59,16 @@ application_links = [
 filing_schedules = ["modelo-322-mensual"]
 deadline_windows = [
     "modelo-322-2026-01",
+    "modelo-322-2026-02",
+    "modelo-322-2026-03",
+    "modelo-322-2026-04",
+    "modelo-322-2026-05",
+    "modelo-322-2026-06",
+    "modelo-322-2026-07",
+    "modelo-322-2026-08",
+    "modelo-322-2026-09",
+    "modelo-322-2026-10",
+    "modelo-322-2026-11",
 ]
 
 # Calculation-completeness manifest for revision 2026-y-siguientes: the

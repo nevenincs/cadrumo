@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from pathlib import Path
 from uuid import UUID
 
-from pydantic import BaseModel, Field, SecretStr, field_validator, model_validator
+from pydantic import BaseModel, Field, SecretStr, field_validator
 
 from ...core import (
     STRICT_FROZEN_CONFIG,
@@ -18,6 +19,7 @@ from ...core import (
     require_active_bucket_id,
 )
 from ...core.identity import ContentDigest
+from ...core.time import now
 from ..operations import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -27,6 +29,7 @@ from ..operations import (
     OperationExecutorContext,
     OperationExecutorFactory,
     OperationFrontendProjection,
+    OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationReplayPolicy,
     OperationRequest,
@@ -34,6 +37,7 @@ from ..operations import (
     OperationSensitiveInputPolicy,
 )
 from ._bundle_export import (
+    ProfileBundleExportPurpose,
     ProfileBundleExportRequest,
     ProfileBundleExportResult,
     ProfileBundleExportTransport,
@@ -118,17 +122,8 @@ class ProfileBundleExportOperationRequest(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     profile_id: UUID
-    export: ProfileBundleExportRequest
-
-    @model_validator(mode="after")
-    def _forbid_a_second_profile_selector(self) -> ProfileBundleExportOperationRequest:
-        if self.export.profile_name is not None:
-            raise ValueError("profile bundle operation resolves its profile from the operation subject")
-        if self.export.passphrase is not None:
-            raise ValueError("profile bundle operation accepts its passphrase only through one-shot secret submission")
-        if self.export.transport is not ProfileBundleExportTransport.PASSPHRASE_ENCRYPTED:
-            raise ValueError("profile bundle operation requires passphrase-encrypted transport")
-        return self
+    destination: Path
+    purpose: ProfileBundleExportPurpose
 
 
 class ProfileMutationOperationResult(BaseModel):
@@ -174,7 +169,7 @@ def _profile_subject(profile_id: UUID) -> str:
     return f"profile:{profile_id}"
 
 
-def _require_active_profile_subject(request: OperationRequest[BaseModel], profile_id: UUID) -> None:
+def _require_active_profile_subject[PayloadT: BaseModel](request: OperationRequest[PayloadT], profile_id: UUID) -> None:
     """Bind every active-profile authority to exactly its secure operation subject."""
     if request.subject_ref != _profile_subject(profile_id):
         raise ValueError("user-profile operation subject does not match its exact profile")
@@ -184,7 +179,7 @@ def _require_active_profile_subject(request: OperationRequest[BaseModel], profil
 
 async def _result_reference(result: BaseModel, context: OperationExecutorContext) -> str:
     """Persist a post-mutation result through the supervisor's encrypted operand store."""
-    return await context.operands.put(result, written_at=context.snapshot.updated_at)
+    return await context.operands.put(result, written_at=now())
 
 
 class ProfileFieldMutationOperationExecutor:
@@ -266,11 +261,12 @@ class ProfileBundleExportOperationExecutor:
                 await context.events.effect(OperationEffect.UNKNOWN)
                 await context.events.phase(_PROFILE_BUNDLE_EXPORT_PHASES[2])
                 result = export_profile_bundle(
-                    payload.export.model_copy(
-                        update={
-                            "profile_name": None,
-                            "passphrase": SecretStr(passphrase),
-                        }
+                    ProfileBundleExportRequest(
+                        profile_name=None,
+                        destination=payload.destination,
+                        purpose=payload.purpose,
+                        transport=ProfileBundleExportTransport.PASSPHRASE_ENCRYPTED,
+                        passphrase=SecretStr(passphrase),
                     )
                 )
             finally:
@@ -334,7 +330,9 @@ def _definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        permitted_frontends=frozenset(
+            {OperationFrontendProjection.CLI, OperationFrontendProjection.MCP, OperationFrontendProjection.TUI}
+        ),
         ephemeral_secret=ephemeral_secret,
     )
 
@@ -380,7 +378,26 @@ def build_user_profile_operation_definitions() -> tuple[OperationDefinition, ...
     return USER_PROFILE_OPERATION_DEFINITIONS
 
 
+def build_user_profile_operation_registrations(
+    definitions: tuple[OperationDefinition, ...],
+) -> tuple[OperationPublicDefinitionRegistrationV1, ...]:
+    """Bind profile-maintenance definitions to their stable public schemas."""
+    return tuple(
+        sorted(
+            (
+                OperationPublicDefinitionRegistrationV1.compose_request_only(
+                    definition=definition,
+                    request_schema_id=f"{definition.definition_id}.request",
+                )
+                for definition in definitions
+            ),
+            key=lambda item: item.contract.definition_id,
+        )
+    )
+
+
 __all__ = [
     "USER_PROFILE_OPERATION_DEFINITIONS",
     "build_user_profile_operation_definitions",
+    "build_user_profile_operation_registrations",
 ]

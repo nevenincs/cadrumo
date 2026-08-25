@@ -31,8 +31,10 @@ Grounded verbatim from the bundled official diseños
   y N (negativa)".
 - M200: "I (Ingreso), U (Domiciliación), N (Negativa/Resultado cero),
   D (Solicitud de devolución), R (Renuncia a la devolución), G/V/X (CCT / extranjero)".
-- M202: "I (ingreso), U (domiciliación), G (Ingreso en C.C.T.) y
-  N (Negativa/Sin actividad/Resultado cero)".
+   - M202: "I (ingreso), U (domiciliación), G (Ingreso en C.C.T.) y
+     N (Negativa/Sin actividad/Resultado cero)".
+   - M210: casilla 31 "Resultado de la autoliquidación"; positive is ingreso,
+     zero is cuota cero, and negative is solicitud de devolución.
 """
 
 from __future__ import annotations
@@ -124,6 +126,10 @@ _M200_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id(
 )
 _M202_402_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id("03", surface="_M202_402_RESULT_CASILLA")
 _M202_403_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id("34", surface="_M202_403_RESULT_CASILLA")
+_M210_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id(
+    "cuota_diferencial",
+    surface="_M210_RESULT_CASILLA",
+)
 
 
 #: Per-modelo disposition spec, grounded in each bundled diseño's "Tipo de
@@ -178,6 +184,13 @@ _DISPOSITION_SPEC: dict[str, _DispositionSpec] = {
     Modelo.M202: _DispositionSpec(
         result_casilla_ids=(_M202_402_RESULT_CASILLA, _M202_403_RESULT_CASILLA),
         negative=ResultDisposition.NEGATIVA,
+        zero=ResultDisposition.NEGATIVA,
+    ),
+    # IRNR autoliquidación: casilla 31 is signed; a negative result requests
+    # devolución and zero is the declared cuota-cero disposition.
+    Modelo.M210: _DispositionSpec(
+        result_casilla_ids=(_M210_RESULT_CASILLA,),
+        negative=ResultDisposition.DEVOLUCION,
         zero=ResultDisposition.NEGATIVA,
     ),
 }

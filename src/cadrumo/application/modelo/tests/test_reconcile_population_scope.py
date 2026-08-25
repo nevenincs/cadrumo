@@ -23,7 +23,11 @@ from ....domain.calculations.registry import (
     ModeloRevision,
     bundled_authority,
 )
-from ....domain.modelos import CalculationRevision, CalculationRevisionState
+from ....domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
 from .. import (
     CasillaDivergenceKind,
     detect_casilla_divergences,
@@ -32,7 +36,6 @@ from .. import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_REVISION_ID = "a" * 64
 _WORK_UNIT_ID = "b" * 64
 
 #: Distinct and fixed rather than "now". The model documents updated_at as equal
@@ -55,12 +58,24 @@ def _calculation(
     binding_overrides: Mapping[BindingId, str] | None = None,
 ) -> CalculationRevision:
     """Build one persisted-shaped revision; every test varies only what it supplies."""
+    supplied_inputs = dict(inputs or {})
+    supplied_overrides = dict(binding_overrides or {})
     return CalculationRevision(
-        calculation_revision_id=_REVISION_ID,
+        # The id is content addressed over what the revision carries, so a
+        # fixed constant only matches a fixture that never varies. These tests
+        # vary the inputs, so the id is derived from the same values.
+        calculation_revision_id=derive_calculation_revision_id(
+            work_unit_id=_WORK_UNIT_ID,
+            input_values_by_casilla_id=supplied_inputs,
+            binding_overrides=supplied_overrides,
+            casilla_values={},
+            source_provenance=(),
+            filing_instance_evidence=None,
+        ),
         work_unit_id=_WORK_UNIT_ID,
         state=CalculationRevisionState.BORRADOR,
-        input_values_by_casilla_id=dict(inputs or {}),
-        binding_overrides=dict(binding_overrides or {}),
+        input_values_by_casilla_id=supplied_inputs,
+        binding_overrides=supplied_overrides,
         created_at=_CREATED_AT,
         updated_at=_UPDATED_AT,
         filing_instance_evidence=None,

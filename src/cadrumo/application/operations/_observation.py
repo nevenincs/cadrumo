@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal, cast
+from typing import ClassVar, Literal, cast
 
 from ...core import OperationCancellation, OperationInteractionKind, OperationLifecycle
 from ._events import (
@@ -185,7 +185,11 @@ class OperationObservationService:
 
 
 class _DefinitionContractMismatchError(RuntimeError):
-    pass
+    __bare_base_rationale__: ClassVar[str] = (
+        "internal-definition-contract-mismatch-signal: this module catches it by name"
+        " one call away and converts the mismatch into its own typed outcome, so it"
+        " never reaches an operator and needs no registry-bound ErrorCode"
+    )
 
 
 def _refusal(

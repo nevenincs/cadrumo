@@ -48,10 +48,11 @@ from .._evidence_draft import (
 )
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile
+from ._evidence_test_support import seeded_filer_profile as seeded_filer_profile
 from ._ledger_value_fixtures import isolated_settings, secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-__all__ = ["isolated_settings", "runtime_profile", "secure_objects"]
+__all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]
 
 _CORPUS = Path(__file__).parent / "_evidence_corpus"
 

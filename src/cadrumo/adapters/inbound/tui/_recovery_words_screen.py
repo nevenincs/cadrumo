@@ -39,7 +39,7 @@ class RecoveryWordsScreen(Screen[None]):
         align: center middle;
     }
     #words-panel {
-        width: 72;
+        width: 100%;
         height: auto;
         border: round $primary;
         padding: 1 2;

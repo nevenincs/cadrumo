@@ -23,9 +23,10 @@ from ....application.operations import (
     OperationRegistry,
     OperationRequest,
     OperationRequestStoragePolicy,
-    OperationSupervisor,
     OperationTerminalCondition,
 )
+from ....application.operations._supervisor import OperationSupervisor
+from ....core import AuthProviderKind
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ...user_profile import (
     login_profile,
@@ -46,6 +47,7 @@ from .._operation_definitions import (
     AuthTeardownOperationRequest,
     ProfileLoginOperationRequest,
     ProfilePassphraseRotationOperationRequest,
+    build_auth_operation_registrations,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -67,7 +69,10 @@ def _supervisor(
         else operation_secure_reference_repository(objects=profile_objects)  # type: ignore[arg-type]
     )
     return OperationSupervisor(
-        registry=OperationRegistry(definitions=AUTH_OPERATION_DEFINITIONS),
+        registry=OperationRegistry(
+            definitions=AUTH_OPERATION_DEFINITIONS,
+            public_registrations=build_auth_operation_registrations(AUTH_OPERATION_DEFINITIONS),
+        ),
         journal=journal,
         event_stream=journal,
         leases=OperationLeaseFilesystemRepository(storage_root=root),
@@ -269,7 +274,7 @@ def test_configure_acquire_logout_and_reset_execute_through_real_active_profile_
                 OperationRequest(
                     definition_id=AUTH_CONFIGURE_OPERATION_DEFINITION_ID,
                     subject_ref=subject_ref,
-                    payload=AuthConfigureOperationRequest(provider="certificate"),
+                    payload=AuthConfigureOperationRequest(provider=AuthProviderKind.CERTIFICATE),
                 ),
                 operation_id="6" * 64,
             )
@@ -285,7 +290,7 @@ def test_configure_acquire_logout_and_reset_execute_through_real_active_profile_
                 OperationRequest(
                     definition_id=AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID,
                     subject_ref=subject_ref,
-                    payload=AuthSessionAcquireOperationRequest(provider="certificate"),
+                    payload=AuthSessionAcquireOperationRequest(provider=AuthProviderKind.CERTIFICATE),
                 ),
                 operation_id="7" * 64,
             )
@@ -299,7 +304,7 @@ def test_configure_acquire_logout_and_reset_execute_through_real_active_profile_
                 OperationRequest(
                     definition_id=AUTH_LOGOUT_OPERATION_DEFINITION_ID,
                     subject_ref=subject_ref,
-                    payload=AuthTeardownOperationRequest(provider="certificate"),
+                    payload=AuthTeardownOperationRequest(provider=AuthProviderKind.CERTIFICATE),
                 ),
                 operation_id="8" * 64,
             )
@@ -315,7 +320,7 @@ def test_configure_acquire_logout_and_reset_execute_through_real_active_profile_
                 OperationRequest(
                     definition_id=AUTH_RESET_OPERATION_DEFINITION_ID,
                     subject_ref=subject_ref,
-                    payload=AuthTeardownOperationRequest(provider="certificate"),
+                    payload=AuthTeardownOperationRequest(provider=AuthProviderKind.CERTIFICATE),
                 ),
                 operation_id="9" * 64,
             )

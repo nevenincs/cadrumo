@@ -32,12 +32,10 @@ from .. import (
     OperationDefinition,
     OperationDurability,
     OperationEffect,
-    OperationExecutorContext,
     OperationExecutorFactory,
     OperationFrontendProjection,
     OperationLifecycle,
     OperationOwnedResource,
-    OperationPersistedSnapshot,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
@@ -46,11 +44,13 @@ from .. import (
     OperationRequestStoragePolicy,
     OperationSchemaBindingV1,
     OperationSensitiveInputPolicy,
-    OperationSupervisor,
     OperationTerminalCondition,
-    OperationTerminalEvent,
     OperationTerminalReceipt,
 )
+from .._events import OperationTerminalEvent
+from .._executor import OperationExecutorContext
+from .._journal import OperationPersistedSnapshot
+from .._supervisor import OperationSupervisor
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -66,6 +66,8 @@ _NOW = datetime(2026, 8, 14, 18, tzinfo=UTC)
 #: cleanup task is still unfinished when the supervisor's bounded wait elapses.
 #: That wait is real time, so the window is also what the test costs.
 _CLEANUP_WINDOW = timedelta(milliseconds=30)
+
+
 class LifecycleRequest(BaseModel):
     """Concrete encrypted operand that reaches the real secure-reference adapter."""
 

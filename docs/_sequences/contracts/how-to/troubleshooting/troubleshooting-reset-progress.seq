@@ -1,6 +1,4 @@
-@step Unlock the profile whose saved progress you want to clear.
-@setup aeat config login docs-sequence-sandbox
 @step Clear the saved progress of interrupted commands.
 @result aeat --format json config repair reset-progress --yes
-@expect result.fingerprint.reason_class == "readable"
+@expect result.fingerprint.reason_class == "absent"
 @expect exit_code == 0

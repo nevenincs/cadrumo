@@ -55,6 +55,7 @@ from ...application.live import (
     list_filed_data_bulk,
     pull_filed_history,
 )
+from ...application.operator_actions import ActionReference
 from ...core import Period, PeriodError
 from ...core.errors import CadrumoError
 from ...core.i18n import tr
@@ -65,6 +66,7 @@ from ._app_live_rendering import _filed_capture_lines, _metric_line, _source_fil
 from ._common import (
     _emit_envelope,
     notice_lines,
+    resolve_notice_action,
     resolve_optional_root,
     resolve_pull_year_range,
 )
@@ -1232,15 +1234,16 @@ def _limit_reached_notice(reached_count: int, *, limit: int | None) -> Notice | 
         severity=NoticeSeverity.WARNING,
         code="live.filed.limit_reached",
         message=tr(
-            "cli.app.live.filed.limit_reached",
+            "cli.app.live.filed.limit_reached_factual",
             default=(
                 "The sweep stopped at the --limit of {limit} after reaching {reached} declaration(s); "
                 "pairs beyond that point were not walked. A missing pair is not evidence that nothing "
-                "was filed -- re-run with a higher --limit or none."
+                "was filed."
             ),
             limit=limit,
             reached=reached_count,
         ),
+        action=resolve_notice_action(action=ActionReference(action_id="operator.live.filed.pull_all")),
         context={"limit": str(limit), "reached_count": str(reached_count)},
     )
 
@@ -1269,14 +1272,15 @@ def _filed_pull_all_notices(run: FiledHistoryOnboardingRun, *, limit: int | None
                 severity=NoticeSeverity.WARNING,
                 code="live.filed.pull_all.pairs_refused",
                 message=tr(
-                    "cli.app.live.filed.pull_all_pairs_refused",
+                    "cli.app.live.filed.pull_all_pairs_refused_factual",
                     default=(
                         "{count} modelo/ejercicio pair(s) could not be read and were NOT reported as empty: "
-                        "{pairs}. Re-run to retry; a refusal is not evidence that nothing was filed."
+                        "{pairs}. A refusal is not evidence that nothing was filed."
                     ),
                     count=len(refused),
                     pairs=", ".join(f"{pair.modelo}/{pair.ejercicio}" for pair in refused),
                 ),
+                action=resolve_notice_action(action=ActionReference(action_id="operator.live.filed.pull_all")),
                 context={
                     "refused_count": str(len(refused)),
                     "pairs": ", ".join(f"{pair.modelo}/{pair.ejercicio}" for pair in refused),

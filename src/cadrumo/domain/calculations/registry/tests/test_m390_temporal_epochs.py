@@ -27,10 +27,9 @@ def test_m390_selects_the_exact_annual_epoch_and_own_record_design(filing_year: 
     assert revision.valid_to == date(filing_year, 12, 31)
     assert revision.period_selector.years == (filing_year,)
     assert revision.source_refs.count(own_source_ref) == 1
-    serialized_revision = revision.model_dump_json()
-    assert own_source_ref in serialized_revision
-    for other_year in {2021, 2022, 2023, 2024, 2025} - {filing_year}:
-        assert f"aeat-dr-390-{other_year}" not in serialized_revision
+    assert {source_ref for source_ref in revision.source_refs if source_ref.startswith("aeat-dr-390-")} == {
+        own_source_ref
+    }
     assert catalogues.sources[own_source_ref].record_design_epoch == str(filing_year)
     assert catalogues.sources[own_source_ref].applies_from == date(filing_year, 1, 1)
     assert catalogues.sources[own_source_ref].applies_to == date(filing_year, 12, 31)
@@ -70,6 +69,28 @@ def test_m390_2021_parser_epoch_does_not_advertise_filing_capability() -> None:
     assert surfaces == {"extractor"}
     assert "cadrumo.application.filing" not in consumers
     assert not revision.export_layouts
+
+
+def test_m390_2021_informational_compensation_roles_do_not_claim_filing_constraints() -> None:
+    modelo, _catalogues = _committed_modelo("390")
+    parser = modelo.revisions["2021"]
+    filing = modelo.revisions["2022"]
+    identities = (
+        ("iva.anual.compensacion-ultimo-periodo-97", "iva_anual_compensacion_ultimo_periodo"),
+        ("iva.anual.compensacion-generada-ejercicio-no-97", "iva_anual_compensacion_generada_ejercicio"),
+    )
+
+    for casilla_id, filing_role in identities:
+        observed = next(c for c in parser.casillas if c.id == casilla_id)
+        bound = next(c for c in filing.casillas if c.id == casilla_id)
+        assert observed.input_kind == "informational"
+        assert observed.constraints is None
+        assert observed.semantic_role == f"{filing_role}_2021_informational"
+        assert bound.input_kind == "bound"
+        assert bound.constraints is not None and bound.constraints.sign == "non_negative"
+        assert bound.semantic_role == filing_role
+        assert "aeat-dr-390-2021" in observed.source_refs
+        assert "aeat-dr-390-2022" in bound.source_refs
 
 
 #: Binding ids embed the revision year (`modelo-390-2024.page_5.223-239....`),

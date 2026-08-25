@@ -7,9 +7,10 @@ checks reachability. It does not submit taxpayer data.
 Find the error in the headings below and follow its steps. If it is not listed,
 jump to [Prepare a privacy-safe support request](#prepare-a-privacy-safe-support-request).
 
-Profile-scoped commands need an active taxpayer profile and may ask for the
-master-key passphrase. See [Set up your taxpayer profile](profile-setup.md) if
-you have none. Output can be English, Spanish, Catalan, or Hungarian.
+Profile-scoped commands need an active taxpayer profile and may ask for that
+profile's passphrase to unwrap its independent encryption key. See [Set up your
+taxpayer profile](profile-setup.md) if you have none. Output can be English,
+Spanish, Catalan, or Hungarian.
 
 ## "This operation requires an active profile"
 
@@ -26,8 +27,13 @@ If the repair check says the active setting points at unreadable profile
 state, clear that broken local pointer, then switch to a good profile:
 
 ```{cli-sequence} troubleshooting-clear-active
-:verify: Confirm you can clear a broken active setting, then switch to a good profile by name.
+:verify: Confirm the profile list supplies the exact login name and the repair commands require real operator state.
 ```
+
+The clear command is destructive repair and is appropriate only after the
+inspection reports an unreadable active pointer. Login then asks for that
+profile's passphrase; a headless caller must use an explicit machine secret
+channel instead of placing the passphrase on the command line.
 
 If no profile exists yet, create one first - see [Set up your taxpayer profile](profile-setup.md).
 

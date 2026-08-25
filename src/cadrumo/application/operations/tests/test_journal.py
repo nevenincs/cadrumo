@@ -11,35 +11,35 @@ from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
 from ....core import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from .. import (
-    OperationConflictScopeReference,
-    OperationEventStream,
     OperationId,
     OperationIdentity,
+    OperationRequest,
+    OperationRequestStoragePolicy,
+    OperationTerminalReceipt,
+)
+from .._events import OperationPhaseEvent, OperationProgressEvent, OperationTerminalEvent
+from .._journal import (
+    OperationEventStream,
     OperationJournal,
+    OperationLeaseRepository,
+    OperationObservationMaterialization,
+    OperationObservationReader,
+    OperationPersistedSnapshot,
+    OperationProgressFoldCheckpoint,
+    OperationProgressFoldInput,
+    OperationSecureReferenceStore,
+)
+from .._leases import (
+    OperationConflictScopeReference,
     OperationLeaseDisposition,
     OperationLeaseObservation,
     OperationLeaseObservationDisposition,
-    OperationLeaseRepository,
     OperationLeaseResult,
-    OperationObservationMaterialization,
-    OperationObservationReader,
     OperationOwnerLease,
-    OperationPersistedSnapshot,
-    OperationPhaseEvent,
-    OperationProgressEvent,
-    OperationProgressFoldCheckpoint,
-    OperationProgressFoldInput,
-    OperationReplayLimit,
-    OperationReplayPage,
-    OperationReplayStatus,
-    OperationRequest,
-    OperationRequestStoragePolicy,
-    OperationSecureReferenceStore,
-    OperationSnapshot,
-    OperationTerminalEvent,
-    OperationTerminalReceipt,
     operation_conflict_scope_reference,
 )
+from .._models import OperationSnapshot
+from .._replay import OperationReplayLimit, OperationReplayPage, OperationReplayStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -753,9 +753,7 @@ def test_observation_materialization_accepts_checkpoint_suffix_and_refuses_cross
         ),
     ):
         with pytest.raises(ValidationError, match=message):
-            OperationObservationMaterialization.model_validate(
-                {**materialization.model_dump(), **mutation}
-            )
+            OperationObservationMaterialization.model_validate({**materialization.model_dump(), **mutation})
 
 
 def test_lease_transition_correlations_refuse_planted_identity_and_time_mutations() -> None:

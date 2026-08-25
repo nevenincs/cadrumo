@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 
 from pydantic import BaseModel, ValidationError
@@ -16,6 +17,7 @@ from ..storage import (
     RepositoryError,
     SecureObjectNamespaceDefinition,
     SecureObjectRepository,
+    secure_object_repository_for_active_bucket,
 )
 
 _SECURE_REFERENCE_SCHEMA_VERSION = 1
@@ -37,12 +39,24 @@ class OperationSecureReferenceRepository:
     def __init__(
         self,
         *,
-        objects: SecureObjectRepository,
+        objects: SecureObjectRepository | None = None,
+        objects_factory: Callable[[], SecureObjectRepository] | None = None,
         namespace: SecureObjectNamespaceDefinition,
     ) -> None:
+        if objects is not None and objects_factory is not None:
+            raise ValueError("operation secure references accept one repository source")
+        if objects is None and objects_factory is None:
+            raise ValueError("operation secure references require one repository source")
         self._validate_namespace(namespace)
         self._objects = objects
+        self._objects_factory = objects_factory
         self._namespace = namespace
+
+    def _repository(self) -> SecureObjectRepository:
+        if self._objects is not None:
+            return self._objects
+        assert self._objects_factory is not None
+        return self._objects_factory()
 
     @staticmethod
     def _validate_namespace(namespace: SecureObjectNamespaceDefinition) -> None:
@@ -70,7 +84,8 @@ class OperationSecureReferenceRepository:
         validate_utc_aware(written_at)
         payload = self._serialized_operand(operand)
         reference = sha256_hex(payload)
-        existing = self._objects.load(
+        objects = self._repository()
+        existing = objects.load(
             self._namespace.namespace,
             reference,
             expected_class=self._namespace.sensitivity,
@@ -79,7 +94,7 @@ class OperationSecureReferenceRepository:
         if existing is not None:
             self._require_matching_digest(reference, existing.payload)
             return reference
-        self._objects.save(
+        objects.save(
             namespace=self._namespace.namespace,
             object_key=reference,
             classification=self._namespace.sensitivity,
@@ -95,7 +110,7 @@ class OperationSecureReferenceRepository:
         operand_type: type[OperandT],
     ) -> OperandT:
         """Load, re-hash, and strictly hydrate one typed secure operand."""
-        record = self._objects.load(
+        record = self._repository().load(
             self._namespace.namespace,
             reference,
             expected_class=self._namespace.sensitivity,
@@ -115,9 +130,16 @@ class OperationSecureReferenceRepository:
             raise RepositoryError("operation secure reference content digest mismatch")
 
 
-def operation_secure_reference_repository(*, objects: SecureObjectRepository) -> OperationSecureReferenceRepository:
-    """Bind the one globally registered process-local operation operand namespace."""
-    return OperationSecureReferenceRepository(objects=objects, namespace=OPERATION_SECURE_REFERENCE_NAMESPACE)
+def operation_secure_reference_repository(
+    *,
+    objects: SecureObjectRepository | None = None,
+) -> OperationSecureReferenceRepository:
+    """Bind explicit test storage or lazily resolve the live active profile."""
+    return OperationSecureReferenceRepository(
+        objects=objects,
+        objects_factory=None if objects is not None else secure_object_repository_for_active_bucket,
+        namespace=OPERATION_SECURE_REFERENCE_NAMESPACE,
+    )
 
 
 __all__ = [

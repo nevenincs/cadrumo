@@ -15,26 +15,30 @@ from queue import Empty
 import pytest
 
 from .....application.operations import (
+    OperationIdentity,
+    OperationRequestStoragePolicy,
+    OperationTerminalReceipt,
+)
+from .....application.operations._events import OperationPhaseEvent, OperationProgressEvent, OperationTerminalEvent
+from .....application.operations._interactions import (
     OperationApplyResponse,
     OperationConsumedInteraction,
-    OperationIdempotencyClaim,
-    OperationIdentity,
     OperationInteractionRequest,
-    OperationLeaseDisposition,
+    OperationPendingInteraction,
+)
+from .....application.operations._journal import (
     OperationObservationCursorAheadError,
     OperationObservationMaterialization,
     OperationObservationUnknownOperationError,
-    OperationOwnerLease,
-    OperationPendingInteraction,
     OperationPersistedSnapshot,
-    OperationPhaseEvent,
-    OperationProgressEvent,
-    OperationReplayStatus,
-    OperationRequestStoragePolicy,
-    OperationTerminalEvent,
-    OperationTerminalReceipt,
+)
+from .....application.operations._leases import (
+    OperationLeaseDisposition,
+    OperationOwnerLease,
     operation_conflict_scope_reference,
 )
+from .....application.operations._models import OperationIdempotencyClaim
+from .....application.operations._replay import OperationReplayStatus
 from .....core import (
     OperationEffect,
     OperationInteractionKind,
