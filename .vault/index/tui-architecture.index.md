@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:961c64ec7fb645a076b2c13dfcd7447da0184e6c6ef3c1f8eed2b68e97fe2148'
+body_hash: 'sha256:be9b3b6169a3f118f23d58f70dfab811498d173678b310fb4255a38683bfb99a'
 related:
   - '[[2026-08-11-tui-architecture-W01-P01-S01]]'
   - '[[2026-08-11-tui-architecture-W01-P01-S02]]'
@@ -66,8 +66,10 @@ related:
   - '[[2026-08-11-tui-architecture-W03-P08-S114]]'
   - '[[2026-08-11-tui-architecture-W03-P08-S39]]'
   - '[[2026-08-11-tui-architecture-W03-P08-S40]]'
+  - '[[2026-08-11-tui-architecture-W03-P08-S41]]'
   - '[[2026-08-11-tui-architecture-W03-P08-S42]]'
   - '[[2026-08-11-tui-architecture-W03-P08-S43]]'
+  - '[[2026-08-11-tui-architecture-W03-P08-S44]]'
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-11-tui-architecture-plan]]'
   - '[[2026-08-11-tui-architecture-research]]'
@@ -128,8 +130,11 @@ related:
   - '[[2026-08-24-tui-architecture-s37-live-facade-audit]]'
   - '[[2026-08-24-tui-architecture-s38-filed-history-conformance-audit]]'
   - '[[2026-08-24-tui-architecture-s39-auth-operations-audit]]'
+  - '[[2026-08-25-tui-architecture-s123-d13-attestation-amendment-review-audit]]'
   - '[[2026-08-25-tui-architecture-s123-dependency-receipt-review-audit]]'
+  - '[[2026-08-25-tui-architecture-s124-receipt-self-reference-feasibility-audit]]'
   - '[[2026-08-25-tui-architecture-s40-profile-operation-definitions-review-audit]]'
+  - '[[2026-08-25-tui-architecture-s41-google-export-operation-audit]]'
 ---
 
 # `tui-architecture` feature index
@@ -197,8 +202,11 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-24-tui-architecture-s37-live-facade-audit` - `tui-architecture` audit: `S37 live facade review`
 - `2026-08-24-tui-architecture-s38-filed-history-conformance-audit` - `tui-architecture` audit: `S38 filed-history conformance review`
 - `2026-08-24-tui-architecture-s39-auth-operations-audit` - `tui-architecture` audit: `s39 auth operations`
+- `2026-08-25-tui-architecture-s123-d13-attestation-amendment-review-audit` - `tui-architecture` audit: `s123 d13 attestation amendment review`
 - `2026-08-25-tui-architecture-s123-dependency-receipt-review-audit` - `tui-architecture` audit: `s123 dependency receipt review`
+- `2026-08-25-tui-architecture-s124-receipt-self-reference-feasibility-audit` - `tui-architecture` audit: `s124 receipt self-reference feasibility`
 - `2026-08-25-tui-architecture-s40-profile-operation-definitions-review-audit` - `tui-architecture` audit: S40 profile-operation definitions review
+- `2026-08-25-tui-architecture-s41-google-export-operation-audit` - `tui-architecture` audit: `S41/S44 Google export operation and export facade`
 
 ### exec
 
@@ -260,8 +268,10 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W03-P08-S114` - Implement credential-free non-secret operation requests and one-shot supervisor-owned ephemeral secret submission with exact binding, expiry, zeroisation, restart interruption, and no durable secret derivatives before registering login or passphrase operations
 - `2026-08-11-tui-architecture-W03-P08-S39` - Register login, provider configuration, credential acquisition, passphrase rotation, and auth teardown as application-owned operations
 - `2026-08-11-tui-architecture-W03-P08-S40` - Register profile field mutation, repeatable-row mutation, bundle export, and profile logout operations through existing user-profile authorities
+- `2026-08-11-tui-architecture-W03-P08-S41` - Move Google export planning and application orchestration out of the CLI frontend and register its external-effect operation
 - `2026-08-11-tui-architecture-W03-P08-S42` - Expose authentication operation definitions through the authentication application facade
 - `2026-08-11-tui-architecture-W03-P08-S43` - Expose profile mutation and lifecycle operation definitions through the user-profile application facade
+- `2026-08-11-tui-architecture-W03-P08-S44` - Expose Google export operation definitions through the export application facade
 
 ### plan
 
