@@ -33,6 +33,9 @@ def test_m296_registry_blocked_refusal_is_bounded_and_unconnected() -> None:
     )
     assert "rows.withholding296" not in connected_candidate_ids()
     assert all(fixture.candidate_id != "rows.withholding296" for fixture in CONNECTED_PROOF_FIXTURES)
+    # Connected fixtures are the sole lifecycle authority for encrypted persistence,
+    # provenance, replay, review, and source-owned repeated-row export.
+    assert not any(fixture.candidate_id == "rows.withholding296" for fixture in CONNECTED_PROOF_FIXTURES)
     retenciones = BindingSourceKind.RETENCIONES_AGGREGATION
     assert CALCULATION_ROUTE_SOURCE_DISPOSITIONS[retenciones].value == "enrolled"
     assert any(retenciones in owner.owned_sources for owner in CALCULATION_ROUTE_RESOLVER_OWNERSHIP)
