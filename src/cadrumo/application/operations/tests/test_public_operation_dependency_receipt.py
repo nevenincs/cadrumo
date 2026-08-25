@@ -289,7 +289,6 @@ _EXPECTED_CONSTRUCTORS: Mapping[str, str] = {
 _SEMANTIC_ALLOWED_OWNERS = frozenset(
     {
         "src/cadrumo/application/operations/_composition.py",
-        "src/cadrumo/application/operations/_journal.py",
         "src/cadrumo/application/operations/_models.py",
         "src/cadrumo/application/operations/_observation.py",
         "src/cadrumo/application/operations/_projection_services.py",
