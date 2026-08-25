@@ -24,9 +24,10 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, ValidationInfo, field_validator, model_validator
+from pydantic import BaseModel, Field, ValidationError, ValidationInfo, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
+from ....core import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ....core.errors import CadrumoError as _CadrumoError
 from ....core.errors import CoreValidationError as _CoreValidationError
 from ....core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT as _DEFAULT_IVA_GENERAL_RATE_PCT
@@ -869,7 +870,7 @@ class InventoryLedger(BaseModel):
         schema_version: Forward-compatible schema version. ``"3"``.
     """
 
-    model_config = ConfigDict(**{**_STRICT_FROZEN_CONFIG, "hide_input_in_errors": True})
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     actividad_id: str = Field(min_length=1)
     year: int = Field(ge=1900)
