@@ -10,6 +10,7 @@ from cadrumo.core import BindingSourceKind
 from cadrumo.core.resources import resources
 from cadrumo.domain.calculations.registry import CasillaFieldKind
 
+from ..check import SourceConnectivityCheckError, check_census_governance
 from ..live_proof import CONNECTED_PROOF_FIXTURES, connected_candidate_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -83,3 +84,16 @@ def test_m232_deferred_source_has_no_connected_downstream_lifecycle() -> None:
         for layout in snapshot.revision.export_layouts
         for record in layout.records
     )
+
+
+def test_m232_terminal_deferral_is_rejected_after_its_expiry() -> None:
+    """The bounded M232 deferral cannot remain current after 2026-12-31."""
+    census = load_source_connectivity_census()
+    entry = next(item for item in census.entries if item.candidate_id == "rows.related-party-operation")
+    expired = entry.model_copy(update={"expires_on": date(2027, 1, 1)})
+    expired_census = census.model_copy(
+        update={"entries": tuple(expired if item is entry else item for item in census.entries)},
+    )
+
+    with pytest.raises(SourceConnectivityCheckError, match="expired without adjudication"):
+        check_census_governance(expired_census, as_of=date(2027, 1, 1))

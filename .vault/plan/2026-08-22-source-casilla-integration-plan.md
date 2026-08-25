@@ -4,7 +4,7 @@ tags:
   - '#source-casilla-integration'
 date: '2026-08-22'
 modified: '2026-08-25'
-body_hash: 'sha256:73141d0917f79f9d2a08960f690a6f5bde580927d34078f8c01c54536cad2c05'
+body_hash: 'sha256:fdd7db40430cbd04cb5d3ea6212eeb84766b9147594d38ffbaf9c01915b61ec6'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -312,7 +312,7 @@ Adjudicate, connect or close, persist, and review the M232 row source.
 - [x] `W05.P15.S92` - adjudicate M232 row semantics and source ownership from official evidence; `.vault/research/2026-08-22-source-casilla-integration-m232-row-source-grounding-research.md`.
 - [x] `W05.P15.S93` - retain the M232 related-party-operation deferral until its carrier preserves direction and relationship type, a secure source owner exists, and S94 proves the full encrypted row route; `src/cadrumo/_data/source_connectivity/census.toml`.
 - [x] `W05.P15.S94` - prove the M232 related-party source remains refused at calculation ingress and unavailable to encrypted persistence/replay, diagnostics/review, and repeated-record export until the S93 reopening predicate is satisfied; `src/cadrumo/application/modelo/tests/test_deferred_detalle_source_advisories.py; dev/source_connectivity/tests/test_m232_deferral.py`.
-- [ ] `W05.P15.S95` - close the M232 census disposition and obtain formal review; `.vault/audit/2026-08-22-m232-row-source-code-review.md`.
+- [x] `W05.P15.S95` - formally close the reviewed bounded M232 ingress-blocked census disposition and obtain final review; `.vault/audit/2026-08-25-source-casilla-integration-s95-m232-terminal-closure-review-audit.md`.
 
 ### Phase `W05.P16` - resolve M360 refund operations
 

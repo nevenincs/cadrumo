@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:fef76bed912c45428095aa606150a7c7c3e2eb617b2b10022e52b97dbf28d657'
+body_hash: 'sha256:7985909247932c883d411fb42e919b37480bd0592aa5f913b32f9387db16bb20'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -111,6 +111,8 @@ related:
   - '[[2026-08-22-source-casilla-integration-W05-P15-S92]]'
   - '[[2026-08-22-source-casilla-integration-W05-P15-S93]]'
   - '[[2026-08-22-source-casilla-integration-W05-P15-S94]]'
+  - '[[2026-08-22-source-casilla-integration-W05-P15-S95]]'
+  - '[[2026-08-22-source-casilla-integration-W05-P15-summary]]'
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-22-source-casilla-integration-census-code-review-audit]]'
   - '[[2026-08-22-source-casilla-integration-composite-provenance-research]]'
@@ -165,6 +167,8 @@ related:
   - '[[2026-08-25-source-casilla-integration-s91-m720-roundtrip-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s92-m232-row-source-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s93-m232-deferral-review-audit]]'
+  - '[[2026-08-25-source-casilla-integration-s94-m232-deferral-review-audit]]'
+  - '[[2026-08-25-source-casilla-integration-s95-m232-terminal-closure-review-audit]]'
 ---
 
 # `source-casilla-integration` feature index
@@ -228,6 +232,8 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-25-source-casilla-integration-s91-m720-roundtrip-review-audit` - `source-casilla-integration` audit: `S91 M720 worksheet roundtrip review`
 - `2026-08-25-source-casilla-integration-s92-m232-row-source-review-audit` - `source-casilla-integration` audit: `S92 M232 row source review`
 - `2026-08-25-source-casilla-integration-s93-m232-deferral-review-audit` - `source-casilla-integration` audit: `S93 M232 deferral review`
+- `2026-08-25-source-casilla-integration-s94-m232-deferral-review-audit` - `source-casilla-integration` audit: `S94 M232 terminal deferral review`
+- `2026-08-25-source-casilla-integration-s95-m232-terminal-closure-review-audit` - `source-casilla-integration` audit: `S95 M232 terminal deferral closure review`
 
 ### exec
 
@@ -333,7 +339,9 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-W05-P14-S91` - prove a real worksheet export-pull-calculate encrypted revision round trip
 - `2026-08-22-source-casilla-integration-W05-P15-S92` - adjudicate M232 row semantics and source ownership from official evidence
 - `2026-08-22-source-casilla-integration-W05-P15-S93` - retain the M232 related-party-operation deferral until its carrier preserves direction and relationship type, a secure source owner exists, and S94 proves the full encrypted row route
-- `2026-08-22-source-casilla-integration-W05-P15-S94` - prove the M232 related-party source remains refused at calculation ingress and unavailable to encrypted persistence/replay, diagnostics/review, and repeated-record export until the S93 reopening predicate is satisfied
+- `2026-08-22-source-casilla-integration-W05-P15-S94` - prove the M232 related-party-operation source remains refused at calculation ingress and unavailable to a connected encrypted source lifecycle, diagnostics/review, and repeated-record export while direct positional Modelo232VinculadaRow encrypted replay remains supported
+- `2026-08-22-source-casilla-integration-W05-P15-S95` - formally close the reviewed bounded M232 ingress-blocked census disposition and obtain final review
+- `2026-08-22-source-casilla-integration-W05-P15-summary` - `source-casilla-integration` `W05.P15` summary
 
 ### plan
 
