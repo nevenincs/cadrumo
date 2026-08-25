@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period, sha256_hex
+from ....core import sha256_hex
 from ....core.time import now
 from ....domain.filing import FilingExportValidationError
 from .. import (
@@ -39,8 +39,6 @@ def _coordinate() -> FilingExportProofCoordinate:
     return FilingExportProofCoordinate(
         modelo="111",
         revision=draft.snapshot_ref.revision_id,
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
         layout_ids=("m111-2025-fichero-boe",),
     )
 
@@ -54,12 +52,8 @@ def _provenance() -> FilingExportPublicProvenance:
         semantic_map_sha256=_DIGEST,
         render_profile_sha256=_DIGEST,
         loader_semantic_sha256=_DIGEST,
-        generated_outputs=(
-            FilingExportGeneratedOutput(relative_path="export/layout.toml", sha256=_DIGEST),
-        ),
-        probes=(
-            FilingExportOfficialProbe(record_id="record-1", field_id="modelo", emitted_offset=0, length=3),
-        ),
+        generated_outputs=(FilingExportGeneratedOutput(relative_path="export/layout.toml", sha256=_DIGEST),),
+        probes=(FilingExportOfficialProbe(record_id="record-1", field_id="modelo", emitted_offset=0, length=3),),
     )
 
 
