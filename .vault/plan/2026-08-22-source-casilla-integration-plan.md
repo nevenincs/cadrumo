@@ -4,7 +4,7 @@ tags:
   - '#source-casilla-integration'
 date: '2026-08-22'
 modified: '2026-08-25'
-body_hash: 'sha256:0d4a223d59c585edad94716f1cde2036d260e960fb571887f76c2b3f8495eed9'
+body_hash: 'sha256:a3aa1123561d9ec935cc75d848d28362f7bfe4cd9baf47170e9340a21aea9f65'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -309,7 +309,7 @@ Carry assembled typed worksheet rows across the governed calculation and encrypt
 
 Adjudicate, connect or close, persist, and review the M232 row source.
 
-- [ ] `W05.P15.S92` - adjudicate M232 row semantics and source ownership from official evidence; `.vault/research/2026-08-22-m232-row-source-grounding-research.md`.
+- [x] `W05.P15.S92` - adjudicate M232 row semantics and source ownership from official evidence; `.vault/research/2026-08-22-m232-row-source-grounding-research.md`.
 - [ ] `W05.P15.S93` - enroll the related-party operation resolver and remove its deferral; `src/cadrumo/application/aggregation/_source_mesh.py`.
 - [ ] `W05.P15.S94` - prove row persistence, diagnostics, provenance, replay, review, and export for M232; `src/cadrumo/application/modelo/tests/test_m232_row_source.py`.
 - [ ] `W05.P15.S95` - close the M232 census disposition and obtain formal review; `.vault/audit/2026-08-22-m232-row-source-code-review.md`.
