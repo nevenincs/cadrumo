@@ -8,18 +8,20 @@ from types import ModuleType
 
 import pytest
 
-import cadrumo.application.flows.capability as capability
-import cadrumo.application.flows.checkpoint as checkpoint
-import cadrumo.application.flows.copy as copy
-import cadrumo.application.flows.definition as definition
-import cadrumo.application.flows.engine as engine
-import cadrumo.application.flows.errors as errors
-import cadrumo.application.flows.line_frontend as line_frontend
-import cadrumo.application.flows.resume as resume
-import cadrumo.application.flows.review as review
-import cadrumo.application.flows.scripted as scripted
-import cadrumo.application.flows.validators as validators
-import cadrumo.application.flows.wizard_projection as wizard_projection
+from .. import (
+    capability,
+    checkpoint,
+    copy,
+    definition,
+    engine,
+    errors,
+    line_frontend,
+    resume,
+    review,
+    scripted,
+    validators,
+    wizard_projection,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
