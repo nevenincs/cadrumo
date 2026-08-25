@@ -201,6 +201,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         ),
         *_diagnostics_range_registrations(),
         *_custody_stdin_registrations(),
+        *_modelo_work_help_registrations(),
     )
 
 
@@ -236,6 +237,35 @@ def _custody_stdin_registrations() -> tuple[FStringKeyRegistration, ...]:
             values=prefixes,
         )
         for tail in ("too_large", "invalid_json", "missing_fields")
+    )
+
+
+def _modelo_work_help_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Register the per-option help keys the modelo work command specs declare.
+
+    The option and argument names are literals in
+    ``MODELO_WORK_COMMAND_SPECS``, so the spec tuple IS the enumeration source
+    -- the same relationship ``ErrorCategory`` has to ``errors.prefix.*``.
+    Deriving from it rather than hand-listing keeps the registration correct
+    when an option is added or renamed, which a literal list could not.
+    """
+    from cadrumo.entrypoints.cli._modelo_work_command_specs import MODELO_WORK_COMMAND_SPECS
+
+    prefix = "cli.app.modelo.work."
+    names = sorted(
+        {
+            help_key.value.removeprefix(prefix)
+            for spec in MODELO_WORK_COMMAND_SPECS
+            for parameter in spec.parameters or ()
+            if (help_key := parameter.help_key) is not None and help_key.value.startswith(prefix)
+        }
+    )
+    return (
+        FStringKeyRegistration(
+            description="cli.app.modelo.work.*_help (MODELO_WORK_COMMAND_SPECS parameters)",
+            key_factory=lambda name: f"{prefix}{name}",
+            values=tuple(names),
+        ),
     )
 
 
