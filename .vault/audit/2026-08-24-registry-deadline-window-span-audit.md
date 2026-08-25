@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:13359470ae8c206fc8be2ed5eca8ddeae7134fe9cf7a4d4a89b23ba11e302499'
+body_hash: 'sha256:ae9accf3c2bdc7842a85205ee5767751d66f1429efdc91f2a7a435ce23352673'
 related: []
 ---
 
@@ -652,6 +652,43 @@ years.
 I also want to correct an earlier claim in this campaign: I reported this
 cluster as "already fixed by peers" on the strength of `test_agenda` passing.
 That was one test, not the cluster. The twenty are still red.
+
+## Open, needs a period-taxonomy ruling: modelo 036 censal observations
+
+`test_modelo_036_censal_continuity` fails with:
+
+```
+1 validation error for RegistryModeloObservation
+period: invalid period code 'alta'
+```
+
+Both sides of this are correctly grounded, which is what makes it a decision
+rather than a bug:
+
+- **The registry is right.** Modelo 036's revision declares
+  `period_selector = { year_from = 2025, periods = ["alta", "modificacion",
+  "baja"] }`, and its own note explains the modelo is addressed by censal
+  events "rather than calendar periods", anchored to RD 1065/2007 and Orden
+  EHA/1274/2007. Core supports this: `core/_period.py` defines
+  `RegistryPeriodCode`, whose accepted set includes the administrative censo
+  tokens, and `test_period.py` carries a `modelo-036-censo-events` case.
+- **The model is also right, by its own contract.**
+  `RegistryModeloObservation.period` is annotated `FilingPeriodCode`, which
+  `core/_period.py` documents as deliberately narrower: "the administrative
+  censo tokens and the symbolic EVENT-N selector are refused", for "a period a
+  taxpayer files in rather than a registry coordinate".
+
+So a modelo 036 observation cannot currently be persisted, because its period
+IS an administrative token and the observation field refuses exactly those.
+
+The ruling needed is which side an observation's `period` belongs to. Widening
+it to `RegistryPeriodCode` admits administrative tokens into observations, and
+`Period.contains()` cannot compute a date span for `alta` -- so anything that
+period-filters observations would need to handle a coordinate with no span.
+Narrowing the registry instead would contradict RD 1065/2007. Neither is a
+patch, and `aeat-registry-authority-flow` reserves the period grammar as one
+authority with no parallel boundaries or aliases, so this is not a call to make
+inside a test fixture.
 
 ## Durable lesson
 
