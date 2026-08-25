@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:5afbe3a9a925f291bedf5ef2b93fdae0a71cc9af107d4fd0136f4ca037e93177'
+body_hash: 'sha256:0fdae62f6dd68481846441a41638e5e4c04d468fb7452669ef20c82676d8c7a3'
 related:
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S01]]'
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S02]]'
@@ -63,6 +63,7 @@ related:
   - '[[2026-08-25-registry-temporal-coverage-s47-s49-final-close-review-audit]]'
   - '[[2026-08-25-registry-temporal-coverage-s48-m220-2025-scope-review-audit]]'
   - '[[2026-08-25-registry-temporal-coverage-s49-m721-package-review-audit]]'
+  - '[[2026-08-25-registry-temporal-coverage-s51-m126-m128-attachment-review-audit]]'
   - '[[2026-08-25-registry-temporal-coverage-w02-p05-s50-modelo-763-temporal-coverage-review-audit]]'
 ---
 
@@ -97,6 +98,7 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 - `2026-08-25-registry-temporal-coverage-s47-s49-final-close-review-audit` - `registry-temporal-coverage` audit: `S47 and S49 final close review`
 - `2026-08-25-registry-temporal-coverage-s48-m220-2025-scope-review-audit` - `registry-temporal-coverage` audit: `S48 Modelo 220 2025 scope review`
 - `2026-08-25-registry-temporal-coverage-s49-m721-package-review-audit` - `registry-temporal-coverage` audit: `S49 Modelo 721 package review`
+- `2026-08-25-registry-temporal-coverage-s51-m126-m128-attachment-review-audit` - `registry-temporal-coverage` audit: `S51 M126 and M128 historical attachment review`
 - `2026-08-25-registry-temporal-coverage-w02-p05-s50-modelo-763-temporal-coverage-review-audit` - `registry-temporal-coverage` audit: `W02.P05.S50 Modelo 763 temporal coverage independent review`
 
 ### exec
