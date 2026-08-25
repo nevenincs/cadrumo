@@ -3,8 +3,6 @@ tags:
   - '#plan'
   - '#profile-password-custody'
 date: '2026-08-13'
-modified: '2026-08-25'
-body_hash: 'sha256:8d5c8622302b98dc8ec5f75274e209d80c07f7908a0feabbaf71a2b65e7000b5'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -20,6 +18,8 @@ related:
   - '[[2026-08-13-recovery-mnemonic-presentation-successor-adr]]'
   - '[[2026-08-13-sealed-archive-transport-successor-adr]]'
   - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
+modified: '2026-08-25'
+body_hash: 'sha256:627fc37b88ec04ef4c47854f278097ee635b65072987dd622e666143ec52251a'
 ---
 
 # `profile-password-custody` plan
@@ -342,7 +342,7 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 - [x] `W06.P12.S231` - Complete every blank or fuzzy Catalan user-page translation and correct download command-list punctuation without English fallback; `docs/locales/ca/LC_MESSAGES/`.
 - [x] `W06.P12.S232` - Complete every blank or fuzzy Hungarian user-page translation and correct download command-list punctuation without English fallback; `docs/locales/hu/LC_MESSAGES/`.
 - [ ] `W06.P12.S233` - Run the complete documented-command, catalogue-drift, locale-completeness, localized-build, no-skip, native Windows, and WSL proof suite and persist fresh global evidence; `dev/docs/tests/ and dev/tests/test_no_skip_xfail.py and src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`.
-- [ ] `W06.P12.S234` - Use Vaultspec RAG semantic discovery plus targeted symbol and caller confirmation to audit recovery creation, handoff, export, restore, and refusal-witness responsibilities for redeclaration, consolidate substitutable implementations, and correct stale optional-recovery production prose; `src/cadrumo/application/user_profile/ and src/cadrumo/adapters/persistence/storage/custody/ and src/cadrumo/entrypoints/cli/`.
+- [x] `W06.P12.S234` - Use Vaultspec RAG semantic discovery plus targeted symbol and caller confirmation to audit recovery creation, handoff, export, restore, and refusal-witness responsibilities for redeclaration, consolidate substitutable implementations, and correct stale optional-recovery production prose; `src/cadrumo/application/user_profile/ and src/cadrumo/adapters/persistence/storage/custody/ and src/cadrumo/entrypoints/cli/`.
 - [ ] `W06.P12.S235` - Repeat the fresh-context campaign-close honesty review against every corrected finding and close the campaign only with no unresolved CRITICAL, HIGH, or MEDIUM result; `.vault/audit/`.
 - [x] `W06.P12.S236` - Correct the S227 review audit into the canonical Scope, Findings, and Recommendations body schema without changing its substantive verdict; `.vault/audit/2026-08-24-profile-password-custody-s227-workstation-docs-review-audit.md`.
 - [x] `W06.P12.S237` - Remove the retired cadrumo agent-extra installation claim from live harness docstrings and install hints while preserving the sibling cadrumo-harness distribution boundary; `src/cadrumo-harness/src/cadrumo_harness/`.
