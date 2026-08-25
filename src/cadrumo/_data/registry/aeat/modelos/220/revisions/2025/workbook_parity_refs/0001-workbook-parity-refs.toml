@@ -1,12 +1,12 @@
 # Modelo 220 record-design parity anchor. Redirected 2026-08-15 to the real
-# bundled Diseño de Registro (aeat-dr-220-2024, era-matching this revision)
+# bundled Diseño de Registro (aeat-dr-220-2025, era-matching this revision)
 # after the prior workbook_source (boe-modelo-200-2025-form, a 2308-byte orden
 # excerpt) was found to carry no layout content and retiered to
 # official_source_guidance. This scheduling/applicability-grade revision
 # carries no calc formulas, so runner_required is false: the anchor pins the
 # official layout provenance without asserting a numeric parity run.
 
-[[revisions."2025-y-siguientes".workbook_parity_refs]]
+[[revisions."2025".workbook_parity_refs]]
 id = "modelo-220-record-design"
 workbook_source = "aeat-dr-220-2025"
 fixture_id = "modelo-220-record-design-layout"
