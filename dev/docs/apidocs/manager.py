@@ -83,12 +83,14 @@ _PUBLIC_FUNCTION_ALIASES: dict[str, tuple[str, ...]] = {
 # importing module.  Exclude only those imported names at the consumer stub;
 # the defining-module stub remains their sole object owner.
 _NON_OWNER_GENERIC_IMPORTS: dict[str, tuple[str, ...]] = {
+    "cadrumo.application._config_reset_repository": ("JournalRepositoryBase",),
     "cadrumo.application.aggregation._impatriado_income_ledger": ("LedgerAggregationResultBase",),
     "cadrumo.application.aggregation._irnr_income_ledger": ("LedgerAggregationResultBase",),
     "cadrumo.application.aggregation._renta_gasto_ledger": ("LedgerAggregationResultBase",),
     "cadrumo.application.aggregation._renta_income_ledger": ("LedgerAggregationResultBase",),
     "cadrumo.application.aggregation._renta_ledger": ("LedgerAggregationResultBase",),
     "cadrumo.application.operator_actions._models": ("PreconditionOutcomeInvariant",),
+    "cadrumo.application.user_profile.bundle_export_operation": ("JournalRepositoryBase",),
     "cadrumo.core.json_contract": ("PreconditionOutcomeInvariant",),
 }
 

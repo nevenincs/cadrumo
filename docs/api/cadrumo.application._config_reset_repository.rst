@@ -5,3 +5,4 @@ cadrumo.application._config_reset_repository module
    :members:
    :show-inheritance:
    :ignore-module-all:
+   :exclude-members: JournalRepositoryBase

@@ -49,6 +49,21 @@ def test_imported_generic_models_are_excluded_only_at_consumers(tmp_path: Path) 
     assert ":exclude-members: LedgerAggregationResultBase" in consumer
 
 
+def test_imported_journal_repository_base_is_excluded_only_at_consumers(tmp_path: Path) -> None:
+    """Journal repositories keep their shared generic base at its defining stub."""
+    manager = ApiStubManager(src_cadrumo=REPO_ROOT / "src" / "cadrumo", docs_api=tmp_path / "api")
+    manager.scaffold()
+
+    config_reset = (tmp_path / "api" / "cadrumo.application._config_reset_repository.rst").read_text(
+        encoding="utf-8",
+    )
+    bundle_export = (tmp_path / "api" / "cadrumo.application.user_profile.bundle_export_operation.rst").read_text(
+        encoding="utf-8"
+    )
+    assert ":exclude-members: JournalRepositoryBase" in config_reset
+    assert ":exclude-members: JournalRepositoryBase" in bundle_export
+
+
 def test_scaffold_produces_conformant_tree(tmp_path: Path) -> None:
     """scaffold() followed by check() returns an empty DriftResult.
 
