@@ -46,7 +46,7 @@ from ....core.flows import DEFER_TOKEN, FlowWidgetKind
 from ....core.i18n import tr
 from ....core.parsing import parse_bool
 from ....entrypoints.tui.components.widgets import ContentScroll
-from ._confirm_screen import confirm_restart_dialog
+from .confirm_screen import confirm_restart_dialog
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -54,7 +54,7 @@ if TYPE_CHECKING:
     from textual.events import Key
 
     from ....application.flows import ChoiceCopy, FlowPage, PageCopy, ValidationVerdict, VisiblePage
-    from ._app import FlowTuiApp
+    from .app import FlowTuiApp
 
 _TEXTUAL_INPUT_WIDGETS = frozenset(
     {
@@ -180,6 +180,7 @@ class QuestionScreen(Screen[None]):
         yield Footer()
 
     def on_mount(self) -> None:
+        """Resolve runtime binding copy and render the engine cursor's page."""
         self._localize_bindings()
         self.render_page()
 
@@ -203,10 +204,11 @@ class QuestionScreen(Screen[None]):
 
     @property
     def flow_app(self) -> FlowTuiApp:
+        """Return the typed flow application that owns this projection."""
         # `self.app` is typed as App[Any]; the runtime object is always the
         # owning FlowTuiApp. The typed accessor narrows for the checker and,
         # unlike a bare assert, keeps a loud typed refusal under ``python -O``.
-        from ._app import require_flow_app
+        from .app import require_flow_app
 
         return require_flow_app(self.app)
 
@@ -436,9 +438,11 @@ class QuestionScreen(Screen[None]):
         self.query_one("#live-validation", Static).update(hint)
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
+        """Commit submitted text through the engine-backed application."""
         self.flow_app.commit_answer(event.value)
 
     def on_radio_set_changed(self, event: RadioSet.Changed) -> None:
+        """Commit a selected confirmation choice when it carries a value."""
         # Only the CONFIRM page still mounts a RadioSet (yes / no).
         if event.pressed.name:
             self.flow_app.commit_answer(event.pressed.name)
@@ -493,6 +497,7 @@ class QuestionScreen(Screen[None]):
             )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Route the page-navigation buttons to their corresponding app intents."""
         if event.button.id == "btn-back":
             self.flow_app.navigate_back()
         elif event.button.id == "btn-next":
@@ -506,12 +511,15 @@ class QuestionScreen(Screen[None]):
         return inputs.first().value if inputs else None
 
     def action_go_back(self) -> None:
+        """Route the back binding to the app's cursor transition."""
         self.flow_app.navigate_back()
 
     def action_go_review(self) -> None:
+        """Route the review binding to the summary projection."""
         self.flow_app.action_go_review()
 
     def action_reset_page(self) -> None:
+        """Route the reset binding to the current-page engine transition."""
         self.flow_app.action_reset_current()
 
     def action_restart_flow(self) -> None:
@@ -531,6 +539,7 @@ class QuestionScreen(Screen[None]):
             self.flow_app.action_restart()
 
     def action_save_exit(self) -> None:
+        """Route the checkpoint binding to the owning application."""
         self.flow_app.action_save_exit()
 
 

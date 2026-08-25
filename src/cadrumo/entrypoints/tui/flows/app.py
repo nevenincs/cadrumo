@@ -54,8 +54,8 @@ from ....core.flows import REPEATING_INSTANCE_SEPARATOR, FlowMode, FlowWidgetKin
 from ....core.i18n import tr
 from ....entrypoints.tui.components.theme import BASE_CSS as _BASE_CSS
 from ....entrypoints.tui.components.theme import install_cadrumo_themes, toggle_appearance
-from ._question_screen import QuestionScreen
-from ._review_screen import ReviewScreen
+from .question_screen import QuestionScreen
+from .review_screen import ReviewScreen
 
 if TYPE_CHECKING:
     from ....application.flows import CheckpointStore, FlowDefinition, FlowState, VisiblePage
@@ -178,6 +178,7 @@ class FlowTuiApp(App[None]):
         registered_values: Mapping[str, str] | None = None,
         on_answer_committed: Callable[[str, str], None] | None = None,
     ) -> None:
+        """Build a flow projection, requiring a store when checkpointing is available."""
         super().__init__()
         if checkpoint_available(definition, mode) and checkpoint_store is None:
             raise _FlowCheckpointError(
@@ -208,6 +209,7 @@ class FlowTuiApp(App[None]):
         self.saved_and_exited = False
 
     def on_mount(self) -> None:
+        """Install shared appearance support and open the current question page."""
         install_cadrumo_themes(self)
         self.push_screen(QuestionScreen())
 
@@ -281,6 +283,7 @@ class FlowTuiApp(App[None]):
         self._rerender_question()
 
     def navigate_back(self) -> None:
+        """Move the engine cursor backwards and repaint the question projection."""
         self.state = back_page(self.definition, self.state)
         self._rerender_question()
 
@@ -306,10 +309,12 @@ class FlowTuiApp(App[None]):
         self._rerender_question()
 
     def action_go_review(self) -> None:
+        """Open the summary projection unless it is already the active screen."""
         if not isinstance(self.screen, ReviewScreen):
             self.push_screen(ReviewScreen())
 
     def action_leave_review(self) -> None:
+        """Return from the summary projection to the current question."""
         if isinstance(self.screen, ReviewScreen):
             self.pop_screen()
             self._rerender_question()
@@ -329,6 +334,7 @@ class FlowTuiApp(App[None]):
             self._rerender_review()
 
     def action_reset_current(self) -> None:
+        """Clear the current page answer through the engine and repaint it."""
         entry = self.cursor_entry()
         if entry is None:
             return
@@ -336,12 +342,14 @@ class FlowTuiApp(App[None]):
         self._rerender_question()
 
     def action_restart(self) -> None:
+        """Restart the engine flow after the screen has confirmed that intent."""
         self.state = restart_flow(self.definition, self.state)
         if isinstance(self.screen, ReviewScreen):
             self.pop_screen()
         self._rerender_question()
 
     def action_submit(self) -> None:
+        """Finish the run only when the engine marks its review as eligible."""
         projection = review(self.definition, self.state)
         if not projection.submit_eligible:
             self._rerender_review()
@@ -351,6 +359,7 @@ class FlowTuiApp(App[None]):
         self.exit()
 
     def action_save_exit(self) -> None:
+        """Persist the current checkpoint when the definition makes it available."""
         if not checkpoint_available(self.definition, self.state.mode):
             self._rerender_review()
             return

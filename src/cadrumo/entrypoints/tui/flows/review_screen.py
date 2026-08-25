@@ -38,11 +38,11 @@ from ....application.flows import (
 )
 from ....core.flows import FlowMode, PageStatus
 from ....core.i18n import tr
-from ._confirm_screen import confirm_restart_dialog
-from ._question_screen import _operator_answer, _operator_verdict
+from .confirm_screen import confirm_restart_dialog
+from .question_screen import _operator_answer, _operator_verdict
 
 if TYPE_CHECKING:
-    from ._app import FlowTuiApp
+    from .app import FlowTuiApp
 
 _STATUS_GLYPHS: dict[PageStatus, str] = {
     PageStatus.ANSWERED: "✔",
@@ -80,6 +80,7 @@ class ReviewScreen(Screen[None]):
         yield Footer()
 
     def on_mount(self) -> None:
+        """Configure localized table columns and render the current review."""
         self._localize_bindings()
         table = self.query_one("#review-table", DataTable)
         table.zebra_stripes = True
@@ -105,11 +106,13 @@ class ReviewScreen(Screen[None]):
 
     @property
     def flow_app(self) -> FlowTuiApp:
-        from ._app import require_flow_app
+        """Return the typed flow application that owns this projection."""
+        from .app import require_flow_app
 
         return require_flow_app(self.app)
 
     def render_review(self) -> None:
+        """Project the engine review into the table, notices, and submit control."""
         app = self.flow_app
         projection = review(app.definition, app.state)
         prompts = self._prompts_by_key(app)
@@ -253,22 +256,27 @@ class ReviewScreen(Screen[None]):
         return assemble_section_titles(app.definition)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        """Route a selectable review row to the app's edit-or-recovery intent."""
         page_key = event.row_key.value
         if page_key is None or page_key.startswith(_SECTION_HEADING_PREFIX):
             return  # a section-heading row is not a jump target
         self.flow_app.edit_from_review(page_key)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Route the submit button to the owning application."""
         if event.button.id == "btn-submit":
             self.flow_app.action_submit()
 
     def action_back_to_question(self) -> None:
+        """Route the return binding to the question projection."""
         self.flow_app.action_leave_review()
 
     def action_submit_flow(self) -> None:
+        """Route the submit binding to the engine-backed application."""
         self.flow_app.action_submit()
 
     def action_save_exit(self) -> None:
+        """Route the checkpoint binding to the owning application."""
         self.flow_app.action_save_exit()
 
     def action_restart_flow(self) -> None:

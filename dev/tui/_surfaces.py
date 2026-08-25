@@ -147,7 +147,6 @@ def _form() -> App:
 def _modelo_work_wizard() -> App:
     from uuid import uuid4
 
-    from cadrumo.adapters.inbound.tui import FlowTuiApp, select_flow_frontend
     from cadrumo.core import resolve_active_bucket_id
     from cadrumo.core.flows import FrontendCapability
     from cadrumo.entrypoints.cli._modelo import _resolve_work_unit_for_cli
@@ -156,6 +155,8 @@ def _modelo_work_wizard() -> App:
         _definition_from_steps,
         _outstanding_wizard_steps,
     )
+    from cadrumo.entrypoints.tui.flows.app import FlowTuiApp
+    from cadrumo.entrypoints.tui.flows.select import select_flow_frontend
 
     from ._modelo_work_fixture import ensure_modelo_work_unit
 

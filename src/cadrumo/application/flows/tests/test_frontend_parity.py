@@ -33,7 +33,6 @@ from prompt_toolkit.output.plain_text import PlainTextOutput
 from pydantic import BaseModel
 from textual.containers import Vertical
 
-from ....adapters.inbound.tui import FlowTuiApp
 from ....core.flows import (
     CheckpointAvailability,
     CopyRefKind,
@@ -41,6 +40,7 @@ from ....core.flows import (
     FlowWidgetKind,
 )
 from ....core.i18n import tr
+from ....entrypoints.tui.flows.app import FlowTuiApp
 from .. import (
     CopyRef,
     FlowAnswerError,

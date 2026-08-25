@@ -55,6 +55,7 @@ class ConfirmScreen(ModalScreen[bool]):
     ]
 
     def __init__(self, *, title: str, message: str, confirm_label: str, cancel_label: str) -> None:
+        """Store the already-localized copy for one irreversible-action prompt."""
         super().__init__()
         self._title = title
         self._message = message
@@ -71,15 +72,19 @@ class ConfirmScreen(ModalScreen[bool]):
                 yield Button(self._confirm_label, id="btn-confirm-accept", classes="-primary", variant="error")
 
     def on_mount(self) -> None:
+        """Focus the declining action as the safe default."""
         self.query_one("#btn-confirm-cancel", Button).focus()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Dismiss with the boolean represented by the pressed button."""
         self.dismiss(event.button.id == "btn-confirm-accept")
 
     def action_decline(self) -> None:
+        """Dismiss without approving the guarded intent."""
         self.dismiss(False)
 
     def action_confirm(self) -> None:
+        """Dismiss with the explicit approval result."""
         self.dismiss(True)
 
 

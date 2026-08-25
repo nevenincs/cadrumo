@@ -8,9 +8,9 @@ non-interactive host refuses here: a scripted caller that has answers to
 replay drives :func:`~cadrumo.application.flows.run_scripted_flow` itself
 and never routes through this selector.
 
-This module lives in the adapter tier because it may name the Textual
-application; the application layer must not. Entry-point and adapter tiers
-consume it through the package facade.
+This module lives in the entrypoint tier because it may name the Textual
+application; the application layer must not. Consumers import this canonical
+projection directly rather than through a package facade.
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 
 from ....application.flows import FlowUnsupportedConsoleError, LineFlowFrontend
 from ....core.flows import FrontendCapability
-from ._app import FlowTuiApp
+from .app import FlowTuiApp
 
 if TYPE_CHECKING:
     from collections.abc import Mapping

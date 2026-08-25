@@ -34,6 +34,7 @@ from cadrumo.entrypoints.tui.components.theme import (
     install_cadrumo_themes,
 )
 from cadrumo.entrypoints.tui.components.widgets import ContentScroll
+from cadrumo.entrypoints.tui.flows.app import FlowTuiApp, run_flow_tui
 
 from .....application.flows import (
     CopyRef,
@@ -62,7 +63,6 @@ from .....core.i18n import (
 )
 from .....tests.env_scope import activate_output_language, output_language_scope
 from .....tests.locales_root_fixture import locales_root_scope
-from .. import FlowTuiApp, run_flow_tui
 
 pytestmark = [
     pytest.mark.unit,
@@ -1225,7 +1225,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from cadrumo.adapters.inbound.tui import run_flow_tui
+from cadrumo.entrypoints.tui.flows.app import run_flow_tui
 from cadrumo.application.flows import (
     CopyRef,
     FlowCheckpointError,
