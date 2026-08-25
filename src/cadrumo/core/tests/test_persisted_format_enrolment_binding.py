@@ -143,6 +143,16 @@ container, or a token naming an enrolled format's version.
 """
 
 CONSTANTS_AWAITING_CLASSIFICATION: Final[Mapping[str, str]] = {
+    "EPOCH_SCHEMA_VERSION": (
+        "Modelo Workspace V1 producer-contract epoch shape. Genuinely open, and the two "
+        "signals disagree: the declaring module holds no repository, secure-object or "
+        "persist reference at all and the contract is a frozen declaration computed at "
+        "import, which reads as not-persisted; but the module documents itself as "
+        "STAMPED producer contracts and the contract carries a digest, so whether a "
+        "stamped contract lands inside a captured projection decides the class. That "
+        "belongs with the workspace producer work rather than being read off a "
+        "neighbour."
+    ),
     "CENSAL_REVIEWED_OPERAND_SCHEMA_VERSION": (
         "Censal reviewed-operand record: the encrypted exact preimage an operator approved or "
         "rejected. It is operator-produced persisted data, so it is NOT outside this inventory, "
@@ -344,7 +354,7 @@ def test_the_unclassified_gap_is_a_number_a_reader_can_see() -> None:
     version as a bare literal, so like the five above they were invisible to
     this gate until named, and they were named and classed in one move.
     """
-    assert len(CONSTANTS_AWAITING_CLASSIFICATION) == 19, (
+    assert len(CONSTANTS_AWAITING_CLASSIFICATION) == 20, (
         f"{len(CONSTANTS_AWAITING_CLASSIFICATION)} persisted formats await a durability class, not "
         "the 18 recorded here. If one has been argued, remove it from "
         "CONSTANTS_AWAITING_CLASSIFICATION and lower this number in the same change; if a new "
