@@ -1732,3 +1732,115 @@ group = "python-resident-filing-years"
 path = "src/cadrumo/entrypoints/tui/devtools/modelo_work_wizard.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
+
+# -- remaining census backlog adjudicated 2026-08-25 -----------------------
+
+[[decision]]
+path = "dev/registry/analysis/transcribe_structural_family_dispositions.py"
+kind = "modelo_conditional_branch"
+group = "modelo-conditional-behaviour"
+
+[[decision]]
+path = "src/cadrumo/application/aggregation/_inventory.py"
+kind = "modelo_conditional_branch"
+group = "modelo-conditional-behaviour"
+
+[[decision]]
+path = "src/cadrumo/application/filing/_envelope_modelo_policy.py"
+kind = "modelo_keyed_mapping_entry"
+group = "modelo-conditional-behaviour"
+
+[[decision]]
+path = "src/cadrumo/application/filing/_export_parity.py"
+kind = "modelo_conditional_branch"
+group = "modelo-conditional-behaviour"
+
+[[decision]]
+path = "src/cadrumo/application/filing/_projection.py"
+kind = "modelo_conditional_branch"
+group = "modelo-conditional-behaviour"
+
+[[decision]]
+path = "src/cadrumo/application/filing/_record_field_renderer.py"
+kind = "modelo_conditional_branch"
+group = "modelo-conditional-behaviour"
+
+[[decision]]
+path = "src/cadrumo/application/modelo/_work_plazo.py"
+kind = "modelo_conditional_branch"
+group = "modelo-conditional-behaviour"
+
+[[decision]]
+path = "src/cadrumo/application/registry/source_connectivity.py"
+kind = "modelo_conditional_branch"
+group = "modelo-conditional-behaviour"
+
+[[decision]]
+path = "src/cadrumo/application/user_profile/preflight.py"
+kind = "modelo_conditional_branch"
+group = "modelo-conditional-behaviour"
+
+[[decision]]
+path = "src/cadrumo/domain/calculations/registry/_deadline_coordinate.py"
+kind = "modelo_conditional_branch"
+group = "registry-modelo-specific"
+
+[[decision]]
+path = "src/cadrumo/domain/calculations/registry/_gasto193_bindings.py"
+kind = "regulatory_named_constant"
+group = "named-regulatory-constants"
+
+[[decision]]
+path = "src/cadrumo/domain/calculations/registry/_record_design.py"
+kind = "design_prose_grammar"
+group = "production-aeat-text-parsers"
+
+[[decision]]
+path = "src/cadrumo/domain/calculations/registry/_record_design_schema.py"
+kind = "design_prose_grammar"
+group = "production-aeat-text-parsers"
+
+[[decision]]
+path = "src/cadrumo/domain/calculations/registry/_record_design_schema.py"
+kind = "modelo_conditional_branch"
+group = "registry-modelo-specific"
+
+[[decision]]
+path = "src/cadrumo/domain/calculations/registry/_supplementary_orden.py"
+kind = "modelo_keyed_mapping_entry"
+group = "registry-modelo-specific"
+
+[[decision]]
+path = "src/cadrumo/domain/calculations/registry/_validate_export_layout_coverage.py"
+kind = "design_prose_grammar"
+group = "production-aeat-text-parsers"
+
+[[decision]]
+path = "src/cadrumo/domain/calculations/registry/_withholding296_bindings.py"
+kind = "regulatory_named_constant"
+group = "named-regulatory-constants"
+
+[[decision]]
+path = "src/cadrumo/domain/deadlines/_plazo.py"
+kind = "modelo_conditional_branch"
+group = "modelo-conditional-behaviour"
+
+[[decision]]
+path = "src/cadrumo/entrypoints/cli/_app_live_iva_wallet_command_specs.py"
+kind = "regulatory_named_constant"
+group = "named-regulatory-constants"
+
+[[decision]]
+path = "src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py"
+kind = "modelo_conditional_branch"
+group = "modelo-conditional-behaviour"
+
+[[decision]]
+path = "src/cadrumo/entrypoints/cli/_modelo_nonwork_iva_wallet_command_specs.py"
+kind = "regulatory_named_constant"
+group = "named-regulatory-constants"
+
+[[decision]]
+path = "src/cadrumo/entrypoints/tui/devtools/modelo_work_wizard.py"
+kind = "regulatory_named_constant"
+group = "named-regulatory-constants"
