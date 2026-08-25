@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-25'
-body_hash: 'sha256:b2d0b1a5ee180f7911b70bf6ec1524ccdaae927ed9edc2232815f7f8c9e7fc77'
+body_hash: 'sha256:65ed4d9d884aa55e9925fe22fba2a2afb8c96da58d4e25545ff9f2f991016e76'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -351,7 +351,7 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 - [x] `W06.P12.S240` - Add exact result-payload expectations to every newly enrolled result frame on the nine named documentation pages and tighten the baseline so future unasserted frames fail; `docs/_sequences/contracts/ and dev/docs/tests/test_documented_command_conformance.py`.
 - [x] `W06.P12.S241` - Adjudicate and correct live documentation sequence behavior for mandatory recovery creation, export product identity, registry and ledger evidence, binding counts, and required-casilla expectations against current production authority; `docs/_sequences/contracts/ and docs/how-to/ and docs/quickstart.md and dev/docs/sequences/_compare.py and dev/docs/sequences/tests/test_compare.py`.
 - [x] `W06.P12.S242` - Regenerate every affected documentation sequence golden through the owning CLI after live behavior is adjudicated and reconcile frame counts without hand-authored output; `docs/_sequences/`.
-- [ ] `W06.P12.S243` - Repair Spanish, Catalan, and Hungarian localized reference tokens and generated CLI toctree integration so all localized nitpicky builds resolve current targets; `docs/locales/ and docs/reference/cli/`.
+- [x] `W06.P12.S243` - Repair Spanish, Catalan, and Hungarian localized reference tokens and generated CLI toctree integration so all localized nitpicky builds resolve current targets; `docs/locales/ and docs/reference/cli/`.
 - [ ] `W06.P12.S244` - Repair the main nitpicky API documentation cross-references and toctree ownership against current public module exports; `docs/api/ and docs/conf.py`.
 - [x] `W06.P12.S245` - Migrate harness warm-runtime profile provisioning to the mandatory verified recovery handoff and prove real runtime startup succeeds; `src/cadrumo-harness/`.
 - [x] `W06.P12.S246` - Repair the harness serial watchdog kill-switch and disarm lifecycle so the full integration suite terminates cleanly without weakening timeout enforcement; `src/cadrumo-harness/`.

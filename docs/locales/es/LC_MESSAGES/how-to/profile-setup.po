@@ -991,7 +991,8 @@ msgstr ""
 "Un fichero de perfil portátil contiene datos del contribuyente, incluidos"
 " el identificador fiscal, la actividad y el historial de presentaciones "
 "local. Guárdalo como datos fiscales sensibles y no lo adjunte a una "
-"solicitud de soporte salvo que haya eliminado los datos personales."
+"solicitud de soporte. Consulta [importación, exportación y "
+"evidencia](../reference/import-export-and-evidence.md)."
 
 #: ../../how-to/profile-setup.md:380
 msgid ""

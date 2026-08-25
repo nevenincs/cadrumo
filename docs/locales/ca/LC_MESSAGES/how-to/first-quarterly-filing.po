@@ -172,11 +172,10 @@ msgid ""
 "it calculates. Attach in that order: a draft bundles its evidence when you verify it, so an invoice attached "
 "afterwards does not reach the filing."
 msgstr ""
-"El resultat de la verificació és el senyal que l'esborrany està a punt. Quan `granted_verificado_completo` diu cert, "
-"exporta el fitxer. L'exportació es nega fins que cada fila de despesa deduïble porti evidència de factura de compra "
-"enllaçada; aquest exemple de primera presentació omet aquesta evidència, de manera que l'exportació i el marcador de "
-"presentació posterior al portal es mostren com a marcs de visualització. La cadena completa d'evidència a exportació "
-"s'executa de cap a cap, executada, a [Prepara una presentació del Model 303 d'IVA](modelo-303.md):"
+"El resultat de la verificació indica que l'esborrany està a punt. La verificació es denega fins que cada fila de "
+"despesa deduïble tingui vinculada l'evidència de la factura de compra; per això aquest exemple registra la factura "
+"del proveïdor i l'adjunta abans de calcular. Fes-ho en aquest ordre: l'esborrany incorpora la seva evidència quan el "
+"verifiques, de manera que una factura adjuntada després no arriba a la presentació."
 
 #: ../../how-to/first-quarterly-filing.md:96
 msgid ""
@@ -214,4 +213,3 @@ msgstr "[El flux de treball de presentació](filing-spine.md)"
 #: ../../how-to/first-quarterly-filing.md:113
 msgid "[File your modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Puja el teu model exportat al portal de l'AEAT](file-at-aeat.md)"
-

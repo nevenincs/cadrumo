@@ -990,8 +990,8 @@ msgid ""
 msgstr ""
 "Egy hordozható profilfájl adózói adatokat tartalmaz, beleértve az "
 "adóazonosítót, a tevékenységet és a helyi benyújtási előzményeket. "
-"Tárolja érzékeny adóadatként, és ne csatolja egy támogatási kéréshez, "
-"hacsak nem távolította el a személyes adatokat."
+"Tárolja érzékeny adóadatként, és ne csatolja támogatási kéréshez. Lásd az "
+"[importálás, exportálás és bizonyítékok](../reference/import-export-and-evidence.md) leírását."
 
 #: ../../how-to/profile-setup.md:380
 msgid ""
