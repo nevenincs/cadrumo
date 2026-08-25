@@ -343,17 +343,20 @@ def test_every_terminal_condition_waits_for_owned_file_cleanup_and_preserves_eff
                 start_task = asyncio.create_task(supervisor.start(operation_id))
                 await executor.started.wait()
                 await supervisor.request_cancel(operation_id)
-                ready_for_settlement = await start_task
+                resource = executor.resource
+                assert resource is not None
+                terminal_waiter = asyncio.create_task(supervisor.await_terminal(operation_id))
+                await resource.cleanup_started.wait()
+                ready_for_settlement = await supervisor.inspect(operation_id)
             else:
                 ready_for_settlement = await supervisor.start(operation_id)
-
-            resource = executor.resource
-            assert resource is not None
-            terminal_waiter = asyncio.create_task(supervisor.await_terminal(operation_id))
-            settlement_task = asyncio.create_task(
-                supervisor.settle(operation_id, _receipt(ready_for_settlement, case, settled_at=_NOW))
-            )
-            await resource.cleanup_started.wait()
+                resource = executor.resource
+                assert resource is not None
+                terminal_waiter = asyncio.create_task(supervisor.await_terminal(operation_id))
+                settlement_task = asyncio.create_task(
+                    supervisor.settle(operation_id, _receipt(ready_for_settlement, case, settled_at=_NOW))
+                )
+                await resource.cleanup_started.wait()
 
             during_cleanup = await supervisor.inspect(operation_id)
             assert during_cleanup == ready_for_settlement
@@ -365,7 +368,7 @@ def test_every_terminal_condition_waits_for_owned_file_cleanup_and_preserves_eff
             assert not any(isinstance(event, OperationTerminalEvent) for event in replay_before_close.events)
 
             resource.allow_cleanup()
-            terminal = await settlement_task
+            terminal = await start_task if case.await_cancellation else await settlement_task
             awaited_terminal = await terminal_waiter
             replay = await journal.read_after(operation_id, 0, limit=20)
 
@@ -502,35 +505,22 @@ def test_cleanup_timeout_refuses_terminal_journal_persistence(tmp_path: Path) ->
             executor=executor,
             cleanup_timeout=_CLEANUP_WINDOW,
         )
-        case = _TERMINAL_CASES[3]
-
         async def retain_nonterminal_state_after_cleanup_timeout() -> None:
             operation_id = "4" * 64
             await supervisor.submit(_request(subject_ref="subject:cleanup-timeout"), operation_id=operation_id)
             start_task = asyncio.create_task(supervisor.start(operation_id))
             await executor.started.wait()
             await supervisor.request_cancel(operation_id)
-            settling = await start_task
-            assert settling.lifecycle is OperationLifecycle.SETTLING
             resource = executor.resource
             assert resource is not None
 
             terminal_waiter = asyncio.create_task(supervisor.await_terminal(operation_id))
-            settlement_task = asyncio.create_task(
-                supervisor.settle(operation_id, _receipt(settling, case, settled_at=_NOW))
-            )
-            cleanup_reached = asyncio.create_task(resource.cleanup_started.wait())
-            await asyncio.wait((cleanup_reached, settlement_task), return_when=asyncio.FIRST_COMPLETED)
-            if not cleanup_reached.done():
-                cleanup_reached.cancel()
-                settlement_task.result()
-                raise AssertionError("settlement ended without beginning the owned close")
+            await resource.cleanup_started.wait()
             with pytest.raises(TimeoutError, match="cleanup deadline"):
-                await settlement_task
+                await start_task
 
             unsettled = await supervisor.inspect(operation_id)
             replay = await journal.read_after(operation_id, 0, limit=20)
-            assert unsettled == settling
             assert unsettled.lifecycle is OperationLifecycle.SETTLING
             assert unsettled.terminal_receipt is None
             assert resource.lifecycle_at_close is OperationLifecycle.SETTLING

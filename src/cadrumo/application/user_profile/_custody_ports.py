@@ -768,7 +768,25 @@ class ProfileSecureObjectInventoryPort(Protocol):
 
     def list_namespaces(self) -> tuple[str, ...]:
         """Return the registered namespaces present in the active bucket."""
-        ...
+
+    ...
+
+
+class ProfileCustodyInventoryEntryPort(Protocol):
+    """One non-secret capsule member observed by physical custody storage."""
+
+    @property
+    def size_bytes(self) -> int: ...
+
+
+class ProfileCustodyInventoryPort(Protocol):
+    """Exact inventory shape consumed by application custody transactions."""
+
+    @property
+    def digest(self) -> str: ...
+
+    @property
+    def digest_entries(self) -> tuple[ProfileCustodyInventoryEntryPort, ...]: ...
 
     def list_keys(self, namespace: str) -> tuple[str, ...]:
         """Return object keys present in one namespace."""

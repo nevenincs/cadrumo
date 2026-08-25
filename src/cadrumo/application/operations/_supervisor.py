@@ -485,7 +485,22 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
     ) -> OperationPersistedSnapshot:
         """Join an executor's domain result to successful settlement after it stops."""
         if result_ref is None:
-            return snapshot
+            returned = await self.inspect(snapshot.identity.operation_id)
+            if returned.cancellation_acknowledged_at is None:
+                return returned
+            condition = self._acknowledged_cancellation_condition(returned)
+            if condition is OperationTerminalCondition.TIMED_OUT:
+                self._validate_cancelled_settlement(returned)
+            return await self.settle(
+                returned.identity.operation_id,
+                OperationTerminalReceipt(
+                    identity=returned.identity,
+                    revision=returned.revision + 1,
+                    condition=condition,
+                    effect=returned.effect,
+                    settled_at=self._clock(),
+                ),
+            )
         if not isinstance(result_ref, str):
             raise OperationDeclarationError("operation executor returned a non-reference result")
         if snapshot.lifecycle is not OperationLifecycle.RUNNING:
@@ -501,6 +516,16 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
                 result_ref=result_ref,
             ),
         )
+
+    @staticmethod
+    def _acknowledged_cancellation_condition(snapshot: OperationPersistedSnapshot) -> OperationTerminalCondition:
+        """Derive the sole terminal fact a cooperatively stopped executor permits."""
+        requested_at = snapshot.cancellation_requested_at
+        if requested_at is None or snapshot.cancellation_acknowledged_at is None:
+            raise ValueError("automatic cancellation settlement requires durable request and acknowledgement")
+        if snapshot.execution_deadline is not None and requested_at >= snapshot.execution_deadline:
+            return OperationTerminalCondition.TIMED_OUT
+        return OperationTerminalCondition.CANCELLED
 
     @staticmethod
     async def _wait_for_executor_or_deadline(

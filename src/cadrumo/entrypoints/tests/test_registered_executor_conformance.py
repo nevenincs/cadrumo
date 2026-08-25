@@ -78,29 +78,58 @@ _ACTOR = "operator:s45"
 @dataclass(frozen=True, slots=True)
 class _RegisteredExecutorConformanceCase:
     definition_id: str
-    succeeds: bool = False
-    expected_terminal: OperationTerminalCondition | None = None
-    expected_effect: OperationEffect | None = None
+    expected_terminal: OperationTerminalCondition
+    expected_effect: OperationEffect
+    expected_phase_codes: tuple[str, ...] | None = None
 
 
 _MATRIX = (
-    _RegisteredExecutorConformanceCase("auth.profile.login", succeeds=True),
-    _RegisteredExecutorConformanceCase("auth.profile.passphrase-rotate", succeeds=True),
-    _RegisteredExecutorConformanceCase("auth.provider.configure"),
-    _RegisteredExecutorConformanceCase("auth.session.acquire"),
-    _RegisteredExecutorConformanceCase("auth.session.logout"),
-    _RegisteredExecutorConformanceCase("auth.session.reset"),
-    _RegisteredExecutorConformanceCase("user-profile.field-mutation", succeeds=True),
-    _RegisteredExecutorConformanceCase("user-profile.repeatable-row-mutation", succeeds=True),
-    _RegisteredExecutorConformanceCase("user-profile.bundle-export", succeeds=True),
-    _RegisteredExecutorConformanceCase("user-profile.logout", succeeds=True),
-    _RegisteredExecutorConformanceCase("live.filed-history.pull"),
+    _RegisteredExecutorConformanceCase(
+        "auth.profile.login", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+    ),
+    _RegisteredExecutorConformanceCase(
+        "auth.profile.passphrase-rotate", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+    ),
+    _RegisteredExecutorConformanceCase(
+        "auth.provider.configure", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+    ),
+    _RegisteredExecutorConformanceCase(
+        "auth.session.acquire", OperationTerminalCondition.REFUSED, OperationEffect.UNKNOWN
+    ),
+    _RegisteredExecutorConformanceCase(
+        "auth.session.logout", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
+    ),
+    _RegisteredExecutorConformanceCase(
+        "auth.session.reset", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
+    ),
+    _RegisteredExecutorConformanceCase(
+        "user-profile.field-mutation", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+    ),
+    _RegisteredExecutorConformanceCase(
+        "user-profile.repeatable-row-mutation", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+    ),
+    _RegisteredExecutorConformanceCase(
+        "user-profile.bundle-export", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
+    ),
+    _RegisteredExecutorConformanceCase(
+        "user-profile.logout", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+    ),
+    _RegisteredExecutorConformanceCase(
+        "live.filed-history.pull", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
+    ),
     _RegisteredExecutorConformanceCase(
         "export.google-sheets",
-        expected_terminal=OperationTerminalCondition.FAILED,
-        expected_effect=OperationEffect.UNKNOWN,
+        OperationTerminalCondition.FAILED,
+        OperationEffect.UNKNOWN,
+        (
+            "export.google-sheets.preflight",
+            "export.google-sheets.plan",
+            "export.google-sheets.apply",
+        ),
     ),
-    _RegisteredExecutorConformanceCase("user-profile.censo-review", succeeds=True),
+    _RegisteredExecutorConformanceCase(
+        "user-profile.censo-review", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+    ),
 )
 
 
@@ -186,6 +215,10 @@ class _ExecutionDriver:
         self, submitted: OperationSubmission, observed: OperationObservationSuccessV1
     ) -> OperationObservationSuccessV1:
         operation_id = await self.respond_apply(submitted, observed)
+        return await self.await_terminal(operation_id)
+
+    async def await_terminal(self, operation_id: str) -> OperationObservationSuccessV1:
+        """Observe a public terminal projection after real executor work completes."""
         for _ in range(100):
             observed = await self.observe(operation_id)
             if observed.projection.lifecycle is OperationLifecycle.TERMINAL:
@@ -364,10 +397,13 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
         submitted, observed = asyncio.run(
             driver.run(definition_id=definition.definition_id, subject_ref=subject_ref, payload=payload, secret=secret)
         )
-        phases = {
+        phase_codes = tuple(
             event.phase_code for event in observed.event_page.events if isinstance(event, OperationPublicPhaseEventV1)
-        }
-        assert phases & set(definition.phase_codes)
+        )
+        if case.expected_phase_codes is None:
+            assert set(phase_codes) & set(definition.phase_codes)
+        else:
+            assert phase_codes == case.expected_phase_codes
         if case.definition_id == "user-profile.censo-review":
             assert observed.projection.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION
             assert isinstance(observed.projection.pending_interaction, OperationReviewAvailableInteractionV1)
@@ -375,18 +411,8 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
             assert cleanup.closed is True
             observed = asyncio.run(driver.apply_review(submitted, observed))
         assert observed.projection.lifecycle is OperationLifecycle.TERMINAL
-        if case.succeeds:
-            assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED, case.definition_id
-            assert observed.projection.effect in {OperationEffect.NONE, OperationEffect.UPDATED}
-        elif case.expected_terminal is not None:
-            assert observed.projection.terminal_condition is case.expected_terminal
-            assert observed.projection.effect is case.expected_effect
-        else:
-            assert observed.projection.terminal_condition in {
-                OperationTerminalCondition.SUCCEEDED,
-                OperationTerminalCondition.REFUSED,
-                OperationTerminalCondition.FAILED,
-            }
+        assert observed.projection.terminal_condition is case.expected_terminal, case.definition_id
+        assert observed.projection.effect is case.expected_effect, case.definition_id
         assert isinstance(observed.projection.pending_interaction, OperationNoPendingInteractionV1)
         asyncio.run(
             driver.review_not_pending(
@@ -397,8 +423,8 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
         )
 
 
-def test_censo_cooperative_cancellation_is_acknowledged_before_its_irreversible_section(tmp_path: Path) -> None:
-    """Drive the one cooperative cancellation capability through the real public control service."""
+def test_censo_cooperative_cancellation_settles_after_its_irreversible_section(tmp_path: Path) -> None:
+    """Drive manual cancellation through the public control service to its exact terminal receipt."""
     reached_boundary = asyncio.Event()
     release_boundary = asyncio.Event()
 
@@ -433,20 +459,18 @@ def test_censo_cooperative_cancellation_is_acknowledged_before_its_irreversible_
             assert isinstance(requested, OperationCancellationSuccessV1)
             assert requested.cancellation_acknowledged is False
             release_boundary.set()
-            for _ in range(100):
-                observed = await driver.observe(operation_id)
-                if observed.projection.cancellation_acknowledged:
-                    assert observed.projection.effect is OperationEffect.NONE
-                    assert cleanup.closed is True
-                    return
-                await asyncio.sleep(0)
-            raise AssertionError("censo executor did not acknowledge cooperative cancellation")
+            terminal = await driver.await_terminal(operation_id)
+            assert terminal.projection.terminal_condition is OperationTerminalCondition.CANCELLED
+            assert terminal.projection.effect is OperationEffect.NONE
+            assert terminal.projection.cancellation_acknowledged is True
+            assert terminal.projection.cleanup_deadline_at is not None
+            assert cleanup.closed is True
 
         asyncio.run(run())
 
 
-def test_censo_execution_deadline_requests_its_actual_cooperative_safe_stop(tmp_path: Path) -> None:
-    """Let the supervisor-owned deadline cancel the production CENSO continuation before apply."""
+def test_censo_execution_deadline_settles_its_actual_cooperative_safe_stop(tmp_path: Path) -> None:
+    """Let the supervisor-owned deadline drive the production CENSO continuation to timed out."""
     cleanup = _CloseWitness()
     with _runtime(
         tmp_path / "censo-deadline",
@@ -466,15 +490,12 @@ def test_censo_execution_deadline_requests_its_actual_cooperative_safe_stop(tmp_
             assert waiting.projection.execution_deadline_at is not None
             await asyncio.sleep(max((waiting.projection.execution_deadline_at - now()).total_seconds(), 0) + 0.01)
             operation_id = await driver.respond_apply(submitted, waiting)
-            for _ in range(100):
-                observed = await driver.observe(operation_id)
-                if observed.projection.cancellation_acknowledged:
-                    assert observed.projection.cancellation_requested is True
-                    assert observed.projection.cleanup_deadline_at is not None
-                    assert observed.projection.effect is OperationEffect.NONE
-                    assert cleanup.closed is True
-                    return
-                await asyncio.sleep(0)
-            raise AssertionError("CENSO deadline did not reach its cooperative safe stop")
+            terminal = await driver.await_terminal(operation_id)
+            assert terminal.projection.terminal_condition is OperationTerminalCondition.TIMED_OUT
+            assert terminal.projection.effect is OperationEffect.NONE
+            assert terminal.projection.cancellation_requested is True
+            assert terminal.projection.cancellation_acknowledged is True
+            assert terminal.projection.cleanup_deadline_at is not None
+            assert cleanup.closed is True
 
         asyncio.run(run())
