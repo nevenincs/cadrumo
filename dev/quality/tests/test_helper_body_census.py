@@ -18,8 +18,8 @@ from typing import Final
 
 import pytest
 
-from dev.quality.fixture_census import FixtureCensusError
-from dev.quality.helper_body_census import census
+from ..fixture_census import FixtureCensusError
+from ..helper_body_census import census
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

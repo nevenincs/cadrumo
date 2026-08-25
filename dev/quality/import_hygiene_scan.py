@@ -2469,7 +2469,9 @@ def _require_accepted_tui_migration_identities(
     *,
     accepted_sha256: str,
 ) -> None:
-    """Refuse any addition, removal, or reclassification of a census identity."""
+    """Refuse identity drift until the legacy census is structurally empty."""
+    if not rows:
+        return
     actual = _tui_migration_identity_sha256(rows)
     if accepted_sha256 and actual != accepted_sha256:
         raise TuiMigrationManifestError(

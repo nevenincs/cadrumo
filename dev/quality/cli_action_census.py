@@ -39,7 +39,8 @@ from yaml.nodes import MappingNode, Node, ScalarNode, SequenceNode
 
 from cadrumo.core import scan_directory
 from cadrumo.core.errors import declared_error_codes
-from dev._paths import REPO_ROOT, UTF_8
+
+from .._paths import REPO_ROOT, UTF_8
 
 SOURCE_ROOT: Final[str] = "src/cadrumo"
 _UTF_8: Final[str] = UTF_8

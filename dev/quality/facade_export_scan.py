@@ -38,8 +38,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from dev._paths import REPO_ROOT, UTF_8
-
+from .._paths import REPO_ROOT, UTF_8
 from .import_hygiene_scan import dunder_all_assignment_value
 
 PKG_PREFIX = "src/cadrumo"

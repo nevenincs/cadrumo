@@ -123,6 +123,7 @@ from dev.quality.import_hygiene_scan import (
     generate_tui_migration_manifest,
     is_shipped_module,
     iter_dynamic_import_targets,
+    tui_migration_census_drift,
     tui_textual_edge_sha256,
     tui_textual_edges,
     walk_module_imports,
@@ -1086,7 +1087,7 @@ def _scan_planted_tui_boundary(tmp_path: Path, dotted_rel: str, body: str):
 
 
 def test_tui_boundary_is_clean_against_the_accepted_legacy_census() -> None:
-    _tui_migration_manifest()
+    migration_rows = _tui_migration_manifest()
     source_files = scan_directory(PKG_ROOT, pattern="*.py", recursive=True)
     dev_files = sorted(
         path for path in scan_directory(REPO_ROOT / "dev", pattern="*.py", recursive=True) if "tests" not in path.parts
@@ -1094,7 +1095,8 @@ def test_tui_boundary_is_clean_against_the_accepted_legacy_census() -> None:
     accepted_edges = tui_textual_edges(source_files, src_root=REPO_ROOT / "src") | tui_textual_edges(
         dev_files, src_root=REPO_ROOT
     )
-    assert tui_textual_edge_sha256(accepted_edges) == _ACCEPTED_TUI_TEXTUAL_EDGE_SHA256
+    if migration_rows:
+        assert tui_textual_edge_sha256(accepted_edges) == _ACCEPTED_TUI_TEXTUAL_EDGE_SHA256
 
     violations = [
         *find_tui_boundary_violations(
@@ -1110,6 +1112,25 @@ def test_tui_boundary_is_clean_against_the_accepted_legacy_census() -> None:
     ]
 
     assert violations == []
+
+
+def test_terminal_empty_tui_census_needs_no_historic_digest_refresh() -> None:
+    """An empty legacy tree is terminal; non-empty identity drift still refuses."""
+    historical_digest = "historic-nonempty-census"
+    assert tui_migration_census_drift((), accepted_sha256=historical_digest) is None
+
+    live_legacy_row = TuiMigrationRow(
+        kind=TuiMigrationRowKind.MODULE,
+        legacy_module=LEGACY_TUI_PACKAGE,
+        symbol=None,
+        consumer=LEGACY_TUI_PACKAGE,
+        consumer_kind="declaration",
+        locator="src/cadrumo/adapters/inbound/tui/__init__.py:1",
+        owner_lane="integration",
+        replacement=CANONICAL_TUI_PACKAGE,
+        deletion_proof="present",
+    )
+    assert tui_migration_census_drift((live_legacy_row,), accepted_sha256=historical_digest) is not None
 
 
 def test_components_import_only_presentation_dependencies() -> None:
@@ -1149,7 +1170,7 @@ def test_components_have_no_legacy_consumers_or_republished_moved_symbols() -> N
     (
         ("from cadrumo.entrypoints.tui.profile import ProfileScreen\n", "cadrumo.entrypoints.tui.profile"),
         ("from cadrumo.application.operations import _registry\n", "cadrumo.application.operations"),
-        ("from cadrumo.adapters.inbound.tui import LegacyScreen\n", "cadrumo.adapters.inbound.tui"),
+        ("from " + LEGACY_TUI_PACKAGE + " import LegacyScreen\n", LEGACY_TUI_PACKAGE),
         ("from cadrumo.entrypoints.cli import app\n", "cadrumo.entrypoints.cli"),
         ("from cadrumo.core.repository import Repository\n", "cadrumo.core.repository"),
         ("from cadrumo.core.timers import Timer\n", "cadrumo.core.timers"),

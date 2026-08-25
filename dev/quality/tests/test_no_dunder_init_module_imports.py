@@ -33,7 +33,7 @@ from typing import Final
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from ..._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

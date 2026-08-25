@@ -1065,7 +1065,7 @@ def _convert_markdown_fences_in_inherited_docstrings(app, what, name, obj, optio
     instead of erroring the nitpicky gate.
 
     Textual documents ``Widget.compose`` — which every screen in
-    ``adapters.inbound.tui`` inherits — with a Markdown fenced block::
+    ``entrypoints.tui`` inherits — with a Markdown fenced block::
 
         ```python
         def compose(self) -> ComposeResult:
