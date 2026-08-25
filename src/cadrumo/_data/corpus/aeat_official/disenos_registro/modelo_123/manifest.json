@@ -14,7 +14,7 @@
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
   ],
-  "artefact_count": 8,
+  "artefact_count": 6,
   "artefacts": [
     {
       "modelo": "123",
@@ -42,18 +42,6 @@
     },
     {
       "modelo": "123",
-      "title": "123 - 01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xlsx",
-      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
-      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_24/DR123e24.xls",
-      "stored_path": "files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xlsx",
-      "original_filename": "01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xlsx",
-      "content_type": "application/octet-stream",
-      "bytes": 38812,
-      "sha256": "835520ea0edf8d182e7e5c839920a208040fcdc78c97d1628d5433518ef2f2dd",
-      "retrieved_at": "2026-05-03"
-    },
-    {
-      "modelo": "123",
       "title": "123 - 02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.txt",
       "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
       "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR123e15v13.xls",
@@ -74,18 +62,6 @@
       "content_type": "application/vnd.ms-excel",
       "bytes": 173568,
       "sha256": "21ec4feed2950c57c689a772166952b3c2245e7101bce7836c2baedc1f4f8dbd",
-      "retrieved_at": "2026-05-03"
-    },
-    {
-      "modelo": "123",
-      "title": "123 - 02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.xlsx",
-      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
-      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR123e15v13.xls",
-      "stored_path": "files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.xlsx",
-      "original_filename": "02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.xlsx",
-      "content_type": "application/octet-stream",
-      "bytes": 38734,
-      "sha256": "035c322eadef3cd90211734216dc5e308c3f213b9a22226be8b4b67f8886a4d4",
       "retrieved_at": "2026-05-03"
     },
     {

@@ -992,6 +992,17 @@ applies_from = 2020-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_20/DR_Anexo_349.pdf"
 review_status = "reviewed"
 
+[sources."aeat-dr-349-2002"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_349/files/03-349-orden-hac-360-2002-28-kb-pdf.pdf"
+sha256 = "2aec34746d7f91b89b4f59b127a4fc00658b49d091137a8777dee68ae50d7ea2"
+bytes = 1023320
+retrieved_at = 2026-05-03
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/TIPOS34905.pdf"
+review_status = "reviewed"
+
 [sources."boe-modelo-349-form-2010"]
 evidence_tier = "layout_authority"
 authority = "boe"

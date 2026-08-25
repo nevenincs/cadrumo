@@ -337,6 +337,17 @@ applies_to = 2023-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr345.pdf"
 review_status = "reviewed"
 
+[sources."aeat-dr-345-2023-archive"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_345/files/03-345-orden-de-actualizacion-del-ejercicio-2023.pdf"
+sha256 = "09ad1c5066e51535d367fc2a7c9f8863140141b9f2b3e836b4778085587d2da4"
+bytes = 184620
+retrieved_at = 2026-07-21
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_23/DR_345_2023.pdf"
+review_status = "reviewed"
+
 [sources."aeat-dr-345-2024"]
 evidence_tier = "layout_authority"
 authority = "aeat"

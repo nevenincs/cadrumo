@@ -807,6 +807,24 @@ def test_every_record_design_source_declares_a_unique_well_formed_epoch() -> Non
         "aeat-dr-303-2019-2020": "held by the in-flight M303 generator-authority campaign",
         "aeat-dr-390-2015": "held by the in-flight M390 generator-authority campaign",
         "aeat-dr-390-2016": "held by the in-flight M390 generator-authority campaign",
+        # S109 registers every official manifest artefact so the corpus and
+        # catalogue agree, but does not invent selection windows. These source
+        # titles describe versions/updates (or an ATF translation), not a
+        # non-conflicting filing period relative to the actively selected
+        # design. The source rows deliberately remain resolver-unreachable
+        # until the temporal-design owner supplies that authority.
+        "aeat-dr-036-v42-provisional": "AEAT calls the 2025 edition provisional; no successor boundary is evidenced",
+        "aeat-dr-036-v40": "AEAT's 2023 update to the 2021-y-siguientes design has no selection boundary",
+        "aeat-dr-036-v35": "AEAT's 2021 update has no selection boundary against v40",
+        "aeat-dr-202-2025-mar-update": "AEAT's March 2026 update has no selection boundary against the active 2025 design",
+        "aeat-dr-202-2019-september-update": "AEAT's September 2019 update has no selection boundary against the active 2019 design",
+        "aeat-dr-202-2012-v32": "the official version label does not establish a filing-period window",
+        "aeat-dr-202-2013-v33": "the official version label does not establish the boundary before the 3P 2013 design",
+        "aeat-dr-202-2010-v13": "the official version label does not establish a filing-period window",
+        "aeat-dr-345-2023-archive": "the archive's 2023 design conflicts with the selected 2023 edition absent an effective boundary",
+        "aeat-dr-349-2002": "the historical order title does not establish a bounded filing window",
+        "aeat-dr-604-atf-spanish": "the Spanish ATF appendix is a translated logical design, not an independently dated epoch",
+        "aeat-dr-604-atf-english": "the English ATF appendix is a translated logical design, not an independently dated epoch",
     }
 
     modelos, catalogues = _registry_tree()

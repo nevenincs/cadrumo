@@ -14,7 +14,7 @@
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
   ],
-  "artefact_count": 4,
+  "artefact_count": 3,
   "artefacts": [
     {
       "modelo": "115",
@@ -26,18 +26,6 @@
       "content_type": "application/vnd.ms-excel",
       "bytes": 176640,
       "sha256": "d0b4c2cb344fe2d4b91a082bc85cc7906e383be792134504ddaedd0dc8bb2694",
-      "retrieved_at": "2026-05-03"
-    },
-    {
-      "modelo": "115",
-      "title": "115 - 01-115-orden-eha-3435-2007-ejercicios-2019-y-siguientes-actualizado-febrero-2019-172-kb-xls.xlsx",
-      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
-      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR115e15v13.xls",
-      "stored_path": "files/01-115-orden-eha-3435-2007-ejercicios-2019-y-siguientes-actualizado-febrero-2019-172-kb-xls.xlsx",
-      "original_filename": "01-115-orden-eha-3435-2007-ejercicios-2019-y-siguientes-actualizado-febrero-2019-172-kb-xls.xlsx",
-      "content_type": "application/octet-stream",
-      "bytes": 40607,
-      "sha256": "b2c9f24fe77967ec460d355efb0a21158a4c41b53745524c70ae37a2634839a0",
       "retrieved_at": "2026-05-03"
     },
     {

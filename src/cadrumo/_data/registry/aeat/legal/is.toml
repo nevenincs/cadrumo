@@ -891,6 +891,79 @@ applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR202e25.xlsx"
 review_status = "reviewed"
 
+# These manifest-backed AEAT binaries are source evidence, but their published
+# titles do not establish a non-conflicting selection window against another
+# design for the same modelo. Keep them hash-pinned and deliberately
+# unselectable until temporal authority is reviewed.
+[sources."aeat-dr-202-2025-mar-update"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/01-202-ejercicio-2025-y-siguientes-actualizado-17-03-26-132-kb-xlsx.xlsx"
+sha256 = "463cac7529de6333f55c174e3a887e92c79e7af328de5865bb1a0399d711b9a0"
+bytes = 135038
+retrieved_at = 2026-05-03
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/DR202e25.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-202-2019-september-update"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/06-202-orden-hac-941-2018-ejercicios-2019-y-siguientes-actualizado-septiembre-2019-128-kb-xlsx.xlsx"
+sha256 = "99dc1738c38269209bd15053ab5c4805477dc70394e29ead2e4c34a172628cc7"
+bytes = 131561
+retrieved_at = 2026-05-03
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR202e17v50.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-202-2012-v32"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/08-202-orden-hap-2055-2012-v3-2-40-kb-pdf.pdf"
+sha256 = "3a47f5b39926e79ca7fa2a589b6a8fabfe15472ad51d324f2d7bc0e489a35adf"
+bytes = 40560
+retrieved_at = 2026-05-03
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/dr202e12v32.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-202-2013-v33"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/12-202-orden-hap-636-2013-v3-3-39-kb-pdf.pdf"
+sha256 = "90385eb1ca5692d4504b3b567aa6b63fddd2e60b0805b70fbecb044e35587d84"
+bytes = 40253
+retrieved_at = 2026-05-03
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/dr202e12v33.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-202-2010-v13"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/14-202-orden-eha-664-2010-adaptada-a-la-ultima-normativa-vigente-33-kb-pdf.pdf"
+sha256 = "c58221f899a6aacc674f305f86764595dfa0c7152f2f58faffa3e341521f5534"
+bytes = 33426
+retrieved_at = 2026-05-03
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/dr202e12v13.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-200-2009-v20"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2009"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/17-200-orden-eha-1338-2010-actualizado-a-11-06-2010-283-kb-pdf.pdf"
+sha256 = "2c845e30819b599c73ae5c55fc7e1d786e370ecf8fe722ca2c0201a59863d866"
+bytes = 289922
+retrieved_at = 2026-05-03
+applies_from = 2009-01-01
+applies_to = 2009-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/dr200e09v20.pdf"
+review_status = "reviewed"
+
 [sources."aeat-modelo-202-instructions"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"
@@ -1355,9 +1428,9 @@ required_text = [
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
-corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/01-200-ejercicio-2025-10-9-mb-xls.xlsx"
-sha256 = "a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505"
-bytes = 2316549
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/01-200-ejercicio-2025-10-9-mb-xls.xls"
+sha256 = "92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509"
+bytes = 11527168
 retrieved_at = 2026-07-21
 applies_from = 2025-01-01
 record_design_epoch = "2025"

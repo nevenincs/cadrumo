@@ -14,7 +14,7 @@
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
   ],
-  "artefact_count": 6,
+  "artefact_count": 5,
   "artefacts": [
     {
       "modelo": "130",
@@ -26,18 +26,6 @@
       "content_type": "application/vnd.ms-excel",
       "bytes": 180736,
       "sha256": "58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7",
-      "retrieved_at": "2026-05-03"
-    },
-    {
-      "modelo": "130",
-      "title": "130 - 01-130-orden-hap-258-2015-ejercicios-2019-y-siguientes-actualizado-marzo-2019-176-kb-xls.xlsx",
-      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
-      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR130e15v12.xls",
-      "stored_path": "files/01-130-orden-hap-258-2015-ejercicios-2019-y-siguientes-actualizado-marzo-2019-176-kb-xls.xlsx",
-      "original_filename": "01-130-orden-hap-258-2015-ejercicios-2019-y-siguientes-actualizado-marzo-2019-176-kb-xls.xlsx",
-      "content_type": "application/octet-stream",
-      "bytes": 39633,
-      "sha256": "5d370a9dd13124dbfa596ee903d7a4f3e8801c4d153aa922e1f445790e181e4f",
       "retrieved_at": "2026-05-03"
     },
     {
