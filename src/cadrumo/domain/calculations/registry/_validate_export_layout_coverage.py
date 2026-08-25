@@ -121,22 +121,23 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final
 
-from ....core import ExportLayoutFormat
-from ....core.resources import resolve_corpus_binary
-from .._export_field_kind import CasillaFieldKind
-from .export import derive_export_layouts_from_bindings
-from .record_design import _naturaleza_or_none, extract_record_design
-from .record_design_schema import RecordDesignField, RecordDesignSheet
-from .schema import (
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_exports import (
     AuxiliaryEnvelopeHeaderDefinition,
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
     FilingEnvelopeDefinition,
-    ModeloRevision,
-    SourceReference,
 )
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+
+from ....core import ExportLayoutFormat
+from ....core.resources import resolve_corpus_binary
+from ..export_field_kind import CasillaFieldKind
 from .errors import RegistryValidationError
+from .export import derive_export_layouts_from_bindings
+from .record_design import _naturaleza_or_none, extract_record_design
+from .record_design_schema import RecordDesignField, RecordDesignSheet
 
 #: AEAT's own obligatoriness marking, read from the column its designs head
 #: ``Oblig.`` (which the parser lands in ``RecordDesignField.validation``).

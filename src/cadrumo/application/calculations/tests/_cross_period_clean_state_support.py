@@ -10,6 +10,10 @@ from functools import cache
 
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
+
 from ....adapters.inbound.pdf import source_pdf_reference_path
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -17,9 +21,6 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....core import CasillaId, Period, RegistryAuthorityGrade
 from ....core.resources import bundled_path, resources
-from cadrumo.domain.calculations.registry.applicability import Modelo202Modality
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.calculations.registry.tests import build_snapshot
 from ....domain.justificante import Justificante
 from ....domain.modelos import (
     CalculationRevision,

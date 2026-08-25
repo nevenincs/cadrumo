@@ -14,12 +14,9 @@ from cadrumo.core import (
     validated_casilla_id,
 )
 from cadrumo.core.hashing import canonical_json_bytes
-from cadrumo.domain.calculations.registry.schema import (
-    ExportFieldDefinition,
-    ExportLayoutDefinition,
-)
-from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
+from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
 
 from ..pipeline import _provenance_manifest
 from ..pipeline._provenance_manifest import (

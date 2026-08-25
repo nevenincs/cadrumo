@@ -18,7 +18,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
-from .schema import LegalReference, ModeloDefinition, ModeloRevision, SourceReference
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+
 from ._validate_applicability_section import validate_applicability_section
 from ._validate_authority_grade import validate_authority_grade_section
 from ._validate_completeness import emit_completeness_gate_failures as _emit_completeness_gate_failures
@@ -46,12 +48,6 @@ from ._validate_revision_closure import validate_revision_closure_sections as _v
 from ._validate_revision_closure import validate_revision_reference_surfaces as _validate_revision_reference_surfaces
 from ._validate_revision_context import RevisionValidationContext, build_revision_validation_context
 from ._validate_revision_id_window_agreement import validate_revision_id_window_agreement
-from .validate_revision_identity import (
-    emit_revision_payload_failures as _emit_revision_payload_failures,
-)
-from .validate_revision_identity import (
-    revision_reference_identity_failures,
-)
 from ._validate_surfaces import (
     validate_application_link_section,
     validate_cross_reference_section,
@@ -60,6 +56,12 @@ from ._validate_surfaces import (
     validate_workbook_parity_section,
 )
 from ._validate_valid_from_ejercicio_convention import validate_valid_from_ejercicio_convention
+from .validate_revision_identity import (
+    emit_revision_payload_failures as _emit_revision_payload_failures,
+)
+from .validate_revision_identity import (
+    revision_reference_identity_failures,
+)
 
 _REVISION_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
 

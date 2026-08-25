@@ -59,6 +59,9 @@ if TYPE_CHECKING:
 
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
 from ....application.storage.calc_sheets import (
     CALC_SHEETS_ENGINE_VERSION,
     OperatorInput,
@@ -74,6 +77,14 @@ from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import ActionEvidenceProvenance, CasillaId, NoRecoveryOutcome, Period
 from ....core.decimal import coerce_decimal, coerce_finite_european_decimal
 from ....core.time import coerce_utc_aware
+from ....domain.calculations.registry.casilla_membership import (
+    casillas_by_id,
+    undeclared_casilla_ids,
+)
+from ....domain.calculations.registry.formula_runtime import (
+    RegistryCalculationResult,
+    calculate_registry_snapshot,
+)
 from ....domain.calculations.registry.ids import (
     BindingId,
     LegalRefId,
@@ -82,19 +93,7 @@ from ....domain.calculations.registry.ids import (
     RevisionId,
     SourceRefId,
 )
-from ....domain.calculations.registry.schema import (
-    CasillaDefinition,
-    RegistrySnapshot,
-)
 from ....domain.calculations.registry.schema_input_kind import InputKind
-from ....domain.calculations.registry.formula_runtime import (
-    RegistryCalculationResult,
-    calculate_registry_snapshot,
-)
-from ....domain.calculations.registry.casilla_membership import (
-    casillas_by_id,
-    undeclared_casilla_ids,
-)
 from ....domain.period import calculation_filing_date
 from ..storage import (
     OutboundStorageConflictError,

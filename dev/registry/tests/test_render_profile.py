@@ -13,11 +13,11 @@ from pydantic import ValidationError
 from cadrumo.core import FilingProducerKey
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry.schema import CasillaFieldKind
-from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.loader import load_catalogue_file
+from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.corpus_catalogue import resolve_record_design_binary
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
+from cadrumo.domain.calculations.registry.loader import load_catalogue_file
 
 from ..pipeline import _export_tree, _render_profile
 from ..pipeline._record_design_ir import (

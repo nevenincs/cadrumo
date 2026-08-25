@@ -9,8 +9,10 @@ from typing import Literal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.schema import DatedValue
+from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition
+
 from ..formula_runtime_ops import resolve_parameter
-from ..schema import DatedValue, ParameterDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

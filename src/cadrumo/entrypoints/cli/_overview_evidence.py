@@ -36,7 +36,8 @@ from ...domain.modelos import WorkUnit
 from ._common import resolve_notice_action
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.applicability import TaxRoute
+    from cadrumo.domain.calculations.registry.applicability_routes import TaxRoute
+
     from ...domain.user_profile.values import UserProfileRecord
 
 logger = get_logger(__name__)

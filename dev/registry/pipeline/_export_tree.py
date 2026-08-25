@@ -19,13 +19,11 @@ import rtoml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.core.directory_scan import iter_directory
-from cadrumo.domain.calculations.registry.record_spec import ENCODING_ALIAS_MAP
-from cadrumo.domain.calculations.registry.schema import (
-    CasillaFieldKind,
-    ExportFieldDefinition,
-    ExportLayoutDefinition,
-    ExportRecordDefinition,
-    ProjectionEndpointDeclaration,
+from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.export_value_policy import (
+    ExportValuePolicy,
+    export_value_policy_wire_length,
 )
 from cadrumo.domain.calculations.registry.fixed_width_codec import (
     ExportEncoding,
@@ -38,11 +36,13 @@ from cadrumo.domain.calculations.registry.ids import (
     RevisionId,
     SourceRefId,
 )
-from cadrumo.domain.calculations.registry.export_value_policy import (
-    ExportValuePolicy,
-    export_value_policy_wire_length,
+from cadrumo.domain.calculations.registry.record_spec import ENCODING_ALIAS_MAP
+from cadrumo.domain.calculations.registry.schema_exports import (
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+    ProjectionEndpointDeclaration,
 )
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ._provenance_manifest import (
     EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION,

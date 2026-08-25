@@ -65,11 +65,13 @@ from typing import Literal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+
 from .....core import Modelo
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from ..export import derive_export_layouts_from_bindings
-from ..schema import ModeloDefinition, ModeloRevision, SourceReference
 from .test_cited_design_field_bounds_are_self_consistent import (
     _KNOWN_SELF_CONTRADICTING_DESIGN,
 )

@@ -10,10 +10,11 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.detail_record_bindings import Modelo720RowObservation
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+
 from .....adapters.outbound.google import RowSetCellEdit, RowSetEdit
 from .....core.resources import resources
-from cadrumo.domain.calculations.registry.bindings import Modelo720RowObservation
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from .. import assemble_row_sets_for_snapshot, collect_row_sets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -43,11 +43,13 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from cadrumo.domain.calculations.registry.schema import CalculationClass, ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
+
 from ....core import ExportLayoutFormat
 from .authority import ValidatedRegistryAuthority
 from .ids import ModeloId, RevisionId
 from .record_design_coverage import calculation_closure_casilla_ids
-from .schema import CalculationClass, EvidenceTier, ModeloDefinition, ModeloRevision
 from .schema_surfaces import CasillaContinuidadEvolutionDefinition
 
 __all__ = [

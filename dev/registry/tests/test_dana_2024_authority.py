@@ -46,14 +46,11 @@ import pytest
 from cadrumo.core import normalise_corpus_text, resolve_anchored_extracted_unit
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry.schema import (
-    LegalReference,
-    SourceReference,
-)
 from cadrumo.domain.calculations.registry.legal import (
     legal_reference_quotes_corpus,
     verify_legal_catalogue_grounding,
 )
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from cadrumo.tests.registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

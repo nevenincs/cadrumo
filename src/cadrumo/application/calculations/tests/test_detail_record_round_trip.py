@@ -18,9 +18,16 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.detail_record_bindings import (
+    resolve_atribucion_binding_row_values,
+    resolve_foreign_asset_binding_row_values,
+    resolve_refund_binding_row_values,
+    resolve_related_party_binding_row_values,
+)
+from cadrumo.domain.calculations.registry.withholding_bindings import resolve_withholding_binding_row_values
+
 from ....adapters.outbound.google import RowSetCellEdit
 from ....core.resources import resources
-from cadrumo.domain.calculations.registry.bindings import resolve_atribucion_binding_row_values, resolve_foreign_asset_binding_row_values, resolve_refund_binding_row_values, resolve_related_party_binding_row_values, resolve_withholding_binding_row_values
 from .._row_set_assembly import (
     assemble_atribucion_observations,
     assemble_foreign_asset_observations,

@@ -13,12 +13,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from cadrumo.core.directory_scan import iter_directory
-from cadrumo.domain.calculations.registry.schema import ExportLayoutDefinition
 from cadrumo.domain.calculations.registry.errors import (
     RegistryError,
     RegistryValidationError,
 )
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory
+from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 
 from ._export_tree import ExportTreeTransportProfile, render_complete_export_tree
 from ._provenance_manifest import (

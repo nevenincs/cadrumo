@@ -68,26 +68,26 @@ from ...domain.calculations import (
     RowCasillaKey,
     RowSourceIdentity,
 )
-from ...domain.calculations.registry.ids import (
-    BindingId,
-    RelationId,
-)
-from ...domain.calculations.registry.schema_input_kind import InputKind
-from ...domain.calculations.registry.schema import ModeloRevision
-from ...domain.calculations.registry.formula_runtime import (
-    RegistryCalculationResult,
-    calculate_registry_snapshot,
-)
 from ...domain.calculations.registry.bindings import (
     bound_casilla_binding_ids,
     resolve_available_bound_inputs_by_casilla_id,
 )
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
+from ...domain.calculations.registry.formula_runtime import (
+    RegistryCalculationResult,
+    calculate_registry_snapshot,
+)
+from ...domain.calculations.registry.formula_text_inputs import validated_text_input_casilla_ids
+from ...domain.calculations.registry.ids import (
+    BindingId,
+    RelationId,
+)
 from ...domain.calculations.registry.iva_wallet_relation_targets import (
     iva_wallet_owned_binding_ids_for_revision,
     iva_wallet_owned_relation_targets_for_revision,
 )
-from ...domain.calculations.registry.formula_text_inputs import validated_text_input_casilla_ids
+from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -149,8 +149,6 @@ from ._calculation_resolution import (
 from ._calculation_resolution import (
     resolve_calculation_inputs as _resolve_calculation_inputs,
 )
-from .calculation_route import CalculationRouteStage as _CalculationRouteStage
-from .calculation_route import require_calculation_route_resolver as _require_calculation_route_resolver
 from ._calculation_source_policy import (
     ACCEPTED_BUCKET_AGGREGATION_SOURCE_KINDS,
     BUCKET_AGGREGATION_LOCK_SOURCES,
@@ -175,9 +173,12 @@ from ._preconditions import build_modelo_precondition_failure
 from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_input_ids
 from ._revision_persistence import persist_calculation_revision, require_filing_instance_evidence_for_work_unit
 from ._transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
+from .calculation_route import CalculationRouteStage as _CalculationRouteStage
+from .calculation_route import require_calculation_route_resolver as _require_calculation_route_resolver
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry.bindings import Modelo720RowObservation
+    from cadrumo.domain.calculations.registry.detail_record_bindings import Modelo720RowObservation
+
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ..aggregation import (
         CalculationSourceDiagnostic,

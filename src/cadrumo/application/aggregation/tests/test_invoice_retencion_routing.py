@@ -23,15 +23,15 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
 from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID
 from ....core import BindingSourceKind, Modelo, Period
 from ....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.bindings import resolve_retenciones_aggregation_binding_values
 from ....domain.invoices import Invoice, InvoiceLine, IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.iva import InvoiceKind, IvaCategory, IvaRetencionRole, category_components
 from ....tests.secure_sql import isolated_runtime_profile
-from ..errors import AggregationValidationError
 from .._invoice_retencion import (
     INVOICE_RETENCION_DEFECT_GUIDANCE,
     InvoiceRetencionProjectionDefect,
@@ -44,6 +44,7 @@ from .._retencion_observations_repository import (
     persist_retencion_observations,
 )
 from .._retenciones import RetencionObservation, RetencionScheme, aggregate_retenciones_111
+from ..errors import AggregationValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

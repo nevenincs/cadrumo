@@ -17,35 +17,33 @@ from collections.abc import Callable, Iterable, Mapping
 from datetime import date
 from typing import Final, Literal
 
-from ....core import BindingSourceKind, CasillaId, Period
-from ....core.hashing import sha256_hex
-from ....core.i18n import tr
-from ....domain.calculations.registry.bindings import (
-    BindingAggregationOp,
-    binding_aggregation_op,
-)
-from ....domain.calculations.registry.binding_selector_utils import (
-    BindingRowSetSelector,
-    binding_row_set_selector,
-)
-from ....domain.calculations.registry.schema import (
-    CasillaDefinition,
+from cadrumo.core.aggregation import BindingAggregationOp
+from cadrumo.domain.calculations.registry.binding_aggregation import binding_aggregation_op
+from cadrumo.domain.calculations.registry.schema import (
     DataBindingDefinition,
     FormulaDefinition,
     ModeloRevision,
     RegistrySnapshot,
 )
-from ....domain.calculations.registry.schema_input_kind import InputKind
-from ....domain.calculations.registry.schema_rounding import RegistryRoundingCode
-from ....domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
+from ....core import BindingSourceKind, CasillaId, Period
+from ....core.hashing import sha256_hex
+from ....core.i18n import tr
+from ....domain.calculations.registry.binding_selector_utils import (
+    BindingRowSetSelector,
+    binding_row_set_selector,
+)
 from ....domain.calculations.registry.casilla_membership import casillas_by_id
+from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ....domain.calculations.registry.relations import (
     relation_requirement_index,
     relation_source_requirements,
 )
-from ....domain.calculations.registry.formula_runtime_ops import resolve_parameter
+from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.schema_rounding import RegistryRoundingCode
 from ....domain.period import calculation_filing_date
-from .errors import CalcSheetsEngineError
 from ._layout import SheetLayout, plan_layout
 from ._records import (
     OperatorInputs,
@@ -72,6 +70,7 @@ from ._records import (
 )
 from ._styling import compute_styling
 from ._translator import is_translatable, translate_formula
+from .errors import CalcSheetsEngineError
 
 # This stamp binds a rendered workbook to the layout compiler as well as the
 # registry snapshot. Increment it whenever a change can move an operator

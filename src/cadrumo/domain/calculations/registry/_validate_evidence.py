@@ -10,6 +10,9 @@ from pathlib import Path
 
 from pydantic import ConfigDict, TypeAdapter, ValidationError
 
+from cadrumo.domain.calculations.registry.schema import SourceCitation
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+
 from ....core import (
     MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,
     MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
@@ -22,7 +25,6 @@ from ....core import (
 from ....core.atomic_write import atomic_write_best_effort_text
 from ....core.hashing import sha256_hex
 from ....core.resources import packaged_data, resolve_companion_binary
-from .schema import LegalReference, SourceCitation, SourceReference
 
 _SourceTextCacheKey = tuple[str, str, int, int]
 _NORMALISED_SOURCE_TEXT_CACHE: dict[_SourceTextCacheKey, str] = {}

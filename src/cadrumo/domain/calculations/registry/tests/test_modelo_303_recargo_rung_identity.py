@@ -44,8 +44,10 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
 from .....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import CasillaDefinition, ModeloRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

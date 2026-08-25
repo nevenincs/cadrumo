@@ -50,10 +50,12 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+
 from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
-from ..formula_runtime import calculate_registry_snapshot
-from ..schema import InputKind, ParameterDefinition
 from .._validate_revision_rules import _bracket_coverage_gaps
+from ..formula_runtime import calculate_registry_snapshot
 from ._registry_schema_support import _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -178,7 +180,7 @@ def test_coverage_validator_fires_on_deliberate_gap() -> None:
     ``model_construct`` bypasses pydantic validation so the fixture can carry
     minimal fields without satisfying the production non-empty ref constraints.
     """
-    from ..schema import BracketEntry
+    from cadrumo.domain.calculations.registry.schema_formula import BracketEntry
 
     bracket_2025 = BracketEntry(
         lower_bound=Decimal("0"),
@@ -212,7 +214,7 @@ def test_coverage_validator_passes_when_no_gap() -> None:
     and extend to ``revision_to`` without interruption must produce zero
     failures.  This guards against false positives in the coverage check.
     """
-    from ..schema import BracketEntry
+    from cadrumo.domain.calculations.registry.schema_formula import BracketEntry
 
     bracket_2024 = BracketEntry(
         lower_bound=Decimal("0"),

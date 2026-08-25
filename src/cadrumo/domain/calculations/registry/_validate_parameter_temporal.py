@@ -10,7 +10,8 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import date, timedelta
 
-from .schema import DatedValue, ModeloRevision, ParameterDefinition
+from cadrumo.domain.calculations.registry.schema import DatedValue, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition
 
 _FAR_FUTURE = date(9999, 12, 31)
 

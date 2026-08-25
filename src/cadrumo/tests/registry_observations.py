@@ -9,10 +9,11 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from decimal import Decimal
 
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
+
 from ..core import CasillaId, RegistryAuthorityGrade
 from ..core.resources import bundled_path
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from ..domain.calculations.registry.tests import build_snapshot
 from ..tests.registry_tree import bundled_registry_tree
 
 

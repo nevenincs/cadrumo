@@ -35,8 +35,26 @@ from collections import Counter
 from collections.abc import Mapping
 from pathlib import Path
 
+from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_exports import (
+    AuxiliaryEnvelopeHeaderDefinition,
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+    FilingEnvelopeDefinition,
+)
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
 from ....core import CasillaId, FilingProjectionRef
 from ....core.aggregation import BindingAggregationOp
+from ._validate_evidence import EvidenceValidator
+from ._validate_export_field_widths import validate_draft_field_slot_width
+from ._validate_helpers import missing_refs as _missing_refs
+from ._validate_projection_endpoints import (
+    validate_projection_endpoint_declarations as _validate_projection_endpoint_declarations,
+)
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
     BindingExportSelector,
@@ -46,25 +64,6 @@ from .binding_selector_utils import (
 from .corpus_catalogue import verify_source_file
 from .errors import RegistryValidationError
 from .ids import BindingId
-from .schema import (
-    AuxiliaryEnvelopeHeaderDefinition,
-    CasillaDefinition,
-    CasillaFieldKind,
-    DataBindingDefinition,
-    ExportFieldDefinition,
-    ExportLayoutDefinition,
-    ExportRecordDefinition,
-    FilingEnvelopeDefinition,
-    LegalReference,
-    ModeloRevision,
-    SourceReference,
-)
-from ._validate_evidence import EvidenceValidator
-from ._validate_export_field_widths import validate_draft_field_slot_width
-from ._validate_helpers import missing_refs as _missing_refs
-from ._validate_projection_endpoints import (
-    validate_projection_endpoint_declarations as _validate_projection_endpoint_declarations,
-)
 
 
 def validate_export_layout_section(

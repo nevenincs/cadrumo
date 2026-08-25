@@ -12,6 +12,13 @@ from pathlib import Path
 import pytest
 from sqlalchemy.engine import Engine
 
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
+from cadrumo.domain.calculations.registry.relations import relation_source_requirements
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.temporal import select_revision
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -25,11 +32,6 @@ from ....domain.buckets import (
 from ....domain.buckets import (
     BucketEventType as BucketEventType,
 )
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation, previous_filing_observation_requirements
-from cadrumo.domain.calculations.registry.relations import relation_source_requirements
-from cadrumo.domain.calculations.registry.temporal import select_revision
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import (
     CalculationRevision,

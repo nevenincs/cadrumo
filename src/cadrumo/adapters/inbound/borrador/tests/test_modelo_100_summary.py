@@ -9,8 +9,12 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema_extraction import (
+    ExtractionProfileDefinition,
+    ExtractionTargetDefinition,
+)
+
 from .....core import CasillaId, validated_casilla_id
-from cadrumo.domain.calculations.registry.schema import ExtractionProfileDefinition, ExtractionTargetDefinition
 from ...pdf import source_pdf_reference_path
 from .. import ArtefactKind, BorradorParseError, BorradorParseMode, InboundBorradorObservation, parse_borrador
 

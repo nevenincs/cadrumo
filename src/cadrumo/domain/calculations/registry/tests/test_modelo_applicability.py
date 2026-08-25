@@ -8,6 +8,15 @@ from typing import TypedDict
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.applicability import (
+    ApplicabilityVerdict,
+    ModeloApplicability,
+    ModeloApplicabilityRule,
+    derive_modelo_applicability,
+    iter_modelo_applicability_rules,
+)
+from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality, Modelo202ModalityVerdict
+
 from .....core.resources import resources
 from ....deadlines import (
     EntityType,
@@ -19,7 +28,6 @@ from ....deadlines import (
     LegalEntityForm,
     TaxpayerProfile,
 )
-from cadrumo.domain.calculations.registry.applicability import ApplicabilityVerdict, Modelo202Modality, Modelo202ModalityVerdict, ModeloApplicability, ModeloApplicabilityRule, derive_modelo_applicability, iter_modelo_applicability_rules
 from ..applicability import MODELO_APPLICABILITY_RULES
 from ._registry_schema_support import _committed_registry_tree
 

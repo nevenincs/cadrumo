@@ -30,24 +30,22 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints
 
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, RegistryExternalLink
+
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
-from ...core.directory_scan import scan_directory
 from ...core.config import Settings, coerce_output_language_setting, load_settings
+from ...core.directory_scan import scan_directory
 from ...core.errors import BaseSeverity
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
 from ...core.logging import get_logger
 from ...core.topics import Topic, TopicCatalogue, load_topic_catalogue
-from ...domain.calculations.registry.schema import (
-    LegalReference,
-    RegistryExternalLink,
-)
-from ...domain.calculations.registry.ids import LegalRefId
-from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
     bundled_authority,
 )
+from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.ids import LegalRefId
 from ...domain.calculations.registry.legal import verify_legal_catalogue
 from ...domain.manuals import (
     ManualCasillaReference,

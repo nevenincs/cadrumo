@@ -12,8 +12,10 @@ from typing import Final
 
 from pydantic import ConfigDict, TypeAdapter, ValidationError
 
+from cadrumo.domain.calculations.registry.schema import ModeloRevision, ModeloScheduleDefinition
+from cadrumo.domain.calculations.registry.schema_verification import ProfilePredicateDefinition
+
 from .errors import RegistryValidationError
-from .schema import ModeloRevision, ModeloScheduleDefinition, ProfilePredicateDefinition
 
 __all__ = [
     "applicable_filing_schedules",
@@ -68,6 +70,7 @@ def evaluate_profile_conditions(
     *,
     mode: str,
 ) -> tuple[str, ...] | None:
+    """Return matched predicate explanations, or ``None`` when the profile fails."""
     if not conditions:
         return ()
     explanations: list[str] = []
@@ -86,6 +89,7 @@ def profile_condition_matches(
     condition: ProfilePredicateDefinition,
     profile_facts: Mapping[str, object] | object,
 ) -> bool:
+    """Return whether one declared predicate matches the supplied profile facts."""
     observed = _resolve_profile_fact(profile_facts, condition.field)
     if condition.op == "equals":
         return observed == condition.value

@@ -6,33 +6,30 @@ from collections.abc import Callable
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
-from .....core.aggregation import BindingAggregation, BindingAggregationOp
-from .....core.identity import SPANISH_TAX_ID_WIDTH, IdentityError, validate_spanish_tax_id
-from ..._export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.schema import BboxAnchorSpec, ExportDraftAttribute, RegistrySnapshot
-from ..authority import ValidatedRegistryAuthority
-from ..binding_selector_utils import selector_as_dict
-from ..schema import DataBindingDefinition
-from ..schema_exports import FilingEnvelopePrefixRole
-from .._validate_export_field_widths import DRAFT_ATTRIBUTE_CANONICAL_WIDTHS, validate_draft_field_slot_width
-from ._registry_schema_support import (
+from cadrumo.domain.calculations.registry.coverage import build_model_law_coverage_ledger
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
+from cadrumo.domain.calculations.registry.export_semantics import ExportDraftAttribute
+from cadrumo.domain.calculations.registry.loader import load_modelo_file
+from cadrumo.domain.calculations.registry.schema import (
+    ModeloDefinition,
+    ModeloRevision,
+    RegistryCatalogues,
+    RegistrySnapshot,
+)
+from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
+from cadrumo.domain.calculations.registry.schema_extraction import BboxAnchorSpec, ExtractionTargetDefinition
+from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
+from cadrumo.domain.calculations.registry.schema_surfaces import (
+    CasillaContinuidadEvolutionDefinition,
+    CasillaDefinition,
+)
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.tests._registry_schema_support import (
     _EXPECTED_LIVE_CROSS_REFERENCES,
     _NUMERIC_CASILLA_01,
     _REQUIRED_APPLICATION_LINKS,
     _SNAPSHOT_HEADER_EXPECTATIONS,
-    CasillaContinuidadEvolutionDefinition,
-    CasillaDefinition,
-    ExportFieldDefinition,
-    ExtractionTargetDefinition,
-    FormulaExpression,
-    ModeloDefinition,
-    ModeloRevision,
     Path,
-    RegistryCatalogues,
-    RegistryLoadError,
-    RegistryValidationError,
-    RegistryValidator,
     ValidationError,
     _committed_modelo,
     _committed_registry,
@@ -40,13 +37,21 @@ from ._registry_schema_support import (
     _revision,
     _with_first_export_field,
     _with_revision,
-    build_model_law_coverage_ledger,
-    build_snapshot,
     bundled_path,
     date,
-    load_modelo_file,
     re,
 )
+from cadrumo.domain.calculations.registry.validate import RegistryValidator
+
+from .....core import CasillaId, validated_casilla_id
+from .....core.aggregation import BindingAggregation, BindingAggregationOp
+from .....core.identity import SPANISH_TAX_ID_WIDTH, IdentityError, validate_spanish_tax_id
+from ...export_field_kind import CasillaFieldKind
+from .._validate_export_field_widths import DRAFT_ATTRIBUTE_CANONICAL_WIDTHS, validate_draft_field_slot_width
+from ..authority import ValidatedRegistryAuthority
+from ..binding_selector_utils import selector_as_dict
+from ..schema import DataBindingDefinition
+from ..schema_exports import FilingEnvelopePrefixRole
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _MISSING_CASILLA: CasillaId = validated_casilla_id("missing", surface="_MISSING_CASILLA")

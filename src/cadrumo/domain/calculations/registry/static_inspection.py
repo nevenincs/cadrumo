@@ -18,21 +18,21 @@ from typing import Literal, Protocol
 
 from pydantic import Field, model_validator
 
+from cadrumo.domain.calculations.registry.schema import (
+    DataBindingDefinition,
+    FormulaDefinition,
+    ModeloDefinition,
+    ModeloRevision,
+)
+from cadrumo.domain.calculations.registry.schema_exports import ProjectionEndpointDeclaration
+from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
+from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
+
 from ....core import CasillaId
 from .casilla_membership import casillas_by_id
 from .ids import BindingId, LegalRefId, ModeloId, RevisionId, SourceRefId
-from .schema import (
-    DataBindingDefinition,
-    FormulaDefinition,
-    LiveCrossReferenceDecision,
-    ModeloDefinition,
-    ModeloRevision,
-    ParameterDefinition,
-    ProjectionEndpointDeclaration,
-    RelationDefinition,
-    SourceReference,
-    WorkbookParityReference,
-)
 from .schema_base import RegistryModel
 
 __all__ = [
@@ -145,9 +145,7 @@ class StaticGeneratedArtifactInspection:
             legal_ref_ids=frozenset(inspection.legal_ref_ids),
             casilla_ids=frozenset(inspection.casilla_ids),
             binding_ids=frozenset(inspection.binding_ids),
-            projection_endpoints=tuple(
-                endpoint.model_copy(deep=True) for endpoint in inspection.projection_endpoints
-            ),
+            projection_endpoints=tuple(endpoint.model_copy(deep=True) for endpoint in inspection.projection_endpoints),
         )
 
 

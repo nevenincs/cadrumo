@@ -8,18 +8,18 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from .....core import CasillaId, Modelo, validated_casilla_id
-from .....core.resources import resources
-from cadrumo.domain.calculations.registry.queries import relations_by_target_binding
-from ..errors import NoRevisionForPeriodError, RegistryValidationError
-from ..queries import (
-    BindingSelectorQueryProjection,
-    ModeloFormulaRow,
+from cadrumo.domain.calculations.registry.queries import (
     RegistryQueryService,
     ResolvedRegistryQueryContext,
+    relations_by_target_binding,
 )
+from cadrumo.domain.calculations.registry.query_reports import BindingSelectorQueryProjection, ModeloFormulaRow
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+
+from .....core import CasillaId, Modelo, validated_casilla_id
+from .....core.resources import resources
+from ..errors import NoRevisionForPeriodError, RegistryValidationError
 from ..query_reports import ModeloBindingsReport, ModeloCasillaDetailReport
-from ..schema import InputKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

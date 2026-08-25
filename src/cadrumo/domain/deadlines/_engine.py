@@ -23,13 +23,9 @@ from ...core.time import now, today_madrid
 # this module does not trigger the ~870ms ValidatedRegistryAuthority
 # parse — load it only when a deadline computation actually runs.
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.schema import DeadlineWindowDefinition, ModeloRevision, ProfilePredicateDefinition
+    from cadrumo.domain.calculations.registry.schema import DeadlineWindowDefinition, ModeloRevision
+    from cadrumo.domain.calculations.registry.schema_verification import ProfilePredicateDefinition
 
-from .errors import (
-    DeadlineValidationError,
-    NoDeadlineWindowsError,
-    ScheduleComputationError,
-)
 from ._models import (
     ModeloDeadline,
     ObligationStatus,
@@ -38,6 +34,11 @@ from ._models import (
     TaxpayerProfile,
 )
 from ._recargo import build_recovery_for_overdue
+from .errors import (
+    DeadlineValidationError,
+    NoDeadlineWindowsError,
+    ScheduleComputationError,
+)
 
 _logger = get_logger(__name__)
 

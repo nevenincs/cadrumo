@@ -38,7 +38,7 @@ _REGISTRY_PACKAGE = "domain/calculations/registry"
 #: The two modules that construct the generic authority and its snapshots.
 _GENERIC_CONSTRUCTION_MODULES: frozenset[str] = frozenset(
     {
-        f"{_REGISTRY_PACKAGE}/_authority.py",
+        f"{_REGISTRY_PACKAGE}/authority.py",
         f"{_REGISTRY_PACKAGE}/_snapshot.py",
     },
 )
@@ -163,7 +163,7 @@ def test_a_per_modelo_class_keeps_its_own_modelo_named_fields() -> None:
 def test_the_branch_detector_sees_a_planted_modelo_branch() -> None:
     """Prove the branch scan bites, and only inside generic construction."""
     planted = ast.parse("def _construct_authority():\n    return modelo.id == Modelo.M303\n")
-    generic = SRC_CADRUMO / _REGISTRY_PACKAGE / "_authority.py"
+    generic = SRC_CADRUMO / _REGISTRY_PACKAGE / "authority.py"
     per_modelo = SRC_CADRUMO / _REGISTRY_PACKAGE / "_m303_orden_resolution.py"
 
     assert _modelo_branches_in_generic_construction(((generic, planted),))

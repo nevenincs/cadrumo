@@ -32,26 +32,16 @@ import re
 
 import pytest
 
-from .....core import ExportLayoutFormat
-from ..export import derive_export_layouts_from_bindings
-from ..record_design import extract_record_design
-from ..record_design_schema import (
-    RecordDesignExtraction,
-    RecordDesignField,
-    RecordDesignNote,
-    RecordDesignSheet,
-    RecordDesignSkippedSheet,
-)
-from ..schema import (
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_exports import (
     AuxiliaryEnvelopeHeaderDefinition,
     ExportLayoutDefinition,
     FilingEnvelopePrefixFieldDeclaration,
     FilingEnvelopePrefixRole,
-    ModeloDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-    SourceReference,
 )
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+
+from .....core import ExportLayoutFormat
 from .._validate_export_layout_coverage import (
     _administration_reserved,
     _belongs_to_layout,
@@ -65,6 +55,15 @@ from .._validate_export_layout_coverage import (
     validate_export_layout_record_coverage,
 )
 from ..errors import RegistryValidationError
+from ..export import derive_export_layouts_from_bindings
+from ..record_design import extract_record_design
+from ..record_design_schema import (
+    RecordDesignExtraction,
+    RecordDesignField,
+    RecordDesignNote,
+    RecordDesignSheet,
+    RecordDesignSkippedSheet,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -865,8 +864,7 @@ def test_an_obligatory_blank_is_required_and_satisfied_by_a_filler(
     ]
     assert blanks, "no obligatory-blank position was examined, so this proved nothing"
     assert any(
-        position.offset == 12 and "Indicador de página complementaria" in position.description
-        for position in blanks
+        position.offset == 12 and "Indicador de página complementaria" in position.description for position in blanks
     ), "a terminal 'En blanco' description sentence must retain its obligatory filler position"
     for position in blanks:
         span = set(range(position.offset, position.offset + position.length))

@@ -53,6 +53,12 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.ledger_bindings import (
+    resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
+)
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
+
 from .....application.aggregation import aggregate_renta_ledger_expenses
 from .....core import CasillaId, Period, validated_casilla_id
 from .....core.resources import bundled_path
@@ -68,9 +74,6 @@ from ....transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-from cadrumo.domain.calculations.registry.bindings import resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

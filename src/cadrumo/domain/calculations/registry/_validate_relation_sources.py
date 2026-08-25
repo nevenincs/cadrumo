@@ -19,22 +19,10 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
+
 from ....core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
-from .bindings_previous_filing import is_direct_previous_filing_binding
-from .errors import RegistryValidationError
-from .ids import ModeloId, RelationId
-from .iva_wallet_relation_targets import (
-    IvaWalletRevisionRelationTarget,
-    iva_wallet_owned_relation_targets_for_revision,
-)
-from .period_offset_math import apply_period_offset
-from .relations import derive_offset_source_period
-from .schema import (
-    DataBindingDefinition,
-    ModeloDefinition,
-    ModeloRevision,
-    RelationDefinition,
-)
 from ._validate_previous_filing_sources import (
     validate_previous_filing_binding_closure as validate_previous_filing_binding_closure,
 )
@@ -47,6 +35,15 @@ from ._validate_relation_periods import (
     period_selectors_overlap as period_selectors_overlap,
 )
 from ._validate_source_casilla_ids import source_casilla_id_reference_failure
+from .bindings_previous_filing import is_direct_previous_filing_binding
+from .errors import RegistryValidationError
+from .ids import ModeloId, RelationId
+from .iva_wallet_relation_targets import (
+    IvaWalletRevisionRelationTarget,
+    iva_wallet_owned_relation_targets_for_revision,
+)
+from .period_offset_math import apply_period_offset
+from .relations import derive_offset_source_period
 
 #: Allowance key: ``(relation_id, source_modelo, source_period,
 #: missing_from_year, missing_through_year)``.

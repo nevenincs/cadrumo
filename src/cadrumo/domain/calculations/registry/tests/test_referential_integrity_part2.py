@@ -4,18 +4,16 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
-from ..record_design_coverage import calculation_closure_casilla_ids
-from ..schema import CasillaContinuidadEvolutionDefinition, ModeloDefinition, RegistryCatalogues
-from ..schema_input_kind import InputKind
-from ..validate import RegistryValidator
-from ._record_design_support import _committed_registry_tree
-from ._referential_integrity_support import (
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_surfaces import (
+    CalculationCompletenessCasilla,
+    CasillaContinuidadEvolutionDefinition,
+    CasillaDefinition,
+)
+from cadrumo.domain.calculations.registry.tests._referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
-    CalculationCompletenessCasilla,
-    CasillaDefinition,
-    RegistryValidationError,
     ValidationError,
     build_snapshot_with_missing_legal,
     build_snapshot_with_missing_source,
@@ -32,6 +30,12 @@ from ._referential_integrity_support import (
     single_segment_casilla,
     snapshot_for_revision,
 )
+
+from .....core import CasillaId, validated_casilla_id
+from ..record_design_coverage import calculation_closure_casilla_ids
+from ..schema_input_kind import InputKind
+from ..validate import RegistryValidator
+from ._record_design_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
@@ -85,7 +89,8 @@ def test_segment_qualified_reference_resolves_across_segments() -> None:
     the intended Liquidacion occurrence and produces no unknown-casilla
     failure.
     """
-    from ..schema import FormulaDefinition, FormulaExpression
+    from cadrumo.domain.calculations.registry.schema import FormulaDefinition
+    from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 
     liquidacion = segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
     ecpn = segmented_casilla(_SEGMENTED_ECPN_CASILLA, "00562", "DP200032")
@@ -230,7 +235,8 @@ def test_revision_without_calculation_closure_passes_without_completeness_manife
 
 def test_calculation_bearing_revision_without_manifest_fails_closed() -> None:
     """A revision with a calculation closure must declare a completeness manifest."""
-    from ..schema import FormulaDefinition, FormulaExpression
+    from cadrumo.domain.calculations.registry.schema import FormulaDefinition
+    from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 
     input_casilla = minimal_casilla(_NUMERIC_CASILLA_01)
     computed_casilla = minimal_casilla(_NUMERIC_CASILLA_02).model_copy(
@@ -663,7 +669,9 @@ def test_filing_modelo_with_formula_passes_invariant() -> None:
     FormulaDefinition does not satisfy.  The invariant under test is solely concerned
     with calculation_class discrimination.
     """
-    from ..schema import FormulaDefinition, FormulaExpression
+    from cadrumo.domain.calculations.registry.schema import FormulaDefinition
+    from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
+
     from .._validate_revision_rules import validate_informative_class_invariant
 
     formula = FormulaDefinition(

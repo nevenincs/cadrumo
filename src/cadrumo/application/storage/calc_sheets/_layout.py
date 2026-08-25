@@ -42,6 +42,10 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_formula import BracketEntry, ParameterDefinition
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import CasillaId
 from ....domain.calculations.registry.ids import (
@@ -50,26 +54,20 @@ from ....domain.calculations.registry.ids import (
     RelationId,
     RevisionId,
 )
-from ....domain.calculations.registry.schema import (
-    BracketEntry,
-    CasillaDefinition,
-    ModeloRevision,
-    ParameterDefinition,
-)
-from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.runtime_graph import (
     expression_binding_refs,
     expression_date_binding_refs,
     expression_parameter_refs,
     expression_relation_refs,
 )
-from .errors import CalcSheetsEngineError
+from ....domain.calculations.registry.schema_input_kind import InputKind
 from ._records import (
     ParameterCell,
     SheetCellAddress,
     TabName,
     column_index_to_letters,
 )
+from .errors import CalcSheetsEngineError
 
 
 class _CasillaRow(BaseModel):

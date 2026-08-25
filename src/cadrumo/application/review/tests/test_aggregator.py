@@ -9,13 +9,14 @@ from typing import Any
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.config import Settings
 from ....core.errors import BaseSeverity
 from ....core.i18n import Translatable as tr
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshotRef
 from ....domain.filing import (
     ModeloDraft,
     ModeloValidationFinding,

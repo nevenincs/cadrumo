@@ -40,9 +40,10 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema_extraction import ExtractionTargetDefinition
+
 from .....core import validated_casilla_id
 from .....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import ExtractionTargetDefinition
 from .._parser import _classify_target, _printed_box_numbers, _TargetClassification
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

@@ -82,6 +82,8 @@ from pydantic import BaseModel, Field, field_validator
 
 from cadrumo.application.workflow.profile_health import ActiveProfileHealth, assess_active_profile_health
 from cadrumo.application.workflow.state_models import WorkflowState
+from cadrumo.core.aggregation import LEDGER_BINDING_SOURCE_KINDS as _LEDGER_PREFLIGHT_BINDING_SOURCES
+from cadrumo.domain.calculations.registry.ids import RevisionId
 
 from ..adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -96,8 +98,6 @@ from ..core.errors import CadrumoError
 from ..core.identity import ProfileId
 from ..core.logging import get_logger
 from ..core.time import today_madrid
-from cadrumo.domain.calculations.registry.bindings import LEDGER_BINDING_SOURCE_KINDS as _LEDGER_PREFLIGHT_BINDING_SOURCES
-from cadrumo.domain.calculations.registry.ids import RevisionId
 from ..domain.deadlines import (
     DeadlineEngine,
     ObligationStatus,
@@ -118,7 +118,7 @@ from .operator_actions import PreconditionVerdict
 from .user_profile.commands import ProfilePreflightRequirement
 
 if TYPE_CHECKING:
-        from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+    from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
 _log = get_logger(__name__)
 
@@ -826,8 +826,9 @@ def _resolve_modelo_readiness_registry(
     callers can render ``registry_ready: false`` instead of losing the
     rest of the projection.
     """
-    from ..core.resources import resources
     from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+
+    from ..core.resources import resources
 
     period_token = period.registry_token
     try:
@@ -915,6 +916,7 @@ def _missing_calculation_bindings_for_readiness(
     construction (``aeat-calculation-aggregation``).
     """
     from cadrumo.domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
+
     from .calculations import relation_prefill_period_zero_default_binding_ids
     from .modelo._profile_binding import (
         ProfileBindingResolutionError,

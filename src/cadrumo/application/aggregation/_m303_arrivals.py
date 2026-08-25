@@ -15,6 +15,8 @@ from typing import Final
 
 from pydantic import BaseModel, field_validator, model_validator
 
+from cadrumo.domain.calculations.registry.ledger_bindings import IvaLedgerObservation
+
 from ...core import (
     STRICT_FROZEN_CONFIG,
     Period,
@@ -22,14 +24,13 @@ from ...core import (
     ProrrataRegisterRegime,
     StandardPeriodCode,
 )
-from ...domain.calculations.registry.bindings import IvaLedgerObservation
 from ...domain.iva import IvaCashAccountingTreatment
 from ...domain.prorrata_register import (
     ProrrataRegister,
     ProrrataRegisterEntry,
 )
-from .errors import AggregationValidationError, t
 from ._iva_ledger import IvaLedgerAggregation
+from .errors import AggregationValidationError, t
 
 # Modelo 303's 2026 record design, DP30301 Note 6: the option and revocation
 # fields are blank before the annual final liquidation and carry SI/NO only in

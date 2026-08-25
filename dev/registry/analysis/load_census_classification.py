@@ -510,7 +510,7 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "cadrumo.core.redaction",
             "cadrumo.core.resources._boundary",
             "cadrumo.core.text_fold",
-            "cadrumo.domain.calculations._export_field_kind",
+            "cadrumo.domain.calculations.export_field_kind",
             "cadrumo.domain.iva._regimen_simplificado_rows",
             "cadrumo.domain.iva._schema",
             "cadrumo.domain.justificante",

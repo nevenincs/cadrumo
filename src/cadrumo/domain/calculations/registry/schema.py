@@ -40,7 +40,13 @@ from ....core import (
 )
 from ....core.aggregation import BindingAggregation, BindingSourceKind, BindingTypedEnumKind
 from ....core.classification import SensitivityClass
-from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
+from ..export_field_kind import CasillaFieldKind, CasillaFieldKindValue
+from ._schema_governance import (
+    validate_attribution_names_somebody,
+    validate_governance_stamp_coherence,
+    validate_reviewed_at_within_horizon,
+)
+from ._toml_helpers import as_toml_table as _as_toml_table
 from .errors import RegistryValidationError
 from .ids import (
     ApplicabilityRuleId,
@@ -64,11 +70,6 @@ from .ids import (
 )
 from .m303_orden_projection_models import M303AnnualOrdenAuthority
 from .period_selector_match import selector_period_matches_request
-from ._schema_governance import (
-    validate_attribution_names_somebody,
-    validate_governance_stamp_coherence,
-    validate_reviewed_at_within_horizon,
-)
 from .schema_input_kind import InputKind, InputKindValue
 from .schema_rounding import RegistryRoundingCode as RegistryRoundingCode
 from .schema_rounding import RegistryRoundingCodeValue
@@ -93,9 +94,7 @@ from .schema_scalars import (
 from .schema_scalars import (
     CountryCode as _CountryCode,
 )
-from .schema_scalars import (
-    DecimalValue as _DecimalValue,
-)
+from .schema_scalars import DecimalValue as _DecimalValue
 from .schema_scalars import (
     IbanString as _IbanString,
 )
@@ -150,7 +149,6 @@ from .schema_verification import (
     WorkbookParityReference,
     fold_reconciliation_total_casilla_ids,
 )
-from ._toml_helpers import as_toml_table as _as_toml_table
 
 __all__ = [
     "ApplicationLinkDefinition",
@@ -237,6 +235,28 @@ __all__ = [
     "export_semantic_payload_axis",
 ]
 
+from cadrumo.domain.calculations.registry.export_semantics import (
+    ExportComputedKey,
+    ExportDraftAttribute,
+    ExportSemanticPayloadAxis,
+    export_semantic_payload_axis,
+)
+from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicyValue
+from cadrumo.domain.calculations.registry.schema_exports import (
+    AuxiliaryEnvelopeHeaderDefinition,
+    ExportFieldDataType,
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+    FilingEnvelopeCloserDerivation,
+    FilingEnvelopeDefinition,
+    FilingEnvelopePrefixFieldDeclaration,
+    FilingEnvelopePrefixRole,
+    FilingEnvelopeTotalDerivation,
+    OneBasedExportOffset,
+    ProjectionEndpointDeclaration,
+)
+
 from .convenio import ConvenioAuthority
 from .modelo_localization import resolve_modelo_localization
 from .schema_base import (
@@ -261,25 +281,6 @@ from .schema_base import (
     governance_stamp_fields,
     manifest_only_fields,
     schema_family_fields,
-)
-from .schema_exports import (
-    AuxiliaryEnvelopeHeaderDefinition,
-    ExportComputedKey,
-    ExportDraftAttribute,
-    ExportFieldDataType,
-    ExportFieldDefinition,
-    ExportLayoutDefinition,
-    ExportRecordDefinition,
-    ExportSemanticPayloadAxis,
-    ExportValuePolicyValue,
-    FilingEnvelopeCloserDerivation,
-    FilingEnvelopeDefinition,
-    FilingEnvelopePrefixFieldDeclaration,
-    FilingEnvelopePrefixRole,
-    FilingEnvelopeTotalDerivation,
-    OneBasedExportOffset,
-    ProjectionEndpointDeclaration,
-    export_semantic_payload_axis,
 )
 from .schema_extraction import BboxAnchorSpec, ExtractionProfileDefinition, ExtractionTargetDefinition
 from .schema_formula import (
@@ -338,6 +339,8 @@ _validate_period_code = _validate_period_code_impl
 
 
 class ApplicationLinkDefinition(RegistryModel):
+    """Declare one application surface that requires this registry authority."""
+
     id: ApplicationLinkId
     surface: Literal[
         "calculation",
@@ -360,6 +363,8 @@ class ApplicationLinkDefinition(RegistryModel):
 
 
 class ConstructDefinition(RegistryModel):
+    """Declare one legally grounded construct and the revision members it joins."""
+
     id: ConstructId
     localization_key: str = Field(min_length=1, exclude=True, repr=False)
     legal_refs: LegalRefs
@@ -436,6 +441,8 @@ class ConstructDefinition(RegistryModel):
 
 
 class DependencyClassificationDefinition(RegistryModel):
+    """Classify how one source modelo contributes to this modelo's authority."""
+
     id: DependencyClassificationId
     source_modelo: ModeloId
     treatment: Literal["direct_annual_settlement", "factual_evidence", "non_dependency"]
@@ -573,6 +580,8 @@ def _parse_deadline_window_period(value: object) -> Period:
 
 
 class DeadlineWindowDefinition(RegistryModel):
+    """Declare the applicable opening, closing, and payment dates for a filing."""
+
     id: DeadlineWindowId
     filing_year: int = Field(ge=1900, le=2999)
     period: Annotated[Period, BeforeValidator(_parse_deadline_window_period)]
@@ -661,6 +670,8 @@ filing_schedule_period_kind_mismatches = _filing_schedule_period_kind_mismatches
 
 
 class ModeloScheduleDefinition(RegistryModel):
+    """Declare the filing periods and profile conditions for a modelo schedule."""
+
     id: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9_.-]+$")
     period_kind: Literal["monthly", "quarterly", "annual", "ad_hoc"]
     periods: tuple[RegistrySelectorPeriodCode, ...] = Field(min_length=1)
@@ -694,6 +705,8 @@ class ModeloScheduleDefinition(RegistryModel):
 
 
 class DataBindingDefinition(RegistryModel):
+    """Declare one typed source-to-casilla binding in a registry revision."""
+
     id: BindingId
     source: BindingSourceKind
     # Accepts a raw authoring mapping (the TOML shape, and the shape every
@@ -869,6 +882,8 @@ class DataBindingDefinition(RegistryModel):
 
 
 class FormulaDefinition(RegistryModel):
+    """Declare the grounded formula that produces one target casilla."""
+
     id: FormulaId
     target_casilla_id: CasillaId
     expression: FormulaExpression
@@ -1415,6 +1430,8 @@ fragment can otherwise supply a revision's legal grounding while
 
 
 class ModeloDefinition(RegistryModel):
+    """Declare a modelo and its complete collection of revision authorities."""
+
     id: ModeloId
     title_localization_key: str = Field(min_length=1, exclude=True, repr=False)
     official_name_localization_key: str = Field(min_length=1, exclude=True, repr=False)
@@ -1493,6 +1510,8 @@ class SupportedFilingYearsCatalogue(RegistryModel):
 
 
 class RegistryCatalogues(RegistryModel):
+    """Collect the registry-wide legal, source, parameter, and support catalogues."""
+
     legal: Mapping[LegalRefId, LegalReference]
     sources: Mapping[SourceRefId, SourceReference]
     parameters: Mapping[str, LegalParameter] = Field(default_factory=dict)
@@ -1502,6 +1521,8 @@ class RegistryCatalogues(RegistryModel):
 
 
 class RegistrySnapshot(RegistryModel):
+    """Represent the resolved immutable authority for one modelo filing coordinate."""
+
     modelo: ModeloDefinition
     revision: ModeloRevision
     filing_period: Period | None = None

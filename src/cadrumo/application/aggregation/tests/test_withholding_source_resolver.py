@@ -16,10 +16,12 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
+
 from ....core import AggregationCaptureKind, Period
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind, RetencionClave
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision, PeriodSelector
-from cadrumo.domain.calculations.registry.bindings import WithholdingObservation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._percepciones_observations_repository import PercepcionObservationRepository
 from .._source_mesh import CalculationSourceContext

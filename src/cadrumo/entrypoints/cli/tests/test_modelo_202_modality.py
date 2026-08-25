@@ -36,7 +36,9 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.applicability import ApplicabilityVerdict, Modelo202Modality, derive_modelo_202_modality
+from cadrumo.domain.calculations.registry.applicability import ApplicabilityVerdict
+from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality, derive_modelo_202_modality
+
 from ....domain.deadlines import (
     EntityType,
     IVARegime,

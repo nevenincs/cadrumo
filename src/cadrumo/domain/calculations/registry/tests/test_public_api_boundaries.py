@@ -7,7 +7,7 @@ project-wide ratcheting import-hygiene gate,
 ``src/cadrumo/tests/test_import_hygiene_gate.py`` (backed by
 the import-hygiene scanner and its checked-in baseline). Its
 former allowlist
-(``_authority.py``, both package ``__init__.py`` files,
+(``authority.py``, both package ``__init__.py`` files,
 ``legal_parameters.py``, ``_imputacion_parameters.py``,
 ``_recargo_equivalencia.py``) is now empty in practice: none
 of those sites still import the raw orchestration symbols cross-package, and
@@ -25,9 +25,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core.directory_scan import scan_directory
-from .....tests import REPO_ROOT
-from ..bindings import (
+from cadrumo.domain.calculations.registry.ledger_bindings import (
     IvaLedgerObservation,
     OssIossLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
@@ -35,6 +33,14 @@ from ..bindings import (
     validate_ledger_iva_aggregation_binding_definition,
     validate_ledger_oss_aggregation_binding_definition,
 )
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaContinuidadEvolutionDefinition
+from cadrumo.domain.calculations.registry.validate_cross_revision_advisory import (
+    CrossRevisionCasillaDriftSummary,
+    summarize_non_overlapping_cross_revision_casilla_drift,
+)
+
+from .....core.directory_scan import scan_directory
+from .....tests import REPO_ROOT
 from ..cross_revision_divergence import CrossRevisionCasillaDivergence
 from ..formula_runtime_ops import resolve_keyed_bracket, resolve_parameter
 from ..runtime_graph import (
@@ -43,11 +49,6 @@ from ..runtime_graph import (
     expression_date_binding_refs,
     expression_parameter_refs,
     expression_relation_refs,
-)
-from ..schema import CasillaContinuidadEvolutionDefinition
-from ..validate_cross_revision import (
-    CrossRevisionCasillaDriftSummary,
-    summarize_non_overlapping_cross_revision_casilla_drift,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -83,9 +84,7 @@ def test_registry_ledger_binding_substrate_lives_in_its_defining_module() -> Non
     )
 
     assert tuple(contract.__name__ for contract in contracts) == _LEDGER_BINDING_PUBLIC_NAMES
-    assert {contract.__module__ for contract in contracts} == {
-        "cadrumo.domain.calculations.registry.bindings"
-    }
+    assert {contract.__module__ for contract in contracts} == {"cadrumo.domain.calculations.registry.ledger_bindings"}
 
 
 def test_registry_casilla_continuity_reports_live_in_their_defining_modules() -> None:
@@ -98,9 +97,9 @@ def test_registry_casilla_continuity_reports_live_in_their_defining_modules() ->
 
     assert tuple(contract.__name__ for contract in contracts) == _CASILLA_CONTINUITY_PUBLIC_NAMES
     assert {contract.__module__ for contract in contracts} == {
-        "cadrumo.domain.calculations.registry.schema",
+        "cadrumo.domain.calculations.registry.schema_surfaces",
         "cadrumo.domain.calculations.registry.cross_revision_divergence",
-        "cadrumo.domain.calculations.registry.validate_cross_revision",
+        "cadrumo.domain.calculations.registry.validate_cross_revision_advisory",
     }
 
 
@@ -120,9 +119,7 @@ def test_registry_formula_reference_walkers_live_in_their_defining_module() -> N
         "expression_parameter_refs",
         "expression_relation_refs",
     )
-    assert {walker.__module__ for walker in walkers} == {
-        "cadrumo.domain.calculations.registry.runtime_graph"
-    }
+    assert {walker.__module__ for walker in walkers} == {"cadrumo.domain.calculations.registry.runtime_graph"}
 
 
 def test_registry_parameter_resolution_lives_in_its_defining_module() -> None:

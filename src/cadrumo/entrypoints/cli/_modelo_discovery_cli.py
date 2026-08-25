@@ -9,6 +9,11 @@ from datetime import date
 
 import typer
 
+from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+from cadrumo.domain.calculations.registry.query_reports import ModeloListRow
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.support_matrix import ModeloEntry
+
 from ...application.modelo._binding_readiness import profile_resolvable_binding_ids
 from ...application.modelo._data_inventory import (
     DataInventoryCasilla,
@@ -41,10 +46,6 @@ from ...core import ActionArgumentSource, ActionArgumentStatus, Period, TaxDomai
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from cadrumo.domain.calculations.registry.queries import ModeloListRow
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.support_matrix import ModeloEntry
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ._common import _parse_iso_date, emit_envelope, resolve_notice_action
 from ._modelo_behavior_support import bare_period_error, resolve_year_period
@@ -233,9 +234,10 @@ def _unresolved_profile_requirements(checklist: DataInventoryChecklist) -> str:
     Returns the empty string when no key resolves, which lets the caller fall
     back to the binding ids rather than emit a warning naming nothing.
     """
+    from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
+
     from ...application.user_profile.preflight import format_profile_path_requirements
     from ...core.resources import resources
-    from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
     from ...domain.user_profile.loader import load_user_profile_schema
 
     if not checklist.unresolved_profile_keys:

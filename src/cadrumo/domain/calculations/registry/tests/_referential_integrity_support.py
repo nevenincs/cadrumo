@@ -10,6 +10,40 @@ from typing import Literal
 import pytest
 from pydantic import ValidationError as ValidationError
 
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import (
+    ApplicationLinkDefinition,
+    ConstructDefinition,
+    DataBindingDefinition,
+    DeadlineWindowDefinition,
+    DependencyClassificationDefinition,
+    FormulaDefinition,
+    ModeloDefinition,
+    ModeloRevision,
+    RegistryCatalogues,
+    RegistrySnapshot,
+)
+from cadrumo.domain.calculations.registry.schema_exports import (
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+)
+from cadrumo.domain.calculations.registry.schema_extraction import (
+    ExtractionProfileDefinition,
+    ExtractionTargetDefinition,
+)
+from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression, ParameterDefinition
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+from cadrumo.domain.calculations.registry.schema_surfaces import (
+    CalculationCompletenessCasilla,
+    CalculationCompletenessManifest,
+    CasillaDefinition,
+    RelationDefinition,
+)
+from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
+
 from .....core import (
     CasillaId,
     RegistryAuthorityGrade,
@@ -19,36 +53,6 @@ from .....core import (
 )
 from .....core.classification import SensitivityClass
 from .....core.config import Settings
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from ..schema import (
-    ApplicationLinkDefinition,
-    CalculationCompletenessCasilla,
-    CalculationCompletenessManifest,
-    CasillaDefinition,
-    ConstructDefinition,
-    DataBindingDefinition,
-    DeadlineWindowDefinition,
-    DependencyClassificationDefinition,
-    ExportFieldDefinition,
-    ExportLayoutDefinition,
-    ExportRecordDefinition,
-    ExtractionProfileDefinition,
-    ExtractionTargetDefinition,
-    FormulaDefinition,
-    FormulaExpression,
-    LegalReference,
-    LiveCrossReferenceDecision,
-    ModeloDefinition,
-    ModeloRevision,
-    ParameterDefinition,
-    RegistryCatalogues,
-    RegistrySnapshot,
-    RelationDefinition,
-    SourceReference,
-    WorkbookParityReference,
-)
 from ..schema_verification import VerificationExpectationDefinition
 from ..snapshot import _build_validated_snapshot as build_snapshot_at_grade
 from ..validate_references import check_all_id_references
@@ -190,7 +194,7 @@ def _minimal_casilla(casilla_id: CasillaId = _DEFAULT_MINIMAL_CASILLA_ID) -> Cas
 
 
 def _minimal_workbook_ref(source_ref: str = _REFERENCE_WORKBOOK_SOURCE_ID) -> WorkbookParityReference:
-    from ..schema import WorkbookParityReference
+    from cadrumo.domain.calculations.registry.schema_verification import WorkbookParityReference
 
     return WorkbookParityReference(
         id="wp.test",
@@ -247,7 +251,7 @@ def _minimal_revision(
     export_layouts: tuple[ExportLayoutDefinition, ...] = (),
     deadline_windows: tuple[DeadlineWindowDefinition, ...] = (),
 ) -> ModeloRevision:
-    from ..schema import PeriodSelector
+    from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 
     workbook_ref = extra_workbook_ref or _minimal_workbook_ref()
     casillas = casillas or (_minimal_casilla(),)

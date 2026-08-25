@@ -45,15 +45,23 @@ from functools import cache
 import pdfplumber
 import pytest
 
+from cadrumo.domain.calculations.registry.bindings import (
+    RegistryModeloObservation,
+    resolve_available_bound_inputs_by_casilla_id,
+)
+from cadrumo.domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
+from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.withholding_bindings import (
+    WithholdingObservation,
+    resolve_withholding_binding_values,
+)
+
 from .....core import CasillaId, Period, validated_casilla_id, validated_casilla_id_map
 from .....core.aggregation import RetencionClave
 from .....tests import FIXTURES_DIR
 from ....period import calculation_filing_date
-from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.bindings import WithholdingObservation, resolve_available_bound_inputs_by_casilla_id, resolve_withholding_binding_values
 from ..authority import ValidatedRegistryAuthority
 from ..binding_selector_utils import selector_as_dict
-from ..bindings import RegistryModeloObservation, resolve_previous_filing_binding_values
 from ..relations import (
     RegistryFoldRequirement,
     materialize_relation_binding_values,

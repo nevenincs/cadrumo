@@ -28,7 +28,9 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 
-from .schema import LegalReference, ModeloRevision
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import LegalReference
+
 from .schema_references import governed_period_span
 
 

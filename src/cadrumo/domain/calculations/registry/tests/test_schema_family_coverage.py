@@ -20,27 +20,28 @@ from typing import Annotated
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from .....core import UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS, RegistrySchemaFamilyDisposition
-from .....tests.registry_tree import bundled_registry_tree
-from ..coverage import REQUIRED_COVERAGE_TIERS
-from ..errors import RegistryLoadError
-from ..loader import load_modelo_directory
-from ..schema import (
+from cadrumo.domain.calculations.registry.schema import (
     REVISION_COLLECTION_SHAPED_FIELDS,
     REVISION_MANIFEST_ONLY_FIELDS,
     REVISION_SCHEMA_FAMILY_FIELDS,
-    CasillaDefinition,
     ModeloRevision,
 )
-from ..schema_base import (
-    SCHEMA_FAMILY,
-    RegistryModel,
-    schema_family_enrollment_failures,
-)
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
+from .....core import UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS, RegistrySchemaFamilyDisposition
+from .....tests.registry_tree import bundled_registry_tree
 from .._schema_family_coverage import (
     RevisionCoverageManifest,
     SchemaFamilyCoverageRow,
     build_revision_coverage_manifest,
+)
+from ..coverage import REQUIRED_COVERAGE_TIERS
+from ..errors import RegistryLoadError
+from ..loader import load_modelo_directory
+from ..schema_base import (
+    SCHEMA_FAMILY,
+    RegistryModel,
+    schema_family_enrollment_failures,
 )
 from ._loader_directory_mode_support import _load_revision as _shared_load_revision
 from ._loader_directory_mode_support import _write_modelo as _shared_write_modelo

@@ -37,6 +37,12 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.ledger_bindings import (
+    IvaLedgerObservation,
+    resolve_ledger_iva_aggregation_binding_values,
+)
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
 from .....core.resources import resources
 from ....invoices import IvaRate
 from ....iva import (
@@ -46,8 +52,6 @@ from ....iva import (
     IvaRateNotFoundError,
     invoice_line_to_iva_observation,
 )
-from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

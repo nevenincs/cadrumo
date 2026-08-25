@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+
 from ...core import M303Exonerado390ActivityProjectionRef, M303Exonerado390OperacionesTercerosProjectionRef, Modelo
 from ...domain.calculations.registry.m303_exonerado_390_projection import (
     M303Exonerado390RecordProjection,
     project_m303_exonerado_390_activity_rows,
-)
-from ...domain.calculations.registry.schema import (
-    RegistrySnapshot,
-    SourceReference,
 )
 from ...domain.modelos import M303Exonerado390FilingEvidence
 from .errors import ModeloApplicationError as FilingExportError

@@ -12,9 +12,11 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .....core.resources import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from ..schema import LiveCrossReferenceDecision, ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision
+
+from .....core.resources import bundled_path
 from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo, _committed_registry_tree
 

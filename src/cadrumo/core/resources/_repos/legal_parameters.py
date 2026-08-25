@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, override
 from .._repository import ResourceCacheRepository
 
 if TYPE_CHECKING:
-    from ....domain.calculations.registry.schema import LegalParameter
+    from cadrumo.domain.calculations.registry.schema_references import LegalParameter
 
 
 class LegalParameterRepository(ResourceCacheRepository[Mapping[str, "LegalParameter"], None]):

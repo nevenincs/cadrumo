@@ -6,17 +6,17 @@ from functools import lru_cache
 
 import pytest
 
-from ._record_design_support import (
+from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
+from cadrumo.domain.calculations.registry.export import resolve_export_layout
+from cadrumo.domain.calculations.registry.tests._record_design_support import (
     _MODELO_131_CURRENT,
     _MODELO_131_WORKBOOK_ROOT,
-    CasillaFieldKind,
     _fixed_export_selectors,
     _is_page_one_structured_input_field,
     _is_structured_input_field,
     _modelo_131_snapshot,
     _official_record_design_sheets,
     _page_one_data_type,
-    resolve_export_layout,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

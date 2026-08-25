@@ -11,6 +11,13 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, FormulaDefinition, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_surfaces import (
+    CasillaConstraints,
+    CasillaDefinition,
+    RelationDefinition,
+)
+
 from ...core import (
     STRICT_FROZEN_CONFIG,
     BindingSourceKind,
@@ -21,6 +28,24 @@ from ...core import (
     Period,
 )
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
+from ...domain.calculations.registry.authority import (
+    ValidatedRegistryAuthority,
+    bundled_authority,
+)
+from ...domain.calculations.registry.bindings import (
+    CasillaObservation,
+    casillas_by_binding,
+)
+from ...domain.calculations.registry.export import (
+    clasificar_casillas_oficiales,
+    derive_export_layouts_from_bindings,
+)
+from ...domain.calculations.registry.export_parse import xml_dictionary_entries
+from ...domain.calculations.registry.handoffs import (
+    RelationConsumptionChannel,
+    relation_consumption_channels,
+    relation_consumption_index,
+)
 from ...domain.calculations.registry.ids import (
     BindingId,
     FormulaId,
@@ -29,32 +54,7 @@ from ...domain.calculations.registry.ids import (
     RevisionId,
     SourceRefId,
 )
-from ...domain.calculations.registry.schema import (
-    CasillaConstraints,
-    CasillaDefinition,
-    DataBindingDefinition,
-    FormulaDefinition,
-    RegistrySnapshot,
-    RelationDefinition,
-)
-from ...domain.calculations.registry.bindings import (
-    CasillaObservation,
-    casillas_by_binding,
-)
-from ...domain.calculations.registry.schema_input_kind import InputKind
-from ...domain.calculations.registry.handoffs import (
-    RelationConsumptionChannel,
-    relation_consumption_channels,
-    relation_consumption_index,
-)
-from ...domain.calculations.registry.authority import (
-    ValidatedRegistryAuthority,
-    bundled_authority,
-)
-from ...domain.calculations.registry.export import (
-    clasificar_casillas_oficiales,
-    derive_export_layouts_from_bindings,
-)
+from ...domain.calculations.registry.queries import relations_by_target_binding
 from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
     expression_binding_refs,
@@ -62,9 +62,8 @@ from ...domain.calculations.registry.runtime_graph import (
     expression_relation_refs,
     revision_date_binding_ids,
 )
-from ...domain.calculations.registry.queries import relations_by_target_binding
+from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.temporal import select_revision
-from ...domain.calculations.registry.export_parse import xml_dictionary_entries
 from ...domain.filing import ModeloScalar, ModeloValueKind
 from ...domain.modelos import (
     OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND,

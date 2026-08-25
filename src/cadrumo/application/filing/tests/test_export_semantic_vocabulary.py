@@ -8,9 +8,15 @@ from importlib import import_module
 
 import pytest
 
+from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
+from cadrumo.domain.calculations.registry.schema_exports import (
+    FilingEnvelopeDefinition,
+    FilingEnvelopePrefixFieldDeclaration,
+    FilingEnvelopePrefixRole,
+)
+
 from ....core import FilingProducerKey, Modelo, Period
 from ....domain.calculations import registry
-from cadrumo.domain.calculations.registry.schema import ExportComputedKey, ExportDraftAttribute, FilingEnvelopeDefinition, FilingEnvelopePrefixFieldDeclaration, FilingEnvelopePrefixRole
 from .. import (
     FilingEnvelopeOccurrence,
     FilingEnvelopeRenderRequest,

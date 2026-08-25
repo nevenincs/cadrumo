@@ -56,6 +56,10 @@ from typing import TYPE_CHECKING
 from cadrumo.application.workflow.engine import WorkflowEngine
 from cadrumo.application.workflow.persistence import WorkflowRunRepository
 from cadrumo.application.workflow.run_models import WorkflowPurpose
+from cadrumo.domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
+from cadrumo.domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -69,21 +73,12 @@ from ...core.config import Settings
 from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
-from ...domain.calculations.registry.schema import (
-    CasillaDefinition,
-    DataBindingDefinition,
-    RegistrySnapshot,
-)
 from ...domain.calculations.registry.bindings import CasillaObservation
-from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.ids import (
     LegalRefId,
     SourceRefId,
 )
-from ...domain.calculations.registry.applicability import (
-    derive_modelo_202_modality,
-    derive_taxpayer_files_economic_activity,
-)
+from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.iva import CUOTA_LESS_M303_IVA_CATEGORIES
 from ...domain.modelos import (

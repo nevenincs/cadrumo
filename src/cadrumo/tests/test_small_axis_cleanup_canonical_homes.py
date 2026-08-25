@@ -30,7 +30,8 @@ def test_setup_answers_has_one_core_home() -> None:
 
 
 def test_counterpart_source_kind_application_imports_from_domain() -> None:
+    from cadrumo.core.aggregation import CounterpartSourceKind as domain_csk
+
     from ..application.aggregation import CounterpartSourceKind as app_csk
-    from cadrumo.domain.calculations.registry.bindings import CounterpartSourceKind as domain_csk
 
     assert app_csk is domain_csk

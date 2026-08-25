@@ -4,18 +4,18 @@ from collections.abc import Callable, Mapping
 from datetime import date
 from decimal import Decimal
 
-from .....core import RegistryAuthorityGrade, validated_casilla_id
-from .....core.resources import bundled_path
-from ..formula_runtime import _evaluate_expression
-from ..schema import (
+from cadrumo.domain.calculations.registry.schema import (
     CasillaId,
     DataBindingDefinition,
-    FormulaExpression,
     ModeloDefinition,
-    ParameterDefinition,
     RegistryCatalogues,
     RegistrySnapshot,
 )
+from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression, ParameterDefinition
+
+from .....core import RegistryAuthorityGrade, validated_casilla_id
+from .....core.resources import bundled_path
+from ..formula_runtime import _evaluate_expression
 from ..snapshot import build_snapshot
 
 

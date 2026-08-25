@@ -6,17 +6,18 @@ from pathlib import Path
 
 import pytest
 
-from .....core.directory_scan import scan_directory
-from .....core.resources import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.record_design import calculation_closure_legal_refs
-from ._record_design_support import (
-    _committed_registry_tree,
+from cadrumo.domain.calculations.registry.record_design_coverage import (
     build_diseno_coverage_report,
+    calculation_closure_legal_refs,
     calculation_closure_record_design_metadata,
     derive_calculation_completeness_casillas,
     derive_diseno_coverage_casillas,
 )
+from cadrumo.domain.calculations.registry.tests._record_design_support import _committed_registry_tree
+
+from .....core.directory_scan import scan_directory
+from .....core.resources import bundled_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

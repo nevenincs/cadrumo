@@ -31,8 +31,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from cadrumo.domain.calculations.registry.schema_exports import ExportRecordDefinition
+
 from .....core import CasillaId
-from .....domain.calculations.registry.schema import ExportRecordDefinition
 from .....domain.calculations.registry.fixed_width_codec import (
     FixedWidthRecordRenderError,
     render_fixed_width_export_record_body,

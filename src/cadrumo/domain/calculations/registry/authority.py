@@ -8,7 +8,6 @@ produces :class:`RegistrySnapshot` instances on demand for each filing context.
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Generator
 from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass, field
@@ -26,7 +25,7 @@ from ....core.access_gate import (
     derive_modelo_authorization,
     load_authorization_manifest,
 )
-from ....core.external_constants import UTF_8_ENCODING
+from ....core.hashing import content_hash_hex
 from ....core.identity import ContentDigest
 from ....core.resources import bundled_path as _bundled_path
 from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
@@ -382,15 +381,17 @@ class _FingerprintKey[T]:
         return isinstance(other, _FingerprintKey) and self.digest == other.digest
 
 
+def _fingerprint_key_payload(fingerprints: tuple[tuple[object, ...], ...]) -> dict[str, object]:
+    """Frame a source-fingerprint corpus for its canonical cache-key digest."""
+    return {
+        "schema": "registry-authority-fingerprint-key/v1",
+        "entries": [[str(fingerprint_field) for fingerprint_field in entry] for entry in fingerprints],
+    }
+
+
 def _fingerprint_key[T: tuple[tuple[object, ...], ...]](fingerprints: T) -> _FingerprintKey[T]:
     """Digest one fingerprint tuple set into an O(1)-hashable cache key."""
-    digest = hashlib.sha256()
-    for entry in fingerprints:
-        for fingerprint_field in entry:
-            digest.update(str(fingerprint_field).encode(UTF_8_ENCODING))
-            digest.update(b"\x1f")
-        digest.update(b"\x1e")
-    return _FingerprintKey(digest=digest.hexdigest(), fingerprints=fingerprints)
+    return _FingerprintKey(digest=content_hash_hex(_fingerprint_key_payload(fingerprints)), fingerprints=fingerprints)
 
 
 _AuthorityRootKey = tuple[Path, Path]
@@ -461,16 +462,19 @@ def _authority_root_key(root: Path, source_root: Path) -> _AuthorityRootKey:
     return root, source_root
 
 
+def _authority_comparison_domain_payload(root: Path, source_root: Path) -> dict[str, str]:
+    """Frame one private physical-root/process identity for content hashing."""
+    return {
+        "schema": "registry-authority-comparison-domain/v1",
+        "registry_root": str(root),
+        "source_root": str(source_root),
+        "process_incarnation": _AUTHORITY_PROCESS_NONCE.hex(),
+    }
+
+
 def _authority_comparison_domain(root: Path, source_root: Path) -> ContentDigest:
     """Return the non-persisted coordinate domain for one resolved root pair."""
-    digest = hashlib.sha256()
-    for label, path in ((b"registry-root", root), (b"source-root", source_root)):
-        encoded = str(path).encode(UTF_8_ENCODING)
-        digest.update(label)
-        digest.update(len(encoded).to_bytes(8, "big"))
-        digest.update(encoded)
-    digest.update(_AUTHORITY_PROCESS_NONCE)
-    return digest.hexdigest()
+    return content_hash_hex(_authority_comparison_domain_payload(root, source_root))
 
 
 def _authority_load_state(root_key: _AuthorityRootKey) -> _AuthorityLoadState:

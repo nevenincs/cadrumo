@@ -33,9 +33,10 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.ledger_bindings import IvaLedgerObservation
+
 from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.resources import resources
-from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation
 from ....domain.invoices import Invoice, IvaRate
 from ....domain.iva import (
     InvoiceKind,

@@ -21,6 +21,9 @@ from typing import TypedDict, get_type_hints
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision
+
 from .....core import CasillaId, Period, validated_casilla_id
 from .....core.identity import SubjectTaxId
 from ....filing import (
@@ -37,13 +40,11 @@ from ....modelos import (
     derive_calculation_revision_id,
 )
 from ....submission import ModeloDraftStatus
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshotRef
 from ..bindings import (
     CasillaObservation,
     OracleModeloObservation,
     RegistryModeloObservation,
 )
-from ..schema import LiveCrossReferenceDecision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -267,7 +268,7 @@ def test_filing_draft_full_roundtrip() -> None:
     starts losing fields during the migration, this test will fail.
     """
 
-    from ..schema import RegistrySnapshotRef
+    from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 
     snapshot_ref = RegistrySnapshotRef(
         modelo="303",
@@ -332,7 +333,7 @@ def test_filing_draft_subject_tax_id_validates_at_boundary() -> None:
 
     import pytest as _pytest
 
-    from ..schema import RegistrySnapshotRef
+    from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 
     snapshot_ref = RegistrySnapshotRef(
         modelo="303",
@@ -372,7 +373,7 @@ def test_filing_draft_profile_tax_id_validates_at_boundary() -> None:
     ``subject_tax_id`` is validated.
     """
 
-    from ..schema import RegistrySnapshotRef
+    from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 
     snapshot_ref = RegistrySnapshotRef(
         modelo="303",
@@ -419,7 +420,7 @@ def test_filing_draft_profile_tax_id_validates_at_boundary() -> None:
 def test_filing_draft_snapshot_ref_full_roundtrip() -> None:
     """A populated ``RegistrySnapshotRef`` survives strict JSON round-trip on ModeloDraft."""
 
-    from ..schema import RegistrySnapshotRef
+    from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 
     ref = RegistrySnapshotRef(
         modelo="303",
@@ -461,7 +462,7 @@ def test_workbook_parity_reference_output_cells_roundtrip() -> None:
     suffix were stripped silently.
     """
 
-    from ..schema import WorkbookParityReference
+    from cadrumo.domain.calculations.registry.schema_verification import WorkbookParityReference
 
     original = WorkbookParityReference(
         id="m130-1t-parity",
@@ -497,7 +498,7 @@ def test_workbook_parity_reference_output_cells_roundtrip() -> None:
 
 
 def test_workbook_parity_reference_rejects_malformed_output_identifier() -> None:
-    from ..schema import WorkbookParityReference
+    from cadrumo.domain.calculations.registry.schema_verification import WorkbookParityReference
 
     with pytest.raises(ValidationError):
         WorkbookParityReference(
@@ -562,7 +563,12 @@ def test_workflow_step_details_typed_envelope_roundtrip() -> None:
 
     from datetime import timedelta
 
-    from cadrumo.application.workflow.run_models import WorkflowAuthCheckDetails, WorkflowDiagnosticSkipReason, WorkflowStage, WorkflowStep
+    from cadrumo.application.workflow.run_models import (
+        WorkflowAuthCheckDetails,
+        WorkflowDiagnosticSkipReason,
+        WorkflowStage,
+        WorkflowStep,
+    )
 
     original = WorkflowStep(
         stage=WorkflowStage.RUNNING_PREFLIGHT,

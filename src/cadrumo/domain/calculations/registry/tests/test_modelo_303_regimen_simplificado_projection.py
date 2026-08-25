@@ -6,6 +6,14 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from cadrumo.domain.calculations.registry.m303_regimen_simplificado_projection import (
+    _m303_iae_epigraph_wire_value,
+    project_m303_regimen_simplificado_rows,
+    validate_m303_regimen_simplificado_endpoint_epoch,
+)
+
 from .....application.calculations import calculate_m303_regimen_simplificado_result
 from .....core import (
     M303RegimenSimplificadoActivityField,
@@ -29,9 +37,6 @@ from .....domain.iva import (
     RegimenSimplificadoFilingRows,
 )
 from ....filing_evidence import FilingEvidenceReference
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.m303_regimen_simplificado_projection import project_m303_regimen_simplificado_rows, validate_m303_regimen_simplificado_endpoint_epoch
-from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -201,9 +206,10 @@ def test_declared_quantity_projection_uses_the_exact_annual_orden_ordinal() -> N
     assert tuple(field.value for field in projected[0].fields) == (Decimal("20"),)
 
 
-@pytest.mark.parametrize("iae_epigrafe", ("691.9", "722"))
+@pytest.mark.parametrize(("iae_epigrafe", "wire_value"), (("691.9", "6919"), ("722", "722")))
 def test_non_agricultural_projection_keeps_the_canonical_iae_discriminator(
     iae_epigrafe: str,
+    wire_value: str,
 ) -> None:
     """The two live same-IAE pairs remain distinct through typed projection refs."""
     registry_snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
@@ -280,7 +286,16 @@ def test_non_agricultural_projection_keeps_the_canonical_iae_discriminator(
         censo_iae_epigraphs=frozenset({iae_epigrafe}),
     )
 
-    assert tuple(field.value for field in projected[0].fields) == (iae_epigrafe, "1", iae_epigrafe, "2")
+    assert tuple(field.value for field in projected[0].fields) == (wire_value, "1", wire_value, "2")
+
+
+@pytest.mark.parametrize("iae_epigrafe", ("6919", "691.90", "691.a", "642.1, 2 y 3"))
+def test_m303_iae_epigraph_wire_value_refuses_noncanonical_or_unrepresentable_identity(
+    iae_epigrafe: str,
+) -> None:
+    """A DP30302 four-byte IAE field never obtains its value by truncation."""
+    with pytest.raises(RegistryValidationError, match="cannot encode"):
+        _m303_iae_epigraph_wire_value(iae_epigrafe)
 
 
 def test_agricultural_projection_refuses_without_official_code_crosswalk() -> None:

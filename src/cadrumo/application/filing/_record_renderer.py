@@ -6,17 +6,18 @@ from collections import Counter
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...core import CasillaId, FilingProducerKey, PriorDomiciliationElection
-from ...core.decimal import coerce_decimal
-from ...domain.calculations.registry.ids import BindingId
-from ...domain.calculations.registry.schema import (
-    CasillaFieldKind,
+from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
-    RegistrySnapshot,
 )
+
+from ...core import CasillaId, FilingProducerKey, PriorDomiciliationElection
+from ...core.decimal import coerce_decimal
 from ...domain.calculations.registry.export import export_fields_overlap
+from ...domain.calculations.registry.ids import BindingId
 from ...domain.filing import FilingExportValidationError, ModeloDraft
 from ._export_parity import did_page_suppressed
 from ._producer_snapshot import FilingProducerSnapshot

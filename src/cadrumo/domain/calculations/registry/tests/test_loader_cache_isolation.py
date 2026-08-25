@@ -45,19 +45,20 @@ from pathlib import Path
 
 import pytest
 
-from .....core.directory_scan import scan_directory
-from .....core.config import override_settings
-from .....core.resources import bundled_path
-from .....tests.env_scope import scoped_env_var
-from ..loader import (
+from cadrumo.domain.calculations.registry.loader import (
     _collect_registry_tree_fingerprints,
     _load_registry_tree_cached,
     _registry_fingerprint_cache,
-    clear_fingerprint_cache,
     is_bundled_registry_root,
     load_registry_tree,
     registry_disk_cache_enabled,
 )
+from cadrumo.domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
+
+from .....core.config import override_settings
+from .....core.directory_scan import scan_directory
+from .....core.resources import bundled_path
+from .....tests.env_scope import scoped_env_var
 from ..loader_cache import REGISTRY_DISK_CACHE_DIR_ENV_VAR
 from ._loader_directory_mode_support import _standard_manifest_text, _standard_revision_preamble_text
 

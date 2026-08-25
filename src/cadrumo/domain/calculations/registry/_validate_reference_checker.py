@@ -15,7 +15,7 @@ from .ids import LegalRefId, SourceRefId
 from .schema import ModeloRevision
 
 if TYPE_CHECKING:
-    from .snapshot import RegistrySnapshot
+    from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
 
 class _IdentifiedRecord(Protocol):

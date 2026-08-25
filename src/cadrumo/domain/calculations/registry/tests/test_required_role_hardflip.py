@@ -15,7 +15,10 @@ from datetime import date
 
 import pytest
 
-from ..schema import CasillaDefinition, ModeloDefinition, ModeloRevision, PeriodSelector
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
 from .._validate_semantic_roles import (
     REQUIRED_ROLE_LABEL_PATTERNS,
     collect_casillas_by_semantic_role,

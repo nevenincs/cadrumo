@@ -32,10 +32,14 @@ from decimal import Decimal, localcontext
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression, ParameterDefinition
+
 from ....core import STRICT_FROZEN_CONFIG, CasillaId, validated_casilla_id
 from ....domain.period import calculation_filing_date
 from . import _formula_runtime_irnr as _irnr
 from . import _formula_runtime_m131 as _m131
+from ._formula_operator_contracts import require_formula_operator_arity
 from .bindings import CasillaObservation
 from .casilla_membership import casillas_by_id as _casillas_by_id
 from .casilla_membership import duplicate_casilla_ids
@@ -50,7 +54,6 @@ from .formula_initial_values import (
 from .formula_initial_values import (
     materialise_observations as _materialise_observations,
 )
-from ._formula_operator_contracts import require_formula_operator_arity
 from .formula_runtime_ops import (
     RegistryUnresolvedOutcomeReason,
 )
@@ -101,7 +104,6 @@ from .ids import (
     SourceRefId,
 )
 from .runtime_graph import formula_evaluation_order
-from .schema import FormulaExpression, ParameterDefinition, RegistrySnapshot
 
 _ZERO = Decimal("0")
 _ONE = Decimal("1")

@@ -18,18 +18,18 @@ from pathlib import Path
 
 import pytest
 
-from .....core.directory_scan import scan_directory
-from ..errors import RegistryFailureCondition, RegistryLoadError, RegistryValidationError
-from ..loader import (
-    ModeloSource,
-    clear_fingerprint_cache,
-    discover_modelo_sources,
+from cadrumo.domain.calculations.registry.loader import (
     load_legal_parameters_only,
     load_modelo_directory,
     load_modelo_file,
     load_modelo_source,
     load_registry_tree,
 )
+from cadrumo.domain.calculations.registry.loader_cache import ModeloSource, discover_modelo_sources
+from cadrumo.domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
+
+from .....core.directory_scan import scan_directory
+from ..errors import RegistryFailureCondition, RegistryLoadError, RegistryValidationError
 from ._loader_directory_mode_support import (
     _MAX_SINGLE_FILE_MODELO_LINES,
     _MAX_TOML_FRAGMENT_LINES,

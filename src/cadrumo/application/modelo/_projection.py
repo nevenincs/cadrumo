@@ -23,6 +23,9 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
+from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import CasillaId, Modelo, Period, validated_casilla_id
 from ...core.decimal import try_parse_canonical_decimal
@@ -30,6 +33,12 @@ from ...core.errors import CadrumoError
 from ...core.logging import get_logger
 from ...core.money import round_to_cents
 from ...core.resources import bundled_path, resources
+from ...domain.calculations.registry.bindings import CasillaObservation
+from ...domain.calculations.registry.errors import (
+    RegistrySnapshotError,
+    RegistryValidationError,
+)
+from ...domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ...domain.calculations.registry.ids import (
     BindingId,
     FormulaId,
@@ -38,22 +47,11 @@ from ...domain.calculations.registry.ids import (
     RevisionId,
     SourceRefId,
 )
-from ...domain.calculations.registry.schema import (
-    CasillaDefinition,
-    ModeloRevision,
-    RegistrySnapshot,
-)
-from ...domain.calculations.registry.bindings import CasillaObservation
-from ...domain.calculations.registry.errors import (
-    RegistrySnapshotError,
-    RegistryValidationError,
-)
-from ...domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
     revision_date_binding_ids,
 )
-from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.modelos import (
     CalculationRevision,

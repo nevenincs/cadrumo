@@ -40,11 +40,13 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.schema import RegistryModel
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+
 from ....core.external_constants import UTF_8_ENCODING
-from .ids import SourceRefId
 from ._m303_orden_constants import EXTRACTOR_VERSION
+from .ids import SourceRefId
 from .m303_orden_raw_models import M303AnnualOrdenSourceCensus
-from .schema import RegistryModel, SourceReference
 
 M303_ORDEN_CENSUS_ARTEFACT_FILENAME = "censuses.json"
 """The sole filename of the generated census artefact. Never spelled elsewhere."""

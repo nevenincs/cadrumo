@@ -21,15 +21,20 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from .....core import CasillaId, validated_casilla_id
-from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation, previous_filing_observation_requirements, resolve_previous_filing_binding_values
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from cadrumo.domain.calculations.registry.bindings_previous_filing import (
+    previous_filing_observation_requirements,
+    resolve_previous_filing_binding_values,
+)
 from cadrumo.domain.calculations.registry.period_offset_math import same_ejercicio_prior_quarter_anchors
 from cadrumo.domain.calculations.registry.relations import source_presence_gaps
+from cadrumo.domain.calculations.registry.schema import BindingSelectorMap, DataBindingDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+
+from .....core import CasillaId, validated_casilla_id
+from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from ..bindings_previous_filing import PreviousModeloSelector, is_direct_previous_filing_binding
 from ..errors import RegistryValidationError
-from ..schema import BindingSelectorMap, PeriodSelector
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

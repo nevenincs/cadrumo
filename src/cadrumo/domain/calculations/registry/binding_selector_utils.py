@@ -8,11 +8,13 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ExportFieldDataType, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_exports import OneBasedExportOffset
+
 from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .binding_aggregation import binding_aggregation_op
 from .errors import RegistryValidationError
-from .schema import DataBindingDefinition, ExportFieldDataType, ModeloRevision, OneBasedExportOffset
 
 __all__ = [
     "BindingExportDataType",
@@ -551,6 +553,7 @@ def selector_against_model(
 
 
 def canonical_selector_key_hint(selector: Mapping[str, object], selector_model: type[BaseModel]) -> str:
+    """Return a canonical-key correction for a known legacy selector spelling."""
     if "source_casillas" in selector and "source_casilla_ids" in selector_model.model_fields:
         return "; use source_casilla_ids, not source_casillas"
     if "source_output" in selector and "source_casilla_id" in selector_model.model_fields:

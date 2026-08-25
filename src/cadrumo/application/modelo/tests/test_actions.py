@@ -15,15 +15,19 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.workflow.errors import WorkflowInputMismatchError
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.aggregation import BindingSourceKind
 from ....core.resources import resources
-from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.schema import CasillaDefinition, DataBindingDefinition, ModeloRevision, PeriodSelector
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation import IvaCompensationDivergence, IvaCompensationReconciliationDecision
 from ....domain.modelos import (
@@ -35,7 +39,6 @@ from ....domain.modelos import (
     derive_work_unit_id,
 )
 from ...calculations import M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA
-from cadrumo.application.workflow.errors import WorkflowInputMismatchError
 from .._action_errors import ModeloAggregationBindingError
 from .._calculation_actions import (
     _reject_caller_overrides_of_source_bindings,

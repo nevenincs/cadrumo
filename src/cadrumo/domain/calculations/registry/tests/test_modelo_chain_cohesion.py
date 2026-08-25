@@ -24,9 +24,11 @@ from collections.abc import Mapping
 
 import pytest
 
-from ..binding_selector_utils import selector_as_dict
-from ..schema import ModeloDefinition, RelationDefinition
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
+
 from .._validate_relation_periods import select_relation_source_revisions
+from ..binding_selector_utils import selector_as_dict
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -19,9 +19,9 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+
 from ....core.resources import bundled_path
-from cadrumo.domain.calculations.registry.schema import LegalReference, SourceReference
-from ..errors import IvaCatalogueError
 from .._grounding import legal_ref_failures
 from .._rates import (
     _source_ref_failures,
@@ -30,6 +30,7 @@ from .._rates import (
     _verify_rate_grounding,
 )
 from .._schema import EUMemberState, IvaRateKind, IvaRateRecord
+from ..errors import IvaCatalogueError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

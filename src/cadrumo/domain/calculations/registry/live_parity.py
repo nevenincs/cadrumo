@@ -46,7 +46,8 @@ from .remote_state_guard import (
 from .schedules import profile_condition_matches
 
 if TYPE_CHECKING:
-    from .schema import LiveCrossReferenceDecision, ModeloDefinition
+    from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+    from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision
 
 _log = get_logger(__name__)
 _ORACLE_ID_ADAPTER: TypeAdapter[OracleId] = TypeAdapter(OracleId)
@@ -288,6 +289,7 @@ class LiveParityCatalogue:
     """
 
     def __init__(self) -> None:
+        """Initialise an empty environment-partitioned oracle registry."""
         self._oracles: dict[OracleId, LiveParityOracle] = {}
         self._environments: dict[OracleId, OracleEnvironment] = {}
 

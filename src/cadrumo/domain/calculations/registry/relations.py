@@ -23,6 +23,9 @@ from typing import TYPE_CHECKING, Literal, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from cadrumo.domain.calculations.registry.schema import ModeloRevision, filing_period_from_scope
+from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
+
 from ....core import STRICT_FROZEN_CONFIG, CasillaId, Period, RegistrySelectorPeriodCode
 from ....core.aggregation import RelationAggregationOp
 from .binding_selector_utils import unique_tuple
@@ -31,7 +34,6 @@ from .ids import BindingId, LegalRefId, ModeloId, RelationId, SourceRefId
 from .observation_fold import gather_observed_requirement_values
 from .period_offset_math import apply_period_offset
 from .relation_aggregation import relation_aggregation_op
-from .schema import ModeloRevision, RelationDefinition, filing_period_from_scope
 
 if TYPE_CHECKING:
     from .bindings import RegistryModeloObservation

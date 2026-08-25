@@ -11,10 +11,18 @@ differently, so it misses the cache.
 from __future__ import annotations
 
 from collections.abc import Callable
+from pathlib import Path
 
 import pytest
 
-from ..authority import _fingerprint_key, _FingerprintKey
+from .....core.hashing import content_hash_hex
+from ..authority import (
+    _authority_comparison_domain,
+    _authority_comparison_domain_payload,
+    _fingerprint_key,
+    _fingerprint_key_payload,
+    _FingerprintKey,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -27,6 +35,27 @@ def test_the_key_carries_the_fingerprints_the_body_reads() -> None:
     """The digest must not cost the body access to the tuples it validates against."""
     fingerprints = _fingerprints(4)
     assert _fingerprint_key(fingerprints).fingerprints == fingerprints
+
+
+def test_the_key_digest_uses_the_canonical_framed_content_hash() -> None:
+    """The source-key frame stays explicit while hashing stays core-owned."""
+    fingerprints = (("modelos/303/revision.toml", 1, 2, "digest"),)
+
+    assert _fingerprint_key(fingerprints).digest == content_hash_hex(_fingerprint_key_payload(fingerprints))
+    assert len(_fingerprint_key(fingerprints).digest) == 64
+
+
+def test_the_comparison_domain_preserves_its_frame_under_the_canonical_hash() -> None:
+    """The opaque domain is byte-for-byte the core hash of its explicit frame."""
+    root = Path("registry-root")
+    source_root = Path("source-root")
+
+    payload = _authority_comparison_domain_payload(root, source_root)
+    domain = _authority_comparison_domain(root, source_root)
+
+    assert domain == content_hash_hex(payload)
+    assert isinstance(domain, str)
+    assert len(domain) == 64
 
 
 def test_the_hash_is_the_digest_hash_and_not_the_corpus_hash() -> None:

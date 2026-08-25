@@ -13,6 +13,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+
 from ....adapters.persistence.profile.invoices import (
     _INVOICE_CATALOGUE_VERSION,
     _INVOICE_NAMESPACE,
@@ -26,7 +28,6 @@ from ....core.classification import SensitivityClass
 from ....core.config import Settings
 from ....core.errors import BaseSeverity
 from ....core.i18n import Translatable as tr
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshotRef
 from ....domain.filing import (
     ModeloDraft,
     ModeloValidationFinding,

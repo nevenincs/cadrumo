@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:c09325755cd670056019e7023f8f00b0e42c7cd0239b038e6410cda2b258c140'
+body_hash: 'sha256:a8a1db39c0eb2aca1713a15aea10e6d9a0ef9fa25a6babcf4b555f089c649796'
 step_id: 'S51'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
@@ -99,3 +99,30 @@ Modelo 180 is no longer divergent. Modelo 200 is a real 2024-exercise versus
 2025-design mismatch governed by the accepted partition ruling and is now
 re-carried as a separate temporal Step. S51 remains open until all remaining
 divergences are resolved without backdating or invented authority.
+## M181 successor-window refusal (2026-08-26)
+
+The official amendment chain establishes the proposed successor boundaries but
+not an attachable multi-era export claim: Orden EHA/3514/2009
+(BOE-A-2009-21165) is followed by Orden HFP/1923/2016
+(BOE-A-2016-12114, first applicable to the 2016 declaration) and Orden
+HFP/1192/2022 (BOE-A-2022-20274, first applicable to the 2022 declaration).
+
+The canonical `resolve_record_design_binary` path verified the existing hashes
+and byte counts in-memory at the proposed windows: `aeat-dr-181-2009` through
+2015, `aeat-dr-181-2016` in 2016, `aeat-dr-181-2017` through 2021, and
+`aeat-dr-181-2022` from 2022. However, the canonical strict parser refuses a
+coverage claim for every historical binary: the 2009, 2016, and 2017 PDFs each
+read two records but report an unidentified restarted record body (at source
+rows 455, 376, and 371 respectively). Only the 2022 PDF reads complete. The
+strict export-layout coverage helper requires complete source extraction, so
+there is no valid geometry proof that the current `modelo-181-fichero-2022`
+layout may cite any historical source.
+
+Accordingly this bounded probe changes no M181 applicability metadata, source
+attachment, revision selector, authority grade, or layout geometry, and adds no
+mutation test for a claim the parser cannot prove. Adding the historic sources
+to the layout to silence the claimed-year gate would manufacture multi-era
+layout authority. S51 remains open. The whole claimed-year gate was also
+unrunnable in the shared worktree because the concurrent Modelo 200 partition
+lane currently declares duplicate `modelo-200-2025-0a` deadline ids; that
+independent loader refusal does not alter this M181 result.

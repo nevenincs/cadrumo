@@ -33,6 +33,9 @@ from xml.etree import ElementTree
 
 from defusedxml import ElementTree as DefusedElementTree
 
+from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+
 from ...core import CasillaId, FilingProducerKey, Modelo
 from ...core.decimal import coerce_decimal, try_parse_canonical_decimal
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
@@ -41,10 +44,6 @@ from ...domain.calculations.registry.export_parse import (
     XML_DICTIONARY_BOOLEAN_TYPES,
     XmlDictionaryEntry,
     xml_dictionary_entries,
-)
-from ...domain.calculations.registry.schema import (
-    ExportLayoutDefinition,
-    SourceReference,
 )
 from ...domain.contribuyente import modelo100_ccaa_codigo, modelo100_ecivil_export_code
 from ...domain.filing import FilingExportError, FilingExportValidationError, ModeloDraft

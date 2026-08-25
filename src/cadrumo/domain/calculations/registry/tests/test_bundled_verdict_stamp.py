@@ -19,10 +19,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
+
 from .....core.directory_scan import scan_directory
 from ..authority import stamp_bundled_registry_release
 from ..identity import read_registry_identity_stamp, registry_identity_stamp_location
-from ..loader import clear_fingerprint_cache
 from ..verdict_cache import VERDICT_OUTCOME_GREEN, read_verdict, shipped_verdict_location
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

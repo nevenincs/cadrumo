@@ -28,6 +28,14 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_extraction import (
+    BboxAnchorSpec,
+    ExtractionProfileDefinition,
+    ExtractionTargetDefinition,
+)
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+
 from ....core import (
     CasillaId,
     Period,
@@ -41,17 +49,9 @@ from ....core.identity import IdentityError, validate_spanish_tax_id
 from ....core.logging import get_logger
 from ....core.resources import bundled_path
 from ....core.time import now
-from ....domain.calculations.registry.schema import (
-    BboxAnchorSpec,
-    ExtractionProfileDefinition,
-    ExtractionTargetDefinition,
-    ModeloRevision,
-    RegistrySnapshot,
-    RegistrySnapshotRef,
-)
-from ....domain.calculations.registry.errors import RegistrySnapshotError
 from ....domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ....domain.calculations.registry.casilla_membership import casillas_by_id
+from ....domain.calculations.registry.errors import RegistrySnapshotError
 from ..pdf import (
     PRESENTADOR_NIF_LABEL,
     SPANISH_AMOUNT_GROUP,
@@ -62,9 +62,9 @@ from ..pdf import (
     source_pdf_reference_path,
 )
 from ._detect import detect_template_revision, detect_template_revision_from_pages
-from .errors import DeclaracionParseError, TemplateNotDetectedError
 from ._parsers import extract_pages_text, extract_pages_text_from_bytes
 from ._schema import InboundDeclaracionObservation, TemplateRevision
+from .errors import DeclaracionParseError, TemplateNotDetectedError
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-PDFWORD: pdfplumber's Page.extract_words()
 # returns dicts whose full key-set varies by version and page content.  A

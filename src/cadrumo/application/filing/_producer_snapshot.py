@@ -14,6 +14,8 @@ from typing import Annotated, ClassVar, Final, Literal
 
 from pydantic import BaseModel, StringConstraints, model_validator
 
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+
 from ...core import (
     STRICT_FROZEN_CONFIG,
     M390ActivityField,
@@ -39,7 +41,6 @@ from ...domain.bienes_inversion import (
     RegistroRegularizacionResult,
     compute_registro_regularizacion,
 )
-from ...domain.calculations.registry.schema import SourceReference
 from ...domain.deadlines import ChargeAccount, ModeloIVAProfile, RefundAccount, TaxpayerProfile
 from ...domain.modelos import (
     CalculationRevisionAmendmentKind,

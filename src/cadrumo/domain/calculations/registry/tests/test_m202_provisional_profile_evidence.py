@@ -6,11 +6,15 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.resources import bundled_path
-from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_extraction import (
+    ExtractionProfileDefinition,
+    ExtractionTargetDefinition,
+)
 from cadrumo.domain.calculations.registry.validate import RegistryValidator
+
+from .....core.resources import bundled_path
 from ..errors import RegistryValidationError
-from ..schema import ExtractionProfileDefinition, ExtractionTargetDefinition, ModeloDefinition
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

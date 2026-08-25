@@ -21,8 +21,9 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.query_reports import ModeloDescribeReport
+
 from ....core import Period
-from cadrumo.domain.calculations.registry.queries import ModeloDescribeReport
 from .._modelo_aux_payloads import ModeloDescribeResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

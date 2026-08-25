@@ -28,24 +28,22 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 
+from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
 from ...core import CasillaId, Period, validated_casilla_id
-from ...domain.calculations.registry.schema import (
-    CasillaDefinition,
-    ModeloRevision,
-    RegistrySnapshot,
-)
-from ...domain.calculations.registry.schema_input_kind import InputKind
-from ...domain.calculations.registry.errors import (
-    RegistrySnapshotError,
-    RegistryValidationError,
-)
-from ...domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     casillas_by_id,
     format_noncanonical_casilla_reference,
     undeclared_casilla_ids,
 )
+from ...domain.calculations.registry.errors import (
+    RegistrySnapshotError,
+    RegistryValidationError,
+)
+from ...domain.calculations.registry.schema_input_kind import InputKind
+from ...domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ...domain.modelos import (
     CalculationRevision,
     derive_calculation_revision_id_from_revision,

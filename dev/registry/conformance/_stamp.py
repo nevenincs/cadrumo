@@ -191,13 +191,10 @@ from typing import Final, TypeGuard
 from cadrumo.core import RevisionReviewStatus, to_str_keyed_dict
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry.schema import (
-    REVISION_GOVERNANCE_FIELDS,
-    ModeloRevision,
-    PeriodSelector,
-)
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory
+from cadrumo.domain.calculations.registry.schema import REVISION_GOVERNANCE_FIELDS, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 
 from .manager import reset_conformance_cache
 

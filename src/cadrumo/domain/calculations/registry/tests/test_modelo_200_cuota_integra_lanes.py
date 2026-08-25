@@ -29,6 +29,9 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality, derive_modelo_202_modality
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+
 from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from ....deadlines import (
     EntityType,
@@ -36,8 +39,6 @@ from ....deadlines import (
     LegalEntityForm,
     TaxpayerProfile,
 )
-from cadrumo.domain.calculations.registry.applicability import Modelo202Modality, derive_modelo_202_modality
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ._registry_schema_support import _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

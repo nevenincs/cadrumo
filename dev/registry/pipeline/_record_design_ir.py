@@ -16,7 +16,14 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.domain.calculations.registry.record_design import (
+from cadrumo.domain.calculations.registry.corpus_catalogue import (
+    ResolvedRecordDesignBinary,
+    resolve_record_design_binary,
+)
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.ids import SourceRefId
+from cadrumo.domain.calculations.registry.record_design import extract_record_design
+from cadrumo.domain.calculations.registry.record_design_schema import (
     AUXILIARY_ENVELOPE_HEADER_LENGTHS,
     AUXILIARY_ENVELOPE_HEADER_ORDINALS,
     AUXILIARY_ENVELOPE_HEADER_ROWS,
@@ -27,16 +34,9 @@ from cadrumo.domain.calculations.registry.record_design import (
     RecordDesignRelativeSuffixMarker,
     RecordDesignSheet,
     RecordDesignVariableEnvelope,
-    extract_record_design,
     validate_auxiliary_envelope_header_contents,
 )
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.corpus_catalogue import (
-    ResolvedRecordDesignBinary,
-    resolve_record_design_binary,
-)
-from cadrumo.domain.calculations.registry.ids import SourceRefId
 
 __all__ = [
     "RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION",

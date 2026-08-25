@@ -1,0 +1,56 @@
+[[revisions."2025-y-siguientes".casillas]]
+id = "03321"
+number = "03321"
+section = ["operaciones_a_plazos_dt_1a_lis", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_operaciones_a_plazos_dt1_permanente_aumento"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "official Modelo 200 source separates operaciones a plazos DT 1a LIS from art. 11.4 LIS rows"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "03322"
+number = "03322"
+section = ["operaciones_a_plazos_dt_1a_lis", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_operaciones_a_plazos_dt1_temporaria_ejercicio_aumento"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "official Modelo 200 source separates operaciones a plazos DT 1a LIS from art. 11.4 LIS rows"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "03323"
+number = "03323"
+section = ["operaciones_a_plazos_dt_1a_lis", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_operaciones_a_plazos_dt1_temporaria_anteriores_aumento"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "official Modelo 200 source separates operaciones a plazos DT 1a LIS from art. 11.4 LIS rows"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "03324"
+number = "03324"
+section = ["operaciones_a_plazos_dt_1a_lis", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_operaciones_a_plazos_dt1_saldo_inicial"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "03325"
+number = "03325"
+section = ["operaciones_a_plazos_dt_1a_lis", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_operaciones_a_plazos_dt1_saldo_final"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

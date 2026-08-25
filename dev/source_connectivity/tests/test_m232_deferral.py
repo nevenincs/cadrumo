@@ -12,7 +12,7 @@ from cadrumo.application.registry import compose_source_connectivity_coverage
 from cadrumo.application.registry.source_connectivity import load_source_connectivity_census
 from cadrumo.core import BindingSourceKind
 from cadrumo.core.resources import resources
-from cadrumo.domain.calculations.registry.schema import CasillaFieldKind
+from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 
 from ..check import SourceConnectivityCheckError, check_capability_locators, check_census_governance
 from ..discovery import discovered_source_capability_evidence

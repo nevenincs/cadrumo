@@ -20,7 +20,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from .schema import LegalReference, ModeloRevision, SourceReference
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import missing_refs as _missing_refs
 from ._validate_revision_context import ConstructMemberObject

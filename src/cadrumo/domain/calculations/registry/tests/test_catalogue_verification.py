@@ -12,6 +12,10 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
+from cadrumo.domain.calculations.registry.schema import filing_period_from_scope
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+
 from .....core import RECORD_DESIGN_EPOCH_RE
 from .....core.external_constants import PDF_EXTENSION, XLS_EXTENSION, XLSM_EXTENSION, XLSX_EXTENSION
 from .....core.resources import bundled_path
@@ -27,8 +31,6 @@ from ..coverage import (
 )
 from ..errors import NoRevisionForPeriodError, RegistryValidationError
 from ..legal import verify_legal_catalogue_grounding
-from ..loader import clear_fingerprint_cache
-from ..schema import SourceReference, filing_period_from_scope
 from ..snapshot import build_snapshot, check_snapshot_filing_review_tier
 from ..temporal import coverage_assessment_horizon, revision_selection_coordinates, select_revision
 from ..validate import RegistryValidator

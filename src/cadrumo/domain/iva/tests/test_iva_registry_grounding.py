@@ -45,14 +45,15 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema_references import LegalReference
+
 from ....core.resources import bundled_path
-from cadrumo.domain.calculations.registry.schema import LegalReference
-from ..errors import IvaCatalogueError
 from .._establishment import _excluded_territories_by_prefix
 from .._grounding import registry_catalogues, verify_table_legal_refs
 from .._place_of_supply import load_place_of_supply_rules
 from .._rates import load_iva_rate_table
 from .._recargo_equivalencia import load_recargo_rate_table
+from ..errors import IvaCatalogueError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

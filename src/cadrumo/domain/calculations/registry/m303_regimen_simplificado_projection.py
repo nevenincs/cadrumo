@@ -221,12 +221,41 @@ def _project_activity_ref(
     if ref.field is M303RegimenSimplificadoActivityField.IAE_EPIGRAFE:
         if not isinstance(row, ActividadNoAgricolaSimplificado):
             raise RegistryValidationError("IAE-epigraph reference resolved an agricultural row")
-        return row.iae_epigrafe
+        return _m303_iae_epigraph_wire_value(row.iae_epigrafe)
     if ref.field is M303RegimenSimplificadoActivityField.AUXILIARY_ACTIVITY_INDICATOR:
         if not isinstance(row, ActividadNoAgricolaSimplificado):
             raise RegistryValidationError("auxiliary activity indicator reference resolved an agricultural row")
         return row.auxiliary_activity_indicator
     raise RegistryValidationError(f"unsupported regimen-simplificado activity field {ref.field!r}")
+
+
+def _m303_iae_epigraph_wire_value(iae_epigrafe: str) -> str:
+    """Encode one canonical annual-Orden IAE identity for DP30302's four-byte field.
+
+    The annual Orden keeps an epigraph such as ``691.9`` in its official,
+    human-facing identity form.  DP30302's alphanumeric four-byte field carries
+    that same identity without its separator (``6919``); a three-digit identity
+    such as ``722`` remains three characters and is padded by the declared
+    fixed-width field codec.  The conversion is deliberately closed so malformed
+    source identities never reach the renderer as an implicit truncation case.
+    """
+    whole, separator, fractional = iae_epigrafe.partition(".")
+    if separator:
+        if (
+            len(whole) == 3
+            and len(fractional) == 1
+            and whole.isascii()
+            and fractional.isascii()
+            and whole.isdecimal()
+            and fractional.isdecimal()
+        ):
+            return f"{whole}{fractional}"
+        raise RegistryValidationError(
+            f"DP30302 cannot encode noncanonical dotted IAE epigraph {iae_epigrafe!r}",
+        )
+    if len(iae_epigrafe) == 3 and iae_epigrafe.isascii() and iae_epigrafe.isdecimal():
+        return iae_epigrafe
+    raise RegistryValidationError(f"DP30302 cannot encode IAE epigraph {iae_epigrafe!r} into its four-byte field")
 
 
 def _project_fact_ref(

@@ -37,6 +37,10 @@ from typing import TYPE_CHECKING, Annotated
 
 from pydantic import BaseModel, Field, TypeAdapter, field_validator, model_validator
 
+from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_exports import ExportRecordDefinition
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import M145_COMMUNICATION_RECORD_NAMESPACE
 from ...core import STRICT_FROZEN_CONFIG, CasillaId, ExportLayoutFormat, Hex64Str, validated_casilla_id_map
@@ -54,18 +58,12 @@ from ...domain.buckets import (
     BucketEventType,
     bucket_event_history_write,
 )
-from ...domain.calculations.registry.schema import (
-    CasillaDefinition,
-    ExportRecordDefinition,
-    ModeloRevision,
-    RegistrySnapshot,
-)
-from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.casilla_membership import (
     casillas_by_id,
     undeclared_casilla_ids,
 )
 from ...domain.calculations.registry.export import resolve_export_layout
+from ...domain.calculations.registry.ids import RevisionId
 from ...domain.modelos import ModeloError, ModeloExportError
 from ._m145_communication import (
     M145_COMMUNICATION_MODELO,

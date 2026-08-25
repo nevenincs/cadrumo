@@ -7,6 +7,17 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.binding_aggregation import binding_aggregation_op
+from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
+from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
+from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.validate import RegistryValidator
+
 from .....core import (
     CasillaId,
     IvaDeductionEvidenceAuthority,
@@ -21,15 +32,6 @@ from ....iva import (
     IvaDeductionClassificationProvenance,
     IvaLedgerObservationRole,
 )
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
-from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
-from cadrumo.domain.calculations.registry.validate import RegistryValidator
-from cadrumo.domain.calculations.registry.bindings import binding_aggregation_op, resolve_available_bound_inputs_by_casilla_id
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
-from cadrumo.domain.calculations.registry.temporal import select_revision
-from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ..bindings import binding_source_casilla_ids, binding_source_modelo
 from ..snapshot import build_snapshot
 
@@ -624,12 +626,16 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
     ledger_iva_aggregation runtime resolver."""
     from decimal import Decimal
 
+    from cadrumo.domain.calculations.registry.ledger_bindings import (
+        IvaLedgerObservation,
+        resolve_ledger_iva_aggregation_binding_values,
+    )
+
     from ....iva import (
         IvaCategory,
         IvaFlowDirection,
         IvaRateKind,
     )
-    from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
 
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions["2022"]
@@ -868,8 +874,15 @@ def test_modelo_303_compensation_chain_uses_current_record_design_casillas() -> 
 
 
 def test_modelo_303_previous_quarter_compensation_binding_resolves_from_source_casilla_id() -> None:
-    from cadrumo.domain.calculations.registry.relations import materialize_relation_binding_values, relation_source_requirements, resolve_relation_values_from_observations
-    from cadrumo.domain.calculations.registry.bindings import previous_filing_observation_requirements, resolve_previous_filing_binding_values
+    from cadrumo.domain.calculations.registry.bindings_previous_filing import (
+        previous_filing_observation_requirements,
+        resolve_previous_filing_binding_values,
+    )
+    from cadrumo.domain.calculations.registry.relations import (
+        materialize_relation_binding_values,
+        relation_source_requirements,
+        resolve_relation_values_from_observations,
+    )
 
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions["2022"]
@@ -912,8 +925,15 @@ def test_modelo_303_previous_quarter_compensation_binding_resolves_from_source_c
 
 
 def test_modelo_303_first_quarter_compensation_resolves_from_previous_year_fourth_quarter() -> None:
-    from cadrumo.domain.calculations.registry.relations import materialize_relation_binding_values, relation_source_requirements, resolve_relation_values_from_observations
-    from cadrumo.domain.calculations.registry.bindings import previous_filing_observation_requirements, resolve_previous_filing_binding_values
+    from cadrumo.domain.calculations.registry.bindings_previous_filing import (
+        previous_filing_observation_requirements,
+        resolve_previous_filing_binding_values,
+    )
+    from cadrumo.domain.calculations.registry.relations import (
+        materialize_relation_binding_values,
+        relation_source_requirements,
+        resolve_relation_values_from_observations,
+    )
 
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions["2022"]
@@ -1066,6 +1086,8 @@ def test_modelo_303_monthly_snapshot_resolves_for_each_period() -> None:
 
 def test_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profiles() -> None:
     """The monthly schedule fires for monthly IVA-liquidation triggers only."""
+    from cadrumo.domain.calculations.registry.schedules import applicable_filing_schedules
+
     from ....deadlines import (
         IVARegime,
         M303RegimeComposition,
@@ -1074,7 +1096,6 @@ def test_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profiles
         ModeloIVAProfile,
         TaxpayerProfile,
     )
-    from cadrumo.domain.calculations.registry.schedules import applicable_filing_schedules
 
     modelo, _catalogues = _load_modelo_303()
     revision = modelo.revisions["2025"]

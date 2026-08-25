@@ -13,6 +13,9 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
 from ....core import CasillaId
 from .bindings import binding_source_casilla_ids, binding_source_modelo
 from .casilla_membership import casillas_by_id
@@ -20,7 +23,6 @@ from .errors import RegistryValidationError
 from .ids import LegalRefId, RevisionId
 from .record_design_schema import RecordDesignSheet
 from .runtime_graph import expression_casilla_refs
-from .schema import CasillaDefinition, DataBindingDefinition, ModeloRevision
 
 
 def _extract_record_design(path: Path) -> tuple[RecordDesignSheet, ...]:

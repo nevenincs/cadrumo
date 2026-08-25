@@ -31,6 +31,8 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, NoReturn
 
+from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
+
 from ....core import CasillaId, ConvenioOverrideKind, TipoRentaIrnr
 from ...contribuyente import UE_EEA_COUNTRY_CODES
 from .convenio import ConvenioOverride
@@ -50,7 +52,6 @@ from .formula_runtime_ops import (
     resolve_scalar_parameter as _resolve_scalar_parameter,
 )
 from .ids import BindingId, ParameterId
-from .schema import FormulaExpression
 
 if TYPE_CHECKING:
     from .formula_runtime import EvalContext

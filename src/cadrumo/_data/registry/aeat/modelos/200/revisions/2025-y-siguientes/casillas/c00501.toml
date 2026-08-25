@@ -1,0 +1,13 @@
+[[revisions."2025-y-siguientes".casillas]]
+id = "00501"
+number = "00501"
+segmento = "DP200012"
+section = ["liquidacion_i", "resultado_de_la_cuenta_de_perdidas_y_ganancias"]
+data_type = "money"
+semantic_role = "is_liquidacion_i_importe"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 200 Liquidacion I result-before-IS row 00501; official manual uses it as the base-determination starting point."
+required = true
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

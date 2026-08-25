@@ -26,7 +26,8 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.formula_runtime import read_parameter
+from cadrumo.domain.calculations.registry.formula_runtime_ops import read_parameter
+
 from .._amortization_ledger import _resolve_amortizacion_inmueble_rate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

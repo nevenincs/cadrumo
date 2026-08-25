@@ -7,17 +7,17 @@ import re
 from functools import cache
 from pathlib import Path
 
-from .....core.directory_scan import scan_directory
-from .....core.resources import bundled_path
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from cadrumo.domain.calculations.registry.loader import ModeloSource
-from ..loader import (
+from cadrumo.domain.calculations.registry.loader import (
     _REVISION_SECTION_FIELDS,
-    discover_modelo_sources,
     load_modelo_directory,
     load_modelo_source,
     load_registry_tree,
 )
+from cadrumo.domain.calculations.registry.loader_cache import ModeloSource, discover_modelo_sources
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+
+from .....core.directory_scan import scan_directory
+from .....core.resources import bundled_path
 from ..schema import ModeloRevision
 
 _REVISION_HEADER_RE = re.compile(r'^\[\[?revisions\.(?:"([^"]+)"|([A-Za-z0-9_-]+))(?=[.\]])')

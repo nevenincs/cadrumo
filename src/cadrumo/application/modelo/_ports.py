@@ -24,8 +24,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Protocol, runtime_checkable
 
+from cadrumo.domain.calculations.registry.schema_exports import ExportRecordDefinition
+
 from ...core import CasillaId
-from ...domain.calculations.registry.schema import ExportRecordDefinition
 
 
 @runtime_checkable

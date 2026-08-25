@@ -28,13 +28,15 @@ from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from cadrumo.domain.calculations.registry.schema import DatedValue, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_formula import BracketEntry, ParameterDefinition
+
 from ....core import CasillaId, validated_casilla_id
 from ....core.money import round_to_cents as _round_to_cents
+from ._formula_operator_contracts import require_formula_operator_arity
 from .casilla_membership import undeclared_casilla_ids
 from .errors import RegistrySnapshotError, RegistryValidationError
-from ._formula_operator_contracts import require_formula_operator_arity
 from .ids import RevisionId
-from .schema import BracketEntry, DatedValue, ModeloRevision, ParameterDefinition
 from .schema_rounding import RegistryRoundingCode
 
 if TYPE_CHECKING:
@@ -59,6 +61,7 @@ class UnresolvedFormulaDependencyError(RegistrySnapshotError):
     """
 
     def __init__(self, dependency_ids: tuple[str, ...]) -> None:
+        """Initialise the refusal with every unresolved dependency identifier."""
         super().__init__(", ".join(dependency_ids))
         self.dependency_ids = dependency_ids
 
@@ -79,6 +82,7 @@ class UnresolvedFormulaOutcomeError(RegistrySnapshotError):
         *,
         context: Mapping[str, str],
     ) -> None:
+        """Initialise the typed unresolved outcome and its safe context."""
         super().__init__(reason.value)
         self.reason = reason
         self.context = dict(context)

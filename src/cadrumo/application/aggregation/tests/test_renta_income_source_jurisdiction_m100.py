@@ -11,11 +11,12 @@ from ._secure_objects_fixtures import SECURE_OBJECTS_BUCKET_ID, secure_objects
 
 __all__ = ["secure_objects"]
 
+from cadrumo.domain.calculations.registry.ledger_bindings import resolve_ledger_renta_income_aggregation_binding_values
+
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.resources import resources
-from cadrumo.domain.calculations.registry.bindings import resolve_ledger_renta_income_aggregation_binding_values
 from ....domain.transactions import TransactionCatalogue
 from .._renta_income_ledger import (
     RentaIncomeLedgerAggregationIssueReason,

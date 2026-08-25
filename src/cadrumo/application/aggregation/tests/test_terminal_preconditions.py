@@ -13,11 +13,13 @@ from typing import override
 
 import pytest
 
+from cadrumo.domain.calculations.registry.ledger_bindings import IvaLedgerObservation
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+
 from ....core import ActionConditionality, ActionEvidenceProvenance, BindingSourceKind, NoRecoveryOutcome, Period
 from ....core.errors import TerminalPreconditionErrorMixin
 from ....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision, PeriodSelector
-from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation
 from ....domain.invoices import Invoice, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import (
     InvoiceKind,
@@ -30,12 +32,12 @@ from ....domain.iva import (
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import _modelo_bindings as modelo_bindings_module
 from .. import _service as service_module
-from ..errors import AggregationError, AggregationUnsupportedModeloError, AggregationValidationError
 from .._modelo_bindings import RetencionesAggregationSourceResolver, _raise_if_screened_invoice_iva_would_be_silent
 from .._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from .._retencion_observations_repository import RetencionObservationRepository
 from .._service import _SUPPORTED_PER_MODELO_MODELOS, provider_for_modelo
 from .._source_mesh import CalculationSourceContext
+from ..errors import AggregationError, AggregationUnsupportedModeloError, AggregationValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
