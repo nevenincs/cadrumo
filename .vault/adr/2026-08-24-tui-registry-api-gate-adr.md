@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:58788a2b90079a2190525c60b3854074cfdd30eb1f9dfdffc14bfadd795b6d0b'
+body_hash: 'sha256:1f1ac4d2bdeca27b25dc0ce9079b3f7f410fd1a5433ae8f9487ba423dec9f8ab'
 related:
   - '[[2026-08-24-tui-registry-api-gate-research]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
@@ -24,6 +24,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-25-tui-architecture-workspace-owner-seam-reconciliation-audit]]'
+  - '[[2026-08-25-tui-architecture-s160-native-work-capture-owner-atomicity-reconciliation-audit]]'
 ---
 
 # `tui-registry-api-gate` adr: `read-only Modelo workspace projection and capability facade` | (**status:** `accepted`)
@@ -77,6 +78,10 @@ reconciliation are grounded in `2026-08-24-tui-registry-api-gate-research` and
   editing are the external interface/write-side boundary established by the
   accepted `2026-08-24-tui-modelo-workspace-interface-adr`. Neither record is
   implemented merely because Workspace V1 exists.
+- The native `work` contribution needs a physical owner coordinate, an atomic
+  catalogue observation, and a registry-independent selector before the generic
+  owner seam is implementable; the unresolved evidence is recorded by
+  `2026-08-25-tui-architecture-s160-native-work-capture-owner-atomicity-reconciliation-audit`.
 
 ## Considered options
 
@@ -102,13 +107,18 @@ reconciliation are grounded in `2026-08-24-tui-registry-api-gate-research` and
 - Workspace V1 lives behind the public `cadrumo.application.modelo` facade. It
   exposes no private registry model, repository, persistence DTO, raw
   exception, frontend type, callback, command request, or untyped payload bag.
-- A request uses the existing discriminated `ModeloVisibleFilingTarget` or
-  `ModeloExactWorkUnitTarget`. The visible target is active bucket or explicit
-  bucket plus Modelo, filing year, and period. An exact work-unit target is an
-  advanced address whose optional bucket assertion must agree with the stored
-  work unit. A missing exact target or multiple active natural matches refuse.
-  Zero natural matches yield an explicit absent-work read state; the workspace
-  never creates or selects a work unit.
+- A request uses exactly the existing discriminated
+  `ModeloVisibleFilingTarget` or `ModeloExactWorkUnitTarget`. The visible target
+  is active bucket or explicit bucket plus Modelo, filing year, and period. An
+  exact work-unit target is an advanced address whose optional bucket assertion
+  must agree with the stored work unit. The generic `ModeloWorkAddress` is an
+  internal normalization shape, not a Workspace or native-capture operand. A
+  missing exact target refuses. Zero visible matches yield an explicit
+  absent-work success; exactly one visible match resolves whether active or
+  discarded; any mixed or same-state multiple match refuses ambiguity. An
+  active-only lifecycle operation may exclude discarded work from its reusable
+  candidate set, but that filter never changes Workspace read addressability.
+  The workspace never creates or selects a work unit.
 - The request separately chooses `static_inspection` or `graded_snapshot`
   admission. Static inspection is not an authority grade and cannot calculate,
   draft, export, or expose materialized work values. Graded admission names one
@@ -342,6 +352,78 @@ native generation. Neither operation may mint an owner generation or obtain a
 second semantic value. Missing, duplicate, stale, misidentified, or
 unclassified registrations fail the generated fixed-point gate.
 
+### Native WORK capture and registry separation
+
+The native `work` capture is a work-only read over the canonical public
+`ModeloVisibleFilingTarget | ModeloExactWorkUnitTarget` input. It returns the
+existing strict frozen `ModeloWorkResolution` together with the native owner
+generation. It does not call registry authority, select a legal revision,
+create or mutate work, translate into a Workspace model, or perform a second
+repository read. The broad address DTO and any union containing it stay inside
+command normalization and cannot widen this public capture boundary.
+
+Exactly one pure selector operates on a supplied captured
+`WorkUnitCatalogue`. In visible-read mode it considers every lifecycle state:
+zero matches produces `ABSENT`, one active or discarded match produces
+`RESOLVED`, and every multiple set -- active, discarded, or mixed -- refuses as
+ambiguous. Exact lookup refuses absence but returns a single discarded unit so
+downstream read and terminal-state policy can observe it. The active-only
+create-or-reuse mode delegates to the same selector while limiting its natural
+candidate set to active work; it is not a second scan or selection authority. A
+requested revision is retained as assertion evidence and never narrows the
+candidate set.
+
+Native capture is blocked until the persistence port can return the catalogue
+and its persistence revision from one and the same `SecureObjectRecord`. A
+document load followed by a revision reload is not an atomic observation. Both
+singleton wire-shape kernels must satisfy the one-record invariant, and the work
+repository protocol and concrete repository must expose that invariant without
+an application-side storage path. The selector consumes only that captured
+catalogue; all substitutable repository scans and raw-selector copies converge
+on it or are deleted.
+
+The physical native owner coordinate is the canonical resolved storage or
+repository root, resolved bucket, work-catalogue namespace and singleton object
+key. When the caller omits `bucket_id`, the root-scoped active-bucket pointer
+coordinate that supplied the bucket is part of the owner observation; an
+explicit bucket has no implicit-pointer dependency. These physical coordinates
+remain internal and never enter a Workspace payload, refusal, baseline, cursor,
+or producer stamp.
+
+Generation state is process-local and scoped by physical storage root. Under
+one root-scoped transition lock, a newly observed catalogue revision or
+implicit-pointer transition advances one monotonic generation exactly once;
+concurrent captures of the same observation singleflight onto the same
+generation. A -> B -> A therefore advances twice even when the semantic
+catalogue or selected bucket returns to its earlier value. The currentness read
+re-observes the same physical owner coordinate and either returns its still-
+current generation or publishes the observed successor; a stale capture can
+never become current again. Distinct roots have independent locks and counters,
+and their integers are incomparable. Process restart remains covered by the
+Workspace process-incarnation coordinate; no generation is persisted, hashed
+from payload equality, or shared across roots.
+
+Registry and work stay separate owners. S128 first performs exactly one native
+WORK capture. Exact absence terminates as the declared refusal; natural absence
+continues because its filing coordinate is complete. S128 then performs exactly
+one S159 registry-native capture from the Modelo, filing year, and period in the
+captured work resolution. One pure application assertion compares the optional
+requested revision and optional stored work revision with the law-selected
+revision from that captured registry projection. The assertion never reloads
+work, calls a raw registry loader, or feeds a stored revision into selection.
+Only after this dependency-ordered WORK-then-REGISTRY pair may S128 capture the
+remaining admission-specific contributors.
+
+The atomic singleton observation, pure captured-catalogue selection and
+consumer convergence, and S159-backed pure revision assertion are prerequisites
+to the native WORK surface and therefore to S128 assembly. The native capture,
+current-generation reader, and any new public native records are promoted
+atomically through the sole `cadrumo.application.modelo` facade with every
+consumer update. The old raw-loader assertion path and substitutable scans are
+deleted in that cutover. No shim, alias, fallback, non-`__init__` re-export
+bridge, private cross-package import, or parallel capture/selector path is
+permitted.
+
 ### Locale and consistency boundary
 
 Each localized field carries its canonical key plus requested language,
@@ -357,15 +439,18 @@ bounded review, calculation, readiness, or closure state. Graded snapshot
 captures all eight registered contributors. Assembly follows this exact
 protocol for the selected admission set:
 
-1. invoke each application-owned S126 registration, whose single call captures
-   the canonical owner's native projection and generation atomically and wraps
-   them without another owner read;
-2. assemble only from those captured projections, with no live owner re-read
+1. invoke the application-owned WORK registration exactly once; its native
+   capture resolves the public visible or exact operand over one atomically
+   observed catalogue without a preliminary work read;
+2. invoke the REGISTRY registration exactly once from the captured filing
+   coordinate, apply the one pure revision assertion, then capture each
+   remaining admission-specific registration exactly once;
+3. assemble only from those captured projections, with no live owner re-read
    hidden inside the join;
-3. ask each same registration for its current coordinates; it combines the
+4. ask each same registration for its current coordinates; it combines the
    unchanged S126 contract stamp with the canonical owner's native
    current-generation read, and both coordinates must equal the capture; and
-4. only after every comparison succeeds, mint one safe opaque
+5. only after every comparison succeeds, mint one safe opaque
    `ModeloWorkspaceBaseline` over the sorted contributor tuple, resolved
    request coordinate, selected revision, Workspace contract version,
    registry schema identity and fingerprint, locale-catalogue stamp, and
@@ -412,6 +497,15 @@ generations; cross-incarnation baseline and cursor refusal; and absence of any
 application-minted, persisted, reset, or substituted owner generation. Domain,
 locale, and other lower-layer modules importing or returning a
 `ModeloWorkspace*` type fail the boundary gate.
+
+WORK conformance additionally proves one-record catalogue/revision atomicity;
+visible absence and exact-absence asymmetry; discarded-only resolution; mixed
+and multiple ambiguity; active-only lifecycle exclusion; one pure selector over
+the captured catalogue; physical-root/bucket/namespace isolation; implicit
+pointer A -> B -> A; catalogue A -> B -> A; same-observation singleflight;
+currentness refusal; distinct-root independence; exactly one WORK capture before
+the S159 REGISTRY capture; and one registry/work revision assertion with no raw
+loader or second owner read.
 
 ### C2 complex-read gate and external prerequisites
 
@@ -505,6 +599,9 @@ choice supported by `2026-08-24-tui-registry-api-gate-research` and
   new field, while backend-only grammar remains private.
 - Large workspaces may be read through typed baseline-pinned facets without
   mixed registry, work, calculation, readiness, closure, or locale epochs.
+- Work reads retain discarded terminal state and natural absence without
+  widening creation semantics, while persistence revision and active-pointer
+  transitions make torn or ABA work captures observable.
 - `ModeloWorkReview` remains the canonical bounded C1 record and appears
   unchanged as the Workspace review facet; Workspace V1 neither expands it nor
   duplicates its semantic join.
