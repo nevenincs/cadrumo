@@ -106,7 +106,6 @@ _RECONCILED_APPLICATION_TO_ADAPTERS_SOURCES = frozenset(
         "cadrumo.application.ledger.evidence_draft",
         "cadrumo.application.ledger.evidence_input",
         "cadrumo.application.ledger.evidence_textlayer",
-        "cadrumo.application.ledger.extracted_document_cache",
         "cadrumo.application.ledger.extraction_draft_store",
         "cadrumo.application.ledger.llm_classification",
         "cadrumo.application.ledger.llm_diagnostics",

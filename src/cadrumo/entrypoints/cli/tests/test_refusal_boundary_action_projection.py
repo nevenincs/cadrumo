@@ -20,8 +20,8 @@ from ....application.operator_actions import (
     ConditionEvidence,
     PreconditionVerdict,
 )
-from cadrumo.application.workflow.abort import WorkflowAbortReason
-from cadrumo.application.workflow.run_models import WorkflowResult, WorkflowStage, WorkflowStep
+from ....application.workflow.abort import WorkflowAbortReason
+from ....application.workflow.run_models import WorkflowResult, WorkflowStage, WorkflowStep
 from ....core import (
     ActionArgumentStatus,
     ActionConditionality,

@@ -6,13 +6,13 @@ a vision transcription costs a model pass over every page -- and the pipeline
 deliberately re-runs the cheap semantic stages when a model or prompt improves,
 which is only affordable if the transcription itself is kept.
 
-**Why this is core-side and encrypted.** The cached value is the transcription of
+**Why this is application-owned and encrypted.** The cached value is the transcription of
 an invoice, which *is* the invoice in a shape a grep can read. On disk in the
 clear it would be a new plaintext store of taxpayer financial data that does not
 exist in this tree today. The operator ruling exempts IN-MEMORY reading,
 rasterising and inference from encryption; it does not reach persistence, and the
 rule it clarifies names "on-disk caches" explicitly among what it does not reach.
-So the cache is written through the core's encrypted bucket-scoped repository,
+So the cache is written through the bound encrypted bucket-scoped repository,
 and the inference subpackage -- which holds no storage handle -- cannot write it
 at all.
 
@@ -33,15 +33,13 @@ itself cannot be serialized.
 
 from __future__ import annotations
 
-from typing import override
+from collections.abc import Generator
+from contextlib import contextmanager
+from contextvars import ContextVar
+from typing import Protocol
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.storage import (
-    LEDGER_EXTRACTED_DOCUMENT_CACHE_NAMESPACE,
-    SecureBoundRepository,
-    secure_object_repository_for_bucket,
-)
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
 from ...core.identity import BucketId
@@ -49,7 +47,10 @@ from .document_transcription import DocumentTranscription, TranscriptionCacheEnt
 
 __all__ = [
     "ExtractedDocumentCacheDocument",
-    "ExtractedDocumentCacheRepository",
+    "ExtractedDocumentCacheRepositoryFactory",
+    "ExtractedDocumentCacheRepositoryProtocol",
+    "bind_extracted_document_cache_repository_factory",
+    "extracted_document_cache_object_key",
     "load_extracted_document_cache",
     "read_cached_transcription",
     "write_cached_transcription",
@@ -65,27 +66,54 @@ class ExtractedDocumentCacheDocument(BaseModel):
     entries: tuple[TranscriptionCacheEntry, ...] = ()
 
 
-class ExtractedDocumentCacheRepository(SecureBoundRepository[ExtractedDocumentCacheDocument]):
-    """Encrypted store for one bucket's transcription cache.
-
-    Namespace, sensitivity and schema version come from the registry
-    definition; the base wraps every document in an ``Envelope`` before it
-    reaches disk, which is what makes "no cache byte lands in the clear" a
-    property of the substrate rather than of this module's care.
-    """
-
-    namespace = LEDGER_EXTRACTED_DOCUMENT_CACHE_NAMESPACE.namespace
-    sensitivity = LEDGER_EXTRACTED_DOCUMENT_CACHE_NAMESPACE.sensitivity
-    schema_version = LEDGER_EXTRACTED_DOCUMENT_CACHE_NAMESPACE.schema_version
-    payload_type = ExtractedDocumentCacheDocument
-
-    @override
-    def extract_identifier(self, payload: ExtractedDocumentCacheDocument) -> str:
-        return payload.bucket_id
+def extracted_document_cache_object_key(document: ExtractedDocumentCacheDocument) -> str:
+    """Return the bucket-scoped natural key for one cache document."""
+    return document.bucket_id
 
 
-def _repository(bucket_id: str, settings: Settings) -> ExtractedDocumentCacheRepository:
-    return ExtractedDocumentCacheRepository(objects=secure_object_repository_for_bucket(bucket_id, settings))
+class ExtractedDocumentCacheRepositoryProtocol(Protocol):
+    """Persistence operations required by transcription-cache policy."""
+
+    def load(self, identifier: str) -> ExtractedDocumentCacheDocument | None:
+        """Load the cache document stored under ``identifier``, when present."""
+        ...
+
+    def save(self, payload: ExtractedDocumentCacheDocument) -> None:
+        """Persist one complete cache document through encrypted storage."""
+        ...
+
+
+class ExtractedDocumentCacheRepositoryFactory(Protocol):
+    """Construct a cache repository for one bucket and storage configuration."""
+
+    def __call__(self, *, bucket_id: str, settings: Settings) -> ExtractedDocumentCacheRepositoryProtocol:
+        """Return the encrypted repository bound to ``bucket_id``."""
+        ...
+
+
+_BOUND_EXTRACTED_DOCUMENT_CACHE_REPOSITORY_FACTORY: ContextVar[ExtractedDocumentCacheRepositoryFactory] = ContextVar(
+    "cadrumo_extracted_document_cache_repository_factory"
+)
+
+
+@contextmanager
+def bind_extracted_document_cache_repository_factory(
+    factory: ExtractedDocumentCacheRepositoryFactory,
+) -> Generator[ExtractedDocumentCacheRepositoryFactory]:
+    """Bind one outward-composed cache repository factory for the host context."""
+    token = _BOUND_EXTRACTED_DOCUMENT_CACHE_REPOSITORY_FACTORY.set(factory)
+    try:
+        yield factory
+    finally:
+        _BOUND_EXTRACTED_DOCUMENT_CACHE_REPOSITORY_FACTORY.reset(token)
+
+
+def _repository(bucket_id: str, settings: Settings) -> ExtractedDocumentCacheRepositoryProtocol:
+    try:
+        factory = _BOUND_EXTRACTED_DOCUMENT_CACHE_REPOSITORY_FACTORY.get()
+    except LookupError as error:
+        raise RuntimeError("extracted-document-cache persistence has not been composed") from error
+    return factory(bucket_id=bucket_id, settings=settings)
 
 
 def load_extracted_document_cache(bucket_id: str, settings: Settings) -> ExtractedDocumentCacheDocument:
@@ -128,7 +156,7 @@ def write_cached_transcription(
     transcription: DocumentTranscription,
     settings: Settings,
 ) -> ExtractedDocumentCacheDocument:
-    """Write a transcription through the core's encrypted repository.
+    """Write a transcription through the bound encrypted repository.
 
     Replaces any prior entry sharing the same key rather than appending a
     second: one reader re-reading one document produces the same fact
