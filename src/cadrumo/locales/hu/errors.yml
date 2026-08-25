@@ -779,9 +779,6 @@ errors:
       nevet.
     profile_passphrase_rotation: A profil jelszavát nem sikerült megváltoztatni.
     profile_registration: A profil regisztrációja nem sikerült.
-    reconciliation_cross_bucket: A megcímzett munkajegység egy másik bucket-hez tartozik,
-      nem az aktív profil bucket-jéhez. Az egyeztetés csak az aktív profil bucket-en
-      belül működik.
     reconciliation_declaration_source_unsupported: Bevallásból való egyeztetés még
       nem elérhető.
     reconciliation_drift: Az egyeztetés számtani vagy azonossági eltérést észlelt

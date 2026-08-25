@@ -826,9 +826,6 @@ errors:
       nombre distinto.
     profile_passphrase_rotation: No se ha podido cambiar la contraseña del perfil.
     profile_registration: No se ha podido registrar el perfil.
-    reconciliation_cross_bucket: La unidad de trabajo apuntada pertenece a un bucket
-      distinto del perfil activo. La conciliación solo opera dentro del bucket del
-      perfil activo.
     reconciliation_declaration_source_unsupported: La conciliación a partir de una
       declaración todavía no está disponible.
     reconciliation_drift: La conciliación detectó una discrepancia aritmética o de

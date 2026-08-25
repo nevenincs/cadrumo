@@ -155,7 +155,7 @@ def _receipt_for_m131(*, total_ingresar: Decimal):
 
 def _reconcile(work_unit: WorkUnit, justificante: Justificante):
     return _reconcile_parsed_justificante(
-        work_unit_id=work_unit.work_unit_id,
+        work_unit=work_unit,
         source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
         source_ref="test://m131",
         actor="operator",

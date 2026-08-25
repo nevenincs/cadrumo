@@ -284,16 +284,6 @@ class ReconciliationDeclaracionSourceUnsupportedError(CadrumoError):
     """
 
 
-class ReconciliationCrossBucketRefusedError(CadrumoError):
-    """Raised when the addressed work unit belongs to a different bucket than the active profile bucket.
-
-    Every event is scoped to a bucket id. Allowing the service to emit
-    into a non-active bucket would let any caller write into other
-    operators' history. The check is enforced at the application service
-    so neither the CLI nor any future caller can bypass it.
-    """
-
-
 def _require_declaration_enrolled_modelo(
     work_unit_id: WorkUnitId,
     *,
@@ -1227,7 +1217,6 @@ __all__ = [
     "ModeloReconciliationEvidenceKind",
     "ModeloReconciliationReport",
     "ModeloReconciliationVerdict",
-    "ReconciliationCrossBucketRefusedError",
     "ReconciliationDeclaracionSourceUnsupportedError",
     "ReconciliationEvidenceInvalidError",
     "WorkUnitNotFoundError",

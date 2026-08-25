@@ -69,6 +69,137 @@ RETIRED_TUI_ROOT: Final[Path] = PKG_ROOT / "adapters" / "inbound" / "tui"
 CANONICAL_TUI_PACKAGE: Final[str] = "cadrumo.entrypoints.tui"
 _DETECTOR_PATH: Final[Path] = Path(__file__).resolve()
 
+_LIVE_INVENTORY_EXCLUDED_DIRS: Final[frozenset[str]] = frozenset(
+    {".git", ".vault", "_build", "build", "dist", "__pycache__", ".mypy_cache", ".pytest_cache", ".ruff_cache"}
+)
+
+
+def tracked_live_files() -> tuple[Path, ...]:
+    """Return tracked repository files, excluding only archive/generated trees."""
+    import subprocess
+
+    output = subprocess.check_output(("git", "ls-files", "-z"), cwd=REPO_ROOT, text=False)  # noqa: S607
+    return tuple(
+        sorted(
+            {
+                (REPO_ROOT / raw.decode(_UTF_8)).resolve()
+                for raw in output.split(b"\0")
+                if raw
+                and (REPO_ROOT / raw.decode(_UTF_8)).is_file()
+                and not any(part in _LIVE_INVENTORY_EXCLUDED_DIRS for part in (REPO_ROOT / raw.decode(_UTF_8)).parts)
+            },
+            key=lambda path: path.as_posix(),
+        )
+    )
+
+
+@dataclass(frozen=True)
+class AddressingBoundaryViolation:
+    """A fixed-point breach found by the reusable import/authority census."""
+
+    path: Path
+    kind: str
+
+
+def find_addressing_boundary_violations(
+    paths: Iterable[Path], *, canonical_path: Path, canonical_module: str, facade_module: str,
+    retired_modules: frozenset[str], addressing_symbols: frozenset[str],
+) -> list[AddressingBoundaryViolation]:
+    """Census imports, dynamic reaches, wrappers and candidate scans for one owner.
+
+    Kept here with the project-wide import scanner so feature gates do not grow
+    competing AST/import resolvers.  It intentionally walks nested callables.
+    """
+    violations: list[AddressingBoundaryViolation] = []
+    for path in paths:
+        try:
+            tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
+        except (FileNotFoundError, SyntaxError, UnicodeDecodeError):
+            continue
+        modules: set[str] = set()
+        aliases = {"WorkUnitCatalogueRepository"}
+        package_modelo = False
+        dynamic = False
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom):
+                target = (
+                    resolve_relative_import(
+                        module_name_for(path, src_root=SRC_ROOT),
+                        path.name == "__init__.py",
+                        node.level,
+                        node.module,
+                    )
+                    if path.is_relative_to(SRC_ROOT)
+                    else node.module
+                )
+                if target:
+                    modules.add(target)
+                package_modelo |= target == "cadrumo.application" and any(
+                    a.name == "modelo" for a in node.names
+                )
+                aliases.update(a.asname or a.name for a in node.names if a.name == "WorkUnitCatalogueRepository")
+            elif isinstance(node, ast.Import):
+                modules.update(a.name for a in node.names)
+            elif isinstance(node, ast.Call):
+                name = (
+                    node.func.id
+                    if isinstance(node.func, ast.Name)
+                    else node.func.attr
+                    if isinstance(node.func, ast.Attribute)
+                    else ""
+                )
+                args = node.args[1:] if name == "getattr" else node.args[:1]
+                dynamic |= name in {"import_module", "__import__", "getattr"} and any(
+                    (isinstance(arg, ast.Constant) and isinstance(arg.value, str) and "modelo" in arg.value)
+                    or (isinstance(arg, ast.BinOp) and isinstance(arg.op, ast.Add))
+                    for arg in args
+                )
+        if facade_module in modules or package_modelo:
+            violations.append(AddressingBoundaryViolation(path, "facade import/package access"))
+        if modules & retired_modules:
+            violations.append(AddressingBoundaryViolation(path, "retired private module import"))
+        if dynamic:
+            violations.append(AddressingBoundaryViolation(path, "dynamic addressing import/access"))
+        names = {n.id for n in ast.walk(tree) if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)}
+        names.update(
+            n.value
+            for n in ast.walk(tree)
+            if isinstance(n, ast.Constant) and isinstance(n.value, str) and n.value in addressing_symbols
+        )
+        direct = canonical_module in modules
+        if path != canonical_path and names & addressing_symbols and not direct:
+            violations.append(AddressingBoundaryViolation(path, "indirect addressing symbol consumer"))
+        for function in (n for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))):
+            calls = [n for n in ast.walk(function) if isinstance(n, ast.Call)]
+            selector = any(
+                (
+                    c.func.id
+                    if isinstance(c.func, ast.Name)
+                    else c.func.attr
+                    if isinstance(c.func, ast.Attribute)
+                    else ""
+                )
+                == "select_modelo_work_resolution"
+                for c in calls
+            )
+            repo = any(
+                (isinstance(c.func, ast.Name) and c.func.id in aliases)
+                or (isinstance(c.func, ast.Attribute) and c.func.attr == "WorkUnitCatalogueRepository")
+                for c in calls
+            )
+            preselect = any(
+                isinstance(c.func, ast.Attribute)
+                and c.func.attr == "get"
+                and isinstance(c.func.value, ast.Name)
+                and c.func.value.id == "catalogue"
+                for c in calls
+            )
+            if selector and repo:
+                violations.append(AddressingBoundaryViolation(path, "repository-owning selector wrapper"))
+            if selector and preselect:
+                violations.append(AddressingBoundaryViolation(path, "catalogue preselection wrapper"))
+    return violations
+
 
 class TuiRetirementRemnantKind(StrEnum):
     """A direct route by which the retired TUI can re-enter the tree."""

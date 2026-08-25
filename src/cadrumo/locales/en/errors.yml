@@ -763,9 +763,6 @@ errors:
       different name.
     profile_passphrase_rotation: The profile password could not be changed.
     profile_registration: The profile could not be registered.
-    reconciliation_cross_bucket: The addressed work unit belongs to a bucket other
-      than the active profile's. Reconciliation only operates within the active profile
-      bucket.
     reconciliation_declaration_source_unsupported: Reconciliation from a declaration
       is not available yet.
     reconciliation_drift: Reconciliation detected arithmetic or identity drift across

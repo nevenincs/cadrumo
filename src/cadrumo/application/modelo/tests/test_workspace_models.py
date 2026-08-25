@@ -78,10 +78,12 @@ def _target(*, revision_id: str = _REVISION_ID) -> ModeloWorkspaceResolvedTarget
         requested_revision_assertion=ModeloWorkspaceRevisionAssertionV1(
             source=ModeloWorkspaceRevisionAssertionSource.REQUESTED,
             disposition=ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT,
+            asserted_revision_id=None,
         ),
         stored_revision_assertion=ModeloWorkspaceRevisionAssertionV1(
             source=ModeloWorkspaceRevisionAssertionSource.STORED,
             disposition=ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT,
+            asserted_revision_id=None,
         ),
     )
 
@@ -539,6 +541,11 @@ def test_workspace_revision_assertion_axes_are_required_independent_and_current_
         ModeloWorkspaceRevisionAssertionV1(
             source=ModeloWorkspaceRevisionAssertionSource.REQUESTED,
             disposition=ModeloWorkspaceRevisionAssertionDisposition.MATCHED,
+        )
+    with pytest.raises(ValidationError, match="asserted_revision_id"):
+        ModeloWorkspaceRevisionAssertionV1(
+            source=ModeloWorkspaceRevisionAssertionSource.STORED,
+            disposition=ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT,
         )
     with pytest.raises(ValidationError, match="requested source"):
         ModeloWorkspaceResolvedTargetV1.model_validate(

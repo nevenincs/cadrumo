@@ -26,7 +26,6 @@ from ....tests import FIXTURES_DIR
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from .._reconcile import (
     ModeloReconciliationCommand,
-    ReconciliationCrossBucketRefusedError,
     ReconciliationDeclaracionSourceUnsupportedError,
     ReconciliationEvidenceInvalidError,
     WorkUnitNotFoundError,
@@ -73,6 +72,12 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
     repo = WorkUnitCatalogueRepository()
     repo.save(upsert_work_unit(repo.load(), work_unit))
     return work_unit_id
+
+
+def _stored_work_unit(work_unit_id: str) -> WorkUnit:
+    work_unit = WorkUnitCatalogueRepository().load().get(work_unit_id)
+    assert work_unit is not None
+    return work_unit
 
 
 def test_modelo_reconcile_matches_when_modelo_and_year_align() -> None:
@@ -138,7 +143,7 @@ def test_modelo_reconcile_mismatches_when_profile_tax_id_differs() -> None:
     parsed = parse_justificante(MODELO_130_FIXTURE)
 
     report = _reconcile_parsed_justificante(
-        work_unit_id=work_unit_id,
+        work_unit=_stored_work_unit(work_unit_id),
         source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
         source_ref=str(MODELO_130_FIXTURE),
         actor="operator",
@@ -204,7 +209,7 @@ def test_reconcile_records_its_event_for_an_evidence_path_longer_than_the_payloa
     assert len(over_long_ref) > 500
 
     report = _reconcile_parsed_justificante(
-        work_unit_id=work_unit_id,
+        work_unit=_stored_work_unit(work_unit_id),
         source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
         source_ref=over_long_ref,
         actor="operator",
@@ -285,12 +290,8 @@ def test_modelo_reconcile_refuses_unknown_work_unit() -> None:
         )
 
 
-def test_modelo_reconcile_refuses_cross_bucket_work_unit(tmp_path: Path) -> None:
-    """A work unit whose bucket_id differs from the active profile bucket
-    is refused. Bucket events must scope to the active bucket; allowing
-    the service to emit into a foreign bucket would let any caller
-    pollute another operator's history. Locks the safety gate from
-    the bucket-event-history contract §implementation."""
+def test_modelo_reconcile_translates_cross_bucket_address_to_absence(tmp_path: Path) -> None:
+    """The captured active catalogue never reveals a foreign work-unit identity."""
 
     foreign_bucket_id = "other-bucket-7" * 4
     revision_id = "r" + "1" * 63
@@ -316,7 +317,7 @@ def test_modelo_reconcile_refuses_cross_bucket_work_unit(tmp_path: Path) -> None
     repo = WorkUnitCatalogueRepository()
     repo.save(upsert_work_unit(repo.load(), foreign_unit))
 
-    with pytest.raises(ReconciliationCrossBucketRefusedError) as raised:
+    with pytest.raises(WorkUnitNotFoundError):
         modelo_reconcile(
             ModeloReconciliationCommand(
                 work_unit_id=foreign_unit_id,
@@ -325,10 +326,6 @@ def test_modelo_reconcile_refuses_cross_bucket_work_unit(tmp_path: Path) -> None
             ),
         )
 
-    # Both bucket identities ride as machine facts rather than a sentence.
-    assert raised.value.context is not None
-    assert raised.value.context["active_bucket_id"]
-    assert raised.value.context["work_unit_bucket_id"]
 
 
 def test_modelo_reconcile_refuses_malformed_evidence(tmp_path: Path) -> None:

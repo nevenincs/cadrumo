@@ -324,8 +324,10 @@ def test_reconciliation_with_no_persisted_revision_still_persists_and_reads_back
         },
     )
 
+    work_unit = WorkUnitCatalogueRepository().load().get(work_unit_id)
+    assert work_unit is not None
     report = _reconcile_parsed_justificante(
-        work_unit_id=work_unit_id,
+        work_unit=work_unit,
         source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
         source_ref="test://m131-no-revision",
         actor="operator",

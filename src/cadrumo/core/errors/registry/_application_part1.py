@@ -908,16 +908,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._reconcile.ReconciliationCrossBucketRefusedError",
-        ErrorCode(
-            code="REFUSED_RECONCILIATION_CROSS_BUCKET",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.reconciliation_cross_bucket",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.application.modelo.work_addressing.ModeloWorkSelectorError",
         ErrorCode(
             code="ERROR_MODELO_WORK_SELECTOR",

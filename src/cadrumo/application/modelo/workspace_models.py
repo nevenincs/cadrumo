@@ -201,7 +201,7 @@ class ModeloWorkspaceRevisionAssertionV1(_WorkspaceModel):
 
     source: ModeloWorkspaceRevisionAssertionSource
     disposition: ModeloWorkspaceRevisionAssertionDisposition
-    asserted_revision_id: RevisionId | None = None
+    asserted_revision_id: RevisionId | None
 
     @model_validator(mode="after")
     def _require_consistent_assertion_shape(self) -> ModeloWorkspaceRevisionAssertionV1:
