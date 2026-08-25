@@ -285,7 +285,8 @@ def test_user_profile_contract_rejects_typoed_predicate_field() -> None:
     """
 
     from .....core.errors import BaseSeverity
-    from ....user_profile import load_user_profile_schema, validate_user_profile_registry_contract
+    from ....user_profile.loader import load_user_profile_schema
+    from ....user_profile.registry_contract import validate_user_profile_registry_contract
 
     modelo_349, _ = _committed_modelo("349")
     revision = modelo_349.revisions["2020-y-siguientes"]
