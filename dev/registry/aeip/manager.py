@@ -42,13 +42,13 @@ from dataclasses import dataclass, field
 from itertools import pairwise
 from pathlib import Path
 
+from pydantic import TypeAdapter, ValidationError
+
 from cadrumo.core.i18n import MissingTranslationError
+from cadrumo.core.identity import ContinuidadId
 from cadrumo.domain.calculations.registry import RegistryLoadError, load_modelo_directory
 
 from .adjudications import AdjudicationSet
-from pydantic import TypeAdapter, ValidationError
-
-from cadrumo.core.identity import ContinuidadId
 
 __all__ = [
     "AeipAmbiguity",
@@ -112,6 +112,7 @@ def chain_id_is_wellformed(candidate: str) -> bool:
     except ValidationError:
         return False
     return True
+
 
 _APLICADO_SUFFIX = re.compile(r":\s*Aplicado en esta declaraci[oó]n\s*$", re.IGNORECASE)
 _WRAPPING_QUOTES = re.compile(r"^\s*[“”«»\"](?P<title>.+?)[“”«»\"]\s*$")
