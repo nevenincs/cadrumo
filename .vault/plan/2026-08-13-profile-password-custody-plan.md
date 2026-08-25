@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#profile-password-custody'
 date: '2026-08-13'
+modified: '2026-08-25'
+body_hash: 'sha256:8d5c8622302b98dc8ec5f75274e209d80c07f7908a0feabbaf71a2b65e7000b5'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -18,8 +20,6 @@ related:
   - '[[2026-08-13-recovery-mnemonic-presentation-successor-adr]]'
   - '[[2026-08-13-sealed-archive-transport-successor-adr]]'
   - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
-modified: '2026-08-25'
-body_hash: 'sha256:967b3eac444799734807cf925243ac2468f46545075d9c538cab819877ceec2f'
 ---
 
 # `profile-password-custody` plan
@@ -370,10 +370,10 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 - [x] `W06.P12.S259` - Correct Modelo 220 revision 2025 source grounding so it cites official authority applicable within its validity window and does not borrow the later 2026 form source; `src/cadrumo/_data/registry/aeat/modelos/220/ and src/cadrumo/domain/calculations/registry/tests/`.
 - [x] `W06.P12.S260` - Reconcile Modelo 182 deadline windows with canonical revision ownership so no revision projects filing years outside its evidenced design era and unsupported 2026 remains refused; `src/cadrumo/_data/registry/aeat/modelos/182/ and src/cadrumo/domain/calculations/registry/tests/`.
 - [x] `W06.P12.S261` - Compose the canonical profile-custody port in test capsule, documentation sequence, and harness profile fixtures so recovery enrollment uses the production owner without a parallel implementation, then rerun golden and harness proofs; `src/cadrumo/tests/profile_capsule.py and dev/docs/sequences/_runner.py and src/cadrumo-harness/src/cadrumo_harness/mcp/tests/`.
-- [ ] `W06.P12.S262` - Reconcile all four production catalogues with current source and registry revision ownership, including Modelo 038, Modelo 220, Modelo 763, missing and orphaned keys, then rerun audit, drift, completeness, and every nitpicky build; `locales/ and dev/locales/ and docs/locales/`.
+- [x] `W06.P12.S262` - Reconcile all four production catalogues with current source and registry revision ownership, including Modelo 038, Modelo 220, Modelo 763, missing and orphaned keys, then rerun audit, drift, completeness, and every nitpicky build; `locales/ and dev/locales/ and docs/locales/`.
 - [x] `W06.P12.S263` - Remove the five newly introduced em dashes from environment-override prose and prove the documentation dash ratchet without widening its baseline; `docs/reference/environment-overrides.md and dev/docs/emdash_baseline.json`.
 - [x] `W06.P12.S264` - Restore hermetic cadrumo-mcp console-script resolution for installed-service, handshake, and watchdog subprocess proofs without weakening real executable delivery; `src/cadrumo-harness/src/cadrumo_harness/mcp/tests/ and src/cadrumo-harness/ packaging`.
-- [ ] `W06.P12.S265` - Bring overview.calendar beneath the real output-schema size budget by reducing its returned payload while preserving retrievable operator detail; `src/cadrumo/application/ and src/cadrumo-harness/src/cadrumo_harness/mcp/tests/test_result_size_budget.py`.
+- [x] `W06.P12.S265` - Bring overview.calendar beneath the real output-schema size budget by reducing its returned payload while preserving retrievable operator detail; `src/cadrumo/application/ and src/cadrumo-harness/src/cadrumo_harness/mcp/tests/test_result_size_budget.py`.
 - [ ] `W06.P12.S266` - Restore typed fail-closed machine-secret descriptor behavior so Windows root refusals never become unexpected internal boundaries and WSL passphrase change through the fd leaf succeeds while preserving descriptor consumption; `src/cadrumo/entrypoints/cli/ and src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`.
 - [x] `W06.P12.S267` - Reconcile feature and full Vaultspec warnings by exact document owner, removing scaffold annotations, reattesting modified bodies, refreshing indexes, and resolving only genuine corpus hygiene debt; `.vault/`.
 - [x] `W06.P12.S268` - Repair defining-source API docstring cross-references and public facade targets for every stable main nitpicky warning left after generated stub reconciliation, without promoting private implementation ownership; `src/cadrumo/, docs/api/, docs/conf.py, and dev/docs/apidocs/`.
