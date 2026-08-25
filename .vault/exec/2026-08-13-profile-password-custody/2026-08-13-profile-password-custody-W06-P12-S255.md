@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:6389f7e98a19e0f3d2b4c4e5f5df492acb50836c872aba6e809f93a0a9395dc2'
+body_hash: 'sha256:6d7b00698276c0b19d2772232aece446f2d883259936f09fbd822b6ba91daa9f'
 step_id: 'S255'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -39,3 +39,4 @@ Executable sequences now carry the profile identity they observed into addressed
 - RAG confirmed `CensalOperationExecutor` and `CensalReviewedOperand` own one acquisition, encrypted reviewed state, exact baseline, and resume-without-reread; `_project_censal_review` owns its safe projection and `apply_cotejo` remains the sole mutation authority.
 - The current CLI pull and legacy manager action bypass that reviewed operation. This Step documents the conflict honestly; concurrent plan commit `cfe5d51459` records the canonical migration as `W06.P12.S257`.
 - Verification passed: censo-update golden and cumulative coherence; 48 focused censal application/CLI tests; 444 parser, comparator, documented-command, and JSON-schema conformance tests; scoped Ruff, formatting, and ty.
+- Formal review approved the bounded documentation change with no findings and independently confirmed that it neither ratifies nor redeclares the reviewed-operation migration assigned to S257.
