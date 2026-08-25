@@ -197,7 +197,6 @@ ignore_imports =
     cadrumo.core.resources._repos.iva_catalogues -> cadrumo.domain.iva
     cadrumo.core.resources._repos.iva_rate_tables -> cadrumo.domain.iva
     cadrumo.core.resources._repos.recargo_bands -> cadrumo.domain.deadlines
-    cadrumo.core.resources._repos.user_profile -> cadrumo.domain.user_profile
 [importlinter:contract:llm-not-persistence]
 name = Local-inference subpackage must not reach persistence
 type = forbidden
@@ -239,9 +238,6 @@ ignore_imports =
     # scan needing the shared file-walk helpers, whose package reaches storage
     # for its own roundtrip fixtures. Pinned at the chain origin.
     cadrumo.llm.tests.test_evidence_marker_declared_at_every_builder -> cadrumo.tests
-    cadrumo.llm.tests.test_llm_vision_classifier -> cadrumo.application.ledger._llm_classification
-    cadrumo.llm.tests.test_local_text_reader_wiring -> cadrumo.application.ledger._llm_classification
-    cadrumo.llm.tests.test_evidence_draft_vision -> cadrumo.application.ledger
     # ── The subpackage's own tests, into the LLM adapter facade ────────────
     # These tests construct the REAL cache, usage recorder and telemetry
     # recorder, because the properties under test -- no cloud fallback on
@@ -437,8 +433,6 @@ ignore_imports =
     cadrumo.application.modelo._review_package_recipient_encryption -> cadrumo.adapters.persistence.storage
     cadrumo.application.modelo._review_package_recipient_encryption -> cadrumo.adapters.persistence.storage.crypto
     cadrumo.application.modelo._review_package_recipient_registry -> cadrumo.adapters.persistence.storage
-    cadrumo.application.modelo._review_package_recipient_replay_guard -> cadrumo.adapters.persistence.profile
-    cadrumo.application.modelo._review_package_recipient_replay_guard -> cadrumo.adapters.persistence.storage
     cadrumo.application.modelo._review_package_signing -> cadrumo.adapters.persistence.storage
     # The mint-or-load-winner keypair primitive was extracted from the signing and
     # recipient-encryption modules above; both are pinned, so the extraction inherits
@@ -463,11 +457,9 @@ ignore_imports =
     # AEAT authentication is an outbound integration and these modules are its
     # callers, so the edges are pinned at the named outbound packages rather
     # than a wildcard -- the sec. 538 outbound-wiring treatment.
-    cadrumo.application.auth.operator_probes -> cadrumo.adapters.outbound.aeat.auth
     cadrumo.application.auth.operator_probes -> cadrumo.adapters.outbound.aeat.auth.certificate
     cadrumo.application.auth.operator_probes -> cadrumo.adapters.persistence.**
     cadrumo.application.auth.operator_scope -> cadrumo.adapters.persistence.**
-    cadrumo.application.auth.sessions -> cadrumo.adapters.outbound.aeat.auth
     cadrumo.application.auth.sessions -> cadrumo.adapters.outbound.aeat.browser
     cadrumo.application.auth.sessions -> cadrumo.adapters.persistence.**
     cadrumo.application.bienes_inversion -> cadrumo.adapters.persistence.**
@@ -486,14 +478,10 @@ ignore_imports =
     # ADAPTER tier, so application -> llm is an outward edge. The inward half
     # (llm -> application.ledger, for the draft shape it produces) needs no pin,
     # being a legal inner reach, and resolves through the ledger's public facade.
-    cadrumo.application.ledger._evidence_draft -> cadrumo.llm
-    cadrumo.application.ledger._llm_classification -> cadrumo.llm
-    cadrumo.application.ledger._llm_diagnostics -> cadrumo.llm
     # The interchange DTOs are canonically owned by cadrumo.llm, so every
     # ledger consumer of them is an application -> adapter-tier edge. Pinned
     # per origin rather than by widening the contract, so a NEW production
     # edge that is not a DTO consumer still fails loudly.
-    cadrumo.application.ledger._llm_review_workflow -> cadrumo.llm
     # The tabular fallback lane reaches the gated subpackage for the one
     # judgement it cannot make deterministically: what a file's own header
     # vocabulary means. Deferred inside the resolver, and pinned here because
@@ -528,8 +516,6 @@ ignore_imports =
     # repositories pinned around them: derived financial data is STORAGE, so
     # it routes through the core's encrypted repository rather than living
     # behind the optional inference boundary.
-    cadrumo.application.ledger._extracted_document_cache -> cadrumo.adapters.persistence.**
-    cadrumo.application.ledger._extraction_draft_store -> cadrumo.adapters.persistence.**
     # The confirmation record is the third of that same family and is pinned for
     # the same reason, not as a convenience: it declares its own secure-object
     # namespace and subclasses SecureBoundRepository, so it IS a ledger store
@@ -544,7 +530,6 @@ ignore_imports =
     # adapters.persistence (rg -l over src/cadrumo/application, excluding tests
     # and conftest). The count is given with its measurement because an
     # unreproducible figure in a rationale rots into folklore.
-    cadrumo.application.ledger._confirmation_record -> cadrumo.adapters.persistence.**
     # Same shape as _confirmation_record above and _rule_repository below: a
     # SecureBoundRepository-backed ledger store naming its namespace constant
     # and its sensitivity class. Pinned rather than inverted for the same
@@ -553,11 +538,9 @@ ignore_imports =
     # under an in-flight symbol rename when this pin landed, so the pin is
     # deliberately expressed at the module and target-package level, which no
     # symbol rename can invalidate.
-    cadrumo.application.ledger._counterparty_establishment -> cadrumo.adapters.persistence.**
     # The read-time shape probe. DocumentShape is derived from a document's
     # own bytes by an INBOUND adapter, because reading an externally-authored
     # format is inbound-adapter work; the ledger consumes the answer.
-    cadrumo.application.ledger._evidence_input -> cadrumo.adapters.inbound.einvoice
     # The batch runner asks that same probe ONE question -- is this document
     # structured, and therefore readable without loading a model -- and consumes
     # the answer. Same shape and same justification as the pin above; it is the
@@ -565,7 +548,6 @@ ignore_imports =
     # the contract sees it anyway (grimp walks function bodies), so the pin
     # records a reviewed decision rather than suppressing something that would
     # otherwise have gone unnoticed.
-    cadrumo.application.ledger._batch_ingest -> cadrumo.adapters.inbound.einvoice
     # Same shape, same reason: the AEAT submission BATCH is read by the inbound
     # adapter (reading an externally-authored format is inbound-adapter work),
     # and this module is the projection that decides how many recipients a
@@ -573,7 +555,6 @@ ignore_imports =
     # every recipient deliberately and names this refusal as the consumer's
     # obligation, so the constraint has to live where the projection does --
     # which means consuming the adapter's record type here.
-    cadrumo.application.ledger._aeat_record_projection -> cadrumo.adapters.inbound.einvoice
     cadrumo.application.filing._history_repository -> cadrumo.adapters.persistence.**
     cadrumo.application.filing._runtime_repository -> cadrumo.adapters.persistence.**
     cadrumo.application.inventory._service -> cadrumo.adapters.persistence.**
@@ -597,41 +578,28 @@ ignore_imports =
     #    unexamined. Narrowing is to keep the inbound class loud, not tidiness.
     #    Each target below was read out of the module's runtime imports;
     #    unmatched_ignore_imports_alerting = error fails a pin that overshoots. ──
-    cadrumo.application.ledger._actions_common -> cadrumo.adapters.persistence.**
-    cadrumo.application.ledger._evidence -> cadrumo.adapters.persistence.**
     # Bank-statement rows arrive as the provider's own ParsedLedgerRow records,
     # and this module classifies and imports them. Reading an externally-authored
     # statement format is inbound-adapter work; the ledger consumes the answer --
     # the same shape as the einvoice pins above. The type-only import is excluded
     # from the graph; the runtime edge is two function-local imports that grimp
     # sees and this pin therefore reviews.
-    cadrumo.application.ledger._actions_import -> cadrumo.adapters.persistence.**
-    cadrumo.application.ledger._actions_import -> cadrumo.adapters.inbound.financial.providers
     # A fourth einvoice consumer, previously hidden inside a broad wildcard while
     # its three siblings were individually reviewed. A structured e-invoice is
     # read exactly by parse_einvoice_document and its parse failure is caught
     # here; same justification as _evidence_input, _batch_ingest and
     # _aeat_record_projection, now stated rather than assumed.
-    cadrumo.application.ledger._evidence_draft -> cadrumo.adapters.persistence.**
-    cadrumo.application.ledger._evidence_draft -> cadrumo.adapters.inbound.einvoice
     # Reaches NO persistence at all: its former `adapters.**` pin was wholly an
     # inbound-adapter allowance wearing a storage-shaped label. Lifting a PDF's
     # text layer out of bytes is inbound-adapter work; this module decides what
     # the extracted text means as evidence.
-    cadrumo.application.ledger._evidence_textlayer -> cadrumo.adapters.inbound.pdf
     # Outbound wiring, the sec. 538 edge, pinned at the narrow llm target rather
     # than a broad adapters wildcard -- the same treatment the fx rate provider
     # above already gets. Classification records run telemetry through the
     # outbound recorder; diagnostics folds that recorder's encrypted usage log.
-    cadrumo.application.ledger._llm_classification -> cadrumo.adapters.persistence.**
-    cadrumo.application.ledger._llm_classification -> cadrumo.adapters.outbound.llm
-    cadrumo.application.ledger._llm_diagnostics -> cadrumo.adapters.persistence.**
-    cadrumo.application.ledger._llm_diagnostics -> cadrumo.adapters.outbound.llm
     # ── arch-remediation-ports-inversion: usage_ratios persistence relocated to
     #    adapters.persistence.profile.usage_ratios; the ledger callers now import
     #    the adapter directly (narrow target keeps the source-module set flat) ──
-    cadrumo.application.ledger._preflight -> cadrumo.adapters.persistence.profile.usage_ratios
-    cadrumo.application.ledger._ratios -> cadrumo.adapters.persistence.profile.usage_ratios
     # ── arch-remediation-ports-inversion: submission repository relocated to
     #    adapters.persistence.profile.submission; the workflow gate constructs the
     #    concrete and injects it into the SubmissionEngine, tests seed via it ──
@@ -641,8 +609,6 @@ ignore_imports =
     #    caller); application/entrypoint callers import the adapter directly ──
     cadrumo.application.calculations._cross_period_clean_state -> cadrumo.adapters.persistence.profile.justificante
     cadrumo.application.modelo._external_import_actions -> cadrumo.adapters.persistence.profile.justificante
-    cadrumo.application.ledger._review_projection -> cadrumo.adapters.persistence.**
-    cadrumo.application.ledger._rule_repository -> cadrumo.adapters.persistence.**
     # ── application/live, registry and diagnostics narrowed from `adapters.**`
     #    to what each module reaches. This package DRIVES the AEAT Sede and its
     #    authentication: an outbound edge here is the package's purpose, not an
@@ -655,7 +621,6 @@ ignore_imports =
     #    previously admitted by the wildcard without review. ──
     cadrumo.application.live -> cadrumo.adapters.outbound.aeat.sede
     cadrumo.application.live._borrador_100 -> cadrumo.adapters.persistence.**
-    cadrumo.application.live._errors -> cadrumo.adapters.outbound.aeat.auth
     cadrumo.application.live._errors -> cadrumo.adapters.outbound.aeat.sede
     # ── live-snapshot family: concrete relocated, construction edge retained ──
     # SecureSnapshotRepository -- the encrypted secure-object backend these
@@ -685,14 +650,12 @@ ignore_imports =
     cadrumo.application.live._filed_observation_persistence -> cadrumo.adapters.inbound.justificante
     cadrumo.application.live._filed_observation_persistence -> cadrumo.adapters.outbound.aeat.sede
     cadrumo.application.live._filed_observation_persistence -> cadrumo.adapters.persistence.**
-    cadrumo.application.live._iva_remote_state -> cadrumo.adapters.outbound.aeat.auth
     cadrumo.application.live._iva_remote_state -> cadrumo.adapters.outbound.aeat.sede
     cadrumo.application.live._iva_remote_state -> cadrumo.adapters.persistence.**
     cadrumo.application.live._justificante -> cadrumo.adapters.inbound.justificante
     cadrumo.application.live._justificante -> cadrumo.adapters.persistence.**
     cadrumo.application.live._notifications -> cadrumo.adapters.outbound.aeat.sede
     cadrumo.application.live._notifications -> cadrumo.adapters.persistence.**
-    cadrumo.application.live._session -> cadrumo.adapters.outbound.aeat.auth
     cadrumo.application.live._verify -> cadrumo.adapters.persistence.**
     cadrumo.application.modelo._borrador_binding -> cadrumo.adapters.persistence.**
     cadrumo.application.modelo._m036_lifecycle -> cadrumo.adapters.persistence.**
@@ -743,10 +706,8 @@ ignore_imports =
     cadrumo.core.resources._repos.iva_catalogues -> cadrumo.domain.iva
     cadrumo.core.resources._repos.iva_rate_tables -> cadrumo.domain.iva
     cadrumo.core.resources._repos.recargo_bands -> cadrumo.domain.deadlines
-    cadrumo.core.resources._repos.user_profile -> cadrumo.domain.user_profile
     # ── application production edges: participation-index derived-cache co-write
     #    (module-granularity replaces the pre-refactor deep-submodule edge) ──
-    cadrumo.application.ledger._participation_read -> cadrumo.adapters.persistence.profile.participation_index
     cadrumo.application.modelo._revision_persistence -> cadrumo.adapters.persistence.profile.participation_index
     cadrumo.application.modelo._participation_index_rebuild -> cadrumo.adapters.persistence.profile.participation_index
     cadrumo.application.modelo._verification_actions -> cadrumo.adapters.persistence.profile.participation_index
@@ -785,7 +746,6 @@ ignore_imports =
     cadrumo.application.invoices._queries -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.invoices._reconciliation -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.invoices._wizard -> cadrumo.adapters.persistence.profile.invoices
-    cadrumo.application.ledger._actions_lifecycle -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.modelo._calculation_actions -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.review._adapters -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.modelo._amendment_actions -> cadrumo.adapters.persistence.profile.modelos_calculation
@@ -817,11 +777,6 @@ ignore_imports =
     #    the concrete BucketEventHistoryRepository moved to the persistence
     #    adapter behind BucketEventHistoryRepositoryProtocol ──
     cadrumo.application.inventory._service -> cadrumo.adapters.persistence.profile.buckets
-    cadrumo.application.ledger._actions_common -> cadrumo.adapters.persistence.profile.buckets
-    cadrumo.application.ledger._actions_split_merge -> cadrumo.adapters.persistence.profile.buckets
-    cadrumo.application.ledger._evidence -> cadrumo.adapters.persistence.profile.buckets
-    cadrumo.application.ledger._llm_classification -> cadrumo.adapters.persistence.profile.buckets
-    cadrumo.application.ledger._review_projection -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.live._filed_observation_persistence -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.live._justificante -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo._amendment_actions -> cadrumo.adapters.persistence.profile.buckets
@@ -848,8 +803,6 @@ ignore_imports =
     cadrumo.application.invoices._linking -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.invoices._queries -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.invoices._reconciliation -> cadrumo.adapters.persistence.profile.transactions
-    cadrumo.application.ledger._actions_split_merge -> cadrumo.adapters.persistence.profile.transactions
-    cadrumo.application.ledger._preflight -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.modelo._art109_activity_income -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.modelo._ledger_drift_gate -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.modelo._calculation_actions -> cadrumo.adapters.persistence.profile.transactions
