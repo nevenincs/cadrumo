@@ -104,7 +104,7 @@ from .profile_record_repository import (
 )
 
 if TYPE_CHECKING:
-    from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer
+    from ..workflow.profile_bucket_models import ProfileBucketPointer
 
 _log = get_logger(__name__)
 
@@ -839,7 +839,7 @@ def resolve_login_target(name: str) -> ProfileBucketPointer:
     "is a bare sandbox name a profile?", for one question that has one
     answer.
     """
-    from cadrumo.application.workflow.profile_bucket_scan import resolve_profile_bucket
+    from ..workflow.profile_bucket_scan import resolve_profile_bucket
 
     trimmed = name.strip()
     if not trimmed:
@@ -864,7 +864,7 @@ def _resolve_selected_target(pointer: BucketPointer) -> ProfileBucketPointer:
     tombstoned bucket and authenticate it before the lifecycle boundary could
     refuse the selection.
     """
-    from cadrumo.application.workflow.profile_bucket_scan import resolve_profile_bucket
+    from ..workflow.profile_bucket_scan import resolve_profile_bucket
 
     if pointer.bucket_id is None:
         raise ProfileNotFoundError(
