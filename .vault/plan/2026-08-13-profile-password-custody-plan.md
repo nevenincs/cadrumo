@@ -19,7 +19,7 @@ related:
   - '[[2026-08-13-sealed-archive-transport-successor-adr]]'
   - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
 modified: '2026-08-25'
-body_hash: 'sha256:d20d5d53c37cd60323d93ca5ad9c31c5acacde457c604434003709f33a21a921'
+body_hash: 'sha256:ce171e6c270958fe24e6b0b716e076ecc7d3c2a9136f05f29da15dd70640c4cb'
 ---
 
 # `profile-password-custody` plan
@@ -369,7 +369,7 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 - [x] `W06.P12.S258` - Make registry referential-integrity preflight validate every revision at its declared authority grade while retaining full reference checks and real invalid-reference failures across applicability, calculation, and filing revisions; `src/cadrumo/application/preflight.py and src/cadrumo/application/tests/test_preflight.py`.
 - [x] `W06.P12.S259` - Correct Modelo 220 revision 2025 source grounding so it cites official authority applicable within its validity window and does not borrow the later 2026 form source; `src/cadrumo/_data/registry/aeat/modelos/220/ and src/cadrumo/domain/calculations/registry/tests/`.
 - [x] `W06.P12.S260` - Reconcile Modelo 182 deadline windows with canonical revision ownership so no revision projects filing years outside its evidenced design era and unsupported 2026 remains refused; `src/cadrumo/_data/registry/aeat/modelos/182/ and src/cadrumo/domain/calculations/registry/tests/`.
-- [ ] `W06.P12.S261` - Compose the canonical profile-custody port in test capsule, documentation sequence, and harness profile fixtures so recovery enrollment uses the production owner without a parallel implementation, then rerun golden and harness proofs; `src/cadrumo/tests/profile_capsule.py and dev/docs/sequences/_runner.py and src/cadrumo-harness/src/cadrumo_harness/mcp/tests/`.
+- [x] `W06.P12.S261` - Compose the canonical profile-custody port in test capsule, documentation sequence, and harness profile fixtures so recovery enrollment uses the production owner without a parallel implementation, then rerun golden and harness proofs; `src/cadrumo/tests/profile_capsule.py and dev/docs/sequences/_runner.py and src/cadrumo-harness/src/cadrumo_harness/mcp/tests/`.
 - [ ] `W06.P12.S262` - Reconcile all four production catalogues with current source and registry revision ownership, including Modelo 038, Modelo 220, Modelo 763, missing and orphaned keys, then rerun audit, drift, completeness, and every nitpicky build; `locales/ and dev/locales/ and docs/locales/`.
 - [ ] `W06.P12.S263` - Remove the five newly introduced em dashes from environment-override prose and prove the documentation dash ratchet without widening its baseline; `docs/reference/environment-overrides.md and dev/docs/emdash_baseline.json`.
 - [ ] `W06.P12.S264` - Restore hermetic cadrumo-mcp console-script resolution for installed-service, handshake, and watchdog subprocess proofs without weakening real executable delivery; `src/cadrumo-harness/src/cadrumo_harness/mcp/tests/ and src/cadrumo-harness/ packaging`.
