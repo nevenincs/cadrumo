@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import TypeGuard
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -91,11 +92,20 @@ def _validate_workflow_run_envelope(payload: bytes) -> Envelope[WorkflowResult]:
 class _PersistenceWorkflow:
     """Implement workflow persistence through the canonical encrypted object store."""
 
+    def __init__(
+        self,
+        *,
+        active_store_factory: Callable[[], WorkflowSecureObjectStorePort],
+        cold_bootstrap_store_factory: Callable[[], WorkflowSecureObjectStorePort],
+    ) -> None:
+        self._active_store_factory = active_store_factory
+        self._cold_bootstrap_store_factory = cold_bootstrap_store_factory
+
     def active_store(self) -> WorkflowSecureObjectStorePort:
-        return secure_object_repository_for_active_bucket()
+        return self._active_store_factory()
 
     def cold_bootstrap_store(self) -> WorkflowSecureObjectStorePort:
-        return secure_object_repository_for_cold_bootstrap_state()
+        return self._cold_bootstrap_store_factory()
 
     def load_state(self, store: WorkflowSecureObjectStorePort) -> tuple[WorkflowState, str]:
         record = store.load(
@@ -258,7 +268,10 @@ class _PersistenceWorkflow:
 
 def build_workflow_persistence_port() -> WorkflowPersistencePort:
     """Build the stateless concrete workflow persistence adapter."""
-    return _PersistenceWorkflow()
+    return _PersistenceWorkflow(
+        active_store_factory=secure_object_repository_for_active_bucket,
+        cold_bootstrap_store_factory=secure_object_repository_for_cold_bootstrap_state,
+    )
 
 
 __all__ = ["build_workflow_persistence_port"]
