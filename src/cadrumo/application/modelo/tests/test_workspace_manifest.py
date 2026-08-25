@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from functools import cache
+from typing import Literal
 
 import pytest
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from ....core import BindingSourceKind
 from ....core.resources import resources
@@ -24,6 +26,13 @@ from .._workspace_models import ModeloWorkspaceSchemaClassification, ModeloWorks
 from .._workspace_producers import ModeloWorkspaceContributorKindV1
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+
+
+type _NestedTraversalAlias = Mapping[str, tuple[int, ...]]
+
+
+class _NestedTraversalModel(BaseModel):
+    value: str
 
 
 @cache
@@ -142,6 +151,44 @@ def test_workspace_manifest_projects_only_representable_live_formula_operands() 
         assert entry.destination is None
         assert entry.owner == "domain.calculations.registry"
         assert entry.reason == "registry_declaration"
+
+
+def test_workspace_manifest_walks_nested_union_containers_and_aliases() -> None:
+    nodes: dict[str, _Node] = {}
+    _walk_annotation(
+        annotation=_NestedTraversalAlias | tuple[_NestedTraversalModel, ...] | Literal["literal"] | int | None,
+        path="synthetic",
+        nodes=nodes,
+        visited=set(),
+        active=(),
+        discriminator=None,
+    )
+
+    assert any(path.endswith(".mapping_value.collection_item") for path in nodes)
+    assert any(path.endswith(".collection_item.value") for path in nodes)
+    assert any(path.endswith("variant=union=Literal") for path in nodes)
+    assert any(path.endswith("variant=union=int") for path in nodes)
+    assert any(path.endswith("variant=union=NoneType") for path in nodes)
+
+
+def test_workspace_manifest_walks_live_dispatch_parameter_identity() -> None:
+    entries = {
+        entry.path: entry
+        for entry in _manifest().entries
+        if entry.path.startswith("registry_snapshot.revision.formulas.collection_item.expression.dispatch_table")
+    }
+    dispatch = entries[
+        "registry_snapshot.revision.formulas.collection_item.expression.dispatch_table.variant=union=Mapping"
+    ]
+    parameter = entries[
+        "registry_snapshot.revision.formulas.collection_item.expression.dispatch_table.variant=union=Mapping.mapping_value"
+    ]
+
+    assert dispatch.classification is ModeloWorkspaceSchemaClassification.BACKEND_ONLY
+    assert dispatch.destination is None
+    assert parameter.schema_type == "ParameterId"
+    assert parameter.classification is ModeloWorkspaceSchemaClassification.PROJECTED
+    assert parameter.destination == "ModeloWorkspaceParameterReferenceV1"
 
 
 def test_workspace_manifest_refuses_duplicate_stale_and_unclassified_fixed_points() -> None:

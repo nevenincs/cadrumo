@@ -211,6 +211,7 @@ def _walk_annotation(
     visited: set[tuple[type[BaseModel], str]],
     active: tuple[type[BaseModel], ...],
     discriminator: str | None,
+    record_terminal: bool = True,
 ) -> None:
     if isinstance(annotation, TypeAliasType) and _is_traversable_type_alias(annotation):
         _walk_annotation(
@@ -220,6 +221,7 @@ def _walk_annotation(
             visited=visited,
             active=active,
             discriminator=discriminator,
+            record_terminal=record_terminal,
         )
         return
     effective_discriminator = discriminator or _annotation_discriminator(annotation)
@@ -255,7 +257,8 @@ def _walk_annotation(
             )
         return
     if origin is Literal:
-        _record_node(nodes, path, _schema_type_label(unwrapped), "leaf")
+        if record_terminal:
+            _record_node(nodes, path, _schema_type_label(unwrapped), "leaf")
         return
     if _is_mapping_origin(origin):
         arguments = get_args(unwrapped)
@@ -279,7 +282,8 @@ def _walk_annotation(
             active=active,
         )
         return
-    _record_node(nodes, path, _schema_type_label(unwrapped), "leaf")
+    if record_terminal:
+        _record_node(nodes, path, _schema_type_label(unwrapped), "leaf")
 
 
 def _walk_union(
@@ -299,7 +303,7 @@ def _walk_union(
         coordinates.add(coordinate)
         arm_path = f"{path}.variant={coordinate}"
         _record_node(nodes, arm_path, _schema_type_label(arm), "union_branch")
-        if _is_model_type(_unwrap_annotated(arm)):
+        if _unwrap_annotated(arm) is not NoneType:
             _walk_annotation(
                 annotation=arm,
                 path=arm_path,
@@ -307,6 +311,7 @@ def _walk_union(
                 visited=visited,
                 active=active,
                 discriminator=None,
+                record_terminal=False,
             )
 
 
