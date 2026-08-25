@@ -50,7 +50,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
+from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from .._formula_runtime import calculate_registry_snapshot
 from .._schema import InputKind, ParameterDefinition
 from .._validate_revision_rules import _bracket_coverage_gaps
@@ -87,7 +87,7 @@ def _base_inputs(base: Decimal) -> dict[CasillaId, Decimal]:
 
 
 def _snapshot_2024():
-    return _committed_snapshot("200", 2025, "0A")
+    return _committed_snapshot("200", 2025, "0A", grade=RegistryAuthorityGrade.CALCULATION)
 
 
 # ---------------------------------------------------------------------------

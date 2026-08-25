@@ -35,7 +35,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
+from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from .._formula_runtime import calculate_registry_snapshot
 from .._schema import InputKind
 from ._registry_schema_support import _committed_snapshot
@@ -72,7 +72,7 @@ _M200_CUOTA_INTEGRA_CASILLA: CasillaId = validated_casilla_id("DP200014:00562", 
 
 
 def _snapshot_2024():
-    return _committed_snapshot("200", 2025, "0A")
+    return _committed_snapshot("200", 2025, "0A", grade=RegistryAuthorityGrade.CALCULATION)
 
 
 def _calculate(inputs: dict[CasillaId, Decimal]):
