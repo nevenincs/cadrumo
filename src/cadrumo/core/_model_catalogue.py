@@ -90,26 +90,11 @@ class ModelRole(StrEnum):
     text layer -- so it is kept separate precisely so it can be sized DOWN
     independently rather than inheriting the harder role's model.
 
-    Members:
-
-        VISION_TRANSCRIPTION: Reading a scanned or photographed document page.
-        TEXT_EXTRACTION: Classifying an already-extracted text layer.
-        COLUMN_ROLE_MAPPING: Naming what each column of a delimited table
-            holds, from its header strings alone. A naming problem over text,
-            never a transcription problem over an image -- a delimited export
-            already IS text, so rasterising one to read it would be the defect,
-            not the design.
-        SUPPLY_NATURE_PROPOSAL: Proposing whether an invoice supplies goods or
-            services, from its line descriptions, for an operator to confirm.
-            The same class of job as column-role mapping and strictly easier
-            still: a selection over a closed vocabulary of TWO tokens given a
-            handful of short strings, against a naming problem over as many
-            tokens as the role enum carries. It therefore clears the bar
-            wherever the mapper does and adds no hardware requirement of its
-            own. Kept as its own member rather than folded into the mapper's
-            because a role names the JOB -- borrowing another's identity would
-            make the catalogue unable to size this one down independently,
-            which is the whole reason these are separate.
+    ``VISION_TRANSCRIPTION`` reads a scanned or photographed page;
+    ``TEXT_EXTRACTION`` classifies an already-extracted text layer;
+    ``COLUMN_ROLE_MAPPING`` names the columns of a delimited table from their
+    header strings; and ``SUPPLY_NATURE_PROPOSAL`` proposes whether invoice
+    lines supply goods or services for an operator to confirm.
     """
 
     VISION_TRANSCRIPTION = "vision_transcription"
@@ -151,14 +136,11 @@ class LicenceVerification(StrEnum):
     publisher's licence file, and only one of the two survives a lawyer. The
     member names the artefact that was actually read.
 
-    Members:
-
-        PUBLISHER_LICENCE_FILE: The publisher's own LICENSE text was read.
-        PUBLISHER_MODEL_CARD: The publisher's model card licence field was read.
-        PUBLISHER_SERVICE_TERMS: The publisher's terms of service were read. The
-            artefact for a hosted model, which ships no weights licence.
-        UNVERIFIED: No publisher text was read. Bars a commercial-use claim
-            outright -- see :class:`ModelLicence`.
+    ``PUBLISHER_LICENCE_FILE`` means the publisher's LICENSE text was read;
+    ``PUBLISHER_MODEL_CARD`` means its model-card licence field was read;
+    ``PUBLISHER_SERVICE_TERMS`` means its service terms were read; and
+    ``UNVERIFIED`` means no publisher text was read and therefore bars a
+    commercial-use claim (see :class:`ModelLicence`).
     """
 
     PUBLISHER_LICENCE_FILE = "publisher_licence_file"
