@@ -4,7 +4,7 @@ tags:
   - '#registry-suite-red-at-head'
 date: '2026-08-13'
 modified: '2026-08-25'
-body_hash: 'sha256:622d39047504f257f53c2f4f487f8dac0cb41a7020e69aa67c76ad0d4cb208e6'
+body_hash: 'sha256:23dd7bd92f0965a49cdcf4424df4bc6a772932a88e3b057e55be8ca8e6d14080'
 tier: L2
 related:
   - '[[2026-08-13-registry-suite-red-at-head-audit]]'
@@ -75,7 +75,7 @@ The M322, M353 and M390 manual worked examples fail at fixture construction, bef
 - [x] `P02.S11` - Re-run the M322, M353 and M390 manual worked examples and confirm each reproduces its AEAT figure, treating a swept fixture whose oracle has not executed as not done; `src/cadrumo/domain/calculations/registry/tests/`.
 - [x] `P02.S07` - Reconcile the surviving IvaLedgerSelector fixture census so every positive constructor supplies cash-accounting treatment and observation-role axes, retain the deliberate missing-role refusal probe, and confirm the focused selector and aggregation suites preserve their exact refusals; `src/cadrumo/domain/calculations/registry/tests/test_binding_reachability_probe.py and src/cadrumo/domain/calculations/registry/tests/test_ledger_iva_aggregation_binding.py`.
 - [x] `P02.S08` - Supply the renta-2024 maternidad profile binding to the registry-layer M100 harnesses from the production derivation authority, never a hand-picked literal; `src/cadrumo/domain/calculations/registry/tests/`.
-- [ ] `P02.S10` - Add one regression driving a real 2024 2T negative settlement credit into the 3T return and asserting the resulting compensacion figure; `src/cadrumo/application/calculations/tests/`.
+- [x] `P02.S10` - Add one regression driving a real 2024 2T negative settlement credit into the 3T return and asserting the resulting compensacion figure; `src/cadrumo/application/calculations/tests/`.
 - [x] `P02.S21` - Author modelo 100's ten Anexo A deduction casillas that both bundled dictionaries declare and the registry omits: A/C/E vivienda habitual (LIRPF DT 18), D empresas nueva creacion and M partidos politicos and I bienes de interes cultural (art. 68), F alquiler (DT 15), G/H/J donativos which additionally need a ley-49-2002:art-19 legal entry the catalogue lacks; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/casillas,src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/casillas`.
 
 ### Phase `P03` - Close the registry-data defects
