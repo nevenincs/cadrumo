@@ -151,6 +151,7 @@ from ._calculation_route import (
     CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
     CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
     MANUAL_INPUT_RESOLVER_ID,
+    CalculationRouteManualOwnership,
     CalculationRouteResolverOwnership,
     validate_calculation_route_resolver_ownership,
 )
@@ -622,6 +623,7 @@ __all__ = [
     "CalculationRevisionNotFoundError",
     "CalculationRevisionState",
     "CalculationRevisionStateError",
+    "CalculationRouteManualOwnership",
     "CalculationRouteResolverOwnership",
     "CasillaDivergence",
     "CasillaDivergenceKind",
