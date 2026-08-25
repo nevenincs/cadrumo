@@ -37,16 +37,6 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.application.user_profile.capsule_record import ProfileRecordSession
-from cadrumo.application.user_profile.cotejo_apply import CensoDivergence, apply_cotejo
-from cadrumo.application.user_profile.profile_record_repository import (
-    ProfileRecordRepository,
-    bound_profile_record_session,
-)
-from cadrumo.application.user_profile.registration import register_profile_with_credentials
-from cadrumo.application.user_profile.validation import DATE_VALUE_ISSUE_CODE, UNKNOWN_FIELD_ISSUE_CODE
-from cadrumo.application.workflow.state_models import WorkflowState
-
 from ....adapters.persistence.storage.custody import (
     load_committed_profile_password_material,
     unlock_profile_custody,
@@ -58,6 +48,15 @@ from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import complete_profile_facts
+from ...workflow.state_models import WorkflowState
+from ..capsule_record import ProfileRecordSession
+from ..cotejo_apply import CensoDivergence, apply_cotejo
+from ..profile_record_repository import (
+    ProfileRecordRepository,
+    bound_profile_record_session,
+)
+from ..registration import register_profile_with_credentials
+from ..validation import DATE_VALUE_ISSUE_CODE, UNKNOWN_FIELD_ISSUE_CODE
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
