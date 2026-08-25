@@ -4,7 +4,7 @@ tags:
   - '#source-casilla-integration'
 date: '2026-08-22'
 modified: '2026-08-25'
-body_hash: 'sha256:f42adcff16dbdec8e28536afdb6adab0dabbf63cb023e1a24f22d2fe144a4c8a'
+body_hash: 'sha256:e83cb4627fd90f5d5dfc0798c159443ced2edaf6a8e0f5a5aade58819100d78e'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -252,7 +252,7 @@ Settle filing destination identity, substitutability, grain, precedence, absence
 - [x] `W03.P10.S57` - determine whether asset amortization is a direct filing source or a duplicate of transaction-ledger expenses; `.vault/adr/2026-08-23-amortization-casilla-mapping-adr.md`.
 - [x] `W03.P10.S58` - determine whether finca amortization shares or requires a distinct source contract; `.vault/adr/2026-08-23-amortization-casilla-mapping-adr.md`.
 - [x] `W03.P10.S59` - decide grain, precedence, absence semantics, rounding, and override policy; `.vault/adr/2026-08-23-amortization-casilla-mapping-adr.md`.
-- [ ] `W03.P10.S60` - record separate asset-amortization and finca-amortization dispositions; `src/cadrumo/_data/source_connectivity/census.toml`.
+- [x] `W03.P10.S60` - record separate asset-amortization and finca-amortization dispositions; `src/cadrumo/_data/source_connectivity/census.toml`.
 
 ### Phase `W03.P11` - implement the amortization vertical slice
 

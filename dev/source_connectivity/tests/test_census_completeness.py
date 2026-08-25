@@ -89,7 +89,7 @@ def test_inventory_census_tracks_only_the_live_connection_gap() -> None:
     assert "missing repeated-row materialization" in summaries
 
 
-def test_asset_amortization_census_retains_the_unsettled_legal_boundary() -> None:
+def test_asset_amortization_census_retains_the_unimplemented_ingress_boundary() -> None:
     manifest = load_source_connectivity_census()
     amortization = next(
         entry for entry in manifest.entries if entry.candidate_id == "assets.amortization-ledger"
@@ -100,8 +100,7 @@ def test_asset_amortization_census_retains_the_unsettled_legal_boundary() -> Non
     assert amortization.bounded_follow_up is not None
     assert amortization.bounded_follow_up.action_id == "source-casilla.assets-amortization-ingress"
     assert "exclusive future source" in amortization.review_condition
-    assert "casilla 0208" in amortization.review_condition
-    assert "casilla 0227" in amortization.review_condition
+    assert "casillas 0208 and 0227" in amortization.review_condition
     assert "finca casilla 0131 separate" in amortization.review_condition
     assert "current encrypted scalar ledger remains ingress-blocked" in amortization.review_condition
 
