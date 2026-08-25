@@ -500,6 +500,25 @@ if TYPE_CHECKING:
         DEFAULT_WRITE_PROVENANCE,
         SecureObjectWrite,
     )
+    from .source_connectivity import (
+        SourceConnectivityCandidateId,
+        SourceConnectivityCandidateIdentity,
+        SourceConnectivityCensusRow,
+        SourceConnectivityConnectedProof,
+        SourceConnectivityConnectionIdentity,
+        SourceConnectivityDisposition,
+        SourceConnectivityEncryptedRevisionProof,
+        SourceConnectivityExecutableEvidence,
+        SourceConnectivityExecutableEvidenceRole,
+        SourceConnectivityExpiryPosture,
+        SourceConnectivityFollowUp,
+        SourceConnectivityGrounding,
+        SourceConnectivityGroundingLocatorKind,
+        SourceConnectivityOperatorReachabilityProof,
+        SourceConnectivityProofAuthority,
+        SourceConnectivityProofFailureCause,
+        SourceConnectivityResolverOwnershipProof,
+    )
     from .storage_materialization import STORAGE_ROOT_MODE, ensure_storage_tree
     from .text_fold import fold_diacritics, fold_printed_phrase, unicode_compose
 

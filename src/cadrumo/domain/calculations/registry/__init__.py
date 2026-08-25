@@ -707,7 +707,12 @@ from ._schema_verification import (
 # single resolution point rather than N direct imports of a non-__all__ name.
 from ._snapshot import build_snapshot as build_snapshot
 from ._snapshot_coordinate import registry_snapshot_id, registry_snapshot_id_for
-from ._temporal import select_revision, select_revision_for_year
+from ._temporal import (
+    coverage_assessment_horizon,
+    revision_selection_coordinates,
+    select_revision,
+    select_revision_for_year,
+)
 from ._validate import RegistryValidator
 from ._validate_cross_revision import (
     CrossRevisionCasillaDriftSummary,
@@ -1252,6 +1257,7 @@ __all__ = [
     "bundled_revision_inspection",
     "calculate_registry_snapshot",
     "calculation_closure_casilla_ids",
+    "coverage_assessment_horizon",
     "calculation_closure_legal_refs",
     "calculation_closure_record_design_metadata",
     "canonical_remote_hostname",
@@ -1437,6 +1443,7 @@ __all__ = [
     "revision_date_binding_ids",
     "revision_locale_key",
     "revision_reference_identity_failures",
+    "revision_selection_coordinates",
     "same_ejercicio_prior_quarter_anchors",
     "screened_quantity_families",
     "select_revision",

@@ -15,10 +15,11 @@ from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
 from .._corpus_catalogue import verify_source_catalogue, verify_source_file
 from .._coverage import EvidenceTierCoverageGate, audit_registry_model_law_coverage, build_model_law_coverage_ledger
+from .._authority import bundled_authority
 from .._legal import verify_legal_catalogue_grounding
 from .._schema import filing_period_from_scope
 from .._snapshot import build_snapshot
-from .._temporal import select_revision
+from .._temporal import coverage_assessment_horizon, revision_selection_coordinates, select_revision
 from .._validate import RegistryValidator
 from ._catalogue_verification_support import _catalogues, _registry_tree
 
@@ -233,11 +234,14 @@ def test_supported_period_matrix_has_applicable_record_design_sources() -> None:
 
 
 def test_committed_registry_tree_has_required_model_law_coverage() -> None:
-    modelos, catalogues = _registry_tree()
+    authority = bundled_authority()
+    audit = audit_registry_model_law_coverage(authority)
 
-    audit = audit_registry_model_law_coverage(modelos, catalogues, source_root=bundled_path())
-
-    modelo_038 = next(ledger for ledger in audit.ledgers if ledger.modelo == "038")
+    modelo_038 = next(
+        ledger
+        for ledger in audit.ledgers
+        if (ledger.modelo, ledger.revision, ledger.filing_year, ledger.period) == ("038", "2002-y-siguientes", 2002, "01")
+    )
     assert modelo_038.revision == "2002-y-siguientes"
     assert modelo_038.authority_scope == "inspection_only"
     assert not modelo_038.filing_eligible
@@ -251,12 +255,24 @@ def test_committed_registry_tree_has_required_model_law_coverage() -> None:
     assert gates["layout_authority"].source_refs == ("enrolled-modelo-038-layout",)
     assert gates["layout_authority"].workbook_refs == ("modelo-038-orden-static-layout",)
 
-    # Keep the finite denominator and every mandatory tier visible across the
-    # complete revision population. The M038 inspection projection above is
-    # deliberately non-filing, but its evidence still belongs in this audit.
+    # Keep the full selector-derived denominator and every mandatory tier
+    # visible. M038's inspection projection is deliberately non-filing, but
+    # its evidence still belongs in every claimed month through the current
+    # registered horizon.
     assert audit.ok
     assert audit.required_gate_failures == ()
-    assert len(audit.ledgers) == sum(len(modelo.revisions) for modelo in modelos)
+    assessment_horizon = coverage_assessment_horizon(authority.catalogues)
+    expected_coordinates = {
+        (modelo.id, revision.id, filing_year, period)
+        for modelo in authority.modelos
+        for revision in modelo.revisions.values()
+        for filing_year, period in revision_selection_coordinates(
+            revision,
+            assessment_horizon=assessment_horizon,
+        )
+    }
+    actual_coordinates = {(ledger.modelo, ledger.revision, ledger.filing_year, ledger.period) for ledger in audit.ledgers}
+    assert actual_coordinates == expected_coordinates
     for ledger in audit.ledgers:
         gates = {gate.tier: gate for gate in ledger.gates}
         assert gates["legal_authority"].status == "satisfied", ledger
