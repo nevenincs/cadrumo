@@ -27,7 +27,7 @@ from ....core.errors import declared_error_codes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-#: Path fragments identifying the codes this campaign is answerable for.
+#: Path fragments identifying the codes this check covers.
 _OWNED_QUALNAME_FRAGMENTS = (
     "adapters.persistence.storage",
     "application.user_profile",

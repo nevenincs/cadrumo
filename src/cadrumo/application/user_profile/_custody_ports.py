@@ -13,7 +13,7 @@ from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, NoReturn, Protocol, TypeGuard, cast
+from typing import TYPE_CHECKING, NoReturn, Protocol, cast
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -49,68 +49,8 @@ from ...core.paths import effective_storage_root
 from ._authentication import ProfileAuthenticationRefusedError, ProfilePasswordProofOperation
 
 if TYPE_CHECKING:
-    from ...core import ProfileSessionRefusalReason, SecureObjectWrite
+    from ...core import SecureObjectWrite
     from ...core.classification import SensitivityClass
-
-
-class ProfileBucketSessionPort(Protocol):
-    """Live bucket-session capability exposed across the application boundary."""
-
-    @property
-    def bucket_id(self) -> str:
-        """The bucket this live session was opened against."""
-        ...
-
-    @property
-    def dek(self) -> bytes:
-        """The session's bound data-encryption key."""
-        ...
-
-    @property
-    def idle_deadline(self) -> datetime:
-        """The sliding deadline the next activity advances."""
-        ...
-
-    @property
-    def absolute_deadline(self) -> datetime:
-        """The immutable cap no activity can extend."""
-        ...
-
-    @property
-    def opened_at(self) -> datetime:
-        """When this session was authenticated."""
-        ...
-
-    @property
-    def unsecured_backend(self) -> bool:
-        """Whether the session was opened over the explicitly unsecured backend."""
-        ...
-
-    @property
-    def sealed(self) -> bool:
-        """Whether this session has been closed and its key material zeroised.
-
-        Closing zeroises the buffers in place rather than replacing the object,
-        so a holder of a closed session sees something that still names its
-        bucket and still answers every other question truthfully. Without this
-        predicate the application layer could not ask whether a session it
-        holds is spent, and had to infer it from a failure at the point of use
-        -- which is how a retired session came to look identical to a live one
-        to anything deciding whether to keep trusting it.
-        """
-        ...
-
-    def touch(self, now: datetime) -> None:
-        """Advance the sliding idle deadline."""
-        ...
-
-    def is_expired(self, now: datetime) -> bool:
-        """Return whether this session has crossed either deadline."""
-        ...
-
-    def close(self) -> None:
-        """Zeroise and retire this session's local key material."""
-        ...
 
 
 class ProfileCustodyPasswordMaterialPort(Protocol):
@@ -155,64 +95,6 @@ class _ProfileCustodyPasswordProofMaterialPort(Protocol):
     @property
     def sentinel(self) -> ProfileCustodySentinelPort:
         """The sentinel that proves the unwrapped DEK."""
-        ...
-
-
-class ProfilePersistedSessionPort(Protocol):
-    """Persisted session record fields needed by login orchestration."""
-
-    @property
-    def profile_id(self) -> UUID:
-        """The profile this receipt accelerates."""
-        ...
-
-    @property
-    def session_id(self) -> UUID:
-        """The receipt's own identity."""
-        ...
-
-    @property
-    def custody_generation(self) -> int:
-        """The custody generation this receipt was minted against."""
-        ...
-
-    @property
-    def dek_epoch(self) -> str:
-        """The DEK epoch this receipt was minted against."""
-        ...
-
-    @property
-    def issued_at(self) -> datetime:
-        """When the receipt was minted."""
-        ...
-
-    @property
-    def idle_deadline(self) -> datetime:
-        """The sliding deadline a resume may advance."""
-        ...
-
-    @property
-    def absolute_deadline(self) -> datetime:
-        """The immutable cap no resume can extend."""
-        ...
-
-
-class ProfileSessionResumeOutcomePort(Protocol):
-    """Fail-closed persisted-session evaluation result."""
-
-    @property
-    def resumed(self) -> bool:
-        """Whether the persisted receipt was accepted."""
-        ...
-
-    @property
-    def refusal(self) -> ProfileSessionRefusalReason | None:
-        """The typed reason a resume was refused, if it was."""
-        ...
-
-    @property
-    def record(self) -> ProfilePersistedSessionPort | None:
-        """The evaluated receipt, present whether or not it was accepted."""
         ...
 
 
@@ -768,132 +650,6 @@ class ProfileCustodyUnlockPort(Protocol):
         ...
 
 
-class ProfileLoginThrottleEvaluationPort(Protocol):
-    """Failed-login backoff decision exposed to the application."""
-
-    @property
-    def throttled(self) -> bool:
-        """Whether the caller must wait before another attempt."""
-        ...
-
-    @property
-    def remaining_seconds(self) -> int:
-        """Seconds left on the current backoff window."""
-        ...
-
-
-class ProfileLoginSessionPort(Protocol):
-    """Complete application capability for profile login-session lifecycle.
-
-    The port deliberately returns the substrate's existing DTO objects through
-    the narrow record protocols above.  It does not copy or project them: the
-    login transaction depends on live-session object identity for rollback and
-    on the exact persisted receipt for idle-deadline renewal.
-    """
-
-    def current_session(self) -> ProfileBucketSessionPort | None:
-        """Return the process-bound live session, if one exists."""
-        ...
-
-    def open_resumed_session(
-        self,
-        *,
-        bucket_id: str,
-        dek: bytes,
-        idle_minutes: int,
-        opened_at: datetime,
-        idle_deadline: datetime,
-        absolute_deadline: datetime,
-        storage_root: Path,
-    ) -> ProfileBucketSessionPort:
-        """Open one live session over the supplied authenticated DEK."""
-        ...
-
-    def bind_session(self, session: ProfileBucketSessionPort) -> None:
-        """Bind one authenticated session to the process context."""
-        ...
-
-    def close_active_session(self) -> None:
-        """Close and zeroise the process-bound live session."""
-        ...
-
-    def session_serves_bucket(self, session: ProfileBucketSessionPort | None, bucket_id: str) -> bool:
-        """Return whether ``session`` serves the exact profile UUID."""
-        ...
-
-    def evaluate_throttle(
-        self,
-        *,
-        storage_root: Path,
-        bucket_id: str,
-        now: datetime,
-    ) -> ProfileLoginThrottleEvaluationPort:
-        """Evaluate failed-login backoff before password derivation."""
-        ...
-
-    def record_login_failure(self, *, storage_root: Path, bucket_id: str, now: datetime) -> None:
-        """Record one refused password proof without replacing its refusal."""
-        ...
-
-    def reset_throttle(self, *, storage_root: Path, bucket_id: str) -> None:
-        """Clear the revocable failed-login backoff cache."""
-        ...
-
-    def acceleration_receipt_path(self, *, storage_root: Path, profile_id: UUID) -> Path:
-        """Return the exact local receipt locator for one profile."""
-        ...
-
-    def mint_acceleration_receipt(
-        self,
-        *,
-        storage_root: Path,
-        profile_id: UUID,
-        custody_generation: int,
-        dek_epoch: str,
-        dek: bytes,
-        now: datetime,
-        idle_minutes: int,
-        absolute_minutes: int,
-    ) -> ProfilePersistedSessionPort:
-        """Mint and return the canonical persisted acceleration receipt."""
-        ...
-
-    def resume_acceleration_receipt(
-        self,
-        *,
-        storage_root: Path,
-        profile_id: UUID,
-        custody_generation: int,
-        dek_epoch: str,
-        now: datetime,
-    ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
-        """Evaluate one receipt and return its owned wipeable DEK buffer."""
-        ...
-
-    def delete_acceleration_receipt(self, *, storage_root: Path, profile_id: UUID) -> None:
-        """Revoke one profile's split-knowledge acceleration receipt."""
-        ...
-
-    def advance_acceleration_idle_deadline(
-        self,
-        *,
-        storage_root: Path,
-        profile_id: UUID,
-        record: ProfilePersistedSessionPort,
-        new_idle_deadline: datetime,
-    ) -> ProfilePersistedSessionPort:
-        """Advance a receipt while preserving its concrete DTO identity."""
-        ...
-
-    def is_persisted_receipt(self, record: object) -> TypeGuard[ProfilePersistedSessionPort]:
-        """Narrow a resume record to the canonical persisted receipt DTO."""
-        ...
-
-    def zeroise_owned_buffer(self, buffer: bytearray) -> None:
-        """Overwrite the exact mutable key buffer owned by the caller."""
-        ...
-
-
 @dataclass(frozen=True, slots=True)
 class ProfileCustodySecureObjectNamespace:
     """Registered namespace contract needed by an application capsule."""
@@ -1314,134 +1070,6 @@ def refuse_profile_login_without_password_channel() -> NoReturn:
     raise custody.ProfileCustodyPasswordError("profile login requires an explicit password channel")
 
 
-class _PersistenceProfileLoginSession:
-    """Compose the real custody and live-session adapters behind one app port."""
-
-    def current_session(self) -> ProfileBucketSessionPort | None:
-        return master_key.current_active_bucket_session()
-
-    def open_resumed_session(
-        self,
-        *,
-        bucket_id: str,
-        dek: bytes,
-        idle_minutes: int,
-        opened_at: datetime,
-        idle_deadline: datetime,
-        absolute_deadline: datetime,
-        storage_root: Path,
-    ) -> ProfileBucketSessionPort:
-        return master_key.BucketSession.open_resumed(
-            bucket_id=bucket_id,
-            dek=dek,
-            idle_minutes=idle_minutes,
-            opened_at=opened_at,
-            idle_deadline=idle_deadline,
-            absolute_deadline=absolute_deadline,
-            storage_root=storage_root,
-        )
-
-    def bind_session(self, session: ProfileBucketSessionPort) -> None:
-        master_key.bind_active_bucket_session(_substrate_handle(session, master_key.BucketSession, "bucket session"))
-
-    def close_active_session(self) -> None:
-        master_key.close_active_bucket_session()
-
-    def session_serves_bucket(self, session: ProfileBucketSessionPort | None, bucket_id: str) -> bool:
-        resolved = None if session is None else _substrate_handle(session, master_key.BucketSession, "bucket session")
-        return bool(master_key.session_serves_bucket(resolved, bucket_id))
-
-    def evaluate_throttle(
-        self,
-        *,
-        storage_root: Path,
-        bucket_id: str,
-        now: datetime,
-    ) -> ProfileLoginThrottleEvaluationPort:
-        return master_key.evaluate_login_throttle(storage_root=storage_root, bucket_id=bucket_id, now=now)
-
-    def record_login_failure(self, *, storage_root: Path, bucket_id: str, now: datetime) -> None:
-        master_key.record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=now)
-
-    def reset_throttle(self, *, storage_root: Path, bucket_id: str) -> None:
-        master_key.reset_login_throttle(storage_root=storage_root, bucket_id=bucket_id)
-
-    def acceleration_receipt_path(self, *, storage_root: Path, profile_id: UUID) -> Path:
-        return custody.profile_session_path(storage_root=storage_root, profile_id=profile_id)
-
-    def mint_acceleration_receipt(
-        self,
-        *,
-        storage_root: Path,
-        profile_id: UUID,
-        custody_generation: int,
-        dek_epoch: str,
-        dek: bytes,
-        now: datetime,
-        idle_minutes: int,
-        absolute_minutes: int,
-    ) -> ProfilePersistedSessionPort:
-        return custody.mint_profile_session(
-            storage_root=storage_root,
-            profile_id=profile_id,
-            custody_generation=custody_generation,
-            dek_epoch=dek_epoch,
-            dek=dek,
-            now=now,
-            idle_minutes=idle_minutes,
-            absolute_minutes=absolute_minutes,
-        )
-
-    def resume_acceleration_receipt(
-        self,
-        *,
-        storage_root: Path,
-        profile_id: UUID,
-        custody_generation: int,
-        dek_epoch: str,
-        now: datetime,
-    ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
-        return custody.resume_profile_session(
-            storage_root=storage_root,
-            profile_id=profile_id,
-            custody_generation=custody_generation,
-            dek_epoch=dek_epoch,
-            now=now,
-        )
-
-    def delete_acceleration_receipt(self, *, storage_root: Path, profile_id: UUID) -> None:
-        custody.delete_profile_session(storage_root=storage_root, profile_id=profile_id)
-
-    def advance_acceleration_idle_deadline(
-        self,
-        *,
-        storage_root: Path,
-        profile_id: UUID,
-        record: ProfilePersistedSessionPort,
-        new_idle_deadline: datetime,
-    ) -> ProfilePersistedSessionPort:
-        return custody.advance_persisted_profile_session_idle_deadline(
-            storage_root=storage_root,
-            profile_id=profile_id,
-            record=_substrate_handle(record, custody.PersistedProfileSession, "persisted session receipt"),
-            new_idle_deadline=new_idle_deadline,
-        )
-
-    def is_persisted_receipt(self, record: object) -> TypeGuard[ProfilePersistedSessionPort]:
-        return isinstance(record, custody.PersistedProfileSession)
-
-    def zeroise_owned_buffer(self, buffer: bytearray) -> None:
-        custody.zeroise(buffer)
-
-
-_PROFILE_LOGIN_SESSION_PORT: ProfileLoginSessionPort = _PersistenceProfileLoginSession()
-
-
-def default_profile_login_session_port() -> ProfileLoginSessionPort:
-    """Return the sole production composition for profile login sessions."""
-    return _PROFILE_LOGIN_SESSION_PORT
-
-
 def profile_custody_record_session_material(
     profile_id: UUID,
     *,
@@ -1453,21 +1081,6 @@ def profile_custody_record_session_material(
         return None
     material = custody.load_committed_profile_password_material(profile_id, root=root)
     return ProfileCustodyRecordSessionMaterial(envelope=material.envelope, dek=session.dek)
-
-
-def profile_session_serves_bucket(session: ProfileBucketSessionPort | None, bucket_id: str) -> bool:
-    """Return whether a live bucket session serves the exact profile UUID."""
-    return default_profile_login_session_port().session_serves_bucket(session, bucket_id)
-
-
-def profile_current_bucket_session() -> ProfileBucketSessionPort | None:
-    """Observe the currently bound bucket session through the custody port boundary."""
-    return default_profile_login_session_port().current_session()
-
-
-def profile_bind_bucket_session(session: ProfileBucketSessionPort) -> None:
-    """Bind one authenticated bucket session to the process context."""
-    default_profile_login_session_port().bind_session(session)
 
 
 def profile_is_authentication_failure(error: BaseException) -> bool:
@@ -1484,27 +1097,6 @@ def profile_is_authentication_failure(error: BaseException) -> bool:
 def profile_is_keyring_unavailable(error: BaseException) -> bool:
     """Recognise a keychain persistence refusal for the process-scoped fallback."""
     return isinstance(error, KeyringUnavailableError)
-
-
-def profile_advance_session_idle_deadline(
-    *,
-    storage_root: Path,
-    profile_id: UUID,
-    record: ProfilePersistedSessionPort,
-    new_idle_deadline: datetime,
-) -> ProfilePersistedSessionPort:
-    """Advance one receipt without exposing its keychain key to the app."""
-    return default_profile_login_session_port().advance_acceleration_idle_deadline(
-        storage_root=storage_root,
-        profile_id=profile_id,
-        record=record,
-        new_idle_deadline=new_idle_deadline,
-    )
-
-
-def profile_is_persisted_session(record: object) -> TypeGuard[ProfilePersistedSessionPort]:
-    """Return whether an outcome record is the custody-owned persisted model."""
-    return default_profile_login_session_port().is_persisted_receipt(record)
 
 
 def profile_custody_secure_object_namespace() -> ProfileCustodySecureObjectNamespace:
@@ -1581,7 +1173,6 @@ def default_profile_bucket_event_history_repository(
 
 
 __all__ = [
-    "ProfileBucketSessionPort",
     "ProfileBucketStoragePathsPort",
     "ProfileBucketStoragePort",
     "ProfileCustodyBucketEventHistoryPort",
@@ -1598,14 +1189,10 @@ __all__ = [
     "ProfileCustodySecureObjectRepositoryPort",
     "ProfileCustodySentinelPort",
     "ProfileCustodyUnlockPort",
-    "ProfileLoginSessionPort",
-    "ProfileLoginThrottleEvaluationPort",
-    "ProfilePersistedSessionPort",
     "ProfileRecordCryptoError",
     "ProfileRecordCryptoPort",
     "ProfileRecordEncryptedBlob",
     "ProfileSecureObjectInventoryPort",
-    "ProfileSessionResumeOutcomePort",
     "canonical_snapshot_bytes",
     "canonical_snapshot_digest",
     "canonical_snapshot_payload",
@@ -1614,14 +1201,11 @@ __all__ = [
     "default_profile_bucket_event_history_repository",
     "default_profile_bucket_storage",
     "default_profile_custody_local_record_store",
-    "default_profile_login_session_port",
     "default_profile_record_crypto_port",
     "default_profile_secure_object_inventory",
     "ensure_profile_custody_owner_root",
     "export_profile_recovery_artifact",
     "map_profile_authentication_proof_failure",
-    "profile_advance_session_idle_deadline",
-    "profile_bind_bucket_session",
     "profile_custody_owner_root",
     "profile_custody_record_session_material",
     "profile_custody_recovery_envelope_path",
@@ -1629,8 +1213,6 @@ __all__ = [
     "profile_custody_secure_object_repository",
     "profile_is_authentication_failure",
     "profile_is_keyring_unavailable",
-    "profile_is_persisted_session",
-    "profile_session_serves_bucket",
     "prove_profile_recovery_artifact",
     "refuse_profile_login_without_password_channel",
     "replace_profile_custody_password_envelope",

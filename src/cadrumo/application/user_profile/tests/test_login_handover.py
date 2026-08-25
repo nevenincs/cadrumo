@@ -11,6 +11,7 @@ import json
 import os
 import shutil
 import time
+from contextlib import AbstractContextManager
 from contextvars import Token
 from datetime import UTC, datetime, timedelta
 from multiprocessing import get_context
@@ -25,7 +26,7 @@ from uuid import UUID
 import pytest
 from sqlalchemy.exc import DatabaseError as SqlDatabaseError
 
-from ....adapters.persistence.storage import master_key
+from ....adapters.persistence.storage import build_profile_login_session_port, master_key
 from ....adapters.persistence.storage.custody import (
     PROFILE_CUSTODY_SENTINEL_FILENAME,
     ProfileCustodyRecordError,
@@ -58,6 +59,7 @@ from .._login_session import (
     _save_handover_journal,
     login_profile,
 )
+from .._login_session_port import ProfileLoginSessionPort, bind_profile_login_session_port
 from .._profile_pointer_transaction import ActiveProfilePointerTransactionError
 from .._profile_record_repository import close_active_profile_record_session, require_profile_record_session
 from .._registration import register_profile_with_credentials
@@ -120,7 +122,9 @@ def _close_live_login() -> None:
     master_key.close_active_bucket_session()
 
 
-def _child_settings(storage_root: Path) -> tuple[Settings, Token[Settings | None]]:
+def _child_settings(
+    storage_root: Path,
+) -> tuple[Settings, Token[Settings | None], AbstractContextManager[ProfileLoginSessionPort]]:
     # Calibration measurement is off for the same reason the session default in
     # `cadrumo/conftest.py` turns it off, and it has to be said again HERE:
     # these children are spawned, so no in-process override reaches them, and
@@ -138,12 +142,20 @@ def _child_settings(storage_root: Path) -> tuple[Settings, Token[Settings | None
         cadrumo_active_profile=None,
         cadrumo_profile_kdf_measure_calibration=False,
     )
-    return settings, config_module._settings_override.set(settings)
+    composition = bind_profile_login_session_port(build_profile_login_session_port())
+    composition.__enter__()
+    return settings, config_module._settings_override.set(settings), composition
 
 
-def _close_child_login(token: Token[Settings | None]) -> None:
-    _close_live_login()
-    config_module._settings_override.reset(token)
+def _close_child_login(
+    token: Token[Settings | None],
+    composition: AbstractContextManager[ProfileLoginSessionPort],
+) -> None:
+    try:
+        _close_live_login()
+        config_module._settings_override.reset(token)
+    finally:
+        composition.__exit__(None, None, None)
 
 
 def _prepared_handover_journal() -> _ProfileLoginHandoverJournal:
@@ -305,7 +317,7 @@ def _conflicted_b_handover_child(
     result_queue: Queue[_ConflictResult],
 ) -> None:
     """Keep A locally active while a separate process rewrites the pointer."""
-    settings, token = _child_settings(storage_root)
+    settings, token, composition = _child_settings(storage_root)
     _ = settings
     try:
         login_profile(name=profile_a, passphrase_callback=lambda: _PASSWORD_A)
@@ -334,7 +346,7 @@ def _conflicted_b_handover_child(
         else:
             result_queue.put({"unexpected_success": True})
     finally:
-        _close_child_login(token)
+        _close_child_login(token, composition)
 
 
 def _acceleration_failure_handover_child(
@@ -345,7 +357,7 @@ def _acceleration_failure_handover_child(
 ) -> None:
     """Use keyring's real failing backend in a fresh process only."""
     os.environ["PYTHON_KEYRING_BACKEND"] = "keyring.backends.fail.Keyring"
-    settings, token = _child_settings(storage_root)
+    settings, token, composition = _child_settings(storage_root)
     _ = settings
     try:
         login_profile(name=profile_a, passphrase_callback=lambda: _PASSWORD_A)
@@ -359,12 +371,12 @@ def _acceleration_failure_handover_child(
             }
         )
     finally:
-        _close_child_login(token)
+        _close_child_login(token, composition)
 
 
 def _crash_after_b_handover_child(storage_root: Path, profile_a: str, profile_b: str) -> None:
     """Terminate after committed B handover without normal process cleanup."""
-    settings, _token = _child_settings(storage_root)
+    settings, _token, _composition = _child_settings(storage_root)
     _ = settings
     login_profile(name=profile_a, passphrase_callback=lambda: _PASSWORD_A)
     login_profile(name=profile_b, passphrase_callback=lambda: _PASSWORD_B)
@@ -377,7 +389,7 @@ def _recover_selected_profile_child(
     result_queue: Queue[_RecoveryResult],
 ) -> None:
     """Authenticate the durable pointer target in a fresh process after a crash."""
-    settings, token = _child_settings(storage_root)
+    settings, token, composition = _child_settings(storage_root)
     _ = settings
     try:
         result = login_profile(name=None, passphrase_callback=lambda: _PASSWORD_B)
@@ -391,7 +403,7 @@ def _recover_selected_profile_child(
             }
         )
     finally:
-        _close_child_login(token)
+        _close_child_login(token, composition)
 
 
 def _login_in_separate_process_child(
@@ -402,7 +414,7 @@ def _login_in_separate_process_child(
     result_queue: Queue[_ChildLoginResult],
 ) -> None:
     """Authenticate one profile the way an operator invocation does: a fresh process."""
-    settings, token = _child_settings(storage_root)
+    settings, token, composition = _child_settings(storage_root)
     _ = settings
     try:
         outcome = login_profile(name=profile, now=now, passphrase_callback=lambda: password)
@@ -414,7 +426,7 @@ def _login_in_separate_process_child(
             }
         )
     finally:
-        _close_child_login(token)
+        _close_child_login(token, composition)
 
 
 def _resume_probe_child(
@@ -423,7 +435,7 @@ def _resume_probe_child(
     result_queue: Queue[_ResumeProbeResult],
 ) -> None:
     """Recover one profile's session material with no passphrase, in its own process."""
-    settings, token = _child_settings(storage_root)
+    settings, token, composition = _child_settings(storage_root)
     _ = settings
     try:
         material = load_committed_profile_password_material(UUID(profile), root=storage_root)
@@ -442,7 +454,7 @@ def _resume_probe_child(
             }
         )
     finally:
-        _close_child_login(token)
+        _close_child_login(token, composition)
 
 
 def _login_in_separate_process(
@@ -514,7 +526,7 @@ def _crash_at_handover_phase_child(
     leaving a test named for a crash that never happened, and a retirement that
     silently did run.
     """
-    settings, token = _child_settings(storage_root)
+    settings, token, composition = _child_settings(storage_root)
     _ = settings
     stop_watcher = ThreadEvent()
 
@@ -558,7 +570,7 @@ def _crash_at_handover_phase_child(
             watcher.join(timeout=5)
         os._exit(1)
     finally:
-        _close_child_login(token)
+        _close_child_login(token, composition)
 
 
 def test_handover_journal_roundtrips_through_the_anchored_bounded_record_store(tmp_path: Path) -> None:

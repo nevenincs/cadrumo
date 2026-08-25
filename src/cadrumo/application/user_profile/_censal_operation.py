@@ -44,9 +44,15 @@ from ..operations import (
 from ..operations.owner import OperationExecutorContext, OperationResumeCheckpoint
 from ._capsule_record import ProfileRecordConflictError
 from ._censal_observation import CensalObservation
-from ._censo_sync import CENSAL_ADOPTABLE_PATHS, censal_facts_from_read, reconcile_censal_read
+from ._censo_sync import (
+    CENSAL_ADOPTABLE_PATHS,
+    CENSO_SOURCE_TAG,
+    censal_facts_from_read,
+    reconcile_censal_read,
+)
 from ._cotejo_apply import apply_cotejo
 from ._profile_record_repository import ProfileRecordRepository
+from ._projections import record_to_effective_facts
 
 CENSAL_OPERATION_DEFINITION_ID = "user-profile.censo-review"
 CENSAL_PHASE_PREFLIGHT = "censo.preflight"
@@ -180,6 +186,25 @@ class CensalOperationRequest(BaseModel):
         if tuple(item.path for item in value) != CENSAL_ADOPTABLE_PATHS:
             raise ValueError("censal operation request must decide every adoptable path in canonical order")
         return value
+
+
+def build_censal_operation_request(record: UserProfileRecord) -> CensalOperationRequest:
+    """Bind the exact baseline and safe per-field defaults for frontend review."""
+    effective = record_to_effective_facts(record)
+    return CensalOperationRequest(
+        baseline=CensalProfileBaseline.from_record(record),
+        field_intents=tuple(
+            CensalReviewedFieldIntent(
+                path=path,
+                intent=(
+                    CensalFieldIntent.ADOPT
+                    if (current := effective.get(path)) is None or current.source == CENSO_SOURCE_TAG
+                    else CensalFieldIntent.PRESERVE
+                ),
+            )
+            for path in CENSAL_ADOPTABLE_PATHS
+        ),
+    )
 
 
 class CensalOperationOutcome(StrEnum):
@@ -531,4 +556,5 @@ __all__ = [
     "CensalReviewedOperand",
     "build_censal_operation_definition",
     "build_censal_operation_registration",
+    "build_censal_operation_request",
 ]

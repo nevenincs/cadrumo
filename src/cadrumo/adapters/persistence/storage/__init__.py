@@ -187,6 +187,7 @@ if TYPE_CHECKING:
         secure_object_namespace_logical_path,
     )
     from ._path_safety import safe_repository_id
+    from ._profile_login_session import build_profile_login_session_port
     from ._recovery_key import (
         RecoveryKey,
         decode_mnemonic,
@@ -554,6 +555,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "assert_corpus_clean": "....core.corpus_manifest",
     "bind_active_bucket_session": ".master_key",
     "build_corpus_manifest": "....core.corpus_manifest",
+    "build_profile_login_session_port": "._profile_login_session",
     "close_active_bucket_session": ".master_key",
     "close_all_live_bucket_sessions": ".master_key",
     "create_engine_from_settings": ".sql.engine",
@@ -842,6 +844,7 @@ __all__ = [
     "assert_corpus_clean",
     "bind_active_bucket_session",
     "build_corpus_manifest",
+    "build_profile_login_session_port",
     "close_active_bucket_session",
     "close_all_live_bucket_sessions",
     "create_engine_from_settings",

@@ -61,7 +61,7 @@ def _login(name: str):
     """Unlock ``name`` over the only channel `config login` still accepts.
 
     The passphrase is no longer resolvable from settings. The machine-secret
-    ADR rejects the environment fallback outright -- "CLI entrypoints never
+    boundary rejects the environment fallback outright -- "CLI entrypoints never
     resolve caller-supplied scalar secrets from environment, settings,
     keyrings, or an implicit adapter fallback" -- so the isolated backend
     configuring `cadrumo_secret_passphrase` no longer unlocks anything, and

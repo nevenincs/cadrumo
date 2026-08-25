@@ -12,8 +12,8 @@ paths so an operator does not retype what the authority already holds.
 :func:`reconcile_censal_read` splits the projection against what the
 record already carries — adopting only paths the operator left blank and
 reporting every disagreement instead of overwriting a declared answer —
-and :func:`apply_censal_read` commits the result through the single
-cotejo apply authority.
+and the canonical ``user-profile.censo-review`` operation commits its encrypted
+reviewed operand through the single cotejo apply authority.
 
 ``CENSO_SOURCE_TAG`` marks an AEAT-verified censo fact and the overview
 calendar reads it to decide whether censo enrolment is verified. It was
@@ -39,11 +39,9 @@ from ...core.logging import get_logger
 from ...domain.user_profile import UserProfileFact
 from ._censal_observation import CensalObservation, CensalObservationAddress
 from ._censo_errors import CensoSyncError
-from ._cotejo_apply import CensoDivergence, apply_cotejo
 
 if TYPE_CHECKING:
     from ...domain.user_profile import UserProfileRecord
-    from ..workflow import WorkflowState
     from ._profile_record_repository import ProfileRecordRepository
     from ._projections import EffectiveFact
 
@@ -369,38 +367,6 @@ def reconcile_censal_read(
     return CensalReconciliation(adopted=tuple(adopted), divergences=tuple(divergences))
 
 
-def apply_censal_read(state: WorkflowState, result: CensalObservation) -> WorkflowState:
-    """Commit a censal consulta read onto the active profile.
-
-    Routes through :func:`~cadrumo.application.user_profile.apply_cotejo`,
-    the single censal apply authority, so the commit emits exactly one
-    ``CENSO_APPLIED`` event and never opens a parallel write path.
-    Disagreements ride the same ``censo.divergencia`` namespace the
-    artefact cotejo uses, so an operator sees unadopted authority values
-    through one surface regardless of which transport produced them.
-
-    Args:
-        state: The workflow state carrying the active profile.
-        result: The parsed censal consulta read.
-
-    Returns:
-        The updated workflow state; the caller persists it.
-    """
-    reconciliation = reconcile_censal_read(
-        state.active_profile_record(),
-        censal_facts_from_read(result),
-        incoming_identity=result.identity.nif,
-    )
-    return apply_cotejo(
-        state,
-        adopted=reconciliation.adopted,
-        divergences=tuple(
-            CensoDivergence(axis=axis, artefact_value=value, source=CENSO_SOURCE_TAG)
-            for axis, value in reconciliation.divergences
-        ),
-    )
-
-
 class CensoSyncService:
     """Read-only censo-derived signals for the active profile bucket.
 
@@ -477,7 +443,6 @@ __all__ = [
     "CENSO_SOURCE_TAG",
     "CensalReconciliation",
     "CensoSyncService",
-    "apply_censal_read",
     "censal_facts_from_read",
     "reconcile_censal_read",
 ]

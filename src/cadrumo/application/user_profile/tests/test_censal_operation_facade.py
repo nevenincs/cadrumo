@@ -6,6 +6,7 @@ import importlib
 import subprocess
 import sys
 import textwrap
+from pathlib import Path
 from types import ModuleType
 
 import pytest
@@ -108,3 +109,25 @@ def test_importing_user_profile_keeps_censal_operation_lazy() -> None:
     )
 
     assert completed.returncode == 0, completed.stderr
+
+
+def test_censal_write_authority_is_not_redeclared_in_production() -> None:
+    """Anti-redeclaration gate: reviewed live apply has one exact owner."""
+
+    package_root = Path(__file__).resolve().parents[3]
+    sources = {
+        path.relative_to(package_root).as_posix(): path.read_text(encoding="utf-8")
+        for path in package_root.rglob("*.py")
+        if "tests" not in path.parts
+    }
+    assert all("apply_censal_read" not in source for source in sources.values())
+    callers = {
+        relative
+        for relative, source in sources.items()
+        if "apply_cotejo(" in source and not relative.endswith("user_profile/_cotejo_apply.py")
+    }
+    assert callers == {
+        "application/user_profile/_censal_operation.py",
+        "entrypoints/cli/_config/_censo_file.py",
+    }
+    assert "reviewed_proposal=operand" in sources["application/user_profile/_censal_operation.py"]

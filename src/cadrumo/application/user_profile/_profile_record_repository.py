@@ -27,10 +27,9 @@ from ._capsule_record import (
     ProfileRecordStore,
 )
 from ._custody_ports import (
-    profile_current_bucket_session,
     profile_custody_record_session_material,
-    profile_session_serves_bucket,
 )
+from ._login_session_port import profile_current_bucket_session, profile_session_serves_bucket
 
 _ACTIVE_RECORD_SESSION: ContextVar[ProfileRecordSession | None] = ContextVar(
     "active_profile_record_session", default=None
