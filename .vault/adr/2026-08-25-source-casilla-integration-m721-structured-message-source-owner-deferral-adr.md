@@ -5,20 +5,13 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:fe489b6382037f71d66104ab1000f01a27898a007e95bd2913edde04155023e9'
+body_hash: 'sha256:d1d4731ceb84453c1ff08ea9aa9b13a321008970288bca424bc8ff85487b3aaa'
 related:
   - "[[2026-08-25-source-casilla-integration-modelo-721-structured-message-source-grounding-research]]"
   - '[[2026-08-22-source-casilla-integration-adr]]'
 ---
 
 # `source-casilla-integration` adr: `m721 structured-message source owner deferral` | (**status:** `accepted`)
-
-<!-- DOCUMENT BOUNDARY:
-     This record owns the decision and only the decision. Grounding evidence
-     lives in the related research/reference documents and is cited by stem
-     (e.g. `2026-02-04-editor-demo-research`), never restated - a restated
-     fact forks and goes stale. A fact this record needs but the grounding
-     lacks is added to the grounding first, then cited. -->
 
 ## Problem Statement
 
