@@ -3,7 +3,8 @@
 import pytest
 
 from cadrumo.domain.deadlines import FiscalResidency, LegalEntityForm
-from dev.locales import get_registered_keys
+
+from .. import get_registered_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

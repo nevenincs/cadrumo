@@ -70,7 +70,8 @@ from typing import Final
 
 from cadrumo.core import iter_directory
 from cadrumo.core.logging import get_logger
-from dev._paths import UTF_8
+
+from .._paths import UTF_8
 
 _log = get_logger(__name__)
 _UTF_8: Final[str] = UTF_8

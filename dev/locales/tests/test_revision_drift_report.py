@@ -13,9 +13,9 @@ from __future__ import annotations
 
 import pytest
 
-from dev.locales import classify_revision_moves
-from dev.locales.cli import _echo_file_audit
-from dev.locales.manager import _audit_locale_file
+from .. import classify_revision_moves
+from ..cli import _echo_file_audit
+from ..manager import _audit_locale_file
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

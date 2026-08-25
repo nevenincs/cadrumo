@@ -230,7 +230,8 @@ def _reserved_token_offenders(flat_leaves: dict[str, str | None]) -> list[str]:
     either is permanently unfillable regardless of what a call site passes.
     """
     from cadrumo.core.i18n import extract_placeholders
-    from dev.locales import RESERVED_INTERPOLATION_TOKENS
+
+    from .. import RESERVED_INTERPOLATION_TOKENS
 
     return sorted(
         key
