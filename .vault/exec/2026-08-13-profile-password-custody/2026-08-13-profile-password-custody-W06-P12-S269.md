@@ -5,45 +5,11 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:c1dcca25b26f265a1be0fb72c53b8728b24d403be3a61312d4c0f8133f7e0988'
+body_hash: 'sha256:69d70cb5630546374a6f604f5fce84bd72da556d9832578b9d91ad2d27229a49'
 step_id: 'S269'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace profile-password-custody with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S269 and 2026-08-13-profile-password-custody-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Move the documentation sequence runner to the canonical relocated profile-capsule runtime helper and repair its ownership link without recreating the retired test facade and ## Scope
-
-- `dev/docs/sequences/_runner.py and cadrumo/adapters/persistence/storage/tests/profile_capsule_runtime.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Move the documentation sequence runner to the canonical relocated profile-capsule runtime helper and repair its ownership link without recreating the retired test facade
 
 ## Scope
@@ -52,10 +18,24 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Located the production capsule lifecycle and relocated runtime helper through Vaultspec RAG, then confirmed the retired runner reach and canonical defining symbol with exact source search.
+- Rewired the documentation sequence runner to import `publish_test_profile_capsule` from its canonical persistence test-runtime owner and corrected the public ownership link in the runner documentation.
+- Added a real regression that proves object identity with the canonical helper and opens an encrypted sequence sandbox whose deterministic profile capsule exists at the production bucket path.
+- Proved the retired facade is no longer reached and exercised the full main nitpicky build through initialization and complete output traversal.
 
 ## Outcome
 
+The sequence runner now composes the relocated capsule runtime directly. It does not redeclare the helper or restore an export on the retired `cadrumo.tests.profile_capsule` facade. A real sandbox publication passes, and the full documentation build advances through all sources and output instead of failing at `builder-inited`.
+
+Verification:
+
+- `uv run pytest -q -n 0 -m integration dev/docs/sequences/tests/test_runner.py::test_sandbox_publishes_through_canonical_capsule_runtime` - 1 passed in 42.50 seconds.
+- `uv run ruff check dev/docs/sequences/_runner.py dev/docs/sequences/tests/test_runner.py src/cadrumo/adapters/persistence/storage/tests/profile_capsule_runtime.py` - passed.
+- `uv run ty check dev/docs/sequences/_runner.py src/cadrumo/adapters/persistence/storage/tests/profile_capsule_runtime.py` - passed.
+- Canonical import identity and retired-facade search gate - passed.
+- `uv run pytest -q -n 0 -m unit dev/docs/tests/test_docs_build_full_scope.py` - initialization and full traversal succeeded; terminal result remains red with 70 S268-owned nitpicky warnings after 664.54 seconds, with no capsule import or sequence-runner failure.
+- Formal read-only review - APPROVE with no findings at any severity; the reviewer confirmed canonical ownership, real encrypted publication, and no wrapper, alias, redeclaration, or bypass.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+The first exact pytest invocation inherited the repository unit-only marker expression and honestly deselected the integration test; it was rerun with `-m integration`. Whole-file ty reports existing diagnostics in unrelated portions of `test_runner.py`; the changed implementation paths are clean, and the new test is runtime-proven. The shared worktree contained concurrent S268 documentation work and peer source/plan work; this step's commit is restricted to its explicit runner, regression, plan row if still uncommitted, execution record, and generated profile-password-custody index if changed by the owning CLI.

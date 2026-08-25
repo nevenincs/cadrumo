@@ -90,6 +90,20 @@ def _profile_seed_sequence(
     )
 
 
+def test_sandbox_publishes_through_canonical_capsule_runtime(tmp_path: Path) -> None:
+    """The docs runner must consume the relocated capsule owner, never its retired facade."""
+    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+        publish_test_profile_capsule as canonical_publish,
+    )
+
+    from .. import _runner
+
+    assert _runner.publish_test_profile_capsule is canonical_publish
+    with sequence_sandbox(sequence_id="canonical-capsule-runtime", sandbox_root=tmp_path / "scope") as sandbox:
+        assert sandbox.profile_id == SANDBOX_PROFILE_ID
+        assert (sandbox.storage_root / "buckets" / SANDBOX_PROFILE_ID).is_dir()
+
+
 def test_logout_then_delete_uses_durable_pointer_not_the_sandbox_override(tmp_path: Path) -> None:
     """The exact delete leaf can remove only the logged-out synthetic profile."""
     sequence = _result_sequence(

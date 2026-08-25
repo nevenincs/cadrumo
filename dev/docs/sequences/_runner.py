@@ -6,7 +6,8 @@ isolation: a fresh real-crypto storage root (:func:`isolated_profile_storage_roo
 backend), the project-wide frozen instant :data:`SANDBOX_INSTANT`
 (:func:`cadrumo.core.time.frozen_clock`), a deterministic injected profile
 identity :data:`SANDBOX_PROFILE_ID` published through the canonical capsule
-writer (:func:`~cadrumo.tests.profile_capsule.publish_test_profile_capsule`,
+writer
+(:func:`~cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime.publish_test_profile_capsule`,
 with facts merged by
 :func:`~cadrumo.tests.profile_capsule.upsert_test_profile_facts` inside
 :func:`~cadrumo.tests.profile_capsule.open_test_profile_session` — never a
@@ -71,6 +72,7 @@ from click.testing import Result
 from pydantic import BaseModel, Field, JsonValue
 
 from cadrumo.adapters.persistence.storage import close_active_bucket_session, dispose_engine
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import publish_test_profile_capsule
 from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.config import load_settings, override_settings
@@ -80,7 +82,6 @@ from cadrumo.tests.cli_runner import invoke_cached_cli, semantic_cli_text
 from cadrumo.tests.profile_capsule import (
     bound_test_profile_record,
     open_test_profile_session,
-    publish_test_profile_capsule,
     upsert_test_profile_facts,
 )
 from cadrumo.tests.profile_persistence import composed_profile_persistence_ports
