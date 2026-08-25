@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-25'
-body_hash: 'sha256:6823579d74d46ea96ed8d0b278675d699a92d1580ddbeead6f56e910126cfb83'
+body_hash: 'sha256:8df2c07f0ef1980211fe2e93ab068e77715cc87f8acd65fe9d8e19c17f2afeab'
 ---
 
 # `tui-architecture` plan
@@ -311,8 +311,8 @@ Replace every CLI, application-test, and development import of the legacy TUI wi
 - [x] `W06.P14.S80` - Replace profile-bundle TUI imports with application flow and operation facades; `src/cadrumo/entrypoints/cli/_config/_profile_bundle_flow.py`.
 - [ ] `W06.P14.S81` - Replace descendant wizard TUI imports with frontend-neutral application flow contracts; `src/cadrumo/entrypoints/cli/_config/_descendiente.py`.
 - [ ] `W06.P14.S82` - Replace representative wizard TUI imports with frontend-neutral application flow contracts; `src/cadrumo/entrypoints/cli/_config/_apoderado.py`.
-- [ ] `W06.P14.S83` - Remove work-wizard imports of TUI internals while preserving line-mode and installed-TUI selection semantics; `src/cadrumo/entrypoints/cli/_modelo_work_wizard_cli.py`.
-- [ ] `W06.P14.S84` - Remove amendment-wizard imports of TUI internals while preserving line-mode and installed-TUI selection semantics; `src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py`.
+- [x] `W06.P14.S83` - Remove work-wizard imports of TUI internals while preserving line-mode and installed-TUI selection semantics; `src/cadrumo/entrypoints/cli/_modelo_work_wizard_cli.py`.
+- [x] `W06.P14.S84` - Remove amendment-wizard imports of TUI internals while preserving line-mode and installed-TUI selection semantics; `src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py`.
 - [x] `W06.P14.S85` - Replace application flow parity dependencies on TUI modules with backend contract assertions; `src/cadrumo/application/flows/tests/test_frontend_parity.py`.
 - [x] `W06.P14.S86` - Move the manager pilot behind the TUI devtools facade or installed out-of-process boundary; `src/cadrumo/tests/manager_pilot.py`.
 - [x] `W06.P14.S87` - Move remaining development TUI launchers and surface checks beneath the canonical TUI devtools package; `dev/tui`.
