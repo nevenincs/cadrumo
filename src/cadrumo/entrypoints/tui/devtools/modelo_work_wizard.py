@@ -28,6 +28,7 @@ if TYPE_CHECKING:
 _MODELO = "130"
 _FILING_YEAR = 2025
 _PERIOD_CODE = "1T"
+_PROFILE_LABEL = "Modelo Work Wizard fixture"
 _MODEL_WORK_PROFILE_FACTS = (
     UserProfileFact(path="preferences.output_language", value="es"),
     UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
@@ -53,24 +54,23 @@ _ACTIVE_WIZARD: ContextVar[ModeloWorkWizardRun | None] = ContextVar("active_mode
 def _ensure_modelo_work_profile() -> str:
     """Return an unlocked harness profile with the full M130 readiness facts."""
     from ....application.user_profile import login_profile, register_profile_with_credentials
-    from ....application.user_profile.manager_projection import persist_active_profile_manager_field
     from ....application.workflow import list_profile_buckets
 
-    profiles = list_profile_buckets()
-    if profiles:
-        bucket_id = next(iter(profiles))
+    existing = next(
+        (pointer for pointer in list_profile_buckets().values() if pointer.label == _PROFILE_LABEL),
+        None,
+    )
+    if existing is not None:
+        bucket_id = existing.bucket_id
         login_profile(name=bucket_id, passphrase_callback=lambda *_args, **_kwargs: passphrase())
     else:
         outcome = register_profile_with_credentials(
-            label="Modelo Work Wizard",
+            label=_PROFILE_LABEL,
             passphrase=passphrase(),
             facts=_MODEL_WORK_PROFILE_FACTS,
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         )
         bucket_id = outcome.bucket_id
-    for fact in _MODEL_WORK_PROFILE_FACTS:
-        value = str(fact.value).lower() if isinstance(fact.value, bool) else str(fact.value)
-        persist_active_profile_manager_field(fact.path, value)
     return bucket_id
 
 

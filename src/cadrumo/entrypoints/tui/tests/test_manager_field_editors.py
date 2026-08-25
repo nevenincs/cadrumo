@@ -26,11 +26,11 @@ from ....application.user_profile import (
     login_profile,
     register_profile_with_credentials,
 )
-from ....application.user_profile.manager_projection import (
-    persist_active_profile_manager_field,
-    profile_manager_field_value_refusal,
-)
 from ....core import require_active_bucket_id
+from ....entrypoints.cli import (
+    persist_active_profile_field,
+    profile_field_value_refusal,
+)
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..profile.overview import FieldEditScreen, ProfileManagerApp
@@ -90,7 +90,7 @@ def _live_overview():
 def _persist(path: str, value: str):
     """The production write door, so an edit here travels the real path."""
     _ensure_logged_in()
-    return persist_active_profile_manager_field(path, value, label=_LABEL)
+    return persist_active_profile_field(path, value, label=_LABEL)
 
 
 def _stored() -> dict[str, object | None]:
@@ -108,7 +108,7 @@ def _manager() -> ProfileManagerApp:
     return ProfileManagerApp(
         _live_overview(),
         persist=_persist,
-        validate=profile_manager_field_value_refusal,
+        validate=profile_field_value_refusal,
     )
 
 
@@ -364,7 +364,7 @@ def test_the_dialog_judge_agrees_with_the_write_door() -> None:
     for path, value in cases:
         declared = schema.field(section_field_key(path))
         door_refuses = profile_value_refusal(declared, UserProfileFact(path=path, value=value).value) is not None
-        dialog_refuses = profile_manager_field_value_refusal(path, value) is not None
+        dialog_refuses = profile_field_value_refusal(path, value) is not None
         assert dialog_refuses is door_refuses, f"the two judges disagree about {value!r} at {path}"
 
 
@@ -393,6 +393,6 @@ def test_every_refusal_kind_reaches_the_operator_as_words() -> None:
         "every refusal kind the rule can return must have a case here, or a kind ships unworded"
     )
     for kind, (path, value) in by_kind.items():
-        sentence = profile_manager_field_value_refusal(path, value)
+        sentence = profile_field_value_refusal(path, value)
         assert sentence, f"{kind} produced no words for {value!r} at {path}"
         assert value in sentence, f"{kind} must quote back the refused value"

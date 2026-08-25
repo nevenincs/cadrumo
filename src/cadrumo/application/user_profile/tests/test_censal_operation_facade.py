@@ -157,6 +157,7 @@ def test_censal_write_authority_is_not_redeclared_in_production() -> None:
     frontend_functions = {
         "entrypoints/_censal_review.py": "_run",
         "entrypoints/cli/_config/_censo_file.py": "censo_pull",
+        "entrypoints/cli/_config/_manager_actions.py": "_run_censal_pull",
     }
     for relative, function_name in frontend_functions.items():
         function = next(

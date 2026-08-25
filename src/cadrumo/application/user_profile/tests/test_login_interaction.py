@@ -6,7 +6,8 @@ import pytest
 
 from ....domain.user_profile import ProfileNotFoundError
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import logout_active_profile, register_profile_with_credentials
+from .. import login_interaction, logout_active_profile, register_profile_with_credentials
+from .._registration import ProfileRegistrationError
 from ..login_interaction import (
     ProfileLoginAttempt,
     ProfileLoginChoice,
@@ -74,3 +75,16 @@ def test_attempt_returns_the_real_login_outcome_after_unlocking(tmp_path) -> Non
         assert attempt.refusal is None
         assert attempt.outcome is not None
         assert attempt.outcome.bucket_id == profile_id
+
+
+def test_attempt_propagates_an_unrelated_application_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Only the enrolled authentication refusal family becomes interaction data."""
+    unexpected = ProfileRegistrationError("unrelated defect")
+
+    def _refuse(**_kwargs: object) -> None:
+        raise unexpected
+
+    monkeypatch.setattr(login_interaction, "login_profile", _refuse)
+
+    with pytest.raises(ProfileRegistrationError, match="unrelated defect"):
+        attempt_profile_login("profile-id", _PASSWORD)

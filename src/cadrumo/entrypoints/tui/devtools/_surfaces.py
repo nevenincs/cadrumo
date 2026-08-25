@@ -71,17 +71,44 @@ def _login() -> App[Any]:
 
 
 def _manager() -> App[Any]:
-    from cadrumo.application.user_profile.manager_projection import (
-        open_active_profile_manager_projection,
-        profile_manager_field_value_refusal,
+    from cadrumo.application.operations import ManagerAction, ManagerActionOutcome
+    from cadrumo.application.user_profile import (
+        CommittedProfileRepository,
+        ProfileRecordRepository,
+        apply_manager_profile_field_mutation,
+        build_profile_overview,
+        logout_active_profile,
     )
+    from cadrumo.core import require_active_bucket_id
+    from cadrumo.core.i18n import tr
     from cadrumo.entrypoints.tui.profile.overview import ProfileManagerApp
 
-    manager = open_active_profile_manager_projection()
+    profile_id = require_active_bucket_id()
+    profiles = ProfileRecordRepository.for_current_session(profile_id)
+    label = CommittedProfileRepository().load(profile_id).label
+
+    def _overview():
+        return build_profile_overview(profiles.load(profile_id), label=label)
+
+    def _persist(path: str, value: str):
+        record = apply_manager_profile_field_mutation(profile_id=profile_id, path=path, value=value)
+        return build_profile_overview(record, label=label)
+
+    def _logout() -> ManagerActionOutcome:
+        logout_active_profile()
+        return ManagerActionOutcome(message=tr("flows.manager.action.logout_done"), close_session=True)
+
     return ProfileManagerApp(
-        manager.inspect(),
-        persist=manager.replace_field,
-        validate=profile_manager_field_value_refusal,
+        _overview(),
+        persist=_persist,
+        actions=(
+            ManagerAction(
+                key="logout",
+                label=tr("flows.manager.action.logout"),
+                label_key="flows.manager.action.logout",
+                run=_logout,
+            ),
+        ),
     )
 
 

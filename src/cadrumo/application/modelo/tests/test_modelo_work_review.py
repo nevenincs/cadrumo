@@ -9,7 +9,13 @@ from pydantic import ValidationError
 
 from ....core import BindingSourceKind, ModeloWorkProgressState, Period
 from ....domain.calculations import RowSourceIdentity
-from ....domain.calculations.registry import CasillaObservation, InputKind, bundled_authority, revision_date_binding_ids
+from ....domain.calculations.registry import (
+    CasillaObservation,
+    InputKind,
+    bundled_authority,
+    revision_date_binding_ids,
+    select_revision,
+)
 from ....domain.filing import ModeloValueKind
 from ....domain.modelos import (
     CalculationRevision,
@@ -65,15 +71,19 @@ def _persist_work_unit(
 ) -> WorkUnit:
     work_repo, _, _, _, _ = repos
     period = Period.from_year_and_code(filing_year, period_code)
-    revision_id = (
-        bundled_authority()
-        .snapshot(
-            modelo,
-            filing_year=filing_year,
-            period=period.registry_token,
-        )
-        .revision.id
+    authority = bundled_authority()
+    selected_revision = select_revision(
+        authority.validate_modelo(modelo),
+        filing_year=filing_year,
+        period=period.registry_token,
     )
+    revision_id = authority.snapshot(
+        modelo,
+        filing_year=filing_year,
+        period=period.registry_token,
+        revision_id=selected_revision.id,
+        grade=selected_revision.effective_authority_grade,
+    ).revision.id
     unit = WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
