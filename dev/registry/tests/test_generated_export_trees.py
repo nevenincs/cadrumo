@@ -12,8 +12,8 @@ cannot say the tree is a VALID registry authority -- and it let trees be written
 without the pre-cutover proof that the generator already owned.
 
 Each generated modelo is enrolled as a row in :data:`_GENERATED_TREES`. Modelo 303
-and 390 are deliberately absent: they are held by an in-flight campaign that owns
-their maps and profiles.
+and 390 are deliberately absent: their maps and profiles remain under a separate
+owner until they are ready for this generated authority.
 """
 
 from __future__ import annotations
@@ -307,7 +307,8 @@ _CHECK_MODE_PENDING: dict[str, str] = {
     # Both 151 revisions resolve every enrolled family and validate through the
     # real authority, so what is left is the reviewer stamp -- the same wall
     # m210, m322 and m353 sit behind. Worth noting for whoever reviews them: the
-    # 2015-2022 layout was a hand transcription until this campaign, and it was
+    # 2015-2022 layout was a hand transcription before the generated tree became
+    # authoritative, and it was
     # two positions SHORT of AEAT's own envelope, omitting the AUX block's
     # programa and NIF-desarrollo fields. The generated tree carries both.
 }

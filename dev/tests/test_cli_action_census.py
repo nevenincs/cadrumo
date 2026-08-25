@@ -36,7 +36,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 @pytest.fixture(scope="module")
 def records() -> tuple[CandidateRecord, ...]:
-    """Read the live production tree once for the S46 closure assertions."""
+    """Read the live production tree once for the closure assertions."""
     return current_census()
 
 
@@ -149,7 +149,7 @@ def test_current_tree_census_fails_closed_on_absent_or_invalid_production_source
 
 
 def test_current_tree_action_alias_pass_has_no_unadjudicated_live_aliases_and_detects_mutation(tmp_path) -> None:
-    """The S46 live pass catches a new field fed directly from a typed action."""
+    """The live pass catches a new field fed directly from a typed action."""
     assert current_action_alias_discoveries(aliases=frozenset({"next_action"})) == ()
 
     source = tmp_path / "src/cadrumo/demo.py"

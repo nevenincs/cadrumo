@@ -522,7 +522,7 @@ def test_production_string_literals_cite_live_commands() -> None:
 def _precondition_observed_from_live_profile(
     coverage: LeafConditionScenario,
 ) -> ObservedProductionActionAssertion:
-    """Build an application verdict from one S42 row, then observe it through S43.
+    """Build an application verdict from one live profile row, then observe it through the action boundary.
 
     The builder resolves the registered modelo profile itself.  Argument names
     come from the resolved catalogue declaration, so this gate contains no
@@ -554,7 +554,7 @@ def _assert_complete_bijective_observation_join(
     matrix: tuple[LeafConditionScenario, ...],
     observations: tuple[ObservedProductionActionAssertion, ...],
 ) -> None:
-    """Require the S42 declaration set and observed S43/S44 identities to match exactly."""
+    """Require the declaration set and observed identities to match exactly."""
     declared = {coverage.identity for coverage in matrix}
     observed = tuple(assertion.leaf_condition_scenario for assertion in observations)
     duplicate_observations = sorted(identity for identity in set(observed) if observed.count(identity) > 1)
@@ -567,11 +567,11 @@ def _assert_complete_bijective_observation_join(
 
 
 def test_live_action_declarations_and_observations_join_bidirectionally() -> None:
-    """Every S42 declaration has one successful S43 observation, and no extras survive."""
+    """Every declaration has one successful observation, and no extras survive."""
     matrix = production_leaf_condition_scenario_matrix().rows
     observations = tuple(_precondition_observed_from_live_profile(coverage) for coverage in matrix)
 
-    assert matrix, "the S42 production leaf-condition matrix is unexpectedly empty"
+    assert matrix, "the production leaf-condition matrix is unexpectedly empty"
     assert all(assertion.passed for assertion in observations)
     _assert_complete_bijective_observation_join(matrix, observations)
 
@@ -602,7 +602,7 @@ def test_live_action_observation_join_rejects_missing_duplicate_and_undeclared_r
 def test_s44_runner_observes_every_live_no_recovery_outcome_without_dispatch(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """S44 consumes S42/S43's live observation for terminal outcomes without inferring recovery."""
+    """The runner observes every live no-recovery outcome without inferring recovery."""
     from cadrumo.application.modelo._preconditions import build_modelo_precondition_failure_for_scenario
 
     def fail_on_dispatch(*_args: object, **_kwargs: object) -> None:

@@ -1,10 +1,10 @@
 """Code-only closure gate for live authored and operator-action coverage.
 
-This gate composes the production authorities already exercised by S120, S42,
-S45, and S46.  It intentionally reads neither process-history artefacts nor
-human planning records: all inputs are the current source tree, the canonical
-action catalogue, the resolved live operator surface, and the checked-in
-disposition ledger.
+This gate composes the production authorities for authored actions, live
+precondition observations, and CLI action-census closure.  It intentionally reads
+neither process-history artefacts nor human planning records: all inputs are the
+current source tree, the canonical action catalogue, the resolved live operator
+surface, and the checked-in disposition ledger.
 """
 
 from __future__ import annotations
@@ -48,7 +48,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 @dataclass(frozen=True, slots=True)
 class _LiveClosureInputs:
-    """The source-derived inputs consumed by the one S47 closure assertion."""
+    """The source-derived inputs consumed by the closure assertion."""
 
     dispositions: tuple[CandidateDisposition, ...]
     authored_join: AuthoredErrorMessageJoin
@@ -124,7 +124,7 @@ def _assert_complete_observation_proofs(
     matrix: tuple[LeafConditionScenario, ...],
     observations: tuple[ObservedProductionActionAssertion, ...],
 ) -> None:
-    """Require exactly one successful S43/S45 observation per live S42 row."""
+    """Require exactly one successful observation per live declaration."""
     declared = tuple(coverage.identity for coverage in matrix)
     observed = tuple(assertion.leaf_condition_scenario for assertion in observations)
 
@@ -245,7 +245,7 @@ def test_action_coverage_closure_rejects_unresolved_action_and_insufficient_bind
 def test_action_coverage_closure_rejects_a_missing_production_observation_proof(
     live_closure_inputs: _LiveClosureInputs,
 ) -> None:
-    """The S45 bijection fails if any resolved production profile lacks an observation."""
+    """The bijection fails if any resolved production profile lacks an observation."""
     matrix = leaf_condition_scenario_matrix(live_closure_inputs.resolution).rows
 
     with pytest.raises(AssertionError, match="production observation proof mismatch"):
