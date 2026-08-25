@@ -117,9 +117,14 @@ def test_secure_request_cannot_carry_caller_supplied_secret_inputs() -> None:
 
     assert "draft" not in type(request).model_fields
     assert "producer_snapshot" not in type(request).model_fields
+    assert "source_pinned_probe_expectations" not in type(request).model_fields
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
         FilingExportSecureReplayRequest.model_validate(
             {**request.model_dump(), "draft": _approved_modelo_111_registry_draft()},
+        )
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+        FilingExportSecureReplayRequest.model_validate(
+            {**request.model_dump(), "source_pinned_probe_expectations": ()},
         )
 
 

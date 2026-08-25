@@ -236,6 +236,21 @@ class FilingExportSecureReplayRequest(BaseModel):
     custody_authority_id: _Token
 
 
+class FilingExportSourcePinnedProbeExpectation(BaseModel):
+    """Source-owned expected bytes for one official replay probe span."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    probe: FilingExportOfficialProbe
+    expected_bytes: bytes = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _require_exact_probe_extent(self) -> FilingExportSourcePinnedProbeExpectation:
+        if len(self.expected_bytes) != self.probe.length:
+            raise ValueError("source-pinned expected bytes must exactly fill the declared probe span")
+        return self
+
+
 class FilingExportSecureReplayEvidence(BaseModel):
     """Secret-bearing source-owned replay evidence, never a public receipt."""
 
@@ -250,6 +265,7 @@ class FilingExportSecureReplayEvidence(BaseModel):
     draft: ModeloDraft
     producer_snapshot: FilingProducerSnapshot
     provenance: FilingExportPublicProvenance
+    source_pinned_probe_expectations: tuple[FilingExportSourcePinnedProbeExpectation, ...] = Field(min_length=1)
     dictionary_values: tuple[FilingExportDictionaryValue, ...] = ()
     prior_domiciliation_election: PriorDomiciliationElection | None = None
     product_software_identity: AeatProductSoftwareIdentity | None = None
@@ -264,6 +280,9 @@ class FilingExportSecureReplayEvidence(BaseModel):
             period=self.draft.period,
         )
         _require_unique_dictionary_fields(self.dictionary_values)
+        expected_probes = tuple(expectation.probe for expectation in self.source_pinned_probe_expectations)
+        if expected_probes != self.provenance.probes:
+            raise ValueError("source-owned replay expectations must exactly cover the declared provenance probes")
         return self
 
 
@@ -690,6 +709,7 @@ __all__ = [
     "FilingExportSecureReplayReceipt",
     "FilingExportSecureReplayRequest",
     "FilingExportSecureReplaySourceAuthority",
+    "FilingExportSourcePinnedProbeExpectation",
     "prove_export_conformance",
     "prove_secure_export_replay",
 ]

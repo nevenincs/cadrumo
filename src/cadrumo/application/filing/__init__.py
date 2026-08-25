@@ -248,6 +248,7 @@ from ._export_proof import (
     FilingExportSecureReplayReceipt,
     FilingExportSecureReplayRequest,
     FilingExportSecureReplaySourceAuthority,
+    FilingExportSourcePinnedProbeExpectation,
     prove_export_conformance,
     prove_secure_export_replay,
 )
@@ -1263,6 +1264,7 @@ __all__ = [
     "FilingExportSecureReplayReceipt",
     "FilingExportSecureReplayRequest",
     "FilingExportSecureReplaySourceAuthority",
+    "FilingExportSourcePinnedProbeExpectation",
     "FilingExportValidatedPayload",
     "FilingModelProfileFacts",
     "FilingProducerSnapshot",

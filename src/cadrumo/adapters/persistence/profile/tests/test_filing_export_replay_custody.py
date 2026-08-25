@@ -14,7 +14,12 @@ from uuid import UUID
 import pytest
 from sqlalchemy import select
 
-from .....application.filing import FilingExportProofCoordinate, FilingExportSecureCustodyRecord
+from .....application.filing import (
+    FilingExportOfficialProbe,
+    FilingExportProofCoordinate,
+    FilingExportSecureCustodyRecord,
+    FilingExportSourcePinnedProbeExpectation,
+)
 from .....tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
@@ -22,7 +27,7 @@ from .....tests.secure_sql import (
 )
 from ...storage import FILING_EXPORT_REPLAY_PROOFS_NAMESPACE, SecureObjectRowIdentityError
 from ...storage.sql import SecureObjectRow
-from ..filing_export_replay import FilingExportReplayCustodyRepository
+from ..filing_export_replay import FilingExportReplayCustodyRepository, _require_source_pinned_probe_bytes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -102,3 +107,21 @@ def test_replay_custody_refuses_encrypted_receipt_identity_substitution(tmp_path
 
         with pytest.raises(SecureObjectRowIdentityError):
             repository.load(str(_RECEIPT_A))
+
+
+def test_replay_custody_refuses_same_length_wrong_probe_bytes() -> None:
+    expectation = FilingExportSourcePinnedProbeExpectation(
+        probe=FilingExportOfficialProbe(
+            record_id="official-record",
+            field_id="official-literal",
+            emitted_offset=2,
+            length=3,
+        ),
+        expected_bytes=b"ABC",
+    )
+
+    with pytest.raises(ValueError, match="disagrees with source-pinned expected bytes"):
+        _require_source_pinned_probe_bytes(
+            expectations=(expectation,),
+            payload=b"00ABD99",
+        )

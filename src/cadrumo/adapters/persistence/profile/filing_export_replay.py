@@ -10,6 +10,7 @@ from ....application.filing import (
     FilingExportSecureCustodyRecord,
     FilingExportSecureReplayEvidence,
     FilingExportSecureReplayRequest,
+    FilingExportSourcePinnedProbeExpectation,
     FilingExportValidatedPayload,
 )
 from ....core import sha256_hex
@@ -62,10 +63,10 @@ class FilingExportReplayCustodyRepository(SecureBoundRepository[FilingExportSecu
             or payload.period != evidence.draft.period
         ):
             raise ValueError("secure replay payload conflicts with source-owned evidence")
-        for probe in evidence.provenance.probes:
-            end = probe.emitted_offset + probe.length
-            if end > len(payload.payload):
-                raise ValueError("secure replay source-pinned probe falls outside emitted bytes")
+        _require_source_pinned_probe_bytes(
+            expectations=evidence.source_pinned_probe_expectations,
+            payload=payload.payload,
+        )
         attested_at = now()
         record = FilingExportSecureCustodyRecord(
             receipt_id=uuid4(),
@@ -94,6 +95,21 @@ class FilingExportReplayCustodyRepository(SecureBoundRepository[FilingExportSecu
         if reloaded != record:
             raise ValueError("encrypted replay custody did not round-trip its exact internal receipt")
         return record
+
+
+def _require_source_pinned_probe_bytes(
+    *,
+    expectations: tuple[FilingExportSourcePinnedProbeExpectation, ...],
+    payload: bytes,
+) -> None:
+    """Refuse any replay whose bytes differ from source-owned expectations."""
+    for expectation in expectations:
+        probe = expectation.probe
+        end = probe.emitted_offset + probe.length
+        if end > len(payload):
+            raise ValueError("secure replay source-pinned probe falls outside emitted bytes")
+        if payload[probe.emitted_offset:end] != expectation.expected_bytes:
+            raise ValueError("secure replay payload disagrees with source-pinned expected bytes")
 
 
 __all__ = ["FilingExportReplayCustodyRepository"]
