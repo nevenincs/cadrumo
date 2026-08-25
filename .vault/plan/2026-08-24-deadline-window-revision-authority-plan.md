@@ -3,8 +3,6 @@ tags:
   - '#plan'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
-modified: '2026-08-25'
-body_hash: 'sha256:d052747e042e2f7af45368af262ad773165f2944a1f64cf324bab21b17efd4e0'
 tier: L3
 related:
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
@@ -14,6 +12,8 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
+modified: '2026-08-25'
+body_hash: 'sha256:e46e290fb7c8625b1c84723650861f8c6f19304e645469de5562f634ea895e72'
 ---
 
 <!-- RETIRED: P06, P07, P09 -->
@@ -159,6 +159,7 @@ Close against fleet invariants, source evidence, repository rules, and architect
 - [x] `W04.P13.S47` - Restore canonical formatting on the shared registry authority after concurrent capture work introduced mixed line endings, then rerun focused authority Ruff, format, and deadline ownership tests without changing behavior; `src/cadrumo/domain/calculations/registry/_authority.py, src/cadrumo/domain/calculations/registry/tests/`.
 - [x] `W04.P13.S48` - Restore canonical formatting on the M210 claimed-year design-axis proof introduced by S46, preserving its generalized mutation-bite semantics; `src/cadrumo/domain/calculations/registry/tests/test_layout_design_applies_to_claimed_years.py`.
 - [x] `W04.P13.S49` - Restore canonical formatting after the concurrent authority-reset fix landed unformatted on the registry authority and its native-capture proof, preserving reset linearization behavior; `src/cadrumo/domain/calculations/registry/_authority.py, src/cadrumo/domain/calculations/registry/tests/test_authority_native_capture.py`.
+- [x] `W04.P13.S50` - Restore real CLI calendar parity for canonical filing evidence and locked-profile rendering after concurrent projection changes, keeping the CLI a thin consumer of overview and registry deadline authority; `src/cadrumo/entrypoints/cli/, src/cadrumo/application/overview/, src/cadrumo/entrypoints/cli/tests/test_overview_calendar_verb.py`.
 
 ## Parallelization
 

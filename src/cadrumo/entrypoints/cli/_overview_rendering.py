@@ -64,8 +64,8 @@ from ._common import resolve_notice_action
 from ._overview_payloads import (
     OverviewAgendaResult,
     OverviewBacklogResult,
-    OverviewCalendarEntrySummaryPayload,
-    OverviewCalendarEventSummaryPayload,
+    OverviewCalendarEntryPayload,
+    OverviewCalendarEventPayload,
     OverviewCalendarResult,
     OverviewExplainResult,
     OverviewPipelineModeloPayload,
@@ -474,40 +474,16 @@ def overview_calendar_output(
 ) -> tuple[OverviewCalendarResult, list[str], list[Notice]]:
     """Project one active-profile calendar into payload, text lines, and notices."""
     entries = [
-        OverviewCalendarEntrySummaryPayload(
-            modelo=entry.modelo,
-            period=str(entry.period),
-            adjusted_closes_on=entry.adjusted_closes_on.isoformat(),
-            payment_cutoff_on=(entry.payment_cutoff_on.isoformat() if entry.payment_cutoff_on is not None else None),
-            status=entry.status,
-            user_state=entry.user_state.value,
-            recovery=_recovery_payload(entry),
-            censo_enrolment_state=entry.censo_enrolment_state.value,
-            local_work_unit_id=entry.local_work_unit_id,
-            local_work_unit_name=entry.local_work_unit_name,
-            local_work_unit_revision_id=entry.local_work_unit_revision_id,
-            local_filing_state=entry.filing_evidence.local_filing_state.value,
-            aeat_submission_state=entry.filing_evidence.aeat_submission_state.value,
-            justificante_required=entry.filing_evidence.justificante_required,
-            justificante_verified=entry.filing_evidence.justificante_verified,
+        OverviewCalendarEntryPayload.model_validate(
+            {
+                **entry.model_dump(mode="json"),
+                "recovery": _recovery_payload(entry),
+            },
         ).model_dump(mode="json")
         for entry in cal.entries
     ]
     events = [
-        OverviewCalendarEventSummaryPayload(
-            event_type=event.event_type.value,
-            event_date=event.event_date.isoformat(),
-            summary=event.summary,
-            reference_id=event.reference_id,
-            modelo=event.modelo,
-            period=str(event.period) if event.period is not None else None,
-            status=event.status,
-            notificacion_estado_servicio=event.notificacion_estado_servicio,
-            aeat_submission_state=(
-                event.aeat_submission_state.value if event.aeat_submission_state is not None else None
-            ),
-            justificante_verified=event.justificante_verified,
-        ).model_dump(mode="json")
+        OverviewCalendarEventPayload.model_validate(event.model_dump(mode="json")).model_dump(mode="json")
         for event in cal.events
     ]
     typed_cal = OverviewCalendarResult.model_validate_json(
@@ -516,7 +492,13 @@ def overview_calendar_output(
                 "range": cal.range.model_dump(mode="json"),
                 "entries": entries,
                 "events": events,
-                "warnings": [warning.model_dump(mode="json") for warning in cal.warnings],
+                "warnings": [
+                    {
+                        **warning.model_dump(mode="json"),
+                        "fix_action": _resolved_action(warning.fix_action).model_dump(mode="json"),
+                    }
+                    for warning in cal.warnings
+                ],
                 "generated_at": cal.generated_at.isoformat(),
                 "completeness": cal.completeness.model_dump(mode="json"),
                 "taxpayer_model_declared": cal.taxpayer_model_declared,

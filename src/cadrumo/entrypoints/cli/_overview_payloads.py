@@ -226,17 +226,15 @@ class OverviewCalendarWarningPayload(OutputSchema):
     application row so consumers can show which obligations may depend on the
     remedy.
 
-    The remedy is deliberately absent from this row. Every calendar warning
-    reaches the operator as an envelope ``Notice`` carrying its schema-resolved
-    action, and that notice is what the text surface renders its executable
-    line from. Restating the remedy here would be a second copy of operator
-    guidance inside ``result`` - the shape the envelope contract reserves for
-    the notice channel, and the shape a ``fix_command`` field once had.
+    ``fix_action`` is the same schema-resolved action carried by the envelope
+    notice. The CLI resolves the application's declaration once through the
+    command catalogue and reuses that value; it does not reconstruct guidance.
     """
 
     code: str
     message: str
     affected_modelos: list[str] = []
+    fix_action: ResolvedNoticeAction
 
 
 class OverviewCalendarRangePayload(OutputSchema):
@@ -373,50 +371,6 @@ class OverviewCalendarProfilePayload(OutputSchema):
     next_due_closes_on: str | None = None
 
 
-class OverviewCalendarEntrySummaryPayload(OutputSchema):
-    """Actionable deadline summary returned by ``overview calendar``.
-
-    The calendar is computed from the caller's clock and therefore cannot
-    honestly thin rows behind a later read.  This projection instead keeps the
-    deadline, recovery, local-work and filing-state facts needed to decide the
-    next action while omitting duplicated evidence identity and provenance
-    metadata available on the filing and live-record surfaces.
-    """
-
-    modelo: str
-    period: str
-    adjusted_closes_on: str
-    payment_cutoff_on: str | None = None
-    status: str
-    user_state: Literal["due", "late", "filed", "unknown"]
-    recovery: OverviewRecoveryPayload | None = None
-    censo_enrolment_state: Literal["not_checked", "not_required", "unverified", "verified"]
-    local_work_unit_id: WorkUnitId | None = None
-    local_work_unit_name: str | None = None
-    local_work_unit_revision_id: RevisionId | None = None
-    local_filing_state: Literal["not_ready_to_file", "ready_to_file", "external_baseline_imported"]
-    aeat_submission_state: Literal["not_observed", "submitted_observed", "accepted", "justificante_verified"]
-    justificante_required: bool
-    justificante_verified: bool
-
-
-class OverviewCalendarEventSummaryPayload(OutputSchema):
-    """Compact additive event summary for a clock-derived calendar result."""
-
-    event_type: Literal["filing", "message"]
-    event_date: str
-    summary: str
-    reference_id: str
-    modelo: str | None = None
-    period: str | None = None
-    status: str | None = None
-    notificacion_estado_servicio: str | None = None
-    aeat_submission_state: Literal["not_observed", "submitted_observed", "accepted", "justificante_verified"] | None = (
-        None
-    )
-    justificante_verified: bool | None = None
-
-
 # ---------------------------------------------------------------------------
 # Graph-declared schema targets
 # ---------------------------------------------------------------------------
@@ -465,8 +419,8 @@ class OverviewCalendarResult(OutputSchema):
     from_date: str | None = None
     to_date: str | None = None
     range: OverviewCalendarRangePayload | None = None
-    entries: list[OverviewCalendarEntrySummaryPayload] = []
-    events: list[OverviewCalendarEventSummaryPayload] = []
+    entries: list[OverviewCalendarEntryPayload] = []
+    events: list[OverviewCalendarEventPayload] = []
     warnings: list[OverviewCalendarWarningPayload] = []
     generated_at: str | None = None
     completeness: OverviewCalendarCompletenessPayload | None = None
