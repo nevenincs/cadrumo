@@ -1,0 +1,123 @@
+# Modelo 721 casillas — Orden HFP/886/2023 (BOE-A-2023-17429),
+# annex amended by Orden HAC/1504/2024 (BOE-A-2024-27528).
+# Source authority: BOE layout PDFs for the original and amended annexes.
+# Legal authority: ley-58-2003:da-18 letra d / rd-1065-2007:art-42-quater.
+#
+# Structure: declarante summary record (type_1) + per-custodian/per-token
+# detail records (type_2). Scope: only crypto held through a THIRD-PARTY
+# custodian (foreign exchanges, custodial-wallet providers). Self-custody /
+# exclusive-key cold wallets are out of scope (art. 42-quater constraint).
+
+# --- Declarante header casillas (completeness-manifest anchors) ---
+
+[[revisions."2024".casillas]]
+id = "ejercicio"
+number = "ejercicio"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = [
+    "ley-58-2003:da-18",
+    "rd-1065-2007:art-42-quater",
+    "orden-hfp-886-2023:art-1",
+]
+source_refs = ["boe-modelo-721-2024-layout"]
+
+[[revisions."2024".casillas]]
+id = "tipo-declaracion"
+number = "tipo-declaracion"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "tipo_declaracion"
+required = true
+input_kind = "informational"
+legal_refs = [
+    "ley-58-2003:da-18",
+    "rd-1065-2007:art-42-quater",
+    "orden-hfp-886-2023:art-1",
+]
+source_refs = ["boe-modelo-721-2024-layout"]
+
+# --- Per-custodian/per-token detail casillas (type_2 records) ---
+
+[[revisions."2024".casillas]]
+id = "custodio.nombre-razon-social"
+number = "custodio.nombre-razon-social"
+section = ["custodio", "identificacion"]
+data_type = "text"
+semantic_role = "custodio_nombre"
+required = true
+input_kind = "manual"
+legal_refs = [
+    "ley-58-2003:da-18",
+    "rd-1065-2007:art-42-quater",
+    "orden-hfp-886-2023:art-2",
+    "ley-58-2003:art-93",
+]
+source_refs = ["boe-modelo-721-2024-layout"]
+
+[[revisions."2024".casillas]]
+id = "custodio.codigo-pais"
+number = "custodio.codigo-pais"
+section = ["custodio", "identificacion"]
+data_type = "country_code"
+semantic_role = "custodio_pais"
+required = true
+input_kind = "manual"
+legal_refs = [
+    "ley-58-2003:da-18",
+    "rd-1065-2007:art-42-quater",
+    "orden-hfp-886-2023:art-2",
+    "ley-58-2003:art-93",
+]
+source_refs = ["boe-modelo-721-2024-layout"]
+
+[[revisions."2024".casillas]]
+id = "moneda.clave-token"
+number = "moneda.clave-token"
+section = ["moneda", "identificacion"]
+data_type = "text"
+semantic_role = "moneda_virtual_clave_token"
+required = true
+input_kind = "manual"
+legal_refs = [
+    "ley-58-2003:da-18",
+    "rd-1065-2007:art-42-quater",
+    "orden-hfp-886-2023:art-2",
+    "ley-58-2003:art-93",
+]
+source_refs = ["boe-modelo-721-2024-layout"]
+
+[[revisions."2024".casillas]]
+id = "moneda.saldo-31-diciembre"
+number = "moneda.saldo-31-diciembre"
+section = ["moneda", "valoracion"]
+data_type = "money"
+semantic_role = "moneda_virtual_saldo_31_diciembre"
+required = true
+input_kind = "manual"
+legal_refs = [
+    "ley-58-2003:da-18",
+    "rd-1065-2007:art-42-quater",
+    "orden-hfp-886-2023:art-2",
+    "ley-58-2003:art-93",
+]
+source_refs = ["boe-modelo-721-2024-layout"]
+
+[[revisions."2024".casillas]]
+id = "moneda.saldo-inicio"
+number = "moneda.saldo-inicio"
+section = ["moneda", "valoracion"]
+data_type = "money"
+semantic_role = "moneda_virtual_saldo_inicio"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "ley-58-2003:da-18",
+    "rd-1065-2007:art-42-quater",
+    "orden-hfp-886-2023:art-2",
+    "ley-58-2003:art-93",
+]
+source_refs = ["boe-modelo-721-2024-layout"]

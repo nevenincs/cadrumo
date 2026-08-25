@@ -1,8 +1,9 @@
-"""Modelo 721 registry grounding regressions."""
+"""Modelo 721 finite BOE-package temporal regressions."""
 
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import date
 from typing import Any
 
 import pytest
@@ -10,16 +11,28 @@ import pytest
 from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
 from .._corpus_catalogue import verify_source_file
+from .._errors import NoRevisionForPeriodError, RegistryValidationError
 from .._legal import verify_legal_catalogue
 from .._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from .._snapshot import _source_applies_across
+from .._temporal import select_revision
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_M721_BOE_ERAS = (
+    (2023, "boe-modelo-721-2023-layout"),
+    (2024, "boe-modelo-721-2024-layout"),
+)
 
-def _modelo_721() -> tuple[ModeloDefinition, ModeloRevision, RegistryCatalogues]:
-    modelo, catalogues = _committed_modelo("721")
-    return modelo, modelo.revisions["2023-y-siguientes"], catalogues
+
+def _modelo_721() -> tuple[ModeloDefinition, RegistryCatalogues]:
+    return _committed_modelo("721")
+
+
+def _revision_721(year: int) -> tuple[ModeloDefinition, ModeloRevision, RegistryCatalogues]:
+    modelo, catalogues = _modelo_721()
+    return modelo, modelo.revisions[str(year)], catalogues
 
 
 def _strings(value: Any) -> Iterator[str]:
@@ -37,7 +50,7 @@ def _strings(value: Any) -> Iterator[str]:
 
 
 def test_modelo_721_articles_are_content_deadline_and_annex_amendment() -> None:
-    _, _, catalogues = _modelo_721()
+    _, catalogues = _modelo_721()
     art_3 = catalogues.legal["orden-hfp-886-2023:art-3"]
     art_4 = catalogues.legal["orden-hfp-886-2023:art-4"]
     amendment = catalogues.legal["orden-hac-1504-2024:art-9"]
@@ -67,63 +80,93 @@ def test_modelo_721_articles_are_content_deadline_and_annex_amendment() -> None:
     )
 
 
-def test_modelo_721_revision_uses_boe_layout_sources_and_applicability_chain() -> None:
-    modelo, revision, catalogues = _modelo_721()
+def test_modelo_721_selects_only_its_two_hash_pinned_boe_form_spec_eras() -> None:
+    """Each selected year names and verifies only its official BOE package."""
+    modelo, catalogues = _modelo_721()
 
-    assert revision.orden_aplicabilidad == (
-        "orden-hfp-886-2023:art-1",
-        "orden-hac-1504-2024:art-9",
-        "orden-hac-1504-2024:df-unica",
+    assert set(modelo.revisions) == {"2023", "2024"}
+    assert set(modelo.source_refs) == {"aeat-modelo-721-procedure"}
+    for filing_year, source_ref in _M721_BOE_ERAS:
+        revision = modelo.revisions[str(filing_year)]
+        source = catalogues.sources[source_ref]
+
+        assert revision.authority_grade.value == "applicability"
+        assert revision.valid_from == date(filing_year, 1, 1)
+        assert revision.valid_to == date(filing_year, 12, 31)
+        assert revision.period_selector.years == (filing_year,)
+        assert revision.period_selector.year_from is None
+        assert {ref for ref in revision.source_refs if ref.startswith("boe-modelo-721-")} == {source_ref}
+        assert revision.export_layouts == ()
+        assert source.authority == "boe"
+        assert source.evidence_tier == "layout_authority"
+        assert source.kind == "form_spec"
+        assert source.applies_from == date(filing_year, 1, 1)
+        assert source.applies_to == date(filing_year, 12, 31)
+        assert source.corpus_path.endswith(".pdf")
+        verify_source_file(REPO_ROOT, source)
+        assert select_revision(modelo, filing_year=filing_year, period="0A", on=date(filing_year, 12, 31)) == revision
+
+        assert {ref.workbook_source for ref in revision.workbook_parity_refs} == {source_ref}
+        assert {window.filing_year for window in revision.deadline_windows} == {filing_year}
+        assert all(casilla.source_refs == (source_ref,) for casilla in revision.casillas)
+
+    revision_2023 = modelo.revisions["2023"]
+    revision_2024 = modelo.revisions["2024"]
+    assert "orden-hac-1504-2024:art-9" not in revision_2023.legal_refs
+    assert {"orden-hac-1504-2024:art-9", "orden-hac-1504-2024:df-unica"} <= set(revision_2024.legal_refs)
+    for filing_year in (2022, 2025, 2026):
+        with pytest.raises(NoRevisionForPeriodError):
+            select_revision(modelo, filing_year=filing_year, period="0A", on=date(filing_year, 12, 31))
+
+
+def test_modelo_721_refuses_a_mutated_2024_selector_past_its_boe_package_window() -> None:
+    """A selector expansion cannot turn the 2024 Annex into 2025 authority."""
+    modelo, revision, catalogues = _revision_721(2024)
+    expanded = revision.model_copy(
+        update={
+            "valid_to": date(2025, 12, 31),
+            "period_selector": revision.period_selector.model_copy(update={"years": (2024, 2025)}),
+        },
     )
-    assert {
-        "boe-modelo-721-2023-layout",
-        "boe-modelo-721-2024-layout",
-        "aeat-modelo-721-procedure",
-    } <= set(revision.source_refs)
+    mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, "2024": expanded}})
 
+    selected = select_revision(mutated_modelo, filing_year=2025, period="0A", on=date(2025, 12, 31))
+    assert selected.id == "2024"
+    (source_ref,) = (ref for ref in selected.source_refs if ref.startswith("boe-modelo-721-"))
+    source = catalogues.sources[source_ref]
+
+    assert source.applies_to == date(2024, 12, 31)
+    assert not _source_applies_across(source, date(2025, 1, 1), date(2025, 12, 31))
+
+
+def test_modelo_721_refuses_a_mutated_boe_package_hash() -> None:
+    """The selected finite era remains bound to the exact official PDF bytes."""
+    _modelo, _revision, catalogues = _revision_721(2024)
+    source_ref = "boe-modelo-721-2024-layout"
+    source = catalogues.sources[source_ref].model_copy(update={"sha256": "0" * 64})
+
+    with pytest.raises(RegistryValidationError, match="sha256 mismatch"):
+        verify_source_file(REPO_ROOT, source)
+
+
+def test_modelo_721_does_not_claim_pair_complete_aeat_soap_xml_contract_authority() -> None:
+    """Finite BOE Annex evidence is not a substitute for historical AEAT bytes."""
+    modelo, catalogues = _modelo_721()
     all_modelo_strings = set(_strings(modelo.model_dump(mode="json")))
+
     assert "aeat-dr-721" not in all_modelo_strings
     assert "boe-modelo-721-2023-form" not in all_modelo_strings
     assert "ley-11-2021:da-10" not in all_modelo_strings
     assert "boe-modelo-721-2023-form" not in catalogues.sources
     assert catalogues.sources["aeat-modelo-721-procedure"].evidence_tier == "official_source_guidance"
-
-    workbook_refs = {reference.id: reference for reference in revision.workbook_parity_refs}
-    assert workbook_refs["modelo-721-dr-2023"].workbook_source == "boe-modelo-721-2023-layout"
-    assert workbook_refs["modelo-721-dr-2024"].workbook_source == "boe-modelo-721-2024-layout"
-
-    for source_id in ("boe-modelo-721-2023-layout", "boe-modelo-721-2024-layout"):
-        source = catalogues.sources[source_id]
-        assert source.authority == "boe"
-        assert source.evidence_tier == "layout_authority"
-        assert source.kind == "form_spec"
-        assert source.corpus_path.endswith(".pdf")
-        verify_source_file(REPO_ROOT, source)
-
-
-def test_modelo_721_deadline_windows_cite_article_4_not_content_article_3() -> None:
-    _, revision, _ = _modelo_721()
-
-    assert len(revision.deadline_windows) == 3
-    for window in revision.deadline_windows:
-        assert "orden-hfp-886-2023:art-4" in window.legal_refs
-        assert "orden-hfp-886-2023:art-3" not in window.legal_refs
-        if window.filing_year >= 2024:
-            assert "orden-hac-1504-2024:df-unica" in window.legal_refs
-
-
-def test_modelo_721_casillas_are_grounded_in_original_and_amended_boe_layouts() -> None:
-    _, revision, _ = _modelo_721()
-
-    assert revision.casillas
-    for casilla in revision.casillas:
-        assert "boe-modelo-721-2023-layout" in casilla.source_refs
-        assert "boe-modelo-721-2024-layout" in casilla.source_refs
-        assert "aeat-dr-721" not in casilla.source_refs
+    for revision in modelo.revisions.values():
+        assert "AEAT SOAP/XML material is not pair-complete" in revision.reviewed_by
+        assert revision.authority_grade.value == "applicability"
+        assert revision.export_layouts == ()
 
 
 def test_modelo_721_threshold_continuity_has_registry_parameters_without_calculation_surface() -> None:
-    modelo, revision, _ = _modelo_721()
+    modelo, revision, _ = _revision_721(2024)
 
     link_ids_by_surface = {link.surface: link.id for link in revision.application_links}
     expected_link_ids_by_surface = {
@@ -152,7 +195,7 @@ def test_modelo_721_redeclaration_is_not_authored_as_scalar_previous_filing_bind
     baseline. Reintroducing this as registry previous_filing requires a row-set
     selector, not the retired source_output key.
     """
-    _, revision, _ = _modelo_721()
+    _, revision, _ = _revision_721(2024)
 
     previous_filing_bindings = [binding.id for binding in revision.bindings if binding.source == "previous_filing"]
     all_binding_strings = set(_strings(tuple(binding.model_dump(mode="json") for binding in revision.bindings)))

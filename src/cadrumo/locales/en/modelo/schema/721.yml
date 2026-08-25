@@ -5,7 +5,38 @@ modelo:
         official_name: null
         title: null
       revision:
-        2023-y-siguientes:
+        '2023':
+          casilla:
+            ejercicio:
+              help: null
+              label: Tax year the foreign virtual currency return refers to
+            tipo-declaracion:
+              help: null
+              label: Type of return (original / supplementary / replacement)
+            x-cdqn6t3fchkmubj3dti6iprf5lo62qbj:
+              help: null
+              label: Custodian's country code (ISO 3166-1 alpha-2)
+            x-cdqn6t3fchkmubjedtmm4sj55lp62ujfdomn6rr3d5gmo:
+              help: null
+              label: Name or company name of the foreign virtual currency custodian
+            x-dlnmspb4c4n66r31epiiqt3fddims:
+              help: null
+              label: Virtual currency identifier (ticker / token ID, e.g. BTC, ETH)
+            x-dlnmspb4c4n76obcchniqcph5li6ior9clmm4sj5:
+              help: null
+              label: Balance or value of the virtual currency at 31 December, expressed
+                in euros
+            x-dlnmspb4c4n76obcchniqqbed5hmiro:
+              help: null
+              label: Balance or value of the virtual currency at the start of the
+                period (for significant variations)
+          construct:
+            modelo-721-informative:
+              field:
+                title: null
+          field:
+            label: null
+        '2024':
           casilla:
             ejercicio:
               help: null

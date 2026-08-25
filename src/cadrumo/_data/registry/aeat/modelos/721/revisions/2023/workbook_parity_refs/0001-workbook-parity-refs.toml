@@ -1,0 +1,9 @@
+[[revisions."2023".workbook_parity_refs]]
+id = "modelo-721-dr-2023"
+workbook_source = "boe-modelo-721-2023-layout"
+fixture_id = "modelo-721-record-design-layout-2023"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-hfp-886-2023:art-1", "ley-58-2003:art-93"]
+source_refs = ["boe-modelo-721-2023-layout"]

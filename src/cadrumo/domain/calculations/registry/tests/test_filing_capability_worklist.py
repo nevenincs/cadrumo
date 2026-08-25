@@ -261,9 +261,10 @@ def _terminal_no_authority(
 
     This is intentionally a *named adjudication*, not an inference that every
     modelo without a fixed-width record design lacks an authorable path. Modelo
-    721 is the counterexample: its source-backed SOAP/XML contract is an
-    authorable extension of the existing filing authority, despite not being a
-    positional record design. The official Modelo 136 catalogue/procedure
+    721 is the counterexample only at the architectural-shape level: a future
+    source-backed SOAP/XML contract can be an authorable extension of its
+    existing authority despite not being a positional record design. The
+    official Modelo 136 catalogue/procedure
     review is narrower: its current layout authority is a visual ``manual_pdf``
     and it has no registered ``record_design``, ``xsd`` or ``dictionary``
     source. Treating a visual form as any of those contracts would fabricate a
@@ -446,10 +447,10 @@ def _blocker(
     if not designs:
         if modelo.id == Modelo.M721:
             return _authorable(
-                "no positional record design is bundled because the exact structured-message contract remains unacquired",
+                "no positional record design is bundled; finite BOE form-spec packages do not establish the missing pair-complete 2023/2024 AEAT structured-message contract",
                 owners=_M721_OWNERS,
                 reconsideration=(
-                    "the three accepted predecessor routes acquire exact contract eras, value lifecycles, and the "
+                    "the three accepted predecessor routes acquire pair-complete versioned AEAT SOAP/XML contract eras, source-derived value lifecycles, and the "
                     "canonical locally-proven serializer"
                 ),
             )

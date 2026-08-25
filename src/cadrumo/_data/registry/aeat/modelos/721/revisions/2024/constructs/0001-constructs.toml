@@ -1,0 +1,41 @@
+[[revisions."2024".constructs]]
+id = "modelo-721-informative"
+dependency_classifications = ["modelo-721-dep-721"]
+legal_refs = [
+    "ley-58-2003:da-18",
+    "rd-1065-2007:art-42-quater",
+    "orden-hfp-886-2023:art-1",
+    "orden-hfp-886-2023:art-2",
+    "orden-hfp-886-2023:art-3",
+    "orden-hfp-886-2023:art-4",
+    "orden-hac-1504-2024:art-9",
+    "orden-hac-1504-2024:df-unica",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "boe-modelo-721-2024-layout",
+    "aeat-modelo-721-procedure",
+]
+casilla_ids = [
+    "ejercicio",
+    "tipo-declaracion",
+    "custodio.nombre-razon-social",
+    "custodio.codigo-pais",
+    "moneda.clave-token",
+    "moneda.saldo-31-diciembre",
+    "moneda.saldo-inicio",
+]
+bindings = []
+export_layouts = []
+extraction_profiles = []
+verification_expectations = []
+workbook_parity_refs = ["modelo-721-dr-2024"]
+live_cross_references = []
+application_links = [
+    "modelo-721-portal",
+    "modelo-721-filing",
+    "modelo-721-extractor",
+    "modelo-721-deadline",
+]
+filing_schedules = ["modelo-721-anual"]
+deadline_windows = ["modelo-721-2024-0a"]

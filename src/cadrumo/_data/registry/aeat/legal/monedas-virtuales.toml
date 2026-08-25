@@ -200,6 +200,7 @@ bytes = 294687
 retrieved_at = 2026-06-28
 published_at = 2023-07-29
 applies_from = 2023-01-01
+applies_to = 2023-12-31
 source_url = "https://www.boe.es/boe/dias/2023/07/29/pdfs/BOE-A-2023-17429.pdf"
 review_status = "reviewed"
 
@@ -213,6 +214,7 @@ bytes = 827110
 retrieved_at = 2026-06-28
 published_at = 2024-12-31
 applies_from = 2024-01-01
+applies_to = 2024-12-31
 source_url = "https://www.boe.es/boe/dias/2024/12/31/pdfs/BOE-A-2024-27528.pdf"
 review_status = "reviewed"
 

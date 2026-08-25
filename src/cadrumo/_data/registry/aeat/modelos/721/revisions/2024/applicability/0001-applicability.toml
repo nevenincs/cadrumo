@@ -1,0 +1,11 @@
+[[revisions."2024".applicability]]
+id = "m721-seed"
+applicable_entity_types = ["legal_entity", "natural_person"]
+required_payer_fact = "monedas_virtuales_extranjero_above_threshold"
+applicable_reason = """
+Modelo 721 (declaracion informativa sobre monedas virtuales en el extranjero): el contribuyente que posee monedas virtuales situadas en el extranjero con valor agregado superior a 50.000 EUR el 31 de diciembre esta obligado a presentar esta declaracion informativa anual. La obligacion operativa esta en la DA 18 de la LGT, introducida por la Ley 11/2021 DA 10a, y el formulario esta aprobado por Orden HFP/886/2023. Nota: la aplicacion no ha implementado aun el calculo completo del Modelo 721; \
+utilice la Sede Electronica de la AEAT para presentarlo."""
+not_applicable_reason = "Modelo 721 no aplica: la declaracion informativa sobre monedas virtuales en el extranjero solo corresponde a personas fisicas o entidades juridicas. El tipo de contribuyente declarado no esta incluido en el ambito subjetivo de la Ley 11/2021 DA 10a."
+cuota_bearing = false
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-quater", "orden-hfp-886-2023:art-1", "orden-hfp-886-2023:art-2", "orden-hfp-886-2023:art-3"]
+

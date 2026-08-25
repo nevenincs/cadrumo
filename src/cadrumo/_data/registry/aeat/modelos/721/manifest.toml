@@ -17,7 +17,5 @@ legal_refs = [
     "ley-58-2003:art-93",
 ]
 source_refs = [
-    "boe-modelo-721-2023-layout",
-    "boe-modelo-721-2024-layout",
     "aeat-modelo-721-procedure",
 ]

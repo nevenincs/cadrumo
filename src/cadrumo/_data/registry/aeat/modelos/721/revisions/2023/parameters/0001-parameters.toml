@@ -1,0 +1,38 @@
+# Initial declaration threshold per RD 1065/2007 art. 42-quater (same structure
+# as 720's arts. 42-bis / 42-ter / 54-bis): must declare if joint custodian+token
+# aggregate exceeds €50,000 at 31 December.
+[[revisions."2023".parameters]]
+id = "modelo-721-asset-declaration-threshold-eur"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["rd-1065-2007:art-42-quater", "ley-58-2003:da-18"]
+source_refs = ["aeat-modelo-721-procedure"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-modelo-721-procedure"
+required_text = ["monedas virtuales situadas en el extranjero"]
+
+[[revisions."2023".parameters.values]]
+value = "50000.00"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+
+# Re-declaration increment threshold per art. 42-quater (same mechanism as 720):
+# re-declare in year N+1 only if the 31-December aggregate rose > €20,000 over
+# the last-declared baseline.
+[[revisions."2023".parameters]]
+id = "modelo-721-redeclaration-increment-threshold-eur"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["rd-1065-2007:art-42-quater", "ley-58-2003:da-18"]
+source_refs = ["aeat-modelo-721-procedure"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-modelo-721-procedure"
+required_text = ["monedas virtuales situadas en el extranjero"]
+
+[[revisions."2023".parameters.values]]
+value = "20000.00"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+
