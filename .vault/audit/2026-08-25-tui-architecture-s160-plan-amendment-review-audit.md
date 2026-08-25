@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:82a6f4fd2e297893e1c1a235daa562f76d56f4eed7119d21d412969dc26b724d'
+body_hash: 'sha256:ae41f7b882c052f21e03fc40899eebb6738855b09f8f64fe93c053f896d69237'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
@@ -53,3 +53,23 @@ Amend S161, S164, and S166 so each native surface is promoted through `cadrumo.a
 ## Disposition
 
 FAIL. S169-S173 are cohesive prerequisite commits and the comparison-domain and S167/S128 dependency order is correct, but S168 and S174 are not closed atomic cutovers and three native-owner rows omit mandatory facade promotion. The plan must be revised before S168 execution; no source implementation is authorized by this review.
+
+## Remediation review
+
+Exact plan-only remediation commit `ec5c87210f33cda9f59815d675d8ce30e3bf65be` was re-reviewed against the three HIGH findings above. The focused review reused the recorded exact source census, compared every required path and teardown obligation with the amended rows, confirmed the commit changes only the plan, and reran the CLI plan checker. The historical FAIL remains the disposition for amendment commit `5f0c4c0847547954938239fc154af5e5af9ef4ed`; this section records only the remediation result.
+
+### S168 pointer cutover
+
+CLOSED. S168 now names the strict record owner, IO owner, core facade, transaction owner and facade, all four direct readers, and all seven transaction-shape consumers from the exact census. It requires their atomic migration, focused record/facade/reader/transaction concurrency proof, one absent-or-selected record, monotonic transition revision, and explicit deletion of dual readers/writers, compatibility readers, shims, aliases, fallbacks, and re-export bridges.
+
+### S174 revision assertion teardown
+
+CLOSED. S174 now names `_external_import_actions.py`, `_quickfile.py`, `_work_lifecycle.py`, and `application/modelo/__init__.py` alongside the original assertion consumers, adds the two CLI consumers, requires same-commit facade promotion, and explicitly deletes `resolve_registry_revision_for_work_target`, its facade export, `load_registry_tree`, asserted-ID selection, stale docstrings, and parallel work-path registry reads without a bridge.
+
+### Native-owner facade promotion
+
+CLOSED. S161, S164, and S166 each now include `application/modelo/__init__.py`, same-commit promotion through the sole canonical `cadrumo.application.modelo` facade, public-surface parity tests, and explicit refusal of private-only or non-facade bridge paths before S167 registration.
+
+### Remediation verdict
+
+PASS. Commit `ec5c87210f33cda9f59815d675d8ce30e3bf65be` closes all three recorded HIGH findings without changing step order, dependencies, comparison domains, or one-step/one-commit granularity. `vaultspec-core vault plan check` reports only the already-adjudicated intentional `PLAN022` display-order warning. S168-S174 are now sufficiently scoped for execution under the accepted ADR and referenced contracts.
