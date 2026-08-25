@@ -15,11 +15,13 @@ from cadrumo.domain.calculations.registry import (
     RegistryValidationError,
     ValidatedRegistryAuthority,
     bundled_authority,
+    load_registry_diagnostic_classification,
 )
 
 from ..filing_export_proof import (
     CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS,
     canonical_two_channel_filing_export_proof_authority,
+    derive_diagnostic_filing_export_conformance_enrollment,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -46,35 +48,67 @@ def test_canonical_authority_cannot_accept_a_preconstructed_replay_receipt() -> 
         )
 
 
-def test_diagnostic_authority_refuses_classification_without_its_strict_failure() -> None:
-    """A diagnostic authority is never an implicit alternative filing authority."""
-    registry = ValidatedRegistryAuthority.load_for_diagnostic_classification(
+def test_diagnostic_classification_has_no_runtime_authority_or_success_path() -> None:
+    """Diagnostic classification remains static residue, never filing authority."""
+    classification = load_registry_diagnostic_classification(
         bundled_path("registry", "aeat"),
         source_root=bundled_path(),
+        strict_validation_error=RegistryValidationError("strict registry validation failed"),
     )
 
-    assert not registry.is_registry_validated
-    with pytest.raises(ValueError, match="requires its strict registry validation error"):
+    assert not isinstance(classification, ValidatedRegistryAuthority)
+    assert not {"_authority", "snapshot", "modelo", "catalogues", "validate_modelo"}.intersection(dir(classification))
+    assert not hasattr(classification, "_authority")
+    with pytest.raises(TypeError, match="requires a validated registry authority"):
         canonical_two_channel_filing_export_proof_authority(
             workspace_root=_REPOSITORY_ROOT,
             registry_root=bundled_path("registry", "aeat"),
             source_root=bundled_path(),
-            authority=registry,
+            authority=cast(Any, classification),
             secure_replay_source=None,
             secure_replay_custody=None,
         )
+    enrollment = derive_diagnostic_filing_export_conformance_enrollment(
+        workspace_root=_REPOSITORY_ROOT,
+        registry_root=bundled_path("registry", "aeat"),
+        source_root=bundled_path(),
+        classification=classification,
+        vectors=CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS,
+    )
+    assert enrollment.full_registry_validation_error == "strict registry validation failed"
+    assert not enrollment.materializable_vectors
+    assert enrollment.residues
 
 
 def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() -> None:
-    """S85 derives every public candidate and retains its exact refusal residue."""
+    """Every public candidate retains its exact refusal residue."""
     try:
         registry = bundled_authority()
     except RegistryValidationError as strict_error:
-        registry = ValidatedRegistryAuthority.load_for_diagnostic_classification(
+        classification = load_registry_diagnostic_classification(
             bundled_path("registry", "aeat"),
             source_root=bundled_path(),
+            strict_validation_error=strict_error,
         )
-        full_registry_validation_error = str(strict_error)
+        enrollment = derive_diagnostic_filing_export_conformance_enrollment(
+            workspace_root=_REPOSITORY_ROOT,
+            registry_root=bundled_path("registry", "aeat"),
+            source_root=bundled_path(),
+            classification=classification,
+            vectors=CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS,
+        )
+        selected_coordinates = {
+            (str(selected.modelo), str(selected.revision.id)) for selected in classification.filing_revisions()
+        }
+        materialized_coordinates = {
+            (str(vector.evidence.coordinate.modelo), str(vector.evidence.coordinate.revision))
+            for vector in enrollment.materializable_vectors
+        }
+        residue_coordinates = {(str(residue.modelo), str(residue.revision)) for residue in enrollment.residues}
+        assert enrollment.full_registry_validation_error == str(strict_error)
+        assert selected_coordinates == residue_coordinates
+        assert not materialized_coordinates
+        return
     else:
         full_registry_validation_error = None
     proof = canonical_two_channel_filing_export_proof_authority(
@@ -84,7 +118,6 @@ def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() 
         authority=registry,
         secure_replay_source=None,
         secure_replay_custody=None,
-        full_registry_validation_error=full_registry_validation_error,
     )
     assessed = 0
     selected_coordinates = set()
@@ -144,7 +177,4 @@ def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() 
         }.intersection(type(candidate.evidence).model_fields)
         for candidate in enrollment.provenance_candidates
     )
-    if full_registry_validation_error is not None:
-        assert not registry.is_registry_validated
-        assert not materialized_coordinates
-        assert any(residue.reason == "generated_provenance_invalid" for residue in enrollment.residues)
+    assert full_registry_validation_error is None

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:eec6a6404179be5c7fca201e18dc418640dd90e354e960ba1dcf05fd196a7568'
+body_hash: 'sha256:ad25d257aa000326d368b9af82c7037995176efa7f5fc0e4561d944b632a8fba'
 step_id: 'S85'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
@@ -45,4 +45,5 @@ related:
 - The shared commits `03d2b3caef` and `d971184e0d` captured parts of the S85 working surface while concurrent work was active. They are retained without amendment; this record supplies the classification and boundary evidence.
 - Concurrent commit `a0dbe37ea7` mechanically re-pinned 209 Modelo 200 map/profile/provenance digests. It makes the current strict registry load pass but conflicts with the `W04.P08.S22` prohibition on re-pinning the unsplit spanning tree. Modelo 200 is not filing-grade in the current denominator, and this change is not credited as S85 evidence.
 - The canonical generator drift gate remains red for `m200-2024-y-siguientes`: a fresh render differs from the committed `_generation.provenance.json`. The owner is `W04.P08.S22`; S85 neither publishes a replacement nor suppresses the failure.
-- The final three-test dynamic rerun was blocked at collection by concurrent auth-relocation work: `cadrumo.application.auth` lacked `select_provider` while loading the registry test fixture. The earlier full dynamic run passed two tests in 125.30 seconds; the post-change fast diagnostic guard passed separately. This unrelated import failure is not suppressed or attributed to S85.
+- Independent review recorded the unsafe diagnostic-authority finding in `9402efef70`; the audit index was refreshed in `130fda7541`. This follow-up replaces that public diagnostic authority with the explicit `UnvalidatedRegistryClassification` surface, which exposes neither snapshot nor runtime authority and is rejected by canonical proof construction.
+- The first focused post-remediation integration attempt was blocked at collection by concurrent core work: `cadrumo.core` lacked `resolve_active_bucket_id`. After its owner restored that public export, the three-test focused integration rerun passed in 226.49 seconds (with two upstream `openpyxl` print-area warnings). Scoped Ruff and compilation pass; the core-only smoke exercised 66 unvalidated diagnostic classifications and confirmed that no authority or snapshot API is exposed.
