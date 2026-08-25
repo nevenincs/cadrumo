@@ -1168,3 +1168,50 @@ enclosing_symbol = "calculate_modelo_work_revision"
 modelo_codes = "M210"
 group = "modelo-path-routing"
 selects = "calculated_m210_plazo_notice"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_external_import_actions.py"
+enclosing_symbol = "import_external_filing_source"
+modelo_codes = "M303"
+classification = "orchestration_routing"
+selects = "ExternalModeloImportError"
+justification = """
+An evidence-policy refusal, and the policy is this application's rather than the
+law's. External import is refused for 303 because 303 must arrive through the
+filing-evidence path -- the refusal's own message key is
+external_import_m303_filing_evidence_required. No provision forbids importing a
+303 from outside; the application requires filing evidence for it and this
+branch enforces where that content may enter. What it decides is which intake
+path is allowed, which is routing. The citation names the refusal it raises.
+"""
+
+[[branch]]
+path = "src/cadrumo/application/live/filed_observation_persistence.py"
+enclosing_symbol = "import_complete_filed_observation_baseline"
+modelo_codes = "M303"
+classification = "orchestration_routing"
+selects = "import_external_filing_source"
+justification = """
+An exclusion guard that sends 303 elsewhere rather than deciding anything about
+303. The function's own docstring states the reason -- "Modelo 303 keeps its
+dedicated filing-evidence policy" -- so returning None here leaves the capture
+on the observation path and the 303-specific policy owns it. The decision is
+which of two intake paths runs, and the regulatory content lives in whichever
+one does. The citation names the importer this function otherwise routes into.
+"""
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_m303_regimen_simplificado_annual_summary.py"
+enclosing_symbol = "_validated_source_evidence"
+modelo_codes = "M303"
+classification = "orchestration_routing"
+selects = "select_revision"
+justification = """
+The branch picks the registry modelo definition this resolver was built for --
+it is a member of M303RegimenSimplificadoAnnualSummarySourceResolver, whose
+whole subject is the 303 annual-summary handoff, so selecting 303 restates the
+class's identity rather than deciding a treatment. Every regulatory question it
+then asks is delegated: which revision governs the source coordinate is resolved
+by select_revision from (modelo, filing_year, period), the law-determined
+selector, not chosen here. The citation names that selector.
+"""
