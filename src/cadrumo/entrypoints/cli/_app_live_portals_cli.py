@@ -92,7 +92,7 @@ def portals_list(
         raise _project_portal_refusal(exc) from exc
 
     rows = [_portal_row(m) for m in entries]
-    from ._app_live_payloads import PortalEntryPayload, PortalsListResult
+    from ._app_live_portals_payloads import PortalEntryPayload, PortalsListResult
 
     result = PortalsListResult(
         count=len(rows),
@@ -120,7 +120,7 @@ def portals_show(
     except PortalRegistryError as exc:
         raise _project_portal_refusal(exc) from exc
     payload = _portal_row(metadata)
-    from ._app_live_payloads import PortalsViewResult
+    from ._app_live_portals_payloads import PortalsViewResult
 
     result = PortalsViewResult(**payload)
     lines = [f"{key}\t{value}" for key, value in payload.items() if value != ""]

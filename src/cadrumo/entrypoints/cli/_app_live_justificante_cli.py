@@ -42,7 +42,7 @@ def justificante_pull(
     same application boundary before emitting :class:`JustificanteCaptureResult`.
     """
     from ...application.live import capture_justificante_snapshot_outcome
-    from ._app_live_payloads import JustificanteCaptureResult
+    from ._app_live_justificante_payloads import JustificanteCaptureResult
 
     bucket_id = _bucket_id()
     _emit_live_auth_preflight()
@@ -106,7 +106,7 @@ def justificante_list(ctx: typer.Context) -> None:
     a :class:`JustificanteListResult` envelope.
     """
     from ...application.live import JustificanteCaptureSnapshotService
-    from ._app_live_payloads import JustificanteListResult, JustificanteSnapshotSummaryPayload
+    from ._app_live_justificante_payloads import JustificanteListResult, JustificanteSnapshotSummaryPayload
 
     bucket_id = _bucket_id()
     rows = JustificanteCaptureSnapshotService(bucket_id=bucket_id).list_snapshots()
@@ -145,7 +145,7 @@ def justificante_view(
     and projected as :class:`JustificanteViewResult`.
     """
     from ...application.live import JustificanteCaptureSnapshotService
-    from ._app_live_payloads import JustificanteViewResult
+    from ._app_live_justificante_payloads import JustificanteViewResult
 
     bucket_id = _bucket_id()
     record = JustificanteCaptureSnapshotService(bucket_id=bucket_id).show(snapshot_id)

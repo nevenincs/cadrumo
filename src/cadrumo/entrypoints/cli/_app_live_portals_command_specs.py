@@ -86,7 +86,7 @@ LIVE_PORTALS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live_portals_cli", "portals_list")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "PortalsListResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_portals_payloads", "PortalsListResult"),
             identity="app.live.portals.list",
         ),
     ),
@@ -119,7 +119,7 @@ LIVE_PORTALS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live_portals_cli", "portals_show")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "PortalsViewResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_portals_payloads", "PortalsViewResult"),
             identity="app.live.portals.view",
         ),
     ),

@@ -27,8 +27,7 @@ over the one flow engine, so the non-TTY / Windows-no-console detection and
 the translated refusal are the substrate's single implementation rather than
 a re-derived copy of it, and the operator gets the engine's review surface
 (re-edit by number, restart, submit) before the amendment is filed. The
-dedicated TUI launcher owns the separate Textual projection. The amendment is
-asked in two rounds: a CHECKBOX
+amendment is asked in two rounds: a CHECKBOX
 selection page over the filing record's casilla ids, then a second definition
 carrying one DECIMAL page per selected casilla, the amendment-kind SELECT
 (restricted to the kinds the period legally permits), and the required reason.
@@ -296,10 +295,9 @@ def _amendable_rows(casilla_rows: tuple[Any, ...], baseline_revision: Calculatio
 def _run_flow(definition: FlowDefinition) -> FlowState:
     """Drive one CLI flow through the frontend-neutral line projection.
 
-    The dedicated TUI launcher owns Textual composition. The CLI consumes the
-    application substrate's line frontend directly; its environment guard
-    preserves the canonical typed refusal on a non-interactive or unsupported
-    console.
+    The CLI consumes the application substrate's line frontend directly; its
+    environment guard preserves the canonical typed refusal on a
+    non-interactive or unsupported console.
     """
     state, _projection = LineFlowFrontend(definition).run(mode=FlowMode.CREATE)
     return state

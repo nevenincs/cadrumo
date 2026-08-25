@@ -21,6 +21,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
         ("config", "auth", "apoderado", "configure"),
         ("app", "overview", "status"),
         ("app", "modelo", "work", "calculate", "missing-work-unit"),
+        ("app", "modelo", "work", "wizard"),
+        ("app", "modelo", "work", "amend-wizard"),
     ),
 )
 def test_global_tui_request_refuses_unimplemented_facets_before_their_preconditions(
@@ -47,7 +49,7 @@ def test_tui_is_global_only() -> None:
     assert "--tui" not in local_help.output
 
 
-def test_every_existing_cli_tui_route_is_enrolled() -> None:
+def test_only_implemented_cli_tui_routes_are_enrolled() -> None:
     from .._command_spec import TuiCapability
     from .._command_specs import COMMAND_GRAPH
 
@@ -55,8 +57,6 @@ def test_every_existing_cli_tui_route_is_enrolled() -> None:
     expected = {
         "config_login",
         "config_profile_status",
-        "app_modelo_work_wizard",
-        "app_modelo_work_amend_wizard",
     }
     available = {key for key, spec in specs.items() if spec.tui_capability is TuiCapability.AVAILABLE}
     assert available == expected

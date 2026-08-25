@@ -5,8 +5,8 @@ which casillas changed through a CHECKBOX page, then a second definition
 of one DECIMAL page per selected casilla plus the amendment-kind SELECT
 and the required reason, and files through the exact same
 :func:`~application.modelo.amend_modelo_revision` composition path
-``work amend`` uses. On a real terminal it renders the full-screen or
-line-mode frontend; a non-interactive host refuses with the substrate's
+``work amend`` uses. On a real terminal it renders the line-mode frontend;
+a non-interactive host refuses with the substrate's
 typed unsupported-console error rather than blocking. So these tests
 exercise the wizard at the surfaces a non-terminal test process can
 honestly reach:

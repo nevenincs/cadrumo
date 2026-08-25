@@ -36,7 +36,7 @@ from ....core import FiledHistoryDiscoverySignal
 from ....core.json_contract import NoticeSeverity, SchemaEnvelope
 from .._app_live import _filed_discover_notices, _filed_discover_result_and_lines
 from .._app_live_command_specs import LIVE_COMMAND_SPECS
-from .._app_live_payloads import FiledDiscoverResult
+from .._app_live_filed_payloads import FiledDiscoverResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

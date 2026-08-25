@@ -119,7 +119,9 @@ def test_every_live_subtree_compiles_from_specs_without_legacy_structure() -> No
 
 def test_live_behavior_and_payload_modules_contain_no_structural_authority() -> None:
     cli_root = Path(__file__).parents[1]
-    paths = [cli_root / "_app_live.py", cli_root / "_app_live_payloads.py"]
+    assert not (cli_root / "_app_live_payloads.py").exists()
+    paths = [cli_root / "_app_live.py", cli_root / "_app_live_payloads_support.py"]
+    paths.extend(sorted(cli_root.glob("_app_live_*_payloads.py")))
     paths.extend(sorted(cli_root.glob("_app_live_*_cli.py")))
     forbidden_names = {"command_execution_policy", "declare_metadata_group", "register_schema"}
     for path in paths:

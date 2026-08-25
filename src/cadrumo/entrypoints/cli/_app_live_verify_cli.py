@@ -65,7 +65,7 @@ def verify_list(
     checks, and are emitted through :class:`VerifyListResult`.
     """
     from ...application.live import VerifyService
-    from ._app_live_payloads import VerifyListResult, VerifyObservationSummaryPayload
+    from ._app_live_verify_payloads import VerifyListResult, VerifyObservationSummaryPayload
 
     bucket_id = _bucket_id()
     rows = VerifyService().list_observations(
@@ -95,7 +95,7 @@ def verify_show(
     shape as ``aeat app live verify list``.
     """
     from ...application.live import VerifyService
-    from ._app_live_payloads import VerifyViewResult
+    from ._app_live_verify_payloads import VerifyViewResult
 
     bucket_id = _bucket_id()
     record = VerifyService().show(bucket_id=bucket_id, observation_id=observation_id)
@@ -117,7 +117,7 @@ def verify_latest(
     ``observation_id=None``.
     """
     from ...application.live import VerifyService
-    from ._app_live_payloads import VerifyLatestResult
+    from ._app_live_verify_payloads import VerifyLatestResult
 
     bucket_id = _bucket_id()
     record = VerifyService().latest_for_nif(
@@ -164,7 +164,7 @@ def verify_nif_iva(
     from ...application.live import VerifyService
     from ...core.access_gate import AeatAccessGate
     from ...core.config import load_settings
-    from ._app_live_payloads import VerifyNifIvaResult
+    from ._app_live_verify_payloads import VerifyNifIvaResult
 
     settings = load_settings()
     AeatAccessGate(settings).require_live_read()
@@ -205,7 +205,7 @@ def verify_tgvi(
     from ...application.live import VerifyService
     from ...core.access_gate import AeatAccessGate
     from ...core.config import load_settings
-    from ._app_live_payloads import VerifyTgviResult
+    from ._app_live_verify_payloads import VerifyTgviResult
 
     settings = load_settings()
     AeatAccessGate(settings).require_live_read()

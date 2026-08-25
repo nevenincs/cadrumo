@@ -19,7 +19,7 @@ from ...application.live import (
     SnapshotLifecycleState,
     SnapshotStateFilter,
 )
-from ._app_live_payloads import (
+from ._app_live_borrador_payloads import (
     Borrador100LatestResult,
     Borrador100ListResult,
     Borrador100SnapshotSummaryPayload,

@@ -35,7 +35,7 @@ def deudas_list(ctx: typer.Context) -> None:
     :class:`DeudasViewResult`.
     """
     from ...application.live import DeudasService
-    from ._app_live_payloads import DeudasListResult, DeudaSnapshotSummaryPayload
+    from ._app_live_deudas_payloads import DeudasListResult, DeudaSnapshotSummaryPayload
 
     bucket_id = _bucket_id()
     rows = DeudasService().list_snapshots(bucket_id=bucket_id)
@@ -71,7 +71,7 @@ def deudas_view(
     is reported on its own field rather than as a sign.
     """
     from ...application.live import DeudasService
-    from ._app_live_payloads import DeudaRowPayload, DeudasViewResult
+    from ._app_live_deudas_payloads import DeudaRowPayload, DeudasViewResult
 
     bucket_id = _bucket_id()
     record = DeudasService().show(bucket_id=bucket_id, snapshot_id=snapshot_id)
@@ -118,7 +118,7 @@ def deudas_latest(ctx: typer.Context) -> None:
     attempting a live pull.
     """
     from ...application.live import DeudasService
-    from ._app_live_payloads import DeudasLatestResult
+    from ._app_live_deudas_payloads import DeudasLatestResult
 
     bucket_id = _bucket_id()
     record = DeudasService().latest(bucket_id=bucket_id)

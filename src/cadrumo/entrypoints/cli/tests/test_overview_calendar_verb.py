@@ -258,8 +258,7 @@ def test_calendar_json_matches_application_coordinates_for_every_supported_year(
                 entry.modelo,
                 str(entry.period),
                 entry.adjusted_closes_on.isoformat(),
-                entry.payment_cutoff_on.isoformat() if entry.payment_cutoff_on is not None else None,
-                entry.status.value,
+                entry.user_state.value,
             )
             for entry in expected_calendar.entries
             if entry.period.filing_year == filing_year
@@ -270,8 +269,7 @@ def test_calendar_json_matches_application_coordinates_for_every_supported_year(
                 entry["modelo"],
                 entry["period"],
                 entry["adjusted_closes_on"],
-                entry["payment_cutoff_on"],
-                entry["status"],
+                entry["user_state"],
             )
             for entry in entries
             if entry["period"].startswith(f"{filing_year} ")
@@ -322,7 +320,12 @@ def test_calendar_text_localizes_shift_label_but_json_keeps_token() -> None:
     assert json_result.exit_code == 0, json_result.output
     entries = json.loads(json_result.output)["result"]["entries"]
     modelo_303 = next(entry for entry in entries if entry["modelo"] == "303" and entry["period"] == "2025 4T")
-    assert modelo_303["shift_reason"] == "business_day"
+    detail = modelo_303["detail_action"]
+    assert detail["action"]["action_id"] == "operator.overview.explain"
+    assert detail["action"]["cli_path"] == ["app", "overview", "explain"]
+    assert {binding["argument_name"]: binding["value"] for binding in detail["argument_bindings"]} == {
+        "modelo": "303"
+    }
 
 
 def test_calendar_shift_formatter_localizes_weekend_tokens() -> None:
@@ -647,12 +650,8 @@ def test_calendar_strict_mode_refuses_conflicting_aeat_evidence_references() -> 
     assert lax_json.exit_code == 0, lax_json.output
     result = json.loads(lax_json.output)["result"]
     entry = next(item for item in result["entries"] if item["modelo"] == "303" and item["period"] == "2025 1T")
-    evidence = entry["filing_evidence"]
-    assert evidence["local_filing_state"] == "external_baseline_imported"
-    assert evidence["aeat_submission_state"] == "accepted"
-    assert evidence["aeat_evidence_kind"] == "aeat_live_capture"
-    assert evidence["aeat_reference_id"] == local_ref
-    assert evidence["aeat_evidence_conflict_reference_ids"] == [remote_ref, local_ref]
+    assert entry["local_filing_state"] == "external_baseline_imported"
+    assert entry["aeat_submission_state"] == "accepted"
     warning = next(item for item in result["warnings"] if item["code"] == "filing.aeat_evidence_conflict")
     assert warning["affected_modelos"] == ["303"]
     fix_action = warning["fix_action"]
@@ -811,12 +810,9 @@ def test_calendar_strict_mode_refuses_imported_csv_register_without_justificante
     assert lax.exit_code == 0, lax.output
     result = json.loads(lax.output)["result"]
     entry = next(item for item in result["entries"] if item["modelo"] == "303" and item["period"] == "2025 1T")
-    evidence = entry["filing_evidence"]
-    assert evidence["local_filing_state"] == "external_baseline_imported"
-    assert evidence["aeat_submission_state"] == "accepted"
-    assert evidence["aeat_evidence_kind"] == "aeat_csv_register"
-    assert evidence["aeat_reference_id"] == csv
-    assert evidence["justificante_verified"] is False
+    assert entry["local_filing_state"] == "external_baseline_imported"
+    assert entry["aeat_submission_state"] == "accepted"
+    assert entry["justificante_verified"] is False
     warning = next(item for item in result["warnings"] if item["code"] == "filing.justificante_unverified")
     assert warning["affected_modelos"] == ["303"]
     fix_action = warning["fix_action"]

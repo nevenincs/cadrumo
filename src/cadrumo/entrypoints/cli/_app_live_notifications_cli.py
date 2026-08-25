@@ -50,7 +50,7 @@ from ...core.config import Settings, load_settings
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ._app_live_auth_preflight import _emit_live_auth_preflight
-from ._app_live_payloads import (
+from ._app_live_notifications_payloads import (
     NotificationDocumentHistoryEntry,
     NotificationDocumentHistoryResult,
     NotificationDocumentPullResult,

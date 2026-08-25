@@ -508,6 +508,7 @@ def overview_calendar_output(
             period=str(entry.period),
             adjusted_closes_on=entry.adjusted_closes_on.isoformat(),
             user_state=entry.user_state.value,
+            censo_enrolment_state=entry.censo_enrolment_state.value,
             local_filing_state=entry.filing_evidence.local_filing_state.value,
             aeat_submission_state=entry.filing_evidence.aeat_submission_state.value,
             justificante_verified=entry.filing_evidence.justificante_verified,
@@ -523,6 +524,13 @@ def overview_calendar_output(
             summary=str(event.summary),
             reference_id=event.reference_id,
             status=event.status,
+            aeat_submission_state=event.aeat_submission_state,
+            aeat_submitted_at=(
+                event.aeat_submitted_at.isoformat().replace("+00:00", "Z")
+                if event.aeat_submitted_at is not None
+                else None
+            ),
+            justificante_verified=event.justificante_verified,
         ).model_dump(mode="json")
         for event in cal.events
     ]

@@ -117,7 +117,7 @@ LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live", "filed_list_cmd")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "FiledListResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_filed_payloads", "FiledListResult"),
             identity="app.live.filed.list",
         ),
     ),
@@ -142,7 +142,7 @@ LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live", "filed_discover_cmd")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "FiledDiscoverResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_filed_payloads", "FiledDiscoverResult"),
             identity="app.live.filed.discover",
         ),
     ),
@@ -190,7 +190,7 @@ LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live", "filed_pull_all_cmd")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "FiledHistoryOnboardingResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_filed_payloads", "FiledHistoryOnboardingResult"),
             identity="app.live.filed.pull_all",
         ),
     ),
@@ -315,7 +315,7 @@ LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live", "filed_pull_cmd")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "FiledCaptureResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_filed_payloads", "FiledCaptureResult"),
             identity="app.live.filed.pull",
         ),
     ),
@@ -407,7 +407,7 @@ LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live", "filed_pull_sources_cmd")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "FiledCaptureSourcesResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_filed_payloads", "FiledCaptureSourcesResult"),
             identity="app.live.filed.pull_sources",
         ),
     ),

@@ -232,6 +232,7 @@ class OverviewCalendarEntrySummaryPayload(OutputSchema):
     period: str
     adjusted_closes_on: str
     user_state: Literal["due", "late", "filed", "unknown"]
+    censo_enrolment_state: Literal["not_checked", "not_required", "unverified", "verified"]
     local_filing_state: Literal["not_ready_to_file", "ready_to_file", "external_baseline_imported"]
     aeat_submission_state: Literal["not_observed", "submitted_observed", "accepted", "justificante_verified"]
     justificante_verified: bool
@@ -252,6 +253,11 @@ class OverviewCalendarEventSummaryPayload(OutputSchema):
     summary: str
     reference_id: str
     status: str | None = None
+    aeat_submission_state: Literal["not_observed", "submitted_observed", "accepted", "justificante_verified"] | None = (
+        None
+    )
+    aeat_submitted_at: str | None = None
+    justificante_verified: bool | None = None
 
 
 class OverviewResolvedWarningActionReferencePayload(OutputSchema):

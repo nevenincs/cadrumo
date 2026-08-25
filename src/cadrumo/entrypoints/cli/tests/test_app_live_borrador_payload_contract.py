@@ -6,7 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....tests.aeat_literal_fixtures import BORRADOR_PAYLOAD_WWW2_ORIGIN_FIXTURE
-from .._app_live_payloads import (
+from .._app_live_borrador_payloads import (
     Borrador100LatestResult,
     Borrador100ListResult,
     Borrador100SnapshotSummaryPayload,

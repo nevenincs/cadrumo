@@ -99,7 +99,7 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "Borrador100ListResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_borrador_payloads", "Borrador100ListResult"),
             identity="app.live.borrador.100.list",
         ),
     ),
@@ -134,7 +134,7 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "Borrador100ViewResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_borrador_payloads", "Borrador100ViewResult"),
             identity="app.live.borrador.100.view",
         ),
     ),
@@ -173,7 +173,7 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "Borrador100LatestResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_borrador_payloads", "Borrador100LatestResult"),
             identity="app.live.borrador.100.latest",
         ),
     ),

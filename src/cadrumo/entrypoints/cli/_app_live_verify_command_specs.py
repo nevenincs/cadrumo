@@ -86,7 +86,7 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live_verify_cli", "verify_list")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "VerifyListResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_verify_payloads", "VerifyListResult"),
             identity="app.live.verify.list",
         ),
     ),
@@ -119,7 +119,7 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live_verify_cli", "verify_show")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "VerifyViewResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_verify_payloads", "VerifyViewResult"),
             identity="app.live.verify.view",
         ),
     ),
@@ -167,7 +167,7 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live_verify_cli", "verify_latest")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "VerifyLatestResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_verify_payloads", "VerifyLatestResult"),
             identity="app.live.verify.latest",
         ),
     ),
@@ -211,7 +211,7 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live_verify_cli", "verify_nif_iva")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "VerifyNifIvaResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_verify_payloads", "VerifyNifIvaResult"),
             identity="app.live.verify.nif_iva",
         ),
     ),
@@ -255,7 +255,7 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live_verify_cli", "verify_tgvi")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "VerifyTgviResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_verify_payloads", "VerifyTgviResult"),
             identity="app.live.verify.tgvi",
         ),
     ),

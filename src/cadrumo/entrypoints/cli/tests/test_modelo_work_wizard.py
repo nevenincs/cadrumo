@@ -1,8 +1,8 @@
 """Contract coverage for ``aeat app modelo work wizard``.
 
 The wizard is a guided front end over the flow substrate: on a real
-terminal it renders the full-screen or line-mode frontend, and a
-non-interactive host with outstanding questions refuses with the
+terminal it renders the line-mode frontend, and a non-interactive host
+with outstanding questions refuses with the
 substrate's typed unsupported-console error rather than blocking. So these
 tests exercise the wizard at the two contract surfaces a non-terminal test
 process can honestly reach:

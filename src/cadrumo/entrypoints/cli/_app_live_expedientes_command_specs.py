@@ -110,7 +110,7 @@ LIVE_EXPEDIENTES_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "ExpedientesCaptureResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_expedientes_payloads", "ExpedientesCaptureResult"),
             identity="app.live.expedientes.pull",
         ),
     ),
@@ -137,7 +137,7 @@ LIVE_EXPEDIENTES_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "ExpedientesListResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_expedientes_payloads", "ExpedientesListResult"),
             identity="app.live.expedientes.list",
         ),
     ),
@@ -172,7 +172,7 @@ LIVE_EXPEDIENTES_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "ExpedientesViewResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_expedientes_payloads", "ExpedientesViewResult"),
             identity="app.live.expedientes.view",
         ),
     ),
@@ -199,7 +199,7 @@ LIVE_EXPEDIENTES_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "ExpedientesLatestResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_expedientes_payloads", "ExpedientesLatestResult"),
             identity="app.live.expedientes.latest",
         ),
     ),

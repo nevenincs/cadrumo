@@ -62,7 +62,7 @@ LIVE_DEUDAS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live_deudas_cli", "deudas_list")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "DeudasListResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_deudas_payloads", "DeudasListResult"),
             identity="app.live.deudas.list",
         ),
     ),
@@ -95,7 +95,7 @@ LIVE_DEUDAS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live_deudas_cli", "deudas_view")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "DeudasViewResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_deudas_payloads", "DeudasViewResult"),
             identity="app.live.deudas.view",
         ),
     ),
@@ -120,7 +120,7 @@ LIVE_DEUDAS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live_deudas_cli", "deudas_latest")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "DeudasLatestResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_deudas_payloads", "DeudasLatestResult"),
             identity="app.live.deudas.latest",
         ),
     ),

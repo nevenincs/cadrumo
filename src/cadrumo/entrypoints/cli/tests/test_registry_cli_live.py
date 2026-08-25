@@ -584,7 +584,7 @@ def test_live_iva_wallet_history_payload_preserves_typed_periods() -> None:
 def test_live_iva_auth_payload_preserves_only_a_redacted_diagnostic_reference() -> None:
     """A failed acquisition exposes correlation without disclosing diagnostic storage keys."""
 
-    from .._app_live_payloads import LiveIvaAuthOutcomePayload, LiveIvaSurfaceOutcomePayload
+    from .._app_live_iva_wallet_payloads import LiveIvaAuthOutcomePayload, LiveIvaSurfaceOutcomePayload
 
     accepted = LiveIvaAuthOutcomePayload(
         status=LiveIvaReadStatus.FAILED,
