@@ -39,12 +39,12 @@ from .....application.diagnostics import (
     secure_object_unreadable_total,
 )
 from .....application.filing import ModeloHistory, ModeloHistoryEntry, ModeloHistoryRepository
-from .....application.live import (
+from .....application.live.borrador_100 import (
     Borrador100Snapshot,
     Borrador100SnapshotRepository,
-    SnapshotLifecycleState,
     derive_borrador_100_snapshot_id,
 )
+from .....application.live.snapshot_base import SnapshotLifecycleState
 from .....application.modelo import RecipientFingerprintRegistryRepository
 from .....application.repair_integrity import (
     RepairRemediationDecision,
