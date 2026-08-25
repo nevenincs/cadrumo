@@ -4,7 +4,7 @@ tags:
   - '#source-casilla-integration'
 date: '2026-08-22'
 modified: '2026-08-25'
-body_hash: 'sha256:857a4c322775499e692e7be347f4630d4dd9202d8f7bc88a930a45fc2b1b2927'
+body_hash: 'sha256:846686e46a60a82a02ce4a28748185ff629aaf1df681832a93a933c77faad296'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -319,7 +319,7 @@ Adjudicate, connect or close, persist, and review the M232 row source.
 Adjudicate, connect or close, persist, and review the M360 row source.
 
 - [x] `W05.P16.S96` - adjudicate M360 row semantics and source ownership from official evidence; `.vault/research/2026-08-22-source-casilla-integration-m360-row-source-grounding-research.md`.
-- [ ] `W05.P16.S97` - enroll the refund-operation resolver and remove its deferral; `src/cadrumo/application/aggregation/_source_mesh.py`.
+- [x] `W05.P16.S97` - retain the M360 refund-operation ingress-blocked census disposition and permit reopening only after one secure owner retains the full official request/document carrier with durable identity and fingerprint and S98 proves encrypted persistence/replay diagnostics/review and supported repeated-record export; `src/cadrumo/_data/source_connectivity/census.toml; dev/source_connectivity/tests/test_m360_deferral.py`.
 - [ ] `W05.P16.S98` - prove row persistence, diagnostics, provenance, replay, review, and export for M360; `src/cadrumo/application/modelo/tests/test_m360_row_source.py`.
 - [ ] `W05.P16.S99` - close the M360 census disposition and obtain formal review; `.vault/audit/2026-08-22-m360-row-source-code-review.md`.
 

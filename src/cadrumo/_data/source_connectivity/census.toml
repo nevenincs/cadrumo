@@ -239,7 +239,7 @@ completion_criterion = "A source owner supplies direction, relationship type, st
 candidate_id = "rows.refund-operation"
 disposition = "ingress_blocked"
 owner = "source-connectivity-campaign"
-review_condition = "Retain deferral until one secure owner preserves Modelo 360 request country/year/period, official document identity and operation type, issue date, taxable base, VAT quota, deductible proportion, requested amount, currency, nature, supplier identity/address, durable identity, and fingerprint; then S97-S99 prove the real encrypted resolver, replay/review, and supported repeated-record export route."
+review_condition = "Reopen only when a secure owner retains the full official M360 request/document carrier: refund country/year/period, operation type, invoice/import document number/date, base, VAT quota, deductible proportion, requested amount, currency, nature (including Other description), and supplier VAT identity/name/address; every document has immutable durable identity/fingerprint; and S98 proves encrypted revision persistence/replay, diagnostics, review, and supported official repeated-record export."
 expires_on = 2026-12-31
 capability_locators = [
   "src/cadrumo/application/calculations/_row_set_assembly.py:174",
@@ -262,8 +262,9 @@ summary = "Worksheet rows dispatch to the typed refund-operation observation ass
 
 [entries.bounded_follow_up]
 action_id = "source-casilla.rows-refund-ingress"
+owner = "source-connectivity-campaign"
 deadline = 2026-11-30
-completion_criterion = "One secure source owner preserves the complete official document-detail and request axes with immutable identity and fingerprint; S97 proves resolver ownership and refusal semantics, S98 proves encrypted revision/replay, diagnostics, review and supported repeated-record export, and S99 independently reviews the evidence before any connected claim."
+completion_criterion = "Keep ingress_blocked until the review condition is satisfied: the full carrier, secure owner, immutable durable identity and fingerprint, and S98 proof must all exist before resolver enrollment or any connected claim; S99 independently reviews that evidence."
 
 [[entries]]
 candidate_id = "rows.donativo-donor"

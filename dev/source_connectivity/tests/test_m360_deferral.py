@@ -16,24 +16,31 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_m360_remains_measurably_ingress_blocked_until_its_missing_authority_exists() -> None:
+    reopening_predicate = (
+        "Reopen only when a secure owner retains the full official M360 request/document carrier: refund country/year/"
+        "period, operation type, invoice/import document number/date, base, VAT quota, deductible proportion, "
+        "requested amount, currency, nature (including Other description), and supplier VAT identity/name/address; "
+        "every document has immutable durable identity/fingerprint; and S98 proves encrypted revision persistence/"
+        "replay, diagnostics, review, and supported official repeated-record export."
+    )
     entry = next(
         item for item in load_source_connectivity_census().entries if item.candidate_id == "rows.refund-operation"
     )
 
     assert entry.disposition.value == "ingress_blocked"
+    assert entry.owner == "source-connectivity-campaign"
+    assert entry.review_condition == reopening_predicate
+    assert entry.expires_on == date(2026, 12, 31)
     assert entry.bounded_follow_up is not None
     assert entry.bounded_follow_up.action_id == "source-casilla.rows-refund-ingress"
+    assert entry.bounded_follow_up.owner == "source-connectivity-campaign"
     assert entry.follow_up_owner() == "source-connectivity-campaign"
-    assert entry.expires_on is not None
-    assert "request country/year/period" in entry.review_condition
-    assert "official document identity" in entry.review_condition
-    assert "taxable base, VAT quota, deductible proportion" in entry.review_condition
-    assert "supplier identity/address" in entry.review_condition
-    assert "S97-S99" in entry.review_condition
-    assert "immutable identity and fingerprint" in entry.bounded_follow_up.completion_criterion
-    assert "S97 proves resolver ownership and refusal semantics" in entry.bounded_follow_up.completion_criterion
-    assert "S98 proves encrypted revision/replay" in entry.bounded_follow_up.completion_criterion
-    assert "S99 independently reviews the evidence" in entry.bounded_follow_up.completion_criterion
+    assert entry.bounded_follow_up.deadline == date(2026, 11, 30)
+    assert entry.bounded_follow_up.completion_criterion == (
+        "Keep ingress_blocked until the review condition is satisfied: the full carrier, secure owner, immutable "
+        "durable identity and fingerprint, and S98 proof must all exist before resolver enrollment or any connected "
+        "claim; S99 independently reviews that evidence."
+    )
 
 
 def test_m360_deferred_source_has_no_connected_downstream_lifecycle() -> None:
