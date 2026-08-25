@@ -188,7 +188,13 @@
         "--period",
         "1T"
       ],
-      "captures": [],
+      "captures": [
+        {
+          "json_path": "result.work_unit_id",
+          "name": "history_work_unit_id",
+          "value": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
+        }
+      ],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.create",
@@ -293,7 +299,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88",
+          "calculation_revision_id": "c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -413,7 +419,6 @@
             "98": "0",
             "99": "0",
             "decl.ejercicio": "2026",
-            "decl.periodo": "0",
             "iva.autoconsumo.promotor.base": "0",
             "iva.autoconsumo.promotor.cuota": "0.00",
             "iva.autorepercutido.interior.deducible": "0",
@@ -2982,7 +2987,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "0"
+              "value": "1T"
             },
             {
               "absent_by_design": false,
@@ -3793,30 +3798,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88`.",
-          "source_provenance": [
-            {
-              "binding_source": "ledger_iva_aggregation",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "source_kind": "ledger_iva_aggregation",
-              "source_ref": "transaction:71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
-            },
-            {
-              "binding_source": "ledger_iva_aggregation",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "source_kind": "ledger_iva_aggregation",
-              "source_ref": "transaction:e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
-            },
-            {
-              "binding_source": "prorrata_regularizacion",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "source_kind": "prorrata_regularizacion",
-              "source_ref": "303:2026:1T,2T,3T,4T:prorrata-current-year-values"
-            }
-          ],
+          "saved_confirmation": "Saved as draft calculation revision c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
@@ -3842,12 +3824,7 @@
         "modelo",
         "work",
         "history",
-        "--modelo",
-        "303",
-        "--year",
-        "2026",
-        "--period",
-        "1T"
+        "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
       ],
       "captures": [],
       "envelope": {
@@ -3907,9 +3884,9 @@
             },
             {
               "actor": "docs-sequence-sandbox",
-              "event_id": "e49c89cecc02946e7134e7f76f3b8aa561807358913047ba4c5ae6ed971e1bb1",
+              "event_id": "b093d3e82e7ff3cf98edd08c84ed787b8953054993099856c440c09b6162d8a6",
               "event_type": "modelo.calculation.created",
-              "object_id": "252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88",
+              "object_id": "c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1",
               "object_type": "calculation_revision",
               "occurred_at": "2026-04-01T09:00:00+00:00",
               "payload": {
@@ -3917,8 +3894,8 @@
                 "borrador_bindings_trace_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
                 "borrador_participated": "false",
                 "borrador_snapshot_id": "",
-                "calculation_revision_id": "252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88",
-                "casilla_count": "147",
+                "calculation_revision_id": "c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1",
+                "casilla_count": "146",
                 "filing_year": "2026",
                 "formula_count": "28",
                 "has_provenance": "true",
@@ -3926,8 +3903,9 @@
                 "modelo": "303",
                 "period": "1T",
                 "row_binding_count": "0",
+                "row_casilla_count": "0",
                 "source_provenance_count": "3",
-                "source_provenance_trace_sha256": "d8cdbc1bcbce43b9e6b21cb0ea5cc31bfd2a308824cb36df01dace6e8442f135",
+                "source_provenance_trace_sha256": "9cf169d9ce731bb7a2ff8e305f6ef7acf1482ebab0997e41c54760a7b95acc3b",
                 "source_transaction_count": "2",
                 "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
               }

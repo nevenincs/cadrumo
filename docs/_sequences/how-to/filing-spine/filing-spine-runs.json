@@ -79,7 +79,9 @@
         "--iva-rate",
         "0.21",
         "--iva-amount",
-        "105"
+        "105",
+        "--deduction-kind",
+        "domestic_current"
       ],
       "captures": [],
       "envelope": null,
@@ -95,50 +97,53 @@
         "--format",
         "json",
         "app",
-        "modelo",
-        "work",
-        "create",
-        "--modelo",
-        "303",
-        "--year",
-        "2026",
-        "--period",
-        "1T"
+        "ledger",
+        "evidence",
+        "add",
+        "fixtures/factura-material-oficina.pdf",
+        "--supplier",
+        "Papeleria Central SL",
+        "--invoice-number",
+        "C-2026-0087",
+        "--invoice-date",
+        "2026-02-11",
+        "--taxable-base",
+        "500",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "105"
       ],
-      "captures": [],
+      "captures": [
+        {
+          "json_path": "result.evidence_id",
+          "name": "evidence_id",
+          "value": "9a075f52dad08e80"
+        }
+      ],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.work.create",
+        "command": "ledger.evidence.add",
         "notices": [],
         "result": {
-          "applicability_guard_bypassed": false,
+          "attachment_id": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
+          "bucket_event_ids": [
+            "23242b36321dbc14fbff281ac7478eee69f63066c137152966db7975d0856c0d"
+          ],
           "bucket_id": "<bucket-id>",
-          "causante_ccaa": null,
-          "created_at": "2026-04-01T09:00:00+00:00",
-          "current_calculation_revision_id": null,
-          "current_filing_record_id": null,
-          "discard_reason": null,
-          "discarded_at": null,
-          "discarded_by": null,
-          "filed_calculation_revision_id": null,
-          "filing_year": 2026,
-          "modelo": "303",
-          "name": "303-2026-1T",
-          "name_applied": null,
-          "operation": "modelo.work.create",
-          "period": {
-            "code": "1T",
-            "filing_year": 2026
-          },
-          "revision_id": "2026-y-siguientes",
-          "short_current_calculation_revision_id": null,
-          "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "af6b2264dd9d",
-          "state": "borrador",
-          "status": "created",
-          "status_message": "New work unit created.",
-          "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
+          "created_at": "2026-04-01T09:00:00Z",
+          "evidence_id": "9a075f52dad08e80",
+          "invoice_date": "2026-02-11",
+          "invoice_number": "C-2026-0087",
+          "iva_amount": "105",
+          "iva_rate": "0.21",
+          "media_kind": "pdf",
+          "notes": "",
+          "source_path": "fixtures/factura-material-oficina.pdf",
+          "source_sha256": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
+          "supplier": "Papeleria Central SL",
+          "taxable_base": "500",
+          "updated_at": "2026-04-01T09:00:00Z"
         },
         "schema_version": "2",
         "status": "success"
@@ -148,6 +153,24 @@
       "kind": "setup",
       "stderr_text": null,
       "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "attach",
+        "e3eeac5e",
+        "--purchase-invoice-evidence-id",
+        "9a075f52dad08e80"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "ID\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\nDate\t2026-02-11\nAmount\t605\nDescription\tCompra de material de oficina proveedor local\nReview status\treviewed\n"
     },
     {
       "argv": [
