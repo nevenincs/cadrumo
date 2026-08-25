@@ -413,6 +413,11 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
                     source=ActionArgumentSource.VERDICT_CONTEXT,
                     source_key="modelo",
                 ),
+                ActionArgumentBindingSpecification(
+                    argument_name="year",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="year",
+                ),
             ),
         ),
         ActionCatalogueEntry(

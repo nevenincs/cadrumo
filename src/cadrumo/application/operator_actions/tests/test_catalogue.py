@@ -97,6 +97,18 @@ def test_initial_actions_are_deterministic_and_lookup_by_stable_identity() -> No
         ),
     )
     assert lookup_action("operator.registry.verify").target_command_key == "registry.verify"
+    assert lookup_action("operator.overview.explain").argument_specifications == (
+        ActionArgumentBindingSpecification(
+            argument_name="modelo",
+            source=ActionArgumentSource.VERDICT_CONTEXT,
+            source_key="modelo",
+        ),
+        ActionArgumentBindingSpecification(
+            argument_name="year",
+            source=ActionArgumentSource.VERDICT_CONTEXT,
+            source_key="year",
+        ),
+    )
     assert lookup_action("operator.modelo.work.calculate").argument_specifications == (
         ActionArgumentBindingSpecification(
             argument_name="work_unit_id",
