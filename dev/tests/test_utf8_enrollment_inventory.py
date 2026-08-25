@@ -98,7 +98,7 @@ _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
         "application/user_profile/_repository.py",
         "application/wizard/_translations.py",
         "application/workflow/_persistence.py",
-        "core/_bucket_pointer_io.py",
+        "core/bucket_pointer.py",
         "core/corpus_manifest/__init__.py",
         "core/i18n/_render.py",
         "core/json_contract.py",

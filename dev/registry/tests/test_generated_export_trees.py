@@ -11,9 +11,8 @@ That is a strictly weaker question -- it can say two directories differ, but it
 cannot say the tree is a VALID registry authority -- and it let trees be written
 without the pre-cutover proof that the generator already owned.
 
-Each generated modelo is enrolled as a row in :data:`_GENERATED_TREES`. Modelo 303
-and 390 are deliberately absent: their maps and profiles remain under a separate
-owner until they are ready for this generated authority.
+Each generated modelo is enrolled as a row in :data:`_GENERATED_TREES`. Modelo
+390 remains absent while its maps and profiles are under their separate owner.
 """
 
 from __future__ import annotations
@@ -122,6 +121,14 @@ _GENERATED_TREES: tuple[_GeneratedTree, ...] = (
     # supporting-modelo needs too: the isolation must admit modelo 200, whose
     # annual IS return these pagos fraccionados are instalments of.
     _GeneratedTree("222", "2025-y-siguientes", "aeat-dr-222-2025", "2025", 2025, "1P"),
+    # The selected five source-bound M303 epochs.  The 2022 layout remains
+    # outside this campaign; the superseded 2023-y-siguientes revision is not a
+    # generated-tree fallback and must never re-enter this set.
+    _GeneratedTree("303", "2023", "aeat-dr-303-2023", "2023", 2023, "4T"),
+    _GeneratedTree("303", "2024-hasta-08-y-2t", "aeat-dr-303-2024-early", "2024-early", 2024, "2T"),
+    _GeneratedTree("303", "2024-desde-09-y-3t", "aeat-dr-303-2024-late", "2024-late", 2024, "3T"),
+    _GeneratedTree("303", "2025", "aeat-dr-303-2025", "2025", 2025, "4T"),
+    _GeneratedTree("303", "2026-y-siguientes", "aeat-dr-303-2026", "2026", 2026, "4T"),
 )
 
 
@@ -133,6 +140,14 @@ def _isolated_authority(tree: _GeneratedTree, root: Path) -> Path:
     """
     registry_root = root / "registry" / "aeat"
     shutil.copytree(bundled_path("registry", "aeat", "legal"), registry_root / "legal")
+    if tree.modelo == "303":
+        # M303's selected snapshot compiles the canonical annual Orden support
+        # authority.  It is registry authority, not an export input, so stage
+        # the same complete bundled directory rather than reconstituting it.
+        shutil.copytree(
+            bundled_path("registry", "aeat", "m303_orden_anual"),
+            registry_root / "m303_orden_anual",
+        )
     modelo_root = registry_root / "modelos" / tree.modelo
     shutil.copytree(
         bundled_path("registry", "aeat", "modelos", tree.modelo),

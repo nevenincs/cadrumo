@@ -473,8 +473,8 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
         ),
         members=(
             "cadrumo.core",
-            "cadrumo.core._bucket_pointer",
-            "cadrumo.core._bucket_pointer_io",
+            "cadrumo.core.bucket_pointer",
+            "cadrumo.core.bucket_pointer",
             "cadrumo.core._config_integration_fields",
             "cadrumo.core._config_state_root",
             "cadrumo.core._config_support",
