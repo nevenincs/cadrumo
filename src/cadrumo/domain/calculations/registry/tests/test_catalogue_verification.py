@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import inspect
 import json
+from collections.abc import Sequence
 from datetime import date
 from pathlib import Path
 
@@ -26,7 +27,7 @@ from .._coverage import (
 from .._errors import NoRevisionForPeriodError, RegistryValidationError
 from .._legal import verify_legal_catalogue_grounding
 from .._loader import clear_fingerprint_cache
-from .._schema import filing_period_from_scope
+from .._schema import SourceReference, filing_period_from_scope
 from .._snapshot import build_snapshot, check_snapshot_filing_review_tier
 from .._temporal import coverage_assessment_horizon, revision_selection_coordinates, select_revision
 from .._validate import RegistryValidator
@@ -238,7 +239,7 @@ def test_supported_period_matrix_has_applicable_record_design_sources() -> None:
     assert not missing, "supported record-design matrix gaps:\n" + "\n".join(missing)
 
 
-def _record_design_sources_cover(sources: list[object], evidence_date: date) -> bool:
+def _record_design_sources_cover(sources: Sequence[SourceReference], evidence_date: date) -> bool:
     """Return whether a cited record-design source covers one period endpoint."""
     return any(
         (source.applies_from is None or source.applies_from <= evidence_date)
