@@ -13,6 +13,7 @@ subprocess transport itself is proven separately in
 from __future__ import annotations
 
 import json
+import sys
 
 import pytest
 
@@ -41,9 +42,9 @@ def _fresh_registry_cache(tmp_path, monkeypatch: pytest.MonkeyPatch):
     reset_settings_cache()
     clear_fingerprint_cache()
     _load_registry_tree_cached.cache_clear()
-    _load_authority.cache_clear()  # type: ignore[attr-defined]
+    _load_authority.cache_clear()  # ty: ignore[unresolved-attribute]
     yield
-    _load_authority.cache_clear()  # type: ignore[attr-defined]
+    _load_authority.cache_clear()  # ty: ignore[unresolved-attribute]
     _load_registry_tree_cached.cache_clear()
     clear_fingerprint_cache()
     reset_settings_cache()
@@ -83,6 +84,27 @@ def test_dispatch_verb_in_process_reconstructs_the_argv_from_the_schema() -> Non
     envelope, is_error = parse_cli_envelope(run)
     assert is_error is False
     assert envelope["command"] == "registry.inspect"
+
+
+@pytest.mark.parametrize(
+    "argv_tail",
+    (
+        ["--format", "json", "app", "registry", "inspect"],
+        ["--profile-secrets-stdin", "--format", "json", "app", "registry", "inspect"],
+    ),
+    ids=("success", "inapplicable-secret-refusal"),
+)
+def test_inprocess_stdin_is_restored_after_success_and_refusal(argv_tail: list[str]) -> None:
+    original = sys.stdin
+
+    run = run_cli_in_process(
+        argv_tail,
+        acquire_timeout_s=30.0,
+        stdin_payload='{"profile_passphrase":"synthetic-only"}',
+    )
+
+    assert run is not None
+    assert sys.stdin is original
 
 
 def test_parse_cli_envelope_rejects_obsolete_success_envelope_version() -> None:
