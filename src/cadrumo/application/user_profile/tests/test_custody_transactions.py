@@ -735,6 +735,7 @@ def test_create_orchestration_journals_stages_verifies_and_publishes_pointer_las
         sentinel=sentinel,
         data_files=data_files,
         label="Custody operator",
+        publication_kind="restore",
         transaction_id=transaction_id,
         now=_INSTANT,
     )

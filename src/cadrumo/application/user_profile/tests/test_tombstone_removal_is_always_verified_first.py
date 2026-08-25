@@ -34,9 +34,7 @@ _VERIFY = "verify_deletion_tombstone"
 _PACKAGE = Path(__file__).resolve().parents[1]
 
 #: A delete step that destroys without checking, used to prove the detector.
-_UNGUARDED_SAMPLE = (
-    "def remove_step(self):\n    self._adapters.remove_deletion_tombstone(profile_id=1)\n"
-)
+_UNGUARDED_SAMPLE = "def remove_step(self):\n    self._adapters.remove_deletion_tombstone(profile_id=1)\n"
 
 #: The same step with the verification restored ahead of it.
 _GUARDED_SAMPLE = (

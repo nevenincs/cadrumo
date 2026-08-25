@@ -704,14 +704,14 @@ if TYPE_CHECKING:
     from ._login_session_port import (
         profile_session_serves_bucket as profile_session_serves_bucket,
     )
-    from ._overview import (
-        MASKED_PLACEHOLDER as MASKED_PLACEHOLDER,
-    )
     from ._operation_definitions import (
         build_user_profile_operation_definitions as build_user_profile_operation_definitions,
     )
     from ._operation_definitions import (
         build_user_profile_operation_registrations as build_user_profile_operation_registrations,
+    )
+    from ._overview import (
+        MASKED_PLACEHOLDER as MASKED_PLACEHOLDER,
     )
     from ._overview import (
         ProfileFieldChoice as ProfileFieldChoice,
