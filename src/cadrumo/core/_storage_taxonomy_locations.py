@@ -542,7 +542,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.PROFILE_CUSTODY_TRANSACTION_JOURNAL,
         "profile-custody-transactions",
-        consumer_module="application/user_profile/_custody_repository.py",
+        consumer_module="application/user_profile/custody_repository.py",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
@@ -550,7 +550,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.PROFILE_CUSTODY_RECEIPT,
         "profile-custody-receipts",
-        consumer_module="application/user_profile/_custody_repository.py",
+        consumer_module="application/user_profile/custody_repository.py",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
@@ -558,7 +558,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.PROFILE_CUSTODY_HOLD_EVIDENCE,
         "profile-custody-holds",
-        consumer_module="application/user_profile/_custody_hold.py",
+        consumer_module="application/user_profile/custody_hold.py",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
@@ -582,7 +582,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.PROFILE_CUSTODY_HOLD_DERIVED_EVIDENCE,
         "profile-custody-holds/derived-evidence",
-        consumer_module="application/user_profile/_custody_hold.py",
+        consumer_module="application/user_profile/custody_hold.py",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,

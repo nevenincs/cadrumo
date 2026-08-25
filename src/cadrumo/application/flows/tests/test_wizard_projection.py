@@ -2,8 +2,7 @@
 
 Every scenario projects the real one-shot wizard catalogue
 (:data:`cadrumo.application.wizard.WIZARD_FLOWS`) into a substrate
-:class:`FlowDefinition` through the public
-``cadrumo.application.flows`` facade, then asserts the mechanical mapping
+:class:`FlowDefinition` through its defining modules, then asserts the mechanical mapping
 holds one-to-one: id and section count, every question id becoming a page
 with its ``profile_key`` as ``domain_key``, widget identity with the
 TEXT-with-choices upgrade to SELECT, ``visible_when`` clause shapes, and
@@ -30,15 +29,9 @@ from ....core.flows import (
 # a genuine peer-WIP breakage would surface as a loud collection error rather
 # than a silent skip; at HEAD it imports cleanly.
 from ...wizard import WIZARD_FLOWS, WizardFlow, WizardQuestion, WizardVisibility
-from .. import (
-    FlowCondition,
-    FlowDefinition,
-    FlowPage,
-    FlowVisibility,
-    flow_definition_from_wizard_flow,
-    start_flow,
-    visible_sequence,
-)
+from ..definition import FlowCondition, FlowDefinition, FlowPage, FlowVisibility
+from ..engine import start_flow, visible_sequence
+from ..wizard_projection import flow_definition_from_wizard_flow
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

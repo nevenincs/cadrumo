@@ -26,6 +26,25 @@ from uuid import UUID
 import pytest
 from sqlalchemy.exc import DatabaseError as SqlDatabaseError
 
+from cadrumo.application.user_profile.authentication import ProfileAuthenticationRefusedError
+from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
+from cadrumo.application.user_profile.login_session import (
+    _HANDOVER_JOURNAL_MAX_BYTES,
+    _clear_handover_journal,
+    _handover_journal_path,
+    _HandoverPhase,
+    _load_handover_journal,
+    _ProfileLoginHandoverJournal,
+    _save_handover_journal,
+    login_profile,
+)
+from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
+from cadrumo.application.user_profile.profile_record_repository import (
+    close_active_profile_record_session,
+    require_profile_record_session,
+)
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
+
 from ....adapters.persistence.storage import (
     build_profile_custody_port,
     build_profile_login_session_port,
@@ -39,34 +58,14 @@ from ....adapters.persistence.storage.custody import (
     profile_session_path,
     resume_profile_session,
 )
-from ....core import (
-    BucketPointer,
-    ProfileSessionRefusalReason,
-    iter_directory,
-    read_pointer,
-    write_pointer,
-)
+from ....core import ProfileSessionRefusalReason, iter_directory
 from ....core import config as config_module
+from ....core.bucket_pointer import BucketPointer, read_pointer, write_pointer
 from ....core.config import Settings
 from ....core.time import now as _now
 from ....domain.buckets import BucketEventHistoryPersistenceError
 from ....tests.secure_sql import isolated_profile_storage_root
-from .._authentication import ProfileAuthenticationRefusedError
-from .._custody_ports import bind_profile_custody_port
-from .._login_session import (
-    _HANDOVER_JOURNAL_MAX_BYTES,
-    _clear_handover_journal,
-    _handover_journal_path,
-    _HandoverPhase,
-    _load_handover_journal,
-    _ProfileLoginHandoverJournal,
-    _save_handover_journal,
-    login_profile,
-)
-from .._login_session_port import bind_profile_login_session_port
-from .._profile_pointer_transaction import ActiveProfilePointerTransactionError
-from .._profile_record_repository import close_active_profile_record_session, require_profile_record_session
-from .._registration import register_profile_with_credentials
+from ..profile_pointer import ActiveProfilePointerTransactionError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

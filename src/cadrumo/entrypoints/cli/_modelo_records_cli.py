@@ -185,7 +185,7 @@ def filing_record_import(
     if not casilla_values and file is None:
         raise typer.BadParameter(tr("cli.app.modelo.filing_record.import_set_required"))
     try:
-        from ...application.workflow import workflow_state_repository
+        from cadrumo.application.workflow.persistence import workflow_state_repository
 
         expected_tax_id = _declared_tax_id(workflow_state_repository().load().active_profile_record())
         if file is not None:

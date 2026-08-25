@@ -8,17 +8,6 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationInteractionKind,
-    require_active_bucket_id,
-)
-from ...core.time import now
-from ...domain.deadlines import TaxpayerProfile
 from cadrumo.application.operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -35,6 +24,18 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
+
+from ...core import (
+    OperationCancellation,
+    OperationClosePolicy,
+    OperationDeadline,
+    OperationDurability,
+    OperationEffect,
+    OperationInteractionKind,
+)
+from ...core.bucket_pointer import require_active_bucket_id
+from ...core.time import now
+from ...domain.deadlines import TaxpayerProfile
 from ..operations.owner import OperationEventEmitter, OperationExecutorContext
 from ..storage.sync_runs import SyncRunRecordRepositoryProtocol
 from ._filed_data_capture import (
@@ -109,8 +110,9 @@ type FiledHistorySyncRunRepositoryFactory = Callable[[], SyncRunRecordRepository
 
 def _resolve_active_filed_history_profile() -> TaxpayerProfile | None:
     """Load the selected profile through its canonical internal projection."""
+    from cadrumo.application.workflow.persistence import workflow_state_repository
+
     from ..wizard import WizardStatusError, load_active_taxpayer_profile
-    from ..workflow import workflow_state_repository
 
     try:
         return load_active_taxpayer_profile(workflow_state_repository().load())

@@ -17,8 +17,14 @@ from ...core import OperationEffect
 from ...core.async_cleanup import AsyncCloseable
 from ...core.identity import ContentDigest
 from .capabilities import OperationOwnedResource
-from .events import OperationDiagnosticReference, OperationEventCode, OperationLogSeverity
-from .models import OperationIdentity, OperationReference, OperationRequest, OperationRevision
+from .events import OperationEventCode, OperationLogSeverity
+from .models import (
+    OperationDiagnosticReference,
+    OperationIdentity,
+    OperationReference,
+    OperationRequest,
+    OperationRevision,
+)
 from .secret_submission import OperationEphemeralSecretAccess
 
 

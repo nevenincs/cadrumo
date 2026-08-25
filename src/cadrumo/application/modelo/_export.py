@@ -1458,7 +1458,7 @@ def export_modelo_revision(
         :func:`~cadrumo.application.modelo._export._validate_output_path`:
             Refuses unsafe destinations before fichero bytes are written.
     """
-    from ...core import resolve_active_bucket_id
+    from ...core.bucket_pointer import resolve_active_bucket_id
 
     active_bucket_id = resolve_active_bucket_id()
     if active_bucket_id is None:

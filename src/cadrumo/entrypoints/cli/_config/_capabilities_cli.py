@@ -12,7 +12,8 @@ from __future__ import annotations
 
 import typer
 
-from ....core import ServiceCapability, resolve_active_bucket_id
+from ....core import ServiceCapability
+from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.i18n import tr
 from .._common import bad, emit_envelope
 
@@ -22,7 +23,7 @@ from ._capabilities_payloads import CapabilitiesShowResult, CapabilitySetResult
 
 def capabilities_show(ctx: typer.Context) -> None:
     """Report the resolved posture of every service capability for the active profile."""
-    from ....application.user_profile import resolve_active_capability
+    from ....application.user_profile.capabilities import resolve_active_capability
 
     profile_id = resolve_active_bucket_id()
     rows: list[dict[str, object]] = []
@@ -49,7 +50,7 @@ def capabilities_show(ctx: typer.Context) -> None:
 
 def capabilities_set(ctx: typer.Context, capability: ServiceCapability, state: str) -> None:
     """Opt the active profile in or out of one service capability."""
-    from ....application.user_profile import ProfileFactWriteDoor, apply_profile_fact_changes
+    from ....application.user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
     from ....domain.user_profile import UserProfileFact
 
     profile_id = resolve_active_bucket_id()

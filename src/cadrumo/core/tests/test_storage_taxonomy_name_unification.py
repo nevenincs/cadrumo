@@ -12,7 +12,7 @@ provides: it takes its whole platform context as an argument, so a test hands
 over a synthetic one rather than mutating the ambient process around the call.
 
 The journal-repository case is a different flavor of the same duplication.
-``application/_journal_repository.py`` is not blocked by the hexagonal
+``application/journal_repository.py`` is not blocked by the hexagonal
 direction -- application may import core freely -- so its ``"buckets"``
 literal was plain drift rather than a layering symptom, found once the new
 directory-agreement gate made every hand-typed layout name suspect. Included
@@ -59,7 +59,7 @@ _SETTINGS_MODULE = Path(__file__).resolve().parent.parent / "config.py"
 _MASTER_KEY_MODULE = (
     Path(__file__).resolve().parents[2] / "adapters" / "persistence" / "storage" / "master_key" / "_master_key.py"
 )
-_JOURNAL_REPOSITORY_MODULE = Path(__file__).resolve().parents[2] / "application" / "_journal_repository.py"
+_JOURNAL_REPOSITORY_MODULE = Path(__file__).resolve().parents[2] / "application" / "journal_repository.py"
 
 
 def test_the_core_constants_are_the_taxonomy_not_a_second_copy() -> None:

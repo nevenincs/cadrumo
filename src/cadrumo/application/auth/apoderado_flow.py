@@ -3,7 +3,7 @@
 Apoderamiento representation is NOT a profile fact: it persists in the
 :class:`ApoderadoService`'s own encrypted namespace, separate from the
 taxpayer profile record. The CLI door therefore hosts these pages over an
-in-memory-only :class:`~cadrumo.application.flows.FlowState`
+in-memory-only :class:`~cadrumo.application.flows.engine.FlowState`
 (:class:`~cadrumo.core.flows.FlowMode` ``MODIFY``, checkpointing declared
 ``UNAVAILABLE`` in both modes) and hands the reviewed answers to
 :meth:`ApoderadoService.configure` at commit -- the substrate never mints a
@@ -41,16 +41,9 @@ from ...core.flows import (
     FlowWidgetKind,
 )
 from ...core.identity import IdentityError, validate_identity
-from ..flows import (
-    CopyRef,
-    FlowChoice,
-    FlowDefinition,
-    FlowPage,
-    FlowSection,
-    FlowState,
-    ValidationVerdict,
-    register_answer_validator,
-)
+from ..flows.definition import CopyRef, FlowChoice, FlowDefinition, FlowPage, FlowSection
+from ..flows.engine import FlowState
+from ..flows.validators import ValidationVerdict, register_answer_validator
 
 #: Flow, section, and page ids. Answers key the canonical map by these bare page ids.
 APODERADO_FLOW_ID = "apoderado"
@@ -86,7 +79,7 @@ APODERADO_FLOW_LOCALE_KEYS: tuple[str, ...] = (
 class ApoderadoFlowAnswers(BaseModel):
     """The typed answer shape the apoderado flow collects.
 
-    Carried on the :class:`~cadrumo.application.flows.FlowDefinition` as its
+    Carried on the :class:`~cadrumo.application.flows.definition.FlowDefinition` as its
     declared ``answers_model``. ``scopes`` is the CHECKBOX page's canonical
     comma-joined token string; :func:`apoderado_answers_from_state` splits it
     into the scope-token tuple :meth:`ApoderadoService.configure` validates.

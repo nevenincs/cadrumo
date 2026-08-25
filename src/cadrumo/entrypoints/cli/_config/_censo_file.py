@@ -58,7 +58,7 @@ _LOCALE_KEYS: tuple[str, ...] = (
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from ....application.user_profile import CensalReconciliation
+    from ....application.user_profile.censo_sync import CensalReconciliation
     from ....domain.user_profile import UserProfileFact
 
 
@@ -69,8 +69,8 @@ def censo_file(
 ) -> None:
     """Parse the certificate and preview — or with ``--apply``, enroll — its censal facts."""
     from ....adapters.inbound.censo import parse_certificado_censal_bytes
-    from ....application.user_profile import apply_cotejo
-    from ....application.workflow import workflow_state_repository
+    from ....application.user_profile.cotejo_apply import apply_cotejo
+    from cadrumo.application.workflow.persistence import workflow_state_repository
     from ....domain.censo import censo_facts_from_certificado
 
     certificado = parse_certificado_censal_bytes(file.read_bytes())
@@ -111,14 +111,9 @@ def censo_pull(
     import asyncio
 
     from ....application.live import pull_censal_datos
-    from ....application.user_profile import (
-        CENSAL_ADOPTABLE_PATHS,
-        CENSO_SOURCE_TAG,
-        CensalFieldIntent,
-        censal_facts_from_read,
-        reconcile_censal_read,
-        record_to_effective_facts,
-    )
+    from ....application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS, CENSO_SOURCE_TAG, censal_facts_from_read, reconcile_censal_read
+    from ....application.user_profile.censal_operation import CensalFieldIntent
+    from ....application.user_profile.projections import record_to_effective_facts
     from ....domain.user_profile import UserProfileFact
     from ....entrypoints import run_censal_review
     from ._censo_review_cli import confirm_censal_review

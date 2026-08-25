@@ -132,7 +132,7 @@ def test_registering_a_second_profile_uses_its_own_identity_while_the_first_is_a
     scripted ``profile create``; the door moved to credential registration
     and the invariant did not.
     """
-    from ....application.workflow import read_profile_bucket
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
 
     register_cli_profile(
         label="alpha",
@@ -257,7 +257,7 @@ def test_config_profile_create_refuses_existing_profile() -> None:
 
 
 def test_config_profile_edit_refuses_missing_profile_without_creating_bucket() -> None:
-    from ....application.workflow import read_profile_bucket
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
 
     result = _invoke_profile_app(
         (
@@ -289,7 +289,7 @@ def test_config_login_emits_profile_activated_event() -> None:
     """
 
     from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ....application.workflow import read_profile_bucket
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
     from ....domain.buckets import BucketEventType
 
     # Registered through the real credential door: ``seed`` provisions a raw
@@ -363,7 +363,7 @@ def test_config_profile_delete_tombstones_with_yes() -> None:
     result = _invoke_profile_app(("delete", "operator", "--yes"))
     assert result.exit_code == 0, result.output
     assert "status\ttombstoned" in result.output
-    from ....core import resolve_active_bucket_id
+    from ....core.bucket_pointer import resolve_active_bucket_id
 
     assert resolve_active_bucket_id() is None
 
@@ -392,7 +392,7 @@ def test_config_login_refuses_a_tombstoned_profile() -> None:
     one with exit code 0.
     """
 
-    from ....core import resolve_active_bucket_id
+    from ....core.bucket_pointer import resolve_active_bucket_id
 
     # Registered through the real credential door: ``seed`` provisions a raw
     # session key, not a passphrase-backed custody envelope, so ``config login``
@@ -426,7 +426,7 @@ def test_config_profile_show_reports_a_tombstoned_profile_as_tombstoned() -> Non
 def test_config_profile_show_inspects_a_tombstoned_profile_by_label_and_uuid() -> None:
     """``show`` preserves tombstoned inspect behavior for label and UUID targets."""
 
-    from ....application.workflow import read_profile_bucket
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
 
     # Registered but deliberately NOT activated: deleting the ACTIVE profile is
     # refused, so a login here would block the verb under test.
@@ -513,7 +513,7 @@ def test_show_and_status_do_not_contradict_on_a_registered_profile() -> None:
 def test_config_profile_show_refuses_when_no_active_profile(_isolated_backend: Path) -> None:
     # Clear the active-profile precedence chain (env + pointer) so the
     # resolver returns None and the show verb refuses.
-    from ....core import BucketPointer, write_pointer
+    from ....core.bucket_pointer import BucketPointer, write_pointer
     from ....core.config import override_settings
 
     write_pointer(_isolated_backend, BucketPointer.absent(transition_revision=1))
@@ -578,7 +578,7 @@ def test_config_profile_status_exits_nonzero_for_dangling_pointer(_isolated_back
     """``config profile status`` exits non-zero when the active profile
     has a dangling pointer (registered but no manifest bucket)."""
 
-    from ....core import BucketPointer, write_pointer
+    from ....core.bucket_pointer import BucketPointer, write_pointer
 
     # Write a pointer to a non-existent bucket so status sees dangling_pointer.
     write_pointer(_isolated_backend, BucketPointer.selected(bucket_id="phantom", transition_revision=1))

@@ -13,7 +13,7 @@ from click.testing import Result
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....application.workflow import workflow_state_repository
+from cadrumo.application.workflow.persistence import workflow_state_repository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.modelos import (
     CalculationRevision,

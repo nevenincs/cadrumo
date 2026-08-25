@@ -47,7 +47,7 @@ from ....tests.profile_capsule import open_test_profile_session
 from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ....tests.user_profile import register_minimal_profile
-from ...workflow import workflow_state_repository
+from cadrumo.application.workflow.persistence import workflow_state_repository
 
 _CAPTURED_AT = datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC)
 #: A checksum-valid synthetic NIF. This value reaches

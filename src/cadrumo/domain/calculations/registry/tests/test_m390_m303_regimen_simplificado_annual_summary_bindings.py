@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from typing import get_args
+
 import pytest
 
-from .....core import BindingSourceKind, CasillaId
+from .....core import BindingSourceKind, CasillaId, FilingProjectionRef
 from .....core.resources import resources
 from .....domain.modelos import M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS
 from .._bindings import (
@@ -41,6 +43,23 @@ def test_live_m390_revision_declares_one_exact_ten_endpoint_handoff() -> None:
     for number, casilla_id in enumerate(M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS, start=74):
         assert casillas[casilla_id].number == str(number)
         assert casillas[casilla_id].binding == requirement.binding_ids_by_summary_casilla_id[casilla_id]
+    bindings_by_id = {binding.id: binding for binding in revision.bindings}
+    assert {
+        bindings_by_id[binding_id].source for binding_id in requirement.binding_ids_by_summary_casilla_id.values()
+    } == {BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY}
+
+    # S85 adds future M390 repeated-row reference families.  They are not an
+    # alternate owner for these existing scalar casillas: the ten boxes arrive
+    # only through the typed M303/4T handoff above, so none of those reference
+    # variants may carry a CasillaId payload capable of selecting 74--83.
+    projection_models = get_args(get_args(FilingProjectionRef)[0])
+    m390_projection_models = tuple(
+        model_type
+        for model_type in projection_models
+        if get_args(model_type.model_fields["projection_kind"].annotation)[0].startswith("m390_")
+    )
+    assert m390_projection_models
+    assert all("casilla_id" not in model_type.model_fields for model_type in m390_projection_models)
     assert all(
         binding.source is not BindingSourceKind.RELATION_PREFILL or binding.id != _RETIRED_BINDING_ID
         for binding in revision.bindings

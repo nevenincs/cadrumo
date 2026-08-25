@@ -23,7 +23,7 @@ from ....adapters.persistence.storage.custody import (
     ProfileCustodyWrappedDek,
     create_profile_custody_sentinel,
 )
-from ....core import BucketPointer, write_pointer
+from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import mint_test_profile_recovery_envelope
 
@@ -77,7 +77,8 @@ def build_envelope() -> ProfileCustodyEnvelope:
 
 def publish_capsule_and_pointer(root: Path) -> None:
     """Publish one complete capsule at *root* and point the active selector at it."""
-    from ...user_profile import ProfileCapsuleLifecycle, ProfileRecordSession
+    from ...user_profile.capsule_record import ProfileRecordSession
+    from ...user_profile.lifecycle import ProfileCapsuleLifecycle
 
     envelope = build_envelope()
     session = ProfileRecordSession.from_envelope(envelope=envelope, dek=DEK)

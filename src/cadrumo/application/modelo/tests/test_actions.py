@@ -40,7 +40,7 @@ from ....domain.modelos import (
     derive_work_unit_id,
 )
 from ...calculations import M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA
-from ...workflow import WorkflowInputMismatchError
+from cadrumo.application.workflow.errors import WorkflowInputMismatchError
 from .. import ModeloAggregationBindingError
 from .._calculation_actions import (
     _reject_caller_overrides_of_source_bindings,

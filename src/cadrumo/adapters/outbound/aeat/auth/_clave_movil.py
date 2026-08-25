@@ -630,13 +630,10 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
     def _active_profile_diagnostic_context(self, provider_identity: str) -> dict[str, object]:
         try:
             from .....adapters.persistence.storage import active_bucket_session_serves
-            from .....application.user_profile import (
-                ProfileRecordRepository,
-                record_to_path_values,
-                record_to_values,
-            )
-            from .....application.workflow import read_profile_bucket_by_id
-            from .....core import resolve_active_bucket_id
+            from .....application.user_profile.profile_record_repository import ProfileRecordRepository
+            from .....application.user_profile.projections import record_to_path_values, record_to_values
+            from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
+            from .....core.bucket_pointer import resolve_active_bucket_id
             from .....domain.user_profile import ProfileNotFoundError
 
             bucket_id = resolve_active_bucket_id()
@@ -755,7 +752,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
     # ── Encrypted session state ────────────────────────────────────────────
 
     def _storage_state_path(self) -> Path:
-        from .....core import require_active_bucket_id
+        from .....core.bucket_pointer import require_active_bucket_id
         from .....core.auth_session_keys import aeat_auth_session_storage_state_path
 
         profile = require_active_bucket_id()

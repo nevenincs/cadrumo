@@ -14,7 +14,8 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from ....core import ServiceCapability, resolve_active_bucket_id
+from ....core import ServiceCapability
+from ....core.bucket_pointer import resolve_active_bucket_id
 
 if TYPE_CHECKING:
     from ....application.provisioning import ContentionSnapshot, DependencyStatus, HardwareProfile
@@ -87,7 +88,7 @@ def config_check(ctx: typer.Context) -> None:
         probe_optional_extras,
         probe_playwright_browser,
     )
-    from ....application.user_profile import resolve_active_capability
+    from ....application.user_profile.capabilities import resolve_active_capability
     from ....core.config import load_settings
     from ._check_hardware_rows import contention_row
 

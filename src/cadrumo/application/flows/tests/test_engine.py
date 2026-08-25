@@ -1,7 +1,7 @@
-"""Real navigation and transition scenarios through the flow facade.
+"""Real navigation and transition scenarios through the flow engine.
 
-Every test drives the pure engine through the public
-``cadrumo.application.flows`` facade (enums from ``cadrumo.core.flows``)
+Every test drives the pure engine through its defining module (enums from
+``cadrumo.core.flows``)
 and asserts against ``PageStatus`` members and structural state, never
 localized prose. The scenarios cover navigation and cursor tracking,
 answer commit and canonicalisation, the two load-bearing invariants
@@ -32,34 +32,24 @@ from ....core.flows import (
     FlowWidgetKind,
     PageStatus,
 )
-from .. import (
+from ..definition import CopyRef, FlowChoice, FlowCondition, FlowDefinition, FlowPage, FlowRepeatingGroup, FlowSection
+from ..engine import (
     SECTION_VERDICT_PREFIX,
-    CopyRef,
-    FlowChoice,
-    FlowCondition,
-    FlowDefinition,
-    FlowNavigationError,
-    FlowPage,
-    FlowRepeatingGroup,
-    FlowSection,
     FlowState,
-    FlowSubmitError,
-    ReviewProjection,
-    ValidationVerdict,
     answer,
-    assert_submit_eligible,
     back_page,
     jump_to,
     next_page,
     page_status,
-    register_cross_field_validator,
     reset_page,
     restart_flow,
-    review,
     set_instance_count,
     start_flow,
     visible_sequence,
 )
+from ..errors import FlowNavigationError, FlowSubmitError
+from ..review import ReviewProjection, assert_submit_eligible, review
+from ..validators import ValidationVerdict, register_cross_field_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

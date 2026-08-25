@@ -26,7 +26,7 @@ from datetime import UTC, datetime, timedelta, timezone
 import pytest
 from pydantic import ValidationError
 
-from .._workflow_auth_models import (
+from ..auth.models import (
     AuthCleanupCertificateSource,
     AuthCleanupIntent,
     AuthCleanupOperationKind,

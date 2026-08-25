@@ -128,7 +128,7 @@ from ._pipeline_health import (
 
 if TYPE_CHECKING:
     from ..state_projection import OperatorStateProjection
-    from ..workflow import WorkflowState
+    from cadrumo.application.workflow.state_models import WorkflowState
     from ._agenda import build_overview_agenda
     from ._backlog import build_overview_backlog
     from ._explain import build_overview_explain

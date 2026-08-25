@@ -715,7 +715,7 @@ def resolve_explicit_or_active_bucket_id(bucket_id: str | None) -> str:
     an empty option never reaches storage scoping as a bucket id.
 
     The refusal is the operator-facing no-active-profile refusal rather than the
-    domain error raised by :func:`~core.resolve_repository_bucket_id`, because a
+    domain error raised by :func:`~core.bucket_pointer.resolve_repository_bucket_id`, because a
     cold-start CLI invocation must distinguish "no profile registered" from
     "registered but logged out" in its suggested next command.
 
@@ -768,7 +768,7 @@ def resolve_actor_option(actor: str | None) -> str:
 def resolve_default_actor() -> str:
     """Return the active profile label, or a permanent fallback label."""
     try:
-        from ...core import resolve_active_bucket_id
+        from ...core.bucket_pointer import resolve_active_bucket_id
 
         label = active_profile_label()
         if label:

@@ -16,7 +16,8 @@ import pytest
 from ....core.flows import FlowMode
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH, SetupAnswers
 from ....domain.deadlines import LegalEntityForm
-from ...flows import FlowAnswerError, run_scripted_flow
+from ...flows.errors import FlowAnswerError
+from ...flows.scripted import run_scripted_flow
 from .. import DESCENDANTS_COUNT_PAGE_ID
 from .._catalogue import SETUP_FLOW
 from .._commands import (

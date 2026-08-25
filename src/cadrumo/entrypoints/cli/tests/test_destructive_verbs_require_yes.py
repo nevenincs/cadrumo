@@ -123,7 +123,7 @@ def test_auth_reset_refuses_without_yes() -> None:
 
 def test_auth_logout_does_not_require_yes() -> None:
     """Anti-tautology: session logout executes without the destructive reset guard."""
-    from ....application.auth import configure_operator_auth
+    from ....application.auth.operator import configure_operator_auth
 
     configure_operator_auth("certificate")
     result = invoke_cached_cli(["config", "auth", "logout", "--provider", "certificate"])
@@ -151,7 +151,7 @@ def test_auth_test_is_non_destructive_and_needs_no_yes() -> None:
     The probe may report an unavailable verdict, but it never mutates provider
     state and never demands ``--yes``; only destructive ``auth reset`` is guarded.
     """
-    from ....application.auth import configure_operator_auth
+    from ....application.auth.operator import configure_operator_auth
 
     configure_operator_auth("certificate")
     result = invoke_cached_cli(["config", "auth", "test"])

@@ -42,7 +42,7 @@ from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProf
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import DEFERRED_SOURCE_KINDS, ForeignAssetClass, ForeignAssetIngestObservation
-from ...user_profile import build_profile_preflight_requirement
+from ...user_profile.preflight import build_profile_preflight_requirement
 from .. import (
     BucketAggregationCalculationResult,
     ModeloAggregationBindingError,

@@ -19,7 +19,7 @@ _SRC = Path("src/cadrumo")
 _WORKFLOW = _SRC / "application" / "workflow"
 _WRITE_SIDE_MODULES = frozenset(
     {
-        "cadrumo.application._journal_repository",
+        "cadrumo.application.journal_repository",
         "cadrumo.application.operations.persistence.journal",
         "cadrumo.core.file_permissions",
         "cadrumo.core.logging",
@@ -198,43 +198,21 @@ def _cycles(graph: dict[str, set[str]]) -> list[tuple[str, ...]]:
     return sorted(found)
 
 
-def test_workflow_facade_has_exact_lazy_public_parity_in_a_fresh_process() -> None:
-    """Every public workflow name must have exactly one lazy owner and resolve from it."""
-    script = """
-import json
-import cadrumo.application.workflow as facade
-
-before = sorted(name for name in __import__('sys').modules if name.startswith(f'{facade.__name__}.'))
-owners = {}
-canonical = []
-owner_names = {facade._LAZY_MODULE_LOADERS[path]().__name__ for path in set(facade._LAZY_EXPORTS.values())}
-for name, module_path in facade._LAZY_EXPORTS.items():
-    value = getattr(facade, name)
-    owner = facade._LAZY_MODULE_LOADERS[module_path]()
-    owners[name] = value is getattr(owner, name)
-    declared_module = getattr(value, '__module__', None)
-    if declared_module in owner_names and declared_module != owner.__name__:
-        canonical.append({'name': name, 'declared': owner.__name__, 'actual': declared_module})
-print(json.dumps({
-    'before': before,
-    'all': sorted(facade.__all__),
-    'mapped': sorted(facade._LAZY_EXPORTS),
-    'owners': owners,
-    'canonical': canonical,
-}))
-"""
-    result = subprocess.run(  # noqa: S603 - fixed interpreter and test-owned source
-        [sys.executable, "-c", script],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    observed = json.loads(result.stdout)
-
-    assert observed["before"] == []
-    assert observed["all"] == observed["mapped"]
-    assert all(observed["owners"].values())
-    assert observed["canonical"] == []
+def test_workflow_namespace_is_inert() -> None:
+    """The namespace owns no API, imports, forwarding, or dynamic export machinery."""
+    tree = ast.parse((_WORKFLOW / "__init__.py").read_text(encoding="utf-8"))
+    assert not [node for node in tree.body if isinstance(node, ast.Import | ast.ImportFrom)]
+    assert not [node for node in tree.body if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef)]
+    assignments = [
+        node
+        for node in tree.body
+        if isinstance(node, ast.Assign | ast.AnnAssign)
+        and any(
+            isinstance(target, ast.Name) and target.id == "__all__"
+            for target in (node.targets if isinstance(node, ast.Assign) else (node.target,))
+        )
+    ]
+    assert len(assignments) == 1
 
 
 def test_workflow_module_level_graph_is_acyclic_and_detector_bites() -> None:
@@ -271,8 +249,8 @@ def test_lazy_facade_and_read_only_config_forbid_materialization_imports() -> No
         "cadrumo.core.storage_materialization": real_config + "\nfrom . import storage_materialization\n",
         "cadrumo.core.file_permissions": real_config + "\nimport cadrumo.core.file_permissions as permissions\n",
         "cadrumo.core.logging": real_config + '\nimport_module("cadrumo.core.logging")\n',
-        "cadrumo.application._journal_repository": real_config
-        + '\n__import__("cadrumo.application._journal_repository")\n',
+        "cadrumo.application.journal_repository": real_config
+        + '\n__import__("cadrumo.application.journal_repository")\n',
     }
     for expected, source in planted.items():
         assert expected in _forbidden_write_imports(source)

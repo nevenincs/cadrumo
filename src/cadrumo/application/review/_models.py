@@ -15,7 +15,7 @@ Concrete models:
 * :class:`FindingReviewItem` — pending findings on filing drafts.
 
 ``InvoiceReviewRecord`` and ``LedgerReviewRecord`` are re-exported here from
-:mod:`cadrumo.application._workflow_review_models`, which owns them jointly with
+:mod:`cadrumo.application.workflow.review_models`, which owns them jointly with
 :class:`~cadrumo.application.workflow.WorkflowEvent` because
 :class:`~cadrumo.application.workflow.WorkflowState` embeds both review records
 as field types — a genuine mutual runtime dependency between
@@ -36,7 +36,7 @@ from ...core.time import validate_utc_aware
 from ...domain.filing import ModeloValidationFinding
 from ...domain.invoices import Invoice
 from ...domain.transactions import Transaction
-from .._workflow_review_models import InvoiceReviewRecord, LedgerReviewRecord
+from ..workflow.review_models import InvoiceReviewRecord, LedgerReviewRecord
 from ._enums import ReviewItemKind, ReviewSeverity
 
 
@@ -145,7 +145,7 @@ __all__ = [
     "TransactionReviewItem",
 ]
 """``InvoiceReviewRecord`` and ``LedgerReviewRecord`` are defined in and owned
-by :mod:`cadrumo.application._workflow_review_models` (see that module's
+by :mod:`cadrumo.application.workflow.review_models` (see that module's
 docstring for the mutual-runtime-dependency rationale); this module
 re-exports them so ``application.review`` consumers keep importing them from
 here.

@@ -73,7 +73,7 @@ def _resolve_readiness_period(*, modelo: str, filing_year: int, period: str | No
 
 
 def _readiness_report(request: ModeloReadinessRequest) -> ProjectionModeloReadiness:
-    from ...core import resolve_active_bucket_id
+    from ...core.bucket_pointer import resolve_active_bucket_id
     from ...core.i18n import tr as _tr
 
     if resolve_active_bucket_id() is None:

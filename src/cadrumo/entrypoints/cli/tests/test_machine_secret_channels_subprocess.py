@@ -26,11 +26,8 @@ from uuid import UUID
 import pytest
 
 from ....adapters.persistence.storage.master_key import close_active_bucket_session
-from ....application.user_profile import (
-    ProfileRecoveryEnrollment,
-    export_profile_recovery_artifact,
-    register_profile_with_credentials,
-)
+from ....application.user_profile.recovery_custody import ProfileRecoveryEnrollment, export_profile_recovery_artifact
+from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.config import override_settings
 from ....tests import SRC_CADRUMO
 from ....tests.secure_sql import reap_profile_session_keys
@@ -82,7 +79,8 @@ _HARNESS = (
     from contextlib import ExitStack
 
     from cadrumo.adapters.persistence.storage import build_profile_custody_port, build_profile_login_session_port
-    from cadrumo.application.user_profile import bind_profile_custody_port, bind_profile_login_session_port
+    from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
+    from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
     from cadrumo.core import config as config_module
     from cadrumo.core.config import Settings
     from cadrumo.core.logging import defer_logging_configuration, resume_logging_configuration
@@ -100,7 +98,7 @@ _HARNESS = (
     exit_code = 0
     try:
         if payload.get("preauthenticate_label") is not None:
-            from cadrumo.application.user_profile import login_profile
+            from cadrumo.application.user_profile.login_session import login_profile
             login_profile(
                 name=payload["preauthenticate_label"],
                 passphrase_callback=lambda: payload["preauthenticate_secret"],
@@ -164,7 +162,8 @@ _WINDOWS_HANDLE_HARNESS = (
     from contextlib import ExitStack
 
     from cadrumo.adapters.persistence.storage import build_profile_custody_port, build_profile_login_session_port
-    from cadrumo.application.user_profile import bind_profile_custody_port, bind_profile_login_session_port
+    from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
+    from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
     from cadrumo.core import config as config_module
     from cadrumo.core.config import Settings
     from cadrumo.core.logging import defer_logging_configuration, resume_logging_configuration
@@ -196,7 +195,7 @@ _WINDOWS_HANDLE_HARNESS = (
     exit_code = 0
     try:
         if payload.get("preauthenticate_label") is not None:
-            from cadrumo.application.user_profile import login_profile
+            from cadrumo.application.user_profile.login_session import login_profile
             login_profile(
                 name=payload["preauthenticate_label"],
                 passphrase_callback=lambda: payload["preauthenticate_secret"],

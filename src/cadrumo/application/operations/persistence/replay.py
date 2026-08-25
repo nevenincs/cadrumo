@@ -12,7 +12,7 @@ from ....core import STRICT_FROZEN_CONFIG
 from ..event_replay import OperationEventCursor
 from .events import OperationEvent
 
-OperationReplayLimit = Annotated[int, Field(gt=0, le=1_000)]
+type OperationReplayLimit = Annotated[int, Field(gt=0, le=1_000)]
 
 
 class OperationReplayStatus(StrEnum):
@@ -105,7 +105,6 @@ class OperationReplayPage(BaseModel):
 
 
 __all__ = [
-    "OperationEventCursor",
     "OperationReplayLimit",
     "OperationReplayPage",
     "OperationReplayStatus",

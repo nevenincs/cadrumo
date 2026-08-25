@@ -12,7 +12,7 @@ import pytest
 
 from ...core.resources import resources
 from ..diagnostics import _grounded_profile_key_summary
-from ..user_profile import build_profile_preflight_requirement
+from ..user_profile.preflight import build_profile_preflight_requirement
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

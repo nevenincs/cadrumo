@@ -20,7 +20,7 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ...review import InvoiceReviewFilterSpec, InvoiceReviewStatus, update_invoice_review
-from ...workflow import WorkflowState
+from cadrumo.application.workflow.state_models import WorkflowState
 from .. import (
     InvoiceMatchRow,
     apply_manual_invoice_match,

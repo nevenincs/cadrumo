@@ -81,7 +81,7 @@ _NOT_IN_THE_REFUSAL_TABLE: dict[str, str] = {
     "src/cadrumo/application/repair_integrity.py": (
         "a repair path deliberately reached when storage is already unhealthy"
     ),
-    "src/cadrumo/application/user_profile/_custody_ports.py": (
+    "src/cadrumo/application/user_profile/custody_ports.py": (
         "custody boundary; its refusals are asserted by the custody suites rather than this table"
     ),
     "src/cadrumo/entrypoints/cli/_config/_google.py": (

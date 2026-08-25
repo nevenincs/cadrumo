@@ -39,9 +39,7 @@ async def _load_active_clave_session():
         Cl@ve cookies.
     """
     # Local imports keep the test file lightweight when skipped.
-    from ......application.auth import (
-        ensure_authenticated_aeat_session,
-    )
+    from ......application.auth.sessions import ensure_authenticated_aeat_session
     from ......core import AuthProviderKind
     from ......core.config import load_settings
     from ......core.errors import CadrumoError

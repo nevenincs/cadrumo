@@ -22,7 +22,7 @@ def sandbox_notice_for_active_bucket() -> Notice | None:
     """Return the persistent sandbox-active :class:`Notice`, or ``None``.
 
     Resolves the active bucket id through the same core precedence chain
-    every command uses (:func:`~cadrumo.core.resolve_active_bucket_id`), then
+    every command uses (:func:`~cadrumo.core.bucket_pointer.resolve_active_bucket_id`), then
     reads its committed label projection and checks it against the reserved
     sandbox label prefix
     (:data:`~cadrumo.core.external_constants.SANDBOX_LABEL_PREFIX`). Returns
@@ -32,8 +32,10 @@ def sandbox_notice_for_active_bucket() -> Notice | None:
     projection is deliberately re-read on every call (no caching) so a
     mid-process ``switch`` is reflected on the very next command.
     """
-    from ...application.user_profile import CommittedProfileRepository, ProfileNotFoundError
-    from ...core import FormerProductStateError, resolve_active_bucket_id
+    from cadrumo.domain.user_profile import ProfileNotFoundError
+    from ...application.user_profile.profile_repository import CommittedProfileRepository
+    from ...core import FormerProductStateError
+    from ...core.bucket_pointer import resolve_active_bucket_id
     from ...core.external_constants import SANDBOX_LABEL_PREFIX
     from ...core.i18n import tr
     from ...core.json_contract import NoticeSeverity

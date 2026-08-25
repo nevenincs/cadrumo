@@ -733,7 +733,7 @@ def _resolved_maternidad_meses(work_unit_id: str) -> MaternidadMesesResolution |
     silent-absent handling profile-sourced bindings already apply.
     """
     from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile import ProfileRecordRepository
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
     from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
     from ._profile_binding import resolve_maternidad_meses
     from ._work_lifecycle import get_work_unit
@@ -870,7 +870,7 @@ def _ambiguous_relacion_hijo_ids(work_unit_id: str, contributing_hijo_ids: froze
     if not contributing_hijo_ids:
         return frozenset[str]()
     from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile import ProfileRecordRepository
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
     from ._work_lifecycle import get_work_unit
 
     unit = get_work_unit(work_unit_id)
@@ -1067,8 +1067,8 @@ def modelo_202_modality_for_work_unit(work_unit: WorkUnit) -> Modelo202ModalityS
         return None
 
     from ...domain.calculations.registry import derive_modelo_202_modality
-    from ..user_profile import projection_for_taxpayer
-    from ..workflow import workflow_state_repository
+    from ..user_profile.projections import projection_for_taxpayer
+    from cadrumo.application.workflow.persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
     record = state.active_profile_record()

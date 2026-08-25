@@ -9,7 +9,7 @@ into five bordered zones and mutates nothing. It owns no data access: the
 adapter tier may name Textual but must not reach the application layer, so
 the entry-point gathers the view-model and injects it here, mirroring the
 way a flow renderer receives a
-pre-built :class:`~cadrumo.application.flows.FlowDefinition`.
+pre-built :class:`~cadrumo.application.flows.definition.FlowDefinition`.
 
 Masking is a rendering invariant, not a policy decision: a fact row
 carrying ``masked=True`` renders the mask token in place of its value and

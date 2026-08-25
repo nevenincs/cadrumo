@@ -3,7 +3,7 @@
 The flow substrate (:mod:`cadrumo.application.flows`) is the canonical home
 of interactive prompting: ``line_frontend.py`` is the one line-mode prompt
 surface (questionary over injectable ``prompt_toolkit`` IO) and
-``_capability.py`` owns the single console-capability probe every frontend
+``capability.py`` owns the single console-capability probe every frontend
 selector consults. No other production module may prompt.
 
 The hazard this gate pins is historical and concrete. The retired one-shot
@@ -84,13 +84,13 @@ LINE_FRONTEND_MODULE = "application/flows/line_frontend.py"
 CANONICAL_PROMPT_MODULES = frozenset(
     {
         LINE_FRONTEND_MODULE,
-        "application/flows/_capability.py",
+        "application/flows/capability.py",
     },
 )
 """The only production modules that may import a prompting/console library.
 
 ``line_frontend.py`` is the substrate's line-mode prompter (questionary
-over injectable ``prompt_toolkit`` IO), and ``_capability.py`` owns the
+over injectable ``prompt_toolkit`` IO), and ``capability.py`` owns the
 SINGLE console-capability probe both the line frontend and the frontend
 selector consult (``prompt_toolkit`` only, no ``questionary`` — it
 classifies a host, it never prompts). Rule 2 still binds them not to grow
@@ -625,11 +625,11 @@ def test_rule_two_ignores_ordinary_imports_from_the_canonical_prompt_surfaces() 
     modules = _synthetic_modules(
         {
             LINE_FRONTEND_MODULE: "import questionary\n\n\nclass LineFlowFrontend:\n    pass\n",
-            "application/flows/_capability.py": (
+        "application/flows/capability.py": (
                 "def detect_frontend_capability():\n    return None\n\n\nNO_CONSOLE_ERRORS = (OSError,)\n"
             ),
             "application/flows/__init__.py": (
-                "from ._capability import NO_CONSOLE_ERRORS, detect_frontend_capability\n"
+                "from .capability import NO_CONSOLE_ERRORS, detect_frontend_capability\n"
                 "from .line_frontend import LineFlowFrontend\n"
             ),
         },

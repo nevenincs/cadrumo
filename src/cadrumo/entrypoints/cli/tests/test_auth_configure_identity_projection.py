@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....application.auth import AuthConfigureResult
+from ....application.auth.operator_results import AuthConfigureResult
 from ....application.operator_actions import (
     ConditionEvidence,
     PreconditionVerdict,

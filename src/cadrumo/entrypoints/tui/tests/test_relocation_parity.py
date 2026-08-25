@@ -19,10 +19,12 @@ from pydantic import BaseModel
 from textual.css.query import NoMatches
 from textual.widgets import DataTable, Input, Static
 
-from ....application.flows import CopyRef, FlowDefinition, FlowPage, FlowSection
-from ....application.user_profile import build_profile_overview, login_profile, logout_active_profile
+from ....application.flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
+from ....application.user_profile.overview import build_profile_overview
+from ....application.user_profile.login_session import login_profile, logout_active_profile
 from ....application.user_profile.login_interaction import attempt_profile_login, profile_login_choices
-from ....core import assess_profile_password, require_active_bucket_id
+from ....core import assess_profile_password
+from ....core.bucket_pointer import require_active_bucket_id
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ....tests.modelo_work_review import build_real_modelo_work_review
 from ....tests.profile_capsule import load_test_profile_record
@@ -370,7 +372,7 @@ async def test_profile_and_secret_apps_preserve_the_real_custody_path(tmp_path: 
         login_profile(name=_LABEL, passphrase_callback=lambda: _PASSPHRASE)
         record = load_test_profile_record(require_active_bucket_id())
         overview = build_profile_overview(record, label=_LABEL)
-        from ....application.user_profile import apply_manager_profile_field_mutation
+        from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
 
         def persist(path: str, value: str):
             applied = apply_manager_profile_field_mutation(profile_id=profile_id, path=path, value=value)

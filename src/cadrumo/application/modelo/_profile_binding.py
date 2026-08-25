@@ -1322,7 +1322,7 @@ def _load_profile_facts(
     """Load and derive the bucket's profile fact index, or ``None`` when absent."""
     record = profile_record
     if record is None:
-        from ..user_profile import ProfileRecordRepository
+        from ..user_profile.profile_record_repository import ProfileRecordRepository
 
         try:
             record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)

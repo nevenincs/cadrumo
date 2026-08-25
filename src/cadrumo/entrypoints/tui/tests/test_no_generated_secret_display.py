@@ -38,7 +38,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 #: that either paints a minted secret or drives a terminal write out from under
 #: the compositor. Both are the failure this gate exists to catch.
 _MINTING_CALLABLES: tuple[tuple[str, str], ...] = (
-    ("cadrumo.application.user_profile._custody_ports", "create_profile_recovery_enrollment_material"),
+    ("cadrumo.application.user_profile.custody_ports", "create_profile_recovery_enrollment_material"),
     ("cadrumo.application.user_profile", "mint_profile_creation_recovery"),
     # The primitive beneath both, and a SECOND reachable path: it is exported from
     # the storage facade in its own right, so a prohibition naming only
@@ -121,9 +121,9 @@ class TestTheMintingPathIsUnreachableFromTheTui:
         Without this, a scan that silently parsed nothing — a changed package
         layout, an empty glob — would report a clean tree and read as proof.
         """
-        source = "from cadrumo.application.user_profile import mint_profile_creation_recovery\n"
+        source = "from cadrumo.application.user_profile.recovery_custody import mint_profile_creation_recovery\n"
         assert "mint_profile_creation_recovery" in _imported_names(source)
-        aliased = "from cadrumo.application.user_profile import mint_profile_creation_recovery as _mint\n"
+        aliased = "from cadrumo.application.user_profile.recovery_custody import mint_profile_creation_recovery as _mint\n"
         assert "mint_profile_creation_recovery" in _imported_names(aliased)
         attribute = "import cadrumo\ncadrumo.adapters.persistence.storage.generate_recovery_key()\n"
         assert "generate_recovery_key" in _imported_names(attribute)

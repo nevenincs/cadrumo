@@ -12,12 +12,12 @@ from datetime import UTC, datetime
 
 import pytest
 
+from cadrumo.application.user_profile.capabilities import CapabilitySource, _parse_bool_fact, resolve_capability
+
 from ....core import ServiceCapability
 from ....core.config import load_settings
 from ....core.parsing import parse_bool
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
-from .. import CapabilitySource, resolve_capability
-from .._capabilities import _parse_bool_fact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

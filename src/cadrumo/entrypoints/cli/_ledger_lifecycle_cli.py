@@ -25,7 +25,7 @@ from ...application.ledger import (
     split_transaction,
     stash_manual_transaction,
 )
-from ...core import resolve_active_bucket_id
+from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.external_constants import PDF_MIME_TYPE
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity, strict_round_trip

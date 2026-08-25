@@ -21,7 +21,8 @@ from ....application._config_reset_models import (
     ConfigResetTarget,
     ConfigResetTargetPhase,
 )
-from ....core import STR_KEYED_MAPPING_ADAPTER, BucketPointer
+from ....core import STR_KEYED_MAPPING_ADAPTER
+from ....core.bucket_pointer import BucketPointer
 from .._config_payloads import ConfigResetOperationPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

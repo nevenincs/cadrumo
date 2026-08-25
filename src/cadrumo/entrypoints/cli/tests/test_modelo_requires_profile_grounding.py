@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....application.user_profile import format_profile_selector_requirements
+from ....application.user_profile.preflight import format_profile_selector_requirements
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     binding_profile_keys,

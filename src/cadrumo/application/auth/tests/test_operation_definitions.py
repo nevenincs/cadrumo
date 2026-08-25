@@ -17,22 +17,20 @@ from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesyst
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from cadrumo.application.operations.capabilities import OperationRequestStoragePolicy
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import OperationReconciliationPolicy, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
 )
+
 from ....core import AuthProviderKind
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
-from ...user_profile import (
-    login_profile,
-    logout_active_profile,
-    profile_custody_secure_object_repository,
-    register_profile_with_credentials,
-)
-from .._operation_definitions import (
+from ...user_profile.custody_ports import profile_custody_secure_object_repository
+from ...user_profile.login_session import login_profile, logout_active_profile
+from ...user_profile.registration import register_profile_with_credentials
+from ..operation_definitions import (
     AUTH_CONFIGURE_OPERATION_DEFINITION_ID,
     AUTH_LOGOUT_OPERATION_DEFINITION_ID,
     AUTH_OPERATION_DEFINITIONS,

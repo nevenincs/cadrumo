@@ -158,7 +158,7 @@ from ...llm import (
     rasterise_pdf_pages_to_base64_png,
 )
 from ..provisioning import probe_ollama_vision
-from ..user_profile import resolve_active_capability
+from ..user_profile.capabilities import resolve_active_capability
 from ._document_transcription import DocumentTranscription
 from ._evidence import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
 from ._evidence_input import (
@@ -1012,7 +1012,7 @@ def _active_filer_tax_id() -> str | None:
     # Both imported at call time: the workflow package reaches this one, and the
     # filer-fact reader reaches the user-profile package which reaches back. The
     # sanctioned cycle breaks, read as if written at module scope.
-    from ..workflow import workflow_state_repository
+    from cadrumo.application.workflow.persistence import workflow_state_repository
     from ._filer_establishment import resolve_filer_tax_id
 
     try:
@@ -1881,7 +1881,7 @@ def _refuse_a_counterparty_that_is_the_filer(counterparty_tax_id: str) -> None:
     """
     from ..invoices import counterparty_is_the_filer
     from ..wizard import WizardStatusError, load_active_taxpayer_profile
-    from ..workflow import workflow_state_repository
+    from cadrumo.application.workflow.persistence import workflow_state_repository
 
     try:
         profile = load_active_taxpayer_profile(workflow_state_repository().load())
@@ -2010,7 +2010,7 @@ def _refuse_an_issued_document_the_filer_did_not_issue(
 
     from ..invoices import counterparty_is_the_filer
     from ..wizard import WizardStatusError, load_active_taxpayer_profile
-    from ..workflow import workflow_state_repository
+    from cadrumo.application.workflow.persistence import workflow_state_repository
 
     try:
         profile = load_active_taxpayer_profile(workflow_state_repository().load())

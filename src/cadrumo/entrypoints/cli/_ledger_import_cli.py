@@ -17,7 +17,8 @@ from ...application.ledger import (
     LedgerSourceVerificationReport,
     import_ledger_source,
 )
-from ...core import DirectoryEntryKind, resolve_active_bucket_id, scan_directory
+from ...core import DirectoryEntryKind, scan_directory
+from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.external_constants import XLS_EXTENSION, XLSX_EXTENSION
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity

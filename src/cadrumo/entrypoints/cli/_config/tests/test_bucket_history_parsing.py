@@ -134,7 +134,7 @@ def test_bucket_history_event_payload_requires_payload_version() -> None:
 
 def test_profile_history_without_name_resolves_the_active_profile(tmp_path) -> None:
     """The omitted subject is the real active profile, not a copied default."""
-    from .....application.user_profile import register_profile_with_credentials
+    from .....application.user_profile.registration import register_profile_with_credentials
     from .....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
     from .....domain.user_profile import UserProfileFact
     from .....tests.secure_sql import isolated_profile_storage_root

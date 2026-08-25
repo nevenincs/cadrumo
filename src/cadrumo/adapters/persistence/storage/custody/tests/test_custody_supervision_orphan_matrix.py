@@ -28,7 +28,7 @@ from uuid import UUID
 
 import pytest
 
-from ......application.user_profile import create_profile_custody_registration_material
+from ......application.user_profile.custody_ports import create_profile_custody_registration_material
 from ......core import pid_is_alive
 from ......core.config import Settings
 from ......core.hashing import canonical_json_bytes

@@ -91,7 +91,7 @@ def test_profile_rename_verb_is_not_registered(_per_bucket_backend: Path) -> Non
     verb outright. This pin asserts the negative conformance — the exact
     unknown-command refusal — so a re-registration reds here immediately.
     """
-    from ....application.workflow import read_profile_bucket
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
 
     create_profile_via_cli("alpha")
 
@@ -141,8 +141,8 @@ def test_delete_active_profile_is_refused_and_survivors_stay_reachable(
     refuses the delete outright — the refusal is the lockout guard — and
     the survivor must remain reachable afterwards.
     """
-    from ....application.workflow import read_profile_bucket
-    from ....core import resolve_active_bucket_id
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
+    from ....core.bucket_pointer import resolve_active_bucket_id
 
     create_profile_via_cli("alpha")
     create_profile_via_cli("beta")
@@ -173,7 +173,7 @@ def test_first_switch_from_a_no_active_profile_state_succeeds(
     the pointer so no session resolves at root-callback time. ``switch``
     must still open its own session and activate the named profile.
     """
-    from ....core import resolve_active_bucket_id
+    from ....core.bucket_pointer import resolve_active_bucket_id
 
     create_profile_via_cli("solo")
 
@@ -218,7 +218,7 @@ def test_delete_active_profile_refuses_and_keeps_the_pointer_intact(
     custody redesign refuses the delete instead. The refusal must not
     leave the pointer cleared — the profile remains active afterwards.
     """
-    from ....core import resolve_active_bucket_id
+    from ....core.bucket_pointer import resolve_active_bucket_id
 
     create_profile_via_cli("alpha")
     assert _invoke(("config", "login", "alpha")).exit_code == 0
@@ -287,7 +287,7 @@ def test_delete_valid_profile_with_no_active_session_succeeds(
     state must succeed — ``delete`` opens its own bucket session scoped
     to the target, it does not require one to already be open.
     """
-    from ....application.workflow import read_profile_bucket
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
 
     create_profile_via_cli("alpha")
 

@@ -40,7 +40,7 @@ from ...application.modelo import (
     require_profile_ready_for_work_unit,
     verify_modelo_revision_with_preconditions,
 )
-from ...application.workflow import workflow_state_repository
+from cadrumo.application.workflow.persistence import workflow_state_repository
 from ...core import PaymentElection, PriorDomiciliationElection, RefundElection
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr

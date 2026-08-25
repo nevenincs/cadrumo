@@ -10,7 +10,7 @@ import pytest
 from ....adapters.persistence.storage.errors import StorageValidationError
 from ....adapters.persistence.storage.sql import dispose_engine
 from ....core.config import override_settings
-from .._persistence import WorkflowRunRepository, workflow_state_repository
+from ..persistence import WorkflowRunRepository, workflow_state_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

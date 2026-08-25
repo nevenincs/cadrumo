@@ -18,7 +18,6 @@ Submodules
    cadrumo.application.wizard._commands
    cadrumo.application.wizard._compiler
    cadrumo.application.wizard._copy_sources
-   cadrumo.application.wizard._descendant_door
    cadrumo.application.wizard._descendant_group
    cadrumo.application.wizard._errors
    cadrumo.application.wizard._flow_validators
@@ -32,3 +31,4 @@ Submodules
    cadrumo.application.wizard._status
    cadrumo.application.wizard._translations
    cadrumo.application.wizard._widgets
+   cadrumo.application.wizard.descendant_door

@@ -31,7 +31,8 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator
 
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...core import STRICT_FROZEN_CONFIG, Period, resolve_active_bucket_id
+from ...core import STRICT_FROZEN_CONFIG, Period
+from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.identity import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ...domain.calculations.registry import RevisionId
 from ...domain.modelos import (

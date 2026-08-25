@@ -28,13 +28,8 @@ from ...application.ledger import (
     resolve_lineage_transaction_id,
     update_manual_transaction_fields,
 )
-from ...core import (
-    Art104TresExclusion,
-    IvaDeductionFactKind,
-    M210PayerMode,
-    ProrrataRegisterRegime,
-    resolve_active_bucket_id,
-)
+from ...core import Art104TresExclusion, IvaDeductionFactKind, M210PayerMode, ProrrataRegisterRegime
+from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity

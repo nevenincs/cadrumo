@@ -8,18 +8,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, SecretStr, field_validator
 
-from ...core import (
-    STRICT_FROZEN_CONFIG,
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationInteractionKind,
-    require_active_bucket_id,
-)
-from ...core.identity import ContentDigest
-from ...core.time import now
 from cadrumo.application.operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -37,17 +25,30 @@ from cadrumo.application.operations.registry import (
     OperationReconciliationPolicy,
 )
 from cadrumo.application.operations.secret_submission import OperationEphemeralSecretDeclaration
-from ..operations.owner import OperationExecutorContext
-from ._bundle_export import (
+from cadrumo.application.user_profile.bundle_export_contracts import (
     ProfileBundleExportPurpose,
     ProfileBundleExportRequest,
     ProfileBundleExportResult,
     ProfileBundleExportTransport,
-    export_profile_bundle,
 )
-from ._fact_write import apply_manager_profile_field_mutation
-from ._login_session import logout_active_profile
-from ._section_rows import add_profile_repeatable_section_row
+
+from ...core import (
+    STRICT_FROZEN_CONFIG,
+    OperationCancellation,
+    OperationClosePolicy,
+    OperationDeadline,
+    OperationDurability,
+    OperationEffect,
+    OperationInteractionKind,
+)
+from ...core.bucket_pointer import require_active_bucket_id
+from ...core.identity import ContentDigest
+from ...core.time import now
+from ..operations.owner import OperationExecutorContext
+from .bundle_export import export_profile_bundle
+from .fact_write import apply_manager_profile_field_mutation
+from .login_session import logout_active_profile
+from .section_rows import add_profile_repeatable_section_row
 
 PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID = "user-profile.field-mutation"
 PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID = "user-profile.repeatable-row-mutation"

@@ -39,13 +39,6 @@ flows:
     action:
       auth_clave_movil_route_app_request: Request in app
       auth_clave_movil_route_qr: QR code
-      busy: Another operation is still running. Wait for it to finish.
-      failed: The operation did not finish.
-      logout: Log out
-      logout_done: Logged out.
-      working: Running {action}...
-    actions:
-      section: Actions
     censal_review:
       apply: Apply this exact proposal
     choice_unavailable: Unavailable choice

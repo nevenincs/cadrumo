@@ -41,7 +41,7 @@ from ._common import activate_subcommand_output_language as _activate_subcommand
 from ._common import emit_envelope, resolve_notice_action
 
 if TYPE_CHECKING:
-    from ...application.user_profile import ProfileBundleExportReconciliation
+    from ...application.user_profile.bundle_export import ProfileBundleExportReconciliation
 
 
 def app_maintenance_reconcile(
@@ -49,7 +49,7 @@ def app_maintenance_reconcile(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Resolve crash-interrupted portable profile-bundle publications."""
-    from ...application.user_profile import reconcile_prepared_exports
+    from ...application.user_profile.bundle_export import reconcile_prepared_exports
 
     _activate_subcommand_output_language(ctx, output_language)
     outcome = reconcile_prepared_exports()

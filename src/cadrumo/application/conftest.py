@@ -3,7 +3,7 @@
 The autouse ``_isolated_aeat_root`` fixture redirects the
 ``cadrumo_local_storage_root`` field on :class:`~cadrumo.core.config.Settings` to a
 function-scoped ``tmp_path`` for unit tests under this package, so the
-:class:`~cadrumo.core.BucketPointer` file materialised by profile custody
+:class:`~cadrumo.core.bucket_pointer.BucketPointer` file materialised by profile custody
 operations lands inside the test sandbox and never bleeds into the project's
 real ``var/storage/`` directory.
 

@@ -1,5 +1,5 @@
 """Unit tests for the strict pydantic v2 records in
-:mod:`cadrumo.application.workflow._run_models`.
+:mod:`cadrumo.application.workflow.run_models`.
 
 Exercises :func:`cadrumo.application.workflow.compute_run_id` hash
 stability and the validators on :class:`cadrumo.application.workflow.WorkflowStep`,
@@ -15,6 +15,19 @@ from typing import Any, cast
 
 import pytest
 from pydantic import ValidationError
+
+from cadrumo.application.workflow.abort import WorkflowAbortReason
+from cadrumo.application.workflow.run_models import (
+    SiteHealthAlert,
+    WorkflowDeadlineContextDetails,
+    WorkflowObligationFacts,
+    WorkflowResult,
+    WorkflowSiteHealthFacts,
+    WorkflowStage,
+    WorkflowStep,
+    WorkflowValidationFailedDetails,
+    compute_run_id,
+)
 
 from ....adapters.outbound.aeat.browser import (
     SiteHealthEvidence,
@@ -38,19 +51,7 @@ from ...operator_actions import (
     ConditionEvidence,
     PreconditionVerdict,
 )
-from .. import (
-    SiteHealthAlert,
-    WorkflowAbortReason,
-    WorkflowDeadlineContextDetails,
-    WorkflowObligationFacts,
-    WorkflowResult,
-    WorkflowSiteHealthFacts,
-    WorkflowStage,
-    WorkflowStep,
-    WorkflowValidationFailedDetails,
-    compute_run_id,
-)
-from .._engine_helpers import DeadlineRole
+from ..engine_helpers import DeadlineRole
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -457,7 +458,6 @@ def test_workflow_obligation_projection_excludes_source_language_and_raw_recover
                 interest_applies=False,
                 legal_ref="ley-58-2003:art-27.2",
             ),
-            next_command="aeat app modelo work calculate WORK_UNIT_ID",
         ),
     )
 
@@ -467,9 +467,13 @@ def test_workflow_obligation_projection_excludes_source_language_and_raw_recover
     assert projected.modelo is Modelo.M303
     assert projected.period == _period(2025)
     assert projected.recovery is not None
+    assert projected.recovery.still_filable is True
     assert projected.recovery.recargo_band_id == "completed_months_2"
+    assert projected.recovery.min_completed_months == 2
+    assert projected.recovery.max_completed_months == 2
+    assert projected.recovery.surcharge_pct == Decimal("3.00")
+    assert projected.recovery.interest_applies is False
+    assert projected.recovery.legal_ref == "ley-58-2003:art-27.2"
     assert "applies_because" not in payload
     assert isinstance(payload["recovery"], dict)
-    assert "next_command" not in payload["recovery"]
     assert "Régimen general de IVA." not in projected.model_dump_json()
-    assert "aeat app modelo" not in projected.model_dump_json()

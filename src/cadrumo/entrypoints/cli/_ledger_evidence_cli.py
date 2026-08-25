@@ -19,7 +19,7 @@ from ...application.ledger import (
     get_attachment_review_item,
     list_attachment_review_queue,
 )
-from ...application.user_profile import cloud_evidence_upload_eligible_for_active_profile
+from ...application.user_profile.capabilities import cloud_evidence_upload_eligible_for_active_profile
 from ...core import IntracomOperationType
 from ...core.config import load_settings
 from ...core.i18n import tr

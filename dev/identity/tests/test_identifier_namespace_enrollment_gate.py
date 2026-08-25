@@ -434,7 +434,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/application/user_profile/_commands.py",
+        path="src/cadrumo/application/user_profile/commands.py",
         model="ProfileSnapshot",
         field="snapshot_id",
         group="semantic tail collisions",
@@ -444,7 +444,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/application/user_profile/_commands.py",
+        path="src/cadrumo/application/user_profile/commands.py",
         model="ProfileStaleCheckReport",
         field="snapshot_id",
         group="semantic tail collisions",

@@ -154,7 +154,7 @@ def _seed_m115_retencion_observation() -> None:
 
 
 def _active_bucket_id() -> str:
-    from ....core import resolve_active_bucket_id
+    from ....core.bucket_pointer import resolve_active_bucket_id
 
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None, "profile create must install an active-profile pointer"
@@ -597,7 +597,7 @@ def test_quickfile_result_payload_summarises_the_readiness_report_when_ready() -
 
 def test_quickfile_result_payload_summarises_a_missing_profile_requirement() -> None:
     """A missing profile fact is retained as an axis verdict and blocker count."""
-    from ....application.user_profile import ProfilePreflightRequirement
+    from ....application.user_profile.commands import ProfilePreflightRequirement
     from .._app_quickfile_payloads import QuickfileReadinessSummaryPayload, QuickfileResultPayload
 
     not_ready = _readiness(

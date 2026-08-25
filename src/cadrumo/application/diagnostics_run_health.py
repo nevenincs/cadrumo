@@ -71,7 +71,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
 from ..core.time import validate_inclusive_date_range
-from .auth import test_operator_auth
+from .auth.operator import test_operator_auth
 
 __all__ = [
     "ErrorKindCount",

@@ -96,7 +96,7 @@ def _dev_secret() -> str:
 
 
 def _registered_profile_exists(name: str) -> bool:
-    from ....application.workflow import read_profile_bucket
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
 
     return read_profile_bucket(name) is not None
 

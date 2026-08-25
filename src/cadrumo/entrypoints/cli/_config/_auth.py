@@ -18,7 +18,7 @@ from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._status_rendering import precondition_action_lines
 
 if TYPE_CHECKING:
-    from ....application.auth import AuthConfigureResult
+    from ....application.auth.operator_results import AuthConfigureResult
 
 
 def _auth_configure_lines(configure_result: AuthConfigureResult) -> list[str]:
@@ -67,7 +67,7 @@ def _run_provider_auth_operation[AuthResultT](
     at an operator whose real remedy is ``aeat config login`` for the target
     profile — an instruction that cannot resolve the refusal it answers.
     """
-    from ....application.auth import (
+    from ....application.auth.operator_results import (
         AuthConfigureNoActiveBucketError,
         AuthOperationRequiresCustodySessionError,
         AuthOperationScopeConflictError,
@@ -106,7 +106,7 @@ def auth_providers(
 ) -> None:
     """List supported authentication providers from the backend catalogue."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import list_operator_auth_providers
+    from ....application.auth.operator import list_operator_auth_providers
     from .._config_payloads import AuthProvidersResult
 
     report = list_operator_auth_providers()
@@ -132,11 +132,8 @@ def auth_configure(
 ) -> None:
     """Configure the active authentication provider."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import (
-        AuthConfigureNoActiveBucketError,
-        AuthProviderReservedError,
-        configure_operator_auth,
-    )
+    from ....application.auth.operator import configure_operator_auth
+    from ....application.auth.operator_results import AuthConfigureNoActiveBucketError, AuthProviderReservedError
 
     try:
         result = configure_operator_auth(provider, certificate_path=file)
@@ -178,7 +175,7 @@ def auth_status(
 ) -> None:
     """Show the configured local authentication state."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import inspect_operator_auth
+    from ....application.auth.operator import inspect_operator_auth
     from .._config_payloads import AuthStatusPayload
 
     try:
@@ -240,7 +237,8 @@ def auth_test(
 ) -> None:
     """Render auth readiness through the application-owned auth state."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import AuthProviderReservedError, test_operator_auth
+    from ....application.auth.operator import test_operator_auth
+    from ....application.auth.operator_results import AuthProviderReservedError
     from .._config_payloads import AuthTestPayload
 
     try:
@@ -285,10 +283,8 @@ def auth_login(
 ) -> None:
     """Acquire or verify a live AEAT session through the configured provider."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import (
-        AuthProviderReservedError,
-        login_operator_auth,
-    )
+    from ....application.auth.operator import login_operator_auth
+    from ....application.auth.operator_results import AuthProviderReservedError
     from .._config_payloads import AuthLoginPayload
 
     try:
@@ -321,7 +317,7 @@ def auth_logout(
 ) -> None:
     """Terminate local auth sessions without removing provider configuration."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import logout_operator_auth
+    from ....application.auth.operator import logout_operator_auth
 
     result = _run_provider_auth_operation(
         logout_operator_auth,
@@ -357,7 +353,7 @@ def auth_reset(
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.auth.reset_requires_yes",
         )
-    from ....application.auth import reset_operator_auth
+    from ....application.auth.operator import reset_operator_auth
 
     result = _run_provider_auth_operation(
         reset_operator_auth,

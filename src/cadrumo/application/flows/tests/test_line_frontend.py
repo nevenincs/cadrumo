@@ -41,24 +41,12 @@ from ....core.flows import (
     FlowWidgetKind,
 )
 from ....core.i18n import tr
-from .. import (
-    CopyRef,
-    FlowCheckpointError,
-    FlowChoice,
-    FlowCondition,
-    FlowDefinition,
-    FlowLegalRef,
-    FlowPage,
-    FlowRunAbandonedError,
-    FlowSection,
-    FlowState,
-    FlowUnsupportedConsoleError,
-    ReviewProjection,
-    answer,
-    assemble_section_titles,
-    start_flow,
-)
+from ..copy import assemble_section_titles
+from ..definition import CopyRef, FlowChoice, FlowCondition, FlowDefinition, FlowLegalRef, FlowPage, FlowSection
+from ..engine import FlowState, answer, start_flow
+from ..errors import FlowCheckpointError, FlowRunAbandonedError, FlowUnsupportedConsoleError
 from ..line_frontend import LineFlowFrontend
+from ..review import ReviewProjection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -976,7 +976,7 @@ class AeatAuthenticator:
         self,
     ) -> Path:
         """Return the canonical encrypted certificate-session object key."""
-        from .....core import require_active_bucket_id
+        from .....core.bucket_pointer import require_active_bucket_id
         from .....core.auth_session_keys import aeat_auth_session_storage_state_path
 
         return aeat_auth_session_storage_state_path(require_active_bucket_id(), "storage")

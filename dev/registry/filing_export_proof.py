@@ -56,18 +56,19 @@ from cadrumo.domain.calculations.registry import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ModeloId,
+    RegistryDiagnosticFilingRevision,
     RegistryRevisionInspection,
-    RegistrySnapshotError,
     RegistryValidationError,
     RevisionId,
+    UnvalidatedRegistryClassification,
     ValidatedRegistryAuthority,
-    coverage_assessment_horizon,
+    derive_filing_revision_classifications,
     render_fixed_width_export_field,
-    revision_selection_coordinates,
 )
 from cadrumo.domain.filing import FilingExportError, ModeloDraft
 
 from .pipeline._provenance_manifest import (
+    ExportFragmentProvenanceManifest,
     ExportFragmentTarget,
     export_fragment_provenance_manifest_json_bytes,
     load_export_fragment_provenance_manifest,
@@ -96,6 +97,7 @@ __all__ = [
     "LiveFilingExportProofAuthority",
     "canonical_live_filing_export_proof_authority",
     "canonical_two_channel_filing_export_proof_authority",
+    "derive_diagnostic_filing_export_conformance_enrollment",
     "derive_filing_export_conformance_enrollment",
     "verify_filing_export_payload_acceptance",
 ]
@@ -107,6 +109,7 @@ _BUILDER_RESIDUE_OWNER = "filing-export-conformance"
 
 _ConformanceResidueReason = Literal[
     "law_selection_failed",
+    "revision_validation_failed",
     "layout_unavailable",
     "generated_provenance_missing",
     "generated_provenance_invalid",
@@ -115,6 +118,7 @@ _ConformanceResidueReason = Literal[
     "period_unrepresentable",
     "canonical_builder_missing",
     "canonical_builder_conflict",
+    "registry_validation_incomplete",
 ]
 
 
@@ -142,6 +146,7 @@ class FilingExportConformanceResidue:
 class FilingExportConformanceEnrollmentReport:
     """Dynamic public-provenance enrollment and its non-success residue."""
 
+    full_registry_validation_error: str | None
     provenance_candidates: tuple[FilingExportConformanceProvenanceCandidate, ...]
     materializable_vectors: tuple[FilingExportConformanceVector, ...]
     residues: tuple[FilingExportConformanceResidue, ...]
@@ -159,6 +164,8 @@ class FilingExportConformanceEnrollmentReport:
             raise ValueError("conformance enrollment records a revision residue more than once")
         if set(successful).intersection(refused):
             raise ValueError("conformance enrollment cannot both materialize and refuse one revision")
+        if self.full_registry_validation_error is not None and successful:
+            raise ValueError("diagnostic conformance classification cannot materialize a vector")
 
 
 @dataclass(frozen=True, slots=True)
@@ -232,8 +239,8 @@ class FilingExportConformanceVectorBuilder(Protocol):
         """Return source-derived inputs without storing taxpayer values in the vector."""
 
 
-# S85 owns dynamic enrollment.  Empty inputs are deliberate and yield typed
-# per-channel refusals; they are never treated as a waiver or proof.
+# Empty inputs are deliberate and yield typed per-channel refusals; they are
+# never treated as a waiver or proof.
 CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS: tuple[FilingExportConformanceVector, ...] = ()
 
 
@@ -245,287 +252,380 @@ def derive_filing_export_conformance_enrollment(
     authority: ValidatedRegistryAuthority,
     vectors: tuple[FilingExportConformanceVector, ...],
 ) -> FilingExportConformanceEnrollmentReport:
-    """Derive every filing revision's public candidate or explicit residue."""
+    """Classify validated filing revisions through the canonical static path."""
+    return _derive_static_filing_export_conformance_enrollment(
+        workspace_root=workspace_root,
+        registry_root=registry_root,
+        source_root=source_root,
+        revisions=derive_filing_revision_classifications(authority),
+        vectors=vectors,
+        strict_validation_error=None,
+        validated_authority=authority,
+    )
+
+
+def derive_diagnostic_filing_export_conformance_enrollment(
+    *,
+    workspace_root: Path,
+    registry_root: Path,
+    source_root: Path,
+    classification: UnvalidatedRegistryClassification,
+    vectors: tuple[FilingExportConformanceVector, ...],
+) -> FilingExportConformanceEnrollmentReport:
+    """Classify static diagnostic facts into residue only after strict failure."""
+    return _derive_static_filing_export_conformance_enrollment(
+        workspace_root=workspace_root,
+        registry_root=registry_root,
+        source_root=source_root,
+        revisions=classification.filing_revisions,
+        vectors=vectors,
+        strict_validation_error=classification.strict_validation_error,
+        validated_authority=None,
+    )
+
+
+def _derive_static_filing_export_conformance_enrollment(
+    *,
+    workspace_root: Path,
+    registry_root: Path,
+    source_root: Path,
+    revisions: tuple[RegistryDiagnosticFilingRevision, ...],
+    vectors: tuple[FilingExportConformanceVector, ...],
+    strict_validation_error: str | None,
+    validated_authority: ValidatedRegistryAuthority | None,
+) -> FilingExportConformanceEnrollmentReport:
+    """Classify one static filing projection with success gated by validation."""
+    if validated_authority is not None and not isinstance(validated_authority, ValidatedRegistryAuthority):
+        raise TypeError("conformance materialization requires a validated registry authority")
+    if strict_validation_error is not None and validated_authority is not None:
+        raise ValueError("unvalidated classification facts cannot authorize materialization")
     vector_by_revision = {
         (vector.evidence.coordinate.modelo, vector.evidence.coordinate.revision): vector for vector in vectors
     }
     if len(vector_by_revision) != len(vectors):
         raise ValueError("canonical conformance vectors must identify distinct revisions")
-    verifier = LiveFilingExportProofAuthority(
-        workspace_root=workspace_root,
-        registry_root=registry_root,
-        source_root=source_root,
-        authority=authority,
-        entries=(),
-    )
     candidates: list[FilingExportConformanceProvenanceCandidate] = []
     materializable_vectors: list[FilingExportConformanceVector] = []
     residues: list[FilingExportConformanceResidue] = []
-    assessment_horizon = coverage_assessment_horizon(authority.catalogues)
 
-    for modelo in sorted(authority.modelos, key=lambda item: item.id):
-        for revision in sorted(modelo.revisions.values(), key=lambda item: item.id):
-            if revision.authority_grade is not RegistryAuthorityGrade.FILING:
-                continue
-            try:
-                selection_coordinates = revision_selection_coordinates(
-                    revision,
-                    assessment_horizon=assessment_horizon,
+    for selected in revisions:
+        if selected.refusal_reason is not None:
+            residues.append(
+                _static_revision_residue(
+                    workspace_root=workspace_root,
+                    registry_root=registry_root,
+                    source_root=source_root,
+                    selected=selected,
                 )
-                snapshots = tuple(
-                    authority.snapshot(
-                        modelo.id,
-                        filing_year=filing_year,
-                        period=period,
-                        grade=RegistryAuthorityGrade.FILING,
-                    )
-                    for filing_year, period in selection_coordinates
-                )
-            except (RegistrySnapshotError, RegistryValidationError, ValueError) as error:
-                residues.append(
-                    _conformance_residue(
-                        modelo=modelo.id,
-                        revision=revision.id,
-                        layout_ids=(),
-                        reason="law_selection_failed",
-                        owner=_GENERATOR_RESIDUE_OWNER,
-                        reconsideration_condition=(
-                            "Restore a filing-grade law-selection coordinate for the registered revision."
-                        ),
-                        detail=_residue_detail(error),
-                    )
-                )
-                continue
-            if any(snapshot.revision.id != revision.id for snapshot in snapshots):
-                residues.append(
-                    _conformance_residue(
-                        modelo=modelo.id,
-                        revision=revision.id,
-                        layout_ids=(),
-                        reason="law_selection_failed",
-                        owner=_GENERATOR_RESIDUE_OWNER,
-                        reconsideration_condition=(
-                            "Reconcile the declared revision scope with the filing snapshot selected by law."
-                        ),
-                        detail="a filing-grade snapshot selected a different revision",
-                    )
-                )
-                continue
-            layout_ids = tuple(layout.id for layout in snapshots[0].revision.export_layouts)
-            if not layout_ids or any(
-                tuple(layout.id for layout in snapshot.revision.export_layouts) != layout_ids for snapshot in snapshots
-            ):
-                residues.append(
-                    _conformance_residue(
-                        modelo=modelo.id,
-                        revision=revision.id,
-                        layout_ids=layout_ids,
-                        reason="layout_unavailable",
-                        owner=_GENERATOR_RESIDUE_OWNER,
-                        reconsideration_condition=(
-                            "Supply one stable filing layout for every law-selected coordinate of the revision."
-                        ),
-                        detail="the filing revision has no stable single layout across its selected coordinates",
-                    )
-                )
-                continue
-            if len(layout_ids) != 1:
-                residues.append(
-                    _conformance_residue(
-                        modelo=modelo.id,
-                        revision=revision.id,
-                        layout_ids=layout_ids,
-                        reason="layout_unavailable",
-                        owner=_GENERATOR_RESIDUE_OWNER,
-                        reconsideration_condition=(
-                            "Reduce the conformance scope to one official filing layout per revision."
-                        ),
-                        detail="conformance supports exactly one generated filing layout per revision",
-                    )
-                )
-                continue
-
-            layout = snapshots[0].revision.export_layouts[0]
-            manifest_path = (
-                registry_root
-                / "modelos"
-                / str(modelo.id)
-                / "revisions"
-                / str(revision.id)
-                / "export"
-                / "_generation.provenance.json"
             )
-            if not manifest_path.is_file():
-                residues.append(
-                    _conformance_residue(
-                        modelo=modelo.id,
-                        revision=revision.id,
-                        layout_ids=layout_ids,
-                        reason="generated_provenance_missing",
-                        owner=_GENERATOR_RESIDUE_OWNER,
-                        reconsideration_condition=(
-                            "Publish canonical generated provenance for the exact selected layout and revision."
-                        ),
-                        detail="the selected generated export tree has no canonical provenance manifest",
-                    )
+            continue
+        try:
+            layout, inspection = _deserialize_static_revision(selected)
+        except ValueError as error:
+            residues.append(
+                _revision_validation_residue(
+                    selected=selected,
+                    detail=_residue_detail(error),
                 )
-                continue
-            try:
-                manifest_raw = manifest_path.read_bytes()
-                manifest = load_export_fragment_provenance_manifest(manifest_raw)
-                if manifest.modelo != modelo.id or manifest.revision_id != revision.id:
-                    raise RegistryValidationError(
-                        "generated provenance identity conflicts with the law-selected revision"
-                    )
-                verifier._verify_generation(
-                    entry=_ConformanceGenerationEntry(
-                        modelo=modelo.id,
-                        revision=revision.id,
-                        design_epoch=manifest.design_epoch,
-                        filing_year=selection_coordinates[0][0],
+            )
+            continue
+        try:
+            manifest_raw, manifest = _verify_static_generated_provenance(
+                workspace_root=workspace_root,
+                registry_root=registry_root,
+                source_root=source_root,
+                selected=selected,
+                layout=layout,
+                inspection=inspection,
+            )
+        except (OSError, RegistryValidationError, ValueError) as error:
+            residues.append(_generated_provenance_residue(selected=selected, error=error))
+            continue
+        filing_year, period_code = selected.selection_coordinates[0]
+        try:
+            period = Period.from_year_and_code(filing_year, period_code)
+        except ValueError as error:
+            residues.append(
+                _conformance_residue(
+                    modelo=selected.modelo,
+                    revision=selected.revision,
+                    layout_ids=selected.layout_ids,
+                    reason="period_unrepresentable",
+                    owner=_BUILDER_RESIDUE_OWNER,
+                    reconsideration_condition=(
+                        "Extend the public conformance contract for the exact law-selected filing period "
+                        "without substituting another period."
                     ),
-                    layout=layout,
+                    detail=_residue_detail(error),
                 )
-            except (OSError, RegistryValidationError, ValueError) as error:
-                residues.append(
-                    _conformance_residue(
-                        modelo=modelo.id,
-                        revision=revision.id,
-                        layout_ids=layout_ids,
-                        reason="generated_provenance_invalid",
-                        owner=_GENERATOR_RESIDUE_OWNER,
-                        reconsideration_condition=(
-                            "Regenerate and verify the exact canonical provenance, source bytes, "
-                            "semantic map, and render profile."
-                        ),
-                        detail=_residue_detail(error),
-                    )
-                )
-                continue
-            filing_year, period_code = selection_coordinates[0]
-            try:
-                period = Period.from_year_and_code(filing_year, period_code)
-            except ValueError as error:
-                residues.append(
-                    _conformance_residue(
-                        modelo=modelo.id,
-                        revision=revision.id,
-                        layout_ids=layout_ids,
-                        reason="period_unrepresentable",
-                        owner=_BUILDER_RESIDUE_OWNER,
-                        reconsideration_condition=(
-                            "Extend the public conformance contract for the exact "
-                            "law-selected filing period without substituting another period."
-                        ),
-                        detail=_residue_detail(error),
-                    )
-                )
-                continue
-            try:
-                probes = _public_vector_probes(layout)
-                evidence = FilingExportConformanceVectorEvidence(
-                    authority_id=_CONFORMANCE_AUTHORITY_ID,
-                    coordinate=FilingExportProofCoordinate(
-                        modelo=modelo.id,
-                        revision=revision.id,
-                        layout_ids=layout_ids,
+            )
+            continue
+        try:
+            probes = _public_vector_probes(layout)
+            evidence = FilingExportConformanceVectorEvidence(
+                authority_id=_CONFORMANCE_AUTHORITY_ID,
+                coordinate=FilingExportProofCoordinate(
+                    modelo=selected.modelo,
+                    revision=selected.revision,
+                    layout_ids=selected.layout_ids,
+                ),
+                filing_year=filing_year,
+                period=period,
+                mechanism_source_ref=f"generated-provenance/{selected.modelo}/{selected.revision}",
+                mechanism_source_sha256=sha256_hex(manifest_raw),
+                provenance=FilingExportPublicProvenance(
+                    official_source_ref=manifest.source_ref,
+                    official_source_sha256=manifest.source_sha256,
+                    design_epoch=manifest.design_epoch,
+                    generation_manifest_sha256=sha256_hex(manifest_raw),
+                    semantic_map_sha256=manifest.semantic_map_sha256,
+                    render_profile_sha256=manifest.render_profile_sha256,
+                    loader_semantic_sha256=manifest.loader_semantic_sha256,
+                    generated_outputs=tuple(
+                        FilingExportGeneratedOutput(relative_path=item.relative_path, sha256=item.sha256)
+                        for item in manifest.output_files
                     ),
-                    filing_year=filing_year,
-                    period=period,
-                    mechanism_source_ref=f"generated-provenance/{modelo.id}/{revision.id}",
-                    mechanism_source_sha256=sha256_hex(manifest_raw),
-                    provenance=FilingExportPublicProvenance(
-                        official_source_ref=manifest.source_ref,
-                        official_source_sha256=manifest.source_sha256,
-                        design_epoch=manifest.design_epoch,
-                        generation_manifest_sha256=sha256_hex(manifest_raw),
-                        semantic_map_sha256=manifest.semantic_map_sha256,
-                        render_profile_sha256=manifest.render_profile_sha256,
-                        loader_semantic_sha256=manifest.loader_semantic_sha256,
-                        generated_outputs=tuple(
-                            FilingExportGeneratedOutput(
-                                relative_path=item.relative_path,
-                                sha256=item.sha256,
-                            )
-                            for item in manifest.output_files
-                        ),
-                        probes=probes,
+                    probes=probes,
+                ),
+            )
+        except (RegistryValidationError, ValueError) as error:
+            residues.append(
+                _conformance_residue(
+                    modelo=selected.modelo,
+                    revision=selected.revision,
+                    layout_ids=selected.layout_ids,
+                    reason="official_probe_unavailable",
+                    owner=_GENERATOR_RESIDUE_OWNER,
+                    reconsideration_condition=(
+                        "Provide one distinct positioned literal probe in the first required non-repeating record."
+                    ),
+                    detail=_residue_detail(error),
+                )
+            )
+            continue
+        candidates.append(FilingExportConformanceProvenanceCandidate(evidence=evidence))
+        if not _layout_producer_keys(layout):
+            residues.append(
+                _conformance_residue(
+                    modelo=selected.modelo,
+                    revision=selected.revision,
+                    layout_ids=selected.layout_ids,
+                    reason="producer_binding_missing",
+                    owner=_PRODUCER_RESIDUE_OWNER,
+                    reconsideration_condition=(
+                        "Declare a resolved filing producer key before a canonical writer input can be materialized."
+                    ),
+                    detail="the selected layout declares no filing producer key",
+                )
+            )
+            continue
+        vector = vector_by_revision.get((selected.modelo, selected.revision))
+        if vector is None:
+            residues.append(
+                _conformance_residue(
+                    modelo=selected.modelo,
+                    revision=selected.revision,
+                    layout_ids=selected.layout_ids,
+                    reason="canonical_builder_missing",
+                    owner=_BUILDER_RESIDUE_OWNER,
+                    reconsideration_condition=(
+                        "Enroll a separately reviewed value-independent canonical builder for this public "
+                        "provenance candidate."
+                    ),
+                    detail=(
+                        "no canonical builder materializes non-sensitive conformance inputs for the selected revision"
                     ),
                 )
-            except (RegistryValidationError, ValueError) as error:
-                residues.append(
-                    _conformance_residue(
-                        modelo=modelo.id,
-                        revision=revision.id,
-                        layout_ids=layout_ids,
-                        reason="official_probe_unavailable",
-                        owner=_GENERATOR_RESIDUE_OWNER,
-                        reconsideration_condition=(
-                            "Provide one distinct positioned literal probe in the first required non-repeating record."
-                        ),
-                        detail=_residue_detail(error),
-                    )
+            )
+            continue
+        if vector.evidence != evidence:
+            residues.append(
+                _conformance_residue(
+                    modelo=selected.modelo,
+                    revision=selected.revision,
+                    layout_ids=selected.layout_ids,
+                    reason="canonical_builder_conflict",
+                    owner=_BUILDER_RESIDUE_OWNER,
+                    reconsideration_condition=(
+                        "Align the canonical builder's public evidence with current generated provenance and "
+                        "selected layout."
+                    ),
+                    detail="canonical builder evidence conflicts with the reverified public provenance candidate",
                 )
-                continue
-            candidates.append(FilingExportConformanceProvenanceCandidate(evidence=evidence))
-            if not _layout_producer_keys(layout):
-                residues.append(
-                    _conformance_residue(
-                        modelo=modelo.id,
-                        revision=revision.id,
-                        layout_ids=layout_ids,
-                        reason="producer_binding_missing",
-                        owner=_PRODUCER_RESIDUE_OWNER,
-                        reconsideration_condition=(
-                            "Declare a resolved filing producer key before a canonical writer "
-                            "input can be materialized."
-                        ),
-                        detail="the selected layout declares no filing producer key",
-                    )
+            )
+            continue
+        if validated_authority is None:
+            if strict_validation_error is None:
+                raise AssertionError("refusal-only static classification requires a strict validation error")
+            residues.append(
+                _conformance_residue(
+                    modelo=selected.modelo,
+                    revision=selected.revision,
+                    layout_ids=selected.layout_ids,
+                    reason="registry_validation_incomplete",
+                    owner=_GENERATOR_RESIDUE_OWNER,
+                    reconsideration_condition=(
+                        "Resolve the recorded whole-registry validation failure, then re-run canonical "
+                        "conformance enrollment."
+                    ),
+                    detail=strict_validation_error,
                 )
-                continue
-            vector = vector_by_revision.get((modelo.id, revision.id))
-            if vector is None:
-                residues.append(
-                    _conformance_residue(
-                        modelo=modelo.id,
-                        revision=revision.id,
-                        layout_ids=layout_ids,
-                        reason="canonical_builder_missing",
-                        owner=_BUILDER_RESIDUE_OWNER,
-                        reconsideration_condition=(
-                            "Enroll a separately reviewed value-independent canonical builder "
-                            "for this public provenance candidate."
-                        ),
-                        detail=(
-                            "no canonical builder materializes non-sensitive conformance inputs "
-                            "for the selected revision"
-                        ),
-                    )
-                )
-                continue
-            if vector.evidence != evidence:
-                residues.append(
-                    _conformance_residue(
-                        modelo=modelo.id,
-                        revision=revision.id,
-                        layout_ids=layout_ids,
-                        reason="canonical_builder_conflict",
-                        owner=_BUILDER_RESIDUE_OWNER,
-                        reconsideration_condition=(
-                            "Align the canonical builder's public evidence with current generated "
-                            "provenance and selected layout."
-                        ),
-                        detail="canonical builder evidence conflicts with the reverified public provenance candidate",
-                    )
-                )
-                continue
-            materializable_vectors.append(vector)
+            )
+            continue
+        materializable_vectors.append(vector)
 
     return FilingExportConformanceEnrollmentReport(
+        full_registry_validation_error=strict_validation_error,
         provenance_candidates=tuple(candidates),
         materializable_vectors=tuple(materializable_vectors),
         residues=tuple(residues),
+    )
+
+
+def _static_revision_residue(
+    *,
+    workspace_root: Path,
+    registry_root: Path,
+    source_root: Path,
+    selected: RegistryDiagnosticFilingRevision,
+) -> FilingExportConformanceResidue:
+    """Map one static selection failure through the shared provenance verifier."""
+    if selected.refusal_reason == "revision_validation_failed":
+        try:
+            layout, inspection = _deserialize_static_revision(selected)
+            _verify_static_generated_provenance(
+                workspace_root=workspace_root,
+                registry_root=registry_root,
+                source_root=source_root,
+                selected=selected,
+                layout=layout,
+                inspection=inspection,
+            )
+        except (OSError, RegistryValidationError, ValueError) as error:
+            return _generated_provenance_residue(selected=selected, error=error)
+    if selected.refusal_reason == "law_selection_failed":
+        return _conformance_residue(
+            modelo=selected.modelo,
+            revision=selected.revision,
+            layout_ids=selected.layout_ids,
+            reason="law_selection_failed",
+            owner=_GENERATOR_RESIDUE_OWNER,
+            reconsideration_condition="Restore a filing-grade law-selection coordinate for the registered revision.",
+            detail=selected.refusal_detail or "static classification did not retain a law-selection failure detail",
+        )
+    if selected.refusal_reason == "layout_unavailable":
+        return _conformance_residue(
+            modelo=selected.modelo,
+            revision=selected.revision,
+            layout_ids=selected.layout_ids,
+            reason="layout_unavailable",
+            owner=_GENERATOR_RESIDUE_OWNER,
+            reconsideration_condition=("Supply one stable generated filing layout for every law-selected coordinate."),
+            detail=selected.refusal_detail or "static classification did not retain a layout failure detail",
+        )
+    return _revision_validation_residue(
+        selected=selected,
+        detail=selected.refusal_detail or "static classification did not retain a validation failure detail",
+    )
+
+
+def _deserialize_static_revision(
+    selected: RegistryDiagnosticFilingRevision,
+) -> tuple[ExportLayoutDefinition, RegistryRevisionInspection]:
+    """Restore local verifier inputs from a copied static revision projection."""
+    if selected.layout_json is None or selected.inspection_json is None or not selected.selection_coordinates:
+        raise ValueError("static filing revision has no complete verifier projection")
+    return (
+        ExportLayoutDefinition.model_validate_json(selected.layout_json),
+        RegistryRevisionInspection.model_validate_json(selected.inspection_json),
+    )
+
+
+def _verify_static_generated_provenance(
+    *,
+    workspace_root: Path,
+    registry_root: Path,
+    source_root: Path,
+    selected: RegistryDiagnosticFilingRevision,
+    layout: ExportLayoutDefinition,
+    inspection: RegistryRevisionInspection,
+) -> tuple[bytes, ExportFragmentProvenanceManifest]:
+    """Load and verify provenance using only static revision projection facts."""
+    manifest_path = (
+        registry_root
+        / "modelos"
+        / str(selected.modelo)
+        / "revisions"
+        / str(selected.revision)
+        / "export"
+        / "_generation.provenance.json"
+    )
+    if not manifest_path.is_file():
+        raise FileNotFoundError("the selected generated export tree has no canonical provenance manifest")
+    manifest_raw = manifest_path.read_bytes()
+    manifest = load_export_fragment_provenance_manifest(manifest_raw)
+    if manifest.modelo != selected.modelo or manifest.revision_id != selected.revision:
+        raise RegistryValidationError("generated provenance identity conflicts with the law-selected revision")
+    _verify_generated_revision(
+        workspace_root=workspace_root,
+        source_root=source_root,
+        inspection=inspection,
+        entry=_ConformanceGenerationEntry(
+            modelo=selected.modelo,
+            revision=selected.revision,
+            design_epoch=manifest.design_epoch,
+            filing_year=selected.selection_coordinates[0][0],
+        ),
+        layout=layout,
+    )
+    return manifest_raw, manifest
+
+
+def _generated_provenance_residue(
+    *,
+    selected: RegistryDiagnosticFilingRevision,
+    error: Exception,
+) -> FilingExportConformanceResidue:
+    """Map every static generated-provenance failure in one place."""
+    if isinstance(error, FileNotFoundError):
+        return _conformance_residue(
+            modelo=selected.modelo,
+            revision=selected.revision,
+            layout_ids=selected.layout_ids,
+            reason="generated_provenance_missing",
+            owner=_GENERATOR_RESIDUE_OWNER,
+            reconsideration_condition=(
+                "Publish canonical generated provenance for the exact selected layout and revision."
+            ),
+            detail=_residue_detail(error),
+        )
+    return _conformance_residue(
+        modelo=selected.modelo,
+        revision=selected.revision,
+        layout_ids=selected.layout_ids,
+        reason="generated_provenance_invalid",
+        owner=_GENERATOR_RESIDUE_OWNER,
+        reconsideration_condition=(
+            "Regenerate and verify the exact canonical provenance, source bytes, semantic map, and render profile."
+        ),
+        detail=_residue_detail(error),
+    )
+
+
+def _revision_validation_residue(
+    *,
+    selected: RegistryDiagnosticFilingRevision,
+    detail: str,
+) -> FilingExportConformanceResidue:
+    """Map copied static selection data that cannot pass validation."""
+    return _conformance_residue(
+        modelo=selected.modelo,
+        revision=selected.revision,
+        layout_ids=selected.layout_ids,
+        reason="revision_validation_failed",
+        owner=_GENERATOR_RESIDUE_OWNER,
+        reconsideration_condition="Resolve the canonical revision validation failure before conformance enrollment.",
+        detail=detail,
     )
 
 
@@ -583,10 +683,7 @@ def _public_vector_probes(layout: ExportLayoutDefinition) -> tuple[FilingExportO
 def _layout_producer_keys(layout: ExportLayoutDefinition) -> frozenset[str]:
     """Return only the typed producer vocabulary actually declared by the selected layout."""
     return frozenset(
-        field.producer_key
-        for record in layout.records
-        for field in record.fields
-        if field.producer_key is not None
+        field.producer_key for record in layout.records for field in record.fields if field.producer_key is not None
     )
 
 
@@ -630,7 +727,7 @@ class CanonicalTwoChannelFilingExportProofAuthority:
         self,
         request: FilingExportConformanceRequest,
     ) -> FilingExportConformanceVectorEvidence | None:
-        """Resolve only a canonical S85-enrolled mechanism vector."""
+        """Resolve only a canonically enrolled mechanism vector."""
         vector = next((item for item in self._vectors if item.evidence.coordinate == request.coordinate), None)
         return None if vector is None else vector.evidence
 
@@ -817,6 +914,76 @@ class _ConformanceGenerationEntry:
     filing_year: int
 
 
+def _verify_generated_revision(
+    *,
+    workspace_root: Path,
+    source_root: Path,
+    inspection: RegistryRevisionInspection,
+    entry: _ConformanceGenerationEntry,
+    layout: ExportLayoutDefinition,
+):
+    """Verify generated provenance from a static revision inspection."""
+    export_root = (
+        workspace_root
+        / "src/cadrumo/_data/registry/aeat/modelos"
+        / str(entry.modelo)
+        / "revisions"
+        / str(entry.revision)
+        / "export"
+    )
+    manifest_path = export_root / "_generation.provenance.json"
+    manifest = load_export_fragment_provenance_manifest(manifest_path.read_bytes())
+    if (
+        manifest.modelo != entry.modelo
+        or manifest.revision_id != entry.revision
+        or manifest.design_epoch != entry.design_epoch
+    ):
+        raise RegistryValidationError("canonical export manifest identity conflicts with the live proof entry")
+    semantic_map = load_semantic_map(
+        workspace_root / "dev/registry/mappings" / f"modelo_{entry.modelo}" / entry.design_epoch,
+    )
+    render_profile = load_render_profile(
+        workspace_root / "dev/registry/render_profiles" / f"modelo_{entry.modelo}" / entry.design_epoch,
+    )
+    intermediate = load_record_design_intermediate(
+        source_root,
+        inspection.sources,
+        source_ref=manifest.source_ref,
+        filing_year=entry.filing_year,
+        design_epoch=entry.design_epoch,
+    )
+    joined = join_record_design_semantics(semantic_map, intermediate, inspection)
+    claims_official = any(
+        rule.evidence.authority_kind != "reviewed_policy"
+        for rule in (*render_profile.singleton_rules, *render_profile.width_17_rules)
+    )
+    source_evidence = (
+        load_render_profile_source_evidence(
+            source_root / inspection.sources[manifest.source_ref].corpus_path,
+            render_profile,
+        )
+        if claims_official
+        else RenderProfileSourceEvidence(design_identity=render_profile.design_identity, entries=())
+    )
+    verified = verify_export_fragment_provenance_manifest(
+        export_root=export_root,
+        joined=joined,
+        semantic_map=semantic_map,
+        target=ExportFragmentTarget(
+            modelo=entry.modelo,
+            revision_id=entry.revision,
+            design_epoch=entry.design_epoch,
+        ),
+        loaded_layout=layout,
+        field_derivations=manifest.field_derivations,
+        render_profile=render_profile,
+        render_profile_source_evidence=source_evidence,
+    )
+    if export_fragment_provenance_manifest_json_bytes(verified) != manifest_path.read_bytes():
+        raise RegistryValidationError("canonical export manifest bytes changed during live verification")
+    return verified, manifest_path
+
+
 def _require_unique_coordinates(coordinates: tuple[FilingExportProofCoordinate, ...], *, channel: str) -> None:
     if len(coordinates) != len(set(coordinates)):
         raise ValueError(f"filing export {channel} proof coordinates must be unique")
@@ -835,6 +1002,8 @@ class LiveFilingExportProofAuthority:
         entries: tuple[FilingExportLiveProofEntry, ...],
     ) -> None:
         """Bind canonical roots, validated authority, and unique proof entries."""
+        if not isinstance(authority, ValidatedRegistryAuthority):
+            raise TypeError("live filing proof requires a validated registry authority")
         coordinates = tuple((entry.modelo, entry.revision) for entry in entries)
         if len(coordinates) != len(set(coordinates)):
             raise ValueError("filing export live proof coordinates must be unique")
@@ -868,28 +1037,6 @@ class LiveFilingExportProofAuthority:
         entry: FilingExportLiveProofEntry,
         layout: ExportLayoutDefinition,
     ):
-        export_root = (
-            self._workspace_root
-            / "src/cadrumo/_data/registry/aeat/modelos"
-            / str(entry.modelo)
-            / "revisions"
-            / str(entry.revision)
-            / "export"
-        )
-        manifest_path = export_root / "_generation.provenance.json"
-        manifest = load_export_fragment_provenance_manifest(manifest_path.read_bytes())
-        if (
-            manifest.modelo != entry.modelo
-            or manifest.revision_id != entry.revision
-            or manifest.design_epoch != entry.design_epoch
-        ):
-            raise RegistryValidationError("canonical export manifest identity conflicts with the live proof entry")
-        semantic_map = load_semantic_map(
-            self._workspace_root / "dev/registry/mappings" / f"modelo_{entry.modelo}" / entry.design_epoch,
-        )
-        render_profile = load_render_profile(
-            self._workspace_root / "dev/registry/render_profiles" / f"modelo_{entry.modelo}" / entry.design_epoch,
-        )
         modelo = self._authority.modelo(entry.modelo)
         inspection = RegistryRevisionInspection.from_revision(
             modelo=modelo,
@@ -898,43 +1045,19 @@ class LiveFilingExportProofAuthority:
             sources=self._authority.catalogues.sources,
             legal_ref_ids=frozenset(self._authority.catalogues.legal),
         )
-        intermediate = load_record_design_intermediate(
-            self._source_root,
-            self._authority.catalogues.sources,
-            source_ref=manifest.source_ref,
-            filing_year=entry.filing_year,
-            design_epoch=entry.design_epoch,
-        )
-        joined = join_record_design_semantics(semantic_map, intermediate, inspection)
-        claims_official = any(
-            rule.evidence.authority_kind != "reviewed_policy"
-            for rule in (*render_profile.singleton_rules, *render_profile.width_17_rules)
-        )
-        source_evidence = (
-            load_render_profile_source_evidence(
-                self._source_root / self._authority.catalogues.sources[manifest.source_ref].corpus_path,
-                render_profile,
-            )
-            if claims_official
-            else RenderProfileSourceEvidence(design_identity=render_profile.design_identity, entries=())
-        )
-        verified = verify_export_fragment_provenance_manifest(
-            export_root=export_root,
-            joined=joined,
-            semantic_map=semantic_map,
-            target=ExportFragmentTarget(
+        return _verify_generated_revision(
+            workspace_root=self._workspace_root,
+            source_root=self._source_root,
+            inspection=inspection,
+            entry=_ConformanceGenerationEntry(
                 modelo=entry.modelo,
-                revision_id=entry.revision,
+                revision=entry.revision,
                 design_epoch=entry.design_epoch,
+                filing_year=entry.filing_year,
             ),
-            loaded_layout=layout,
-            field_derivations=manifest.field_derivations,
-            render_profile=render_profile,
-            render_profile_source_evidence=source_evidence,
+            layout=layout,
         )
-        if export_fragment_provenance_manifest_json_bytes(verified) != manifest_path.read_bytes():
-            raise RegistryValidationError("canonical export manifest bytes changed during live verification")
-        return verified, manifest_path
+
 
 def canonical_live_filing_export_proof_authority(
     *,
@@ -963,6 +1086,8 @@ def canonical_two_channel_filing_export_proof_authority(
     secure_replay_custody: FilingExportSecureReplayCustody | None,
 ) -> CanonicalTwoChannelFilingExportProofAuthority:
     """Bind canonical public vectors and operator-supplied secure attestations."""
+    if not isinstance(authority, ValidatedRegistryAuthority):
+        raise TypeError("canonical filing proof requires a validated registry authority")
     enrollment = derive_filing_export_conformance_enrollment(
         workspace_root=workspace_root,
         registry_root=registry_root,

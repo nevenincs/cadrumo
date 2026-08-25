@@ -23,7 +23,7 @@ from pydantic import SecretStr
 from ...adapters.outbound.storage import windows_worst_case_object_path_suffix_length
 from ...core import AuthProviderKind, RegistryAuthorityGrade
 from ...core.config import override_settings
-from ..auth import ProviderProbeResult
+from ..auth.probes import ProviderProbeResult
 from ..preflight import (
     _ERROR_PROBE_RESULTS,
     _OK_PROBE_RESULTS,

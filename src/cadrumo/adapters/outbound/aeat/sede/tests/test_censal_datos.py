@@ -18,7 +18,7 @@ from datetime import date
 
 import pytest
 
-from ......application.user_profile import CensalObservation
+from ......application.user_profile.censal_observation import CensalObservation
 from ......core.config import Settings
 from ......core.i18n import tr
 from ......tests import FIXTURES_DIR

@@ -10,11 +10,9 @@ from pydantic import SecretStr
 from ....core import AuthProviderKind
 from ....core.config import override_settings
 from ....tests.certificates import CERTIFICATE_BUNDLE_PASSPHRASE, build_pkcs12_bundle
-from .. import (
-    AuthConfigureNoActiveBucketError,
-    active_auth_projection_span,
-    login_operator_auth,
-)
+from ..credentials import active_auth_projection_span
+from ..operator import login_operator_auth
+from ..operator_results import AuthConfigureNoActiveBucketError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

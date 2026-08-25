@@ -8,23 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.operations.capabilities import (
-    OperationOwnedResource,
-    OperationReplayPolicy,
-)
-from cadrumo.application.operations.interactions import OperationRejectResponse
-from cadrumo.application.operations.models import (
-    OperationReconciliationOutcome,
-    OperationTerminalReceipt,
-)
-from cadrumo.application.operations.persistence.events import OperationReconciliationEvent
-from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
-from cadrumo.application.operations.persistence.leases import (
-    OperationLeaseObservationDisposition,
-    operation_conflict_scope_reference,
-)
-from cadrumo.application.operations.registry import OperationReconciliationPolicy
-from cadrumo.core.operations import (
+from ....core.operations import (
     OperationCancellation,
     OperationDeadline,
     OperationDurability,
@@ -33,8 +17,23 @@ from cadrumo.core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-
 from ....tests.secure_sql import isolated_runtime_profile
+from ..capabilities import (
+    OperationOwnedResource,
+    OperationReplayPolicy,
+)
+from ..interactions import OperationRejectResponse
+from ..models import (
+    OperationReconciliationOutcome,
+    OperationTerminalReceipt,
+)
+from ..persistence.events import OperationReconciliationEvent
+from ..persistence.journal import OperationPersistedSnapshot
+from ..persistence.leases import (
+    OperationLeaseObservationDisposition,
+    operation_conflict_scope_reference,
+)
+from ..registry import OperationReconciliationPolicy
 from .test_supervisor import (
     _NOW,
     DeadlineAcknowledgingExecutor,

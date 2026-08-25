@@ -62,10 +62,8 @@ def certificate_register(
 ) -> None:
     """Register (or re-point) a named certificate source for the active profile."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import (
-        AuthConfigureNoActiveBucketError,
-        register_operator_certificate_source,
-    )
+    from ....application.auth.certificate_source_operations import register_operator_certificate_source
+    from ....application.auth.operator_results import AuthConfigureNoActiveBucketError
 
     try:
         result = register_operator_certificate_source(
@@ -98,7 +96,7 @@ def certificate_list(
 ) -> None:
     """Enumerate every registered certificate source for the active profile."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import list_operator_certificate_sources
+    from ....application.auth.certificate_source_operations import list_operator_certificate_sources
     from .._config_payloads import CertificateSourceListPayload, CertificateSourcePayloadEntry
 
     report = list_operator_certificate_sources()
@@ -133,10 +131,8 @@ def certificate_select(
 ) -> None:
     """Mark ``name`` the active certificate source; its path becomes the certificate-provider path."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import (
-        AuthConfigureNoActiveBucketError,
-        select_operator_certificate_source,
-    )
+    from ....application.auth.certificate_source_operations import select_operator_certificate_source
+    from ....application.auth.operator_results import AuthConfigureNoActiveBucketError
 
     try:
         result = select_operator_certificate_source(name=name)
@@ -171,10 +167,8 @@ def certificate_remove(
 ) -> None:
     """Remove ``name`` from the certificate-source registry. A no-op when ``name`` is not registered."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import (
-        AuthConfigureNoActiveBucketError,
-        remove_operator_certificate_source,
-    )
+    from ....application.auth.certificate_source_operations import remove_operator_certificate_source
+    from ....application.auth.operator_results import AuthConfigureNoActiveBucketError
 
     try:
         result = remove_operator_certificate_source(name=name)
@@ -212,7 +206,8 @@ def certificate_check(
     individually rather than only the active certificate.
     """
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import ProviderProbeResult, check_operator_certificate_sources
+    from ....application.auth.certificate_source_operations import check_operator_certificate_sources
+    from ....application.auth.probes import ProviderProbeResult
     from .._config_payloads import CertificateSourceCheckEntryPayload, CertificateSourceCheckPayload
 
     report = check_operator_certificate_sources()
@@ -302,10 +297,8 @@ def certificate_secret_set(
             ),
         )
 
-    from ....application.auth import (
-        AuthConfigureNoActiveBucketError,
-        set_operator_certificate_source_secret,
-    )
+    from ....application.auth.certificate_source_operations import set_operator_certificate_source_secret
+    from ....application.auth.operator_results import AuthConfigureNoActiveBucketError
 
     try:
         result = set_operator_certificate_source_secret(
@@ -342,10 +335,8 @@ def certificate_secret_remove(
 ) -> None:
     """Remove the passphrase bound to the named certificate source. A no-op when unset."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import (
-        AuthConfigureNoActiveBucketError,
-        remove_operator_certificate_source_secret,
-    )
+    from ....application.auth.certificate_source_operations import remove_operator_certificate_source_secret
+    from ....application.auth.operator_results import AuthConfigureNoActiveBucketError
 
     try:
         result = remove_operator_certificate_source_secret(name=name)

@@ -89,7 +89,7 @@ def engine_band(app: App[Any]) -> list[str]:
     if definition is None or state is None:
         return []
 
-    from ....application.flows import page_status, visible_sequence
+    from ....application.flows.engine import page_status, visible_sequence
 
     sequence = list(visible_sequence(definition, state))
     answered = sum(1 for entry in sequence if state.answers.get(entry.key))

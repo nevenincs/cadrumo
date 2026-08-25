@@ -23,26 +23,12 @@ from cadrumo.application.operations.persistence.journal import (
 
 from ...core import OperationEffect, OperationLifecycle
 from ...core.async_cleanup import AsyncCloseable
-from ...core.errors import CoreValidationError
 from .capabilities import OperationOwnedResource
-from .events import (
-    OperationDiagnosticReference,
-    OperationEventCode,
-    OperationLogSeverity,
-)
+from .errors import OperationDeclarationError
+from .events import OperationEventCode, OperationLogSeverity
 from .interactions import OperationPendingInteraction
-from .models import OperationId
+from .models import OperationDiagnosticReference, OperationId
 from .registry import OperationRegistry
-
-
-class OperationDeclarationError(CoreValidationError):
-    """One executor claim the operation definition does not declare.
-
-    A declaration refusal is a definition-contract breach detected by the
-    supervisor before any state mutation, not an executor runtime failure, so
-    it reaches its caller instead of settling the operation into an opaque
-    terminal diagnostic.
-    """
 
 
 class _Cancellation:
@@ -278,4 +264,4 @@ class _DefinitionBoundInteractions:
         )
 
 
-__all__ = ["DefinitionBoundContext", "OperationDeclarationError"]
+__all__ = ["DefinitionBoundContext"]

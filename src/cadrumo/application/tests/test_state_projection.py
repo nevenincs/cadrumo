@@ -39,8 +39,8 @@ from ...domain.transactions import BusinessClassification, TransactionDirection
 from ...tests.bucket_layout import provision_bucket_directory
 from ...tests.registry_revision import active_registry_revision_id
 from ...tests.user_profile import register_minimal_profile
-from ..auth import inspect_operator_auth
-from ..auth import test_operator_auth as probe_operator_auth
+from ..auth.operator import inspect_operator_auth
+from ..auth.operator import test_operator_auth as probe_operator_auth
 from ..ledger import ManualLedgerTransactionCommand, create_manual_transaction
 from ..modelo import create_work_unit, discard_work_unit
 from ..overview import build_overview_status_report
@@ -51,13 +51,12 @@ from ..state_projection import (
     build_operator_state_projection,
     modelo_requires_ledger_preflight,
 )
-from ..user_profile import (
-    close_active_profile_record_session,
-    profile_bind_bucket_session,
-    register_profile_with_credentials,
-)
+from ..user_profile.profile_record_repository import close_active_profile_record_session
+from ..user_profile.login_session_port import profile_bind_bucket_session
+from ..user_profile.registration import register_profile_with_credentials
 from ..wizard import WIZARD_FLOWS
-from ..workflow import WorkflowState, workflow_state_repository
+from cadrumo.application.workflow.state_models import WorkflowState
+from cadrumo.application.workflow.persistence import workflow_state_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -655,7 +654,7 @@ def test_auth_readiness_configured_is_coherent_with_health_summary() -> None:
     raw engineering English ``certificate path not configured``.
     """
 
-    from ..auth import configure_operator_auth
+    from ..auth.operator import configure_operator_auth
 
     _register_active_profile()
     configure_operator_auth("certificate")
@@ -690,7 +689,7 @@ def test_auth_readiness_drops_certificate_path_after_switching_provider(tmp_path
     active provider.
     """
 
-    from ..auth import configure_operator_auth
+    from ..auth.operator import configure_operator_auth
 
     _register_active_profile()
     cert_file = tmp_path / "operator-cert.pfx"
@@ -717,7 +716,7 @@ def test_auth_readiness_health_severity_is_populated_for_a_configured_provider()
     never silently empty for a configured provider.
     """
 
-    from ..auth import configure_operator_auth
+    from ..auth.operator import configure_operator_auth
 
     _register_active_profile()
     configure_operator_auth("clave_movil")

@@ -15,8 +15,9 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.application.user_profile.keys_validation import validate_profile_values
+
 from ... import wizard as _wizard  # noqa: F401 - registers compiled profile keys
-from .._keys_validation import validate_profile_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

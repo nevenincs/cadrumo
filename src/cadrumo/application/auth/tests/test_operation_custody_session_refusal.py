@@ -1,7 +1,7 @@
 """Real-behavior tests for the auth operation custody-session precondition.
 
 Every auth operator surface routes its storage access through
-:func:`application.auth._operator_scope.active_profile_storage_span`. The span
+:func:`application.auth.operator_scope.active_profile_storage_span`. The span
 no longer opens a session for whichever bucket the caller named: it requires the
 target profile's custody session to already be open, and refuses otherwise.
 
@@ -18,22 +18,19 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.master_key import current_active_bucket_session
-from ....core import AuthProviderKind, BucketPointer, write_pointer
+from ....core import AuthProviderKind
+from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....core.config import load_settings, override_settings
 from ....core.errors import get_registered_error_code, resolve_error_message
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
-from .. import (
-    AuthOperationRequiresCustodySessionError,
-    build_live_auth_preflight_report,
-)
-from .. import (
-    test_operator_auth as run_operator_auth_test,
-)
-from .._operator_probes import _probe_local_session
-from .._operator_scope import active_profile_storage_span
+from ..operator import build_live_auth_preflight_report
+from ..operator import test_operator_auth as run_operator_auth_test
+from ..operator_probes import probe_local_session
+from ..operator_results import AuthOperationRequiresCustodySessionError
+from ..operator_scope import active_profile_storage_span
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -257,7 +254,7 @@ def test_local_session_probe_degrades_to_absent_instead_of_raising(bucket_a_sess
     with override_settings(cadrumo_active_profile=_BUCKET_B) as settings_b:
         pass
 
-    probe = _probe_local_session(AuthProviderKind.CERTIFICATE.value, settings=settings_b)
+    probe = probe_local_session(AuthProviderKind.CERTIFICATE.value, settings=settings_b)
 
     assert probe.present is False
     assert probe.state == "no_session"

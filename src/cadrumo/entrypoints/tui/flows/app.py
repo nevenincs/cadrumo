@@ -4,7 +4,7 @@ The app owns exactly two responsibilities: hold the current
 :class:`FlowState` (replacing it wholesale on every engine transition)
 and route screen intents onto engine calls. It never interprets an
 answer, never evaluates visibility, and never decides eligibility —
-those are :mod:`cadrumo.application.flows` calls whose results the
+those are direct :mod:`cadrumo.application.flows` defining-module calls whose results the
 screens render. The intent surface mirrors the substrate's closed
 :class:`~cadrumo.core.flows.FlowIntentKind` set.
 
@@ -42,33 +42,25 @@ from textual.widgets.option_list import Option
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
-from ....application.flows import (
-    FlowCheckpointError as _FlowCheckpointError,
-)
-from ....application.flows import (
-    FlowPage,
-    FlowUnsupportedConsoleError,
-    ReviewProjection,
-    ReviewRow,
+from ....application.flows.checkpoint import checkpoint_available, save_checkpoint
+from ....application.flows.copy import assemble_page_copy, assemble_section_titles, resolve_copy
+from ....application.flows.definition import FlowPage
+from ....application.flows.engine import (
     answer,
-    assemble_page_copy,
-    assemble_section_titles,
-    assert_submit_eligible,
     back_page,
-    checkpoint_available,
     jump_to,
     next_page,
     page_status,
     reset_page,
-    resolve_copy,
     restart_flow,
-    review,
-    save_checkpoint,
     start_flow,
-    validate_widget_shape,
     visible_sequence,
 )
+from ....application.flows.errors import FlowCheckpointError as _FlowCheckpointError
+from ....application.flows.errors import FlowUnsupportedConsoleError
 from ....application.flows.line_frontend import LineFlowFrontend
+from ....application.flows.review import ReviewProjection, ReviewRow, assert_submit_eligible, review
+from ....application.flows.validators import validate_widget_shape
 from ....core.flows import (
     DEFER_TOKEN,
     REPEATING_INSTANCE_SEPARATOR,
@@ -89,15 +81,11 @@ if TYPE_CHECKING:
 
     from textual.events import Key
 
-    from ....application.flows import (
-        CheckpointStore,
-        ChoiceCopy,
-        FlowDefinition,
-        FlowState,
-        PageCopy,
-        ValidationVerdict,
-        VisiblePage,
-    )
+    from ....application.flows.checkpoint import CheckpointStore
+    from ....application.flows.copy import ChoiceCopy, PageCopy
+    from ....application.flows.definition import FlowDefinition
+    from ....application.flows.engine import FlowState, VisiblePage
+    from ....application.flows.validators import ValidationVerdict
 
 
 def _operator_flow_context(definition: FlowDefinition, mode: FlowMode) -> dict[str, str]:
@@ -423,7 +411,7 @@ class FlowTuiApp(App[None]):
         """Re-render every screen under the newly-activated output language.
 
         The engine state is locale-blind, so nothing in it changes; every
-        zone and :class:`~cadrumo.application.flows.PageCopy` re-assembles at
+        zone and :class:`~cadrumo.application.flows.copy.PageCopy` re-assembles at
         render, and each screen resolves its footer bindings at mount. Popping
         back to a single screen and pushing a fresh :class:`QuestionScreen`
         therefore re-resolves all operator-facing copy — prompts, choices,

@@ -18,13 +18,11 @@ def config_status(
     _activate_output_language(ctx, output_language)
     from pydantic import ValidationError
 
-    from ....application.user_profile import record_to_path_values
+    from ....application.user_profile.projections import record_to_path_values
     from ....application.wizard import project_answers
-    from ....application.workflow import (
-        assess_active_profile_health,
-        read_profile_bucket_by_id,
-        workflow_state_repository,
-    )
+    from cadrumo.application.workflow.profile_health import assess_active_profile_health
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
+    from cadrumo.application.workflow.persistence import workflow_state_repository
     from ....core.logging import get_logger
     from ....core.wizard_catalogue import get_setup_flow
     from .._config_payloads import ConfigStatusResult

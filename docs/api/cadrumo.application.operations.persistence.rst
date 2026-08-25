@@ -13,8 +13,8 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.application.operations.persistence._events
-   cadrumo.application.operations.persistence._idempotency
-   cadrumo.application.operations.persistence._journal
-   cadrumo.application.operations.persistence._leases
-   cadrumo.application.operations.persistence._replay
+   cadrumo.application.operations.persistence.events
+   cadrumo.application.operations.persistence.idempotency
+   cadrumo.application.operations.persistence.journal
+   cadrumo.application.operations.persistence.leases
+   cadrumo.application.operations.persistence.replay

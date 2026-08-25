@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import typer
 
 if TYPE_CHECKING:
-    from ....application.workflow import ProfileBucketPointer
+    from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
@@ -33,7 +33,7 @@ def apoderado_scopes_list(
 ) -> None:
     """List all available representative scopes in the vocabulary."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import ApoderadoService
+    from ....application.auth.apoderado_service import ApoderadoService
     from .._config_payloads import ApoderadoScopesListResult
 
     svc = ApoderadoService()
@@ -48,7 +48,7 @@ def apoderado_status(
     output_language: OutputLanguage | None = None,
 ) -> None:
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import ApoderadoService
+    from ....application.auth.apoderado_service import ApoderadoService
     from .._config_payloads import ApoderadoStatusResult
 
     pointer = _active_profile_pointer()
@@ -96,9 +96,10 @@ def apoderado_configure(
     profile fact.
     """
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import ApoderadoRepresentedNifInvalidError, ApoderadoService
+    from cadrumo.application.workflow.persistence import workflow_state_repository
+
     from ....application.auth.apoderado_flow import run_apoderado_flow
-    from ....application.workflow import workflow_state_repository
+    from ....application.auth.apoderado_service import ApoderadoRepresentedNifInvalidError, ApoderadoService
 
     workflow_state_repository().load()
     pointer = _active_profile_pointer()
@@ -164,8 +165,9 @@ def apoderado_clear(
     output_language: OutputLanguage | None = None,
 ) -> None:
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import ApoderadoService
-    from ....application.workflow import workflow_state_repository
+    from cadrumo.application.workflow.persistence import workflow_state_repository
+
+    from ....application.auth.apoderado_service import ApoderadoService
     from .._config_payloads import ApoderadoClearResult
 
     workflow_state_repository().load()
@@ -186,8 +188,9 @@ def apoderado_check(
     output_language: OutputLanguage | None = None,
 ) -> None:
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import ApoderadoService
-    from ....application.workflow import workflow_state_repository
+    from cadrumo.application.workflow.persistence import workflow_state_repository
+
+    from ....application.auth.apoderado_service import ApoderadoService
 
     workflow_state_repository().load()
     pointer = _active_profile_pointer()

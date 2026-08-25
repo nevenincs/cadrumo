@@ -239,7 +239,7 @@ def active_bucket_session_serves(bucket_id: str) -> bool:
 
     Storage-root and explicit-routing agreement are a separate, stricter
     concern layered on top of this by
-    :func:`~application.auth._operator_scope.active_profile_storage_span`; this
+    :func:`~application.auth.operator_scope.active_profile_storage_span`; this
     function owns the bucket-identity half that every caller needs.
     """
     return session_serves_bucket(_active_session.get(), bucket_id)

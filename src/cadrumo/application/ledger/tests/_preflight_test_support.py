@@ -20,7 +20,7 @@ from ....domain.transactions import (
 )
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ...user_profile import CensoSyncService
+from ...user_profile.censo_sync import CensoSyncService
 
 _BUCKET_ID = "22222222-2222-4222-8222-222222222222"
 _OTHER_BUCKET_ID = "23232323-2323-4323-8323-232323232323"

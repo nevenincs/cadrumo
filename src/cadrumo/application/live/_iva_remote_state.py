@@ -59,15 +59,15 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage import (
     secure_object_repository_for_active_bucket as _secure_object_repository_for_active_bucket,
 )
-from ...application.auth import AuthenticatedAeatSessionResult as _AuthenticatedAeatSessionResult
-from ...application.auth import ensure_authenticated_aeat_session as _ensure_authenticated_aeat_session
+from ...application.auth.sessions import AuthenticatedAeatSessionResult as _AuthenticatedAeatSessionResult
+from ...application.auth.sessions import ensure_authenticated_aeat_session as _ensure_authenticated_aeat_session
 from ...application.calculations import CalculationObservationRepository as _CalculationObservationRepository
 from ...application.calculations import IvaCompensationHistoryRepository as _IvaCompensationHistoryRepository
 from ...application.calculations import IvaWalletDecisionRepository as _IvaWalletDecisionRepository
 from ...application.calculations import iva_wallet_decision_key as _iva_wallet_decision_key
 from ...application.calculations import reconcile_modelo_303_iva_compensation as _reconcile_modelo_303_iva_compensation
 from ...core import Modelo, Period, StorageCategory
-from ...core import resolve_active_bucket_id as _resolve_active_bucket_id
+from ...core.bucket_pointer import resolve_active_bucket_id as _resolve_active_bucket_id
 from ...core import storage_location as _storage_location
 from ...core.access_gate import AeatAccessGate as _AeatAccessGate
 from ...core.config import Settings as _Settings

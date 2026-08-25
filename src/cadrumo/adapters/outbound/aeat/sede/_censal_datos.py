@@ -44,7 +44,7 @@ from urllib.parse import quote, urlsplit
 
 from bs4 import Tag
 
-from .....application.user_profile import CensalObservation, CensalObservationAddress, CensalObservationIdentity
+from .....application.user_profile.censal_observation import CensalObservation, CensalObservationAddress, CensalObservationIdentity
 from .....core import fold_diacritics
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings

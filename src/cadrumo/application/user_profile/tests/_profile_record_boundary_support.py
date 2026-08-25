@@ -23,6 +23,8 @@ from uuid import UUID
 from pydantic import BaseModel
 from pydantic_core import PydanticUndefined
 
+from cadrumo.application.user_profile.capsule_record import ProfileRecordSession
+
 from ....adapters.persistence.storage.custody import (
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
@@ -32,7 +34,6 @@ from ....adapters.persistence.storage.custody import (
 from ....domain.buckets import BucketEventType
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import mint_test_profile_recovery_envelope
-from .._capsule_record import ProfileRecordSession
 
 PROFILE_ID = UUID("3f8b1d42-6c07-4e59-9a13-2b7e5c04d8af")
 DEK = bytes(range(100, 132))
@@ -143,7 +144,7 @@ def publish_capsule(root: Path) -> UserProfileRecord:
     by the in-process one, so the two suites publish byte-identical capsules
     and differ only in which process does the publishing.
     """
-    from .._lifecycle import ProfileCapsuleLifecycle
+    from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 
     envelope = build_envelope()
     session = open_record_session()
@@ -200,7 +201,7 @@ def advance_to_revision_two(
     replacement lineage is legitimately satisfied, so a refusal can only come
     from the payload itself.
     """
-    from .._capsule_record import ProfileRecordCommandEvent, ProfileRecordStore
+    from cadrumo.application.user_profile.capsule_record import ProfileRecordCommandEvent, ProfileRecordStore
 
     replacement = replacement_record(written)
     ProfileRecordStore(session=session, root=root).replace(

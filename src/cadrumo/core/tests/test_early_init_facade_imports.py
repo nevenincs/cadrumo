@@ -49,7 +49,28 @@ def _late_bound_facade_names() -> frozenset[str]:
 
 
 #: Modules on the settings-resolution path, which core's own body can reach.
-_SETTINGS_PATH_MODULES = ("config.py", "_bucket_pointer_io.py")
+_SETTINGS_PATH_MODULES = ("config.py", "bucket_pointer.py")
+
+
+def test_bucket_pointer_public_surface_is_defining_module_only() -> None:
+    """Pointer APIs have no core-facade bridge or lazy binding."""
+    from ... import core
+    from .. import bucket_pointer
+
+    names = (
+        "BucketPointer",
+        "pointer_path",
+        "read_pointer",
+        "require_active_bucket_id",
+        "resolve_active_bucket_id",
+        "resolve_repository_bucket_id",
+        "write_pointer",
+    )
+
+    assert all(not hasattr(core, name) for name in names)
+    assert all(hasattr(bucket_pointer, name) for name in names)
+    assert all(name not in core._LAZY_EXPORTS for name in names)
+    assert all(name not in core.__all__ for name in names)
 
 
 def _facade_imported_names(module_path: Path) -> set[str]:

@@ -1,6 +1,6 @@
 """Real-behavior tests for the certificate-secret backend abstraction.
 
-Exercises :mod:`~application.auth._certificate_secret_backend` against a
+Exercises :mod:`~application.auth.certificate_secret_backend` against a
 real encrypted :class:`~adapters.persistence.storage.SecretStore` (an
 :class:`~cadrumo.tests.master_key.EphemeralMasterKeyProvider`
 under a real :class:`~adapters.persistence.storage.blob_store.EncryptedBlobStore`
@@ -17,7 +17,7 @@ backend, backend-kind selector, backend factory, and unavailable error must
 be absent from both the module and the ``application.auth`` facade.
 
 See Also:
-    :mod:`~application.auth._certificate_secret_backend`
+    :mod:`~application.auth.certificate_secret_backend`
         Sole secure-storage certificate-secret backend contract under test.
     :class:`~application.auth.SecureStorageCertificateSecretBackend`
         Bucket-scoped backend exercised with a real encrypted store.
@@ -38,21 +38,21 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr, ValidationError
 
+import cadrumo.application.auth.certificate_secret_backend as _backend_module
+
 from ....adapters.persistence.storage import EncryptedBlobStore, SecretStore
 from ....tests.master_key import EphemeralMasterKeyProvider
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
-from ... import auth as _auth_facade
 from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
-from .. import (
-    CertificateSourceNotFoundError,
+from ..certificate_secret_backend import CertificateSecretBackend, SecureStorageCertificateSecretBackend
+from ..certificate_source_operations import (
     register_operator_certificate_source,
     remove_operator_certificate_source_secret,
-    resolve_certificate_source_secret,
     set_operator_certificate_source_secret,
 )
-from .. import _certificate_secret_backend as _backend_module
-from .._certificate_secret_backend import SecureStorageCertificateSecretBackend
+from ..credentials import resolve_certificate_source_secret
+from ..operator_results import CertificateSourceNotFoundError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -110,9 +110,9 @@ def test_secure_storage_backend_roundtrips_a_secret(secret_store: SecretStore) -
 
 def test_public_certificate_secret_backend_imports_and_constructs() -> None:
     """The public auth surface can construct its certificate-secret backend."""
-    backend = _auth_facade.SecureStorageCertificateSecretBackend(bucket_id=_BUCKET_ID)
+    backend = SecureStorageCertificateSecretBackend(bucket_id=_BUCKET_ID)
 
-    assert isinstance(backend, _auth_facade.CertificateSecretBackend)
+    assert isinstance(backend, CertificateSecretBackend)
 
 
 def test_secure_storage_backend_get_is_none_when_unset(secret_store: SecretStore) -> None:
@@ -295,13 +295,6 @@ def test_retired_keyring_symbol_absent_from_backend_module(symbol: str) -> None:
     assert not hasattr(_backend_module, symbol), f"{symbol} must be deleted from the certificate-secret backend module"
 
 
-@pytest.mark.parametrize("symbol", _RETIRED_KEYRING_SYMBOLS)
-def test_retired_keyring_symbol_absent_from_auth_facade(symbol: str) -> None:
-    """The retired keyring surface is no longer exported from ``application.auth``."""
-    assert not hasattr(_auth_facade, symbol), f"{symbol} must not be re-exported from the application.auth facade"
-    assert symbol not in _auth_facade.__all__
-
-
 def test_secure_storage_backend_is_the_only_public_backend() -> None:
     """The module exposes exactly the secure-storage backend and its protocol.
 
@@ -319,7 +312,7 @@ class TestSecretStoreNaturalKey:
     """The secret key addresses exactly the spellings the registry can persist.
 
     The key helper used to strip for itself while the durable
-    :class:`~application.workflow.CertificateSourceRecord` preserved padding.
+    :class:`~application.auth.models.CertificateSourceRecord` preserved padding.
     A source persisted as ``" personal "`` therefore had its passphrase filed
     under ``"personal"``, so two distinct persisted names aliased onto one
     secret. Both sides now share the canonical name contract, so the key can

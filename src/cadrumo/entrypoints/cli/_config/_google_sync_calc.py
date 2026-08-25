@@ -260,7 +260,7 @@ def google_sync_calc_verify(
         OperatorInputScenario,
         verify_modelo_parity,
     )
-    from ....application.user_profile import resolve_active_capability
+    from ....application.user_profile.capabilities import resolve_active_capability
     from ....core import ServiceCapability
 
     # `verify` creates a Drive spreadsheet and writes cells, so it is a Google

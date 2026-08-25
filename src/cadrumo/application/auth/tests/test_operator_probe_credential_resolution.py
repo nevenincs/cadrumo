@@ -18,16 +18,17 @@ from __future__ import annotations
 import pytest
 from pydantic import SecretStr
 
+from cadrumo.application.workflow.persistence import workflow_state_repository
+
 from ....core import AuthProviderKind
 from ....core.config import load_settings, override_settings
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
 from ..._state_projection_auth import build_auth_readiness
-from ...workflow import workflow_state_repository
-from .._operator import _assert_login_precondition, build_live_auth_preflight_report, configure_operator_auth
-from .._operator_probes import (
-    _live_auth_identity_kind,
-    _live_auth_identity_state,
+from ..operator import _assert_login_precondition, build_live_auth_preflight_report, configure_operator_auth
+from ..operator_probes import (
+    live_auth_identity_kind,
+    live_auth_identity_state,
     probe_clave_credentials,
 )
 
@@ -103,7 +104,7 @@ def test_alignment_reports_a_match_for_a_profile_borne_credential() -> None:
 
     _register_profile(**{"auth.dni_nie": _TAX_ID})
     with override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
-        profile_present, provider_present, alignment = _live_auth_identity_state(
+        profile_present, provider_present, alignment = live_auth_identity_state(
             AuthProviderKind.CLAVE_MOVIL,
             settings=settings,
         )
@@ -123,7 +124,7 @@ def test_alignment_still_reports_a_mismatch_it_should_catch() -> None:
 
     _register_profile(**{"auth.dni_nie": _OTHER_TAX_ID})
     with override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
-        _profile_present, _provider_present, alignment = _live_auth_identity_state(
+        _profile_present, _provider_present, alignment = live_auth_identity_state(
             AuthProviderKind.CLAVE_MOVIL,
             settings=settings,
         )
@@ -140,7 +141,7 @@ def test_alignment_still_reports_an_absent_credential() -> None:
 
     _register_profile()
     with override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
-        _profile_present, provider_present, alignment = _live_auth_identity_state(
+        _profile_present, provider_present, alignment = live_auth_identity_state(
             AuthProviderKind.CLAVE_MOVIL,
             settings=settings,
         )
@@ -158,7 +159,7 @@ def test_identity_kind_classifies_a_profile_borne_credential() -> None:
 
     _register_profile(**{"auth.dni_nie": _TAX_ID})
     with override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
-        kind = _live_auth_identity_kind(AuthProviderKind.CLAVE_MOVIL, settings=settings)
+        kind = live_auth_identity_kind(AuthProviderKind.CLAVE_MOVIL, settings=settings)
 
     assert kind == "DNI"
 
@@ -180,7 +181,7 @@ def test_login_precondition_admits_a_profile_borne_credential() -> None:
 def test_login_precondition_still_refuses_when_no_credential_exists() -> None:
     """The refusal has to survive: neither source holds an identity."""
 
-    from .._operator_results import AuthLoginPreconditionError
+    from ..operator_results import AuthLoginPreconditionError
 
     _register_profile()
     with (
@@ -202,7 +203,7 @@ def test_settings_still_win_when_the_profile_carries_nothing() -> None:
 
     _register_profile()
     with override_settings(cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID)) as settings:
-        _profile_present, provider_present, alignment = _live_auth_identity_state(
+        _profile_present, provider_present, alignment = live_auth_identity_state(
             AuthProviderKind.CLAVE_MOVIL,
             settings=settings,
         )

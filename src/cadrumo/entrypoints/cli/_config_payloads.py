@@ -21,28 +21,19 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import ConfigDict, Field, field_validator, model_validator
 
-from ...application.auth import (
-    AuthDiagnosticDetail,
-    AuthDiagnosticPhoneState,
-    AuthDiagnosticSummary,
-    AuthLoginResult,
-    AuthProviderListing,
-    AuthStatusResult,
-    AuthTestResult,
-    ProviderProbeResult,
-)
+from ...application.auth.catalogue import AuthProviderListing
+from ...application.auth.diagnostics import AuthDiagnosticDetail, AuthDiagnosticPhoneState, AuthDiagnosticSummary
+from ...application.auth.operator_results import AuthLoginResult, AuthStatusResult, AuthTestResult
+from ...application.auth.probes import ProviderProbeResult
 from ...application.bucket_maintenance import BucketDeletionFingerprint
 from ...application.config_reset import (
     ConfigResetOperationStatus,
     ConfigResetPauseReason,
     ConfigResetTargetPhase,
 )
-from ...application.user_profile import (
-    ProfileBundleExportPurpose,
-    ProfileBundleExportTransport,
-    ProfileRestoreAuthority,
-)
-from ...application.workflow import ProfileHealthStatus, ProfileSource
+from cadrumo.application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose, ProfileBundleExportTransport
+from ...application.user_profile.aggregate import ProfileRestoreAuthority
+from cadrumo.application.workflow.profile_health import ProfileHealthStatus, ProfileSource
 from ...core import HEX_PATTERN_64, Period
 from ...core.errors import BaseSeverity
 from ...core.identity import BucketId, ProfileId
@@ -58,7 +49,7 @@ from ...domain.user_profile import ProfileSetupState
 # guard.
 
 if TYPE_CHECKING:
-    from ...application.auth import AuthConfigureResult
+    from ...application.auth.operator_results import AuthConfigureResult
     from ...application.config_reset import ConfigResetOperation
 
 # Shared nested models (not direct CommandSpec schema targets)

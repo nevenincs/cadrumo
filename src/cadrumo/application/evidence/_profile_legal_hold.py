@@ -20,8 +20,8 @@ from pydantic import BaseModel, Field, ValidationError, field_validator, model_v
 from ...core import STRICT_FROZEN_CONFIG, StorageCategory, storage_location
 from ...core.logging import get_logger
 from ...core.time import validate_utc_aware
-from .._profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
-from ..user_profile import (
+from ..profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
+from ..user_profile.custody_ports import (
     ProfileCustodyLocalRecordStore,
     canonical_snapshot_bytes,
     canonical_snapshot_digest,

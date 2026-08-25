@@ -18,6 +18,8 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.application.user_profile.preflight import ProfilePreflightService
+
 from ....core import Period
 from ....core.classification import SensitivityClass
 from ....domain.user_profile import (
@@ -32,7 +34,6 @@ from ....domain.user_profile import (
     UserProfileRecord,
     load_user_profile_schema,
 )
-from .._preflight import ProfilePreflightService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -27,7 +27,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ...core.flows import CopyRefKind, FlowWidgetKind
-from ..flows import CopyRef, FlowDefinition, FlowPage, FlowSection
+from ..flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 
 if TYPE_CHECKING:
     from collections.abc import Mapping

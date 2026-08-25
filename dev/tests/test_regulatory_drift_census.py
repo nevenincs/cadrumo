@@ -51,9 +51,18 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 #: residue mean "adjudicated" rather than "blind".
 _KNOWN_INSTANCES: tuple[tuple[str, FindingKind], ...] = (
     ("src/cadrumo/domain/calculations/registry/_applicability.py", FindingKind.MODELO_KEYED_MAPPING_ENTRY),
-    ("src/cadrumo/domain/calculations/registry/_m303_orden_constants.py", FindingKind.YEAR_SET),
+    # The year-set control moved because its old specimen was CURED, not because
+    # the detector weakened: d7a4413227 removed
+    # `SUPPORTED_EJERCICIOS = (2022, ..., 2026)` from `_m303_orden_constants.py`
+    # and centralised it in a catalogue authority, which is exactly the drift
+    # this census exists to encourage. A control pinned to a file that gets
+    # cleaned up must be re-pointed at live data, never relaxed -- the whole
+    # value of these rows is that a detector which finds nothing anywhere
+    # cannot certify a clean residue.
+    ("src/cadrumo/application/modelo/_objective_estimation_advisory.py", FindingKind.YEAR_SET),
     ("src/cadrumo/domain/calculations/registry/_m303_orden_constants.py", FindingKind.DECIMAL_LITERAL),
-    ("dev/registry/_export_tree.py", FindingKind.DESIGN_PROSE_GRAMMAR),
+    # `_export_tree.py` moved under `pipeline/`; the finding is unchanged.
+    ("dev/registry/pipeline/_export_tree.py", FindingKind.DESIGN_PROSE_GRAMMAR),
     ("dev/registry/render_profiles", FindingKind.DEV_RESIDENT_REGULATORY_DATA),
 )
 

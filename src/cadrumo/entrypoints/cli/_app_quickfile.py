@@ -22,7 +22,7 @@ from pathlib import Path
 import typer
 
 from ...application.modelo import QuickfileCommand, run_modelo_quickfile
-from ...application.workflow import workflow_state_repository
+from cadrumo.application.workflow.persistence import workflow_state_repository
 from ...core import OutputLanguage, PaymentElection, Period, PeriodError, PriorDomiciliationElection, RefundElection
 from ...core.i18n import tr
 from ...core.json_contract import Notice
@@ -40,7 +40,7 @@ from ._modelo_rendering import advisory_notice, verification_report_notices
 
 def _require_active_profile() -> str:
     """Return the active bucket id, refusing cold-start with clean guidance."""
-    from ...core import resolve_active_bucket_id
+    from ...core.bucket_pointer import resolve_active_bucket_id
 
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:

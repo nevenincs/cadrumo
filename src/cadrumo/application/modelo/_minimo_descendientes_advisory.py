@@ -102,7 +102,7 @@ def _has_descendiente_facts(bucket_id: str) -> bool:
     handling :func:`~application.modelo._profile_binding.resolve_profile_sourced_bindings`
     already applies to profile-sourced bindings.
     """
-    from ..user_profile import ProfileRecordRepository
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
 
     try:
         record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
@@ -182,7 +182,7 @@ def _family_profile_from_facts(facts: dict[str, str]) -> RentaFamilyProfile:
 
 def _profile_fact_strings(bucket_id: str) -> dict[str, str] | None:
     """Return every non-null profile fact as a ``{path: str-value}`` map, or ``None``."""
-    from ..user_profile import ProfileRecordRepository
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
 
     try:
         record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
@@ -937,7 +937,7 @@ def collect_minimo_descendientes_dependencia_diagnostics(
 
 def _declared_descendant_row_count(bucket_id: str) -> int | None:
     """Return how many descendant rows the profile carries, or ``None`` if unreadable."""
-    from ..user_profile import ProfileRecordRepository
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
 
     try:
         record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
@@ -953,7 +953,7 @@ def _declared_descendant_row_count(bucket_id: str) -> int | None:
 
 def _stored_descendientes_count(bucket_id: str) -> Decimal | None:
     """Return the stored aggregate count fact, or ``None`` when absent."""
-    from ..user_profile import ProfileRecordRepository
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
 
     try:
         record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)

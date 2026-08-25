@@ -7,13 +7,22 @@ own export keys, layout offsets, or rendered record fragments.
 
 from __future__ import annotations
 
+from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, ClassVar, Final, Literal
+from typing import Annotated, ClassVar, Final, Literal, Mapping
 
 from pydantic import BaseModel, StringConstraints, model_validator
 
 from ...core import (
     STRICT_FROZEN_CONFIG,
+    M390ActivityField,
+    M390DifferentiatedDeductionProjectionField,
+    M390ProrrataActivityProjectionField,
+    M390RegimenSimplificadoActivityField,
+    M390RegimenSimplificadoCohort,
+    M390RegimenSimplificadoModuleValue,
+    M390RepresentativeField,
+    M390RepresentativeKind,
     Modelo,
     PaymentElection,
     Period,
@@ -23,6 +32,7 @@ from ...core import (
     StandardPeriodCode,
     result_disposition_is_refund,
 )
+from ...domain.calculations.registry import SourceReference
 from ...core.identity import SubjectTaxId
 from ...domain.bienes_inversion import (
     BienesInversionIvaRegister,
@@ -1272,6 +1282,93 @@ def _validate_m303_register_evidence(facts: M303FilingFacts) -> None:
             raise ValueError("M303 prorrata transition arrival evidence must belong to the supplied register")
 
 
+type M390ProjectionScalar = str | Decimal | None
+
+
+class M390ActivityValueArrival(BaseModel):
+    """One source-shaped page-one statistical activity row."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    slot: int
+    values: Mapping[M390ActivityField, M390ProjectionScalar]
+
+
+class M390RepresentativeValueArrival(BaseModel):
+    """One source-shaped physical/community or legal representative row."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    representative_kind: M390RepresentativeKind
+    slot: int
+    values: Mapping[M390RepresentativeField, M390ProjectionScalar]
+
+
+class M390RegimenSimplificadoActivityValueArrival(BaseModel):
+    """One source-shaped page-five simplified-regime activity row."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    cohort: M390RegimenSimplificadoCohort
+    slot: int
+    values: Mapping[M390RegimenSimplificadoActivityField, M390ProjectionScalar]
+
+
+class M390RegimenSimplificadoModuleValueArrival(BaseModel):
+    """One source-shaped module pair on a non-agricultural activity row."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    slot: int
+    module_order: int
+    values: Mapping[M390RegimenSimplificadoModuleValue, M390ProjectionScalar]
+
+
+class M390ProrrataActivityValueArrival(BaseModel):
+    """One source-shaped page-seven prorrata activity row."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    slot: int
+    values: Mapping[M390ProrrataActivityProjectionField, M390ProjectionScalar]
+
+
+class M390DifferentiatedDeductionValueArrival(BaseModel):
+    """One source-shaped page-eight differentiated-deduction row."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    slot: int
+    values: Mapping[M390DifferentiatedDeductionProjectionField, M390ProjectionScalar]
+
+
+class M390FilingFacts(BaseModel):
+    """Complete source-shaped repeated-row arrivals for one annual Modelo 390 filing.
+
+    Row values remain addressed by the closed core projection references.  This
+    layer therefore owns value arrival only; a semantic map later supplies the
+    export-record coordinate without introducing a second M390 selector.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    period: Period
+    registry_revision_id: str
+    record_design: SourceReference
+    activity_rows: tuple[M390ActivityValueArrival, ...] = ()
+    representative_rows: tuple[M390RepresentativeValueArrival, ...] = ()
+    regimen_simplificado_activity_rows: tuple[M390RegimenSimplificadoActivityValueArrival, ...] = ()
+    regimen_simplificado_module_rows: tuple[M390RegimenSimplificadoModuleValueArrival, ...] = ()
+    prorrata_activity_rows: tuple[M390ProrrataActivityValueArrival, ...] = ()
+    differentiated_deduction_rows: tuple[M390DifferentiatedDeductionValueArrival, ...] = ()
+
+    @model_validator(mode="after")
+    def _require_annual_period(self) -> M390FilingFacts:
+        if self.period.standard_code is not StandardPeriodCode.ANNUAL:
+            raise ValueError("M390 repeated-row filing facts require the annual 0A period")
+        return self
+
+
 def resolve_m303_filing_facts(
     *,
     evidence: FilingInstanceEvidence,
@@ -1384,6 +1481,7 @@ class FilingProducerSnapshot(BaseModel):
     amendment_evidence: AmendmentEvidence | None
     selected_account: SelectedFilingAccount | None
     m303_filing_facts: M303FilingFacts | None
+    m390_filing_facts: M390FilingFacts | None = None
 
     @model_validator(mode="after")
     def _validate_model_profile(self) -> FilingProducerSnapshot:
@@ -1396,6 +1494,8 @@ class FilingProducerSnapshot(BaseModel):
 def _validate_snapshot_model_profile(snapshot: FilingProducerSnapshot) -> None:
     if snapshot.modelo is not Modelo.M303 and snapshot.m303_filing_facts is not None:
         raise ValueError("M303FilingFacts are valid only for modelo 303")
+    if snapshot.modelo is not Modelo.M390 and snapshot.m390_filing_facts is not None:
+        raise ValueError("M390FilingFacts are valid only for modelo 390")
     if (
         snapshot.modelo is not Modelo.M303
         and snapshot.amendment_evidence is not None
@@ -1552,6 +1652,7 @@ def build_filing_producer_snapshot(
             amendment_evidence=amendment_evidence,
             selected_account=selected_account,
             m303_filing_facts=m303_filing_facts,
+            m390_filing_facts=None,
             declaration_contact=declaration_contact or DeclarationContactFacts(),
         )
     except ValueError as exc:
@@ -1584,6 +1685,14 @@ __all__ = [
     "M303FilingFacts",
     "M303InsolvencyFilingFact",
     "M303InsolvencyFilingSubtype",
+    "M390ActivityValueArrival",
+    "M390DifferentiatedDeductionValueArrival",
+    "M390FilingFacts",
+    "M390ProrrataActivityValueArrival",
+    "M390ProjectionScalar",
+    "M390RegimenSimplificadoActivityValueArrival",
+    "M390RegimenSimplificadoModuleValueArrival",
+    "M390RepresentativeValueArrival",
     "Modelo111ProfileFacts",
     "Modelo202ActivityFacts",
     "Modelo202ProducerProfile",

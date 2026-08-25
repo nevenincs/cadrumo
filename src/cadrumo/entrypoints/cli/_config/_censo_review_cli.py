@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import typer
 
-from ....application.user_profile import CensalReviewProjectionV1
+from ....application.user_profile.censal_operation import CensalReviewProjectionV1
 from ....core.i18n import tr
 
 

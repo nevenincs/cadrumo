@@ -56,21 +56,19 @@ Submodules
    cadrumo.application._config_reset_repository
    cadrumo.application._errors
    cadrumo.application._foreign_asset_thresholds
-   cadrumo.application._journal_repository
-   cadrumo.application._profile_deletion_hold_contract
    cadrumo.application._provisioning_contracts
    cadrumo.application._provisioning_runtime
    cadrumo.application._state_projection_auth
    cadrumo.application._state_projection_readiness
-   cadrumo.application._workflow_auth_models
-   cadrumo.application._workflow_review_models
    cadrumo.application.auth_credentials
    cadrumo.application.cli_exception_preconditions
    cadrumo.application.config_reset
    cadrumo.application.diagnostics
    cadrumo.application.diagnostics_run_health
    cadrumo.application.diagnostics_telemetry
+   cadrumo.application.journal_repository
    cadrumo.application.preflight
+   cadrumo.application.profile_deletion_hold_contract
    cadrumo.application.profile_preconditions
    cadrumo.application.provisioning
    cadrumo.application.repair_integrity

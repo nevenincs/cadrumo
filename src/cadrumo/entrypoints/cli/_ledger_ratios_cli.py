@@ -24,7 +24,7 @@ _log = get_logger(__name__)
 
 def _ratios_bucket_and_profile() -> tuple[str, str | None]:
     """Return ``(bucket_id, active_profile_id)`` from workflow state."""
-    from ...core import resolve_active_bucket_id
+    from ...core.bucket_pointer import resolve_active_bucket_id
 
     return _ratios_bucket_id(), resolve_active_bucket_id()
 
@@ -99,7 +99,7 @@ def ratios_list(
     from ...adapters.persistence.profile.usage_ratios import (
         load_usage_ratios_with_censo_guard,
     )
-    from ...application.user_profile import CensoSyncService
+    from ...application.user_profile.censo_sync import CensoSyncService
     from ...domain.usage_ratios import CensoRatioMismatchError
     from ._ledger_payloads import RatiosListResult, RatiosRowPayload
 
@@ -147,7 +147,7 @@ def ratios_set(
     """Set or replace one per-category usage-ratio override on the active bucket."""
     _activate_subcommand_output_language(ctx, output_language)
     from ...application.ledger import censo_override_warning, set_usage_ratio
-    from ...application.user_profile import CensoSyncService
+    from ...application.user_profile.censo_sync import CensoSyncService
     from ._ledger_payloads import RatiosSetResult
 
     parsed = parse_decimal_amount(ratio, label="ratio")

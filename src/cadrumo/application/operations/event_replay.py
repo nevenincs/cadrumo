@@ -4,6 +4,6 @@ from typing import Annotated
 
 from pydantic import Field
 
-OperationEventCursor = Annotated[int, Field(ge=0)]
+type OperationEventCursor = Annotated[int, Field(ge=0)]
 
 __all__ = ["OperationEventCursor"]

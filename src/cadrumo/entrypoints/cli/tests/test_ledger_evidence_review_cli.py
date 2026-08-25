@@ -35,13 +35,8 @@ from ....application.ledger import (
     verified_provenance,
     write_extraction_draft,
 )
-from ....core import (
-    LOCAL_TRANSPORT_LABEL,
-    DraftDiscrepancyKind,
-    FieldGroundingOutcome,
-    FieldOrigin,
-    resolve_active_bucket_id,
-)
+from ....core import LOCAL_TRANSPORT_LABEL, DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
+from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.config import load_settings
 from ._ledger_ux_support import _invoke, _open_ledger_ux_session
 

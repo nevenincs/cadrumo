@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import NamedTuple
 from uuid import UUID
 
-from ..core import BucketPointer
+from ..core.bucket_pointer import BucketPointer
 from ..core.config import load_settings
 from ..core.errors import CadrumoError
 from ..core.time import now
@@ -31,22 +31,18 @@ from ._config_reset_repository import (
     ConfigResetJournalNotFoundError,
     ConfigResetJournalRepository,
 )
-from .auth import (
-    clear_operator_auth_acquisition_locks,
-    operator_auth_revocation_is_reachable,
-    reset_operator_auth,
-)
+from .auth.operator import reset_operator_auth
+from .auth.operator_cleanup import clear_operator_auth_acquisition_locks
+from .auth.operator_scope import operator_auth_revocation_is_reachable
 from .bucket_maintenance import (
     AssessBucketDeletionCommand,
     BucketDeletionAssessment,
     BucketMaintenanceService,
 )
-from .user_profile import (
-    ProfileCapsuleLifecycle,
-    ProfileCustodyRetentionOverride,
-    active_profile_pointer_transaction,
-)
-from .workflow import list_profile_buckets
+from .user_profile.lifecycle import ProfileCapsuleLifecycle
+from .user_profile.custody_hold_models import ProfileCustodyRetentionOverride
+from .user_profile.profile_pointer import active_profile_pointer_transaction
+from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
 
 
 class ConfigResetError(CadrumoError):
@@ -378,8 +374,15 @@ def _reconcile_pointer_snapshot_for_resume(
     pointer_transition_started = any(
         _phase_at_least(target.phase, ConfigResetTargetPhase.POINTER_RECONCILING) for target in operation.targets
     )
-    if pointer_transition_started and current_pointer.record.bucket_id is None:
-        return _Preflight(operation=operation)
+    if pointer_transition_started:
+        before = operation.pointer_snapshot.record
+        expected_successor = (
+            before
+            if before.bucket_id is None
+            else BucketPointer.absent(transition_revision=before.transition_revision + 1)
+        )
+        if current_pointer.record == expected_successor:
+            return _Preflight(operation=operation)
     target_ids = {target.bucket_id for target in operation.targets}
     targets = list(operation.targets)
     paused_ids: tuple[str, ...] = ()

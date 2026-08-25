@@ -194,6 +194,7 @@ class OperationObservationUnknownOperationError(LookupError):
     """The locked observation read found no journal for the requested operation."""
 
     def __init__(self, operation_id: OperationId) -> None:
+        """Carry the requested operation identity for a missing observation."""
         self.operation_id = operation_id
         super().__init__("operation observation requires an existing operation")
 
@@ -208,6 +209,7 @@ class OperationObservationCursorAheadError(ValueError):
     )
 
     def __init__(self, *, requested_cursor: OperationEventCursor, anchor_cursor: OperationEventCursor) -> None:
+        """Carry the requested and authoritative cursors for a refused read."""
         self.requested_cursor = requested_cursor
         self.anchor_cursor = anchor_cursor
         super().__init__("operation observation cursor exceeds its authoritative anchor")
@@ -433,7 +435,9 @@ def _validate_terminal_events(snapshot: OperationPersistedSnapshot) -> None:
 class OperationJournal(Protocol):
     """Atomic snapshot-plus-event persistence with optimistic revision checks."""
 
-    async def load(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
+    async def load(self, operation_id: OperationId) -> OperationPersistedSnapshot:
+        """Load the latest persisted snapshot for one operation."""
+        ...
 
     async def resolve_idempotency(self, claim: OperationIdempotencyClaim) -> OperationId | None:
         """Resolve a claim only when its matching operation journal exists."""
@@ -464,7 +468,9 @@ class OperationEventStream(Protocol):
         cursor: OperationEventCursor,
         *,
         limit: OperationReplayLimit,
-    ) -> OperationReplayPage: ...
+    ) -> OperationReplayPage:
+        """Replay the bounded event interval after one exclusive cursor."""
+        ...
 
 
 @runtime_checkable
@@ -481,7 +487,9 @@ class OperationObservationReader(Protocol):
         after_cursor: OperationEventCursor,
         *,
         limit: OperationReplayLimit,
-    ) -> OperationObservationMaterialization: ...
+    ) -> OperationObservationMaterialization:
+        """Read one atomic snapshot and its bounded event page."""
+        ...
 
 
 @runtime_checkable
@@ -494,9 +502,13 @@ class OperationLeaseRepository(Protocol):
         operation_id: OperationId,
         *,
         observed_at: datetime,
-    ) -> OperationLeaseObservation: ...
+    ) -> OperationLeaseObservation:
+        """Observe the current lease state for one conflict scope."""
+        ...
 
-    async def acquire(self, candidate: OperationOwnerLease, *, observed_at: datetime) -> OperationLeaseResult: ...
+    async def acquire(self, candidate: OperationOwnerLease, *, observed_at: datetime) -> OperationLeaseResult:
+        """Acquire a candidate owner lease against explicit evidence time."""
+        ...
 
     async def compare_and_swap(
         self,
@@ -505,23 +517,29 @@ class OperationLeaseRepository(Protocol):
         *,
         observed_at: datetime,
     ) -> OperationLeaseResult:
+        """Replace one exact live lease with its verified successor."""
         del successor
         raise NotImplementedError
 
-    async def release(self, predecessor: OperationOwnerLease, *, observed_at: datetime) -> OperationLeaseResult: ...
+    async def release(self, predecessor: OperationOwnerLease, *, observed_at: datetime) -> OperationLeaseResult:
+        """Release one exact current lease against explicit evidence time."""
+        ...
 
 
 @runtime_checkable
 class OperationSecureReferenceStore(Protocol):
     """Store and resolve confidential operands outside credential-free journals."""
 
-    async def put(self, operand: BaseModel, *, written_at: datetime) -> ContentDigest: ...
+    async def put(self, operand: BaseModel, *, written_at: datetime) -> ContentDigest:
+        """Store one typed confidential operand and return its reference."""
+        ...
 
     async def resolve[OperandT: BaseModel](
         self,
         reference: ContentDigest,
         operand_type: type[OperandT],
     ) -> OperandT:
+        """Resolve one typed confidential operand by its content reference."""
         del operand_type
         raise NotImplementedError
 

@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....application.user_profile import ProfileFieldChoice, ProfileFieldView
+from ....application.user_profile.overview import ProfileFieldChoice, ProfileFieldView
 from ....domain.user_profile import ProfileSetupState
 from ..profile.overview import ProfileManagerApp
 
@@ -94,7 +94,7 @@ def test_a_closed_choice_row_renders_its_operator_label_not_its_token() -> None:
 
 
 def test_the_shipped_clave_route_row_never_renders_app_request() -> None:
-    from ....application.user_profile import build_profile_overview
+    from ....application.user_profile.overview import build_profile_overview
     from ....core.i18n import tr
     from ....domain.user_profile import UserProfileFact, UserProfileRecord
 

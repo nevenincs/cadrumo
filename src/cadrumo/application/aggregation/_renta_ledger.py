@@ -69,7 +69,8 @@ from ...domain.transactions import (
     TransactionLifecycleState,
 )
 from ...domain.user_profile import ProfileNotFoundError, UserProfileRecord
-from ..user_profile import ProfileRecordRepository, fact_value
+from ..user_profile.profile_record_repository import ProfileRecordRepository
+from ..user_profile.projections import fact_value
 from . import _shared_issue_reasons
 from ._currency_predicates import (
     effective_eur_amount,

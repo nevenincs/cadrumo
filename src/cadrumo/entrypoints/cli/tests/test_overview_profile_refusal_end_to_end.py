@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ....application.user_profile import build_profile_preflight_requirement
+from ....application.user_profile.preflight import build_profile_preflight_requirement
 from ....core.resources import resources
 from ....tests.cli_runner import invoke_cached_cli
 from ._overview_calendar_support import calendar_backend_omitting_gating_facts

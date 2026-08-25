@@ -240,7 +240,8 @@ def _profile_path_values_for_bucket(bucket_id: str) -> dict[str, str] | None:
     Returns ``None`` only when there is genuinely no profile for the bucket.
     """
     from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile import ProfileRecordRepository, record_to_path_values
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
+    from ..user_profile.projections import record_to_path_values
 
     try:
         record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
@@ -554,20 +555,20 @@ def resolve_relations_from_local_store(
         # explicit value from its context bucket; the Sheets-pull path calls this
         # bare). An explicit caller value (e.g. a deterministic test) is never
         # overridden; absent an active bucket, derivation returns None (no scoping).
-        from ...core import resolve_active_bucket_id
+        from ...core.bucket_pointer import resolve_active_bucket_id
 
         active_bucket_id = resolve_active_bucket_id()
         if active_bucket_id is not None:
             activity_start_date = activity_start_date_for_bucket(active_bucket_id)
     if m111_no_retenciones_periods is None:
-        from ...core import resolve_active_bucket_id
+        from ...core.bucket_pointer import resolve_active_bucket_id
 
         active_bucket_id = resolve_active_bucket_id()
         m111_no_retenciones_periods = (
             m111_no_retenciones_periods_for_bucket(active_bucket_id) if active_bucket_id is not None else frozenset()
         )
     if not_applicable_source_modelos is None:
-        from ...core import resolve_active_bucket_id
+        from ...core.bucket_pointer import resolve_active_bucket_id
 
         active_bucket_id = resolve_active_bucket_id()
         not_applicable_source_modelos = (

@@ -20,7 +20,7 @@ from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....core.external_constants import UTF_8_ENCODING, load_external_constants
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import isolated_runtime_profile
-from .._diagnostics import (
+from ..diagnostics import (
     AUTH_DIAGNOSTIC_PHONE_STATES,
     AuthDiagnosticPhoneState,
     _DiagnosticPayload,
@@ -29,7 +29,7 @@ from .._diagnostics import (
     load_auth_diagnostic,
     record_auth_diagnostic_phone_state,
 )
-from .._errors import AuthDiagnosticPayloadError, AuthDiagnosticPhoneStateError
+from ..errors import AuthDiagnosticPayloadError, AuthDiagnosticPhoneStateError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -268,7 +268,7 @@ def test_diagnostic_payload_rejects_non_object_json() -> None:
     import json as _json
 
     from ....core.errors import get_registered_error_code, resolve_error_message
-    from .._diagnostics import _payload
+    from ..diagnostics import _payload
 
     with pytest.raises(AuthDiagnosticPayloadError) as raised:
         _payload(_json.dumps([1, 2, 3]).encode(UTF_8_ENCODING))

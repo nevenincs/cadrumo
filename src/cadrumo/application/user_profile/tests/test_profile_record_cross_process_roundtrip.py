@@ -36,18 +36,17 @@ from textwrap import dedent
 
 import pytest
 
-from ....adapters.persistence.storage import DecryptionError, crypto
-from ....domain.user_profile import UserProfileRecord
-from ....tests.subprocess_cli import run_subprocess_cli_harness
-from .. import (
-    profile_custody_secure_object_repository,
-)
-from .._capsule_record import (
+from cadrumo.application.user_profile.capsule_record import (
     ProfileRecordIntegrityError,
     ProfileRecordSession,
     ProfileRecordStore,
     profile_record_object_key,
 )
+from cadrumo.application.user_profile.custody_ports import profile_custody_secure_object_repository
+
+from ....adapters.persistence.storage import DecryptionError, crypto
+from ....domain.user_profile import UserProfileRecord
+from ....tests.subprocess_cli import run_subprocess_cli_harness
 from ._profile_record_boundary_support import (
     PROFILE_ID,
     RECORD_NAMESPACE,
@@ -71,10 +70,8 @@ _PUBLISHER_SOURCE = dedent(
         build_profile_custody_port,
         build_profile_login_session_port,
     )
-    from cadrumo.application.user_profile import (
-        bind_profile_custody_port,
-        bind_profile_login_session_port,
-    )
+    from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
+    from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
 
     composition = ExitStack()
     composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))

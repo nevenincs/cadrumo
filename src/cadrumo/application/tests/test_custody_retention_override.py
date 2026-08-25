@@ -24,7 +24,7 @@ from uuid import UUID
 import pytest
 
 from ...tests.profile_capsule import open_test_profile_session
-from ..user_profile import ProfileCustodyRetentionOverride
+from ..user_profile.custody_hold_models import ProfileCustodyRetentionOverride
 from .test_config_reset import (
     _OVERRIDE_REASON,
     _create_profile,
@@ -65,7 +65,7 @@ def test_the_override_clears_a_filing_hold_and_is_recorded_in_the_journal(tmp_pa
     the gate and left no account of itself would satisfy the operator and tell a
     later reader nothing.
     """
-    from ..user_profile import ProfileCapsuleLifecycle
+    from ..user_profile.lifecycle import ProfileCapsuleLifecycle
 
     with _isolated_reset_root(tmp_path) as root:
         _held_profile(root)
@@ -90,7 +90,8 @@ def test_an_open_legal_case_still_refuses_with_a_valid_override(tmp_path: Path) 
     thing the refusal exists to protect.
     """
     from ..evidence import LegalHoldCaseAuthority
-    from ..user_profile import ProfileCapsuleLifecycle, ProfileCustodyTransactionRefusalError
+    from ..user_profile.lifecycle import ProfileCapsuleLifecycle
+    from ..user_profile.custody_transactions import ProfileCustodyTransactionRefusalError
 
     with _isolated_reset_root(tmp_path) as root:
         _held_profile(root)
@@ -116,7 +117,8 @@ def test_an_override_is_refused_where_no_filing_hold_blocks(tmp_path: Path) -> N
     nothing would notice, because a profile with no hold deletes cleanly either
     way.
     """
-    from ..user_profile import ProfileCapsuleLifecycle, ProfileCustodyTransactionRefusalError
+    from ..user_profile.lifecycle import ProfileCapsuleLifecycle
+    from ..user_profile.custody_transactions import ProfileCustodyTransactionRefusalError
 
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_ID, label="No hold", tax_id="22222222J")
@@ -137,7 +139,8 @@ def test_a_legal_case_opened_after_preparation_still_stops_the_execution(tmp_pat
     afterwards. The execution must refuse, and the capsule must survive.
     """
     from ..evidence import LegalHoldCaseAuthority
-    from ..user_profile import ProfileCapsuleLifecycle, ProfileCustodyTransactionRefusalError
+    from ..user_profile.lifecycle import ProfileCapsuleLifecycle
+    from ..user_profile.custody_transactions import ProfileCustodyTransactionRefusalError
 
     with _isolated_reset_root(tmp_path) as root:
         _held_profile(root)

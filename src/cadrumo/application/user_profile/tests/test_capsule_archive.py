@@ -13,19 +13,20 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage.custody import load_committed_profile_password_material
-from ....domain.user_profile import UserProfileFact
-from ....tests.secure_sql import isolated_profile_storage_root
-from .. import (
+from cadrumo.application.user_profile.capsule_archive import (
+    RECOVERY_SLOT_BYTES,
     ProfileCapsuleArchiveError,
     export_profile_capsule_archive,
     inspect_profile_capsule_archive,
-    profile_custody_recovery_envelope_path,
     read_profile_capsule_archive,
-    register_profile_with_credentials,
-    restore_profile_capsule_with_password,
 )
-from .._capsule_archive import RECOVERY_SLOT_BYTES
+from cadrumo.application.user_profile.capsule_restore import restore_profile_capsule_with_password
+from cadrumo.application.user_profile.custody_ports import profile_custody_recovery_envelope_path
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
+
+from ....adapters.persistence.storage.custody import load_committed_profile_password_material
+from ....domain.user_profile import UserProfileFact
+from ....tests.secure_sql import isolated_profile_storage_root
 
 if TYPE_CHECKING:
     from pathlib import Path

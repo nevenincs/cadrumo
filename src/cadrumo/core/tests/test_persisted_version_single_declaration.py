@@ -147,7 +147,7 @@ STANDING_LITERAL_VERSION_DECLARATIONS: Final[Mapping[tuple[str, str, str], str]]
         "schema_version",
     ): _UNNAMED_SOLE_DECLARATION,
     (
-        "src/cadrumo/application/user_profile/_login_session.py",
+        "src/cadrumo/application/user_profile/login_session.py",
         "_ProfileLoginHandoverJournal",
         "schema_version",
     ): _UNNAMED_SOLE_DECLARATION,
@@ -407,9 +407,9 @@ def test_the_two_repaired_formats_stay_repaired(source_tree_ast: Mapping[Path, a
     """
     anchors = (
         (
-            "src/cadrumo/application/user_profile/_bundle.py",
+            "src/cadrumo/application/user_profile/bundle.py",
             "BUNDLE_SCHEMA_VERSION",
-            "src/cadrumo/application/user_profile/_bundle_export_contracts.py",
+            "src/cadrumo/application/user_profile/bundle_export_contracts.py",
         ),
         (
             "src/cadrumo/domain/fincas/_models.py",

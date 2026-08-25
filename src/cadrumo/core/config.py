@@ -23,7 +23,7 @@ from contextlib import contextmanager
 from datetime import date
 from functools import lru_cache
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any, Final, override
+from typing import TYPE_CHECKING, Annotated, Any, Final, Literal, override
 
 from pydantic import BeforeValidator, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import (
@@ -75,6 +75,7 @@ from .resources import bundled_path
 from .telemetry import TelemetryTier
 
 if TYPE_CHECKING:
+    from .bucket_pointer import BucketPointer
     from .external_constants import ExternalConstants
 
 
@@ -1006,10 +1007,15 @@ class Settings(CadrumoLlmSettings):
             # attribute whose accessor does not exist yet, and the whole package
             # becomes unimportable. Naming the submodule keeps this resolvable
             # no matter how early the caller sits.
-            from ._bucket_pointer_io import pointer_path, read_pointer
+            from .bucket_pointer import pointer_path, read_pointer
 
             try:
-                pointer = read_pointer(self.cadrumo_local_storage_root)
+                captured = _settings_pointer_observation.get()
+                pointer = (
+                    captured[1]
+                    if captured is not None and captured[0] == self.cadrumo_local_storage_root
+                    else read_pointer(self.cadrumo_local_storage_root)
+                )
             except (OSError, ValueError) as exc:
                 pointer_file = pointer_path(self.cadrumo_local_storage_root)
                 _LOGGER.debug(
@@ -1263,6 +1269,10 @@ _settings_override: contextvars.ContextVar[Settings | None] = contextvars.Contex
     "_settings_override",
     default=None,
 )
+_settings_pointer_observation: contextvars.ContextVar[tuple[Path, BucketPointer] | None] = contextvars.ContextVar(
+    "_settings_pointer_observation",
+    default=None,
+)
 
 
 def classify_storage_route(settings: Settings | None = None) -> StorageRouteClassification:
@@ -1291,7 +1301,7 @@ def settings_for_active_profile_bucket(bucket_id: str, source: Settings | None =
     return settings_for_bucket_route(bucket_id, source or load_settings())
 
 
-def _active_profile_pointer_fingerprint() -> tuple[object, ...]:
+def _active_profile_pointer_observation() -> tuple[Path, BucketPointer]:
     """Identify the current active-profile pointer through its native coordinate.
 
     Settings construction is not a pure function of the environment: when
@@ -1313,18 +1323,25 @@ def _active_profile_pointer_fingerprint() -> tuple[object, ...]:
     """
     import os
 
-    root = os.environ.get("CADRUMO_LOCAL_STORAGE_ROOT") or str(default_storage_root())
+    configured_root = os.environ.get("CADRUMO_LOCAL_STORAGE_ROOT")
+    root = normalize_project_relative_path(Path(configured_root)) if configured_root else default_storage_root()
+    assert root is not None
     try:
-        from ._bucket_pointer_io import read_pointer
+        from .bucket_pointer import read_pointer
 
-        pointer = read_pointer(Path(root))
+        pointer = read_pointer(root)
     except (OSError, ValueError):
-        return (root, "invalid-pointer")
-    return (root, pointer.transition_revision)
+        raise
+    return (root, pointer)
 
 
 @lru_cache(maxsize=8)
-def _constructed_settings(_pointer_fingerprint: tuple[object, ...]) -> Settings:
+def _constructed_settings(
+    root: Path,
+    selection: Literal["absent", "selected"],
+    bucket_id: str | None,
+    transition_revision: int,
+) -> Settings:
     """Build the settings for one active-profile pointer state and hold them.
 
     Construction is expensive out of proportion to what it produces: the model
@@ -1334,7 +1351,8 @@ def _constructed_settings(_pointer_fingerprint: tuple[object, ...]) -> Settings:
     over two hundred production sites — around ten times for a single profile
     field edit, which is how a keystroke came to cost seconds.
 
-    The argument is not read; it is the cache key. Keying on the pointer keeps
+    The transition coordinate arguments are not read; they are the cache key.
+    Keying on the pointer keeps
     the hold from outliving a bucket switch, which is what the profile-bucket
     lifecycle requires of any cache that could otherwise strand a stale route.
     A handful of entries is enough for the few profiles one process touches.
@@ -1343,7 +1361,19 @@ def _constructed_settings(_pointer_fingerprint: tuple[object, ...]) -> Settings:
     directly and so never reach this cache; tests that need different values
     use :func:`override_settings`, which is consulted ahead of it.
     """
-    return Settings()
+    from .bucket_pointer import BucketPointer
+
+    pointer = BucketPointer(
+        selection=selection,
+        bucket_id=bucket_id,
+        transition_revision=transition_revision,
+        schema_version=2,
+    )
+    token = _settings_pointer_observation.set((root, pointer))
+    try:
+        return Settings()
+    finally:
+        _settings_pointer_observation.reset(token)
 
 
 def reset_settings_cache() -> None:
@@ -1367,7 +1397,13 @@ def load_settings() -> Settings:
     override = _settings_override.get()
     if override is not None:
         return override
-    return _constructed_settings(_active_profile_pointer_fingerprint())
+    root, pointer = _active_profile_pointer_observation()
+    return _constructed_settings(
+        root,
+        pointer.selection,
+        pointer.bucket_id,
+        pointer.transition_revision,
+    )
 
 
 @contextmanager

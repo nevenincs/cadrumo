@@ -1,6 +1,6 @@
 """Profile-flow copy-source resolvers for the paged setup flow.
 
-The paged setup flow authored on the :mod:`cadrumo.application.flows`
+The paged setup flow authored on the :mod:`cadrumo.application.flows.definition`
 substrate carries every copy slot as a :class:`CopyRef`, resolved at
 render time. Locale keys are built in; this module supplies the two
 non-locale resolvers the profile flow registers, each owning a
@@ -34,7 +34,7 @@ from ...core.i18n import output_language
 from ...core.resources import resources
 from ...domain.user_profile import UserProfileError
 from ..corpus_search import CorpusSearchInputError, lookup_terminology
-from ..flows import register_copy_source
+from ..flows.copy import register_copy_source
 
 _SCHEMA_NAMESPACE = "profile-schema:"
 _TERMINOLOGY_NAMESPACE = "profile-terminology:"

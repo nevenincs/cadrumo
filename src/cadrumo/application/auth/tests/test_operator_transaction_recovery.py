@@ -14,6 +14,10 @@ from threading import Barrier, Event
 import pytest
 from pydantic import SecretStr
 
+from cadrumo.application.auth.models import AuthCleanupOperationKind, CertificateSecretMutationEventKind
+from cadrumo.application.workflow.persistence import WorkflowStateRepository, workflow_state_repository
+from cadrumo.application.workflow.state_models import WorkflowState
+
 from ....adapters.outbound.aeat.auth import _session_store
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage import RepositoryError
@@ -26,34 +30,23 @@ from ....domain.contribuyente import required_profile_keys
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ....tests.user_profile import register_minimal_profile
-from ...workflow import (
-    AuthCleanupOperationKind,
-    CertificateSecretMutationEventKind,
-    WorkflowState,
-    WorkflowStateRepository,
-    workflow_state_repository,
-)
-from .. import (
-    AuthCleanupInProgressError,
-    CertificateSecretMutationInProgressError,
-    ensure_authenticated_aeat_session,
-)
-from .._acquisition_lock import acquire_auth_acquisition_lock
-from .._actions import update_auth
-from .._certificate_sources_operator import (
+from ..acquisition_lock import acquire_auth_acquisition_lock
+from ..actions import update_auth
+from ..certificate_source_operations import (
     register_operator_certificate_source,
     remove_operator_certificate_source_secret,
     resolve_certificate_source_secret,
     set_operator_certificate_source_secret,
 )
-from .._operator import (
+from ..operator import (
     _build_auth_cleanup_intent,
     configure_operator_auth,
     logout_operator_auth,
     reset_operator_auth,
 )
-from .._operator_scope import auth_mutation_span
-from .._sessions import storage_state_paths
+from ..operator_results import AuthCleanupInProgressError, CertificateSecretMutationInProgressError
+from ..operator_scope import auth_mutation_span
+from ..sessions import ensure_authenticated_aeat_session, storage_state_paths
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

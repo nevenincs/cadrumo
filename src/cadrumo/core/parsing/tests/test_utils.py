@@ -7,7 +7,7 @@ Contract under test, :func:`_parse_bool`:
 
 Contract under test, :func:`_enum_value`: this is the converged home of two
 formerly independent, byte-identical private functions
-(``application/workflow/_engine_helpers.py::enum_value`` and
+(``application/workflow/engine_helpers.py::enum_value`` and
 ``domain/submission/_preflight.py::_enum_value``), so its behaviour is now
 load-bearing for both a workflow-stage status/finding read and a submission
 preflight status/auth-provider-kind read.

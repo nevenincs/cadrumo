@@ -967,7 +967,7 @@ def _should_resolve_deferred_models() -> bool:
     docs_root = Path(__file__).resolve().parent
     diagnostic_pages = {
         (docs_root / "api" / "cadrumo.application.diagnostics.rst").resolve(),
-        (docs_root / "api" / "cadrumo.application.auth._diagnostics.rst").resolve(),
+        (docs_root / "api" / "cadrumo.application.auth.diagnostics.rst").resolve(),
         (docs_root / "api" / "cadrumo.application.transactions._diagnostics.rst").resolve(),
     }
     return any(source in diagnostic_pages for source in specific_sources)

@@ -16,7 +16,7 @@ from typing import cast
 
 import pytest
 
-from ....application.auth import LiveAuthPreflightReport
+from ....application.auth.operator_results import LiveAuthPreflightReport
 from ....application.live import (
     Borrador100SnapshotService,
     IvaRemoteStateAcquisitionReport,

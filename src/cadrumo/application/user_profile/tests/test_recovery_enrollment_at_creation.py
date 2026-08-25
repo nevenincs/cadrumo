@@ -16,6 +16,9 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.application.user_profile.profile_repository import CommittedProfileRepository
+from cadrumo.application.user_profile.registration import ProfileRegistrationError, register_profile_with_credentials
+
 from ....adapters.persistence.storage import generate_recovery_key
 from ....adapters.persistence.storage.custody import (
     PROFILE_CUSTODY_RECOVERY_FILENAME,
@@ -25,12 +28,11 @@ from ....adapters.persistence.storage.custody import (
     unlock_profile_custody_recovery,
 )
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import CommittedProfileRepository, ProfileRegistrationError, register_profile_with_credentials
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from .._recovery_custody import ProfileRecoveryEnrollment
+    from cadrumo.application.user_profile.recovery_custody import ProfileRecoveryEnrollment
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

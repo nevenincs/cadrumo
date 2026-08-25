@@ -41,7 +41,7 @@ _READER_PROBES: tuple[tuple[str, str], ...] = (
 def _run_cold(body: str) -> subprocess.CompletedProcess[str]:
     """Execute ``body`` in a fresh interpreter with no prior wizard import."""
     source = (
-        "from cadrumo.application.user_profile._keys_validation import ("
+        "from cadrumo.application.user_profile.keys_validation import ("
         "list_profile_key_records, validate_profile_values)\n" + body + "\n"
     )
     return subprocess.run(  # noqa: S603 - fixed argv, no shell, test-local source

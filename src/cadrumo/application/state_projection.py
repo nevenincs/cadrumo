@@ -80,6 +80,9 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, field_validator
 
+from cadrumo.application.workflow.profile_health import ActiveProfileHealth, assess_active_profile_health
+from cadrumo.application.workflow.state_models import WorkflowState
+
 from ..adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -87,7 +90,8 @@ from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueR
 from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ..adapters.persistence.storage import inspect_bucket_storage_runtime
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..core import AuthProviderKind, BindingSourceKind, OperatorActionAxis, Period, resolve_active_bucket_id
+from ..core import AuthProviderKind, BindingSourceKind, OperatorActionAxis, Period
+from ..core.bucket_pointer import resolve_active_bucket_id
 from ..core.errors import CadrumoError
 from ..core.identity import ProfileId
 from ..core.logging import get_logger
@@ -107,19 +111,11 @@ from ._state_projection_readiness import (
     one_line_error_message,
     readiness_binding_input_channel,
 )
-from .auth import (
-    ActiveAuthProjectionSnapshot,
-    active_auth_projection_span,
-)
+from .auth.credentials import ActiveAuthProjectionSnapshot, active_auth_projection_span
 from .auth_credentials import ActiveCertificateCredentials
 from .ledger import LedgerPreflightIssue, LedgerPreflightIssueReason, preflight_ledger_tax_readiness
 from .operator_actions import PreconditionVerdict
-from .user_profile import ProfilePreflightRequirement
-from .workflow import (
-    ActiveProfileHealth,
-    WorkflowState,
-    assess_active_profile_health,
-)
+from .user_profile.commands import ProfilePreflightRequirement
 
 if TYPE_CHECKING:
     from ..domain.calculations.registry import RegistrySnapshot
@@ -317,7 +313,7 @@ def _taxpayer_profile_from_state(state: WorkflowState) -> TaxpayerProfile:
     the single fact-to-taxpayer projection authority, so the deadline engine
     receives exactly the profile shape every other surface computes.
     """
-    from .user_profile import projection_for_taxpayer
+    from .user_profile.projections import projection_for_taxpayer
 
     record = state.active_profile_record()
     return projection_for_taxpayer(record if record is not None else {})
@@ -678,6 +674,8 @@ def _build_modelo_readiness(
     if not requests or active_profile_id is None:
         return ()
 
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
+
     from ..core.i18n import tr
     from ..core.resources import resources
     from ..domain.user_profile import ProfileSetupState
@@ -686,8 +684,7 @@ def _build_modelo_readiness(
         modelo_work_profile_preflight_report,
         pre_activity_period_refusal,
     )
-    from .user_profile import ProfileRecordRepository
-    from .workflow import read_profile_bucket_by_id
+    from .user_profile.profile_record_repository import ProfileRecordRepository
 
     pointer = read_profile_bucket_by_id(active_profile_id)
     if pointer is None:
@@ -1011,7 +1008,7 @@ def build_operator_state_projection(
     Args:
         state: Pre-loaded workflow state. When ``None`` and a profile
             is active, the state is loaded through
-            :func:`~cadrumo.application.workflow._persistence.workflow_state_repository`;
+            :func:`~cadrumo.application.workflow.persistence.workflow_state_repository`;
             when ``None`` and no
             profile is active, an empty :class:`WorkflowState` is used
             (opening the bucket database would require a session that

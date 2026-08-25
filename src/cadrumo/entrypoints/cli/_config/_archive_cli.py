@@ -32,10 +32,7 @@ from .._common import activate_subcommand_output_language as _activate_subcomman
 from .._common import emit_envelope
 
 if TYPE_CHECKING:
-    from ....application.user_profile import (
-        ProfileCapsuleArchiveInspection,
-        ProfileCapsuleArchiveReceipt,
-    )
+    from ....application.user_profile.capsule_archive import ProfileCapsuleArchiveInspection, ProfileCapsuleArchiveReceipt
 
 
 def _export_lines(receipt: ProfileCapsuleArchiveReceipt) -> tuple[str, ...]:
@@ -75,7 +72,7 @@ def archive_export(
 
     """Write a named profile's capsule to a sealed archive."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile import export_profile_capsule_archive
+    from ....application.user_profile.capsule_archive import export_profile_capsule_archive
     from .._config_payloads import ConfigProfileArchiveExportResult
 
     # The archive service takes a UUID and deliberately holds no opinion
@@ -107,7 +104,7 @@ def archive_inspect(
 ) -> None:
     """Report an archive's plaintext header without decrypting it."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile import inspect_profile_capsule_archive
+    from ....application.user_profile.capsule_archive import inspect_profile_capsule_archive
     from .._config_payloads import ConfigProfileArchiveInspectResult
 
     inspection = inspect_profile_capsule_archive(file)

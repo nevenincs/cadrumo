@@ -33,22 +33,13 @@ from prompt_toolkit.output.plain_text import PlainTextOutput
 from pydantic import BaseModel
 from textual.containers import Vertical
 
-from ....application.flows import (
-    CopyRef,
-    FlowAnswerError,
-    FlowChoice,
-    FlowCondition,
-    FlowDefinition,
-    FlowPage,
-    FlowSection,
-    FlowState,
-    ReviewProjection,
-    answer,
-    assemble_section_titles,
-    run_scripted_flow,
-    start_flow,
-)
+from ....application.flows.copy import assemble_section_titles
+from ....application.flows.definition import CopyRef, FlowChoice, FlowCondition, FlowDefinition, FlowPage, FlowSection
+from ....application.flows.engine import FlowState, answer, start_flow
+from ....application.flows.errors import FlowAnswerError
 from ....application.flows.line_frontend import LineFlowFrontend
+from ....application.flows.review import ReviewProjection
+from ....application.flows.scripted import run_scripted_flow
 from ....core.flows import (
     CheckpointAvailability,
     CopyRefKind,

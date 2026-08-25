@@ -346,7 +346,7 @@ def profile_requirements_for_binding(
     worse than a resolved one and better than none.
     """
     from ...core.resources import resources
-    from ..user_profile import format_profile_path_requirements
+    from ..user_profile.preflight import format_profile_path_requirements
 
     try:
         authority = authority_via_resources()

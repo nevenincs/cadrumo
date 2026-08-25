@@ -16,7 +16,7 @@ import pytest
 from ....core import AuthProviderKind, StorageCategory, storage_location
 from ....core.config import Settings, override_settings
 from ....tests import assert_path_matches_grammar
-from .._acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
+from ..acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

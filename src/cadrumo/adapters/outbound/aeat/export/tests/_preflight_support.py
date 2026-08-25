@@ -7,7 +7,7 @@ from functools import cache
 
 from pydantic import SecretStr
 
-from ......application.auth import AuthProvider, select_provider
+from ......application.auth.providers import AuthProvider, select_provider
 from ......application.modelo import build_revision_deadline_window_checker
 from ......core import AuthProviderKind, Period
 from ......core.config import Settings

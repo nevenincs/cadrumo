@@ -7,7 +7,10 @@ import pytest
 from ....core.config import override_settings
 from ....core.flows import CheckpointAvailability, FlowMode, FlowWidgetKind
 from ....core.i18n import tr
-from ...flows import FlowPage, answer, assemble_page_copy, flow_definition_from_wizard_flow, start_flow
+from ...flows.copy import assemble_page_copy
+from ...flows.definition import FlowPage
+from ...flows.engine import answer, start_flow
+from ...flows.wizard_projection import flow_definition_from_wizard_flow
 from .._catalogue import SETUP_FLOW
 from .._format_hints import PAGE_FORMAT_HINTS, PAGE_WIDGET_KINDS, attach_format_hints
 

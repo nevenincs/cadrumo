@@ -52,7 +52,7 @@ from .._common import emit_envelope
 from ._secure_input import MachineSecretPayload, MachineSecretSelection
 
 if TYPE_CHECKING:
-    from ....application.user_profile import ProfileCapsuleSource, ProfileRestoreOutcome
+    from ....application.user_profile.capsule_restore import ProfileCapsuleSource, ProfileRestoreOutcome
 
 _RECOVERY_LIMIT_NOTICE_CODE = "config.profile.restore.password_unchanged"
 
@@ -105,7 +105,8 @@ def _read_capsule_source(source: Path) -> ProfileCapsuleSource:
     kind of backup they are holding, and a flag they could set wrongly would
     turn a recoverable mistake into a confusing refusal.
     """
-    from ....application.user_profile import read_profile_capsule_archive, read_profile_capsule_source
+    from ....application.user_profile.capsule_archive import read_profile_capsule_archive
+    from ....application.user_profile.capsule_restore import read_profile_capsule_source
 
     if source.is_dir():
         return read_profile_capsule_source(source)
@@ -139,10 +140,7 @@ def profile_restore(
 ) -> None:
     """Republish a capsule directory as a usable profile."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile import (
-        restore_profile_capsule_with_password,
-        restore_profile_capsule_with_recovery_artifact,
-    )
+    from ....application.user_profile.capsule_restore import restore_profile_capsule_with_password, restore_profile_capsule_with_recovery_artifact
     from .._config_payloads import ConfigProfileRestoreResult
     from ._secure_input import select_machine_secret_channel
 

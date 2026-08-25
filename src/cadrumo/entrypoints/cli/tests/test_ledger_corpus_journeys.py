@@ -277,7 +277,8 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
 
     from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ....core import Period, resolve_active_bucket_id
+    from ....core import Period
+    from ....core.bucket_pointer import resolve_active_bucket_id
     from ....domain.modelos import (
         CalculationRevision,
         CalculationRevisionCatalogue,

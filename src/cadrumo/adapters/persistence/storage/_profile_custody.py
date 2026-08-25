@@ -9,7 +9,8 @@ from pathlib import Path
 from typing import Literal, NoReturn
 from uuid import UUID
 
-from ....application.user_profile import (
+from ....application.user_profile.authentication import ProfilePasswordProofOperation
+from ....application.user_profile.custody_ports import (
     ProfileBucketStoragePathsPort,
     ProfileBucketStoragePort,
     ProfileCapsuleArchiveContentsMaterial,
@@ -32,7 +33,6 @@ from ....application.user_profile import (
     ProfileCustodySecureObjectRepositoryPort,
     ProfileCustodySentinelPort,
     ProfileCustodyUnlockPort,
-    ProfilePasswordProofOperation,
     ProfileRecordCryptoError,
     ProfileRecordCryptoPort,
     ProfileRecordEncryptedBlob,
@@ -47,6 +47,7 @@ from . import (
     USER_PROFILE_VALUE_NAMESPACE,
     KeyringUnavailableError,
     MasterKeyMaterialMissingError,
+    PersistenceError,
     SecureObjectRepository,
     bucket,
     crypto,
@@ -613,6 +614,9 @@ class _PersistenceProfileCustody:
 
     def is_keyring_unavailable(self, error: BaseException) -> bool:
         return isinstance(error, KeyringUnavailableError)
+
+    def is_persistence_failure(self, error: BaseException) -> bool:
+        return isinstance(error, PersistenceError)
 
     def secure_object_namespace(self) -> ProfileCustodySecureObjectNamespace:
         return ProfileCustodySecureObjectNamespace(

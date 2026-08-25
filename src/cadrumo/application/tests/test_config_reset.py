@@ -13,7 +13,8 @@ import pytest
 from pydantic import SecretStr
 
 from ...adapters.persistence.storage.custody import profile_session_path
-from ...core import iter_directory, read_pointer, scan_directory
+from ...core import iter_directory, scan_directory
+from ...core.bucket_pointer import read_pointer
 from ...tests.profile_capsule import open_test_profile_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -84,7 +85,7 @@ def _delete_profile_through_custody(profile_id: str, *, root: Path) -> None:
     """
     from ..evidence import LegalHoldCaseAuthority
     from ..filing import FilingRetentionAuthority
-    from ..user_profile import ProfileCapsuleLifecycle
+    from ..user_profile.lifecycle import ProfileCapsuleLifecycle
 
     observed_at = datetime.now(UTC)
     identity = UUID(profile_id)
@@ -132,7 +133,7 @@ def _capsule_dir_for(root: Path, profile_id: str) -> Path:
 
 
 def _write_active_pointer(root: Path, bucket_id: str) -> None:
-    from ...core import BucketPointer, write_pointer
+    from ...core.bucket_pointer import BucketPointer, write_pointer
 
     write_pointer(
         root,
@@ -238,7 +239,8 @@ def test_start_discovers_live_and_dangling_targets_then_completes(
     clearing it is a contract the reset actually holds.
     """
     from ...adapters.persistence.storage.bucket import bucket_paths
-    from ...core import AuthProviderKind, StorageCategory, pointer_path, storage_location
+    from ...core import AuthProviderKind, StorageCategory, storage_location
+    from ...core.bucket_pointer import pointer_path
     from ...core.config import load_settings
     from .._config_reset_models import (
         ConfigResetAuthClearanceMode,
@@ -246,9 +248,8 @@ def test_start_discovers_live_and_dangling_targets_then_completes(
         ConfigResetTargetPhase,
     )
     from .._config_reset_repository import ConfigResetJournalRepository
-    from ..auth import (
-        acquire_auth_acquisition_lock,
-        auth_acquisition_lock_path,
+    from ..auth.acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
+    from ..auth.certificate_source_operations import (
         register_operator_certificate_source,
         set_operator_certificate_source_secret,
     )
@@ -377,7 +378,7 @@ def test_a_locked_dangling_target_has_its_key_free_lock_cleared_and_says_what_it
         ConfigResetOperationStatus,
         ConfigResetTargetPhase,
     )
-    from ..auth import acquire_auth_acquisition_lock, auth_acquisition_lock_path
+    from ..auth.acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
     from ..config_reset import start_config_reset
 
     with _isolated_reset_root(tmp_path) as root:
@@ -449,7 +450,7 @@ def test_a_profile_from_the_seeding_door_alone_is_deletion_assessable(
 def test_retention_preflight_pauses_before_auth_pointer_or_bucket_mutation(
     tmp_path: Path,
 ) -> None:
-    from ...core import pointer_path
+    from ...core.bucket_pointer import pointer_path
     from .._config_reset_models import (
         ConfigResetOperationStatus,
         ConfigResetPauseReason,
@@ -650,7 +651,7 @@ def test_resume_detects_an_a_to_b_to_a_pointer_coordinate_change(tmp_path: Path)
     """ABA selection equality cannot hide a changed reset preflight witness."""
     from .._config_reset_models import ConfigResetPauseReason
     from ..config_reset import resume_config_reset, start_config_reset
-    from ..user_profile import active_profile_pointer_transaction
+    from ..user_profile.profile_pointer import active_profile_pointer_transaction
 
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")

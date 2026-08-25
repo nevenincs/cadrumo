@@ -20,8 +20,8 @@ _profile_field: str | None = None
 
 
 def _resume_active_profile(passphrase: str) -> None:
-    from cadrumo.application.user_profile import login_profile
-    from cadrumo.application.workflow import assess_active_profile_health
+    from cadrumo.application.user_profile.login_session import login_profile
+    from cadrumo.application.workflow.profile_health import assess_active_profile_health
 
     profile_name = assess_active_profile_health().active_profile_label
     if profile_name is None:

@@ -27,7 +27,7 @@ from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record, seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionRepository
-from ...user_profile import record_to_path_values
+from ...user_profile.projections import record_to_path_values
 from .. import (
     ModeloProfileReadinessError,
     WorkUnitMutationRefusedError,

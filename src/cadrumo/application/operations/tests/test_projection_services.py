@@ -10,10 +10,22 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
-from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
-from cadrumo.application.operations.capabilities import (
+from ....adapters.persistence.operations.journal import OperationJournalRepository
+from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
+from ....adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from ....core import (
+    STRICT_FROZEN_CONFIG,
+    OperationCancellation,
+    OperationClosePolicy,
+    OperationDeadline,
+    OperationDurability,
+    OperationEffect,
+    OperationInteractionKind,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
+from ....tests.secure_sql import isolated_runtime_profile
+from ..capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
     OperationConflictScope,
@@ -22,7 +34,7 @@ from cadrumo.application.operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from cadrumo.application.operations.frontend_contracts import (
+from ..frontend_contracts import (
     OperationCancellationRefusalCode,
     OperationCancellationRefusalV1,
     OperationCancellationRequestV1,
@@ -47,29 +59,33 @@ from cadrumo.application.operations.frontend_contracts import (
     OperationWorkspaceRefreshTargetSuccessV1,
     OperationWorkspaceRefreshTargetVersionHeader,
 )
-from cadrumo.application.operations.models import (
+from ..interactions import OperationInteractionRequest, OperationPendingInteraction, OperationResponseIntent
+from ..models import (
     OperationIdentity,
     OperationRequest,
     OperationTerminalReceipt,
 )
-from cadrumo.application.operations.persistence.events import (
+from ..owner import OperationExecutorContext
+from ..persistence.events import (
     OperationInteractionEvent,
     OperationPhaseEvent,
     OperationTerminalEvent,
 )
-from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
-from cadrumo.application.operations.persistence.leases import (
+from ..persistence.journal import OperationPersistedSnapshot
+from ..persistence.leases import (
     OperationOwnerLease,
     operation_conflict_scope_reference,
 )
-from cadrumo.application.operations.projection_services import (
+from ..projection_services import (
+    BoundOperationSecureResponseAuthority,
     OperationCancellationService,
     OperationDetachService,
+    OperationResponseAuthorityBroker,
     OperationResponseControlService,
     OperationReviewProjectionService,
     OperationWorkspaceRefreshTargetService,
 )
-from cadrumo.application.operations.registry import (
+from ..registry import (
     OperationDefinition,
     OperationExecutorFactory,
     OperationFrontendProjection,
@@ -79,22 +95,6 @@ from cadrumo.application.operations.registry import (
     OperationSchemaBindingV1,
     operation_public_schema_reference,
 )
-
-from ....core import (
-    STRICT_FROZEN_CONFIG,
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationInteractionKind,
-    OperationLifecycle,
-    OperationTerminalCondition,
-)
-from ....tests.secure_sql import isolated_runtime_profile
-from ..interactions import OperationInteractionRequest, OperationPendingInteraction, OperationResponseIntent
-from ..owner import OperationExecutorContext
-from ..projection_services import BoundOperationSecureResponseAuthority, OperationResponseAuthorityBroker
 from ..supervisor import OperationSupervisor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

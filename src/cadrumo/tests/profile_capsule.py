@@ -26,14 +26,10 @@ from ..adapters.persistence.storage.tests.profile_capsule_runtime import (
     new_test_profile_custody_envelope,
     test_profile_recovery_envelope,
 )
-from ..application.user_profile import (
-    ProfileCapsuleLifecycle,
-    ProfileCustodyRecoveryEnvelopePort,
-    ProfileRecordRepository,
-    ProfileRecordSession,
-    bound_profile_record_session,
-    close_active_profile_record_session,
-)
+from ..application.user_profile.lifecycle import ProfileCapsuleLifecycle
+from ..application.user_profile.custody_ports import ProfileCustodyRecoveryEnvelopePort
+from ..application.user_profile.profile_record_repository import ProfileRecordRepository, bound_profile_record_session, close_active_profile_record_session
+from ..application.user_profile.capsule_record import ProfileRecordSession
 from ..core.identity import canonical_profile_bucket_id
 from ..core.paths import effective_storage_root
 from ..domain.buckets import BucketEventType
@@ -281,7 +277,7 @@ def set_active_test_profile_facts(
     that forgot to select a profile fails here instead of silently writing to
     a different capsule.
     """
-    from ..core import resolve_active_bucket_id
+    from ..core.bucket_pointer import resolve_active_bucket_id
 
     active = resolve_active_bucket_id()
     if active is None:

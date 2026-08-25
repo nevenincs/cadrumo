@@ -14,9 +14,9 @@ from ...core.time import validate_utc_aware
 from .events import OperationEventCode
 from .models import OperationIdentity, OperationReference, OperationRevision
 
-OperationInteractionId = Hex64Str
-OperationResponseToken = Hex64Str
-OperationActorReference = Annotated[
+type OperationInteractionId = Hex64Str
+type OperationResponseToken = Hex64Str
+type OperationActorReference = Annotated[
     str,
     Field(min_length=3, max_length=128, pattern=r"^[a-z][a-z0-9]*:[a-z0-9][a-z0-9._-]+$"),
 ]
@@ -83,7 +83,7 @@ class OperationRejectResponse(_OperationInteractionResponseBase):
     reason_code: OperationEventCode | None = None
 
 
-OperationInteractionResponse = Annotated[
+type OperationInteractionResponse = Annotated[
     OperationApplyResponse | OperationRejectResponse,
     Field(discriminator="intent"),
 ]

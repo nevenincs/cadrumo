@@ -10,7 +10,7 @@ from typer.main import get_command
 
 from ....adapters.persistence.storage.master_key import close_active_bucket_session
 from ....application.storage_write_policy import inspect_storage_write_policy
-from ....core import pointer_path
+from ....core.bucket_pointer import pointer_path
 from ....core.config import Settings, override_settings
 from ....tests.cli_runner import cadrumo_click_command
 from ....tests.secure_sql import isolated_profile_storage_root

@@ -49,6 +49,7 @@ class OperationSubmissionService:
     """Public submit/start door over the private canonical supervisor."""
 
     def __init__(self, supervisor: OperationSupervisor, authority_broker: OperationResponseAuthorityBroker) -> None:
+        """Bind the operational supervisor and response-capability authority."""
         self.supervisor = supervisor
         self._authority_broker = authority_broker
 

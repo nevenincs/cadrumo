@@ -88,7 +88,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.auth._operator_results.AuthProviderReservedError",
+        "cadrumo.application.auth.operator_results.AuthProviderReservedError",
         ErrorCode(
             code="REFUSED_AUTH_PROVIDER_RESERVED",
             category=ErrorCategory.REFUSED,
@@ -98,7 +98,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.auth._operator_results.AuthConfigureNoActiveBucketError",
+        "cadrumo.application.auth.operator_results.AuthConfigureNoActiveBucketError",
         ErrorCode(
             code="REFUSED_AUTH_CONFIGURE_NO_ACTIVE_BUCKET",
             category=ErrorCategory.REFUSED,
@@ -108,7 +108,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.auth._operator_results.AuthConfigureDanglingActiveProfileError",
+        "cadrumo.application.auth.operator_results.AuthConfigureDanglingActiveProfileError",
         ErrorCode(
             code="REFUSED_AUTH_CONFIGURE_DANGLING_ACTIVE_PROFILE",
             category=ErrorCategory.REFUSED,
@@ -118,7 +118,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.auth._operator_results.AuthLoginNotEnabledError",
+        "cadrumo.application.auth.operator_results.AuthLoginNotEnabledError",
         ErrorCode(
             code="REFUSED_AUTH_LOGIN_LIVE_TESTS_DISABLED",
             category=ErrorCategory.REFUSED,
@@ -128,7 +128,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.auth._operator_results.AuthLoginPreconditionError",
+        "cadrumo.application.auth.operator_results.AuthLoginPreconditionError",
         ErrorCode(
             code="REFUSED_AUTH_LOGIN_PRECONDITION",
             category=ErrorCategory.REFUSED,
@@ -138,7 +138,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.auth._operator_results.AuthCleanupInProgressError",
+        "cadrumo.application.auth.operator_results.AuthCleanupInProgressError",
         ErrorCode(
             code="LOCKED_AUTH_CLEANUP_IN_PROGRESS",
             category=ErrorCategory.LOCKED,
@@ -148,7 +148,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.auth._operator_results.CertificateSecretMutationInProgressError",
+        "cadrumo.application.auth.operator_results.CertificateSecretMutationInProgressError",
         ErrorCode(
             code="LOCKED_CERTIFICATE_SECRET_MUTATION_IN_PROGRESS",
             category=ErrorCategory.LOCKED,
@@ -158,7 +158,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.auth._operator_results.AuthOperationScopeConflictError",
+        "cadrumo.application.auth.operator_results.AuthOperationScopeConflictError",
         ErrorCode(
             code="REFUSED_AUTH_OPERATION_SCOPE_CONFLICT",
             category=ErrorCategory.REFUSED,
@@ -168,7 +168,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.auth._operator_results.AuthOperationRequiresCustodySessionError",
+        "cadrumo.application.auth.operator_results.AuthOperationRequiresCustodySessionError",
         ErrorCode(
             code="REFUSED_AUTH_OPERATION_REQUIRES_CUSTODY_SESSION",
             category=ErrorCategory.REFUSED,
@@ -178,7 +178,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.auth._operator_results.AuthProviderNotConfiguredError",
+        "cadrumo.application.auth.operator_results.AuthProviderNotConfiguredError",
         ErrorCode(
             code="REFUSED_AUTH_PROVIDER_NOT_CONFIGURED",
             category=ErrorCategory.REFUSED,
@@ -188,7 +188,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.auth._operator_results.CertificateSourceNotFoundError",
+        "cadrumo.application.auth.operator_results.CertificateSourceNotFoundError",
         ErrorCode(
             code="REFUSED_AUTH_CERTIFICATE_SOURCE_NOT_FOUND",
             category=ErrorCategory.REFUSED,
@@ -198,7 +198,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.auth._acquisition_lock.AuthAcquisitionLockedError",
+        "cadrumo.application.auth.acquisition_lock.AuthAcquisitionLockedError",
         ErrorCode(
             code="LOCKED_AUTH_ACQUISITION",
             category=ErrorCategory.LOCKED,
@@ -208,7 +208,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.auth._errors.AuthDiagnosticPayloadError",
+        "cadrumo.application.auth.errors.AuthDiagnosticPayloadError",
         ErrorCode(
             code="REFUSED_AUTH_DIAGNOSTIC_PAYLOAD",
             category=ErrorCategory.REFUSED,
@@ -218,7 +218,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.auth._errors.AuthDiagnosticPhoneStateError",
+        "cadrumo.application.auth.errors.AuthDiagnosticPhoneStateError",
         ErrorCode(
             code="REFUSED_AUTH_DIAGNOSTIC_PHONE_STATE",
             category=ErrorCategory.REFUSED,
@@ -468,7 +468,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.workflow._errors.BootstrapAlreadyCompleteError",
+        "cadrumo.application.workflow.errors.BootstrapAlreadyCompleteError",
         ErrorCode(
             code="REFUSED_BOOTSTRAP_ALREADY_COMPLETE",
             category=ErrorCategory.REFUSED,
@@ -478,7 +478,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.workflow._errors.ProfileNameCollisionError",
+        "cadrumo.application.workflow.errors.ProfileNameCollisionError",
         ErrorCode(
             code="REFUSED_PROFILE_NAME_COLLISION",
             category=ErrorCategory.REFUSED,
@@ -488,7 +488,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.workflow._errors.ProfileLockedError",
+        "cadrumo.application.workflow.errors.ProfileLockedError",
         ErrorCode(
             code="REFUSED_PROFILE_LOCKED",
             category=ErrorCategory.REFUSED,
@@ -498,7 +498,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.workflow._errors.WorkflowAbortedError",
+        "cadrumo.application.workflow.errors.WorkflowAbortedError",
         ErrorCode(
             code="REFUSED_WORKFLOW_ABORTED",
             category=ErrorCategory.REFUSED,
@@ -508,7 +508,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.workflow._errors.WorkflowComponentError",
+        "cadrumo.application.workflow.errors.WorkflowComponentError",
         ErrorCode(
             code="ERROR_WORKFLOW_COMPONENT",
             category=ErrorCategory.ERROR,
@@ -518,7 +518,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.workflow._errors.WorkflowError",
+        "cadrumo.application.workflow.errors.WorkflowError",
         ErrorCode(
             code="ERROR_WORKFLOW",
             category=ErrorCategory.ERROR,
@@ -528,7 +528,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.workflow._resume.WorkflowResumeRefusedError",
+        "cadrumo.application.workflow.resume.WorkflowResumeRefusedError",
         ErrorCode(
             code="REFUSED_WORKFLOW_RESUME",
             category=ErrorCategory.REFUSED,
@@ -538,7 +538,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.workflow._resume.WorkflowResumeRunAmbiguousError",
+        "cadrumo.application.workflow.resume.WorkflowResumeRunAmbiguousError",
         ErrorCode(
             code="REFUSED_WORKFLOW_RESUME_RUN_AMBIGUOUS",
             category=ErrorCategory.REFUSED,
@@ -578,7 +578,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.workflow._errors.ProfileLabelAmbiguousError",
+        "cadrumo.application.workflow.errors.ProfileLabelAmbiguousError",
         ErrorCode(
             code="REFUSED_PROFILE_LABEL_AMBIGUOUS",
             category=ErrorCategory.REFUSED,
@@ -588,7 +588,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.workflow._errors.WorkflowAbortSignalError",
+        "cadrumo.application.workflow.errors.WorkflowAbortSignalError",
         ErrorCode(
             code="INTERNAL_WORKFLOW_ABORT_SIGNAL",
             category=ErrorCategory.INTERNAL,
@@ -598,7 +598,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.workflow._errors.UnhandledWorkflowError",
+        "cadrumo.application.workflow.errors.UnhandledWorkflowError",
         ErrorCode(
             code="INTERNAL_WORKFLOW_UNHANDLED",
             category=ErrorCategory.INTERNAL,
@@ -608,7 +608,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.auth._sessions.CorruptAuthSessionError",
+        "cadrumo.application.auth.sessions.CorruptAuthSessionError",
         ErrorCode(
             code="AUTH_SESSION_CORRUPT",
             category=ErrorCategory.AUTH,
@@ -618,7 +618,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.auth._sessions.AuthSessionUnavailableError",
+        "cadrumo.application.auth.sessions.AuthSessionUnavailableError",
         ErrorCode(
             code="AUTH_SESSION_UNAVAILABLE",
             category=ErrorCategory.AUTH,
@@ -628,7 +628,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.auth._sessions.AuthProfileIdentityMismatchError",
+        "cadrumo.application.auth.sessions.AuthProfileIdentityMismatchError",
         ErrorCode(
             code="REFUSED_AUTH_PROFILE_IDENTITY_MISMATCH",
             category=ErrorCategory.REFUSED,
@@ -638,7 +638,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.auth._sessions.ClaveCredentialsIncompleteError",
+        "cadrumo.application.auth.sessions.ClaveCredentialsIncompleteError",
         ErrorCode(
             code="REFUSED_CLAVE_CREDENTIALS_INCOMPLETE",
             category=ErrorCategory.REFUSED,
@@ -648,7 +648,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.auth._sessions.SessionDeserializationError",
+        "cadrumo.application.auth.sessions.SessionDeserializationError",
         ErrorCode(
             code="AUTH_SESSION_DESERIALIZATION",
             category=ErrorCategory.AUTH,

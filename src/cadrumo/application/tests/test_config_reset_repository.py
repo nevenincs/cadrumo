@@ -15,7 +15,8 @@ import pytest
 from pydantic import ValidationError
 
 from ...adapters.persistence.storage.bucket import bucket_paths
-from ...core import BucketPointer, StorageCategory, scan_directory, storage_location
+from ...core import StorageCategory, scan_directory, storage_location
+from ...core.bucket_pointer import BucketPointer
 from ...domain.user_profile import ProfileSetupState
 from .._bucket_deletion_contracts import BucketDeletionFingerprint
 from .._config_reset_models import (
@@ -264,7 +265,7 @@ def test_repository_excludes_non_journals_and_bucket_discovery(
     tmp_path: Path,
 ) -> None:
     """External journal files are neither bucket targets nor repository members."""
-    from ..workflow import list_profile_buckets
+    from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
 
     repository = ConfigResetJournalRepository(storage_root=tmp_path)
     operation = _operation()

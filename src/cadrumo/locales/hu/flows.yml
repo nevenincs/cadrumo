@@ -39,13 +39,6 @@ flows:
     action:
       auth_clave_movil_route_app_request: Kérés az alkalmazásban
       auth_clave_movil_route_qr: QR-kód
-      busy: Egy másik művelet még mindig fut. Várja meg, amíg befejeződik.
-      failed: A művelet nem fejeződött be.
-      logout: Kijelentkezés
-      logout_done: Kijelentkezve.
-      working: '{action} folyamatban...'
-    actions:
-      section: Műveletek
     censal_review:
       apply: A pontos javaslat alkalmazása
     choice_unavailable: Nem elérhető választási lehetőség

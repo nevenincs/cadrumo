@@ -84,10 +84,8 @@ from cadrumo.adapters.persistence.storage import (
     build_profile_custody_port,
     build_profile_login_session_port,
 )
-from cadrumo.application.user_profile import (
-    bind_profile_custody_port,
-    bind_profile_login_session_port,
-)
+from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
+from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
 
 composition = ExitStack()
 composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))

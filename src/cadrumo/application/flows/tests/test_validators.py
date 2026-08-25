@@ -1,7 +1,7 @@
 """Widget-shape validation coverage for the DATE and DECIMAL kinds.
 
-The tests drive ``validate_widget_shape`` through the public
-``cadrumo.application.flows`` facade over real :class:`FlowPage` records
+The tests drive ``validate_widget_shape`` from its defining module over real
+:class:`FlowPage` records
 and assert on the structural outcome — the canonical token, the verdict
 ``ok`` flag, the i18n message *key*, and the redacted context — never on
 localized prose, and never leaking the raw answer into the diagnostic.
@@ -16,7 +16,8 @@ from decimal import Decimal
 import pytest
 
 from ....core.flows import CopyRefKind, FlowWidgetKind
-from .. import CopyRef, FlowCondition, FlowPage, validate_widget_shape
+from ..definition import CopyRef, FlowCondition, FlowPage
+from ..validators import validate_widget_shape
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

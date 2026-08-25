@@ -18,8 +18,8 @@ Flag derivation per question kind:
   a ``list[str]``.
 
 An interactive walk projects the one-shot wizard catalogue into a
-substrate :class:`~cadrumo.application.flows.FlowDefinition`
-(via :func:`~cadrumo.application.flows.flow_definition_from_wizard_flow`)
+substrate :class:`~cadrumo.application.flows.definition.FlowDefinition`
+(via :func:`~cadrumo.application.flows.wizard_projection.flow_definition_from_wizard_flow`)
 and drives it through an injected frontend runner: the full-screen
 Textual frontend where the host supports it, degrading to the line-mode
 frontend otherwise, and refusing instructively on a non-interactive
@@ -62,17 +62,11 @@ from ...core import (
 )
 from ...core.flows import CheckpointAvailability, FlowMode
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
-from ..flows import (
-    FlowAnswerError,
-    FlowDefinition,
-    FlowPage,
-    FlowSection,
-    FlowSubmitError,
-    flow_definition_from_wizard_flow,
-    run_scripted_flow,
-    start_flow,
-    visible_sequence,
-)
+from ..flows.definition import FlowDefinition, FlowPage, FlowSection
+from ..flows.engine import start_flow, visible_sequence
+from ..flows.errors import FlowAnswerError, FlowSubmitError
+from ..flows.scripted import run_scripted_flow
+from ..flows.wizard_projection import flow_definition_from_wizard_flow
 from ._catalogue import SETUP_FLOW
 from ._descendant_group import attach_descendant_group
 from ._errors import (
@@ -661,7 +655,7 @@ def _missing_filing_baseline_flags(flow: WizardFlow, answers: BaseModel) -> tupl
     they must leave a taxpayer-type axis and a filing identity, otherwise
     modelo work would fail later against an already-committed profile.
     """
-    from ..user_profile import missing_filing_baseline_flags as _missing_profile_filing_baseline_flags
+    from ..user_profile.filing_baseline import missing_filing_baseline_flags as _missing_profile_filing_baseline_flags
     from ._persistence import serialise_answers
 
     return _missing_profile_filing_baseline_flags(serialise_answers(flow, answers))
@@ -712,7 +706,7 @@ def setup_flow_definition(
     CREATE (where the facts-as-checkpoint store seeds and re-seeds the group)
     and withheld for MODIFY. Modify-mode seeding cannot instantiate the
     repeating group: the modify frontend seeds render-time page defaults over
-    a fresh :func:`~cadrumo.application.flows.start_flow` state, and instance
+    a fresh :func:`~cadrumo.application.flows.engine.start_flow` state, and instance
     pages are generated dynamically from the group's count rather than being
     static items the default-seed mechanism can reach. Rendering the group
     unseeded would show an operator's existing descendants as an empty group
@@ -761,7 +755,7 @@ def _project_scripted_answers(
 ) -> tuple[list[str], dict[str, str]]:
     """Project the canonical dict into the driver's visible-sequence order.
 
-    :func:`~cadrumo.application.flows.run_scripted_flow` consumes an ordered
+    :func:`~cadrumo.application.flows.scripted.run_scripted_flow` consumes an ordered
     queue, one token per visible page, re-evaluating visibility after each
     commit. This mirrors that walk over the DEFINITION (so a substrate-only
     page keeps its true walk position) and emits each page's canonical token,
@@ -1075,12 +1069,9 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
     ``SetupAnswers`` model construction, no descriptor-default seeding.
     """
     from ...domain.user_profile import UserProfileFact
-    from ..user_profile import (
-        ProfileFactWriteDoor,
-        ProfileRecordRepository,
-        apply_profile_fact_changes,
-        record_to_path_values,
-    )
+    from ..user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
+    from ..user_profile.projections import record_to_path_values
     from ._persistence import (
         profile_values_from_patch,
         project_answers,
@@ -1123,13 +1114,10 @@ def _run_full_flow(
 
     """
     from ...domain.user_profile import UserProfileFact
-    from ..user_profile import (
-        ProfileFactWriteDoor,
-        ProfileRecordRepository,
-        ProfileRegistrationError,
-        apply_profile_fact_changes,
-        record_to_path_values,
-    )
+    from ..user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
+    from ..user_profile.registration import ProfileRegistrationError
+    from ..user_profile.projections import record_to_path_values
     from ._persistence import (
         project_answers,
         serialise_answers,
@@ -1285,7 +1273,7 @@ def _resolve_profile_id_for_mode(flow: WizardFlow, mode: WizardPersistMode, prof
     missing-flag refusal.
     """
     from ...domain.user_profile import new_profile_id
-    from ..workflow import read_profile_bucket
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
 
     if mode == "create":
         _require_profile_label_available(
@@ -1354,8 +1342,8 @@ def _resolve_profile_target_for_mode(
         profile_name = _require_profile_name(flow, raw_profile_name)
         return profile_name, _resolve_profile_id_for_mode(flow, mode, profile_name)
 
-    from ...core import require_active_bucket_id
-    from ..user_profile import resolve_login_target
+    from ...core.bucket_pointer import require_active_bucket_id
+    from ..user_profile.login_session import resolve_login_target
 
     target = resolve_login_target(require_active_bucket_id())
     return target.label, target.bucket_id

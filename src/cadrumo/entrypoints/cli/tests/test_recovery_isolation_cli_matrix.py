@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ....application.user_profile import register_profile_with_credentials
+from ....application.user_profile.registration import register_profile_with_credentials
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 

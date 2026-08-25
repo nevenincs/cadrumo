@@ -20,7 +20,7 @@ import typing
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.application.workflow import ActiveProfileHealth, ProfileHealthStatus
+from cadrumo.application.workflow.profile_health import ActiveProfileHealth, ProfileHealthStatus
 
 from .._harness_tools import HarnessFloorPayload, WhoamiIdentity
 

@@ -64,6 +64,7 @@ class OperationLeaseStorage(JournalRepositoryBase[_OperationLeaseRecord]):
     """
 
     def __init__(self, *, storage_root: Path) -> None:
+        """Bind the shared lease record store to the configured storage root."""
         super().__init__(
             journal_dirname=storage_location(StorageCategory.OPERATION_JOURNAL).subpath,
             storage_root=storage_root,
@@ -167,6 +168,7 @@ class OperationLeaseFilesystemRepository(OperationLeaseRepository):
     """Caller-clocked durable owner-lease port over the operation journal root."""
 
     def __init__(self, *, storage_root: Path) -> None:
+        """Bind the durable lease port to the configured storage root."""
         self._storage = OperationLeaseStorage(storage_root=storage_root)
 
     @override

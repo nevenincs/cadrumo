@@ -29,7 +29,7 @@ from ...application.modelo import (
     export_modelo_revision,
     resolve_modelo_revision_for_operator_target,
 )
-from ...application.workflow import workflow_state_repository
+from cadrumo.application.workflow.persistence import workflow_state_repository
 from ...core import PaymentElection, PriorDomiciliationElection, RefundElection
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity

@@ -8,7 +8,7 @@ from uuid import UUID
 import typer
 from pydantic import SecretStr
 
-from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
+from ....core.bucket_pointer import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.i18n import OutputLanguage, tr
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._common import emit_envelope
@@ -16,7 +16,7 @@ from .._errors import CliRefusedBoundaryError
 from ._secure_input import MachineSecretPayload
 
 if TYPE_CHECKING:
-    from ....application.user_profile import ProfilePassphraseRotationOutcome
+    from ....application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 
 
 class PassphraseChangeSecrets(MachineSecretPayload):
@@ -60,7 +60,7 @@ def passphrase_change(
 ) -> None:
     """Rotate the active profile's passphrase without replacing its data key."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile import rotate_profile_passphrase
+    from ....application.user_profile.passphrase_rotation import rotate_profile_passphrase
     from .._config_payloads import ConfigPassphraseChangeResult
 
     active = _resolve_active_bucket_id()

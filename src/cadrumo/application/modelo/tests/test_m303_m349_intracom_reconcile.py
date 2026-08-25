@@ -41,7 +41,7 @@ from ....domain.modelos import (
 )
 from ....tests import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
-from ...workflow import workflow_state_repository
+from cadrumo.application.workflow.persistence import workflow_state_repository
 from .._m303_m349_reconcile import m303_m349_intracom_reconcile_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

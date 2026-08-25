@@ -45,6 +45,8 @@ from typing import TYPE_CHECKING, Protocol, TypedDict
 
 from pydantic import BaseModel, Field, field_validator
 
+from cadrumo.application.operations.events import OperationLogSeverity
+
 from ...adapters.outbound.aeat.sede import (
     Declaracion,
     DeclaracionesRegisterSession,
@@ -58,15 +60,8 @@ from ...adapters.outbound.aeat.sede import (
     shared_playwright,
 )
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import (
-    CasillaId,
-    CasillaValueKind,
-    FiledHistoryDiscoverySignal,
-    Period,
-    RegisterScopingSignal,
-    SyncSurface,
-    require_active_bucket_id,
-)
+from ...core import CasillaId, CasillaValueKind, FiledHistoryDiscoverySignal, Period, RegisterScopingSignal, SyncSurface
+from ...core.bucket_pointer import require_active_bucket_id
 from ...core.config import load_settings
 from ...core.errors import CadrumoError
 from ...core.i18n import tr
@@ -82,7 +77,6 @@ from ...domain.calculations.registry import (
     select_revision,
     verification_tolerance_or_exact,
 )
-from cadrumo.application.operations.events import OperationLogSeverity
 from ..operations.owner import OperationEventEmitter
 from ..storage.sync_runs import (
     SyncRunRecordReference,

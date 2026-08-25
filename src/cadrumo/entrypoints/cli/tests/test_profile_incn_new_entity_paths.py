@@ -104,9 +104,9 @@ def _load_active_taxpayer_profile():
     the storage runtime.
     """
 
-    from ....application.user_profile import record_to_path_values
-    from ....application.workflow import workflow_state_repository
-    from ....core import read_pointer
+    from ....application.user_profile.projections import record_to_path_values
+    from cadrumo.application.workflow.persistence import workflow_state_repository
+    from ....core.bucket_pointer import read_pointer
     from ....core.config import load_settings
     from ....domain.deadlines import taxpayer_profile_from_mapping
 

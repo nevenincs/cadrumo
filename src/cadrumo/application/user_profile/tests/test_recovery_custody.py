@@ -23,6 +23,20 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.application.user_profile.authentication import ProfileAuthenticationRefusedError
+from cadrumo.application.user_profile.capsule_record import ProfileRecordSession, ProfileRecordStore
+from cadrumo.application.user_profile.custody_ports import create_profile_custody_registration_material
+from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
+from cadrumo.application.user_profile.recovery_contracts import ProfileCustodyRecoveryArtifactWarning
+from cadrumo.application.user_profile.recovery_custody import (
+    ProfileRecoveryArtifactReceipt,
+    ProfileRecoveryEnrollment,
+    export_profile_recovery_artifact,
+    mint_profile_creation_recovery,
+    restore_profile_from_recovery_artifact,
+    restore_profile_with_password,
+)
+
 from ....adapters.persistence.storage import generate_recovery_key
 from ....adapters.persistence.storage.custody import (
     ProfileCustodyEnvelope,
@@ -33,18 +47,6 @@ from ....core.config import override_settings
 from ....core.errors import build_error_envelope, render_error_text
 from ....core.i18n import tr
 from ....domain.user_profile import ProfileSetupState, UserProfileRecord
-from .. import ProfileAuthenticationRefusedError, create_profile_custody_registration_material
-from .._capsule_record import ProfileRecordSession, ProfileRecordStore
-from .._lifecycle import ProfileCapsuleLifecycle
-from .._recovery_contracts import ProfileCustodyRecoveryArtifactWarning
-from .._recovery_custody import (
-    ProfileRecoveryArtifactReceipt,
-    ProfileRecoveryEnrollment,
-    export_profile_recovery_artifact,
-    mint_profile_creation_recovery,
-    restore_profile_from_recovery_artifact,
-    restore_profile_with_password,
-)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

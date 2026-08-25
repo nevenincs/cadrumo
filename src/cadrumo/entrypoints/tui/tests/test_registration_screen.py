@@ -23,7 +23,7 @@ import pytest
 from textual.css.query import NoMatches
 from textual.widgets import Input, Static
 
-from ....application.user_profile import logout_active_profile
+from ....application.user_profile.login_session import logout_active_profile
 from ....application.user_profile.login_interaction import attempt_profile_login
 from ....core import ProfilePasswordRefusalReason, assess_profile_password
 from ....core.i18n import tr

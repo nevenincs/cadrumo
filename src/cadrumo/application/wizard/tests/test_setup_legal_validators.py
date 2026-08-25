@@ -27,19 +27,10 @@ from pydantic import BaseModel
 from ....core import RentaDeclaracionType
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ....domain.contribuyente import SituacionFamiliar
-from ...flows import (
-    SECTION_VERDICT_PREFIX,
-    CopyRef,
-    FlowDefinition,
-    FlowPage,
-    FlowSection,
-    ValidationVerdict,
-    answer,
-    flow_definition_from_wizard_flow,
-    next_page,
-    resolve_cross_field_validator,
-    start_flow,
-)
+from ...flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
+from ...flows.engine import SECTION_VERDICT_PREFIX, answer, next_page, start_flow
+from ...flows.validators import ValidationVerdict, resolve_cross_field_validator
+from ...flows.wizard_projection import flow_definition_from_wizard_flow
 from .. import (
     SETUP_UNIDAD_FAMILIAR_VALIDATOR_ID,
     attach_setup_legal_validators,

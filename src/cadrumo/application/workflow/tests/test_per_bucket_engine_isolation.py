@@ -23,10 +23,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.auth.models import AuthState
+
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import AuthState
-from .._persistence import WorkflowStateRepository
-from .._state_models import WorkflowState
+from ..persistence import WorkflowStateRepository
+from ..state_models import WorkflowState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

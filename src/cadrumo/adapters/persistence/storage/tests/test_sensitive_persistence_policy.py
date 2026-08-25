@@ -126,7 +126,7 @@ _FORBIDDEN_TEXT = (
 )
 _SENSITIVE_DIRECT_WRITE_EXCEPTIONS: dict[tuple[str, str, str], str] = {
     (
-        "src/cadrumo/application/user_profile/_lifecycle.py",
+        "src/cadrumo/application/user_profile/lifecycle.py",
         "_stage_and_validate_restore_database",
         "database.write_bytes",
     ): (
@@ -414,7 +414,7 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
     ): "shared hardened staging primitive; same pattern, holds no data of its own",
     # --- profile restore staging --------------------------------------------
     (
-        "src/cadrumo/application/user_profile/_lifecycle.py",
+        "src/cadrumo/application/user_profile/lifecycle.py",
         "_stage_and_validate_restore_database",
         "database.write_bytes",
     ): "stages the bucket's own already-encrypted database file for publication; the bytes are ciphertext the secure "

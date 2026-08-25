@@ -1,7 +1,7 @@
 """Render-time copy resolution and page-copy assembly over real sources.
 
-Every scenario drives the copy assembler through the public
-``cadrumo.application.flows`` facade. Locale keys resolve against the real
+Every scenario drives the copy assembler through its defining module. Locale
+keys resolve against the real
 bundled catalogue; ``SCHEMA_FIELD`` references resolve through real
 resolver functions this module registers — genuine resolver
 implementations returning strings from a literal namespace table, not
@@ -26,23 +26,15 @@ Assertions read the resolver's own returned strings and error message
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
-import yaml
 
 from ....core.flows import CopyRefKind, FlowWidgetKind
-from .. import (
-    CopyRef,
-    FlowChoice,
-    FlowCopyResolutionError,
-    FlowLegalRef,
-    FlowPage,
-    assemble_page_copy,
-    register_copy_source,
-    resolve_copy,
-)
+from ....tests.locale_catalogue import shard_payload
+from ..copy import assemble_page_copy, register_copy_source, resolve_copy
+from ..definition import CopyRef, FlowChoice, FlowLegalRef, FlowPage
+from ..errors import FlowCopyResolutionError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -100,9 +92,7 @@ def _catalogue_leaf(key: str) -> str:
     """
     from ....core.i18n import output_language
 
-    root = Path(__file__).resolve().parents[3] / "locales"
-    catalogue = yaml.safe_load((root / f"{output_language()}.yml").read_text(encoding="utf-8"))
-    leaf: object = catalogue
+    leaf: object = shard_payload(output_language(), key)
     for segment in key.split("."):
         assert isinstance(leaf, dict)
         row: dict[str, object] = {str(node_key): node_value for node_key, node_value in leaf.items()}
@@ -142,7 +132,7 @@ def _kind_with_no_resolvers() -> Iterator[CopyRefKind]:
     holds in the real registry, clear them, and restore on teardown. This
     is genuine registry-state setup, not a behaviour double.
     """
-    from .._copy import _SOURCE_RESOLVERS
+    from ..copy import _SOURCE_RESOLVERS
 
     kind = CopyRefKind.TERMINOLOGY_CONCEPT
     saved = _SOURCE_RESOLVERS.pop(kind, None)

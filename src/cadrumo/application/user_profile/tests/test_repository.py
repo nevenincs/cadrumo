@@ -15,6 +15,20 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.application.user_profile.capsule_record import ProfileRecordSession
+from cadrumo.application.user_profile.profile_record_repository import (
+    ProfileRecordRepository,
+    bound_profile_record_session,
+    close_active_profile_record_session,
+    require_profile_record_session,
+)
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
+from cadrumo.application.user_profile.repository import (
+    USER_PROFILE_SNAPSHOT_NAMESPACE,
+    UserProfileSnapshotRepository,
+    user_profile_snapshot_object_key,
+)
+
 from ....adapters.persistence.storage import (
     USER_PROFILE_SNAPSHOT_NAMESPACE as USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE,
 )
@@ -42,19 +56,6 @@ from ....domain.user_profile import (
 )
 from ....tests.profile_capsule import open_test_profile_session, seed_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
-from .._capsule_record import ProfileRecordSession
-from .._profile_record_repository import (
-    ProfileRecordRepository,
-    bound_profile_record_session,
-    close_active_profile_record_session,
-    require_profile_record_session,
-)
-from .._registration import register_profile_with_credentials
-from .._repository import (
-    USER_PROFILE_SNAPSHOT_NAMESPACE,
-    UserProfileSnapshotRepository,
-    user_profile_snapshot_object_key,
-)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

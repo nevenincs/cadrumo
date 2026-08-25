@@ -16,18 +16,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...core import (
-    STRICT_FROZEN_CONFIG,
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationInteractionKind,
-    Period,
-    ServiceCapability,
-    require_active_bucket_id,
-)
+from ...core import STRICT_FROZEN_CONFIG, OperationCancellation, OperationClosePolicy, OperationDeadline, OperationDurability, OperationEffect, OperationInteractionKind, Period, ServiceCapability
+from ...core.bucket_pointer import require_active_bucket_id
 from ...core.time import now
 from ...domain.calculations.registry import ModeloId, RegistrySnapshot, RevisionId, bundled_authority
 from ..calculations import resolve_relations_from_local_store
@@ -57,7 +47,7 @@ from ..storage.calc_sheets import (
     SheetExportPlan,
     build_export_plan,
 )
-from ..user_profile import resolve_active_capability
+from ..user_profile.capabilities import resolve_active_capability
 
 GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID = "export.google-sheets"
 GOOGLE_SHEETS_EXPORT_PHASE_PREFLIGHT = "export.google-sheets.preflight"

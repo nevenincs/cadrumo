@@ -848,7 +848,8 @@ def _expected_tax_id_for_filing_record(filing: ModeloRecord) -> str:
     if filing.member_nif is not None and filing.member_nif.strip():
         return tax_id_identity_token(filing.member_nif)
     from ...core.errors import CadrumoError
-    from ..user_profile import ProfileRecordRepository, record_to_values
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
+    from ..user_profile.projections import record_to_values
 
     try:
         record = ProfileRecordRepository.for_current_session(filing.bucket_id).load(filing.bucket_id)

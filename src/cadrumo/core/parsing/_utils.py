@@ -81,7 +81,7 @@ def _enum_value(value: object) -> str:
     an ``int``, a ``bool``) round-trips through ``str()`` unchanged.
 
     This was two independently-defined, byte-identical functions --
-    ``application/workflow/_engine_helpers.py::enum_value`` and
+    ``application/workflow/engine_helpers.py::enum_value`` and
     ``domain/submission/_preflight.py::_enum_value`` -- before converging
     here. ``core`` is imported by both layers and owned by neither, so it is
     the only home that does not force one layer to depend on the other; the

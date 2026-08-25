@@ -44,18 +44,19 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ....core import SecureObjectWrite
-from ....domain.user_profile import ProfileSetupState, UserProfileRecord
-from .. import (
-    profile_custody_secure_object_namespace,
-    profile_custody_secure_object_repository,
-)
-from .._capsule_record import (
+from cadrumo.application.user_profile.capsule_record import (
     ProfileRecordIntegrityError,
     ProfileRecordSession,
     ProfileRecordStore,
     profile_record_object_key,
 )
+from cadrumo.application.user_profile.custody_ports import (
+    profile_custody_secure_object_namespace,
+    profile_custody_secure_object_repository,
+)
+
+from ....core import SecureObjectWrite
+from ....domain.user_profile import ProfileSetupState, UserProfileRecord
 from ._profile_record_boundary_support import (
     CREATED_AT,
     PROFILE_ID,
@@ -223,19 +224,21 @@ def test_schema_identity_fields_are_pinned_not_merely_defaulted() -> None:
     message is what the assertion has to bind to.
     """
     canonical_version: int = UserProfileRecord.model_fields["schema_version"].default_factory()  # type: ignore[assignment,misc]
-    cases = (
+    cases: tuple[tuple[dict[str, object], str], ...] = (
         ({"schema_id": "cadrumo.user_profile.other"}, "is not the canonical profile schema"),
         ({"schema_version": canonical_version + 1}, "is not the canonical profile schema version"),
     )
     for overrides, fragment in cases:
         with pytest.raises(ValidationError) as refusal:
-            UserProfileRecord(
-                profile_id=str(PROFILE_ID),
-                facts=populated_facts(),
-                setup_state=ProfileSetupState.INCOMPLETE,
-                created_at=CREATED_AT,
-                updated_at=UPDATED_AT,
-                **overrides,
+            UserProfileRecord.model_validate(
+                {
+                    "profile_id": str(PROFILE_ID),
+                    "facts": populated_facts(),
+                    "setup_state": ProfileSetupState.INCOMPLETE,
+                    "created_at": CREATED_AT,
+                    "updated_at": UPDATED_AT,
+                    **overrides,
+                },
             )
         assert fragment in str(refusal.value)
 

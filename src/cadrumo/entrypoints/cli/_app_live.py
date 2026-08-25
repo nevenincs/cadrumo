@@ -687,7 +687,7 @@ def _live_iva_evidence_pull_command_timeout_ms(*, year_from: int, year_to: int) 
 def _live_iva_auth_watchdog_context(*, stage: str) -> dict[str, object]:
     """Return redacted local auth-session state for live IVA watchdog diagnostics."""
     try:
-        from ...application.auth import build_live_auth_preflight_report
+        from ...application.auth.operator import build_live_auth_preflight_report
 
         report = build_live_auth_preflight_report()
     except Exception:
@@ -1024,7 +1024,7 @@ def _active_taxpayer_profile_or_none() -> TaxpayerProfile | None:
     answer, which is what the caveat notices exist to prevent.
     """
     from ...application.wizard import load_active_taxpayer_profile
-    from ...application.workflow import workflow_state_repository
+    from cadrumo.application.workflow.persistence import workflow_state_repository
 
     try:
         return load_active_taxpayer_profile(workflow_state_repository().load())

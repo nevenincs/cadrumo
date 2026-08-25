@@ -61,12 +61,10 @@ from ....entrypoints.tui.components.widgets import ContentScroll
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
-    from ....application.user_profile import (
-        ProfileLoginOutcome,
-        ProfileRecoveryEnrollment,
-        ProfileRegistrationOutcome,
-        ProspectiveProfilePasswordRefusal,
-    )
+    from ....application.user_profile.login_session import ProfileLoginOutcome
+    from ....application.user_profile.recovery_custody import ProfileRecoveryEnrollment
+    from ....application.user_profile.registration import ProfileRegistrationOutcome
+    from ....application.user_profile.prospective_password import ProspectiveProfilePasswordRefusal
     from ....application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
 
 
@@ -227,7 +225,7 @@ def assessment_refusal(
     assessment: ProfilePasswordAssessment,
 ) -> ProspectiveProfilePasswordRefusal | None:
     """Project a canonical assessment through the application facade."""
-    from ....application.user_profile import prospective_profile_password_refusal
+    from ....application.user_profile.prospective_password import prospective_profile_password_refusal
 
     return prospective_profile_password_refusal(assessment)
 

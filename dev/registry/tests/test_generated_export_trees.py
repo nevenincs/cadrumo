@@ -11,9 +11,8 @@ That is a strictly weaker question -- it can say two directories differ, but it
 cannot say the tree is a VALID registry authority -- and it let trees be written
 without the pre-cutover proof that the generator already owned.
 
-Each generated modelo is enrolled as a row in :data:`_GENERATED_TREES`. Modelo 303
-and 390 are deliberately absent: their maps and profiles remain under a separate
-owner until they are ready for this generated authority.
+Each generated modelo is enrolled as a row in :data:`_GENERATED_TREES`. Modelo
+390 remains absent while its maps and profiles are under their separate owner.
 """
 
 from __future__ import annotations
@@ -31,7 +30,9 @@ from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
     ExportEncoding,
     RegistryRevisionInspection,
+    RegistryLoadError,
     RegistryValidationError,
+    load_modelo_directory,
     load_registry_tree,
 )
 
@@ -46,7 +47,7 @@ from ..pipeline._render_profile import (
 from ..pipeline._semantic_map_join import join_record_design_semantics
 from ..pipeline._semantic_map_loader import load_semantic_map
 from ..pipeline._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
-from ..pipeline._tree_validation import GeneratedExportTreeValidationContext
+from ..pipeline._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -122,6 +123,14 @@ _GENERATED_TREES: tuple[_GeneratedTree, ...] = (
     # supporting-modelo needs too: the isolation must admit modelo 200, whose
     # annual IS return these pagos fraccionados are instalments of.
     _GeneratedTree("222", "2025-y-siguientes", "aeat-dr-222-2025", "2025", 2025, "1P"),
+    # The selected five source-bound M303 epochs.  The 2022 layout remains
+    # outside this campaign; the superseded 2023-y-siguientes revision is not a
+    # generated-tree fallback and must never re-enter this set.
+    _GeneratedTree("303", "2023", "aeat-dr-303-2023", "2023", 2023, "4T"),
+    _GeneratedTree("303", "2024-hasta-08-y-2t", "aeat-dr-303-2024-early", "2024-early", 2024, "2T"),
+    _GeneratedTree("303", "2024-desde-09-y-3t", "aeat-dr-303-2024-late", "2024-late", 2024, "3T"),
+    _GeneratedTree("303", "2025", "aeat-dr-303-2025", "2025", 2025, "4T"),
+    _GeneratedTree("303", "2026-y-siguientes", "aeat-dr-303-2026", "2026", 2026, "4T"),
 )
 
 
@@ -133,6 +142,14 @@ def _isolated_authority(tree: _GeneratedTree, root: Path) -> Path:
     """
     registry_root = root / "registry" / "aeat"
     shutil.copytree(bundled_path("registry", "aeat", "legal"), registry_root / "legal")
+    if tree.modelo == "303":
+        # M303's selected snapshot compiles the canonical annual Orden support
+        # authority.  It is registry authority, not an export input, so stage
+        # the same complete bundled directory rather than reconstituting it.
+        shutil.copytree(
+            bundled_path("registry", "aeat", "m303_orden_anual"),
+            registry_root / "m303_orden_anual",
+        )
     modelo_root = registry_root / "modelos" / tree.modelo
     shutil.copytree(
         bundled_path("registry", "aeat", "modelos", tree.modelo),
@@ -175,6 +192,38 @@ def _supporting_modelos(tree: _GeneratedTree) -> frozenset[str]:
     return frozenset(
         modelo for modelo in referenced - {tree.modelo} if bundled_path("registry", "aeat", "modelos", modelo).is_dir()
     )
+
+
+def _stage_continuity_metadata(tree: _GeneratedTree, root: Path) -> Path | None:
+    """Copy only the sibling facts the strict continuity validator reads.
+
+    The generated candidate stays a one-revision authority.  A landing
+    revision's continuity declarations nevertheless name real predecessor
+    revisions, so the generic validator receives a separate directory-mode
+    witness containing those predecessors' scalar metadata, continuity
+    surfaces, and evolution declarations -- never their bindings, formulas,
+    layouts, or generated exports.
+    """
+    source_modelo_root = bundled_path("registry", "aeat", "modelos", tree.modelo)
+    definition = load_modelo_directory(source_modelo_root)
+    target = definition.revisions[tree.revision]
+    predecessors = sorted({str(evolution.from_revision) for evolution in target.casilla_continuidad_evolutions})
+    if not predecessors:
+        return None
+
+    metadata_modelo_root = root / "continuity-metadata" / tree.modelo
+    metadata_modelo_root.mkdir(parents=True)
+    shutil.copy2(source_modelo_root / "manifest.toml", metadata_modelo_root / "manifest.toml")
+    for predecessor in predecessors:
+        source_revision_root = source_modelo_root / "revisions" / predecessor
+        target_revision_root = metadata_modelo_root / "revisions" / predecessor
+        target_revision_root.mkdir(parents=True)
+        shutil.copy2(source_revision_root / "revision.toml", target_revision_root / "revision.toml")
+        for member in ("casillas", "casilla_continuidad_evolutions"):
+            source_member = source_revision_root / member
+            if source_member.is_dir():
+                shutil.copytree(source_member, target_revision_root / member)
+    return metadata_modelo_root
 
 
 def _referenced_modelos(modelo_root: Path) -> frozenset[str]:
@@ -398,6 +447,7 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
 
     candidate_root = tmp_path / "candidate"
     registry_root = _isolated_authority(tree, candidate_root)
+    continuity_metadata_modelo_root = _stage_continuity_metadata(tree, candidate_root)
     published_modelo_root: Path | None = None
     revisions_root = bundled_path("registry", "aeat", "modelos", tree.modelo, "revisions")
     if len(tuple(revisions_root.iterdir())) > 1:
@@ -425,6 +475,7 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
             filing_year=tree.filing_year,
             period=tree.period,
             supporting_modelos=_supporting_modelos(tree),
+            continuity_metadata_modelo_root=continuity_metadata_modelo_root,
         ),
         temporary_root=candidate_root,
         target_registry_root=bundled_path("registry", "aeat"),
@@ -452,6 +503,84 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
         "from _CHECK_MODE_PENDING and let this gate assert the pass"
     )
     assert str(checked.candidate.layout.id) == tree.layout_id
+
+
+def test_target_only_continuity_metadata_requires_real_declared_m303_siblings(tmp_path: Path) -> None:
+    """A strict 2026 landing revision cannot validate against invented predecessors.
+
+    The 2026 M303 target declares transitions from five real revisions.  It is
+    the generic target-only isolation regression: the fresh candidate succeeds
+    only when those source-copied predecessor metadata fragments are supplied;
+    absent, missing, or structurally mismatched predecessor declarations still
+    refuse through the ordinary strict-continuity validator.
+    """
+    tree = next(item for item in _GENERATED_TREES if item.modelo == "303" and item.revision == "2026-y-siguientes")
+    semantic_map, render_profile, joined, evidence, transport = _authorities(tree)
+    candidate_root = tmp_path / "candidate"
+    registry_root = _isolated_authority(tree, candidate_root)
+    metadata_modelo_root = _stage_continuity_metadata(tree, candidate_root)
+    assert metadata_modelo_root is not None
+    assert set(child.name for child in (metadata_modelo_root / "revisions").iterdir()) == {
+        "2022",
+        "2023",
+        "2024-hasta-08-y-2t",
+        "2024-desde-09-y-3t",
+        "2025",
+    }
+
+    rendered = render_complete_export_tree(
+        registry_root / "modelos" / tree.modelo / "revisions" / tree.revision / "export",
+        revision_id=tree.revision,
+        joined=joined,
+        semantic_map=semantic_map,
+        transport_profile=transport,
+        render_profile=render_profile,
+        render_profile_source_evidence=evidence,
+    )
+
+    def validate(metadata_root: Path | None) -> None:
+        validate_generated_export_tree(
+            context=GeneratedExportTreeValidationContext(
+                registry_root=registry_root,
+                source_root=bundled_path(),
+                target=ExportFragmentTarget(
+                    modelo=tree.modelo,
+                    revision_id=tree.revision,
+                    design_epoch=tree.epoch,
+                ),
+                filing_year=tree.filing_year,
+                period=tree.period,
+                continuity_metadata_modelo_root=metadata_root,
+            ),
+            joined=joined,
+            semantic_map=semantic_map,
+            rendered=rendered,
+            render_profile=render_profile,
+            render_profile_source_evidence=evidence,
+        )
+
+    validate(metadata_modelo_root)
+
+    with pytest.raises(
+        RegistryValidationError, match="evolution references a revision that the modelo does not declare"
+    ):
+        validate(None)
+
+    missing_metadata_root = tmp_path / "missing-metadata" / tree.modelo
+    shutil.copytree(metadata_modelo_root, missing_metadata_root)
+    shutil.rmtree(missing_metadata_root / "revisions" / "2022")
+    with pytest.raises(
+        RegistryValidationError, match="evolution references a revision that the modelo does not declare"
+    ):
+        validate(missing_metadata_root)
+
+    mismatched_metadata_root = tmp_path / "mismatched-metadata" / tree.modelo
+    shutil.copytree(metadata_modelo_root, mismatched_metadata_root)
+    (mismatched_metadata_root / "revisions" / "2022").rename(
+        mismatched_metadata_root / "revisions" / "mismatched-2022",
+    )
+    with pytest.raises(RegistryLoadError, match="declares '2022', expected 'mismatched-2022'"):
+        validate(mismatched_metadata_root)
 
 
 @pytest.mark.parametrize("tree", _GENERATED_TREES, ids=str)

@@ -15,11 +15,8 @@ import pytest
 from textual.widgets import Input
 from textual.worker import WorkerCancelled
 
-from ....application.user_profile import (
-    CommittedProfileRepository,
-    ProfileRegistrationError,
-    register_profile_with_credentials,
-)
+from ....application.user_profile.profile_repository import CommittedProfileRepository
+from ....application.user_profile.registration import ProfileRegistrationError, register_profile_with_credentials
 from ....core import assess_profile_password
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....domain.user_profile import UserProfileFact

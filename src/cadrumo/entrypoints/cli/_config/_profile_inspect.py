@@ -36,8 +36,8 @@ _log = _get_logger(__name__)
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from ....application.user_profile import ProfileValidationReport as _ProfileValidationReport
-    from ....application.workflow import ProfileBucketPointer as _ProfileBucketPointer
+    from ....application.user_profile.commands import ProfileValidationReport as _ProfileValidationReport
+    from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer as _ProfileBucketPointer
     from ....domain.user_profile import UserProfileRecord as _UserProfileRecord
 
 
@@ -124,7 +124,8 @@ def config_profile_show(
         status.
         """
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile import ProfileValidationService, record_to_path_values
+    from ....application.user_profile.validation import ProfileValidationService
+    from ....application.user_profile.projections import record_to_path_values
     from ....domain.user_profile import load_user_profile_schema
 
     pointer = _resolve_show_pointer(name, ctx=ctx, resolve_active_profile_pointer=resolve_active_profile_pointer)
@@ -158,7 +159,7 @@ def config_profile_show(
         values=values,
         display_name=pointer.label,
     )
-    from ....application.user_profile import censo_divergence_notice
+    from ....application.user_profile.cotejo_apply import censo_divergence_notice
 
     divergence_notice = censo_divergence_notice(record)
     notices = [divergence_notice] if divergence_notice is not None else []
@@ -396,7 +397,7 @@ def config_profile_validate(
         """
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.modelo import modelo_work_profile_baseline_validation_issues
-    from ....application.user_profile import ProfileValidationService
+    from ....application.user_profile.validation import ProfileValidationService
     from ....domain.user_profile import ProfileNotFoundError, load_user_profile_schema
 
     pointer = _resolve_validate_target_pointer(

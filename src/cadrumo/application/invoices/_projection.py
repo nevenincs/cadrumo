@@ -20,7 +20,7 @@ from ...core.money import round_to_cents as _round_to_cents
 from ...domain.invoices import Invoice, InvoiceCatalogue
 from ...domain.transactions import TransactionCatalogue
 from ..review import InvoiceReviewFilterSpec, InvoiceReviewRecord, InvoiceReviewStatus, update_invoice_review
-from ..workflow import WorkflowState
+from cadrumo.application.workflow.state_models import WorkflowState
 
 _log = get_logger(__name__)
 

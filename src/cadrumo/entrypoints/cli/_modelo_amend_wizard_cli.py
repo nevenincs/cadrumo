@@ -51,16 +51,9 @@ from uuid import uuid4
 import typer
 from pydantic import BaseModel
 
-from ...application.flows import (
-    CopyRef,
-    FlowChoice,
-    FlowCondition,
-    FlowDefinition,
-    FlowPage,
-    FlowSection,
-    FlowState,
-    register_copy_source,
-)
+from ...application.flows.copy import register_copy_source
+from ...application.flows.definition import CopyRef, FlowChoice, FlowCondition, FlowDefinition, FlowPage, FlowSection
+from ...application.flows.engine import FlowState
 from ...application.flows.line_frontend import LineFlowFrontend
 from ...application.modelo import (
     AmendmentComplementariaLiabilityDecreaseError,

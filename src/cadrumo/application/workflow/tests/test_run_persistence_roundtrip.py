@@ -45,8 +45,8 @@ from ...operator_actions import (
     ConditionEvidence,
     PreconditionVerdict,
 )
-from .._errors import WorkflowError
-from .._persistence import (
+from ..errors import WorkflowError
+from ..persistence import (
     _RUN_NAMESPACE,
     _RUN_SENSITIVITY,
     _RUN_VERSION,
@@ -54,7 +54,7 @@ from .._persistence import (
     load_run,
     save_run,
 )
-from .._run_models import (
+from ..run_models import (
     SiteHealthAlert,
     WorkflowAbortReason,
     WorkflowDeadlineContextDetails,
@@ -395,7 +395,7 @@ def test_workflow_run_aborted_reason_drift_surfaces_at_load(
     import json as _json
 
     from ....adapters.persistence.storage import SensitivityClass
-    from .._persistence import _RUN_NAMESPACE, _RUN_VERSION
+    from ..persistence import _RUN_NAMESPACE, _RUN_VERSION
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         objects = profile.repository

@@ -44,8 +44,6 @@ Submodules
    cadrumo.core._amendment_kind_regime
    cadrumo.core._auth_provider
    cadrumo.core._authority_grade
-   cadrumo.core._bucket_pointer
-   cadrumo.core._bucket_pointer_io
    cadrumo.core._calculation_route
    cadrumo.core._capabilities
    cadrumo.core._casilla_id
@@ -142,6 +140,7 @@ Submodules
    cadrumo.core.atomic_write
    cadrumo.core.auth_session_keys
    cadrumo.core.base64_codec
+   cadrumo.core.bucket_pointer
    cadrumo.core.cli_metadata
    cadrumo.core.click_context
    cadrumo.core.compatibility_lifecycle

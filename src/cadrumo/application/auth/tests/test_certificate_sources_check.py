@@ -18,10 +18,13 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr, ValidationError
 
+from cadrumo.application.workflow.persistence import workflow_state_repository
+
 from ....adapters.outbound.aeat.auth import _session_store
 from ....adapters.persistence.storage import SECRET_INDEX_FILENAME, SecretStore, get_secret_store
 from ....adapters.persistence.storage.master_key import current_active_bucket_session
-from ....core import AuthProviderKind, BucketPointer, write_pointer
+from ....core import AuthProviderKind
+from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....core.config import load_settings, override_settings
 from ....tests.certificates import CERTIFICATE_BUNDLE_PASSPHRASE, build_pkcs12_bundle
 from ....tests.profile_capsule import open_test_profile_session
@@ -29,31 +32,35 @@ from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
 from ...state_projection import build_operator_state_projection
-from ...workflow import workflow_state_repository
-from .. import (
+from ..actions import update_auth
+from ..certificate_source_operations import (
+    check_operator_certificate_sources,
+    register_operator_certificate_source,
+    select_operator_certificate_source,
+    set_operator_certificate_source_secret,
+)
+from ..credentials import (
+    active_auth_projection_span,
+    project_active_certificate_credentials,
+    resolve_active_certificate_credentials,
+)
+from ..operator import (
+    _test_operator_auth_from_snapshot,
+    build_live_auth_preflight_report,
+    configure_operator_auth,
+    inspect_operator_auth,
+    login_operator_auth,
+)
+from ..operator import test_operator_auth as run_operator_auth_test
+from ..operator_probes import probe_provider_credentials
+from ..operator_results import (
     AuthLoginPreconditionError,
     AuthOperationRequiresCustodySessionError,
     CertificateSourceCheckEntry,
-    ProviderProbeResult,
-    active_auth_projection_span,
-    build_live_auth_preflight_report,
-    check_operator_certificate_sources,
-    configure_operator_auth,
-    inspect_operator_auth,
-    load_persisted_session,
-    login_operator_auth,
-    probe_provider_credentials,
-    project_active_certificate_credentials,
-    register_operator_certificate_source,
-    resolve_active_certificate_credentials,
-    select_operator_certificate_source,
-    select_provider,
-    set_operator_certificate_source_secret,
-    storage_state_paths,
-    update_auth,
 )
-from .._operator import _test_operator_auth_from_snapshot
-from .._operator import test_operator_auth as run_operator_auth_test
+from ..probes import ProviderProbeResult
+from ..providers import select_provider
+from ..sessions import load_persisted_session, storage_state_paths
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -21,7 +21,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import CasillaId, Period, validated_casilla_id
+from ....core import CasillaId, Period, RegistryAuthorityGrade, validated_casilla_id
 from ....core.errors import resolve_error_message
 from ....core.resources import resources
 from ....domain.transactions import (
@@ -173,7 +173,12 @@ def _seed_reviewed_business_ledger(tx_repo: TransactionCatalogueRepository) -> N
 
 
 def _create_m200_work_unit(work_unit_repository: WorkUnitCatalogueRepository):
-    snapshot = resources().modelos.authority.snapshot(_M200, filing_year=_FILING_YEAR, period="0A")
+    snapshot = resources().modelos.authority.snapshot(
+        _M200,
+        filing_year=_FILING_YEAR,
+        period="0A",
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
     return create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo=_M200,

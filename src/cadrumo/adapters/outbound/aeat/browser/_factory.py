@@ -234,7 +234,7 @@ async def default_browser_session_factory(settings: Settings) -> DefaultBrowserS
     implicitly. Call ``await session.close()`` when you are done. Auth providers
     already do that in their ``close()`` path.
     """
-    from .....core import resolve_active_bucket_id
+    from .....core.bucket_pointer import resolve_active_bucket_id
 
     # This factory is reachable from the diagnostic browser-connectivity
     # probe under `aeat config status`, so a missing active profile MUST

@@ -33,7 +33,7 @@ repair-integrity path.
 See Also:
     :mod:`application.repair_integrity` owns metadata-only repair
     decisions and active-bucket repair sessions.
-    :mod:`application.workflow._profile_health` supplies the redacted
+    :mod:`application.workflow.profile_health` supplies the redacted
     active-profile health verdict when secure workflow state is readable or
     degraded.
     :mod:`application.wizard._status` supplies semantic profile/auth
@@ -87,10 +87,12 @@ from .operator_actions import (
 # Importing them lazily inside the functions that actually run keeps the
 # version surface off the heavy import graph.
 if TYPE_CHECKING:
+    from cadrumo.application.workflow.profile_health import ActiveProfileHealth
+    from cadrumo.application.workflow.state_models import WorkflowState
+
     from ..adapters.outbound.aeat.browser import SiteHealthStatus
     from ..adapters.persistence.storage import SecureObjectNamespaceIntegrity
     from .wizard import WizardStatusReport
-    from .workflow import ActiveProfileHealth, WorkflowState
 
 _log = get_logger(__name__)
 
@@ -490,8 +492,10 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
 
     setup_report: WizardStatusReport | None = None
     try:
+        from cadrumo.application.workflow.persistence import workflow_state_repository
+        from cadrumo.application.workflow.profile_health import assess_active_profile_health
+
         from .wizard import build_wizard_status
-        from .workflow import assess_active_profile_health, workflow_state_repository
 
         # Read the secure state through whatever session the operator already
         # holds. This probe deliberately opens none of its own: it used to enter
@@ -517,7 +521,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
         checks.append(_profile_check(setup_report, profile_health=profile_health, state=state))
         checks.append(_auth_check(setup_report))
     except Exception as exc:  # pragma: no cover - concrete failure mode depends on local secure backend.
-        from .workflow import assess_active_profile_health
+        from cadrumo.application.workflow.profile_health import assess_active_profile_health
 
         _log.debug("config repair secure state probe failed", exc_info=True)
         profile_health = assess_active_profile_health()
@@ -968,7 +972,7 @@ def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[Diagnostic
     whether the key is required or optional. The parent readiness row owns the
     single typed profile-editor action, avoiding per-finding transport prose.
     """
-    from .user_profile import list_profile_key_records
+    from .user_profile.keys_validation import list_profile_key_records
 
     if state is None:
         return ()
@@ -982,7 +986,7 @@ def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[Diagnostic
     if record is None:
         return ()
 
-    from .user_profile import record_to_path_values
+    from .user_profile.projections import record_to_path_values
 
     values = record_to_path_values(record)
     findings: list[DiagnosticFinding] = []
@@ -1161,7 +1165,7 @@ def _grounded_profile_key_summary(key: str) -> str:
     guessed at.
     """
     from ..core.resources import resources
-    from .user_profile import build_profile_preflight_requirement
+    from .user_profile.preflight import build_profile_preflight_requirement
 
     schema = resources().user_profile_schema.singleton
     requirement = build_profile_preflight_requirement(key, schema=schema)

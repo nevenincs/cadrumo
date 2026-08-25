@@ -6,7 +6,7 @@ as an inline conditional cannot be reached that way -- the only way to weaken it
 is to edit the file, and this is a shared worktree where a peer's sweep can
 commit the working tree at any moment.
 
-That happened. A sweep captured ``application/user_profile/_capsule_record.py``
+That happened. A sweep captured ``application/user_profile/capsule_record.py``
 carrying ``if False:`` in place of the assertion that an initial profile record
 is exactly revision one without a predecessor, and a live integrity guard shipped
 disabled. It was caught by hand, not by any gate.

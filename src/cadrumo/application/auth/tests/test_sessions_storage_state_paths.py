@@ -1,4 +1,4 @@
-"""Focused unit tests for application.auth._sessions.storage_state_paths.
+"""Focused unit tests for application.auth.sessions.storage_state_paths.
 
 `storage_state_paths` composes the active profile + AuthProviderKind into the
 encrypted storage-state logical key. Three branches:
@@ -37,8 +37,8 @@ from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
-from .._operator import configure_operator_auth, logout_operator_auth, reset_operator_auth
-from .._sessions import storage_state_paths
+from ..operator import configure_operator_auth, logout_operator_auth, reset_operator_auth
+from ..sessions import storage_state_paths
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

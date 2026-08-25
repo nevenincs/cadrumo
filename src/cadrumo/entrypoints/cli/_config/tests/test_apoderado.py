@@ -58,7 +58,7 @@ def test_apoderado_scopes_list() -> None:
 
 
 def test_apoderado_service_importable_and_has_cli_callers() -> None:
-    from .....application.auth import ApoderadoService
+    from .....application.auth.apoderado_service import ApoderadoService
     from .._apoderado import apoderado_scopes_list
 
     service = ApoderadoService()
@@ -260,7 +260,7 @@ def test_apoderado_configure_leaves_profile_facts_untouched(profile_storage_root
         },
     )
 
-    from .....application.workflow import read_profile_bucket
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
 
     pointer = read_profile_bucket("myco")
     assert pointer is not None

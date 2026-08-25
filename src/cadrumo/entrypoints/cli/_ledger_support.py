@@ -292,7 +292,7 @@ def _resolve_business_pct_with_censo(
 ) -> Decimal | None:
     """Stamp the censo-derived business_pct when the operator omits one."""
     from ...application.ledger import censo_business_pct_for
-    from ...application.user_profile import CensoSyncService
+    from ...application.user_profile.censo_sync import CensoSyncService
 
     if operator_supplied is not None:
         return operator_supplied

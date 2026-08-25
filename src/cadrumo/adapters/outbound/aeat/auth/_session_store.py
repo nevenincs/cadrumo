@@ -1,7 +1,7 @@
 """Encrypted persistence for AEAT browser session state.
 
 This module is the concrete adapter behind
-:class:`application.auth._protocols.SessionStoreProtocol`. It stores
+:class:`application.auth.protocols.SessionStoreProtocol`. It stores
 :class:`PersistedBrowserSession` payloads in
 :data:`adapters.persistence.storage.AEAT_BROWSER_SESSION_NAMESPACE`,
 whose registry entry pins the records to bucket-local

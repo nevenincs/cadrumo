@@ -51,7 +51,7 @@ def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
 
 def _resolve_invoice_bucket_id(bucket_id: str | None) -> str:
     """Return an explicit or active profile bucket id for the invoice catalogue."""
-    from ....core import resolve_repository_bucket_id
+    from ....core.bucket_pointer import resolve_repository_bucket_id
 
     return resolve_repository_bucket_id(bucket_id, error_type=InvoicePersistenceError)
 

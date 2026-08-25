@@ -12,16 +12,17 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.auth.models import AuthState
+
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from ...review import (
     InvoiceReviewRecord,
     LedgerReviewRecord,
 )
-from .. import AuthState
-from .._persistence import WorkflowStateRepository
-from .._profile_bucket_scan import list_profile_buckets
-from .._state_models import (
+from ..persistence import WorkflowStateRepository
+from ..profile_bucket_scan import list_profile_buckets
+from ..state_models import (
     DeclaracionPointer,
     WorkflowEvent,
     WorkflowState,
