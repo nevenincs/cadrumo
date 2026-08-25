@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 from openpyxl import load_workbook
+from openpyxl.cell.cell import Cell
 
 from .....adapters.outbound.google import RowSetEdit
 from .....adapters.outbound.google._calc_sheets_pull import _decode_row_set_block
@@ -18,6 +19,7 @@ from .....adapters.persistence.profile.transactions import TransactionCatalogueR
 from .....core import BindingSourceKind, Period
 from .....core.hashing import content_hash_hex
 from .....core.resources import resources
+from .....domain.calculations.registry import Modelo720RowObservation
 from .....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .....tests.profile_capsule import seed_test_profile_record
 from .....tests.secure_sql import isolated_runtime_profile
@@ -92,23 +94,28 @@ def test_real_worksheet_pull_calculation_roundtrips_m720_row_source_through_encr
     workbook = load_workbook(BytesIO(serialize_offline_workbook(plan)))
     worksheet = workbook[row_set.tab.value]
     for column in row_set.columns:
-        worksheet.cell(row=row_set.first_data_row, column=column.header_address.column).value = values[
-            str(column.binding)
-        ]
-    rows = [
-        [
-            worksheet.cell(row=row_set.first_data_row + offset, column=column).value
-            for column in range(1, len(row_set.columns) + 1)
-        ]
-        for offset in range(50)
-    ]
+        cell = worksheet.cell(row=row_set.first_data_row, column=column.header_address.column)
+        assert isinstance(cell, Cell)
+        cell.value = values[str(column.binding)]
+    rows: list[list[object]] = []
+    for offset in range(50):
+        row: list[object] = []
+        for column in range(1, len(row_set.columns) + 1):
+            cell = worksheet.cell(row=row_set.first_data_row + offset, column=column)
+            assert isinstance(cell, Cell)
+            row.append(cell.value)
+        rows.append(row)
     cells, cells_read = _decode_row_set_block(rows, row_set)
     assert cells_read == len(values), "real workbook pull must expose every exported row binding"
     assembled = assemble_row_sets_for_snapshot((RowSetEdit(grouping=row_set.grouping, cells=cells),), snapshot)
     source_kind, observations = assembled[0]
     assert source_kind == "foreign_asset"
     assert len(observations) == 1
-    observation = observations[0]
+    typed_observations: list[Modelo720RowObservation] = []
+    for candidate in observations:
+        assert isinstance(candidate, Modelo720RowObservation)
+        typed_observations.append(candidate)
+    observation = typed_observations[0]
     expected_fingerprint = content_hash_hex(observation.model_dump(mode="json"))
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
@@ -133,7 +140,7 @@ def test_real_worksheet_pull_calculation_roundtrips_m720_row_source_through_encr
             calculation_repository=calculations,
             transaction_repository=transactions,
             invoice_repository=invoices,
-            foreign_asset_row_observations=observations,
+            foreign_asset_row_observations=tuple(typed_observations),
             clock=_T1,
         ).revision
         stored = calculations.load().get(calculated.calculation_revision_id)
