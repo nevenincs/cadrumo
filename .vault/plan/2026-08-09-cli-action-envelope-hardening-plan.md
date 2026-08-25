@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-25'
-body_hash: 'sha256:fecd41055487caf6a7b33e051d213f6069ced3370fb82db809009a6650797577'
+body_hash: 'sha256:8d0e68b26e8673b1abc1c0ee827f10fd02d02082ea68a803073e36599e97a3fe'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -219,7 +219,7 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [x] `W05.P10.S81` - Migrate review action producers to typed conditions and canonical actions; `src/cadrumo/application/review`.
 - [x] `W05.P10.S82` - Migrate storage-management recovery producers to typed conditions and canonical actions; `src/cadrumo/application/storage_management`.
 - [x] `W05.P10.S83` - Migrate authorization-domain recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/auth`.
-- [ ] `W05.P10.S84` - Replace calculation-domain applicability, query, authority-grade, and loader-race command/retry prose with domain-owned failed-condition facts and boundary-resolved typed outcomes; `src/cadrumo/domain/calculations/_errors.py; src/cadrumo/domain/calculations/_applicability.py; src/cadrumo/domain/calculations/_applicability_modelo202.py; src/cadrumo/domain/calculations/_queries.py; src/cadrumo/domain/calculations/_snapshot.py; src/cadrumo/domain/calculations/_loader.py; src/cadrumo/domain/calculations/_loader_cache.py; src/cadrumo/domain/calculations/_loader_fingerprints.py; src/cadrumo/domain/calculations/tests; src/cadrumo/application/calculations; src/cadrumo/entrypoints/cli`.
+- [x] `W05.P10.S84` - Replace calculation-domain applicability, query, authority-grade, and loader-race command/retry prose with domain-owned failed-condition facts and boundary-resolved typed outcomes; `src/cadrumo/domain/calculations/_errors.py; src/cadrumo/domain/calculations/_applicability.py; src/cadrumo/domain/calculations/_applicability_modelo202.py; src/cadrumo/domain/calculations/_queries.py; src/cadrumo/domain/calculations/_snapshot.py; src/cadrumo/domain/calculations/_loader.py; src/cadrumo/domain/calculations/_loader_cache.py; src/cadrumo/domain/calculations/_loader_fingerprints.py; src/cadrumo/domain/calculations/tests; src/cadrumo/application/calculations; src/cadrumo/entrypoints/cli`.
 - [x] `W05.P10.S85` - Migrate taxpayer-domain recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/contribuyente`.
 - [x] `W05.P10.S86` - Replace the remaining transaction-model free-form recovery hints and ledger-category command prose with typed conditions and canonical actions or explicit no-recovery outcomes; `src/cadrumo/domain/transactions/_models.py; src/cadrumo/domain/transactions/tests`.
 - [x] `W05.P10.S87` - Migrate user-profile-domain recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/user_profile`.
