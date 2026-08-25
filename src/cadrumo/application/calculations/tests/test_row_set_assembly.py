@@ -356,6 +356,27 @@ def test_snapshot_command_uses_the_validated_revision_and_filing_year() -> None:
     assert observations[0].transaction_date == date(2025, 12, 31)
 
 
+def test_snapshot_command_delegates_exact_snapshot_coordinates(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Deleting either snapshot coordinate changes the command's only dispatcher call."""
+    snapshot = _snapshot("190", filing_year=2025, period="0A")
+    cells = (
+        RowSetCellEdit(binding="modelo-190-perceptor-row-nif", row_index=1, value="11111111A"),
+    )
+    calls: list[tuple[object, ...]] = []
+
+    def dispatch(grouping: object, dispatched_cells: object, revision: object, *, filing_year: int) -> tuple[str, tuple[()]]:
+        calls.append((grouping, dispatched_cells, revision, filing_year))
+        return ("withholding", ())
+
+    monkeypatch.setattr(
+        "cadrumo.application.calculations._row_set_assembly.assemble_observations_for_grouping",
+        dispatch,
+    )
+
+    assert assemble_observations_for_snapshot("per_perceptor_clave", cells, snapshot) == ("withholding", ())
+    assert calls == [("per_perceptor_clave", cells, snapshot.revision, snapshot.filing_year)]
+
+
 def test_snapshot_command_preserves_the_dispatcher_unknown_grouping_refusal() -> None:
     snapshot = _snapshot("190", filing_year=2025, period="0A")
 
