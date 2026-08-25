@@ -228,7 +228,7 @@ print(json.dumps({
 
 
 def test_workflow_module_level_graph_is_acyclic_and_detector_bites() -> None:
-    """S18-S19 must not trade eager facade loading for an internal import cycle."""
+    """Workflow import boundaries must not trade eager facade loading for an internal import cycle."""
     sources = {
         path.stem: path.read_text(encoding="utf-8") for path in _WORKFLOW.glob("*.py") if path.name != "__init__.py"
     }
@@ -269,7 +269,7 @@ def test_lazy_facade_and_read_only_config_forbid_materialization_imports() -> No
 
 
 def test_loading_settings_and_derived_paths_does_not_materialize_storage(tmp_path: Path) -> None:
-    """The S20 read boundary remains a pure read in an isolated fresh process."""
+    """The read boundary remains pure in an isolated fresh process."""
     isolated_parent = tmp_path / "isolated"
     isolated_parent.mkdir()
     storage_root = isolated_parent / "state"

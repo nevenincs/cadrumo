@@ -1,4 +1,4 @@
-"""Dynamic S14 proofs for CommandSpec-only application-family loading."""
+"""Dynamic proofs that application families load only their CommandSpec surface."""
 
 from __future__ import annotations
 

@@ -15,7 +15,7 @@ Two properties are held here, and they are the ones that were lost:
 - no command's result schema re-implements the notice channel with a bespoke
   ``next`` / ``suggestion`` / ``*_advisory`` field.
 
-The second is not hypothetical. This campaign found a notice whose message
+The second is not hypothetical. A prior regression found a notice whose message
 carried raw ``aeat …`` command prose (which crashed the whole calculation at the
 outbound boundary) and a refusal whose context carried a raw ``ValidationError``
 class name. Both were the same mistake in the other direction: pushing

@@ -152,7 +152,7 @@ class _CloseWitness:
 
 @dataclass(slots=True)
 class _ExecutionDriver:
-    """Single S45 execution driver over the canonical composed supervisor."""
+    """Single registered execution driver over the canonical composed supervisor."""
 
     services: OperationComposedServices
 
