@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.entrypoints.tui.components import (
+from cadrumo.entrypoints.tui.components.forms import (
     FormChoice,
     FormField,
     FormFieldKind,

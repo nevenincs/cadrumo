@@ -1114,7 +1114,7 @@ def test_tui_boundary_is_clean_against_the_accepted_legacy_census() -> None:
 
 def test_components_import_only_presentation_dependencies() -> None:
     """Canonical components do not reach feature, lifecycle, or work-owning layers."""
-    component_files = scan_directory(_COMPONENTS_ROOT, pattern="*.py", recursive=True)
+    component_files = list(scan_directory(_COMPONENTS_ROOT, pattern="*.py", recursive=True))
     forbidden_imports = _component_import_policy_violations(component_files, src_root=REPO_ROOT / "src")
 
     assert forbidden_imports == ()
