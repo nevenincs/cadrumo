@@ -13,7 +13,8 @@ from functools import cache
 from pathlib import Path
 
 from cadrumo.core import DirectoryEntryKind, scan_directory
-from dev._paths import REPO_ROOT
+
+from .._paths import REPO_ROOT
 
 PROJECT_TEST_ROOTS: tuple[Path, ...] = (REPO_ROOT / "dev", REPO_ROOT / "docs")
 """Project-level test roots outside the ``src/cadrumo`` package tree."""

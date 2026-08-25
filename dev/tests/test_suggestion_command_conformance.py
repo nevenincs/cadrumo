@@ -63,12 +63,13 @@ from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.json_contract import EnvelopeStatus
 from cadrumo.entrypoints.cli._verb_input_schema import DECLARED_UNIMPLEMENTED_SURFACES
 from cadrumo.tests.cli_runner import cadrumo_click_command
-from dev._paths import REPO_ROOT
-from dev.agent_eval._action_coverage import LeafConditionScenario, production_leaf_condition_scenario_matrix
-from dev.agent_eval._models import ExitCodeScenario, ObservedProductionActionAssertion, observe_production_action
-from dev.agent_eval._runner import check_exit_code_scenario
-from dev.locales import LocaleManager, LocaleNode
-from dev.locales.manager import locale_catalogue_source
+
+from .._paths import REPO_ROOT
+from ..agent_eval._action_coverage import LeafConditionScenario, production_leaf_condition_scenario_matrix
+from ..agent_eval._models import ExitCodeScenario, ObservedProductionActionAssertion, observe_production_action
+from ..agent_eval._runner import check_exit_code_scenario
+from ..locales import LocaleManager, LocaleNode
+from ..locales.manager import locale_catalogue_source
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

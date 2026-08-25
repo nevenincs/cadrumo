@@ -23,15 +23,16 @@ from cadrumo.application.operator_surface import (
 )
 from cadrumo.core import ActionEvidenceProvenance
 from cadrumo.entrypoints.cli import current_operator_surface_reconciliation
-from dev.agent_eval._action_coverage import LeafConditionScenario, leaf_condition_scenario_matrix
-from dev.agent_eval._models import ObservedProductionActionAssertion, observe_production_action
-from dev.quality.cli_action_census import (
+
+from ..agent_eval._action_coverage import LeafConditionScenario, leaf_condition_scenario_matrix
+from ..agent_eval._models import ObservedProductionActionAssertion, observe_production_action
+from ..quality.cli_action_census import (
     AuthoredErrorMessageJoin,
     authored_error_message_join,
     current_action_alias_discoveries,
     current_census,
 )
-from dev.quality.cli_action_census_dispositions import (
+from ..quality.cli_action_census_dispositions import (
     DEFAULT_DISPOSITIONS_PATH,
     AuthoredMessageExclusion,
     CandidateDisposition,

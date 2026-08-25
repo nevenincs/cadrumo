@@ -38,7 +38,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.quality.facade_export_scan import REPO_ROOT, ScanResult, scan
+from ..quality.facade_export_scan import REPO_ROOT, ScanResult, scan
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -260,7 +260,7 @@ def test_planted_break_is_detected_in_each_direction() -> None:
     """
     import ast
 
-    from dev.quality.facade_export_scan import module_facts
+    from ..quality.facade_export_scan import module_facts
 
     facts = module_facts(
         ast.parse(

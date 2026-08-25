@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import pytest
 
-from dev.quality.modelo_branch_classification import (
+from ..quality.modelo_branch_classification import (
     BranchClassification,
     BranchClassificationError,
     BranchEntry,

@@ -9,7 +9,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core import scan_directory
-from dev.quality.import_hygiene_scan import (
+
+from ..quality.import_hygiene_scan import (
     LEGACY_TUI_PACKAGE,
     LEGACY_TUI_ROOT,
     REPO_ROOT,
