@@ -477,6 +477,16 @@ class ConfigProfileShowResult(OutputSchema):
     profile_record: str | None = None
 
 
+class ConfigProfileAddRowResult(OutputSchema):
+    """Result of one application-owned repeatable profile-row mutation."""
+
+    profile_id: ProfileId
+    section: str = Field(min_length=1)
+    row_index: int = Field(ge=0)
+    record_revision: int = Field(ge=1)
+    content_digest: str = Field(min_length=1)
+
+
 class ConfigProfileValidateResult(OutputSchema):
     """JSON envelope for ``aeat config profile validate``.
 

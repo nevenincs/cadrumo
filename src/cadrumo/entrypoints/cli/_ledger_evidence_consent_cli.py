@@ -34,7 +34,7 @@ from ...application.ledger import (
 from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ._common import _emit_envelope, _state, _tx_repo
+from ._common import _state, _tx_repo, emit_envelope
 from ._ledger_business_payloads import (
     EvidenceConsentListResult,
     EvidenceConsentRederiveResult,
@@ -114,7 +114,7 @@ def consent_list(ctx: typer.Context) -> None:
     notices = [_unrecallable_notice()]
     if not survey.consented_dispatches and (not survey.cloud_derived_artefacts):
         notices.append(_no_history_notice())
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.evidence.consent.list",
         result=EvidenceConsentListResult.model_validate(payload),
@@ -181,7 +181,7 @@ def consent_rederive(ctx: typer.Context, evidence_reference: str, content_addres
         settings=load_settings(),
         read_on_host=_on_host_reader(),
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.evidence.consent.rederive",
         result=EvidenceConsentRederiveResult.model_validate(

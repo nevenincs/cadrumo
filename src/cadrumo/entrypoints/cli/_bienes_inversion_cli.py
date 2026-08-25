@@ -25,7 +25,7 @@ from ._bienes_inversion_payloads import (
     BienesInversionListResult,
     BienInversionRecordPayload,
 )
-from ._common import _bad, _emit_envelope, parse_decimal_amount
+from ._common import _bad, emit_envelope, parse_decimal_amount
 from ._common import active_bucket_id_or_refuse as _register_bucket_id
 
 
@@ -100,7 +100,7 @@ def bienes_inversion_declare(
         record=_record_payload(record),
         count=len(register.records),
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.bienes_inversion.declare",
         result=payload,
@@ -129,7 +129,7 @@ def bienes_inversion_list(ctx: typer.Context) -> None:
             f"{record.identifier}\t{record.acquisition_year}\t{record.kind.value}\t"
             f"cuota={record.cuota_soportada}\tprorrata={record.prorrata_inicial_pct}",
         )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.bienes_inversion.list",
         result=payload,

@@ -54,7 +54,6 @@
     "src/cadrumo/domain/invoices/_models.py": 1369,
     "src/cadrumo/domain/transactions/_models.py": 1371,
     "src/cadrumo/entrypoints/cli/_app_live.py": 1763,
-    "src/cadrumo/entrypoints/cli/_config/_manager_actions.py": 1564,
     "src/cadrumo/entrypoints/cli/_config_payloads.py": 1570,
     "src/cadrumo/entrypoints/cli/_modelo.py": 1390,
     "src/cadrumo/entrypoints/cli/_modelo_payloads.py": 1530

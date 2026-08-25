@@ -19,7 +19,7 @@ The nested calendar payloads mirror the JSON form of
 those fragments, plus read models returned by
 :func:`build_overview_status_report`, :func:`build_overview_agenda`,
 :func:`build_overview_backlog`, and :func:`build_overview_explain`, for the
-:class:`SchemaEnvelope` surface through :func:`_emit_envelope`. The application
+:class:`SchemaEnvelope` surface through :func:`emit_envelope`. The application
 overview package remains the source of business semantics; this module only
 documents and validates the transport shape emitted by :mod:`_overview`.
 """
@@ -217,6 +217,47 @@ class OverviewCalendarEventPayload(OutputSchema):
         if not verified_state and self.verified_justificante_csv is not None:
             raise ValueError("justificante CSV evidence requires a verified AEAT submission state")
         return self
+
+
+class OverviewCalendarEntrySummaryPayload(OutputSchema):
+    """Actionable calendar row summary with a typed route to full explanation.
+
+    The calendar list answers what is due and whether filing evidence has been
+    observed. Legal-window and recovery detail stays retrievable through the
+    resolved ``overview explain`` action instead of being repeated for every
+    row in the tool-list schema.
+    """
+
+    modelo: str
+    period: str
+    adjusted_closes_on: str
+    user_state: Literal["due", "late", "filed", "unknown"]
+    censo_enrolment_state: Literal["not_checked", "not_required", "unverified", "verified"]
+    local_filing_state: Literal["not_ready_to_file", "ready_to_file", "external_baseline_imported"]
+    aeat_submission_state: Literal["not_observed", "submitted_observed", "accepted", "justificante_verified"]
+    justificante_verified: bool
+    detail_action: ResolvedNoticeAction
+
+
+class OverviewCalendarEventSummaryPayload(OutputSchema):
+    """Compact observed-event identity retained by the calendar list.
+
+    ``source`` plus ``reference_id`` are the stable retrieval coordinates for
+    the owning live-read surface; the full event record is not redeclared in
+    every calendar result schema.
+    """
+
+    event_type: Literal["filing", "message"]
+    event_date: str
+    source: str
+    summary: str
+    reference_id: str
+    status: str | None = None
+    aeat_submission_state: Literal["not_observed", "submitted_observed", "accepted", "justificante_verified"] | None = (
+        None
+    )
+    aeat_submitted_at: str | None = None
+    justificante_verified: bool | None = None
 
 
 class OverviewResolvedWarningActionReferencePayload(OutputSchema):
@@ -436,8 +477,8 @@ class OverviewCalendarResult(OutputSchema):
     from_date: str | None = None
     to_date: str | None = None
     range: OverviewCalendarRangePayload | None = None
-    entries: list[OverviewCalendarEntryPayload] = []
-    events: list[OverviewCalendarEventPayload] = []
+    entries: list[OverviewCalendarEntrySummaryPayload] = []
+    events: list[OverviewCalendarEventSummaryPayload] = []
     warnings: list[OverviewCalendarWarningPayload] = []
     generated_at: str | None = None
     completeness: OverviewCalendarCompletenessPayload | None = None

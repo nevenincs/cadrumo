@@ -19,19 +19,21 @@ from ...core import (
 )
 from ...core.time import now
 from ...domain.deadlines import TaxpayerProfile
-from ..operations import (
+from cadrumo.application.operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
     OperationConflictScope,
+    OperationReplayPolicy,
+    OperationRequestStoragePolicy,
+    OperationSensitiveInputPolicy,
+)
+from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.registry import (
     OperationDefinition,
     OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationReplayPolicy,
-    OperationRequest,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
 )
 from ..operations.owner import OperationEventEmitter, OperationExecutorContext
 from ..storage.sync_runs import SyncRunRecordRepositoryProtocol

@@ -101,7 +101,7 @@ _RESPONSE_CONTRACT: Final[str] = (
 #: rot into a rubber stamp that pre-authorises the next literal in that class.
 STANDING_LITERAL_VERSION_DECLARATIONS: Final[Mapping[tuple[str, str, str], str]] = {
     (
-        "src/cadrumo/adapters/persistence/operations/_lease.py",
+        "src/cadrumo/adapters/persistence/operations/lease.py",
         "_OperationLeaseRecord",
         "schema_version",
     ): _UNNAMED_SOLE_DECLARATION,
@@ -129,7 +129,7 @@ STANDING_LITERAL_VERSION_DECLARATIONS: Final[Mapping[tuple[str, str, str], str]]
         "schema_version",
     ): _UNNAMED_SOLE_DECLARATION,
     (
-        "src/cadrumo/application/operations/persistence/_journal.py",
+        "src/cadrumo/application/operations/persistence/journal.py",
         "OperationPersistedSnapshot",
         "schema_version",
     ): (
@@ -137,12 +137,12 @@ STANDING_LITERAL_VERSION_DECLARATIONS: Final[Mapping[tuple[str, str, str], str]]
         "twice with no name attached to the number at any point."
     ),
     (
-        "src/cadrumo/application/operations/persistence/_leases.py",
+        "src/cadrumo/application/operations/persistence/leases.py",
         "OperationLeaseObservation",
         "schema_version",
     ): _UNNAMED_SOLE_DECLARATION,
     (
-        "src/cadrumo/application/operations/persistence/_leases.py",
+        "src/cadrumo/application/operations/persistence/leases.py",
         "OperationLeaseResult",
         "schema_version",
     ): _UNNAMED_SOLE_DECLARATION,

@@ -39,7 +39,7 @@ from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.iva import StatedCountryCodeStatus
-from ._common import _bad, _emit_envelope, _state, _tx_repo, resolve_notice_action
+from ._common import _bad, _state, _tx_repo, emit_envelope, resolve_notice_action
 from ._ledger_business_payloads import (
     EvidenceReviewBlockerPayload,
     EvidenceReviewFieldPayload,
@@ -441,7 +441,7 @@ def review_list(
         for row in rows
     )
     notices = _review_queue_notices(rows)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.evidence.review.list",
         result=EvidenceReviewListResult.model_validate(
@@ -530,7 +530,7 @@ def review_show(ctx: typer.Context, reference: str) -> None:
                 context={"blocker_ids": ",".join(blocker.blocker_id for blocker in blockers)},
             )
         )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.evidence.review.show",
         result=EvidenceReviewShowResult.model_validate(payload),

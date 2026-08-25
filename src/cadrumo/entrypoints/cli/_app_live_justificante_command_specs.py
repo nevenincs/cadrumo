@@ -99,7 +99,9 @@ LIVE_JUSTIFICANTE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "JustificanteCaptureResult"),
+            target=DeferredTarget(
+                "cadrumo.entrypoints.cli._app_live_justificante_payloads", "JustificanteCaptureResult"
+            ),
             identity="app.live.justificante.pull",
         ),
     ),
@@ -126,7 +128,7 @@ LIVE_JUSTIFICANTE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "JustificanteListResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_justificante_payloads", "JustificanteListResult"),
             identity="app.live.justificante.list",
         ),
     ),
@@ -161,7 +163,7 @@ LIVE_JUSTIFICANTE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "JustificanteViewResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_justificante_payloads", "JustificanteViewResult"),
             identity="app.live.justificante.view",
         ),
     ),

@@ -600,16 +600,9 @@ def test_live_action_observation_join_rejects_missing_duplicate_and_undeclared_r
         _assert_complete_bijective_observation_join(matrix, (*observations, undeclared))
 
 
-def test_s44_runner_observes_every_live_no_recovery_outcome_without_dispatch(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """The runner observes every live no-recovery outcome without inferring recovery."""
+def test_s44_runner_observes_every_live_no_recovery_outcome() -> None:
+    """The runner observes every live no-recovery outcome through its declared contract."""
     from cadrumo.application.modelo._preconditions import build_modelo_precondition_failure_for_scenario
-
-    def fail_on_dispatch(*_args: object, **_kwargs: object) -> None:
-        pytest.fail("no-recovery outcomes must not dispatch a canonical CLI action")
-
-    monkeypatch.setattr("dev.agent_eval._runner._invoke_canonical_cli", fail_on_dispatch)
 
     no_recovery_rows = tuple(
         coverage

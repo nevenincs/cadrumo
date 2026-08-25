@@ -6,7 +6,7 @@ and re-exported by :mod:`_modelo_payloads` so audit,
 work-history, workflow-run, list, and describe emitters keep one payload import
 surface. Validated results enter
 :class:`SchemaEnvelope` through
-:func:`_emit_envelope`.
+:func:`emit_envelope`.
 
 The application/modelo, workflow, and audit services remain authoritative for
 evidence-bundle manifests, work-unit event history, workflow runs, and modelo

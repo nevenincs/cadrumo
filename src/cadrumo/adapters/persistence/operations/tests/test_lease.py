@@ -13,22 +13,21 @@ from queue import Empty
 
 import pytest
 
-from .....application.operations import (
-    OperationIdentity,
-    OperationRequestStoragePolicy,
-)
-from .....application.operations.persistence import (
+from cadrumo.application.operations.capabilities import OperationRequestStoragePolicy
+from cadrumo.application.operations.models import OperationIdentity
+from cadrumo.application.operations.persistence.events import OperationPhaseEvent
+from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
+from cadrumo.application.operations.persistence.leases import (
     OperationLeaseDisposition,
     OperationLeaseObservationDisposition,
     OperationOwnerLease,
-    OperationPersistedSnapshot,
-    OperationPhaseEvent,
     operation_conflict_scope_reference,
 )
+
 from .....core import OperationEffect, OperationLifecycle, exclusive_file_lock
 from ...storage import RepositoryError
-from .._journal import OperationJournalRepository
-from .._lease import OperationLeaseFilesystemRepository, OperationLeaseStorage
+from ..journal import OperationJournalRepository
+from ..lease import OperationLeaseFilesystemRepository, OperationLeaseStorage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

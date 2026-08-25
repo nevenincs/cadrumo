@@ -49,8 +49,16 @@ _BUCKET_ID = "39393939-3939-4393-8393-393939393939"
 _INVOICE_SOURCES = frozenset({"collectible_invoice", "payable_invoice"})
 
 
+#: The ejercicio these structural assertions read a revision for. They are
+#: claims about a revision's DECLARED binding sources, not about any year's
+#: figures, so the ejercicio only has to be one AEAT has published: modelo 390's
+#: annual design for an ejercicio appears late in that same year, so 2026 is not
+#: published yet and 2025 is the latest that is.
+_STRUCTURAL_EJERCICIO = 2025
+
+
 def _revision(modelo_id: str, period: str):
-    return resources().modelos.authority.snapshot(modelo_id, filing_year=2026, period=period).revision
+    return resources().modelos.authority.snapshot(modelo_id, filing_year=_STRUCTURAL_EJERCICIO, period=period).revision
 
 
 def test_the_invoice_versus_ledger_screen_now_covers_m390() -> None:

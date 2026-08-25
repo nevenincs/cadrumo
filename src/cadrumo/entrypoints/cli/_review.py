@@ -16,7 +16,7 @@ from ...core.decimal import coerce_decimal_strict
 from ...core.errors import resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
-from ._common import _bad, _emit_envelope, activate_subcommand_output_language
+from ._common import _bad, activate_subcommand_output_language, emit_envelope
 from ._review_payloads import ReviewQueueResult, ReviewQueueRowPayload, ReviewViewResult
 
 
@@ -107,7 +107,7 @@ def review_queue(
     typed_result = ReviewQueueResult(
         rows=tuple(_row_to_payload(row) for row in report.rows),
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="review.queue",
         result=typed_result,
@@ -138,7 +138,7 @@ def review_show(
     ]
     if explain and row.legal_refs:
         lines.append(f"{tr('cli.review.labels.legal_refs', default='legal_refs')}\t{', '.join(row.legal_refs)}")
-    _emit_envelope(ctx, command="review.view", result=typed_result, lines=lines)
+    emit_envelope(ctx, command="review.view", result=typed_result, lines=lines)
 
 
 def _queue_lines(report: ReviewQueueReport, *, explain: bool = False) -> list[str]:

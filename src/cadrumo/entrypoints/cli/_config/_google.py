@@ -88,7 +88,7 @@ from ....core.config import load_settings
 from ....core.hashing import sha256_hex
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
-from .._common import _emit_envelope
+from .._common import emit_envelope
 from .._errors import CliRefusedBoundaryError
 from ._google_errors import _google_refusal
 from ._google_payloads import (
@@ -199,7 +199,7 @@ def google_register(
         client_id=client.client_id,
         project_id=client.project_id,
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.google.register",
         result=typed,
@@ -237,7 +237,7 @@ def google_login(
                 mode="refresh-only",
                 account_email=metadata.account_email,
             )
-            _emit_envelope(
+            emit_envelope(
                 ctx,
                 command="config.google.login",
                 result=typed_refresh,
@@ -261,7 +261,7 @@ def google_login(
         account_email=metadata.account_email,
         granted_scopes=list(metadata.granted_scopes),
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.google.login",
         result=typed_consent,
@@ -315,7 +315,7 @@ def google_status(
                 *tuple(f"scope\t{scope}" for scope in metadata.granted_scopes),
             ),
         )
-    _emit_envelope(ctx, command="config.google.status", result=typed_status, lines=tuple(lines))
+    emit_envelope(ctx, command="config.google.status", result=typed_status, lines=tuple(lines))
 
 
 def google_logout(
@@ -339,7 +339,7 @@ def google_logout(
         metadata_removed=metadata_removed,
         client_preserved=True,
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.google.logout",
         result=typed_logout,
@@ -409,7 +409,7 @@ def google_sync_probe(
         root_folder_id=resolved_root_folder_id,
         detail=report.detail,
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.google.sync.probe",
         result=probe_result,
@@ -1093,7 +1093,7 @@ def google_sync_push(
         mirror_result=mirror_result,
     )
     notices, _unused = _google_sync_push_notices(mirror_result)
-    _emit_envelope(ctx, command="config.google.sync.push", result=push_result, lines=tuple(lines), notices=notices)
+    emit_envelope(ctx, command="config.google.sync.push", result=push_result, lines=tuple(lines), notices=notices)
 
 
 # Suppress unused-import false positive for `load_token` and `REQUIRED_SCOPES`;

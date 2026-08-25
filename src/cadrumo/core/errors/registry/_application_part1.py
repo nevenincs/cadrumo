@@ -928,7 +928,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.flows._errors.FlowError",
+        "cadrumo.application.flows.errors.FlowError",
         ErrorCode(
             code="ERROR_FLOW",
             category=ErrorCategory.ERROR,
@@ -938,7 +938,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.flows._errors.FlowValidatorRegistryError",
+        "cadrumo.application.flows.errors.FlowValidatorRegistryError",
         ErrorCode(
             code="INTERNAL_FLOW_VALIDATOR_REGISTRY",
             category=ErrorCategory.INTERNAL,
@@ -948,7 +948,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.flows._errors.FlowNavigationError",
+        "cadrumo.application.flows.errors.FlowNavigationError",
         ErrorCode(
             code="REFUSED_FLOW_NAVIGATION",
             category=ErrorCategory.REFUSED,
@@ -958,7 +958,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.flows._errors.FlowAnswerError",
+        "cadrumo.application.flows.errors.FlowAnswerError",
         ErrorCode(
             code="REFUSED_FLOW_ANSWER",
             category=ErrorCategory.REFUSED,
@@ -968,7 +968,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.flows._errors.FlowSubmitError",
+        "cadrumo.application.flows.errors.FlowSubmitError",
         ErrorCode(
             code="REFUSED_FLOW_SUBMIT",
             category=ErrorCategory.REFUSED,
@@ -978,7 +978,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.flows._errors.FlowCheckpointError",
+        "cadrumo.application.flows.errors.FlowCheckpointError",
         ErrorCode(
             code="REFUSED_FLOW_CHECKPOINT",
             category=ErrorCategory.REFUSED,
@@ -988,7 +988,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.flows._errors.FlowCopyResolutionError",
+        "cadrumo.application.flows.errors.FlowCopyResolutionError",
         ErrorCode(
             code="INTERNAL_FLOW_COPY_RESOLUTION",
             category=ErrorCategory.INTERNAL,
@@ -998,7 +998,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.flows._errors.FlowUnsupportedConsoleError",
+        "cadrumo.application.flows.errors.FlowUnsupportedConsoleError",
         ErrorCode(
             code="REFUSED_FLOW_UNSUPPORTED_CONSOLE",
             category=ErrorCategory.REFUSED,
@@ -1008,7 +1008,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.flows._errors.FlowRunAbandonedError",
+        "cadrumo.application.flows.errors.FlowRunAbandonedError",
         ErrorCode(
             code="REFUSED_FLOW_RUN_ABANDONED",
             category=ErrorCategory.REFUSED,

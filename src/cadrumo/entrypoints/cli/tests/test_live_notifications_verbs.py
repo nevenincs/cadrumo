@@ -47,7 +47,7 @@ def test_notifications_show_refuses_unknown_snapshot() -> None:
 def test_notification_snapshot_payloads_refuse_malformed_identity_time_url_and_count() -> None:
     """Notification transport preserves the persisted snapshot's strict fields."""
 
-    from .._app_live_payloads import NotificationsCaptureResult, NotificationSnapshotListingPayload
+    from .._app_live_notifications_payloads import NotificationsCaptureResult, NotificationSnapshotListingPayload
 
     instant = datetime(2026, 8, 1, tzinfo=UTC)
     with pytest.raises(ValidationError):
@@ -197,7 +197,7 @@ def test_a_document_payload_cannot_claim_a_reading_it_does_not_carry() -> None:
     reading nor a reason for its absence, would let an operator conclude the
     served act held no figures when the truth is that nobody read it.
     """
-    from .._app_live_payloads import NotificationDocumentPullResult, NotificationDocumentViewResult
+    from .._app_live_notifications_payloads import NotificationDocumentPullResult, NotificationDocumentViewResult
 
     shared: _NotificationDocumentShared = {
         "bucket_id": "00000000-0000-4000-8000-000000000000",

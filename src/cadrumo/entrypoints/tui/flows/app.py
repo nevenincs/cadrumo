@@ -48,7 +48,6 @@ from ....application.flows import (
 from ....application.flows import (
     FlowPage,
     FlowUnsupportedConsoleError,
-    LineFlowFrontend,
     ReviewProjection,
     ReviewRow,
     answer,
@@ -69,6 +68,7 @@ from ....application.flows import (
     validate_widget_shape,
     visible_sequence,
 )
+from ....application.flows.line_frontend import LineFlowFrontend
 from ....core.flows import (
     DEFER_TOKEN,
     REPEATING_INSTANCE_SEPARATOR,

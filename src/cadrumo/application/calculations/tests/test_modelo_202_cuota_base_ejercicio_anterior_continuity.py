@@ -43,7 +43,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
+from ....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     RegistryCalculationResult,
@@ -92,7 +92,9 @@ def _modalidad_rate_from_snapshot(filing_year: int) -> Decimal:
     ``is.modalidad_cuota.percentage`` parameter on the 2P snapshot;
     the authority is ``aeat-modelo-202-instructions``.
     """
-    snapshot = resources().modelos.authority.snapshot(_MODELO_202, filing_year=filing_year, period="2P")
+    snapshot = resources().modelos.authority.snapshot(
+        _MODELO_202, filing_year=filing_year, period="2P", grade=RegistryAuthorityGrade.CALCULATION
+    )
     param = next(p for p in snapshot.revision.parameters if p.id == "is.modalidad_cuota.percentage")
     # Parameter is declared with data_type="ratio", unit="percent": value "18"
     # means 18%, so divide by 100 to get the Decimal multiplier.
@@ -131,6 +133,7 @@ def _seed_m200_cuota_liquida(*, source_year: int, cuota: Decimal, obs_repo: Calc
                     filing_year=source_year,
                     period="0A",
                     casilla_values={_M200_CUOTA_LIQUIDA_CASILLA: cuota},
+                    grade=RegistryAuthorityGrade.CALCULATION,
                 ),
             ),
             source_kind="app_filing",
@@ -181,7 +184,9 @@ def _calculate_202_2p(
     casilla_02: Decimal,
 ) -> tuple[RegistryCalculationResult, int]:
     """Run the REAL M202 2P calculation from the resolved prior-cuota relation."""
-    snapshot = resources().modelos.authority.snapshot(_MODELO_202, filing_year=filing_year, period="2P")
+    snapshot = resources().modelos.authority.snapshot(
+        _MODELO_202, filing_year=filing_year, period="2P", grade=RegistryAuthorityGrade.CALCULATION
+    )
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="2P")
     binding_values = {**relation_binding_values}
     inputs = {
@@ -206,7 +211,9 @@ def _resolve_202_relations(
     period: str = "2P",
     obs_repo: CalculationObservationRepository,
 ) -> dict[RelationId, Decimal]:
-    snapshot = resources().modelos.authority.snapshot(_MODELO_202, filing_year=filing_year, period=period)
+    snapshot = resources().modelos.authority.snapshot(
+        _MODELO_202, filing_year=filing_year, period=period, grade=RegistryAuthorityGrade.CALCULATION
+    )
     prefill = resolve_relations_from_local_store(snapshot, repository=obs_repo)
     return {item.relation: item.value for item in prefill.values if item.value is not None}
 

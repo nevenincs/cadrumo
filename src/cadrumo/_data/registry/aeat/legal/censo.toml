@@ -192,6 +192,43 @@ applies_from = 2025-02-03
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/DR036v43.xlsx"
 review_status = "reviewed"
 
+# These exact AEAT artefacts are retained as hash-pinned historical corpus
+# evidence. Their titles establish publication/version dates, but not a
+# non-overlapping filing-selection window against the active editions below;
+# do not make an epoch or applicability claim until that authority is reviewed.
+[sources."aeat-dr-036-v42-provisional"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_036/files/02-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-provisional-107-kb-xlsx.xlsx"
+sha256 = "d0a52e57b23236cd2e8566aeca19a3c9012e24e34f49e179e520f9d5e606c251"
+bytes = 120743
+retrieved_at = 2026-05-03
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/DR036v42.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-036-v40"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_036/files/04-036-ejercicio-2021-y-siguientes-actualizado-11-04-2023-106-kb-xlsx.xlsx"
+sha256 = "2638409df538acdd6f1532accb8f111d4f702600026a71b577926756b4ed0fa6"
+bytes = 108655
+retrieved_at = 2026-05-03
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/DR036v40.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-036-v35"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_036/files/05-036-ejercicio-2021-y-siguientes-actualizado-13-05-2021-102-kb-xlsx.xlsx"
+sha256 = "fd9b1379b78f6bdcefd4d3392f224bbd9bbeb4c22a41d70ac391385366ff8d30"
+bytes = 104353
+retrieved_at = 2026-05-03
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/DR036v35.xlsx"
+review_status = "reviewed"
+
 [sources."aeat-modelo-036-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"

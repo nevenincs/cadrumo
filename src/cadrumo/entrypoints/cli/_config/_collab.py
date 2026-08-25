@@ -39,8 +39,8 @@ import typer
 
 from ....application.modelo import RecipientFingerprintRegistryRepository, public_key_hex_from_raw_bytes
 from ....core.i18n import tr
-from .._common import _emit_envelope
 from .._common import active_bucket_id_or_refuse as _active_bucket_id_or_refuse
+from .._common import emit_envelope
 from ._collab_payloads import (
     ConfigCollabRecipientAddResult,
     ConfigCollabRecipientListResult,
@@ -94,7 +94,7 @@ def collab_recipient_add(
         fingerprint_sha256=record.fingerprint_sha256,
         added_at=record.added_at,
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.collab.recipient.add",
         result=result,
@@ -124,7 +124,7 @@ def collab_recipient_list(ctx: typer.Context) -> None:
     result = ConfigCollabRecipientListResult(recipients=rows, count=len(rows))
     lines = [f"count\t{len(rows)}"]
     lines.extend(f"{row.recipient_id}\t{row.label}\t{row.fingerprint_sha256}" for row in rows)
-    _emit_envelope(ctx, command="config.collab.recipient.list", result=result, lines=lines)
+    emit_envelope(ctx, command="config.collab.recipient.list", result=result, lines=lines)
 
 
 def collab_recipient_remove(
@@ -136,7 +136,7 @@ def collab_recipient_remove(
     updated = registry.remove(recipient_id)
 
     result = ConfigCollabRecipientRemoveResult(recipient_id=recipient_id, remaining=len(updated.records))
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.collab.recipient.remove",
         result=result,

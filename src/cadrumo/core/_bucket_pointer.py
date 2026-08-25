@@ -1,30 +1,10 @@
-"""Strict pydantic v2 record for the active-profile pointer file.
+"""Strict current-only record for the active-profile pointer.
 
-The pointer file lives at ``<cadrumo-root>/active-profile`` and carries the
-canonical default for the active-profile precedence chain
-(flag > env > pointer). This record is the typed wrapper around the
-pointer file's plaintext content: :class:`BucketPointer`. The storage-layer
-term ``bucket`` is preserved on the record's ``bucket_id`` field because the
-bucket is the encrypted storage slice the operator profile sits on; the file's
-operator-visible name is ``active-profile`` to match the verb noun.
-
-The on-disk representation is single-document TOML keyed by
-``bucket_id`` and ``schema_version``. An atomic write-then-rename
-helper, :func:`write_pointer`, materialises the pointer; the
-:func:`resolve_active_bucket_id` resolver consumes it at startup. Invalid
-TOML and pydantic validation failures are deliberate hard failures for
-``read_pointer``; they are not treated as "no active profile" because that
-would silently fall back to root storage.
-
-This module is also distinct from the application-layer capsule scanners:
-:class:`~application.workflow.ProfileBucketPointer` records are derived from
-the committed custody capsule projection (``CommittedProfileRepository``,
-seeded by ``list_current_profile_custody_capsule_ids``) and prove registered
-profile metadata. A ``BucketPointer`` only names the intended active bucket;
-it does not prove the bucket exists, read a capsule, or validate lifecycle
-status. The companion :mod:`core._bucket_pointer_io` module owns the file
-boundary, while this module owns strict validation and deterministic
-serialisation only.
+The pointer is one durable, plaintext coordination record under the storage
+root. It names either a selected bucket or an explicit absence and carries the
+monotonic transition coordinate used by every pointer consumer. The record is
+not a profile manifest or a profile-lifecycle assertion: it only records the
+currently selected bucket.
 """
 
 from __future__ import annotations
@@ -32,84 +12,75 @@ from __future__ import annotations
 import tomllib
 from typing import Final, Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, model_validator
 
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .identity import BucketId
 
-#: Current on-disk schema version of the active-profile pointer document.
-#:
-#: Declared as a named constant so a reader has a name for the version the
-#: format sits at. The model below pins the same number as a ``Literal``,
-#: which is what actually refuses a foreign version at parse; a test asserts
-#: the two agree, so the constant cannot drift away from the constraint it
-#: describes.
-POINTER_SCHEMA_VERSION: Final[Literal[1]] = 1
+POINTER_SCHEMA_VERSION: Final[Literal[2]] = 2
 
 
 class BucketPointer(BaseModel):
-    """Plaintext pointer to the active bucket id.
+    """One strict active-profile selection and its durable transition revision.
 
-    The value object carries only ``bucket_id`` and ``schema_version``. It does
-    not read settings, open storage, inspect manifests, or resolve precedence;
-    those operations belong to :func:`read_pointer`, :func:`write_pointer`, and
-    :func:`resolve_active_bucket_id`.
-
-    ``schema_version`` is required and pinned, not bounded. A pointer claiming
-    a version this code does not implement -- older or newer -- names a
-    document format that is not this one, and the pointer is the file that
-    decides which encrypted bucket every subsequent read and write lands in, so
-    guessing at it is the failure worth refusing. Omitting the key is refused
-    for the same reason: a document that makes no version claim is not entitled
-    to be read as the current one, and every writer in the tree states it.
-
-    Attributes:
-        bucket_id: Encrypted profile bucket id selected by the pointer.
-        schema_version: Pointer document schema version, exactly
-            :data:`POINTER_SCHEMA_VERSION`.
+    ``selection`` is deliberately explicit because TOML has no null scalar.
+    A selected record carries exactly one bucket id; an absent record is the
+    persisted tombstone written by clear. The physically absent initial file
+    observes as an absent record at revision zero and is never accepted as an
+    on-disk compatibility format.
     """
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: BucketId
-    schema_version: Literal[1]
+    selection: Literal["absent", "selected"]
+    bucket_id: BucketId | None = None
+    transition_revision: int = Field(ge=0)
+    schema_version: Literal[2]
+
+    @model_validator(mode="after")
+    def _validate_selection(self) -> BucketPointer:
+        if (self.selection == "selected") != (self.bucket_id is not None):
+            raise ValueError("pointer selection and bucket id must agree")
+        return self
+
+    @classmethod
+    def absent(cls, *, transition_revision: int) -> BucketPointer:
+        """Construct the explicit absent-selection tombstone."""
+        return cls(
+            selection="absent",
+            bucket_id=None,
+            transition_revision=transition_revision,
+            schema_version=POINTER_SCHEMA_VERSION,
+        )
+
+    @classmethod
+    def selected(cls, *, bucket_id: str, transition_revision: int) -> BucketPointer:
+        """Construct one selected current-format record."""
+        return cls(
+            selection="selected",
+            bucket_id=bucket_id,
+            transition_revision=transition_revision,
+            schema_version=POINTER_SCHEMA_VERSION,
+        )
 
     def to_toml(self) -> str:
-        """Serialise the pointer to its single-document TOML representation.
-
-        Emits a deterministic two-line document keyed by ``bucket_id`` and
-        ``schema_version``. The output ends with a trailing newline so the
-        atomic write-then-rename helper produces a POSIX-clean file. The inverse
-        parser is :meth:`from_toml`.
-        """
-        # Hand-formatted to keep the dependency footprint minimal and the
-        # output deterministic; the format is fixed at two scalar keys.
-        bucket_id_escaped = self.bucket_id.replace("\\", "\\\\").replace('"', '\\"')
-        return f'bucket_id = "{bucket_id_escaped}"\nschema_version = {self.schema_version}\n'
+        """Return the deterministic strict current-format TOML payload."""
+        lines = [f'selection = "{self.selection}"']
+        if self.bucket_id is not None:
+            bucket_id_escaped = self.bucket_id.replace("\\", "\\\\").replace('"', '\\"')
+            lines.append(f'bucket_id = "{bucket_id_escaped}"')
+        lines.extend(
+            (
+                f"transition_revision = {self.transition_revision}",
+                f"schema_version = {self.schema_version}",
+            )
+        )
+        return "\n".join(lines) + "\n"
 
     @classmethod
     def from_toml(cls, text: str) -> BucketPointer:
-        """Parse the single-document TOML representation back into a record.
-
-        The parser accepts the exact schema emitted by :meth:`to_toml` and then
-        delegates to pydantic validation, so unknown keys, blank bucket ids, a
-        schema version that is not the current one, and a document omitting the
-        version outright all fail before pointer IO can accept the file.
-
-        Args:
-            text: Raw TOML string to parse, expected to carry
-                ``bucket_id`` and ``schema_version`` scalar keys.
-
-        Returns:
-            A validated :class:`BucketPointer` instance.
-
-        Raises:
-            tomllib.TOMLDecodeError: If ``text`` is not valid TOML.
-            pydantic.ValidationError: If the TOML payload violates the strict
-                pointer schema.
-        """
-        payload = tomllib.loads(text)
-        return cls.model_validate(payload)
+        """Strictly parse a current-format pointer record."""
+        return cls.model_validate(tomllib.loads(text))
 
 
 __all__ = ["POINTER_SCHEMA_VERSION", "BucketPointer"]

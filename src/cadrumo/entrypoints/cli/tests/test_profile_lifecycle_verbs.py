@@ -513,10 +513,10 @@ def test_show_and_status_do_not_contradict_on_a_registered_profile() -> None:
 def test_config_profile_show_refuses_when_no_active_profile(_isolated_backend: Path) -> None:
     # Clear the active-profile precedence chain (env + pointer) so the
     # resolver returns None and the show verb refuses.
-    from ....core import clear_pointer
+    from ....core import BucketPointer, write_pointer
     from ....core.config import override_settings
 
-    clear_pointer(_isolated_backend)
+    write_pointer(_isolated_backend, BucketPointer.absent(transition_revision=1))
     with override_settings(cadrumo_active_profile=None):
         result = _invoke_profile(("show",))
     assert result.exit_code != 0
@@ -581,7 +581,7 @@ def test_config_profile_status_exits_nonzero_for_dangling_pointer(_isolated_back
     from ....core import BucketPointer, write_pointer
 
     # Write a pointer to a non-existent bucket so status sees dangling_pointer.
-    write_pointer(_isolated_backend, BucketPointer(bucket_id="phantom", schema_version=1))
+    write_pointer(_isolated_backend, BucketPointer.selected(bucket_id="phantom", transition_revision=1))
 
     result = _invoke_profile(("status",))
 

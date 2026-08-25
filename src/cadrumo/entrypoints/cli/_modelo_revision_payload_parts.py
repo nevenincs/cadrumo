@@ -11,7 +11,7 @@ They are not direct CommandSpec result targets on their own; graph-declared
 :class:`WorkObservationsResult`,
 and :class:`WorkCalculateResult` models
 carry them into :class:`SchemaEnvelope` through
-:func:`_emit_envelope`.
+:func:`emit_envelope`.
 """
 
 from __future__ import annotations

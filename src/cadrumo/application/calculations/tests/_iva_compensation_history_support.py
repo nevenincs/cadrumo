@@ -57,12 +57,17 @@ _M303_PRINTED_PERIOD_RESULT_REFERENCE_CASILLA: CasillaId = validated_casilla_id(
 _M303_PRINTED_COMPENSATION_REFERENCE_CASILLA: CasillaId = validated_casilla_id("87")
 _M390_PRINTED_LAST_PERIOD_COMPENSATION_REFERENCE_CASILLA: CasillaId = validated_casilla_id("97")
 
+#: The ejercicio these fixtures summarise. Modelo 390 is annual, so the
+#: ejercicio must be one AEAT has published a design for; the annual instrument
+#: for a given ejercicio appears late in that same year.
+_M390_EJERCICIO = 2025
+
 _BOX_97_BINDING = "modelo-390-prev-303-compensacion-ultimo-periodo"
 _BOX_662_BINDING = "modelo-390-prev-303-compensacion-generada-ejercicio-no-97"
 
 
 @cache
-def _modelo_390_2026_snapshot() -> RegistrySnapshot:
+def _modelo_390_annual_snapshot() -> RegistrySnapshot:
     """Build a CALCULATION-grade snapshot directly, bypassing filing-grade admission.
 
     Modelo 390 carries a real fichero-BOE layout on every revision, so this
@@ -77,7 +82,7 @@ def _modelo_390_2026_snapshot() -> RegistrySnapshot:
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2026,
+        filing_year=_M390_EJERCICIO,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )

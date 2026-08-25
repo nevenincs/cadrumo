@@ -17,7 +17,7 @@ from ...application.live import VerifySurface, VerifyVerdict
 from ...core.i18n import tr
 from ...core.identity import tax_id_identity_token
 from ...core.time import now
-from ._common import _emit_envelope, active_bucket_id_or_refuse
+from ._common import active_bucket_id_or_refuse, emit_envelope
 
 
 class _VerifyRow(TypedDict):
@@ -65,7 +65,7 @@ def verify_list(
     checks, and are emitted through :class:`VerifyListResult`.
     """
     from ...application.live import VerifyService
-    from ._app_live_payloads import VerifyListResult, VerifyObservationSummaryPayload
+    from ._app_live_verify_payloads import VerifyListResult, VerifyObservationSummaryPayload
 
     bucket_id = _bucket_id()
     rows = VerifyService().list_observations(
@@ -81,7 +81,7 @@ def verify_list(
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     for r in rows:
         lines.append(f"{r.observation_id}\t{r.surface.value}\t{r.nif}\t{r.verdict}\t{r.checked_at.isoformat()}")
-    _emit_envelope(ctx, command="app.live.verify.list", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.verify.list", result=result, lines=lines)
 
 
 def verify_show(
@@ -95,13 +95,13 @@ def verify_show(
     shape as ``aeat app live verify list``.
     """
     from ...application.live import VerifyService
-    from ._app_live_payloads import VerifyViewResult
+    from ._app_live_verify_payloads import VerifyViewResult
 
     bucket_id = _bucket_id()
     record = VerifyService().show(bucket_id=bucket_id, observation_id=observation_id)
     result = VerifyViewResult(bucket_id=bucket_id, **_verify_row(record))
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
-    _emit_envelope(ctx, command="app.live.verify.view", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.verify.view", result=result, lines=lines)
 
 
 def verify_latest(
@@ -117,7 +117,7 @@ def verify_latest(
     ``observation_id=None``.
     """
     from ...application.live import VerifyService
-    from ._app_live_payloads import VerifyLatestResult
+    from ._app_live_verify_payloads import VerifyLatestResult
 
     bucket_id = _bucket_id()
     record = VerifyService().latest_for_nif(
@@ -132,7 +132,7 @@ def verify_latest(
             nif=nif,
             observation_id=None,
         )
-        _emit_envelope(
+        emit_envelope(
             ctx,
             command="app.live.verify.latest",
             result=empty,
@@ -146,7 +146,7 @@ def verify_latest(
         return
     result = VerifyLatestResult(bucket_id=bucket_id, **_verify_row(record))
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
-    _emit_envelope(ctx, command="app.live.verify.latest", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.verify.latest", result=result, lines=lines)
 
 
 def verify_nif_iva(
@@ -164,7 +164,7 @@ def verify_nif_iva(
     from ...application.live import VerifyService
     from ...core.access_gate import AeatAccessGate
     from ...core.config import load_settings
-    from ._app_live_payloads import VerifyNifIvaResult
+    from ._app_live_verify_payloads import VerifyNifIvaResult
 
     settings = load_settings()
     AeatAccessGate(settings).require_live_read()
@@ -187,7 +187,7 @@ def verify_nif_iva(
     )
     result = VerifyNifIvaResult(bucket_id=bucket_id, **_verify_row(record))
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
-    _emit_envelope(ctx, command="app.live.verify.nif_iva", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.verify.nif_iva", result=result, lines=lines)
 
 
 def verify_tgvi(
@@ -205,7 +205,7 @@ def verify_tgvi(
     from ...application.live import VerifyService
     from ...core.access_gate import AeatAccessGate
     from ...core.config import load_settings
-    from ._app_live_payloads import VerifyTgviResult
+    from ._app_live_verify_payloads import VerifyTgviResult
 
     settings = load_settings()
     AeatAccessGate(settings).require_live_read()
@@ -228,7 +228,7 @@ def verify_tgvi(
     )
     result = VerifyTgviResult(bucket_id=bucket_id, **_verify_row(record))
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
-    _emit_envelope(ctx, command="app.live.verify.tgvi", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.verify.tgvi", result=result, lines=lines)
 
 
 __all__ = ["verify_latest", "verify_list", "verify_nif_iva", "verify_show", "verify_tgvi"]

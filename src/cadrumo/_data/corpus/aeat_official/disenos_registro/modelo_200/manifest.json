@@ -14,7 +14,7 @@
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
   ],
-  "artefact_count": 18,
+  "artefact_count": 17,
   "artefacts": [
     {
       "modelo": "200",
@@ -26,18 +26,6 @@
       "content_type": "application/vnd.ms-excel",
       "bytes": 11527168,
       "sha256": "92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509",
-      "retrieved_at": "2026-07-21"
-    },
-    {
-      "modelo": "200",
-      "title": "200 - 01-200-ejercicio-2025-10-9-mb-xls.xlsx",
-      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
-      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR200e25.xls",
-      "stored_path": "files/01-200-ejercicio-2025-10-9-mb-xls.xlsx",
-      "original_filename": "01-200-ejercicio-2025-10-9-mb-xls.xlsx",
-      "content_type": "application/octet-stream",
-      "bytes": 2316549,
-      "sha256": "a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505",
       "retrieved_at": "2026-07-21"
     },
     {

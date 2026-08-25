@@ -98,7 +98,7 @@ def publish_capsule_and_pointer(root: Path) -> None:
         )
     finally:
         session.close()
-    write_pointer(root, BucketPointer(bucket_id=PROFILE_ID, schema_version=1))
+    write_pointer(root, BucketPointer.selected(bucket_id=PROFILE_ID, transition_revision=1))
 
 
 __all__ = [

@@ -5,7 +5,7 @@ Every declared payload is an
 production-authored CommandSpec as deferred public schema targets for the ledger rule
 command JSON-contract surface carried by
 :class:`SchemaEnvelope` through
-:func:`_emit_envelope`. These schemas are the CLI projection of the secure,
+:func:`emit_envelope`. These schemas are the CLI projection of the secure,
 profile-local rule engine: persisted :class:`LedgerClassificationRule` records
 are listed and added through :mod:`_ledger_rules_cli`, while
 :func:`apply_classification_rules` owns live mutation semantics. The parent

@@ -37,71 +37,17 @@ flows:
     unlock_button: Inicia la sessió
   manager:
     action:
-      abandoned: Sense canvis.
-      add_row: Afegir una fila
-      add_row_done: S'ha afegit la fila %{index} de %{section}.
-      add_row_incomplete: A la fila li manquen dades obligatòries, així que no s'ha
-        desat res.
-      add_row_none: Aquest esquema de perfil no declara cap secció amb files.
-      add_row_required: És obligatori; la fila no es pot afegir sense aquesta dada.
-      add_row_section: A quina secció s'afegeix
-      auth_clave_incomplete: A Cl@ve encara li falta %{missing}. No s'ha desat res.
       auth_clave_movil_route_app_request: Sol·licitud a l'aplicació
       auth_clave_movil_route_qr: Codi QR
-      auth_contraste_missing: 'La sol·licitud a l''aplicació de Cl@ve Mòbil necessita
-        una dada de contrast del document: %{nie_field} per a un NIE o %{dni_field}
-        per a un DNI. Obriu Identificació, empleneu el camp aplicable i torneu a intentar
-        la sincronització.'
-      auth_fecha_validez_invalid: Introduïu la data de validesa com a AAAA-MM-DD,
-        per exemple 1990-01-31.
-      auth_tax_id_invalid: Aquest NIF o NIE no és vàlid. Comproveu la lletra final
-        i introduïu-lo tal com figura al vostre document, per exemple 12345678Z.
       busy: Encara hi ha una altra operació en curs. Espera que acabi.
-      censal_pull: Emplenar amb les dades censals de l'AEAT
-      censal_pull_auth_incomplete: La vostra identificació és incompleta, així que
-        encara no es pot llegir l'AEAT. Completeu-la primer.
-      censal_pull_no_provider: Trieu com us identifiqueu davant l'AEAT abans de llegir
-        les vostres dades censals.
-      censal_pull_review_applied: S'ha aplicat la proposta censal exacta revisada
-        de l'AEAT.
-      censal_pull_review_rejected: S'ha rebutjat la proposta censal revisada de l'AEAT;
-        el perfil no ha canviat.
-      certificate: Certificat
-      certificate_active: Certificat actiu
-      certificate_done: 'Identificació: %{provider}; certificat actiu: %{name}.'
-      export: Exportar còpia
-      export_destination: Ruta del fitxer de destinació
-      export_done: Còpia xifrada escrita a %{destination}. Aquest producte no la pot
-        reimportar; utilitza 'aeat config profile archive export' per a una còpia
-        restaurable.
-      export_passphrase: Contrasenya que protegirà la còpia
       failed: L'operació no s'ha completat.
-      filed_history_pull_all: Recollir l'historial de declaracions de l'AEAT
-      filed_history_pull_all_done: '{captured} declaració(ns) capturada(es), {refused}
-        rebutjada(es); cartera d''IVA: {iva_wallet_status}; notificacions: {notificaciones_status}.'
-      filed_history_pull_all_refused: 'No s''han pogut llegir aquests parells i NO
-        s''han declarat buits: {pairs}. Torneu a executar per reintentar-ho.'
-      google_export: Exportar a Google Sheets
-      google_export_done: Model %{modelo} exportat a %{spreadsheet_url}.
-      google_export_modelo: Model
-      google_export_period: Període
-      google_export_year: Any
-      google_export_year_invalid: Introdueix un any entre 2000 i 2099.
       logout: Tanca la sessió
       logout_done: Sessió tancada.
-      provider:
-        certificate: Certificat electrònic
-        clave_movil: Cl@ve Mòbil
-        clave_permanente: Cl@ve Permanent
       working: S'està executant {action}...
     actions:
       section: Accions
     censal_review:
       apply: Aplica aquesta proposta exacta
-      decision: Decisió
-      reject: Rebutja sense modificar el perfil
-      required: Trieu aplicar o rebutjar.
-      title: Reviseu la proposta censal exacta de l'AEAT
     choice_unavailable: Opció no disponible
     column:
       field: Camp
@@ -112,15 +58,6 @@ flows:
       clear: Esborra
       masked_kept: Aquest valor està ocult, per això el camp comença buit. Deixa'l
         buit per conservar el valor desat o escriu-ne un de nou per substituir-lo.
-      refused:
-        boolean: '''%{value}'' no és una resposta de sí o no. Respon Sí o No.'
-        date: '''%{value}'' no és una data. Fes servir el format AAAA-MM-DD - per
-          exemple 1978-03-15.'
-        email: '''%{value}'' no és una adreça de correu electrònic. Introdueix-ne
-          una amb la forma nom@exemple.com.'
-        enum: '''%{value}'' no s''accepta aquí. Tria''n un de: %{accepted}.'
-        numeric: '''%{value}'' no és un nombre que aquest camp accepti%{accepted}.
-          Introdueix un nombre, amb punt per als decimals.'
       required_blank: '{field} és obligatori, així que no pot quedar en blanc. Introdueix
         un valor o cancel·la per deixar-lo sense canvis.'
       save: Desa
@@ -137,8 +74,6 @@ flows:
     language:
       unavailable: Aquest perfil no ofereix cap configuració d'idioma.
     namespace_detail: detall {number}
-    next_step_modelo: Les dades declarades d'aquest perfil el dirigeixen al Model
-      {modelo}.
     required_field_unavailable: Camp obligatori del perfil
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'

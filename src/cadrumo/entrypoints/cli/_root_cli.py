@@ -90,12 +90,12 @@ def app_root(ctx: typer.Context, help_: bool = False) -> None:
         enforce_tui_request(ctx, spec=COMMAND_GRAPH.by_key()["app"])
         from ...application.operator_surface import build_help_document, render_help_text
         from ...core.json_contract import strict_round_trip
-        from ._common import _emit_envelope
+        from ._common import emit_envelope
         from ._root_payloads import AppRootResult
 
         document = build_help_document("app")
         typed_app = strict_round_trip(AppRootResult, document)
-        _emit_envelope(ctx, command="root.app", result=typed_app, lines=render_help_text(document).splitlines())
+        emit_envelope(ctx, command="root.app", result=typed_app, lines=render_help_text(document).splitlines())
         raise typer.Exit()
 
 

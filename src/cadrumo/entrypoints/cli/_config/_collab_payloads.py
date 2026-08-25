@@ -18,7 +18,7 @@ See Also:
         Deferred public target that owns each command envelope schema.
     :mod:`~entrypoints.cli._config._collab`
         Command handlers that emit these payloads.
-    :func:`~entrypoints.cli._common._emit_envelope`
+    :func:`~entrypoints.cli._common.emit_envelope`
         CLI envelope renderer used after the payloads are populated.
 """
 

@@ -165,7 +165,6 @@ def test_registration_retires_the_profile_it_displaces_without_waiting_for_a_log
         entering = _register_in_separate_process(storage_root, "Displacement Two", _PASSWORD_ENTERING)["profile_id"]
 
         selected = read_pointer(storage_root)
-        assert selected is not None
         assert selected.bucket_id == entering, "creation is expected to select the new capsule"
 
         _assert_no_resumable_material(
@@ -208,12 +207,11 @@ def test_a_registration_that_displaces_nothing_still_publishes_its_profile(
     one would refuse the profile-creation door outright.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        assert read_pointer(storage_root) is None
+        assert read_pointer(storage_root).bucket_id is None
 
         first = _register_in_separate_process(storage_root, "Unopposed One", _PASSWORD_DISPLACED)
 
         selected = read_pointer(storage_root)
-        assert selected is not None
         assert selected.bucket_id == first["profile_id"]
         assert first["label"] == "Unopposed One"
 
@@ -288,7 +286,6 @@ def test_a_retirement_that_cannot_complete_refuses_the_registration_in_its_own_w
         assert refusal["translated_message"] != "application.user_profile.errors.profile_already_exists"
 
         selected = read_pointer(storage_root)
-        assert selected is not None
         assert selected.bucket_id == displaced, (
             "a refused retirement must leave the pointer on the profile it failed to retire"
         )

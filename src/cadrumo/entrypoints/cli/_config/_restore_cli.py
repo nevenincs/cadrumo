@@ -47,8 +47,8 @@ from pydantic import SecretStr
 
 from ....core.i18n import OutputLanguage, tr
 from ....core.json_contract import Notice, NoticeSeverity
-from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
+from .._common import emit_envelope
 from ._secure_input import MachineSecretPayload, MachineSecretSelection
 
 if TYPE_CHECKING:
@@ -182,7 +182,7 @@ def profile_restore(
             ),
         )
 
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.profile.restore",
         result=ConfigProfileRestoreResult(

@@ -6,7 +6,7 @@ This module wires filed-declaration commands through :func:`list_filed_data`,
 delegates IVA-wallet and subgroup command families to live application services.
 It emits graph-declared payload schemas such as :class:`FiledListResult`,
 :class:`FiledCaptureResult`, and :class:`FiledCaptureSourcesResult` through
-:func:`_emit_envelope`. The commands collect or render local evidence only; live
+:func:`emit_envelope`. The commands collect or render local evidence only; live
 submission, payment, acknowledgement, and representative write actions remain
 outside this CLI surface.
 
@@ -64,7 +64,7 @@ from ...domain.iva_compensation import IvaCompensationDecisionReason
 from ._app_live_auth_preflight import _emit_live_auth_preflight
 from ._app_live_rendering import _filed_capture_lines, _metric_line, _source_filed_capture_lines
 from ._common import (
-    _emit_envelope,
+    emit_envelope,
     notice_lines,
     resolve_notice_action,
     resolve_optional_root,
@@ -176,7 +176,7 @@ def iva_wallet_pull_cmd(
             taxpayer_nif=taxpayer_nif,
         ),
     )
-    from ._app_live_payloads import IvaWalletPullResult
+    from ._app_live_iva_wallet_payloads import IvaWalletPullResult
 
     result = IvaWalletPullResult(
         taxpayer_ref=report.taxpayer_ref,
@@ -193,7 +193,7 @@ def iva_wallet_pull_cmd(
         blocked=report.blocked,
         captured_at=report.captured_at.isoformat(),
     )
-    _emit_envelope(ctx, command="app.live.iva_wallet.pull", result=result, lines=_iva_wallet_pull_lines(report))
+    emit_envelope(ctx, command="app.live.iva_wallet.pull", result=result, lines=_iva_wallet_pull_lines(report))
 
 
 def _iva_wallet_pull_lines(report: IvaWalletCaptureReport) -> tuple[str, ...]:
@@ -231,11 +231,11 @@ def iva_wallet_history_cmd(
 
     report = list_iva_compensation_history(as_of_year=as_of_year)
     result = _iva_wallet_history_result(report)
-    _emit_envelope(ctx, command="app.live.iva_wallet.history", result=result, lines=_iva_wallet_history_lines(report))
+    emit_envelope(ctx, command="app.live.iva_wallet.history", result=result, lines=_iva_wallet_history_lines(report))
 
 
 def _iva_wallet_history_result(report: IvaCompensationHistoryReport) -> Any:
-    from ._app_live_payloads import (
+    from ._app_live_iva_wallet_payloads import (
         IvaCompensationCarryForwardLotPayload,
         IvaCompensationHistoryRowPayload,
         IvaWalletAuthorityDecisionPayload,
@@ -478,7 +478,7 @@ def iva_wallet_pull_history_cmd(
         _metric_line("failed_declaration_count", report.failed_declaration_count),
         _metric_line("output_root", report.output_root),
     )
-    from ._app_live_payloads import IvaWalletCaptureHistoryResult
+    from ._app_live_iva_wallet_payloads import IvaWalletCaptureHistoryResult
 
     result = IvaWalletCaptureHistoryResult(
         output_root=report.output_root,
@@ -494,7 +494,7 @@ def iva_wallet_pull_history_cmd(
         failed_declaration_count=report.failed_declaration_count,
         failed_declarations=list(report.failed_declarations),
     )
-    _emit_envelope(ctx, command="app.live.iva_wallet.pull_history", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.iva_wallet.pull_history", result=result, lines=lines)
 
 
 def iva_wallet_pull_evidence_cmd(
@@ -534,7 +534,7 @@ def iva_wallet_pull_evidence_cmd(
             timeout_ms=_live_iva_evidence_pull_command_timeout_ms(year_from=year_from, year_to=year_to),
         ),
     )
-    from ._app_live_payloads import (
+    from ._app_live_iva_wallet_payloads import (
         IvaWalletPullEvidenceResult,
         LiveIvaAuthOutcomePayload,
         LiveIvaSurfaceOutcomePayload,
@@ -573,7 +573,7 @@ def iva_wallet_pull_evidence_cmd(
             for outcome in report.outcomes
         ],
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="app.live.iva_wallet.pull_evidence",
         result=result,
@@ -904,7 +904,7 @@ def filed_list_cmd(
         rows=rows,
         failures=failures,
     )
-    _emit_envelope(ctx, command="app.live.filed.list", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.filed.list", result=result, lines=lines)
 
 
 def _filed_list_result_and_lines(
@@ -916,7 +916,7 @@ def _filed_list_result_and_lines(
     rows: Sequence[FiledDataListingRow],
     failures: Sequence[FiledDataCaptureFailureRow],
 ) -> tuple[Any, tuple[str, ...]]:
-    from ._app_live_payloads import FiledCaptureFailurePayload, FiledListingRowPayload, FiledListResult
+    from ._app_live_filed_payloads import FiledCaptureFailurePayload, FiledListingRowPayload, FiledListResult
 
     lines = [_metric_line("row_count", row_count), _metric_line("failed_count", len(failures))]
     for row in rows:
@@ -1006,7 +1006,7 @@ def filed_discover_cmd(ctx: typer.Context) -> None:
     profile = _active_taxpayer_profile_or_none()
     report = asyncio.run(discover_filed_history(profile=profile))
     result, lines = _filed_discover_result_and_lines(report)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="app.live.filed.discover",
         result=result,
@@ -1033,7 +1033,7 @@ def _active_taxpayer_profile_or_none() -> TaxpayerProfile | None:
 
 
 def _filed_discover_result_and_lines(report: FiledHistoryDiscoveryReport) -> tuple[Any, tuple[str, ...]]:
-    from ._app_live_payloads import FiledDiscoverResult, FiledHistoryDiscoveryPairPayload
+    from ._app_live_filed_payloads import FiledDiscoverResult, FiledHistoryDiscoveryPairPayload
 
     lines = [
         _metric_line("pair_count", len(report.pairs)),
@@ -1142,7 +1142,7 @@ def filed_pull_all_cmd(
     )
     result, lines = _filed_pull_all_result_and_lines(run)
     notices = _filed_pull_all_notices(run, limit=limit)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="app.live.filed.pull_all",
         result=result,
@@ -1152,7 +1152,7 @@ def filed_pull_all_cmd(
 
 
 def _filed_pull_all_result_and_lines(run: FiledHistoryOnboardingRun) -> tuple[Any, tuple[str, ...]]:
-    from ._app_live_payloads import FiledHistoryOnboardingResult, FiledHistoryPairOutcomePayload
+    from ._app_live_filed_payloads import FiledHistoryOnboardingResult, FiledHistoryPairOutcomePayload
 
     refused = run.refused_pairs
     empty = run.genuinely_empty_pairs
@@ -1338,7 +1338,7 @@ def _emit_single_filed_pull(
 ) -> None:
     """Capture and emit one modelo/year filed-declaration report."""
     from ...core.config import load_settings
-    from ._app_live_payloads import FiledCaptureResult
+    from ._app_live_filed_payloads import FiledCaptureResult
 
     resolved_period = _live_period_option(period, year=year)
     report = asyncio.run(
@@ -1370,7 +1370,7 @@ def _emit_single_filed_pull(
         calculation_observation_keys=list(report.calculation_observation_keys),
     )
     notices = _filed_capture_notices(report, limit=limit)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="app.live.filed.pull",
         result=result,
@@ -1392,7 +1392,7 @@ def _emit_bulk_filed_pull(
 ) -> None:
     """Capture and emit a bulk filed-declaration report."""
     from ...core.config import load_settings
-    from ._app_live_payloads import FiledCaptureFailurePayload, FiledCaptureResult
+    from ._app_live_filed_payloads import FiledCaptureFailurePayload, FiledCaptureResult
 
     resolved_from, resolved_to = resolve_pull_year_range(year=year, year_from=year_from, year_to=year_to)
     report = asyncio.run(
@@ -1454,7 +1454,7 @@ def _emit_bulk_filed_pull(
     if skipped is not None:
         lines = (*lines, skipped.message)
         notices.append(skipped)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="app.live.filed.pull",
         result=result,
@@ -1581,7 +1581,7 @@ def filed_pull_sources_cmd(
     command does not submit or mutate AEAT state.
     """
     from ...core.config import load_settings
-    from ._app_live_payloads import FiledCaptureSourcesResult
+    from ._app_live_filed_payloads import FiledCaptureSourcesResult
 
     _emit_live_auth_preflight()
     report = asyncio.run(
@@ -1614,7 +1614,7 @@ def filed_pull_sources_cmd(
         calculation_observation_keys=list(report.calculation_observation_keys),
     )
     notices = _filed_capture_notices(report)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="app.live.filed.pull_sources",
         result=result,

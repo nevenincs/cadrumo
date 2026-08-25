@@ -3280,18 +3280,30 @@ def _snapshot_pdf_page(page: Page) -> _PdfPageSnapshot:
             )
             for word in page.extract_words()
         ),
-        rects=tuple(
-            _PdfRect(
-                x0=float(rect["x0"]),
-                x1=float(rect["x1"]),
-                top=float(rect["top"]),
-                bottom=float(rect["bottom"]),
-                width=float(rect["width"]),
-                height=float(rect["height"]),
-                fill=rect.get("non_stroking_color"),
-            )
-            for rect in page.rects
-        ),
+        rects=_snapshot_pdf_chart_rects(page),
+    )
+
+
+def _snapshot_pdf_chart_rects(page: Page) -> tuple[_PdfRect, ...]:
+    """Return the painted geometry a visual record-design chart can use.
+
+    AEAT's older diagram PDFs encode the same filled horizontal field rule as
+    either a PDF rectangle or a closed PDF curve, depending on the producer.
+    The visual reader consumes only thin, black, horizontal geometry later; it
+    must therefore preserve both source representations here.  This remains a
+    physical-document normalisation, not a modelo-specific recovery.
+    """
+    return tuple(
+        _PdfRect(
+            x0=float(shape["x0"]),
+            x1=float(shape["x1"]),
+            top=float(shape["top"]),
+            bottom=float(shape["bottom"]),
+            width=float(shape["width"]),
+            height=float(shape["height"]),
+            fill=shape.get("non_stroking_color"),
+        )
+        for shape in (*page.rects, *page.curves)
     )
 
 
@@ -4465,14 +4477,28 @@ def _visual_chart_rules_for_number_row(
     horizontal_rules: tuple[_PdfRect, ...],
     number_top: float,
 ) -> tuple[_PdfRect, ...]:
-    grouped_rules: dict[float, list[_PdfRect]] = {}
-    for rule in horizontal_rules:
-        if 0 < number_top - rule.top <= 30:
-            grouped_rules.setdefault(round(rule.top, 1), []).append(rule)
-    if not grouped_rules:
+    candidate_rules = tuple(rule for rule in horizontal_rules if 0 < number_top - rule.top <= 30)
+    if not candidate_rules:
         return ()
-    rule_top = max(grouped_rules)
-    return tuple(sorted(grouped_rules[rule_top], key=lambda rule: rule.x0))
+    # A single printed rule band may arrive as adjacent PDF shapes whose
+    # vertical bounds overlap without sharing an identical ``top`` coordinate.
+    # Select the physical band nearest the number ruler by overlap, rather than
+    # rounding coordinates and silently dropping the offset segments that a
+    # producer represented a few tenths of a point differently.
+    nearest = max(candidate_rules, key=lambda rule: rule.top)
+    band_top = nearest.top
+    band_bottom = nearest.bottom
+    band: list[_PdfRect] = []
+    while True:
+        expanded = tuple(rule for rule in candidate_rules if rule.bottom >= band_top and rule.top <= band_bottom)
+        expanded_top = min(rule.top for rule in expanded)
+        expanded_bottom = max(rule.bottom for rule in expanded)
+        if expanded_top == band_top and expanded_bottom == band_bottom:
+            band = list(expanded)
+            break
+        band_top = expanded_top
+        band_bottom = expanded_bottom
+    return tuple(sorted(band, key=lambda rule: rule.x0))
 
 
 def _visual_chart_description(

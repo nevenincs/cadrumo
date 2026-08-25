@@ -1009,7 +1009,7 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
     settings = load_settings()
     write_pointer(
         settings.cadrumo_local_storage_root,
-        BucketPointer(bucket_id=_BUCKET_ID, schema_version=1),
+        BucketPointer.selected(bucket_id=_BUCKET_ID, transition_revision=1),
     )
     with override_settings(cadrumo_active_profile=None):
         with active_auth_projection_span(requested_provider=AuthProviderKind.CERTIFICATE.value) as snapshot:
@@ -1018,7 +1018,7 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
             assert snapshot.certificate_credentials is not None
             write_pointer(
                 settings.cadrumo_local_storage_root,
-                BucketPointer(bucket_id=_BUCKET_B, schema_version=1),
+                BucketPointer.selected(bucket_id=_BUCKET_B, transition_revision=2),
             )
             state_after_pointer_change = workflow_state_repository().load()
             credentials_after_pointer_change = resolve_active_certificate_credentials()

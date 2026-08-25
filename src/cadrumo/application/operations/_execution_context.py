@@ -6,30 +6,33 @@ from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from datetime import datetime
 
-from ...core import OperationEffect, OperationLifecycle
-from ...core.async_cleanup import AsyncCloseable
-from ...core.errors import CoreValidationError
-from ._capabilities import OperationOwnedResource
-from ._events import (
-    OperationDiagnosticReference,
-    OperationEventCode,
-    OperationLogSeverity,
-)
-from ._interactions import OperationPendingInteraction
-from ._models import OperationId
-from ._registry import OperationRegistry
-from .persistence import (
+from cadrumo.application.operations.persistence.events import (
     OperationDiagnosticEvent,
     OperationEffectEvent,
     OperationEvent,
     OperationInteractionEvent,
     OperationLogRecord,
     OperationNoticeEvent,
-    OperationPersistedSnapshot,
     OperationPhaseEvent,
     OperationProgressEvent,
+)
+from cadrumo.application.operations.persistence.journal import (
+    OperationPersistedSnapshot,
     OperationSecureReferenceStore,
 )
+
+from ...core import OperationEffect, OperationLifecycle
+from ...core.async_cleanup import AsyncCloseable
+from ...core.errors import CoreValidationError
+from .capabilities import OperationOwnedResource
+from .events import (
+    OperationDiagnosticReference,
+    OperationEventCode,
+    OperationLogSeverity,
+)
+from .interactions import OperationPendingInteraction
+from .models import OperationId
+from .registry import OperationRegistry
 
 
 class OperationDeclarationError(CoreValidationError):

@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.operations import (
+from cadrumo.adapters.persistence.operations.secure_references import (
     OPERATION_SECURE_REFERENCE_NAMESPACE,
     operation_secure_reference_repository,
 )
@@ -18,7 +18,7 @@ from ....adapters.persistence.storage import RepositoryError
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
-from ...operations import OperationRequest
+from cadrumo.application.operations.models import OperationRequest
 from .._censal_observation import CensalObservation, CensalObservationAddress, CensalObservationIdentity
 from .._censal_operation import (
     CENSAL_OPERATION_DEFINITION,

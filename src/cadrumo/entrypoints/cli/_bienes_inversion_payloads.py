@@ -2,7 +2,7 @@
 
 Each result model is a strict
 :class:`OutputSchema` subclass referenced as a deferred public target under a
-stable ``command`` key so the ``_emit_envelope`` spine and the JSON-schema
+stable ``command`` key so the ``emit_envelope`` spine and the JSON-schema
 conformance gate bind the ``aeat app ledger bienes-inversion`` leaves to a schema.
 """
 

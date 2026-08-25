@@ -2,7 +2,7 @@
 
 Every declared payload is an :class:`OutputSchema` subclass referenced by
 production-authored CommandSpec as deferred public schema targets for the local-only run-health diagnostic surface
-carried by :class:`SchemaEnvelope` through :func:`_emit_envelope`. These
+carried by :class:`SchemaEnvelope` through :func:`emit_envelope`. These
 schemas project :class:`~application.diagnostics_run_health.RunHealthReport`,
 :class:`~application.diagnostics_run_health.LatencyReport`,
 :class:`~application.diagnostics_run_health.ErrorsBreakdownReport`, and

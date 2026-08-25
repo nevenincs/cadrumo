@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import typer
 
-from .._common import _emit_envelope
+from .._common import emit_envelope
 from .._config_payloads import (
     ConfigResetOperationPayload,
     ConfigResetResumeResult,
@@ -90,7 +90,7 @@ def config_reset_start(
         retention_override_reason=reason,
     )
     projection = ConfigResetOperationPayload.from_operation(operation)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.reset.start",
         result=ConfigResetStartResult(operation=projection),
@@ -107,7 +107,7 @@ def config_reset_status_command(
 
     operation = config_reset_status(operation_id)
     projection = ConfigResetOperationPayload.from_operation(operation) if operation is not None else None
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.reset.status",
         result=ConfigResetStatusResult(operation=projection),
@@ -144,7 +144,7 @@ def config_reset_resume(
         retention_override_reason=reason,
     )
     projection = ConfigResetOperationPayload.from_operation(operation)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.reset.resume",
         result=ConfigResetResumeResult(operation=projection),

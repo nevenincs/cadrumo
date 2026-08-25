@@ -12,18 +12,16 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.operations import (
-    OperationJournalRepository,
-    OperationLeaseFilesystemRepository,
-    operation_secure_reference_repository,
-)
-from ....application.operations import (
+from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
+from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
+from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from cadrumo.application.operations.capabilities import OperationRequestStoragePolicy
+from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.registry import OperationReconciliationPolicy, OperationRegistry
+from cadrumo.application.operations.supervisor import OperationSupervisor
+from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
-    OperationRegistry,
-    OperationRequest,
-    OperationRequestStoragePolicy,
-    OperationSupervisor,
     OperationTerminalCondition,
 )
 from ....core import AuthProviderKind

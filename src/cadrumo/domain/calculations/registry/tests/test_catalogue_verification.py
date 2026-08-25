@@ -16,6 +16,7 @@ from .....core import RECORD_DESIGN_EPOCH_RE
 from .....core.external_constants import PDF_EXTENSION, XLS_EXTENSION, XLSM_EXTENSION, XLSX_EXTENSION
 from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
+from .....tests.aeat_literal_fixtures import RECORD_DESIGN_ROUTE_BASE_FIXTURE
 from .._authority import ValidatedRegistryAuthority, bundled_authority
 from .._corpus_catalogue import resolve_record_design_binary, verify_source_catalogue, verify_source_file
 from .._coverage import (
@@ -297,7 +298,7 @@ def test_modelo_038_refuses_unevidenced_history_and_keeps_historical_pdf_unselec
         "original_filename": "dr038_2005.pdf",
         "sha256": "e9008d9c0c407c76143d6997f3a5fb52a2a482c40571f395da7dcf8a8fee3d9d",
         "title": "038 - Orden HAC/66/2002, de 15 de enero (actualizado a 18/01/2012)",
-        "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/dr038_2005.pdf",
+        "url": f"{RECORD_DESIGN_ROUTE_BASE_FIXTURE}/DR_01_99/archivos/dr038_2005.pdf",
     }
 
     amendment_refs = {ref_id: catalogues.legal[ref_id] for ref_id in _M038_SOURCE_ERA_LEGAL_REFS}
@@ -806,6 +807,24 @@ def test_every_record_design_source_declares_a_unique_well_formed_epoch() -> Non
         "aeat-dr-303-2019-2020": "held by the in-flight M303 generator-authority campaign",
         "aeat-dr-390-2015": "held by the in-flight M390 generator-authority campaign",
         "aeat-dr-390-2016": "held by the in-flight M390 generator-authority campaign",
+        # Every official manifest artefact is registered so the corpus and
+        # catalogue agree, but this map does not invent selection windows. These source
+        # titles describe versions/updates (or an ATF translation), not a
+        # non-conflicting filing period relative to the actively selected
+        # design. The source rows deliberately remain resolver-unreachable
+        # until the temporal-design owner supplies that authority.
+        "aeat-dr-036-v42-provisional": "AEAT calls the 2025 edition provisional; no successor boundary is evidenced",
+        "aeat-dr-036-v40": "AEAT's 2023 update to the 2021-y-siguientes design has no selection boundary",
+        "aeat-dr-036-v35": "AEAT's 2021 update has no selection boundary against v40",
+        "aeat-dr-202-2025-mar-update": "AEAT's March 2026 update has no selection boundary against the active 2025 design",
+        "aeat-dr-202-2019-september-update": "AEAT's September 2019 update has no selection boundary against the active 2019 design",
+        "aeat-dr-202-2012-v32": "the official version label does not establish a filing-period window",
+        "aeat-dr-202-2013-v33": "the official version label does not establish the boundary before the 3P 2013 design",
+        "aeat-dr-202-2010-v13": "the official version label does not establish a filing-period window",
+        "aeat-dr-345-2023-archive": "the archive's 2023 design conflicts with the selected 2023 edition absent an effective boundary",
+        "aeat-dr-349-2002": "the historical order title does not establish a bounded filing window",
+        "aeat-dr-604-atf-spanish": "the Spanish ATF appendix is a translated logical design, not an independently dated epoch",
+        "aeat-dr-604-atf-english": "the English ATF appendix is a translated logical design, not an independently dated epoch",
     }
 
     modelos, catalogues = _registry_tree()

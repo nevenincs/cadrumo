@@ -16,12 +16,14 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+from typing import Never
 
 import pytest
 
 from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....domain.attachments import AttachmentSource
 from ...storage import (
+    OutboundStorageError,
     OutboundStorageNetworkError,
     OutboundStoragePermissionError,
     OutboundStorageValidationError,
@@ -35,7 +37,7 @@ _FILE_ID = "1AbcDEfgHIjkLMnoPQRstuVWxyz12345"
 
 
 def _assert_closed_outcome(
-    error: BaseException,
+    error: OutboundStorageError,
     *,
     condition_id: str,
     facts: dict[str, str | int | bool],
@@ -247,6 +249,16 @@ class _NonBytesMediaFiles:
     def get_media(self, *, fileId: str) -> _NonBytesMediaRequest:  # noqa: N803 - Drive API kwarg name
         assert fileId == _FILE_ID
         return _NonBytesMediaRequest()
+
+    def list(
+        self,
+        *,
+        q: str,
+        fields: str,
+        pageSize: int,  # noqa: N803 - Drive API kwarg name
+        pageToken: str = "",  # noqa: N803 - Drive API kwarg name
+    ) -> Never:
+        raise AssertionError("non-bytes media fixture does not support files.list")
 
 
 class _NonBytesMediaService:

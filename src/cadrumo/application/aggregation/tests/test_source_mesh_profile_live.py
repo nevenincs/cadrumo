@@ -14,7 +14,7 @@ from ....adapters.outbound.aeat.sede import (
     IvaCompensationWalletObservation,
     IvaCompensationWalletRow,
 )
-from ....core import CalculationSourceLineageRole, Period
+from ....core import CalculationSourceLineageRole, Period, RegistryAuthorityGrade
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -252,7 +252,14 @@ def test_profile_source_resolver_projects_each_registered_modelo_revision(
     expected_value: Decimal | str,
 ) -> None:
     """Every registered profile-source revision projects its fact and provenance through the live mesh."""
-    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
+    # Reading a profile FACT through the mesh needs only the rung that declares
+    # bindings, and every registered modelo carries them at applicability grade.
+    # Asking for filing here would refuse 036, which is censal and never filable,
+    # and 200, whose filing boundary is deliberately shut while its revision spans
+    # two layouts.
+    snapshot = resources().modelos.authority.snapshot(
+        modelo, filing_year=filing_year, period=period, grade=RegistryAuthorityGrade.APPLICABILITY
+    )
 
     resolution = ProfileSourceResolver(
         registry_snapshot=snapshot,

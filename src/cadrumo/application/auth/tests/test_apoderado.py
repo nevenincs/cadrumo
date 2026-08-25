@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from io import StringIO
 from pathlib import Path
 
 import pytest
+from prompt_toolkit.input import create_pipe_input
+from prompt_toolkit.output.plain_text import PlainTextOutput
 
 from ....adapters.persistence.storage.bucket import bucket_paths
 from ....core.config import Settings, override_settings
@@ -15,19 +18,19 @@ from ....core.time import now
 from ....domain.auth.apoderamientos import UnknownScopeError
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, isolated_two_bucket_runtime
 from ...flows import FlowPage, run_scripted_flow
-from .._apoderado import (
+from ..apoderado_service import (
     ApoderadoConfiguration,
     ApoderadoConfigurationIdentityError,
     ApoderadoLiveCheckUnavailableError,
     ApoderadoRepresentedNifInvalidError,
     ApoderadoService,
-    _ApoderadoConfigRepository,
+    ApoderadoConfigRepository,
 )
-from .._apoderado_flow import (
+from ..apoderado_flow import (
     REPRESENTED_NIF_PAGE_ID,
     SCOPES_PAGE_ID,
-    apoderado_answers_from_state,
     build_apoderado_flow_definition,
+    run_apoderado_flow,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -272,37 +275,35 @@ class TestBucketIsolation:
 class TestApoderadoFlowDoor:
     """The paged apoderado flow walks its pages and commits through the real service."""
 
-    def test_headless_walk_commits_through_the_service(self, isolated_settings: Settings) -> None:
-        """A scripted walk of the door's pages configures the real record.
+    def test_headless_walk_commits_through_the_production_door(self, isolated_settings: Settings) -> None:
+        """Real line prompts reach the production service writer and read back durably.
 
-        Drives the engine headlessly through the door's own
-        ``FlowDefinition`` -- the same definition the interactive frontend
-        renders -- then projects and commits through the real
-        ``ApoderadoService``. The read-back asserts against the service's own
-        status surface, never the flow state's echo.
+        The input bytes drive the same ``LineFlowFrontend`` instance the CLI
+        door delegates to. The runner itself performs the service write; the
+        assertion then reads through the service's status boundary rather than
+        trusting the transient flow state.
         """
         svc = ApoderadoService(settings=isolated_settings)
-        definition = build_apoderado_flow_definition(svc.catalogue)
+        output = StringIO()
+        # Catalogue order is GENERALNT, RENT, IVA.  Move to RENT, select it,
+        # move to IVA, select it, finish the checkbox, then submit review.
+        keys = "87654321X\r\x1b[B \x1b[B \r\r"
+        with create_pipe_input() as pipe:
+            pipe.send_text(keys)
+            result = run_apoderado_flow(
+                svc,
+                bucket_id=_APODERADO_BUCKET_ID,
+                input=pipe,
+                output=PlainTextOutput(output),
+            )
 
-        state, _projection = run_scripted_flow(
-            definition,
-            tokens=["87654321X", "RENT,IVA"],
-            mode=FlowMode.MODIFY,
-        )
-        represented_nif, scope_tokens = apoderado_answers_from_state(state)
-        assert represented_nif == "87654321X"
-        # CHECKBOX canonicalises to sorted tokens.
-        assert scope_tokens == ("IVA", "RENT")
-
-        svc.configure(
-            bucket_id=_APODERADO_BUCKET_ID,
-            represented_nif=represented_nif,
-            scope_tokens=scope_tokens,
-        )
+        assert result.represented_nif == "87654321X"
+        assert result.granted_scopes == ("IVA", "RENT")
         status = svc.status(bucket_id=_APODERADO_BUCKET_ID)
         assert status.configured is True
         assert status.represented_nif == "87654321X"
         assert status.granted_scopes == ("IVA", "RENT")
+        assert output.getvalue(), "the production line door must render its prompts and review"
 
     def test_answer_pages_bind_no_profile_domain_key(self, isolated_settings: Settings) -> None:
         """Every answer page is domain_key-free: no apoderado answer is a profile fact."""
@@ -448,7 +449,7 @@ class TestCanonicalBucketEquivalence:
 class TestStoredConfigurationOwnership:
     """The object key is the only durable statement of which bucket owns a record.
 
-    ``_ApoderadoConfigRepository`` derives its key from
+    ``ApoderadoConfigRepository`` derives its key from
     ``ApoderadoConfiguration.bucket_id``, but the inherited load path validated
     only the envelope class and version. A configuration for bucket B rekeyed
     under bucket A therefore loaded cleanly, and ``status(bucket_id=A)``
@@ -465,7 +466,7 @@ class TestStoredConfigurationOwnership:
             notes="",
         )
 
-    def _rekey_under(self, repo: _ApoderadoConfigRepository, key: str, config: ApoderadoConfiguration) -> None:
+    def _rekey_under(self, repo: ApoderadoConfigRepository, key: str, config: ApoderadoConfiguration) -> None:
         """Write ``config``'s genuine encrypted envelope under a foreign ``key``."""
         envelope = repo._identified_envelope(config)[1]
         repo._objects.save(
@@ -481,7 +482,7 @@ class TestStoredConfigurationOwnership:
         self,
         isolated_profile: TestRuntimeProfile,
     ) -> None:
-        repo = _ApoderadoConfigRepository(bucket_id=_PROFILE_BUCKET_ID, settings=isolated_profile.settings)
+        repo = ApoderadoConfigRepository(bucket_id=_PROFILE_BUCKET_ID, settings=isolated_profile.settings)
         self._rekey_under(repo, _PROFILE_BUCKET_ID, self._foreign_configuration())
 
         with pytest.raises(ApoderadoConfigurationIdentityError):
@@ -492,7 +493,7 @@ class TestStoredConfigurationOwnership:
         isolated_profile: TestRuntimeProfile,
     ) -> None:
         """The leak this closes is identity-bearing, so refusal must reach the service."""
-        repo = _ApoderadoConfigRepository(bucket_id=_PROFILE_BUCKET_ID, settings=isolated_profile.settings)
+        repo = ApoderadoConfigRepository(bucket_id=_PROFILE_BUCKET_ID, settings=isolated_profile.settings)
         self._rekey_under(repo, _PROFILE_BUCKET_ID, self._foreign_configuration())
 
         with pytest.raises(ApoderadoConfigurationIdentityError):
@@ -511,7 +512,7 @@ class TestStoredConfigurationOwnership:
         """
         from ....core.errors import get_registered_error_code, resolve_error_message
 
-        repo = _ApoderadoConfigRepository(bucket_id=_PROFILE_BUCKET_ID, settings=isolated_profile.settings)
+        repo = ApoderadoConfigRepository(bucket_id=_PROFILE_BUCKET_ID, settings=isolated_profile.settings)
         foreign = self._foreign_configuration()
 
         with pytest.raises(ApoderadoConfigurationIdentityError) as excinfo:
@@ -534,7 +535,7 @@ class TestStoredConfigurationOwnership:
         isolated_profile: TestRuntimeProfile,
     ) -> None:
         """The guard must not refuse the legitimate write-then-read path."""
-        repo = _ApoderadoConfigRepository(bucket_id=_PROFILE_BUCKET_ID, settings=isolated_profile.settings)
+        repo = ApoderadoConfigRepository(bucket_id=_PROFILE_BUCKET_ID, settings=isolated_profile.settings)
         config = ApoderadoConfiguration(
             bucket_id=_PROFILE_BUCKET_ID,
             represented_nif="12345678Z",
@@ -550,6 +551,6 @@ class TestStoredConfigurationOwnership:
 
     def test_absent_record_still_reads_as_none(self, isolated_profile: TestRuntimeProfile) -> None:
         """An unconfigured bucket is not an identity violation."""
-        repo = _ApoderadoConfigRepository(bucket_id=_PROFILE_BUCKET_ID, settings=isolated_profile.settings)
+        repo = ApoderadoConfigRepository(bucket_id=_PROFILE_BUCKET_ID, settings=isolated_profile.settings)
 
         assert repo.load(_PROFILE_BUCKET_ID) is None

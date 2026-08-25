@@ -17,7 +17,7 @@ from ...application.registry import (
 from ...core.i18n import tr
 from ...core.json_contract import strict_round_trip
 from ...core.resources import bundled_path
-from ._common import _emit_envelope, resolve_optional_root
+from ._common import emit_envelope, resolve_optional_root
 from ._registry_diff_payloads import RegistryDiffRevisionsResult
 from ._registry_payloads import (
     RegistryInspectResult,
@@ -64,7 +64,7 @@ def inspect_registry_cmd(
     """Load the read-only registry tree and report inventory counts."""
     registry_root = resolve_optional_root(registry_root, lambda: bundled_path("registry", "aeat"))
     report = inspect_registry_tree(registry_root)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="registry.inspect",
         result=strict_round_trip(RegistryInspectResult, report),
@@ -81,7 +81,7 @@ def verify_registry_cmd(
     registry_root = resolve_optional_root(registry_root, lambda: bundled_path("registry", "aeat"))
     resolved_source_root = resolve_optional_root(source_root, bundled_path)
     report = verify_registry_tree(registry_root, source_root=resolved_source_root)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="registry.verify",
         result=strict_round_trip(RegistryInspectResult, report),
@@ -127,7 +127,7 @@ def verify_filed_state_cmd(
                 f"{drift.casilla_id}\tlocal={drift.local_value}\tfiled={drift.filed_value}\tdelta={drift.delta}",
             ),
         )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="registry.verify_filed_state",
         result=RegistryVerifyFiledStateResult(
@@ -163,7 +163,7 @@ def diff_revisions_cmd(
         registry_root=resolve_optional_root(registry_root, lambda: bundled_path("registry", "aeat")),
         source_root=resolve_optional_root(source_root, bundled_path),
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="registry.diff_revisions",
         result=strict_round_trip(RegistryDiffRevisionsResult, report),

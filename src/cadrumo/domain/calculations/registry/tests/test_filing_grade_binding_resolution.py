@@ -25,7 +25,11 @@ from .....application.modelo import (
     CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
     assert_no_novel_source_kinds,
 )
-from .....application.registry import SourceConnectivityCensusManifest, load_source_connectivity_census
+from .....application.registry import (
+    SourceConnectivityCensusEntry,
+    SourceConnectivityCensusManifest,
+    load_source_connectivity_census,
+)
 from .....core import BindingSourceKind, RegistryAuthorityGrade
 from .....domain.filing import ModeloBuilderError
 from .. import DataBindingDefinition, ModeloRevision, PeriodSelector, selector_model_for_source
@@ -106,7 +110,7 @@ def _filing_grade_bindings() -> tuple[_FilingGradeBinding, ...]:
 def _matching_census_entries(
     record: _FilingGradeBinding,
     manifest: SourceConnectivityCensusManifest,
-) -> tuple[object, ...]:
+) -> tuple[SourceConnectivityCensusEntry, ...]:
     """Find exact census ownership without recreating the census authority."""
     return tuple(
         entry

@@ -33,7 +33,7 @@ from ....domain.calculations.registry import (
     RelationId,
 )
 from ....domain.calculations.registry import bundled_authority as _bundled_authority
-from .._common import _emit_envelope
+from .._common import emit_envelope
 from .._errors import CliRefusedBoundaryError
 from ._google_errors import _google_refusal
 from ._google_payloads import (
@@ -195,7 +195,7 @@ def google_sync_calc_export(
         f"protected_ranges_written\t{result.protected_ranges_written}",
         f"tab_count\t{result.tab_count}",
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.google.sync.calc.export",
         result=export_result,
@@ -376,7 +376,7 @@ def google_sync_calc_verify(
     ]
     for div in report.divergences:
         lines.append(f"divergence\t{div.casilla_id}\tlocal={div.local}\tsheets={div.sheets}\taeat={div.aeat}")
-    _emit_envelope(ctx, command="config.google.sync.calc.verify", result=verify_result, lines=tuple(lines))
+    emit_envelope(ctx, command="config.google.sync.calc.verify", result=verify_result, lines=tuple(lines))
 
 
 def google_sync_calc_pull(
@@ -496,7 +496,7 @@ def google_sync_calc_pull(
             f"assembled\t{assembled['grouping']}\t{assembled['source_kind']}\t{assembled['observation_count']}",
         )
     pull_result = GoogleSyncCalcPullResult.model_validate(payload)
-    _emit_envelope(ctx, command="config.google.sync.calc.pull", result=pull_result, lines=tuple(lines))
+    emit_envelope(ctx, command="config.google.sync.calc.pull", result=pull_result, lines=tuple(lines))
 
 
 def google_sync_calc_compute(
@@ -572,7 +572,7 @@ def google_sync_calc_compute(
     ]
     for entry in computed_casilla_entries:
         lines.append(f"computed\t{entry.casilla_id}\t{entry.value}\t{entry.formula_id}")
-    _emit_envelope(ctx, command="config.google.sync.calc.compute", result=compute_result, lines=tuple(lines))
+    emit_envelope(ctx, command="config.google.sync.calc.compute", result=compute_result, lines=tuple(lines))
 
 
 def _assemble_pull_observations(

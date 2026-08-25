@@ -49,10 +49,12 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
+from typing import Protocol
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN
 from ...core import (
     AeatProductSoftwareIdentity,
     CasillaId,
@@ -453,6 +455,48 @@ class DeclaracionExportResult(BaseModel):
         return value
 
 
+class FilingExportConsumedResult(BaseModel):
+    """Internal receipt for a validated payload delivered without a filesystem path."""
+
+    model_config = _STRICT_FROZEN
+
+    draft_id: str = Field(min_length=1, max_length=128)
+    modelo: str = Field(min_length=1, max_length=8)
+    period: Period
+    format: DeclaracionExportFormat
+    byte_size: int = Field(gt=0)
+    file_sha256: str = Field(min_length=_SHA256_HEX_LENGTH, max_length=_SHA256_HEX_LENGTH)
+    exported_at: datetime
+    casilla_provenance: tuple[ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
+
+    @field_validator("file_sha256")
+    @classmethod
+    def _validate_sha256_hex(cls, value: str) -> str:
+        if any(character not in "0123456789abcdef" for character in value):
+            raise FilingExportValidationError("file_sha256 must be lowercase hexadecimal")
+        return value
+
+
+class FilingExportValidatedPayload(BaseModel):
+    """Secret-bearing in-memory payload delivered only after export validation."""
+
+    model_config = _STRICT_FROZEN_HIDDEN
+
+    draft_id: str = Field(min_length=1, max_length=128)
+    modelo: str = Field(min_length=1, max_length=8)
+    period: Period
+    format: DeclaracionExportFormat
+    payload: bytes = Field(min_length=1)
+    casilla_provenance: tuple[ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
+
+
+class FilingExportPayloadConsumer(Protocol):
+    """Destination port for validated bytes that must not touch plaintext disk."""
+
+    def consume_validated_payload(self, payload: FilingExportValidatedPayload) -> None:
+        """Consume the payload synchronously before its in-memory owner returns."""
+
+
 class DeclaracionVerifyResult(BaseModel):
     """Verdict produced by verifying an exported file against an approved draft.
 
@@ -770,16 +814,49 @@ def _write_prepared_export(
     return receipt
 
 
+def _consume_prepared_export(
+    draft: ModeloDraft,
+    *,
+    prepared: _PreparedExportDraft,
+    payload: bytes,
+    casilla_provenance: tuple[ModeloCasillaProvenance, ...],
+    payload_consumer: FilingExportPayloadConsumer,
+) -> FilingExportConsumedResult:
+    """Deliver validated bytes synchronously without materialising a plaintext file."""
+    format_ = _declaracion_export_format(prepared.layout)
+    payload_consumer.consume_validated_payload(
+        FilingExportValidatedPayload(
+            draft_id=draft.draft_id,
+            modelo=draft.modelo,
+            period=draft.period,
+            format=format_,
+            payload=payload,
+            casilla_provenance=casilla_provenance,
+        ),
+    )
+    return FilingExportConsumedResult(
+        draft_id=draft.draft_id,
+        modelo=draft.modelo,
+        period=draft.period,
+        format=format_,
+        byte_size=len(payload),
+        file_sha256=sha256_hex(payload),
+        exported_at=now(),
+        casilla_provenance=casilla_provenance,
+    )
+
+
 def export_draft(
     draft: ModeloDraft,
     *,
-    output_path: Path,
+    output_path: Path | None = None,
+    payload_consumer: FilingExportPayloadConsumer | None = None,
     producer_snapshot: FilingProducerSnapshot,
     dictionary_values: Mapping[str, object] | None = None,
     prior_domiciliation_election: PriorDomiciliationElection | None = None,
     product_software_identity: AeatProductSoftwareIdentity | None = None,
     schema_provider: RegistrySchemaAccessor | None = None,
-) -> DeclaracionExportResult:
+) -> DeclaracionExportResult | FilingExportConsumedResult:
     """Write an approved draft to a local fichero-BOE file and return a receipt.
 
     The function selects the active registry
@@ -790,7 +867,10 @@ def export_draft(
 
     Args:
         draft: The :class:`ModeloDraft` to export; must be in ``APROBADO`` status.
-        output_path: Destination path for the fichero-BOE bytes.
+        output_path: Destination path for ordinary filesystem export. Exactly
+            one of this or ``payload_consumer`` is required.
+        payload_consumer: Synchronous destination for validated in-memory bytes,
+            used when plaintext output must not touch a filesystem.
         producer_snapshot: Complete typed filing facts consumed by registry producers.
         dictionary_values: Optional values addressed by the dictionary field id
             AEAT declares for them, each still carrying its own Python type.
@@ -819,6 +899,8 @@ def export_draft(
         :func:`domain.calculations.registry.parse_export_payload`
             Registry parser used by the verification path.
     """
+    if (output_path is None) == (payload_consumer is None):
+        raise FilingExportValidationError("export requires exactly one payload destination")
     prepared = _prepare_export_draft(
         draft,
         producer_snapshot=producer_snapshot,
@@ -836,12 +918,22 @@ def export_draft(
         product_software_identity=product_software_identity,
     )
     casilla_provenance = _validate_prepared_export(draft, prepared=prepared, payload=payload)
-    return _write_prepared_export(
+    if output_path is not None:
+        return _write_prepared_export(
+            draft,
+            output_path=output_path,
+            prepared=prepared,
+            payload=payload,
+            casilla_provenance=casilla_provenance,
+        )
+    if payload_consumer is None:
+        raise FilingExportValidationError("export payload consumer is unavailable")
+    return _consume_prepared_export(
         draft,
-        output_path=output_path,
         prepared=prepared,
         payload=payload,
         casilla_provenance=casilla_provenance,
+        payload_consumer=payload_consumer,
     )
 
 
@@ -1641,6 +1733,9 @@ __all__ = [
     "DeclaracionExportResult",
     "DeclaracionVerifyResult",
     "DeclaracionVerifyVerdict",
+    "FilingExportConsumedResult",
+    "FilingExportPayloadConsumer",
+    "FilingExportValidatedPayload",
     "FilingProjectionValue",
     "FilingRecordRenderContext",
     "_RecordRenderRow",

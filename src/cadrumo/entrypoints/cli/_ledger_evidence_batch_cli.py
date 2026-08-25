@@ -43,10 +43,10 @@ from ...core.output_rendering import OutputFormat
 from ...domain.iva import InvoiceKind
 from ._common import (
     _bad,
-    _emit_envelope,
     _format_of,
     _state,
     _tx_repo,
+    emit_envelope,
     emit_progress_line,
     resolve_cli_precondition_action,
     resolve_notice_action,
@@ -95,7 +95,7 @@ def evidence_batch(
         direction=kind,
         on_item=(lambda item: emit_progress_line(_progress_line(item))) if text_mode else None,
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.evidence.batch",
         result=_batch_payload(run, bucket_id=bucket_id, direction=kind),

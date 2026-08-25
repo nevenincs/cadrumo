@@ -25,7 +25,7 @@ from typing import Protocol, runtime_checkable
 from ...core.flows import CheckpointAvailability, FlowMode
 from ._definition import FlowDefinition
 from ._engine import FlowState
-from ._errors import FlowCheckpointError
+from .errors import FlowCheckpointError
 
 
 @runtime_checkable

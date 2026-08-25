@@ -96,7 +96,7 @@ LIVE_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live", "iva_wallet_pull_cmd")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "IvaWalletPullResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_iva_wallet_payloads", "IvaWalletPullResult"),
             identity="app.live.iva_wallet.pull",
         ),
     ),
@@ -133,7 +133,7 @@ LIVE_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live", "iva_wallet_history_cmd")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "IvaWalletHistoryResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_iva_wallet_payloads", "IvaWalletHistoryResult"),
             identity="app.live.iva_wallet.history",
         ),
     ),
@@ -194,7 +194,9 @@ LIVE_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "IvaWalletCaptureHistoryResult"),
+            target=DeferredTarget(
+                "cadrumo.entrypoints.cli._app_live_iva_wallet_payloads", "IvaWalletCaptureHistoryResult"
+            ),
             identity="app.live.iva_wallet.pull_history",
         ),
     ),
@@ -288,7 +290,9 @@ LIVE_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "IvaWalletPullEvidenceResult"),
+            target=DeferredTarget(
+                "cadrumo.entrypoints.cli._app_live_iva_wallet_payloads", "IvaWalletPullEvidenceResult"
+            ),
             identity="app.live.iva_wallet.pull_evidence",
         ),
     ),

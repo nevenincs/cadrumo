@@ -8,29 +8,13 @@ from uuid import UUID
 
 import pytest
 
-from .. import _profile_login_session as adapter_module
-from .. import build_profile_login_session_port, custody, master_key
+from .. import KeyringUnavailableError, build_profile_login_session_port, custody, master_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _PROFILE_ID = UUID("11111111-1111-4111-8111-111111111111")
-_SESSION_ID = UUID("22222222-2222-4222-8222-222222222222")
 _NOW = datetime(2026, 8, 25, 12, tzinfo=UTC)
 _DEK = bytes(range(32))
-
-
-def _receipt() -> custody.PersistedProfileSession:
-    return custody.wrap_profile_session_dek(
-        session_key=bytes(range(32, 64)),
-        dek=_DEK,
-        profile_id=_PROFILE_ID,
-        session_id=_SESSION_ID,
-        custody_generation=3,
-        dek_epoch="epoch-3",
-        issued_at=_NOW,
-        idle_deadline=_NOW + timedelta(minutes=15),
-        absolute_deadline=_NOW + timedelta(hours=4),
-    )
 
 
 def test_live_session_throttle_and_buffer_wipe_delegate_to_the_real_authorities(tmp_path: Path) -> None:
@@ -68,58 +52,81 @@ def test_live_session_throttle_and_buffer_wipe_delegate_to_the_real_authorities(
     assert port.current_session() is None
 
 
-def test_receipt_delegation_preserves_dto_and_key_buffer_identity(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_receipt_lifecycle_preserves_exact_metadata_and_wipeable_key_buffer(tmp_path: Path) -> None:
     port = build_profile_login_session_port()
-    record = _receipt()
-    outcome = custody.ProfileSessionResumeOutcome(resumed=True, record=record)
-    resumed_dek = bytearray(_DEK)
-    advanced = record.model_copy(update={"idle_deadline": _NOW + timedelta(minutes=20)})
+    receipt_path = port.acceleration_receipt_path(storage_root=tmp_path, profile_id=_PROFILE_ID)
+    try:
+        minted = port.mint_acceleration_receipt(
+            storage_root=tmp_path,
+            profile_id=_PROFILE_ID,
+            custody_generation=3,
+            dek_epoch="epoch-3",
+            dek=_DEK,
+            now=_NOW,
+            idle_minutes=15,
+            absolute_minutes=240,
+        )
+    except KeyringUnavailableError:
+        assert not receipt_path.exists()
+        return
 
-    monkeypatch.setattr(adapter_module.custody, "mint_profile_session", lambda **_kwargs: record)
-    monkeypatch.setattr(
-        adapter_module.custody,
-        "resume_profile_session",
-        lambda **_kwargs: (outcome, resumed_dek),
-    )
-    monkeypatch.setattr(
-        adapter_module.custody,
-        "advance_persisted_profile_session_idle_deadline",
-        lambda **_kwargs: advanced,
-    )
+    try:
+        assert isinstance(minted, custody.PersistedProfileSession)
+        assert minted.profile_id == _PROFILE_ID
+        assert minted.custody_generation == 3
+        assert minted.dek_epoch == "epoch-3"
+        assert minted.issued_at == _NOW
+        assert minted.idle_deadline == _NOW + timedelta(minutes=15)
+        assert minted.absolute_deadline == _NOW + timedelta(hours=4)
 
-    minted = port.mint_acceleration_receipt(
-        storage_root=tmp_path,
-        profile_id=_PROFILE_ID,
-        custody_generation=3,
-        dek_epoch="epoch-3",
-        dek=_DEK,
-        now=_NOW,
-        idle_minutes=15,
-        absolute_minutes=240,
-    )
-    resumed, key_buffer = port.resume_acceleration_receipt(
-        storage_root=tmp_path,
-        profile_id=_PROFILE_ID,
-        custody_generation=3,
-        dek_epoch="epoch-3",
-        now=_NOW,
-    )
-    renewed = port.advance_acceleration_idle_deadline(
-        storage_root=tmp_path,
-        profile_id=_PROFILE_ID,
-        record=record,
-        new_idle_deadline=_NOW + timedelta(minutes=20),
-    )
+        resumed, key_buffer = port.resume_acceleration_receipt(
+            storage_root=tmp_path,
+            profile_id=_PROFILE_ID,
+            custody_generation=3,
+            dek_epoch="epoch-3",
+            now=_NOW + timedelta(minutes=1),
+        )
+        assert isinstance(resumed, custody.ProfileSessionResumeOutcome)
+        assert resumed.resumed is True
+        assert resumed.refusal is None
+        assert resumed.record == minted
+        assert isinstance(key_buffer, bytearray)
+        assert key_buffer == _DEK
+        port.zeroise_owned_buffer(key_buffer)
+        assert key_buffer == bytearray(32)
 
-    assert minted is record
-    assert resumed is outcome
-    assert key_buffer is resumed_dek
-    assert renewed is advanced
-    assert port.is_persisted_receipt(record) is True
-    assert port.is_persisted_receipt(object()) is False
+        renewed = port.advance_acceleration_idle_deadline(
+            storage_root=tmp_path,
+            profile_id=_PROFILE_ID,
+            record=minted,
+            new_idle_deadline=_NOW + timedelta(minutes=20),
+        )
+        assert isinstance(renewed, custody.PersistedProfileSession)
+        assert renewed.session_id == minted.session_id
+        assert renewed.issued_at == minted.issued_at
+        assert renewed.idle_deadline == _NOW + timedelta(minutes=20)
+        assert renewed.absolute_deadline == minted.absolute_deadline
+
+        resumed_after_renewal, renewed_key_buffer = port.resume_acceleration_receipt(
+            storage_root=tmp_path,
+            profile_id=_PROFILE_ID,
+            custody_generation=3,
+            dek_epoch="epoch-3",
+            now=_NOW + timedelta(minutes=16),
+        )
+        assert isinstance(resumed_after_renewal, custody.ProfileSessionResumeOutcome)
+        assert resumed_after_renewal.resumed is True
+        assert resumed_after_renewal.record == renewed
+        assert isinstance(renewed_key_buffer, bytearray)
+        assert renewed_key_buffer == _DEK
+        port.zeroise_owned_buffer(renewed_key_buffer)
+        assert renewed_key_buffer == bytearray(32)
+        assert port.is_persisted_receipt(renewed) is True
+        assert port.is_persisted_receipt(object()) is False
+    finally:
+        port.delete_acceleration_receipt(storage_root=tmp_path, profile_id=_PROFILE_ID)
+
+    assert not receipt_path.exists()
 
 
 def test_receipt_path_and_absent_delete_use_the_canonical_custody_location(tmp_path: Path) -> None:

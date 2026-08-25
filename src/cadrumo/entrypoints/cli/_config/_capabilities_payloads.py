@@ -6,7 +6,7 @@ production-authored CommandSpec as deferred public schema targets so the JSON-co
 enumerates the surface. Field sets match the payload dicts constructed in
 :mod:`_capabilities_cli` and enter
 :class:`SchemaEnvelope` through
-:func:`_emit_envelope`.
+:func:`emit_envelope`.
 
 Capability identifiers come from :class:`ServiceCapability`; the
 resolved posture is computed by

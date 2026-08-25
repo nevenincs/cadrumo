@@ -20,7 +20,7 @@ from ...core import Period
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.i18n import tr
 from ...domain.iva_compensation import IvaCompensationSeedConflictError
-from ._common import _emit_envelope, active_bucket_id_or_refuse
+from ._common import active_bucket_id_or_refuse, emit_envelope
 from ._modelo_payloads import IvaWalletBalanceResult, IvaWalletOverrideResult, IvaWalletSeedResult
 from ._modelo_payloads_m036 import IvaWalletCorrectResult
 
@@ -83,7 +83,7 @@ def iva_wallet_balance_cmd(ctx: typer.Context, as_of_year: int) -> None:
         f"next_expiry_year\t{report.next_expiry_year}",
         f"unallocated_applied_amount\t{report.unallocated_applied_amount}",
     ]
-    _emit_envelope(ctx, command="modelo.iva_wallet.balance", result=balance_result, lines=lines)
+    emit_envelope(ctx, command="modelo.iva_wallet.balance", result=balance_result, lines=lines)
 
 
 def iva_wallet_seed_cmd(ctx: typer.Context, filing_year: int, period: str, amount: str, confirm: bool = False) -> None:
@@ -131,7 +131,7 @@ def iva_wallet_seed_cmd(ctx: typer.Context, filing_year: int, period: str, amoun
         f"provenance\t{state.provenance.value}",
         f"register_status\t{state.status or ''}",
     ]
-    _emit_envelope(ctx, command="modelo.iva_wallet.seed", result=seed_result, lines=lines)
+    emit_envelope(ctx, command="modelo.iva_wallet.seed", result=seed_result, lines=lines)
 
 
 def iva_wallet_correct_cmd(
@@ -208,7 +208,7 @@ def iva_wallet_correct_cmd(
         f"register_status\t{state.status or ''}",
         f"reason\t{clean_reason}",
     ]
-    _emit_envelope(ctx, command="modelo.iva_wallet.correct", result=correct_result, lines=lines)
+    emit_envelope(ctx, command="modelo.iva_wallet.correct", result=correct_result, lines=lines)
 
 
 def iva_wallet_override_cmd(
@@ -278,4 +278,4 @@ def iva_wallet_override_cmd(
         f"reason\t{clean_reason}",
         f"evidence_locator\t{clean_locator}",
     ]
-    _emit_envelope(ctx, command="modelo.iva_wallet.override", result=override_result, lines=lines)
+    emit_envelope(ctx, command="modelo.iva_wallet.override", result=override_result, lines=lines)

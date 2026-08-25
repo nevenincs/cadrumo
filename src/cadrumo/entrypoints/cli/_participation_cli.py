@@ -19,7 +19,7 @@ import typer
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.ledger import get_transaction_participation
-from ._common import _active_bucket_id_or_bad, _emit_envelope, _state, _tx_repo, emit_help_text
+from ._common import _active_bucket_id_or_bad, _state, _tx_repo, emit_envelope, emit_help_text
 from ._ledger_read_cli import resolve_ledger_transaction_id
 
 if TYPE_CHECKING:
@@ -74,7 +74,7 @@ def _emit_participation_lookup(
         )
         for participation in index.participations
     ]
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.participation",
         result=LedgerTransactionParticipationPayload.model_validate(
@@ -113,7 +113,7 @@ def participation_rebuild(ctx: typer.Context) -> None:
 
     bucket_id = _active_bucket_id_or_bad(_state())
     stats = rebuild_participation_index(bucket_id=bucket_id)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.participation.rebuild",
         result=LedgerParticipationRebuildResult.model_validate(

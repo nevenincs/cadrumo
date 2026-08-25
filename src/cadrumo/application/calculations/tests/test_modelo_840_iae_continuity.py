@@ -37,6 +37,7 @@ import pytest
 
 from ....core import (
     CasillaId,
+    RegistryAuthorityGrade,
     validated_casilla_id,
 )
 from ....domain.calculations.registry import RegistryModeloObservation
@@ -121,6 +122,12 @@ def _threshold_context_observation(*, filing_year: int) -> RegistryModeloObserva
             _DECL_TIPO_DECLARACION_CASILLA: Decimal("2"),
             _DECL_EJERCICIO_CASILLA: Decimal(str(filing_year)),
         },
+        # The question here is an APPLICABILITY fact -- whether the IAE
+        # exemption threshold is crossed, and the declaration-context casillas
+        # that record it. Modelo 840 declares exactly that rung and no more, so
+        # asking for filing (this helper's default) demands an authority this
+        # work never exercises and the registry is right to withhold.
+        grade=RegistryAuthorityGrade.APPLICABILITY,
     )
 
 

@@ -15,11 +15,11 @@ implementation modules pollutes the code namespace and is forbidden.
 
 **A registry binding or resolver family** — counterpart, ledger, invoice,
 detail-record, withholding, previous-filing, and any new one — lives in its own
-per-family module under `domain/calculations/registry/`, consumed only through
-the package facade. New families follow the established shape: selector model,
-typed validator registered in the dispatch table, `resolve_*` functions. The
-`_bindings.py` aggregator holds the cross-family dispatch table and re-exports;
-it does not accrete family implementations.
+semantically named public defining module under
+`domain/calculations/registry/`. New families follow the established shape:
+selector model, typed validator registered in the dispatch table, and
+`resolve_*` functions. A dispatch module may define the cross-family dispatch
+table, but it never re-exports per-family symbols.
 
 ## Typed boundaries
 
@@ -40,36 +40,25 @@ on parse failure. A late registry-driven refusal is acceptable for axes dependin
 on dynamic registry data, but it MUST list the accepted set — never a bare "value
 invalid".
 
-## Imports resolve to the owning package's facade
+## Imports resolve to canonical defining modules
 
-Every cross-package import MUST resolve to the sole canonical public top-level
-`__all__` facade of the symbol's owning package. A cross-package consumer MUST
-NEVER import from another package's private `_module` — ownership of `A.B._C...`
-is `A.B`. Intra-package private imports, and a package building its own facade
-from its own private modules, are fine.
+Every cross-package symbol has exactly one definition in a semantically named
+public module. Consumers import directly from that module. Package `__init__.py`
+namespaces are inert and may not import, bind, alias, lazily resolve, or
+re-export project symbols. An empty `__all__` may document the inert boundary.
 
-When the symbol is not yet exported, **promotion to `__all__` is a precondition
-of the consuming change, not a follow-up.** Eager is the default; lazy
-`__getattr__` / PEP 562 is equally acceptable where the package already uses that
-pattern or eager import costs enough to matter. This governs WHERE a symbol
-lives, never WHEN its module executes — lazy resolution keeps one canonical home
-and one import path, and converting an eager facade to lazy is permitted.
+A contract required outside its package must hard-move from an underscore-
+private module to a public defining module with every production, test,
+fixture, tooling, annotation, registration, and dynamic consumer updated and
+the old path deleted atomically. Truly private modules remain package-internal.
+Never mechanically strip an underscore without adjudicating whether the
+contract is shared, narrower API is required, or the reach must be deleted.
 
-Never mechanically rename a private `_name` into `__all__`. Per symbol: rename
-and promote a genuinely shared primitive; expose a narrower purpose-built public
-API for a single caller's need; or treat the reach as a design defect to remove.
-
-**A dynamic `importlib.import_module` cycle-break is sanctioned, but its module
-string is bound by the same ownership rule** — it must name the public facade,
-never a private submodule. The AST scanner cannot see a string-built target, so
-this is author discipline: read the target exactly as if it were
-`from X import Y`.
-
-**There are no standing non-`__init__` re-export bridge modules.** The one shape
-that is not a bridge: a module defining its own optional-dependency fallback
-classes inside a `try`/`except ImportError` branch, with no canonical definition
-elsewhere — the scanner misclassifies that as a pure re-export because its walk
-does not see definitions nested inside the branch.
+Re-export modules, package facades, hierarchical roll-ups, aliases, forwarding
+wrappers, compatibility imports, fallback imports, star imports, and PEP 562
+export maps are prohibited. Dynamic imports name the canonical defining module
+exactly. Static imports, local imports, annotations, `TYPE_CHECKING`,
+registrations, and string-based discovery all count as import edges.
 
 ## No shims, no parallel write paths
 
@@ -88,8 +77,9 @@ event emission.
 ## Relocations are atomic
 
 Land every symbol relocation in ONE explicit-path commit: the canonical-site
-move, every consumer update, every fixture update, and every `__all__` baseline
-update share one git index and one commit. Run
+move, every consumer update, every fixture update, and every canonical-
+definition inventory and inert-namespace gate update share one git index and
+one commit. Run
 `uv run --no-sync pytest --collect-only -q` immediately before and observe clean
 collection. Never split the move from the consumer sweep, and never reintroduce a
 re-export as a temporary bridge. One Step = one symbol = one atomic commit; tag
@@ -115,17 +105,17 @@ profile-fact resolver.
 
 ## How
 
-- **Good:** a new service imports `rename_profile` from the owning package's
-  `__all__` re-export, promoted before the consuming file was authored.
+- **Good:** a new service imports `rename_profile` directly from its public
+  defining module, and the owning package `__init__.py` remains inert.
 - **Good:** the OAuth resolver is `_active_profile.py`; the string-to-Decimal
   parser is `_decimal_parsing.py`. The registry profile-fact resolver keeps the
   binding name — it is correct there.
 - **Good:** `src/cadrumo/application/modelo/tests/test_work_addressing.py`.
 - **Bad:** `src/cadrumo/application/modelo/test_work_addressing.py` beside the
   implementation modules.
-- **Bad:** importing from a private submodule path, or a blanket
-  underscore-strip promotion without judging shared-primitive versus
-  single-caller versus design defect.
+- **Bad:** importing a symbol from a package namespace, private cross-package
+  module, bridge, or alias; or blanket underscore stripping without judging
+  shared primitive versus single caller versus design defect.
 - **Bad:** naming a new module `_*_binding.py` for a session, identity, parsing
   or verification concern.
 - **Bad:** a `rename` that opens its own bucket session, decrypts, mutates,
@@ -135,6 +125,8 @@ profile-fact resolver.
 Enforced by `dev/quality/import_hygiene_scan.py` and
 `dev/tests/test_import_hygiene_gate.py` -- both outside the `src/` test lanes, so
 run them explicitly. Source: ADRs
-`2026-07-01-import-centralization-adr`, `2026-06-05-test-topology-refactor-adr`,
+`2026-07-01-import-centralization-adr`, `2026-08-11-tui-architecture-adr`,
+`2026-08-11-tui-interface-adr`, `2026-08-24-tui-registry-api-gate-adr`,
+`2026-06-05-test-topology-refactor-adr`,
 `2026-06-03-cli-workflow-redesign-adr`,
 `2026-06-14-bindings-interface-hardening-adr` (decisions E, F).

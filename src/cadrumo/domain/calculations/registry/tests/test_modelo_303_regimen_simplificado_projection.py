@@ -204,6 +204,88 @@ def test_declared_quantity_projection_uses_the_exact_annual_orden_ordinal() -> N
     assert tuple(field.value for field in projected[0].fields) == (Decimal("20"),)
 
 
+@pytest.mark.parametrize("iae_epigrafe", ("691.9", "722"))
+def test_non_agricultural_projection_keeps_the_canonical_iae_discriminator(
+    iae_epigrafe: str,
+) -> None:
+    """The two live same-IAE pairs remain distinct through typed projection refs."""
+    registry_snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
+    scope_decision = M303RegimenSimplificadoScopeDecision(
+        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
+    )
+    regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=registry_snapshot,
+        scope_decision=scope_decision,
+    )
+    annual_activities = tuple(
+        activity for activity in regimen_snapshot.orden.activities if activity.iae_epigrafe == iae_epigrafe
+    )
+    assert tuple(activity.auxiliary_activity_indicator for activity in annual_activities) == ("1", "2")
+    evidence = FilingEvidenceReference(reference="test:s75:canonical-iae-discriminator")
+    rows = RegimenSimplificadoFilingRows(
+        ejercicio=2026,
+        activities=tuple(
+            ActividadNoAgricolaSimplificado(
+                orden_id=activity.orden_id,
+                ejercicio=2026,
+                activity_id=activity.orden_id,
+                iae_epigrafe=iae_epigrafe,
+                auxiliary_activity_indicator=activity.auxiliary_activity_indicator,
+                modulos=tuple(
+                    EntradaModuloSimplificado(
+                        module_identity=module.identity,
+                        declared_quantity=Decimal("1"),
+                        evidence_reference=evidence,
+                    )
+                    for module in activity.modulos
+                ),
+                facts=tuple(
+                    HechoActividadSimplificado(
+                        fact=M303RegimenSimplificadoFact.CUOTA_DEVENGADA_OPERACIONES_CORRIENTES,
+                        value=Decimal("1"),
+                        evidence_reference=evidence,
+                    )
+                    for identity in activity.applicable_fact_identities
+                ),
+                evidence_reference=evidence,
+            )
+            for activity in annual_activities
+        ),
+    )
+    projection_refs = tuple(
+        M303RegimenSimplificadoActivityProjectionRef(
+            projection_kind="m303_regimen_simplificado_activity",
+            cohort=M303RegimenSimplificadoCohort.NO_AGRICOLA,
+            slot=slot,
+            field=field,
+        )
+        for slot in (1, 2)
+        for field in (
+            M303RegimenSimplificadoActivityField.IAE_EPIGRAFE,
+            M303RegimenSimplificadoActivityField.AUXILIARY_ACTIVITY_INDICATOR,
+        )
+    )
+
+    projected = project_m303_regimen_simplificado_rows(
+        projection_refs=projection_refs,
+        rows=rows,
+        orden=regimen_snapshot.orden.activities,
+        agricultural_authority=regimen_snapshot.orden.agricultural_authority,
+        applicable=True,
+        calculation_result=calculate_m303_regimen_simplificado_result(
+            period=Period.from_year_and_code(2026, "1T"),
+            scope_decision=scope_decision,
+            rows=rows,
+            regimen_snapshot=regimen_snapshot,
+            dana_2024_eligibility=None,
+            catalogues=resources().modelos.authority.catalogues,
+        ),
+        censo_iae_epigraphs=frozenset({iae_epigrafe}),
+    )
+
+    assert tuple(field.value for field in projected[0].fields) == (iae_epigrafe, "1", iae_epigrafe, "2")
+
+
 def test_agricultural_projection_refuses_without_official_code_crosswalk() -> None:
     annual_orden = _resolved_annual_orden_for_2026()
     agricultural_authority = annual_orden.agricultural_authority

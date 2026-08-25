@@ -1,4 +1,4 @@
-"""Cross-contract invariants exercised solely through the public facade."""
+"""Cross-contract invariants exercised through canonical defining modules."""
 
 from __future__ import annotations
 
@@ -8,27 +8,32 @@ from typing import TypedDict
 import pytest
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
-from .. import (
+from cadrumo.application.operations.capabilities import (
     OperationBaselinePolicy,
-    OperationCancellation,
     OperationCapabilities,
-    OperationClosePolicy,
     OperationConflictScope,
+    OperationReplayPolicy,
+    OperationRequestStoragePolicy,
+    OperationSensitiveInputPolicy,
+)
+from cadrumo.application.operations.models import (
+    OperationIdentity,
+    OperationRequest,
+    OperationTerminalReceipt,
+)
+from cadrumo.application.operations.persistence.events import OperationDiagnosticEvent
+from cadrumo.core.operations import (
+    OperationCancellation,
+    OperationClosePolicy,
     OperationDeadline,
     OperationDurability,
     OperationEffect,
-    OperationIdentity,
     OperationLifecycle,
-    OperationReplayPolicy,
-    OperationRequest,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
     OperationTerminalCondition,
-    OperationTerminalReceipt,
 )
-from .._interactions import OperationApplyResponse
-from .._models import OperationSnapshot
-from ..persistence import OperationDiagnosticEvent
+
+from ..interactions import OperationApplyResponse
+from ..models import OperationSnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

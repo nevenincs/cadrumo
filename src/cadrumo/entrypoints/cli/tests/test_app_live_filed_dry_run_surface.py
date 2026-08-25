@@ -16,7 +16,7 @@ from __future__ import annotations
 import pytest
 
 from ....application.live import BulkFiledDataCaptureReport
-from .._app_live_payloads import FiledCaptureResult
+from .._app_live_filed_payloads import FiledCaptureResult
 from .._app_live_rendering import _filed_capture_lines
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

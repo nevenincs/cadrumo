@@ -7,7 +7,7 @@ confirmation prose while leaving the machine surface (the
 
 These tests drive the exact emit boundary the flag flows through
 (:func:`_emit_work_create_result`) and the shared transport it relies on
-(:func:`_emit_envelope`) with a real
+(:func:`emit_envelope`) with a real
 :class:`~cadrumo.domain.modelos.WorkUnit`, a real registered result model,
 and a real Typer/Click context, capturing stdout. No mocks, stubs, or
 skips.
@@ -37,7 +37,7 @@ from typer.core import TyperGroup, TyperOption
 from ....core import Period
 from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli, semantic_cli_output
-from .._common import _emit_envelope
+from .._common import emit_envelope
 from .._modelo_payloads import WorkCreateResult
 from .._modelo_rendering import work_unit_payload
 from .._modelo_work_lifecycle_cli import _emit_work_create_result
@@ -189,7 +189,7 @@ def test_quiet_json_envelope_is_complete(capsys: pytest.CaptureFixture[str]) -> 
 # ---------------------------------------------------------------------------
 #
 # The quiet branch only ever changes the ``lines`` argument passed to
-# ``_emit_envelope``; it never touches ``result`` or ``notices``. These
+# ``emit_envelope``; it never touches ``result`` or ``notices``. These
 # tests pin that (a) text mode emits the supplied lines, so a populated
 # (non-quiet) line set prints and an empty (quiet) line set is silent,
 # and (b) JSON mode is byte-identical regardless of the lines, so the
@@ -212,7 +212,7 @@ def test_text_mode_emits_the_supplied_lines(capsys: pytest.CaptureFixture[str]) 
         "New work unit created.",
     ]
 
-    _emit_envelope(_context("text"), command="modelo.work.create", result=result, lines=lines)
+    emit_envelope(_context("text"), command="modelo.work.create", result=result, lines=lines)
     out = capsys.readouterr().out
 
     for line in lines:
@@ -229,7 +229,7 @@ def test_json_output_is_byte_identical_regardless_of_lines(capsys: pytest.Captur
     """
     result = _work_create_result()
 
-    _emit_envelope(
+    emit_envelope(
         _context("json"),
         command="modelo.work.create",
         result=result,
@@ -237,7 +237,7 @@ def test_json_output_is_byte_identical_regardless_of_lines(capsys: pytest.Captur
     )
     with_lines = capsys.readouterr().out
 
-    _emit_envelope(_context("json"), command="modelo.work.create", result=result, lines=[])
+    emit_envelope(_context("json"), command="modelo.work.create", result=result, lines=[])
     without_lines = capsys.readouterr().out
 
     assert with_lines == without_lines

@@ -42,13 +42,13 @@ from ....application.flows import (
     FlowPage,
     FlowSection,
     FlowState,
-    LineFlowFrontend,
     ReviewProjection,
     answer,
     assemble_section_titles,
     run_scripted_flow,
     start_flow,
 )
+from ....application.flows.line_frontend import LineFlowFrontend
 from ....core.flows import (
     CheckpointAvailability,
     CopyRefKind,

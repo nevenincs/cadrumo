@@ -539,9 +539,16 @@ def test_a_not_subject_row_outside_the_regime_is_not_refused_by_this_gate() -> N
     assert "cash_accounting_excluded_category" not in _gate_reasons(transaction)
 
 
+_M390_EJERCICIO = 2025
+
+
 def _m390_repercutido_values(transaction: Transaction) -> dict[str, Decimal]:
     """Resolve the real M390 repercutido bindings for one transaction."""
-    annual = Period.from_year_and_code(2026, "0A")
+    # Modelo 390 is annual and AEAT publishes an ejercicio's design late in that
+    # same year, so ejercicio 2026 has no instrument yet. The caller's claim is
+    # an equality between two economically identical sales within ONE ejercicio,
+    # so it is year-agnostic and reads the latest published one.
+    annual = Period.from_year_and_code(_M390_EJERCICIO, "0A")
     aggregation = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
         period=annual,
@@ -588,15 +595,15 @@ def test_cash_accounting_row_reaches_the_same_rate_boxes_as_an_ordinary_row() ->
         "taxable_base": Decimal("1000.00"),
         "iva_amount": Decimal("210.00"),
     }
-    ordinary = _transaction("ordinary-rate-box", booked_date=date(2026, 4, 20), **common)
+    ordinary = _transaction("ordinary-rate-box", booked_date=date(2025, 4, 20), **common)
     cash = _transaction(
         "cash-rate-box",
-        booked_date=date(2026, 4, 15),
+        booked_date=date(2025, 4, 15),
         cash_accounting_treatment=IvaCashAccountingTreatment.TAXPAYER_REGIME,
-        operation_date=date(2026, 4, 10),
+        operation_date=date(2025, 4, 10),
         cash_accounting_payment_evidence=(
             IvaCashAccountingPaymentEvidence(
-                payment_date=date(2026, 4, 15),
+                payment_date=date(2025, 4, 15),
                 taxable_base=Decimal("1000.00"),
                 iva_amount=Decimal("210.00"),
             ),

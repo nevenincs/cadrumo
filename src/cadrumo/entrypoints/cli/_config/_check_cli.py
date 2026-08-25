@@ -19,7 +19,7 @@ from ....core import ServiceCapability, resolve_active_bucket_id
 if TYPE_CHECKING:
     from ....application.provisioning import ContentionSnapshot, DependencyStatus, HardwareProfile
 from ....core.i18n import tr
-from .._common import _emit_envelope, resolve_cli_precondition_action
+from .._common import emit_envelope, resolve_cli_precondition_action
 from ._check_payloads import CheckDependencyPayload, CheckPreflightPayload, ConfigCheckResult
 from ._status_rendering import precondition_action_lines
 
@@ -191,7 +191,7 @@ def config_check(ctx: typer.Context) -> None:
             lines.extend(f"{row.check}.{line}" for line in precondition_action_lines(action))
     for issue in issues:
         lines.append(f"{tr('cli.config.check.issue_label')}\t{issue}")
-    _emit_envelope(ctx, command="config.check", result=result, lines=tuple(lines))
+    emit_envelope(ctx, command="config.check", result=result, lines=tuple(lines))
     if not ok:
         raise typer.Exit(code=2)
 

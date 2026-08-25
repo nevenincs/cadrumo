@@ -10,11 +10,76 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
-from ....adapters.persistence.operations import (
-    OperationJournalRepository,
-    OperationLeaseFilesystemRepository,
-    operation_secure_reference_repository,
+from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
+from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
+from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from cadrumo.application.operations.capabilities import (
+    OperationBaselinePolicy,
+    OperationCapabilities,
+    OperationConflictScope,
+    OperationOwnedResource,
+    OperationReplayPolicy,
+    OperationRequestStoragePolicy,
+    OperationSensitiveInputPolicy,
 )
+from cadrumo.application.operations.frontend_contracts import (
+    OperationCancellationRefusalCode,
+    OperationCancellationRefusalV1,
+    OperationCancellationRequestV1,
+    OperationCancellationSuccessV1,
+    OperationDetachRequestV1,
+    OperationDetachSuccessV1,
+    OperationResponseApplyRequestV1,
+    OperationResponseControlRefusalCode,
+    OperationResponseControlRequestV1,
+    OperationResponseControlSuccessV1,
+    OperationResponseMutationSuccessV1,
+    OperationResponseRejectRequestV1,
+    OperationReviewProjectionReferenceV1,
+    OperationReviewProjectionRefusalCode,
+    OperationReviewProjectionRefusalV1,
+    OperationReviewProjectionRequestV1,
+    OperationReviewProjectionSuccessV1,
+    OperationReviewProjectionVersionHeader,
+    OperationWorkspaceRefreshTargetRefusalCode,
+    OperationWorkspaceRefreshTargetRefusalV1,
+    OperationWorkspaceRefreshTargetRequestV1,
+    OperationWorkspaceRefreshTargetSuccessV1,
+    OperationWorkspaceRefreshTargetVersionHeader,
+)
+from cadrumo.application.operations.models import (
+    OperationIdentity,
+    OperationRequest,
+    OperationTerminalReceipt,
+)
+from cadrumo.application.operations.persistence.events import (
+    OperationInteractionEvent,
+    OperationPhaseEvent,
+    OperationTerminalEvent,
+)
+from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
+from cadrumo.application.operations.persistence.leases import (
+    OperationOwnerLease,
+    operation_conflict_scope_reference,
+)
+from cadrumo.application.operations.projection_services import (
+    OperationCancellationService,
+    OperationDetachService,
+    OperationResponseControlService,
+    OperationReviewProjectionService,
+    OperationWorkspaceRefreshTargetService,
+)
+from cadrumo.application.operations.registry import (
+    OperationDefinition,
+    OperationExecutorFactory,
+    OperationFrontendProjection,
+    OperationPublicDefinitionRegistrationV1,
+    OperationReconciliationPolicy,
+    OperationRegistry,
+    OperationSchemaBindingV1,
+    operation_public_schema_reference,
+)
+
 from ....core import (
     STRICT_FROZEN_CONFIG,
     OperationCancellation,
@@ -27,66 +92,10 @@ from ....core import (
     OperationTerminalCondition,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
-    OperationBaselinePolicy,
-    OperationCancellationRefusalCode,
-    OperationCancellationRefusalV1,
-    OperationCancellationRequestV1,
-    OperationCancellationService,
-    OperationCancellationSuccessV1,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationDefinition,
-    OperationDetachRequestV1,
-    OperationDetachService,
-    OperationDetachSuccessV1,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationIdentity,
-    OperationOwnedResource,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationRegistry,
-    OperationReplayPolicy,
-    OperationRequest,
-    OperationRequestStoragePolicy,
-    OperationResponseApplyRequestV1,
-    OperationResponseControlRefusalCode,
-    OperationResponseControlRequestV1,
-    OperationResponseControlService,
-    OperationResponseControlSuccessV1,
-    OperationResponseMutationSuccessV1,
-    OperationResponseRejectRequestV1,
-    OperationReviewProjectionReferenceV1,
-    OperationReviewProjectionRefusalCode,
-    OperationReviewProjectionRefusalV1,
-    OperationReviewProjectionRequestV1,
-    OperationReviewProjectionService,
-    OperationReviewProjectionSuccessV1,
-    OperationReviewProjectionVersionHeader,
-    OperationSchemaBindingV1,
-    OperationSensitiveInputPolicy,
-    OperationTerminalReceipt,
-    OperationWorkspaceRefreshTargetRefusalCode,
-    OperationWorkspaceRefreshTargetRefusalV1,
-    OperationWorkspaceRefreshTargetRequestV1,
-    OperationWorkspaceRefreshTargetService,
-    OperationWorkspaceRefreshTargetSuccessV1,
-    OperationWorkspaceRefreshTargetVersionHeader,
-    operation_public_schema_reference,
-)
-from .._interactions import OperationInteractionRequest, OperationPendingInteraction, OperationResponseIntent
-from .._projection_services import BoundOperationSecureResponseAuthority, OperationResponseAuthorityBroker
-from .._supervisor import OperationSupervisor
+from ..interactions import OperationInteractionRequest, OperationPendingInteraction, OperationResponseIntent
 from ..owner import OperationExecutorContext
-from ..persistence import (
-    OperationInteractionEvent,
-    OperationOwnerLease,
-    OperationPersistedSnapshot,
-    OperationPhaseEvent,
-    OperationTerminalEvent,
-    operation_conflict_scope_reference,
-)
+from ..projection_services import BoundOperationSecureResponseAuthority, OperationResponseAuthorityBroker
+from ..supervisor import OperationSupervisor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

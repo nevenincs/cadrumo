@@ -6,13 +6,10 @@ import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from ..application.operations import (
-    OperationComposedServices,
-    OperationEffect,
-    OperationLifecycle,
+from ..application.operations.composition import OperationComposedServices
+from ..application.operations.frontend_contracts import (
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
-    OperationRequest,
     OperationResponseApplyRequestV1,
     OperationResponseControlRequestV1,
     OperationResponseMutationSuccessV1,
@@ -20,8 +17,8 @@ from ..application.operations import (
     OperationReviewAvailableInteractionV1,
     OperationReviewProjectionRequestV1,
     OperationReviewProjectionSuccessV1,
-    OperationTerminalCondition,
 )
+from ..application.operations.models import OperationRequest
 from ..application.user_profile import (
     CENSAL_OPERATION_DEFINITION_ID,
     CensalOperationOutcome,
@@ -31,6 +28,11 @@ from ..application.user_profile import (
     build_censal_operation_request,
 )
 from ..core import require_active_bucket_id
+from ..core.operations import (
+    OperationEffect,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
 from ..core.time import now
 from ._operation_composition import compose_operation_dependencies
 

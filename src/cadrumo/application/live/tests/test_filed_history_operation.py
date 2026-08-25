@@ -18,11 +18,9 @@ from ....adapters.outbound.aeat.sede import (
     FiledDeclarationAvailability,
     FiledDeclarationAvailabilityReport,
 )
-from ....adapters.persistence.operations import (
-    OperationJournalRepository,
-    OperationLeaseFilesystemRepository,
-    operation_secure_reference_repository,
-)
+from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
+from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
+from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ....adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from ....core import (
     FiledHistoryDiscoverySignal,
@@ -37,11 +35,9 @@ from ....core import (
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....tests.offline_aeat_register import aeat_sede_fixture, open_routed_declarations_register
 from ....tests.secure_sql import isolated_runtime_profile
-from ...operations import (
-    OperationRegistry,
-    OperationRequest,
-    OperationSupervisor,
-)
+from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.registry import OperationRegistry
+from cadrumo.application.operations.supervisor import OperationSupervisor
 from .. import (
     FILED_HISTORY_OPERATION_DEFINITION_ID as PUBLIC_FILED_HISTORY_OPERATION_DEFINITION_ID,
 )
@@ -421,7 +417,9 @@ def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path) -> None:
             events = (await supervisor.replay(operation_id, 0, limit=100)).events
             receipt = snapshot.terminal_receipt
             assert receipt is not None
-            result = await operands.resolve(receipt.result_ref, FiledHistoryOnboardingRun)
+            reference = receipt.result_ref
+            assert reference is not None
+            result = await operands.resolve(reference, FiledHistoryOnboardingRun)
             return snapshot, events, result
 
         snapshot, events, result = asyncio.run(run())
@@ -587,7 +585,9 @@ def test_public_registration_uses_a_strict_profile_free_request_schema(tmp_path:
 def test_active_profile_resolution_uses_the_workflow_public_facade() -> None:
     """The live operation must not reach through workflow's persistence module."""
     module = importlib.import_module(".._filed_history_operation", package=__package__)
-    source = Path(module.__file__).read_text(encoding="utf-8")
+    module_file = module.__file__
+    assert module_file is not None
+    source = Path(module_file).read_text(encoding="utf-8")
 
     assert "from ..workflow import workflow_state_repository" in source
     assert "from ..workflow._persistence import workflow_state_repository" not in source

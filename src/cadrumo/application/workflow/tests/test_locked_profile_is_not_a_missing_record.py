@@ -192,7 +192,7 @@ def test_an_unlocked_profile_is_read_through_to_ready(tmp_path: Path) -> None:
 
 def test_a_selector_with_no_committed_capsule_is_not_softened_into_a_lock(tmp_path: Path) -> None:
     """Genuine absence keeps its own alarming verdict; nothing is hidden behind the lock."""
-    write_pointer(tmp_path, BucketPointer(bucket_id=PROFILE_ID, schema_version=1))
+    write_pointer(tmp_path, BucketPointer.selected(bucket_id=PROFILE_ID, transition_revision=1))
 
     with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
         health = assess_active_profile_health()

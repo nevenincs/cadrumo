@@ -13,12 +13,10 @@ from uuid import UUID, uuid4
 from pydantic import ValidationError
 
 from ...core import BucketPointer
-from ...core.external_constants import UTF_8_ENCODING
 from ...core.paths import effective_storage_root
 from ...core.time import now as _utc_now
 from ._custody_hold import ProfileCustodyHoldAuthority
 from ._custody_hold_models import ProfileCustodyRetentionOverride, hold_permits_local_deletion
-from ._custody_pointer import ProfileCustodyPointerSnapshot
 from ._custody_ports import (
     ProfileCustodyEnvelopePort,
     ProfileCustodyPort,
@@ -28,7 +26,6 @@ from ._custody_ports import (
 )
 from ._custody_repository import (
     ProfileCustodyTransactionRepository,
-    compare_and_swap_profile_pointer,
     profile_custody_transaction_lock,
 )
 from ._custody_transactions import (
@@ -50,6 +47,7 @@ from ._login_session import (
     remove_profile_session_acceleration_for_custody_delete,
     revoke_live_profile_secret_for_custody_delete,
 )
+from ._profile_pointer_transaction import active_profile_pointer_transaction
 
 
 class ProfileCustodyDisplacedSessionRetirementError(ProfileCustodyTransactionConflictError):
@@ -88,6 +86,11 @@ class _ProfileCustodyTransactionCapability:
         self._adapters: ProfileCustodyPort = profile_custody_port()
         self._repository = ProfileCustodyTransactionRepository(root=self._root)
         self._holds = ProfileCustodyHoldAuthority(root=self._root)
+
+    def _read_pointer(self) -> BucketPointer:
+        """Consume one canonical lock-scoped pointer observation."""
+        with active_profile_pointer_transaction(self._root) as transaction:
+            return transaction.read()
 
     def prepare_delete(
         self,
@@ -134,7 +137,7 @@ class _ProfileCustodyTransactionCapability:
                 state=ProfileCustodyTransactionState.DELETE_PREPARED,
                 started_at=instant,
                 updated_at=instant,
-                pointer_before=ProfileCustodyPointerSnapshot.capture(self._root),
+                pointer_before=self._read_pointer(),
                 expected_custody_digest=inventory.digest,
                 inventory=ProfileCustodyInventoryWitness.from_inventory(inventory),
                 hold_assessment=hold_assessment,
@@ -193,7 +196,7 @@ class _ProfileCustodyTransactionCapability:
                 state=ProfileCustodyTransactionState.PREPARED,
                 started_at=instant,
                 updated_at=instant,
-                pointer_before=ProfileCustodyPointerSnapshot.capture(self._root),
+                pointer_before=self._read_pointer(),
                 proposed_generation=password_envelope.password_generation,
                 label=canonical_label,
                 label_revision=label_record.label_revision,
@@ -352,7 +355,7 @@ class _ProfileCustodyTransactionCapability:
         rollback only when the pointer still equals the original witness.  A
         surviving stage is promoted to ``STAGE_VERIFIED`` before publication.
         """
-        current = ProfileCustodyPointerSnapshot.capture(self._root)
+        current = self._read_pointer()
         stage = self._create_stage_path(journal)
         final = self._adapters.committed_capsule_path(journal.profile_id, root=self._root)
         if os.path.lexists(stage) and final is not None:
@@ -430,23 +433,25 @@ class _ProfileCustodyTransactionCapability:
             self._repository.save_journal(journal)
         else:
             raise ProfileCustodyTransactionConflictError("verified create stage disappeared before publication")
-        current = ProfileCustodyPointerSnapshot.capture(self._root)
-        replacement = (
-            BucketPointer(bucket_id=str(journal.profile_id), schema_version=1).to_toml().encode(UTF_8_ENCODING)
+        replacement_bucket_id = str(journal.profile_id)
+        published_record = journal.pointer_before.selected(
+            bucket_id=replacement_bucket_id,
+            transition_revision=journal.pointer_before.transition_revision + 1,
         )
-        if current == journal.pointer_before:
-            self._retire_displaced_profile_session(journal)
-            compare_and_swap_profile_pointer(
-                root=self._root,
-                expected=journal.pointer_before,
-                replacement=replacement,
-            )
-        elif current.captured_bytes() != replacement:
-            raise ProfileCustodyTransactionConflictError(
-                "create recovery will not overwrite an independently changed pointer"
-            )
-        else:
-            self._retire_displaced_profile_session(journal)
+        with active_profile_pointer_transaction(self._root) as pointer_transaction:
+            current = pointer_transaction.read()
+            if current == journal.pointer_before:
+                self._retire_displaced_profile_session(journal)
+                pointer_transaction.compare_and_select(
+                    expected=journal.pointer_before,
+                    bucket_id=replacement_bucket_id,
+                )
+            elif current != published_record:
+                raise ProfileCustodyTransactionConflictError(
+                    "create recovery will not overwrite an independently changed pointer"
+                )
+            else:
+                self._retire_displaced_profile_session(journal)
         published = journal.with_update(
             state=ProfileCustodyTransactionState.POINTER_PUBLISHED,
             updated_at=instant,
@@ -506,16 +511,9 @@ class _ProfileCustodyTransactionCapability:
             ) from exc
 
     @staticmethod
-    def _selected_profile_before(snapshot: ProfileCustodyPointerSnapshot) -> str | None:
+    def _selected_profile_before(snapshot: BucketPointer) -> str | None:
         """Return the profile the captured pointer named, or ``None`` when unselected."""
-        captured = snapshot.captured_bytes()
-        if captured is None:
-            return None
-        try:
-            pointer = BucketPointer.from_toml(captured.decode(UTF_8_ENCODING))
-        except (UnicodeDecodeError, ValidationError, ValueError) as exc:
-            raise ProfileCustodyTransactionConflictError("captured active profile pointer is not canonical") from exc
-        return pointer.bucket_id
+        return snapshot.bucket_id
 
     def _finish_create_recovery(
         self,
@@ -640,7 +638,7 @@ class _ProfileCustodyTransactionCapability:
 
         with active_profile_pointer_transaction(self._root) as pointer_transaction:
             pointer = pointer_transaction.read()
-        if pointer is not None and pointer.bucket_id == str(profile_id):
+        if pointer.bucket_id == str(profile_id):
             raise ProfileCustodyTransactionRefusalError("single-target profile deletion refuses the active profile")
 
     def _validate_current_delete_hold(
@@ -765,12 +763,29 @@ class _ProfileCustodyTransactionCapability:
         if journal.state is not ProfileCustodyTransactionState.SESSION_ACCELERATION_DELETED:
             return journal
         self._verify_source_delete_marker(journal)
-        replacement = self._pointer_replacement(journal.pointer_before, journal.profile_id)
-        current = ProfileCustodyPointerSnapshot.capture(self._root)
-        if current == journal.pointer_before:
-            compare_and_swap_profile_pointer(root=self._root, expected=journal.pointer_before, replacement=replacement)
-        elif current.captured_bytes() != replacement:
-            raise ProfileCustodyTransactionConflictError("active profile pointer changed after delete preflight")
+        replacement_bucket_id = self._pointer_replacement(journal.pointer_before, journal.profile_id)
+        replacement_record = (
+            journal.pointer_before.absent(
+                transition_revision=journal.pointer_before.transition_revision + 1,
+            )
+            if replacement_bucket_id is None
+            else journal.pointer_before.selected(
+                bucket_id=replacement_bucket_id,
+                transition_revision=journal.pointer_before.transition_revision + 1,
+            )
+        )
+        with active_profile_pointer_transaction(self._root) as pointer_transaction:
+            current = pointer_transaction.read()
+            if current == journal.pointer_before:
+                if replacement_bucket_id is None:
+                    pointer_transaction.clear()
+                else:
+                    pointer_transaction.compare_and_select(
+                        expected=journal.pointer_before,
+                        bucket_id=replacement_bucket_id,
+                    )
+            elif current != replacement_record:
+                raise ProfileCustodyTransactionConflictError("active profile pointer changed after delete preflight")
         cleared = journal.with_update(state=ProfileCustodyTransactionState.POINTER_CLEARED, updated_at=instant)
         self._repository.save_journal(cleared)
         return cleared
@@ -969,12 +984,12 @@ class _ProfileCustodyTransactionCapability:
         )
 
     @classmethod
-    def _pointer_replacement(cls, snapshot: ProfileCustodyPointerSnapshot, profile_id: UUID) -> bytes | None:
-        """Return the pointer bytes after removing this profile, if needed."""
+    def _pointer_replacement(cls, snapshot: BucketPointer, profile_id: UUID) -> str | None:
+        """Return the selected id after removing this profile, if needed."""
         selected = cls._selected_profile_before(snapshot)
         if selected is None:
             return None
-        return None if selected == str(profile_id) else snapshot.captured_bytes()
+        return None if selected == str(profile_id) else selected
 
     @staticmethod
     def _validate_confirmation(

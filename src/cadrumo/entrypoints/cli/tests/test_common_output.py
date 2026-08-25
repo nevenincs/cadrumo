@@ -7,7 +7,7 @@ import typer.main
 from ....core.json_contract import OutputSchema
 from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from .._command_suggestions import INVOCATION_REMAINDER_META_KEY
-from .._common import _emit_envelope, _is_metadata_invocation
+from .._common import _is_metadata_invocation, emit_envelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -18,7 +18,7 @@ class _EnvelopePayload(OutputSchema):
     profile_id: str
 
 
-def test_emit_envelope_text_path_redacts_lines_through_common_renderer(capsys: pytest.CaptureFixture[str]) -> None:
+def test_envelope_text_path_redacts_lines_through_common_renderer(capsys: pytest.CaptureFixture[str]) -> None:
     # Create a typer app and get its click command to create a proper typer.Context.
     # The Typer must carry at least one command; the current (vendored-click) typer
     # raises "Could not get a command for this Typer instance" for an empty app.
@@ -30,7 +30,7 @@ def test_emit_envelope_text_path_redacts_lines_through_common_renderer(capsys: p
     click_cmd = typer.main.get_command(app)
     ctx = typer.Context(click_cmd, obj={"format": "text"})
 
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="app secure audit",
         result=_EnvelopePayload(profile_id=_PROFILE_ID),

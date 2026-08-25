@@ -61,7 +61,7 @@ from ._engine import (
     start_flow,
     visible_sequence,
 )
-from ._errors import (
+from .errors import (
     FlowAnswerError,
     FlowCheckpointError,
     FlowCopyResolutionError,
@@ -72,7 +72,6 @@ from ._errors import (
     FlowUnsupportedConsoleError,
     FlowValidatorRegistryError,
 )
-from ._line_frontend import LineFlowFrontend
 from ._resume import resume_flow
 from ._review import ReviewProjection, ReviewRow, assert_submit_eligible, review
 from ._scripted import run_scripted_flow
@@ -117,7 +116,6 @@ __all__ = [
     "FlowValidatorRegistryError",
     "FlowVisibility",
     "LegalRefCopy",
-    "LineFlowFrontend",
     "PageCopy",
     "ReviewProjection",
     "ReviewRow",

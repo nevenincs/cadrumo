@@ -12,26 +12,27 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
-from ....adapters.persistence.operations import (
-    OperationJournalRepository,
-    OperationLeaseFilesystemRepository,
+from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
+from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
+from cadrumo.adapters.persistence.operations.secure_references import (
     OperationSecureReferenceRepository,
     operation_secure_reference_repository,
 )
 from ....adapters.persistence.storage import current_active_bucket_session
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....application.operations import (
-    OperationEffect,
-    OperationLifecycle,
-    OperationReconciliationPolicy,
-    OperationRegistry,
-    OperationRequest,
+from cadrumo.application.operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
-    OperationSupervisor,
+)
+from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.registry import OperationReconciliationPolicy, OperationRegistry
+from cadrumo.application.operations.supervisor import OperationSupervisor
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationLifecycle,
     OperationTerminalCondition,
 )
-from ....application.operations.persistence import OperationPersistedSnapshot
+from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from ....core import read_pointer
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -42,7 +43,10 @@ from .._bundle_export_contracts import (
 from .._bundle_export_operation import ProfileBundleExportJournalRepository
 from .._custody_ports import ProfileCustodySecureObjectRepositoryPort, profile_custody_secure_object_repository
 from .._login_session import login_profile
-from .._operation_definitions import (
+from .._profile_record_repository import ProfileRecordRepository
+from .._projections import record_to_path_values
+from .._registration import register_profile_with_credentials
+from ..operations import (
     PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,
     PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
     PROFILE_LOGOUT_OPERATION_DEFINITION_ID,
@@ -50,16 +54,13 @@ from .._operation_definitions import (
     USER_PROFILE_OPERATION_DEFINITIONS,
     ProfileBundleExportOperationRequest,
     ProfileFieldMutationOperationRequest,
-    ProfileLogoutOperationRequest,
     ProfileMutationOperationResult,
     ProfileRepeatableRowMutationOperationRequest,
     ProfileRepeatableRowMutationOperationResult,
     ProfileRepeatableRowValue,
+    build_profile_logout_operation_request,
     build_user_profile_operation_registrations,
 )
-from .._profile_record_repository import ProfileRecordRepository
-from .._projections import record_to_path_values
-from .._registration import register_profile_with_credentials
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -303,7 +304,7 @@ def test_profile_logout_strong_closes_real_custody_after_secure_request_resoluti
         profile_id = _register_profile()
         live_session = current_active_bucket_session()
         assert live_session is not None
-        assert read_pointer(root) is not None
+        assert read_pointer(root).bucket_id is not None
         with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as profile_objects:
 
             async def _run_strong_close() -> OperationPersistedSnapshot:
@@ -314,11 +315,7 @@ def test_profile_logout_strong_closes_real_custody_after_secure_request_resoluti
                     lease_token="8" * 64,
                 )
                 created = await supervisor.submit(
-                    OperationRequest(
-                        definition_id=PROFILE_LOGOUT_OPERATION_DEFINITION_ID,
-                        subject_ref=f"profile:{profile_id}",
-                        payload=ProfileLogoutOperationRequest(profile_id=profile_id),
-                    ),
+                    build_profile_logout_operation_request(profile_id),
                     operation_id="d" * 64,
                 )
                 terminal = await supervisor.start(created)
@@ -331,5 +328,5 @@ def test_profile_logout_strong_closes_real_custody_after_secure_request_resoluti
         assert terminal.effect is OperationEffect.UPDATED
         assert terminal.terminal_receipt is not None
         assert terminal.terminal_receipt.result_ref == f"profile:{profile_id}"
-        assert read_pointer(root) is None
+        assert read_pointer(root).bucket_id is None
         assert live_session.sealed is True

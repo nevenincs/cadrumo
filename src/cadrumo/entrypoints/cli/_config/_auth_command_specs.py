@@ -299,7 +299,7 @@ AUTH_COMMAND_SPECS = (
             ),
             _option("scope", ("--scope",), _STR, "cli.config.auth.apoderado.configure.scope_help", multiple=True),
         ),
-        tui_capability=TuiCapability.AVAILABLE,
+        tui_capability=TuiCapability.NOT_IMPLEMENTED,
     ),
     _leaf(
         "config_auth_apoderado_clear",

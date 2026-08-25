@@ -616,7 +616,7 @@ def test_default_route_repository_refuses_pointer_scoped_active_profile_without_
 ) -> None:
     """A plaintext pointer selects a runtime bucket; it must not fall back to root DB."""
 
-    write_pointer(tmp_path, BucketPointer(bucket_id=_BUCKET_A_ID, schema_version=1))
+    write_pointer(tmp_path, BucketPointer.selected(bucket_id=_BUCKET_A_ID, transition_revision=1))
 
     with (
         override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None),

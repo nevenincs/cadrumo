@@ -37,71 +37,17 @@ flows:
     unlock_button: Bejelentkezés
   manager:
     action:
-      abandoned: Nem történt változás.
-      add_row: Sor hozzáadása
-      add_row_done: A(z) %{section} %{index}. sora hozzáadva.
-      add_row_incomplete: A sorból kötelező adatok hiányoznak, ezért semmi sem lett
-        mentve.
-      add_row_none: Ez a profilséma nem tartalmaz sorokat kezelő szakaszt.
-      add_row_required: Kötelező; enélkül a sor nem adható hozzá.
-      add_row_section: Melyik szakaszhoz
-      auth_clave_incomplete: 'A Cl@ve még ezt igényli: %{missing}. Semmi sem lett
-        elmentve.'
       auth_clave_movil_route_app_request: Kérés az alkalmazásban
       auth_clave_movil_route_qr: QR-kód
-      auth_contraste_missing: 'A Cl@ve Móvil alkalmazáskéréséhez egy okmány-ellenőrző
-        adat szükséges: NIE esetén %{nie_field}, DNI esetén %{dni_field}. Nyissa meg
-        az Azonosítás részt, töltse ki a megfelelő mezőt, majd próbálja újra a szinkronizálást.'
-      auth_fecha_validez_invalid: Az érvényességi dátumot ÉÉÉÉ-HH-NN alakban adja
-        meg, például 1990-01-31.
-      auth_tax_id_invalid: Ez a NIF vagy NIE nem érvényes. Ellenőrizze a záró betűt,
-        és úgy adja meg, ahogy az okmányán szerepel, például 12345678Z.
       busy: Egy másik művelet még mindig fut. Várja meg, amíg befejeződik.
-      censal_pull: Kitöltés az AEAT nyilvántartási adataiból
-      censal_pull_auth_incomplete: Az azonosítása hiányos, ezért az AEAT még nem olvasható.
-        Előbb egészítse ki.
-      censal_pull_no_provider: A nyilvántartási adatok beolvasása előtt válassza ki,
-        hogyan azonosítja magát az AEAT felé.
-      censal_pull_review_applied: Az AEAT pontosan ellenőrzött nyilvántartási javaslata
-        alkalmazva lett.
-      censal_pull_review_rejected: Az ellenőrzött AEAT-javaslat elutasítva; a profil
-        nem változott.
-      certificate: Tanúsítvány
-      certificate_active: Aktív tanúsítvány
-      certificate_done: 'Azonosítás: %{provider}; aktív tanúsítvány: %{name}.'
-      export: Másolat exportálása
-      export_destination: A célfájl elérési útja
-      export_done: 'Titkosított másolat írva ide: %{destination}. A termék nem tudja
-        visszaimportálni; visszaállítható mentéshez használd az ''aeat config profile
-        archive export'' parancsot.'
-      export_passphrase: A másolatot védő jelszó
       failed: A művelet nem fejeződött be.
-      filed_history_pull_all: AEAT bevallási előzmények lekérése
-      filed_history_pull_all_done: '{captured} bevallás rögzítve, {refused} elutasítva;
-        ÁFA-egyenleg: {iva_wallet_status}; értesítések: {notificaciones_status}.'
-      filed_history_pull_all_refused: 'Ezeket a párokat nem sikerült beolvasni, és
-        NEM lettek üresként jelentve: {pairs}. Az újbóli próbálkozáshoz futtassa újra.'
-      google_export: Exportálás Google Sheetsbe
-      google_export_done: 'A(z) %{modelo} modelo exportálva ide: %{spreadsheet_url}.'
-      google_export_modelo: Modelo
-      google_export_period: Időszak
-      google_export_year: Év
-      google_export_year_invalid: Adjon meg egy 2000 és 2099 közötti évet.
       logout: Kijelentkezés
       logout_done: Kijelentkezve.
-      provider:
-        certificate: Elektronikus tanúsítvány
-        clave_movil: Cl@ve Móvil
-        clave_permanente: Cl@ve Permanente
       working: '{action} folyamatban...'
     actions:
       section: Műveletek
     censal_review:
       apply: A pontos javaslat alkalmazása
-      decision: Döntés
-      reject: Elutasítás a profil módosítása nélkül
-      required: Válassza az alkalmazást vagy az elutasítást.
-      title: Az AEAT pontos nyilvántartási javaslatának ellenőrzése
     choice_unavailable: Nem elérhető választási lehetőség
     column:
       field: Mező
@@ -112,15 +58,6 @@ flows:
       clear: Törlés
       masked_kept: Ez az érték rejtett, ezért a mező üresen indul. Hagyd üresen a
         megőrzéshez, vagy írj be egy újat a cseréhez.
-      refused:
-        boolean: A(z) '%{value}' nem igen vagy nem válasz. Válaszolj Igen vagy Nem
-          értékkel.
-        date: A(z) '%{value}' nem dátum. Használd az ÉÉÉÉ-HH-NN formátumot - például
-          1978-03-15.
-        email: A(z) '%{value}' nem e-mail-cím. Adj meg egyet nev@pelda.com formában.
-        enum: 'A(z) ''%{value}'' itt nem elfogadott. Válassz egyet: %{accepted}.'
-        numeric: A(z) '%{value}' nem olyan szám, amelyet ez a mező elfogad%{accepted}.
-          Adj meg egy számot, tizedesponttal.
       required_blank: A(z) {field} kötelező, ezért nem maradhat üresen. Adj meg egy
         értéket, vagy a mégse gombbal hagyd változatlanul.
       save: Mentés
@@ -137,7 +74,6 @@ flows:
     language:
       unavailable: Ez a profil nem kínál nyelvi beállítást.
     namespace_detail: '{number}. részlet'
-    next_step_modelo: A profil megadott adatai a(z) {modelo} modellhez vezetnek.
     required_field_unavailable: Kötelező profilmező
     section_title: '{title} - {present}/{total}'
     title: 'Profil: {profile}'

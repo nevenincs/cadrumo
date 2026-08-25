@@ -32,6 +32,7 @@ from textual.widgets import Input
 from ....application.user_profile import (
     MASKED_PLACEHOLDER,
     ProfileFieldView,
+    apply_manager_profile_field_mutation,
     build_profile_overview,
     login_profile,
     register_profile_with_credentials,
@@ -39,7 +40,6 @@ from ....application.user_profile import (
 from ....core import require_active_bucket_id
 from ....core.classification import SensitivityClass
 from ....domain.user_profile import load_user_profile_schema
-from ....entrypoints.cli import persist_active_profile_field
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..components.status import PinnedStatusBar
@@ -83,7 +83,12 @@ def _live_overview():
 def _persist(path: str, value: str):
     """The production write door, so an edit here travels the real path."""
     _ensure_logged_in()
-    return persist_active_profile_field(path, value, label=_LABEL)
+    record = apply_manager_profile_field_mutation(
+        profile_id=require_active_bucket_id(),
+        path=path,
+        value=value,
+    )
+    return build_profile_overview(record, label=_LABEL)
 
 
 def _stored() -> dict[str, object | None]:

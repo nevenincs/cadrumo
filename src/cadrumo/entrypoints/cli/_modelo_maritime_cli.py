@@ -25,7 +25,7 @@ from ...application.modelo import preview_maritime_exemption_for_active_profile
 from ...core.errors import resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...domain.renta import RentaValidationError
-from ._common import _emit_envelope, activate_subcommand_output_language
+from ._common import activate_subcommand_output_language, emit_envelope
 from ._modelo_behavior_support import require_active_profile
 from ._modelo_cli_support import bad_parameter_from_error, optional_decimal_option
 from ._modelo_payloads import CasillaObservationPayload, WorkPreviewMaritimeExemptionResult
@@ -117,4 +117,4 @@ def work_preview_maritime_exemption(
         lines.append(f"casilla_value\t{key}\t{value}")
     if retmar_warning is not None:
         lines.append(f"retmar_warning\t{retmar_warning}")
-    _emit_envelope(ctx, command="modelo.work.preview_maritime_exemption", result=payload, lines=lines)
+    emit_envelope(ctx, command="modelo.work.preview_maritime_exemption", result=payload, lines=lines)

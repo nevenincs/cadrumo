@@ -18,7 +18,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
+from ....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     RegistrySnapshot,
@@ -52,7 +52,22 @@ _M200_CUOTA_INTEGRA_CASILLA: CasillaId = validated_casilla_id(
 
 
 def _m200_snapshot() -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("200", filing_year=2025, period="0A", on=None)
+    """Return the modelo 200 snapshot at the rung this module's questions need.
+
+    Every test here asks how INPUTS are routed -- which binding ids the enum
+    channel consumes, how string inputs resolve to enum bindings, what the
+    calculation does with a compensation value. None of them renders a fichero
+    record or reads an export layout, so the calculation rung is the authority
+    they exercise. Modelo 200 declares exactly that rung and deliberately
+    withholds filing while its revision spans two AEAT layouts.
+    """
+    return resources().modelos.authority.snapshot(
+        "200",
+        filing_year=2025,
+        period="0A",
+        on=None,
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
 
 
 def test_enum_consumed_binding_ids_identifies_legal_entity_form() -> None:

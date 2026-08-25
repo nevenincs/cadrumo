@@ -16,6 +16,8 @@ from ....adapters.persistence.storage.errors import (
 )
 from ....adapters.persistence.storage.master_key import NoActiveBucketSessionError
 from ....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_cli_profile
 from .. import _errors
 from .._common import cli_policy_refusal_projection
 
@@ -211,15 +213,14 @@ def _project(error: Exception):
     ids=("no-active-session", "no-active-profile", "resumed-kek", "missing-material", "expired", "locked"),
 )
 def test_s70_boundary_projects_each_producer_without_a_resolved_profile_as_exact_no_action(
-    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
     error_factory: Callable[[], Exception],
     condition: str,
     facts: Mapping[str, str | bool],
 ) -> None:
     """No bucket identifier is ever misrepresented as the action's public name."""
-    monkeypatch.setattr(_errors, "active_profile_label_for_error", lambda: None)
-
-    action = _project(error_factory())
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        action = _project(error_factory())
 
     assert action.failed_condition_id == condition
     assert len(action.evidence) == 1
@@ -248,15 +249,15 @@ def test_s70_boundary_projects_each_producer_without_a_resolved_profile_as_exact
     ids=("no-active-session", "expired-session"),
 )
 def test_s70_boundary_reuses_canonical_login_action_only_for_a_proven_public_profile_target(
-    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
     error_factory: Callable[[], Exception],
     condition: str,
     reason: str,
 ) -> None:
     """The existing profile-session helper, not an adapter, resolves login."""
-    monkeypatch.setattr(_errors, "active_profile_label_for_error", lambda: "operator-profile")
-
-    action = _project(error_factory())
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_cli_profile(label="operator-profile")
+        action = _project(error_factory())
 
     assert action.failed_condition_id == condition
     assert action.action is not None
@@ -277,21 +278,19 @@ def test_s70_boundary_reuses_canonical_login_action_only_for_a_proven_public_pro
     assert action.no_recovery_outcome is None
 
 
-def test_s70_sqlalchemy_wrapped_no_session_error_reaches_the_same_canonical_login_action(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_s70_sqlalchemy_wrapped_no_session_error_reaches_the_same_canonical_login_action(tmp_path: Path) -> None:
     """The real encrypted-column wrapping shape cannot bypass the boundary policy."""
     import sqlalchemy.exc as sa_exc
 
-    monkeypatch.setattr(_errors, "active_profile_label_for_error", lambda: "operator-profile")
-    wrapped = sa_exc.StatementError(
-        message="bind-param processing failed",
-        statement="SELECT secure_objects.payload FROM secure_objects",
-        params={},
-        orig=NoActiveBucketSessionError(),
-    )
-
-    action = _project(wrapped)
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_cli_profile(label="operator-profile")
+        wrapped = sa_exc.StatementError(
+            message="bind-param processing failed",
+            statement="SELECT secure_objects.payload FROM secure_objects",
+            params={},
+            orig=NoActiveBucketSessionError(),
+        )
+        action = _project(wrapped)
 
     assert action.failed_condition_id == "profile.session.logged_in"
     assert action.action is not None

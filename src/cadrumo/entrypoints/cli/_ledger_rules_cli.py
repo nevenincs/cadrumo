@@ -18,7 +18,7 @@ from ...domain.transactions import (
     Transaction,
     TransactionLifecycleState,
 )
-from ._common import _bad, _emit_envelope
+from ._common import _bad, emit_envelope
 from ._common import active_bucket_id_or_refuse as _rule_bucket_id
 
 
@@ -90,7 +90,7 @@ def rule_add(
     ]
     from ._ledger_payloads import RuleAddResult
 
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.rule.add",
         result=RuleAddResult.model_validate(payload),
@@ -163,7 +163,7 @@ def _emit_rule_apply_dry_run(ctx: typer.Context, *, bucket_id: str, reaffirm: bo
     from ._ledger_payloads import RuleApplyResult
 
     would_match = _rule_apply_dry_run_matches(bucket_id=bucket_id, reaffirm=reaffirm)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.rule.apply",
         result=RuleApplyResult.model_validate(_rule_apply_dry_run_payload(would_match)),
@@ -202,7 +202,7 @@ def _rule_apply_lines(result: ApplyRulesResult) -> list[str]:
 def _emit_rule_apply_result(ctx: typer.Context, result: ApplyRulesResult) -> None:
     from ._ledger_payloads import RuleApplyResult
 
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.rule.apply",
         result=RuleApplyResult.model_validate(_rule_apply_payload(result)),
@@ -265,7 +265,7 @@ def rule_list(ctx: typer.Context) -> None:
         )
     from ._ledger_payloads import RuleListResult
 
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.rule.list",
         result=RuleListResult.model_validate(payload),

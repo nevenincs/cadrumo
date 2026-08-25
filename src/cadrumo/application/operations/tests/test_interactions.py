@@ -9,13 +9,13 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ....core import OperationInteractionKind
-from .._interactions import (
+from ..interactions import (
     OperationApplyResponse,
     OperationInteractionRequest,
     OperationInteractionResponse,
     OperationRejectResponse,
 )
-from .._models import OperationIdentity
+from ..models import OperationIdentity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

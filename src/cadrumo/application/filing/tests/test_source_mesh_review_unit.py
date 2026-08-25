@@ -20,6 +20,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....core.hashing import content_hash_hex
 from ....domain.invoices import Invoice, InvoiceCatalogue
 from ....domain.iva import InvoiceKind
 from ...invoices import build_catalogue_invoice
@@ -72,3 +73,14 @@ def test_invoice_catalogue_fingerprint_distinguishes_empty_from_populated() -> N
 
     assert empty != populated
     assert empty == _invoice_catalogue_fingerprint(InvoiceCatalogue())
+
+
+def test_invoice_catalogue_fingerprint_has_core_canonical_digest_parity() -> None:
+    invoice_a = _invoice("2026-0001", taxable_base=Decimal("100.00"))
+    invoice_b = _invoice("2026-0002", taxable_base=Decimal("200.00"))
+    catalogue = InvoiceCatalogue.from_invoices([invoice_b, invoice_a])
+    payload = [
+        invoice.model_dump(mode="json") for invoice in sorted(catalogue.values(), key=lambda item: item.invoice_id)
+    ]
+
+    assert _invoice_catalogue_fingerprint(catalogue) == content_hash_hex(payload)

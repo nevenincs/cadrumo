@@ -21,7 +21,7 @@ from ....application._config_reset_models import (
     ConfigResetTarget,
     ConfigResetTargetPhase,
 )
-from ....core import STR_KEYED_MAPPING_ADAPTER
+from ....core import STR_KEYED_MAPPING_ADAPTER, BucketPointer
 from .._config_payloads import ConfigResetOperationPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -43,7 +43,7 @@ def _completed_operation() -> ConfigResetOperation:
         status=ConfigResetOperationStatus.COMPLETE,
         started_at=_STARTED_AT,
         updated_at=_COMPLETED_AT,
-        pointer_snapshot=ConfigResetPointerSnapshot(present=False),
+        pointer_snapshot=ConfigResetPointerSnapshot(record=BucketPointer.absent(transition_revision=0)),
         targets=(target,),
         summary=ConfigResetSummary(
             target_count=1,

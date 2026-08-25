@@ -8,26 +8,22 @@ from typing import Annotated, TypedDict
 import pytest
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 
-from ....core import OperationEventKind, OperationInteractionKind, OperationLifecycle
-from ... import operations as public_operations
-from .. import (
+import cadrumo.application.operations.frontend_contracts as frontend_contracts
+from cadrumo.application.operations.capabilities import (
     OperationBaselinePolicy,
-    OperationCancellation,
+    OperationCapabilities,
+    OperationConflictScope,
+    OperationReplayPolicy,
+    OperationRequestStoragePolicy,
+    OperationSensitiveInputPolicy,
+)
+from cadrumo.application.operations.frontend_contracts import (
     OperationCancellationRefusalCode,
     OperationCancellationRefusalV1,
     OperationCancellationVersionHeader,
-    OperationCapabilities,
-    OperationClosePolicy,
-    OperationConflictScope,
-    OperationDeadline,
-    OperationDefinition,
     OperationDetachRefusalCode,
     OperationDetachRefusalV1,
     OperationDetachVersionHeader,
-    OperationDurability,
-    OperationEffect,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
     OperationNoPendingInteractionV1,
     OperationObservationRefusalCode,
     OperationObservationRefusalV1,
@@ -35,16 +31,10 @@ from .. import (
     OperationObservationResultV1,
     OperationObservationSuccessV1,
     OperationObservationVersionHeader,
-    OperationPublicContractSetV1,
     OperationPublicEventPageV1,
     OperationPublicPhaseEventV1,
     OperationPublicProgressV1,
     OperationPublicProjectionV1,
-    OperationReconciliationPolicy,
-    OperationRegistry,
-    OperationReplayPolicy,
-    OperationRequest,
-    OperationRequestStoragePolicy,
     OperationResponseControlRefusalCode,
     OperationResponseControlRefusalV1,
     OperationResponseControlVersionHeader,
@@ -54,10 +44,6 @@ from .. import (
     OperationReviewProjectionResultV1,
     OperationReviewProjectionSuccessV1,
     OperationReviewProjectionVersionHeader,
-    OperationSchemaBindingV1,
-    OperationSchemaIdentityV1,
-    OperationSensitiveInputPolicy,
-    OperationTerminalCondition,
     OperationUnsupportedInteractionV1,
     OperationWorkspaceRefreshTargetRefusalCode,
     OperationWorkspaceRefreshTargetRefusalV1,
@@ -66,9 +52,31 @@ from .. import (
     OperationWorkspaceRefreshTargetSuccessV1,
     OperationWorkspaceRefreshTargetVersionHeader,
 )
+from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.persistence.replay import OperationReplayStatus
+from cadrumo.application.operations.registry import (
+    OperationDefinition,
+    OperationExecutorFactory,
+    OperationFrontendProjection,
+    OperationPublicContractSetV1,
+    OperationPublicDefinitionRegistrationV1,
+    OperationReconciliationPolicy,
+    OperationRegistry,
+    OperationSchemaBindingV1,
+    OperationSchemaIdentityV1,
+)
+from cadrumo.core.operations import (
+    OperationCancellation,
+    OperationClosePolicy,
+    OperationDeadline,
+    OperationDurability,
+    OperationEffect,
+    OperationTerminalCondition,
+)
+
+from ....core import OperationEventKind, OperationInteractionKind, OperationLifecycle
 from .._model_contract import require_strict_frozen_operation_model_graph
 from ..owner import OperationExecutorContext
-from ..persistence import OperationReplayStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -138,7 +146,7 @@ def _projection_contract_set(
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
     )
-    registration = public_operations.OperationPublicDefinitionRegistrationV1.compose(
+    registration = OperationPublicDefinitionRegistrationV1.compose(
         definition=definition,
         request_schema=OperationSchemaBindingV1.bind(
             schema_id="operations.public.projection.request",
@@ -555,7 +563,7 @@ def test_public_refusals_are_closed_renderer_neutral_records(
     }
 
 
-def test_refresh_result_is_exactly_specialized_and_exported_from_the_facade() -> None:
+def test_refresh_result_is_exactly_specialized_in_its_defining_module() -> None:
     success = OperationWorkspaceRefreshTargetSuccessV1[SafeProjection](
         target_schema=_SCHEMA,
         definition_contract_digest=_DIGEST,
@@ -564,17 +572,15 @@ def test_refresh_result_is_exactly_specialized_and_exported_from_the_facade() ->
     adapter = TypeAdapter(OperationWorkspaceRefreshTargetResultV1[SafeProjection])
 
     assert adapter.validate_python(success) == success
-    assert public_operations.OperationWorkspaceRefreshTargetRequestV1 is (OperationWorkspaceRefreshTargetRequestV1)
-    assert public_operations.OperationPublicProjectionV1 is OperationPublicProjectionV1
 
 
-def _exported_public_model_types() -> tuple[type[BaseModel], ...]:
+def _frontend_contract_model_types() -> tuple[type[BaseModel], ...]:
     models: list[type[BaseModel]] = []
-    for name in public_operations.__all__:
-        candidate = getattr(public_operations, name)
+    for name in frontend_contracts.__all__:
+        candidate = getattr(frontend_contracts, name)
         if not isinstance(candidate, type) or not issubclass(candidate, BaseModel):
             continue
-        if candidate.__module__ != "cadrumo.application.operations._public":
+        if candidate.__module__ != "cadrumo.application.operations.frontend_contracts":
             continue
         if candidate is OperationReviewProjectionSuccessV1:
             candidate = OperationReviewProjectionSuccessV1[SafeProjection]
@@ -584,8 +590,8 @@ def _exported_public_model_types() -> tuple[type[BaseModel], ...]:
     return tuple(models)
 
 
-@pytest.mark.parametrize("model_type", _exported_public_model_types())
-def test_every_exported_public_model_graph_is_strict_frozen_and_closed(model_type: type[BaseModel]) -> None:
+@pytest.mark.parametrize("model_type", _frontend_contract_model_types())
+def test_every_frontend_contract_model_graph_is_strict_frozen_and_closed(model_type: type[BaseModel]) -> None:
     require_strict_frozen_operation_model_graph(model_type, path="public DTO")
     OperationSchemaIdentityV1.from_model(
         schema_id="operations.public.contract",

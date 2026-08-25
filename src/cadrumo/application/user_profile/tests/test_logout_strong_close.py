@@ -59,7 +59,7 @@ def _register_and_login(storage_root: Path) -> str:
     )
     login_profile(name=outcome.profile_id, passphrase_callback=lambda: _PASSWORD)
     assert master_key.current_active_bucket_session() is not None
-    assert read_pointer(storage_root) is not None
+    assert read_pointer(storage_root).bucket_id is not None
     return outcome.profile_id
 
 
@@ -84,7 +84,7 @@ def test_logout_clears_the_live_session_the_pointer_and_the_persisted_accelerati
             assert signed_out == profile_id
             assert master_key.current_active_bucket_session() is None
             assert not session_path.exists()
-            assert read_pointer(storage_root) is None
+            assert read_pointer(storage_root).bucket_id is None
             assert bind_resumed_profile_session(bucket_id=profile_id) is ProfileSessionRefusalReason.ABSENT
             assert master_key.current_active_bucket_session() is None
         finally:
@@ -153,7 +153,7 @@ def test_second_logout_is_a_clean_no_op(tmp_path: Path) -> None:
             assert logout_active_profile() is None
 
             assert master_key.current_active_bucket_session() is None
-            assert read_pointer(storage_root) is None
+            assert read_pointer(storage_root).bucket_id is None
             assert not session_path.exists()
         finally:
             _close_live_login()
@@ -187,6 +187,6 @@ def test_login_after_logout_is_a_fresh_authentication_not_a_resume(tmp_path: Pat
             assert outcome.already_authenticated is False
             assert outcome.bucket_id == profile_id
             assert master_key.current_active_bucket_session() is not first
-            assert read_pointer(storage_root) is not None
+            assert read_pointer(storage_root).bucket_id is not None
         finally:
             _close_live_login()

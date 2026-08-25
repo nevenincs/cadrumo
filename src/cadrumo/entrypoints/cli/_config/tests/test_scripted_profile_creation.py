@@ -23,8 +23,8 @@ from .....core.config import override_settings
 from .....core.i18n import tr
 from .....tests.cli_runner import invoke_cached_cli
 from ... import _command_specs
-from ..._command_spec import ArgumentSpec, CommandSpecGraph
-from ..._verb_input_schema import build_verb_input_schemas
+from ..._command_spec import ArgumentSpec
+from ..._verb_input_schema import build_verb_input_schemas, project_recovery_handoff_contract
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -579,7 +579,7 @@ def test_lazy_create_help_declares_exactly_one_canonical_machine_secret_option_p
     assert contract.verification_direction == "read"
 
 
-def test_recovery_schema_projects_changed_command_graph_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_recovery_schema_projects_changed_command_graph_metadata() -> None:
     graph = _command_specs.COMMAND_GRAPH
     create = graph.by_key()["config_profile_create"]
     assert create.recovery_handoff is not None
@@ -587,16 +587,11 @@ def test_recovery_schema_projects_changed_command_graph_metadata(monkeypatch: py
         create,
         recovery_handoff=replace(create.recovery_handoff, maximum_bytes=4096),
     )
-    monkeypatch.setattr(
-        _command_specs,
-        "COMMAND_GRAPH",
-        CommandSpecGraph(tuple(changed if spec.key == create.key else spec for spec in graph.specs)),
-    )
 
-    schema = build_verb_input_schemas(("config.profile.create",))["config.profile.create"]
+    contract = project_recovery_handoff_contract(changed)
 
-    assert schema.recovery_handoff_contract is not None
-    assert schema.recovery_handoff_contract.maximum_bytes == 4096
+    assert contract is not None
+    assert contract.maximum_bytes == 4096
 
 
 def test_recovery_descriptor_parameters_refuse_missing_or_stale_declaration() -> None:

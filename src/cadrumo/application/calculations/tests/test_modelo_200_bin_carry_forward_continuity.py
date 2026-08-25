@@ -40,7 +40,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
+from ....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     RegistryCalculationResult,
@@ -117,6 +117,7 @@ def _seed_m200_bin_stock(*, source_year: int, stock: Decimal, obs_repo: Calculat
                     filing_year=source_year,
                     period="0A",
                     casilla_values={_M200_BIN_PENDIENTE_FUTUROS: stock},
+                    grade=RegistryAuthorityGrade.CALCULATION,
                 ),
             ),
             source_kind="app_filing",
@@ -137,7 +138,9 @@ def _calculate_200(
     resultado contable 00501) merged over the resolved bound inputs; absent
     manual casillas default to zero in formula evaluation.
     """
-    snapshot = resources().modelos.authority.snapshot(_MODELO_200, filing_year=filing_year, period="0A")
+    snapshot = resources().modelos.authority.snapshot(
+        _MODELO_200, filing_year=filing_year, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+    )
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
     # Resolve every previous_filing carry binding (BIN-stock 00670 AND the art.13
     # dotaciones-deterioro 01494/01495) from the local observation store; any the
@@ -168,7 +171,9 @@ def _resolve_and_supply_relations(
     filing_year: int,
     obs_repo: CalculationObservationRepository,
 ) -> dict[RelationId, Decimal]:
-    snapshot = resources().modelos.authority.snapshot(_MODELO_200, filing_year=filing_year, period="0A")
+    snapshot = resources().modelos.authority.snapshot(
+        _MODELO_200, filing_year=filing_year, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+    )
     resolved = {
         item.relation: item.value
         for item in resolve_relations_from_local_store(snapshot, repository=obs_repo).values

@@ -26,7 +26,7 @@ emits :class:`~entrypoints.cli._diagnostics_payloads.RunHealthResult`,
 :class:`~entrypoints.cli._diagnostics_payloads.LatencyResult`,
 :class:`~entrypoints.cli._diagnostics_payloads.ErrorsBreakdownResult`,
 and :class:`~entrypoints.cli._diagnostics_payloads.LlmUsageResult`
-through :func:`_emit_envelope`.
+through :func:`emit_envelope`.
 
 See Also:
     :mod:`~application.diagnostics_run_health`
@@ -47,7 +47,7 @@ from datetime import date as _date
 import typer
 
 from ...core.i18n import tr
-from ._common import _emit_envelope, optional_decimal_text
+from ._common import emit_envelope, optional_decimal_text
 from ._diagnostics_payloads import (
     ErrorKindCountPayload,
     ErrorsBreakdownResult,
@@ -205,7 +205,7 @@ def diagnostics_run_health(
         )
         notices.append(notice)
 
-    _emit_envelope(ctx, command="diagnostics.run_health", result=result, lines=lines, notices=notices)
+    emit_envelope(ctx, command="diagnostics.run_health", result=result, lines=lines, notices=notices)
 
 
 def diagnostics_runs(
@@ -261,7 +261,7 @@ def diagnostics_runs(
     if no_run_data_notice is not None:
         notices.append(no_run_data_notice)
 
-    _emit_envelope(ctx, command="diagnostics.runs", result=result, lines=lines, notices=notices)
+    emit_envelope(ctx, command="diagnostics.runs", result=result, lines=lines, notices=notices)
 
 
 def diagnostics_latency(
@@ -332,7 +332,7 @@ def diagnostics_latency(
                 f"\tmean_ms={percentiles.mean_duration_ms}",
             )
 
-    _emit_envelope(ctx, command="diagnostics.latency", result=result, lines=lines, notices=notices)
+    emit_envelope(ctx, command="diagnostics.latency", result=result, lines=lines, notices=notices)
 
 
 def diagnostics_errors(
@@ -376,7 +376,7 @@ def diagnostics_errors(
         for row in result.by_error_kind:
             lines.append(f"{row.provider}\t{row.error_kind}\tcount={row.count}")
 
-    _emit_envelope(ctx, command="diagnostics.errors", result=result, lines=lines, notices=notices)
+    emit_envelope(ctx, command="diagnostics.errors", result=result, lines=lines, notices=notices)
 
 
 def diagnostics_llm_usage(
@@ -452,7 +452,7 @@ def diagnostics_llm_usage(
                     f"\ttotal_ms={model_row.total_duration_ms}\tmean_ms={model_row.mean_duration_ms}",
                 )
 
-    _emit_envelope(ctx, command="diagnostics.llm_usage", result=result, lines=lines, notices=notices)
+    emit_envelope(ctx, command="diagnostics.llm_usage", result=result, lines=lines, notices=notices)
 
 
 __all__ = [

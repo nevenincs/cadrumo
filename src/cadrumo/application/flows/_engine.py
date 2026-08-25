@@ -43,7 +43,7 @@ from ._definition import (
     FlowSection,
     iter_flow_conditions,
 )
-from ._errors import FlowAnswerError, FlowNavigationError
+from .errors import FlowAnswerError, FlowNavigationError
 from ._validators import ValidationVerdict, resolve_cross_field_validator, run_answer_validation
 
 SECTION_VERDICT_PREFIX = "section:"

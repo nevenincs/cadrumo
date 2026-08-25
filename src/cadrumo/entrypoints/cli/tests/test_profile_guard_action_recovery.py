@@ -148,7 +148,7 @@ def test_clean_root_refusal_executes_projected_profile_recovery_then_retries(
         }
         active_pointer = read_pointer(storage_root)
         registered_profile = read_profile_bucket("recovered")
-        assert active_pointer is not None
+        assert active_pointer.bucket_id is not None
         assert registered_profile is not None
         assert registered_profile.bucket_id == active_pointer.bucket_id
 

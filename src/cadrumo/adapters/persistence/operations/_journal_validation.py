@@ -7,8 +7,13 @@ from itertools import pairwise
 
 from pydantic import BaseModel, model_validator
 
-from ....application.operations import OperationRevision
-from ....application.operations.persistence import OperationEvent, OperationPersistedSnapshot, OperationTerminalEvent
+from cadrumo.application.operations.models import OperationRevision
+from cadrumo.application.operations.persistence.events import (
+    OperationEvent,
+    OperationTerminalEvent,
+)
+from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
+
 from ....core import STRICT_FROZEN_CONFIG
 from ..storage import RepositoryError
 

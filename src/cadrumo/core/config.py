@@ -1018,7 +1018,7 @@ class Settings(CadrumoLlmSettings):
                     exc_info=True,
                 )
                 raise ActiveProfilePointerError(path=pointer_file) from exc
-            if pointer is not None:
+            if pointer.bucket_id is not None:
                 bucket_id = pointer.bucket_id.strip()
         from ._storage_taxonomy import StorageCategory, bucket_scoped_storage_path, storage_path
 
@@ -1292,7 +1292,7 @@ def settings_for_active_profile_bucket(bucket_id: str, source: Settings | None =
 
 
 def _active_profile_pointer_fingerprint() -> tuple[object, ...]:
-    """Identify the current active-profile pointer without parsing it.
+    """Identify the current active-profile pointer through its native coordinate.
 
     Settings construction is not a pure function of the environment: when
     ``cadrumo_database_url`` is unset, the post-validator below reads the
@@ -1302,29 +1302,25 @@ def _active_profile_pointer_fingerprint() -> tuple[object, ...]:
     for a long-running interactive or external session.
 
     Holding one settings instance across such a switch would keep serving the
-    previous profile's database route, so the pointer's identity is folded
-    into the cache key. A stat is roughly four orders of magnitude cheaper
-    than the construction it guards, so correctness here costs nothing worth
-    measuring. A missing pointer is a distinct, legitimate state (logged out)
-    and gets its own key.
+    previous profile's database route, so the canonical durable transition
+    coordinate is folded into the cache key. A fresh root observes the initial
+    absent coordinate zero; a later clear is a distinct persisted tombstone.
 
-    The pointer filename comes from the same taxonomy member the pointer
-    reader itself resolves, rather than being re-typed here. The root is still
-    read straight from the environment: that read is deliberately independent
-    of the settings model it guards, because it has to answer "which pointer
-    would the next construction see" BEFORE any settings exist to ask.
+    The root is read straight from the environment: that read is deliberately
+    independent of the settings model it guards, because it has to answer
+    "which pointer would the next construction see" BEFORE any settings exist
+    to ask.
     """
     import os
 
-    from ._storage_taxonomy import StorageCategory, storage_location
-
     root = os.environ.get("CADRUMO_LOCAL_STORAGE_ROOT") or str(default_storage_root())
-    pointer = Path(root) / storage_location(StorageCategory.ACTIVE_PROFILE_POINTER).relative_path()
     try:
-        stat = pointer.stat()
-    except OSError:
-        return (root, None)
-    return (root, stat.st_mtime_ns, stat.st_size)
+        from ._bucket_pointer_io import read_pointer
+
+        pointer = read_pointer(Path(root))
+    except (OSError, ValueError):
+        return (root, "invalid-pointer")
+    return (root, pointer.transition_revision)
 
 
 @lru_cache(maxsize=8)

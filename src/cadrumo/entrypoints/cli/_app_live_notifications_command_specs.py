@@ -64,7 +64,9 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "NotificationsCaptureResult"),
+            target=DeferredTarget(
+                "cadrumo.entrypoints.cli._app_live_notifications_payloads", "NotificationsCaptureResult"
+            ),
             identity="app.live.notifications.pull",
         ),
     ),
@@ -91,7 +93,9 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "NotificationsListResult"),
+            target=DeferredTarget(
+                "cadrumo.entrypoints.cli._app_live_notifications_payloads", "NotificationsListResult"
+            ),
             identity="app.live.notifications.list",
         ),
     ),
@@ -126,7 +130,9 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "NotificationsViewResult"),
+            target=DeferredTarget(
+                "cadrumo.entrypoints.cli._app_live_notifications_payloads", "NotificationsViewResult"
+            ),
             identity="app.live.notifications.view",
         ),
     ),
@@ -153,7 +159,9 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "NotificationsLatestResult"),
+            target=DeferredTarget(
+                "cadrumo.entrypoints.cli._app_live_notifications_payloads", "NotificationsLatestResult"
+            ),
             identity="app.live.notifications.latest",
         ),
     ),
@@ -209,7 +217,9 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "NotificationDocumentPullResult"),
+            target=DeferredTarget(
+                "cadrumo.entrypoints.cli._app_live_notifications_payloads", "NotificationDocumentPullResult"
+            ),
             identity="app.live.notifications.document.pull",
         ),
     ),
@@ -244,7 +254,9 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "NotificationDocumentViewResult"),
+            target=DeferredTarget(
+                "cadrumo.entrypoints.cli._app_live_notifications_payloads", "NotificationDocumentViewResult"
+            ),
             identity="app.live.notifications.document.view",
         ),
     ),
@@ -271,7 +283,9 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_payloads", "NotificationDocumentHistoryResult"),
+            target=DeferredTarget(
+                "cadrumo.entrypoints.cli._app_live_notifications_payloads", "NotificationDocumentHistoryResult"
+            ),
             identity="app.live.notifications.document.history",
         ),
     ),

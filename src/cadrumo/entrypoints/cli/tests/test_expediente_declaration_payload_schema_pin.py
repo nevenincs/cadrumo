@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._app_live_payloads import ExpedienteDeclarationPayload
+from .._app_live_expedientes_payloads import ExpedienteDeclarationPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

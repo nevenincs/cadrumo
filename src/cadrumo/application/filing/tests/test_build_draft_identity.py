@@ -179,8 +179,14 @@ def test_build_draft_rejects_noncanonical_casilla_reference_token(
             schema_provider=build_runtime_schema_provider(modelos=("303",), filing_year=2026, period=period),
         )
 
-    assert expected_fragment in str(exc_info.value)
-    assert f"{input_key!r} -> {casilla.id}" in str(exc_info.value)
+    # The refusal renders through the locale catalogue, so the offending token
+    # and the canonical casilla it should have named live in the TYPED context,
+    # not in str(exc) -- which is only the message key.
+    context = dict(exc_info.value.context)
+    assert input_key in context["input_keys"]
+    reference = next(ref for ref in context["noncanonical_references"] if ref["token"] == input_key)
+    assert casilla.id in reference["canonical_casilla_ids"]
+    assert expected_fragment in (casilla.id, *reference["canonical_casilla_ids"])
 
 
 def test_build_draft_rejects_ambiguous_reused_printed_number() -> None:

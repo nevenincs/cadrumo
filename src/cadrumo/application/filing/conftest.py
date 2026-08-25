@@ -36,8 +36,12 @@ from __future__ import annotations
 from collections.abc import Iterator
 
 import pytest
+from sqlalchemy import inspect as sa_inspect
+from sqlalchemy import text as sa_text
 
-from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, reset_secure_object_store
+from ...adapters.persistence.storage import USER_PROFILE_VALUE_NAMESPACE
+from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 # Capsule publication mints the bucket's identity through ``UUID(str(profile_id))``
 # (:func:`~cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime.publish_test_profile_capsule`),
@@ -65,8 +69,35 @@ def _reset_filing_store(_active_bucket_runtime: TestRuntimeProfile) -> Iterator[
     biting. The reset is cheap (a whole-table DELETE); the costly bucket
     provisioning is paid once by ``_active_bucket_runtime``.
     """
-    reset_secure_object_store(_active_bucket_runtime.repository)
+    _reset_preserving_the_profile_record(_active_bucket_runtime.repository)
     yield
+
+
+def _reset_preserving_the_profile_record(repository: SecureObjectRepository) -> None:
+    """Truncate per-test rows while leaving the capsule's one record row intact.
+
+    The shared reset deletes every ``secure_objects`` row, and the profile
+    record is one of them -- so it also destroyed capsule identity. A committed
+    capsule ALWAYS holds exactly one current record row (creation writes it
+    before the stage commit marker, and replacement is compare-and-swap, never
+    delete-then-write), so a capsule holding none is a state no production path
+    can reach, and the loader is right to call it corruption. Every test in this
+    package inherited that state, and any production path self-loading the
+    profile record refused inside it.
+
+    The row belongs with the bucket directory, manifest and wrapped DEK that the
+    shared reset already preserves deliberately: provisioned once, carrying no
+    per-test mutable state. A test that MUTATES the record still has to restore
+    it, exactly as it would for those.
+    """
+    engine = repository._engine
+    with engine.begin() as connection:
+        connection.execute(
+            sa_text("DELETE FROM secure_objects WHERE namespace != :keep"),
+            {"keep": USER_PROFILE_VALUE_NAMESPACE.namespace},
+        )
+        if sa_inspect(engine).has_table("secure_objects_quarantine"):
+            connection.execute(sa_text("DELETE FROM secure_objects_quarantine"))
 
 
 __all__ = ["_active_bucket_runtime", "_reset_filing_store"]

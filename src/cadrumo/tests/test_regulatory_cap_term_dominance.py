@@ -67,7 +67,7 @@ def _discovered_cap_sites() -> dict[_SiteKey, set[str]]:
 
 
 _NON_REGULATORY_EXEMPTIONS: Mapping[_SiteKey, str] = {
-    ("application/operations/_supervisor.py", "await_terminal"): (
+    ("application/operations/supervisor.py", "await_terminal"): (
         "Supervisor polling backoff is a runtime scheduling bound, not a tax cap."
     ),
     ("adapters/outbound/google/_calc_sheets_apply.py", "_condition_for_constraint"): (

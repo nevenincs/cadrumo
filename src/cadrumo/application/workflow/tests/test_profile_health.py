@@ -144,7 +144,7 @@ def test_empty_storage_routes_the_operator_to_current_registration(tmp_path: Pat
 
 
 def test_pointer_to_no_current_capsule_is_repaired_without_creating_a_bucket(tmp_path: Path) -> None:
-    write_pointer(tmp_path, BucketPointer(bucket_id=_PROFILE_ID, schema_version=1))
+    write_pointer(tmp_path, BucketPointer.selected(bucket_id=_PROFILE_ID, transition_revision=1))
     with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
         before = assess_active_profile_health()
         repaired = repair_active_profile_pointer(clear_active=True, confirmed=True)
@@ -155,7 +155,7 @@ def test_pointer_to_no_current_capsule_is_repaired_without_creating_a_bucket(tmp
     assert repaired.cleared_pointer is True
     assert repaired.after is not None
     assert repaired.after.status == "none"
-    assert read_pointer(tmp_path) is None
+    assert read_pointer(tmp_path).bucket_id is None
 
 
 def test_pointer_to_malformed_current_marker_is_reported_as_capsule_integrity_not_manifest_state(
@@ -165,7 +165,7 @@ def test_pointer_to_malformed_current_marker_is_reported_as_capsule_integrity_no
     marker.parent.mkdir(parents=True)
     malformed = b"not a current commit"
     marker.write_bytes(malformed)
-    write_pointer(tmp_path, BucketPointer(bucket_id=_PROFILE_ID, schema_version=1))
+    write_pointer(tmp_path, BucketPointer.selected(bucket_id=_PROFILE_ID, transition_revision=1))
 
     with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
         before = assess_active_profile_health()
@@ -202,7 +202,7 @@ def test_health_observes_current_or_degraded_state_without_provider_or_recovery_
     malformed_marker = malformed_root / "buckets" / _PROFILE_ID / "profile.commit.v1.json"
     malformed_marker.parent.mkdir(parents=True)
     malformed_marker.write_bytes(b"malformed current marker")
-    write_pointer(malformed_root, BucketPointer(bucket_id=_PROFILE_ID, schema_version=1))
+    write_pointer(malformed_root, BucketPointer.selected(bucket_id=_PROFILE_ID, transition_revision=1))
 
     secret_paths = tuple(root / "secrets" for root in (ready_root, absent_root, malformed_root, cold_root))
     recovery_paths = (

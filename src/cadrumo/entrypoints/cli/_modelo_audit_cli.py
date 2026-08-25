@@ -6,7 +6,7 @@ from pathlib import Path
 
 import typer
 
-from ._common import _emit_envelope, active_bucket_id_or_refuse
+from ._common import active_bucket_id_or_refuse, emit_envelope
 
 
 def _evidence_bundle_service():
@@ -53,7 +53,7 @@ def audit_show(
         f"verification_state\t{bundle.verification_state.value}",
         f"records\t{len(bundle.records)}",
     ]
-    _emit_envelope(ctx, command="modelo.audit.show", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.audit.show", result=result, lines=lines)
 
 
 def audit_check(
@@ -85,7 +85,7 @@ def audit_check(
         f"completeness_ratio\t{report.completeness_ratio}",
         f"findings\t{len(report.findings)}",
     ]
-    _emit_envelope(ctx, command="modelo.audit.check", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.audit.check", result=result, lines=lines)
 
 
 def audit_export(
@@ -119,7 +119,7 @@ def audit_export(
         f"output\t{output_path}",
         f"verification_state\t{bundle.verification_state.value}",
     ]
-    _emit_envelope(ctx, command="modelo.audit.export", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.audit.export", result=result, lines=lines)
 
 
 __all__ = ["audit_check", "audit_export", "audit_show"]

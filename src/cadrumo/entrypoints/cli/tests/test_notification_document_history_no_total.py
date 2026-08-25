@@ -6,7 +6,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from .._app_live_payloads import NotificationDocumentHistoryResult
+from .._app_live_notifications_payloads import NotificationDocumentHistoryResult
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

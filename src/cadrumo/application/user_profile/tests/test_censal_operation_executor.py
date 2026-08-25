@@ -11,11 +11,9 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.operations import (
-    OperationJournalRepository,
-    OperationLeaseFilesystemRepository,
-    operation_secure_reference_repository,
-)
+from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
+from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
+from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ....adapters.persistence.storage.custody import (
     load_committed_profile_password_material,
     unlock_profile_custody,
@@ -25,15 +23,17 @@ from ....core.config import override_settings
 from ....domain.user_profile import UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...operations import (
+from cadrumo.application.operations.interactions import (
     OperationApplyResponse,
+    OperationRejectResponse,
+)
+from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.registry import (
     OperationExecutorFactory,
     OperationRegistry,
-    OperationRejectResponse,
-    OperationRequest,
-    OperationSupervisor,
     operation_public_schema_reference,
 )
+from cadrumo.application.operations.supervisor import OperationSupervisor
 from .._capsule_record import ProfileRecordSession, ProfileRecordStore
 from .._censal_observation import CensalObservation, CensalObservationAddress, CensalObservationIdentity
 from .._censal_operation import (

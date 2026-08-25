@@ -1,7 +1,7 @@
 """Headless drive of the line-mode frontend over the real engine.
 
-Every scenario drives ``LineFlowFrontend.run`` through the public
-``cadrumo.application.flows`` facade, feeding real keystrokes over
+Every scenario drives ``LineFlowFrontend.run`` through its canonical defining
+module, feeding real keystrokes over
 ``prompt_toolkit.input.create_pipe_input`` and capturing output in an
 in-memory ``PlainTextOutput`` — the same headless pipe-input contract the
 retired one-shot prompter's smoke test used. No prompt is mocked: the
@@ -53,12 +53,12 @@ from .. import (
     FlowSection,
     FlowState,
     FlowUnsupportedConsoleError,
-    LineFlowFrontend,
     ReviewProjection,
     answer,
     assemble_section_titles,
     start_flow,
 )
+from ..line_frontend import LineFlowFrontend
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

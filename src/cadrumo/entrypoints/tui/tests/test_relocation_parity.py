@@ -24,10 +24,10 @@ from ....application.user_profile import build_profile_overview, login_profile, 
 from ....application.user_profile.login_interaction import attempt_profile_login, profile_login_choices
 from ....core import assess_profile_password, require_active_bucket_id
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
-from ....entrypoints.cli import attempt_registration, persist_active_profile_field
 from ....tests.modelo_work_review import build_real_modelo_work_review
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
+from ..devtools.fixture import registration_attempt
 from ..flows.app import FlowTuiApp
 from ..modelo.view.work_review import ModeloWorkReviewApp
 from ..profile.overview import ProfileManagerApp
@@ -328,7 +328,7 @@ def test_manager_pilot_has_one_canonical_home_and_exactly_seven_direct_consumers
 async def test_profile_and_secret_apps_preserve_the_real_custody_path(tmp_path: Path) -> None:
     """Register, unlock, and render an actual encrypted profile through relocated apps."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        registration = RegistrationApp(assess=assess_profile_password, register=attempt_registration)
+        registration = RegistrationApp(assess=assess_profile_password, register=registration_attempt)
         async with registration.run_test(size=_TERMINAL_SIZE) as pilot:
             registration.query_one("#field-username", Input).value = _LABEL
             registration.query_one("#field-password", Input).value = _PASSPHRASE
@@ -370,7 +370,13 @@ async def test_profile_and_secret_apps_preserve_the_real_custody_path(tmp_path: 
         login_profile(name=_LABEL, passphrase_callback=lambda: _PASSPHRASE)
         record = load_test_profile_record(require_active_bucket_id())
         overview = build_profile_overview(record, label=_LABEL)
-        manager = ProfileManagerApp(overview, persist=persist_active_profile_field)
+        from ....application.user_profile import apply_manager_profile_field_mutation
+
+        def persist(path: str, value: str):
+            applied = apply_manager_profile_field_mutation(profile_id=profile_id, path=path, value=value)
+            return build_profile_overview(applied, label=_LABEL)
+
+        manager = ProfileManagerApp(overview, persist=persist)
         async with manager.run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             rendered_rows = sum(table.row_count for table in manager.query(DataTable))

@@ -64,8 +64,8 @@ from ._common import resolve_notice_action
 from ._overview_payloads import (
     OverviewAgendaResult,
     OverviewBacklogResult,
-    OverviewCalendarEntryPayload,
-    OverviewCalendarEventPayload,
+    OverviewCalendarEntrySummaryPayload,
+    OverviewCalendarEventSummaryPayload,
     OverviewCalendarResult,
     OverviewExplainResult,
     OverviewPipelineModeloPayload,
@@ -198,6 +198,29 @@ def _calendar_warning_action_payload(warning: CalendarWarning) -> dict[str, obje
         "action": {"action": {"action_id": action_id}, **action},
         "argument_bindings": [binding.model_dump(mode="json") for binding in resolved.argument_bindings],
     }
+
+
+def _calendar_entry_detail_action(entry: OverviewCalendarEntry) -> ResolvedNoticeAction:
+    """Resolve the canonical per-modelo explanation route for a summary row."""
+    return resolve_notice_action(
+        action=ActionReference(action_id="operator.overview.explain"),
+        argument_bindings=(
+            ResolvedActionArgument(
+                argument_name="modelo",
+                status=ActionArgumentStatus.RESOLVED,
+                value=entry.modelo,
+                source=ActionArgumentSource.VERDICT_CONTEXT,
+                source_key="modelo",
+            ),
+            ResolvedActionArgument(
+                argument_name="year",
+                status=ActionArgumentStatus.RESOLVED,
+                value=entry.filing_year,
+                source=ActionArgumentSource.VERDICT_CONTEXT,
+                source_key="year",
+            ),
+        ),
+    )
 
 
 _COVERAGE_NOTICE_CODE = "overview.coverage.incomplete"
@@ -487,16 +510,37 @@ def overview_calendar_output(
 ) -> tuple[OverviewCalendarResult, list[str], list[Notice]]:
     """Project one active-profile calendar into payload, text lines, and notices."""
     entries = [
-        OverviewCalendarEntryPayload.model_validate(
-            {
-                **entry.model_dump(mode="json"),
-                "recovery": _recovery_payload(entry),
-            },
+        OverviewCalendarEntrySummaryPayload(
+            modelo=entry.modelo,
+            period=str(entry.period),
+            adjusted_closes_on=entry.adjusted_closes_on.isoformat(),
+            user_state=entry.user_state.value,
+            censo_enrolment_state=entry.censo_enrolment_state.value,
+            local_filing_state=entry.filing_evidence.local_filing_state.value,
+            aeat_submission_state=entry.filing_evidence.aeat_submission_state.value,
+            justificante_verified=entry.filing_evidence.justificante_verified,
+            detail_action=_calendar_entry_detail_action(entry),
         ).model_dump(mode="json")
         for entry in cal.entries
     ]
     events = [
-        OverviewCalendarEventPayload.model_validate(event.model_dump(mode="json")).model_dump(mode="json")
+        OverviewCalendarEventSummaryPayload(
+            event_type=event.event_type.value,
+            event_date=event.event_date.isoformat(),
+            source=event.source,
+            summary=str(event.summary),
+            reference_id=event.reference_id,
+            status=event.status,
+            aeat_submission_state=(
+                event.aeat_submission_state.value if event.aeat_submission_state is not None else None
+            ),
+            aeat_submitted_at=(
+                event.aeat_submitted_at.isoformat().replace("+00:00", "Z")
+                if event.aeat_submitted_at is not None
+                else None
+            ),
+            justificante_verified=event.justificante_verified,
+        ).model_dump(mode="json")
         for event in cal.events
     ]
     typed_cal = OverviewCalendarResult.model_validate_json(

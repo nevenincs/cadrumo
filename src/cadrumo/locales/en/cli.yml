@@ -1917,6 +1917,12 @@ cli:
       no_active_profile: No profile is active. Sign in with 'aeat config login NAME'
         before changing its passphrase.
     profile:
+      add_row:
+        duplicate_field: Field %{field} was supplied more than once; nothing was written.
+        help: Add one row to a schema-declared repeatable profile section.
+        invalid_value: Each --value must use FIELD=VALUE syntax; nothing was written.
+        section_help: Repeatable profile section key.
+        value_help: Row field as FIELD=VALUE; repeat for each populated field.
       already_exists: Profile %{name} already exists. Pick a different target id.
       archive:
         export_help: Write the named profile's capsule to a sealed archive at --to;

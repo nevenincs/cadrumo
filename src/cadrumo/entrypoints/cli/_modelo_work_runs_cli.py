@@ -46,7 +46,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import ResolvedPreconditionAction
 from ._action_rendering import resolved_precondition_action_json_cell
-from ._common import _emit_envelope, activate_subcommand_output_language, resolve_cli_precondition_action
+from ._common import activate_subcommand_output_language, emit_envelope, resolve_cli_precondition_action
 from ._modelo_behavior_support import resolve_optional_cli_period
 from ._modelo_cli_support import (
     bad_parameter_from_error,
@@ -190,7 +190,7 @@ def _emit_work_resume(
         f"closes_on\t{result.obligation.closes_on.isoformat()}",
         f"obligation_status\t{result.obligation.status.value}",
     ]
-    _emit_envelope(ctx, command="modelo.work.resume", result=resume_result, lines=lines)
+    emit_envelope(ctx, command="modelo.work.resume", result=resume_result, lines=lines)
 
 
 __all__ = ["work_resume", "work_run", "work_run_details", "work_runs"]
@@ -226,7 +226,7 @@ def work_run_details(
         f"summary_stage\t{projection.summary_stage.value if projection.summary_stage is not None else ''}",
         f"summary_locale_key\t{projection.summary_locale_key}",
     ]
-    _emit_envelope(ctx, command="modelo.work.run_details", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.work.run_details", result=result, lines=lines)
 
 
 def work_run(
@@ -270,7 +270,7 @@ def work_run(
         "run_id\tmodelo\tperiod\tfinal_stage\taborted_reason\tstarted_at\tsummary\taction",
         _workflow_run_tab_line(payload),
     ]
-    _emit_envelope(ctx, command="modelo.work.run", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.work.run", result=result, lines=lines)
 
 
 def work_runs(ctx: typer.Context, output_language: OutputLanguage | None = None) -> None:
@@ -285,7 +285,7 @@ def work_runs(ctx: typer.Context, output_language: OutputLanguage | None = None)
         "run_id\tmodelo\tperiod\tfinal_stage\taborted_reason\tstarted_at\tsummary\taction",
     ]
     lines.extend(_workflow_run_tab_line(run) for run in run_payloads)
-    _emit_envelope(ctx, command="modelo.work.runs", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.work.runs", result=result, lines=lines)
 
 
 def work_resume(

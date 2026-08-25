@@ -20,7 +20,7 @@ from ...application.ledger import (
 )
 from ...application.review import FilterParseError, LedgerReviewFilterSpec
 from ...core.i18n import tr
-from ._common import _emit_envelope, _state, _tx_repo
+from ._common import _state, _tx_repo, emit_envelope
 from ._ledger_list import ledger_review_query_for_spec
 from ._ledger_read_cli import resolve_ledger_transaction_id
 from ._ledger_support import _ledger_cli_no_recovery
@@ -127,7 +127,7 @@ def _emit_ledger_review_result(
 
     if record_id is not None:
         if not result.rows:
-            _emit_envelope(
+            emit_envelope(
                 ctx,
                 command="ledger.review",
                 result=LedgerReviewResult.model_validate(_ledger_review_empty_payload(result)),
@@ -135,14 +135,14 @@ def _emit_ledger_review_result(
             )
             return
         row = result.rows[0]
-        _emit_envelope(
+        emit_envelope(
             ctx,
             command="ledger.review",
             result=LedgerReviewResult.model_validate(_ledger_review_detail_payload(row, verbose=verbose)),
             lines=_ledger_review_detail_lines(row),
         )
         return
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.review",
         result=LedgerReviewResult.model_validate(_ledger_review_list_payload(result)),

@@ -34,15 +34,18 @@ def test_pull_row_assembly_calls_the_public_snapshot_command_with_the_selected_s
         for node in imports
     )
 
-    calls = [node for node in ast.walk(function) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)]
+    calls = [node for node in ast.walk(function) if isinstance(node, ast.Call)]
     assert any(
-        node.func.id == "assemble_observations_for_snapshot"
+        isinstance(node.func, ast.Name)
+        and node.func.id == "assemble_observations_for_snapshot"
         and len(node.args) == 3
         and isinstance(node.args[2], ast.Name)
         and node.args[2].id == "snapshot"
         for node in calls
     )
-    assert all(node.func.id != "assemble_observations_for_grouping" for node in calls)
+    assert all(
+        not (isinstance(node.func, ast.Name) and node.func.id == "assemble_observations_for_grouping") for node in calls
+    )
 
 
 def test_pull_row_assembly_returns_live_snapshot_assembled_observations() -> None:

@@ -18,8 +18,7 @@ Obligation-coverage mappings expose :data:`OUT_OF_SCOPE_OBLIGATIONS` and
 :data:`UNMODELED_OBLIGATIONS`, the codified AEAT modelo sets the overview
 coverage report reads to distinguish product-scope exclusions from
 registry gaps. Active-bucket context uses the plaintext :class:`BucketPointer` value object
-plus :func:`pointer_path`, :func:`read_pointer`, :func:`capture_pointer`,
-:func:`restore_pointer`, :func:`clear_pointer`, :func:`write_pointer`,
+plus :func:`pointer_path`, :func:`read_pointer`, and :func:`write_pointer`,
 :func:`exclusive_file_lock`,
 :func:`resolve_active_bucket_id`, :func:`require_active_bucket_id`, and
 :func:`resolve_repository_bucket_id`. :func:`pid_is_alive` is the shared
@@ -117,14 +116,11 @@ if TYPE_CHECKING:
     from ._authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
     from ._bucket_pointer import BucketPointer
     from ._bucket_pointer_io import (
-        capture_pointer,
-        clear_pointer,
         pointer_path,
         read_pointer,
         require_active_bucket_id,
         resolve_active_bucket_id,
         resolve_repository_bucket_id,
-        restore_pointer,
         write_pointer,
     )
     from ._calculation_route import ModeloCalculationRouteId
@@ -823,10 +819,8 @@ __all__: list[str] = [
     "bucket_scoped_storage_path",
     "build_provenance_stamp",
     "candidates_for_role",
-    "capture_pointer",
     "classify_amendment_liability_direction",
     "classify_post_filing_event_kind",
-    "clear_pointer",
     "compile_filing_projection_ref",
     "content_hash_hex",
     "corpus_redaction_marks",
@@ -893,7 +887,6 @@ __all__: list[str] = [
     "resolve_anchored_extracted_unit",
     "resolve_notificacion_estado_servicio",
     "resolve_repository_bucket_id",
-    "restore_pointer",
     "result_disposition_casilla_ids",
     "result_disposition_is_refund",
     "result_disposition_requires_bank_account",
@@ -1234,10 +1227,8 @@ _LAZY_EXPORTS: dict[str, str] = {
     "bucket_scoped_storage_path": "._storage_taxonomy",
     "build_provenance_stamp": "._provenance_stamp",
     "candidates_for_role": "._model_catalogue",
-    "capture_pointer": "._bucket_pointer_io",
     "classify_amendment_liability_direction": "._amendment_kind_regime",
     "classify_post_filing_event_kind": "._post_filing_event",
-    "clear_pointer": "._bucket_pointer_io",
     "compile_filing_projection_ref": "._filing_projection_ref",
     "content_hash_hex": ".hashing",
     "corpus_redaction_marks": ".corpus_text",
@@ -1302,7 +1293,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "resolve_anchored_extracted_unit": ".corpus_text",
     "resolve_notificacion_estado_servicio": "._notificacion_estado_servicio",
     "resolve_repository_bucket_id": "._bucket_pointer_io",
-    "restore_pointer": "._bucket_pointer_io",
     "result_disposition_casilla_ids": "._result_disposition",
     "result_disposition_is_refund": "._result_disposition",
     "result_disposition_requires_bank_account": "._result_disposition",

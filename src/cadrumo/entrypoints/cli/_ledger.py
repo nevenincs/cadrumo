@@ -9,7 +9,7 @@ Lifecycle events are appended to the profile audit trail via
 verbs validate registered
 :class:`OutputSchema` payloads and emit
 :class:`SchemaEnvelope` documents through
-:func:`_emit_envelope` so CLI JSON stays aligned
+:func:`emit_envelope` so CLI JSON stays aligned
 with the registered ledger payload contracts.
 """
 
@@ -53,11 +53,11 @@ from ...domain.transactions import (
 )
 from ._common import (
     _bad,
-    _emit_envelope,
     _parse_iso_date,
     _profile_to_taxpayer,
     _state,
     _tx_repo,
+    emit_envelope,
 )
 from ._ledger_classify_cli import ledger_classify_bulk_csv, require_single_ledger_classification_request
 from ._ledger_lifecycle_cli import (
@@ -757,7 +757,7 @@ def ledger_link(
     ]
     from ._ledger_payloads import LedgerLinkResult
 
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.link",
         result=LedgerLinkResult.model_validate(payload),

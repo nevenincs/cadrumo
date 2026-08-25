@@ -17,7 +17,7 @@ encrypted local secure-object storage.
 This module is the transport adapter over
 :func:`~application.user_profile.reconcile_prepared_exports`. It emits
 :class:`~entrypoints.cli._app_maintenance_payloads.ProfileBundleReconcileResult`
-through :func:`_emit_envelope`, and reports both halves of the outcome through
+through :func:`emit_envelope`, and reports both halves of the outcome through
 the typed :class:`Notice` channel per
 ``aeat-cli-contract``.
 """
@@ -37,8 +37,8 @@ from ._app_maintenance_payloads import (
     ReconciledProfileExportPayload,
     UnreconciledProfileExportPayload,
 )
-from ._common import _emit_envelope, resolve_notice_action
 from ._common import activate_subcommand_output_language as _activate_subcommand_output_language
+from ._common import emit_envelope, resolve_notice_action
 
 if TYPE_CHECKING:
     from ...application.user_profile import ProfileBundleExportReconciliation
@@ -75,7 +75,7 @@ def app_maintenance_reconcile(
         ],
     )
     notices = _reconcile_notices(outcome)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="app.maintenance.reconcile",
         result=result,

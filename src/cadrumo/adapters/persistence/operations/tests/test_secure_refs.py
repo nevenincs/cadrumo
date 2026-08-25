@@ -9,6 +9,12 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, Field
 
+from cadrumo.adapters.persistence.operations.secure_references import (
+    OPERATION_SECURE_REFERENCE_NAMESPACE,
+    OperationSecureReferenceRepository,
+    operation_secure_reference_repository,
+)
+
 from .....core.classification import SensitivityClass
 from .....core.hashing import sha256_hex
 from .....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
@@ -18,11 +24,6 @@ from ...storage import (
     StorageNamespaceScope,
 )
 from ...storage.errors import RepositoryError
-from .. import (
-    OPERATION_SECURE_REFERENCE_NAMESPACE,
-    OperationSecureReferenceRepository,
-    operation_secure_reference_repository,
-)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -93,8 +94,8 @@ def test_secure_reference_constructor_refuses_plaintext_or_non_digest_namespace(
             OperationSecureReferenceRepository(objects=profile.repository, namespace=wrong_key_namespace)
 
 
-def test_canonical_namespace_is_registered_once_and_exposed_by_operations_facade() -> None:
-    """The global operation-reference home is unique, registered, and facade-owned."""
+def test_canonical_namespace_is_registered_once_in_its_defining_module() -> None:
+    """The global operation-reference home is unique and definition-owned."""
     namespace = OPERATION_SECURE_REFERENCE_NAMESPACE
 
     assert STORAGE_NAMESPACE_REGISTRY.namespace_by_key(namespace.key) is namespace

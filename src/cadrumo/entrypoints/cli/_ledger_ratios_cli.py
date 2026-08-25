@@ -14,7 +14,7 @@ from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.buckets import BucketEventType
 from ...domain.categories import SpendingCategory
-from ._common import _bad, _emit_envelope, parse_decimal_amount
+from ._common import _bad, emit_envelope, parse_decimal_amount
 from ._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ._common import active_bucket_id_or_refuse as _ratios_bucket_id
 from ._ledger_support import _ledger_cli_no_recovery
@@ -125,7 +125,7 @@ def ratios_list(
     rows = [RatiosRowPayload(category=category, ratio=str(ratio)) for category, ratio in profile.ratios.items()]
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     lines.extend(f"{row.category.value}\t{row.ratio}" for row in rows)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.ratios.list",
         result=RatiosListResult(
@@ -174,7 +174,7 @@ def ratios_set(
         )
         if warning is not None:
             _emit_ratios_censo_override_warning(bucket_id=bucket_id, warning=warning)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.ratios.set",
         result=RatiosSetResult(bucket_id=bucket_id, category=category, ratio=str(parsed)),
@@ -211,7 +211,7 @@ def ratios_unset(
         prior=prior,
         new=None,
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.ratios.unset",
         result=RatiosUnsetResult(bucket_id=bucket_id, category=category, ratio=""),
@@ -238,7 +238,7 @@ def ratios_eligible(
         lines.append(
             f"{row.category.value}\t{kind_text}\tdefault={default or '-'}\toverride={override_marker}",
         )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.ratios.eligible",
         result=RatiosEligibleResult(
@@ -280,7 +280,7 @@ def ratios_validate(
     for finding in report.findings:
         detail = f"\t{finding.detail}" if finding.detail else ""
         lines.append(f"finding\t{finding.category.value}\t{finding.kind}{detail}")
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.ratios.validate",
         result=RatiosValidateResult(

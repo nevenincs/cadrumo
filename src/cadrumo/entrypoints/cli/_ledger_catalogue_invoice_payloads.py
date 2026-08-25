@@ -4,7 +4,7 @@ Each payload is a strict
 :class:`OutputSchema` subclass referenced by
 production-authored CommandSpec as deferred public schema targets on the shared
 :class:`SchemaEnvelope` surface through
-:func:`_emit_envelope`.
+:func:`emit_envelope`.
 
 Every verb in the group projects the canonical :class:`Invoice`
 held in the :class:`InvoiceCatalogue` — the sole invoice

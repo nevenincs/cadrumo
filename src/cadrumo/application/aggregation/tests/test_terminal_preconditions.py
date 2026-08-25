@@ -15,6 +15,7 @@ import pytest
 
 from ....core import ActionConditionality, ActionEvidenceProvenance, BindingSourceKind, NoRecoveryOutcome, Period
 from ....core.errors import TerminalPreconditionErrorMixin
+from ....core.resources import resources
 from ....domain.calculations.registry import DataBindingDefinition, IvaLedgerObservation, ModeloRevision, PeriodSelector
 from ....domain.invoices import Invoice, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import (
@@ -29,7 +30,7 @@ from ....tests.secure_sql import isolated_runtime_profile
 from .. import _modelo_bindings as modelo_bindings_module
 from .. import _service as service_module
 from .._errors import AggregationError, AggregationUnsupportedModeloError, AggregationValidationError
-from .._modelo_bindings import RetencionesAggregationSourceResolver, _raise_if_invoice_iva_would_be_silent
+from .._modelo_bindings import RetencionesAggregationSourceResolver, _raise_if_screened_invoice_iva_would_be_silent
 from .._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from .._retencion_observations_repository import RetencionObservationRepository
 from .._service import _SUPPORTED_PER_MODELO_MODELOS, provider_for_modelo
@@ -70,7 +71,7 @@ _AGGREGATION_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         AggregationPreconditionCondition.PER_MODELO_MODELO_SUPPORTED,
         (("modelo", "modelo"), ("supported_modelos", "'|'.join(_SUPPORTED_PER_MODELO_MODELOS)")),
     ),
-    "_modelo_bindings:_raise_if_invoice_iva_would_be_silent:1": _contract(
+    "_modelo_bindings:_raise_if_screened_invoice_iva_would_be_silent:1": _contract(
         AggregationPreconditionCondition.INVOICE_LEDGER_COMPLETE,
         (
             ("modelo", "str(context.modelo)"),
@@ -81,7 +82,7 @@ _AGGREGATION_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
             ("missing_binding_count", "0"),
         ),
     ),
-    "_modelo_bindings:_raise_if_invoice_iva_would_be_silent:2": _contract(
+    "_modelo_bindings:_raise_if_screened_invoice_iva_would_be_silent:2": _contract(
         AggregationPreconditionCondition.INVOICE_LEDGER_COMPLETE,
         (
             ("modelo", "str(context.modelo)"),
@@ -291,7 +292,6 @@ def test_unsupported_modelo_has_an_exact_application_state_operator_decision_ver
 
 @pytest.mark.parametrize("refusal", ["uncovered_deduction", "unmatched_ledger"])
 def test_invoice_ledger_refusals_have_exact_application_state_operator_decision_verdicts(
-    monkeypatch: pytest.MonkeyPatch,
     refusal: str,
 ) -> None:
     context = CalculationSourceContext(
@@ -299,14 +299,7 @@ def test_invoice_ledger_refusals_have_exact_application_state_operator_decision_
         modelo="303",
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
-        revision=ModeloRevision(
-            id="test-303-terminal-preconditions",
-            localization_key="test.schema.revision.test-303-terminal-preconditions.label",
-            valid_from=date(2025, 1, 1),
-            period_selector=PeriodSelector(year_from=2025, periods=("1T",)),
-            legal_refs=("ley-37-1992:art-88",),
-            source_refs=("test-terminal-preconditions",),
-        ),
+        revision=resources().modelos.authority.snapshot("303", filing_year=2025, period="1T").revision,
     )
     expected_facts: dict[str, str | int | bool | Decimal]
     if refusal == "uncovered_deduction":
@@ -364,12 +357,6 @@ def test_invoice_ledger_refusals_have_exact_application_state_operator_decision_
             ),
             invoice_ids=("invoice-unmatched",),
         )
-        binding_id = modelo_bindings_module._INVOICE_LEDGER_SCREEN_BINDINGS["303"][0]
-        monkeypatch.setattr(
-            modelo_bindings_module,
-            "resolve_iva_ledger_binding_values",
-            lambda *_args, **_kwargs: {binding_id: Decimal("21.00")},
-        )
         expected_facts = {
             "modelo": "303",
             "filing_year": "2025",
@@ -378,14 +365,12 @@ def test_invoice_ledger_refusals_have_exact_application_state_operator_decision_
             "invoice_count": 1,
             "missing_binding_count": 1,
         }
-    monkeypatch.setattr(modelo_bindings_module, "_screened_invoice_iva_observations", lambda **_kwargs: screened)
-
     with pytest.raises(AggregationValidationError) as raised:
-        _raise_if_invoice_iva_would_be_silent(
+        _raise_if_screened_invoice_iva_would_be_silent(
             context=context,
-            period=Period.from_year_and_code(2025, "1T"),
+            screened_bindings=modelo_bindings_module._INVOICE_LEDGER_SCREEN_BINDINGS["303"],
+            screened=screened,
             transaction_binding_values={},
-            invoice_repository=None,
             prorrata_apportionment=None,
         )
 

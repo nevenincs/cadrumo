@@ -89,7 +89,7 @@ def test_failed_atomic_create_raises_and_leaves_no_profile(profile_storage_root:
     root = load_settings().cadrumo_local_storage_root
 
     assert list_current_profile_custody_capsule_ids(root=root) == (), "a refused create committed a capsule"
-    assert read_pointer(root) is None, "a refused create left a dangling active-profile pointer"
+    assert read_pointer(root).bucket_id is None, "a refused create left a dangling active-profile pointer"
     assert read_profile_bucket(_VICTIM_LABEL) is None, "a refused create left a phantom label projection"
 
 
@@ -110,7 +110,6 @@ def test_successful_atomic_create_lands_the_artifacts_a_failure_clears(profile_s
     committed = list_current_profile_custody_capsule_ids(root=root)
     assert len(committed) == 1
     pointer = read_pointer(root)
-    assert pointer is not None
     assert pointer.bucket_id == str(committed[0])
     scanned = read_profile_bucket(_SURVIVOR_LABEL)
     assert scanned is not None

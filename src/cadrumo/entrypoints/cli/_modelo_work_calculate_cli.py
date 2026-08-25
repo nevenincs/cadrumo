@@ -41,7 +41,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice
 from ...domain.calculations.registry import RegistryValidationError
-from ._common import _emit_envelope, activate_subcommand_output_language
+from ._common import activate_subcommand_output_language, emit_envelope
 from ._errors import CliOutboundPayloadBoundaryError
 from ._m303_filing_evidence_input import m303_filing_instance_evidence_from_cli
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
@@ -204,7 +204,7 @@ def _run_work_calculate(
         *source_advisory_lines,
         saved_confirmation,
     ]
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="modelo.work.calculate",
         result=result,
@@ -225,7 +225,7 @@ def _work_calculate_saved_confirmation(revision: CalculationRevision, work_unit:
         state=calculation_revision_state_label(revision.state.value),
         modelo=work_unit.modelo,
         year=work_unit.filing_year,
-        period=work_unit.period,
+        period=work_unit.period.registry_token,
     )
 
 

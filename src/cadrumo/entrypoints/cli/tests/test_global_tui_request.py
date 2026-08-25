@@ -15,8 +15,14 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
     "command",
     (
         ("config", "passphrase", "change"),
+        ("config", "profile", "create"),
+        ("config", "profile", "edit"),
+        ("config", "profile", "descendiente"),
+        ("config", "auth", "apoderado", "configure"),
         ("app", "overview", "status"),
         ("app", "modelo", "work", "calculate", "missing-work-unit"),
+        ("app", "modelo", "work", "wizard"),
+        ("app", "modelo", "work", "amend-wizard"),
     ),
 )
 def test_global_tui_request_refuses_unimplemented_facets_before_their_preconditions(
@@ -33,6 +39,26 @@ def test_global_tui_request_refuses_unimplemented_facets_before_their_preconditi
     assert result.stdout == ""
 
 
+@pytest.mark.parametrize(
+    ("command", "identity"),
+    (
+        (("app", "modelo", "work", "wizard"), "modelo.work.wizard"),
+        (("app", "modelo", "work", "amend-wizard"), "modelo.work.amend_wizard"),
+    ),
+)
+def test_global_tui_request_refuses_wizard_routes_with_their_declared_identities(
+    command: tuple[str, ...], identity: str
+) -> None:
+    result = invoke_cached_cli(("--language", "en", "--format", "json", "--tui", *command))
+
+    assert result.exit_code != 0
+    document = json.loads(result.stderr)
+    assert document["command"] == identity
+    assert document["error"]["code"] == "TUI_NOT_IMPLEMENTED"
+    assert document["error"]["context"]["command"] == identity
+    assert result.stdout == ""
+
+
 def test_tui_is_global_only() -> None:
     root_help = invoke_cached_cli(("--language", "en", "--help"))
     local_help = invoke_cached_cli(("--language", "en", "config", "profile", "create", "--help"))
@@ -43,7 +69,7 @@ def test_tui_is_global_only() -> None:
     assert "--tui" not in local_help.output
 
 
-def test_every_existing_cli_tui_route_is_enrolled() -> None:
+def test_only_implemented_cli_tui_routes_are_enrolled() -> None:
     from .._command_spec import TuiCapability
     from .._command_specs import COMMAND_GRAPH
 
@@ -51,12 +77,6 @@ def test_every_existing_cli_tui_route_is_enrolled() -> None:
     expected = {
         "config_login",
         "config_profile_status",
-        "config_profile_descendiente",
-        "config_auth_apoderado_configure",
-        "config_profile_create",
-        "config_profile_edit",
-        "app_modelo_work_wizard",
-        "app_modelo_work_amend_wizard",
     }
     available = {key for key, spec in specs.items() if spec.tui_capability is TuiCapability.AVAILABLE}
     assert available == expected

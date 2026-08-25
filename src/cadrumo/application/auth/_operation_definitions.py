@@ -22,22 +22,26 @@ from ...core import (
     require_active_bucket_id,
 )
 from ...core.time import now
-from ..operations import (
-    CredentialFreeOperationRequest,
+from cadrumo.application.operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
     OperationConflictScope,
+    OperationReplayPolicy,
+    OperationRequestStoragePolicy,
+    OperationSensitiveInputPolicy,
+)
+from cadrumo.application.operations.models import (
+    CredentialFreeOperationRequest,
+    OperationRequest,
+)
+from cadrumo.application.operations.registry import (
     OperationDefinition,
-    OperationEphemeralSecretDeclaration,
     OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationReplayPolicy,
-    OperationRequest,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
 )
+from cadrumo.application.operations.secret_submission import OperationEphemeralSecretDeclaration
 from ..operations.owner import OperationExecutorContext
 from ..user_profile import (
     ProfileLoginOutcome,

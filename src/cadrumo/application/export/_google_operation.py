@@ -31,20 +31,24 @@ from ...core import (
 from ...core.time import now
 from ...domain.calculations.registry import ModeloId, RegistrySnapshot, RevisionId, bundled_authority
 from ..calculations import resolve_relations_from_local_store
-from ..operations import (
-    CredentialFreeOperationRequest,
+from cadrumo.application.operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
     OperationConflictScope,
+    OperationReplayPolicy,
+    OperationRequestStoragePolicy,
+    OperationSensitiveInputPolicy,
+)
+from cadrumo.application.operations.models import (
+    CredentialFreeOperationRequest,
+    OperationRequest,
+)
+from cadrumo.application.operations.registry import (
     OperationDefinition,
     OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationReplayPolicy,
-    OperationRequest,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
 )
 from ..operations.owner import OperationExecutorContext
 from ..storage.calc_sheets import (

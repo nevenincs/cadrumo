@@ -43,7 +43,7 @@ import typer
 
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
-from .._common import _emit_envelope, _state
+from .._common import _state, emit_envelope
 from ._censo_payloads import CensoFactPayload, CensoFileIngestResult, CensoPullDivergencePayload, CensoPullResult
 
 # The divergence helper selects one of these keys by data rather than passing a
@@ -100,7 +100,7 @@ def censo_file(
             message=tr("cli.config.profile.censo.non_official_notice"),
         ),
     ]
-    _emit_envelope(ctx, command="config.profile.censo.file", result=result, lines=lines, notices=notices)
+    emit_envelope(ctx, command="config.profile.censo.file", result=result, lines=lines, notices=notices)
 
 
 def censo_pull(
@@ -121,7 +121,7 @@ def censo_pull(
     )
     from ....domain.user_profile import UserProfileFact
     from ....entrypoints import run_censal_review
-    from ._censo_review_ui import confirm_censal_review
+    from ._censo_review_cli import confirm_censal_review
 
     # Refuse an absent active profile before the read, not after: the live
     # navigation can trigger a Cl@ve push, and asking the operator to
@@ -218,7 +218,7 @@ def censo_pull(
     # what keeps the two renderings from drifting apart.
     notices = _pull_notices(applied=apply, adopted=adopted, divergences=divergences)
     lines.extend(f"{notice.severity.value.upper()}\t{notice.message}" for notice in notices)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.profile.censo.pull",
         result=result,

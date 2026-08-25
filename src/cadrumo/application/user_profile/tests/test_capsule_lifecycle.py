@@ -145,7 +145,6 @@ def test_lifecycle_projects_only_its_committed_capsule_and_owns_selection(tmp_pa
     assert CommittedProfileRepository(root=tmp_path).list() == (created,)
     assert service.select("Capsule operator") == created
     pointer = read_pointer(tmp_path)
-    assert pointer is not None
     assert pointer.bucket_id == str(_PROFILE_ID)
     assert (tmp_path / "buckets" / str(_PROFILE_ID) / "db" / "cadrumo.db").is_file()
     with bound_profile_record_session(record_session):

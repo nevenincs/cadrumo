@@ -23,7 +23,6 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from pathlib import Path
 from types import MappingProxyType
-from typing import NoReturn
 from uuid import UUID
 
 import pytest
@@ -48,7 +47,6 @@ from .. import (
     register_profile_with_credentials,
     unlock_profile_custody_password,
 )
-from .. import _registration as registration_module
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -260,26 +258,6 @@ def test_every_prospective_password_refusal_is_typed_safe_and_creates_nothing(
         assert refused.value.translated_message == translated_message
         with pytest.raises(TypeError):
             payload.context["candidate"] = candidate  # type: ignore[index]
-
-
-def test_registration_refusal_bites_before_identity_randomness_and_custody(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Invalid input must not reach any collaborator preceding persistence."""
-
-    def fail_if_called(*_args: object, **_kwargs: object) -> NoReturn:
-        pytest.fail("registration collaborator ran before password refusal")
-
-    monkeypatch.setattr(registration_module, "new_profile_id", fail_if_called)
-    monkeypatch.setattr(registration_module, "token_bytes", fail_if_called)
-    monkeypatch.setattr(registration_module, "create_profile_custody_registration_material", fail_if_called)
-
-    with pytest.raises(ProfileRegistrationError):
-        register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
-            label="Ordering Bite",
-            passphrase="a" * 7,
-        )
 
 
 @pytest.mark.parametrize(

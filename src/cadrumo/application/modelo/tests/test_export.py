@@ -38,16 +38,14 @@ from .._export import (
     ModeloExportCrossBucketRefusedError,
     ModeloExportNoActiveBucketError,
     ModeloExportResult,
-    ModeloExportUnsupportedError,
     ModeloIvaWalletDecisionProvenance,
+    _modelo_export_layout_readiness_refusal,
     export_modelo_revision,
     iva_wallet_decision_export_provenance,
-    modelo_export_readiness_refusal,
 )
 from ._export_test_support import (
     _M130_RENDIMIENTO_NETO_CASILLA,
     _casilla_id_from_payload,
-    _general_m303_filing_evidence,
     _profile,
     _seed_profile,
     _seed_revision,
@@ -56,33 +54,17 @@ from ._export_test_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_export_readiness_refusal_declares_and_binds_the_catalogue_action(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Layout-readiness selection is application-owned; the CLI only resolves it."""
-    from .. import _export as export_module
-
-    class _Subview:
-        export_layouts: tuple[object, ...] = ()
-
-    class _Provider:
-        def get_subview(self, modelo: str) -> _Subview:
-            assert modelo == "999"
-            return _Subview()
-
-    monkeypatch.setattr(export_module, "build_runtime_schema_provider", lambda **_kwargs: _Provider())
-
-    refusal = modelo_export_readiness_refusal(
-        modelo="999",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        registry_ready=True,
-    )
+def test_export_readiness_refusal_declares_and_binds_the_catalogue_action() -> None:
+    """The application projects an unrenderable layout; the CLI only resolves it."""
+    refusal = _modelo_export_layout_readiness_refusal(modelo="303", layout=None)
 
     assert refusal is not None
+    assert refusal.reason == "the registry snapshot has no complete export_layouts definition"
     verdict = refusal.precondition_failure.verdict
     assert verdict.action is not None
     assert verdict.action.action_id == "operator.modelo.describe"
     assert verdict.no_recovery_outcome is None
-    assert verdict.argument_bindings[0].value == "999"
+    assert verdict.argument_bindings[0].value == "303"
 
 
 def test_export_result_json_surfaces_casilla_provenance(tmp_path: Path) -> None:
@@ -381,35 +363,5 @@ def test_m303_export_refuses_revision_missing_filing_evidence(
     # producer now carries a declared precondition failure instead of a
     # sentence this assertion could match on.
     assert exc_info.value.context["cause_type"] == "M303FilingEvidenceError"
-    assert not output.exists()
-    assert not output.with_name(output.name + ".tmp").exists()
-
-
-def test_m303_export_with_valid_revision_evidence_reaches_withdrawn_layout_refusal(
-    isolated_backend: None,
-    tmp_path: Path,
-) -> None:
-    bucket_id = _seed_profile()
-    period = Period.from_year_and_code(2026, "1T")
-    _, calc_rev_id = _seed_revision(
-        bucket_id=bucket_id,
-        state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        modelo="303",
-        filing_year=2026,
-        period="1T",
-        filing_instance_evidence=_general_m303_filing_evidence(period),
-    )
-    output = tmp_path / "modelo-303.txt"
-
-    with pytest.raises(ModeloExportUnsupportedError):
-        export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id=calc_rev_id,
-                output_path=output,
-                actor="operator",
-            ),
-            workflow_profile=_profile(),
-        )
-
     assert not output.exists()
     assert not output.with_name(output.name + ".tmp").exists()

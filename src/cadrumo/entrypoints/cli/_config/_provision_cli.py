@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING
 import typer
 
 from ....core import ModelRole
-from .._common import _emit_envelope, resolve_cli_precondition_action
+from .._common import emit_envelope, resolve_cli_precondition_action
 from ._provision_payloads import (
     ProvisionContentionPayload,
     ProvisionModelPayload,
@@ -210,7 +210,7 @@ def _emit_provision_report(ctx: typer.Context) -> None:
         models=models,
         contention=_contention_payload(contention),
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.provision.report",
         result=result,
@@ -232,7 +232,7 @@ def _emit_provision_pull(ctx: typer.Context, *, model: str | None, role: ModelRo
             facts=selection.facts,
             precondition_action=resolve_cli_precondition_action(selection.precondition_verdict),
         )
-        _emit_envelope(ctx, command="config.provision.pull", result=result, lines=_provision_result_lines(result))
+        emit_envelope(ctx, command="config.provision.pull", result=result, lines=_provision_result_lines(result))
         raise typer.Exit(code=2)
 
     outcome = pull_runtime_model(target, requirement)
@@ -248,7 +248,7 @@ def _emit_provision_pull(ctx: typer.Context, *, model: str | None, role: ModelRo
             else None
         ),
     )
-    _emit_envelope(ctx, command="config.provision.pull", result=result, lines=_provision_result_lines(result))
+    emit_envelope(ctx, command="config.provision.pull", result=result, lines=_provision_result_lines(result))
     if not outcome.pulled:
         raise typer.Exit(code=2)
 
@@ -267,7 +267,7 @@ def _emit_provision_verify(ctx: typer.Context, *, model: str | None, role: Model
             facts=selection.facts,
             precondition_action=resolve_cli_precondition_action(selection.precondition_verdict),
         )
-        _emit_envelope(ctx, command="config.provision.verify", result=result, lines=_provision_result_lines(result))
+        emit_envelope(ctx, command="config.provision.verify", result=result, lines=_provision_result_lines(result))
         raise typer.Exit(code=2)
 
     outcome = verify_model_ready(target)
@@ -284,6 +284,6 @@ def _emit_provision_verify(ctx: typer.Context, *, model: str | None, role: Model
             else None
         ),
     )
-    _emit_envelope(ctx, command="config.provision.verify", result=result, lines=_provision_result_lines(result))
+    emit_envelope(ctx, command="config.provision.verify", result=result, lines=_provision_result_lines(result))
     if not outcome.ready:
         raise typer.Exit(code=2)

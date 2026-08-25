@@ -8,8 +8,8 @@ from typing import TYPE_CHECKING
 import typer
 
 from ....core.external_constants import OutputLanguage
-from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_output_language
+from .._common import emit_envelope
 
 if TYPE_CHECKING:
     from ....application.workflow import ProfileBucketPointer
@@ -53,7 +53,7 @@ def config_list(
             for pointer in rows
         ],
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.profile.list",
         result=result,

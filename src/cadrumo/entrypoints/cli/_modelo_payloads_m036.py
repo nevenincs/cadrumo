@@ -8,7 +8,7 @@ CommandSpec schema authority and re-exported through
 payload import surface is
 unchanged. Validated results enter
 :class:`SchemaEnvelope` through
-:func:`_emit_envelope`.
+:func:`emit_envelope`.
 
 The application modelo facade remains authoritative for
 :class:`M036DeclarationResult`,

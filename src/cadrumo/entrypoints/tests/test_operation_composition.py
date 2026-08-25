@@ -9,18 +9,21 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import current_active_bucket_session
-from ...application.operations import (
-    OperationCancellationService,
+from cadrumo.application.operations.composition import (
     OperationComposedServices,
-    OperationDetachService,
-    OperationObservationService,
-    OperationRequest,
-    OperationReviewProjectionService,
     OperationSubmission,
     OperationSubmissionService,
+)
+from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.observation import OperationObservationService
+from cadrumo.application.operations.projection_services import (
+    OperationCancellationService,
+    OperationDetachService,
+    OperationReviewProjectionService,
     OperationWorkspaceRefreshTargetService,
 )
+
+from ...adapters.persistence.storage import current_active_bucket_session
 from ...tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from .. import build_production_operation_registry
 from .._operation_composition import compose_operation_dependencies
@@ -97,12 +100,13 @@ def test_production_composition_exposes_only_public_services() -> None:
     assert callable(OperationComposedServices.response)
 
 
-def test_production_composition_imports_operation_definitions_only_from_owner_facades() -> None:
+def test_production_composition_imports_user_profile_operations_from_its_canonical_module() -> None:
     source_path = Path(__file__).parents[1] / "_operation_composition.py"
     tree = ast.parse(source_path.read_text(encoding="utf-8"))
     imported_modules = tuple(node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom))
 
     assert not any(module.endswith("_operation_definitions") for module in imported_modules)
+    assert "application.user_profile.operations" in imported_modules
     assert not any(module.endswith("_censal_operation") for module in imported_modules)
     assert not any(module.endswith("_filed_history_operation") for module in imported_modules)
 

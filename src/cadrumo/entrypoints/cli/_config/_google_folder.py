@@ -11,7 +11,7 @@ from ....adapters.outbound.google import (
     resolve_active_profile,
     save_drive_config,
 )
-from .._common import _emit_envelope
+from .._common import emit_envelope
 from ._google_errors import _google_refusal
 from ._google_folder_payloads import GoogleFolderGetResult, GoogleFolderSetResult
 
@@ -28,7 +28,7 @@ def google_folder_set(ctx: typer.Context, folder_id: str) -> None:
     config = DriveConfig(root_folder_id=folder_id.strip())
     save_drive_config(active, config)
     result = GoogleFolderSetResult(profile=active, root_folder_id=config.root_folder_id)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.google.folder.set",
         result=result,
@@ -52,7 +52,7 @@ def google_folder_get(ctx: typer.Context) -> None:
         configured=config is not None,
         root_folder_id=config.root_folder_id if config is not None else None,
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.google.folder.get",
         result=result,

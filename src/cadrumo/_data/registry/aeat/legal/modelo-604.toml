@@ -113,3 +113,28 @@ retrieved_at = 2026-07-21
 applies_from = 2024-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR604_2024.xlsx"
 review_status = "reviewed"
+
+# The two AEAT ATF appendices are Spanish/English translations. Their content
+# confirms that they are logical filing designs, but does not state a separate
+# filing window from the active M604 designs, so no epoch is asserted here.
+[sources."aeat-dr-604-atf-spanish"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_604/files/01-604-diseno-de-registro-atf-en-espanol.pdf"
+sha256 = "99247eb28da6a1c68867fdf231f1ead2b66d0fcba8b57ff16f1db54abecf0df4"
+bytes = 217511
+retrieved_at = 2026-07-21
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR_ATF.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-604-atf-english"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_604/files/02-604-diseno-de-registro-atf-en-ingles.pdf"
+sha256 = "97b7fae21fba5c5e6eb7c19fe854758484bbc834698124cc81e825e925dd89af"
+bytes = 208439
+retrieved_at = 2026-07-21
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR_ATF_Ingles.pdf"
+review_status = "reviewed"

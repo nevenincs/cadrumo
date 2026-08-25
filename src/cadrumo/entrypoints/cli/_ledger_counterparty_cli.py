@@ -50,7 +50,7 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.time import now
 from ...domain.iva import EUMemberState, IvaTerritorialScope
-from ._common import _bad, _emit_envelope
+from ._common import _bad, emit_envelope
 from ._common import active_bucket_id_or_refuse as _counterparty_bucket_id
 from ._ledger_counterparty_payloads import (
     CounterpartyConfirmResult,
@@ -170,7 +170,7 @@ def counterparty_confirm(
             ),
         )
 
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.counterparty.confirm",
         result=CounterpartyConfirmResult(counterparty=_payload(fact), recorded=recorded),
@@ -214,7 +214,7 @@ def counterparty_withdraw(
                 context={"tax_identifier": tax_identifier},
             ),
         )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.counterparty.withdraw",
         result=CounterpartyWithdrawResult(
@@ -299,7 +299,7 @@ def counterparty_show(
                 context={"tax_identifier": tax_identifier},
             ),
         )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.counterparty.show",
         result=CounterpartyShowResult(

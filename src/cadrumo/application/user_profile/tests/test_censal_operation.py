@@ -9,17 +9,19 @@ from pathlib import Path
 import pytest
 
 from ....adapters.outbound.aeat.sede import parse_censal_datos
-from ....adapters.persistence.operations import OperationLeaseFilesystemRepository
+from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ....core import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ....domain.buckets import BucketEventType
 from ....tests import FIXTURES_DIR
-from ...operations import (
+from cadrumo.application.operations.interactions import (
     OperationApplyResponse,
     OperationRejectResponse,
+)
+from cadrumo.application.operations.models import (
     OperationRequest,
     OperationTerminalReceipt,
 )
-from ...operations.persistence import operation_conflict_scope_reference
+from cadrumo.application.operations.persistence.leases import operation_conflict_scope_reference
 from .._capsule_record import ProfileRecordStore
 from .._censal_operation import (
     CENSAL_OPERATION_DEFINITION,

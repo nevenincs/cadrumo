@@ -121,7 +121,7 @@ from ...application.workflow import workflow_state_repository
 from ...core import PaymentElection, Period, PriorDomiciliationElection, RefundElection
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr
-from ._common import _emit_envelope, _filing_taxpayer_or_refuse
+from ._common import _filing_taxpayer_or_refuse, emit_envelope
 from ._modelo_cli_support import (
     parse_revision_selector,
     resolve_default_actor,
@@ -252,7 +252,7 @@ def review_package_build(
             )
         except (ReviewPackageRevisionStateError, ReviewPackageError) as exc:
             raise bad_parameter_from_error(exc) from exc
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="modelo.review_package.build",
         result=review_package_build_result_payload(build_result),
@@ -277,7 +277,7 @@ def review_package_verify(ctx: typer.Context, package: Path) -> None:
     except ReviewPackageIntegrityError as exc:
         raise bad_parameter_from_error(exc) from exc
     result, lines = review_package_verify_result(package, verification)
-    _emit_envelope(ctx, command="modelo.review_package.verify", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.review_package.verify", result=result, lines=lines)
 
 
 def review_package_sign(ctx: typer.Context, package: Path, output: Path, bucket_id: str | None = None) -> None:
@@ -309,7 +309,7 @@ def review_package_sign(ctx: typer.Context, package: Path, output: Path, bucket_
     result, lines = review_package_sign_result(
         package, output, bucket_id=resolved_bucket_id, signed=signed, signer_public_key_hex=public_key.public_key_hex
     )
-    _emit_envelope(ctx, command="modelo.review_package.sign", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.review_package.sign", result=result, lines=lines)
 
 
 def review_package_verify_signature(ctx: typer.Context, package: Path, signature: Path, public_key: str) -> None:
@@ -333,7 +333,7 @@ def review_package_verify_signature(ctx: typer.Context, package: Path, signature
     result, lines = review_package_verify_signature_result(
         package, signature, signer_public_key_hex=signer_public_key_hex, is_valid=is_valid
     )
-    _emit_envelope(ctx, command="modelo.review_package.verify_signature", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.review_package.verify_signature", result=result, lines=lines)
 
 
 def review_package_counter_sign(
@@ -374,7 +374,7 @@ def review_package_counter_sign(
         receipt=receipt,
         counter_signer_public_key_hex=counter_public_key.public_key_hex,
     )
-    _emit_envelope(ctx, command="modelo.review_package.counter_sign", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.review_package.counter_sign", result=result, lines=lines)
 
 
 def review_package_verify_receipt(
@@ -407,7 +407,7 @@ def review_package_verify_receipt(
         counter_signer_public_key_hex=counter_key,
         is_valid=is_valid,
     )
-    _emit_envelope(ctx, command="modelo.review_package.verify_receipt", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.review_package.verify_receipt", result=result, lines=lines)
 
 
 def review_package_encrypt_for_recipient(
@@ -459,7 +459,7 @@ def review_package_encrypt_for_recipient(
     result, lines = review_package_encrypt_for_recipient_result(
         package, output, recipient_id=recipient_id, recipient_public_key_hex=recipient.public_key_hex, envelope=envelope
     )
-    _emit_envelope(ctx, command="modelo.review_package.encrypt_for_recipient", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.review_package.encrypt_for_recipient", result=result, lines=lines)
 
 
 def review_package_decrypt(ctx: typer.Context, envelope_path: Path, output: Path, bucket_id: str | None = None) -> None:
@@ -497,7 +497,7 @@ def review_package_decrypt(ctx: typer.Context, envelope_path: Path, output: Path
     result, lines = review_package_decrypt_result(
         envelope_path, output, bucket_id=resolved_bucket_id, decrypted=decrypted
     )
-    _emit_envelope(ctx, command="modelo.review_package.decrypt", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.review_package.decrypt", result=result, lines=lines)
 
 
 def review_package_encrypt_feedback(
@@ -561,7 +561,7 @@ def review_package_encrypt_feedback(
         has_counter_sign=counter_signed_receipt is not None,
         envelope=envelope,
     )
-    _emit_envelope(ctx, command="modelo.review_package.encrypt_feedback", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.review_package.encrypt_feedback", result=result, lines=lines)
 
 
 def review_package_import_feedback(
@@ -621,7 +621,7 @@ def review_package_import_feedback(
     result, lines = review_package_import_feedback_result(
         envelope_path, bucket_id=resolved_bucket_id, imported=imported, attached=attached
     )
-    _emit_envelope(ctx, command="modelo.review_package.import_feedback", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.review_package.import_feedback", result=result, lines=lines)
 
 
 def _resolve_optional_cli_period(*, year: int | None, period: str | None) -> Period | None:

@@ -21,7 +21,8 @@ def enforce_tui_request(ctx: typer.Context, *, spec: CommandSpec) -> bool:
 
         identity = spec.result_schema.identity or ".".join(spec.path[1:]) or "root"
         raise CliTuiNotImplementedError(command=identity)
-    from ...application.flows import FlowUnsupportedConsoleError, detect_frontend_capability
+    from ...application.flows.errors import FlowUnsupportedConsoleError
+    from ...application.flows import detect_frontend_capability
     from ...core.flows import FrontendCapability
 
     if detect_frontend_capability() is not FrontendCapability.FULL_SCREEN:
