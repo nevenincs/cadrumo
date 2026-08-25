@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#profile-password-custody'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:e3eb429d6298c36693b2200c620ad4e0d9f8688bd75ce74c09d0e709b2cd58a9'
+body_hash: 'sha256:7af974493dd1e98c6d3be1d290279f400a445e51b1c02d2d32e092ac70f8cab4'
 step_id: 'S233'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -42,11 +42,11 @@ Fresh strict rerun on current shared HEAD, 2026-08-25:
 - `python -m pytest -q -n 0 src/cadrumo-harness/src/cadrumo_harness -m "integration and serial and not perf and not os_keychain"` exited 1 after 84.28 seconds: 18 passed, 1 failed, 379 deselected. The real leaked-stdin watchdog proof cannot launch `cadrumo-mcp`.
 - `python -m pytest -q -n 0 dev/tests/test_no_skip_xfail.py` exited 0: 25 passed in 30.60 seconds.
 - Native Windows supervised KDF exited 0: 19 passed in 30.20 seconds. Native machine-secret subprocess proof exited 1: 68 passed, 2 failed in 516.77 seconds; unusable root descriptors for `config.profile.history` are laundered into `INTERNAL_CLI_UNEXPECTED_BOUNDARY` with exit 6 instead of the typed exit-2 refusal.
-- WSL supervised KDF exited 0: 19 passed in 40.43 seconds. The WSL machine-secret result is recorded below when the bounded run completes.
+- WSL supervised KDF exited 0: 19 passed in 40.43 seconds. WSL machine-secret subprocess proof exited 1 after 1,150.47 seconds: 69 passed and the fd-leaf passphrase-change case failed with `INTERNAL_CLI_UNEXPECTED_BOUNDARY`, exit 6, while its descriptor remained open.
 - The corrected 41-file campaign surface exited 0 under both Ruff and ty in 1.2 seconds. No diagnostic remains on that bounded campaign surface.
 - `vaultspec-core vault check all -f profile-password-custody --no-hints` exited 0 in 5.17 seconds but reported 26 warnings: 17 scaffold-annotation documents, one stale feature index, and eight stale body attestations. The unfiltered full check exited 0 in 10.26 seconds with 1,505 warnings across annotations, markdown hygiene, orphan audits, stale/missing feature indexes, historical body sections, references, schema grounding, and modified stamps.
 
-Derived owner steps were appended through the plan CLI and S233 remains open: S261 owns custody composition in profile capsules, sequences, and harness fixtures; S262 owns catalogue/revision reconciliation and all nitpicky builds; S263 owns the documentation em-dash regression; S264 owns hermetic `cadrumo-mcp` delivery to installed subprocess proofs; S265 owns the `overview.calendar` schema budget; S266 owns typed root descriptor refusal; S267 owns feature/full Vaultspec hygiene by exact document owner.
+Derived owner steps were appended through the plan CLI and S233 remains open: S261 owns custody composition in profile capsules, sequences, and harness fixtures; S262 owns catalogue/revision reconciliation and all nitpicky builds; S263 owns the documentation em-dash regression; S264 owns hermetic `cadrumo-mcp` delivery to installed subprocess proofs; S265 owns the `overview.calendar` schema budget; S266 owns both Windows typed root descriptor refusal and WSL fd-leaf passphrase change; S267 owns feature/full Vaultspec hygiene by exact document owner.
 
 Exact commands and results on 2026-08-24:
 

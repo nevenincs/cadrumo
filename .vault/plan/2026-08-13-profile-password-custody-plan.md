@@ -19,7 +19,7 @@ related:
   - '[[2026-08-13-sealed-archive-transport-successor-adr]]'
   - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
 modified: '2026-08-25'
-body_hash: 'sha256:74a74539e5b1e1b54243ac576acb3284471b5d73144c375d510989fa72e7b029'
+body_hash: 'sha256:d20d5d53c37cd60323d93ca5ad9c31c5acacde457c604434003709f33a21a921'
 ---
 
 # `profile-password-custody` plan
@@ -374,5 +374,5 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 - [ ] `W06.P12.S263` - Remove the five newly introduced em dashes from environment-override prose and prove the documentation dash ratchet without widening its baseline; `docs/reference/environment-overrides.md and dev/docs/emdash_baseline.json`.
 - [ ] `W06.P12.S264` - Restore hermetic cadrumo-mcp console-script resolution for installed-service, handshake, and watchdog subprocess proofs without weakening real executable delivery; `src/cadrumo-harness/src/cadrumo_harness/mcp/tests/ and src/cadrumo-harness/ packaging`.
 - [ ] `W06.P12.S265` - Bring overview.calendar beneath the real output-schema size budget by reducing its returned payload while preserving retrievable operator detail; `src/cadrumo/application/ and src/cadrumo-harness/src/cadrumo_harness/mcp/tests/test_result_size_budget.py`.
-- [ ] `W06.P12.S266` - Restore typed fail-closed root descriptor refusal for unusable machine-secret channels so config.profile.history never launders the condition into an unexpected internal boundary; `src/cadrumo/entrypoints/cli/ and src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`.
+- [ ] `W06.P12.S266` - Restore typed fail-closed machine-secret descriptor behavior so Windows root refusals never become unexpected internal boundaries and WSL passphrase change through the fd leaf succeeds while preserving descriptor consumption; `src/cadrumo/entrypoints/cli/ and src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`.
 - [ ] `W06.P12.S267` - Reconcile feature and full Vaultspec warnings by exact document owner, removing scaffold annotations, reattesting modified bodies, refreshing indexes, and resolving only genuine corpus hygiene debt; `.vault/`.
