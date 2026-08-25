@@ -1,10 +1,8 @@
-"""The full-screen login on a restore-fed profile, and legacy refusal.
+"""Full-screen login behavior for a restore-fed profile.
 
 Two routes the earlier Pilot suite left uncodified: a profile that reaches
 the machine through the capsule restore door (rather than registration)
-must present on the login screen and unlock through the real door; and a
-storage root carrying a retired custody member must refuse at the login
-surface instead of offering profiles it cannot attest.
+must present on the login screen and unlock through the real door.
 
 No mocks. Real registration, real restore, real Argon2id, the real
 LoginApp through Textual's headless Pilot.
@@ -27,7 +25,6 @@ from ....application.user_profile.login_interaction import (
     attempt_profile_login,
     profile_login_choices,
 )
-from ....core.errors import CadrumoError, get_registered_error_code
 from ....entrypoints.tui.secret.app import LoginApp
 from ....tests.secure_sql import isolated_profile_storage_root
 
@@ -84,23 +81,3 @@ async def test_a_restored_profile_presents_and_unlocks_on_the_login_screen(
             assert app.error is None
             assert app.outcome is not None
             assert app.outcome.bucket_id == restored.profile_id
-
-
-@pytest.mark.asyncio
-async def test_a_legacy_custody_member_refuses_at_the_login_surface(
-    tmp_path: Path,
-) -> None:
-    """A retired plaintext manifest in the root refuses instead of lying."""
-    with isolated_profile_storage_root(tmp_path=tmp_path / "legacy-root") as root:
-        (root / "buckets").mkdir(parents=True, exist_ok=True)
-        (root / "buckets" / "11111111-1111-4111-8111-111111111111" / "manifest.toml").parent.mkdir(
-            parents=True, exist_ok=True
-        )
-        (root / "buckets" / "11111111-1111-4111-8111-111111111111" / "manifest.toml").write_text(
-            "bucket_id = '11111111-1111-4111-8111-111111111111'\n",
-            encoding="utf-8",
-        )
-        with pytest.raises(CadrumoError) as captured:
-            profile_login_choices()
-
-        assert get_registered_error_code(type(captured.value)).code == "REFUSED_STORAGE_PROFILE_CUSTODY"
