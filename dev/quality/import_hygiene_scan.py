@@ -46,6 +46,7 @@ import ast
 import fnmatch
 import io
 import json
+import re
 import sys
 import tokenize
 import tomllib
@@ -93,112 +94,437 @@ def tracked_live_files() -> tuple[Path, ...]:
     )
 
 
-@dataclass(frozen=True)
-class AddressingBoundaryViolation:
-    """A fixed-point breach found by the reusable import/authority census."""
+@dataclass(frozen=True, slots=True)
+class CanonicalAuthorityTarget:
+    """One public defining module and the symbols it alone owns."""
+
+    module: str
+    path: Path
+    symbols: frozenset[str]
+
+
+@dataclass(frozen=True, slots=True)
+class DelegatingWrapperRule:
+    """A forbidden wrapper shape around one canonical callable."""
+
+    kind: str
+    delegated_symbol: str
+    collaborator_symbols: frozenset[str] = frozenset()
+    receiver_methods: frozenset[tuple[str, str]] = frozenset()
+
+
+@dataclass(frozen=True, slots=True)
+class CanonicalAuthoritySpec:
+    """Declarative configuration for a canonical import/authority census."""
+
+    targets: tuple[CanonicalAuthorityTarget, ...]
+    retired_modules: frozenset[str] = frozenset()
+    facade_modules: frozenset[str] = frozenset()
+    inert_modules: frozenset[str] = frozenset()
+    export_container_names: frozenset[str] = frozenset(
+        {"__all__", "_EXPORTS", "_EXPORT_MAP", "_LAZY_EXPORTS"}
+    )
+    wrapper_rules: tuple[DelegatingWrapperRule, ...] = ()
+    forbidden_text_references: frozenset[str] = frozenset()
+    text_suffixes: frozenset[str] = frozenset(
+        {".cfg", ".ini", ".json", ".md", ".py", ".pyi", ".rst", ".toml", ".txt", ".yaml", ".yml"}
+    )
+    forbid_import_aliases: bool = True
+    forbid_qualified_access: bool = True
+
+
+@dataclass(frozen=True, slots=True)
+class CanonicalAuthorityViolation:
+    """One provenance-resolved breach of a canonical authority specification."""
 
     path: Path
     kind: str
+    lineno: int = 0
+    detail: str = ""
+
+
+@dataclass
+class _AuthorityScope:
+    qualified: dict[str, str] = field(default_factory=dict)
+    strings: dict[str, str] = field(default_factory=dict)
+    literals: dict[str, ast.AST] = field(default_factory=dict)
+
+    def child(self) -> _AuthorityScope:
+        return _AuthorityScope(self.qualified.copy(), self.strings.copy(), self.literals.copy())
+
+
+def _authority_module_name(path: Path) -> str:
+    resolved = path.resolve()
+    for root in (SRC_ROOT.resolve(), REPO_ROOT.resolve()):
+        try:
+            return module_name_for(resolved, src_root=root)
+        except ValueError:
+            continue
+    return path.stem
+
+
+def _static_string(node: ast.AST, scope: _AuthorityScope) -> str | None:
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    if isinstance(node, ast.Name):
+        return scope.strings.get(node.id)
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+        left = _static_string(node.left, scope)
+        right = _static_string(node.right, scope)
+        return left + right if left is not None and right is not None else None
+    if isinstance(node, ast.JoinedStr):
+        parts: list[str] = []
+        for value in node.values:
+            if isinstance(value, ast.FormattedValue):
+                part = _static_string(value.value, scope)
+            else:
+                part = _static_string(value, scope)
+            if part is None:
+                return None
+            parts.append(part)
+        return "".join(parts)
+    return None
+
+
+def _qualified_value(node: ast.AST, scope: _AuthorityScope) -> str | None:
+    if isinstance(node, ast.Name):
+        return scope.qualified.get(node.id)
+    if isinstance(node, ast.Attribute):
+        base = _qualified_value(node.value, scope)
+        return f"{base}.{node.attr}" if base else None
+    if not isinstance(node, ast.Call):
+        return None
+    function = _qualified_value(node.func, scope)
+    if function in {"importlib.import_module", "__import__"} and node.args:
+        return _static_string(node.args[0], scope)
+    if function == "getattr" and len(node.args) >= 2:
+        base = _qualified_value(node.args[0], scope)
+        attribute = _static_string(node.args[1], scope)
+        return f"{base}.{attribute}" if base and attribute else None
+    return None
+
+
+def _literal_strings(node: ast.AST, scope: _AuthorityScope, seen: frozenset[str] = frozenset()) -> set[str]:
+    if isinstance(node, ast.Name) and node.id in scope.literals and node.id not in seen:
+        return _literal_strings(scope.literals[node.id], scope, seen | {node.id})
+    if isinstance(node, (ast.List, ast.Set, ast.Tuple)):
+        return {value for item in node.elts for value in _literal_strings(item, scope, seen)}
+    if isinstance(node, ast.Dict):
+        return {
+            value
+            for item in (*node.keys, *node.values)
+            if item is not None
+            for value in _literal_strings(item, scope, seen)
+        }
+    if isinstance(node, ast.Call) and _bare_callable_name(node.func) == "dict":
+        return {
+            value for argument in node.args for value in _literal_strings(argument, scope, seen)
+        } | {
+            value
+            for keyword in node.keywords
+            for value in (({keyword.arg} if keyword.arg else set()) | _literal_strings(keyword.value, scope, seen))
+        }
+    value = _static_string(node, scope)
+    return {value} if value is not None else set()
+
+
+def _bare_callable_name(node: ast.AST) -> str:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        return node.attr
+    return ""
+
+
+def _scope_nodes(statements: Iterable[ast.stmt]) -> Iterable[ast.AST]:
+    """Yield nodes owned by one scope, excluding nested definition bodies."""
+    pending: list[ast.AST] = list(statements)
+    while pending:
+        node = pending.pop()
+        yield node
+        for child in ast.iter_child_nodes(node):
+            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda)):
+                continue
+            pending.append(child)
+
+
+class _CanonicalAuthorityAnalyzer:
+    def __init__(self, path: Path, tree: ast.Module, spec: CanonicalAuthoritySpec) -> None:
+        self.path = path
+        self.tree = tree
+        self.spec = spec
+        self.module = _authority_module_name(path)
+        self.targets = {symbol: target for target in spec.targets for symbol in target.symbols}
+        self.target_modules = {target.module for target in spec.targets}
+        self.qualified_targets = {
+            f"{target.module}.{symbol}" for target in spec.targets for symbol in target.symbols
+        }
+        self.violations: list[CanonicalAuthorityViolation] = []
+
+    def add(self, kind: str, node: ast.AST, detail: str = "") -> None:
+        violation = CanonicalAuthorityViolation(self.path, kind, getattr(node, "lineno", 0), detail)
+        if violation not in self.violations:
+            self.violations.append(violation)
+
+    def run(self) -> list[CanonicalAuthorityViolation]:
+        self._scan_scope(self.tree.body, _AuthorityScope())
+        return self.violations
+
+    def _scan_scope(self, statements: list[ast.stmt], scope: _AuthorityScope) -> None:
+        self._populate_scope(statements, scope)
+        for node in _scope_nodes(statements):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                self._check_definition(node)
+            elif isinstance(node, ast.Import):
+                self._check_import(node, scope)
+            elif isinstance(node, ast.ImportFrom):
+                self._check_import_from(node, scope)
+            elif isinstance(node, (ast.Assign, ast.AnnAssign)):
+                self._check_assignment(node, scope)
+            elif isinstance(node, ast.Call):
+                self._check_dynamic_call(node, scope)
+            elif isinstance(node, ast.Attribute) and isinstance(node.ctx, ast.Load):
+                self._check_qualified_access(node, scope)
+            elif isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load):
+                self._check_name_load(node, scope)
+            elif isinstance(node, ast.arg) and node.annotation is not None:
+                self._check_annotation(node.annotation, scope)
+        for definition in (
+            node for node in statements if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+        ):
+            if isinstance(definition, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                self._check_wrapper(definition, scope)
+            self._scan_scope(definition.body, scope.child())
+
+    def _populate_scope(self, statements: list[ast.stmt], scope: _AuthorityScope) -> None:
+        nodes = tuple(_scope_nodes(statements))
+        for node in nodes:
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    bound = alias.asname or alias.name.split(".", 1)[0]
+                    scope.qualified[bound] = alias.name if alias.asname else bound
+            elif isinstance(node, ast.ImportFrom):
+                target = resolve_relative_import(
+                    self.module, self.path.name == "__init__.py", node.level, node.module
+                )
+                if target:
+                    for alias in node.names:
+                        scope.qualified[alias.asname or alias.name] = f"{target}.{alias.name}"
+        for _ in range(len(nodes) + 1):
+            changed = False
+            for node in nodes:
+                if not isinstance(node, (ast.Assign, ast.AnnAssign)) or node.value is None:
+                    continue
+                targets = node.targets if isinstance(node, ast.Assign) else (node.target,)
+                for target in targets:
+                    if not isinstance(target, ast.Name):
+                        continue
+                    scope.literals[target.id] = node.value
+                    string = _static_string(node.value, scope)
+                    qualified = _qualified_value(node.value, scope)
+                    if string is not None and scope.strings.get(target.id) != string:
+                        scope.strings[target.id] = string
+                        changed = True
+                    if qualified is not None and scope.qualified.get(target.id) != qualified:
+                        scope.qualified[target.id] = qualified
+                        changed = True
+            if not changed:
+                break
+
+    def _check_definition(self, node: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef) -> None:
+        target = self.targets.get(node.name)
+        if target is not None and self.path.resolve() != target.path.resolve():
+            self.add("duplicate authority definition", node, node.name)
+
+    def _check_import(self, node: ast.Import, scope: _AuthorityScope) -> None:
+        if self.module in self.spec.inert_modules:
+            self.add("non-inert package import", node)
+        for alias in node.names:
+            if alias.name in self.spec.retired_modules:
+                self.add("retired private module import", node, alias.name)
+            if alias.name in self.spec.facade_modules:
+                self.add("facade import/package access", node, alias.name)
+
+    def _check_import_from(self, node: ast.ImportFrom, scope: _AuthorityScope) -> None:
+        target = resolve_relative_import(self.module, self.path.name == "__init__.py", node.level, node.module)
+        if target is None:
+            return
+        if self.module in self.spec.inert_modules and target != "__future__":
+            self.add("non-inert package import", node, target)
+        if target in self.spec.retired_modules:
+            self.add("retired private module import", node, target)
+        for alias in node.names:
+            qualified = f"{target}.{alias.name}"
+            authority = self.targets.get(alias.name)
+            if alias.name == "*" and target in self.target_modules | self.spec.facade_modules:
+                self.add("wildcard authority import", node, target)
+            if qualified in self.spec.retired_modules:
+                self.add("retired private module import", node, qualified)
+            if target in self.spec.facade_modules and (authority is not None or qualified in self.target_modules):
+                self.add("facade import/package access", node, qualified)
+            if authority is not None and target != authority.module:
+                self.add("non-canonical authority import", node, qualified)
+            if authority is not None and alias.asname and self.spec.forbid_import_aliases:
+                self.add("aliased authority import", node, f"{qualified} as {alias.asname}")
+
+    def _check_assignment(self, node: ast.Assign | ast.AnnAssign, scope: _AuthorityScope) -> None:
+        if node.value is None:
+            return
+        targets = node.targets if isinstance(node, ast.Assign) else (node.target,)
+        names = {target.id for target in targets if isinstance(target, ast.Name)}
+        for name in names & self.targets.keys():
+            if self.path.resolve() != self.targets[name].path.resolve():
+                self.add("duplicate authority binding", node, name)
+        qualified = _qualified_value(node.value, scope)
+        if qualified in self.qualified_targets and not names & self.targets.keys():
+            self.add("aliased authority binding", node, qualified)
+        if names & self.spec.export_container_names:
+            exported = _literal_strings(node.value, scope) & self.targets.keys()
+            if exported and self.module not in self.target_modules:
+                self.add("indirect authority export", node, ", ".join(sorted(exported)))
+
+    def _check_dynamic_call(self, node: ast.Call, scope: _AuthorityScope) -> None:
+        function = _qualified_value(node.func, scope)
+        if function in {"importlib.import_module", "__import__"} and node.args:
+            imported = _static_string(node.args[0], scope)
+            if imported in self.spec.retired_modules:
+                self.add("dynamic authority import/access", node, imported or "")
+            elif imported in self.spec.facade_modules:
+                self.add("facade import/package access", node, imported or "")
+        expression = _qualified_value(node, scope)
+        if expression in self.spec.retired_modules:
+            self.add("dynamic authority import/access", node, expression or "")
+        elif expression in self.qualified_targets and self.spec.forbid_qualified_access:
+            self.add("qualified authority access", node, expression or "")
+
+    def _check_qualified_access(self, node: ast.Attribute, scope: _AuthorityScope) -> None:
+        expression = _qualified_value(node, scope)
+        if expression in self.spec.retired_modules:
+            self.add("retired qualified authority access", node, expression or "")
+        elif expression in self.qualified_targets and self.spec.forbid_qualified_access:
+            self.add("qualified authority access", node, expression or "")
+        elif any(expression == f"{facade}.{symbol}" for facade in self.spec.facade_modules for symbol in self.targets):
+            self.add("facade import/package access", node, expression or "")
+
+    def _check_name_load(self, node: ast.Name, scope: _AuthorityScope) -> None:
+        target = self.targets.get(node.id)
+        if target is None or self.path.resolve() == target.path.resolve():
+            return
+        if scope.qualified.get(node.id) != f"{target.module}.{node.id}":
+            self.add("indirect authority symbol consumer", node, node.id)
+
+    def _check_annotation(self, node: ast.AST, scope: _AuthorityScope) -> None:
+        if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
+            return
+        names = set(re.findall(r"\b[A-Za-z_]\w*\b", node.value)) & self.targets.keys()
+        for name in names:
+            target = self.targets[name]
+            if self.path.resolve() != target.path.resolve() and scope.qualified.get(name) != f"{target.module}.{name}":
+                self.add("indirect authority symbol consumer", node, name)
+
+    def _check_wrapper(self, node: ast.FunctionDef | ast.AsyncFunctionDef, parent: _AuthorityScope) -> None:
+        scope = parent.child()
+        self._populate_scope(node.body, scope)
+        for returned in (item for item in _scope_nodes(node.body) if isinstance(item, ast.Return)):
+            if not isinstance(returned.value, ast.Call):
+                continue
+            delegated = _qualified_value(returned.value.func, scope)
+            for rule in self.spec.wrapper_rules:
+                target = self.targets.get(rule.delegated_symbol)
+                expected = f"{target.module}.{rule.delegated_symbol}" if target else rule.delegated_symbol
+                if delegated not in {expected, rule.delegated_symbol}:
+                    continue
+                calls = [item for item in _scope_nodes(node.body) if isinstance(item, ast.Call)]
+                collaborators = {_qualified_value(call.func, scope) or _bare_callable_name(call.func) for call in calls}
+                collaborator_names = {name.rsplit(".", 1)[-1] for name in collaborators}
+                receiver_methods = {
+                    (call.func.value.id, call.func.attr)
+                    for call in calls
+                    if isinstance(call.func, ast.Attribute) and isinstance(call.func.value, ast.Name)
+                }
+                if rule.collaborator_symbols & collaborator_names or rule.receiver_methods & receiver_methods:
+                    self.add(rule.kind, node, node.name)
+
+
+def scan_canonical_authority(
+    spec: CanonicalAuthoritySpec, paths: Iterable[Path] | None = None
+) -> list[CanonicalAuthorityViolation]:
+    """Scan tracked live Python files against one declarative authority spec."""
+    candidates = tracked_live_files() if paths is None else tuple(paths)
+    violations: list[CanonicalAuthorityViolation] = []
+    definitions: dict[str, list[tuple[Path, int]]] = defaultdict(list)
+    for path in candidates:
+        if path.suffix.lower() in spec.text_suffixes and spec.forbidden_text_references:
+            try:
+                text = path.read_text(encoding=_UTF_8, errors="replace")
+            except OSError:
+                text = ""
+            for reference in spec.forbidden_text_references:
+                if reference in text:
+                    violations.append(
+                        CanonicalAuthorityViolation(path, "retired authority string", detail=reference)
+                    )
+        if path.suffix.lower() not in {".py", ".pyi"}:
+            continue
+        try:
+            tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
+        except (FileNotFoundError, SyntaxError, UnicodeDecodeError):
+            continue
+        for node in tree.body:
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                definitions[node.name].append((path, node.lineno))
+            elif isinstance(node, (ast.Assign, ast.AnnAssign)) and node.value is not None:
+                if isinstance(node.value, ast.Attribute):
+                    continue
+                targets = node.targets if isinstance(node, ast.Assign) else (node.target,)
+                for target in targets:
+                    if isinstance(target, ast.Name):
+                        definitions[target.id].append((path, node.lineno))
+        violations.extend(_CanonicalAuthorityAnalyzer(path, tree, spec).run())
+    for target in spec.targets:
+        for symbol in target.symbols:
+            sites = definitions.get(symbol, [])
+            expected = [(path, line) for path, line in sites if path.resolve() == target.path.resolve()]
+            if len(expected) != 1:
+                violations.append(
+                    CanonicalAuthorityViolation(
+                        target.path,
+                        "missing canonical definition" if not expected else "duplicate canonical definition",
+                        detail=symbol,
+                    )
+                )
+    return sorted(violations, key=lambda item: (item.path.as_posix(), item.lineno, item.kind, item.detail))
+
+
+# Transitional type name retained for existing external consumers of the scanner API.
+AddressingBoundaryViolation = CanonicalAuthorityViolation
 
 
 def find_addressing_boundary_violations(
     paths: Iterable[Path], *, canonical_path: Path, canonical_module: str, facade_module: str,
     retired_modules: frozenset[str], addressing_symbols: frozenset[str],
-) -> list[AddressingBoundaryViolation]:
-    """Census imports, dynamic reaches, wrappers and candidate scans for one owner.
-
-    Kept here with the project-wide import scanner so feature gates do not grow
-    competing AST/import resolvers.  It intentionally walks nested callables.
-    """
-    violations: list[AddressingBoundaryViolation] = []
-    for path in paths:
-        try:
-            tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
-        except (FileNotFoundError, SyntaxError, UnicodeDecodeError):
-            continue
-        modules: set[str] = set()
-        aliases = {"WorkUnitCatalogueRepository"}
-        package_modelo = False
-        dynamic = False
-        for node in ast.walk(tree):
-            if isinstance(node, ast.ImportFrom):
-                target = (
-                    resolve_relative_import(
-                        module_name_for(path, src_root=SRC_ROOT),
-                        path.name == "__init__.py",
-                        node.level,
-                        node.module,
-                    )
-                    if path.is_relative_to(SRC_ROOT)
-                    else node.module
-                )
-                if target:
-                    modules.add(target)
-                package_modelo |= target == "cadrumo.application" and any(
-                    a.name == "modelo" for a in node.names
-                )
-                aliases.update(a.asname or a.name for a in node.names if a.name == "WorkUnitCatalogueRepository")
-            elif isinstance(node, ast.Import):
-                modules.update(a.name for a in node.names)
-            elif isinstance(node, ast.Call):
-                name = (
-                    node.func.id
-                    if isinstance(node.func, ast.Name)
-                    else node.func.attr
-                    if isinstance(node.func, ast.Attribute)
-                    else ""
-                )
-                args = node.args[1:] if name == "getattr" else node.args[:1]
-                dynamic |= name in {"import_module", "__import__", "getattr"} and any(
-                    (isinstance(arg, ast.Constant) and isinstance(arg.value, str) and "modelo" in arg.value)
-                    or (isinstance(arg, ast.BinOp) and isinstance(arg.op, ast.Add))
-                    for arg in args
-                )
-        if facade_module in modules or package_modelo:
-            violations.append(AddressingBoundaryViolation(path, "facade import/package access"))
-        if modules & retired_modules:
-            violations.append(AddressingBoundaryViolation(path, "retired private module import"))
-        if dynamic:
-            violations.append(AddressingBoundaryViolation(path, "dynamic addressing import/access"))
-        names = {n.id for n in ast.walk(tree) if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)}
-        names.update(
-            n.value
-            for n in ast.walk(tree)
-            if isinstance(n, ast.Constant) and isinstance(n.value, str) and n.value in addressing_symbols
-        )
-        direct = canonical_module in modules
-        if path != canonical_path and names & addressing_symbols and not direct:
-            violations.append(AddressingBoundaryViolation(path, "indirect addressing symbol consumer"))
-        for function in (n for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))):
-            calls = [n for n in ast.walk(function) if isinstance(n, ast.Call)]
-            selector = any(
-                (
-                    c.func.id
-                    if isinstance(c.func, ast.Name)
-                    else c.func.attr
-                    if isinstance(c.func, ast.Attribute)
-                    else ""
-                )
-                == "select_modelo_work_resolution"
-                for c in calls
-            )
-            repo = any(
-                (isinstance(c.func, ast.Name) and c.func.id in aliases)
-                or (isinstance(c.func, ast.Attribute) and c.func.attr == "WorkUnitCatalogueRepository")
-                for c in calls
-            )
-            preselect = any(
-                isinstance(c.func, ast.Attribute)
-                and c.func.attr == "get"
-                and isinstance(c.func.value, ast.Name)
-                and c.func.value.id == "catalogue"
-                for c in calls
-            )
-            if selector and repo:
-                violations.append(AddressingBoundaryViolation(path, "repository-owning selector wrapper"))
-            if selector and preselect:
-                violations.append(AddressingBoundaryViolation(path, "catalogue preselection wrapper"))
-    return violations
+) -> list[CanonicalAuthorityViolation]:
+    """Compatibility entry point backed by the generic canonical-authority scanner."""
+    return scan_canonical_authority(
+        CanonicalAuthoritySpec(
+            targets=(CanonicalAuthorityTarget(canonical_module, canonical_path, addressing_symbols),),
+            retired_modules=retired_modules,
+            facade_modules=frozenset({facade_module}),
+            wrapper_rules=(
+                DelegatingWrapperRule(
+                    "repository-owning selector wrapper",
+                    "select_modelo_work_resolution",
+                    collaborator_symbols=frozenset({"WorkUnitCatalogueRepository"}),
+                ),
+                DelegatingWrapperRule(
+                    "catalogue preselection wrapper",
+                    "select_modelo_work_resolution",
+                    receiver_methods=frozenset({("catalogue", "get")}),
+                ),
+            ),
+        ),
+        paths,
+    )
 
 
 class TuiRetirementRemnantKind(StrEnum):

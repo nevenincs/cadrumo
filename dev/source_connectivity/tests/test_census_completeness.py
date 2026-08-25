@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -71,10 +72,12 @@ def test_inventory_census_tracks_only_the_live_connection_gap() -> None:
     manifest = load_source_connectivity_census()
     inventory = next(entry for entry in manifest.entries if entry.candidate_id == "inventory.stock-valuation")
 
-    assert inventory.disposition.value == "connect_candidate"
+    assert inventory.disposition.value == "registry_blocked"
+    assert inventory.expires_on == date(2026, 12, 31)
     assert "canonical inventory resolver" in inventory.review_condition
     assert "source-mesh enrollment" in inventory.review_condition
     assert "registry row bindings" in inventory.review_condition
+    assert "registry-blocked" in inventory.review_condition
     assert "repeated activity-row casillas" in inventory.review_condition
     assert "verified end to end" in inventory.review_condition
     assert "fabricated activity-envelope facts" in inventory.review_condition

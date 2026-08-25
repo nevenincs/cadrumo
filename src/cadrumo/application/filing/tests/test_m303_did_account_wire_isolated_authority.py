@@ -878,7 +878,31 @@ def test_m303_account_bearing_dispositions_refuse_without_their_selected_account
         )
 
 
-def test_production_m303_keeps_no_export_layout_until_the_complete_authority_lands() -> None:
-    modelo = bundled_authority().modelo("303")
+def test_production_m303_generated_authority_is_visible_at_the_filing_boundary() -> None:
+    """The filing boundary now receives the S20-generated 2026 layout.
 
-    assert modelo.revisions[_REVISION_ID].export_layouts == ()
+    This replaces the retired absence assertion.  The complete layout remains
+    owned by the hash-pinned generated tree; this consumer only proves that the
+    selected runtime snapshot exposes it unchanged.
+    """
+    registry_snapshot = _m303_2026_snapshot()
+    (layout,) = registry_snapshot.revision.export_layouts
+    assert layout.id == "generated-modelo-303-2026-y-siguientes-fichero"
+    assert layout.filing_envelope is not None
+    assert {field.kind for record in layout.records for field in record.fields} == {
+        CasillaFieldKind.CASILLA,
+        CasillaFieldKind.COMPUTED,
+        CasillaFieldKind.DRAFT,
+        CasillaFieldKind.FILLER,
+        CasillaFieldKind.HEADER,
+        CasillaFieldKind.LITERAL,
+        CasillaFieldKind.PROJECTION,
+    }
+    assert tuple(record.id for record in layout.records) == (
+        "m303-declaration",
+        "m303-regimen-simplificado",
+        "m303-resultados",
+        "m303-exonerado-390",
+        "m303-prorrata-deducciones",
+        "m303-domiciliacion",
+    )

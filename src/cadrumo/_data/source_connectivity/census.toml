@@ -53,9 +53,10 @@ summary = "The M036 lifecycle records a declaration already filed at Sede or in 
 
 [[entries]]
 candidate_id = "inventory.stock-valuation"
-disposition = "connect_candidate"
+disposition = "registry_blocked"
 owner = "source-connectivity-campaign"
-review_condition = "Encrypted schema-v3 persistence, the canonical inventory resolver, source-mesh enrollment, registry row bindings, calculation orchestration, source identity, and caller-override refusal are connected for M100/2025. The candidate remains non-terminal until grounded repeated activity-row casillas are materialized, rendered into the supported official filing structure, and verified end to end without fabricated activity-envelope facts."
+review_condition = "Encrypted schema-v3 persistence, the canonical inventory resolver, source-mesh enrollment, registry row bindings, calculation orchestration, source identity, and caller-override refusal are connected for M100/2025. Filing linkage remains registry-blocked until grounded repeated activity-row casillas are materialized, rendered into the supported official filing structure, and verified end to end without fabricated activity-envelope facts."
+expires_on = 2026-12-31
 capability_locators = [
   "src/cadrumo/adapters/persistence/profile/inventory.py:121",
   "src/cadrumo/application/inventory/_source_readiness.py:32",

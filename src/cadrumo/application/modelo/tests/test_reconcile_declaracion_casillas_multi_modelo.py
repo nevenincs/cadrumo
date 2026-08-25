@@ -33,6 +33,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.workflow.persistence import workflow_state_repository
+
 from ....adapters.inbound.declaracion import InboundDeclaracionObservation, TemplateRevision
 from ....adapters.inbound.pdf import ExtractedCasilla
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -53,7 +55,6 @@ from ....domain.modelos import (
 )
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.registry_observations import registry_grounded_observations
-from cadrumo.application.workflow.persistence import workflow_state_repository
 from .._reconcile import (
     _reconcile_parsed_declaracion,
 )
@@ -214,7 +215,7 @@ def _synthetic_declaracion(
 
 def _reconcile(work_unit: WorkUnit, declaracion: InboundDeclaracionObservation):
     return _reconcile_parsed_declaracion(
-        work_unit_id=work_unit.work_unit_id,
+        work_unit=work_unit,
         source_kind=ModeloReconciliationEvidenceKind.DECLARATION,
         source_ref=f"test://declaracion-{work_unit.modelo}",
         actor="operator",

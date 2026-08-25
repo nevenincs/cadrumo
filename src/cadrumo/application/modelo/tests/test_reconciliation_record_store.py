@@ -32,6 +32,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.application.workflow.persistence import workflow_state_repository
+
 from ....adapters.inbound.justificante import parse_justificante
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -45,7 +47,6 @@ from ....domain.buckets import BucketEventType
 from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_work_unit
 from ....tests import FIXTURES_DIR
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
-from cadrumo.application.workflow.persistence import workflow_state_repository
 from .._reconcile import (
     ModeloReconciliationCommand,
     _reconcile_parsed_justificante,
@@ -376,7 +377,6 @@ def test_finalise_reconciliation_issues_exactly_one_batched_save() -> None:
     """
     import ast
     import inspect
-
     from importlib import import_module
 
     reconcile_module = import_module("cadrumo.application.modelo._reconcile")
