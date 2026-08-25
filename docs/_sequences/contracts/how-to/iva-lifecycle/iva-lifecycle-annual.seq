@@ -1,17 +1,17 @@
 @setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01
-@step Open the annual Modelo 390 summary for the year.
-@result aeat --format json app modelo work create --modelo 390 --year 2026 --period 0A
-@expect result.name == "390-2026-0A"
-@expect result.revision_id == "2010-y-siguientes"
+@step Open the latest annual Modelo 390 summary backed by a filing-grade registry revision.
+@result aeat --format json app modelo work create --modelo 390 --year 2025 --period 0A
+@expect result.name == "390-2025-0A"
+@expect result.revision_id == "2025"
 @expect exit_code == 0
 @step Calculate, verify, export, and file the annual summary.
-@static aeat app modelo work calculate --modelo 390 --year 2026 --period 0A
+@static aeat app modelo work calculate --modelo 390 --year 2025 --period 0A
 @blocked unconverted Refuses REFUSED_MODELO_CROSS_PERIOD_CLEAN_STATE, missing_303_periods 1T, 2T, 3T, 4T; the annual fold-in needs all four quarters filed and this sequence files none.
-@static aeat app modelo work verify --modelo 390 --year 2026 --period 0A
+@static aeat app modelo work verify --modelo 390 --year 2025 --period 0A
 @blocked unconverted Cascades from the calculate frame above: with no calculation revision the work unit has no selectable current_calculation_revision_id to verify.
-@static aeat app modelo export --modelo 390 --year 2026 --period 0A --output ./modelo-390-2026.boe
+@static aeat app modelo export --modelo 390 --year 2025 --period 0A --output ./modelo-390-2025.boe
 @blocked unconverted Cascades from the calculate frame above: no exportable verified or filed revision exists until the four-quarter fold-in produces one.
-@static aeat app modelo work file --modelo 390 --year 2026 --period 0A
+@static aeat app modelo work file --modelo 390 --year 2025 --period 0A
 @blocked unconverted Cascades from the calculate frame above: with no calculation revision the work unit has no selectable current_calculation_revision_id to file.
-@static aeat app modelo reconcile pull --modelo 390 --year 2026 --period 0A
+@static aeat app modelo reconcile pull --modelo 390 --year 2025 --period 0A
 @blocked live-aeat The pull verb fetches from the AEAT sede; the sandbox refuses live frames.

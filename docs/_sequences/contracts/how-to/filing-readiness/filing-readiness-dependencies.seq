@@ -1,8 +1,8 @@
 @step List the registry-declared dependencies for the filing year.
-aeat --format json app modelo work dependencies --year 2026
+aeat --format json app modelo work dependencies --year 2025
 @step Narrow the inventory to one modelo.
-aeat --format json app modelo work dependencies --year 2026 --modelo 390
+aeat --format json app modelo work dependencies --year 2025 --modelo 390
 @step Narrow further to one modelo and period, which also evaluates its blockers.
-@result aeat --format json app modelo work dependencies --year 2026 --modelo 390 --period 0A
-@expect result.filing_year == 2026
+@result aeat --format json app modelo work dependencies --year 2025 --modelo 390 --period 0A
+@expect result.filing_year == 2025
 @expect exit_code == 0
