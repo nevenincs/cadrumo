@@ -928,3 +928,33 @@ tempting repair is to route around the guard by supplying what it would have
 loaded. Cheapest tell: a refusal whose message describes corruption ("must
 contain exactly one..."). Fix the fixture; a sibling test usually already shows
 the right shape.
+
+### correction: modelo 200 is not an un-done attestation, it is a deliberate refusal
+
+The entry above ("what the modelo 200 filing-grade attestation actually blocks")
+stated the fix was to "validate and attest modelo 200's `2024-y-siguientes`
+revision at filing grade". That is wrong and the wrong work would follow from it.
+
+Modelo 200 WAS filing grade. Commit `0e535a3919a` downgraded it to `calculation`
+and recorded why in the fragment itself:
+
+> This revision cannot safely back filing while it spans the incompatible 2024
+> and 2025 AEAT layouts. Keep its calculation authority available, but make the
+> filing boundary refuse until separate, layout-correct revisions exist.
+
+So the filing refusal is the registry working as designed: one revision spanning
+two incompatible AEAT layouts must not back a filing, and the boundary is held
+shut on purpose. Attesting it at filing grade would defeat that guard and let a
+draft be built against the wrong layout.
+
+The real work is the revision SPLIT into layout-correct 2024 and 2025 revisions
+— which has been attempted and reverted at least once (`17eb2833130` split,
+`a0855a6cdba` revert). Until it lands, every filing-grade consumer of modelo 200
+refuses correctly: the 8 `test_filing_export_live_proof` failures, the
+`m200-2024-y-siguientes` export-tree check, and the `registry_empty_for_period`
+disguise described above.
+
+Method note: the grade was traced with `git log -S "authority_grade"` on the
+fragment. Neither the commit subject nor its body mentioned the downgrade — only
+the fragment comment did. Read the DATA's own comment before concluding that
+regulated data is simply missing something.
