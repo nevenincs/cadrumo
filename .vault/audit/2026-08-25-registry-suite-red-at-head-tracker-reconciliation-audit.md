@@ -87,6 +87,15 @@ deadline-window-revision-authority `W02.P05.S46`; Modelo 200 reuses export autho
 clusters without duplicating those authorities. Campaign closure still requires the
 isolated nodes and a fresh sequential whole-tree run to pass.
 
+The isolated catalogue and continuity gates also contradict three checked
+predecessor claims. Registry-temporal-coverage `W02.P05.S43` is reopened because
+the registered Modelo 038 inspection source still lacks its required unique
+`record_design_epoch`. Registry-completeness-closure `W03.P05.S31` is reopened for
+the ungrounded continuity groups introduced by the 038, 194, 721, and 763 revision
+work; its baseline may not simply be raised. The roll-up's temporal predecessor
+close row `W03.P06.S34` is reopened because an open predicate-relevant temporal row
+and the new `W02.P05.S51` make that closure claim false.
+
 ### non-executable-rows | medium | Two checked findings were not plan work
 
 `P03.S19` and `P03.S20` described adjudication findings and explicitly stated that

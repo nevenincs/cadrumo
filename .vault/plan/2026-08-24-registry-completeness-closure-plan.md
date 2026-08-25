@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#registry-completeness-closure'
 date: '2026-08-24'
+modified: '2026-08-25'
+body_hash: 'sha256:f4cc8295d12707db432c43aa62f16a0dffa41c101840878fa79de27782538778'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -10,8 +12,6 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-22-source-casilla-integration-plan]]'
-modified: '2026-08-25'
-body_hash: 'sha256:1c4944255b9a9dcc3aa42c5dee7fbda556c443af9bcd3889f836bdf325dc6891'
 ---
 
 # `registry-completeness-closure` plan
@@ -139,7 +139,7 @@ Prove localization, binding, continuity, calculation, and export semantics acros
 Exercise the supported revision umbrella through localization, casilla continuity, binding and calculation resolution, and official export layout semantics.
 
 - [x] `W03.P05.S30` - Verify every shipped modelo and revision localization key across supported output locales; `dev/locales/`.
-- [x] `W03.P05.S31` - Verify casilla identity, semantic linkage, and continuity chains across every supported revision boundary; `src/cadrumo/domain/calculations/registry/tests/`.
+- [ ] `W03.P05.S31` - Verify and ground casilla identity, semantic linkage, and continuity chains across every supported revision boundary, including the newly exposed ungrounded groups for Modelos 038, 194, 721, and 763, without merely raising the ratchet baseline; `src/cadrumo/domain/calculations/registry/tests/test_continuidad_completeness_ratchet.py, src/cadrumo/_data/registry/aeat/modelos/038, src/cadrumo/_data/registry/aeat/modelos/194, src/cadrumo/_data/registry/aeat/modelos/721, src/cadrumo/_data/registry/aeat/modelos/763`.
 - [x] `W03.P05.S32` - Verify binding selectors, resolver enrollment, calculation paths, and provenance for every filing-grade revision; `src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W03.P05.S33` - Verify official export layout selection, mapped semantic owners, and emitted-byte offsets for every filing-grade revision; `src/cadrumo/application/filing/tests/`.
 
@@ -147,7 +147,7 @@ Exercise the supported revision umbrella through localization, casilla continuit
 
 Close the predicate-relevant work in temporal coverage, source-casilla integration, and export-fragment authority with records, summaries, reviews, and canonical plan state.
 
-- [x] `W03.P06.S34` - Close registry-temporal-coverage predicate-relevant rows, execution records, summaries, stale assumptions, and final review; `.vault/plan/2026-08-14-registry-temporal-coverage-plan.md`.
+- [ ] `W03.P06.S34` - Close registry-temporal-coverage predicate-relevant rows, execution records, summaries, stale assumptions, and final review; `.vault/plan/2026-08-14-registry-temporal-coverage-plan.md`.
 - [ ] `W03.P06.S35` - Close source-casilla-integration predicate-relevant rows, execution records, summaries, stale assumptions, and final review; `.vault/plan/2026-08-22-source-casilla-integration-plan.md`.
 - [ ] `W03.P06.S36` - Close aeat-export-fragment-generator-authority predicate-relevant rows, execution records, summaries, stale assumptions, and final review; `.vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md`.
 
