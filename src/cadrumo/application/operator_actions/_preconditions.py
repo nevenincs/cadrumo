@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from decimal import Decimal
 
 from ...core import (
     ActionArgumentSource,
@@ -18,7 +19,7 @@ def no_action_precondition_verdict(
     *,
     condition_id: str,
     evidence_id: str | None = None,
-    facts: Mapping[str, str | int | bool],
+    facts: Mapping[str, str | int | bool | Decimal],
     provenance: ActionEvidenceProvenance,
     outcome: NoRecoveryOutcome,
 ) -> PreconditionVerdict:
@@ -42,7 +43,7 @@ def active_profile_pointer_repair_verdict(
     *,
     condition_id: str,
     evidence_id: str,
-    facts: Mapping[str, str | int | bool],
+    facts: Mapping[str, str | int | bool | Decimal],
     provenance: ActionEvidenceProvenance,
 ) -> PreconditionVerdict:
     """Build the confirm-required repair outcome for one active-pointer failure."""
