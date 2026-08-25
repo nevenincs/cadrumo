@@ -130,6 +130,10 @@ def _modificacion_observation() -> RegistryModeloObservation:
             modelo=_MODELO,
             filing_year=_YEAR_N_PLUS_1,
             period=_MODIFICACION_PERIOD,
+            # Same rung as the alta above: modelo 036 is censal, not a
+            # filing modelo, so the FILING default asks it for capability
+            # it neither has nor claims.
+            grade=RegistryAuthorityGrade.APPLICABILITY,
             casilla_values={
                 _EVENT_KIND_CASILLA: Decimal("2"),
                 _VIGENCIA_2025_CASILLA: _VIGENCIA,

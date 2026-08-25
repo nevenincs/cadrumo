@@ -20,7 +20,6 @@ from .. import (
     OperationRequest,
     OperationResponseIntent,
     OperationReviewProjectionService,
-    _executor,
     owner,
 )
 from .. import __all__ as public_names
@@ -120,12 +119,13 @@ def test_live_operation_boundary_census_has_no_private_consumer_or_redeclaration
     owner_consumers: set[Path] = set()
 
     assert top_level_exports.isdisjoint(owner_exports)
-    assert owner.OperationEventEmitter is _executor.OperationEventEmitter
-    assert owner.OperationExecutor is _executor.OperationExecutor
-    assert owner.OperationExecutorContext is _executor.OperationExecutorContext
-    assert owner.OperationInteractionAccess is _executor.OperationInteractionAccess
-    assert owner.OperationResumableExecutor is _executor.OperationResumableExecutor
-    assert owner.OperationResumeCheckpoint is _executor.OperationResumeCheckpoint
+    assert owner.OperationEventEmitter.__module__ == owner.__name__
+    assert owner.OperationExecutor.__module__ == owner.__name__
+    assert owner.OperationExecutorContext.__module__ == owner.__name__
+    assert owner.OperationInteractionAccess.__module__ == owner.__name__
+    assert owner.OperationResumableExecutor.__module__ == owner.__name__
+    assert owner.OperationResumeCheckpoint.__module__ == owner.__name__
+    assert not (operations_root / "_executor.py").exists()
 
     for source in source_root.rglob("*.py"):
         if (

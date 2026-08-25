@@ -57,8 +57,8 @@ from __future__ import annotations
 
 import os
 import tempfile
-from tempfile import TemporaryDirectory
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 # Pure stdlib, deliberately not `from cadrumo.tests import collection_storage_root`
 # -- see the docstring above. Mirrors `_collection_storage_root.collection_storage_root`'s

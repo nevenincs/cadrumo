@@ -31,6 +31,7 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Callable, Iterable, Mapping
 from datetime import datetime
+from decimal import Decimal
 from enum import StrEnum
 from typing import Final, Protocol
 
@@ -688,7 +689,12 @@ def _prior_filing_observations_fingerprint(payloads: Iterable[_StoredPriorObserv
 def _normalize_prior_filing_observation(payload: _StoredPriorObservation) -> list[object]:
     observation = payload.observation
     casilla_values = sorted(
-        [entry.casilla_id, canonical_decimal_string(entry.value)] for entry in observation.observations
+        [
+            entry.casilla_id,
+            entry.value_kind,
+            canonical_decimal_string(entry.value) if isinstance(entry.value, Decimal) else entry.value,
+        ]
+        for entry in observation.observations
     )
     return [
         str(observation.modelo),

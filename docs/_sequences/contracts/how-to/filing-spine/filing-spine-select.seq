@@ -1,17 +1,26 @@
 :seed: iva-evidence-2026
 @step Create the work unit for the filing target.
 @setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
-@step Calculate the quarter's IVA from the classified ledger.
+@step Record a later sale so recalculation produces a new content-addressed draft even when the reused seed revision was already filed.
+@setup aeat app ledger add --date 2026-03-20 --amount 121 --direction INCOMING --description "Selector transition sale" --classification BUSINESS --taxable-base 100 --iva-rate 0.21 --iva-amount 21 --iva-category domestic_general --idempotency-key filing-spine-selector-transition
+@step Calculate the changed quarter and retain the new draft reference.
 @setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T --m303-filing-evidence fixtures/m303-filing-evidence-2026-1T.json
+@capture selected_revision_id result.calculation_revision_id
 @step Select the latest draft revision explicitly.
-aeat --format json app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-draft
+@result aeat --format json app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-draft
+@expect result.calculation_revision_id == "{selected_revision_id}"
+@expect result.state == "borrador"
 @step Verify the calculated draft so a verified revision exists.
 @setup aeat --format json app modelo work verify --modelo 303 --year 2026 --period 1T
 @step Select the latest verified revision.
-aeat --format json app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-verified
+@result aeat --format json app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-verified
+@expect result.calculation_revision_id == "{selected_revision_id}"
+@expect result.state == "verificado_completo"
 @step Record the local filed marker so a filed revision exists.
 @setup aeat --format json app modelo work file --modelo 303 --year 2026 --period 1T
 @step Select the filed revision.
 @result aeat --format json app modelo work revision --modelo 303 --year 2026 --period 1T --select filed
+@expect result.calculation_revision_id == "{selected_revision_id}"
+@expect result.state == "presentado"
 @expect exit_code == 0
 @expect result.filed_by == "docs-sequence-sandbox"

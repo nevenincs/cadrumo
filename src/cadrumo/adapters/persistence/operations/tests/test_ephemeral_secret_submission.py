@@ -35,9 +35,9 @@ from .....application.operations import (
     OperationTerminalCondition,
     OperationTerminalReceipt,
 )
-from .....application.operations._executor import OperationExecutorContext
 from .....application.operations._secret_submission import EphemeralSecretSubmission
 from .....application.operations._supervisor import OperationSupervisor
+from .....application.operations.owner import OperationExecutorContext
 from .....core import (
     STRICT_FROZEN_CONFIG,
     OperationCancellation,

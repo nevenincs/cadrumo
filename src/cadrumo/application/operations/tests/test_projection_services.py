@@ -73,12 +73,12 @@ from .. import (
     operation_public_schema_reference,
 )
 from .._events import OperationInteractionEvent, OperationPhaseEvent, OperationTerminalEvent
-from .._executor import OperationExecutorContext
 from .._interactions import OperationInteractionRequest, OperationPendingInteraction, OperationResponseIntent
 from .._journal import OperationPersistedSnapshot
 from .._leases import OperationOwnerLease, operation_conflict_scope_reference
 from .._projection_services import BoundOperationSecureResponseAuthority, OperationResponseAuthorityBroker
 from .._supervisor import OperationSupervisor
+from ..owner import OperationExecutorContext
 
 _NOW = datetime(2026, 8, 24, 12, tzinfo=UTC)
 _OPERATION_ID = "1" * 64

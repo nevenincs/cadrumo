@@ -241,6 +241,10 @@ from ._diagnostics import (
     record_auth_diagnostic_phone_state,
 )
 from ._errors import AuthDiagnosticPayloadError
+from ._operation_definitions import (
+    build_auth_operation_definitions,
+    build_auth_operation_registrations,
+)
 from ._operator import (
     build_live_auth_preflight_report,
     configure_operator_auth,
@@ -284,10 +288,6 @@ from ._operator_results import (
     CertificateSourcePayload,
     CertificateSourceSecretMutationResult,
     LiveAuthPreflightReport,
-)
-from ._operation_definitions import (
-    build_auth_operation_definitions,
-    build_auth_operation_registrations,
 )
 from ._operator_scope import operator_auth_revocation_is_reachable
 from ._probe_result import ProviderProbeResult
@@ -389,9 +389,9 @@ __all__ = [
     "bind_clave_credentials_to_settings",
     "bind_profile_auth_settings",
     "build_apoderado_flow_definition",
-    "build_live_auth_preflight_report",
     "build_auth_operation_definitions",
     "build_auth_operation_registrations",
+    "build_live_auth_preflight_report",
     "certificate_source_tax_id",
     "check_operator_certificate_sources",
     "clave_auth_facts_from_profile_values",

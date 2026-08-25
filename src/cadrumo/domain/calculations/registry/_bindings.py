@@ -22,9 +22,24 @@ from collections.abc import Callable, Mapping
 from decimal import Decimal, InvalidOperation
 from typing import Literal, TypeGuard
 
-from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    TypeAdapter,
+    ValidationError,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
 
-from ....core import OBJECT_TUPLE_ADAPTER, STRICT_FROZEN_CONFIG, CasillaId, FilingPeriodCode, Period
+from ....core import (
+    OBJECT_TUPLE_ADAPTER,
+    STRICT_FROZEN_CONFIG,
+    CasillaId,
+    FilingPeriodCode,
+    Period,
+    RegistryPeriodCode,
+)
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, CounterpartSourceKind
 from ...iva_compensation import (
     M303_COMPENSATION_APLICADA_CASILLA,
@@ -462,7 +477,11 @@ class RegistryModeloObservation(BaseModel):
     modelo: ModeloId
     filing_period: Period | None = None
     filing_year: int = Field(ge=2000, le=2099)
-    period: FilingPeriodCode
+    #: A registry coordinate, not necessarily a period a taxpayer files in:
+    #: a non-filing modelo such as the censal 036 is addressed by its event
+    #: (alta, modificacion, baja) rather than by a calendar period. The
+    #: span-capable ``filing_period`` above stays ``None`` for those.
+    period: RegistryPeriodCode
     observations: tuple[CasillaObservation, ...] = Field(default_factory=tuple)
 
     @model_validator(mode="before")
@@ -482,7 +501,17 @@ class RegistryModeloObservation(BaseModel):
         try:
             filing_period = Period.from_year_and_code(filing_year, period)
         except ValueError as exc:
-            raise RegistryValidationError("observation period must be a bare registry period token") from exc
+            # An administrative coordinate has no calendar span, so a
+            # non-filing modelo simply carries no filing_period. Anything
+            # else that cannot form a Period -- a combined display form such
+            # as "2025 1T" -- is drift and is still refused here.
+            try:
+                TypeAdapter(RegistryPeriodCode).validate_python(period)
+            except ValidationError:
+                raise RegistryValidationError(
+                    "observation period must be a bare registry period token",
+                ) from exc
+            return data
         return {**payload, "filing_period": filing_period}
 
     @field_validator("observations", mode="before")

@@ -26,6 +26,12 @@ from cadrumo.application.filing import (
     TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
 )
+from cadrumo.application.registry import (
+    compose_filing_export_coverage,
+    compose_source_connectivity_coverage,
+    compose_temporal_coverage,
+    load_source_connectivity_census,
+)
 from cadrumo.core import (
     AeatProductSoftwareEvidence,
     AeatProductSoftwareIdentity,
@@ -35,6 +41,7 @@ from cadrumo.core import (
     PriorDomiciliationElection,
     RefundElection,
     ResultDisposition,
+    SourceConnectivityDisposition,
 )
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
@@ -51,7 +58,7 @@ from ...filing_export_proof import (
     FilingExportOfficialOffsetProbe,
     LiveFilingExportProofAuthority,
 )
-from ..closure import load_registry_closure_report
+from ..closure import build_registry_closure_report, load_registry_closure_report
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -91,12 +98,12 @@ def test_real_live_filing_success_cannot_invent_a_complete_source_limb() -> None
         "unmeasured",
     )
     assert row.predicate_outcome == "refused"
-    assert report.satisfied_revision_count == 0
+    assert report.satisfied_revision_count >= 1
     assert not report.release_eligible
 
 
-def test_real_below_grade_row_is_blocked_only_by_canonical_source_evidence_gap() -> None:
-    """Modelo 036 is outside filing participation, while its real source gap remains blocking."""
+def test_real_below_grade_row_is_complete_from_canonical_manual_source_evidence() -> None:
+    """M036's real manual source evidence completes its non-filing closure row."""
     report = _canonical_report()
     row = next(
         item
@@ -104,7 +111,7 @@ def test_real_below_grade_row_is_blocked_only_by_canonical_source_evidence_gap()
         if (item.modelo, item.revision) == (Modelo.M036, "2025-02-03-y-siguientes")
     )
 
-    assert row.predicate_outcome == "refused"
+    assert row.temporal_coverage.status == "validated"
     assert row.filing_export is not None
     assert (row.filing_export.outcome, row.filing_export.evidence, row.filing_export.refusal) == (
         "not_applicable",
@@ -112,14 +119,84 @@ def test_real_below_grade_row_is_blocked_only_by_canonical_source_evidence_gap()
         None,
     )
     assert row.source_connectivity is not None
+    assert row.source_connectivity.outcome == "satisfied"
+    assert row.source_connectivity.refusal is None
+    assert {
+        evidence.authority
+        for evidence in row.source_connectivity.evidence
+    } == {
+        "source-domain-to-casilla-connectivity:censo.modelo-036-profile-status",
+    }
+    assert row.predicate_outcome == "satisfied"
+    assert row.refusals == ()
+    assert report.satisfied_revision_count >= 1
+    assert not report.release_eligible
+
+
+def test_real_complete_below_grade_row_refuses_mutated_manual_source_evidence() -> None:
+    """Removing M036's terminal evidence makes the real composed row refused again."""
+    authority = bundled_authority()
+    census = load_source_connectivity_census()
+    m036 = next(entry for entry in census.entries if entry.candidate_id == "censo.modelo-036-profile-status")
+    mutated_census = _validated_census(
+        census,
+        entries=tuple(entry for entry in census.entries if entry.candidate_id != m036.candidate_id),
+    )
+    report = _compose_report(authority=authority, census=mutated_census)
+    row = next(
+        item
+        for item in report.rows
+        if (item.modelo, item.revision) == (Modelo.M036, "2025-02-03-y-siguientes")
+    )
+
+    assert row.temporal_coverage.status == "validated"
+    assert row.source_connectivity is not None
     assert (row.source_connectivity.outcome, row.source_connectivity.refusal.reason) == (
         "unmeasured",
         "unmeasured",
     )
-    assert [(refusal.limb, refusal.reason) for refusal in row.refusals] == [
-        ("source_connectivity", "unmeasured"),
-    ]
-    assert not report.release_eligible
+    assert row.filing_export is not None
+    assert row.filing_export.outcome == "not_applicable"
+    assert row.predicate_outcome == "refused"
+
+
+def test_real_complete_below_grade_row_refuses_pending_source_disposition_mutation() -> None:
+    """M036 cannot keep completeness after its terminal manual disposition becomes pending."""
+    authority = bundled_authority()
+    census = load_source_connectivity_census()
+    m036 = next(entry for entry in census.entries if entry.candidate_id == "censo.modelo-036-profile-status")
+    follow_up = next(
+        entry.bounded_follow_up
+        for entry in census.entries
+        if entry.bounded_follow_up is not None
+    )
+    pending_m036 = m036.model_copy(
+        update={
+            "disposition": SourceConnectivityDisposition.CONNECT_CANDIDATE,
+            "bounded_follow_up": follow_up,
+        },
+    )
+    mutated_census = _validated_census(
+        census,
+        entries=tuple(
+            pending_m036 if entry.candidate_id == m036.candidate_id else entry
+            for entry in census.entries
+        ),
+    )
+    report = _compose_report(authority=authority, census=mutated_census)
+    row = next(
+        item
+        for item in report.rows
+        if (item.modelo, item.revision) == (Modelo.M036, "2025-02-03-y-siguientes")
+    )
+
+    assert row.source_connectivity is not None
+    assert (row.source_connectivity.outcome, row.source_connectivity.refusal.reason) == (
+        "refused",
+        "unreviewed_evidence",
+    )
+    assert row.source_connectivity.refusal.disposition.work_item == follow_up.action_id
+    assert row.predicate_outcome == "refused"
 
 
 def test_real_grade_scope_row_guards_bite_both_participation_mutations() -> None:
@@ -226,6 +303,30 @@ def test_real_loader_reports_cross_limb_disagreement_from_divergent_authority_ca
         "cross_limb_disagreement",
     )
     assert row.predicate_outcome == "refused"
+
+
+def _compose_report(*, authority, census):
+    """Join real temporal, source, and export composers with only census evidence varied."""
+    return build_registry_closure_report(
+        temporal_coverage=compose_temporal_coverage(authority=authority),
+        source_connectivity=compose_source_connectivity_coverage(
+            authority=authority,
+            census=census,
+            as_of=_AS_OF,
+        ),
+        filing_export=compose_filing_export_coverage(authority=authority),
+        as_of=_AS_OF,
+    )
+
+
+def _validated_census(census, *, entries):
+    """Revalidate an in-memory mutation through the canonical census contract."""
+    return census.__class__.model_validate(
+        {
+            **census.model_dump(mode="python"),
+            "entries": entries,
+        },
+    )
 
 
 def _m151_live_filing_authority(authority) -> LiveFilingExportProofAuthority:

@@ -65,7 +65,6 @@ from .._events import (
     OperationReconciliationEvent,
     OperationTerminalEvent,
 )
-from .._executor import OperationExecutorContext
 from .._interactions import OperationInteractionRequest, OperationPendingInteraction
 from .._journal import (
     OperationObservationMaterialization,
@@ -75,6 +74,7 @@ from .._journal import (
 )
 from .._leases import OperationOwnerLease, operation_conflict_scope_reference
 from .._replay import OperationReplayPage, OperationReplayStatus
+from ..owner import OperationExecutorContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

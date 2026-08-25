@@ -76,6 +76,37 @@ def test_prior_filing_fingerprint_changes_when_a_filed_value_changes() -> None:
     assert before != after
 
 
+def test_prior_filing_fingerprint_tracks_a_text_casilla_without_decimal_coercion() -> None:
+    def carrier(value: str) -> ObservationEnvelopePayload:
+        observation = RegistryModeloObservation(
+            modelo="130",
+            filing_year=2026,
+            period="1T",
+            observations=(
+                CasillaObservation(
+                    casilla_id=_M130_RESULTADO_CASILLA,
+                    value_kind="text",
+                    value=value,
+                    legal_refs=_LEGAL_REFS,
+                    source_refs=_SOURCE_REFS,
+                ),
+            ),
+        )
+        return ObservationEnvelopePayload(
+            observation=observation,
+            captured_at=datetime(2026, 1, 1, tzinfo=UTC),
+            source_kind="app_filing",
+            member_nif=None,
+            stamped_revision_id="2019-y-siguientes",
+            source_metadata={},
+        )
+
+    before = _prior_filing_observations_fingerprint([carrier("1T")])
+    after = _prior_filing_observations_fingerprint([carrier("2T")])
+
+    assert before != after
+
+
 def test_prior_filing_fingerprint_tracks_the_stamped_revision() -> None:
     before = _prior_filing_observations_fingerprint([_carrier(value="100.00", stamped_revision_id="2019-y-siguientes")])
     after = _prior_filing_observations_fingerprint([_carrier(value="100.00", stamped_revision_id="2024-y-siguientes")])

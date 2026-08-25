@@ -66,7 +66,6 @@ from .._events import (
     OperationTerminalEvent,
 )
 from .._execution_context import OperationDeclarationError
-from .._executor import OperationExecutor, OperationExecutorContext
 from .._interactions import (
     OperationApplyResponse,
     OperationConsumedInteraction,
@@ -77,6 +76,7 @@ from .._interactions import (
 from .._journal import OperationPersistedSnapshot, OperationSecureReferenceStore
 from .._leases import OperationLeaseDisposition, OperationOwnerLease, operation_conflict_scope_reference
 from .._supervisor import OperationSupervisor
+from ..owner import OperationExecutor, OperationExecutorContext
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
