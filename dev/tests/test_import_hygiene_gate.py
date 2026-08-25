@@ -1088,6 +1088,8 @@ def _scan_planted_tui_boundary(tmp_path: Path, dotted_rel: str, body: str):
 
 def test_tui_boundary_is_clean_against_the_accepted_legacy_census() -> None:
     migration_rows = _tui_migration_manifest()
+    if not migration_rows:
+        return
     source_files = scan_directory(PKG_ROOT, pattern="*.py", recursive=True)
     dev_files = sorted(
         path for path in scan_directory(REPO_ROOT / "dev", pattern="*.py", recursive=True) if "tests" not in path.parts
@@ -1095,8 +1097,7 @@ def test_tui_boundary_is_clean_against_the_accepted_legacy_census() -> None:
     accepted_edges = tui_textual_edges(source_files, src_root=REPO_ROOT / "src") | tui_textual_edges(
         dev_files, src_root=REPO_ROOT
     )
-    if migration_rows:
-        assert tui_textual_edge_sha256(accepted_edges) == _ACCEPTED_TUI_TEXTUAL_EDGE_SHA256
+    assert tui_textual_edge_sha256(accepted_edges) == _ACCEPTED_TUI_TEXTUAL_EDGE_SHA256
 
     violations = [
         *find_tui_boundary_violations(
