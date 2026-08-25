@@ -437,7 +437,9 @@ def test_parser_regexes_are_derived_from_the_schema_constraints() -> None:
     from .._schema import Identifier, JsonPath, SequenceId
 
     def _pattern(alias: object) -> str:
-        return next(meta for meta in get_args(alias) if isinstance(meta, StringConstraints)).pattern
+        pattern = next(meta for meta in get_args(alias) if isinstance(meta, StringConstraints)).pattern
+        assert isinstance(pattern, str)
+        return pattern
 
     assert _SEQUENCE_ID_RE.pattern == _pattern(SequenceId)
     assert _IDENTIFIER_RE.pattern == _pattern(Identifier)

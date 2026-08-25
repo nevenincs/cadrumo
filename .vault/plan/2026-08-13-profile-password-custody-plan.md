@@ -19,7 +19,7 @@ related:
   - '[[2026-08-13-sealed-archive-transport-successor-adr]]'
   - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
 modified: '2026-08-25'
-body_hash: 'sha256:f6d0e147ef05e57ccfc17e4f7ee793d925d6efe141d21f5d7acc0adf7f5887bf'
+body_hash: 'sha256:ec08f92c8566acae98a61318199fd0c72f8c01bb7298a1d8de0834f43088a27b'
 ---
 
 # `profile-password-custody` plan
@@ -355,7 +355,7 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 - [x] `W06.P12.S244` - Repair the main nitpicky API documentation cross-references and toctree ownership against current public module exports; `docs/api/ and docs/conf.py`.
 - [x] `W06.P12.S245` - Migrate harness warm-runtime profile provisioning to the mandatory verified recovery handoff and prove real runtime startup succeeds; `src/cadrumo-harness/`.
 - [x] `W06.P12.S246` - Repair the harness serial watchdog kill-switch and disarm lifecycle so the full integration suite terminates cleanly without weakening timeout enforcement; `src/cadrumo-harness/`.
-- [ ] `W06.P12.S247` - Resolve changed-surface Ruff import order and partition every remaining type diagnostic to its owning implementation or fixture until the scoped global proof is clean; `src/cadrumo/ and src/cadrumo-harness/ and dev/`.
+- [x] `W06.P12.S247` - Resolve changed-surface Ruff import order and partition every remaining type diagnostic to its owning implementation or fixture until the scoped global proof is clean; `src/cadrumo/ and src/cadrumo-harness/ and dev/`.
 - [x] `W06.P12.S248` - Reconcile Modelo 303 2026 and Modelo 390 2022-2025 semantic-role constraint signatures against their official record-design authority so the shared-role validator passes without weakening compatibility checks; `src/cadrumo/_data/registry/aeat/modelos/303/ and src/cadrumo/_data/registry/aeat/modelos/390/ and src/cadrumo/domain/calculations/registry/tests/`.
 - [x] `W06.P12.S249` - Reconcile profile and recovery provisioning sequences on check-aeat-notifications, quickstart, profile-setup, and troubleshooting with mandatory creation channels and current status/list composition; `docs/_sequences/contracts/ and docs/quickstart.md and docs/how-to/profile-setup.md and docs/troubleshooting.md`.
 - [x] `W06.P12.S250` - Restore or truthfully re-document operation composition projections on classify-with-llm, import-bank-statements, Modelo 390, and troubleshooting before regenerating their sequences; `docs/_sequences/contracts/ and src/cadrumo/application/operations/`.
