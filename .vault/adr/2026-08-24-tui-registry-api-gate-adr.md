@@ -82,6 +82,10 @@ reconciliation are grounded in `2026-08-24-tui-registry-api-gate-research` and
   catalogue observation, and a registry-independent selector before the generic
   owner seam is implementable; the unresolved evidence is recorded by
   `2026-08-25-tui-architecture-s160-native-work-capture-owner-atomicity-reconciliation-audit`.
+- The approved amendment still needs an authoritative implicit-pointer
+  transition coordinate, a safe physical comparison domain, and independent
+  requested/stored revision evidence; those three gaps are isolated by
+  `2026-08-25-tui-architecture-s160-approved-amendment-architecture-review-audit`.
 
 ## Considered options
 
@@ -124,9 +128,11 @@ reconciliation are grounded in `2026-08-24-tui-registry-api-gate-research` and
   draft, export, or expose materialized work values. Graded admission names one
   required `RegistryAuthorityGrade`; the law-selected revision either satisfies
   it or the result refuses without downgrade.
-- A stored, explicit, or work-unit revision is assertion evidence only. The
-  producer always selects from Modelo, filing year, and period and reports a
-  mismatch rather than resolving through the stored id.
+- A requested visible-target revision and a stored work-unit revision are
+  independent assertion evidence only. The producer always selects from
+  Modelo, filing year, and period, evaluates both typed source axes against the
+  law-selected result, and reports either mismatch without resolving through
+  an asserted id.
 - Every capability answer is copied from its canonical public producer with
   its coordinate and evidence. Absence of a producer or measurement is
   `unmeasured`, never available. Workspace V1 does not infer readiness from
@@ -296,13 +302,30 @@ every owner-state transition that can change the contributed projection,
 including A -> B -> A. It is not a payload digest, timestamp, value-equality
 marker, Workspace baseline, or counter minted by Workspace code.
 
-Native generations are monotonic within one owner process incarnation. An
-opaque Workspace baseline and every cursor bind the application process
-incarnation as part of their token derivation, and a follow-up presented to a
-different incarnation refuses as `workspace_changed`; it never compares a
-restarted integer generation as though it belonged to the earlier process.
+Native generations are monotonic within one owner process incarnation. S126
+epoch schema version 2 adds one safe opaque `comparison_domain` beside the
+unchanged native integer generation. The native owner derives that domain from
+its canonical physical owner scope and the application process incarnation;
+the S126 registration copies it unchanged and never derives it from the
+semantic contributor name. Raw roots, buckets, namespaces, keys and pointer
+paths never enter the domain token or a Workspace payload. Epoch equality,
+successor comparison and second-pass currentness first require exact domain
+equality; a different root, physical owner scope, or process incarnation
+refuses as `workspace_changed` without comparing generation integers.
+
+The complete version-2 epoch coordinate -- owner, kind, schema version,
+comparison domain and unchanged native generation -- participates in the
+sorted contributor epoch digest, Workspace baseline token and every cursor or
+facet continuation token. S126's producer-contract and inventory digests change
+because their declared epoch schema version becomes 2; the runtime comparison
+domain itself belongs only to the captured epoch and epoch digest, never the
+static producer stamp. Revalidation requires that same domain before any
+ordinal comparison. There is no schema-version-1 reader or dual epoch path.
 The incarnation coordinate grants no authorization, contains no owner data,
-and is not a substitute owner generation or a durable shadow counter.
+and is not a substitute owner generation or a durable shadow counter. Lower
+owners return their native projection, native integer generation and neutral
+opaque comparison-domain token only; they never import or mint a
+`ModeloWorkspace*` type.
 
 The Workspace-specific contract remains owned exclusively by
 `cadrumo.application.modelo`. For each contributor kind, the application
@@ -312,9 +335,10 @@ native capture surface. That realization performs exactly one native capture,
 derives the safe Workspace contribution only from the captured immutable or
 otherwise snapshot-isolated value,
 constructs `ModeloWorkspaceProducerStampV1` from the application contract, and
-preserves the owner's generation unchanged in `ModeloWorkspaceEpochV1`.
+preserves the owner's generation and opaque comparison domain unchanged in
+`ModeloWorkspaceEpochV1` using epoch schema version 2.
 `read_current_stamp_and_epoch` combines the same contract-derived stamp with
-the canonical owner's native current-generation read. A lower layer never
+the canonical owner's native current-coordinate read. A lower layer never
 imports, constructs, or returns a `ModeloWorkspace*` type.
 
 This registration is application composition, not a second semantic owner,
@@ -390,29 +414,78 @@ explicit bucket has no implicit-pointer dependency. These physical coordinates
 remain internal and never enter a Workspace payload, refusal, baseline, cursor,
 or producer stamp.
 
-Generation state is process-local and scoped by physical storage root. Under
-one root-scoped transition lock, a newly observed catalogue revision or
-implicit-pointer transition advances one monotonic generation exactly once;
-concurrent captures of the same observation singleflight onto the same
-generation. A -> B -> A therefore advances twice even when the semantic
-catalogue or selected bucket returns to its earlier value. The currentness read
-re-observes the same physical owner coordinate and either returns its still-
-current generation or publishes the observed successor; a stale capture can
-never become current again. Distinct roots have independent locks and counters,
-and their integers are incomparable. Process restart remains covered by the
-Workspace process-incarnation coordinate; no generation is persisted, hashed
-from payload equality, or shared across roots.
+The canonical active-bucket pointer transition authority is the existing
+active-profile pointer owner, exposed through the public
+`cadrumo.application.user_profile` facade and backed solely by the public
+`cadrumo.core` pointer IO primitive. Its public transaction owns the canonical
+custody-root lock. The facade promotes one frozen native pointer observation and
+one capture/current-coordinate pair over that transaction; the core IO
+primitive alone serializes and atomically replaces its record. Under the lock,
+the observation returns the resolved optional bucket together with the durable
+native monotonic transition coordinate from that same record. Clear publishes
+an absent-selection tombstone rather than deleting the coordinate. Every
+successful state-changing write, restore or clear publishes exactly one
+successor coordinate; idempotent no-change operations do not advance it. The
+pointer owner alone persists this coordinate as its revision -- it is not a
+Workspace or WORK generation.
+
+All production pointer readers and writers migrate atomically to that public
+transaction and IO record; there is no dual record reader or legacy mutation
+path. Raw mutation outside it, a second pointer lock, and a WORK-owned pointer
+counter are forbidden. Thus a completed A -> B -> A remains distinguishable
+even when no WORK capture ran between the two pointer transitions or another
+process performed them under the same custody-root lock.
+
+An implicit-bucket WORK capture composes two native coordinates rather than
+shadowing either owner: the pointer observation and the one-record catalogue
+observation for its selected bucket. It captures the pointer under the pointer
+owner's custody-root lock, captures that bucket's catalogue and revision, then
+re-reads the pointer owner's current coordinate. Equality accepts the pair;
+change triggers a bounded retry from the pointer capture, and exhaustion
+refuses `workspace_changed`. Its currentness read repeats the same dependency
+order and compares both coordinates. The native WORK integer generation is a
+pure injective order-preserving composition of the authoritative pointer and
+catalogue monotonic integers, so either successor advances it and completed
+pointer ABA remains visible without mutable WORK generation state. The opaque
+comparison domain binds the physical root, pointer-owner physical identity,
+resolved bucket, catalogue namespace and key, and process incarnation. An
+explicit bucket capture excludes the pointer coordinate, lock, retry and domain
+limb; its native generation is the catalogue generation unchanged.
+
+Concurrent captures of the same accepted coordinate pair singleflight onto the
+same result. A catalogue A -> B -> A and an implicit pointer A -> B -> A each
+remain visible through their own authoritative monotonic coordinate; a stale
+capture can never become current again. Distinct roots have independent
+physical domains and their integers are never compared. Neither Workspace nor
+WORK persists a generation, hashes payload equality into one, or keeps a
+root-global shadow counter.
 
 Registry and work stay separate owners. S128 first performs exactly one native
 WORK capture. Exact absence terminates as the declared refusal; natural absence
 continues because its filing coordinate is complete. S128 then performs exactly
 one S159 registry-native capture from the Modelo, filing year, and period in the
-captured work resolution. One pure application assertion compares the optional
-requested revision and optional stored work revision with the law-selected
-revision from that captured registry projection. The assertion never reloads
-work, calls a raw registry loader, or feeds a stored revision into selection.
-Only after this dependency-ordered WORK-then-REGISTRY pair may S128 capture the
-remaining admission-specific contributors.
+captured work resolution.
+
+S125 carries two fixed, independent typed assertion axes on the resolved target:
+`requested_revision_assertion` and `stored_revision_assertion`. Each record has
+its fixed source discriminator, an optional asserted revision id and exactly one
+of `not_present`, `matched` or `mismatched`; `not_present` requires no id and the
+other outcomes require one. The requested axis reflects only the optional
+visible-target assertion. The stored axis reflects only the optional revision
+persisted on the resolved work unit. Natural absence therefore has a
+`not_present` stored axis, an exact target has a `not_present` requested axis,
+and a visible persisted target can carry both without collapsing their
+evidence. The former single `revision_assertion` field is deleted with no alias
+or compatibility reader.
+
+After the S159 capture, one pure application assertion evaluates both axes
+independently against the same law-selected revision. A success echoes both
+outcomes; any mismatch produces a typed refusal that preserves every evaluated
+axis and identifies each mismatching source, including the two-mismatch case.
+The assertion never reloads work, calls a raw registry loader, feeds either
+asserted revision into selection, or hides an axis in generic facts. Only after
+this dependency-ordered WORK-then-REGISTRY pair and both-axis assertion may
+S128 capture the remaining admission-specific contributors.
 
 The atomic singleton observation, pure captured-catalogue selection and
 consumer convergence, and S159-backed pure revision assertion are prerequisites
@@ -443,8 +516,9 @@ protocol for the selected admission set:
    capture resolves the public visible or exact operand over one atomically
    observed catalogue without a preliminary work read;
 2. invoke the REGISTRY registration exactly once from the captured filing
-   coordinate, apply the one pure revision assertion, then capture each
-   remaining admission-specific registration exactly once;
+   coordinate, apply both independent revision-assertion axes through the one
+   pure assertion operation, then capture each remaining admission-specific
+   registration exactly once;
 3. assemble only from those captured projections, with no live owner re-read
    hidden inside the join;
 4. ask each same registration for its current coordinates; it combines the
@@ -452,9 +526,10 @@ protocol for the selected admission set:
    current-generation read, and both coordinates must equal the capture; and
 5. only after every comparison succeeds, mint one safe opaque
    `ModeloWorkspaceBaseline` over the sorted contributor tuple, resolved
-   request coordinate, selected revision, Workspace contract version,
-   registry schema identity and fingerprint, locale-catalogue stamp, and
-   field-manifest digest.
+   request coordinate, selected revision, Workspace contract version, complete
+   schema-version-2 contributor epoch digest including every comparison domain,
+   registry schema identity and fingerprint, locale-catalogue stamp, and field-
+   manifest digest.
 
 An unknown or changed epoch or producer stamp causes a bounded whole-assembly
 retry and then a typed `workspace_changed` or `consistency_unavailable`
@@ -493,19 +568,27 @@ Conformance also proves a one-to-one fixed point between the eight S126
 registrations and the eight canonical native owner surfaces; exact contributor
 identities and admission-specific capture sets; exactly one native capture per
 S126 capture; immutable or snapshot-isolated captured values; unchanged owner
-generations; cross-incarnation baseline and cursor refusal; and absence of any
-application-minted, persisted, reset, or substituted owner generation. Domain,
-locale, and other lower-layer modules importing or returning a
-`ModeloWorkspace*` type fail the boundary gate.
+generations and comparison domains; epoch-schema-v2-only decoding; same-domain
+comparison; distinct-root, switched-root and cross-incarnation refusal before
+integer comparison; comparison-domain participation in contributor epoch
+digests, baselines and cursors; and absence of any application-minted,
+persisted, reset, or substituted owner generation. Domain, locale, and other
+lower-layer modules importing or returning a `ModeloWorkspace*` type fail the
+boundary gate.
 
 WORK conformance additionally proves one-record catalogue/revision atomicity;
 visible absence and exact-absence asymmetry; discarded-only resolution; mixed
 and multiple ambiguity; active-only lifecycle exclusion; one pure selector over
-the captured catalogue; physical-root/bucket/namespace isolation; implicit
-pointer A -> B -> A; catalogue A -> B -> A; same-observation singleflight;
-currentness refusal; distinct-root independence; exactly one WORK capture before
-the S159 REGISTRY capture; and one registry/work revision assertion with no raw
-loader or second owner read.
+the captured catalogue; physical-root/bucket/namespace isolation; pointer-owner
+atomic observation and mutation under the canonical custody-root lock;
+between-WORK-observations implicit pointer A -> B -> A; catalogue A -> B -> A;
+implicit pointer/catalogue retry and currentness; explicit-bucket pointer
+exclusion; same-observation singleflight; currentness refusal; distinct-root
+independence; exactly one WORK capture before the S159 REGISTRY capture; natural
+absence with a `not_present` stored axis and both requested-axis presence cases;
+visible work with both axes; exact work with only the stored axis;
+requested-only, stored-only and simultaneous mismatch refusals; and no raw
+loader, generic-fact assertion, or second owner read.
 
 ### C2 complex-read gate and external prerequisites
 
@@ -601,7 +684,14 @@ choice supported by `2026-08-24-tui-registry-api-gate-research` and
   mixed registry, work, calculation, readiness, closure, or locale epochs.
 - Work reads retain discarded terminal state and natural absence without
   widening creation semantics, while persistence revision and active-pointer
-  transitions make torn or ABA work captures observable.
+  transitions make torn or ABA work captures observable. The pointer owner,
+  not WORK or Workspace, remains the transition-counter authority.
+- Safe epoch comparison is confined to one opaque physical-scope and process-
+  incarnation domain; baselines and cursors cannot accidentally compare equal
+  integers from distinct roots or processes.
+- Requested-target and stored-work revision evidence remain independently
+  inspectable on success and refusal, including absent work and simultaneous
+  mismatch, without widening either assertion into selection authority.
 - `ModeloWorkReview` remains the canonical bounded C1 record and appears
   unchanged as the Workspace review facet; Workspace V1 neither expands it nor
   duplicates its semantic join.

@@ -94,10 +94,11 @@ Resolution belongs to `resolve_modelo_work_target` at
 contracts at `src/cadrumo/application/modelo/_selectors.py:174` and
 `src/cadrumo/application/modelo/_selectors.py:296`. Their behavior already
 distinguishes explicit-id absence, natural absence, contradiction, revision
-conflict, and multiple natural matches. `resolve_registry_revision_for_work_target`
-at `src/cadrumo/application/modelo/_work_addressing.py:723` preserves the
-law-selected revision and treats a supplied revision only as an equality
-assertion.
+conflict, and multiple natural matches. The current
+`resolve_registry_revision_for_work_target` at
+`src/cadrumo/application/modelo/_work_addressing.py:723` is the legacy combined
+work/registry path identified for deletion by the accepted ADR; it is not an
+S128 producer or assertion authority.
 
 There is one constraint-shape gap to handle deliberately: the two public
 target operands are frozen dataclasses, not strict Pydantic models carrying an
@@ -107,6 +108,24 @@ Workspace-owned tagged arm that contains the canonical operand, or reconcile
 the canonical target contract first; never create a second natural-addressing
 authority. Zero natural matches must remain an explicit absent-work read state,
 and no S125 model may imply creation.
+
+### Revision assertion contract-correction locator
+
+The assertion decision and all outcome semantics live only in
+`2026-08-24-tui-registry-api-gate-adr`. The current S125 implementation has one
+`ModeloWorkspaceRevisionAssertionV1` attached as `revision_assertion`; it can
+name only the requested visible-target revision and cannot retain the stored
+work revision independently. The corrected strict Workspace V1 shape replaces
+that field atomically with fixed `requested_revision_assertion` and
+`stored_revision_assertion` records. Each has a source-fixed discriminator,
+optional asserted `RevisionId`, and the closed disposition set `not_present`,
+`matched`, or `mismatched`, with validators that bind presence to disposition.
+The resolved target and typed revision-mismatch refusal carry both records, so
+natural absence, exact lookup, visible persisted work, and either or both
+mismatch sources remain distinguishable. S128 populates neither axis from
+generic facts and evaluates both only after the S159 law-selected capture. The
+old field and its reader are removed; there is no alias, default synthesis,
+compatibility arm, or second assertion model.
 
 ### Registry admission and schema projection
 
@@ -273,6 +292,18 @@ baseline is never accepted as an edit baseline, command
 credential, approval, mutation precondition, persistence key, or operation
 refresh authority.
 
+S126 epoch schema version 2 adds one opaque safe comparison-domain token copied
+unchanged from each native owner's physical-scope/process-incarnation domain.
+The epoch tuple and its digest include that token. `ModeloWorkspaceBaselineV1`
+adds a `contributor_epoch_digest` over the sorted complete epoch coordinates,
+separate from its static `contributor_stamp_digest`; its token and every cursor
+or facet continuation bind that epoch digest.
+Raw root, bucket, namespace, key and pointer coordinates remain outside S125
+models. Cross-domain currentness refuses before integer comparison, and no
+epoch-schema-version-1 compatibility reader remains. This reference owns only
+the safe Workspace token placement; domain derivation and comparison semantics
+remain in the accepted ADR, while lower owners return no Workspace type.
+
 ## Forbidden dependency edges
 
 - No import from `cadrumo.entrypoints`, `cadrumo.adapters`, concrete
@@ -299,7 +330,12 @@ refresh authority.
   provenance, readiness, and schema DTO family in `_workspace_models.py`.
 - S126 supplies the sole application-owned producer contract, stamp, epoch,
   structural port, and fixed eight-kind inventory family in
-  `_workspace_producers.py`; it intentionally supplies no live owner surface.
+  `_workspace_producers.py`; its current epoch schema lacks the approved opaque
+  comparison domain and requires the atomic schema-version-2 correction. It
+  intentionally supplies no live owner surface.
+- S125's current single requested-revision assertion cannot preserve the
+  independent stored-work axis and requires the atomic two-axis correction
+  located above before S128 composition.
 - S127 supplies the sole generated field-classification denominator in
   `_workspace_manifest.py`. Its early field-manifest contract owner identity is
   scheduled for correction and atomic relocation into S167's registration
