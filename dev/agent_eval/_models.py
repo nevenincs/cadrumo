@@ -52,10 +52,17 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 from itertools import pairwise
+from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from cadrumo.core import NoRecoveryOutcome
 from cadrumo.core.json_contract import EnvelopeStatus
+
+if TYPE_CHECKING:
+    from cadrumo.application.operator_actions import PreconditionVerdict
+
+    from ._action_coverage import LeafConditionScenario
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -274,9 +281,10 @@ class ExitCodeScenario(BaseModel):
     as ``modelo.work.verify`` legitimately raises a non-zero process exit code
     when findings exist, while still emitting a well-formed JSON envelope on
     stdout. This scenario declares the exit code that legitimately signals a
-    verdict, the envelope ``status`` that verdict must carry, and a real
-    registry command key the operator must be guided to run next - proving the
-    operator has a continuation, not a dead end.
+    verdict, the envelope ``status`` that verdict must carry, and the exact
+    production ``(leaf, condition, scenario)`` row whose observed outcome is
+    asserted. The row resolves through the live action-coverage matrix; this
+    scenario deliberately cannot name its own continuation command or action.
 
     Attributes:
         name: Scenario identifier (e.g. ``"m130-verify-cross-period-unclean"``).
@@ -289,10 +297,9 @@ class ExitCodeScenario(BaseModel):
             Never :attr:`~core.json_contract.EnvelopeStatus.SUCCESS` - a
             non-zero exit paired with a "success" status would itself be the
             silent-crash-vs-verdict confusion this scenario exists to catch.
-        expected_next_action: A real registry command key (resolvable against
-            the live CLI schema registry) the operator must be guided to run
-            next - the continuation verb proving the exit code is actionable
-            rather than terminal.
+        leaf_condition_scenario: The S42 production matrix identity that
+            declares the failed condition and either its canonical recovery
+            action or its explicit no-recovery outcome.
     """
 
     model_config = _STRICT_FROZEN
@@ -301,7 +308,14 @@ class ExitCodeScenario(BaseModel):
     command: str = Field(min_length=1)
     expected_exit_code: int = Field(gt=0, le=255)
     tool_result_status: EnvelopeStatus
-    expected_next_action: str = Field(min_length=1)
+    leaf_condition_scenario: tuple[str, str, str]
+
+    @field_validator("leaf_condition_scenario")
+    @classmethod
+    def _require_complete_production_identity(cls, value: tuple[str, str, str]) -> tuple[str, str, str]:
+        if any(not part.strip() for part in value):
+            raise ValueError("leaf_condition_scenario must contain three non-blank production identities")
+        return value
 
     @model_validator(mode="after")
     def _reject_success_status_for_a_verdict_scenario(self) -> ExitCodeScenario:
@@ -313,6 +327,68 @@ class ExitCodeScenario(BaseModel):
                 "scenario proves against)",
             )
         return self
+
+
+class ObservedProductionActionAssertion(BaseModel):
+    """One observed verdict compared with its resolved production profile.
+
+    The report contains only the matrix identity, observed values, and derived
+    matches. It has no expected-action field: the expected action and closed
+    outcome remain inside the S42 resolved production profile used by
+    :func:`observe_production_action`.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    leaf_condition_scenario: tuple[str, str, str]
+    observed_condition_id: str = Field(min_length=1)
+    observed_action_id: str | None = None
+    observed_no_recovery_outcome: NoRecoveryOutcome | None = None
+    condition_matches: bool
+    action_matches: bool
+    no_recovery_outcome_matches: bool
+
+    @field_validator("leaf_condition_scenario")
+    @classmethod
+    def _require_complete_identity(cls, value: tuple[str, str, str]) -> tuple[str, str, str]:
+        if any(not part.strip() for part in value):
+            raise ValueError("leaf_condition_scenario must contain three non-blank production identities")
+        return value
+
+    @model_validator(mode="after")
+    def _require_one_observed_outcome(self) -> ObservedProductionActionAssertion:
+        if (self.observed_action_id is None) == (self.observed_no_recovery_outcome is None):
+            raise ValueError("observed production verdict requires exactly one action or no-recovery outcome")
+        return self
+
+    @property
+    def passed(self) -> bool:
+        """True when the actual condition and outcome exactly match production."""
+        return self.condition_matches and self.action_matches and self.no_recovery_outcome_matches
+
+
+def observe_production_action(
+    coverage: LeafConditionScenario,
+    verdict: PreconditionVerdict,
+) -> ObservedProductionActionAssertion:
+    """Compare an actual verdict with its S42-resolved production declaration.
+
+    The function takes the live matrix row rather than caller-supplied expected
+    action data. It stays lazily typed so importing the general evaluator model
+    surface does not eagerly materialise the application/CLI operator surface.
+    """
+    declared = coverage.profile.declaration
+    observed_action_id = verdict.action.action_id if verdict.action is not None else None
+    declared_action_id = declared.action.action_id if declared.action is not None else None
+    return ObservedProductionActionAssertion(
+        leaf_condition_scenario=coverage.identity,
+        observed_condition_id=verdict.failed_condition_id,
+        observed_action_id=observed_action_id,
+        observed_no_recovery_outcome=verdict.no_recovery_outcome,
+        condition_matches=verdict.failed_condition_id == declared.condition_id,
+        action_matches=observed_action_id == declared_action_id,
+        no_recovery_outcome_matches=verdict.no_recovery_outcome == declared.no_recovery_outcome,
+    )
 
 
 class ExitCodeVerdict(BaseModel):
@@ -330,7 +406,7 @@ class ExitCodeVerdict(BaseModel):
     exit_code_matches: bool
     envelope_well_formed: bool
     status_is_non_success: bool
-    next_action_is_continuation: bool
+    production_action_assertion: ObservedProductionActionAssertion
     failures: tuple[str, ...] = ()
 
     @property
@@ -340,7 +416,7 @@ class ExitCodeVerdict(BaseModel):
             self.exit_code_matches
             and self.envelope_well_formed
             and self.status_is_non_success
-            and self.next_action_is_continuation
+            and self.production_action_assertion.passed
             and not self.failures
         )
 
