@@ -4,7 +4,7 @@ tags:
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
 modified: '2026-08-25'
-body_hash: 'sha256:6da9c81e5760e31967632b0ccffea847ea2b85f8bb93b5dbc0ea5dc00cefe990'
+body_hash: 'sha256:6938df4a0725e6a8f4bea78dd1502d269f351104b259d6e866cec9c7563d0f72'
 tier: L3
 related:
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
@@ -156,6 +156,7 @@ Close against fleet invariants, source evidence, repository rules, and architect
 - [ ] `W04.P13.S35` - Run feature-scoped Ruff, formatting, focused tests, Vaultspec, cold and warm registry validation, generated-reference drift, locale, and real CLI smoke gates, then run the applicable repository-wide gates, attribute every failure to the current revision and owning paths, block feature closure on failures caused by or overlapping this feature, and record unrelated shared-worktree failures separately; `src/cadrumo/, dev/, .vault/, current revision and owned-path evidence`.
 - [x] `W04.P13.S36` - Perform formal code and architecture review for canonical reuse, source fidelity, warm-load enforcement, consumer parity, and absence of superseded paths, running Vaultspec RAG discovery followed by exact-symbol sweeps to prove no revision selector, filing-window resolver, period parser, cadence authority, supported-year horizon, deadline catalogue, qualifier vocabulary, or downstream deduplication has been redeclared; `src/cadrumo/; .vault/exec/; .vault/audit/`.
 - [x] `W04.P13.S45` - Make deadline reference-date semantics canonical and deterministic. Correct stale date.today() documentation, replace direct wall-clock reads in deadline-path tests with explicit or frozen today_madrid() input, and derive exercised filing years from the supported-filing-year catalogue while preserving literal official dates only in source-fidelity tests; `src/cadrumo/domain/deadlines/, src/cadrumo/entrypoints/cli/tests/, .vault/audit/`.
+- [ ] `W04.P13.S47` - Restore canonical formatting on the shared registry authority after concurrent capture work introduced mixed line endings, then rerun focused authority Ruff, format, and deadline ownership tests without changing behavior; `src/cadrumo/domain/calculations/registry/_authority.py, src/cadrumo/domain/calculations/registry/tests/`.
 
 ## Parallelization
 
