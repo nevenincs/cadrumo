@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
+from ....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     RegistryModeloObservation,
@@ -53,7 +53,9 @@ def _m202_observation(
 
 
 def _resolve_m200_pagos_fraccionados(repository: CalculationObservationRepository) -> dict[RelationId, Decimal]:
-    snapshot = resources().modelos.authority.snapshot("200", filing_year=2025, period="0A")
+    snapshot = resources().modelos.authority.snapshot(
+        "200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+    )
     relation_vals = resolve_relations_from_local_store(snapshot, repository=repository)
     return {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}
 
@@ -102,7 +104,9 @@ def _all_m202_relation_values(
     *,
     first_year_cuota: bool,
 ) -> dict[RelationId, Decimal | None]:
-    snapshot = resources().modelos.authority.snapshot("200", filing_year=2025, period="0A")
+    snapshot = resources().modelos.authority.snapshot(
+        "200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+    )
     relation_vals = resolve_relations_from_local_store(
         snapshot,
         repository=repository,
