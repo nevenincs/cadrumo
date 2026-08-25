@@ -40,7 +40,7 @@ from ....domain.user_profile import (
 )
 from ..status_projection import _build_fact_rows
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_ID = "33333333-3333-4333-8333-333333333333"
 
