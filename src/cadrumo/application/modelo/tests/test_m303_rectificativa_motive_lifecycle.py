@@ -74,9 +74,9 @@ from ....tests.secure_sql import isolated_runtime_profile
 from .._export import (
     ModeloExportCommand,
     ModeloExportError,
-    _require_matching_amendment_evidence,
     export_modelo_revision,
 )
+from .._export_amendment_evidence import resolve_persisted_amendment_export_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -304,7 +304,9 @@ def test_context_free_missing_and_cross_context_rectificativa_refuse() -> None:
     with pytest.raises(ValidationError, match="context-bound aggregate"):
         CalculationRevision.model_validate(payload)
 
-    missing_motive = revision.amendment_identity.model_copy(update={"m303_rectificativa_motive": None})
+    amendment_identity = revision.amendment_identity
+    assert amendment_identity is not None
+    missing_motive = amendment_identity.model_copy(update={"m303_rectificativa_motive": None})
     missing_payload = {
         **payload,
         "amendment_identity": missing_motive,
@@ -567,7 +569,7 @@ def test_export_refuses_command_substitution_and_derives_persisted_receipt(tmp_p
         )
         derived_command = command.model_copy(update={"amendment_evidence": None})
         assert (
-            _require_matching_amendment_evidence(
+            resolve_persisted_amendment_export_evidence(
                 derived_command,
                 revision,
                 work_unit=work_unit,
@@ -579,7 +581,7 @@ def test_export_refuses_command_substitution_and_derives_persisted_receipt(tmp_p
             == exact
         )
         assert (
-            _require_matching_amendment_evidence(
+            resolve_persisted_amendment_export_evidence(
                 command,
                 revision,
                 work_unit=work_unit,
@@ -603,7 +605,7 @@ def test_export_refuses_command_substitution_and_derives_persisted_receipt(tmp_p
         for replacement in substitutions:
             substituted = command.model_copy(update={"amendment_evidence": replacement})
             with pytest.raises(ModeloExportError):
-                _require_matching_amendment_evidence(
+                resolve_persisted_amendment_export_evidence(
                     substituted,
                     revision,
                     work_unit=work_unit,
@@ -630,7 +632,7 @@ def test_export_amendment_gate_refuses_missing_injected_justificante_authority(t
         )
 
         with pytest.raises(ModeloExportError) as raised:
-            _require_matching_amendment_evidence(
+            resolve_persisted_amendment_export_evidence(
                 command,
                 revision,
                 work_unit=work_unit,

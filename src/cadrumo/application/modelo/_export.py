@@ -42,7 +42,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Annotated, NamedTuple, NoReturn
+from typing import Annotated, NamedTuple
 
 from pydantic import BaseModel, Field
 
@@ -78,31 +78,22 @@ from ...domain.bienes_inversion import (
 from ...domain.buckets import BucketEvent, BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.calculations.registry import (
     DataBindingDefinition,
-    bundled_authority,
     derive_modelo_202_modality,
     derive_taxpayer_files_economic_activity,
 )
 from ...domain.deadlines import ModeloIVAProfile, TaxpayerProfile
 from ...domain.filing import ModeloDraft
 from ...domain.iva_compensation import IvaCompensationReconciliationDecision
-from ...domain.justificante import Justificante, JustificanteRepositoryProtocol
+from ...domain.justificante import JustificanteRepositoryProtocol
 from ...domain.modelos import (
     CalculationRevision,
-    CalculationRevisionAggregateContext,
-    CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
-    M303RectificativaMotive,
     ModeloError,
     ModeloExportError,
-    ModeloRecord,
-    ModeloRecordCatalogue,
     ModeloRecordCatalogueRepositoryProtocol,
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
-    is_justificante_backed_external_evidence,
-    validate_calculation_revision_aggregate,
 )
 from ...domain.prorrata_register import ProrrataRegister
 from ..aggregation import (
@@ -519,23 +510,6 @@ def _raise_if_ledger_export_evidence_missing(revision: CalculationRevision) -> N
     )
 
 
-def _load_revision_for_export(
-    calculation_revision_id: CalculationRevisionId,
-    *,
-    repo: CalculationRevisionCatalogueRepositoryProtocol,
-) -> CalculationRevision:
-    """Load an exportable :class:`~cadrumo.domain.modelos.CalculationRevision` or raise a typed refusal."""
-    revisions = repo.load()
-    revision = revisions.get(calculation_revision_id)
-    if revision is None:
-        raise CalculationRevisionNotFoundError(
-            translated_message="application.modelo.errors.calculation_revision_not_found",
-            context={"calculation_revision_id": calculation_revision_id},
-        )
-    _require_exportable_revision_state(revision)
-    return revision
-
-
 def _require_exportable_revision_state(revision: CalculationRevision) -> None:
     if revision.state not in {
         CalculationRevisionState.VERIFICADO_COMPLETO,
@@ -828,199 +802,6 @@ def _require_export_identity(
             },
         )
     return presenter, taxpayer_identity
-
-
-def _require_matching_amendment_evidence(
-    command: ModeloExportCommand,
-    revision: CalculationRevision,
-    *,
-    work_unit: WorkUnit,
-    workflow_profile: TaxpayerProfile,
-    work_unit_repository: WorkUnitCatalogueRepository,
-    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
-    justificante_repository: JustificanteRepositoryProtocol | None,
-) -> AmendmentEvidence | None:
-    amendment_identity = revision.amendment_identity
-    if amendment_identity is None:
-        if command.amendment_evidence is not None:
-            _raise_amendment_export_error(
-                command,
-                cause="typed amendment evidence was supplied for a non-amendment revision",
-            )
-        return None
-
-    filing_records = filing_repository.load()
-    target = _require_amendment_export_target(
-        command,
-        identity=amendment_identity,
-        work_unit=work_unit,
-        filing_records=filing_records,
-    )
-    justificantes, receipt = _require_amendment_export_receipt(
-        command,
-        target=target,
-        work_unit=work_unit,
-        workflow_profile=workflow_profile,
-        justificante_repository=justificante_repository,
-    )
-    motive, receipt_number = _resolve_amendment_export_evidence(
-        command,
-        revision=revision,
-        identity=amendment_identity,
-        work_unit=work_unit,
-        workflow_profile=workflow_profile,
-        work_unit_repository=work_unit_repository,
-        filing_records=filing_records,
-        justificantes=justificantes,
-        receipt=receipt,
-    )
-
-    persisted = AmendmentEvidence(
-        kind=amendment_identity.kind,
-        m303_rectificativa_motive=motive,
-        original_aeat_receipt=receipt_number,
-    )
-    if command.amendment_evidence is not None and command.amendment_evidence != persisted:
-        _raise_amendment_export_error(
-            command,
-            cause="supplied amendment evidence diverges from persisted authority",
-        )
-    return persisted
-
-
-def _raise_amendment_export_error(command: ModeloExportCommand, *, cause: str) -> NoReturn:
-    raise ModeloExportError(
-        translated_message="application.modelo.errors.export_draft_write_failed",
-        context={"calculation_revision_id": command.calculation_revision_id, "cause": cause},
-    )
-
-
-def _require_amendment_export_target(
-    command: ModeloExportCommand,
-    *,
-    identity: CalculationRevisionAmendmentIdentity,
-    work_unit: WorkUnit,
-    filing_records: ModeloRecordCatalogue,
-) -> ModeloRecord:
-    target = filing_records.get(identity.amends_filing_record_id)
-    if target is None or not target.aeat_accepted:
-        _raise_amendment_export_error(
-            command,
-            cause="amended filing target lacks persisted AEAT evidence",
-        )
-    target_coordinate = (
-        target.work_unit_id,
-        target.bucket_id,
-        target.modelo,
-        target.filing_year,
-        target.period,
-    )
-    work_coordinate = (
-        work_unit.work_unit_id,
-        work_unit.bucket_id,
-        work_unit.modelo,
-        work_unit.filing_year,
-        work_unit.period,
-    )
-    external_evidence = target.external_evidence
-    if external_evidence is None:
-        _raise_amendment_export_error(
-            command,
-            cause="amended filing target lacks persisted AEAT evidence",
-        )
-    if target_coordinate != work_coordinate or not is_justificante_backed_external_evidence(external_evidence.kind):
-        _raise_amendment_export_error(
-            command,
-            cause="amended filing target crosses the export coordinate",
-        )
-    return target
-
-
-def _require_amendment_export_receipt(
-    command: ModeloExportCommand,
-    *,
-    target: ModeloRecord,
-    work_unit: WorkUnit,
-    workflow_profile: TaxpayerProfile,
-    justificante_repository: JustificanteRepositoryProtocol | None,
-) -> tuple[tuple[Justificante, ...], Justificante]:
-    if justificante_repository is None:
-        _raise_amendment_export_error(
-            command,
-            cause="amendment export requires injected justificante repository authority",
-        )
-    external_evidence = target.external_evidence
-    if external_evidence is None:
-        _raise_amendment_export_error(
-            command,
-            cause="amended filing target lacks persisted AEAT evidence",
-        )
-    justificantes = tuple(justificante_repository.iter_justificantes())
-    matching_receipts = tuple(item for item in justificantes if item.csv == external_evidence.reference_id)
-    if len(matching_receipts) != 1:
-        _raise_amendment_export_error(
-            command,
-            cause="amended filing target does not resolve to one persisted justificante",
-        )
-    receipt = matching_receipts[0]
-    if (
-        not receipt.matches_filing_target(
-            modelo=str(work_unit.modelo),
-            filing_year=work_unit.filing_year,
-            period=work_unit.period,
-            tax_id=workflow_profile.tax_id,
-        )
-        or receipt.presentation_id is None
-    ):
-        _raise_amendment_export_error(
-            command,
-            cause="persisted justificante disagrees with the export authority",
-        )
-    return justificantes, receipt
-
-
-def _resolve_amendment_export_evidence(
-    command: ModeloExportCommand,
-    *,
-    revision: CalculationRevision,
-    identity: CalculationRevisionAmendmentIdentity,
-    work_unit: WorkUnit,
-    workflow_profile: TaxpayerProfile,
-    work_unit_repository: WorkUnitCatalogueRepository,
-    filing_records: ModeloRecordCatalogue,
-    justificantes: tuple[Justificante, ...],
-    receipt: Justificante,
-) -> tuple[M303RectificativaMotive | None, str]:
-    receipt_number = receipt.presentation_id
-    if receipt_number is None:
-        _raise_amendment_export_error(
-            command,
-            cause="persisted justificante has no AEAT presentation receipt",
-        )
-    if identity.kind is not CalculationRevisionAmendmentKind.RECTIFICATIVA or work_unit.modelo != Modelo.M303.value:
-        return identity.m303_rectificativa_motive, receipt_number
-    validated = validate_calculation_revision_aggregate(
-        revision,
-        context=CalculationRevisionAggregateContext(
-            work_units=work_unit_repository.load(),
-            filing_records=filing_records,
-            justificantes=justificantes,
-            registry_snapshots={
-                work_unit.work_unit_id: bundled_authority().snapshot(
-                    Modelo.M303.value,
-                    filing_year=work_unit.filing_year,
-                    period=work_unit.period.registry_token,
-                )
-            },
-            expected_taxpayer_tax_id=workflow_profile.tax_id,
-        ),
-    )
-    if validated is None:
-        _raise_amendment_export_error(
-            command,
-            cause="M303 rectificativa aggregate did not resolve persisted evidence",
-        )
-    return validated.motive, validated.original_aeat_receipt
 
 
 def _resolve_export_model_profile(
