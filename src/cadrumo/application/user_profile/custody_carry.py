@@ -56,11 +56,11 @@ from ...adapters.persistence.storage import (
     SecureBoundRepository,
     SecureObjectNamespaceDefinition,
     SecureObjectWrite,
-    StorageCustodyProfile,
     secure_object_repository_for_bucket,
     unwrap_blob_payload,
 )
 from ...adapters.persistence.storage.envelope import Envelope
+from ...core import StorageCustodyProfile
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...domain.evidence_consent import (
@@ -68,7 +68,7 @@ from ...domain.evidence_consent import (
     evidence_consent_ledger_entry_object_key,
 )
 from ...domain.user_profile.errors import ProfileExportError
-from ...domain.user_profile.portable_export import CarriedSecureObject
+from ...domain.user_profile.portable_export import CarriedSecureObject, CoverageManifest
 from ...domain.user_profile.values import UserProfileSnapshot
 from ..aggregation import PercepcionObservationRepository, RetencionObservationRepository
 from ..calculations import (
@@ -563,6 +563,72 @@ def serialize_carried_objects(
     return tuple(carried)
 
 
+def normalize_storage_custody_profile(
+    custody_profile: StorageCustodyProfile | str,
+) -> StorageCustodyProfile:
+    """Resolve an operator custody selection into the closed neutral value set."""
+    if isinstance(custody_profile, StorageCustodyProfile):
+        return custody_profile
+    try:
+        return StorageCustodyProfile(custody_profile)
+    except ValueError as exc:
+        raise ProfileExportError(context={"custody_profile": custody_profile}) from exc
+
+
+def build_secure_object_custody_payload(
+    *,
+    bucket_id: str,
+    custody_profile: StorageCustodyProfile,
+) -> tuple[tuple[CarriedSecureObject, ...], CoverageManifest]:
+    """Build the generic custody rows and exact namespace-coverage manifest."""
+    repository = secure_object_repository_for_bucket(bucket_id)
+    populated_namespaces = tuple(repository.list_namespaces())
+    row_counts_by_namespace = {namespace: len(repository.list_keys(namespace)) for namespace in populated_namespaces}
+
+    carried_namespace_set = frozenset(
+        definition.namespace for definition in carried_namespace_definitions(custody_profile)
+    )
+    carried_or_typed = carried_namespace_set | TYPED_CATEGORY_NAMESPACES
+    excluded_namespaces = tuple(
+        namespace for namespace in populated_namespaces if namespace not in carried_namespace_set
+    )
+
+    if custody_profile is StorageCustodyProfile.FULL:
+        registered_namespaces = frozenset(definition.namespace for definition in STORAGE_NAMESPACE_REGISTRY.namespaces)
+        _assert_full_custody_coverage(
+            populated_namespaces=populated_namespaces,
+            covered_namespaces=carried_or_typed | registered_namespaces,
+        )
+
+    carried_objects = serialize_carried_objects(bucket_id=bucket_id, profile=custody_profile)
+    carried_namespaces = tuple(
+        namespace
+        for namespace in (definition.namespace for definition in carried_namespace_definitions(custody_profile))
+        if row_counts_by_namespace.get(namespace, 0) > 0
+    )
+    custody_profile_value = "full" if custody_profile is StorageCustodyProfile.FULL else "structured"
+    coverage_manifest = CoverageManifest(
+        custody_profile=custody_profile_value,
+        carried_namespaces=carried_namespaces,
+        excluded_namespaces=excluded_namespaces,
+        row_counts_by_namespace=row_counts_by_namespace,
+    )
+    return carried_objects, coverage_manifest
+
+
+def _assert_full_custody_coverage(
+    *,
+    populated_namespaces: tuple[str, ...],
+    covered_namespaces: frozenset[str],
+) -> None:
+    missing = tuple(namespace for namespace in populated_namespaces if namespace not in covered_namespaces)
+    if not missing:
+        return
+    raise ProfileExportError(
+        context={"unclassified_namespaces": missing, "custody_profile": StorageCustodyProfile.FULL.value},
+    )
+
+
 def restore_carried_objects(
     carried_objects: Iterable[CarriedSecureObject],
     *,
@@ -624,7 +690,9 @@ def _rebound_payload(carried: CarriedSecureObject, *, target_bucket_id: str) -> 
 
 __all__ = [
     "TYPED_CATEGORY_NAMESPACES",
+    "build_secure_object_custody_payload",
     "carried_namespace_definitions",
+    "normalize_storage_custody_profile",
     "restore_carried_objects",
     "serialize_carried_objects",
 ]

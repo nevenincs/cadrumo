@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from .....core import StorageCustodyProfile
 from .....core.classification import SensitivityClass
 from .....core.errors import ERROR_REGISTRY, build_error_envelope
 from .....core.product_identity import PRODUCT_IDENTITY
@@ -64,7 +65,6 @@ from .. import (
     WORKFLOW_STATE_NAMESPACE,
     SecureObjectNamespaceDefinition,
     StorageCustodyDisposition,
-    StorageCustodyProfile,
     StorageHierarchyRegistry,
     StorageNamespaceScope,
     StorageRemoteMirrorPolicy,

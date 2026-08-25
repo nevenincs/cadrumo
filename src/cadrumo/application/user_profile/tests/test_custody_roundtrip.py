@@ -67,7 +67,7 @@ def _seed_bucket_event(bucket_id: str) -> str:
 
 def test_structured_profile_excludes_attachment_evidence_bytes(tmp_path: Path) -> None:
     """The cleartext (structured) profile must not carry FINANCIAL attachment bytes."""
-    from ....adapters.persistence.storage import StorageCustodyProfile
+    from ....core import StorageCustodyProfile
 
     with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
         AttachmentStore().put_bytes(_EVIDENCE_BYTES)
@@ -136,7 +136,7 @@ def _seed_justificante() -> str:
 
 
 def test_full_custody_carry_restores_evidence_bytes_and_audit_trail(tmp_path: Path) -> None:
-    from ....adapters.persistence.storage import StorageCustodyProfile
+    from ....core import StorageCustodyProfile
 
     with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
         source_bucket = runtime.primary.bucket_id
@@ -243,7 +243,7 @@ def test_reconciliation_records_survive_the_custody_carry_with_grounding(tmp_pat
     for this to pass — which is exactly what the bound resolver does, and why
     the composite key is no obstacle.
     """
-    from ....adapters.persistence.storage import StorageCustodyProfile
+    from ....core import StorageCustodyProfile
     from ...modelo._reconciliation_records import (
         ModeloReconciliationRecordRepository,
         list_modelo_reconciliations,

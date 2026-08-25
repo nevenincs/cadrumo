@@ -18,9 +18,9 @@ class CalculationRevisionCatalogueRepositoryFactory(Protocol):
         ...
 
 
-_BOUND_CALCULATION_REVISION_CATALOGUE_REPOSITORY_FACTORY: ContextVar[
-    CalculationRevisionCatalogueRepositoryFactory
-] = ContextVar("cadrumo_calculation_revision_catalogue_repository_factory")
+_BOUND_CALCULATION_REVISION_CATALOGUE_REPOSITORY_FACTORY: ContextVar[CalculationRevisionCatalogueRepositoryFactory] = (
+    ContextVar("cadrumo_calculation_revision_catalogue_repository_factory")
+)
 
 
 @contextmanager
