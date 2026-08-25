@@ -21,7 +21,7 @@ No findings. The closed eight-kind denominator is enforced by the contributor-ki
 
 ## Recommendations
 
-No remediation is required for S126. Keep live producer implementations and all-ports assembly out of this boundary until their separately owned S128 work, and preserve the inventory's generated fixed-point validation when concrete ports are enrolled.
+No remediation is required for S126. Keep native owner captures and live producer realizations out of the S126 definition boundary: the amended plan assigns native captures to S159-S166, the sole application-owned S126 registration fixed point to S167, and all-ports assembly/retry to S128. Preserve the inventory's generated fixed-point validation when registrations are enrolled.
 
 ## Disposition
 

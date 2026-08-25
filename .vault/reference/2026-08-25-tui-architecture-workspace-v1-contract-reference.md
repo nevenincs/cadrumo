@@ -148,8 +148,11 @@ The canonical registry tree identity is `RegistryIdentity` at
 `src/cadrumo/domain/calculations/registry/_identity.py:89`, whose digest is the
 single tree fingerprint. The authority currently consumes that identity for
 caching but does not expose an atomic public schema-identity projection. S125
-may declare the safe identity DTO; the stamped producer and atomic capture are
-S126/S128 work and must not be fabricated from a local payload hash.
+declares the safe identity DTO; S126 defines only the application-owned stamped
+envelope and structural port protocol; S159 adds the registry-native capture
+and generation; S167 owns its sole S126 registration; and S128 invokes and
+composes that registration. None may fabricate an owner generation from a
+local payload hash.
 
 ### Canonical bounded review
 
@@ -254,17 +257,19 @@ Locale uses the closed `OutputLanguage` enum at
 exhausts the requested locale and then falls directly to mandatory Spanish.
 It currently returns only the rendered scalar, not key, resolved language, or
 fallback/suppression disposition. S125 can define the safe locale summary and
-per-field resolution DTO, but S128 must obtain those facts from a canonical
-stamped locale producer rather than infer them from string equality. Locale
+per-field resolution DTO, but S165 must expose those facts through the canonical
+native locale capture, S167 must register that surface once under S126, and S128
+must invoke it rather than infer resolution from string equality. Locale
 never changes IDs, values, provenance, capability, revision, or baseline.
 
 `ModeloWorkspaceBaseline` is a new opaque safe-read consistency token. Use the
 canonical constrained digest types such as `ContentDigest` at
 `src/cadrumo/core/identity/_digest.py:26`; never place raw values, source
 identities, secrets, timestamps, repository revisions, or authorization in the
-token. The model must state only consistency identity. Epoch capture,
-producer-stamp validation, ABA protection, retry, and token minting belong to
-S126/S128. The baseline is never accepted as an edit baseline, command
+token. The model must state only consistency identity. S126 owns the application
+envelope; S159-S166 own native generations; S167 owns their sole registrations;
+and S128 owns retry, process-incarnation invalidation, and token minting. The
+baseline is never accepted as an edit baseline, command
 credential, approval, mutation precondition, persistence key, or operation
 refresh authority.
 
@@ -312,8 +317,10 @@ refresh authority.
   audited HEAD.
 
 These gaps are intentionally split across the plan: S125 declares the safe
-models; S126 owns stamped ports and ABA-safe epochs; S127 owns the generated
-field denominator; S128 owns assembly from canonical captured projections;
-S129 owns facade export; S130 proves conformance and duplicate-authority
-absence. Pulling any later-step behavior into `_workspace_models.py` would
-create the redeclaration this blueprint is meant to prevent.
+models; S126 owns the application stamped-envelope and structural port types;
+S127 owns the generated field denominator; S159-S166 own native atomic captures
+and generations; S167 owns the exact S126 registration fixed point; S128 owns
+assembly from those registrations; S129 owns facade export; and S130 proves
+conformance and duplicate-authority absence. Pulling later-step behavior into
+`_workspace_models.py` or lower-layer owners would create the redeclaration or
+dependency inversion this blueprint is meant to prevent.

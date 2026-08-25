@@ -4,7 +4,7 @@ tags:
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
 modified: '2026-08-25'
-body_hash: 'sha256:db24e95f68f395bf1ae670df05567087940ce0d9bc6e262d6378f865d6fa1544'
+body_hash: 'sha256:6649679669582086bfc1664a3ecdf538ffb725c2f74ab50b957bd46e7933bd57'
 tier: L3
 related:
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
@@ -152,8 +152,9 @@ Close against fleet invariants, source evidence, repository rules, and architect
 
 - [x] `W04.P13.S33` - Run the bundled-registry invariant proving zero ownership, identity, uniqueness, qualifier, period, and completeness violations; `src/cadrumo/domain/calculations/registry/tests/`.
 - [x] `W04.P13.S34` - Run exact historical engine and CLI scenarios for every repaired modelo against the adjudicated registry census; `src/cadrumo/domain/deadlines/tests/; src/cadrumo/entrypoints/cli/tests/; .vault/audit/`.
-- [ ] `W04.P13.S35` - Run Ruff, focused and full pytest, Vaultspec, registry validation, generated-reference drift, locale, and real CLI smoke gates; `src/cadrumo/; dev/; .vault/`.
+- [ ] `W04.P13.S35` - Run feature-scoped Ruff, formatting, focused tests, Vaultspec, cold and warm registry validation, generated-reference drift, locale, and real CLI smoke gates, then run the applicable repository-wide gates, attribute every failure to the current revision and owning paths, block feature closure on failures caused by or overlapping this feature, and record unrelated shared-worktree failures separately; `src/cadrumo/, dev/, .vault/, current revision and owned-path evidence`.
 - [x] `W04.P13.S36` - Perform formal code and architecture review for canonical reuse, source fidelity, warm-load enforcement, consumer parity, and absence of superseded paths, running Vaultspec RAG discovery followed by exact-symbol sweeps to prove no revision selector, filing-window resolver, period parser, cadence authority, supported-year horizon, deadline catalogue, qualifier vocabulary, or downstream deduplication has been redeclared; `src/cadrumo/; .vault/exec/; .vault/audit/`.
+- [ ] `W04.P13.S45` - Make deadline reference-date semantics canonical and deterministic. Correct stale date.today() documentation, replace direct wall-clock reads in deadline-path tests with explicit or frozen today_madrid() input, and derive exercised filing years from the supported-filing-year catalogue while preserving literal official dates only in source-fidelity tests; `src/cadrumo/domain/deadlines/, src/cadrumo/entrypoints/cli/tests/, .vault/audit/`.
 
 ## Parallelization
 
@@ -176,7 +177,15 @@ valid registry data. W04 and formal review are strictly last.
   and tipo 28 gains no numeric offset without verified RD 1776/2004 authority.
 - Registry authority and `resolve_filing_window` remain the only projection and matching
   surfaces; runtime and CLI layers contain no dedupe or revision-selection workaround.
-- M303 filing year 2025 produces exactly four quarterly obligations at authority,
-  engine, overview, workflow, and real CLI boundaries.
-- Cold and warm registry validation, focused and full tests, Ruff, Vaultspec, generated
-  references, locales, CLI smoke tests, and formal code review all pass.
+- Exact official dates are asserted in source-fidelity tests. Fleet and architecture
+  behavior is parametrized from canonical catalogues and semantic relationships, without
+  a copied year horizon or exact-count pass condition.
+- Deadline status uses an explicit reference date or the canonical `today_madrid()` seam;
+  deterministic tests never depend directly on the host wall clock.
+- Focused registry, resolver, engine, overview, workflow, CLI, Ruff, Vaultspec, generated
+  reference, locale, and smoke gates pass for every path attributable to this feature.
+  Full-repository runs are pinned revision-scoped checkpoints: all failures are reported
+  and attributed, while unrelated concurrent failures are routed to their owning campaign
+  and do not redefine deadline feature acceptance.
+- Formal code and architecture review confirms canonical reuse, source fidelity,
+  warm-load enforcement, consumer parity, and no redeclared authority.

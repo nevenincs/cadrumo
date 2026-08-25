@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:5392d4a9b4ccbdde1bb9e35e475e02a16bd390305581ae07c1043b7bd53dad1b'
+body_hash: 'sha256:be2f94b41536173cd108818d4bfd249c9e6c960daace33daa1bc38f2d899f1bb'
 related:
   - "[[2026-08-24-deadline-window-revision-authority-adr]]"
   - "[[2026-08-24-deadline-window-revision-authority-plan]]"
@@ -53,8 +53,8 @@ The research records the defect inventory and option evidence; the ADR owns the 
 
 ## Recommendations
 
-1. Amend S35 into two explicit gate classes: feature acceptance gates that must pass and repository-wide observational gates whose deadline-attributable failures must be zero. Route unrelated repository failures to their owning campaign or release-quality plan with evidence, without representing them as deadline-feature defects.
-2. Revise the active goal to: “Deliver and verify a cohesive, revision-owned deadline and filing-window authority for every supported modelo and filing year: canonical law-selected ownership, complete registry-declared cadence, one qualified resolver, thin engine/CLI consumers, no duplicate authority, source-grounded legal dates, and catalogue-driven behavioral invariants. Completion requires all attributable feature gates green and no unresolved deadline-window findings; repository-wide unrelated health is reported separately.”
-3. Preserve literal dates in registry source-fidelity tests. Keep fleet and architecture tests catalogue-driven, relational, parametrized by canonical period/modelo inputs, and free of copied year horizons or exact-count pass conditions.
-4. Define `today` consistently as an injectable reference date defaulting to `today_madrid()`. Correct stale docstrings and replace direct `date.today()` calls in deadline-path tests with `frozen_clock` or explicit dates; derive applicable supported years from the registry rather than a fixed current year.
-5. Keep the existing accepted ADR status. These recommendations refine plan acceptance and test expression; they do not change the architectural decision.
+1. Applied: S35 now separates mandatory attributable deadline gates from an honestly recorded, pinned, revision-scoped whole-repository checkpoint. Unrelated failures are routed to their owning campaigns and no longer define deadline feature acceptance.
+2. Applied: the accepted ADR and reference now distinguish literal source-fidelity dates from catalogue-driven behavioral invariants, define “today” as an injectable `today_madrid()` reference input, and bind finite attributable feature acceptance to the quality-gate-zero-closure architecture.
+3. Applied: plan step S45 now owns correction of stale `date.today()` documentation and direct wall-clock deadline tests, including supported-year derivation.
+4. Recommended active goal wording: “Deliver and verify a cohesive, revision-owned deadline and filing-window authority for every supported modelo and filing year: canonical law-selected ownership, complete registry-declared cadence, one qualified resolver, thin engine/CLI consumers, no duplicate authority, source-grounded legal dates, and catalogue-driven behavioral invariants. Completion requires all attributable feature gates green and no unresolved deadline-window findings; repository-wide unrelated health is reported separately.”
+5. Keep the existing ADR accepted. The curation refines completion and verification semantics without changing the chosen production architecture.

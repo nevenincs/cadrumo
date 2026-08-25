@@ -23,6 +23,7 @@ related:
   - '[[2026-08-04-modelo-localization-cascade-adr]]'
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
+  - '[[2026-08-25-tui-architecture-workspace-owner-seam-reconciliation-audit]]'
 ---
 
 # `tui-registry-api-gate` adr: `read-only Modelo workspace projection and capability facade` | (**status:** `accepted`)
@@ -71,11 +72,11 @@ reconciliation are grounded in `2026-08-24-tui-registry-api-gate-research` and
   still means only that tokenised required fields were examined. Neither state
   is a Modelo-completeness verdict
   (`2026-08-08-profile-requirement-grounding-adr`).
-- Public operation observation is the external amendment proposed by
+- Public operation observation is the external amendment established by
   `2026-08-24-tui-operation-observation-adr`. Modelo workspace presentation and
-  editing are the external interface/write-side amendment proposed by
-  `2026-08-24-tui-modelo-workspace-interface-adr`. Neither proposed record is
-  accepted or implemented merely because Workspace V1 exists.
+  editing are the external interface/write-side boundary established by the
+  accepted `2026-08-24-tui-modelo-workspace-interface-adr`. Neither record is
+  implemented merely because Workspace V1 exists.
 
 ## Considered options
 
@@ -121,11 +122,12 @@ reconciliation are grounded in `2026-08-24-tui-registry-api-gate-research` and
   `unmeasured`, never available. Workspace V1 does not infer readiness from
   schema population, layout presence, lifecycle state, or neighbouring
   capabilities.
-- Every owner contributing to a successful projection exposes one stamped port
-  that atomically returns its projection and an owner-scoped ABA-safe epoch.
-  A payload digest, wall-clock timestamp, or equality of an earlier and later
-  payload is not an epoch. An owner that cannot provide that atomic pair cannot
-  participate in a successful Workspace projection.
+- Every canonical owner contributing to a successful projection exposes through
+  its public facade one native atomic projection-plus-generation capture and one
+  current-generation read. The application-owned Workspace boundary alone wraps
+  that surface in S126 contract, stamp, epoch, and port types. A lower layer never
+  imports or returns a `ModeloWorkspace*` type. An owner that cannot provide the
+  native atomic pair cannot participate in a successful Workspace projection.
 - Locale affects display fields only. The canonical locale resolver supplies
   the key, requested language, resolved language, and fallback or suppression
   disposition. The workspace never reads schema-carried prose, constructs
@@ -273,27 +275,71 @@ Localized command prose and raw exceptions never enter either arm. Global
 registry completeness need not be satisfied for Workspace V1 to render; an
 evidence-backed refusal is valid workspace data.
 
-### Stamped contributing-port contract
+### Native-owner capture and application-owned Workspace contract seam
 
-Every registry, work, bounded-review, calculation, readiness, closure,
-locale-catalogue, and field-manifest port that contributes to a successful
-Workspace result publishes a frozen `ModeloWorkspaceProducerContractV1`. The
-contract names the owner and producer, public projection discriminator and
-contract version, deterministic projection-schema fingerprint, epoch kind and
-epoch-schema version, and the declared atomic read operation. The generated
-`ModeloWorkspaceProducerContractInventoryV1` contains exactly one contract for
-every contributing port; missing, duplicate, stale, or unclassified contracts
-fail the fixed-point gate rather than becoming a permanent hand-maintained
-allowlist.
+The semantic projection and its consistency generation remain owned by each
+canonical contributor. Each owner exposes through its canonical public facade
+one native operation that atomically returns an immutable or snapshot-isolated
+owner projection together with an owner-local ABA-safe monotonic generation,
+plus one native read of the current generation. The generation advances on
+every owner-state transition that can change the contributed projection,
+including A -> B -> A. It is not a payload digest, timestamp, value-equality
+marker, Workspace baseline, or counter minted by Workspace code.
 
-One port call atomically returns a frozen
-`ModeloWorkspaceContributingProjectionV1[T]` containing the projection, its
-`ModeloWorkspaceProducerStampV1`, and its `ModeloWorkspaceEpochV1`. The stamp
-binds the returned value to the declared producer contract and schema
-fingerprint. The epoch is owner-scoped and monotonically advances, or has an
-equivalent generation guarantee that distinguishes A -> B -> A; it cannot be a
-payload hash, timestamp, or value-equality marker. A contract or stamp mismatch
-is a typed `consistency_unavailable` refusal, never a best-effort read.
+Native generations are monotonic within one owner process incarnation. An
+opaque Workspace baseline and every cursor bind the application process
+incarnation as part of their token derivation, and a follow-up presented to a
+different incarnation refuses as `workspace_changed`; it never compares a
+restarted integer generation as though it belonged to the earlier process.
+The incarnation coordinate grants no authorization, contains no owner data,
+and is not a substitute owner generation or a durable shadow counter.
+
+The Workspace-specific contract remains owned exclusively by
+`cadrumo.application.modelo`. For each contributor kind, the application
+declares exactly one `ModeloWorkspaceProducerContractV1` and exactly one
+`ModeloWorkspaceAtomicProjectionPortV1` realization over the owner's public
+native capture surface. That realization performs exactly one native capture,
+derives the safe Workspace contribution only from the captured immutable value,
+constructs `ModeloWorkspaceProducerStampV1` from the application contract, and
+preserves the owner's generation unchanged in `ModeloWorkspaceEpochV1`.
+`read_current_stamp_and_epoch` combines the same contract-derived stamp with
+the canonical owner's native current-generation read. A lower layer never
+imports, constructs, or returns a `ModeloWorkspace*` type.
+
+This registration is application composition, not a second semantic owner,
+compatibility adapter, or bridge. It owns no contributor state, cache,
+generation, selector, review or readiness calculation, closure join, source
+graph, or locale resolution; it cannot reread a repository, loader, or owner
+while projecting a captured value. No shim, fallback, non-`__init__` re-export
+bridge, adapter-package implementation, or alternate owner API is permitted.
+Promotion through the canonical owner's package facade remains mandatory. If
+an owner cannot provide atomic native capture and current-generation semantics,
+that contributor cannot be registered and Workspace returns
+`consistency_unavailable`.
+
+The contributor fixed point is exact:
+
+| Kind | Canonical semantic owner | Producer identity |
+|---|---|---|
+| `registry` | `domain.calculations.registry` | `validated_registry_projection` |
+| `work` | `application.modelo.work_addressing` | `resolved_work_target` |
+| `bounded_review` | `application.modelo.work_review` | `modelo_work_review` |
+| `calculation` | `application.modelo.calculation` | `calculation_materialization` |
+| `readiness` | `application.state_projection` | `modelo_readiness` |
+| `closure` | `application.registry` | `registry_closure` |
+| `locale_catalogue` | `locales` | `locale_catalogue` |
+| `field_manifest` | `application.modelo.workspace_manifest` | `workspace_field_manifest` |
+
+`ModeloWorkspaceProducerContractInventoryV1` inventories these eight
+application-owned S126 registrations, not contracts implemented by lower-layer
+owners. Each contract fingerprints the safe application projection schema.
+One S126 capture calls its canonical owner's native capture exactly once,
+projects only that captured value, and returns the application projection,
+contract-derived stamp, and unchanged native generation. The second-pass read
+returns the unchanged contract-derived stamp and the same owner's current
+native generation. Neither operation may mint an owner generation or obtain a
+second semantic value. Missing, duplicate, stale, misidentified, or
+unclassified registrations fail the generated fixed-point gate.
 
 ### Locale and consistency boundary
 
@@ -304,15 +350,20 @@ same semantic record has identical identities, values, provenance, and
 capabilities in every locale.
 
 `ModeloWorkspaceProjection` is one logical point-in-time read, and the
-application owns its complete semantic join. Assembly follows this exact
-protocol:
+application owns its complete semantic join. Static inspection captures exactly
+`registry`, `work`, `locale_catalogue`, and `field_manifest`; it does not read
+bounded review, calculation, readiness, or closure state. Graded snapshot
+captures all eight registered contributors. Assembly follows this exact
+protocol for the selected admission set:
 
-1. capture the atomic projection, producer stamp, and ABA-safe epoch from every
-   contributing port;
+1. invoke each application-owned S126 registration, whose single call captures
+   the canonical owner's native projection and generation atomically and wraps
+   them without another owner read;
 2. assemble only from those captured projections, with no live owner re-read
    hidden inside the join;
-3. re-read or validate every owner's current epoch and exact producer stamp and
-   compare them with the captured tuple; and
+3. ask each same registration for its current coordinates; it combines the
+   unchanged S126 contract stamp with the canonical owner's native
+   current-generation read, and both coordinates must equal the capture; and
 4. only after every comparison succeeds, mint one safe opaque
    `ModeloWorkspaceBaseline` over the sorted contributor tuple, resolved
    request coordinate, selected revision, Workspace contract version,
@@ -352,6 +403,15 @@ assessment alone without the separately stamped canonical capability verdict.
 The suite also covers version refusal, forbidden imports, sensitive-data
 non-retention, and the live C2 dependency-receipt validator.
 
+Conformance also proves a one-to-one fixed point between the eight S126
+registrations and the eight canonical native owner surfaces; exact contributor
+identities and admission-specific capture sets; exactly one native capture per
+S126 capture; immutable or snapshot-isolated captured values; unchanged owner
+generations; cross-incarnation baseline and cursor refusal; and absence of any
+application-minted, persisted, reset, or substituted owner generation. Domain,
+locale, and other lower-layer modules importing or returning a
+`ModeloWorkspace*` type fail the boundary gate.
+
 ### C2 complex-read gate and external prerequisites
 
 Existing bounded `ModeloWorkReview` and backend campaigns may continue. The C2
@@ -371,9 +431,9 @@ complex-read cohort remains blocked until all of these receipts exist:
    evidence-backed refusals;
 5. the generated current-HEAD field-classification manifest has zero
    unclassified paths and its digest is recorded;
-6. every contributing port publishes a current stamped producer contract and
-   the generated `ModeloWorkspaceProducerContractInventoryV1` fixed point is
-   green;
+6. every canonical owner publishes its native atomic capture surface, every
+   application registration publishes a current stamped producer contract, and
+   the native-surface/S126 one-to-one fixed point is green;
 7. the complete V1 conformance suite above is green; and
 8. the machine-readable
    `.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md`
@@ -391,13 +451,15 @@ complex-read cohort remains blocked until all of these receipts exist:
 4. the accepted or formally reconciled authority-grade decision stem,
    disposition, commit, body hash, and reconciliation-artifact digest when
    reconciliation was required; and
-5. the `ModeloWorkspaceProducerContractInventoryV1` schema version, producing
+5. the native-owner surface inventory and seam-conformance digest plus the
+   `ModeloWorkspaceProducerContractInventoryV1` schema version, producing
    commit, and artifact digest.
 
-The C2 receipt additionally records the sorted producer contracts and stamps,
-captured epoch tuple/digest, Workspace version and schema fingerprint, generated
-field-manifest digest, baseline and locale proofs, source ancestry, and exact
-complex-read routes opened. Its validator rejects an absent or reordered
+The C2 receipt additionally records the sorted native-owner surfaces, producer
+contracts and stamps, captured epoch tuple/digest, process-incarnation refusal
+proof, Workspace version and schema fingerprint, generated field-manifest
+digest, baseline and locale proofs, source ancestry, and exact complex-read
+routes opened. Its validator rejects an absent or reordered
 predecessor, a proposed/unapproved decision, a non-ancestor producing commit,
 artifact or body-hash drift, missing or mismatched producer stamps, epoch-
 protocol drift, a non-green C1 receipt, or a route outside C2. Mocks, prose

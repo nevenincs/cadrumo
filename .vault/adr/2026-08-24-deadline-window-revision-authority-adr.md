@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:40530faa0cf2a4daa2c7b8940a7f22ab1155f04956892c02b98b1d61271fc51a'
+body_hash: 'sha256:77075bb99ceaf32ce3090ef67e20a0c64492ba2d2a86f7099d2b13b3b42c18b2'
 related:
   - "[[2026-08-24-deadline-window-revision-authority-research]]"
   - '[[2026-08-24-deadline-window-revision-authority-reference]]'
@@ -56,28 +56,42 @@ ownership, and semantic uniqueness during registry build; project only validated
   owned by the accepted registry-temporal-coverage architecture; it does not add a
   deadline-specific horizon. Validation makes no claim about unpublished future dates.
 - Any changed legal date requires verification against bundled and official authority.
+- Exact filing dates are revision-owned legal facts. Registry source-fidelity tests assert
+  those literal values and provenance; architecture and fleet behavior tests derive their
+  horizon from the supported-filing-year catalogue and assert relational or semantic
+  invariants instead of copying a year list or exact-count pass condition.
+- “Today” is not registry data or a durable legal fact. Status calculations accept an
+  explicit reference date and default only through the canonical Europe/Madrid civil clock
+  seam; deterministic tests inject or freeze that seam.
+- Feature acceptance is attributable and finite. Revision-scoped whole-repository
+  checkpoints remain honest release evidence, but unrelated concurrent failures do not
+  become deadline-window defects or keep this feature open; this follows the accepted
+  quality-gate-zero-closure decision.
 
 ## Implementation
 
 Define the semantic coordinate as `(modelo, period.filing_year,
-period.registry_token, typed deadline qualifiers)`. Registry validation will require
+period.registry_token, typed deadline qualifiers)`. Registry validation requires
 the redundant year to match the period year, the containing revision to be the unique
 law-selected owner, and IDs and semantic coordinates to be unique across revisions.
-For periodic schedules, validation will require every selected cadence token for each
+For periodic schedules, validation requires every selected cadence token for each
 filing year declared supported by the canonical temporal-coverage projection. Sparse
 coverage is permitted only for an explicitly typed ad-hoc/event schedule, never inferred
 from missing rows.
 
-Repair all affected modelo data. M303, M322, and M353 retain rows only in their canonical
-revision. M190 and M193 align identity year while retaining physical filing dates. M210
-uses canonical `EVENT-N`/`0A` identity plus the existing `ResultDisposition` and official
-two-digit tipo-renta code authorities as qualifiers, completing rather than bypassing its
-plazo-keying decision. Missing periodic windows are
-materialised for M303, M322, M353, and M369 through the declared supported year.
+Repair all affected modelo data. M190 and M193 align identity year while retaining
+physical filing dates. M210 uses canonical `EVENT-N`/`0A` identity plus the existing
+`ResultDisposition` and official two-digit tipo-renta code authorities as qualifiers,
+completing rather than bypassing its plazo-keying decision. M303, M322, and M353 retain
+rows only in their canonical revisions, including the M303 2024 cutover. The complete
+measured periodic fleet—M111, M115, M123, M130, M131, M202, M216, M303, M322, M349,
+M353, and M369—is materialised through the canonical declared supported-year horizon
+from bundled official evidence. Open frontier revisions do not imply unpublished future
+dates.
 
-The authority deadline projection will traverse validated canonical rows and assert the
-invariant defensively. The engine, overview application, workflow, and CLI remain thin
-consumers and add no dedupe logic.
+The authority deadline projection traverses validated canonical rows and asserts the
+invariant defensively. The engine, overview application, workflow, declaration and
+calculation notices, and CLI remain thin consumers and add no dedupe logic.
 
 ## Rationale
 
