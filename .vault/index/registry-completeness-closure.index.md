@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:851854b0f0275f6f39a392c8e15c2d1c4367c7ebc72982a9e671c97f8812b842'
+body_hash: 'sha256:5b2191498ae21cb0233c623f40e37ac22f4eadbeae9ceccdd4bfb9b8e78e4dc8'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -87,6 +87,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W03-P05-S32]]'
   - '[[2026-08-24-registry-completeness-closure-W03-P05-S33]]'
   - '[[2026-08-24-registry-completeness-closure-W03-P06-S34]]'
+  - '[[2026-08-24-registry-completeness-closure-W03-P06-S35]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-audit]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-036-2025-filing-authority-reference]]'
@@ -193,6 +194,7 @@ related:
   - '[[2026-08-25-registry-completeness-closure-s72-independent-post-review-audit]]'
   - '[[2026-08-25-registry-completeness-closure-s73-independent-post-review-audit]]'
   - '[[2026-08-25-registry-completeness-closure-s73-source-connectivity-revalidation-audit]]'
+  - '[[2026-08-25-registry-completeness-closure-source-casilla-predecessor-reconciliation-audit]]'
 ---
 
 # `registry-completeness-closure` feature index
@@ -295,6 +297,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-25-registry-completeness-closure-s72-independent-post-review-audit` - `registry-completeness-closure` audit: `S72 independent post-review`
 - `2026-08-25-registry-completeness-closure-s73-independent-post-review-audit` - `registry-completeness-closure` audit: `S73 independent post-review`
 - `2026-08-25-registry-completeness-closure-s73-source-connectivity-revalidation-audit` - `registry-completeness-closure` audit: `S73 source-connectivity revalidation audit`
+- `2026-08-25-registry-completeness-closure-source-casilla-predecessor-reconciliation-audit` - `registry-completeness-closure` audit: `S35 source-casilla predecessor reconciliation`
 
 ### exec
 
@@ -377,6 +380,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W03-P05-S32` - 2026-08-24-registry-completeness-closure-W03-P05-S32
 - `2026-08-24-registry-completeness-closure-W03-P05-S33` - Verify official export layout selection, mapped semantic owners, and emitted-byte offsets for every filing-grade revision
 - `2026-08-24-registry-completeness-closure-W03-P06-S34` - Close registry-temporal-coverage predicate-relevant rows, execution records, summaries, stale assumptions, and final review
+- `2026-08-24-registry-completeness-closure-W03-P06-S35` - Close source-casilla-integration predicate-relevant rows, execution records, summaries, stale assumptions, and final review
 
 ### plan
 
