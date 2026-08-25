@@ -8,7 +8,7 @@ from html import unescape
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
+from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from .....core.resources import bundled_path
 from .. import (
     RegistryValidator,
@@ -104,6 +104,7 @@ def test_modelo_200_validates_with_deadline_and_schedule_catalogue_refs() -> Non
         source_root=bundled_path(),
         filing_year=2025,
         period="0A",
+        grade=RegistryAuthorityGrade.CALCULATION,
     )
     construct = snapshot.revision.constructs[0]
     assert construct.filing_schedules == ("modelo-200-2024-anual",)
@@ -131,6 +132,7 @@ def test_modelo_200_calendar_year_2024_deadline_matches_boe_order() -> None:
         source_root=bundled_path(),
         filing_year=2025,
         period="0A",
+        grade=RegistryAuthorityGrade.CALCULATION,
     )
 
     window = snapshot.revision.deadline_windows[0]
@@ -172,6 +174,7 @@ def test_modelo_200_schedule_is_annual_for_calendar_year_entities() -> None:
         source_root=bundled_path(),
         filing_year=2025,
         period="0A",
+        grade=RegistryAuthorityGrade.CALCULATION,
     )
 
     schedule = snapshot.revision.filing_schedules[0]
@@ -201,6 +204,7 @@ def test_modelo_200_liquidacion_cuota_chain_casillas_resolve_under_their_segment
         source_root=bundled_path(),
         filing_year=2025,
         period="0A",
+        grade=RegistryAuthorityGrade.CALCULATION,
     )
 
     casilla_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
@@ -235,6 +239,7 @@ def test_modelo_200_liquidacion_014_014b_formulas_use_segment_identities() -> No
         source_root=bundled_path(),
         filing_year=2025,
         period="0A",
+        grade=RegistryAuthorityGrade.CALCULATION,
     )
 
     formulas_by_target = {formula.target_casilla_id: formula for formula in snapshot.revision.formulas}
@@ -359,6 +364,7 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
         source_root=bundled_path(),
         filing_year=2025,
         period="0A",
+        grade=RegistryAuthorityGrade.CALCULATION,
     )
 
     result = calculate_registry_snapshot(
@@ -414,6 +420,7 @@ def test_modelo_200_carries_manual_handoff_under_declaration_advisory_predicates
         source_root=bundled_path(),
         filing_year=2025,
         period="0A",
+        grade=RegistryAuthorityGrade.CALCULATION,
     )
 
     predicates = {p.predicate_id: p.expression for p in snapshot.revision.verification_predicates}
@@ -449,6 +456,7 @@ def test_modelo_200_cuota_liquida_is_computed_and_rejects_direct_input() -> None
         source_root=bundled_path(),
         filing_year=2025,
         period="0A",
+        grade=RegistryAuthorityGrade.CALCULATION,
     )
 
     casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
@@ -503,6 +511,7 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
         source_root=bundled_path(),
         filing_year=2025,
         period="0A",
+        grade=RegistryAuthorityGrade.CALCULATION,
     )
 
     # The base imponible 00552 is now COMPUTED from the base-determination
