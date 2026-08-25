@@ -11,22 +11,6 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.application.user_profile.capsule_record import (
-    ProfileRecordConflictError,
-    ProfileRecordSession,
-    ProfileRecordStore,
-)
-from cadrumo.application.user_profile.custody_ports import ProfileCustodyRecoveryEnvelopePort
-from cadrumo.application.user_profile.custody_repository import profile_custody_transaction_lock
-from cadrumo.application.user_profile.custody_transactions import ProfileCustodyTransactionConflictError
-from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
-from cadrumo.application.user_profile.profile_record_repository import (
-    ProfileRecordRepository,
-    bound_profile_record_session,
-)
-from cadrumo.application.user_profile.profile_repository import CommittedProfileRepository
-from cadrumo.application.user_profile.recovery_custody import mint_profile_creation_recovery
-
 from ....adapters.persistence.storage.custody import (
     ProfileCustodyCapsuleLabel,
     ProfileCustodyEnvelope,
@@ -47,6 +31,21 @@ from ....domain.user_profile.errors import ProfileNotFoundError
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.user_profile import complete_profile_facts
+from ..capsule_record import (
+    ProfileRecordConflictError,
+    ProfileRecordSession,
+    ProfileRecordStore,
+)
+from ..custody_ports import ProfileCustodyRecoveryEnvelopePort
+from ..custody_repository import profile_custody_transaction_lock
+from ..custody_transactions import ProfileCustodyTransactionConflictError
+from ..lifecycle import ProfileCapsuleLifecycle
+from ..profile_record_repository import (
+    ProfileRecordRepository,
+    bound_profile_record_session,
+)
+from ..profile_repository import CommittedProfileRepository
+from ..recovery_custody import mint_profile_creation_recovery
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
