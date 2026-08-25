@@ -34,10 +34,8 @@ from ..core import (
     is_link_like,
     storage_location,
 )
-from ..core.directory_scan import (
-    scan_directory,
-)
 from ..core.atomic_write import atomic_write_hardened_text
+from ..core.directory_scan import scan_directory
 from ..core.errors import CadrumoError
 from ..core.external_constants import UTF_8_ENCODING
 
@@ -55,12 +53,18 @@ class JournalOperation(Protocol):
     """
 
     @property
-    def operation_id(self) -> str: ...
+    def operation_id(self) -> str:
+        """Return the filename identity of this journal operation."""
+        ...
 
     @property
-    def started_at(self) -> datetime: ...
+    def started_at(self) -> datetime:
+        """Return the timestamp used to order journal operations."""
+        ...
 
-    def model_dump_json(self, *, indent: int) -> str: ...
+    def model_dump_json(self, *, indent: int) -> str:
+        """Serialize this journal operation as indented JSON."""
+        ...
 
 
 class JournalRepositoryBase[T: JournalOperation]:
@@ -84,6 +88,7 @@ class JournalRepositoryBase[T: JournalOperation]:
         subject: str,
         id_subject: str,
     ) -> None:
+        """Initialize the repository with its storage and validation contracts."""
         self._storage_root = storage_root.expanduser().resolve(strict=False)
         self._root = self._storage_root / journal_dirname
         self._lock_target = self._root / ".repository"
