@@ -115,7 +115,7 @@ def test_declared_s91_cli_census_rejects_mutated_local_actions_and_recovery_pros
     """Mutation probes prove the S91 census cannot pass after either regression."""
     action_mutation = "ActionReference(action_id='operator.modelo.describe')"
     prose_mutation = "typer.BadParameter(\"Run 'aeat app modelo work calculate' first.\")"
-    profile_mutation = "typer.BadParameter(\"Set it via config profile.\")"
+    profile_mutation = 'typer.BadParameter("Set it via config profile.")'
 
     assert _s91_cli_census_violations(action_mutation) == ("local action constructor: ActionReference",)
     assert _s91_cli_census_violations(prose_mutation) == ("executable recovery literal",)
