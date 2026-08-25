@@ -217,7 +217,9 @@ class _RevisionRepository:
         return True
 
     def load(self) -> CalculationRevisionCatalogue:
-        return CalculationRevisionCatalogue(revisions={self._revision.calculation_revision_id: self._revision})
+        return CalculationRevisionCatalogue.model_construct(
+            revisions={self._revision.calculation_revision_id: self._revision},
+        )
 
 
 _REVISION_CREATED_AT = datetime(2026, 8, 25, tzinfo=UTC)
