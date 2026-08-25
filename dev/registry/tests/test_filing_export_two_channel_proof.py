@@ -15,7 +15,10 @@ from cadrumo.domain.calculations.registry import (
     bundled_authority,
 )
 
-from ..filing_export_proof import canonical_two_channel_filing_export_proof_authority
+from ..filing_export_proof import (
+    CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS,
+    canonical_two_channel_filing_export_proof_authority,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -42,7 +45,7 @@ def test_canonical_authority_cannot_accept_a_preconstructed_replay_receipt() -> 
 
 
 def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() -> None:
-    """Each filing revision refuses both proof channels until evidence is enrolled."""
+    """S85 derives every public candidate and retains its exact refusal residue."""
     registry = bundled_authority()
     proof = canonical_two_channel_filing_export_proof_authority(
         workspace_root=_REPOSITORY_ROOT,
@@ -53,6 +56,7 @@ def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() 
         secure_replay_custody=None,
     )
     assessed = 0
+    selected_coordinates = set()
     for modelo in registry.modelos:
         for revision in modelo.revisions.values():
             if revision.authority_grade is not RegistryAuthorityGrade.FILING:
@@ -62,6 +66,7 @@ def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() 
                 revision=revision.id,
                 layout_ids=tuple(layout.id for layout in revision.export_layouts),
             )
+            selected_coordinates.add((str(coordinate.modelo), str(coordinate.revision)))
             assessment = proof.assess_for(coordinate)
             assert assessment.proof is None
             assert {item.channel for item in assessment.refusals} == {
@@ -70,3 +75,40 @@ def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() 
             }
             assessed += 1
     assert assessed > 0
+
+    enrollment = proof.conformance_enrollment
+    candidate_coordinates = {
+        (str(candidate.evidence.coordinate.modelo), str(candidate.evidence.coordinate.revision))
+        for candidate in enrollment.provenance_candidates
+    }
+    materialized_coordinates = {
+        (str(vector.evidence.coordinate.modelo), str(vector.evidence.coordinate.revision))
+        for vector in enrollment.materializable_vectors
+    }
+    residue_coordinates = {(str(residue.modelo), str(residue.revision)) for residue in enrollment.residues}
+    canonical_vector_coordinates = {
+        (str(vector.evidence.coordinate.modelo), str(vector.evidence.coordinate.revision))
+        for vector in CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS
+    }
+
+    assert selected_coordinates == materialized_coordinates | residue_coordinates
+    assert candidate_coordinates <= selected_coordinates
+    assert materialized_coordinates <= canonical_vector_coordinates
+    assert candidate_coordinates - materialized_coordinates <= residue_coordinates
+    assert canonical_vector_coordinates - materialized_coordinates <= residue_coordinates
+    assert all(
+        residue.owner and residue.reconsideration_condition and residue.detail for residue in enrollment.residues
+    )
+    assert all(
+        not {
+            "draft",
+            "producer_snapshot",
+            "dictionary_values",
+            "prior_domiciliation_election",
+            "product_software_identity",
+            "payload",
+            "payload_sha256",
+            "accepted_payload_hash",
+        }.intersection(candidate.evidence.model_fields)
+        for candidate in enrollment.provenance_candidates
+    )
