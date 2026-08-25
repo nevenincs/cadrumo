@@ -60,7 +60,10 @@ _TAX_ID = "X1234567L"
 _T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
 _STALE_REVISION_ID = "0" * 64
-_EVIDENCE_REFERENCE = "JUST-2026-130-1T-ATOMIC"
+#: Doubles as the justificante CSV, which AEAT prints as an unbroken
+#: alphanumeric run -- the model enforces ^[A-Z0-9]{8,32}$, so the
+#: hyphenated form this used to carry could never be a real CSV.
+_EVIDENCE_REFERENCE = "JUST2026130Q1ATOMIC"
 
 _INCOME_CASILLA: CasillaId = validated_casilla_id("01", surface="test casilla id")
 _EXPENSE_CASILLA: CasillaId = validated_casilla_id("02", surface="test casilla id")
