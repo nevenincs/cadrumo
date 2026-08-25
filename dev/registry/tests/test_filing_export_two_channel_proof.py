@@ -42,7 +42,7 @@ def test_canonical_authority_cannot_accept_a_preconstructed_replay_receipt() -> 
 
 
 def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() -> None:
-    """S84 exposes both gaps dynamically; S85 owns vector enrollment."""
+    """Each filing revision refuses both proof channels until evidence is enrolled."""
     registry = bundled_authority()
     proof = canonical_two_channel_filing_export_proof_authority(
         workspace_root=_REPOSITORY_ROOT,
