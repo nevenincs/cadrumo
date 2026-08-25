@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, TypedDict
 
 import pytest
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
@@ -68,6 +67,7 @@ from cadrumo.application.operations import (
 )
 from cadrumo.application.operations._model_contract import require_strict_frozen_operation_model_graph
 from cadrumo.application.operations.owner import OperationExecutorContext
+from cadrumo.application.operations.persistence import OperationReplayStatus
 from cadrumo.core import OperationEventKind, OperationInteractionKind, OperationLifecycle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -86,6 +86,12 @@ _SCHEMA = OperationSchemaIdentityV1(
 class SafeProjection(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
     code: Annotated[str, Field(min_length=1)]
+
+
+class _TimelineChanges(TypedDict, total=False):
+    started_at: datetime
+    execution_deadline_at: datetime | None
+    cleanup_deadline_at: datetime | None
 
 
 class ProjectionContractExecutor:
@@ -154,6 +160,9 @@ def _projection_contract_set(
 def _projection(
     *,
     contract_set: OperationPublicContractSetV1 | None = None,
+    started_at: datetime = _NOW,
+    execution_deadline_at: datetime | None = None,
+    cleanup_deadline_at: datetime | None = None,
     **changes: object,
 ) -> OperationPublicProjectionV1:
     contract_set = _projection_contract_set() if contract_set is None else contract_set
@@ -170,7 +179,7 @@ def _projection(
         "terminal_condition": None,
         "effect": OperationEffect.NONE,
         "phase_code": "operations.public.running",
-        "started_at": _NOW,
+        "started_at": started_at,
         "updated_at": _NOW,
         "progress": None,
         "close_policy": contract.close_policy,
@@ -178,8 +187,8 @@ def _projection(
         "cancellable_now": False,
         "cancellation_requested": False,
         "cancellation_acknowledged": False,
-        "execution_deadline_at": None,
-        "cleanup_deadline_at": None,
+        "execution_deadline_at": execution_deadline_at,
+        "cleanup_deadline_at": cleanup_deadline_at,
         "pending_interaction": OperationNoPendingInteractionV1(),
         "result_ref": None,
         "refusal_ref": None,
@@ -255,7 +264,7 @@ def test_observation_success_requires_one_exact_projection_page_anchor() -> None
         operation_id=_OPERATION_ID,
         anchor_cursor=0,
         requested_cursor=0,
-        status="caught_up",
+        status=OperationReplayStatus.CAUGHT_UP,
         events=(),
         next_cursor=0,
         restart_cursor=None,
@@ -282,7 +291,7 @@ def test_observation_success_refuses_event_rows_newer_than_its_projection() -> N
         operation_id=_OPERATION_ID,
         anchor_cursor=1,
         requested_cursor=0,
-        status="page",
+        status=OperationReplayStatus.PAGE,
         events=(event,),
         next_cursor=1,
         restart_cursor=None,
@@ -365,7 +374,7 @@ def test_public_projection_refuses_progress_phase_and_pending_interaction_drift(
         {"cleanup_deadline_at": _NOW + timedelta(seconds=1)},
     ],
 )
-def test_public_projection_refuses_deadline_and_timeline_drift(changes: dict[str, object]) -> None:
+def test_public_projection_refuses_deadline_and_timeline_drift(changes: _TimelineChanges) -> None:
     with pytest.raises(ValidationError, match=r"start|deadline"):
         _projection(**changes)
 
@@ -417,7 +426,7 @@ def test_public_event_page_enforces_contiguous_bounded_rows_and_resynchronizatio
         operation_id=_OPERATION_ID,
         anchor_cursor=1,
         requested_cursor=0,
-        status="page",
+        status=OperationReplayStatus.PAGE,
         events=(first,),
         next_cursor=1,
         restart_cursor=None,
@@ -429,7 +438,7 @@ def test_public_event_page_enforces_contiguous_bounded_rows_and_resynchronizatio
             operation_id=_OPERATION_ID,
             anchor_cursor=2,
             requested_cursor=0,
-            status="page",
+            status=OperationReplayStatus.PAGE,
             events=(first.model_copy(update={"sequence": 2}),),
             next_cursor=2,
             restart_cursor=None,
@@ -439,7 +448,7 @@ def test_public_event_page_enforces_contiguous_bounded_rows_and_resynchronizatio
             operation_id=_OPERATION_ID,
             anchor_cursor=4,
             requested_cursor=1,
-            status="compacted",
+            status=OperationReplayStatus.COMPACTED,
             events=(),
             next_cursor=1,
             restart_cursor=None,
@@ -449,7 +458,7 @@ def test_public_event_page_enforces_contiguous_bounded_rows_and_resynchronizatio
             operation_id=_OPERATION_ID,
             anchor_cursor=2,
             requested_cursor=1,
-            status="caught_up",
+            status=OperationReplayStatus.CAUGHT_UP,
             events=(),
             next_cursor=1,
             restart_cursor=None,
@@ -486,24 +495,50 @@ def test_review_reference_and_success_never_carry_response_authority() -> None:
 
 
 @pytest.mark.parametrize(
-    ("model", "code"),
+    "refusal",
     [
-        (OperationObservationRefusalV1, OperationObservationRefusalCode.OBSERVATION_UNAVAILABLE),
-        (OperationReviewProjectionRefusalV1, OperationReviewProjectionRefusalCode.REVIEW_PROJECTION_UNAVAILABLE),
-        (OperationResponseControlRefusalV1, OperationResponseControlRefusalCode.RESPONSE_AUTHORITY_UNAVAILABLE),
-        (OperationCancellationRefusalV1, OperationCancellationRefusalCode.CANCELLATION_UNAVAILABLE),
-        (OperationDetachRefusalV1, OperationDetachRefusalCode.DETACH_NOT_ALLOWED),
-        (
-            OperationWorkspaceRefreshTargetRefusalV1,
-            OperationWorkspaceRefreshTargetRefusalCode.UNSAFE_REFRESH_TARGET,
+        OperationObservationRefusalV1(
+            code=OperationObservationRefusalCode.OBSERVATION_UNAVAILABLE,
+            requested_version=1,
+            diagnostic_ref=None,
+        ),
+        OperationReviewProjectionRefusalV1(
+            code=OperationReviewProjectionRefusalCode.REVIEW_PROJECTION_UNAVAILABLE,
+            requested_version=1,
+            diagnostic_ref=None,
+        ),
+        OperationResponseControlRefusalV1(
+            code=OperationResponseControlRefusalCode.RESPONSE_AUTHORITY_UNAVAILABLE,
+            requested_version=1,
+            diagnostic_ref=None,
+        ),
+        OperationCancellationRefusalV1(
+            code=OperationCancellationRefusalCode.CANCELLATION_UNAVAILABLE,
+            requested_version=1,
+            diagnostic_ref=None,
+        ),
+        OperationDetachRefusalV1(
+            code=OperationDetachRefusalCode.DETACH_NOT_ALLOWED,
+            requested_version=1,
+            diagnostic_ref=None,
+        ),
+        OperationWorkspaceRefreshTargetRefusalV1(
+            code=OperationWorkspaceRefreshTargetRefusalCode.UNSAFE_REFRESH_TARGET,
+            requested_version=1,
+            diagnostic_ref=None,
         ),
     ],
 )
 def test_public_refusals_are_closed_renderer_neutral_records(
-    model: type[BaseModel],
-    code: StrEnum,
+    refusal: (
+        OperationObservationRefusalV1
+        | OperationReviewProjectionRefusalV1
+        | OperationResponseControlRefusalV1
+        | OperationCancellationRefusalV1
+        | OperationDetachRefusalV1
+        | OperationWorkspaceRefreshTargetRefusalV1
+    ),
 ) -> None:
-    refusal = model(code=code, requested_version=1, diagnostic_ref=None)
     assert refusal.outcome == "refused"
     assert set(refusal.model_dump()) <= {
         "outcome",
