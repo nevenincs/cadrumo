@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from contextlib import contextmanager
 from typing import Any, cast
 
 import pytest
 
 from ......tests.master_key import EphemeralMasterKeyProvider
-from ...tests.engine_bootstrap import bootstrap_sqlite_engine
 from ._secure_objects_support import (
     UTC,
     Path,
@@ -26,6 +23,8 @@ from ._secure_objects_support import (
     StorageNamespaceScope,
     StorageValidationError,
     ValidationError,
+    _ephemeral_secure_repo,
+    _ephemeral_secure_repo_at,
     _seed_under_key,
     datetime,
     event,
@@ -35,28 +34,6 @@ from ._secure_objects_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-
-@contextmanager
-def _ephemeral_secure_repo_at(
-    db_path: Path,
-) -> Iterator[tuple[Any, SecureObjectRepository]]:
-    with EphemeralMasterKeyProvider():
-        engine = bootstrap_sqlite_engine(db_path)
-        try:
-            yield engine, SecureObjectRepository(engine=engine)
-        finally:
-            engine.dispose()
-
-
-@contextmanager
-def _ephemeral_secure_repo(
-    tmp_path: Path,
-    database_name: str,
-) -> Iterator[tuple[Path, Any, SecureObjectRepository]]:
-    db_path = tmp_path / database_name
-    with _ephemeral_secure_repo_at(db_path) as (engine, repo):
-        yield db_path, engine, repo
 
 
 def test_iter_records_with_failures_yields_registry_schema_drift(tmp_path: Path) -> None:

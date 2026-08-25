@@ -11,6 +11,7 @@ duplicate-helper burndown built this session.
 
 from __future__ import annotations
 
+import ast
 from pathlib import Path
 from textwrap import dedent
 from typing import Final
@@ -579,6 +580,45 @@ _CANONICAL_HOMES: Final[tuple[tuple[str, str], ...]] = (
     ("src/cadrumo/adapters/persistence/storage/sql/tests/_secure_objects_support.py", "_ephemeral_secure_repo"),
     ("dev/docs/terminology_handbook/tests/_support.py", "write_concept_fragment"),
 )
+
+_SECURE_OBJECTS_SUPPORT_PATH = "src/cadrumo/adapters/persistence/storage/sql/tests/_secure_objects_support.py"
+_EPHEMERAL_SECURE_REPO_CONSUMERS: Final[dict[str, frozenset[str]]] = {
+    "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_object_write_batching.py": frozenset(
+        {"_ephemeral_secure_repo"},
+    ),
+    "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_part2.py": frozenset(
+        {"_ephemeral_secure_repo", "_ephemeral_secure_repo_at"},
+    ),
+}
+
+
+def _module_imports(relative_path: str) -> frozenset[str]:
+    """Return names imported directly from the canonical secure-object support module."""
+    repository_root = Path(__file__).resolve().parents[3]
+    tree = ast.parse((repository_root / relative_path).read_text(encoding="utf-8"))
+    return frozenset(
+        alias.name
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ImportFrom) and node.level == 1 and node.module == "_secure_objects_support"
+        for alias in node.names
+    )
+
+
+def test_ephemeral_secure_repo_has_one_shared_definition_and_direct_consumers() -> None:
+    """The secure-object helpers have one owner; callers import rather than re-declare them."""
+    result = census()
+    definitions = {
+        (record.path, record.qualname)
+        for record in result.helpers
+        if record.qualname in {"_ephemeral_secure_repo", "_ephemeral_secure_repo_at"}
+    }
+
+    assert definitions == {
+        (_SECURE_OBJECTS_SUPPORT_PATH, "_ephemeral_secure_repo"),
+        (_SECURE_OBJECTS_SUPPORT_PATH, "_ephemeral_secure_repo_at"),
+    }
+    for path, expected_names in _EPHEMERAL_SECURE_REPO_CONSUMERS.items():
+        assert expected_names <= _module_imports(path)
 
 
 def _site_key(site: str) -> tuple[str, str]:
