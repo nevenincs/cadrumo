@@ -47,17 +47,12 @@ from ....domain.user_profile import profile_field_label, profile_section_title
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
 
-    from ....adapters.inbound.tui import (
-        FormField,
-        FormPage,
-        ManagerAction,
-        ManagerActionOutcome,
-    )
+    from ....adapters.inbound.tui import ManagerAction, ManagerActionOutcome
     from ....application.auth import AuthConfigureResult
     from ....application.live import FiledHistoryOnboardingRun
-    from ....application.user_profile import CensalReconciliation, EffectiveFact, ProfileOverview
     from ....core import AuthProviderKind
     from ....domain.user_profile import ProfileFieldDefinition, ProfileSectionDefinition
+    from ....entrypoints.tui.components import FormField, FormPage
 
 _AUTH_PROVIDER_PATH = "auth.provider"
 _AUTH_CLAVE_MOVIL_ROUTE_PATH = "auth.clave_movil_route"
@@ -152,74 +147,26 @@ def censal_pull_action() -> ManagerAction:
 
 
 def _run_censal_pull() -> ManagerActionOutcome:
-    """Read the censal consulta and reconcile it onto the active profile.
-
-    A pure read. The reader navigates to the consulta view and parses the
-    rendered DOM; it submits nothing, and refuses at runtime if AEAT
-    lands it on a modification surface. Nothing on this path can file.
-
-    There is no way to aim the read at anybody: the taxpayer is taken
-    from the authenticated session's own identity, so this action offers
-    no subject to choose and could not read another person's data if an
-    operator asked it to.
-
-    The commit routes through ``apply_censal_read`` onto ``apply_cotejo``,
-    the single censal apply authority the CLI verb drives, so one
-    ``CENSO_APPLIED`` marks the change and no second write path exists.
-
-    Three things can happen to any field and the operator is told all
-    three. A blank path is adopted. A path already carrying the same
-    value is unchanged. A path where AEAT disagrees with an answer the
-    operator declared is reported and left standing - that is the
-    reconciliation working, not a failure. A value a previous pull
-    adopted is refreshed rather than reported, because there is no
-    operator answer to protect and both sides are the authority's.
-    """
-    import asyncio
-
+    """Acquire once and apply only after the exact reviewed projection."""
     from ....adapters.inbound.tui import ManagerActionDisposition, ManagerActionOutcome
-    from ....application.live import pull_censal_datos
-    from ....application.user_profile import (
-        apply_censal_read,
-        censal_facts_from_read,
-        reconcile_censal_read,
-        record_to_effective_facts,
-    )
-    from ....application.workflow import workflow_state_repository
+    from ....entrypoints import run_censal_review
+    from ._censo_review_ui import confirm_censal_review
     from ._manager_frontend import build_active_profile_overview
 
     unavailable = _censal_pull_unavailable()
     if unavailable is not None:
-        # Refuse before the read, not after: the live navigation can push
-        # a Cl@ve prompt to the operator's phone, and spending their
-        # second factor on a pull that cannot authenticate is worse than
-        # telling them what is missing.
         return ManagerActionOutcome(message=unavailable, disposition=ManagerActionDisposition.REFUSED)
 
-    repository = workflow_state_repository()
-    state = repository.load()
-    read = asyncio.run(pull_censal_datos())
-    facts = censal_facts_from_read(read)
-    record = state.active_profile_record()
-    # Read the effective facts BEFORE the commit: afterwards a cleared
-    # path may carry the adopted value and no longer look cleared.
-    declared = record_to_effective_facts(record)
-    reconciliation = reconcile_censal_read(record, facts, incoming_identity=read.identity.nif)
-    # The projection is exactly the adoptable paths now, so every fact it
-    # emits is an outcome the operator is told about.
-    adoptable_read = len(facts)
-    repository.save(apply_censal_read(state, read))
-
-    # Built once and used twice: the summary names the diverging fields
-    # the way the page does, and the page itself is what the screen redraws.
+    reviewed = run_censal_review(actor_ref="operator:tui-censo", decide=confirm_censal_review)
+    if not reviewed.applied:
+        return ManagerActionOutcome(
+            message=tr("flows.manager.action.censal_pull_review_rejected"),
+            disposition=ManagerActionDisposition.REFUSED,
+        )
     overview = build_active_profile_overview()
+
     return ManagerActionOutcome(
-        message=_censal_pull_summary(
-            reconciliation,
-            read_count=adoptable_read,
-            declared=declared,
-            labels=_field_labels(overview),
-        ),
+        message=tr("flows.manager.action.censal_pull_review_applied"),
         overview=overview,
     )
 
@@ -245,118 +192,6 @@ def _censal_pull_unavailable() -> str | None:
     if (refusal := _clave_refusal(on_record)) is not None:
         return f"{tr('flows.manager.action.censal_pull_auth_incomplete')} {refusal}"
     return None
-
-
-def _censal_pull_summary(
-    reconciliation: CensalReconciliation,
-    *,
-    read_count: int,
-    declared: Mapping[str, EffectiveFact],
-    labels: Mapping[str, str],
-) -> str:
-    """Report what the read did to each field, in the operator's terms.
-
-    Unchanged is derived rather than reported by the reconciliation,
-    which emits only the two axes that changed something: a field AEAT
-    agrees with is neither adopted nor diverging.
-
-    That derivation counts only the ADOPTABLE paths, and the restriction
-    is load-bearing rather than tidiness. The projection also carries
-    ``identity.tax_id``, which the reconciliation consumes for its
-    ownership guard and then passes over - so a subtraction across
-    everything read would sweep the fiscal identity into "already
-    matching" and tell the operator AEAT had corroborated it. On a first
-    read onto a profile carrying no identity the guard deliberately
-    allows the read through, so nothing has been corroborated at all,
-    and it is the one row an operator cannot check for themselves
-    because both sides render as hashes. An ownership check is not an
-    outcome of the reconciliation and belongs in none of the three.
-
-    The diverging axis carries two different situations and they do not
-    read alike. "You declared X and AEAT says Y" describes an answer the
-    operator gave. A path they deliberately CLEARED has no declared
-    answer to set against AEAT's value, so the same wording would
-    describe a declaration they never made, and a rendering that shows
-    their side would show a blank that looks like a fault rather than
-    their deletion being honoured. They are reported separately, in the
-    vocabulary the CLI verb uses for the same two states.
-    """
-    from ....application.user_profile import CENSAL_ADOPTABLE_PATHS
-
-    adoptable = frozenset(CENSAL_ADOPTABLE_PATHS)
-    adopted = sum(1 for fact in reconciliation.adopted if fact.path in adoptable)
-    diverging = sum(1 for path, _ in reconciliation.divergences if path in adoptable)
-    parts = [
-        tr(
-            "flows.manager.action.censal_pull_done",
-            adopted=adopted,
-            unchanged=read_count - adopted - diverging,
-            diverging=diverging,
-        ),
-    ]
-    cleared, contested = _split_divergences(reconciliation, declared)
-    if contested:
-        parts.append(tr("flows.manager.action.censal_pull_contested", paths=_name_paths(contested, labels)))
-    if cleared:
-        parts.append(tr("flows.manager.action.censal_pull_cleared", paths=_name_paths(cleared, labels)))
-    return " ".join(parts)
-
-
-def _name_paths(paths: Sequence[str], labels: Mapping[str, str]) -> str:
-    """Name each path the way the page names it.
-
-    The operator is being told which of their fields AEAT disagrees with,
-    so they are named as the rows they can go and look at. A dotted path
-    is how the record addresses a field, not how the page shows it, and it
-    is not what the operator was reading when they answered.
-
-    A path missing from the projection is still reported, but only through a
-    generic operator label. Its dotted storage address is diagnostic data,
-    not actionable screen copy.
-    """
-    return ", ".join(labels.get(path, tr("flows.manager.field_unavailable")) for path in paths)
-
-
-def _field_labels(overview: ProfileOverview) -> Mapping[str, str]:
-    """Every field path on the page, mapped to the label shown for it.
-
-    Read from the projection rather than from a table here, so the names
-    follow the page: whatever the overview calls a field, including once
-    those labels are translated, is what this reports.
-    """
-    return {field.path: field.label for section in overview.sections for field in section.fields}
-
-
-def _split_divergences(
-    reconciliation: CensalReconciliation,
-    declared: Mapping[str, EffectiveFact],
-) -> tuple[tuple[str, ...], tuple[str, ...]]:
-    """Separate a deletion the operator made from an answer they declared.
-
-    A cleared path is an effective fact whose value is ``None``: the
-    operator emptied it, and that deletion is their answer. A path they
-    never set at all does not reach here, because the reconciliation
-    adopts it.
-
-    Args:
-        reconciliation: The split the read produced.
-        declared: The effective fact at each path the record holds.
-
-    Returns:
-        The cleared paths and the contested paths, in that order.
-    """
-    from ....application.user_profile import CENSAL_ADOPTABLE_PATHS
-
-    adoptable = frozenset(CENSAL_ADOPTABLE_PATHS)
-    cleared: list[str] = []
-    contested: list[str] = []
-    for path, _incoming in reconciliation.divergences:
-        if path not in adoptable:
-            continue
-        fact = declared.get(path)
-        target = cleared if fact is not None and fact.value is None else contested
-        target.append(path)
-    return tuple(cleared), tuple(contested)
 
 
 def filed_history_pull_all_action() -> ManagerAction:
@@ -492,7 +327,7 @@ def _run_export() -> ManagerActionOutcome:
         ProfileBundleExportTransport,
         export_profile_bundle,
     )
-    from ....entrypoints.tui.components.forms import FormField, FormPage
+    from ....entrypoints.tui.components import FormField, FormPage
     from ._manager_frontend import present_form
 
     page = FormPage(
@@ -673,7 +508,7 @@ def _auth_form_page(
         The :class:`~cadrumo.adapters.inbound.tui.FormPage` to present.
     """
     from ....core import AuthProviderKind, ClaveMovilRoute
-    from ....entrypoints.tui.components.forms import FormField, FormFieldKind, FormPage, form_choices
+    from ....entrypoints.tui.components import FormField, FormFieldKind, FormPage, form_choices
 
     fields = [
         FormField(
@@ -1155,7 +990,7 @@ def _row_page(
     title come from the shared schema-label helpers, so this page names a
     field exactly as the manager's own table does.
     """
-    from ....entrypoints.tui.components.forms import FormField, FormFieldKind, FormPage, form_choices
+    from ....entrypoints.tui.components import FormField, FormFieldKind, FormPage, form_choices
 
     section = _chosen_section(sections, values)
     fields: list[FormField] = [
@@ -1193,7 +1028,7 @@ def _row_field(section: ProfileSectionDefinition, field: ProfileFieldDefinition)
     reports one field's fault as the whole row's.
     """
     from ....application.user_profile import profile_field_choices
-    from ....entrypoints.tui.components.forms import FormField, FormFieldKind, form_choices
+    from ....entrypoints.tui.components import FormField, FormFieldKind, form_choices
 
     declared = profile_field_choices(field, path=f"{section.key}.{field.key}")
     return FormField(
@@ -1280,7 +1115,7 @@ def _run_google_export() -> ManagerActionOutcome:
     """Collect parameters, then adapt them through the canonical export service."""
     from ....adapters.inbound.tui import ManagerActionDisposition, ManagerActionOutcome
     from ....core.errors import CadrumoError
-    from ....entrypoints.tui.components.forms import FormField, FormPage
+    from ....entrypoints.tui.components import FormField, FormPage
     from ._google_sync_calc import execute_google_sheets_export
     from ._manager_frontend import present_form
 

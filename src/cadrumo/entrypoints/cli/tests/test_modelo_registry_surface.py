@@ -22,9 +22,11 @@ source of truth, and ``work calculate`` reads from that same registry.
 
 from __future__ import annotations
 
+import ast
 import json
 import re
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 import typer
@@ -42,6 +44,82 @@ _UUID_TEXT_RE = re.compile(
     r"\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b",
     re.IGNORECASE,
 )
+
+_REPOSITORY_ROOT = Path(__file__).resolve().parents[5]
+_S91_DECLARED_SOURCE_PATHS = (
+    "src/cadrumo/application/modelo/_action_errors.py",
+    "src/cadrumo/application/modelo/_export.py",
+    "src/cadrumo/application/modelo/_iva_wallet_seed.py",
+    "src/cadrumo/application/modelo/_preconditions.py",
+    "src/cadrumo/entrypoints/cli/_modelo.py",
+    "src/cadrumo/entrypoints/cli/_modelo_behavior_support.py",
+    "src/cadrumo/entrypoints/cli/_modelo_payloads.py",
+    "src/cadrumo/entrypoints/cli/_modelo_readiness_cli.py",
+    "src/cadrumo/entrypoints/cli/_modelo_export_cli.py",
+    "src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py",
+    "src/cadrumo/entrypoints/cli/_modelo_amend_wizard_payloads.py",
+    "src/cadrumo/entrypoints/cli/_modelo_work_calculate_cli.py",
+    "src/cadrumo/entrypoints/cli/_modelo_work_wizard_cli.py",
+    "src/cadrumo/entrypoints/cli/_modelo_iva_wallet_cli.py",
+)
+_S91_CLI_SOURCE_PATHS = tuple(path for path in _S91_DECLARED_SOURCE_PATHS if "/entrypoints/cli/" in path)
+_LOCAL_ACTION_CONSTRUCTORS = {
+    "ActionReference",
+    "ConditionEvidence",
+    "PreconditionVerdict",
+    "ResolvedActionReference",
+    "ResolvedNoticeAction",
+}
+_EXECUTABLE_RECOVERY_LITERAL = re.compile(
+    r"aeat\s+app\s+modelo\s+(?:filing-record\s+import|bindings\s+list|work\s+(?:calculate|verify|file|revisions)|iva-wallet\s+seed)|calculate\s*->\s*verify\s*->\s*file|set\s+it\s+via\s+config\s+profile",
+    re.IGNORECASE,
+)
+
+
+def _call_name(node: ast.expr) -> str | None:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        return node.attr
+    return None
+
+
+def _s91_cli_census_violations(source: str) -> tuple[str, ...]:
+    """Return forbidden local selection or executable-recovery literals in one CLI source."""
+    tree = ast.parse(source)
+    violations = {
+        f"local action constructor: {_call_name(call.func)}"
+        for call in ast.walk(tree)
+        if isinstance(call, ast.Call) and _call_name(call.func) in _LOCAL_ACTION_CONSTRUCTORS
+    }
+    for call in (node for node in ast.walk(tree) if isinstance(node, ast.Call)):
+        literals = (
+            value.value for value in ast.walk(call) if isinstance(value, ast.Constant) and isinstance(value.value, str)
+        )
+        if any(_EXECUTABLE_RECOVERY_LITERAL.search(value) for value in literals):
+            violations.add("executable recovery literal")
+    return tuple(sorted(violations))
+
+
+def test_declared_s91_sources_keep_action_selection_in_application_and_recovery_off_prose() -> None:
+    """The entire declared S91 surface is fail-closed against action/prose regressions."""
+    for relative_path in _S91_DECLARED_SOURCE_PATHS:
+        source = (_REPOSITORY_ROOT / relative_path).read_text(encoding="utf-8")
+        ast.parse(source)
+    for relative_path in _S91_CLI_SOURCE_PATHS:
+        source = (_REPOSITORY_ROOT / relative_path).read_text(encoding="utf-8")
+        assert _s91_cli_census_violations(source) == (), relative_path
+
+
+def test_declared_s91_cli_census_rejects_mutated_local_actions_and_recovery_prose() -> None:
+    """Mutation probes prove the S91 census cannot pass after either regression."""
+    action_mutation = "ActionReference(action_id='operator.modelo.describe')"
+    prose_mutation = "typer.BadParameter(\"Run 'aeat app modelo work calculate' first.\")"
+    profile_mutation = "typer.BadParameter(\"Set it via config profile.\")"
+
+    assert _s91_cli_census_violations(action_mutation) == ("local action constructor: ActionReference",)
+    assert _s91_cli_census_violations(prose_mutation) == ("executable recovery literal",)
+    assert _s91_cli_census_violations(profile_mutation) == ("executable recovery literal",)
 
 
 def _seed_modelo_130_ready_profile(bucket_id: str) -> None:

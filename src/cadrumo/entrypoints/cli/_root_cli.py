@@ -56,6 +56,10 @@ def root_command(
         _emit_root_help_and_exit(ctx)
     if ctx.invoked_subcommand is not None and _is_introspection_only_invocation(ctx):
         return
+    from ...adapters.persistence.storage import build_profile_login_session_port
+    from ...application.user_profile import bind_profile_login_session_port
+
+    ctx.with_resource(bind_profile_login_session_port(build_profile_login_session_port()))
     preserve_requested_cli_leaf(ctx)
     state["profile_override"] = profile
     if ctx.invoked_subcommand is None:

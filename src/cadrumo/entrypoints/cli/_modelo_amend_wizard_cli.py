@@ -82,6 +82,7 @@ from ...application.modelo import (
     get_filing_record,
     registry_casillas_for_registry_scope,
 )
+from ...application.modelo._action_errors import amendment_evidence_missing_precondition
 from ...core import STRICT_FROZEN_CONFIG, Modelo, Period, permitted_amendment_kind_values
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
@@ -187,10 +188,16 @@ def run_modelo_work_amend_wizard(
     except ModeloRecordNotFoundError as exc:
         raise deps.bad_parameter_from_error(exc) from exc
     if baseline.external_evidence is None:
-        raise deps.bad_parameter_from_error(
-            AmendmentEvidenceMissingError(
-                f"filing record {baseline.filing_record_id!r} has no external_evidence; the amendment wizard requires an imported AEAT-attested baseline (`aeat app modelo filing-record import`). Locally-filed returns are corrected through the standard re-file path (calculate -> verify -> file)."
-            )
+        raise AmendmentEvidenceMissingError(
+            context={
+                "work_unit_id": unit.work_unit_id,
+                "filing_record_id": baseline.filing_record_id,
+                "external_evidence_present": False,
+            },
+            precondition_failure=amendment_evidence_missing_precondition(
+                work_unit_id=unit.work_unit_id,
+                filing_record_id=baseline.filing_record_id,
+            ),
         ) from None
     try:
         casilla_rows = _baseline_casilla_rows(unit)

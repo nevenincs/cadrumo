@@ -21,7 +21,6 @@ from __future__ import annotations
 import ast
 import inspect
 import json
-from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
@@ -95,45 +94,6 @@ def _stderr_document(result: Any) -> dict[str, Any]:
             assert isinstance(parsed, dict)
             return parsed
     raise AssertionError(f"no JSON document on stderr: {stderr[:400]!r}")
-
-
-def _count_apply_calls(nodes: Iterable[ast.AST], *, into_nested_functions: bool) -> int:
-    """Count ``apply_censal_read`` calls beneath ``nodes``.
-
-    A nested function body counts only when asked for: a call there is not
-    reached by entering the branch that lexically encloses it, since the
-    function could be invoked from anywhere, or never.
-    """
-    found = 0
-    stack = list(nodes)
-    while stack:
-        node = stack.pop()
-        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.Lambda) and not into_nested_functions:
-            continue
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "apply_censal_read":
-            found += 1
-        stack.extend(ast.iter_child_nodes(node))
-    return found
-
-
-def _apply_call_is_gated(source: str) -> bool:
-    """Return whether every ``apply_censal_read`` call sits in an ``if apply`` BODY.
-
-    Counts ``node.body`` deliberately rather than walking the whole
-    ``ast.If``: an ``ast.If`` carries its ``orelse`` too, so walking it
-    certifies a door that writes in the ELSE branch — writing on preview
-    and not on apply, the exact inversion of the contract — as gated.
-    """
-    tree = ast.parse(source)
-    total = _count_apply_calls([tree], into_nested_functions=True)
-    gated = 0
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.If):
-            continue
-        if not (isinstance(node.test, ast.Name) and node.test.id == "apply"):
-            continue
-        gated += _count_apply_calls(node.body, into_nested_functions=False)
-    return total > 0 and gated == total
 
 
 def test_the_live_transport_is_named_pull() -> None:
@@ -450,52 +410,21 @@ def test_pull_refuses_before_the_read_when_no_profile_is_active() -> None:
     assert document["active_profile"] is None
 
 
-def test_the_commit_routes_through_the_single_cotejo_apply_authority() -> None:
-    """The door persists through ``apply_censal_read``, never a parallel write.
-
-    ``apply_censal_read`` delegates to ``apply_cotejo``, which emits
-    exactly one ``CENSO_APPLIED`` per apply-commit. A direct record-repository
-    ``apply_fact_changes`` write here — the only other door onto profile facts
-    — would skip that event and give the live transport a second write path
-    the file transport does not share.
-    """
+def test_live_pull_contains_no_censal_write_authority() -> None:
+    """The preview frontend cannot redeclare or invoke a censal write path."""
     source = inspect.getsource(_censo_file.censo_pull)
-    assert "apply_censal_read(state" in source
+    assert "apply_censal_read" not in source
+    assert "apply_cotejo" not in source
     assert "apply_fact_changes(" not in source
 
 
-def test_the_commit_is_reachable_only_under_apply() -> None:
-    """Every write call in the pull sits inside the ``--apply`` branch."""
-    assert _apply_call_is_gated(inspect.getsource(_censo_file.censo_pull))
+def test_apply_refuses_before_profile_or_live_acquisition() -> None:
+    """The handler forecloses legacy apply before profile or remote authority."""
+    from ..._errors import CliRefusedBoundaryError
 
-
-def test_an_ungated_commit_would_be_caught() -> None:
-    """Anti-tautology: the gating check fails a door that writes unconditionally.
-
-    Without this, a checker that found no calls at all (a renamed
-    authority, a changed call form) would report vacuous success and the
-    preview default would be unguarded.
-    """
-    ungated = "def pull(apply):\n    apply_censal_read(state, read)\n"
-    wrongly_gated = "def pull(apply):\n    if force:\n        apply_censal_read(state, read)\n"
-    no_call = "def pull(apply):\n    if apply:\n        pass\n"
-    # The inversion: writes on PREVIEW and not on apply. An earlier version of
-    # this checker walked the whole `ast.If`, which carries `orelse`, and
-    # certified this as gated - the one shape that matters most.
-    inverted = "def pull(apply):\n    if apply:\n        pass\n    else:\n        apply_censal_read(state, read)\n"
-    # Lexically inside the branch, but reachable from anywhere or never.
-    nested = (
-        "def pull(apply):\n"
-        "    if apply:\n"
-        "        def commit():\n"
-        "            apply_censal_read(state, read)\n"
-        "        register(commit)\n"
-    )
-    assert not _apply_call_is_gated(ungated)
-    assert not _apply_call_is_gated(wrongly_gated)
-    assert not _apply_call_is_gated(no_call)
-    assert not _apply_call_is_gated(inverted)
-    assert not _apply_call_is_gated(nested)
+    with pytest.raises(CliRefusedBoundaryError) as raised:
+        _censo_file.censo_pull(typer.Context(_censo_commands()["pull"]), apply=True)
+    assert raised.value.translated_message == "cli.config.profile.censo.pull_apply_unavailable"
 
 
 def test_the_module_docstring_does_not_declare_the_pull_retired() -> None:

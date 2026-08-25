@@ -28,7 +28,8 @@ import pytest
 from pydantic import ValidationError
 
 from ....application.flows import run_scripted_flow
-from ....core import resolve_active_bucket_id
+from ....application.modelo._action_errors import modelo_work_wizard_retry_exhausted_precondition
+from ....core import ActionConditionality, NoRecoveryOutcome, resolve_active_bucket_id
 from ....core.flows import FlowMode
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
@@ -73,6 +74,16 @@ _PREV_YEAR_INCOME_ANSWER = "13000"
 
 _MANUAL_CASILLAS = ["06", "08", "10", "16", "18"]
 _PREV_YEAR_BINDING_KEY = "irpf.previous_year_economic_activity_net_income"
+
+
+def test_wizard_retry_exhaustion_has_a_declared_no_recovery_outcome() -> None:
+    """The retry cap neither infers a command nor leaves its terminal state implicit."""
+    failure = modelo_work_wizard_retry_exhausted_precondition(work_unit_id="a" * 64, retry_limit=3)
+
+    verdict = failure.verdict
+    assert verdict.action is None
+    assert verdict.conditionality is ActionConditionality.NOT_APPLICABLE
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
 
 
 def _invoke(args: list[str]):

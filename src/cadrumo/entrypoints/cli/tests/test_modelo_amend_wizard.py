@@ -39,7 +39,14 @@ from ....adapters.inbound.pdf import source_pdf_reference_path
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....application.flows import FlowAnswerError, FlowPage, run_scripted_flow
 from ....application.modelo import get_calculation_revision, get_filing_record
-from ....core import STR_KEYED_MAPPING_ADAPTER, Period, resolve_active_bucket_id
+from ....application.modelo._action_errors import amendment_evidence_missing_precondition
+from ....core import (
+    STR_KEYED_MAPPING_ADAPTER,
+    ActionConditionality,
+    NoRecoveryOutcome,
+    Period,
+    resolve_active_bucket_id,
+)
 from ....core.flows import FlowMode
 from ....core.resources import resources
 from ....domain.justificante import Justificante
@@ -66,6 +73,17 @@ from .._modelo_amend_wizard_cli import (
 from ._modelo_work_ux_support import _create_m130_work_unit, _create_m303_work_unit
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def test_amend_wizard_missing_evidence_has_no_invented_recovery_action() -> None:
+    """No exact import/re-file catalogue action exists for this amendment baseline refusal."""
+    failure = amendment_evidence_missing_precondition(work_unit_id="a" * 64, filing_record_id="b" * 64)
+
+    verdict = failure.verdict
+    assert verdict.action is None
+    assert verdict.conditionality is ActionConditionality.NOT_APPLICABLE
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+
 
 _TAX_ID = "12345678Z"
 

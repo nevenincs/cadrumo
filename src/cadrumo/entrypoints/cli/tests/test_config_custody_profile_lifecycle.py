@@ -262,7 +262,7 @@ def test_profile_logout_is_the_only_strong_logout_before_switch(tmp_path: Path) 
 def test_config_passphrase_change_self_authenticates_without_a_keychain(tmp_path: Path) -> None:
     """The rotation leaf proves custody itself and survives a failing keychain.
 
-    This is the root-gate regression for `W02.P11.S21`: the command's current
+    This is the root-gate regression: the command's current
     passphrase is already the exact active profile's proof, so a keychain-free
     process must reach the leaf rather than demand a separate root credential.
     """

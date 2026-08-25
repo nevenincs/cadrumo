@@ -27,6 +27,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from ._censal_review import (
+        CensalReviewedFrontendResult as CensalReviewedFrontendResult,
+    )
+    from ._censal_review import run_censal_review as run_censal_review
     from ._operation_composition import (
         build_production_operation_registry as build_production_operation_registry,
     )
@@ -34,7 +38,12 @@ if TYPE_CHECKING:
         compose_operation_dependencies as compose_operation_dependencies,
     )
 
-__all__ = ["build_production_operation_registry", "compose_operation_dependencies"]
+__all__ = [
+    "CensalReviewedFrontendResult",
+    "build_production_operation_registry",
+    "compose_operation_dependencies",
+    "run_censal_review",
+]
 
 
 def __getattr__(name: str) -> object:
@@ -48,3 +57,11 @@ def __getattr__(name: str) -> object:
 
         return compose_operation_dependencies
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    if name == "CensalReviewedFrontendResult":
+        from ._censal_review import CensalReviewedFrontendResult
+
+        return CensalReviewedFrontendResult
+    if name == "run_censal_review":
+        from ._censal_review import run_censal_review
+
+        return run_censal_review

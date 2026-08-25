@@ -71,6 +71,7 @@ from ...application.modelo import (
     registry_bindings_for_scope,
     registry_casillas_for_registry_scope,
 )
+from ...application.modelo._action_errors import modelo_work_wizard_retry_exhausted_precondition
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.external_constants import OutputLanguage
 from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
@@ -78,8 +79,8 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice
 from ...domain.calculations.registry import InputKind, RegistrySnapshotError, RegistryValidationError
 from ...domain.user_profile import ProfileNotFoundError
-from ._common import activate_subcommand_output_language
-from ._errors import CliOutboundPayloadBoundaryError
+from ._common import activate_subcommand_output_language, attach_cli_policy_verdict
+from ._errors import CliOutboundPayloadBoundaryError, CliRefusedBoundaryError
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
 from ._modelo_cli_support import (
     MISSING_INPUT_TRANSLATED_MESSAGES,
@@ -209,12 +210,19 @@ def _drive_wizard_calculation(
             continue
         _emit_wizard_result(ctx, calculation_result, tuple(prompted))
         return
-    raise typer.BadParameter(
-        tr(
-            "cli.app.modelo.work.wizard_retry_exhausted",
-            default="The wizard could not resolve every calculation input after {limit} follow-up prompts.",
-            limit=_MAX_MISSING_INPUT_RETRIES,
-        )
+    failure = modelo_work_wizard_retry_exhausted_precondition(
+        work_unit_id=unit.work_unit_id,
+        retry_limit=_MAX_MISSING_INPUT_RETRIES,
+    )
+    raise attach_cli_policy_verdict(
+        CliRefusedBoundaryError(
+            tr(
+                "cli.app.modelo.work.wizard_retry_exhausted",
+                default="The wizard could not resolve every calculation input after {limit} follow-up prompts.",
+                limit=_MAX_MISSING_INPUT_RETRIES,
+            )
+        ),
+        verdict=failure.verdict,
     )
 
 
