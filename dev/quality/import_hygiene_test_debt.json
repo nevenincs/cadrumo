@@ -130,20 +130,6 @@
                 "reason": "White-box test reach: the roundtrip proof drives a REAL local .xlsx through the actual worksheet decode step and on into assemble_row_sets_for_snapshot and an encrypted revision, without standing up Google I/O. `_decode_row_set_block` is the decode step; its only production caller is its own module. Deliberately NOT promoted -- publishing it would put an adapter-internal worksheet decoder on the outbound.google facade, where any package could bind to a shape that exists to serve one pull implementation. The public type the same test needs (RowSetEdit) WAS already exported and is now imported from the facade, so this entry covers only the private decoder."
             },
             {
-                "importer_path": "src/cadrumo/application/tests/test_error_class_registration.py",
-                "occurrence": 1,
-                "target_mod": "cadrumo.application.auth.diagnostics",
-                "imported_names": ["_payload"],
-                "reason": "White-box test of the private auth-diagnostics payload builder's except-clause narrowing. Internal diagnostics helper, not a reusable public primitive."
-            },
-            {
-                "importer_path": "src/cadrumo/application/tests/test_error_class_registration.py",
-                "occurrence": 1,
-                "target_mod": "cadrumo.application.auth.sessions",
-                "imported_names": ["_session_metadata_datetime"],
-                "reason": "White-box test of the private session-metadata datetime coercion helper's except-clause narrowing. Internal parsing helper, not a reusable public primitive."
-            },
-            {
                 "importer_path": "src/cadrumo/application/tests/test_import_dedup_path_parity.py",
                 "occurrence": 1,
                 "target_mod": "cadrumo.application.ledger._actions_import",
