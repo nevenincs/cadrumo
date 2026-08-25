@@ -23,10 +23,15 @@ from dev.registry.filing_export_proof import (
     canonical_live_filing_export_proof_authority,
 )
 
-from ....application.registry import compose_filing_export_coverage, law_selection_coordinate
+from ....application.registry import compose_filing_export_coverage
 from ....core import Modelo, RegistryAuthorityGrade
 from ....core.resources import bundled_path
-from ....domain.calculations.registry import ValidatedRegistryAuthority, bundled_authority
+from ....domain.calculations.registry import (
+    ValidatedRegistryAuthority,
+    bundled_authority,
+    coverage_assessment_horizon,
+    revision_selection_coordinates,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -102,14 +107,18 @@ def test_every_filing_grade_revision_has_one_law_selected_export_limb_and_an_hon
     }
     assert coordinates <= set(limbs)
 
+    assessment_horizon = coverage_assessment_horizon(authority.catalogues)
     for modelo, revision in filing_revisions:
-        filing_year, period = law_selection_coordinate(revision)
-        inspection = authority.inspect_revision(
-            modelo.id,
-            filing_year=filing_year,
-            period=period,
-        )
-        assert inspection.revision_id == revision.id
+        for filing_year, period in revision_selection_coordinates(
+            revision,
+            assessment_horizon=assessment_horizon,
+        ):
+            inspection = authority.inspect_revision(
+                modelo.id,
+                filing_year=filing_year,
+                period=period,
+            )
+            assert inspection.revision_id == revision.id
 
         limb = limbs[(modelo.id, revision.id)]
         assert limb.name == "filing_export"
@@ -176,20 +185,19 @@ def test_modelo_353_layout_gap_is_selected_by_its_own_law_coordinate_and_cannot_
         if limb.refusal is not None and limb.refusal.disposition.work_item == f"{_EXPORT_OWNER}:filing-layout"
     )
     successor_revision = next(revision for revision, _limb in revision_limbs if revision.id != gap_revision.id)
-    gap_year, gap_period = law_selection_coordinate(gap_revision)
-    successor_year, successor_period = law_selection_coordinate(successor_revision)
+    assessment_horizon = coverage_assessment_horizon(authority.catalogues)
+    gap_coordinates = revision_selection_coordinates(gap_revision, assessment_horizon=assessment_horizon)
+    successor_coordinates = revision_selection_coordinates(successor_revision, assessment_horizon=assessment_horizon)
 
-    assert authority.inspect_revision(
-        modelo.id,
-        filing_year=gap_year,
-        period=gap_period,
-    ).revision_id == gap_revision.id
-    assert authority.inspect_revision(
-        modelo.id,
-        filing_year=successor_year,
-        period=successor_period,
-    ).revision_id == successor_revision.id
-    assert (gap_year, gap_period) != (successor_year, successor_period)
+    assert all(
+        authority.inspect_revision(modelo.id, filing_year=filing_year, period=period).revision_id == gap_revision.id
+        for filing_year, period in gap_coordinates
+    )
+    assert all(
+        authority.inspect_revision(modelo.id, filing_year=filing_year, period=period).revision_id == successor_revision.id
+        for filing_year, period in successor_coordinates
+    )
+    assert not set(gap_coordinates).intersection(successor_coordinates)
 
     assert gap_limb.outcome == "refused"
     assert gap_limb.refusal is not None

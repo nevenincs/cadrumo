@@ -42,13 +42,13 @@ from ...application.ledger import DocumentTranscription, PurchaseInvoiceEvidence
 from ...core import FieldOrigin, ImageMediaType
 from ...core.config import load_settings
 from ...core.decimal import coerce_finite_european_decimal
-from ...tests._llm_vision_evidence_support import (
+from ...tests.llm_vision_evidence_support import (
     _json_array,
     _json_object,
     _png_image,
     _run_against_loopback_ollama,
 )
-from ...tests._llm_vision_evidence_support import profile as profile
+from ...tests.llm_vision_evidence_support import profile as profile
 from ...tests.secure_sql import TestRuntimeProfile
 from .._evidence_draft_vision import (
     VISION_TRANSCRIPTION_PROMPT,

@@ -54,6 +54,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _CURRENT = "s39-current-profile-passphrase"
 _REPLACEMENT = "s39-replacement-profile-passphrase"
+
+
 def _supervisor(
     root: Path,
     *,
@@ -64,9 +66,7 @@ def _supervisor(
 ) -> OperationSupervisor:
     journal = OperationJournalRepository(storage_root=root)
     operands = (
-        None
-        if profile_objects is None
-        else operation_secure_reference_repository(objects=profile_objects)  # type: ignore[arg-type]
+        None if profile_objects is None else operation_secure_reference_repository(objects=profile_objects)  # type: ignore[arg-type]
     )
     return OperationSupervisor(
         registry=OperationRegistry(

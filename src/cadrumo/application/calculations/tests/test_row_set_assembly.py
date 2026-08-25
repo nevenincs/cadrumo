@@ -26,6 +26,7 @@ from .._row_set_assembly import (
     assemble_donativo_observations,
     assemble_foreign_asset_observations,
     assemble_observations_for_grouping,
+    assemble_observations_for_snapshot,
     assemble_refund_observations,
     assemble_related_party_observations,
     assemble_withholding_observations,
@@ -36,6 +37,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def _modelo(modelo_id: str, revision_id: str):
     return resources().modelos.get(modelo_id).revisions[revision_id]
+
+
+def _snapshot(modelo_id: str, *, filing_year: int, period: str):
+    return resources().modelos.authority.snapshot(
+        modelo_id,
+        filing_year=filing_year,
+        period=period,
+    )
 
 
 def test_assemble_withholding_groups_two_perceptors_into_two_observations() -> None:
@@ -325,6 +334,48 @@ def test_assemble_observations_for_grouping_dispatches_per_donativo_donor() -> N
     obs = observations[0]
     assert isinstance(obs, DonativoDonorObservation)
     assert obs.donor_tax_id == "11111111A"
+
+
+def test_snapshot_command_uses_the_validated_revision_and_filing_year() -> None:
+    """The application command reaches the existing assembler only via a snapshot."""
+    snapshot = _snapshot("190", filing_year=2025, period="0A")
+    cells = (
+        RowSetCellEdit(binding="modelo-190-perceptor-row-nif", row_index=1, value="11111111A"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-clave", row_index=1, value="A"),
+    )
+
+    source_kind, observations = assemble_observations_for_snapshot(
+        "per_perceptor",
+        cells,
+        snapshot,
+    )
+
+    assert snapshot.revision.id == "2025-y-siguientes"
+    assert source_kind == "withholding"
+    assert observations[0].source_id == "detalle:per_perceptor:row-1"
+    assert observations[0].transaction_date == date(2025, 12, 31)
+
+
+def test_snapshot_command_preserves_the_dispatcher_unknown_grouping_refusal() -> None:
+    snapshot = _snapshot("190", filing_year=2025, period="0A")
+
+    with pytest.raises(RegistryValidationError) as excinfo:
+        assemble_observations_for_snapshot("operator_clave", (), snapshot)
+
+    assert str(excinfo.value) == "application.calculations.row_set.errors.grouping_has_no_assembler"
+    assert (excinfo.value.context or {})["grouping"] == "operator_clave"
+
+
+def test_snapshot_command_preserves_the_dispatcher_invalid_row_refusal() -> None:
+    snapshot = _snapshot("190", filing_year=2025, period="0A")
+    cells = (
+        RowSetCellEdit(binding="modelo-190-perceptor-row-nif", row_index=1, value="12345678A"),
+    )
+
+    with pytest.raises(RegistryValidationError) as excinfo:
+        assemble_observations_for_snapshot("per_perceptor", cells, snapshot)
+
+    assert str(excinfo.value) == "application.calculations.row_set.errors.percepcion_clave_missing"
 
 
 def test_assemble_returns_empty_for_empty_cells() -> None:
