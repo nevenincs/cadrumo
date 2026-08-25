@@ -3,8 +3,6 @@ tags:
   - '#plan'
   - '#tui-architecture'
 date: '2026-08-11'
-modified: '2026-08-25'
-body_hash: 'sha256:2f5f491a9df0ca06348119a51cfcc4cfbc2b861c94704ee507c1f8e10dcadcca'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -13,6 +11,8 @@ related:
   - '[[2026-08-24-modelo-edit-contract-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
+modified: '2026-08-25'
+body_hash: 'sha256:f9950b54c471395b462a366e4cb2f7117c4966b9d5fda77c176eb48cc3ff8295'
 ---
 
 # `tui-architecture` plan
@@ -164,6 +164,15 @@ Implement the read-only Workspace V1 contract, stamped contributing ports, gener
 - [x] `W03.P20.S125` - Define strict Workspace V1 version headers, visible and exact target admission, inspection and graded result arms, projection, bounded facets, schema and provenance records, capability and refusal families, locale summary, and safe read baseline without mutation authority; `src/cadrumo/application/modelo/_workspace_models.py`.
 - [x] `W03.P20.S126` - Define ModeloWorkspaceProducerContractV1, stamped contributing projections, owner-scoped ABA-safe epochs, atomic projection-plus-epoch ports, and the generated producer-contract inventory that rejects missing, duplicate, or stale contributors; `src/cadrumo/application/modelo/_workspace_producers.py`.
 - [x] `W03.P20.S127` - Generate the exhaustive registry model-and-field classification manifest from validated public schema types, classifying every reachable leaf and discriminator branch exactly once as projected, canonically derived, or backend-only with destination, owner, and bounded reason; `src/cadrumo/application/modelo/_workspace_manifest.py`.
+- [ ] `W03.P20.S159` - Expose the validated-registry atomic Workspace port with an owner-local monotonic ABA-safe epoch and S126 capture contract, directly at its canonical owner without a shim, re-export, or private grammar; `src/cadrumo/application/registry/__init__.py`.
+- [ ] `W03.P20.S160` - Expose the canonical work-target atomic Workspace port with an owner-local monotonic ABA-safe epoch and S126 capture contract, directly at its canonical owner without a shim, re-export, or private grammar; `src/cadrumo/application/modelo/_work_addressing.py`.
+- [ ] `W03.P20.S161` - Expose the canonical bounded ModeloWorkReview atomic Workspace port with an owner-local monotonic ABA-safe epoch and S126 capture contract, directly at its canonical owner without a shim, re-export, or private grammar; `src/cadrumo/application/modelo/_work_review.py`.
+- [ ] `W03.P20.S162` - Expose the canonical readiness atomic Workspace port with an owner-local monotonic ABA-safe epoch and S126 capture contract, directly at its canonical owner without a shim, re-export, or private grammar; `src/cadrumo/application/state_projection.py`.
+- [ ] `W03.P20.S163` - Expose the canonical registry-closure atomic Workspace port with an owner-local monotonic ABA-safe epoch and S126 capture contract, directly at its canonical owner without a shim, re-export, or private grammar; `src/cadrumo/application/registry/_closure.py`.
+- [ ] `W03.P20.S164` - Expose the canonical calculation/materialization and source-graph safe atomic Workspace port with an owner-local monotonic ABA-safe epoch and S126 capture contract, directly at its canonical owner without a shim, re-export, or private grammar; `src/cadrumo/application/modelo/_calculation_helpers.py`.
+- [ ] `W03.P20.S165` - Expose the canonical locale-catalogue atomic Workspace port with an owner-local monotonic ABA-safe epoch and S126 capture contract, directly at its canonical owner without a shim, re-export, or private grammar; `src/cadrumo/locales/`.
+- [ ] `W03.P20.S166` - Expose the live field-manifest atomic Workspace port with an owner-local monotonic ABA-safe epoch and S126 field-manifest capture contract, directly at its canonical owner without a shim, re-export, or private grammar; `src/cadrumo/application/modelo/_workspace_manifest.py`.
+- [ ] `W03.P20.S167` - Prove the owner-port conformance fixed point for all eight atomic Workspace ports under S126 capture, refusing stale, duplicate, missing, unclassified, torn, or ABA coordinates without a shim, re-export, or private grammar; `src/cadrumo/application/modelo/_workspace_producers.py`.
 - [ ] `W03.P20.S128` - Assemble Workspace projections only from stamped producer captures and canonical validated-registry, ModeloWorkReview, operator-state readiness, closure, calculation-revision, and source-graph owners, enforcing exact target admission, bounded materialization, two-pass epoch validation, locale selection, and stable safe-read baselines without parsing registry grammar; `src/cadrumo/application/modelo/_workspace_projection.py`.
 - [ ] `W03.P20.S129` - Export the sole frontend-neutral Workspace request, projection, capability, refresh-target, refusal, and producer-contract family without exposing registry grammar or persistence types; `src/cadrumo/application/modelo/__init__.py`.
 - [ ] `W03.P20.S130` - Prove strict Workspace round trips, exhaustive manifest coverage, exact ModeloWorkReview parity, readiness and closure parity, static versus graded admission, epoch and ABA refusal, locale behavior, bounded non-retention, forbidden-import boundaries, and a semantic-plus-exact census that fails duplicate Workspace authorities; `src/cadrumo/application/modelo/tests/test_workspace_projection.py`.
