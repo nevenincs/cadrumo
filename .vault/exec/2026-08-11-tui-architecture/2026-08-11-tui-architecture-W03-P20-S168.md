@@ -5,60 +5,11 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:7b30a55e640f4ba3fa750357754ef2c75e2dbe13fa210fcd41d33f3c3644a67c'
+body_hash: 'sha256:9d7181ce0d9471f795c42c9a9e907b70acf1fe0ac42f98f6e5ee9d5957a05177'
 step_id: 'S168'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S168 and 2026-08-11-tui-architecture-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Replace the strict active-profile pointer record and IO owner with one atomic absent-or-selected observation/current-coordinate contract that persists its monotonic transition revision under the canonical custody-root lock, promote the core record/coordinate surface and sole user-profile transaction through their canonical facades, atomically migrate every exact direct reader and transaction consumer, and prove idempotence, cross-process A -> B -> A, restore/clear lineage, and zero dual reader/writer, compatibility reader, shim, alias, fallback, or re-export bridge and ## Scope
-
-- `src/cadrumo/core/_bucket_pointer.py`
-- `src/cadrumo/core/_bucket_pointer_io.py`
-- `src/cadrumo/core/__init__.py`
-- `src/cadrumo/core/config.py`
-- `src/cadrumo/application/storage_write_policy.py`
-- `src/cadrumo/application/config_reset.py`
-- `src/cadrumo/application/auth/_operator_scope.py`
-- `src/cadrumo/application/user_profile/_profile_pointer_transaction.py`
-- `src/cadrumo/application/user_profile/__init__.py`
-- `src/cadrumo/application/workflow/_profile_health.py`
-- `src/cadrumo/application/user_profile/_login_session.py`
-- `src/cadrumo/application/user_profile/_lifecycle.py`
-- `src/cadrumo/application/user_profile/_custody_service.py`
-- `src/cadrumo/application/user_profile/_custody_repository.py`
-- `src/cadrumo/entrypoints/cli/_config/_profile_delete.py`
-- `and focused pointer-record/facade/direct-reader/transaction concurrency tests` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Replace the strict active-profile pointer record and IO owner with one atomic absent-or-selected observation/current-coordinate contract that persists its monotonic transition revision under the canonical custody-root lock, promote the core record/coordinate surface and sole user-profile transaction through their canonical facades, atomically migrate every exact direct reader and transaction consumer, and prove idempotence, cross-process A -> B -> A, restore/clear lineage, and zero dual reader/writer, compatibility reader, shim, alias, fallback, or re-export bridge
 
 ## Scope
@@ -78,33 +29,26 @@ related:
 - `src/cadrumo/application/user_profile/_custody_service.py`
 - `src/cadrumo/application/user_profile/_custody_repository.py`
 - `src/cadrumo/entrypoints/cli/_config/_profile_delete.py`
-- `and focused pointer-record/facade/direct-reader/transaction concurrency tests`
+- Focused pointer-record, facade, direct-reader, transaction, reset, and handover tests.
 
 ## Description
 
-- Replace the selected-only pointer payload with a strict v2 absent-or-selected
-  record carrying its persisted `transition_revision`.
-- Make the custody-root transaction the sole production transition authority and
-  retain clear operations as absent tombstones.
-- Move direct consumers, durable reset and handover witnesses, and public facade
-  exports to the canonical observation and coordinate.
-- Delete the duplicate custody snapshot reader, byte-CAS facade, byte restore and
-  unlink clear APIs, and compatibility reader paths.
-- Add focused lineage, spawned ABA, no-follow, idempotence, facade fixed-point,
-  v1-rejection, and consumer-coordinate coverage.
+- Replace the selected-only payload with a strict v2 absent-or-selected record carrying `transition_revision`.
+- Make the custody-root transaction the sole production mutation authority; clear writes an absent tombstone and idempotent states retain their coordinate.
+- Move direct readers, durable reset witnesses, custody journals, login handovers, Settings cache identity, and public facades to the canonical observation.
+- Delete duplicate custody snapshot IO, byte-CAS facade, exact-byte restore, unlink clear, and compatibility-reader paths.
+- Prove strict v1 rejection, no-follow pointer refusal, idempotence, clear and restore lineage, real spawned A-to-B-to-A succession, stale-coordinate refusal, facade ownership, and sole-writer source ownership.
 
 ## Outcome
 
-Implementation is in `d64845fbf1a`; the step remains open while the required
-follow-up verification fixes and shared-worktree import validation complete.
+`d64845fbf1a` delivered the implementation. During shared-history advance, concurrent commit `03d2b3caef1` accidentally swept the five independently verified closure corrections into its operations-relocation change. This closure records their verification without rewriting shared history: it removes an unused import, makes the ABA reset fixture unambiguous, expects the public transaction error, uses public facade imports, and asserts failed-login rollback as A/r to B/r+1 to A/r+2.
+
+Focused verification passed: core pointer and authority coverage, 35 custody/authority unit tests with 3 correctly marker-deselected, 22 reset tests, and 26 non-keychain handover integration tests. Collection found 71 requested tests and 38 marker deselections. Scoped Ruff passed for the full pointer surface and every closure correction; scoped basedpyright passed for all changed pointer sources without inherited diagnostics and for every correction file. Vault feature validation completed without errors. RAG and exact source census found one production low-level writer, the canonical transaction, and no retired capture, restore, clear, byte-CAS, duplicate-snapshot, or raw-byte handover paths.
 
 ## Notes
 
-- `d64845fbf1a` landed before the final verification pass. A transparent
-  follow-up commit will contain only the test/static corrections identified by
-  that pass and this execution/plan closure material; shared history is not
-  rewritten.
-- The `filing/_review.py` and `flows/_definition.py` changes bundled in
-  `d64845fbf1a` are hashing refactors, not pointer-coordinate consumers. They
-  are recorded here as an accidental scope sweep for separate review; this step
-  neither depends on nor extends them.
+`d64845fbf1a` landed before its final verification pass. Concurrent `03d2b3caef1` then swept the five resulting test/static corrections during a shared-worktree operations relocation. This closure is deliberately limited to the execution record and CLI plan check; shared commits are not rewritten or restaged.
+
+The `filing/_review.py` and `flows/_definition.py` changes bundled in `d64845fbf1a` are unrelated `content_hash_hex` refactors rather than pointer-coordinate consumers. They are an accidental scope sweep for separate review and are neither extended nor reverted here.
+
+Repository-wide import hygiene reached 77 passing checks before two external failures: a transient TUI test syntax error and dangling imports during the concurrent operations-module relocation. Neither diagnostic named an S168 path. Later focused collection completed after the registry/auth worktree settled. Full basedpyright still reports inherited, pre-S168 diagnostics in `core/config.py`, `workflow/_profile_health.py`, and `_lifecycle.py`; the S168-specific subset is clean.
