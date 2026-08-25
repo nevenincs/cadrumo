@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#source-casilla-integration'
 date: '2026-08-22'
+modified: '2026-08-25'
+body_hash: 'sha256:93707130b0e7d8eb21b041de243b618337159e3c78bcd7361980acd499c9d79b'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -15,8 +17,6 @@ related:
   - '[[2026-08-23-inventory-casilla-grounding-research]]'
   - '[[2026-08-23-amortization-casilla-grounding-research]]'
   - '[[2026-08-25-source-casilla-integration-m296-row-source-grounding-research]]'
-modified: '2026-08-25'
-body_hash: 'sha256:0508af23ae1924f1f46294466dff579a96a53cc2de6ea4d0405f21989ec249c8'
 ---
 
 <!-- RETIRED: S52, S191, S193 -->
@@ -346,7 +346,7 @@ Adjudicate, connect or close, persist, and review the M193 row source.
 - [x] `W05.P18.S104` - adjudicate M193 contributor-expense semantics and source ownership from official evidence; `.vault/research/2026-08-25-source-casilla-integration-m193-row-source-grounding-research.md`.
 - [x] `W05.P18.S105` - recast the Modelo 193 contributor-expense source as a bounded terminal ingress-blocked deferral pending canonical gasto193_contributor alignment, non-synthetic durable contributor and representative identity, a secure persistence owner, and resolver/provenance/replay/review plus supported repeated-record export proof, while preserving direct manual gasto casillas and the distinct withholding repository; `src/cadrumo/_data/source_connectivity/census.toml; dev/source_connectivity/tests/test_m193_deferral.py`.
 - [x] `W05.P18.S106` - prove the Modelo 193 contributor-expense source remains refused at calculation ingress and unavailable to connected encrypted persistence, provenance, replay, review, or source-owned repeated-record export until S105's reopening predicate is satisfied, while direct manual gasto casillas and the distinct withholding lifecycle remain available without any M193 expense resolver claim; `dev/source_connectivity/tests/test_m193_deferral.py`.
-- [ ] `W05.P18.S107` - close the M193 census disposition and obtain formal review; `.vault/audit/2026-08-22-m193-row-source-code-review.md`.
+- [x] `W05.P18.S107` - formally close the reviewed M193 contributor-expense ingress-blocked census disposition, retain its owner, expiry, reopening predicate, direct manual gasto and distinct withholding boundaries, no-connected-route proof, and hand off independent final review; `.vault/exec/2026-08-22-source-casilla-integration/2026-08-22-source-casilla-integration-W05-P18-S107.md`.
 
 ### Phase `W05.P19` - resolve M296 withholding rows
 

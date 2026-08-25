@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:f34b6168a967e0aaf989d3c7d64555662cd18e67f82ce9a1da0e9b2786361beb'
+body_hash: 'sha256:22bc8acda3f6f23e9f5fa86cb1671f52016303605ef6b08735dc96804c0ef296'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -126,6 +126,8 @@ related:
   - '[[2026-08-22-source-casilla-integration-W05-P18-S104]]'
   - '[[2026-08-22-source-casilla-integration-W05-P18-S105]]'
   - '[[2026-08-22-source-casilla-integration-W05-P18-S106]]'
+  - '[[2026-08-22-source-casilla-integration-W05-P18-S107]]'
+  - '[[2026-08-22-source-casilla-integration-W05-P18-summary]]'
   - '[[2026-08-22-source-casilla-integration-W05-P19-S108]]'
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-22-source-casilla-integration-census-code-review-audit]]'
@@ -399,6 +401,8 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-W05-P18-S104` - adjudicate M193 contributor-expense semantics and source ownership from official evidence
 - `2026-08-22-source-casilla-integration-W05-P18-S105` - recast the Modelo 193 contributor-expense source as a bounded terminal ingress-blocked deferral pending canonical gasto193_contributor alignment, non-synthetic durable contributor and representative identity, a secure persistence owner, and resolver/provenance/replay/review plus supported repeated-record export proof, while preserving direct manual gasto casillas and the distinct withholding repository
 - `2026-08-22-source-casilla-integration-W05-P18-S106` - prove the Modelo 193 contributor-expense source remains refused at calculation ingress and unavailable to connected encrypted persistence, provenance, replay, review, or source-owned repeated-record export until S105's reopening predicate is satisfied, while direct manual gasto casillas and the distinct withholding lifecycle remain available without any M193 expense resolver claim
+- `2026-08-22-source-casilla-integration-W05-P18-S107` - close the M193 census disposition and obtain formal review
+- `2026-08-22-source-casilla-integration-W05-P18-summary` - `source-casilla-integration` `W05.P18` summary
 - `2026-08-22-source-casilla-integration-W05-P19-S108` - adjudicate M296 withholding-row semantics and source ownership from official evidence
 
 ### plan
