@@ -154,7 +154,9 @@ def _ejercicio_scoped_designs() -> frozenset[str]:
         selector_start = (
             selector.years[0]
             if selector is not None and selector.years
-            else selector.year_from if selector is not None else None
+            else selector.year_from
+            if selector is not None
+            else None
         )
         selector_declares_bound_axis = isinstance(start, date) and selector_start == start.year
         if selector_declares_bound_axis or (isinstance(start, date) and (start.month, start.day) == (1, 1)):
