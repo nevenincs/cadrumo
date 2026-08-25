@@ -3996,7 +3996,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "d4dc2a54266d11bb6ec770a5153d9cc578d405e72bb4d6b5eca44bd12d2378b5",
+          "calculation_revision_id": "d90b835e179f0b786c24ffef906024994c87b011bd6568f00bfa8af0a827ac37",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -4116,7 +4116,6 @@
             "98": "0",
             "99": "0",
             "decl.ejercicio": "2026",
-            "decl.periodo": "0",
             "iva.autoconsumo.promotor.base": "0",
             "iva.autoconsumo.promotor.cuota": "0.00",
             "iva.autorepercutido.interior.deducible": "0",
@@ -6685,7 +6684,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "0"
+              "value": "1T"
             },
             {
               "absent_by_design": false,
@@ -7496,30 +7495,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision d4dc2a54266d11bb6ec770a5153d9cc578d405e72bb4d6b5eca44bd12d2378b5 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision d4dc2a54266d11bb6ec770a5153d9cc578d405e72bb4d6b5eca44bd12d2378b5`.",
-          "source_provenance": [
-            {
-              "binding_source": "ledger_iva_aggregation",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "source_kind": "ledger_iva_aggregation",
-              "source_ref": "transaction:71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
-            },
-            {
-              "binding_source": "ledger_iva_aggregation",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "source_kind": "ledger_iva_aggregation",
-              "source_ref": "transaction:e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
-            },
-            {
-              "binding_source": "prorrata_regularizacion",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "source_kind": "prorrata_regularizacion",
-              "source_ref": "303:2026:1T,2T,3T,4T:prorrata-current-year-values"
-            }
-          ],
+          "saved_confirmation": "Saved as draft calculation revision d90b835e179f0b786c24ffef906024994c87b011bd6568f00bfa8af0a827ac37 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision d90b835e179f0b786c24ffef906024994c87b011bd6568f00bfa8af0a827ac37`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
