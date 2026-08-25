@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from .._bucket_pointer import BucketPointer
-from .._bucket_pointer_io import read_pointer, write_pointer
+from ..bucket_pointer import BucketPointer
+from ..bucket_pointer import read_pointer, write_pointer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

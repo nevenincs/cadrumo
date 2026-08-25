@@ -246,6 +246,7 @@ class OperationJournalRepository(OperationJournal, OperationEventStream, Operati
     """Async operation-journal port over the atomic filesystem substrate."""
 
     def __init__(self, *, storage_root: Path) -> None:
+        """Bind the repository to the configured secure storage root."""
         self._repository = _SnapshotJournalRepository(storage_root=storage_root)
 
     @override

@@ -25,7 +25,7 @@ Exactly ONE carve-out is sanctioned: ``cadrumo.core.config.override_settings``.
 It is a scoped context manager (not a swappable slot) backed by a
 ``contextvars.ContextVar`` named ``_settings_override`` — NOT an ``_override_*``
 global, so rule 1 never touches it — and it has real production callers
-(``application.auth._sessions``, ``_operator_scope``, ``_credential_resolution``,
+(``application.auth.sessions``, ``operator_scope``, ``credentials``,
 ``application.workflow._profile_health``) that scope active-profile settings for
 one call tree. The carve-out is pinned to exactly one function name in exactly
 one module, so a second ``override_*`` cannot hide behind it: an

@@ -15,9 +15,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 
-from ......application.auth import (
-    AuthProvider as AuthProvider,
-)
+from ......application.auth.providers import AuthProvider as AuthProvider
 from ......application.auth_credentials import unnamed_certificate_credentials
 from ......core import AuthProviderDescription as AuthProviderDescription
 from ......core import AuthProviderKind as AuthProviderKind

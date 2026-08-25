@@ -114,15 +114,6 @@ if TYPE_CHECKING:
     )
     from ._auth_provider import AuthProviderDescription, AuthProviderKind, ClaveMovilRoute
     from ._authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
-    from ._bucket_pointer import BucketPointer
-    from ._bucket_pointer_io import (
-        pointer_path,
-        read_pointer,
-        require_active_bucket_id,
-        resolve_active_bucket_id,
-        resolve_repository_bucket_id,
-        write_pointer,
-    )
     from ._calculation_route import ModeloCalculationRouteId
     from ._capabilities import ServiceCapability
     from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
@@ -618,7 +609,6 @@ __all__: list[str] = [
     "AuthProviderKind",
     "BindingAggregationOp",
     "BindingSourceKind",
-    "BucketPointer",
     "CalculationSourceLineageRole",
     "CasillaId",
     "CasillaValueKind",
@@ -870,19 +860,15 @@ __all__: list[str] = [
     "permitted_amendment_kind_values",
     "pid_is_alive",
     "platform_user_data_root",
-    "pointer_path",
     "post_filing_event_is_actionable",
     "project_m210_tipo_renta_code",
     "provenance_stamp_transport",
     "provenance_transport_label",
-    "read_pointer",
     "read_toml",
     "record_design_epoch_year",
     "registry_period_kind",
     "render_corpus_sidecar_text",
-    "require_active_bucket_id",
     "require_optional_extra",
-    "resolve_active_bucket_id",
     "resolve_amendment_kind_regime",
     "resolve_anchored_extracted_unit",
     "resolve_notificacion_estado_servicio",
@@ -908,7 +894,6 @@ __all__: list[str] = [
     "unlink_lockfile",
     "validated_casilla_id",
     "validated_casilla_id_map",
-    "write_pointer",
 ]
 
 
@@ -960,7 +945,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "BindingAggregationOp": ".aggregation",
     "BindingSourceKind": ".aggregation",
     "CalculationSourceLineageRole": ".aggregation",
-    "BucketPointer": "._bucket_pointer",
     "COMPATIBILITY_REGIME": ".compatibility_lifecycle",
     "CasillaId": "._casilla_id",
     "CasillaValueKind": "._casilla_value_kind",
@@ -1277,22 +1261,17 @@ _LAZY_EXPORTS: dict[str, str] = {
     "permitted_amendment_kind_values": "._amendment_kind_regime",
     "pid_is_alive": "._pid_liveness",
     "platform_user_data_root": "._config_state_root",
-    "pointer_path": "._bucket_pointer_io",
     "post_filing_event_is_actionable": "._post_filing_event",
     "project_m210_tipo_renta_code": "._irnr",
     "provenance_stamp_transport": "._provenance_stamp",
     "provenance_transport_label": "._provenance_stamp",
-    "read_pointer": "._bucket_pointer_io",
     "read_toml": "._toml",
     "registry_period_kind": "._period",
     "render_corpus_sidecar_text": "._corpus_sidecar",
-    "require_active_bucket_id": "._bucket_pointer_io",
     "require_optional_extra": "._optional_extras",
-    "resolve_active_bucket_id": "._bucket_pointer_io",
     "resolve_amendment_kind_regime": "._amendment_kind_regime",
     "resolve_anchored_extracted_unit": ".corpus_text",
     "resolve_notificacion_estado_servicio": "._notificacion_estado_servicio",
-    "resolve_repository_bucket_id": "._bucket_pointer_io",
     "result_disposition_casilla_ids": "._result_disposition",
     "result_disposition_is_refund": "._result_disposition",
     "result_disposition_requires_bank_account": "._result_disposition",
@@ -1315,7 +1294,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "unlink_lockfile": "._lockfile_unlink",
     "validated_casilla_id": "._casilla_id",
     "validated_casilla_id_map": "._casilla_id",
-    "write_pointer": "._bucket_pointer_io",
 }
 
 

@@ -9,7 +9,8 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from ......application.auth import AuthProvider, load_auth_diagnostic
+from ......application.auth.diagnostics import load_auth_diagnostic
+from ......application.auth.providers import AuthProvider
 from ......application.auth_credentials import unnamed_certificate_credentials
 from ......core import AuthProviderKind
 from ......core.async_cleanup import AsyncResourceCleanupError

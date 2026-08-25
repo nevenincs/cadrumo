@@ -13,7 +13,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def test_auth_provider_contract_has_one_public_home() -> None:
     from .. import core
     from ..adapters.outbound.aeat import auth as adapter_auth
-    from ..application import auth as application_auth
+    from ..application.auth.providers import AuthProvider
     from ..core import config
 
     assert core.AuthProviderKind.__module__ == "cadrumo.core._auth_provider"
@@ -21,8 +21,7 @@ def test_auth_provider_contract_has_one_public_home() -> None:
     assert not hasattr(core, "AuthProviderKindSetting")
     assert not hasattr(config, "AuthProviderKind")
     assert not hasattr(config, "AuthProviderKindSetting")
-    assert not hasattr(application_auth, "AuthProviderKind")
-    assert not hasattr(application_auth, "AuthProviderDescription")
+    assert AuthProvider.__module__ == "cadrumo.application.auth.providers"
     assert not hasattr(adapter_auth, "AuthProviderKind")
     assert not hasattr(adapter_auth, "AuthProviderDescription")
 

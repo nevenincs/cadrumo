@@ -1,9 +1,10 @@
-"""Atomic current-record IO for the active-profile pointer.
+"""Strict current-only record for the active-profile pointer.
 
-This module owns exactly one current-format record parser and atomic writer.
-The application pointer transaction owns cross-process transition serialization
-through the custody-root lock; this core boundary neither opens that lock nor
-implements profile lifecycle policy.
+The pointer is one durable, plaintext coordination record under the storage
+root. It names either a selected bucket or an explicit absence and carries the
+monotonic transition coordinate used by every pointer consumer. The record is
+not a profile manifest or a profile-lifecycle assertion: it only records the
+currently selected bucket.
 """
 
 from __future__ import annotations
@@ -12,18 +13,84 @@ import os
 import stat
 import sys
 import time
+import tomllib
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final, Literal
 
-from ._bucket_pointer import BucketPointer
-from ._fsync import fsync_parent_dir
-from ._link_safety import is_link_like
-from ._windows_contention import is_windows_contention
+from pydantic import BaseModel, Field, model_validator
+
+from ._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .identity import BucketId
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable
 
     from .errors import CadrumoError
+
+POINTER_SCHEMA_VERSION: Final[Literal[2]] = 2
+
+
+class BucketPointer(BaseModel):
+    """One strict active-profile selection and its durable transition revision.
+
+    ``selection`` is deliberately explicit because TOML has no null scalar.
+    A selected record carries exactly one bucket id; an absent record is the
+    persisted tombstone written by clear. The physically absent initial file
+    observes as an absent record at revision zero and is never accepted as an
+    on-disk compatibility format.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    selection: Literal["absent", "selected"]
+    bucket_id: BucketId | None = None
+    transition_revision: int = Field(ge=0)
+    schema_version: Literal[2]
+
+    @model_validator(mode="after")
+    def _validate_selection(self) -> BucketPointer:
+        if (self.selection == "selected") != (self.bucket_id is not None):
+            raise ValueError("pointer selection and bucket id must agree")
+        return self
+
+    @classmethod
+    def absent(cls, *, transition_revision: int) -> BucketPointer:
+        """Construct the explicit absent-selection tombstone."""
+        return cls(
+            selection="absent",
+            bucket_id=None,
+            transition_revision=transition_revision,
+            schema_version=POINTER_SCHEMA_VERSION,
+        )
+
+    @classmethod
+    def selected(cls, *, bucket_id: str, transition_revision: int) -> BucketPointer:
+        """Construct one selected current-format record."""
+        return cls(
+            selection="selected",
+            bucket_id=bucket_id,
+            transition_revision=transition_revision,
+            schema_version=POINTER_SCHEMA_VERSION,
+        )
+
+    def to_toml(self) -> str:
+        """Return the deterministic strict current-format TOML payload."""
+        lines = [f'selection = "{self.selection}"']
+        if self.bucket_id is not None:
+            bucket_id_escaped = self.bucket_id.replace("\\", "\\\\").replace('"', '\\"')
+            lines.append(f'bucket_id = "{bucket_id_escaped}"')
+        lines.extend(
+            (
+                f"transition_revision = {self.transition_revision}",
+                f"schema_version = {self.schema_version}",
+            )
+        )
+        return "\n".join(lines) + "\n"
+
+    @classmethod
+    def from_toml(cls, text: str) -> BucketPointer:
+        """Strictly parse a current-format pointer record."""
+        return cls.model_validate(tomllib.loads(text))
 
 
 def pointer_path(root: Path) -> Path:
@@ -52,15 +119,11 @@ def _pointer_entry_signature(target: Path) -> tuple[str, int, int] | None:
 def _read_pointer_bytes(target: Path) -> bytes | None:
     """Read one complete record, waiting out a Windows replacement race."""
     def read_once() -> bytes:
-        # Refuse a discovered reparse point before open; O_NOFOLLOW and fstat
-        # close the POSIX race and preserve the same no-follow boundary used by
-        # destructive custody transitions.
+        from ._link_safety import is_link_like
+
         if is_link_like(target):
             raise OSError("active-profile pointer must not be link-like")
-        descriptor = os.open(
-            target,
-            os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0),
-        )
+        descriptor = os.open(target, os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0))
         try:
             metadata = os.fstat(descriptor)
             if not stat.S_ISREG(metadata.st_mode) or metadata.st_size > _POINTER_MAXIMUM_BYTES:
@@ -77,6 +140,8 @@ def _read_pointer_bytes(target: Path) -> bytes | None:
             return read_once()
         except FileNotFoundError:
             return None
+    from ._windows_contention import is_windows_contention
+
     started = time.monotonic()
     deadline = started + _POINTER_READ_RETRY_SECONDS
     ceiling = started + _POINTER_READ_MAX_WAIT_SECONDS
@@ -86,24 +151,19 @@ def _read_pointer_bytes(target: Path) -> bytes | None:
             return read_once()
         except FileNotFoundError:
             return None
-        except PermissionError:
+        except PermissionError as exc:
             now = time.monotonic()
             current = _pointer_entry_signature(target)
             if current != signature:
                 signature = current
                 deadline = now + _POINTER_READ_RETRY_SECONDS
-            if now >= deadline or now >= ceiling:
+            if not is_windows_contention(exc) or now >= deadline or now >= ceiling:
                 raise
             time.sleep(_POINTER_READ_POLL_SECONDS)
 
 
 def read_pointer(root: Path) -> BucketPointer:
-    """Observe the optional selection and durable current coordinate once.
-
-    A fresh root has no record and therefore observes as the initial absent
-    coordinate zero. Once a transition has occurred, absence is persisted as a
-    strict tombstone rather than inferred from a deleted file.
-    """
+    """Observe the optional selection and durable current coordinate once."""
     raw = _read_pointer_bytes(pointer_path(root))
     if raw is None:
         return BucketPointer.absent(transition_revision=0)
@@ -111,6 +171,8 @@ def read_pointer(root: Path) -> BucketPointer:
 
 
 def _await_uncontended(operation: Callable[[], None]) -> None:
+    from ._windows_contention import is_windows_contention
+
     deadline = time.monotonic() + _POINTER_WRITE_RETRY_SECONDS
     while True:
         try:
@@ -124,12 +186,8 @@ def _await_uncontended(operation: Callable[[], None]) -> None:
 
 
 def write_pointer(root: Path, pointer: BucketPointer) -> None:
-    """Atomically replace the one strict pointer record.
-
-    The caller must hold the canonical custody-root transaction when changing
-    a selection. This primitive deliberately persists exactly the supplied
-    record so the transaction remains the only owner of revision succession.
-    """
+    """Atomically replace the one strict pointer record under its owner lock."""
+    from ._fsync import fsync_parent_dir
     from .atomic_write import atomic_write_hardened_bytes
 
     target = pointer_path(root)
@@ -138,7 +196,7 @@ def write_pointer(root: Path, pointer: BucketPointer) -> None:
 
 
 def resolve_active_bucket_id() -> str | None:
-    """Resolve a process override or the current persisted pointer selection."""
+    """Resolve a process override or one current persisted selection."""
     from .config import load_settings
 
     settings = load_settings()
@@ -164,20 +222,16 @@ def resolve_repository_bucket_id(bucket_id: str | None, *, error_type: type[Cadr
         trimmed = bucket_id.strip()
         if trimmed:
             return trimmed
-        raise error_type(
-            translated_message="application.workflow.errors.no_active_profile_bucket",
-            context={"reason": "blank_explicit_bucket_id"},
-        )
+        raise error_type(translated_message="application.workflow.errors.no_active_profile_bucket", context={"reason": "blank_explicit_bucket_id"})
     active = resolve_active_bucket_id()
     if active is None:
-        raise error_type(
-            translated_message="application.workflow.errors.no_active_profile_bucket",
-            context={"reason": "missing_active_profile_bucket"},
-        )
+        raise error_type(translated_message="application.workflow.errors.no_active_profile_bucket", context={"reason": "missing_active_profile_bucket"})
     return active
 
 
 __all__ = [
+    "POINTER_SCHEMA_VERSION",
+    "BucketPointer",
     "pointer_path",
     "read_pointer",
     "require_active_bucket_id",

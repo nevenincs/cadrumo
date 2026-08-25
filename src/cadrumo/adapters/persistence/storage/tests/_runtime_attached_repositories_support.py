@@ -23,7 +23,8 @@ from .....adapters.persistence.profile.modelos_filing import ModeloRecordCatalog
 from .....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from .....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from .....application.auth import ApoderadoService, list_auth_diagnostics
+from .....application.auth.apoderado_service import ApoderadoService
+from .....application.auth.diagnostics import list_auth_diagnostics
 from .....application.calculations import (
     CalculationObservationRepository,
     IvaCompensationHistoryRepository,

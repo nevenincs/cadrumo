@@ -17,7 +17,7 @@ from typing import Final
 import pytest
 from pydantic import ValidationError
 
-from .._bucket_pointer_io import pointer_path
+from ..bucket_pointer import pointer_path
 from .._storage_taxonomy import (
     FINGERPRINT_EXCLUDED_STORAGE_FIELDS,
     ROOT_DERIVED_STORAGE_FIELDS,

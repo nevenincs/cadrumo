@@ -358,11 +358,11 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile._profile_pointer_transaction.ActiveProfilePointerTransactionError",
+        "cadrumo.application.user_profile.profile_pointer.ActiveProfilePointerTransactionError",
         ErrorCode(
             code="INTERNAL_ACTIVE_PROFILE_POINTER_TRANSACTION",
             category=ErrorCategory.INTERNAL,
-            message_key="errors.internal.internal_active_profile_pointer_transaction",
+            message_key="errors.internal.internal_activeprofile_pointer",
             retryable=False,
             runbook_id=None,
         ),
@@ -1154,7 +1154,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.operations._execution_context.OperationDeclarationError",
+        "cadrumo.application.operations.errors.OperationDeclarationError",
         ErrorCode(
             code="INTERNAL_OPERATION_DECLARATION_BREACH",
             category=ErrorCategory.INTERNAL,

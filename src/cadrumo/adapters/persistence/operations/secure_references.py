@@ -43,6 +43,7 @@ class OperationSecureReferenceRepository:
         objects_factory: Callable[[], SecureObjectRepository] | None = None,
         namespace: SecureObjectNamespaceDefinition,
     ) -> None:
+        """Bind one encrypted object source to its registered operand namespace."""
         if objects is not None and objects_factory is not None:
             raise ValueError("operation secure references accept one repository source")
         if objects is None and objects_factory is None:

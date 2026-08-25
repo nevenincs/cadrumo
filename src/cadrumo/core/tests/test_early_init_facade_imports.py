@@ -49,7 +49,7 @@ def _late_bound_facade_names() -> frozenset[str]:
 
 
 #: Modules on the settings-resolution path, which core's own body can reach.
-_SETTINGS_PATH_MODULES = ("config.py", "_bucket_pointer_io.py")
+_SETTINGS_PATH_MODULES = ("config.py", "bucket_pointer.py")
 
 
 def _facade_imported_names(module_path: Path) -> set[str]:
