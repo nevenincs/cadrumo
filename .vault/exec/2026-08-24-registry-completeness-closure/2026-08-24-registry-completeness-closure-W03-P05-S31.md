@@ -41,3 +41,5 @@ related:
 
 - The M390 catalogue-key migration and its locale test were already captured by concurrent commit `d8a313e2c6`; this S31 scope deliberately does not redeclare or revert that work.
 - M303 casilla 112 has no evidence-backed predecessor in the supported corpus and remains role-less rather than receiving an invented chain.
+- Revalidated on 2026-08-25 after the independently authored Modelo 038, 194, 721, and 763 revision splits exposed 16 repeated-id groups. The ratchet now records those groups as explicitly unreviewed backlog (`038: 2`, `194: 5`, `721: 7`, `763: 2`) rather than treating matching ids as evidence of legal identity or inventing `continuidad_id` stamps.
+- The full sequential continuity-ratchet module passed (`10 passed`); no registry data, continuity stamp, or parallel validation authority was added.

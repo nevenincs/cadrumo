@@ -135,3 +135,16 @@ any future implementation must be enrolled under the owning production campaign.
 - Implement S08, S10, and S13 in that order without reviving superseded shapes.
 - Treat the isolated 2026-08-25 failure set, not the historical checkbox count, as
   the live closure baseline and re-run it after every cluster lands.
+
+## Reconciliation update — 2026-08-25
+
+- Temporal `W02.P05.S43` is reclosed after Modelo 038 received the evidence-backed
+  `record_design_epoch = "2012"` declaration and its focused gates passed.
+- Temporal `W02.P05.S44` is reclosed after the M182 proof was corrected to its live
+  mixed-review authority: four legacy refs are operator-reviewed, two HAC/1430/2025
+  amendment refs are agent-reviewed, and neither promotes the applicability-grade
+  revision.
+- Completeness `W03.P05.S31` is reclosed at its original execution boundary. The
+  later 038, 194, 721, and 763 revision splits introduced sixteen legitimate
+  unreviewed repeated-id groups; the ratchet explicitly admits them as backlog.
+  Matching ids alone are not legal evidence, so no continuity stamps were invented.

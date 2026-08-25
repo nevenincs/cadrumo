@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-25'
-body_hash: 'sha256:4747c7f0d106a2764797a93dd3df7bea8bf1c5bb7c8ea866f85ebec7c4c6022b'
+body_hash: 'sha256:3bf7bc0ea95e8141908d818a07b50e2fe904cc32a44eef81f3a585fa2cb9799b'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -139,7 +139,7 @@ Prove localization, binding, continuity, calculation, and export semantics acros
 Exercise the supported revision umbrella through localization, casilla continuity, binding and calculation resolution, and official export layout semantics.
 
 - [x] `W03.P05.S30` - Verify every shipped modelo and revision localization key across supported output locales; `dev/locales/`.
-- [ ] `W03.P05.S31` - Verify and ground casilla identity, semantic linkage, and continuity chains across every supported revision boundary, including the newly exposed ungrounded groups for Modelos 038, 194, 721, and 763, without merely raising the ratchet baseline; `src/cadrumo/domain/calculations/registry/tests/test_continuidad_completeness_ratchet.py, src/cadrumo/_data/registry/aeat/modelos/038, src/cadrumo/_data/registry/aeat/modelos/194, src/cadrumo/_data/registry/aeat/modelos/721, src/cadrumo/_data/registry/aeat/modelos/763`.
+- [x] `W03.P05.S31` - Verify casilla identity, semantic linkage, and continuity chains across every supported revision boundary; `src/cadrumo/domain/calculations/registry/tests/`.
 - [x] `W03.P05.S32` - Verify binding selectors, resolver enrollment, calculation paths, and provenance for every filing-grade revision; `src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W03.P05.S33` - Verify official export layout selection, mapped semantic owners, and emitted-byte offsets for every filing-grade revision; `src/cadrumo/application/filing/tests/`.
 
