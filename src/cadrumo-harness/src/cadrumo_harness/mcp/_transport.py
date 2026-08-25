@@ -497,9 +497,7 @@ def _run_inprocess_tool(
     from ._profile_secret_channel import profile_secret_stdin_payload
 
     stdin_payload = (
-        None
-        if descriptor.verb_schema.profile_authentication == "not-applicable"
-        else profile_secret_stdin_payload()
+        None if descriptor.verb_schema.profile_authentication == "not-applicable" else profile_secret_stdin_payload()
     )
 
     def _target() -> None:
