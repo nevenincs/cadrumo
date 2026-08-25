@@ -1327,4 +1327,3 @@ are grounded in `2026-08-24-tui-operation-observation-research`.
   path survives.
 - C0 and C3 remain independently gated by their exact dependency receipts;
   neither receipt authorizes a later Modelo or visual cohort by implication.
-

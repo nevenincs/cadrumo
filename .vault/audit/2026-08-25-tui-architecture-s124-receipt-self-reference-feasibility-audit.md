@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:16dbc64a11528bd2687cbce9511bf59731c21bfba41c2db0d27ffc8187269ca3'
+body_hash: 'sha256:92c8620c2e37250ffbcc7cea1373d7b17f2eeb9296a120032cadd45ee2aad803'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
@@ -15,7 +15,7 @@ related:
 
 Architecture feasibility review of S124 against accepted TUI Architecture ADR D8/D13, the S123 live-tree validator, the canonical plan, and existing receipt conventions. Vaultspec RAG was attempted first but correctly refused because the local client (`0.4.2`) and resident service (`0.4.1`) differ; exact source and vault searches supplied the evidence instead. No implementation was changed.
 
-## Finding
+## Findings
 
 ### HIGH - S124 is mathematically infeasible under the current self-referential `producing_commit` rule
 
@@ -23,7 +23,7 @@ S123 builds a receipt with `producing_commit = git rev-parse HEAD` and its valid
 
 The source-tree digest intentionally covers tracked Cadrumo source, not `.vault/reference`, so the artifact can be committed without source drift. The blocker is solely the conflation of implementation provenance and artifact-attestation commit identity.
 
-## Recommended contract
+## Recommendations
 
 Amend the accepted TUI ADR before implementation; this is a decision-level refinement. Keep exact current-HEAD and source-digest authority, but split the facts without a shim, alias, or re-export bridge:
 
@@ -38,7 +38,7 @@ Amend the accepted TUI ADR before implementation; this is a decision-level refin
 
 Do not exclude staged files from source authority. The covered-source digest already intentionally excludes the vault artifact; explicit committed-byte verification is the narrower proof. Do not preserve `producing_commit` as an alias or accept either field: pre-release current-only policy requires deleting the old field and updating every in-tree producer, parser, test, plan/record statement, and reference schema together.
 
-## Required changes after decision approval
+### Required changes after decision approval
 
 - Amend ADR D13's clean-commit receipt language to distinguish implementation evidence A from artifact attestation target B.
 - Update `TuiOperationObservationDependencyReceiptV1`, its builder, and sole validator in `test_public_operation_dependency_receipt.py`; add adversarial tests for non-ancestor implementation commit, source drift between A/B, uncommitted/staged artifact, and artifact-byte mismatch.
