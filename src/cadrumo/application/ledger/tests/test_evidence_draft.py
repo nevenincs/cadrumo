@@ -43,6 +43,7 @@ from ....domain.attachments import load_attachment
 from ....domain.invoices import InvoiceValidationError
 from ....domain.iva import InvoiceKind
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....tests._llm_vision_evidence_support import _json_array, _run_against_loopback_ollama
 from ....tests.pdf_fixtures import text_pdf_bytes
 from ....tests.profile_capsule import seed_test_profile_record
 from .._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError
@@ -58,7 +59,6 @@ from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile
 from ._evidence_test_support import seeded_filer_profile as seeded_filer_profile
 from ._ledger_value_fixtures import isolated_settings, secure_objects
-from ._llm_vision_evidence_support import _json_array, _run_against_loopback_ollama
 from ._loopback_reader import serving_a_loopback_reader
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

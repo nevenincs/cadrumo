@@ -14,25 +14,25 @@ from typing import ClassVar, override
 import pytest
 from PIL import Image
 
-from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....core import STR_KEYED_MAPPING_ADAPTER
-from ....core.config import override_settings
-from ....domain.transactions import (
+from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ..application.ledger import PurchaseInvoiceEvidenceService
+from ..core import STR_KEYED_MAPPING_ADAPTER
+from ..core.config import override_settings
+from ..domain.transactions import (
     RawProvenance,
     RawTransaction,
     SourceFormat,
     Transaction,
     TransactionDirection,
 )
-from ....tests.loopback_llm import (
+from .loopback_llm import (
     SilentLoopbackHandler,
     ollama_chat_reply,
     read_json_body,
     serving_loopback,
     write_json_response,
 )
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from .._evidence import PurchaseInvoiceEvidenceService
+from .secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 _BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 

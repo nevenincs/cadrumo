@@ -22,20 +22,20 @@ from ....core.config import Settings
 from ....domain.transactions import prompt_spec_with_saturation_fields
 from ....domain.user_profile import ProfileSetupState
 from ....llm import LocalVisionLLMClassifier, MultimodalImageInput
-from ....tests.secure_sql import TestRuntimeProfile
-from ...provisioning import ProvisioningPreconditionCondition
-from .._evidence import PurchaseInvoiceEvidenceInputError
-from .._llm_classification import _classify_with_evidence, _resolve_evidence, _ResolvedEvidence
-from .._preconditions import LedgerPreconditionCondition
-from ._llm_vision_evidence_support import (
+from ....tests._llm_vision_evidence_support import (
     _add_evidence,
     _png_image,
     _scan_only_pdf,
     _transaction,
 )
-from ._llm_vision_evidence_support import (
+from ....tests._llm_vision_evidence_support import (
     profile as profile,
 )
+from ....tests.secure_sql import TestRuntimeProfile
+from ...provisioning import ProvisioningPreconditionCondition
+from .._evidence import PurchaseInvoiceEvidenceInputError
+from .._llm_classification import _classify_with_evidence, _resolve_evidence, _ResolvedEvidence
+from .._preconditions import LedgerPreconditionCondition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
