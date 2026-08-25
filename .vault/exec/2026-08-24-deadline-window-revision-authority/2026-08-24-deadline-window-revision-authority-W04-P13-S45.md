@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:02a3a7f72724ec16de81dd0bcfaa49c9c45dce836124bbeb3a450a729fd832ce'
+body_hash: 'sha256:4dd56f6d820f9a47cb99322479b8e9146bde0f3376701a164bd095ca7070c6d8'
 step_id: 'S45'
 related:
   - "[[2026-08-24-deadline-window-revision-authority-plan]]"
@@ -32,4 +32,4 @@ Deadline reference-date behavior is deterministic and authority-driven. The real
 
 ## Notes
 
-Vaultspec RAG discovery was attempted first as required. The running service refused the search because its 0.4.1 release differed from the 0.4.2 client; direct local fallback was unavailable while that service held the index. Exact-symbol searches then confirmed the scoped clock and catalogue call sites. Focused Ruff and formatting checks passed. The real CLI integration module passed all three tests.
+Vaultspec RAG discovery was attempted first as required. The running service refused the search because its 0.4.1 release differed from the 0.4.2 client; direct local fallback was unavailable while that service held the index. Exact-symbol searches then confirmed the scoped clock and catalogue call sites and found no redeclared authority. Focused Ruff and formatting checks passed. The real CLI integration module passed all 3 tests, and the deadline-engine module passed all 42 tests. Formal review approved the latest diff with zero findings at every severity.

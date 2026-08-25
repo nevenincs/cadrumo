@@ -4,7 +4,7 @@ tags:
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
 modified: '2026-08-25'
-body_hash: 'sha256:f594444e069168ccc0843bf53847c76aaf4fcff6daa6d2551beba28021619db8'
+body_hash: 'sha256:6da9c81e5760e31967632b0ccffea847ea2b85f8bb93b5dbc0ea5dc00cefe990'
 tier: L3
 related:
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
@@ -155,7 +155,7 @@ Close against fleet invariants, source evidence, repository rules, and architect
 - [x] `W04.P13.S34` - Run exact historical engine and CLI scenarios for every repaired modelo against the adjudicated registry census; `src/cadrumo/domain/deadlines/tests/; src/cadrumo/entrypoints/cli/tests/; .vault/audit/`.
 - [ ] `W04.P13.S35` - Run feature-scoped Ruff, formatting, focused tests, Vaultspec, cold and warm registry validation, generated-reference drift, locale, and real CLI smoke gates, then run the applicable repository-wide gates, attribute every failure to the current revision and owning paths, block feature closure on failures caused by or overlapping this feature, and record unrelated shared-worktree failures separately; `src/cadrumo/, dev/, .vault/, current revision and owned-path evidence`.
 - [x] `W04.P13.S36` - Perform formal code and architecture review for canonical reuse, source fidelity, warm-load enforcement, consumer parity, and absence of superseded paths, running Vaultspec RAG discovery followed by exact-symbol sweeps to prove no revision selector, filing-window resolver, period parser, cadence authority, supported-year horizon, deadline catalogue, qualifier vocabulary, or downstream deduplication has been redeclared; `src/cadrumo/; .vault/exec/; .vault/audit/`.
-- [ ] `W04.P13.S45` - Make deadline reference-date semantics canonical and deterministic. Correct stale date.today() documentation, replace direct wall-clock reads in deadline-path tests with explicit or frozen today_madrid() input, and derive exercised filing years from the supported-filing-year catalogue while preserving literal official dates only in source-fidelity tests; `src/cadrumo/domain/deadlines/, src/cadrumo/entrypoints/cli/tests/, .vault/audit/`.
+- [x] `W04.P13.S45` - Make deadline reference-date semantics canonical and deterministic. Correct stale date.today() documentation, replace direct wall-clock reads in deadline-path tests with explicit or frozen today_madrid() input, and derive exercised filing years from the supported-filing-year catalogue while preserving literal official dates only in source-fidelity tests; `src/cadrumo/domain/deadlines/, src/cadrumo/entrypoints/cli/tests/, .vault/audit/`.
 
 ## Parallelization
 

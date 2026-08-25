@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:9176d9f79ef56e3225ffc54296e7ee22cfabe51c88df231690aa1c8e011fc2be'
+body_hash: 'sha256:e10903312c5e1f7a25b0a914d58351a1e5536bce03a188268543c2cb6ad7390d'
 related:
   - '[[2026-08-24-deadline-window-revision-authority-W01-P01-S01]]'
   - '[[2026-08-24-deadline-window-revision-authority-W01-P01-S02]]'
@@ -50,6 +50,7 @@ related:
   - '[[2026-08-24-deadline-window-revision-authority-W04-P13-S33]]'
   - '[[2026-08-24-deadline-window-revision-authority-W04-P13-S34]]'
   - '[[2026-08-24-deadline-window-revision-authority-W04-P13-S36]]'
+  - '[[2026-08-24-deadline-window-revision-authority-W04-P13-S45]]'
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
   - '[[2026-08-24-deadline-window-revision-authority-audit]]'
   - '[[2026-08-24-deadline-window-revision-authority-engine-projection-audit]]'
@@ -180,6 +181,7 @@ Auto-generated index of all documents tagged with `#deadline-window-revision-aut
 - `2026-08-24-deadline-window-revision-authority-W04-P13-S33` - Run the bundled-registry invariant proving zero ownership, identity, uniqueness, qualifier, period, and completeness violations
 - `2026-08-24-deadline-window-revision-authority-W04-P13-S34` - Run exact historical engine and CLI scenarios for every repaired modelo against the adjudicated registry census
 - `2026-08-24-deadline-window-revision-authority-W04-P13-S36` - Perform formal code and architecture review
+- `2026-08-24-deadline-window-revision-authority-W04-P13-S45` - Make deadline reference-date semantics canonical and deterministic. Correct stale date.today() documentation, replace direct wall-clock reads in deadline-path tests with explicit or frozen today_madrid() input, and derive exercised filing years from the supported-filing-year catalogue while preserving literal official dates only in source-fidelity tests
 - `2026-08-25-deadline-window-revision-authority-exec` - Fleet periodic deadline completeness hard gate
 
 ### plan
