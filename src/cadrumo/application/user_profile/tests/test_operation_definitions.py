@@ -12,44 +12,40 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
-from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from cadrumo.adapters.persistence.operations.secure_references import (
+from ....adapters.persistence.operations.journal import OperationJournalRepository
+from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
+from ....adapters.persistence.operations.secure_references import (
     OperationSecureReferenceRepository,
     operation_secure_reference_repository,
 )
-from cadrumo.application.operations.capabilities import (
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
-from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
-from cadrumo.application.operations.registry import OperationReconciliationPolicy, OperationRegistry
-from cadrumo.application.operations.supervisor import OperationSupervisor
-from cadrumo.application.user_profile.bundle_export_contracts import (
-    ProfileBundleExportPurpose,
-    ProfileBundleExportResult,
-)
-from cadrumo.application.user_profile.bundle_export_operation import ProfileBundleExportJournalRepository
-from cadrumo.application.user_profile.custody_ports import (
-    ProfileCustodySecureObjectRepositoryPort,
-    profile_custody_secure_object_repository,
-)
-from cadrumo.application.user_profile.login_session import login_profile
-from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
-from cadrumo.application.user_profile.projections import record_to_path_values
-from cadrumo.application.user_profile.registration import register_profile_with_credentials
-from cadrumo.core.operations import (
+from ....adapters.persistence.storage import current_active_bucket_session
+from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core.bucket_pointer import read_pointer
+from ....core.operations import (
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
 )
-
-from ....adapters.persistence.storage import current_active_bucket_session
-from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core.bucket_pointer import read_pointer
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....tests.secure_sql import isolated_profile_storage_root
+from ...operations.capabilities import (
+    OperationRequestStoragePolicy,
+    OperationSensitiveInputPolicy,
+)
+from ...operations.models import OperationRequest
+from ...operations.persistence.journal import OperationPersistedSnapshot
+from ...operations.registry import OperationReconciliationPolicy, OperationRegistry
+from ...operations.supervisor import OperationSupervisor
+from ..bundle_export_contracts import (
+    ProfileBundleExportPurpose,
+    ProfileBundleExportResult,
+)
+from ..bundle_export_operation import ProfileBundleExportJournalRepository
+from ..custody_ports import (
+    ProfileCustodySecureObjectRepositoryPort,
+    profile_custody_secure_object_repository,
+)
+from ..login_session import login_profile
 from ..operations import (
     PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,
     PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
@@ -65,6 +61,9 @@ from ..operations import (
     build_profile_logout_operation_request,
     build_user_profile_operation_registrations,
 )
+from ..profile_record_repository import ProfileRecordRepository
+from ..projections import record_to_path_values
+from ..registration import register_profile_with_credentials
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
