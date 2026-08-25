@@ -4,15 +4,15 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Final, Literal
+from typing import Final, Literal
 from uuid import UUID
 
-from ...adapters.persistence.storage import custody
 from ...core import StorageCategory, storage_location
 from ...core.paths import effective_storage_root
 from ...core.time import validate_utc_aware
 from .._profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
 from ._custody_hold_models import ProfileCustodyHoldEvidence, evidence_from_owner_projection
+from ._custody_ports import ProfileCustodyLocalRecordStore, default_profile_custody_local_record_store
 from ._custody_transactions import (
     ProfileCustodyHoldAssessment,
     ProfileCustodyTransactionCorruptError,
@@ -35,9 +35,9 @@ the name is declared once and read in both places rather than typed in each.
 """
 
 
-def _write_canonical_file(path: Path, payload: bytes, adapters: Any) -> None:
+def _write_canonical_file(path: Path, payload: bytes, store: ProfileCustodyLocalRecordStore) -> None:
     try:
-        adapters.write_profile_custody_local_record(path, payload, publish_once=False)
+        store.write(path, payload, publish_once=False)
     except Exception as exc:
         raise ProfileCustodyTransactionCorruptError(
             "canonical custody owner record cannot be atomically written"
@@ -58,18 +58,18 @@ class _ProfileCustodyHoldEvidenceOwner:
         )
 
     def refresh(self, profile_id: UUID, *, now: datetime) -> ProfileCustodyHoldEvidence:
-        adapters = custody
+        store = default_profile_custody_local_record_store()
         projection = self._owner_projection(profile_id, now=now)
         evidence = evidence_from_owner_projection(projection)
         try:
-            adapters.ensure_profile_custody_local_directory(self._root.parent.parent)
-            adapters.ensure_profile_custody_local_directory(self._root.parent)
-            adapters.ensure_profile_custody_local_directory(self._root)
-            with adapters.profile_custody_local_lock(self._root / ".evidence.lock"):
+            store.ensure_directory(self._root.parent.parent)
+            store.ensure_directory(self._root.parent)
+            store.ensure_directory(self._root)
+            with store.lock(self._root / ".evidence.lock"):
                 _write_canonical_file(
                     self.path(profile_id),
                     canonical_model_bytes(evidence, maximum_bytes=1024, subject=f"{self._owner} hold evidence"),
-                    adapters,
+                    store,
                 )
         except Exception as exc:
             raise ProfileCustodyTransactionCorruptError(
