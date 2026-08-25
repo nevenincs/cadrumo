@@ -646,6 +646,76 @@ class ProfileCustodyCapsuleSourceMaterial:
     database_bytes: bytes
 
 
+@dataclass(frozen=True, slots=True)
+class ProfileCapsuleArchiveHeaderMaterial:
+    """Plaintext archive header fields observed by profile lifecycle policy."""
+
+    product: str
+    bucket_id: str
+    manifest_digest: str
+    archive_schema_version: int
+    created_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileCapsuleArchiveContentsMaterial:
+    """Opaque sealed-container result supplied to profile archive policy."""
+
+    header: ProfileCapsuleArchiveHeaderMaterial
+    payload_bytes: bytes
+
+
+def profile_capsule_archive_schema_version() -> int:
+    """Return the sealed-container schema version implemented by persistence."""
+    return bucket.ARCHIVE_SCHEMA_VERSION
+
+
+def write_profile_capsule_archive_container(
+    target: Path,
+    *,
+    header: ProfileCapsuleArchiveHeaderMaterial,
+    payload_bytes: bytes,
+) -> None:
+    """Write an opaque profile payload through the sealed-container provider."""
+    bucket.write_sealed_archive(
+        target,
+        header=bucket.ExportArchiveHeader(
+            product=header.product,
+            bucket_id=header.bucket_id,
+            manifest_digest=header.manifest_digest,
+            archive_schema_version=header.archive_schema_version,
+            created_at=header.created_at,
+        ),
+        payload_bytes=payload_bytes,
+    )
+
+
+def read_profile_capsule_archive_container(source: Path) -> ProfileCapsuleArchiveContentsMaterial:
+    """Read an opaque profile payload through the sealed-container provider."""
+    contents = bucket.read_sealed_archive(source)
+    return ProfileCapsuleArchiveContentsMaterial(
+        header=ProfileCapsuleArchiveHeaderMaterial(
+            product=contents.header.product,
+            bucket_id=contents.header.bucket_id,
+            manifest_digest=contents.header.manifest_digest,
+            archive_schema_version=contents.header.archive_schema_version,
+            created_at=contents.header.created_at,
+        ),
+        payload_bytes=contents.payload_bytes,
+    )
+
+
+def parse_profile_custody_capsule_members(
+    *, envelope_bytes: bytes, sentinel_bytes: bytes, database_bytes: bytes
+) -> ProfileCustodyCapsuleSourceMaterial:
+    """Parse archive-carried custody records through their persistence owner."""
+    return ProfileCustodyCapsuleSourceMaterial(
+        password_envelope=custody.parse_profile_custody_envelope(envelope_bytes),
+        sentinel=custody.parse_profile_custody_sentinel_record(sentinel_bytes),
+        database_bytes=database_bytes,
+    )
+
+
 def read_profile_custody_capsule_source(source: Path) -> ProfileCustodyCapsuleSourceMaterial:
     """Read and parse one unpublished capsule through the custody provider."""
 
