@@ -104,6 +104,12 @@ because Modelo 721 has a 2025 hole. Registry-completeness-closure `W02.P04.S80` 
 reopened because the structured-message export-exemption gate still finds no cited
 layout-authority source. These are owning-row regressions, not new registry-red work.
 
+Two corpus-wide export failures had an audit but no executable receiving row. They
+are enrolled once under aeat-export-fragment-generator-authority: `W04.P07.S110`
+owns completing the canonical parser for the partially read Modelo 180 and 349 PDFs,
+and `W04.P07.S109` owns registering or evidence-classifying every bundled
+record-design artefact. Neither is expanded into per-file registry-red rows.
+
 ### non-executable-rows | medium | Two checked findings were not plan work
 
 `P03.S19` and `P03.S20` described adjudication findings and explicitly stated that

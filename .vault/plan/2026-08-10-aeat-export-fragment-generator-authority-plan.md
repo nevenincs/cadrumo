@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
-modified: '2026-08-24'
-body_hash: 'sha256:4082440c3ffb96db7f7319a0a398ec409aaa8a835955a4d7f0adc3b9009db7f9'
+modified: '2026-08-25'
+body_hash: 'sha256:b8c95f70354d3e172c8f8955f963d30f4e7ced0b48f3489ecc639746ce207d02'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -88,6 +88,7 @@ Cover every authority boundary with positive and negative real-behavior tests.
 
 Verify generated layouts as loadable complete structures and as real emitted filing bytes.
 
+
 ## Wave `W04` - regenerate and release relayout waves
 
 Use the proven authority to replace unverified trees, close the blocked split spans, and restore architecture-consistent model bindings.
@@ -165,6 +166,8 @@ Regenerate the highest-priority calculation-model revisions and discharge the he
 - [ ] `W04.P07.S106` - After the complete Modelo 390 2021 casilla and value-arrival surface is approved, author its distinct source-bound 2021 semantic map and render profile, generate through the canonical publisher, and prove export_draft bytes at 2021 offsets without reusing 2022 through 2025 layouts or adding a Modelo 390-specific writer.; `dev/registry/mappings/modelo_390/2021/; dev/registry/render_profiles/modelo_390/2021/; src/cadrumo/_data/registry/aeat/modelos/390/revisions/2021/; src/cadrumo/application/filing/tests/; dev/registry/filing_export_proof.py`.
 - [ ] `W04.P07.S107` - After Modelo 763 law-selected design eras and complete filer and value owners exist, author every selected-era record and terminator semantic map with reviewed render profiles, generate through the canonical publisher, and prove production bytes at official positions without inventing opening-period authority, a compatibility layout, or a parallel writer.; `dev/registry/mappings/modelo_763/; dev/registry/render_profiles/modelo_763/; src/cadrumo/_data/registry/aeat/modelos/763/revisions/; src/cadrumo/application/filing/tests/`.
 - [ ] `W04.P07.S108` - After Modelo 840 values and filing scope are approved, add one generic semantic-map transport-terminator contract that retains the official CRLF anchor while delegating its one emission to the existing record line-ending authority, prove omission, space replacement, and doubled-CRLF mutations refuse, then author the Modelo 840 map and profile, generate canonical fragments, and prove all three record extents and official bytes without an M840 writer or second terminator table.; `dev/registry/pipeline/; dev/registry/mappings/modelo_840/; dev/registry/render_profiles/modelo_840/; src/cadrumo/domain/calculations/registry/; src/cadrumo/_data/registry/aeat/modelos/840/revisions/; src/cadrumo/application/filing/tests/; dev/registry/tests/`.
+- [ ] `W04.P07.S109` - Reconcile every bundled record-design artefact through one source catalogue by registering its exact hash-pinned scope or classifying it as a non-record-design with evidence, until the corpus-wide registration gate passes without an allowlist baseline, filename inference, or duplicate source ownership; `src/cadrumo/_data/corpus/aeat_official/disenos_registro, src/cadrumo/_data/registry/aeat/legal, src/cadrumo/domain/calculations/registry/tests/test_every_bundled_record_design_is_registered.py`.
+- [ ] `W04.P07.S110` - Complete the canonical record-design parser for the partially read Modelo 180 and Modelo 349 official PDFs so every table position is read or a typed corpus defect is reported, without adding modelo-specific fallback parsing or treating the current partial count as accepted; `src/cadrumo/domain/calculations/registry/_record_design.py, src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_180, src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_349, src/cadrumo/domain/calculations/registry/tests/test_every_bundled_design_is_read_or_reported.py`.
 
 ### Phase `W04.P08` - campaign integration and release
 
