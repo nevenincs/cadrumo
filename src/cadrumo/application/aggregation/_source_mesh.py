@@ -25,7 +25,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Annotated, Final, Literal, NamedTuple, Protocol, Self, runtime_checkable
+from typing import Annotated, ClassVar, Final, Literal, NamedTuple, Protocol, Self, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, field_serializer, field_validator, model_validator
 
@@ -1258,15 +1258,11 @@ class CalculationSourceResolution(BaseModel):
 class ModeloSourceResolver(Protocol):
     """Application port implemented by one calculation source adapter."""
 
-    @property
-    def resolver_id(self) -> str:
-        """Stable resolver identifier for diagnostics and provenance."""
-        ...
+    resolver_id: ClassVar[str] = ""
+    """Stable class-level resolver identifier for registration and provenance."""
 
-    @property
-    def owned_sources(self) -> tuple[BindingSourceKind, ...]:
-        """Registry :class:`BindingSourceKind` this resolver owns."""
-        ...
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = ()
+    """Class-level registry source ownership used by registration and instances."""
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve source-backed calculation values for ``context``.

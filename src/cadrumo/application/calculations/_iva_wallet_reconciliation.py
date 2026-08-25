@@ -35,7 +35,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from pydantic import BaseModel, ConfigDict
 
@@ -89,8 +89,8 @@ class IvaWalletDecisionSourceResolver:
     participated in the wallet/filed-history/local-recurrence decision.
     """
 
-    resolver_id = "iva_wallet_decision"
-    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.IVA_WALLET_DECISION,)
+    resolver_id: ClassVar[str] = "iva_wallet_decision"
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (BindingSourceKind.IVA_WALLET_DECISION,)
     binding_id = "modelo-303-compensacion-pendiente-anteriores"
 
     def __init__(self, decision: IvaCompensationReconciliationDecision | None) -> None:

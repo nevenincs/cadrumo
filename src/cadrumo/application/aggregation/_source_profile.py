@@ -11,6 +11,7 @@ resident registry authority at resolution time.
 from __future__ import annotations
 
 from collections.abc import Iterable
+from typing import ClassVar
 
 from ...core import BindingSourceKind
 from ...domain.calculations.registry import BindingId, RegistrySnapshot
@@ -23,8 +24,8 @@ from ._source_mesh import (
 class ProfileSourceResolver:
     """Resolve calculation-relevant ``source = "profile"`` bindings."""
 
-    resolver_id = "profile"
-    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.PROFILE,)
+    resolver_id: ClassVar[str] = "profile"
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (BindingSourceKind.PROFILE,)
 
     def __init__(
         self,

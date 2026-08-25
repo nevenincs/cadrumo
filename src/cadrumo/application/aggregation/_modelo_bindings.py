@@ -31,6 +31,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
+from typing import ClassVar
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.usage_ratios import load_usage_ratios
@@ -258,8 +259,8 @@ class LedgerIvaAggregationSourceResolver:
     source issues, unrouted-observation diagnostics, and transaction provenance.
     """
 
-    resolver_id = "ledger_iva_aggregation"
-    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.LEDGER_IVA_AGGREGATION,)
+    resolver_id: ClassVar[str] = "ledger_iva_aggregation"
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (BindingSourceKind.LEDGER_IVA_AGGREGATION,)
 
     def __init__(
         self,
@@ -468,8 +469,8 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
     :class:`~._source_mesh.CalculationSourceResolution`.
     """
 
-    resolver_id = "ledger_renta_gastos_estimacion_directa_aggregation"
-    owned_sources: tuple[BindingSourceKind, ...] = (
+    resolver_id: ClassVar[str] = "ledger_renta_gastos_estimacion_directa_aggregation"
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (
         BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
     )
 
@@ -573,8 +574,8 @@ class LedgerRentaIncomeAggregationSourceResolver:
     activity-income path over the same ledger eligibility rules.
     """
 
-    resolver_id = "ledger_renta_income_aggregation"
-    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,)
+    resolver_id: ClassVar[str] = "ledger_renta_income_aggregation"
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,)
 
     def __init__(
         self,
@@ -854,8 +855,8 @@ class LedgerImpatriadoIncomeAggregationSourceResolver:
     dropped (art. 93.2 LIRPF / art. 25.1.f TRLIRNR).
     """
 
-    resolver_id = "ledger_impatriado_income_aggregation"
-    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,)
+    resolver_id: ClassVar[str] = "ledger_impatriado_income_aggregation"
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,)
 
     def __init__(self, *, transaction_repository: TransactionCatalogueRepositoryProtocol | None = None) -> None:
         self._transaction_repository = transaction_repository
@@ -945,8 +946,8 @@ class LedgerIrnrIncomeAggregationSourceResolver:
     ``03`` cannot be merged merely because they share a rate concept.
     """
 
-    resolver_id = "ledger_irnr_income_aggregation"
-    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION,)
+    resolver_id: ClassVar[str] = "ledger_irnr_income_aggregation"
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION,)
 
     def __init__(self, *, transaction_repository: TransactionCatalogueRepositoryProtocol) -> None:
         self._transaction_repository = transaction_repository
@@ -1089,8 +1090,10 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
     diagnostic for declarable gastos no binding consumes.
     """
 
-    resolver_id = "ledger_renta_gastos_pago_fraccionado_aggregation"
-    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,)
+    resolver_id: ClassVar[str] = "ledger_renta_gastos_pago_fraccionado_aggregation"
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (
+        BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
+    )
 
     def __init__(
         self,
@@ -2605,8 +2608,8 @@ class RetencionesAggregationSourceResolver:
     handled by :class:`~._withholding_source.WithholdingSourceResolver`.
     """
 
-    resolver_id = "retenciones_aggregation"
-    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.RETENCIONES_AGGREGATION,)
+    resolver_id: ClassVar[str] = "retenciones_aggregation"
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (BindingSourceKind.RETENCIONES_AGGREGATION,)
 
     def __init__(self, *, retencion_repository: RetencionObservationRepository | None = None) -> None:
         self._retencion_repository = retencion_repository

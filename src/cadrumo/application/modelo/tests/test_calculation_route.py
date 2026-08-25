@@ -15,7 +15,7 @@ from .. import (
     CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
     CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
     MANUAL_INPUT_RESOLVER_ID,
-    CalculationRouteResolverOwnership,
+    CalculationRouteManualOwnership,
     validate_calculation_route_resolver_ownership,
 )
 
@@ -57,7 +57,7 @@ def test_route_reads_class_level_identity_and_declares_every_stage_and_manual_ow
     assert tuple(row.resolver_type for row in conditional) == (M303RegimenSimplificadoAnnualSummarySourceResolver,)
     manual = tuple(row for row in CALCULATION_ROUTE_RESOLVER_OWNERSHIP if row.stage == "manual")
     assert manual == (
-        CalculationRouteResolverOwnership(
+        CalculationRouteManualOwnership(
             stage="manual",
             resolver_type=None,
             resolver_id=MANUAL_INPUT_RESOLVER_ID,
@@ -78,7 +78,7 @@ def test_route_refuses_duplicate_ids_duplicate_sources_omission_and_invented_own
         )
     with pytest.raises(AggregationValidationError):
         validate_calculation_route_resolver_ownership(CALCULATION_ROUTE_RESOLVER_OWNERSHIP[:-1])
-    invented = CalculationRouteResolverOwnership(
+    invented = CalculationRouteManualOwnership(
         stage="manual",
         resolver_type=None,
         resolver_id="invented-deferred-owner",
@@ -98,7 +98,7 @@ def test_route_refuses_resolver_class_identity_mutations() -> None:
         validate_calculation_route_resolver_ownership(
             (replace(profile, owned_sources=(BindingSourceKind.RELATED_PARTY_OPERATION,)), *remaining),
         )
-    with pytest.raises(RuntimeError, match="only the canonical manual-input pseudo-owner"):
+    with pytest.raises(RuntimeError, match="contains an invented resolver"):
         validate_calculation_route_resolver_ownership(
             (replace(profile, resolver_type=None), *remaining),
         )
@@ -115,7 +115,7 @@ def test_route_refuses_additional_or_typed_manual_pseudo_owners() -> None:
         validate_calculation_route_resolver_ownership((*CALCULATION_ROUTE_RESOLVER_OWNERSHIP, manual))
 
     profile = CALCULATION_ROUTE_RESOLVER_OWNERSHIP[0]
-    with pytest.raises(RuntimeError, match="must use stage 'pre_mesh'"):
+    with pytest.raises(RuntimeError, match="only the canonical manual-input pseudo-owner"):
         validate_calculation_route_resolver_ownership(
             (
                 *CALCULATION_ROUTE_RESOLVER_OWNERSHIP[:-1],

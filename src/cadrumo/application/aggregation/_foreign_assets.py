@@ -19,6 +19,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from decimal import Decimal
+from typing import ClassVar
 
 from pydantic import BaseModel, Field, InstanceOf, TypeAdapter, ValidationError, field_validator, model_validator
 
@@ -302,8 +303,8 @@ class ForeignAssetsAggregationSourceResolver:
     row-producer bindings.
     """
 
-    resolver_id = "foreign_assets_aggregation"
-    owned_sources = _OWNED_SOURCES
+    resolver_id: ClassVar[str] = "foreign_assets_aggregation"
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = _OWNED_SOURCES
 
     def __init__(self, *, observations: Iterable[ForeignAssetIngestObservation] = ()) -> None:
         self._observations = tuple(observations)

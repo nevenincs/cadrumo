@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal
-from typing import Final
+from typing import ClassVar, Final
 
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import (
@@ -245,8 +245,8 @@ def _unresolved_diagnostics(
 class IvaCompensationAnnualPartitionSourceResolver:
     """Resolve Modelo 390 boxes 97 / 662 from the IVA compensation FIFO partition."""
 
-    resolver_id = _SOURCE_KIND.value
-    owned_sources: tuple[BindingSourceKind, ...] = (_SOURCE_KIND,)
+    resolver_id: ClassVar[str] = _SOURCE_KIND.value
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (_SOURCE_KIND,)
 
     def __init__(
         self,

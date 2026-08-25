@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Literal, Protocol
+from typing import Literal
 
 from ...core import BindingSourceKind, ModeloCalculationRouteId
 from ..aggregation import (
@@ -18,6 +18,7 @@ from ..aggregation import (
     LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
     LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
     LedgerRentaIncomeAggregationSourceResolver,
+    ModeloSourceResolver,
     OssIossLedgerSourceResolver,
     ProfileSourceResolver,
     RetencionesAggregationSourceResolver,
@@ -42,17 +43,12 @@ CALCULATION_ROUTE_ID = ModeloCalculationRouteId.MODELO_WORK_CALCULATION
 MANUAL_INPUT_RESOLVER_ID = "manual_input"
 
 
-class _ResolverClass(Protocol):
-    resolver_id: str
-    owned_sources: tuple[BindingSourceKind, ...]
-
-
 @dataclass(frozen=True, slots=True)
 class CalculationRouteResolverOwnership:
     """One class-owned resolver identity at its production route stage."""
 
     stage: CalculationRouteResolverStage
-    resolver_type: type[_ResolverClass]
+    resolver_type: type[ModeloSourceResolver]
     resolver_id: str
     owned_sources: tuple[BindingSourceKind, ...]
 
@@ -72,7 +68,7 @@ type CalculationRouteOwnership = CalculationRouteResolverOwnership | Calculation
 
 def _resolver_ownership(
     stage: CalculationRouteStage,
-    resolver_type: type[_ResolverClass],
+    resolver_type: type[ModeloSourceResolver],
 ) -> CalculationRouteResolverOwnership:
     if stage == "manual":
         raise RuntimeError("manual input is not a class-owned resolver")
@@ -84,7 +80,7 @@ def _resolver_ownership(
     )
 
 
-_CANONICAL_RESOLVER_STAGES: tuple[tuple[CalculationRouteStage, type[_ResolverClass]], ...] = (
+_CANONICAL_RESOLVER_STAGES: tuple[tuple[CalculationRouteStage, type[ModeloSourceResolver]], ...] = (
     ("pre_mesh", ProfileSourceResolver),
     ("pre_mesh", Modelo100BorradorSourceResolver),
     ("pre_mesh", IvaWalletDecisionSourceResolver),
@@ -208,6 +204,7 @@ __all__ = [
     "CALCULATION_ROUTE_RESOLVER_OWNERSHIP",
     "CALCULATION_ROUTE_SOURCE_DISPOSITIONS",
     "MANUAL_INPUT_RESOLVER_ID",
+    "CalculationRouteManualOwnership",
     "CalculationRouteResolverOwnership",
     "CalculationRouteStage",
     "require_calculation_route_resolver",

@@ -21,6 +21,8 @@ fact (``no-silent-under-declaration``: the zero is loud, not silent).
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 from ...adapters.persistence.storage import (
     ClassificationError,
     DecryptionError,
@@ -78,8 +80,8 @@ class WithholdingSourceResolver:
     one store (one-aggregation-path).
     """
 
-    resolver_id = _WITHHOLDING_SOURCE.value
-    owned_sources = (_WITHHOLDING_SOURCE,)
+    resolver_id: ClassVar[str] = _WITHHOLDING_SOURCE.value
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (_WITHHOLDING_SOURCE,)
 
     def __init__(self, *, withholding_repository: PercepcionObservationRepository | None = None) -> None:
         self._withholding_repository = withholding_repository
