@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:b7e6daf8ffd2b00f2e53da9ea758a25f6f0c67313ed61100ee855387b009d085'
+body_hash: 'sha256:583ce1764a47b72c056ff39ee52937298b08a92ee8588a7a9168002c701744b4'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
   - '[[2026-08-22-source-casilla-integration-W06-P20-S116]]'
@@ -18,13 +18,13 @@ Execution evidence for `W06.P20.S116` at the current tree after the completed so
 
 ## Findings
 
-### s116-two-pass-locator-drift | high | Two fresh processes find the same stale related-party locator
+### s116-two-pass-locator-drift | high | Two fresh processes find the same absent inventory locator
 
-Two independently launched `uv run --no-sync python -m dev.source_connectivity.cli generate` probes each discovered 476 capabilities with the identical sorted-ID digest `sha256:b48f226826e09ff58aabe9b4eb2b3dae7af8544ef7f3995b62e4002cc8988e03`. Their ID sets were equal.
+Two independently launched fresh discovery probes each found 464 capabilities with the identical sorted-ID digest `sha256:0be7d9fae88abef85b83af8eddd87a1cc4a030c8e6e751587c6f6ae42975cf64`. Their ID sets were equal.
 
-Each following fresh `uv run --no-sync python -m dev.source_connectivity.cli compare` invocation exited 1 with precisely the same refusal: `source-connectivity census mismatch: census capability locator drift for rows.related-party-operation: row_assembler:per_related_party_operation now resolves to 'src/cadrumo/application/calculations/_row_set_assembly.py:170'`.
+Each following fresh `uv run --no-sync python -m dev.source_connectivity.cli compare` invocation exited 1 with precisely the same refusal: `source-connectivity census mismatch: census capability locator line is absent: inventory.stock-valuation: src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py:4866`.
 
-The current census still attests locator line 168 for that capability. Because canonical comparison refuses before it can produce a validated assignment/membership projection, this step cannot prove that no candidate is unclassified or unactioned. The two-pass condition is therefore not satisfied and `S116` remains open.
+The earlier `rows.related-party-operation` line drift was repaired and no longer refuses comparison. The current census still attests a CLI command-spec location removed by concurrent command-surface relocation. Because canonical comparison refuses before it can produce a validated assignment/membership projection, this step cannot prove that no candidate is unclassified or unactioned. The two-pass condition is therefore not satisfied and `S116` remains open.
 
 ### s116-static-inventory-posture | medium | The manifest has 15 recorded rows and no expired dated deferral, but its assignment is not currently valid
 
@@ -34,13 +34,12 @@ All seven entries with `expires_on` are current through 2026-12-31. That static 
 
 ## Recommendations
 
-- Assign a distinct mechanical locator-maintenance step to update only the `rows.related-party-operation` locator after mutation-backed proof identifies the canonical live location. It must neither revise the candidate's `ingress_blocked` disposition nor alter any other census decision.
+- Assign a distinct mechanical locator-maintenance step to determine whether `inventory.stock-valuation` has a relocated live command-spec capability or has disappeared from discovery. Update only a proven live locator, or route candidate retirement through its owning census decision; never invent a replacement line or revise its disposition merely to make comparison pass.
 - Rerun two separate fresh generate-and-compare passes after that correction. Close `S116` only if both comparisons emit validated, identical assignment sets with no unclassified or unactioned candidate and no expired governed deferral.
 
 ## Verification receipt
 
-- `uv run --no-sync python -m dev.source_connectivity.cli generate` (pass 1): exit 0; 476 capabilities; digest above.
-- `uv run --no-sync python -m dev.source_connectivity.cli compare` (pass 1): exit 1; exact locator-drift refusal above.
-- `uv run --no-sync python -m dev.source_connectivity.cli generate` (pass 2): exit 0; 476 capabilities; same digest and ID set.
-- `uv run --no-sync python -m dev.source_connectivity.cli compare` (pass 2): exit 1; byte-identical locator-drift refusal.
-- The broadening focused pytest run was stopped on direction once the canonical two-pass failure was conclusive; its partial dots are deliberately not claimed as a passing receipt.
+- Fresh discovery pass 1: exit 0; 464 capabilities; digest above.
+- Fresh comparison pass 1: exit 1; exact absent-locator refusal above.
+- Fresh discovery pass 2: exit 0; 464 capabilities; same digest and ID set.
+- Fresh comparison pass 2: exit 1; byte-identical absent-locator refusal.
