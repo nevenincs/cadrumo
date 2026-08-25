@@ -12,8 +12,8 @@ related:
   - '[[2026-08-23-amortization-casilla-mapping-adr]]'
   - '[[2026-08-23-inventory-casilla-grounding-research]]'
   - '[[2026-08-23-amortization-casilla-grounding-research]]'
-modified: '2026-08-24'
-body_hash: 'sha256:bf46fc515de0f874578a5afeacc9f5917060e072cbdf56a09326393f84a7b002'
+modified: '2026-08-25'
+body_hash: 'sha256:2e5b73a36a276d2ec99f0cfe511c938c843623adc89722d697fe621c0edde358'
 ---
 
 <!-- RETIRED: S52, S191, S193 -->
@@ -299,7 +299,7 @@ Treat each existing deferred row source as its own vertical slice; shared worksh
 
 Carry assembled typed worksheet rows across the governed calculation and encrypted revision boundary.
 
-- [ ] `W05.P14.S87` - define the application command that accepts assembled typed row observations for calculation; `src/cadrumo/application/calculations/_row_set_assembly.py`.
+- [x] `W05.P14.S87` - define the application command that accepts assembled typed row observations for calculation; `src/cadrumo/application/calculations/_row_set_assembly.py`.
 - [ ] `W05.P14.S88` - route Google Sheets pull output into the governed calculation input boundary; `src/cadrumo/entrypoints/cli/_config/_google_sync_calc.py`.
 - [ ] `W05.P14.S89` - preserve grouping, row index, binding identity, source identity, and fingerprint through ingress; `src/cadrumo/domain/modelos/_calculation_revision.py`.
 - [ ] `W05.P14.S90` - reject unknown fields, row ownership collisions, sparse invalid rows, and caller substitution; `src/cadrumo/application/storage/calc_sheets/_row_set_assembly.py`.

@@ -21,12 +21,12 @@ from ....domain.calculations.registry import (
     RegistryValidationError,
     WithholdingObservation,
 )
+from .. import assemble_observations_for_snapshot
 from .._row_set_assembly import (
     assemble_atribucion_observations,
     assemble_donativo_observations,
     assemble_foreign_asset_observations,
     assemble_observations_for_grouping,
-    assemble_observations_for_snapshot,
     assemble_refund_observations,
     assemble_related_party_observations,
     assemble_withholding_observations,
@@ -345,14 +345,14 @@ def test_snapshot_command_uses_the_validated_revision_and_filing_year() -> None:
     )
 
     source_kind, observations = assemble_observations_for_snapshot(
-        "per_perceptor",
+        "per_perceptor_clave",
         cells,
         snapshot,
     )
 
     assert snapshot.revision.id == "2025-y-siguientes"
     assert source_kind == "withholding"
-    assert observations[0].source_id == "detalle:per_perceptor:row-1"
+    assert observations[0].source_id == "detalle:per_perceptor_clave:row-1"
     assert observations[0].transaction_date == date(2025, 12, 31)
 
 

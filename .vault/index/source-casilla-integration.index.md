@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#source-casilla-integration'
 date: '2026-08-22'
-modified: '2026-08-24'
+modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:ec53bd161019cedead17b6b00de7b5a236aa7c88087488fe9cb59eb4ad35a56a'
+body_hash: 'sha256:0bd3721aa3ea678c250e20cf06498aca4d25df38515e8c0e2cd884ab15a67caf'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -103,6 +103,7 @@ related:
   - '[[2026-08-22-source-casilla-integration-W03-P10-S57]]'
   - '[[2026-08-22-source-casilla-integration-W03-P10-S58]]'
   - '[[2026-08-22-source-casilla-integration-W03-P10-S59]]'
+  - '[[2026-08-22-source-casilla-integration-W05-P14-S87]]'
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-22-source-casilla-integration-census-code-review-audit]]'
   - '[[2026-08-22-source-casilla-integration-composite-provenance-research]]'
@@ -303,6 +304,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-W03-P10-S58` - determine whether finca amortization shares or requires a distinct source contract
 - `2026-08-22-source-casilla-integration-W03-P10-S59` - decide grain, precedence, absence semantics, rounding, and override policy
 - `2026-08-22-source-casilla-integration-W01-P23-S225` - Adjudicate Modelo 036's exact event-driven profile source as manual-by-design and retain the human-filed no-local-submission boundary
+- `2026-08-22-source-casilla-integration-W05-P14-S87` - define the application command that accepts assembled typed row observations for calculation
 
 ### plan
 
