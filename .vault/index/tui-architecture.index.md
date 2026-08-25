@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:0d7a3821a8f4b76616a0b7959b576833795e91e6f32f52dfaa4d3632d1cea247'
+body_hash: 'sha256:961c64ec7fb645a076b2c13dfcd7447da0184e6c6ef3c1f8eed2b68e97fe2148'
 related:
   - '[[2026-08-11-tui-architecture-W01-P01-S01]]'
   - '[[2026-08-11-tui-architecture-W01-P01-S02]]'
@@ -67,6 +67,7 @@ related:
   - '[[2026-08-11-tui-architecture-W03-P08-S39]]'
   - '[[2026-08-11-tui-architecture-W03-P08-S40]]'
   - '[[2026-08-11-tui-architecture-W03-P08-S42]]'
+  - '[[2026-08-11-tui-architecture-W03-P08-S43]]'
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-11-tui-architecture-plan]]'
   - '[[2026-08-11-tui-architecture-research]]'
@@ -128,6 +129,7 @@ related:
   - '[[2026-08-24-tui-architecture-s38-filed-history-conformance-audit]]'
   - '[[2026-08-24-tui-architecture-s39-auth-operations-audit]]'
   - '[[2026-08-25-tui-architecture-s123-dependency-receipt-review-audit]]'
+  - '[[2026-08-25-tui-architecture-s40-profile-operation-definitions-review-audit]]'
 ---
 
 # `tui-architecture` feature index
@@ -196,6 +198,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-24-tui-architecture-s38-filed-history-conformance-audit` - `tui-architecture` audit: `S38 filed-history conformance review`
 - `2026-08-24-tui-architecture-s39-auth-operations-audit` - `tui-architecture` audit: `s39 auth operations`
 - `2026-08-25-tui-architecture-s123-dependency-receipt-review-audit` - `tui-architecture` audit: `s123 dependency receipt review`
+- `2026-08-25-tui-architecture-s40-profile-operation-definitions-review-audit` - `tui-architecture` audit: S40 profile-operation definitions review
 
 ### exec
 
@@ -258,6 +261,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W03-P08-S39` - Register login, provider configuration, credential acquisition, passphrase rotation, and auth teardown as application-owned operations
 - `2026-08-11-tui-architecture-W03-P08-S40` - Register profile field mutation, repeatable-row mutation, bundle export, and profile logout operations through existing user-profile authorities
 - `2026-08-11-tui-architecture-W03-P08-S42` - Expose authentication operation definitions through the authentication application facade
+- `2026-08-11-tui-architecture-W03-P08-S43` - Expose profile mutation and lifecycle operation definitions through the user-profile application facade
 
 ### plan
 
