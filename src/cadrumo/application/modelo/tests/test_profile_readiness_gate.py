@@ -38,12 +38,12 @@ from .._calculation_actions import (
     mark_revision_verificado_completo,
 )
 from .._profile_readiness_gate import (
+    _profile_activity_start_date,
     modelo_applicability_refusal,
     pre_activity_period_refusal,
 )
 from .._work_lifecycle import create_work_unit
 from ..work_addressing import ensure_modelo_work_unit_for_active_target
-from .._profile_readiness_gate import _profile_activity_start_date
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -297,12 +297,12 @@ def test_create_work_unit_service_refuses_profile_missing_activity(tmp_path: Pat
                 clock=_NOW,
             )
 
-        from ....core.resources import resources
         from ....domain.user_profile.labels import profile_field_label
+        from ....domain.user_profile.loader import load_user_profile_schema
 
         expected_label = profile_field_label(
             "activities",
-            resources().user_profile_schema.singleton.field("activities.description"),
+            load_user_profile_schema().field("activities.description"),
         )
         assert excinfo.value.context == {
             "modelo": Modelo.M130.value,
@@ -838,6 +838,7 @@ def test_visible_target_ensure_refuses_reused_pre_activity_m303_before_rename(tm
                 registry_revision_id=_M303_2026_REVISION,
                 name="renamed stale work",
                 actor="operator",
+                catalogue=work_repository.load(),
             )
 
         assert "pre-activity period" in str(excinfo.value)

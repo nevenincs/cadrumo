@@ -1162,10 +1162,10 @@ def _grounded_profile_key_summary(key: str) -> str:
     A key the schema does not resolve is returned unchanged rather than
     guessed at.
     """
-    from ..core.resources import resources
+    from ..domain.user_profile.loader import load_user_profile_schema
     from .user_profile.preflight import build_profile_preflight_requirement
 
-    schema = resources().user_profile_schema.singleton
+    schema = load_user_profile_schema()
     requirement = build_profile_preflight_requirement(key, schema=schema)
     if requirement.label == key:
         return key

@@ -17,6 +17,7 @@ from ....domain.calculations.registry import (
     binding_profile_keys,
     build_profile_grounding_index,
 )
+from ....domain.user_profile.loader import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -46,7 +47,7 @@ def test_a_profile_binding_key_renders_as_a_label_rather_than_the_binding_id() -
     unlabelled field anywhere in the registry fails this rather than only the
     one example a hand-picked fixture would cover.
     """
-    schema = resources().user_profile_schema.singleton
+    schema = load_user_profile_schema()
     grounding_index = build_profile_grounding_index(resources().modelos.authority)
 
     for binding, keys in _profile_bindings_with_keys():

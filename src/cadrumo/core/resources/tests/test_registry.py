@@ -155,7 +155,6 @@ def test_resources_factory_composes_every_repository() -> None:
         "modelos",
         "recargo_bands",
         "topics",
-        "user_profile_schema",
         "iva_catalogues",
         "iva_rate_tables",
     }

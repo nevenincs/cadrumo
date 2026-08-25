@@ -11,7 +11,7 @@ import pytest
 
 from cadrumo.application.user_profile.validation import ProfileValidationService
 
-from ....core.resources import resources
+from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import UserProfileFact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -29,7 +29,7 @@ _RETIRED_FILING_EXPORT_FACTS = (
 
 def test_retired_filing_export_account_paths_are_absent_and_refused() -> None:
     """The real profile schema and validation boundary reject every old path."""
-    schema = resources().user_profile_schema.singleton
+    schema = load_user_profile_schema()
     retired_paths = {fact.path for fact in _RETIRED_FILING_EXPORT_FACTS}
 
     assert retired_paths.isdisjoint(schema.field_paths)

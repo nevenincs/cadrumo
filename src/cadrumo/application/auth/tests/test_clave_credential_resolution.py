@@ -21,7 +21,7 @@ from pydantic import SecretStr
 
 from ....core import AuthProviderKind, ClaveMovilRoute
 from ....core.config import override_settings
-from ....core.resources import resources
+from ....domain.user_profile.loader import load_user_profile_schema
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
 from ...user_profile.preflight import build_profile_preflight_requirement
@@ -104,7 +104,7 @@ def test_missing_profile_route_refuses_even_when_environment_selects_qr() -> Non
 
     expected_label = build_profile_preflight_requirement(
         "auth.clave_movil_route",
-        schema=resources().user_profile_schema.singleton,
+        schema=load_user_profile_schema(),
     ).label
     assert expected_label != "auth.clave_movil_route"
     assert raised.value.translated_message == "application.auth.sessions.errors.clave_route_missing"
@@ -176,7 +176,7 @@ def test_clave_mode_without_any_dni_nie_refuses_naming_the_absent_credential() -
     # asserts the name is schema-sourced without pinning one wording.
     expected_label = build_profile_preflight_requirement(
         "auth.dni_nie",
-        schema=resources().user_profile_schema.singleton,
+        schema=load_user_profile_schema(),
     ).label
     assert expected_label != "auth.dni_nie", "label collapsed to the path; the assertion would be vacuous"
     assert raised.value.context == {"provider": "clave_movil", "identity_field": expected_label}

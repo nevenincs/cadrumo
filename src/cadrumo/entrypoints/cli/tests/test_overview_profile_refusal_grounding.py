@@ -19,9 +19,14 @@ from collections.abc import Sequence
 import pytest
 from click.testing import Result
 
-from ....application.user_profile.preflight import build_profile_preflight_requirement, format_profile_preflight_requirement, format_profile_selector_requirements
+from ....application.user_profile.preflight import (
+    build_profile_preflight_requirement,
+    format_profile_preflight_requirement,
+    format_profile_selector_requirements,
+)
 from ....core.resources import resources
 from ....domain.calculations.registry import build_profile_grounding_index
+from ....domain.user_profile.loader import load_user_profile_schema
 from ....tests.cli_runner import invoke_cached_cli
 from .._overview import (
     _ENTITY_TYPE_SELECTOR,
@@ -53,7 +58,7 @@ def _grounding_index():
 
 def test_the_gating_field_label_differs_from_its_selector_token() -> None:
     """Anchor the fixture: every assertion below is vacuous if they are equal."""
-    schema = resources().user_profile_schema.singleton
+    schema = load_user_profile_schema()
     requirement = build_profile_preflight_requirement(
         _GATING_PATH,
         schema=schema,
@@ -71,7 +76,7 @@ def test_a_profile_selector_token_renders_as_its_operator_label() -> None:
     the label and any legal grounding come from the same authority the modelo
     readiness gate consults when it refuses for this same field.
     """
-    schema = resources().user_profile_schema.singleton
+    schema = load_user_profile_schema()
 
     rendered = format_profile_selector_requirements(
         (_GATING_SELECTOR,),
@@ -95,7 +100,7 @@ def test_a_non_profile_warning_code_survives_verbatim() -> None:
     """A code naming no profile field must not be relabelled or dropped."""
     rendered = format_profile_selector_requirements(
         (_NON_PROFILE_WARNING_CODE,),
-        schema=resources().user_profile_schema.singleton,
+        schema=load_user_profile_schema(),
         grounding_index=_grounding_index(),
     )
 
@@ -104,7 +109,7 @@ def test_a_non_profile_warning_code_survives_verbatim() -> None:
 
 def test_a_mixed_stream_enriches_only_the_profile_fields_and_preserves_order() -> None:
     """Both kinds arrive interleaved in one stream and each keeps its position."""
-    schema = resources().user_profile_schema.singleton
+    schema = load_user_profile_schema()
 
     rendered = format_profile_selector_requirements(
         (_NON_PROFILE_WARNING_CODE, _GATING_SELECTOR, _NON_PROFILE_WARNING_CODE),
@@ -171,7 +176,7 @@ def test_calendar_allow_incomplete_still_renders_rather_than_refusing() -> None:
 
 
 def _label_for(selector: str) -> str:
-    schema = resources().user_profile_schema.singleton
+    schema = load_user_profile_schema()
     path = schema.path_for_model_selector(selector)
     assert path is not None, f"{selector} does not resolve to a schema field"
     return build_profile_preflight_requirement(path, schema=schema, selector=selector).label

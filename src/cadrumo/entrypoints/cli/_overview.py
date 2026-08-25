@@ -115,11 +115,12 @@ def _grounded_warning_summary(warnings: Sequence[CalendarWarning]) -> str:
     from ...application.user_profile.preflight import format_profile_selector_requirements
     from ...core.resources import resources
     from ...domain.calculations.registry import build_profile_grounding_index
+    from ...domain.user_profile.loader import load_user_profile_schema
 
     return ", ".join(
         format_profile_selector_requirements(
             (warning.code for warning in warnings),
-            schema=resources().user_profile_schema.singleton,
+            schema=load_user_profile_schema(),
             grounding_index=build_profile_grounding_index(resources().modelos.authority),
         ),
     )
@@ -184,6 +185,7 @@ def _undeclared_taxpayer_model_refusal(profile: TaxpayerProfile) -> CliRefusedBo
     from ...core.resources import resources
     from ...domain.calculations.registry import build_profile_grounding_index
     from ...domain.deadlines import EntityType
+    from ...domain.user_profile.loader import load_user_profile_schema
     from ._common import attach_cli_policy_verdict
     from .errors import CliRefusedBoundaryError
 
@@ -199,7 +201,7 @@ def _undeclared_taxpayer_model_refusal(profile: TaxpayerProfile) -> CliRefusedBo
                 "requirements": ", ".join(
                     format_profile_selector_requirements(
                         missing,
-                        schema=resources().user_profile_schema.singleton,
+                        schema=load_user_profile_schema(),
                         grounding_index=build_profile_grounding_index(resources().modelos.authority),
                     ),
                 ),

@@ -19,6 +19,7 @@ from cadrumo.application.user_profile.preflight import (
 
 from ....core.resources import resources
 from ....domain.calculations.registry import binding_profile_keys
+from ....domain.user_profile.loader import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -29,7 +30,7 @@ _GATING_PATH = "withholding.has_employees"
 
 
 def _schema():
-    return resources().user_profile_schema.singleton
+    return load_user_profile_schema()
 
 
 def test_a_selector_token_resolves_only_through_the_selector_renderer() -> None:

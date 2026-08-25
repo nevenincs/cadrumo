@@ -14,6 +14,7 @@ from ....core.errors import BaseSeverity
 from ....core.resources import resources
 from ....domain.calculations.registry import ProfileKeyGrounding
 from ....domain.user_profile.labels import profile_field_label
+from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.schema import ProfileSchemaDefinition
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
@@ -31,7 +32,7 @@ _NON_ISO_DATE_VALUES = (
 
 @pytest.fixture(scope="module")
 def schema() -> ProfileSchemaDefinition:
-    return resources().user_profile_schema.singleton
+    return load_user_profile_schema()
 
 
 def test_validation_rejects_unknown_field_path(schema: ProfileSchemaDefinition) -> None:

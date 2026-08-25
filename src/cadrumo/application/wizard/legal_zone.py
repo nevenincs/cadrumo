@@ -29,12 +29,12 @@ from collections.abc import Mapping
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG, Modelo
-from ...core.resources import resources
 from ...domain.calculations.registry import (
     ValidatedRegistryAuthority,
     build_profile_grounding_index,
 )
 from ...domain.user_profile.errors import UserProfileError
+from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.schema import ProfileSchemaDefinition
 from ..flows.definition import FlowDefinition, FlowPage, FlowRepeatingGroup
 
@@ -94,7 +94,7 @@ def build_flow_legal_zones(
     ``domain_key``, and emits a :class:`PageLegalZone` only when the union
     is non-empty. The returned mapping is keyed by page id in walk order.
     """
-    resolved_schema = schema or resources().user_profile_schema.singleton
+    resolved_schema = schema or load_user_profile_schema()
     grounding_index = build_profile_grounding_index(authority)
 
     zones: dict[str, PageLegalZone] = {}

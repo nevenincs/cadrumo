@@ -23,6 +23,7 @@ from ....domain.calculations.registry import (
     binding_profile_keys,
 )
 from ....domain.modelos import WorkUnit, derive_work_unit_id
+from ....domain.user_profile.loader import load_user_profile_schema
 from .._modelo_behavior_support import _date_binding_profile_requirements
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -116,7 +117,7 @@ def test_a_real_profile_binding_resolves_to_its_profile_facts() -> None:
     lookup instead of the path lookup.
     """
     unit, binding = _an_addressable_profile_binding()
-    schema = resources().user_profile_schema.singleton
+    schema = load_user_profile_schema()
     # Binding keys are schema PATHS, so the label is resolved by path.
     labelled = [build_profile_preflight_requirement(key, schema=schema).label for key in binding_profile_keys(binding)]
 

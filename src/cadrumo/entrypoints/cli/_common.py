@@ -1593,6 +1593,7 @@ def _filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
     from ...application.user_profile.preflight import format_profile_selector_requirements
     from ...core.resources import resources
     from ...domain.calculations.registry import build_profile_grounding_index
+    from ...domain.user_profile.loader import load_user_profile_schema
     from .errors import CliRefusedBoundaryError
 
     record = state.active_profile_record()
@@ -1608,7 +1609,7 @@ def _filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
                     "requirements": ", ".join(
                         format_profile_selector_requirements(
                             [_TAX_ID_SELECTOR],
-                            schema=resources().user_profile_schema.singleton,
+                            schema=load_user_profile_schema(),
                             grounding_index=build_profile_grounding_index(resources().modelos.authority),
                         ),
                     ),

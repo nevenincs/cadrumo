@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....core import Period
-from ....core.resources import resources
+from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ...wizard import compiler as _wizard  # noqa: F401 - registers compiled profile keys
 from ..completeness import conditional_profile_missing_required
@@ -77,7 +77,7 @@ def test_profile_key_validation_applies_irnr_conditional_requirements() -> None:
 
 
 def test_lifecycle_validation_reports_conditional_irnr_profile_errors() -> None:
-    schema = resources().user_profile_schema.singleton
+    schema = load_user_profile_schema()
     facts = (
         UserProfileFact(path="identity.tax_id", value="B66012345"),
         UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
@@ -114,7 +114,7 @@ def test_profile_key_validation_does_not_require_iva_regime_for_natural_person_w
 
 
 def test_lifecycle_validation_allows_natural_person_without_activity_to_omit_iva_regime() -> None:
-    schema = resources().user_profile_schema.singleton
+    schema = load_user_profile_schema()
     facts = (
         UserProfileFact(path="identity.tax_id", value="12345678Z"),
         UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
@@ -129,7 +129,7 @@ def test_lifecycle_validation_allows_natural_person_without_activity_to_omit_iva
 
 
 def test_lifecycle_validation_requires_natural_person_with_activity_to_declare_iva_regime() -> None:
-    schema = resources().user_profile_schema.singleton
+    schema = load_user_profile_schema()
     facts = (
         UserProfileFact(path="identity.tax_id", value="12345678Z"),
         UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
@@ -144,7 +144,7 @@ def test_lifecycle_validation_requires_natural_person_with_activity_to_declare_i
 
 
 def test_profile_preflight_reports_irnr_country_as_missing_before_modelo_work() -> None:
-    schema = resources().user_profile_schema.singleton
+    schema = load_user_profile_schema()
     record = UserProfileRecord(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="88888888-8888-4888-8888-888888888888",

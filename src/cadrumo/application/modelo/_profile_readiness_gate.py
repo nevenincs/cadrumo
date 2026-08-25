@@ -43,6 +43,7 @@ from ...domain.calculations.registry import (
 from ...domain.deadlines import EntityType, IrpfIncomeCategory
 from ...domain.modelos import WorkUnit
 from ...domain.user_profile.errors import ProfileNotFoundError
+from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from ..user_profile.commands import ProfilePreflightReport, ProfilePreflightRequirement, ProfileValidationIssue
 from ..user_profile.completeness import missing_required_field_paths
@@ -84,7 +85,7 @@ def _requirement_for_profile_path(
     """
     return build_profile_preflight_requirement(
         path,
-        schema=resources().user_profile_schema.singleton,
+        schema=load_user_profile_schema(),
         selector=selector,
         grounding_index=grounding_index,
     )
@@ -183,7 +184,7 @@ def _validation_missing_requirements(
     *,
     grounding_index: Mapping[str, ProfileKeyGrounding] | None = None,
 ) -> tuple[ProfilePreflightRequirement, ...]:
-    validation = ProfileValidationService(schema=resources().user_profile_schema.singleton).validate_record(record)
+    validation = ProfileValidationService(schema=load_user_profile_schema()).validate_record(record)
     requirements: list[ProfilePreflightRequirement] = []
     for issue in validation.issues:
         if issue.severity.value != "error":
@@ -255,7 +256,7 @@ def modelo_work_profile_preflight_report(
             authority=authority,
         )
     else:
-        report = ProfilePreflightService(schema=resources().user_profile_schema.singleton).report(
+        report = ProfilePreflightService(schema=load_user_profile_schema()).report(
             record=record,
             modelo=modelo,
             revision_id=revision_id,
@@ -296,7 +297,7 @@ def _report_for_target(
         revision = selected if selected.id == revision_id else None
     except (FileNotFoundError, RegistrySnapshotError):
         revision = None
-    return ProfilePreflightService(schema=resources().user_profile_schema.singleton).report(
+    return ProfilePreflightService(schema=load_user_profile_schema()).report(
         record=record,
         modelo=modelo,
         revision_id=revision_id,
@@ -545,7 +546,7 @@ def require_profile_ready_for_modelo_work(
         # rule with every individual field populated, in which case the
         # enumeration below is empty and the original generic wording is
         # kept rather than claiming "missing: nothing".
-        schema = resources().user_profile_schema.singleton
+        schema = load_user_profile_schema()
         missing_paths = missing_required_field_paths(schema, record_to_path_values(record))
         if missing_paths:
             # Grounded, not a bare label. This composed the list without a

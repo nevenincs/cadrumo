@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.resources import resources
+from ....domain.user_profile.loader import load_user_profile_schema
 from ...user_profile.preflight import build_profile_preflight_requirement
 from ..sessions import (
     _PROFILE_TAX_ID_PATH,
@@ -28,7 +28,7 @@ _TAX_ID_SELECTOR = "tax.id"
 def _label() -> str:
     return build_profile_preflight_requirement(
         _PROFILE_TAX_ID_PATH,
-        schema=resources().user_profile_schema.singleton,
+        schema=load_user_profile_schema(),
     ).label
 
 

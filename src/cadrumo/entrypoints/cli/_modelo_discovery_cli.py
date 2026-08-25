@@ -239,13 +239,14 @@ def _unresolved_profile_requirements(checklist: DataInventoryChecklist) -> str:
     from ...application.user_profile.preflight import format_profile_path_requirements
     from ...core.resources import resources
     from ...domain.calculations.registry import build_profile_grounding_index
+    from ...domain.user_profile.loader import load_user_profile_schema
 
     if not checklist.unresolved_profile_keys:
         return ""
     return ", ".join(
         format_profile_path_requirements(
             checklist.unresolved_profile_keys,
-            schema=resources().user_profile_schema.singleton,
+            schema=load_user_profile_schema(),
             grounding_index=build_profile_grounding_index(resources().modelos.authority),
         )
     )

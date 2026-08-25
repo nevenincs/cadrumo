@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.resources import resources
+from ....domain.user_profile.loader import load_user_profile_schema
 from ..copy_sources import (
     register_profile_copy_sources,
     resolve_profile_schema_copy,
@@ -23,7 +23,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _first_field_with_legal_refs() -> tuple[str, tuple[str, ...]]:
-    schema = resources().user_profile_schema.singleton
+    schema = load_user_profile_schema()
     for section in schema.sections:
         for field in section.fields:
             if field.legal_refs:
@@ -34,7 +34,7 @@ def _first_field_with_legal_refs() -> tuple[str, tuple[str, ...]]:
 def test_schema_resolver_projects_description_and_citations() -> None:
     """A profile-schema ref renders the field description plus its citation tokens."""
     path, legal_refs = _first_field_with_legal_refs()
-    field = resources().user_profile_schema.singleton.field(path)
+    field = load_user_profile_schema().field(path)
     rendered = resolve_profile_schema_copy(f"profile-schema:{path}")
     assert rendered is not None
     assert field.description in rendered

@@ -345,7 +345,7 @@ def profile_requirements_for_binding(
     the caller keeps whatever guidance it already had. A degraded message is
     worse than a resolved one and better than none.
     """
-    from ...core.resources import resources
+    from ...domain.user_profile.loader import load_user_profile_schema
     from ..user_profile.preflight import format_profile_path_requirements
 
     try:
@@ -359,7 +359,7 @@ def profile_requirements_for_binding(
             return ""
         rendered = format_profile_path_requirements(
             keys,
-            schema=resources().user_profile_schema.singleton,
+            schema=load_user_profile_schema(),
             grounding_index=build_profile_grounding_index(authority),
         )
     except Exception:
