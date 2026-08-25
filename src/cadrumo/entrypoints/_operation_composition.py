@@ -36,6 +36,8 @@ from ..application.storage.calc_sheets import SheetExportPlan, TabName, export_m
 from ..application.user_profile import (
     CENSAL_OPERATION_DEFINITION,
     build_censal_operation_registration,
+)
+from ..application.user_profile.operations import (
     build_user_profile_operation_definitions,
     build_user_profile_operation_registrations,
 )

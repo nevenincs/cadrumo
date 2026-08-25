@@ -317,7 +317,7 @@ _C0_OWNER_FILES = frozenset(
         "src/cadrumo/application/live/_filed_history_operation.py",
         "src/cadrumo/application/user_profile/_bundle_export_operation.py",
         "src/cadrumo/application/user_profile/_censal_operation.py",
-        "src/cadrumo/application/user_profile/_operation_definitions.py",
+        "src/cadrumo/application/user_profile/operations.py",
         "src/cadrumo/entrypoints/_operation_composition.py",
         "src/cadrumo/entrypoints/tests/test_operation_composition.py",
         "src/cadrumo/entrypoints/tests/test_public_operation_dependency_receipt.py",

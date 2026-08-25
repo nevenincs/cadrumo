@@ -1,4 +1,4 @@
-"""Canonical registered operations for active user-profile maintenance."""
+"""Canonical public registered operations for active user-profile maintenance."""
 
 from __future__ import annotations
 
@@ -163,6 +163,17 @@ class ProfileLogoutOperationRequest(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     profile_id: UUID
+
+
+def build_profile_logout_operation_request(
+    profile_id: UUID,
+) -> OperationRequest[ProfileLogoutOperationRequest]:
+    """Build the sole typed strong-close request for an active profile."""
+    return OperationRequest(
+        definition_id=PROFILE_LOGOUT_OPERATION_DEFINITION_ID,
+        subject_ref=_profile_subject(profile_id),
+        payload=ProfileLogoutOperationRequest(profile_id=profile_id),
+    )
 
 
 def _profile_subject(profile_id: UUID) -> str:
@@ -397,7 +408,20 @@ def build_user_profile_operation_registrations(
 
 
 __all__ = [
+    "PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID",
+    "PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID",
+    "PROFILE_LOGOUT_OPERATION_DEFINITION_ID",
+    "PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID",
     "USER_PROFILE_OPERATION_DEFINITIONS",
+    "ProfileBundleExportOperationRequest",
+    "ProfileFieldMutationOperationRequest",
+    "ProfileLogoutOperationRequest",
+    "ProfileLogoutOperationResult",
+    "ProfileMutationOperationResult",
+    "ProfileRepeatableRowMutationOperationRequest",
+    "ProfileRepeatableRowMutationOperationResult",
+    "ProfileRepeatableRowValue",
+    "build_profile_logout_operation_request",
     "build_user_profile_operation_definitions",
     "build_user_profile_operation_registrations",
 ]

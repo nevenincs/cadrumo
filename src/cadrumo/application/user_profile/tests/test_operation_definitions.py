@@ -42,7 +42,10 @@ from .._bundle_export_contracts import (
 from .._bundle_export_operation import ProfileBundleExportJournalRepository
 from .._custody_ports import ProfileCustodySecureObjectRepositoryPort, profile_custody_secure_object_repository
 from .._login_session import login_profile
-from .._operation_definitions import (
+from .._profile_record_repository import ProfileRecordRepository
+from .._projections import record_to_path_values
+from .._registration import register_profile_with_credentials
+from ..operations import (
     PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,
     PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
     PROFILE_LOGOUT_OPERATION_DEFINITION_ID,
@@ -50,16 +53,13 @@ from .._operation_definitions import (
     USER_PROFILE_OPERATION_DEFINITIONS,
     ProfileBundleExportOperationRequest,
     ProfileFieldMutationOperationRequest,
-    ProfileLogoutOperationRequest,
     ProfileMutationOperationResult,
     ProfileRepeatableRowMutationOperationRequest,
     ProfileRepeatableRowMutationOperationResult,
     ProfileRepeatableRowValue,
+    build_profile_logout_operation_request,
     build_user_profile_operation_registrations,
 )
-from .._profile_record_repository import ProfileRecordRepository
-from .._projections import record_to_path_values
-from .._registration import register_profile_with_credentials
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -314,11 +314,7 @@ def test_profile_logout_strong_closes_real_custody_after_secure_request_resoluti
                     lease_token="8" * 64,
                 )
                 created = await supervisor.submit(
-                    OperationRequest(
-                        definition_id=PROFILE_LOGOUT_OPERATION_DEFINITION_ID,
-                        subject_ref=f"profile:{profile_id}",
-                        payload=ProfileLogoutOperationRequest(profile_id=profile_id),
-                    ),
+                    build_profile_logout_operation_request(profile_id),
                     operation_id="d" * 64,
                 )
                 terminal = await supervisor.start(created)

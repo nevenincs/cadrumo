@@ -704,12 +704,6 @@ if TYPE_CHECKING:
     from ._login_session_port import (
         profile_session_serves_bucket as profile_session_serves_bucket,
     )
-    from ._operation_definitions import (
-        build_user_profile_operation_definitions as build_user_profile_operation_definitions,
-    )
-    from ._operation_definitions import (
-        build_user_profile_operation_registrations as build_user_profile_operation_registrations,
-    )
     from ._overview import (
         MASKED_PLACEHOLDER as MASKED_PLACEHOLDER,
     )
@@ -998,8 +992,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "build_censal_operation_definition": "._censal_operation",
     "build_censal_operation_request": "._censal_operation",
     "build_censal_operation_registration": "._censal_operation",
-    "build_user_profile_operation_definitions": "._operation_definitions",
-    "build_user_profile_operation_registrations": "._operation_definitions",
     "CENSO_CERTIFICATE_AXIS_PREFIX": "._cotejo_apply",
     "CENSO_DIVERGENCE_NOTICE_CODE": "._cotejo_apply",
     "CENSO_DIVERGENCE_PREFIX": "._cotejo_apply",
@@ -1365,8 +1357,6 @@ __all__ = [
     "build_censal_operation_request",
     "build_profile_overview",
     "build_profile_preflight_requirement",
-    "build_user_profile_operation_definitions",
-    "build_user_profile_operation_registrations",
     "bundle_data_categories",
     "bundle_excluded_data_categories",
     "carried_namespace_definitions",
