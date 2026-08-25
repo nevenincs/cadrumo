@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:e8ad5c44d44c7b891ceabe571fe7d0654d5241d4aa962eb3be13338c802626f5'
+body_hash: 'sha256:e1bae0588a16fa7d1fe770a5de204549f698dda858601ce35920b8d1b434aad5'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -119,6 +119,8 @@ related:
   - '[[2026-08-22-source-casilla-integration-W05-P16-S99]]'
   - '[[2026-08-22-source-casilla-integration-W05-P16-summary]]'
   - '[[2026-08-22-source-casilla-integration-W05-P17-S100]]'
+  - '[[2026-08-22-source-casilla-integration-W05-P17-S101]]'
+  - '[[2026-08-22-source-casilla-integration-W05-P17-S102]]'
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-22-source-casilla-integration-census-code-review-audit]]'
   - '[[2026-08-22-source-casilla-integration-composite-provenance-research]]'
@@ -169,6 +171,8 @@ related:
   - '[[2026-08-23-source-casilla-integration-s42-inventory-source-ownership-review-audit]]'
   - '[[2026-08-23-source-casilla-integration-s43-inventory-binding-templates-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s100-m182-row-source-review-audit]]'
+  - '[[2026-08-25-source-casilla-integration-s101-m182-terminal-deferral-review-audit]]'
+  - '[[2026-08-25-source-casilla-integration-s102-m182-terminal-deferral-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s87-independent-post-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s88-google-pull-post-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s89-row-source-identity-review-audit]]'
@@ -239,6 +243,8 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-23-source-casilla-integration-s42-inventory-source-ownership-review-audit` - `source-casilla-integration` audit: `s42 inventory source ownership review`
 - `2026-08-23-source-casilla-integration-s43-inventory-binding-templates-review-audit` - `source-casilla-integration` audit: `source-casilla-integration audit: s43 inventory binding templates review`
 - `2026-08-25-source-casilla-integration-s100-m182-row-source-review-audit` - `source-casilla-integration` audit: `W05.P17.S100 independent review`
+- `2026-08-25-source-casilla-integration-s101-m182-terminal-deferral-review-audit` - `source-casilla-integration` audit: `S101 M182 terminal deferral review`
+- `2026-08-25-source-casilla-integration-s102-m182-terminal-deferral-review-audit` - `source-casilla-integration` audit: `S102 M182 terminal-deferral review`
 - `2026-08-25-source-casilla-integration-s87-independent-post-review-audit` - `source-casilla-integration` audit: `S87 snapshot-bound row assembly independent review`
 - `2026-08-25-source-casilla-integration-s88-google-pull-post-review-audit` - `source-casilla-integration` audit: `s88 google pull post review`
 - `2026-08-25-source-casilla-integration-s89-row-source-identity-review-audit` - `source-casilla-integration` audit: `S89 row source identity review`
@@ -366,6 +372,8 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-W05-P16-S99` - formally close the reviewed terminal M360 ingress-blocked census deferral, retain its owner, expiry, reopening predicate, and no-connected-route boundary, and obtain final review
 - `2026-08-22-source-casilla-integration-W05-P16-summary` - `source-casilla-integration` `W05.P16` summary
 - `2026-08-22-source-casilla-integration-W05-P17-S100` - adjudicate Modelo 182 donor-detail and Article-3 declarant/header source semantics, including type-1 nature `3` and administrator-holder identity, from official evidence
+- `2026-08-22-source-casilla-integration-W05-P17-S101` - recast Modelo 182 as a bounded terminal ingress-blocked deferral pending distinct non-lossy type-1 declarant/header and type-2 donor-detail carriers, secure owner(s), durable identity/fingerprint, and S102 lifecycle/export proof
+- `2026-08-22-source-casilla-integration-W05-P17-S102` - prove Modelo 182 declarant and donor-detail persistence, diagnostics, provenance, replay, review, and supported export without a lossy fold
 
 ### plan
 
