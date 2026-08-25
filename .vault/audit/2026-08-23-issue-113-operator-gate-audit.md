@@ -1,3 +1,12 @@
+---
+related: []
+date: '2026-08-23'
+modified: '2026-08-25'
+body_hash: 'sha256:b86fa67e18f1d22e112cb840f193e6fb3158101d2ea9530a96b77632c029ef64'
+tags:
+  - '#audit'
+  - '#open-decisions-and-operator-gates'
+---
 # Issue #113 operator gate audit — 2026-08-23
 
 ## Scope and environment

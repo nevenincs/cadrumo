@@ -1,3 +1,12 @@
+---
+related: []
+date: '2026-08-24'
+modified: '2026-08-25'
+body_hash: 'sha256:c4b0b8c2693f20cd2264d098e1a266d78509152f61611aea3016e194b96232f9'
+tags:
+  - '#reference'
+  - '#registry-completeness-closure'
+---
 # REGISTRY LOOP v4 — make the registry GREEN and WHOLE
 
 GOAL, set by the operator: **the registry is green (every gate passes) and whole (every

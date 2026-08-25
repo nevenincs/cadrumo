@@ -1,3 +1,12 @@
+---
+related: []
+date: '2026-08-23'
+modified: '2026-08-25'
+body_hash: 'sha256:60c4778ed13ca383e6b9af18abf36fefcd49a91d3024b090b086716208894a1f'
+tags:
+  - '#reference'
+  - '#registry-completeness-closure'
+---
 # REGISTRY UNBLOCK LOOP v2 — make the application file what it claims to file
 
 Supersedes v1 and the retired REGISTRY LOOP v7.
