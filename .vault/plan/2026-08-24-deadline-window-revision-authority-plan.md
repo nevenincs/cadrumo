@@ -3,8 +3,6 @@ tags:
   - '#plan'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
-modified: '2026-08-24'
-body_hash: 'sha256:35904fdcfc117a830f6f29fe6a5fcee65c3e667a183b0c035af045f902fcad97'
 tier: L3
 related:
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
@@ -14,6 +12,8 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
+modified: '2026-08-25'
+body_hash: 'sha256:433f20d660a02a9908cda63e6c50ba6ca70a9ef49a094462b01ddaf433b0e505'
 ---
 
 <!-- RETIRED: P06, P07, P09 -->
@@ -141,7 +141,7 @@ Prove every operator surface inherits canonical authority and close with formal 
 
 Verify the full consumer chain without local matching or multiplicity erasure.
 
-- [ ] `W04.P12.S29` - Audit overview, agenda, backlog, workflow gates, filing-window lookup, and explain for exclusive consumption of canonical deadline APIs; `src/cadrumo/application/`.
+- [x] `W04.P12.S29` - Audit overview, agenda, backlog, workflow gates, filing-window lookup, and explain for exclusive consumption of canonical deadline APIs; `src/cadrumo/application/`.
 - [ ] `W04.P12.S30` - Add overview and workflow regressions comparing ordered semantic coordinates without multiplicity-erasing assertions; `src/cadrumo/application/overview/tests/; src/cadrumo/application/modelo/tests/`.
 - [ ] `W04.P12.S31` - Add real CLI JSON regressions for calendar, agenda, backlog, workflow, and explain including exactly four M303 quarterly obligations for 2025; `src/cadrumo/entrypoints/cli/tests/`.
 - [ ] `W04.P12.S32` - Add all-modelo parity coverage across registry, DeadlineEngine, overview, workflow, and real CLI for every supported filing year; `src/cadrumo/domain/deadlines/tests/; src/cadrumo/application/overview/tests/; src/cadrumo/entrypoints/cli/tests/`.
