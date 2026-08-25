@@ -9,6 +9,7 @@ tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-22-source-casilla-integration-research]]'
+  - '[[2026-08-22-source-casilla-integration-m182-row-source-grounding-research]]'
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
   - '[[2026-08-23-inventory-casilla-mapping-adr]]'
   - '[[2026-08-23-amortization-casilla-mapping-adr]]'
