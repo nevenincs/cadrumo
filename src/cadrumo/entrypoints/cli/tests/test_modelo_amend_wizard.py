@@ -38,8 +38,7 @@ from pydantic import AnyHttpUrl, TypeAdapter
 from ....adapters.inbound.pdf import source_pdf_reference_path
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....application.flows import FlowAnswerError, FlowPage, run_scripted_flow
-from ....application.modelo import get_calculation_revision, get_filing_record
-from ....application.modelo._action_errors import amendment_evidence_missing_precondition
+from ....application.modelo import amendment_evidence_missing_precondition, get_calculation_revision, get_filing_record
 from ....core import (
     STR_KEYED_MAPPING_ADAPTER,
     ActionConditionality,

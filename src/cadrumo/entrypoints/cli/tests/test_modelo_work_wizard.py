@@ -28,7 +28,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....application.flows import run_scripted_flow
-from ....application.modelo._action_errors import modelo_work_wizard_retry_exhausted_precondition
+from ....application.modelo import modelo_work_wizard_retry_exhausted_precondition
 from ....core import ActionConditionality, NoRecoveryOutcome, resolve_active_bucket_id
 from ....core.flows import FlowMode
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
