@@ -794,3 +794,32 @@ author the four general a-ingresar quarterly windows for 210 grounded in
 intentionally out of scope and correct the tests to match. Not actioned here:
 fabricating deadline windows would invent filing dates, and the standing rule
 forbids inventing legal behaviour.
+
+### registry validator modules grew past their pinned reviewability ceilings
+
+`test_registry_reviewability.py::test_registry_validator_modules_stay_below_complexity_baselines`
+is red on four validators:
+
+- `_validate.py` 325 vs pinned 307
+- `_validate_cross_revision.py` 447 vs pinned 326
+- `_validate_revision_rules.py` 428 vs the 300 default (no baseline entry)
+- one further module reported by the same assertion
+
+Not actioned, deliberately. The gate's own comment states the contract: "a raise
+is a reviewed decision, and its reasoning belongs in the commit that makes it",
+and "the incentive runs against that by construction, since raising a number is
+a one-line edit while shrinking a validator is real work". Bumping the pins here
+would be exactly the one-line edit the gate exists to prevent, and the standing
+rule forbids bumping a ratchet.
+
+The growth arrived with registry feature commits (e.g. `2b8164c1ae`, grounding
+modelos 220 and 349 in official plazos) rather than with this canonicalisation
+work. Note that author-based attribution is useless in this tree: every peer
+commits under the same git identity, so the commit SUBJECT is the only signal.
+
+Owner action: either shrink the four validators back under their pins, or re-pin
+each to its exact current length in the same commit that states why the growth
+was accepted. Also worth a sweep on the way down — several modules now sit well
+under stale pins (`_validate_exports.py` 463 vs 536, `_validate_revision_sections.py`
+320 vs 323), and the gate's comment asks for re-pinning in that direction too,
+because slack is silent permission to grow back into the gap.
