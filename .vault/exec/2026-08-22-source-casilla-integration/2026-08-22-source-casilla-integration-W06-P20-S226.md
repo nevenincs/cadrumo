@@ -58,10 +58,13 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Ground official M187 filer and record populations, current bindings, mesh, census, and export surfaces.
+- Record the accepted source-owner deferral decision without runtime or registry changes.
 
 ## Outcome
 
+Payer and Article 42 entity/IIC facts remain non-substitutable. No secure source owner, resolver, binding, or export claim was added; S112 remains the separate census lane.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+- This evidence step does not classify or mutate the census.

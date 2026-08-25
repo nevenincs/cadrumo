@@ -38,6 +38,29 @@ related:
 
 # `source-casilla-integration` research: `m187 payer entity iic grounding`
 
+Modelo 187 has distinct type-1 filer/header and type-2 payer/entity/IIC facts. The official sources establish filing populations and record structure, but no current secure source owner supplies a non-lossy connected carrier; this record therefore authorizes no binding, resolver, export, or census promotion.
+
+## Findings
+
+### Article 42 RGAT is a separate obligated-person limb
+
+Orden HAC/1417/2018 rewrites the Modelo 187 filer population to include the Article 42 RGAT obligated-person/entity limb in addition to the withholding payer population. The canonical legal catalogue records that separation at `src/cadrumo/_data/registry/aeat/legal/irpf.toml:2021`; the official order is BOE-A-2018-17997. A single payer selector cannot represent both without collapsing distinct legal populations.
+
+### Type-1 and type-2 records have non-substitutable grain
+
+The Modelo manifest cites the authoritative AEAT procedure and BOE layout at `src/cadrumo/_data/registry/aeat/modelos/187/manifest.toml:2`. Type-1 owns declarant/header facts; type-2 carries payer/entity/IIC record facts. Existing manual/direct fields remain legitimate operator entry, but do not establish capture identity, source provenance, secure persistence, replay, review, or a live source owner.
+
+### No connectable source route is present
+
+The live source mesh has no Modelo 187 payer/entity/IIC resolver; its existing resolver families are source-kind-specific and must not be repurposed. Neither current registry declarations nor export structure prove a secure owner. Temporal applicability and an export layout are downstream schema facts, not evidence of source ownership. The evidence supports deferral pending a separately accepted non-lossy source carrier; it does not safely classify a new census entry before the S112 census lane.
+
+## Sources
+
+- `src/cadrumo/_data/registry/aeat/legal/irpf.toml:2002`
+- `src/cadrumo/_data/registry/aeat/legal/irpf.toml:2021`
+- `src/cadrumo/_data/registry/aeat/modelos/187/manifest.toml:2`
+- https://www.boe.es/buscar/doc.php?id=BOE-A-2018-17997
+
 <!-- Lead: the question, why it matters to `source-casilla-integration`, and what was
      concluded - the evidence picture, not a decision. -->
 
