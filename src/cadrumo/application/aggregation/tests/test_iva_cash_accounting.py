@@ -11,7 +11,7 @@ import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Period
+from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Modelo, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import resolve_ledger_iva_aggregation_binding_values
 from ....domain.iva import (
@@ -541,13 +541,27 @@ def test_a_not_subject_row_outside_the_regime_is_not_refused_by_this_gate() -> N
 
 def _m390_repercutido_values(transaction: Transaction) -> dict[str, Decimal]:
     """Resolve the real M390 repercutido bindings for one transaction."""
+    annual = Period.from_year_and_code(2026, "0A")
     aggregation = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period=Period.from_year_and_code(2026, "0A"),
+        period=annual,
     )
     assert aggregation.issues == ()
+    # The revision is RESOLVED from the same period the observations were
+    # aggregated for, never pinned: an id literal names one moment in the
+    # registry and rots on the next span split, and pinning a different year's
+    # id would compute this period under another year's norms.
+    revision = (
+        resources()
+        .modelos.authority.snapshot(
+            Modelo.M390.value,
+            filing_year=annual.filing_year,
+            period=annual.registry_token,
+        )
+        .revision
+    )
     resolved = resolve_ledger_iva_aggregation_binding_values(
-        resources().modelos.get("390").revisions["2010-y-siguientes"],
+        revision,
         aggregation.observations,
     )
     return {key: value for key, value in resolved.items() if value and "repercutido" in key}
