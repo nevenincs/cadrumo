@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:d2b2bfaab3817ef1425178ba41e53f043f8e89372c0b0068bc118e3090f1a183'
+body_hash: 'sha256:bab516f357a52de130eb2b402c83cbd5285407b3c787994ff0c9e483a21ae1c9'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
@@ -105,7 +105,6 @@ assuming that one era's destination or semantics applies to the other.
 `.vault/adr/2026-08-22-source-casilla-integration-adr.md:81`
 
 ## Sources
-
 
 - https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_24/DR220e24.xlsx
 - https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR220e25.xlsx
