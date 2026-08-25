@@ -62,1272 +62,531 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from functools import partial
-from importlib import import_module
-from types import ModuleType
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from ...domain.modelos import (
-        CalculationRevisionState,
-        Modelo184MemberRow,
-        Modelo232VinculadaRow,
-        Modelo347ContraparteRow,
-        Modelo349CountryPrefixContextError,
-        Modelo349OperadorRow,
-        Modelo349RectificacionRow,
-        ModeloDetailRow,
-        ModeloError,
-        ModeloRecordStatus,
-        ModeloVerificationFindingKind,
-        ModeloVerificationFindingSeverity,
-        VerificationCompletenessStatus,
-        validate_m349_country_prefix_context,
-        validate_m349_nif_format,
-    )
-    from ._action_errors import (
-        AmendmentComplementariaLiabilityDecreaseError,
-        AmendmentEvidenceMissingError,
-        AmendmentKindNotPermittedError,
-        AmendmentM303RectificativaMotiveError,
-        AmendmentOverrideCasillaError,
-        AmendmentTargetStateError,
-        AmendmentVerificationRefusedError,
-        CalculationRegistryUnavailableError,
-        CalculationRevisionNotFoundError,
-        CalculationRevisionStateError,
-        CasillaProvenanceMissingError,
-        ExternalModeloImportError,
-        ModeloAggregationBindingError,
-        ModeloApplicabilityFilterError,
-        ModeloChargeAccountMissingError,
-        ModeloCrossPeriodCleanStateError,
-        ModeloLocalObservationError,
-        ModeloPaymentElectionCapabilityRefusedError,
-        ModeloPaymentElectionIncompatibleError,
-        ModeloPriorDomiciliationElectionRefusedError,
-        ModeloProfileReadinessError,
-        ModeloRecordNotFoundError,
-        ModeloRefundElectionNotEligibleError,
-        ModeloRequiredBindingsMissingError,
-        ModeloWorkflowGateError,
-        StoredCalculationDriftError,
-        VerificationReportNotFoundError,
-        WorkUnitAlreadyDiscardedError,
-        WorkUnitMutationRefusedError,
-        WorkUnitNotFoundError,
-        WorkUnitRevisionDivergenceError,
-    )
-    from ._amendment_actions import amend_modelo_revision
-    from ._binding_readiness import profile_resolvable_binding_ids
-    from ._binding_resolution import DeclarationPeriodInputs, resolve_declaration_period_inputs
-    from ._borrador_binding import (
-        Modelo100BorradorBindingCommand,
-        Modelo100BorradorBindingError,
-        Modelo100BorradorSourceResolver,
-        resolve_modelo_100_borrador_bindings,
-    )
-    from ._calculate_input import (
-        Modelo202ModalitySummary,
-        ModeloAuthorizationAdvisorySummary,
-        ModeloWorkCalculationServiceResult,
-        WorkCalculateInputBundle,
-        apply_calculation_shortcut_inputs,
-        authorization_advisory_for_modelo,
-        build_work_calculate_input_bundle,
-        calculate_modelo_work_revision,
-        is_detail_casilla_override_key,
-        modelo_202_modality_for_work_unit,
-    )
-    from ._calculation_actions import (
-        BucketAggregationCalculationResult,
-        assert_no_novel_source_kinds,
-        calculate_modelo_revision,
-        calculate_modelo_revision_from_bucket_aggregation,
-        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-        get_calculation_revision,
-        list_calculation_revisions,
-        mark_revision_verificado_completo,
-    )
-    from ._calculation_resolution import resolve_calculation_binding_channels
-    from ._calculation_route import (
-        CALCULATION_ROUTE_ENROLLED_SOURCES,
-        CALCULATION_ROUTE_ID,
-        CALCULATION_ROUTE_PRE_MESH_SOURCES,
-        CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
-        CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
-        MANUAL_INPUT_RESOLVER_ID,
-        CalculationRouteManualOwnership,
-        CalculationRouteResolverOwnership,
-        validate_calculation_route_resolver_ownership,
-    )
-    from ._calculation_source_policy import (
-        BUCKET_AGGREGATION_LOCK_SOURCES,
-        CALLER_OVERRIDABLE_CARRY_SOURCES,
-    )
-    from ._data_inventory import (
-        DataInventoryCasilla,
-        DataInventoryChecklist,
-        data_inventory_checklist,
-        profile_requirements_for_binding,
-    )
-    from ._export import (
-        ModeloExportCommand,
-        ModeloExportCrossBucketRefusedError,
-        ModeloExportNoActiveBucketError,
-        ModeloExportOutputPathError,
-        ModeloExportResult,
-        ModeloExportUnsupportedError,
-        export_modelo_revision,
-    )
-    from ._external_import_actions import (
-        ExternalFilingBaselineSource,
-        import_external_filing_evidence,
-        import_external_filing_source,
-    )
-    from ._filed_revision_observation import (
-        APP_FILING_SOURCE_KIND,
-        persist_filed_revision_observation,
-    )
-    from ._filing_actions import (
-        file_modelo_revision,
-        get_filing_record,
-        get_verification_report,
-        list_filing_records,
-        list_verification_reports,
-    )
-    from ._history import (
-        WorkUnitHistory,
-        WorkUnitHistoryEvent,
-        assemble_work_unit_history,
-    )
-    from ._iva_wallet_gate import (
-        ModeloIvaWalletReconciliationBlocked,
-        ModeloIvaWalletReconciliationBlockedError,
-        apply_iva_compensation_decision_binding,
-        require_persisted_iva_compensation_decision_matches_revision,
-    )
-    from ._iva_wallet_seed import (
-        ModeloIvaWalletCorrectionNoRecordError,
-        ModeloIvaWalletCorrectionSealedError,
-        ModeloIvaWalletOverrideFreshWalletError,
-        ModeloIvaWalletOverrideSealedError,
-        ModeloIvaWalletSeedError,
-        ModeloIvaWalletSeedNegativeAmountError,
-        ModeloIvaWalletSeedNoTaxpayerError,
-        correct_iva_compensation_period_for_bucket,
-        record_iva_compensation_override_for_bucket,
-        seed_iva_compensation_period_for_bucket,
-    )
-    from ._local_observation_actions import (
-        OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND,
-        ModeloLocalObservationResult,
-        record_operator_local_observation,
-    )
-    from ._local_observation_spreadsheet import parse_casilla_lexical_spreadsheet, parse_casilla_value_spreadsheet
-    from ._m036_lifecycle import (
-        M036DeclarationCommand,
-        M036DeclarationResult,
-        derive_m036_declaration_id,
-        list_m036_declarations,
-        m036_declaration_object_key,
-        read_m036_declaration,
-        record_m036_declaration,
-    )
-    from ._m145_communication import (
-        M145_COMMUNICATION_MODELO,
-        M145_COMMUNICATION_PERIOD,
-        M145_COMMUNICATION_SERVICE_OWNER,
-        M145CommunicationAction,
-        M145CommunicationServiceContract,
-        build_m145_communication_service_contract,
-    )
-    from ._m145_communication_records import (
-        M145CommunicationCreateCommand,
-        M145CommunicationExportResult,
-        M145CommunicationPeriod,
-        M145CommunicationRecord,
-        M145CommunicationRecordAmbiguousError,
-        M145CommunicationRecordExportError,
-        M145CommunicationRecordNotFoundError,
-        M145CommunicationRecordState,
-        M145CommunicationRecordTransitionError,
-        M145CommunicationRecordValidationError,
-        M145CommunicationServiceError,
-        M145CommunicationValidationIssue,
-        M145CommunicationValidationIssueKind,
-        M145CommunicationValidationResult,
-        create_m145_communication_record,
-        derive_m145_communication_record_id,
-        export_m145_communication_record,
-        list_m145_communication_records,
-        m145_communication_record_object_key,
-        mark_m145_communication_record_delivered_to_payer,
-        mark_m145_communication_record_locally_completed,
-        read_m145_communication_record,
-        validate_m145_communication_record,
-    )
-    from ._maritime_preview import (
-        ModeloMaritimeExemptionPreview,
-        maritime_facts_from_active_profile,
-        preview_maritime_exemption_for_active_profile,
-    )
-    from ._participation_index_rebuild import (
-        ParticipationRebuildStats,
-        rebuild_participation_index,
-    )
-    from ._preconditions import (
-        MODELO_PRECONDITION_PROFILE_REGISTRY,
-        MODELO_PRECONDITION_PROFILES,
-        ModeloPreconditionFailure,
-        build_modelo_precondition_failure,
-    )
-    from ._profile_binding import (
-        ProfileBindingResolutionError,
-        profile_resolved_binding_ids,
-        resolve_maternidad_meses,
-        resolve_profile_sourced_bindings,
-    )
-    from ._profile_export_binding import (
-        compose_legal_full_name,
-        resolve_export_identity,
-        resolve_profile_export_values,
-    )
-    from ._profile_readiness_gate import (
-        modelo_applicability_refusal,
-        modelo_work_profile_baseline_missing_paths,
-        modelo_work_profile_baseline_validation_issues,
-        modelo_work_profile_preflight_report,
-        pre_activity_period_refusal,
-        require_existing_profile_baseline_ready_for_modelo_work,
-        require_profile_ready_for_modelo_work,
-        require_profile_ready_for_work_unit,
-    )
-    from ._projection import (
-        ModeloCompareDeltaRow,
-        ModeloCompareNeedTwoYearsError,
-        ModeloCompareNoRevisionsError,
-        ModeloCompareNoUsableRevisionsError,
-        ModeloCompareNoWorkUnitsError,
-        ModeloCompareSection,
-        ModeloCompareServiceResult,
-        ModeloProjectInvalidDecimalOverrideError,
-        ModeloProjectionCasillaObservation,
-        ModeloProjectionError,
-        ModeloProjectM100Projection,
-        ModeloProjectM130Accumulated,
-        ModeloProjectNoM130RevisionsError,
-        ModeloProjectNoM130UnitsError,
-        ModeloProjectServiceResult,
-        compare_modelo_years,
-        project_modelo_100_from_m130,
-    )
-    from ._pulled_filing_reconcile import pulled_filing_divergence_findings
-    from ._quickfile import (
-        QUICKFILE_STAGE_ORDER,
-        QuickfileCommand,
-        QuickfileResult,
-        QuickfileStage,
-        QuickfileStageOutcome,
-        QuickfileStageStatus,
-        run_modelo_quickfile,
-    )
-    from ._reconcile import (
-        ModeloReconciliationBytesCommand,
-        ModeloReconciliationCommand,
-        ModeloReconciliationReport,
-        ReconciliationCrossBucketRefusedError,
-        ReconciliationDeclaracionSourceUnsupportedError,
-        ReconciliationEvidenceInvalidError,
-        modelo_reconcile,
-        modelo_reconcile_bytes,
-    )
-    from ._reconcile_casilla import (
-        CasillaDivergence,
-        CasillaDivergenceKind,
-        detect_casilla_divergences,
-    )
-    from ._reconcile_population import (
-        CasillaPopulationScope,
-        resolve_casilla_population_scope,
-    )
-    from ._reconciliation_records import (
-        ModeloReconciliationAdvisory,
-        ModeloReconciliationDiff,
-        ModeloReconciliationDiffKind,
-        ModeloReconciliationEvidenceKind,
-        ModeloReconciliationHistoryEntry,
-        ModeloReconciliationRecord,
-        ModeloReconciliationRecordRepository,
-        ModeloReconciliationVerdict,
-        list_modelo_reconciliations,
-    )
-    from ._registry_discovery import (
-        declared_modelo_period_tokens,
-        registry_bindings,
-        registry_bindings_for_scope,
-        registry_bindings_for_year,
-        registry_casilla,
-        registry_casilla_for_registry_scope,
-        registry_casillas,
-        registry_casillas_for_registry_scope,
-        registry_casillas_for_scope,
-        registry_describe_modelo,
-        registry_describe_modelo_for_registry_scope,
-        registry_describe_modelo_for_scope,
-        registry_formulas,
-        registry_formulas_for_registry_scope,
-        registry_formulas_for_scope,
-        registry_list_modelos,
-        registry_modelo_codes,
-        registry_support_matrix,
-    )
-    from ._result_summary import (
-        CalculationResultSummary,
-        ResultSummaryRole,
-        ResultSummaryRow,
-        calculation_result_summary,
-    )
-    from ._review_package import (
-        ReviewPackageBuildResult,
-        ReviewPackageError,
-        ReviewPackageIntegrityError,
-        ReviewPackageManifest,
-        ReviewPackageRevisionStateError,
-        ReviewPackageVerification,
-        assert_review_package_verifies,
-        build_review_package,
-        verify_review_package,
-    )
-    from ._review_package_collab_audit import (
-        emit_collab_feedback_countersign_attached_event,
-        emit_collab_package_counter_signed_event,
-        emit_collab_package_decrypted_event,
-        emit_collab_package_encrypted_event,
-        emit_collab_recipient_registered_event,
-        emit_collab_recipient_removed_event,
-        emit_collab_review_only_workspace_opened_event,
-    )
-    from ._review_package_counter_sign import (
-        CounterSignedReceipt,
-        ReviewPackageCounterSigningError,
-        counter_sign_review_package,
-        verify_counter_signed_receipt,
-    )
-    from ._review_package_feedback import (
-        FeedbackCounterSignatureInvalidError,
-        FeedbackPackage,
-        ImportedFeedback,
-        ReviewPackageFeedbackError,
-        build_feedback_package,
-        decrypt_feedback_package_from_originator_envelope,
-        encrypt_feedback_package_for_originator,
-        import_feedback_package,
-    )
-    from ._review_package_recipient_encryption import (
-        RecipientDecryptedPackage,
-        RecipientDecryptionError,
-        RecipientEncryptedPackage,
-        RecipientEncryptionError,
-        RecipientEncryptionKeyNotFoundError,
-        RecipientEncryptionKeypair,
-        RecipientEncryptionPublicKey,
-        RecipientPackageExpiredError,
-        decrypt_review_package_for_recipient,
-        encrypt_review_package_for_recipient,
-        ensure_recipient_encryption_keypair,
-        load_recipient_encryption_keypair,
-        recipient_encryption_public_key,
-    )
-    from ._review_package_recipient_registry import (
-        RecipientAlreadyRegisteredError,
-        RecipientFingerprintRecord,
-        RecipientFingerprintRegister,
-        RecipientFingerprintRegistryError,
-        RecipientFingerprintRegistryRepository,
-        RecipientNotRegisteredError,
-        public_key_hex_from_raw_bytes,
-    )
-    from ._review_package_recipient_replay_guard import (
-        ConsumedNonceLedger,
-        ConsumedNonceRecord,
-        RecipientPackageReplayedError,
-        RecipientReplayGuardError,
-        RecipientReplayGuardRepository,
-    )
-    from ._review_package_review_only_workspace import (
-        ReviewOnlyWorkspace,
-        ReviewOnlyWorkspaceAuthorityError,
-        ReviewOnlyWorkspaceError,
-        assert_workspace_permits_official_action,
-        open_review_only_workspace,
-    )
-    from ._review_package_signing import (
-        ReviewPackageSigningError,
-        ReviewPackageSigningKeyNotFoundError,
-        ReviewPackageSigningKeypair,
-        ReviewPackageSigningPublicKey,
-        SignedReviewPackage,
-        ensure_review_package_signing_keypair,
-        load_review_package_signing_keypair,
-        review_package_signing_public_key,
-        sign_review_package,
-        verify_review_package_signature,
-    )
-    from ._revision_persistence import persist_filed_revision, require_filing_instance_evidence_for_work_unit
-    from ._selectors import (
-        ModeloCalculationRevisionCandidate,
-        ModeloCalculationRevisionDefault,
-        ModeloCalculationRevisionSelection,
-        ModeloCalculationRevisionSelector,
-        ModeloCalculationRevisionSelectorAmbiguousError,
-        ModeloCalculationRevisionSelectorError,
-        ModeloCalculationRevisionSelectorNotFoundError,
-        ModeloCalculationRevisionSelectorStateError,
-        ModeloVerifySelector,
-        ModeloWorkNoActiveBucketError,
-        ModeloWorkResolution,
-        ModeloWorkRevisionConflictError,
-        ModeloWorkSelectorContradictionError,
-        ModeloWorkSelectorError,
-        ModeloWorkSelectorRequest,
-        ModeloWorkSelectorState,
-        ModeloWorkUnitCandidate,
-        ModeloWorkUnitNotFoundError,
-        ModeloWorkVisibleTargetAmbiguousError,
-        active_natural_target_work_units,
-        natural_target_work_units,
-        resolve_active_natural_modelo_work_unit,
-        resolve_modelo_calculation_revision_pick,
-        resolve_modelo_work_bucket,
-        resolve_modelo_work_unit,
-        select_current_verified_revision,
-        select_exportable_revision,
-        select_modelo_calculation_revision,
-    )
-    from ._semantic_role_resolution import casilla_id_for_unique_revision_semantic_role
-    from ._taxation_comparison import (
-        TaxationComparisonError,
-        TaxationComparisonResult,
-        TaxationRecommendation,
-        compare_taxation_for_work_address,
-        compare_taxation_for_work_unit,
-        compare_taxation_modes,
-    )
-    from ._verification_actions import verify_modelo_revision, verify_modelo_revision_with_preconditions
-    from ._verification_preconditions import (
-        ModeloVerificationResult,
-        VerificationFindingPreconditionProjection,
-        build_verification_precondition_failure,
-        project_verification_findings,
-    )
-    from ._work_addressing import (
-        ModeloExactWorkUnitTarget,
-        ModeloResolvedRevisionProjection,
-        ModeloResolvedWorkProjection,
-        ModeloRevisionPick,
-        ModeloVisibleFilingTarget,
-        ModeloWorkAddress,
-        ModeloWorkAddressNotFoundError,
-        ModeloWorkEnsureResult,
-        ModeloWorkPeriodTokenError,
-        ModeloWorkRegistryYearMismatchError,
-        ModeloWorkTarget,
-        ensure_modelo_work_unit_for_active_target,
-        modelo_work_address_from_operator_target,
-        project_modelo_work_target,
-        project_modelo_work_unit,
-        resolve_exportable_modelo_calculation_revision_address,
-        resolve_fileable_modelo_calculation_revision_address,
-        resolve_modelo_calculation_revision_address,
-        resolve_modelo_revision_for_operator_target,
-        resolve_modelo_revision_pick,
-        resolve_modelo_work_address,
-        resolve_modelo_work_address_unit,
-        resolve_modelo_work_target,
-        resolve_modelo_work_unit_for_operator_target,
-        resolve_modelo_work_unit_id,
-        resolve_optional_modelo_work_address,
-        resolve_registry_revision_for_work_target,
-        resolve_verifiable_modelo_calculation_revision_address,
-        work_address_for_modelo_target,
-    )
-    from ._work_create_policy import (
-        CEDED_AUTONOMIC_MODELO_LOCALE_KEYS,
-        CEDED_AUTONOMIC_MODELOS,
-        STUB_MODELO_LOCALE_KEYS,
-        STUB_ONLY_MODELOS,
-        ModeloWorkCreateApplicabilityRefusal,
-        ceded_autonomic_modelo_locale_key,
-        guard_active_profile_foral_ccaa,
-        modelo_work_create_applicability_refusal,
-        modelo_work_create_refusal_locale_key,
-    )
-    from ._work_lifecycle import (
-        ModeloWorkLifecycleContinuation,
-        create_work_unit,
-        discard_work_unit,
-        get_work_unit,
-        lifecycle_continuation_for_work_history,
-        lifecycle_continuation_for_work_list,
-        lifecycle_continuation_for_work_status,
-        list_work_units,
-        rename_work_unit,
-    )
-    from ._work_plazo import (
-        ModeloWorkConditionalRecargoPreview,
-        ModeloWorkDeadlinePosture,
-        calculated_m210_plazo_notice,
-        modelo_work_deadline_posture,
-        validate_modelo_work_deadline_posture,
-    )
-    from ._work_review import (
-        BlockerRef,
-        ModeloWorkBindingOrigin,
-        ModeloWorkOriginAnomaly,
-        ModeloWorkProgress,
-        ModeloWorkProgressDenominator,
-        ModeloWorkRelationConsumption,
-        ModeloWorkReview,
-        ModeloWorkReviewCasilla,
-    )
-    from ._work_review_projection import build_modelo_work_review
-    from ._workflow_gate import build_revision_deadline_window_checker, workflow_period_for_work_unit
-
-
-_LAZY_EXPORTS: dict[str, str] = {
-    **dict.fromkeys(
-        (
-            "CalculationRevisionState",
-            "Modelo184MemberRow",
-            "Modelo232VinculadaRow",
-            "Modelo347ContraparteRow",
-            "Modelo349CountryPrefixContextError",
-            "Modelo349OperadorRow",
-            "Modelo349RectificacionRow",
-            "ModeloDetailRow",
-            "ModeloError",
-            "ModeloRecordStatus",
-            "ModeloVerificationFindingKind",
-            "ModeloVerificationFindingSeverity",
-            "VerificationCompletenessStatus",
-            "validate_m349_country_prefix_context",
-            "validate_m349_nif_format",
-        ),
-        "...domain.modelos",
-    ),
-    **dict.fromkeys(
-        (
-            "AmendmentComplementariaLiabilityDecreaseError",
-            "AmendmentEvidenceMissingError",
-            "AmendmentKindNotPermittedError",
-            "AmendmentM303RectificativaMotiveError",
-            "AmendmentOverrideCasillaError",
-            "AmendmentTargetStateError",
-            "AmendmentVerificationRefusedError",
-            "CalculationRegistryUnavailableError",
-            "CalculationRevisionNotFoundError",
-            "CalculationRevisionStateError",
-            "CasillaProvenanceMissingError",
-            "ExternalModeloImportError",
-            "ModeloAggregationBindingError",
-            "ModeloApplicabilityFilterError",
-            "ModeloChargeAccountMissingError",
-            "ModeloCrossPeriodCleanStateError",
-            "ModeloLocalObservationError",
-            "ModeloPaymentElectionCapabilityRefusedError",
-            "ModeloPaymentElectionIncompatibleError",
-            "ModeloPriorDomiciliationElectionRefusedError",
-            "ModeloProfileReadinessError",
-            "ModeloRecordNotFoundError",
-            "ModeloRefundElectionNotEligibleError",
-            "ModeloRequiredBindingsMissingError",
-            "ModeloWorkflowGateError",
-            "StoredCalculationDriftError",
-            "VerificationReportNotFoundError",
-            "WorkUnitAlreadyDiscardedError",
-            "WorkUnitMutationRefusedError",
-            "WorkUnitNotFoundError",
-            "WorkUnitRevisionDivergenceError",
-        ),
-        "._action_errors",
-    ),
-    "amend_modelo_revision": "._amendment_actions",
-    "profile_resolvable_binding_ids": "._binding_readiness",
-    **dict.fromkeys(
-        (
-            "DeclarationPeriodInputs",
-            "resolve_declaration_period_inputs",
-        ),
-        "._binding_resolution",
-    ),
-    **dict.fromkeys(
-        (
-            "Modelo100BorradorBindingCommand",
-            "Modelo100BorradorBindingError",
-            "Modelo100BorradorSourceResolver",
-            "resolve_modelo_100_borrador_bindings",
-        ),
-        "._borrador_binding",
-    ),
-    **dict.fromkeys(
-        (
-            "Modelo202ModalitySummary",
-            "ModeloAuthorizationAdvisorySummary",
-            "ModeloWorkCalculationServiceResult",
-            "WorkCalculateInputBundle",
-            "apply_calculation_shortcut_inputs",
-            "authorization_advisory_for_modelo",
-            "build_work_calculate_input_bundle",
-            "calculate_modelo_work_revision",
-            "is_detail_casilla_override_key",
-            "modelo_202_modality_for_work_unit",
-        ),
-        "._calculate_input",
-    ),
-    **dict.fromkeys(
-        (
-            "BucketAggregationCalculationResult",
-            "assert_no_novel_source_kinds",
-            "calculate_modelo_revision",
-            "calculate_modelo_revision_from_bucket_aggregation",
-            "calculate_modelo_revision_from_bucket_aggregation_with_diagnostics",
-            "get_calculation_revision",
-            "list_calculation_revisions",
-            "mark_revision_verificado_completo",
-        ),
-        "._calculation_actions",
-    ),
-    "resolve_calculation_binding_channels": "._calculation_resolution",
-    **dict.fromkeys(
-        (
-            "CALCULATION_ROUTE_ENROLLED_SOURCES",
-            "CALCULATION_ROUTE_ID",
-            "CALCULATION_ROUTE_PRE_MESH_SOURCES",
-            "CALCULATION_ROUTE_RESOLVER_OWNERSHIP",
-            "CALCULATION_ROUTE_SOURCE_DISPOSITIONS",
-            "MANUAL_INPUT_RESOLVER_ID",
-            "CalculationRouteManualOwnership",
-            "CalculationRouteResolverOwnership",
-            "validate_calculation_route_resolver_ownership",
-        ),
-        "._calculation_route",
-    ),
-    **dict.fromkeys(
-        (
-            "BUCKET_AGGREGATION_LOCK_SOURCES",
-            "CALLER_OVERRIDABLE_CARRY_SOURCES",
-        ),
-        "._calculation_source_policy",
-    ),
-    **dict.fromkeys(
-        (
-            "DataInventoryCasilla",
-            "DataInventoryChecklist",
-            "data_inventory_checklist",
-            "profile_requirements_for_binding",
-        ),
-        "._data_inventory",
-    ),
-    **dict.fromkeys(
-        (
-            "ModeloExportCommand",
-            "ModeloExportCrossBucketRefusedError",
-            "ModeloExportNoActiveBucketError",
-            "ModeloExportOutputPathError",
-            "ModeloExportResult",
-            "ModeloExportUnsupportedError",
-            "export_modelo_revision",
-        ),
-        "._export",
-    ),
-    **dict.fromkeys(
-        (
-            "ExternalFilingBaselineSource",
-            "import_external_filing_evidence",
-            "import_external_filing_source",
-        ),
-        "._external_import_actions",
-    ),
-    **dict.fromkeys(
-        (
-            "APP_FILING_SOURCE_KIND",
-            "persist_filed_revision_observation",
-        ),
-        "._filed_revision_observation",
-    ),
-    **dict.fromkeys(
-        (
-            "file_modelo_revision",
-            "get_filing_record",
-            "get_verification_report",
-            "list_filing_records",
-            "list_verification_reports",
-        ),
-        "._filing_actions",
-    ),
-    **dict.fromkeys(
-        (
-            "WorkUnitHistory",
-            "WorkUnitHistoryEvent",
-            "assemble_work_unit_history",
-        ),
-        "._history",
-    ),
-    **dict.fromkeys(
-        (
-            "ModeloIvaWalletReconciliationBlocked",
-            "ModeloIvaWalletReconciliationBlockedError",
-            "apply_iva_compensation_decision_binding",
-            "require_persisted_iva_compensation_decision_matches_revision",
-        ),
-        "._iva_wallet_gate",
-    ),
-    **dict.fromkeys(
-        (
-            "ModeloIvaWalletCorrectionNoRecordError",
-            "ModeloIvaWalletCorrectionSealedError",
-            "ModeloIvaWalletOverrideFreshWalletError",
-            "ModeloIvaWalletOverrideSealedError",
-            "ModeloIvaWalletSeedError",
-            "ModeloIvaWalletSeedNegativeAmountError",
-            "ModeloIvaWalletSeedNoTaxpayerError",
-            "correct_iva_compensation_period_for_bucket",
-            "record_iva_compensation_override_for_bucket",
-            "seed_iva_compensation_period_for_bucket",
-        ),
-        "._iva_wallet_seed",
-    ),
-    **dict.fromkeys(
-        (
-            "OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND",
-            "ModeloLocalObservationResult",
-            "record_operator_local_observation",
-        ),
-        "._local_observation_actions",
-    ),
-    **dict.fromkeys(
-        (
-            "parse_casilla_lexical_spreadsheet",
-            "parse_casilla_value_spreadsheet",
-        ),
-        "._local_observation_spreadsheet",
-    ),
-    **dict.fromkeys(
-        (
-            "M036DeclarationCommand",
-            "M036DeclarationResult",
-            "derive_m036_declaration_id",
-            "list_m036_declarations",
-            "m036_declaration_object_key",
-            "read_m036_declaration",
-            "record_m036_declaration",
-        ),
-        "._m036_lifecycle",
-    ),
-    **dict.fromkeys(
-        (
-            "M145_COMMUNICATION_MODELO",
-            "M145_COMMUNICATION_PERIOD",
-            "M145_COMMUNICATION_SERVICE_OWNER",
-            "M145CommunicationAction",
-            "M145CommunicationServiceContract",
-            "build_m145_communication_service_contract",
-        ),
-        "._m145_communication",
-    ),
-    **dict.fromkeys(
-        (
-            "M145CommunicationCreateCommand",
-            "M145CommunicationExportResult",
-            "M145CommunicationPeriod",
-            "M145CommunicationRecord",
-            "M145CommunicationRecordAmbiguousError",
-            "M145CommunicationRecordExportError",
-            "M145CommunicationRecordNotFoundError",
-            "M145CommunicationRecordState",
-            "M145CommunicationRecordTransitionError",
-            "M145CommunicationRecordValidationError",
-            "M145CommunicationServiceError",
-            "M145CommunicationValidationIssue",
-            "M145CommunicationValidationIssueKind",
-            "M145CommunicationValidationResult",
-            "create_m145_communication_record",
-            "derive_m145_communication_record_id",
-            "export_m145_communication_record",
-            "list_m145_communication_records",
-            "m145_communication_record_object_key",
-            "mark_m145_communication_record_delivered_to_payer",
-            "mark_m145_communication_record_locally_completed",
-            "read_m145_communication_record",
-            "validate_m145_communication_record",
-        ),
-        "._m145_communication_records",
-    ),
-    **dict.fromkeys(
-        (
-            "ModeloMaritimeExemptionPreview",
-            "maritime_facts_from_active_profile",
-            "preview_maritime_exemption_for_active_profile",
-        ),
-        "._maritime_preview",
-    ),
-    **dict.fromkeys(
-        (
-            "ParticipationRebuildStats",
-            "rebuild_participation_index",
-        ),
-        "._participation_index_rebuild",
-    ),
-    **dict.fromkeys(
-        (
-            "MODELO_PRECONDITION_PROFILE_REGISTRY",
-            "MODELO_PRECONDITION_PROFILES",
-            "ModeloPreconditionFailure",
-            "build_modelo_precondition_failure",
-        ),
-        "._preconditions",
-    ),
-    **dict.fromkeys(
-        (
-            "ProfileBindingResolutionError",
-            "profile_resolved_binding_ids",
-            "resolve_maternidad_meses",
-            "resolve_profile_sourced_bindings",
-        ),
-        "._profile_binding",
-    ),
-    **dict.fromkeys(
-        (
-            "compose_legal_full_name",
-            "resolve_export_identity",
-            "resolve_profile_export_values",
-        ),
-        "._profile_export_binding",
-    ),
-    **dict.fromkeys(
-        (
-            "modelo_applicability_refusal",
-            "modelo_work_profile_baseline_missing_paths",
-            "modelo_work_profile_baseline_validation_issues",
-            "modelo_work_profile_preflight_report",
-            "pre_activity_period_refusal",
-            "require_existing_profile_baseline_ready_for_modelo_work",
-            "require_profile_ready_for_modelo_work",
-            "require_profile_ready_for_work_unit",
-        ),
-        "._profile_readiness_gate",
-    ),
-    **dict.fromkeys(
-        (
-            "ModeloCompareDeltaRow",
-            "ModeloCompareNeedTwoYearsError",
-            "ModeloCompareNoRevisionsError",
-            "ModeloCompareNoUsableRevisionsError",
-            "ModeloCompareNoWorkUnitsError",
-            "ModeloCompareSection",
-            "ModeloCompareServiceResult",
-            "ModeloProjectInvalidDecimalOverrideError",
-            "ModeloProjectionCasillaObservation",
-            "ModeloProjectionError",
-            "ModeloProjectM100Projection",
-            "ModeloProjectM130Accumulated",
-            "ModeloProjectNoM130RevisionsError",
-            "ModeloProjectNoM130UnitsError",
-            "ModeloProjectServiceResult",
-            "compare_modelo_years",
-            "project_modelo_100_from_m130",
-        ),
-        "._projection",
-    ),
-    "pulled_filing_divergence_findings": "._pulled_filing_reconcile",
-    **dict.fromkeys(
-        (
-            "QUICKFILE_STAGE_ORDER",
-            "QuickfileCommand",
-            "QuickfileResult",
-            "QuickfileStage",
-            "QuickfileStageOutcome",
-            "QuickfileStageStatus",
-            "run_modelo_quickfile",
-        ),
-        "._quickfile",
-    ),
-    **dict.fromkeys(
-        (
-            "ModeloReconciliationBytesCommand",
-            "ModeloReconciliationCommand",
-            "ModeloReconciliationReport",
-            "ReconciliationCrossBucketRefusedError",
-            "ReconciliationDeclaracionSourceUnsupportedError",
-            "ReconciliationEvidenceInvalidError",
-            "modelo_reconcile",
-            "modelo_reconcile_bytes",
-        ),
-        "._reconcile",
-    ),
-    **dict.fromkeys(
-        (
-            "CasillaDivergence",
-            "CasillaDivergenceKind",
-            "detect_casilla_divergences",
-        ),
-        "._reconcile_casilla",
-    ),
-    **dict.fromkeys(
-        (
-            "CasillaPopulationScope",
-            "resolve_casilla_population_scope",
-        ),
-        "._reconcile_population",
-    ),
-    **dict.fromkeys(
-        (
-            "ModeloReconciliationAdvisory",
-            "ModeloReconciliationDiff",
-            "ModeloReconciliationDiffKind",
-            "ModeloReconciliationEvidenceKind",
-            "ModeloReconciliationHistoryEntry",
-            "ModeloReconciliationRecord",
-            "ModeloReconciliationRecordRepository",
-            "ModeloReconciliationVerdict",
-            "list_modelo_reconciliations",
-        ),
-        "._reconciliation_records",
-    ),
-    **dict.fromkeys(
-        (
-            "declared_modelo_period_tokens",
-            "registry_bindings",
-            "registry_bindings_for_scope",
-            "registry_bindings_for_year",
-            "registry_casilla",
-            "registry_casilla_for_registry_scope",
-            "registry_casillas",
-            "registry_casillas_for_registry_scope",
-            "registry_casillas_for_scope",
-            "registry_describe_modelo",
-            "registry_describe_modelo_for_registry_scope",
-            "registry_describe_modelo_for_scope",
-            "registry_formulas",
-            "registry_formulas_for_registry_scope",
-            "registry_formulas_for_scope",
-            "registry_list_modelos",
-            "registry_modelo_codes",
-            "registry_support_matrix",
-        ),
-        "._registry_discovery",
-    ),
-    **dict.fromkeys(
-        (
-            "CalculationResultSummary",
-            "ResultSummaryRole",
-            "ResultSummaryRow",
-            "calculation_result_summary",
-        ),
-        "._result_summary",
-    ),
-    **dict.fromkeys(
-        (
-            "ReviewPackageBuildResult",
-            "ReviewPackageError",
-            "ReviewPackageIntegrityError",
-            "ReviewPackageManifest",
-            "ReviewPackageRevisionStateError",
-            "ReviewPackageVerification",
-            "assert_review_package_verifies",
-            "build_review_package",
-            "verify_review_package",
-        ),
-        "._review_package",
-    ),
-    **dict.fromkeys(
-        (
-            "emit_collab_feedback_countersign_attached_event",
-            "emit_collab_package_counter_signed_event",
-            "emit_collab_package_decrypted_event",
-            "emit_collab_package_encrypted_event",
-            "emit_collab_recipient_registered_event",
-            "emit_collab_recipient_removed_event",
-            "emit_collab_review_only_workspace_opened_event",
-        ),
-        "._review_package_collab_audit",
-    ),
-    **dict.fromkeys(
-        (
-            "CounterSignedReceipt",
-            "ReviewPackageCounterSigningError",
-            "counter_sign_review_package",
-            "verify_counter_signed_receipt",
-        ),
-        "._review_package_counter_sign",
-    ),
-    **dict.fromkeys(
-        (
-            "FeedbackCounterSignatureInvalidError",
-            "FeedbackPackage",
-            "ImportedFeedback",
-            "ReviewPackageFeedbackError",
-            "build_feedback_package",
-            "decrypt_feedback_package_from_originator_envelope",
-            "encrypt_feedback_package_for_originator",
-            "import_feedback_package",
-        ),
-        "._review_package_feedback",
-    ),
-    **dict.fromkeys(
-        (
-            "RecipientDecryptedPackage",
-            "RecipientDecryptionError",
-            "RecipientEncryptedPackage",
-            "RecipientEncryptionError",
-            "RecipientEncryptionKeyNotFoundError",
-            "RecipientEncryptionKeypair",
-            "RecipientEncryptionPublicKey",
-            "RecipientPackageExpiredError",
-            "decrypt_review_package_for_recipient",
-            "encrypt_review_package_for_recipient",
-            "ensure_recipient_encryption_keypair",
-            "load_recipient_encryption_keypair",
-            "recipient_encryption_public_key",
-        ),
-        "._review_package_recipient_encryption",
-    ),
-    **dict.fromkeys(
-        (
-            "RecipientAlreadyRegisteredError",
-            "RecipientFingerprintRecord",
-            "RecipientFingerprintRegister",
-            "RecipientFingerprintRegistryError",
-            "RecipientFingerprintRegistryRepository",
-            "RecipientNotRegisteredError",
-            "public_key_hex_from_raw_bytes",
-        ),
-        "._review_package_recipient_registry",
-    ),
-    **dict.fromkeys(
-        (
-            "ConsumedNonceLedger",
-            "ConsumedNonceRecord",
-            "RecipientPackageReplayedError",
-            "RecipientReplayGuardError",
-            "RecipientReplayGuardRepository",
-        ),
-        "._review_package_recipient_replay_guard",
-    ),
-    **dict.fromkeys(
-        (
-            "ReviewOnlyWorkspace",
-            "ReviewOnlyWorkspaceAuthorityError",
-            "ReviewOnlyWorkspaceError",
-            "assert_workspace_permits_official_action",
-            "open_review_only_workspace",
-        ),
-        "._review_package_review_only_workspace",
-    ),
-    **dict.fromkeys(
-        (
-            "ReviewPackageSigningError",
-            "ReviewPackageSigningKeyNotFoundError",
-            "ReviewPackageSigningKeypair",
-            "ReviewPackageSigningPublicKey",
-            "SignedReviewPackage",
-            "ensure_review_package_signing_keypair",
-            "load_review_package_signing_keypair",
-            "review_package_signing_public_key",
-            "sign_review_package",
-            "verify_review_package_signature",
-        ),
-        "._review_package_signing",
-    ),
-    **dict.fromkeys(
-        (
-            "persist_filed_revision",
-            "require_filing_instance_evidence_for_work_unit",
-        ),
-        "._revision_persistence",
-    ),
-    **dict.fromkeys(
-        (
-            "ModeloCalculationRevisionCandidate",
-            "ModeloCalculationRevisionDefault",
-            "ModeloCalculationRevisionSelection",
-            "ModeloCalculationRevisionSelector",
-            "ModeloCalculationRevisionSelectorAmbiguousError",
-            "ModeloCalculationRevisionSelectorError",
-            "ModeloCalculationRevisionSelectorNotFoundError",
-            "ModeloCalculationRevisionSelectorStateError",
-            "ModeloVerifySelector",
-            "ModeloWorkNoActiveBucketError",
-            "ModeloWorkResolution",
-            "ModeloWorkRevisionConflictError",
-            "ModeloWorkSelectorContradictionError",
-            "ModeloWorkSelectorError",
-            "ModeloWorkSelectorRequest",
-            "ModeloWorkSelectorState",
-            "ModeloWorkUnitCandidate",
-            "ModeloWorkUnitNotFoundError",
-            "ModeloWorkVisibleTargetAmbiguousError",
-            "active_natural_target_work_units",
-            "natural_target_work_units",
-            "resolve_active_natural_modelo_work_unit",
-            "resolve_modelo_calculation_revision_pick",
-            "resolve_modelo_work_bucket",
-            "resolve_modelo_work_unit",
-            "select_current_verified_revision",
-            "select_exportable_revision",
-            "select_modelo_calculation_revision",
-        ),
-        "._selectors",
-    ),
-    "casilla_id_for_unique_revision_semantic_role": "._semantic_role_resolution",
-    **dict.fromkeys(
-        (
-            "TaxationComparisonError",
-            "TaxationComparisonResult",
-            "TaxationRecommendation",
-            "compare_taxation_for_work_address",
-            "compare_taxation_for_work_unit",
-            "compare_taxation_modes",
-        ),
-        "._taxation_comparison",
-    ),
-    **dict.fromkeys(
-        (
-            "verify_modelo_revision",
-            "verify_modelo_revision_with_preconditions",
-        ),
-        "._verification_actions",
-    ),
-    **dict.fromkeys(
-        (
-            "ModeloVerificationResult",
-            "VerificationFindingPreconditionProjection",
-            "build_verification_precondition_failure",
-            "project_verification_findings",
-        ),
-        "._verification_preconditions",
-    ),
-    **dict.fromkeys(
-        (
-            "ModeloExactWorkUnitTarget",
-            "ModeloResolvedRevisionProjection",
-            "ModeloResolvedWorkProjection",
-            "ModeloRevisionPick",
-            "ModeloVisibleFilingTarget",
-            "ModeloWorkAddress",
-            "ModeloWorkAddressNotFoundError",
-            "ModeloWorkEnsureResult",
-            "ModeloWorkPeriodTokenError",
-            "ModeloWorkRegistryYearMismatchError",
-            "ModeloWorkTarget",
-            "ensure_modelo_work_unit_for_active_target",
-            "modelo_work_address_from_operator_target",
-            "project_modelo_work_target",
-            "project_modelo_work_unit",
-            "resolve_exportable_modelo_calculation_revision_address",
-            "resolve_fileable_modelo_calculation_revision_address",
-            "resolve_modelo_calculation_revision_address",
-            "resolve_modelo_revision_for_operator_target",
-            "resolve_modelo_revision_pick",
-            "resolve_modelo_work_address",
-            "resolve_modelo_work_address_unit",
-            "resolve_modelo_work_target",
-            "resolve_modelo_work_unit_for_operator_target",
-            "resolve_modelo_work_unit_id",
-            "resolve_optional_modelo_work_address",
-            "resolve_registry_revision_for_work_target",
-            "resolve_verifiable_modelo_calculation_revision_address",
-            "work_address_for_modelo_target",
-        ),
-        "._work_addressing",
-    ),
-    **dict.fromkeys(
-        (
-            "CEDED_AUTONOMIC_MODELO_LOCALE_KEYS",
-            "CEDED_AUTONOMIC_MODELOS",
-            "STUB_MODELO_LOCALE_KEYS",
-            "STUB_ONLY_MODELOS",
-            "ModeloWorkCreateApplicabilityRefusal",
-            "ceded_autonomic_modelo_locale_key",
-            "guard_active_profile_foral_ccaa",
-            "modelo_work_create_applicability_refusal",
-            "modelo_work_create_refusal_locale_key",
-        ),
-        "._work_create_policy",
-    ),
-    **dict.fromkeys(
-        (
-            "ModeloWorkLifecycleContinuation",
-            "create_work_unit",
-            "discard_work_unit",
-            "get_work_unit",
-            "lifecycle_continuation_for_work_history",
-            "lifecycle_continuation_for_work_list",
-            "lifecycle_continuation_for_work_status",
-            "list_work_units",
-            "rename_work_unit",
-        ),
-        "._work_lifecycle",
-    ),
-    **dict.fromkeys(
-        (
-            "ModeloWorkConditionalRecargoPreview",
-            "ModeloWorkDeadlinePosture",
-            "calculated_m210_plazo_notice",
-            "modelo_work_deadline_posture",
-            "validate_modelo_work_deadline_posture",
-        ),
-        "._work_plazo",
-    ),
-    **dict.fromkeys(
-        (
-            "BlockerRef",
-            "ModeloWorkBindingOrigin",
-            "ModeloWorkOriginAnomaly",
-            "ModeloWorkProgress",
-            "ModeloWorkProgressDenominator",
-            "ModeloWorkRelationConsumption",
-            "ModeloWorkReview",
-            "ModeloWorkReviewCasilla",
-        ),
-        "._work_review",
-    ),
-    "build_modelo_work_review": "._work_review_projection",
-    **dict.fromkeys(
-        (
-            "build_revision_deadline_window_checker",
-            "workflow_period_for_work_unit",
-        ),
-        "._workflow_gate",
-    ),
-}
-
-# Every loader target is a closed literal from ``_LAZY_EXPORTS``. The requested
-# public attribute selects a pre-bound loader; it never becomes an import path.
-_LAZY_MODULE_LOADERS: dict[str, Callable[[], ModuleType]] = {
-    module_path: partial(import_module, module_path, __name__) for module_path in frozenset(_LAZY_EXPORTS.values())
-}
-
-
-def __getattr__(name: str) -> object:
-    """Resolve one public name by importing only its canonical owning module."""
-    module_path = _LAZY_EXPORTS.get(name)
-    if module_path is None:
-        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-    loader = _LAZY_MODULE_LOADERS.get(module_path)
-    if loader is None:
-        raise RuntimeError(f"missing lazy loader for {module_path!r}")
-    value = getattr(loader(), name)
-    globals()[name] = value
-    return value
-
-
-def __dir__() -> list[str]:
-    """Return ordinary module attributes plus the lazily exposed public API."""
-    return sorted(set(globals()) | set(__all__))
-
+from ...domain.modelos import (
+    CalculationRevisionState,
+    Modelo184MemberRow,
+    Modelo232VinculadaRow,
+    Modelo347ContraparteRow,
+    Modelo349CountryPrefixContextError,
+    Modelo349OperadorRow,
+    Modelo349RectificacionRow,
+    ModeloDetailRow,
+    ModeloError,
+    ModeloRecordStatus,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+    VerificationCompletenessStatus,
+    validate_m349_country_prefix_context,
+    validate_m349_nif_format,
+)
+from ._action_errors import (
+    AmendmentComplementariaLiabilityDecreaseError,
+    AmendmentEvidenceMissingError,
+    AmendmentKindNotPermittedError,
+    AmendmentM303RectificativaMotiveError,
+    AmendmentOverrideCasillaError,
+    AmendmentTargetStateError,
+    AmendmentVerificationRefusedError,
+    CalculationRegistryUnavailableError,
+    CalculationRevisionNotFoundError,
+    CalculationRevisionStateError,
+    CasillaProvenanceMissingError,
+    ExternalModeloImportError,
+    ModeloAggregationBindingError,
+    ModeloApplicabilityFilterError,
+    ModeloChargeAccountMissingError,
+    ModeloCrossPeriodCleanStateError,
+    ModeloLocalObservationError,
+    ModeloPaymentElectionCapabilityRefusedError,
+    ModeloPaymentElectionIncompatibleError,
+    ModeloPriorDomiciliationElectionRefusedError,
+    ModeloProfileReadinessError,
+    ModeloRecordNotFoundError,
+    ModeloRefundElectionNotEligibleError,
+    ModeloRequiredBindingsMissingError,
+    ModeloWorkflowGateError,
+    StoredCalculationDriftError,
+    VerificationReportNotFoundError,
+    WorkUnitAlreadyDiscardedError,
+    WorkUnitMutationRefusedError,
+    WorkUnitNotFoundError,
+    WorkUnitRevisionDivergenceError,
+)
+from ._amendment_actions import amend_modelo_revision
+from ._binding_readiness import profile_resolvable_binding_ids
+from ._binding_resolution import DeclarationPeriodInputs, resolve_declaration_period_inputs
+from ._borrador_binding import (
+    Modelo100BorradorBindingCommand,
+    Modelo100BorradorBindingError,
+    Modelo100BorradorSourceResolver,
+    resolve_modelo_100_borrador_bindings,
+)
+from ._calculate_input import (
+    Modelo202ModalitySummary,
+    ModeloAuthorizationAdvisorySummary,
+    ModeloWorkCalculationServiceResult,
+    WorkCalculateInputBundle,
+    apply_calculation_shortcut_inputs,
+    authorization_advisory_for_modelo,
+    build_work_calculate_input_bundle,
+    calculate_modelo_work_revision,
+    is_detail_casilla_override_key,
+    modelo_202_modality_for_work_unit,
+)
+from ._calculation_actions import (
+    BucketAggregationCalculationResult,
+    assert_no_novel_source_kinds,
+    calculate_modelo_revision,
+    calculate_modelo_revision_from_bucket_aggregation,
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+    get_calculation_revision,
+    list_calculation_revisions,
+    mark_revision_verificado_completo,
+)
+from ._calculation_resolution import resolve_calculation_binding_channels
+from ._calculation_route import (
+    CALCULATION_ROUTE_ENROLLED_SOURCES,
+    CALCULATION_ROUTE_ID,
+    CALCULATION_ROUTE_PRE_MESH_SOURCES,
+    CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
+    CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
+    MANUAL_INPUT_RESOLVER_ID,
+    CalculationRouteManualOwnership,
+    CalculationRouteResolverOwnership,
+    validate_calculation_route_resolver_ownership,
+)
+from ._calculation_source_policy import (
+    BUCKET_AGGREGATION_LOCK_SOURCES,
+    CALLER_OVERRIDABLE_CARRY_SOURCES,
+)
+from ._data_inventory import (
+    DataInventoryCasilla,
+    DataInventoryChecklist,
+    data_inventory_checklist,
+    profile_requirements_for_binding,
+)
+from ._export import (
+    ModeloExportCommand,
+    ModeloExportCrossBucketRefusedError,
+    ModeloExportNoActiveBucketError,
+    ModeloExportOutputPathError,
+    ModeloExportResult,
+    ModeloExportUnsupportedError,
+    export_modelo_revision,
+)
+from ._external_import_actions import (
+    ExternalFilingBaselineSource,
+    import_external_filing_evidence,
+    import_external_filing_source,
+)
+from ._filed_revision_observation import (
+    APP_FILING_SOURCE_KIND,
+    persist_filed_revision_observation,
+)
+from ._filing_actions import (
+    file_modelo_revision,
+    get_filing_record,
+    get_verification_report,
+    list_filing_records,
+    list_verification_reports,
+)
+from ._history import (
+    WorkUnitHistory,
+    WorkUnitHistoryEvent,
+    assemble_work_unit_history,
+)
+from ._iva_wallet_gate import (
+    ModeloIvaWalletReconciliationBlocked,
+    ModeloIvaWalletReconciliationBlockedError,
+    apply_iva_compensation_decision_binding,
+    require_persisted_iva_compensation_decision_matches_revision,
+)
+from ._iva_wallet_seed import (
+    ModeloIvaWalletCorrectionNoRecordError,
+    ModeloIvaWalletCorrectionSealedError,
+    ModeloIvaWalletOverrideFreshWalletError,
+    ModeloIvaWalletOverrideSealedError,
+    ModeloIvaWalletSeedError,
+    ModeloIvaWalletSeedNegativeAmountError,
+    ModeloIvaWalletSeedNoTaxpayerError,
+    correct_iva_compensation_period_for_bucket,
+    record_iva_compensation_override_for_bucket,
+    seed_iva_compensation_period_for_bucket,
+)
+from ._local_observation_actions import (
+    OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND,
+    ModeloLocalObservationResult,
+    record_operator_local_observation,
+)
+from ._local_observation_spreadsheet import parse_casilla_lexical_spreadsheet, parse_casilla_value_spreadsheet
+from ._m036_lifecycle import (
+    M036DeclarationCommand,
+    M036DeclarationResult,
+    derive_m036_declaration_id,
+    list_m036_declarations,
+    m036_declaration_object_key,
+    read_m036_declaration,
+    record_m036_declaration,
+)
+from ._m145_communication import (
+    M145_COMMUNICATION_MODELO,
+    M145_COMMUNICATION_PERIOD,
+    M145_COMMUNICATION_SERVICE_OWNER,
+    M145CommunicationAction,
+    M145CommunicationServiceContract,
+    build_m145_communication_service_contract,
+)
+from ._m145_communication_records import (
+    M145CommunicationCreateCommand,
+    M145CommunicationExportResult,
+    M145CommunicationPeriod,
+    M145CommunicationRecord,
+    M145CommunicationRecordAmbiguousError,
+    M145CommunicationRecordExportError,
+    M145CommunicationRecordNotFoundError,
+    M145CommunicationRecordState,
+    M145CommunicationRecordTransitionError,
+    M145CommunicationRecordValidationError,
+    M145CommunicationServiceError,
+    M145CommunicationValidationIssue,
+    M145CommunicationValidationIssueKind,
+    M145CommunicationValidationResult,
+    create_m145_communication_record,
+    derive_m145_communication_record_id,
+    export_m145_communication_record,
+    list_m145_communication_records,
+    m145_communication_record_object_key,
+    mark_m145_communication_record_delivered_to_payer,
+    mark_m145_communication_record_locally_completed,
+    read_m145_communication_record,
+    validate_m145_communication_record,
+)
+from ._maritime_preview import (
+    ModeloMaritimeExemptionPreview,
+    maritime_facts_from_active_profile,
+    preview_maritime_exemption_for_active_profile,
+)
+from ._participation_index_rebuild import (
+    ParticipationRebuildStats,
+    rebuild_participation_index,
+)
+from ._preconditions import (
+    MODELO_PRECONDITION_PROFILE_REGISTRY,
+    MODELO_PRECONDITION_PROFILES,
+    ModeloPreconditionFailure,
+    build_modelo_precondition_failure,
+)
+from ._profile_binding import (
+    ProfileBindingResolutionError,
+    profile_resolved_binding_ids,
+    resolve_maternidad_meses,
+    resolve_profile_sourced_bindings,
+)
+from ._profile_export_binding import (
+    compose_legal_full_name,
+    resolve_export_identity,
+    resolve_profile_export_values,
+)
+from ._profile_readiness_gate import (
+    modelo_applicability_refusal,
+    modelo_work_profile_baseline_missing_paths,
+    modelo_work_profile_baseline_validation_issues,
+    modelo_work_profile_preflight_report,
+    pre_activity_period_refusal,
+    require_existing_profile_baseline_ready_for_modelo_work,
+    require_profile_ready_for_modelo_work,
+    require_profile_ready_for_work_unit,
+)
+from ._projection import (
+    ModeloCompareDeltaRow,
+    ModeloCompareNeedTwoYearsError,
+    ModeloCompareNoRevisionsError,
+    ModeloCompareNoUsableRevisionsError,
+    ModeloCompareNoWorkUnitsError,
+    ModeloCompareSection,
+    ModeloCompareServiceResult,
+    ModeloProjectInvalidDecimalOverrideError,
+    ModeloProjectionCasillaObservation,
+    ModeloProjectionError,
+    ModeloProjectM100Projection,
+    ModeloProjectM130Accumulated,
+    ModeloProjectNoM130RevisionsError,
+    ModeloProjectNoM130UnitsError,
+    ModeloProjectServiceResult,
+    compare_modelo_years,
+    project_modelo_100_from_m130,
+)
+from ._pulled_filing_reconcile import pulled_filing_divergence_findings
+from ._quickfile import (
+    QUICKFILE_STAGE_ORDER,
+    QuickfileCommand,
+    QuickfileResult,
+    QuickfileStage,
+    QuickfileStageOutcome,
+    QuickfileStageStatus,
+    run_modelo_quickfile,
+)
+from ._reconcile import (
+    ModeloReconciliationBytesCommand,
+    ModeloReconciliationCommand,
+    ModeloReconciliationReport,
+    ReconciliationCrossBucketRefusedError,
+    ReconciliationDeclaracionSourceUnsupportedError,
+    ReconciliationEvidenceInvalidError,
+    modelo_reconcile,
+    modelo_reconcile_bytes,
+)
+from ._reconcile_casilla import (
+    CasillaDivergence,
+    CasillaDivergenceKind,
+    detect_casilla_divergences,
+)
+from ._reconcile_population import (
+    CasillaPopulationScope,
+    resolve_casilla_population_scope,
+)
+from ._reconciliation_records import (
+    ModeloReconciliationAdvisory,
+    ModeloReconciliationDiff,
+    ModeloReconciliationDiffKind,
+    ModeloReconciliationEvidenceKind,
+    ModeloReconciliationHistoryEntry,
+    ModeloReconciliationRecord,
+    ModeloReconciliationRecordRepository,
+    ModeloReconciliationVerdict,
+    list_modelo_reconciliations,
+)
+from ._registry_discovery import (
+    declared_modelo_period_tokens,
+    registry_bindings,
+    registry_bindings_for_scope,
+    registry_bindings_for_year,
+    registry_casilla,
+    registry_casilla_for_registry_scope,
+    registry_casillas,
+    registry_casillas_for_registry_scope,
+    registry_casillas_for_scope,
+    registry_describe_modelo,
+    registry_describe_modelo_for_registry_scope,
+    registry_describe_modelo_for_scope,
+    registry_formulas,
+    registry_formulas_for_registry_scope,
+    registry_formulas_for_scope,
+    registry_list_modelos,
+    registry_modelo_codes,
+    registry_support_matrix,
+)
+from ._result_summary import (
+    CalculationResultSummary,
+    ResultSummaryRole,
+    ResultSummaryRow,
+    calculation_result_summary,
+)
+from ._review_package import (
+    ReviewPackageBuildResult,
+    ReviewPackageError,
+    ReviewPackageIntegrityError,
+    ReviewPackageManifest,
+    ReviewPackageRevisionStateError,
+    ReviewPackageVerification,
+    assert_review_package_verifies,
+    build_review_package,
+    verify_review_package,
+)
+from ._review_package_collab_audit import (
+    emit_collab_feedback_countersign_attached_event,
+    emit_collab_package_counter_signed_event,
+    emit_collab_package_decrypted_event,
+    emit_collab_package_encrypted_event,
+    emit_collab_recipient_registered_event,
+    emit_collab_recipient_removed_event,
+    emit_collab_review_only_workspace_opened_event,
+)
+from ._review_package_counter_sign import (
+    CounterSignedReceipt,
+    ReviewPackageCounterSigningError,
+    counter_sign_review_package,
+    verify_counter_signed_receipt,
+)
+from ._review_package_feedback import (
+    FeedbackCounterSignatureInvalidError,
+    FeedbackPackage,
+    ImportedFeedback,
+    ReviewPackageFeedbackError,
+    build_feedback_package,
+    decrypt_feedback_package_from_originator_envelope,
+    encrypt_feedback_package_for_originator,
+    import_feedback_package,
+)
+from ._review_package_recipient_encryption import (
+    RecipientDecryptedPackage,
+    RecipientDecryptionError,
+    RecipientEncryptedPackage,
+    RecipientEncryptionError,
+    RecipientEncryptionKeyNotFoundError,
+    RecipientEncryptionKeypair,
+    RecipientEncryptionPublicKey,
+    RecipientPackageExpiredError,
+    decrypt_review_package_for_recipient,
+    encrypt_review_package_for_recipient,
+    ensure_recipient_encryption_keypair,
+    load_recipient_encryption_keypair,
+    recipient_encryption_public_key,
+)
+from ._review_package_recipient_registry import (
+    RecipientAlreadyRegisteredError,
+    RecipientFingerprintRecord,
+    RecipientFingerprintRegister,
+    RecipientFingerprintRegistryError,
+    RecipientFingerprintRegistryRepository,
+    RecipientNotRegisteredError,
+    public_key_hex_from_raw_bytes,
+)
+from ._review_package_recipient_replay_guard import (
+    ConsumedNonceLedger,
+    ConsumedNonceRecord,
+    RecipientPackageReplayedError,
+    RecipientReplayGuardError,
+    RecipientReplayGuardRepository,
+)
+from ._review_package_review_only_workspace import (
+    ReviewOnlyWorkspace,
+    ReviewOnlyWorkspaceAuthorityError,
+    ReviewOnlyWorkspaceError,
+    assert_workspace_permits_official_action,
+    open_review_only_workspace,
+)
+from ._review_package_signing import (
+    ReviewPackageSigningError,
+    ReviewPackageSigningKeyNotFoundError,
+    ReviewPackageSigningKeypair,
+    ReviewPackageSigningPublicKey,
+    SignedReviewPackage,
+    ensure_review_package_signing_keypair,
+    load_review_package_signing_keypair,
+    review_package_signing_public_key,
+    sign_review_package,
+    verify_review_package_signature,
+)
+from ._revision_persistence import persist_filed_revision, require_filing_instance_evidence_for_work_unit
+from ._selectors import (
+    ModeloCalculationRevisionCandidate,
+    ModeloCalculationRevisionDefault,
+    ModeloCalculationRevisionSelection,
+    ModeloCalculationRevisionSelector,
+    ModeloCalculationRevisionSelectorAmbiguousError,
+    ModeloCalculationRevisionSelectorError,
+    ModeloCalculationRevisionSelectorNotFoundError,
+    ModeloCalculationRevisionSelectorStateError,
+    ModeloVerifySelector,
+    ModeloWorkNoActiveBucketError,
+    ModeloWorkResolution,
+    ModeloWorkRevisionConflictError,
+    ModeloWorkSelectorContradictionError,
+    ModeloWorkSelectorError,
+    ModeloWorkSelectorRequest,
+    ModeloWorkSelectorState,
+    ModeloWorkUnitCandidate,
+    ModeloWorkUnitNotFoundError,
+    ModeloWorkVisibleTargetAmbiguousError,
+    active_natural_target_work_units,
+    natural_target_work_units,
+    resolve_active_natural_modelo_work_unit,
+    resolve_modelo_calculation_revision_pick,
+    resolve_modelo_work_bucket,
+    resolve_modelo_work_unit,
+    select_current_verified_revision,
+    select_exportable_revision,
+    select_modelo_calculation_revision,
+)
+from ._semantic_role_resolution import casilla_id_for_unique_revision_semantic_role
+from ._taxation_comparison import (
+    TaxationComparisonError,
+    TaxationComparisonResult,
+    TaxationRecommendation,
+    compare_taxation_for_work_address,
+    compare_taxation_for_work_unit,
+    compare_taxation_modes,
+)
+from ._verification_actions import verify_modelo_revision, verify_modelo_revision_with_preconditions
+from ._verification_preconditions import (
+    ModeloVerificationResult,
+    VerificationFindingPreconditionProjection,
+    build_verification_precondition_failure,
+    project_verification_findings,
+)
+from ._work_addressing import (
+    ModeloExactWorkUnitTarget,
+    ModeloResolvedRevisionProjection,
+    ModeloResolvedWorkProjection,
+    ModeloRevisionPick,
+    ModeloVisibleFilingTarget,
+    ModeloWorkAddress,
+    ModeloWorkAddressNotFoundError,
+    ModeloWorkEnsureResult,
+    ModeloWorkPeriodTokenError,
+    ModeloWorkRegistryYearMismatchError,
+    ModeloWorkTarget,
+    ensure_modelo_work_unit_for_active_target,
+    modelo_work_address_from_operator_target,
+    project_modelo_work_target,
+    project_modelo_work_unit,
+    resolve_exportable_modelo_calculation_revision_address,
+    resolve_fileable_modelo_calculation_revision_address,
+    resolve_modelo_calculation_revision_address,
+    resolve_modelo_revision_for_operator_target,
+    resolve_modelo_revision_pick,
+    resolve_modelo_work_address,
+    resolve_modelo_work_address_unit,
+    resolve_modelo_work_target,
+    resolve_modelo_work_unit_for_operator_target,
+    resolve_modelo_work_unit_id,
+    resolve_optional_modelo_work_address,
+    resolve_registry_revision_for_work_target,
+    resolve_verifiable_modelo_calculation_revision_address,
+    work_address_for_modelo_target,
+)
+from ._work_create_policy import (
+    CEDED_AUTONOMIC_MODELO_LOCALE_KEYS,
+    CEDED_AUTONOMIC_MODELOS,
+    STUB_MODELO_LOCALE_KEYS,
+    STUB_ONLY_MODELOS,
+    ModeloWorkCreateApplicabilityRefusal,
+    ceded_autonomic_modelo_locale_key,
+    guard_active_profile_foral_ccaa,
+    modelo_work_create_applicability_refusal,
+    modelo_work_create_refusal_locale_key,
+)
+from ._work_lifecycle import (
+    ModeloWorkLifecycleContinuation,
+    create_work_unit,
+    discard_work_unit,
+    get_work_unit,
+    lifecycle_continuation_for_work_history,
+    lifecycle_continuation_for_work_list,
+    lifecycle_continuation_for_work_status,
+    list_work_units,
+    rename_work_unit,
+)
+from ._work_plazo import (
+    ModeloWorkConditionalRecargoPreview,
+    ModeloWorkDeadlinePosture,
+    calculated_m210_plazo_notice,
+    modelo_work_deadline_posture,
+    validate_modelo_work_deadline_posture,
+)
+from ._work_review import (
+    BlockerRef,
+    ModeloWorkBindingOrigin,
+    ModeloWorkOriginAnomaly,
+    ModeloWorkProgress,
+    ModeloWorkProgressDenominator,
+    ModeloWorkRelationConsumption,
+    ModeloWorkReview,
+    ModeloWorkReviewCasilla,
+)
+from ._work_review_projection import build_modelo_work_review
+from ._workflow_gate import build_revision_deadline_window_checker, workflow_period_for_work_unit
 
 __all__ = [
     "APP_FILING_SOURCE_KIND",
