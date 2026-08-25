@@ -46,6 +46,7 @@ from ._common import (
     _format_of,
     _state,
     _tx_repo,
+    emit_envelope,
     emit_progress_line,
     resolve_cli_precondition_action,
     resolve_notice_action,

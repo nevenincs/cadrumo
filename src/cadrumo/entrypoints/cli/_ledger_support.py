@@ -37,6 +37,7 @@ from ...domain.transactions import Transaction, TransactionIdPrefixError, Transa
 from ._common import (
     _bad,
     attach_cli_policy_verdict,
+    emit_envelope,
     parse_decimal_amount,
     parse_optional_decimal_amount,
 )

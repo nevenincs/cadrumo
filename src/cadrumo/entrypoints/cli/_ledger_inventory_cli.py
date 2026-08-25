@@ -24,6 +24,7 @@ from ...domain.contribuyente.inventory import (
 )
 from ._common import (
     _parse_iso_date,
+    emit_envelope,
     parse_decimal_amount,
     parse_optional_decimal_amount,
 )

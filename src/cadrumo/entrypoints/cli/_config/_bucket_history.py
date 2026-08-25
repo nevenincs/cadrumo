@@ -16,6 +16,7 @@ from ....core.i18n import tr
 from ....core.time import coerce_utc_aware
 from ....domain.buckets import BucketEvent, BucketEventType
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
+from .._common import emit_envelope
 
 if TYPE_CHECKING:
     from .._config_bucket_history_payloads import BucketHistoryEventPayload

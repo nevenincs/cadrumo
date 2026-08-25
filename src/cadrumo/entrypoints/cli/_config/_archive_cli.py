@@ -29,6 +29,7 @@ import typer
 
 from ....core.i18n import OutputLanguage
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
+from .._common import emit_envelope
 
 if TYPE_CHECKING:
     from ....application.user_profile import (

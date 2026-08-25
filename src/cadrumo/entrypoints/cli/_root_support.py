@@ -11,6 +11,7 @@ from ._command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
 from ._common import (
     active_profile_label,
     attach_cli_policy_verdict,
+    emit_envelope,
     requested_cli_leaf,
 )
 

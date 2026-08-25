@@ -40,6 +40,7 @@ from ...domain.iva import InvoiceKind, IvaCategory
 from ._common import (
     _bad,
     _parse_iso_date,
+    emit_envelope,
     parse_decimal_amount,
     parse_optional_decimal_amount,
 )

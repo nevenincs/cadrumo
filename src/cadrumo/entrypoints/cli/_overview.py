@@ -56,6 +56,7 @@ from ._common import (
     _state,
     _tx_repo,
     activate_subcommand_output_language,
+    emit_envelope,
 )
 from ._overview_evidence import (
     _live_censo_verified_profile_keys,

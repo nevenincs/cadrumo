@@ -57,6 +57,7 @@ from ._common import (
     _profile_to_taxpayer,
     _state,
     _tx_repo,
+    emit_envelope,
 )
 from ._ledger_classify_cli import ledger_classify_bulk_csv, require_single_ledger_classification_request
 from ._ledger_lifecycle_cli import (

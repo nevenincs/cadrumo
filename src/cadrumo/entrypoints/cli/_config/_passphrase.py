@@ -11,6 +11,7 @@ from pydantic import SecretStr
 from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.i18n import OutputLanguage, tr
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
+from .._common import emit_envelope
 from .._errors import CliRefusedBoundaryError
 from ._secure_input import MachineSecretPayload
 

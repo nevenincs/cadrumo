@@ -39,6 +39,7 @@ from ...domain.modelos import WorkUnit
 from ._common import (
     activate_subcommand_output_language,
     active_profile_label,
+    emit_envelope,
     resolve_lifecycle_continuation_notice,
 )
 from ._modelo_behavior_support import (

@@ -40,6 +40,7 @@ import typer
 from ....application.modelo import RecipientFingerprintRegistryRepository, public_key_hex_from_raw_bytes
 from ....core.i18n import tr
 from .._common import active_bucket_id_or_refuse as _active_bucket_id_or_refuse
+from .._common import emit_envelope
 from ._collab_payloads import (
     ConfigCollabRecipientAddResult,
     ConfigCollabRecipientListResult,

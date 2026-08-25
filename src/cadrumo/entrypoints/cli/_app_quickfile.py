@@ -31,6 +31,7 @@ from ._common import (
     _filing_taxpayer_or_refuse,
     _no_active_profile_refusal,
     activate_subcommand_output_language,
+    emit_envelope,
 )
 from ._m303_filing_evidence_input import m303_filing_instance_evidence_from_cli
 from ._modelo_cli_support import unsupported_local_work_period_refusal, work_calculate_input_bundle_from_cli

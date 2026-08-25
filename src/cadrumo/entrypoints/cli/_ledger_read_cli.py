@@ -66,6 +66,7 @@ from ._common import (
     _state,
     _tx_repo,
     active_profile_label,
+    emit_envelope,
     optional_decimal_text,
     resolve_notice_action,
 )
