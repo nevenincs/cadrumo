@@ -44,8 +44,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _SURFACE = "modelo-151-ahorro-cuota-advisory"
 _BASE_AHORRO = validated_casilla_id("p08.base-liquidable-del-ahorro-18", surface=_SURFACE)
 _CUOTA_AHORRO = validated_casilla_id(
-    "p08.cuota-correspondiente-e-general-del-ahorro-20",
-    surface=_SURFACE,
+    "p08.cuota-correspondiente-e-general-del-ahorro-20", surface=_SURFACE,
 )
 
 #: Ejercicios governed by the 2015-2022 revision, sampled at both ends and inside.
@@ -128,10 +127,13 @@ def test_both_branches_of_the_cuota_are_guarded() -> None:
     general = [
         expression
         for expression in expressions
-        if "impatriado.base-liquidable-general" in expression and "impatriado.cuota-integra-general" in expression
+        if "impatriado.base-liquidable-general" in expression
+        and "impatriado.cuota-integra-general" in expression
     ]
     ahorro = [
-        expression for expression in expressions if str(_BASE_AHORRO) in expression and str(_CUOTA_AHORRO) in expression
+        expression
+        for expression in expressions
+        if str(_BASE_AHORRO) in expression and str(_CUOTA_AHORRO) in expression
     ]
 
     assert general, "the general-branch soundness predicate has gone"

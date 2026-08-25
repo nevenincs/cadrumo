@@ -318,11 +318,7 @@ def test_calculation_terminal_carrier_totality_is_exact_and_mutation_sensitive()
             for node in ast.walk(
                 ast.parse(
                     inspect.getsource(
-                        next(
-                            module
-                            for module in _TERMINAL_PRODUCER_MODULES
-                            if module.__name__.endswith(key.split(":")[0])
-                        )
+                        next(module for module in _TERMINAL_PRODUCER_MODULES if module.__name__.endswith(key.split(":")[0]))
                     )
                 )
             )
@@ -445,7 +441,9 @@ def test_m303_registry_formula_contradiction_has_an_exact_safety_verdict(
         filing_year=_PERIOD.filing_year,
         period=_PERIOD.registry_token,
     )
-    formula = next(item for item in revision.formulas if item.target_casilla_id == M303_COMPENSATION_AVAILABLE_CASILLA)
+    formula = next(
+        item for item in revision.formulas if item.target_casilla_id == M303_COMPENSATION_AVAILABLE_CASILLA
+    )
     monkeypatch.setattr(m303_module, "expression_casilla_refs", lambda _expression: ())
 
     with isolated_runtime_profile(tmp_path=tmp_path):

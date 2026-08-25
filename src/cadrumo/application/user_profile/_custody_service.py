@@ -164,7 +164,9 @@ class _ProfileCustodyTransactionCapability:
         is durable so recovery can resume at the last verified boundary.
         """
         if publication_kind == "enroll" and recovery_envelope is None:
-            raise ProfileCustodyTransactionRefusalError("profile enrollment publication requires a recovery envelope")
+            raise ProfileCustodyTransactionRefusalError(
+                "profile enrollment publication requires a recovery envelope"
+            )
         if password_envelope.profile_id != profile_id or sentinel.profile_id != profile_id:
             raise ProfileCustodyTransactionRefusalError("create custody material does not bind its target profile")
         try:
@@ -646,7 +648,9 @@ class _ProfileCustodyTransactionCapability:
         with active_profile_pointer_transaction(self._root) as pointer_transaction:
             pointer = pointer_transaction.read()
         if pointer is not None and pointer.bucket_id == str(profile_id):
-            raise ProfileCustodyTransactionRefusalError("single-target profile deletion refuses the active profile")
+            raise ProfileCustodyTransactionRefusalError(
+                "single-target profile deletion refuses the active profile"
+            )
 
     def _validate_current_delete_hold(
         self,

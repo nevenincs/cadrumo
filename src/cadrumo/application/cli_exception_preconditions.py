@@ -183,12 +183,9 @@ def cli_exception_no_recovery_verdict(
     adapter from smuggling an unbound command template into a recovery field.
     """
     from .operator_actions import no_action_precondition_verdict
-
     return no_action_precondition_verdict(
-        condition_id=condition.value,
-        facts=facts,
-        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-        outcome=outcome,
+        condition_id=condition.value, facts=facts,
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION, outcome=outcome,
     )
 
 

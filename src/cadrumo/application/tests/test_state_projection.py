@@ -75,7 +75,6 @@ def test_registry_readiness_refusals_have_no_authored_describe_command() -> None
         assert "aeat app modelo describe" not in refusal
         assert "revision" in refusal
 
-
 _ACTIVE_STORAGE_STACK: ExitStack | None = None
 _PROFILE_SPAN_OPEN = False
 _ACTIVE_PROFILE_ID: str | None = None

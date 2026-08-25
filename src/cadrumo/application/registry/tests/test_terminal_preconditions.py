@@ -190,9 +190,7 @@ def _write_unextracted_manual(root: Path) -> None:
 
 def test_corpus_refusals_classify_selection_and_missing_extraction_state(tmp_path: Path) -> None:
     invalid_locale = _refusal_error(
-        lambda: list_registry_manuals(
-            RegistryManualsListCommand(manual=RegistryManualId.RENTA, year=2025), locale="zz"
-        ),
+        lambda: list_registry_manuals(RegistryManualsListCommand(manual=RegistryManualId.RENTA, year=2025), locale="zz"),
     )
     _assert_no_action_contract(
         invalid_locale,

@@ -90,7 +90,6 @@ class SupportedModeloCalculationWorkflowCatalogue(BaseModel):
             for workflow in self.workflows
         )
 
-
 def build_supported_modelo_calculation_workflow_catalogue(
     reconciliation: OperatorSurfaceReconciliation,
 ) -> SupportedModeloCalculationWorkflowCatalogue:

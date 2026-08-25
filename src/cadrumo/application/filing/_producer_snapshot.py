@@ -730,7 +730,6 @@ class Modelo210ProfileFacts(BaseModel):
     representante: Modelo210RepresentanteFacts | None = None
     sin_ingreso_ni_devolucion: Modelo210SinIngresoNiDevolucionFacts | None = None
 
-
 class Modelo200AdministradorRow(BaseModel):
     """One administrador row, projected into modelo 200's layout at slot 1..5."""
 

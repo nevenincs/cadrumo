@@ -81,15 +81,11 @@ def test_live_capture_creates_exact_immediately_amendable_baseline(
     assert len(accumulator.filing_record_ids) == 1
     work_units = WorkUnitCatalogueRepository().load()
     assert len(work_units) == 1
-    filing = (
-        ModeloRecordCatalogueRepository()
-        .load()
-        .current_for(
-            bucket_id=_PROFILE_ID,
-            modelo="130",
-            filing_year=2026,
-            period=observation.period,
-        )
+    filing = ModeloRecordCatalogueRepository().load().current_for(
+        bucket_id=_PROFILE_ID,
+        modelo="130",
+        filing_year=2026,
+        period=observation.period,
     )
     assert filing is not None
     revision = get_calculation_revision(filing.calculation_revision_id)

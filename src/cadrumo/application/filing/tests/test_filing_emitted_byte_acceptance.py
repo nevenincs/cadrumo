@@ -101,7 +101,9 @@ def test_every_filing_grade_revision_has_one_law_selected_export_limb_and_an_hon
     coordinates = {(modelo.id, revision.id) for modelo, revision in filing_revisions}
 
     assert set(limbs) == {
-        (modelo.id, revision.id) for modelo in authority.modelos for revision in modelo.revisions.values()
+        (modelo.id, revision.id)
+        for modelo in authority.modelos
+        for revision in modelo.revisions.values()
     }
     assert coordinates <= set(limbs)
 
@@ -122,7 +124,9 @@ def test_every_filing_grade_revision_has_one_law_selected_export_limb_and_an_hon
         assert limb.name == "filing_export"
         if limb.outcome == "satisfied":
             evidence_by_authority = {evidence.authority: evidence.locator for evidence in limb.evidence}
-            generation = evidence_by_authority["dev.registry.pipeline.verify_export_fragment_provenance_manifest"]
+            generation = evidence_by_authority[
+                "dev.registry.pipeline.verify_export_fragment_provenance_manifest"
+            ]
             emission = evidence_by_authority["cadrumo.application.filing.export_draft"]
             assert ";semantic=" in generation and ";render=" in generation and ";loader=" in generation
             assert ";payload-sha256=" in emission and ";checked-offsets=" in emission
@@ -141,7 +145,9 @@ def test_an_empty_canonical_live_proof_cannot_turn_a_declared_layout_into_emitte
 
     authority, proof_authority = _canonical_filing_authority()
     modelo, revision = next(
-        (modelo, revision) for modelo, revision in _filing_revisions(authority) if revision.export_layouts
+        (modelo, revision)
+        for modelo, revision in _filing_revisions(authority)
+        if revision.export_layouts
     )
     narrowed = _narrow_authority(authority, modelo=modelo, revision=revision)
     report = compose_filing_export_coverage(
@@ -188,8 +194,7 @@ def test_modelo_353_layout_gap_is_selected_by_its_own_law_coordinate_and_cannot_
         for filing_year, period in gap_coordinates
     )
     assert all(
-        authority.inspect_revision(modelo.id, filing_year=filing_year, period=period).revision_id
-        == successor_revision.id
+        authority.inspect_revision(modelo.id, filing_year=filing_year, period=period).revision_id == successor_revision.id
         for filing_year, period in successor_coordinates
     )
     assert not set(gap_coordinates).intersection(successor_coordinates)

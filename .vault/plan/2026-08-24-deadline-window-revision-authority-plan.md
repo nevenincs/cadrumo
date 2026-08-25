@@ -13,7 +13,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
 modified: '2026-08-25'
-body_hash: 'sha256:924472f101e945b917d5ba5c9818aae23b32a773704bc739ab4177d85de88bc7'
+body_hash: 'sha256:90444767a00e3d44fc4fd3278a680ea14dd588887c163c68250425e858bdf55f'
 ---
 
 <!-- RETIRED: P06, P07, P09 -->
@@ -151,7 +151,7 @@ Verify the full consumer chain without local matching or multiplicity erasure.
 Close against fleet invariants, source evidence, repository rules, and architectural intent.
 
 - [ ] `W04.P13.S33` - Run the bundled-registry invariant proving zero ownership, identity, uniqueness, qualifier, period, and completeness violations; `src/cadrumo/domain/calculations/registry/tests/`.
-- [ ] `W04.P13.S34` - Run exact historical engine and CLI scenarios for every repaired modelo against the adjudicated registry census; `src/cadrumo/domain/deadlines/tests/; src/cadrumo/entrypoints/cli/tests/; .vault/audit/`.
+- [x] `W04.P13.S34` - Run exact historical engine and CLI scenarios for every repaired modelo against the adjudicated registry census; `src/cadrumo/domain/deadlines/tests/; src/cadrumo/entrypoints/cli/tests/; .vault/audit/`.
 - [ ] `W04.P13.S35` - Run Ruff, focused and full pytest, Vaultspec, registry validation, generated-reference drift, locale, and real CLI smoke gates; `src/cadrumo/; dev/; .vault/`.
 - [ ] `W04.P13.S36` - Perform formal code and architecture review for canonical reuse, source fidelity, warm-load enforcement, consumer parity, and absence of superseded paths, running Vaultspec RAG discovery followed by exact-symbol sweeps to prove no revision selector, filing-window resolver, period parser, cadence authority, supported-year horizon, deadline catalogue, qualifier vocabulary, or downstream deduplication has been redeclared; `src/cadrumo/; .vault/exec/; .vault/audit/`.
 

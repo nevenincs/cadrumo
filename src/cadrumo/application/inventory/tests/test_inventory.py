@@ -76,21 +76,9 @@ def _acquisition(value: str) -> InventoryAcquisitionCost:
         consideration_deductible_iva_ratio=Decimal("1"),
         attributable_cost_components=(),
         evidence=(
-            InventoryAcquisitionEvidence(
-                reference=invoice,
-                evidence_kind=InventoryAcquisitionEvidenceKind.PURCHASE_INVOICE,
-                content_digest="a" * 64,
-            ),
-            InventoryAcquisitionEvidence(
-                reference=cost_review,
-                evidence_kind=InventoryAcquisitionEvidenceKind.ATTRIBUTABLE_COST_REVIEW,
-                content_digest="b" * 64,
-            ),
-            InventoryAcquisitionEvidence(
-                reference=iva_review,
-                evidence_kind=InventoryAcquisitionEvidenceKind.IVA_RECOVERABILITY_REVIEW,
-                content_digest="c" * 64,
-            ),
+            InventoryAcquisitionEvidence(reference=invoice, evidence_kind=InventoryAcquisitionEvidenceKind.PURCHASE_INVOICE, content_digest="a" * 64),
+            InventoryAcquisitionEvidence(reference=cost_review, evidence_kind=InventoryAcquisitionEvidenceKind.ATTRIBUTABLE_COST_REVIEW, content_digest="b" * 64),
+            InventoryAcquisitionEvidence(reference=iva_review, evidence_kind=InventoryAcquisitionEvidenceKind.IVA_RECOVERABILITY_REVIEW, content_digest="c" * 64),
         ),
         completeness=InventoryAcquisitionCompleteness(
             consideration_evidence=invoice,
@@ -442,9 +430,7 @@ class TestClosingAuthorityRecord:
 
         assert first.ledger.closing_authority_record == record
         assert replay.ledger.closing_authority_record == record
-        assert (
-            svc.show(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025).closing_authority_record == record
-        )
+        assert svc.show(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025).closing_authority_record == record
         stored = InventoryLedgerRepository(objects=secure_engine.repository).load()
         assert stored.schema_version == "3"
         assert stored.ledgers[0].closing_authority_record == record
@@ -505,10 +491,7 @@ class TestClosingAuthorityRecord:
                 year=2025,
                 authority_record=_physical_authority_record(),
             )
-        assert (
-            svc.show(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025).closing_authority_record
-            == original
-        )
+        assert svc.show(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025).closing_authority_record == original
 
 
 class TestInventoryEventEmission:

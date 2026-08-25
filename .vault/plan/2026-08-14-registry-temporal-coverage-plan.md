@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#registry-temporal-coverage'
 date: '2026-08-14'
-modified: '2026-08-24'
-body_hash: 'sha256:b3b74c1b194f51bd0d643ec9f5c71623cd8ec2b3c5b1dc0775979be9e5b91669'
+modified: '2026-08-25'
+body_hash: 'sha256:75f4b553a4ba7304e13c2db24f33eacd0a522ceede315ccbe2f0bceaa3c090d5'
 tier: L3
 related:
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
@@ -111,7 +111,7 @@ Refuse or advise at the authority and snapshot resolution boundary, which execut
 
 Replace the single-representative-year assessment with the full-span derived matrix and collapse the duplicated filing-eligibility predicate to one.
 
-- [ ] `W02.P06.S13` - Replace the single-representative-year assessment with a derived modelo, filing-year, period and schema-family matrix over the validated authority that assesses every claimed year up to the assessment horizon, proven by property on a real long-span open revision; `src/cadrumo/domain/calculations/registry/_coverage.py; src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `W02.P06.S13` - Replace the single-representative-year assessment with a derived modelo, filing-year, period and schema-family matrix over the validated authority that assesses every claimed year up to the assessment horizon, proven by property on a real long-span open revision; `src/cadrumo/domain/calculations/registry/_coverage.py; src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W02.P06.S14` - Collapse the duplicated filing-eligibility predicate onto the snapshot-owned check and delete the coverage-ledger duplicate and the by-construction-empty filing gap surface outright, replacing them with matrix-derived gaps proven non-vacuous on a synthetic reviewed corpus, with no superseded ledger surface retained beside the matrix; `src/cadrumo/domain/calculations/registry/_coverage.py; src/cadrumo/domain/calculations/registry/_snapshot.py; src/cadrumo/domain/calculations/registry/tests/`.
 
 ## Wave `W03` - corpus migration and enforcement flip

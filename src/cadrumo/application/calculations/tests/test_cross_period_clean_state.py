@@ -218,9 +218,7 @@ def test_cross_period_requirements_include_relation_rollups(tmp_path: Path) -> N
 def test_cross_period_requirements_preserve_previous_filing_presence_policy() -> None:
     snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
     binding = next(
-        binding
-        for binding in snapshot.revision.bindings
-        if binding.id == "irpf.previous_year_economic_activity_net_income"
+        binding for binding in snapshot.revision.bindings if binding.id == "irpf.previous_year_economic_activity_net_income"
     )
     requirement = next(
         requirement

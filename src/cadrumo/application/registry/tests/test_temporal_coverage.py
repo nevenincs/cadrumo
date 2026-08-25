@@ -112,9 +112,7 @@ def test_temporal_coverage_expands_open_selectors_through_the_supported_horizon(
     expected_coordinates = revision_selection_coordinates(revision, assessment_horizon=assessment_horizon)
 
     assert {(row.filing_year, row.period) for row in report.rows} == set(expected_coordinates)
-    assert {row.filing_year for row in report.rows} == set(
-        range(revision.period_selector.year_from, assessment_horizon + 1)
-    )
+    assert {row.filing_year for row in report.rows} == set(range(revision.period_selector.year_from, assessment_horizon + 1))
     assert len(report.rows) > len(revision.period_selector.periods)
 
 
@@ -474,12 +472,10 @@ def test_temporal_coverage_retains_undeclared_grade_refusal_from_an_authority_mu
     refusals = _refusals(compose_temporal_coverage(authority=authority), "undeclared_authority_grade")
     row = refusals[0]
 
-    assert len(refusals) == len(
-        revision_selection_coordinates(
-            ungraded,
-            assessment_horizon=coverage_assessment_horizon(authority.catalogues),
-        )
-    )
+    assert len(refusals) == len(revision_selection_coordinates(
+        ungraded,
+        assessment_horizon=coverage_assessment_horizon(authority.catalogues),
+    ))
 
     assert (row.modelo, row.revision, row.selected_revision) == ("036", revision.id, revision.id)
 
@@ -498,12 +494,10 @@ def test_temporal_coverage_retains_declared_grade_snapshot_refusal_from_an_autho
     refusals = _refusals(compose_temporal_coverage(authority=authority), "declared_grade_snapshot_refused")
     row = refusals[0]
 
-    assert len(refusals) == len(
-        revision_selection_coordinates(
-            filing_grade,
-            assessment_horizon=coverage_assessment_horizon(authority.catalogues),
-        )
-    )
+    assert len(refusals) == len(revision_selection_coordinates(
+        filing_grade,
+        assessment_horizon=coverage_assessment_horizon(authority.catalogues),
+    ))
 
     assert (row.modelo, row.revision, row.selected_revision) == ("036", revision.id, revision.id)
 

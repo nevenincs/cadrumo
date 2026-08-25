@@ -318,7 +318,6 @@ class GoogleSheetsExportOperationExecutor:
         await context.events.phase(GOOGLE_SHEETS_EXPORT_PHASE_SETTLEMENT)
         return result_ref
 
-
 def _result(
     payload: GoogleSheetsExportOperationRequest,
     snapshot: RegistrySnapshot,

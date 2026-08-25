@@ -507,28 +507,24 @@ def import_external_filing_evidence[CasillaKey](
             "casilla_count": str(len(outputs)),
         },
     )
-    observation_payload = (
-        observation_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
-                modelo=work_unit.modelo,
-                filing_year=work_unit.filing_year,
-                period=work_unit.period.registry_token,
-                observations=revision.observations,
-            ),
-            source_kind=ObservationSourceKind.AEAT_CSV_REGISTER,
-            captured_at=now,
-            stamped_revision_id=work_unit.revision_id,
-            source_metadata={
-                "aeat_register_status": "ALTA",
-                "aeat_expediente_id": cleaned_reference,
-                "authenticated_identity": (expected_tax_id or "").strip(),
-                "external_evidence_reference_id": cleaned_reference,
-                "filing_record_id": new_filing_id,
-            },
-        )
-        if evidence_kind is ExternalEvidenceKind.AEAT_CSV_REGISTER
-        else None
-    )
+    observation_payload = observation_repo.prepare_observation_envelope(
+        RegistryModeloObservation(
+            modelo=work_unit.modelo,
+            filing_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+            observations=revision.observations,
+        ),
+        source_kind=ObservationSourceKind.AEAT_CSV_REGISTER,
+        captured_at=now,
+        stamped_revision_id=work_unit.revision_id,
+        source_metadata={
+            "aeat_register_status": "ALTA",
+            "aeat_expediente_id": cleaned_reference,
+            "authenticated_identity": (expected_tax_id or "").strip(),
+            "external_evidence_reference_id": cleaned_reference,
+            "filing_record_id": new_filing_id,
+        },
+    ) if evidence_kind is ExternalEvidenceKind.AEAT_CSV_REGISTER else None
 
     # One unit of work: the imported revision, the filing catalogue, the advanced
     # work-unit pointers, and the ``modelo.filing.imported`` event commit
@@ -537,18 +533,12 @@ def import_external_filing_evidence[CasillaKey](
     # pointer that no history entry accounted for.
     fr_repo.save_with_secure_object_writes(
         updated_filing_catalogue,
-        tuple(
-            write
-            for write in (
-                cr_repo.to_secure_object_write(revisions, expected_revision_id=revisions_revision_id),
-                wu_repo.to_secure_object_write(advanced_work_units),
-                _bucket_event_write(bv_repo, (imported_event,)),
-                observation_repo.to_secure_object_write(observation_payload)
-                if observation_payload is not None
-                else None,
-            )
-            if write is not None
-        ),
+        tuple(write for write in (
+            cr_repo.to_secure_object_write(revisions, expected_revision_id=revisions_revision_id),
+            wu_repo.to_secure_object_write(advanced_work_units),
+            _bucket_event_write(bv_repo, (imported_event,)),
+            observation_repo.to_secure_object_write(observation_payload) if observation_payload is not None else None,
+        ) if write is not None),
         expected_revision_id=filing_revision_id,
     )
 
