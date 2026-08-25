@@ -29,7 +29,6 @@ from ..operations import (
     OperationCapabilities,
     OperationConflictScope,
     OperationDefinition,
-    OperationExecutorContext,
     OperationExecutorFactory,
     OperationFrontendProjection,
     OperationOwnedResource,
@@ -38,11 +37,11 @@ from ..operations import (
     OperationReplayPolicy,
     OperationRequest,
     OperationRequestStoragePolicy,
-    OperationResumeCheckpoint,
     OperationSchemaBindingV1,
     OperationSensitiveInputPolicy,
     operation_public_schema_reference,
 )
+from ..operations.owner import OperationExecutorContext, OperationResumeCheckpoint
 from ._capsule_record import ProfileRecordConflictError
 from ._censal_observation import CensalObservation
 from ._censo_sync import CENSAL_ADOPTABLE_PATHS, censal_facts_from_read, reconcile_censal_read

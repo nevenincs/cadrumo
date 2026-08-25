@@ -82,7 +82,8 @@ from ...domain.calculations.registry import (
     select_revision,
     verification_tolerance_or_exact,
 )
-from ..operations import OperationEventEmitter, OperationLogSeverity
+from ..operations import OperationLogSeverity
+from ..operations.owner import OperationEventEmitter
 from ..storage.sync_runs import (
     SyncRunRecordReference,
     SyncRunRecordRepositoryProtocol,

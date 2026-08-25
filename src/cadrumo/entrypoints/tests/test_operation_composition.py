@@ -22,7 +22,6 @@ from ...application.operations import (
     OperationObservationService,
     OperationPublicDefinitionRegistrationV1,
     OperationRequest,
-    OperationResponseCapability,
     OperationReviewProjectionService,
     OperationSubmission,
     OperationSubmissionService,
@@ -131,7 +130,7 @@ def test_submission_issues_actor_bound_opaque_response_capability(tmp_path: Path
         result = asyncio.run(submit())
 
         assert result.receipt.operation_id == "a" * 64
-        assert isinstance(result.response_capability, OperationResponseCapability)
+        assert callable(result.response_capability.close)
 
 
 def test_production_composition_exposes_only_public_services() -> None:
