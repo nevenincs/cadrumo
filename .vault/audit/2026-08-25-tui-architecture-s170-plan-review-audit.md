@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:e0611ebda51e5f99cf661e1d3fd635440a0ba0e48971b1801e8d5942d04deff5'
+body_hash: 'sha256:d677c2f5598be2d26937967ca4d57e26f605bc21d5c9bbecaa442b2a24796d4f'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -72,3 +72,49 @@ substitutable catalogue scans while retaining the sole pure captured-catalogue
 scan. Re-run the plan checker and review the resulting whole-plan diff before
 assigning S170 to Terra.
 
+## Remediation re-review
+
+### Scope and evidence
+
+Fresh plan-only re-review of remediation commit
+`cebbad34fe5282218220a39a4012665892aadf7e` against both findings above, the
+accepted canonical-defining-module amendment, and the downstream W03.P20
+dependency order. The review inspected the committed diff and complete current
+text of S170, S174, S160, S161, S164, S166, and S129. The Vaultspec plan checker
+reports only the intentional `PLAN022` non-monotonic-ID warning caused by the
+dependency-ordered insertion of S168-S174 before S160.
+
+### Prior finding closure
+
+The `downstream-defining-module` HIGH is closed. S174 and S160 now define and
+extend the sole public `application/modelo/work_addressing.py` module and require
+direct imports across production, S126 registration, test, dynamic, and tooling
+consumers. Neither row recreates `_work_addressing.py`; each names
+`application/modelo/__init__.py` only as an inert-namespace gate. S161 hard-moves
+review ownership to public `application/modelo/work_review.py`; S164 defines the
+public calculation contract in `application/modelo/calculation.py` while keeping
+the unrelated implementation collaborator private; S166 hard-moves the manifest
+authority to public `application/modelo/workspace_manifest.py`; and S129 performs
+the final public moves to `workspace_models.py`, `workspace_producers.py`, and
+`workspace.py`. Every row requires direct consumer migration, package-binding
+deletion, and no shim, alias, fallback, bridge, or re-export.
+
+The downstream order is coherent: S174 supplies the pure one-capture revision
+assertion before S160 adds native WORK capture; S161, S164, and S166 establish
+their public native-owner homes before S167 registration; and S129 relocates the
+completed S125/S126/S128 contract, registration, and assembly families only
+after those implementation rows, migrating all receipt and frontend consumers
+atomically.
+
+The `catalogue-scan-wording` MEDIUM is closed. S170 now deletes selector-owned
+repository reads and only parallel, substitutable, repository-owning scans or
+first-match picks, while explicitly retaining the sole canonical pure scan over
+the supplied captured catalogue.
+
+### Remediation disposition
+
+PASS. Commit `cebbad34fe5282218220a39a4012665892aadf7e` closes both prior
+findings. The seven reviewed rows now give Terra one unambiguous public-module,
+direct-import execution path consistent with the accepted amendment; no new
+critical, high, medium, or low finding remains in the reviewed remediation
+scope.
