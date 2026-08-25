@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:e64652a98199e39569a38a9c411f4173eb8c920c585e88092e7e08acd244f40a'
+body_hash: 'sha256:9fe40bcaf81874202f229e4b378a44998e0787f0723ce195fca6a553c184bd4e'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
@@ -20,7 +20,7 @@ no-runtime/no-census boundary.
 
 ## Findings
 
-### accepted ADR is the sole model-scoped normative home Ã¢â‚¬â€� PASS, HIGH resolved
+### accepted ADR is the sole model-scoped normative home â€” PASS, HIGH resolved
 
 `2026-08-25-source-casilla-integration-m220-source-owner-deferral-adr` is
 accepted and makes the bounded `ingress_blocked` decision, owner, expiry
@@ -34,7 +34,7 @@ limits of the official evidence. The execution record links the ADR and
 attests its boundary without redeclaring the decision; the checked plan links
 the research.
 
-### evidence and boundaries remain exact Ã¢â‚¬â€� PASS
+### evidence and boundaries remain exact â€” PASS
 
 The official AEAT workbook SHA-256 values recompute as
 `a8f398dd42db0b1142d5f2e98bf3a60d79069e31d63af32001373f459fee4f2e` for
@@ -49,7 +49,7 @@ The repair commit changes Vault documents only. Exact source/census search
 finds no M220 source-connectivity census row, producer, binding, resolver,
 casilla linkage, layout, lifecycle, or export promotion.
 
-### verification Ã¢â‚¬â€� PASS
+### verification â€” PASS
 
 - `uv run pytest -n 0 src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py -k "not every_registry_revision_can_produce_a_filing_artifact"`: 5 passed, 1 deselected.
 - `uv run ruff check` over the reviewed Markdown paths: passed (no Python files).
