@@ -1,24 +1,14 @@
-"""Exit-code-as-verdict golden gate for the operator eval.
+"""Real negative-recovery-retry coverage for the operator eval runner.
 
-Guards against an exit code being misread as a crash: a non-zero CLI process
-exit code paired with a well-formed JSON envelope is a domain VERDICT the operator
-must read and act on, not a crash to abort on or retry blindly.
-
-This module dispatches a REAL ``modelo work verify`` on a real M130 draft that
-legitimately fails cross-period clean-state (the same reproduction as
-``test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_state``
-in ``entrypoints/cli/tests/test_modelo_work_natural_key.py``: an M130 quarter with
-no prior filed M100 for the preceding year), decodes the real stdout envelope, and
-feeds the real exit code plus the real envelope into
-:func:`dev.agent_eval.check_exit_code_scenario`. No mocks: the exit code, the
-envelope shape, the ``status``, and the continuation-command citation are all
-real CLI/registry output.
+The runner must not treat a non-zero exit as a dead-end string-matching exercise.
+These tests dispatch live CLI leaves, build the same application-owned typed
+precondition facts, and let the runner resolve, safely execute, and retry through
+the live operator surface.  No test owns an expected action or a recovery command.
 """
 
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -27,7 +17,9 @@ from typing import Any
 import pytest
 
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.core import resolve_active_bucket_id
+from cadrumo.application.modelo import build_modelo_precondition_failure
+from cadrumo.application.operator_actions import no_action_precondition_verdict
+from cadrumo.core import ActionEvidenceProvenance, resolve_active_bucket_id
 from cadrumo.core.json_contract import EnvelopeStatus
 from cadrumo.domain.transactions import (
     BusinessClassification,
@@ -38,46 +30,134 @@ from cadrumo.domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
+from cadrumo.domain.user_profile import (
+    ProfileSetupState,
+    UserProfileFact,
+    UserProfileRecord,
+    load_user_profile_schema,
+)
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo.tests.cli_runner import invoke_cached_cli
-from cadrumo.tests.profile_capsule import open_test_profile_session
-from cadrumo.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
+from cadrumo.tests.profile_capsule import open_test_profile_session, seed_test_profile_record
+from cadrumo.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from dev.agent_eval._action_coverage import LeafConditionScenario, production_leaf_condition_scenario_matrix
 
 from .. import ExitCodeScenario, check_exit_code_scenario
-from ._real_cli_support import valid_cli_commands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _FILING_YEAR = 2025
 _PERIOD = "1T"
+_PROFILE_ID = "0ac1e000-0000-4000-8000-000000000344"
 
 
-def _create_profile() -> None:
-    result = invoke_cached_cli(
+@pytest.fixture
+def runtime_profile(tmp_path: Path) -> TestRuntimeProfile:
+    with isolated_cli_runtime_profile(
+        tmp_path=tmp_path,
+        bucket_id=_PROFILE_ID,
+        label="Exit-code golden-eval test profile",
+    ) as profile:
+        yield profile
+
+
+def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
+    schema = load_user_profile_schema()
+    seed_test_profile_record(
+        UserProfileRecord(
+            schema_id=schema.id,
+            schema_version=schema.version,
+            profile_id=_PROFILE_ID,
+            setup_state=ProfileSetupState.COMPLETE,
+            facts=(
+                UserProfileFact(path="identity.name", value="Exit Code Operator"),
+                UserProfileFact(path="identity.surnames", value="Golden Eval"),
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                UserProfileFact(path="iva.redeme_enrolled", value=False),
+                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="provenance.source", value="manual_cli"),
+            ),
+        ),
+        root=runtime_profile.storage_root,
+        label="Exit-code golden-eval test profile",
+    )
+
+
+def _recovery_coverage() -> LeafConditionScenario:
+    return production_leaf_condition_scenario_matrix().row_for(
+        (
+            "modelo.work.verify",
+            "modelo.work.verify.calculation_revision.addresses_calculation",
+            "modelo.work.verify.calculation_revision.work_unit_target",
+        ),
+    )
+
+
+def _no_recovery_coverage() -> LeafConditionScenario:
+    return production_leaf_condition_scenario_matrix().row_for(
+        (
+            "modelo.work.verify",
+            "modelo.work.verify.cross_period_dependency.clean",
+            "modelo.work.verify.cross_period_dependency.unclean",
+        ),
+    )
+
+
+def _dispatch_unprepared_m347_verify(runtime_profile: TestRuntimeProfile) -> tuple[int, dict[str, Any], str]:
+    """Create a real draft, then ask the live verify leaf to address no calculation.
+
+    This is the safe recovery chain: the declared recovery action calculates the
+    exact work unit, and the runner retries the original verify leaf afterwards.
+    """
+    _seed_natural_person_profile(runtime_profile)
+    created = invoke_cached_cli(
         [
-            "config", "profile", "create", "operator",
-            "--quiet", "--accept-defaults",
-            "--entity-type", "natural_person",
-            "--tax-id", "12345678Z",
-            "--name", "Operator",
-            "--surnames", "Exit Code Golden Eval",
-            "--activity", "design",
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "347", "--year", "2024", "--period", "0A", "--revision", "2008-2024",
         ],
     )  # fmt: skip
-    assert result.exit_code == 0, result.output
+    assert created.exit_code == 0, created.output
+    work_unit_id = str(require_schema_envelope(created.output)["work_unit_id"])
+
+    verified = invoke_cached_cli(
+        ["--format", "json", "app", "modelo", "work", "verify", work_unit_id],
+    )
+    return verified.exit_code, json.loads(verified.output), work_unit_id
+
+
+def _recovery_precondition(*, coverage: LeafConditionScenario, work_unit_id: str):
+    action = coverage.profile.declaration.action
+    assert action is not None
+    return build_modelo_precondition_failure(
+        subject_leaf_key=coverage.subject_leaf_key,
+        condition_id=coverage.condition_id,
+        scenario_id=coverage.scenario_id,
+        evidence_id="workflow.work_unit.addressing",
+        evidence_values={
+            "work_unit_id": work_unit_id,
+            "modelo": "347",
+            "year": 2024,
+            "period": "0A",
+        },
+        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        action_id=action.action_id,
+        action_argument_values={"work_unit_id": work_unit_id},
+    ).verdict
 
 
 def _seed_m130_income_transaction(*, amount: Decimal, filing_year: int) -> None:
-    """Seed one real actividad-economica income row for source-bound M130 casilla 01.
-
-    Deliberately local to this module rather than importing
-    ``entrypoints.cli.tests._m130_source_support`` (a private helper module scoped
-    to the ``entrypoints.cli.tests`` package) across a package boundary, mirroring
-    the pattern in ``test_response_provenance_golden.py``. Writes a genuine row
-    through the real ``TransactionCatalogueRepository`` - no expense is seeded, so
-    the scenario reproduces the same cross-period clean-state gap the natural-key
-    CLI test exercises.
-    """
+    """Seed one real actividad-economica income row for source-bound M130 casilla 01."""
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None, "test profile must install an active bucket pointer"
     value_date = date(filing_year, 2, 15)
@@ -124,22 +204,10 @@ def _seed_m130_income_transaction(*, amount: Decimal, filing_year: int) -> None:
         )
 
 
-def _dispatch_m130_verify_with_cross_period_finding() -> tuple[int, dict[str, Any]]:
-    """Dispatch a REAL M130 create -> calculate -> verify that legitimately exits 1.
-
-    No prior filed M100 exists for the preceding year, so the real
-    ``verify_modelo_revision`` action refuses ``granted_verificado_completo`` on a
-    real ``cross_period_dependency_unclean`` finding and the CLI raises
-    ``typer.Exit(code=1)`` - the same reproduction as
-    ``test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_state``.
-
-    Returns:
-        The real process exit code and the fully decoded stdout JSON envelope
-        (the top-level document, not just its ``result`` sub-mapping).
-    """
-    _create_profile()
+def _dispatch_m130_verify_with_cross_period_finding(runtime_profile: TestRuntimeProfile) -> tuple[int, dict[str, Any]]:
+    """Dispatch a real M130 verify that reaches an explicit operator-decision outcome."""
+    _seed_natural_person_profile(runtime_profile)
     _seed_m130_income_transaction(amount=Decimal("12000.00"), filing_year=_FILING_YEAR)
-
     created = invoke_cached_cli(
         [
             "--format", "json",
@@ -148,10 +216,6 @@ def _dispatch_m130_verify_with_cross_period_finding() -> tuple[int, dict[str, An
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
-
-    # Casilla 02 (gastos) is bucket-bound (aggregated from deductible ledger rows)
-    # and resolves to 0 with no expense seeded; immaterial to the cross-period
-    # clean-state check this scenario exercises.
     calculated = invoke_cached_cli(
         [
             "--format", "json",
@@ -162,7 +226,6 @@ def _dispatch_m130_verify_with_cross_period_finding() -> tuple[int, dict[str, An
         ],
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
-
     verified = invoke_cached_cli(
         [
             "--format", "json",
@@ -173,166 +236,87 @@ def _dispatch_m130_verify_with_cross_period_finding() -> tuple[int, dict[str, An
     payload = require_schema_envelope(verified.output)
     assert payload["granted_verificado_completo"] is False, verified.output
     assert payload["findings"][0]["kind"] == "cross_period_dependency_unclean", verified.output
-
-    envelope: dict[str, Any] = json.loads(verified.output)
-    return verified.exit_code, envelope
+    return verified.exit_code, json.loads(verified.output)
 
 
-def _strip_notice_suggestions(envelope: Mapping[str, Any]) -> dict[str, Any]:
-    """Return a copy of ``envelope`` with every notice ``suggestion`` cleared.
-
-    Reproduces the historical exit-code-as-crash confusion this scenario closes:
-    a non-zero exit whose JSON body carries no continuation guidance would read
-    as a dead end, not an actionable verdict.
-    """
-    notices = envelope.get("notices")
-    stripped_notices = (
-        [{**notice, "suggestion": None} if isinstance(notice, Mapping) else notice for notice in notices]
-        if isinstance(notices, list)
-        else notices
-    )
-    return {**envelope, "notices": stripped_notices}
-
-
-def test_exit_1_with_findings_reads_as_an_actionable_verdict_not_a_crash() -> None:
-    """A real M130 verify that legitimately exits 1 passes every category-7 dimension.
-
-    (i) the JSON body is well-formed, (ii) its ``status`` is not "success", and
-    (iii) a real registry command key (``modelo.reconcile.file``) - a genuine
-    continuation the operator can run next - is cited in the envelope notices.
-    """
-    exit_code, envelope = _dispatch_m130_verify_with_cross_period_finding()
-    assert exit_code == 1
-
+def test_runner_executes_only_the_safe_canonical_recovery_then_retries_the_original_leaf(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    coverage = _recovery_coverage()
+    exit_code, envelope, work_unit_id = _dispatch_unprepared_m347_verify(runtime_profile)
+    assert exit_code == 1, envelope
     scenario = ExitCodeScenario(
-        name="m130-verify-cross-period-unclean-exit-1",
-        command="modelo.work.verify",
+        name="m347-verify-without-calculation",
+        command=coverage.subject_leaf_key,
         expected_exit_code=1,
-        tool_result_status=EnvelopeStatus.WARNING,
-        expected_next_action="modelo.reconcile.file",
+        tool_result_status=EnvelopeStatus.ERROR,
+        leaf_condition_scenario=coverage.identity,
     )
 
     result = check_exit_code_scenario(
         scenario,
         exit_code=exit_code,
         envelope=envelope,
-        valid_commands=valid_cli_commands(),
+        precondition_verdict=_recovery_precondition(coverage=coverage, work_unit_id=work_unit_id),
+        original_argv=("app", "modelo", "work", "verify", work_unit_id),
     )
 
     assert result.passed, result.failures
-    assert result.exit_code_matches
-    assert result.envelope_well_formed
-    assert result.status_is_non_success
-    assert result.next_action_is_continuation
-    assert envelope["status"] != EnvelopeStatus.SUCCESS.value
+    assert result.production_action_assertion.passed
 
 
-def test_runner_rejects_an_exit_1_with_no_continuation_guidance() -> None:
-    """Anti-tautology: an exit 1 whose notices carry no continuation MUST fail.
-
-    Takes the SAME real dispatched exit code and envelope and strips every
-    notice ``suggestion`` - reproducing a verdict that reads as a dead end (the
-    "treats exit 1 as terminal" case) - and proves
-    ``next_action_is_continuation`` catches it. Without this proof the dimension
-    could pass vacuously regardless of what the CLI actually emitted.
-    """
-    exit_code, envelope = _dispatch_m130_verify_with_cross_period_finding()
-    stripped = _strip_notice_suggestions(envelope)
-
+def test_runner_leaves_explicit_operator_decision_outcome_unexecuted(runtime_profile: TestRuntimeProfile) -> None:
+    coverage = _no_recovery_coverage()
+    outcome = coverage.profile.declaration.no_recovery_outcome
+    assert outcome is not None
+    exit_code, envelope = _dispatch_m130_verify_with_cross_period_finding(runtime_profile)
+    assert exit_code == 1, envelope
     scenario = ExitCodeScenario(
-        name="m130-verify-cross-period-unclean-exit-1",
-        command="modelo.work.verify",
+        name="m130-verify-cross-period-unclean",
+        command=coverage.subject_leaf_key,
         expected_exit_code=1,
         tool_result_status=EnvelopeStatus.WARNING,
-        expected_next_action="modelo.reconcile.file",
+        leaf_condition_scenario=coverage.identity,
     )
-
-    result = check_exit_code_scenario(
-        scenario,
-        exit_code=exit_code,
-        envelope=stripped,
-        valid_commands=valid_cli_commands(),
-    )
-
-    assert not result.passed
-    assert not result.next_action_is_continuation
-    assert any("dead end" in failure for failure in result.failures)
-    # The other real dimensions are untouched by stripping suggestions.
-    assert result.exit_code_matches
-    assert result.envelope_well_formed
-    assert result.status_is_non_success
-
-
-def test_runner_rejects_an_exit_code_mismatch() -> None:
-    """Anti-tautology: a scenario expecting the wrong exit code MUST fail.
-
-    Uses the SAME real dispatch (a genuine exit 1) but declares
-    ``expected_exit_code=2``, proving ``exit_code_matches`` is a real comparison
-    against the dispatched process exit code, not a vacuous pass.
-    """
-    exit_code, envelope = _dispatch_m130_verify_with_cross_period_finding()
-
-    scenario = ExitCodeScenario(
-        name="m130-verify-cross-period-unclean-wrong-exit",
-        command="modelo.work.verify",
-        expected_exit_code=2,
-        tool_result_status=EnvelopeStatus.WARNING,
-        expected_next_action="modelo.reconcile.file",
+    refusal = no_action_precondition_verdict(
+        condition_id=coverage.condition_id,
+        evidence_id="modelo.work.verify.cross_period_dependency",
+        facts={"modelo": "130", "year": _FILING_YEAR, "period": _PERIOD},
+        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        outcome=outcome,
     )
 
     result = check_exit_code_scenario(
         scenario,
         exit_code=exit_code,
         envelope=envelope,
-        valid_commands=valid_cli_commands(),
+        precondition_verdict=refusal,
     )
 
-    assert not result.passed
-    assert not result.exit_code_matches
+    assert result.passed, result.failures
+    assert result.production_action_assertion.observed_no_recovery_outcome is outcome
 
 
-def test_exit_code_scenario_rejects_success_status_for_a_nonzero_exit() -> None:
-    """Anti-tautology at the model layer: a "success" verdict for a non-zero exit is invalid.
-
-    An ``ExitCodeScenario`` cannot even be constructed declaring
-    ``tool_result_status=EnvelopeStatus.SUCCESS`` - the exact exit-code-as-crash
-    confusion this category exists to catch is refused at the typed boundary,
-    not just at check time.
-    """
-    with pytest.raises(ValueError, match=r"tool_result_status must not be EnvelopeStatus\.SUCCESS"):
-        ExitCodeScenario(
-            name="invalid-success-verdict",
-            command="modelo.work.verify",
-            expected_exit_code=1,
-            tool_result_status=EnvelopeStatus.SUCCESS,
-            expected_next_action="modelo.reconcile.file",
-        )
-
-
-def test_runner_rejects_a_fabricated_continuation_command() -> None:
-    """Anti-tautology: a next-action naming a non-existent command MUST fail.
-
-    Proves the continuation check does not just string-match arbitrary prose -
-    it requires the declared ``expected_next_action`` to resolve against the
-    live CLI schema registry.
-    """
-    exit_code, envelope = _dispatch_m130_verify_with_cross_period_finding()
-
+def test_runner_rejects_a_retry_that_does_not_name_the_resolved_subject_leaf(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    coverage = _recovery_coverage()
+    exit_code, envelope, work_unit_id = _dispatch_unprepared_m347_verify(runtime_profile)
     scenario = ExitCodeScenario(
-        name="m130-verify-fabricated-continuation",
-        command="modelo.work.verify",
+        name="m347-verify-retry-must-stay-on-subject",
+        command=coverage.subject_leaf_key,
         expected_exit_code=1,
-        tool_result_status=EnvelopeStatus.WARNING,
-        expected_next_action="modelo.work.fabricated",
+        tool_result_status=EnvelopeStatus.ERROR,
+        leaf_condition_scenario=coverage.identity,
     )
 
     result = check_exit_code_scenario(
         scenario,
         exit_code=exit_code,
         envelope=envelope,
-        valid_commands=valid_cli_commands(),
+        precondition_verdict=_recovery_precondition(coverage=coverage, work_unit_id=work_unit_id),
+        original_argv=("app", "modelo", "work", "calculate", work_unit_id),
     )
 
     assert not result.passed
-    assert not result.next_action_is_continuation
-    assert any("does not resolve against the live CLI surface" in failure for failure in result.failures)
+    assert any("does not invoke its canonical subject leaf" in failure for failure in result.failures)

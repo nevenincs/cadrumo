@@ -45,15 +45,16 @@ what counts as a mutating command (that closed set rides on the scenario).
 
 from __future__ import annotations
 
+import json
 import tomllib
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 
 from cadrumo_harness import iter_skill_documents
 from pydantic import BaseModel, ConfigDict
 
 from cadrumo.core.external_constants import UTF_8_ENCODING as _UTF_8
-from cadrumo.core.json_contract import EnvelopeStatus
+from cadrumo.core.json_contract import EnvelopeStatus, ResolvedActionArgument
 from cadrumo.core.resources import resources
 
 from ._models import (
@@ -448,11 +449,164 @@ def _envelope_field(envelope: Mapping[str, object], field: str) -> object:
     return envelope.get(field)
 
 
-def _cites_continuation(notice: object, expected_cli_form: str) -> bool:
-    if not isinstance(notice, Mapping):
-        return False
-    suggestion = notice.get("suggestion")
-    return isinstance(suggestion, str) and expected_cli_form in suggestion
+def _canonical_action_arguments(
+    *,
+    cli_path: tuple[str, ...],
+    argument_bindings: tuple[ResolvedActionArgument, ...],
+) -> tuple[str, ...]:
+    """Materialise a resolved action through the live command graph.
+
+    The action resolver is the authority for binding completeness and source
+    provenance; the command graph is the authority for positional versus option
+    syntax.  This helper deliberately has no action- or command-specific branch.
+    """
+    from cadrumo.core import PRODUCT_IDENTITY, ActionArgumentStatus
+    from cadrumo.entrypoints.cli import command_graph
+
+    values: dict[str, object] = {}
+    for binding in argument_bindings:
+        name = binding.argument_name
+        status = binding.status
+        value = binding.value
+        if status is not ActionArgumentStatus.RESOLVED or value is None:
+            raise ValueError(f"canonical recovery has no concrete value for argument: {name}")
+        values[name] = value
+
+    command = command_graph.resolve_path((PRODUCT_IDENTITY.cli_executable, *cli_path))
+    arguments: list[str] = []
+    consumed: set[str] = set()
+    for parameter in command.parameters:
+        name = parameter.name
+        if name not in values:
+            continue
+        value = values[name]
+        consumed.add(name)
+        if parameter.kind == "argument":
+            arguments.append(str(value))
+            continue
+
+        declarations = parameter.declarations
+        long_options = tuple(declaration for declaration in declarations if declaration.startswith("--"))
+        if not long_options:
+            raise ValueError(f"canonical recovery option has no long declaration: {name}")
+        if parameter.is_flag:
+            if not isinstance(value, bool):
+                raise ValueError(f"canonical recovery flag requires a bool value: {name}")
+            if value:
+                arguments.append(long_options[0])
+            continue
+        arguments.extend((long_options[0], str(value)))
+
+    unmatched = sorted(set(values) - consumed)
+    if unmatched:
+        raise ValueError("canonical recovery bindings do not map to live CLI parameters: " + ", ".join(unmatched))
+    return tuple(arguments)
+
+
+def _invoke_canonical_cli(argv: Sequence[str]):
+    """Run the live CLI command tree once, requesting its canonical JSON envelope."""
+    from click.testing import CliRunner
+
+    from cadrumo.entrypoints.cli import full_command_tree
+
+    return CliRunner().invoke(full_command_tree(), ["--format", "json", *argv])
+
+
+def _decoded_envelope(output: str) -> Mapping[str, object] | None:
+    """Return one actual JSON envelope, without accepting a fabricated substitute."""
+    try:
+        decoded = json.loads(output)
+    except json.JSONDecodeError:
+        return None
+    return decoded if isinstance(decoded, Mapping) else None
+
+
+def _safe_to_execute(cli_path: tuple[str, ...]) -> bool:
+    """Read recovery safety from the command graph's execution-policy authority."""
+    from cadrumo.entrypoints.cli import command_execution_policy_for_cli_path
+
+    policy = command_execution_policy_for_cli_path(cli_path)
+    return not (policy.destructive or policy.handoff or policy.live_write)
+
+
+def _retry_uses_subject_leaf(*, original_argv: Sequence[str], subject_cli_path: tuple[str, ...]) -> bool:
+    """Require the retry to invoke the same canonical leaf the scenario observed."""
+    return tuple(original_argv[: len(subject_cli_path)]) == subject_cli_path
+
+
+def _execute_safe_recovery_and_retry(
+    *,
+    scenario: ExitCodeScenario,
+    original_argv: Sequence[str],
+    precondition_verdict: object,
+    subject_cli_path: tuple[str, ...],
+    failures: list[str],
+) -> None:
+    """Validate, execute, and observe one immediate safe canonical recovery.
+
+    There is deliberately no caller-supplied recovery command or executor.  The
+    existing CLI resolver validates the live catalogue bindings, the command
+    policy decides whether dispatch is safe, and the live command tree performs
+    both the recovery and the retry.  A terminal/safety/operator-decision outcome
+    has no action and therefore cannot reach this function.
+    """
+    from cadrumo.core import ActionArgumentStatus, ActionConditionality
+    from cadrumo.entrypoints.cli import resolve_cli_precondition_action
+
+    resolved = resolve_cli_precondition_action(precondition_verdict)
+    action = resolved.action
+    if action is None:
+        return
+    if resolved.conditionality is not ActionConditionality.IMMEDIATE:
+        failures.append(
+            f"'{scenario.command}' recovery action '{action.action_id}' is conditional and was not executed",
+        )
+        return
+    if resolved.missing_argument_names or any(
+        binding.status is not ActionArgumentStatus.RESOLVED for binding in resolved.argument_bindings
+    ):
+        failures.append(
+            f"'{scenario.command}' recovery action '{action.action_id}' has unresolved bindings and was not executed",
+        )
+        return
+    if not _safe_to_execute(action.cli_path):
+        failures.append(
+            f"'{scenario.command}' recovery action '{action.action_id}' is not safe to execute automatically",
+        )
+        return
+    if not _retry_uses_subject_leaf(original_argv=original_argv, subject_cli_path=subject_cli_path):
+        failures.append(
+            f"'{scenario.command}' retry does not invoke its canonical subject leaf",
+        )
+        return
+
+    try:
+        recovery_arguments = _canonical_action_arguments(
+            cli_path=action.cli_path,
+            argument_bindings=resolved.argument_bindings,
+        )
+    except ValueError as error:
+        failures.append(str(error))
+        return
+    recovery = _invoke_canonical_cli((*action.cli_path, *recovery_arguments))
+    recovery_envelope = _decoded_envelope(recovery.output)
+    recovery_completed = (
+        recovery.exit_code == 0
+        and recovery_envelope is not None
+        and recovery_envelope.get("command") == action.target_command_key
+    )
+    if not recovery_completed:
+        failures.append(
+            f"'{scenario.command}' canonical recovery action '{action.action_id}' did not complete as a JSON verdict",
+        )
+        return
+
+    retry = _invoke_canonical_cli(tuple(original_argv))
+    retry_envelope = _decoded_envelope(retry.output)
+    if retry.exit_code != 0 or retry_envelope is None or retry_envelope.get("command") != scenario.command:
+        failures.append(
+            f"'{scenario.command}' remained refused after canonical recovery '{action.action_id}'",
+        )
 
 
 def check_exit_code_scenario(
@@ -460,41 +614,34 @@ def check_exit_code_scenario(
     *,
     exit_code: int,
     envelope: Mapping[str, object],
-    valid_commands: frozenset[str],
+    precondition_verdict: object,
+    original_argv: Sequence[str] = (),
 ) -> ExitCodeVerdict:
-    """Assert a REAL dispatched exit code reads as an actionable verdict, not a crash.
+    """Check one real negative dispatch against the resolved production profile.
 
-    Closes eval-catalogue category 7. The caller dispatches a real CLI/MCP
-    invocation (e.g. ``modelo.work.verify`` on a draft with outstanding
-    findings), captures its process exit code and its decoded JSON envelope
-    (the full top-level document: ``schema_version``/``command``/``status``/
-    ``result``/``notices``), and passes both in; this module never dispatches
-    the call itself (mirrors the injection pattern of
-    :func:`run_golden_scenario`'s ``valid_commands``/``response_observations``).
-
-    Four dimensions, all over the REAL dispatch:
-
-    - ``exit_code_matches``: the process exit code equals
-      ``scenario.expected_exit_code``.
-    - ``envelope_well_formed``: the captured stdout document is a well-formed
-      ``SchemaEnvelope`` for the expected ``command`` (a crash would emit no
-      such document, or one missing the shared spine fields).
-    - ``status_is_non_success``: the envelope ``status`` is neither
-      :attr:`~core.json_contract.EnvelopeStatus.SUCCESS` nor anything
-      other than the scenario's declared ``tool_result_status`` - a verdict
-      must not read as a clean success.
-    - ``next_action_is_continuation``: ``scenario.expected_next_action``
-      resolves against the live CLI surface (``valid_commands``) AND its CLI
-      form is cited as a notice ``suggestion`` in the envelope - proving the
-      operator is guided to a real follow-on command rather than left at a
-      dead end.
-
-    Returns:
-        An :class:`ExitCodeVerdict` whose ``passed`` is true only when the
-        real dispatch's exit code, envelope shape, status, and next-action
-        guidance all match the declared expectation.
+    The caller supplies the initial live exit/envelope and the application-owned
+    precondition verdict it observed.  The evaluator resolves the S42 matrix row
+    itself and uses S43's observation assertion; it never accepts a scenario
+    action or recovery command.  Immediate actions are binding-validated by the
+    canonical CLI resolver, dispatched only if the live policy marks them safe,
+    and followed by one real retry of the original canonical leaf.  Explicit
+    no-recovery outcomes do not dispatch or infer a command.
     """
+    from ._action_coverage import production_leaf_condition_scenario_matrix
+    from ._models import observe_production_action
+
     failures: list[str] = []
+    coverage = production_leaf_condition_scenario_matrix().row_for(scenario.leaf_condition_scenario)
+    assertion = observe_production_action(coverage, precondition_verdict)
+    if scenario.command != coverage.subject_leaf_key:
+        failures.append(
+            f"scenario command '{scenario.command}' does not match its production subject leaf "
+            f"'{coverage.subject_leaf_key}'",
+        )
+    if not assertion.passed:
+        failures.append(
+            "observed precondition verdict does not match the resolved production condition/action outcome",
+        )
 
     exit_code_matches = exit_code == scenario.expected_exit_code
     if not exit_code_matches:
@@ -512,8 +659,8 @@ def check_exit_code_scenario(
     )
     if not envelope_well_formed:
         failures.append(
-            f"'{scenario.command}' response for exit code {exit_code} is not a well-formed JSON "
-            "envelope (missing command/status/notices) - a crash would look like this, a verdict must not",
+            f"'{scenario.command}' response for exit code {exit_code} is not a well-formed JSON envelope "
+            "(missing command/status/notices)",
         )
 
     status_is_non_success = (
@@ -522,25 +669,16 @@ def check_exit_code_scenario(
     if envelope_well_formed and not status_is_non_success:
         failures.append(
             f"'{scenario.command}' envelope status is '{status}' for a non-zero exit ({exit_code}); "
-            f"expected '{scenario.tool_result_status.value}' - a domain verdict must not read as success",
+            f"expected '{scenario.tool_result_status.value}'",
         )
 
-    next_action_resolves = scenario.expected_next_action in valid_commands
-    if not next_action_resolves:
-        failures.append(
-            f"expected_next_action '{scenario.expected_next_action}' does not resolve against the live CLI surface",
-        )
-
-    next_action_is_continuation = False
-    if envelope_well_formed and next_action_resolves:
-        expected_cli_form = _cli_form(scenario.expected_next_action)
-        notice_rows: Iterable[object] = notices if isinstance(notices, list) else []
-        next_action_is_continuation = any(_cites_continuation(notice, expected_cli_form) for notice in notice_rows)
-    if not next_action_is_continuation:
-        failures.append(
-            f"no notice suggests the continuation command '{scenario.expected_next_action}' "
-            f"({_cli_form(scenario.expected_next_action)!r}); exit {exit_code} would read as a "
-            "dead end rather than an actionable verdict",
+    if assertion.passed and coverage.profile.declaration.action is not None:
+        _execute_safe_recovery_and_retry(
+            scenario=scenario,
+            original_argv=original_argv,
+            precondition_verdict=precondition_verdict,
+            subject_cli_path=coverage.profile.subject_leaf.live_leaf.canonical_cli_path,
+            failures=failures,
         )
 
     return ExitCodeVerdict(
@@ -548,7 +686,7 @@ def check_exit_code_scenario(
         exit_code_matches=exit_code_matches,
         envelope_well_formed=envelope_well_formed,
         status_is_non_success=status_is_non_success,
-        next_action_is_continuation=next_action_is_continuation,
+        production_action_assertion=assertion,
         failures=tuple(failures),
     )
 
