@@ -25,6 +25,7 @@ from ....core.access_gate import (
     derive_modelo_authorization,
     load_authorization_manifest,
 )
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.resources import bundled_path as _bundled_path
 from ._convenio import collect_convenio_fingerprints, load_convenio_authority, validate_convenio_legal_refs
 from ._identity import (
@@ -358,7 +359,7 @@ def _fingerprint_key[T: tuple[tuple[object, ...], ...]](fingerprints: T) -> _Fin
     digest = hashlib.sha256()
     for entry in fingerprints:
         for fingerprint_field in entry:
-            digest.update(str(fingerprint_field).encode("utf-8"))
+            digest.update(str(fingerprint_field).encode(UTF_8_ENCODING))
             digest.update(b"\x1f")
         digest.update(b"\x1e")
     return _FingerprintKey(digest=digest.hexdigest(), fingerprints=fingerprints)

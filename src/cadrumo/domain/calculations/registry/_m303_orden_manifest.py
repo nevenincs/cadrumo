@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ....core import Modelo, scan_directory
-from .errors import RegistryLoadError, RegistryValidationError
+from ....core.external_constants import UTF_8_ENCODING
 from ._ids import LegalRefId, SourceRefId
 from ._loader_cache import toml_file_fingerprint
 from ._m303_orden_census_artefact import (
@@ -29,6 +29,7 @@ from ._m303_orden_projection_models import (
 from ._m303_orden_raw_models import M303AnnualOrdenSourceCensus
 from ._m303_orden_source import extract_m303_annual_orden_source
 from ._schema_references import LegalReference, SourceReference
+from .errors import RegistryLoadError, RegistryValidationError
 
 if TYPE_CHECKING:
     from ._schema import ModeloDefinition
@@ -184,7 +185,7 @@ def check_m303_annual_orden_census_artefact(
         raise RegistryLoadError(f"annual Orden census artefact is missing: {artefact_path}")
     expected = render_m303_annual_orden_census_artefact(source_root=source_root, sources=sources)
     try:
-        actual = artefact_path.read_text(encoding="utf-8")
+        actual = artefact_path.read_text(encoding=UTF_8_ENCODING)
     except OSError as exc:
         raise RegistryLoadError(f"annual Orden census artefact cannot be read: {artefact_path}") from exc
     if actual != expected:
@@ -292,7 +293,7 @@ def _check_manifest_with_censuses(
     )
     expected = _render_generated_manifest(manifest)
     try:
-        actual = manifest_path.read_text(encoding="utf-8")
+        actual = manifest_path.read_text(encoding=UTF_8_ENCODING)
     except OSError as exc:
         raise RegistryLoadError(f"annual Orden generated manifest cannot be read: {manifest_path}") from exc
     if actual != expected:

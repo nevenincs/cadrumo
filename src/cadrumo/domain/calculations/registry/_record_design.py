@@ -33,13 +33,13 @@ if TYPE_CHECKING:
     from xlrd.sheet import Sheet as XlrdSheet
 
 from ....core.external_constants import PDF_EXTENSION as _PDF_EXTENSION
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from ....core.external_constants import XLSM_EXTENSION as _XLSM_EXTENSION
 from ....core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
 from ....core.logging import get_logger
 from ....core.paths import path_stat_fingerprint
 from ....core.tabular import coerce_cell_text
-from .errors import RegistryValidationError
 from ._record_design_coverage import (
     DerivedDisenoCasilla,
     DisenoCoverageReport,
@@ -74,6 +74,7 @@ from ._record_design_schema import (
     RecordDesignVariableTotalMarker,
     validate_auxiliary_envelope_header_contents,
 )
+from .errors import RegistryValidationError
 
 _log = get_logger(__name__)
 
@@ -166,7 +167,7 @@ def _load_corrections(source_path: Path) -> _CorrectionIndex:
     sidecar_path = source_path.with_name(source_path.name + _CORRECTION_SUFFIX)
     if not sidecar_path.is_file():
         return _EMPTY_CORRECTIONS
-    payload = json.loads(sidecar_path.read_text(encoding="utf-8"))
+    payload = json.loads(sidecar_path.read_text(encoding=UTF_8_ENCODING))
     entries = payload.get("corrections") if isinstance(payload, dict) else None
     if not isinstance(entries, list):
         raise RegistryValidationError(f"{sidecar_path}: correction sidecar must declare a 'corrections' list")
@@ -230,7 +231,7 @@ def _load_declared_non_record_sheet_reasons(source_path: Path) -> Mapping[str, s
     declaration_path = modelo_root / _DECLARED_NON_RECORD_SHEETS_FILENAME
     if not declaration_path.is_file():
         return {}
-    payload = json.loads(declaration_path.read_text(encoding="utf-8"))
+    payload = json.loads(declaration_path.read_text(encoding=UTF_8_ENCODING))
     entries = payload.get("declared_non_record_sheets") if isinstance(payload, dict) else None
     if not isinstance(entries, list):
         raise RegistryValidationError(

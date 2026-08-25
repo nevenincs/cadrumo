@@ -30,7 +30,7 @@ from ....core import (
     render_corpus_sidecar_text,
     sha256_hex,
 )
-from .errors import RegistryLoadError, RegistryValidationError
+from ....core.external_constants import UTF_8_ENCODING
 from ._m303_orden_constants import (
     EXPECTED_ACTIVITY_COUNT,
     EXPECTED_MODULE_DISTRIBUTION,
@@ -48,6 +48,7 @@ from ._m303_orden_raw_models import (
     M303AnnualOrdenSourceCensus,
 )
 from ._schema_references import SourceReference
+from .errors import RegistryLoadError, RegistryValidationError
 
 _SIDECAR_PREPROCESSOR_ID = "normatives-html"
 _SIDECAR_PREPROCESSOR_VERSION = "1.3"
@@ -306,7 +307,7 @@ def _validate_annual_orden_sidecar(
     source_path = source_root.expanduser().resolve() / source.corpus_path
     sidecar_path = source_path.with_name(source_path.name + ".extracted.json")
     try:
-        payload_raw: object = json.loads(sidecar_path.read_text(encoding="utf-8"))
+        payload_raw: object = json.loads(sidecar_path.read_text(encoding=UTF_8_ENCODING))
     except (OSError, json.JSONDecodeError) as exc:
         raise RegistryLoadError(f"annual Orden sidecar is unreadable for {source.id!r}: {sidecar_path}") from exc
     if not isinstance(payload_raw, dict):
@@ -316,7 +317,7 @@ def _validate_annual_orden_sidecar(
     raw_units, rendered_units = _sidecar_units(payload, source)
     text_sidecar_path = source_path.with_name(source_path.name + ".extracted.md")
     try:
-        rendered_text = text_sidecar_path.read_text(encoding="utf-8")
+        rendered_text = text_sidecar_path.read_text(encoding=UTF_8_ENCODING)
     except OSError as exc:
         raise RegistryLoadError(
             f"annual Orden text sidecar is unreadable for {source.id!r}: {text_sidecar_path}",
