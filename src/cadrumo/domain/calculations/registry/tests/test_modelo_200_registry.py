@@ -5,10 +5,19 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from html import unescape
+from typing import get_args
 
 import pytest
+from pydantic import ValidationError
 
-from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
+from .....core import (
+    CasillaId,
+    FilingProjectionRef,
+    RegistryAuthorityGrade,
+    compile_filing_projection_ref,
+    filing_projection_ref_casilla_id,
+    validated_casilla_id,
+)
 from .....core.resources import bundled_path
 from .. import (
     RegistryValidator,
@@ -181,6 +190,50 @@ def test_modelo_200_schedule_is_annual_for_calendar_year_entities() -> None:
     assert schedule.period_kind == "annual"
     assert schedule.periods == ("0A",)
     assert snapshot.revision.period_selector.periods == ("0A",)
+
+
+def test_modelo_200_projection_endpoints_keep_design_derived_slot_caps_and_no_casilla_address() -> None:
+    """Every live M200 repeating family ends exactly at its diseño-derived slot cap.
+
+    The endpoint declaration set is generated from the official record design;
+    the core type must admit every declared slot and reject precisely its next
+    integer.  Deriving the bound from that live declaration set avoids a second
+    table of M200 family capacities in this test.
+    """
+    modelo, catalogues = _load_modelo_200()
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2025,
+        period="0A",
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
+    m200_references = tuple(
+        endpoint.projection_ref
+        for endpoint in snapshot.revision.projection_endpoints
+        if endpoint.projection_ref.projection_kind.startswith("m200_")
+    )
+    core_m200_types = {
+        model_type
+        for model_type in get_args(get_args(FilingProjectionRef)[0])
+        if get_args(model_type.model_fields["projection_kind"].annotation)[0].startswith("m200_")
+    }
+
+    assert {type(reference) for reference in m200_references} == core_m200_types
+    for model_type in core_m200_types:
+        references = tuple(reference for reference in m200_references if type(reference) is model_type)
+        declared_slots = {reference.slot for reference in references}
+        slot_cap = max(declared_slots)
+        upper_bound = {metadata.le for metadata in model_type.model_fields["slot"].metadata if hasattr(metadata, "le")}
+
+        assert declared_slots == set(range(1, slot_cap + 1))
+        assert upper_bound == {slot_cap}
+        assert all(filing_projection_ref_casilla_id(reference) is None for reference in references)
+
+        cap_plus_one = references[0].model_dump(mode="json") | {"slot": slot_cap + 1}
+        with pytest.raises(ValidationError, match="less than or equal"):
+            compile_filing_projection_ref(cap_plus_one)
 
 
 def test_modelo_200_liquidacion_cuota_chain_casillas_resolve_under_their_segmento() -> None:

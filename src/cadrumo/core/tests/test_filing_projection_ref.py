@@ -336,12 +336,25 @@ def test_numbered_endpoint_accessor_answers_only_for_casilla_bearing_variants() 
         )
         == "700"
     )
-    for slotless in (
+    for casilla_less in (
         M303RegimenSimplificadoActivityProjectionRef(
             projection_kind="m303_regimen_simplificado_activity",
             cohort=M303RegimenSimplificadoCohort.AGRICOLA,
             slot=1,
             field=M303RegimenSimplificadoActivityField.ACTIVITY_CODE,
+        ),
+        M303RegimenSimplificadoFactProjectionRef(
+            projection_kind="m303_regimen_simplificado_fact",
+            cohort=M303RegimenSimplificadoCohort.AGRICOLA,
+            slot=1,
+            fact=M303RegimenSimplificadoFact.INDICE_CUOTA,
+        ),
+        M303RegimenSimplificadoModuleProjectionRef(
+            projection_kind="m303_regimen_simplificado_module",
+            cohort=M303RegimenSimplificadoCohort.NO_AGRICOLA,
+            slot=1,
+            module_order=1,
+            value=M303RegimenSimplificadoModuleValue.DECLARED_QUANTITY,
         ),
         M303Exonerado390ActivityProjectionRef(
             projection_kind="m303_exonerado_390_activity",
@@ -352,7 +365,7 @@ def test_numbered_endpoint_accessor_answers_only_for_casilla_bearing_variants() 
             projection_kind="m303_exonerado_390_operaciones_terceros",
         ),
     ):
-        assert filing_projection_ref_casilla_id(slotless) is None
+        assert filing_projection_ref_casilla_id(casilla_less) is None
 
 
 def test_a_reference_survives_its_own_python_mode_serialisation() -> None:
