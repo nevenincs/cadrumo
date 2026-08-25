@@ -52,6 +52,13 @@ def resolve_filing_closes_on(modelo: str, filing_year: int, period: Period) -> d
     or its period token might not match any window. ``None`` means the
     deadline data is unavailable; callers continue without a close date.
 
+    A modelo absent from the registry is NOT one of those causes and REFUSES
+    with :exc:`RegistrySnapshotError` rather than returning ``None``. Production
+    reaches this through the ``Modelo`` enum, so an unregistered id is a caller
+    bug or unvalidated external input; returning ``None`` would hand that caller
+    "no deadline", and an extemporaneidad computed from it would silently drop
+    the recargo.
+
     Args:
         modelo: Agencia Estatal de Administración Tributaria (AEAT) modelo code
             (e.g. ``"130"``, ``"303"``).
