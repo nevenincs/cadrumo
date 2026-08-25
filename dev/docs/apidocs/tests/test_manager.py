@@ -12,6 +12,23 @@ from ..manager import ApiStubManager, DriftResult, ScaffoldResult
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+def test_public_type_aliases_have_one_canonical_facade_target(tmp_path: pytest.TempPathFactory) -> None:
+    """Public PEP 695 aliases are indexed once at their intended facades."""
+    manager = ApiStubManager(src_cadrumo=REPO_ROOT / "src" / "cadrumo", docs_api=tmp_path / "api")
+
+    manager.scaffold()
+
+    core_stub = (tmp_path / "api" / "cadrumo.core.rst").read_text(encoding="utf-8")
+    identity_stub = (tmp_path / "api" / "cadrumo.core.identity.rst").read_text(encoding="utf-8")
+    all_stub_text = "\n".join(path.read_text(encoding="utf-8") for path in (tmp_path / "api").glob("*.rst"))
+    assert ".. py:data:: CasillaId\n   :module: cadrumo.core" in core_stub
+    assert ".. py:data:: TaxIdIdentityToken\n   :module: cadrumo.core.identity" in identity_stub
+    assert ".. py:data:: SubjectTaxId\n   :module: cadrumo.core.identity" in identity_stub
+    assert all_stub_text.count(".. py:data:: CasillaId\n") == 1
+    assert all_stub_text.count(".. py:data:: TaxIdIdentityToken\n") == 1
+    assert all_stub_text.count(".. py:data:: SubjectTaxId\n") == 1
+
+
 def test_scaffold_produces_conformant_tree(tmp_path: pytest.TempPathFactory) -> None:
     """scaffold() followed by check() returns an empty DriftResult.
 

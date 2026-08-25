@@ -64,6 +64,30 @@ _EXCLUDED_FILENAMES: frozenset[str] = frozenset({"conftest.py"})
 
 _UTF_8: str = UTF_8_ENCODING
 
+# PEP 695 aliases do not produce Python-domain objects when ``automodule``
+# enumerates members.  These aliases are nevertheless intentional public API
+# and are referenced throughout the API prose and generated annotations.  Keep
+# the small ownership table here, beside the stub generator, so each alias gets
+# exactly one canonical ``py:data`` target at its public facade.
+_PUBLIC_DATA_ALIASES: dict[str, tuple[str, ...]] = {
+    "cadrumo.core": ("CasillaId",),
+    "cadrumo.core.identity": ("SubjectTaxId", "TaxIdIdentityToken"),
+}
+
+
+def _public_data_aliases(module_name: str) -> list[str]:
+    """Render canonical Python-domain targets for public type aliases."""
+    lines: list[str] = []
+    for alias in _PUBLIC_DATA_ALIASES.get(module_name, ()):
+        lines.extend(
+            (
+                f".. py:data:: {alias}",
+                f"   :module: {module_name}",
+                "",
+            )
+        )
+    return lines
+
 
 def _stub_is_current(path: Path, content: str) -> bool:
     """Return True when *path* holds exactly the bytes *content* serialises to.
@@ -273,6 +297,7 @@ class ApiStubManager:
             "   :ignore-module-all:",
             "",
         ]
+        lines.extend(_public_data_aliases(pkg_name))
 
         if sub_packages:
             lines.append(self._toctree_block(sub_packages, "Subpackages"))
@@ -312,6 +337,7 @@ class ApiStubManager:
             "   :ignore-module-all:",
             "",
         ]
+        lines.extend(_public_data_aliases(mod_name))
         return "\n".join(lines)
 
     def _expected_stub_contents(self, all_modules: list[tuple[str, bool]] | None = None) -> dict[str, str]:

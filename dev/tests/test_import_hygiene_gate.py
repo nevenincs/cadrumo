@@ -102,31 +102,24 @@ from cadrumo.tests import repo_relative
 
 from .._paths import REPO_ROOT
 from ..quality.import_hygiene_scan import (
-    _ACCEPTED_TUI_TEXTUAL_EDGE_SHA256,
     CANONICAL_TUI_PACKAGE,
     DEMOTED_REGISTRY_LOADER_SYMBOLS,
-    LEGACY_TUI_PACKAGE,
     PKG_ROOT,
     REGISTRY_LOADER_PACKAGE,
     ImportSite,
     TuiBoundaryViolationKind,
-    TuiMigrationRow,
-    TuiMigrationRowKind,
     discover_facades,
     find_delegate_wrapper_shims,
     find_dev_tooling_import_violations,
     find_multi_sourced_symbols,
     find_private_import_violations,
     find_registry_loader_import_violations,
+    find_retired_tui_remnants,
     find_shim_modules,
     find_tui_boundary_violations,
     find_underscore_in_all_violations,
-    generate_tui_migration_manifest,
     is_shipped_module,
     iter_dynamic_import_targets,
-    tui_migration_census_drift,
-    tui_textual_edge_sha256,
-    tui_textual_edges,
     walk_module_imports,
     wheel_exclude_globs,
 )
@@ -148,14 +141,6 @@ _COMPONENT_FORBIDDEN_PREFIXES: Final[tuple[str, ...]] = (
 )
 _COMPONENT_FORBIDDEN_SEGMENTS: Final[frozenset[str]] = frozenset(
     {"repository", "repositories", "timer", "timers", "task", "tasks", "work", "worker", "workers", "lifecycle"}
-)
-_MOVED_LEGACY_COMPONENT_EXPORTS: Final[frozenset[tuple[str, str]]] = frozenset(
-    {
-        (module, symbol)
-        for module in (LEGACY_TUI_PACKAGE, f"{LEGACY_TUI_PACKAGE}._form_screen")
-        for symbol in ("ChoiceEditScreen", "OneChoiceEditScreen", "TextEditScreen")
-    }
-    | {(module, "PinnedStatusBar") for module in (LEGACY_TUI_PACKAGE, f"{LEGACY_TUI_PACKAGE}._status_bar")}
 )
 
 
@@ -332,12 +317,6 @@ def _component_import_policy_violations(
             ):
                 violations.append(site)
     return tuple(violations)
-
-
-@cache
-def _tui_migration_manifest() -> tuple[TuiMigrationRow, ...]:
-    """Build the canonical legacy census once for all TUI boundary proofs."""
-    return generate_tui_migration_manifest()
 
 
 def _current_production_family1_sites() -> tuple[_BaselineSite, ...]:
@@ -1087,52 +1066,9 @@ def _scan_planted_tui_boundary(tmp_path: Path, dotted_rel: str, body: str):
     return find_tui_boundary_violations([planted], src_root=tmp_path)
 
 
-def test_tui_boundary_is_clean_against_the_accepted_legacy_census() -> None:
-    migration_rows = _tui_migration_manifest()
-    if not migration_rows:
-        return
-    source_files = scan_directory(PKG_ROOT, pattern="*.py", recursive=True)
-    dev_files = sorted(
-        path for path in scan_directory(REPO_ROOT / "dev", pattern="*.py", recursive=True) if "tests" not in path.parts
-    )
-    accepted_edges = tui_textual_edges(source_files, src_root=REPO_ROOT / "src") | tui_textual_edges(
-        dev_files, src_root=REPO_ROOT
-    )
-    assert tui_textual_edge_sha256(accepted_edges) == _ACCEPTED_TUI_TEXTUAL_EDGE_SHA256
-
-    violations = [
-        *find_tui_boundary_violations(
-            source_files,
-            src_root=REPO_ROOT / "src",
-            accepted_textual_edges=accepted_edges,
-        ),
-        *find_tui_boundary_violations(
-            dev_files,
-            src_root=REPO_ROOT,
-            accepted_textual_edges=accepted_edges,
-        ),
-    ]
-
-    assert violations == []
-
-
-def test_terminal_empty_tui_census_needs_no_historic_digest_refresh() -> None:
-    """An empty legacy tree is terminal; non-empty identity drift still refuses."""
-    historical_digest = "historic-nonempty-census"
-    assert tui_migration_census_drift((), accepted_sha256=historical_digest) is None
-
-    live_legacy_row = TuiMigrationRow(
-        kind=TuiMigrationRowKind.MODULE,
-        legacy_module=LEGACY_TUI_PACKAGE,
-        symbol=None,
-        consumer=LEGACY_TUI_PACKAGE,
-        consumer_kind="declaration",
-        locator="src/cadrumo/adapters/inbound/tui/__init__.py:1",
-        owner_lane="integration",
-        replacement=CANONICAL_TUI_PACKAGE,
-        deletion_proof="present",
-    )
-    assert tui_migration_census_drift((live_legacy_row,), accepted_sha256=historical_digest) is not None
+def test_retired_tui_fixed_point_is_clean() -> None:
+    """C1 migration evidence is derived from current sources, never a historical census."""
+    assert find_retired_tui_remnants() == ()
 
 
 def test_components_import_only_presentation_dependencies() -> None:
@@ -1153,26 +1089,12 @@ def test_components_facade_has_no_imports_or_exports() -> None:
     assert [(site.target_mod, site.imported_names) for site in sites] == [("__future__", ["annotations"])]
 
 
-def test_components_have_no_legacy_consumers_or_republished_moved_symbols() -> None:
-    """The canonical census proves relocated presentation has no legacy duplicate or reach."""
-    rows = _tui_migration_manifest()
-    legacy_consumers = [row for row in rows if row.consumer.startswith(_COMPONENTS_PACKAGE)]
-    legacy_exports = {
-        (row.legacy_module, row.symbol)
-        for row in rows
-        if row.kind is TuiMigrationRowKind.EXPORT and row.symbol is not None
-    }
-
-    assert legacy_consumers == []
-    assert _MOVED_LEGACY_COMPONENT_EXPORTS.isdisjoint(legacy_exports)
-
-
 @pytest.mark.parametrize(
     ("body", "expected_target"),
     (
         ("from cadrumo.entrypoints.tui.profile import ProfileScreen\n", "cadrumo.entrypoints.tui.profile"),
         ("from cadrumo.application.operations import _registry\n", "cadrumo.application.operations"),
-        ("from " + LEGACY_TUI_PACKAGE + " import LegacyScreen\n", LEGACY_TUI_PACKAGE),
+        ("from cadrumo.adapters.inbound import RetiredScreen\n", "cadrumo.adapters.inbound"),
         ("from cadrumo.entrypoints.cli import app\n", "cadrumo.entrypoints.cli"),
         ("from cadrumo.core.repository import Repository\n", "cadrumo.core.repository"),
         ("from cadrumo.core.timers import Timer\n", "cadrumo.core.timers"),
@@ -1290,18 +1212,3 @@ def test_tui_boundary_rejects_each_ast_bypass(
     violations = _scan_planted_tui_boundary(tmp_path, dotted_rel, body)
 
     assert [violation.kind for violation in violations] == [expected_kind]
-
-
-def test_accepted_textual_consumer_cannot_add_a_new_textual_edge(tmp_path: Path) -> None:
-    planted = _plant_module(
-        tmp_path,
-        "cadrumo/application/accepted_textual.py",
-        "from textual.app import App\nfrom textual.containers import Container\n",
-    )
-    accepted = frozenset({("cadrumo.application.accepted_textual", "textual.app")})
-
-    violations = find_tui_boundary_violations([planted], src_root=tmp_path, accepted_textual_edges=accepted)
-
-    assert [(violation.target, violation.kind) for violation in violations] == [
-        ("textual.containers", TuiBoundaryViolationKind.TEXTUAL_LOCATION)
-    ]
