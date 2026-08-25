@@ -296,6 +296,7 @@ _SEMANTIC_ALLOWED_OWNERS = frozenset(
         "src/cadrumo/application/operations/_public.py",
         "src/cadrumo/application/operations/_registry.py",
         "src/cadrumo/application/operations/_supervisor.py",
+        "src/cadrumo/application/operations/persistence/_journal.py",
     }
 )
 
