@@ -20,12 +20,13 @@ from ...core import (
     SourceConnectivityProofAuthority,
     SourceConnectivityProofFailureCause,
 )
-from ...domain.calculations.registry import ModeloRevision, ValidatedRegistryAuthority
+from ...domain.calculations.registry import ModeloId, ModeloRevision, ValidatedRegistryAuthority
 from ._closure import (
     RegistryClosureEvidence,
     RegistryClosureLimb,
     RegistryClosureOwnerDisposition,
     RegistryClosureRefusal,
+    RegistryClosureRefusalReason,
 )
 from .source_connectivity import (
     RegistryDestinationCandidate,
@@ -130,7 +131,7 @@ def compose_source_connectivity_coverage(
 def _compose_revision_limb(
     *,
     census: SourceConnectivityCensusManifest,
-    modelo_id,
+    modelo_id: ModeloId,
     revision: ModeloRevision,
     as_of: date,
     proof_failures: dict[str, _ConnectedProofFailure],
@@ -164,7 +165,7 @@ def _compose_revision_limb(
                     ),
                 ),
             ),
-    )
+        )
     evidence = _entry_evidence(census, entries)
     failed_connected = next(
         (proof_failures[entry.candidate_id] for entry in entries if entry.candidate_id in proof_failures),
@@ -179,9 +180,7 @@ def _compose_revision_limb(
             failure=failed_connected,
         )
     expired = tuple(
-        entry
-        for entry in entries
-        if entry.expiry_posture(as_of=as_of) is SourceConnectivityExpiryPosture.EXPIRED
+        entry for entry in entries if entry.expiry_posture(as_of=as_of) is SourceConnectivityExpiryPosture.EXPIRED
     )
     if expired:
         entry = expired[0]
@@ -264,7 +263,7 @@ def _connected_proof_failures(
 def _candidate_applies_to_revision(
     candidate: RegistryDestinationCandidate,
     *,
-    modelo_id,
+    modelo_id: ModeloId,
     revision: ModeloRevision,
 ) -> bool:
     """Return whether one validated census destination exists in this revision."""
@@ -295,7 +294,7 @@ def _entry_evidence(
 def _refused_connected_claim_limb(
     *,
     census: SourceConnectivityCensusManifest,
-    modelo_id,
+    modelo_id: ModeloId,
     revision: ModeloRevision,
     evidence: tuple[RegistryClosureEvidence, ...],
     failure: _ConnectedProofFailure,
@@ -335,7 +334,7 @@ def _refused_connected_claim_limb(
 
 def _expired_terminal_limb(
     *,
-    modelo_id,
+    modelo_id: ModeloId,
     revision: ModeloRevision,
     evidence: tuple[RegistryClosureEvidence, ...],
     entry: SourceConnectivityCensusEntry,
@@ -365,12 +364,12 @@ def _expired_terminal_limb(
 
 def _refused_limb(
     *,
-    modelo_id,
+    modelo_id: ModeloId,
     revision: ModeloRevision,
     entries: tuple[SourceConnectivityCensusEntry, ...],
     evidence: tuple[RegistryClosureEvidence, ...],
     entry: SourceConnectivityCensusEntry,
-    reason,
+    reason: RegistryClosureRefusalReason,
     detail: str,
 ) -> RegistryClosureLimb:
     """Retain the exact unresolved census row as an actionable closure refusal."""
