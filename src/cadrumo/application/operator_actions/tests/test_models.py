@@ -140,6 +140,33 @@ def test_application_and_wire_precondition_models_have_one_core_invariant_owner(
     assert not canonical_validators & set(ResolvedPreconditionAction.__dict__)
 
 
+def test_application_and_wire_precondition_models_pin_the_actionable_and_closed_refusal_schema() -> None:
+    """The application verdict and wire record must keep one executable grammar."""
+    expected_fields = (
+        "failed_condition_id",
+        "evidence",
+        "action",
+        "argument_bindings",
+        "missing_argument_names",
+        "conditionality",
+        "no_recovery_outcome",
+    )
+
+    assert tuple(PreconditionVerdict.model_fields) == expected_fields
+    assert tuple(ResolvedPreconditionAction.model_fields) == expected_fields
+    assert tuple(member.value for member in ActionConditionality) == (
+        "immediate",
+        "requires_arguments",
+        "not_applicable",
+    )
+    assert tuple(member.value for member in ActionArgumentStatus) == ("resolved", "missing")
+    assert tuple(member.value for member in NoRecoveryOutcome) == (
+        "terminal",
+        "safety",
+        "operator_decision",
+    )
+
+
 def test_application_and_wire_precondition_models_both_refuse_evidence_from_another_condition() -> None:
     """The shared outcome invariant rejects the same factual join defect in both projections."""
     with pytest.raises(ValidationError, match="condition evidence must identify the failed condition"):

@@ -335,21 +335,15 @@ def _optional_text_kwarg(
     return {key: text}
 
 
-def _optional_int_kwarg(fields: Mapping[str, Decimal | str], key: str) -> dict[str, int]:
-    """Pass an integer-clave fact only when the row supplies a non-empty value.
-
-    The integer counterpart of :func:`_optional_text_kwarg`: cells arrive as
-    ``Decimal`` or ``str``, and the target field is a plain ``int`` clave, so the
-    value is routed through its decimal text so a fractional cell
-    (``"1.5"``) refuses instead of truncating.
-    """
+def _row_optional_int(fields: Mapping[str, Decimal | str], key: str) -> int | None:
+    """Read an optional integer-clave fact without truncating fractional cells."""
     raw = fields.get(key)
     if raw is None:
-        return {}
+        return None
     text = format(raw, "f") if isinstance(raw, Decimal) else str(raw).strip()
     if not text:
-        return {}
-    return {key: int(text)}
+        return None
+    return int(text)
 
 
 class _OperationKindCodeKwarg(TypedDict, total=False):
@@ -552,45 +546,50 @@ def assemble_withholding_observations(
                     # when the row carries them, left to the observation model's
                     # None defaults otherwise -- the resolver applies the design's
                     # per-clave completion rules at resolve time.
-                    **_optional_text_kwarg(fields, "representative_tax_id"),
-                    **_optional_text_kwarg(fields, "spouse_or_unit_titular_tax_id"),
-                    **_optional_int_kwarg(fields, "disability_clave"),
-                    **_optional_int_kwarg(fields, "contract_relation_clave"),
-                    **_optional_int_kwarg(fields, "unit_convivencia_titular_clave"),
-                    **_optional_int_kwarg(fields, "geographic_mobility_clave"),
-                    **_optional_int_kwarg(fields, "accrual_year"),
-                    **_optional_int_kwarg(fields, "descendants_under_3_total"),
-                    **_optional_int_kwarg(fields, "descendants_under_3_whole"),
-                    **_optional_int_kwarg(fields, "descendants_rest_total"),
-                    **_optional_int_kwarg(fields, "descendants_rest_whole"),
-                    **_optional_int_kwarg(fields, "descendants_disabled_33_65_total"),
-                    **_optional_int_kwarg(fields, "descendants_disabled_33_65_whole"),
-                    **_optional_int_kwarg(fields, "descendants_disabled_mobility_total"),
-                    **_optional_int_kwarg(fields, "descendants_disabled_mobility_whole"),
-                    **_optional_int_kwarg(fields, "descendants_disabled_65_plus_total"),
-                    **_optional_int_kwarg(fields, "descendants_disabled_65_plus_whole"),
-                    **_optional_int_kwarg(fields, "ascendants_under_75_total"),
-                    **_optional_int_kwarg(fields, "ascendants_under_75_whole"),
-                    **_optional_int_kwarg(fields, "ascendants_75_plus_total"),
-                    **_optional_int_kwarg(fields, "ascendants_75_plus_whole"),
-                    **_optional_int_kwarg(fields, "ascendants_disabled_33_65_total"),
-                    **_optional_int_kwarg(fields, "ascendants_disabled_33_65_whole"),
-                    **_optional_int_kwarg(fields, "ascendants_disabled_mobility_total"),
-                    **_optional_int_kwarg(fields, "ascendants_disabled_mobility_whole"),
-                    **_optional_int_kwarg(fields, "ascendants_disabled_65_plus_total"),
-                    **_optional_int_kwarg(fields, "ascendants_disabled_65_plus_whole"),
-                    **_optional_int_kwarg(fields, "first_child_compute"),
-                    **_optional_int_kwarg(fields, "second_child_compute"),
-                    **_optional_int_kwarg(fields, "third_child_compute"),
-                    **_optional_int_kwarg(fields, "housing_loan_communication_clave"),
-                    **_optional_int_kwarg(fields, "complemento_infancia_clave"),
-                    **_optional_int_kwarg(fields, "emerging_stock_excess_clave"),
-                    **_optional_int_kwarg(fields, "startup_fund_rendimientos_clave"),
-                    **_optional_int_kwarg(fields, "pension_prestacion_jubilacion"),
-                    **_optional_int_kwarg(fields, "pension_prestacion_viudedad"),
-                    **_optional_int_kwarg(fields, "pension_prestacion_incapacidad"),
-                    **_optional_int_kwarg(fields, "pension_prestacion_no_contributiva"),
-                    **_optional_int_kwarg(fields, "pension_prestacion_resto"),
+                    representative_tax_id=_coerce_text(fields.get("representative_tax_id")).strip() or None,
+                    spouse_or_unit_titular_tax_id=_coerce_text(fields.get("spouse_or_unit_titular_tax_id")).strip()
+                    or None,
+                    disability_clave=_row_optional_int(fields, "disability_clave"),
+                    contract_relation_clave=_row_optional_int(fields, "contract_relation_clave"),
+                    unit_convivencia_titular_clave=_row_optional_int(fields, "unit_convivencia_titular_clave"),
+                    geographic_mobility_clave=_row_optional_int(fields, "geographic_mobility_clave"),
+                    accrual_year=_row_optional_int(fields, "accrual_year"),
+                    descendants_under_3_total=_row_optional_int(fields, "descendants_under_3_total"),
+                    descendants_under_3_whole=_row_optional_int(fields, "descendants_under_3_whole"),
+                    descendants_rest_total=_row_optional_int(fields, "descendants_rest_total"),
+                    descendants_rest_whole=_row_optional_int(fields, "descendants_rest_whole"),
+                    descendants_disabled_33_65_total=_row_optional_int(fields, "descendants_disabled_33_65_total"),
+                    descendants_disabled_33_65_whole=_row_optional_int(fields, "descendants_disabled_33_65_whole"),
+                    descendants_disabled_mobility_total=_row_optional_int(
+                        fields, "descendants_disabled_mobility_total"
+                    ),
+                    descendants_disabled_mobility_whole=_row_optional_int(
+                        fields, "descendants_disabled_mobility_whole"
+                    ),
+                    descendants_disabled_65_plus_total=_row_optional_int(fields, "descendants_disabled_65_plus_total"),
+                    descendants_disabled_65_plus_whole=_row_optional_int(fields, "descendants_disabled_65_plus_whole"),
+                    ascendants_under_75_total=_row_optional_int(fields, "ascendants_under_75_total"),
+                    ascendants_under_75_whole=_row_optional_int(fields, "ascendants_under_75_whole"),
+                    ascendants_75_plus_total=_row_optional_int(fields, "ascendants_75_plus_total"),
+                    ascendants_75_plus_whole=_row_optional_int(fields, "ascendants_75_plus_whole"),
+                    ascendants_disabled_33_65_total=_row_optional_int(fields, "ascendants_disabled_33_65_total"),
+                    ascendants_disabled_33_65_whole=_row_optional_int(fields, "ascendants_disabled_33_65_whole"),
+                    ascendants_disabled_mobility_total=_row_optional_int(fields, "ascendants_disabled_mobility_total"),
+                    ascendants_disabled_mobility_whole=_row_optional_int(fields, "ascendants_disabled_mobility_whole"),
+                    ascendants_disabled_65_plus_total=_row_optional_int(fields, "ascendants_disabled_65_plus_total"),
+                    ascendants_disabled_65_plus_whole=_row_optional_int(fields, "ascendants_disabled_65_plus_whole"),
+                    first_child_compute=_row_optional_int(fields, "first_child_compute"),
+                    second_child_compute=_row_optional_int(fields, "second_child_compute"),
+                    third_child_compute=_row_optional_int(fields, "third_child_compute"),
+                    housing_loan_communication_clave=_row_optional_int(fields, "housing_loan_communication_clave"),
+                    complemento_infancia_clave=_row_optional_int(fields, "complemento_infancia_clave"),
+                    emerging_stock_excess_clave=_row_optional_int(fields, "emerging_stock_excess_clave"),
+                    startup_fund_rendimientos_clave=_row_optional_int(fields, "startup_fund_rendimientos_clave"),
+                    pension_prestacion_jubilacion=_row_optional_int(fields, "pension_prestacion_jubilacion"),
+                    pension_prestacion_viudedad=_row_optional_int(fields, "pension_prestacion_viudedad"),
+                    pension_prestacion_incapacidad=_row_optional_int(fields, "pension_prestacion_incapacidad"),
+                    pension_prestacion_no_contributiva=_row_optional_int(fields, "pension_prestacion_no_contributiva"),
+                    pension_prestacion_resto=_row_optional_int(fields, "pension_prestacion_resto"),
                 ),
             )
         except (ValidationError, ValueError) as exc:
@@ -860,33 +859,33 @@ def assemble_withholding296_observations(
                     source_id=f"detalle:per_perceptor_296:row-{row_index}",
                     perceptor_tax_id=_coerce_text(fields.get("perceptor_tax_id")),
                     perceptor_legal_name=_coerce_text(fields.get("perceptor_legal_name")),
-                    **_optional_text_kwarg(fields, "representative_tax_id"),
-                    **_optional_text_kwarg(fields, "persona_juridica_flag"),
-                    **_optional_text_kwarg(fields, "codigo_bic"),
-                    **_optional_text_kwarg(fields, "fecha_devengo"),
+                    representative_tax_id=_coerce_text(fields.get("representative_tax_id")).strip() or None,
+                    persona_juridica_flag=_coerce_text(fields.get("persona_juridica_flag")).strip() or None,
+                    codigo_bic=_coerce_text(fields.get("codigo_bic")).strip() or None,
+                    fecha_devengo=_coerce_text(fields.get("fecha_devengo")).strip() or None,
                     naturaleza=_coerce_text(fields.get("naturaleza"), default="D") or "D",
                     clave=_coerce_text(fields.get("clave"), default="01") or "01",
                     subclave=_coerce_text(fields.get("subclave")),
-                    **_optional_text_kwarg(fields, "perceptor_mediador_flag"),
-                    **_optional_text_kwarg(fields, "codigo"),
-                    **_optional_text_kwarg(fields, "codigo_emisor"),
-                    **_optional_int_kwarg(fields, "pago"),
-                    **_optional_text_kwarg(fields, "tipo_codigo"),
-                    **_optional_text_kwarg(fields, "codigo_cuenta"),
-                    **_optional_text_kwarg(fields, "pendiente_flag"),
-                    **_optional_int_kwarg(fields, "accrual_year"),
-                    **_optional_text_kwarg(fields, "fecha_inicio_prestamo"),
-                    **_optional_text_kwarg(fields, "fecha_vencimiento_prestamo"),
-                    **_optional_text_kwarg(fields, "direccion_perceptor"),
-                    **_optional_text_kwarg(fields, "nif_pagador_anterior"),
-                    **_optional_text_kwarg(fields, "procedimiento_especial_flag"),
-                    **_optional_text_kwarg(fields, "clave_mercado"),
-                    **_optional_text_kwarg(fields, "codigo_lei"),
-                    **_optional_text_kwarg(fields, "nif_pais_residencia"),
-                    **_optional_text_kwarg(fields, "fecha_nacimiento"),
-                    **_optional_text_kwarg(fields, "ciudad_nacimiento"),
-                    **_optional_text_kwarg(fields, "codigo_pais"),
-                    **_optional_text_kwarg(fields, "pais_residencia_fiscal"),
+                    perceptor_mediador_flag=_coerce_text(fields.get("perceptor_mediador_flag")).strip() or None,
+                    codigo=_coerce_text(fields.get("codigo")).strip() or None,
+                    codigo_emisor=_coerce_text(fields.get("codigo_emisor")).strip() or None,
+                    pago=_row_optional_int(fields, "pago"),
+                    tipo_codigo=_coerce_text(fields.get("tipo_codigo")).strip() or None,
+                    codigo_cuenta=_coerce_text(fields.get("codigo_cuenta")).strip() or None,
+                    pendiente_flag=_coerce_text(fields.get("pendiente_flag")).strip() or None,
+                    accrual_year=_row_optional_int(fields, "accrual_year"),
+                    fecha_inicio_prestamo=_coerce_text(fields.get("fecha_inicio_prestamo")).strip() or None,
+                    fecha_vencimiento_prestamo=_coerce_text(fields.get("fecha_vencimiento_prestamo")).strip() or None,
+                    direccion_perceptor=_coerce_text(fields.get("direccion_perceptor")).strip() or None,
+                    nif_pagador_anterior=_coerce_text(fields.get("nif_pagador_anterior")).strip() or None,
+                    procedimiento_especial_flag=_coerce_text(fields.get("procedimiento_especial_flag")).strip() or None,
+                    clave_mercado=_coerce_text(fields.get("clave_mercado")).strip() or None,
+                    codigo_lei=_coerce_text(fields.get("codigo_lei")).strip() or None,
+                    nif_pais_residencia=_coerce_text(fields.get("nif_pais_residencia")).strip() or None,
+                    fecha_nacimiento=_coerce_text(fields.get("fecha_nacimiento")).strip() or None,
+                    ciudad_nacimiento=_coerce_text(fields.get("ciudad_nacimiento")).strip() or None,
+                    codigo_pais=_coerce_text(fields.get("codigo_pais")).strip() or None,
+                    pais_residencia_fiscal=_coerce_text(fields.get("pais_residencia_fiscal")).strip() or None,
                     transaction_date=default_date,
                     base_retenciones=coerce_decimal(fields.get("base_retenciones"), default=Decimal("0")),
                     porcentaje_retencion=coerce_decimal(fields.get("porcentaje_retencion"), default=Decimal("0")),

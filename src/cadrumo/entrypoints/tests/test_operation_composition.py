@@ -13,6 +13,10 @@ import pytest
 from ...adapters.persistence.profile import SyncRunRecordRepository
 from ...adapters.persistence.storage import current_active_bucket_session
 from ...application.auth import build_auth_operation_definitions, build_auth_operation_registrations
+from ...application.export import (
+    build_google_sheets_export_operation_definition,
+    build_google_sheets_export_operation_registration,
+)
 from ...application.live import build_filed_history_operation_definition, build_filed_history_operation_registration
 from ...application.operations import (
     OperationCancellationService,
@@ -46,12 +50,19 @@ def _owner_registry_fixed_point() -> tuple[
     """Derive the live denominator from every current public owner facade."""
     auth_definitions = build_auth_operation_definitions()
     profile_definitions = build_user_profile_operation_definitions()
+    google_export_definition = build_google_sheets_export_operation_definition()
     filed_history_definition = build_filed_history_operation_definition(
         sync_run_repository_factory=SyncRunRecordRepository
     )
     definitions = tuple(
         sorted(
-            (*auth_definitions, *profile_definitions, CENSAL_OPERATION_DEFINITION, filed_history_definition),
+            (
+                *auth_definitions,
+                *profile_definitions,
+                CENSAL_OPERATION_DEFINITION,
+                filed_history_definition,
+                google_export_definition,
+            ),
             key=lambda item: item.definition_id,
         )
     )
@@ -62,6 +73,7 @@ def _owner_registry_fixed_point() -> tuple[
                 *build_user_profile_operation_registrations(profile_definitions),
                 build_censal_operation_registration(CENSAL_OPERATION_DEFINITION),
                 build_filed_history_operation_registration(filed_history_definition),
+                build_google_sheets_export_operation_registration(google_export_definition),
             ),
             key=lambda item: item.contract.definition_id,
         )

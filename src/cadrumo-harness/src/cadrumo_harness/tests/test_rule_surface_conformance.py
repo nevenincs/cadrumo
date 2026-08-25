@@ -34,7 +34,15 @@ from cadrumo.application.operator_surface import (
     CommandSchemaRef,
     get_operator_surface_contract,
 )
-from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION, Notice, SchemaEnvelope
+from cadrumo.core import ActionArgumentStatus, ActionConditionality, NoRecoveryOutcome
+from cadrumo.core.errors import ErrorEnvelope
+from cadrumo.core.json_contract import (
+    ENVELOPE_SCHEMA_VERSION,
+    Notice,
+    ResolvedActionReference,
+    ResolvedPreconditionAction,
+    SchemaEnvelope,
+)
 
 from .. import iter_operator_rules, iter_personas, iter_skill_documents
 from ..mcp._capability_manifest import build_operator_surface_manifest
@@ -267,6 +275,52 @@ def test_cited_envelope_spine_fields_still_exist() -> None:
         if notice_field not in _NOTICE_FIELDS:
             failures.append(f"notice field '{notice_field}' no longer on Notice")
     assert not failures, "\n".join(failures)
+
+
+def test_envelope_reading_rule_pins_the_live_actionable_and_closed_refusal_grammar() -> None:
+    """The shipped algorithm must drift with neither the error nor action schemas."""
+    rule = dict(_rule_documents())["cadrumo-operator-envelope-reading.md"]
+    expected_precondition_fields = (
+        "failed_condition_id",
+        "evidence",
+        "action",
+        "argument_bindings",
+        "missing_argument_names",
+        "conditionality",
+        "no_recovery_outcome",
+    )
+    expected_action_fields = ("action_id", "target_command_key", "cli_path", "arguments")
+    expected_conditionality = ("immediate", "requires_arguments", "not_applicable")
+    expected_binding_statuses = ("resolved", "missing")
+    expected_no_recovery = ("terminal", "safety", "operator_decision")
+
+    assert tuple(ResolvedPreconditionAction.model_fields) == expected_precondition_fields
+    assert tuple(ResolvedActionReference.model_fields) == expected_action_fields
+    assert tuple(ErrorEnvelope.model_fields) == (
+        "code",
+        "category",
+        "message",
+        "action",
+        "retryable",
+        "runbook_id",
+        "context",
+        "trace_id",
+    )
+    assert tuple(member.value for member in ActionConditionality) == expected_conditionality
+    assert tuple(member.value for member in ActionArgumentStatus) == expected_binding_statuses
+    assert tuple(member.value for member in NoRecoveryOutcome) == expected_no_recovery
+
+    required_rule_tokens = {
+        "error.action",
+        "error.action.action",
+        *expected_precondition_fields[3:],
+        "cli_path",
+        "target_command_key",
+        *expected_conditionality,
+        *expected_binding_statuses,
+        *expected_no_recovery,
+    }
+    assert required_rule_tokens <= set(_BACKTICK.findall(rule))
 
 
 def test_no_operator_document_names_a_package_internal() -> None:

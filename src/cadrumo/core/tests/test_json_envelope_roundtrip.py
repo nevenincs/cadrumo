@@ -405,6 +405,39 @@ def test_precondition_projection_remains_available_only_for_failure_envelopes() 
     assert rendered["conditionality"] == ActionConditionality.NOT_APPLICABLE.value
 
 
+def test_resolved_precondition_action_schema_pins_the_actionable_and_closed_refusal_grammar() -> None:
+    """A field or enum drift changes the operator's executable refusal contract."""
+    assert tuple(ResolvedPreconditionAction.model_fields) == (
+        "failed_condition_id",
+        "evidence",
+        "action",
+        "argument_bindings",
+        "missing_argument_names",
+        "conditionality",
+        "no_recovery_outcome",
+    )
+    assert tuple(ResolvedActionReference.model_fields) == (
+        "action_id",
+        "target_command_key",
+        "cli_path",
+        "arguments",
+    )
+    assert tuple(member.value for member in ActionConditionality) == (
+        "immediate",
+        "requires_arguments",
+        "not_applicable",
+    )
+    assert tuple(member.value for member in ActionArgumentStatus) == ("resolved", "missing")
+    assert tuple(member.value for member in NoRecoveryOutcome) == (
+        "terminal",
+        "safety",
+        "operator_decision",
+    )
+    assert set(ResolvedPreconditionAction.model_json_schema()["properties"]) == set(
+        ResolvedPreconditionAction.model_fields
+    )
+
+
 def _profile_state_evidence(*, condition_id: str = "profile.active.required") -> ActionConditionEvidence:
     """One real typed fact row used to construct action-envelope inputs."""
     return ActionConditionEvidence(
