@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:3c607072a8d9ed92bce42b1d77834cd0c453711e8d8329a6e5b5e1d8dfe12d5c'
+body_hash: 'sha256:017ef3ac0ea47d405c7475dc34e10d08107fbe1946b54d2ec62d1e8ffa27ac89'
 step_id: 'S266'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -22,8 +22,8 @@ Run the full machine-secret subprocess contract serially on native Windows and W
 
 ## Outcome
 
-Native Windows passes all 70 tests in 547.08 seconds. The first WSL run passed 62 tests while eight root-channel cases observed a transient shared-head CLI relocation and reported the internal boundary. After that relocation settled, an exact rerun of every affected root strict-payload, retired restore/certificate field, hostile environment, and live-session root-source case passed 13 selected cases in 269.82 seconds. The union proves all 70 WSL cases on the current behavior: the 62 unaffected cases, including the former fd-leaf passphrase-change regression, passed in the full run; every transient failure passed on the settled-head rerun.
+Native Windows passes all 70 tests in 547.08 seconds. A single immutable WSL/POSIX run from committed source identity `efe9ef0807` passes all 70 tests in 1,697.86 seconds. That complete run covers typed root and leaf refusals, descriptor consumption and deliberate non-consumption, hostile-environment isolation, certificate and restore channels, recovery handoff, and the fd-leaf passphrase-change case. No union of partial runs is used as closure evidence.
 
 ## Notes
 
-No new descriptor implementation was needed in S266. The canonical reader already closes selected descriptors in `finally`, maps unreadable channels to typed refusals, and stages leaf material before root authentication. The initial WSL failures coincided with concurrent manager/CLI relocation edits; a single root duplicate-payload reproduction then passed twice, followed by the complete affected slice. S266 records both observations rather than hiding the transient red run.
+No new descriptor implementation was needed in S266. The canonical reader already closes selected descriptors in `finally`, maps unreadable channels to typed refusals, and stages leaf material before root authentication. Two attempted full WSL runs in the principal shared tree were invalidated by concurrent source changes: the first crossed an emitter rename and failed 11 cases on a missing `_emit_envelope` import; the second crossed later settings/profile edits and failed 49 cases. The authoritative rerun used a plain `git archive` of `efe9ef0807` plus an isolated WSL uv environment, so every subprocess imported one fixed tree. The archive was not a Git worktree and had no branch or index; both the archive and isolated environment are removed after evidence capture and their absence is verified.
