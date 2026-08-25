@@ -3,11 +3,12 @@ tags:
   - '#adr'
   - '#renta-region-deductibility'
 date: '2026-07-04'
-modified: '2026-08-15'
+modified: '2026-08-25'
 body_hash: 'sha256:55fabda3e82cdb114e1840aa1935670e3a77dfbc71bb1229e635a6578852d86e'
 related:
   - '[[2026-07-04-autonomic-deduccion-framework-adr]]'
   - '[[2026-07-01-autonomic-deduccion-auto-trigger-adr]]'
+  - '[[2026-06-14-legal-grounding-centralization-audit]]'
 ---
 
 # `renta-region-deductibility` adr: `region-scoped renta expense deductibility` | (**status:** `accepted`)
