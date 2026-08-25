@@ -62,7 +62,7 @@ from .._source_mesh import CalculationSourceContext
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-class _RepositorySpy:
+class _RecordingInventoryRepository:
     def __init__(self, document: InventoryLedgerDocument | None = None, *, error: bool = False) -> None:
         self.loads = 0
         self.document = document or InventoryLedgerDocument(ledgers=())
@@ -249,7 +249,7 @@ def test_inventory_operation_adapter_tracks_the_canonical_row_field_vocabulary()
 
 
 def test_no_inventory_binding_is_allocation_and_repository_read_free() -> None:
-    repository = _RepositorySpy()
+    repository = _RecordingInventoryRepository()
 
     result = InventorySourceResolver(inventory_repository=repository).resolve(_context(_revision(inventory=False)))
 
@@ -265,7 +265,7 @@ def test_no_inventory_binding_is_allocation_and_repository_read_free() -> None:
 def test_inventory_row_templates_expand_complete_activities_in_canonical_rows() -> None:
     alpha = _ledger("alpha")
     zeta = _ledger("zeta")
-    repository = _RepositorySpy(InventoryLedgerDocument(ledgers=(zeta, alpha)))
+    repository = _RecordingInventoryRepository(InventoryLedgerDocument(ledgers=(zeta, alpha)))
 
     result = InventorySourceResolver(inventory_repository=repository).resolve(_context(_revision(inventory=True)))
 
@@ -300,15 +300,15 @@ def test_inventory_activity_order_is_insertion_invariant_and_semantic_change_cha
     alpha = _ledger("alpha")
     zeta = _ledger("zeta")
     forward = InventorySourceResolver(
-        inventory_repository=_RepositorySpy(InventoryLedgerDocument(ledgers=(alpha, zeta)))
+        inventory_repository=_RecordingInventoryRepository(InventoryLedgerDocument(ledgers=(alpha, zeta)))
     ).resolve(_context(_revision(inventory=True)))
     reverse = InventorySourceResolver(
-        inventory_repository=_RepositorySpy(InventoryLedgerDocument(ledgers=(zeta, alpha)))
+        inventory_repository=_RecordingInventoryRepository(InventoryLedgerDocument(ledgers=(zeta, alpha)))
     ).resolve(_context(_revision(inventory=True)))
     changed_movement = alpha.period_movements[0].model_copy(update={"movement_date": date(2025, 3, 1)})
     changed = InventoryLedger.model_validate(alpha.model_copy(update={"period_movements": (changed_movement,)}))
     mutated = InventorySourceResolver(
-        inventory_repository=_RepositorySpy(InventoryLedgerDocument(ledgers=(changed, zeta)))
+        inventory_repository=_RecordingInventoryRepository(InventoryLedgerDocument(ledgers=(changed, zeta)))
     ).resolve(_context(_revision(inventory=True)))
 
     assert forward.row_binding_values == reverse.row_binding_values == mutated.row_binding_values
@@ -322,7 +322,7 @@ def test_inventory_activity_order_is_insertion_invariant_and_semantic_change_cha
 def test_inventory_conflict_is_safe_per_activity_advisory() -> None:
     ledger = _ledger("secret-activity", physical_closing=Decimal("250.00"))
     result = InventorySourceResolver(
-        inventory_repository=_RepositorySpy(InventoryLedgerDocument(ledgers=(ledger,)))
+        inventory_repository=_RecordingInventoryRepository(InventoryLedgerDocument(ledgers=(ledger,)))
     ).resolve(_context(_revision(inventory=True)))
 
     assert result.row_binding_values[("inventory-0177", 1)] == Decimal("100.00")
@@ -335,12 +335,12 @@ def test_inventory_conflict_is_safe_per_activity_advisory() -> None:
 @pytest.mark.parametrize("kind", ["missing", "unreadable", "incomplete"])
 def test_inventory_failure_is_atomic_value_free_and_loads_once(kind: str) -> None:
     if kind == "missing":
-        repository = _RepositorySpy()
+        repository = _RecordingInventoryRepository()
     elif kind == "unreadable":
-        repository = _RepositorySpy(error=True)
+        repository = _RecordingInventoryRepository(error=True)
     else:
         ledger = _ledger("secret-activity").model_copy(update={"closing_authority_record": None})
-        repository = _RepositorySpy(InventoryLedgerDocument.model_construct(ledgers=(ledger,)))
+        repository = _RecordingInventoryRepository(InventoryLedgerDocument.model_construct(ledgers=(ledger,)))
     result = InventorySourceResolver(inventory_repository=repository).resolve(_context(_revision(inventory=True)))
 
     assert repository.loads == 1
@@ -408,7 +408,7 @@ def test_real_encrypted_multi_activity_success_absence_conflict_and_corruption(
 
 
 def test_inventory_row_template_rejects_unsupported_coordinate_without_repository_read() -> None:
-    repository = _RepositorySpy()
+    repository = _RecordingInventoryRepository()
 
     result = InventorySourceResolver(inventory_repository=repository).resolve(
         _context(_revision(inventory=True), year=2024),
@@ -425,7 +425,7 @@ def test_inventory_row_template_rejects_unsupported_coordinate_without_repositor
 def test_inventory_template_cohort_refuses_atomically_before_storage(shape: str) -> None:
     revision = _revision(inventory=True)
     bindings = revision.bindings[:-1] if shape == "missing" else (*revision.bindings, revision.bindings[0])
-    repository = _RepositorySpy(InventoryLedgerDocument(ledgers=(_ledger("alpha"),)))
+    repository = _RecordingInventoryRepository(InventoryLedgerDocument(ledgers=(_ledger("alpha"),)))
 
     result = InventorySourceResolver(inventory_repository=repository).resolve(
         _context(revision.model_copy(update={"bindings": bindings})),

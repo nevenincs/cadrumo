@@ -102,7 +102,7 @@ def _s91_cli_census_violations(source: str) -> tuple[str, ...]:
 
 
 def test_declared_s91_sources_keep_action_selection_in_application_and_recovery_off_prose() -> None:
-    """The entire declared S91 surface is fail-closed against action/prose regressions."""
+    """The entire declared Modelo registry surface is fail-closed against action/prose regressions."""
     for relative_path in _S91_DECLARED_SOURCE_PATHS:
         source = (_REPOSITORY_ROOT / relative_path).read_text(encoding="utf-8")
         ast.parse(source)
@@ -112,7 +112,7 @@ def test_declared_s91_sources_keep_action_selection_in_application_and_recovery_
 
 
 def test_declared_s91_cli_census_rejects_mutated_local_actions_and_recovery_prose() -> None:
-    """Mutation probes prove the S91 census cannot pass after either regression."""
+    """Mutation probes prove the Modelo registry census cannot pass after either regression."""
     action_mutation = "ActionReference(action_id='operator.modelo.describe')"
     prose_mutation = "typer.BadParameter(\"Run 'aeat app modelo work calculate' first.\")"
     profile_mutation = 'typer.BadParameter("Set it via config profile.")'
