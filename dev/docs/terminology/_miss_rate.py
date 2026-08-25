@@ -21,8 +21,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from dev._paths import UTF_8
-
+from ..._paths import UTF_8
 from ._sweep import SweepResult
 
 __all__ = [

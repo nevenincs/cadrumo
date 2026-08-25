@@ -47,8 +47,7 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 
-from dev._paths import REPO_ROOT, UTF_8
-
+from .._paths import REPO_ROOT, UTF_8
 from ..packaging.cohort_manifest import ArtifactKind
 
 if TYPE_CHECKING:

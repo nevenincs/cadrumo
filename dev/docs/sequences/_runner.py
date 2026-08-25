@@ -84,8 +84,8 @@ from cadrumo.tests.profile_capsule import (
     upsert_test_profile_facts,
 )
 from cadrumo.tests.secure_sql import isolated_profile_storage_root
-from dev._paths import REPO_ROOT
 
+from ..._paths import REPO_ROOT
 from ._errors import SequenceExecutionError
 from ._schema import (
     FrameKind,

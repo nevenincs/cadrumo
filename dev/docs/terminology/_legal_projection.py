@@ -12,8 +12,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import REPO_ROOT
 
+from ..._paths import REPO_ROOT
 from ..legal_reference import (
     LegalProvisionRecord,
     LegalReferenceError,

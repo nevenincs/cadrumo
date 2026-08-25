@@ -47,8 +47,8 @@ from pydantic import BaseModel, Field, JsonValue, StringConstraints, ValidationE
 
 from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.observability import GOLDEN_MASK_FIELDS, MASK_SENTINEL
-from dev._paths import REPO_ROOT, UTF_8
 
+from ..._paths import REPO_ROOT, UTF_8
 from ._errors import SequenceGoldenError
 from ._runner import CapturedValue, EnvelopeSource, SequenceTranscript
 from ._schema import FrameKind, SequenceId

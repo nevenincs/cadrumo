@@ -6,8 +6,7 @@ from typing import Annotated
 
 import typer
 
-from dev._paths import REPO_ROOT
-
+from ..._paths import REPO_ROOT
 from .manager import ApiStubManager
 
 app = typer.Typer(
