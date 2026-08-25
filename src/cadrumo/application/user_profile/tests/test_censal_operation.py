@@ -18,7 +18,7 @@ from ...operations import (
     OperationTerminalReceipt,
 )
 from ...operations._interactions import OperationApplyResponse, OperationRejectResponse
-from ...operations._leases import operation_conflict_scope_reference
+from ...operations.persistence import operation_conflict_scope_reference
 from .._capsule_record import ProfileRecordStore
 from .._censal_operation import (
     CENSAL_OPERATION_DEFINITION,

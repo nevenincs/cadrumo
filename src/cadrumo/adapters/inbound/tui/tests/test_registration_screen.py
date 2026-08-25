@@ -31,7 +31,7 @@ from .....adapters.persistence.storage.custody import (
 )
 from .....core import ProfilePasswordRefusalReason, assess_profile_password
 from .....core.i18n import tr
-from .....entrypoints.cli._config._manager_frontend import attempt_registration
+from .....entrypoints.cli import attempt_registration
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import RegistrationApp
 from .._recovery_words_screen import RecoveryWordsScreen

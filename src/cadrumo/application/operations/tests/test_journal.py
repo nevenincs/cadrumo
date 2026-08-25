@@ -17,29 +17,31 @@ from .. import (
     OperationRequestStoragePolicy,
     OperationTerminalReceipt,
 )
-from .._events import OperationPhaseEvent, OperationProgressEvent, OperationTerminalEvent
-from .._journal import (
+from .._models import OperationSnapshot
+from ..persistence import (
+    OperationConflictScopeReference,
     OperationEventStream,
     OperationJournal,
-    OperationLeaseRepository,
-    OperationObservationMaterialization,
-    OperationObservationReader,
-    OperationPersistedSnapshot,
-    OperationProgressFoldCheckpoint,
-    OperationProgressFoldInput,
-    OperationSecureReferenceStore,
-)
-from .._leases import (
-    OperationConflictScopeReference,
     OperationLeaseDisposition,
     OperationLeaseObservation,
     OperationLeaseObservationDisposition,
+    OperationLeaseRepository,
     OperationLeaseResult,
+    OperationObservationMaterialization,
+    OperationObservationReader,
     OperationOwnerLease,
+    OperationPersistedSnapshot,
+    OperationPhaseEvent,
+    OperationProgressEvent,
+    OperationProgressFoldCheckpoint,
+    OperationProgressFoldInput,
+    OperationReplayLimit,
+    OperationReplayPage,
+    OperationReplayStatus,
+    OperationSecureReferenceStore,
+    OperationTerminalEvent,
     operation_conflict_scope_reference,
 )
-from .._models import OperationSnapshot
-from .._replay import OperationReplayLimit, OperationReplayPage, OperationReplayStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -199,7 +199,7 @@ def _registration_screen() -> RegistrationApp:
     not reach up into the application layer for itself.
     """
     from .....core import assess_profile_password
-    from .....entrypoints.cli._config._manager_frontend import attempt_registration
+    from .....entrypoints.cli import attempt_registration
 
     return RegistrationApp(assess=assess_profile_password, register=attempt_registration)
 

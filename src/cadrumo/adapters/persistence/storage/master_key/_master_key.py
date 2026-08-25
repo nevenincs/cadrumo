@@ -216,8 +216,8 @@ def _provider_enter(
     profile, falls back to ``fallback_bucket_id`` if supplied (the
     Unsecured provider uses ``"unsecured"`` as a stable label so the
     engine cache keys consistently). When neither resolves, raises
-    :class:`NoActiveProfileError` so the CLI root callback can refuse
-    the verb with a translated message.
+    :class:`~adapters.persistence.storage.bucket.NoActiveBucketError`
+    with the failed storage-selection observation.
 
     Stores the opened session and activation context manager on the provider so
     :func:`exit_provider_session` can tear them down. Provider activation is a

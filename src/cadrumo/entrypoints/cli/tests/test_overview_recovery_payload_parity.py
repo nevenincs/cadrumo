@@ -1,33 +1,37 @@
-"""An overdue calendar entry must not lose its recovery obligations in transport.
+"""CLI transport for typed overdue recovery facts and actions.
 
-The canonical :class:`Recovery` requires the resolved
-:class:`RecargoBand` -- with its Ley 58/2003 art-27 ``legal_ref`` -- plus the
-next command the operator has to run. The CLI entry payload exposed
-``recovery`` as a bare ``dict[str, object] | None``, so an empty mapping
-validated and serialized as a perfectly good recovery: an overdue row could
-reach the operator with its legal grounding and its remedial action absent.
-
-These tests drive the real canonical models through the real payload (no
-doubles): a genuine Recovery projects field for field, and every way of
-dropping one of its obligations is refused.
+The domain :class:`Recovery` carries only the Ley 58/2003 art-27 legal facts.
+The overview application layer declares the ``operator.modelo.work.create``
+catalogue action from the resolved modelo, filing year, and period, and this
+CLI boundary resolves it against the live command surface before serializing
+the recovery payload.
 """
 
 from __future__ import annotations
 
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
 
-from ....core import STR_KEYED_MAPPING_ADAPTER
-from ....domain.deadlines import RecargoBand, Recovery
+from ....application.overview import (
+    OverviewCalendar,
+    OverviewCalendarEntry,
+    OverviewCalendarRange,
+    OverviewPeriodState,
+    declare_next_action,
+)
+from ....core import Period, STR_KEYED_MAPPING_ADAPTER
+from ....domain.deadlines import ObligationStatus, RecargoBand, Recovery
 from .._overview_payloads import OverviewCalendarEntryPayload, OverviewRecoveryPayload
+from .._overview_rendering import _resolved_action, overview_calendar_output
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def _canonical_recovery() -> Recovery:
-    """A real overdue recovery, every defaultable field set non-default."""
+    """A real overdue recovery containing only legal recargo facts."""
     return Recovery(
         still_filable=True,
         recargo_band=RecargoBand(
@@ -38,7 +42,15 @@ def _canonical_recovery() -> Recovery:
             interest_applies=False,
             legal_ref="ley-58-2003:art-27.2",
         ),
-        next_command="aeat app modelo work calculate",
+    )
+
+
+def _declared_recovery_action():
+    return declare_next_action(
+        "operator.modelo.work.create",
+        modelo="303",
+        year=2025,
+        period="1T",
     )
 
 
@@ -46,27 +58,46 @@ def _recovery_json() -> dict[str, object]:
     return STR_KEYED_MAPPING_ADAPTER.validate_python(_canonical_recovery().model_dump(mode="json"))
 
 
+def _recovery_payload_json() -> dict[str, object]:
+    next_action = _resolved_action(_declared_recovery_action())
+    assert next_action is not None
+    return {
+        **_recovery_json(),
+        "next_action": next_action,
+    }
+
+
 def _recargo_band_json() -> dict[str, object]:
     return STR_KEYED_MAPPING_ADAPTER.validate_python(_canonical_recovery().recargo_band.model_dump(mode="json"))
 
 
-def test_canonical_recovery_projects_into_the_payload_field_for_field() -> None:
-    """Every canonical field survives the CLI boundary with its value."""
-    payload = OverviewRecoveryPayload.model_validate(_recovery_json())
+def test_canonical_legal_recovery_projects_with_a_resolved_action() -> None:
+    """Legal facts cross unchanged; executable identity comes from the resolver."""
+    payload = OverviewRecoveryPayload.model_validate(_recovery_payload_json())
 
     assert payload.still_filable is True
-    assert payload.next_command == "aeat app modelo work calculate"
     assert payload.recargo_band.id == "completed_months_0"
     assert payload.recargo_band.legal_ref == "ley-58-2003:art-27.2"
     assert payload.recargo_band.surcharge_pct == "1.00"
     assert payload.recargo_band.min_completed_months == 0
     assert payload.recargo_band.max_completed_months == 3
     assert payload.recargo_band.interest_applies is False
+    assert payload.next_action.action.action_id == "operator.modelo.work.create"
+    assert payload.next_action.action.target_command_key == "modelo.work.create"
+    assert payload.next_action.action.cli_path == ("app", "modelo", "work", "create")
+    assert {binding.argument_name: binding.value for binding in payload.next_action.argument_bindings} == {
+        "modelo": "303",
+        "year": 2025,
+        "period": "1T",
+    }
 
 
-def test_payload_mirrors_every_canonical_recovery_field() -> None:
-    """No canonical recovery field may stop at the CLI boundary."""
-    assert set(Recovery.model_fields) - set(OverviewRecoveryPayload.model_fields) == set()
+def test_payload_contains_all_legal_recovery_fields_and_only_its_resolved_action() -> None:
+    """The CLI adds resolution; it does not reconstruct domain legal facts."""
+    assert set(OverviewRecoveryPayload.model_fields) == {
+        *Recovery.model_fields,
+        "next_action",
+    }
 
 
 def test_payload_mirrors_every_canonical_recargo_band_field() -> None:
@@ -77,15 +108,15 @@ def test_payload_mirrors_every_canonical_recargo_band_field() -> None:
 
 
 def test_an_empty_recovery_mapping_is_refused() -> None:
-    """The audit's probe: ``recovery={}`` must not serialize as a recovery."""
+    """An overdue entry cannot serialize without legal facts and an action."""
     with pytest.raises(ValidationError):
         OverviewRecoveryPayload.model_validate({})
 
 
-@pytest.mark.parametrize("dropped", ["recargo_band", "next_command"])
-def test_a_recovery_missing_a_legal_obligation_is_refused(dropped: str) -> None:
-    """Neither the recargo band nor the operator's next command is optional."""
-    payload = {key: value for key, value in _recovery_json().items() if key != dropped}
+@pytest.mark.parametrize("dropped", ["recargo_band", "next_action"])
+def test_a_recovery_missing_a_required_payload_part_is_refused(dropped: str) -> None:
+    """Neither the legal band nor the resolved continuation is optional."""
+    payload = {key: value for key, value in _recovery_payload_json().items() if key != dropped}
 
     with pytest.raises(ValidationError):
         OverviewRecoveryPayload.model_validate(payload)
@@ -95,7 +126,7 @@ def test_a_recovery_missing_a_legal_obligation_is_refused(dropped: str) -> None:
 def test_a_band_missing_its_grounding_is_refused(dropped: str) -> None:
     """A band without its identity, rate, or legal reference is not a band."""
     payload = {
-        **_recovery_json(),
+        **_recovery_payload_json(),
         "recargo_band": {key: value for key, value in _recargo_band_json().items() if key != dropped},
     }
 
@@ -103,24 +134,18 @@ def test_a_band_missing_its_grounding_is_refused(dropped: str) -> None:
         OverviewRecoveryPayload.model_validate(payload)
 
 
-def test_a_blank_next_command_is_refused() -> None:
-    """An overdue row must carry a runnable action, not an empty string."""
-    payload = _recovery_json()
-    payload["next_command"] = ""
+def test_an_unresolved_action_and_retired_raw_command_are_refused() -> None:
+    """The wire contract accepts only a resolver-owned action projection."""
+    with pytest.raises(ValidationError):
+        OverviewRecoveryPayload.model_validate({**_recovery_json(), "next_action": {}})
 
     with pytest.raises(ValidationError):
-        OverviewRecoveryPayload.model_validate(payload)
-
-
-def test_an_inverted_band_window_is_refused_at_the_boundary_too() -> None:
-    """The canonical window invariant holds on the transport shape as well."""
-    band = _recargo_band_json()
-    band["min_completed_months"] = 6
-    band["max_completed_months"] = 3
-    payload = {**_recovery_json(), "recargo_band": band}
-
-    with pytest.raises(ValidationError):
-        OverviewRecoveryPayload.model_validate(payload)
+        OverviewRecoveryPayload.model_validate(
+            {
+                **_recovery_payload_json(),
+                "next_command": "retired",
+            },
+        )
 
 
 def test_calendar_entry_recovery_is_the_typed_payload_not_a_bare_mapping() -> None:
@@ -131,7 +156,43 @@ def test_calendar_entry_recovery_is_the_typed_payload_not_a_bare_mapping() -> No
     assert OverviewRecoveryPayload in getattr(annotation, "__args__", (annotation,))
 
 
+def test_cli_calendar_resolves_the_application_overdue_declaration() -> None:
+    """Only the CLI boundary materializes the application's catalogue declaration."""
+    period = Period.from_year_and_code(2025, "1T")
+    calendar_range = OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 20))
+    entry = OverviewCalendarEntry(
+        modelo="303",
+        period=period,
+        opens_on=date(2025, 4, 1),
+        closes_on=date(2025, 4, 20),
+        adjusted_closes_on=date(2025, 4, 21),
+        shift_reason="weekend",
+        status=ObligationStatus.OVERDUE,
+        user_state=OverviewPeriodState.LATE,
+        recovery=_canonical_recovery(),
+        recovery_action=_declared_recovery_action(),
+        filing_year=2025,
+    )
+    calendar = OverviewCalendar(
+        range=calendar_range,
+        entries=(entry,),
+        generated_at=datetime(2025, 5, 1, tzinfo=UTC),
+    )
+
+    result, _, _ = overview_calendar_output(calendar, calendar_range, evidence_notices=())
+    recovery = result.entries[0].recovery
+
+    assert recovery is not None
+    assert recovery.next_action.action.action_id == "operator.modelo.work.create"
+    assert recovery.next_action.action.cli_path == ("app", "modelo", "work", "create")
+    assert {binding.argument_name: binding.value for binding in recovery.next_action.argument_bindings} == {
+        "modelo": "303",
+        "year": 2025,
+        "period": "1T",
+    }
+
+
 def test_a_not_overdue_entry_may_still_carry_no_recovery() -> None:
     """Only OVERDUE rows resolve a recovery; ``None`` stays legitimate."""
-    assert OverviewRecoveryPayload.model_validate(_recovery_json()) is not None
+    assert OverviewRecoveryPayload.model_validate(_recovery_payload_json()) is not None
     assert OverviewCalendarEntryPayload.model_fields["recovery"].default is None

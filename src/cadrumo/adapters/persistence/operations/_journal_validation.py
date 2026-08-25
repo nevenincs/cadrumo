@@ -7,9 +7,8 @@ from itertools import pairwise
 
 from pydantic import BaseModel, model_validator
 
-from ....application.operations._events import OperationEvent, OperationTerminalEvent
-from ....application.operations._journal import OperationPersistedSnapshot
-from ....application.operations._models import OperationRevision
+from ....application.operations import OperationRevision
+from ....application.operations.persistence import OperationEvent, OperationPersistedSnapshot, OperationTerminalEvent
 from ....core import STRICT_FROZEN_CONFIG
 from ..storage import RepositoryError
 

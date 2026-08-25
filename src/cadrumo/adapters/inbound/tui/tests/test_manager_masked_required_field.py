@@ -39,7 +39,7 @@ from .....application.user_profile import (
 from .....core import require_active_bucket_id
 from .....core.classification import SensitivityClass
 from .....domain.user_profile import load_user_profile_schema
-from .....entrypoints.cli._config._manager_frontend import persist_active_profile_field
+from .....entrypoints.cli import persist_active_profile_field
 from .....tests.manager_pilot import wait_until_settled
 from .....tests.profile_capsule import load_test_profile_record
 from .....tests.secure_sql import isolated_profile_storage_root

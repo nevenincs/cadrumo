@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from ....tests.cli_runner import invoke_cached_cli
@@ -50,6 +52,18 @@ def test_explain_renders_envelope_for_known_modelo() -> None:
     assert "applicable\t" in result.output
     assert "rationale\t" in result.output
     assert "profile_fact\ttax_id\t" in result.output
+
+
+def test_explain_json_uses_the_registry_backed_modelo_303_2025_schedule() -> None:
+    result = invoke_cached_cli(
+        ["--format", "json", "app", "overview", "explain", "303", "--year", "2025"],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)["result"]
+    assert (payload["modelo"], payload["year"]) == ("303", 2025)
+    assert payload["applicable"] is True
+    assert payload["scheduling_rationale"]
 
 
 def test_explain_refuses_unknown_modelo() -> None:

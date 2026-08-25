@@ -27,7 +27,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from pydantic import ValidationError
 
 from .....core import CasillaId, Period, validated_casilla_id
 from .....core.resources import resources

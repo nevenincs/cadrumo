@@ -82,30 +82,117 @@ from collections.abc import Callable
 from functools import partial
 from importlib import import_module
 from types import ModuleType
-from typing import TYPE_CHECKING, Literal, Protocol, overload
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from pathlib import Path
+    from cadrumo.domain.filing import ModeloInputs, ModeloInputScalar, ModeloInputValue
 
-    from ._persistence import WorkflowStateRepository
+    from .._workflow_auth_models import (
+        AuthCleanupCertificateSource,
+        AuthCleanupIntent,
+        AuthCleanupOperationKind,
+        AuthState,
+        CertificateSecretMutationEventKind,
+        CertificateSecretMutationIntent,
+        CertificateSourceName,
+        CertificateSourceRecord,
+    )
+    from .._workflow_review_models import WorkflowEvent
+    from ._adapters import DeadlineEngineAdapter, ModeloDraftBuilderAdapter, SubmissionEngineAdapter, default_engine
+    from ._engine import WorkflowEngine
+    from ._errors import (
+        ProfileLabelAmbiguousError,
+        WorkflowAbortedError,
+        WorkflowComponentError,
+        WorkflowError,
+        WorkflowInputMismatchError,
+    )
+    from ._events import WorkflowStateResetFingerprint
+    from ._persistence import (
+        WorkflowRunRepository,
+        WorkflowStateRepository,
+        current_operation_instant,
+        fingerprint_workflow_state,
+        list_runs,
+        load_run,
+        reset_workflow_state,
+        save_run,
+        workflow_state_repository,
+    )
     from ._profile_bucket_models import ProfileBucketPointer
-    from ._state_models import WorkflowState
-
-    def workflow_state_repository() -> WorkflowStateRepository:
-        """Type the lazily exported active workflow repository factory."""
-        ...
-
-
-class _ProfileBucketLookup(Protocol):
-    """Type the lazy committed-profile lookup exports without importing their scanner."""
-
-    def __call__(self, identifier: str, *, root: Path | None = None) -> ProfileBucketPointer | None: ...
-
-
-class _ProfileBucketCatalog(Protocol):
-    """Type the lazy committed-profile catalog export without importing its scanner."""
-
-    def __call__(self, *, root: Path | None = None) -> dict[str, ProfileBucketPointer]: ...
+    from ._profile_bucket_scan import (
+        list_profile_buckets,
+        read_profile_bucket,
+        read_profile_bucket_by_id,
+        resolve_profile_bucket,
+    )
+    from ._profile_health import (
+        ActiveProfileHealth,
+        ActiveProfileRepairResult,
+        ProfileHealthStatus,
+        ProfileSource,
+        assess_active_profile_health,
+        repair_active_profile_pointer,
+        unavailable_profile_record_verdict,
+    )
+    from ._protocols import (
+        CertificateBundleProtocol,
+        DeadlineEngineProtocol,
+        ModeloDraftBuilderProtocol,
+        ModeloInputsProviderProtocol,
+        RegistryModeloDraftProtocol,
+        SubmissionEngineProtocol,
+    )
+    from ._resume import (
+        WorkflowResumeContext,
+        WorkflowResumeRefusedError,
+        WorkflowResumeRunAmbiguousError,
+        WorkflowResumeRunCandidate,
+        WorkflowResumeTargetResolution,
+        find_latest_run_for_period,
+        find_unique_run_for_period,
+        resolve_modelo_exact_workflow_run_for_resume,
+        resolve_modelo_visible_workflow_run_for_resume,
+        resolve_modelo_workflow_resume_target,
+        resolve_modelo_workflow_run_for_resume,
+        resume_modelo_workflow,
+        workflow_resume_candidate_lines,
+    )
+    from ._run_models import (
+        SiteHealthAlert,
+        WorkflowAlreadyFiledDetails,
+        WorkflowAuthCheckDetails,
+        WorkflowDeadlineContextDetails,
+        WorkflowDeadlineRecoveryFacts,
+        WorkflowDiagnosticSkipReason,
+        WorkflowDraftBuiltDetails,
+        WorkflowDraftMismatchDetails,
+        WorkflowDraftNotReadyDetails,
+        WorkflowFailureDetails,
+        WorkflowInboxBlockedDetails,
+        WorkflowInboxSkippedDetails,
+        WorkflowObligationFacts,
+        WorkflowPreflightFailedDetails,
+        WorkflowPurpose,
+        WorkflowResult,
+        WorkflowSiteHealthFacts,
+        WorkflowStage,
+        WorkflowStep,
+        WorkflowStepDetails,
+        WorkflowValidationFailedDetails,
+        compute_run_id,
+    )
+    from ._state_models import (
+        ActiveProfileRecordResolution,
+        DeclaracionPointer,
+        WorkflowState,
+        active_transaction_catalogue_repository,
+        declaration_key,
+        resolve_active_profile_record,
+        update_declaration_pointer,
+        utc_now,
+    )
+    from ._workflow_abort import WorkflowAbortReason
 
 
 _LAZY_EXPORTS: dict[str, str] = {
@@ -224,7 +311,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     ),
     **dict.fromkeys(
         ("ModeloInputs", "ModeloInputScalar", "ModeloInputValue"),
-        "cadrumo.domain.filing._protocols",
+        "cadrumo.domain.filing",
     ),
     **dict.fromkeys(
         (
@@ -249,20 +336,6 @@ _LAZY_EXPORTS: dict[str, str] = {
 _LAZY_MODULE_LOADERS: dict[str, Callable[[], ModuleType]] = {
     module_path: partial(import_module, module_path, __name__) for module_path in frozenset(_LAZY_EXPORTS.values())
 }
-
-
-@overload
-def __getattr__(
-    name: Literal["read_profile_bucket", "read_profile_bucket_by_id", "resolve_profile_bucket"],
-) -> _ProfileBucketLookup: ...
-
-
-@overload
-def __getattr__(name: Literal["list_profile_buckets"]) -> _ProfileBucketCatalog: ...
-
-
-@overload
-def __getattr__(name: str) -> object: ...
 
 
 def __getattr__(name: str) -> object:

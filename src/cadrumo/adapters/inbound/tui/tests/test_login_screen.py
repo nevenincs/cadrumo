@@ -21,8 +21,7 @@ import pytest
 from textual.widgets import Button, Input, Select
 
 from .....application.user_profile import login_profile, logout_active_profile
-from .....entrypoints.cli._config._login_frontend import attempt_login
-from .....entrypoints.cli._config._manager_frontend import attempt_registration
+from .....entrypoints.cli import attempt_login, attempt_registration
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import LoginApp, LoginChoice
 from .._status_bar import PinnedStatusBar

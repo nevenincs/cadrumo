@@ -47,10 +47,9 @@ from .. import (
     OperationTerminalCondition,
     OperationTerminalReceipt,
 )
-from .._events import OperationTerminalEvent
-from .._journal import OperationPersistedSnapshot
 from .._supervisor import OperationSupervisor
 from ..owner import OperationExecutorContext
+from ..persistence import OperationPersistedSnapshot, OperationTerminalEvent
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

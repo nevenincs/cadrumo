@@ -136,7 +136,7 @@ def compose_temporal_coverage(*, authority: ValidatedRegistryAuthority) -> Tempo
     rows: list[TemporalRevisionCoverage] = []
     for modelo in sorted(authority.modelos, key=lambda item: item.id):
         for revision in sorted(modelo.revisions.values(), key=lambda item: item.id):
-            filing_year, period = _law_selection_coordinate(revision)
+            filing_year, period = law_selection_coordinate(revision)
             rows.append(
                 _compose_revision_temporal_coverage(
                     authority=authority,
@@ -150,7 +150,7 @@ def compose_temporal_coverage(*, authority: ValidatedRegistryAuthority) -> Tempo
     return TemporalCoverageReport(rows=tuple(rows))
 
 
-def _law_selection_coordinate(revision: ModeloRevision) -> tuple[int, RegistrySelectorPeriodCode]:
+def law_selection_coordinate(revision: ModeloRevision) -> tuple[int, RegistrySelectorPeriodCode]:
     """Return one coordinate declared by a revision's temporal selector.
 
     The authoritative registry has already validated every selector before this

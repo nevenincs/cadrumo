@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.bucket import NoActiveBucketError
+from ....adapters.persistence.storage.bucket import BucketLockedError, NoActiveBucketError
 from ....adapters.persistence.storage.errors import (
     MasterKeyMaterialMissingError,
     MasterKeyUnavailableError,
@@ -87,7 +87,7 @@ def _raise_call_contracts(path: Path) -> tuple[tuple[str, Mapping[str, str]], ..
 
 
 def test_s70_exactly_five_producers_keep_observed_fact_expression_polarity() -> None:
-    """The five legacy command producers have one complete, mutation-sensitive census."""
+    """The five persistence producers have one complete, mutation-sensitive census."""
     assert {
         relative: _raise_call_contracts(path)
         for relative, path in _PERSISTENCE_PRODUCERS.items()
@@ -98,7 +98,7 @@ def test_s70_exactly_five_producers_keep_observed_fact_expression_polarity() -> 
                 "MasterKeyUnavailableError",
                 {
                     "context": _normalised_expression(
-                        "{'resumed_profile_session': True, 'key_encryption_key_available': False}"
+                        "{'resumed_profile_session': True, 'resumed_session_kek_material_available': False}"
                     ),
                     "translated_message": _normalised_expression("'errors.auth.auth_storage_master_key_unavailable'"),
                 },
@@ -110,7 +110,7 @@ def test_s70_exactly_five_producers_keep_observed_fact_expression_polarity() -> 
                 "MasterKeyMaterialMissingError",
                 {
                     "context": _normalised_expression(
-                        "{'active_profile_resolved': True, 'profile_custody_unlocked': False}"
+                        "{'active_bucket_selected': True, 'master_key_material_available': False}"
                     ),
                 },
             ),
@@ -120,7 +120,7 @@ def test_s70_exactly_five_producers_keep_observed_fact_expression_polarity() -> 
                 "SessionExpiredError",
                 {
                     "context": _normalised_expression(
-                        "{'active_session_current': False, 'session_expired': True}"
+                        "{'active_session_fresh': False, 'session_expired': True}"
                     ),
                 },
             ),
@@ -184,42 +184,49 @@ def _project(error: Exception):
 
 
 @pytest.mark.parametrize(
-    ("error_factory", "facts"),
+    ("error_factory", "condition", "facts"),
     (
         (
             NoActiveBucketSessionError,
-            {"active_bucket_session_available": False, "profile_login_target_available": False},
+            "storage.active_bucket.session_available",
+            {"active_bucket_session_available": False},
         ),
         (
             NoActiveBucketError,
-            {"active_profile_resolved": False},
+            "storage.active_bucket.selected",
+            {"active_bucket_selected": False},
         ),
         (
             lambda: MasterKeyUnavailableError(
-                context={"resumed_profile_session": True, "key_encryption_key_available": False}
+                context={"resumed_profile_session": True, "resumed_session_kek_material_available": False}
             ),
-            {"resumed_profile_session": True, "key_encryption_key_available": False},
+            "storage.resumed_session.kek_material_available",
+            {"resumed_profile_session": True, "resumed_session_kek_material_available": False},
         ),
         (
             lambda: MasterKeyMaterialMissingError(
-                context={"active_profile_resolved": True, "profile_custody_unlocked": False}
+                context={"active_bucket_selected": True, "master_key_material_available": False}
             ),
-            {"active_profile_resolved": True, "profile_custody_unlocked": False},
+            "storage.master_key.material_available",
+            {"active_bucket_selected": True, "master_key_material_available": False},
         ),
         (
             lambda: SessionExpiredError(context={"active_session_current": False, "session_expired": True}),
-            {
-                "active_session_current": False,
-                "session_expired": True,
-                "profile_login_target_available": False,
-            },
+            "storage.bucket_session.fresh",
+            {"active_session_fresh": False, "session_expired": True},
+        ),
+        (
+            lambda: BucketLockedError(bucket_id="locked-bucket"),
+            "storage.bucket_session.unlocked",
+            {"bucket_session_unlocked": False},
         ),
     ),
-    ids=("no-active-session", "no-active-profile", "resumed-kek", "missing-custody", "expired"),
+    ids=("no-active-session", "no-active-profile", "resumed-kek", "missing-material", "expired", "locked"),
 )
 def test_s70_boundary_projects_each_producer_without_a_resolved_profile_as_exact_no_action(
     monkeypatch: pytest.MonkeyPatch,
     error_factory: Callable[[], Exception],
+    condition: str,
     facts: Mapping[str, str | bool],
 ) -> None:
     """No bucket identifier is ever misrepresented as the action's public name."""
@@ -227,11 +234,11 @@ def test_s70_boundary_projects_each_producer_without_a_resolved_profile_as_exact
 
     action = _project(error_factory())
 
-    assert action.failed_condition_id == "cli.profile.login.completed"
+    assert action.failed_condition_id == condition
     assert len(action.evidence) == 1
     evidence = action.evidence[0]
-    assert evidence.condition_id == "cli.profile.login.completed"
-    assert evidence.evidence_id == "cli.profile.login.completed.observation"
+    assert evidence.condition_id == condition
+    assert evidence.evidence_id == f"{condition}.observation"
     assert evidence.provenance is ActionEvidenceProvenance.RUNTIME_OBSERVATION
     assert dict(evidence.values) == facts
     assert action.action is None

@@ -23,15 +23,6 @@ from ...core import (
 from ...core.async_cleanup import AsyncCloseable, close_async_resources
 from ...core.errors import ErrorCategory, get_registered_error_code
 from ._capabilities import OperationRequestStoragePolicy
-from ._events import (
-    OperationDiagnosticEvent,
-    OperationEvent,
-    OperationInteractionEvent,
-    OperationNoticeEvent,
-    OperationPhaseEvent,
-    OperationReconciliationEvent,
-    OperationTerminalEvent,
-)
 from ._execution_context import DefinitionBoundContext, OperationDeclarationError
 from ._interactions import (
     OperationApplyResponse,
@@ -40,23 +31,8 @@ from ._interactions import (
     OperationPendingInteraction,
     OperationRejectResponse,
 )
-from ._journal import (
-    OperationEventStream,
-    OperationJournal,
-    OperationLeaseRepository,
-    OperationPersistedSnapshot,
-    OperationSecureReferenceStore,
-)
-from ._leases import (
-    OperationLeaseDisposition,
-    OperationLeaseObservationDisposition,
-    OperationLeaseToken,
-    OperationOwnerLease,
-    operation_conflict_scope_reference,
-)
 from ._models import (
     OperationId,
-    OperationIdempotencyClaim,
     OperationIdentity,
     OperationReconciliationOutcome,
     OperationRequest,
@@ -65,7 +41,7 @@ from ._models import (
 )
 from ._projection_services import OperationResponseAuthorityIssuer
 from ._registry import OperationDefinition, OperationReconciliationPolicy, OperationRegistry
-from ._replay import OperationEventCursor, OperationReplayLimit, OperationReplayPage
+from ._replay import OperationEventCursor
 from ._secret_submission import (
     BoundEphemeralSecretAccess,
     EphemeralSecretBroker,
@@ -74,6 +50,28 @@ from ._secret_submission import (
 )
 from ._supervisor_lease import OperationSupervisorLeaseMixin
 from .owner import OperationResumableExecutor
+from .persistence import (
+    OperationDiagnosticEvent,
+    OperationEvent,
+    OperationEventStream,
+    OperationIdempotencyClaim,
+    OperationInteractionEvent,
+    OperationJournal,
+    OperationLeaseDisposition,
+    OperationLeaseObservationDisposition,
+    OperationLeaseRepository,
+    OperationLeaseToken,
+    OperationNoticeEvent,
+    OperationOwnerLease,
+    OperationPersistedSnapshot,
+    OperationPhaseEvent,
+    OperationReconciliationEvent,
+    OperationReplayLimit,
+    OperationReplayPage,
+    OperationSecureReferenceStore,
+    OperationTerminalEvent,
+    operation_conflict_scope_reference,
+)
 
 _AWAIT_TERMINAL_INITIAL_BACKOFF_SECONDS = 0.025
 _AWAIT_TERMINAL_MAX_BACKOFF_SECONDS = 0.25

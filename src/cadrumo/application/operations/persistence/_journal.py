@@ -8,43 +8,43 @@ from typing import Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, model_validator
 
-from ...core import (
+from ....core import (
     STRICT_FROZEN_CONFIG,
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from ...core.identity import ContentDigest
-from ...core.time import validate_utc_aware
-from ._capabilities import OperationRequestStoragePolicy
+from ....core.identity import ContentDigest
+from ....core.time import validate_utc_aware
+from .._capabilities import OperationRequestStoragePolicy
+from .._events import OperationEventCode
+from .._interactions import OperationConsumedInteraction, OperationPendingInteraction
+from .._models import (
+    OperationId,
+    OperationIdentity,
+    OperationRevision,
+    OperationTerminalReceipt,
+)
+from .._replay import OperationEventCursor
+from .._secret_submission import OperationSecretRequirement
 from ._events import (
     OperationEvent,
-    OperationEventCode,
     OperationPhaseEvent,
     OperationProgressEvent,
     OperationTerminalEvent,
 )
-from ._interactions import OperationConsumedInteraction, OperationPendingInteraction
+from ._idempotency import OperationIdempotencyClaim
 from ._leases import (
     OperationConflictScopeReference,
     OperationLeaseObservation,
     OperationLeaseResult,
     OperationOwnerLease,
 )
-from ._models import (
-    OperationId,
-    OperationIdempotencyClaim,
-    OperationIdentity,
-    OperationRevision,
-    OperationTerminalReceipt,
-)
 from ._replay import (
-    OperationEventCursor,
     OperationReplayLimit,
     OperationReplayPage,
     OperationReplayStatus,
 )
-from ._secret_submission import OperationSecretRequirement
 
 
 class OperationPersistedSnapshot(BaseModel):

@@ -20,13 +20,11 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-import pydantic
 import pytest
 from sqlalchemy import select
 
 from .....domain.contribuyente.inventory import (
     INVENTORY_SCHEMA_VERSION,
-    InventoryLedgerError,
     InventoryAcquisitionCompleteness,
     InventoryAcquisitionCost,
     InventoryAcquisitionEvidence,
@@ -35,6 +33,7 @@ from .....domain.contribuyente.inventory import (
     InventoryAttributableCostKind,
     InventoryLedger,
     InventoryLedgerDocument,
+    InventoryLedgerError,
     MovementKind,
     MovementRecord,
     StockLayer,
@@ -190,8 +189,14 @@ def test_inventory_ledger_survives_encrypted_storage_roundtrip(tmp_path: Path) -
         assert purchase.deductible_iva_ratio == Decimal("0.50")
         assert purchase.acquisition_cost == _complete_acquisition()
         assert purchase.acquisition_cost.attributable_cost_components[0].taxable_base == Decimal("37.00")
-        assert purchase.acquisition_cost.evidence[2].evidence_kind is InventoryAcquisitionEvidenceKind.ATTRIBUTABLE_COST_REVIEW
-        assert purchase.acquisition_cost.completeness.iva_recoverability_review_evidence.reference == _PRIVATE_IVA_REVIEW_REFERENCE
+        assert (
+            purchase.acquisition_cost.evidence[2].evidence_kind
+            is InventoryAcquisitionEvidenceKind.ATTRIBUTABLE_COST_REVIEW
+        )
+        assert (
+            purchase.acquisition_cost.completeness.iva_recoverability_review_evidence.reference
+            == _PRIVATE_IVA_REVIEW_REFERENCE
+        )
         assert purchase.capitalized_value == Decimal("954.45")
         assert purchase.resolved_unit_cost == Decimal("12.726")
         assert inventory_acquisition_fingerprint(purchase) == inventory_acquisition_fingerprint(
@@ -267,9 +272,7 @@ def _drop_content_digest(document: dict[str, Any]) -> None:
 def _replace_review_role(document: dict[str, Any]) -> None:
     acquisition = _purchase_payload(document)
     review = next(
-        item
-        for item in acquisition["evidence"]
-        if item["reference"]["reference"] == _PRIVATE_COST_REVIEW_REFERENCE
+        item for item in acquisition["evidence"] if item["reference"]["reference"] == _PRIVATE_COST_REVIEW_REFERENCE
     )
     assert review["evidence_kind"] == "attributable_cost_review"
     review["evidence_kind"] = "purchase_invoice"
@@ -318,7 +321,9 @@ _ACQUISITION_MUTATIONS: tuple[tuple[str, Callable[[dict[str, Any]], None]], ...]
 )
 
 
-@pytest.mark.parametrize(("case_id", "mutate"), _ACQUISITION_MUTATIONS, ids=[case[0] for case in _ACQUISITION_MUTATIONS])
+@pytest.mark.parametrize(
+    ("case_id", "mutate"), _ACQUISITION_MUTATIONS, ids=[case[0] for case in _ACQUISITION_MUTATIONS]
+)
 def test_inventory_acquisition_corruption_fails_closed_at_encrypted_load(
     tmp_path: Path,
     case_id: str,

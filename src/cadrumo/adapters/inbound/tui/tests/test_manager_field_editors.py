@@ -27,7 +27,7 @@ from .....application.user_profile import (
     register_profile_with_credentials,
 )
 from .....core import require_active_bucket_id
-from .....entrypoints.cli._config._manager_frontend import (
+from .....entrypoints.cli import (
     persist_active_profile_field,
     profile_field_value_refusal,
 )

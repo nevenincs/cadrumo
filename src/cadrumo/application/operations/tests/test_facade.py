@@ -21,6 +21,7 @@ from .. import (
     OperationResponseIntent,
     OperationReviewProjectionService,
     owner,
+    persistence,
 )
 from .. import __all__ as public_names
 
@@ -106,19 +107,43 @@ def test_facade_does_not_import_frontend_or_adapter_modules() -> None:
     }
 
 
+def test_persistence_facade_owns_only_adapter_facing_operation_contracts() -> None:
+    """Persistence adapters receive one dedicated contract facade, not runtime authority."""
+    persistence_names = persistence.__all__
+
+    assert persistence_names == sorted(persistence_names)
+    assert len(persistence_names) == len(set(persistence_names))
+    assert set(persistence_names).isdisjoint(public_names)
+    assert set(persistence_names).isdisjoint(owner.__all__)
+    assert all(hasattr(persistence, name) for name in persistence_names)
+    assert persistence.OperationPhaseEvent.__module__.startswith(persistence.__name__)
+    assert persistence.OperationIdempotencyClaim.__module__.startswith(persistence.__name__)
+    assert persistence.OperationJournal.__module__.startswith(persistence.__name__)
+    assert persistence.OperationLeaseObservation.__module__.startswith(persistence.__name__)
+    assert persistence.OperationPersistedSnapshot.__module__.startswith(persistence.__name__)
+    assert persistence.OperationReplayPage.__module__.startswith(persistence.__name__)
+    assert persistence.operation_conflict_scope_reference.__module__.startswith(persistence.__name__)
+
+    operations_root = Path(__file__).parents[1]
+    assert not (operations_root / "_journal.py").exists()
+    assert not (operations_root / "_leases.py").exists()
+
+
 def test_live_operation_boundary_census_has_no_private_consumer_or_redeclaration() -> None:
     """Join live facade exports to every production consumer import."""
     application_root = Path(__file__).parents[2]
     source_root = application_root.parent
     operations_root = application_root / "operations"
-    persistence_adapter_root = source_root / "adapters" / "persistence" / "operations"
     top_level_exports = frozenset(public_names)
     owner_exports = frozenset(owner.__all__)
+    persistence_exports = frozenset(persistence.__all__)
     private_imports: list[tuple[Path, str]] = []
     invalid_imports: list[tuple[Path, str, str]] = []
     owner_consumers: set[Path] = set()
 
     assert top_level_exports.isdisjoint(owner_exports)
+    assert top_level_exports.isdisjoint(persistence_exports)
+    assert owner_exports.isdisjoint(persistence_exports)
     assert owner.OperationEventEmitter.__module__ == owner.__name__
     assert owner.OperationExecutor.__module__ == owner.__name__
     assert owner.OperationExecutorContext.__module__ == owner.__name__
@@ -128,11 +153,7 @@ def test_live_operation_boundary_census_has_no_private_consumer_or_redeclaration
     assert not (operations_root / "_executor.py").exists()
 
     for source in source_root.rglob("*.py"):
-        if (
-            "tests" in source.parts
-            or source.is_relative_to(operations_root)
-            or source.is_relative_to(persistence_adapter_root)
-        ):
+        if "tests" in source.parts or source.is_relative_to(operations_root):
             continue
         tree = ast.parse(source.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
@@ -146,6 +167,11 @@ def test_live_operation_boundary_census_has_no_private_consumer_or_redeclaration
                 owner_consumers.add(source)
                 for imported in node.names:
                     if imported.name not in owner_exports:
+                        invalid_imports.append((source, module, imported.name))
+                continue
+            if module.endswith("operations.persistence"):
+                for imported in node.names:
+                    if imported.name not in persistence_exports:
                         invalid_imports.append((source, module, imported.name))
                 continue
             if module == "operations" or module.endswith(".application.operations"):

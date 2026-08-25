@@ -71,7 +71,7 @@ def test_after_12_months_recovery_payload() -> None:
     assert recovery.recargo_band.id == "after_12_months"
     assert recovery.recargo_band.interest_applies is True
     assert recovery.recargo_band.surcharge_pct == Decimal("15.00")
-    assert recovery.next_command == "aeat app modelo work --help"
+    assert "next_command" not in type(recovery).model_fields
 
 
 def test_zero_completed_months_no_interest() -> None:

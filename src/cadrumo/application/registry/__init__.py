@@ -203,6 +203,7 @@ from ._temporal_coverage import (
     TemporalCoverageReport,
     TemporalRevisionCoverage,
     compose_temporal_coverage,
+    law_selection_coordinate,
 )
 from .source_connectivity import (
     ManualCasillaRequirement,
@@ -710,6 +711,7 @@ __all__ = [
     "derive_registry_source_disposition_records",
     "diff_registry_revisions",
     "inspect_registry_tree",
+    "law_selection_coordinate",
     "list_registry_citations",
     "list_registry_manual_rules",
     "list_registry_manuals",

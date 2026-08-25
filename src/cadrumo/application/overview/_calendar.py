@@ -128,6 +128,7 @@ from ._calendar_models import (
 from ._calendar_models import (
     user_state_for as _user_state_for,
 )
+from ._next_actions import declare_next_action as _declare_next_action
 from ._calendar_warnings import (
     _build_completeness_and_warnings,
     _calendar_aeat_evidence_conflict_warnings,
@@ -760,6 +761,16 @@ def _calendar_entry_from_obligation(
         status=obligation.status,
         user_state=_user_state_for(obligation.status),
         recovery=obligation.recovery,
+        recovery_action=(
+            _declare_next_action(
+                "operator.modelo.work.create",
+                modelo=str(obligation.modelo),
+                year=period.filing_year,
+                period=period.registry_token,
+            )
+            if obligation.recovery is not None
+            else None
+        ),
         filing_year=period.filing_year,
         censo_enrolment_state=_calendar_censo_enrolment_state(
             modelo=obligation.modelo,

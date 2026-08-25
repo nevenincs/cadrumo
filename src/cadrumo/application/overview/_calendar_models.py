@@ -245,6 +245,7 @@ class OverviewCalendarEntry(BaseModel):
     status: _ObligationStatus
     user_state: OverviewPeriodState
     recovery: _Recovery | None = None
+    recovery_action: DeclaredNextAction | None = Field(default=None, exclude=True)
     filing_year: int | None = Field(default=None, ge=2000, le=2099)
     censo_enrolment_state: OverviewCensoEnrolmentState = OverviewCensoEnrolmentState.NOT_CHECKED
     filing_evidence: OverviewCalendarFilingEvidence = Field(default_factory=lambda: OverviewCalendarFilingEvidence())
@@ -278,6 +279,12 @@ class OverviewCalendarEntry(BaseModel):
                 f"OverviewCalendarEntry.user_state ({self.user_state}) "
                 f"disagrees with engine status mapping ({expected})",
             )
+        return self
+
+    @model_validator(mode="after")
+    def _enforce_recovery_action_consistency(self) -> OverviewCalendarEntry:
+        if (self.recovery is None) != (self.recovery_action is None):
+            raise ValueError("OverviewCalendarEntry recovery and recovery_action must be present together")
         return self
 
 

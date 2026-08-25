@@ -10,16 +10,16 @@ from pydantic import TypeAdapter, ValidationError
 
 from ....core import OperationEffect, OperationEventKind, OperationTerminalCondition
 from ....tests.aeat_literal_fixtures import REDACTION_SESSION_QUERY_URL_CANARY
-from .._events import (
+from .._events import OperationLogSeverity
+from .._models import OperationIdentity, OperationReconciliationOutcome, OperationTerminalReceipt
+from ..persistence import (
     OperationDiagnosticEvent,
     OperationEvent,
     OperationLogRecord,
-    OperationLogSeverity,
     OperationProgressEvent,
     OperationReconciliationEvent,
     OperationTerminalEvent,
 )
-from .._models import OperationIdentity, OperationReconciliationOutcome, OperationTerminalReceipt
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

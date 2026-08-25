@@ -11,22 +11,25 @@ from ...core.async_cleanup import AsyncCloseable
 from ...core.errors import CoreValidationError
 from ._capabilities import OperationOwnedResource
 from ._events import (
-    OperationDiagnosticEvent,
     OperationDiagnosticReference,
-    OperationEffectEvent,
-    OperationEvent,
     OperationEventCode,
-    OperationInteractionEvent,
-    OperationLogRecord,
     OperationLogSeverity,
-    OperationNoticeEvent,
-    OperationPhaseEvent,
-    OperationProgressEvent,
 )
 from ._interactions import OperationPendingInteraction
-from ._journal import OperationPersistedSnapshot, OperationSecureReferenceStore
 from ._models import OperationId
 from ._registry import OperationRegistry
+from .persistence import (
+    OperationDiagnosticEvent,
+    OperationEffectEvent,
+    OperationEvent,
+    OperationInteractionEvent,
+    OperationLogRecord,
+    OperationNoticeEvent,
+    OperationPersistedSnapshot,
+    OperationPhaseEvent,
+    OperationProgressEvent,
+    OperationSecureReferenceStore,
+)
 
 
 class OperationDeclarationError(CoreValidationError):

@@ -26,7 +26,7 @@ from .....application.user_profile import (
 )
 from .....core import require_active_bucket_id, resolve_active_bucket_id
 from .....core.i18n import tr
-from .....entrypoints.cli._config._manager_frontend import persist_active_profile_field
+from .....entrypoints.cli import persist_active_profile_field
 from .....tests.manager_pilot import wait_until_settled
 from .....tests.profile_capsule import load_test_profile_record
 from .....tests.secure_sql import isolated_profile_storage_root
@@ -1020,7 +1020,7 @@ async def test_logout_closes_both_the_session_and_the_surface(tmp_path) -> None:
     session is gone (the real ``logout_active_profile`` door, not a
     stand-in) AND that the app is no longer running, not either alone.
     """
-    from .....entrypoints.cli._config._manager_actions import logout_action
+    from .....entrypoints.cli import logout_action
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(

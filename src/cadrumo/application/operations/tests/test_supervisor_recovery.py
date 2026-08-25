@@ -23,10 +23,13 @@ from .. import (
     OperationTerminalCondition,
     OperationTerminalReceipt,
 )
-from .._events import OperationReconciliationEvent
-from .._journal import OperationPersistedSnapshot
-from .._leases import OperationLeaseObservationDisposition, operation_conflict_scope_reference
-from .._replay import OperationReplayLimit
+from ..persistence import (
+    OperationLeaseObservationDisposition,
+    OperationPersistedSnapshot,
+    OperationReconciliationEvent,
+    OperationReplayLimit,
+    operation_conflict_scope_reference,
+)
 from .test_supervisor import (
     _NOW,
     DeadlineAcknowledgingExecutor,

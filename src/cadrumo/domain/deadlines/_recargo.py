@@ -246,14 +246,13 @@ def build_recovery_for_overdue(
     Args:
         closes_on: The filing window's close date (deadline).
         reference_today: The date the self-assessment is presented.
-        modelo: Modelo identifier the operator must still file.
+        modelo: Modelo identifier for the overdue obligation.
         period: Typed filing period for the overdue obligation.
         bands: Optional pre-loaded band table; when ``None``, the canonical
             TOML is loaded once.
 
     Returns:
-        A :class:`Recovery` carrying the resolved band, the legal
-        reference, and a runnable next-action command.
+        A :class:`Recovery` carrying the resolved band and legal reference.
     """
     band_table = bands if bands is not None else load_recargo_bands()
     if more_than_twelve_months_elapsed(closes_on, reference_today):
@@ -261,11 +260,9 @@ def build_recovery_for_overdue(
     else:
         months = completed_months_late(closes_on, reference_today)
         resolved = resolve_recargo_band(months, band_table)
-    next_command = "aeat app modelo work --help"
     return Recovery(
         still_filable=True,
         recargo_band=resolved,
-        next_command=next_command,
     )
 
 

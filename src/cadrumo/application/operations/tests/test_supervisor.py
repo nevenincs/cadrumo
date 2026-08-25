@@ -59,12 +59,6 @@ from .. import (
     OperationTerminalCondition,
     OperationTerminalReceipt,
 )
-from .._events import (
-    OperationDiagnosticEvent,
-    OperationNoticeEvent,
-    OperationReconciliationEvent,
-    OperationTerminalEvent,
-)
 from .._execution_context import OperationDeclarationError
 from .._interactions import (
     OperationApplyResponse,
@@ -73,10 +67,19 @@ from .._interactions import (
     OperationPendingInteraction,
     OperationRejectResponse,
 )
-from .._journal import OperationPersistedSnapshot, OperationSecureReferenceStore
-from .._leases import OperationLeaseDisposition, OperationOwnerLease, operation_conflict_scope_reference
 from .._supervisor import OperationSupervisor
 from ..owner import OperationExecutor, OperationExecutorContext
+from ..persistence import (
+    OperationDiagnosticEvent,
+    OperationLeaseDisposition,
+    OperationNoticeEvent,
+    OperationOwnerLease,
+    OperationPersistedSnapshot,
+    OperationReconciliationEvent,
+    OperationSecureReferenceStore,
+    OperationTerminalEvent,
+    operation_conflict_scope_reference,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

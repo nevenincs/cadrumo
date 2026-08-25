@@ -31,12 +31,6 @@ from ._interactions import (
     OperationResponseIntent,
     OperationResponseToken,
 )
-from ._journal import (
-    OperationObservationReader,
-    OperationObservationUnknownOperationError,
-    OperationPersistedSnapshot,
-    OperationSecureReferenceStore,
-)
 from ._models import OperationId
 from ._public import (
     OperationCancellationRefusalCode,
@@ -77,6 +71,12 @@ from ._public import (
 )
 from ._registry import OperationRegistry, operation_public_schema_reference
 from ._secret_submission import zeroize_secret_buffer
+from .persistence import (
+    OperationObservationReader,
+    OperationObservationUnknownOperationError,
+    OperationPersistedSnapshot,
+    OperationSecureReferenceStore,
+)
 
 _SUPPORTED_VERSION = 1
 _READ_LIMIT = 1

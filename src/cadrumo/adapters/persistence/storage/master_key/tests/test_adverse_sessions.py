@@ -54,7 +54,7 @@ def test_resumed_session_kek_refusal_carries_only_the_observed_key_facts() -> No
     assert exc_info.value.translated_message == "errors.auth.auth_storage_master_key_unavailable"
     assert exc_info.value.context == {
         "resumed_profile_session": True,
-        "key_encryption_key_available": False,
+        "resumed_session_kek_material_available": False,
     }
 
 

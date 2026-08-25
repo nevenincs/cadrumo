@@ -984,10 +984,10 @@ class RecargoBand(BaseModel):
 class Recovery(BaseModel):
     r"""Operator-facing recovery payload attached to an OVERDUE obligation.
 
-    Surfaces the resolved Ley 58/2003 art-27 recargo band plus a runnable
-    next-action command the operator can copy. The CLI's calendar
-    renderer surfaces ``recovery\\t<band_id>\\t<surcharge_pct>%\\t<next_command>``
-    underneath each OVERDUE entry.
+    Surfaces the resolved Ley 58/2003 art-27 recargo band. The application
+    overview layer declares any executable continuation from the resolved
+    modelo and period; the CLI resolves that declaration against its live
+    command surface.
 
     Attributes:
         still_filable: True for every band -- art-27 self-assessments
@@ -1002,15 +1002,12 @@ class Recovery(BaseModel):
             onto this payload, so there is exactly one place a renderer
             can read the grounding from and no way for two copies to
             disagree.
-        next_command: Literal shell command the operator can copy to
-            calculate the late filing.
     """
 
     model_config = _STRICT_FROZEN
 
     still_filable: bool = True
     recargo_band: RecargoBand
-    next_command: str = Field(min_length=1, max_length=256)
 
 
 def _parse_modelo_deadline_period(value: object) -> Period:

@@ -267,7 +267,7 @@ _REQUIRED_PROOFS: Mapping[str, tuple[str, str]] = {
 
 _EXPECTED_AUTHORITY_OWNERS: Mapping[str, str] = {
     "OperationSnapshot": "src/cadrumo/application/operations/_models.py",
-    "OperationPersistedSnapshot": "src/cadrumo/application/operations/_journal.py",
+    "OperationPersistedSnapshot": "src/cadrumo/application/operations/persistence/_journal.py",
     "OperationRegistry": "src/cadrumo/application/operations/_registry.py",
     "OperationObservationService": "src/cadrumo/application/operations/_observation.py",
     "OperationReviewProjectionService": "src/cadrumo/application/operations/_projection_services.py",
@@ -289,13 +289,13 @@ _EXPECTED_CONSTRUCTORS: Mapping[str, str] = {
 _SEMANTIC_ALLOWED_OWNERS = frozenset(
     {
         "src/cadrumo/application/operations/_composition.py",
-        "src/cadrumo/application/operations/_journal.py",
         "src/cadrumo/application/operations/_models.py",
         "src/cadrumo/application/operations/_observation.py",
         "src/cadrumo/application/operations/_projection_services.py",
         "src/cadrumo/application/operations/_public.py",
         "src/cadrumo/application/operations/_registry.py",
         "src/cadrumo/application/operations/_supervisor.py",
+        "src/cadrumo/application/operations/persistence/_journal.py",
     }
 )
 
