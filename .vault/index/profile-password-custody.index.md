@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:0cbf35456020d0312e36ada0aa24b09e8d0a1fc88a870f81338bf82bc5a8fbee'
+body_hash: 'sha256:317668eb1f69f93d02b8a89e934f1a448acbc0e44cd386b34e499f9662641f2e'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -326,6 +326,7 @@ related:
   - '[[2026-08-25-profile-password-custody-s251-filing-spine-cumulative-state-audit]]'
   - '[[2026-08-25-profile-password-custody-s252-registry-documentation-authority-review-audit]]'
   - '[[2026-08-25-profile-password-custody-s253-ledger-invoice-witnesses-audit]]'
+  - '[[2026-08-25-profile-password-custody-s256-workstation-mask-review-audit]]'
   - '[[2026-08-25-profile-password-custody-s258-grade-aware-preflight-review-audit]]'
   - '[[2026-08-25-profile-password-custody-s259-m220-grounding-review-audit]]'
   - '[[2026-08-25-profile-password-custody-s260-m182-deadline-review-audit]]'
@@ -403,6 +404,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-25-profile-password-custody-s251-filing-spine-cumulative-state-audit` - `profile-password-custody` audit: `S251 filing-spine cumulative-state formal review`
 - `2026-08-25-profile-password-custody-s252-registry-documentation-authority-review-audit` - `profile-password-custody` audit: `s252 registry documentation authority review`
 - `2026-08-25-profile-password-custody-s253-ledger-invoice-witnesses-audit` - `profile-password-custody` audit: `s253 ledger invoice witnesses`
+- `2026-08-25-profile-password-custody-s256-workstation-mask-review-audit` - `profile-password-custody` audit: `S256 workstation mask review`
 - `2026-08-25-profile-password-custody-s258-grade-aware-preflight-review-audit` - `profile-password-custody` audit: `S258 grade-aware preflight review`
 - `2026-08-25-profile-password-custody-s259-m220-grounding-review-audit` - `profile-password-custody` audit: `S259 M220 grounding review`
 - `2026-08-25-profile-password-custody-s260-m182-deadline-review-audit` - `profile-password-custody` audit: `S260 M182 deadline review`

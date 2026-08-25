@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-25'
-body_hash: 'sha256:9bcdeb4a6876cfebd5cfe94b243ea9b1a5e8111902c06b05cd8d7890e977f30c'
+body_hash: 'sha256:5d81a6a6bc3cf2e1cc3aefd2ac9cdc1e2e28fa930302b25ec6dadf7794dcdcc3'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -364,7 +364,7 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 - [x] `W06.P12.S253` - Replace stale ledger-evidence and invoice output assumptions with stable authority-backed dynamic witnesses on ledger-evidence and manage-invoices; `docs/_sequences/contracts/ledger-evidence/ and docs/_sequences/contracts/manage-invoices/`.
 - [x] `W06.P12.S254` - Reconcile verification-report history and provenance sequences with current Modelo 303 identifiers and authoritative frame structure; `docs/_sequences/contracts/verification-reports/ and src/cadrumo/application/verification/`.
 - [x] `W06.P12.S255` - Reconcile the censo-update sequence with the current censal projection and reviewed-apply authority; `docs/_sequences/contracts/censo-update/ and src/cadrumo/application/user_profile/`.
-- [ ] `W06.P12.S256` - Separate volatile workstation free-memory diagnostics from deterministic golden state while preserving real registry-integrity failures and host-health evidence; `docs/_sequences/contracts/workstation-setup/ and src/cadrumo/application/diagnostics.py and src/cadrumo/core/observability/`.
+- [x] `W06.P12.S256` - Separate volatile workstation free-memory diagnostics from deterministic golden state while preserving real registry-integrity failures and host-health evidence; `docs/_sequences/contracts/workstation-setup/ and src/cadrumo/application/diagnostics.py and src/cadrumo/core/observability/`.
 - [ ] `W06.P12.S257` - Route CLI and manager censal apply through the canonical user-profile.censo-review operation, preserving one acquisition, encrypted reviewed operand, exact baseline, resume-without-reread, and apply_cotejo sole-writer authority; `src/cadrumo/application/user_profile/_censal_operation.py and src/cadrumo/entrypoints/cli/_config/ and src/cadrumo/adapters/inbound/tui/`.
 - [x] `W06.P12.S258` - Make registry referential-integrity preflight validate every revision at its declared authority grade while retaining full reference checks and real invalid-reference failures across applicability, calculation, and filing revisions; `src/cadrumo/application/preflight.py and src/cadrumo/application/tests/test_preflight.py`.
 - [x] `W06.P12.S259` - Correct Modelo 220 revision 2025 source grounding so it cites official authority applicable within its validity window and does not borrow the later 2026 form source; `src/cadrumo/_data/registry/aeat/modelos/220/ and src/cadrumo/domain/calculations/registry/tests/`.
