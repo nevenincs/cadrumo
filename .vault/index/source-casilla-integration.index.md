@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:3ed01dd4f44b99b9fe7fe7e043d2ccef33a3ca5b5ed18fa3ca169983a299bb26'
+body_hash: 'sha256:0e71afa008e0d8afd83b66aeca10308de705251900d730416f1462e6a6201705'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -137,6 +137,7 @@ related:
   - '[[2026-08-22-source-casilla-integration-W06-P20-S113]]'
   - '[[2026-08-22-source-casilla-integration-W06-P20-S114]]'
   - '[[2026-08-22-source-casilla-integration-W06-P20-S115]]'
+  - '[[2026-08-22-source-casilla-integration-W06-P20-S116]]'
   - '[[2026-08-22-source-casilla-integration-W06-P20-S226]]'
   - '[[2026-08-22-source-casilla-integration-W06-P20-S227]]'
   - '[[2026-08-22-source-casilla-integration-W06-P20-S228]]'
@@ -198,6 +199,7 @@ related:
   - '[[2026-08-25-source-casilla-integration-m187-source-owner-deferral-adr]]'
   - '[[2026-08-25-source-casilla-integration-m193-row-source-grounding-research]]'
   - '[[2026-08-25-source-casilla-integration-m220-source-owner-deferral-adr]]'
+  - '[[2026-08-25-source-casilla-integration-m232-locator-correction-follow-up-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-m296-row-source-grounding-research]]'
   - '[[2026-08-25-source-casilla-integration-m390-2021-annual-value-arrival-grounding-research]]'
   - '[[2026-08-25-source-casilla-integration-m390-2021-source-owner-deferral-adr]]'
@@ -217,7 +219,9 @@ related:
   - '[[2026-08-25-source-casilla-integration-s113-helper-candidate-classification-research]]'
   - '[[2026-08-25-source-casilla-integration-s113-helper-candidate-classification-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s114-zero-delivery-closure-review-audit]]'
+  - '[[2026-08-25-source-casilla-integration-s115-related-party-locator-followup-audit]]'
   - '[[2026-08-25-source-casilla-integration-s115-structural-helper-selector-review-audit]]'
+  - '[[2026-08-25-source-casilla-integration-s116-connectivity-fixed-point-audit]]'
   - '[[2026-08-25-source-casilla-integration-s226-m187-source-owner-decision-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s227-m220-source-owner-deferral-repair-follow-up-audit]]'
   - '[[2026-08-25-source-casilla-integration-s227-modelo-220-source-deferral-review-audit]]'
@@ -226,6 +230,7 @@ related:
   - '[[2026-08-25-source-casilla-integration-s230-m763-no-candidate-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s231-m840-source-owner-deferral-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s232-m188-no-candidate-review-audit]]'
+  - '[[2026-08-25-source-casilla-integration-s233-m194-no-candidate-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s87-independent-post-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s88-google-pull-post-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s89-row-source-identity-review-audit]]'
@@ -309,6 +314,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-23-source-casilla-integration-s41-inventory-runtime-composition-review-audit` - `source-casilla-integration` audit: `s41 inventory runtime composition review`
 - `2026-08-23-source-casilla-integration-s42-inventory-source-ownership-review-audit` - `source-casilla-integration` audit: `s42 inventory source ownership review`
 - `2026-08-23-source-casilla-integration-s43-inventory-binding-templates-review-audit` - `source-casilla-integration` audit: `source-casilla-integration audit: s43 inventory binding templates review`
+- `2026-08-25-source-casilla-integration-m232-locator-correction-follow-up-review-audit` - M232 locator correction follow-up review
 - `2026-08-25-source-casilla-integration-s100-m182-row-source-review-audit` - `source-casilla-integration` audit: `W05.P17.S100 independent review`
 - `2026-08-25-source-casilla-integration-s101-m182-terminal-deferral-review-audit` - `source-casilla-integration` audit: `S101 M182 terminal deferral review`
 - `2026-08-25-source-casilla-integration-s102-m182-terminal-deferral-followup-audit` - `source-casilla-integration` audit: `S102 M182 terminal-deferral follow-up review`
@@ -316,7 +322,9 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-25-source-casilla-integration-s112-connectivity-census-regeneration-review-audit` - `source-casilla-integration` audit: `S112 connectivity census regeneration review`
 - `2026-08-25-source-casilla-integration-s113-helper-candidate-classification-review-audit` - `source-casilla-integration` audit: `S113 helper candidate classification review`
 - `2026-08-25-source-casilla-integration-s114-zero-delivery-closure-review-audit` - `source-casilla-integration` audit: `S114 zero-delivery closure review`
+- `2026-08-25-source-casilla-integration-s115-related-party-locator-followup-audit` - `source-casilla-integration` audit: `S115 related-party locator follow-up`
 - `2026-08-25-source-casilla-integration-s115-structural-helper-selector-review-audit` - `source-casilla-integration` audit: `S115 structural helper selector review`
+- `2026-08-25-source-casilla-integration-s116-connectivity-fixed-point-audit` - `source-casilla-integration` audit: `S116 source-connectivity fixed-point execution evidence`
 - `2026-08-25-source-casilla-integration-s226-m187-source-owner-decision-review-audit` - `source-casilla-integration` audit: `S226 Modelo 187 source-owner decision review`
 - `2026-08-25-source-casilla-integration-s227-m220-source-owner-deferral-repair-follow-up-audit` - `source-casilla-integration` audit: `S227 M220 source-owner deferral repair follow-up`
 - `2026-08-25-source-casilla-integration-s227-modelo-220-source-deferral-review-audit` - `source-casilla-integration` audit: `S227 Modelo 220 source deferral review`
@@ -325,6 +333,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-25-source-casilla-integration-s230-m763-no-candidate-review-audit` - `source-casilla-integration` audit: `S230 M763 no-candidate review`
 - `2026-08-25-source-casilla-integration-s231-m840-source-owner-deferral-review-audit` - `source-casilla-integration` audit: `S231 M840 source-owner deferral review`
 - `2026-08-25-source-casilla-integration-s232-m188-no-candidate-review-audit` - `source-casilla-integration` audit: `S232 M188 no-candidate review`
+- `2026-08-25-source-casilla-integration-s233-m194-no-candidate-review-audit` - `source-casilla-integration` audit: `S233 M194 no-candidate review`
 - `2026-08-25-source-casilla-integration-s87-independent-post-review-audit` - `source-casilla-integration` audit: `S87 snapshot-bound row assembly independent review`
 - `2026-08-25-source-casilla-integration-s88-google-pull-post-review-audit` - `source-casilla-integration` audit: `s88 google pull post review`
 - `2026-08-25-source-casilla-integration-s89-row-source-identity-review-audit` - `source-casilla-integration` audit: `S89 row source identity review`
@@ -370,6 +379,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-W01-P01-S146` - make calculation-route ownership validation refuse renamed resolvers, invented pseudo-owners, and stage drift
 - `2026-08-22-source-casilla-integration-W01-P01-S147` - make persisted source provenance internally coherent, identity-bearing, unambiguous, and strictly typed
 - `2026-08-22-source-casilla-integration-W01-P01-S148` - require source provenance at every revision identity and persistence boundary and correct its identity contract
+- `2026-08-22-source-casilla-integration-W06-P20-S116` - rerun discovery until two consecutive runs produce no unclassified or unactioned candidate
 - `2026-08-22-source-casilla-integration-W01-P01-S149` - define the canonical primary/contributor lineage role and replace the calculation-source provenance shape atomically with separate resolved and contributor axes
 - `2026-08-22-source-casilla-integration-W01-P01-S150` - migrate every calculation-source provenance constructor, serializer, merge, and revision-identity payload without defaults, aliases, or dual-read compatibility
 - `2026-08-22-source-casilla-integration-W01-P01-S151` - emit IVA wallet decisions as immutable event-key primaries and parent their authority-source contributors to the decision provenance node
