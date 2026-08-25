@@ -19,6 +19,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar, override
 
+from pydantic import TypeAdapter, ValidationError
 from rich.text import Text
 from textual.app import App, ComposeResult
 from textual.binding import Binding, BindingsMap
@@ -45,11 +46,7 @@ from ....application.flows import (
     FlowCheckpointError as _FlowCheckpointError,
 )
 from ....application.flows import (
-    FlowError as _FlowError,
-)
-from ....application.flows import (
     FlowPage,
-    FlowRepeatingGroup,
     FlowUnsupportedConsoleError,
     LineFlowFrontend,
     ReviewProjection,
@@ -198,7 +195,7 @@ class FlowTuiApp(App[None]):
         width: 100%;
     }
     #review-save-note { color: $warning; margin: 0; }
-    #btn-submit { dock: bottom; margin: 0; }
+    #btn-submit { margin: 0; }
     """
     )
 
@@ -253,7 +250,7 @@ class FlowTuiApp(App[None]):
     def on_mount(self) -> None:
         """Install shared appearance support and open the current question page."""
         install_cadrumo_themes(self)
-        self.push_screen(QuestionScreen())
+        self.push_screen(QuestionScreen(self))
 
     def action_toggle_appearance(self) -> None:
         """Flip between the light and dark appearance without leaving the flow.
@@ -353,7 +350,7 @@ class FlowTuiApp(App[None]):
     def action_go_review(self) -> None:
         """Open the summary projection unless it is already the active screen."""
         if not isinstance(self.screen, ReviewScreen):
-            self.push_screen(ReviewScreen())
+            self.push_screen(ReviewScreen(self))
 
     def action_leave_review(self) -> None:
         """Return from the summary projection to the current question."""
@@ -444,7 +441,7 @@ class FlowTuiApp(App[None]):
     def _rebuild_screens_for_locale(self) -> None:
         while len(self.screen_stack) > 1:
             self.pop_screen()
-        self.push_screen(QuestionScreen())
+        self.push_screen(QuestionScreen(self))
 
     # ── rendering plumbing ──────────────────────────────────────────────
 
@@ -468,21 +465,6 @@ class FlowTuiApp(App[None]):
             screen.render_review()
 
 
-def require_flow_app(app: object) -> FlowTuiApp:
-    """Narrow a screen's ``self.app`` to the owning :class:`FlowTuiApp`.
-
-    The runtime object is always the owning app; a typed refusal (rather
-    than a bare ``assert`` that ``python -O`` strips) keeps the guard loud
-    if a screen is ever mounted under a foreign app.
-    """
-    if not isinstance(app, FlowTuiApp):
-        raise _FlowError(
-            translated_message="flows.errors.unexpected_app_type",
-            context={"expected": FlowTuiApp.__name__, "actual": type(app).__name__},
-        )
-    return app
-
-
 def _collect_page_widgets(definition: FlowDefinition) -> dict[str, FlowWidgetKind]:
     """Map every declared page id to its widget kind (repeating pages included)."""
     widgets: dict[str, FlowWidgetKind] = {}
@@ -490,7 +472,7 @@ def _collect_page_widgets(definition: FlowDefinition) -> dict[str, FlowWidgetKin
         for item in section.items:
             if isinstance(item, FlowPage):
                 widgets[item.id] = item.widget
-            elif isinstance(item, FlowRepeatingGroup):
+            else:
                 for page in item.pages:
                     widgets[page.id] = page.widget
     return widgets
@@ -599,15 +581,27 @@ def _operator_verdict(
     for key in ("page_id", "page_key", "page"):
         if key in context:
             context[key] = prompts.get(str(context[key]), current_prompt)
-    if "fields" in context and isinstance(context["fields"], list):
-        context["fields"] = [
-            prompts.get(str(value), tr("flows.review.question_unavailable")) for value in context["fields"]
-        ]
-    if "choices" in context and isinstance(context["choices"], list):
-        context["choices"] = [
-            choices.get(str(value), tr("flows.tui.choice_unavailable")) for value in context["choices"]
-        ]
+    fields = _string_list(context.get("fields"))
+    if fields is not None:
+        context["fields"] = [prompts.get(value, tr("flows.review.question_unavailable")) for value in fields]
+    choice_values = _string_list(context.get("choices"))
+    if choice_values is not None:
+        context["choices"] = [choices.get(value, tr("flows.tui.choice_unavailable")) for value in choice_values]
     return tr(verdict.message_key or "", **context)
+
+
+_OBJECT_LIST_ADAPTER = TypeAdapter(list[object])
+
+
+def _string_list(value: object | None) -> list[str] | None:
+    """Validate and stringify an optional verdict-context list."""
+    if value is None:
+        return None
+    try:
+        items = _OBJECT_LIST_ADAPTER.validate_python(value, strict=True)
+    except ValidationError:
+        return None
+    return [str(item) for item in items]
 
 
 def _confirm_restart_dialog() -> ConfirmScreen:
@@ -630,6 +624,10 @@ class QuestionScreen(Screen[None]):
         Binding("ctrl+n", "restart_flow", ""),
         Binding("ctrl+s", "save_exit", ""),
     ]
+
+    def __init__(self, flow_app: FlowTuiApp) -> None:
+        super().__init__()
+        self._flow_app = flow_app
 
     @override
     def compose(self) -> ComposeResult:
@@ -677,7 +675,7 @@ class QuestionScreen(Screen[None]):
     @property
     def flow_app(self) -> FlowTuiApp:
         """Return the typed flow application that owns this projection."""
-        return require_flow_app(self.app)
+        return self._flow_app
 
     def render_page(self) -> None:
         """Render every zone for the page the engine cursor addresses."""
@@ -935,7 +933,7 @@ class QuestionScreen(Screen[None]):
         self.flow_app.action_reset_current()
 
     def action_restart_flow(self) -> None:
-        self.app.push_screen(_confirm_restart_dialog(), self._apply_restart_decision)
+        self.flow_app.push_screen(_confirm_restart_dialog(), self._apply_restart_decision)
 
     def _apply_restart_decision(self, confirmed: bool | None) -> None:
         if confirmed:
@@ -956,6 +954,10 @@ _STATUS_GLYPHS: dict[PageStatus, str] = {
 _SECTION_HEADING_PREFIX = "\x00section\x00"
 
 
+class _ReviewTable(DataTable[str]):
+    """Typed flow-review table with string cell values."""
+
+
 class ReviewScreen(Screen[None]):
     """Render a clickable summary of every question in the flow."""
 
@@ -966,10 +968,14 @@ class ReviewScreen(Screen[None]):
         Binding("ctrl+n", "restart_flow", ""),
     ]
 
+    def __init__(self, flow_app: FlowTuiApp) -> None:
+        super().__init__()
+        self._flow_app = flow_app
+
     @override
     def compose(self) -> ComposeResult:
         yield Static(id="review-header")
-        yield DataTable(id="review-table", cursor_type="row")
+        yield _ReviewTable(id="review-table", cursor_type="row")
         yield Static(id="review-blocking")
         yield Static(id="review-save-note")
         yield Button(tr("flows.review.action_submit"), id="btn-submit", variant="success")
@@ -978,7 +984,7 @@ class ReviewScreen(Screen[None]):
     def on_mount(self) -> None:
         """Configure localized table columns and render the current review."""
         self._localize_bindings()
-        table = self.query_one("#review-table", DataTable)
+        table = self.query_one("#review-table", _ReviewTable)
         table.zebra_stripes = True
         table.add_columns(
             tr("flows.review.column_status"),
@@ -1002,7 +1008,7 @@ class ReviewScreen(Screen[None]):
     @property
     def flow_app(self) -> FlowTuiApp:
         """Return the typed flow application that owns this projection."""
-        return require_flow_app(self.app)
+        return self._flow_app
 
     def render_review(self) -> None:
         """Project the engine review into the table, notices, and submit control."""
@@ -1017,7 +1023,7 @@ class ReviewScreen(Screen[None]):
                 eligible=tr("flows.confirm.yes" if projection.submit_eligible else "flows.confirm.no"),
             ),
         )
-        table = self.query_one("#review-table", DataTable)
+        table = self.query_one("#review-table", _ReviewTable)
         table.clear()
         self._fill_table(table, app, projection, prompts)
         choice_labels = {
@@ -1051,7 +1057,7 @@ class ReviewScreen(Screen[None]):
 
     def _fill_table(
         self,
-        table: DataTable[str],
+        table: _ReviewTable,
         app: FlowTuiApp,
         projection: ReviewProjection,
         prompts: dict[str, str],
@@ -1132,7 +1138,7 @@ class ReviewScreen(Screen[None]):
         self.flow_app.action_save_exit()
 
     def action_restart_flow(self) -> None:
-        self.app.push_screen(_confirm_restart_dialog(), self._apply_restart_decision)
+        self.flow_app.push_screen(_confirm_restart_dialog(), self._apply_restart_decision)
 
     def _apply_restart_decision(self, confirmed: bool | None) -> None:
         if confirmed:
@@ -1164,4 +1170,4 @@ def select_flow_frontend(
     return LineFlowFrontend(definition, checkpoint_store=checkpoint_store)
 
 
-__all__ = ["FlowTuiApp", "require_flow_app", "run_flow_tui", "select_flow_frontend"]
+__all__ = ["FlowTuiApp", "run_flow_tui", "select_flow_frontend"]
