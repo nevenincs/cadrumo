@@ -143,9 +143,12 @@ def test_production_composition_registers_the_facade_owned_definition_and_real_t
         try:
             definition = dependencies.observation.registry.lookup(GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID)
             assert definition.executor_factory.create().__class__.__name__ == "GoogleSheetsExportOperationExecutor"
-            assert dependencies.observation.registry.lookup_public_contract(
-                GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID
-            ).request_schema.schema_id == "export.google-sheets.request"
+            assert (
+                dependencies.observation.registry.lookup_public_contract(
+                    GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID
+                ).request_schema.schema_id
+                == "export.google-sheets.request"
+            )
         finally:
             asyncio.run(dependencies.shutdown())
 
@@ -169,9 +172,7 @@ def test_google_export_owner_and_composition_keep_one_hexagonal_apply_plus_prove
     provenance_handoffs = [
         node
         for node in ast.walk(composition_tree)
-        if isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Name)
-        and node.func.id == "export_modelo_to_sheets"
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "export_modelo_to_sheets"
     ]
     assert {"export_modelo_to_sheets", "preview_export_plan"}.issubset(direct_calls)
     assert any(

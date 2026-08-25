@@ -74,9 +74,7 @@ def _create_committed_profile(root: Path, *, bucket_id: str, label: str) -> None
             password_envelope=envelope,
             sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
             data_files={},
-            recovery_envelope=mint_test_profile_recovery_envelope(
-                profile_id, dek=_DEK, dek_epoch=envelope.dek_epoch
-            ),
+            recovery_envelope=mint_test_profile_recovery_envelope(profile_id, dek=_DEK, dek_epoch=envelope.dek_epoch),
             initial_record=UserProfileRecord(
                 profile_id=bucket_id,
                 setup_state=ProfileSetupState.INCOMPLETE,

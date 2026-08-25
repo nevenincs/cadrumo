@@ -111,9 +111,7 @@ def test_workflow_delegates_pointer_repair_action_construction_to_operator_actio
     assert profile_health_module is not None
     tree = ast.parse(inspect.getsource(profile_health_module))
     functions = {
-        node.name: node
-        for node in ast.walk(tree)
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        node.name: node for node in ast.walk(tree) if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
     }
 
     assert "_pointer_repair_verdict" not in functions

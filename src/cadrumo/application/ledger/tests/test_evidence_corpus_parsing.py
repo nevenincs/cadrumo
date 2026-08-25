@@ -581,7 +581,9 @@ def test_an_unrecognised_xml_refuses_rather_than_reaching_the_vision_model() -> 
     )
 
     assert evidence.document_shape not in STRUCTURED_DOCUMENT_SHAPES, "not a recognised invoice syntax"
-    with pytest.raises(PurchaseInvoiceEvidenceInputError, match=re.escape("errors.refused.refused_ledger_evidence_input")):
+    with pytest.raises(
+        PurchaseInvoiceEvidenceInputError, match=re.escape("errors.refused.refused_ledger_evidence_input")
+    ):
         _refuse_an_unrecognised_xml_document(evidence)
 
 
