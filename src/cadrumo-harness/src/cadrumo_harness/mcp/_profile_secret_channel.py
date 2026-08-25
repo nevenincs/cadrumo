@@ -1,9 +1,10 @@
-"""One-shot local profile-secret channel for installed MCP subprocesses.
+"""One-shot local profile-secret channel for installed MCP CLI invocations.
 
 Secrets never travel over MCP, argv, environment variables, logs, or retained
 evidence.  An operator-owned launcher may provide a bounded strict-JSON file;
 the server reads and unlinks it at startup, keeps only the validated value in
-memory, and frames it onto each profile-authenticated CLI child's stdin.
+memory, and frames it onto each profile-authenticated CLI invocation's stdin,
+whether the transport is warm in-process or a supervised subprocess.
 """
 
 from __future__ import annotations

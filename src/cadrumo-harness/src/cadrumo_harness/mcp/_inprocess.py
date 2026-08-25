@@ -35,9 +35,10 @@ from __future__ import annotations
 import contextlib
 import io
 import json
+import sys
 import threading
 import time
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 
 from pydantic import BaseModel, ConfigDict
 
@@ -68,6 +69,17 @@ _CAPTURE_LOCK = threading.Lock()
 # supervised subprocess transport rather than queuing behind the wedge forever.
 _HOLDER_SINCE: float | None = None
 _STATE_LOCK = threading.Lock()
+
+
+@contextlib.contextmanager
+def _redirect_stdin(stream: io.TextIOWrapper) -> Iterator[None]:
+    """Temporarily bind process stdin while the global capture lock is held."""
+    previous = sys.stdin
+    sys.stdin = stream
+    try:
+        yield
+    finally:
+        sys.stdin = previous
 
 
 def warm_capture_holder_age() -> float | None:
@@ -131,7 +143,12 @@ def _exit_code(code: object) -> int:
     return 1
 
 
-def run_cli_in_process(argv_tail: Sequence[str], *, acquire_timeout_s: float) -> CompletedCliRun | None:
+def run_cli_in_process(
+    argv_tail: Sequence[str],
+    *,
+    acquire_timeout_s: float,
+    stdin_payload: str | None = None,
+) -> CompletedCliRun | None:
     """Run the real ``aeat`` Typer app in-process, capturing its output streams.
 
     ``argv_tail`` is the argv the subprocess transport would pass after the
@@ -145,6 +162,10 @@ def run_cli_in_process(argv_tail: Sequence[str], *, acquire_timeout_s: float) ->
     returned instead. stdout and stderr are captured under the module capture lock
     so no CLI output reaches the MCP JSON-RPC pipe and concurrent calls cannot
     interleave their redirects.
+
+    When ``stdin_payload`` is supplied, it is bound to the process-global stdin
+    under the same capture lock, so the canonical CLI machine-secret reader sees
+    the same byte stream it receives from a subprocess pipe.
 
     The capture lock is acquired with a wall-clock bound: a call NEVER queues
     behind a slow or hung in-process verb forever. When the lock cannot be
@@ -171,7 +192,12 @@ def run_cli_in_process(argv_tail: Sequence[str], *, acquire_timeout_s: float) ->
     err = io.StringIO()
     returncode = 0
     try:
-        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+        stdin = (
+            contextlib.nullcontext()
+            if stdin_payload is None
+            else _redirect_stdin(io.TextIOWrapper(io.BytesIO(stdin_payload.encode("utf-8")), encoding="utf-8"))
+        )
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err), stdin:
             try:
                 command.main(
                     args=list(argv_tail),
@@ -192,6 +218,7 @@ def dispatch_verb_in_process(
     arguments: dict[str, object],
     *,
     acquire_timeout_s: float,
+    profile_secret_stdin_payload: str | None = None,
 ) -> CompletedCliRun | None:
     """Build a verb's argv from its schema and run it through the warm runtime.
 
@@ -201,7 +228,14 @@ def dispatch_verb_in_process(
     uses, so both transports dispatch the identical command line. Returns ``None``
     when the capture could not be acquired within ``acquire_timeout_s``.
     """
-    return run_cli_in_process(cli_argv_for(schema, arguments), acquire_timeout_s=acquire_timeout_s)
+    argv_tail = cli_argv_for(schema, arguments)
+    if profile_secret_stdin_payload is not None:
+        argv_tail = ["--profile-secrets-stdin", *argv_tail]
+    return run_cli_in_process(
+        argv_tail,
+        acquire_timeout_s=acquire_timeout_s,
+        stdin_payload=profile_secret_stdin_payload,
+    )
 
 
 def parse_cli_envelope(run: CompletedCliRun) -> tuple[dict[str, object], bool]:

@@ -494,6 +494,13 @@ def _run_inprocess_tool(
     zeroises any still-bound session on interpreter exit).
     """
     holder: dict[str, CompletedCliRun | None] = {}
+    from ._profile_secret_channel import profile_secret_stdin_payload
+
+    stdin_payload = (
+        None
+        if descriptor.verb_schema.profile_authentication == "not-applicable"
+        else profile_secret_stdin_payload()
+    )
 
     def _target() -> None:
         try:
@@ -501,6 +508,7 @@ def _run_inprocess_tool(
                 descriptor.verb_schema,
                 arguments,
                 acquire_timeout_s=acquire_timeout_s,
+                profile_secret_stdin_payload=stdin_payload,
             )
         finally:
             # Relock: evict and zeroise any bucket session still bound in this
@@ -588,11 +596,7 @@ def _run_tool(  # pyright: ignore[reportUnusedFunction]
         read_only=descriptor.annotations.read_only_hint,
         open_world=descriptor.annotations.open_world_hint,
     )
-    from ._profile_secret_channel import profile_secret_stdin_payload
-
-    if not tier_runs_in_process(tier) or (
-        descriptor.verb_schema.profile_authentication != "not-applicable" and profile_secret_stdin_payload() is not None
-    ):
+    if not tier_runs_in_process(tier):
         return _run_subprocess_tool(descriptor, arguments)
     mcp_settings = load_mcp_settings()
     wedge_threshold_s = mcp_settings.cadrumo_mcp_wedge_threshold_seconds
