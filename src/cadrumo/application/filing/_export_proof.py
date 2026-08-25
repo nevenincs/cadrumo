@@ -37,6 +37,7 @@ from .runtime import RegistrySchemaAccessor
 _Token = Annotated[str, Field(min_length=1, max_length=200, pattern=r"^[a-z0-9][a-z0-9._:/-]*$")]
 _DictionaryScalar = str | Decimal | date | bool | int
 _CANONICAL_WRITER = "cadrumo.application.filing.export_draft"
+_SECURE_REPLAY_PROOF_SCHEMA_VERSION = "filing-export-secure-replay-v1"
 
 
 class FilingExportProofCoordinate(BaseModel):
@@ -293,7 +294,7 @@ class FilingExportSecureReplayReceipt(BaseModel):
     source_authority_id: _Token
     custody_authority_id: _Token
     canonical_writer: Literal["cadrumo.application.filing.export_draft"] = _CANONICAL_WRITER
-    proof_schema_version: Literal["filing-export-secure-replay-v1"] = "filing-export-secure-replay-v1"
+    proof_schema_version: Literal["filing-export-secure-replay-v1"] = _SECURE_REPLAY_PROOF_SCHEMA_VERSION
     attested_at: UtcInstant
     valid_until: UtcInstant
     replay_passed: Literal[True] = True
