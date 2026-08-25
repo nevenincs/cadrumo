@@ -22,7 +22,7 @@ from ....application.overview import (
     OverviewPeriodState,
     declare_next_action,
 )
-from ....core import Period, STR_KEYED_MAPPING_ADAPTER
+from ....core import STR_KEYED_MAPPING_ADAPTER, Period
 from ....domain.deadlines import ObligationStatus, RecargoBand, Recovery
 from .._overview_payloads import OverviewCalendarEntryPayload, OverviewRecoveryPayload
 from .._overview_rendering import _resolved_action, overview_calendar_output

@@ -128,7 +128,6 @@ from ._calendar_models import (
 from ._calendar_models import (
     user_state_for as _user_state_for,
 )
-from ._next_actions import declare_next_action as _declare_next_action
 from ._calendar_warnings import (
     _build_completeness_and_warnings,
     _calendar_aeat_evidence_conflict_warnings,
@@ -138,6 +137,7 @@ from ._calendar_warnings import (
     _calendar_unverified_justificante_warnings,
 )
 from ._coverage import build_obligation_coverage
+from ._next_actions import declare_next_action as _declare_next_action
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry import DeadlineWindowDefinition

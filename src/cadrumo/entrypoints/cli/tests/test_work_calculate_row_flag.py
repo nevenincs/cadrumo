@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 import typer
 
+from ....core.config import override_settings
 from ....domain.modelos import (
     Modelo184MemberRow,
     Modelo184ShareSumError,
@@ -32,7 +33,6 @@ from ....domain.modelos import (
     validate_m347_threshold,
 )
 from .._modelo_cli_support import parse_row_spec as _parse_row_spec
-from ....core.config import override_settings
 
 
 def _output_language(language: str):
