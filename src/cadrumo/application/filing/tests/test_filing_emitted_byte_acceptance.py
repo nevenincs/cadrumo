@@ -23,8 +23,7 @@ from dev.registry.filing_export_proof import (
     canonical_live_filing_export_proof_authority,
 )
 
-from ....application.registry import compose_filing_export_coverage
-from ....application.registry._temporal_coverage import _law_selection_coordinate
+from ....application.registry import compose_filing_export_coverage, law_selection_coordinate
 from ....core import Modelo, RegistryAuthorityGrade
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import ValidatedRegistryAuthority, bundled_authority
@@ -104,7 +103,7 @@ def test_every_filing_grade_revision_has_one_law_selected_export_limb_and_an_hon
     assert coordinates <= set(limbs)
 
     for modelo, revision in filing_revisions:
-        filing_year, period = _law_selection_coordinate(revision)
+        filing_year, period = law_selection_coordinate(revision)
         inspection = authority.inspect_revision(
             modelo.id,
             filing_year=filing_year,
@@ -177,8 +176,8 @@ def test_modelo_353_layout_gap_is_selected_by_its_own_law_coordinate_and_cannot_
         if limb.refusal is not None and limb.refusal.disposition.work_item == f"{_EXPORT_OWNER}:filing-layout"
     )
     successor_revision = next(revision for revision, _limb in revision_limbs if revision.id != gap_revision.id)
-    gap_year, gap_period = _law_selection_coordinate(gap_revision)
-    successor_year, successor_period = _law_selection_coordinate(successor_revision)
+    gap_year, gap_period = law_selection_coordinate(gap_revision)
+    successor_year, successor_period = law_selection_coordinate(successor_revision)
 
     assert authority.inspect_revision(
         modelo.id,

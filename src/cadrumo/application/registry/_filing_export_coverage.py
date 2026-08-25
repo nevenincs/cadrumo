@@ -33,7 +33,7 @@ from ._filing_export_authority import (
     FilingExportProofAuthority,
     FilingExportProofConflictError,
 )
-from ._temporal_coverage import _law_selection_coordinate
+from ._temporal_coverage import law_selection_coordinate
 
 __all__ = [
     "FilingExportCoverageReport",
@@ -120,7 +120,7 @@ def _compose_revision_limb(
             work_item="aeat-export-fragment-generator-authority:reviewed-layout",
             reconsideration_condition="Record a valid review for the exact revision and its official layout authority.",
         )
-    filing_year, period = _law_selection_coordinate(revision)
+    filing_year, period = law_selection_coordinate(revision)
     try:
         snapshot = authority.snapshot(
             modelo_id,
