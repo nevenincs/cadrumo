@@ -1188,6 +1188,10 @@ application:
         (%{mismatch_kind}).
       registry_advisory_predicate_fired: A registry advisory predicate fired for this
         revision.
+      registry_authority_grade_insufficient: This modelo's registry revision declares
+        %{declared_grade} authority and cannot back a filing, which requires %{requested_grade}
+        authority. The revision resolves correctly; it is not attested to the level
+        a filing needs, so this work target cannot be verified for filing yet.
       registry_snapshot_unresolved: The registry snapshot for this work target could
         not be resolved.
       suffered_retencion_capital_mobiliario_uncredited: This return declares rendimientos

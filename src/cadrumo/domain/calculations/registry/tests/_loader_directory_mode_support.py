@@ -158,12 +158,10 @@ def _write_modelo(
             if manifest_text is None
             else manifest_text
         ),
-        encoding="utf-8",
-    )
+        encoding="utf-8", newline="\n")
     (revision_dir / "casillas" / "0001-casillas.toml").write_text(
         casilla_fragment + fragment_extra,
-        encoding="utf-8",
-    )
+        encoding="utf-8", newline="\n")
     return modelo_dir
 
 

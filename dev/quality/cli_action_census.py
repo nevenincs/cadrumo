@@ -1088,7 +1088,7 @@ def read_fixed_point_state(path: Path) -> FixedPointState:
 
 def write_fixed_point_state(path: Path, state: FixedPointState) -> None:
     """Persist the canonical reviewed-state form for a later exact rescan."""
-    path.write_text(f"{json.dumps(dump_fixed_point_state(state), indent=2)}\n", encoding=_UTF_8)
+    path.write_text(f"{json.dumps(dump_fixed_point_state(state), indent=2)}\n", encoding=_UTF_8, newline="\n")
 
 
 def fixed_point_pass_from_sources(

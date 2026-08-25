@@ -42,7 +42,6 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.application.user_profile.repository import (
-    USER_PROFILE_SNAPSHOT_NAMESPACE,
     UserProfileSnapshotRepository,
     user_profile_snapshot_object_key,
 )
@@ -122,7 +121,7 @@ def _rewrite_persisted_snapshot(
     """
     object_key = user_profile_snapshot_object_key(_PROFILE_ID, snapshot_id)
     stored = objects.load(
-        USER_PROFILE_SNAPSHOT_NAMESPACE,
+        USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.namespace,
         object_key,
         expected_class=USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.sensitivity,
         max_supported_version=USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.schema_version,
@@ -131,7 +130,7 @@ def _rewrite_persisted_snapshot(
     envelope = json.loads(stored.payload)
     mutate(envelope["payload"])
     objects.save(
-        namespace=USER_PROFILE_SNAPSHOT_NAMESPACE,
+        namespace=USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.namespace,
         object_key=object_key,
         classification=USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.sensitivity,
         schema_version=USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.schema_version,

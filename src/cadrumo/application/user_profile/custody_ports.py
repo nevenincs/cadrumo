@@ -25,6 +25,7 @@ from ...core.errors import CoreError
 
 if TYPE_CHECKING:
     from ...domain.buckets import BucketEventHistoryCatalogue
+    from ...domain.user_profile.values import UserProfileSnapshot
     from .recovery_contracts import ProfileCustodyRecoveryArtifactWarning
 
 from ...core.hashing import bounded_canonical_json_bytes, canonical_json_digest
@@ -245,6 +246,46 @@ class ProfileCustodySecureObjectRepositoryPort(Protocol):
 
     def apply_batch(self, writes: tuple[SecureObjectWrite, ...]) -> None:
         """Commit an atomic set of encrypted-object writes."""
+        ...
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileSnapshotStoredRecord:
+    """Decoded filing-time snapshot plus its inner envelope contract."""
+
+    snapshot: UserProfileSnapshot
+    classification: SensitivityClass
+    schema_version: int
+
+
+class ProfileSnapshotPersistencePort(Protocol):
+    """Encrypted persistence boundary for immutable filing-time snapshots."""
+
+    @property
+    def namespace(self) -> str:
+        """Return the registered secure-object namespace."""
+        ...
+
+    @property
+    def sensitivity(self) -> SensitivityClass:
+        """Return the required inner and outer sensitivity classification."""
+        ...
+
+    @property
+    def schema_version(self) -> int:
+        """Return the current supported inner and outer schema version."""
+        ...
+
+    def exists(self, object_key: str) -> bool:
+        """Report whether one immutable snapshot row exists."""
+        ...
+
+    def load(self, object_key: str) -> ProfileSnapshotStoredRecord | None:
+        """Load and decode one snapshot without applying application policy."""
+        ...
+
+    def save(self, object_key: str, snapshot: UserProfileSnapshot, *, written_at: datetime) -> None:
+        """Encode and persist one immutable snapshot."""
         ...
 
 
@@ -977,6 +1018,15 @@ class ProfileCustodyPort(Protocol):
         """Return active-bucket namespace inventory."""
         ...
 
+    def profile_snapshot_persistence(
+        self,
+        bucket_id: str,
+        *,
+        objects: ProfileCustodySecureObjectRepositoryPort | None = None,
+    ) -> ProfileSnapshotPersistencePort:
+        """Return immutable profile-snapshot persistence for one bucket."""
+        ...
+
     def record_crypto(self) -> ProfileRecordCryptoPort:
         """Return the profile-record AEAD adapter."""
         ...
@@ -1450,6 +1500,8 @@ __all__ = [
     "ProfileRecordEncryptedBlob",
     "ProfileRecoveryKeyPort",
     "ProfileSecureObjectInventoryPort",
+    "ProfileSnapshotPersistencePort",
+    "ProfileSnapshotStoredRecord",
     "bind_profile_custody_port",
     "canonical_snapshot_bytes",
     "canonical_snapshot_digest",

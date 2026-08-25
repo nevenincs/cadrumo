@@ -67,7 +67,7 @@ def _synthetic_locale_scope(tmp_path: Path, request: pytest.FixtureRequest) -> I
     if request.node.nodeid in BUNDLED_DATA_TEST_IDS:
         yield
         return
-    (tmp_path / "es.yml").write_text("", encoding="utf-8")
+    (tmp_path / "es.yml").write_text("", encoding="utf-8", newline="\n")
     with locales_root_scope(tmp_path):
         synthetic_locale_state.root = tmp_path
         try:
@@ -85,7 +85,7 @@ def _write_test_label(label: str) -> str:
     """
     key = f"test.schema.casilla.{hashlib.sha256(label.encode('utf-8')).hexdigest()}.label"
     if synthetic_locale_state.root is not None:
-        with (synthetic_locale_state.root / "es.yml").open("a", encoding="utf-8") as handle:
+        with (synthetic_locale_state.root / "es.yml").open("a", encoding="utf-8", newline="\n") as handle:
             handle.write(f"{json.dumps(key)}: {json.dumps(label, ensure_ascii=False)}\n")
     return key
 

@@ -1242,6 +1242,11 @@ application:
         (%{mismatch_kind}).
       registry_advisory_predicate_fired: A nyilvántartás tanácsadó predikátuma aktiválódott
         ehhez a revízióhoz.
+      registry_authority_grade_insufficient: Ennek a modelonak a registry-revizioja
+        %{declared_grade} szintu jogosultsagot deklaral, es nem tud bevallast alatamasztani,
+        amihez %{requested_grade} szintu jogosultsag szukseges. A revizio helyesen
+        feloldodik, de nincs a bevalláshoz szukseges szinten igazolva, ezert ez a
+        munkacel meg nem ellenorizheto bevallashoz.
       registry_snapshot_unresolved: Nem sikerült feloldani a nyilvántartási pillanatképet
         ehhez a munkacélhoz.
       suffered_retencion_capital_mobiliario_uncredited: Ez a bevallás megtakarítási

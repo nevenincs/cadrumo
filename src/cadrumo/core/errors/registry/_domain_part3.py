@@ -278,6 +278,26 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.user_profile.errors.ProfileSnapshotClassificationError",
+        ErrorCode(
+            code="INTEGRITY_PROFILE_SNAPSHOT_CLASSIFICATION",
+            category=ErrorCategory.INTEGRITY,
+            message_key="application.user_profile.errors.repository_classification_mismatch",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.user_profile.errors.ProfileSnapshotVersionError",
+        ErrorCode(
+            code="INTEGRITY_PROFILE_SNAPSHOT_VERSION",
+            category=ErrorCategory.INTEGRITY,
+            message_key="application.user_profile.errors.repository_profile_snapshot_version_unsupported",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.user_profile.errors.StoredProfileDriftError",
         ErrorCode(
             code="INTEGRITY_STORED_PROFILE_DRIFT",

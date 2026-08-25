@@ -553,11 +553,7 @@ def _write_archive_member(
     info.external_attr = (0o100644 & 0xFFFF) << 16
     with (
         source.open("rb") as source_handle,
-        archive.open(
-            info,
-            mode="w",
-            force_zip64=True,
-        ) as destination_handle,
+        archive.open(info, mode="w", force_zip64=True, newline="\n") as destination_handle,
     ):
         shutil.copyfileobj(source_handle, destination_handle, length=1024 * 1024)
 

@@ -39,14 +39,23 @@ from ....application.user_profile.custody_ports import (
     ProfileRecordCryptoPort,
     ProfileRecordEncryptedBlob,
     ProfileSecureObjectInventoryPort,
+    ProfileSnapshotPersistencePort,
+    ProfileSnapshotStoredRecord,
 )
 from ....core import StorageCategory, storage_location
-from ....core.config import Settings
+from ....core.classification import SensitivityClass
+from ....core.config import Settings, load_settings
 from ....core.hashing import prefixed_digest
 from ....core.time import now as _utc_now
+from ....domain.user_profile.errors import ProfileSnapshotClassificationError, ProfileSnapshotVersionError
+from ....domain.user_profile.values import UserProfileSnapshot
 from ..profile.buckets import BucketEventHistoryRepository
 from . import (
+    USER_PROFILE_SNAPSHOT_NAMESPACE,
     USER_PROFILE_VALUE_NAMESPACE,
+    ClassificationError,
+    Envelope,
+    EnvelopeVersionError,
     KeyringUnavailableError,
     MasterKeyMaterialMissingError,
     PersistenceError,
@@ -162,6 +171,73 @@ class _PersistenceProfileSecureObjectInventory:
 
     def list_keys(self, namespace: str) -> tuple[str, ...]:
         return self._list_keys(namespace)
+
+
+class _PersistenceProfileSnapshotStore:
+    """Envelope codec and secure-object store for filing-time snapshots."""
+
+    def __init__(self, objects: SecureObjectRepository) -> None:
+        self._objects = objects
+
+    @property
+    def namespace(self) -> str:
+        return USER_PROFILE_SNAPSHOT_NAMESPACE.namespace
+
+    @property
+    def sensitivity(self) -> SensitivityClass:
+        return USER_PROFILE_SNAPSHOT_NAMESPACE.sensitivity
+
+    @property
+    def schema_version(self) -> int:
+        return USER_PROFILE_SNAPSHOT_NAMESPACE.schema_version
+
+    def exists(self, object_key: str) -> bool:
+        return self._objects.exists(self.namespace, object_key)
+
+    def load(self, object_key: str) -> ProfileSnapshotStoredRecord | None:
+        try:
+            record = self._objects.load(
+                self.namespace,
+                object_key,
+                expected_class=self.sensitivity,
+                max_supported_version=self.schema_version,
+            )
+        except ClassificationError as exc:
+            raise ProfileSnapshotClassificationError(
+                str(exc),
+                translated_message=exc.translated_message,
+                context=exc.context,
+            ) from exc
+        except EnvelopeVersionError as exc:
+            raise ProfileSnapshotVersionError(
+                str(exc),
+                translated_message=exc.translated_message,
+                context=exc.context,
+            ) from exc
+        if record is None:
+            return None
+        envelope = Envelope[UserProfileSnapshot].model_validate_json(record.payload.decode("utf-8"))
+        return ProfileSnapshotStoredRecord(
+            snapshot=envelope.payload,
+            classification=envelope.classification,
+            schema_version=envelope.schema_version,
+        )
+
+    def save(self, object_key: str, snapshot: UserProfileSnapshot, *, written_at: datetime) -> None:
+        envelope = Envelope[UserProfileSnapshot](
+            schema_version=self.schema_version,
+            written_at=written_at,
+            classification=self.sensitivity,
+            payload=snapshot,
+        )
+        self._objects.save(
+            namespace=self.namespace,
+            object_key=object_key,
+            classification=self.sensitivity,
+            schema_version=self.schema_version,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
 
 
 class _PersistenceProfileRecordCrypto:
@@ -464,6 +540,19 @@ class _PersistenceProfileCustody:
 
     def secure_object_inventory(self) -> ProfileSecureObjectInventoryPort:
         return _PersistenceProfileSecureObjectInventory()
+
+    def profile_snapshot_persistence(
+        self,
+        bucket_id: str,
+        *,
+        objects: ProfileCustodySecureObjectRepositoryPort | None = None,
+    ) -> ProfileSnapshotPersistencePort:
+        resolved = (
+            secure_object_repository_for_bucket(bucket_id, load_settings())
+            if objects is None
+            else _substrate_handle(objects, SecureObjectRepository, "secure-object repository")
+        )
+        return _PersistenceProfileSnapshotStore(resolved)
 
     def record_crypto(self) -> ProfileRecordCryptoPort:
         return _PersistenceProfileRecordCrypto()

@@ -1307,6 +1307,11 @@ application:
         (%{mismatch_kind}).
       registry_advisory_predicate_fired: Se ha activado un predicado consultivo del
         registro para esta revisión.
+      registry_authority_grade_insufficient: La revision del registro de este modelo
+        declara autoridad %{declared_grade} y no puede respaldar una presentacion,
+        que exige autoridad %{requested_grade}. La revision se resuelve correctamente;
+        no esta acreditada al nivel que exige una presentacion, por lo que este objetivo
+        de trabajo aun no puede verificarse para presentar.
       registry_snapshot_unresolved: No se ha podido resolver la instantánea del registro
         para este objetivo de trabajo.
       suffered_retencion_capital_mobiliario_uncredited: Esta declaración consigna

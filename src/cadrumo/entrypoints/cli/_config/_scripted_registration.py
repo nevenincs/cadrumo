@@ -34,6 +34,7 @@ from typing import TYPE_CHECKING, cast
 import typer
 from pydantic import SecretStr
 
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from .._common import emit_envelope
@@ -125,7 +126,7 @@ def _validated_recovery_descriptors(
 
 def _write_recovery_handoff(descriptor: int, mnemonic: str) -> None:
     """Write one bounded secret document and close its descriptor on every exit."""
-    raw = bytearray(json.dumps({"recovery_mnemonic": mnemonic}, separators=(",", ":")).encode("utf-8") + b"\n")
+    raw = bytearray(json.dumps({"recovery_mnemonic": mnemonic}, separators=(",", ":")).encode(UTF_8_ENCODING) + b"\n")
     try:
         if len(raw) > 8192:
             raise CliRefusedBoundaryError(

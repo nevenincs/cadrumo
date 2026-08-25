@@ -24,7 +24,6 @@ from cadrumo.application.user_profile.profile_record_repository import (
 )
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.application.user_profile.repository import (
-    USER_PROFILE_SNAPSHOT_NAMESPACE,
     UserProfileSnapshotRepository,
     user_profile_snapshot_object_key,
 )
@@ -40,14 +39,15 @@ from ....adapters.persistence.storage.custody import (
     load_committed_profile_password_material,
     unlock_profile_custody,
 )
-from ....adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.i18n import tr
 from ....core.time import now
 from ....domain.user_profile.errors import (
     ProfileBucketMismatchError,
     ProfileNotFoundError,
+    ProfileSnapshotClassificationError,
     ProfileSnapshotNotFoundError,
+    ProfileSnapshotVersionError,
 )
 from ....domain.user_profile.values import (
     ProfileSetupState,
@@ -278,7 +278,7 @@ def test_snapshot_load_rejects_inner_classification_without_identifier_leak(
         payload=snapshot,
     )
     secure_objects.save(
-        namespace=USER_PROFILE_SNAPSHOT_NAMESPACE,
+        namespace=USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.namespace,
         object_key=user_profile_snapshot_object_key(_BUCKET_ID, snapshot.snapshot_id),
         classification=USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.sensitivity,
         schema_version=USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.schema_version,
@@ -286,13 +286,13 @@ def test_snapshot_load_rejects_inner_classification_without_identifier_leak(
         payload=envelope.model_dump_json().encode("utf-8"),
     )
 
-    with pytest.raises(ClassificationError) as excinfo:
+    with pytest.raises(ProfileSnapshotClassificationError) as excinfo:
         UserProfileSnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects).load(snapshot.snapshot_id)
 
     assert str(excinfo.value) == "secure-object namespace classification does not match the repository contract"
     assert excinfo.value.translated_message == "application.user_profile.errors.repository_classification_mismatch"
     assert excinfo.value.context == {
-        "namespace": USER_PROFILE_SNAPSHOT_NAMESPACE,
+        "namespace": USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.namespace,
         "snapshot_id": snapshot.snapshot_id,
         "classification": SensitivityClass.FINANCIAL.value,
         "expected": USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.sensitivity.value,
@@ -316,7 +316,7 @@ def test_snapshot_load_rejects_inner_version_without_identifier_leak(
         payload=snapshot,
     )
     secure_objects.save(
-        namespace=USER_PROFILE_SNAPSHOT_NAMESPACE,
+        namespace=USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.namespace,
         object_key=user_profile_snapshot_object_key(_BUCKET_ID, snapshot.snapshot_id),
         classification=USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.sensitivity,
         schema_version=USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.schema_version,
@@ -324,7 +324,7 @@ def test_snapshot_load_rejects_inner_version_without_identifier_leak(
         payload=envelope.model_dump_json().encode("utf-8"),
     )
 
-    with pytest.raises(EnvelopeVersionError) as excinfo:
+    with pytest.raises(ProfileSnapshotVersionError) as excinfo:
         UserProfileSnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects).load(snapshot.snapshot_id)
 
     assert str(excinfo.value) == "profile snapshot schema version is not supported"
@@ -341,7 +341,7 @@ def test_snapshot_load_rejects_inner_version_without_identifier_leak(
 
 
 def test_snapshot_namespace_name_comes_from_the_storage_registry() -> None:
-    assert USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.namespace == USER_PROFILE_SNAPSHOT_NAMESPACE
+    assert USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.namespace == "cadrumo.application.user_profile.snapshot"
 
 
 def test_snapshot_object_keys_use_the_current_profile_and_snapshot_id() -> None:

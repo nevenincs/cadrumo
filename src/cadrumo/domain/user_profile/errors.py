@@ -78,6 +78,14 @@ class ProfileSnapshotNotFoundError(UserProfileError):
     """Raised when a snapshot id has no persisted record in the secure backend."""
 
 
+class ProfileSnapshotClassificationError(UserProfileError):
+    """Raised when a stored snapshot's classification violates its contract."""
+
+
+class ProfileSnapshotVersionError(UserProfileError):
+    """Raised when a stored snapshot's schema version is unsupported."""
+
+
 class ProfileBucketMismatchError(UserProfileError):
     """Raised when a payload's profile identity is not the bound bucket's own.
 

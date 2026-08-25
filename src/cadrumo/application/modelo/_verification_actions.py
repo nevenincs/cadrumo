@@ -53,6 +53,10 @@ from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from cadrumo.application.workflow.engine import WorkflowEngine
+from cadrumo.application.workflow.persistence import WorkflowRunRepository
+from cadrumo.application.workflow.run_models import WorkflowPurpose
+
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -119,9 +123,6 @@ from ..calculations import (
     CrossPeriodExpectedMemberSet,
     validate_m303_regimen_simplificado_annual_summary_target_revision,
 )
-from cadrumo.application.workflow.engine import WorkflowEngine
-from cadrumo.application.workflow.run_models import WorkflowPurpose
-from cadrumo.application.workflow.persistence import WorkflowRunRepository
 from ._action_errors import (
     WORKFLOW_GATE_LEGAL_REFS,
     CalculationRevisionNotFoundError,
@@ -1430,7 +1431,7 @@ def _resolve_verification_snapshot(
     findings: list[ModeloVerificationFinding],
     failures_by_finding_id: dict[int, ModeloPreconditionFailure],
 ) -> RegistrySnapshot | None:
-    from ...domain.calculations.registry import RegistrySnapshotError
+    from ...domain.calculations.registry import RegistrySnapshotError, RegistryValidationError
 
     try:
         authority = _authority_via_resources()
@@ -1439,6 +1440,45 @@ def _resolve_verification_snapshot(
             filing_year=work_unit.filing_year,
             period=work_unit.period.registry_token,
         )
+    except RegistryValidationError as exc:
+        # A revision that resolves but declares less than filing authority is a
+        # DIFFERENT operator situation from one that cannot be resolved, and it
+        # reaches here as RegistryValidationError, which is not a subclass of
+        # RegistrySnapshotError -- so without this clause the refusal escaped a
+        # gate whose entire purpose is to enumerate why a revision is not fit to
+        # file, and the operator got a traceback instead of a finding.
+        classification = getattr(exc, "registry_failure", None)
+        facts = dict(getattr(classification, "facts", {}) or {})
+        finding = ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message_locale_key="application.modelo.findings.registry_authority_grade_insufficient",
+            message_facts={
+                "modelo": str(work_unit.modelo),
+                "filing_year": work_unit.filing_year,
+                "period": work_unit.period.registry_token,
+                "declared_grade": str(facts.get("declared_authority_grade", "")),
+                "requested_grade": str(facts.get("requested_authority_grade", "")),
+            },
+            legal_refs=WORKFLOW_GATE_LEGAL_REFS,
+        )
+        findings.append(finding)
+        failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
+            calculation_revision_id=target.calculation_revision_id,
+            work_unit_id=target.work_unit_id,
+            condition_id="modelo.work.verify.registry_snapshot.filing_authority",
+            scenario_id="modelo.work.verify.registry_snapshot.authority_grade_insufficient",
+            evidence_id="modelo.work.verify.registry_snapshot",
+            evidence_values={
+                "modelo": str(work_unit.modelo),
+                "year": work_unit.filing_year,
+                "period": work_unit.period.registry_token,
+                "declared_authority_grade": str(facts.get("declared_authority_grade", "")),
+                "requested_authority_grade": str(facts.get("requested_authority_grade", "")),
+            },
+            provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
+        )
+        return None
     except (FileNotFoundError, RegistrySnapshotError):
         finding = ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.BLOCKING_RULE,
