@@ -2,9 +2,8 @@
 
 The ``core`` layer remains independent of application modules. It resolves the
 active profile's ``preferences.output_language`` preference through a registered
-callback. :mod:`cadrumo.application.user_profile` explicitly calls
-:func:`register_language_resolver` after the module's imports complete. That
-function registers
+callback. Each executable host explicitly calls :func:`register_language_resolver`
+when it composes profile persistence. That function registers
 :func:`resolve_active_profile_output_language` with
 :func:`cadrumo.core.i18n.register_profile_language_resolver`.
 """
@@ -78,10 +77,8 @@ def resolve_profile_output_language_hint(bucket_id: str) -> str | None:
 def register_language_resolver() -> None:
     """Register :func:`resolve_active_profile_output_language` with ``core.i18n``.
 
-    Replaces the prior module-import side-effect registration: callers
-    now invoke this function from a known initialiser (the
-    :mod:`cadrumo.application.user_profile` package import) so the
-    registration point is explicit and greppable rather than hidden in
-    a noqa-protected import line.
+    Executable hosts invoke this alongside custody and login-session composition,
+    keeping registration explicit and greppable rather than hiding it in a
+    package-import side effect.
     """
     register_profile_language_resolver(resolve_active_profile_output_language)

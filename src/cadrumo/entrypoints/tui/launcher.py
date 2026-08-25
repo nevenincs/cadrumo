@@ -19,6 +19,7 @@ def profile_storage_scope(root: Path) -> Generator[Path]:
     from ...adapters.persistence.storage import build_profile_custody_port, build_profile_login_session_port
     from ...adapters.persistence.workflow import build_workflow_persistence_port
     from ...application.user_profile.custody_ports import bind_profile_custody_port
+    from ...application.user_profile.language_resolver import register_language_resolver
     from ...application.user_profile.login_session_port import bind_profile_login_session_port
     from ...application.workflow.persistence import bind_workflow_persistence_port
     from ...core import STORAGE_TAXONOMY, StorageCategory, storage_location
@@ -44,6 +45,7 @@ def profile_storage_scope(root: Path) -> Generator[Path]:
         composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
         composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
         composition.enter_context(bind_workflow_persistence_port(build_workflow_persistence_port()))
+        register_language_resolver()
         yield storage_root
 
 
