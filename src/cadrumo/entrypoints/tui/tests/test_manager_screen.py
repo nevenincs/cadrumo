@@ -12,7 +12,6 @@ view would fail.
 
 from __future__ import annotations
 
-import asyncio
 import threading
 
 import pytest
@@ -25,7 +24,7 @@ from ....application.user_profile import (
     login_profile,
     register_profile_with_credentials,
 )
-from ....core import require_active_bucket_id, resolve_active_bucket_id
+from ....core import require_active_bucket_id
 from ....core.i18n import tr
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -309,7 +308,6 @@ async def test_a_second_edit_is_refused_before_its_dialog_opens(tmp_path) -> Non
     while one is in flight, so the operator is stopped before they type
     rather than after — there is never anything to lose.
     """
-    import threading
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(
@@ -397,20 +395,6 @@ async def test_a_masked_field_opens_empty_rather_than_prefilled(tmp_path) -> Non
 # ── actions ─────────────────────────────────────────────────────────────
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 @pytest.mark.asyncio
 async def test_a_write_failing_wordlessly_is_named_rather_than_shown_blank(tmp_path) -> None:
     """The write path settles the same way, and had the same blank.
@@ -469,14 +453,6 @@ async def test_a_page_with_no_actions_renders_no_action_bar(tmp_path) -> None:
             app.exit(None)
 
 
-
-
-
-
-
-
-
-
 @pytest.mark.asyncio
 async def test_a_long_field_label_never_pushes_the_value_off_screen(tmp_path) -> None:
     """A real AEAT-length field name must not carry the value column past column 80.
@@ -525,5 +501,3 @@ async def test_a_long_field_label_never_pushes_the_value_off_screen(tmp_path) ->
                 "the long IRPF field-name label pushed the value column out of the 80-column viewport"
             )
             app.exit(None)
-
-
