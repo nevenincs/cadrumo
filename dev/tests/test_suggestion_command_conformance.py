@@ -1,18 +1,9 @@
-"""Suggestion-string command-citation conformance gate.
+"""Live CLI citation and production-action-observation conformance gate.
 
 The CLI's instructive surface is wider than ``--help`` and the how-to docs:
-the curated operator help documents, ``next_action`` builder strings, the
-runtime write-policy, and the four locale catalogues all cite ``aeat app ...`` /
-``aeat config ...``
-invocations that an operator is told to run next. The pull/--file standard
-rule (``cadrumo-pull-and-file-standard``) records that NONE of these strings
-were covered by a conformance gate: ``test_documented_command_conformance``
-scans only the how-to docs, and ``test_json_schema_conformance`` only the
-envelope ``command=`` identifiers, so "a verb rename MUST be swept by hand"
-through every suggestion surface. A rename that misses one leaves a dead
-operator instruction — the error path tells the operator to run a command
-that no longer exists, which is a silent failure of the first instructive
-surface.
+the curated operator help documents, production prose, and the four locale
+catalogues all cite ``aeat app ...`` / ``aeat config ...`` invocations. A verb
+rename that misses one leaves the operator with a dead instruction.
 
 This gate converts that hand-sweep obligation into CI enforcement. It walks
 the REAL Click tree (``typer.main.get_command`` over the live Cadrumo app —
@@ -21,18 +12,17 @@ no mocks, no fixture trees) and resolves every cited command path from:
 - the curated operator help documents (root / config / app surfaces);
 - every string literal in production modules under ``cadrumo.adapters``,
   ``cadrumo.application``, ``cadrumo.core.errors``, and ``cadrumo.entrypoints``
-  (AST-extracted, so comments cannot false-positive and ``next_action`` /
-  write-policy / envelope-builder / adapter-refusal strings are all swept).
+  (AST-extracted, so comments cannot false-positive).
 
 The four locale catalogues (``en``/``es``/``ca``/``hu``) carry the same class
-of citations inside translated suggestion text and are the natural fourth
+of citations inside translated operator text and are the natural fourth
 sweep. This was tracked as a follow-up when the gate first landed (the
 catalogues carried three locale-divergent dead citations at that time); it is
 now closed by :func:`test_locale_catalogues_cite_live_commands`, which walks
 every string leaf of every catalogue through the same live-tree resolver.
 Landing that sweep caught three real dead citations shipped across the
 catalogues: all four locales cited a never-existing ``aeat config profile
-health`` for the Google OAuth profile-repair suggestion (corrected to the
+health`` for the Google OAuth profile-repair instruction (corrected to the
 real ``aeat config profile status``); the Hungarian catalogue alone cited a
 retired ``aeat config doctor`` path where the sibling locales already cited
 the real ``aeat config repair`` (corrected to match); and the Spanish and
@@ -59,9 +49,7 @@ from __future__ import annotations
 
 import ast
 import re
-from collections import Counter
 from collections.abc import Iterator
-from dataclasses import replace
 from functools import cache
 from pathlib import Path
 from typing import cast
@@ -70,21 +58,17 @@ import click
 import pytest
 
 from cadrumo.application.operator_surface import HelpSurface, build_help_document, build_root_landing_report
-from cadrumo.core import scan_directory
+from cadrumo.core import ActionEvidenceProvenance, scan_directory
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+from cadrumo.core.json_contract import EnvelopeStatus
 from cadrumo.entrypoints.cli._verb_input_schema import DECLARED_UNIMPLEMENTED_SURFACES
 from cadrumo.tests.cli_runner import cadrumo_click_command
 from dev._paths import REPO_ROOT
+from dev.agent_eval._action_coverage import LeafConditionScenario, production_leaf_condition_scenario_matrix
+from dev.agent_eval._models import ExitCodeScenario, ObservedProductionActionAssertion, observe_production_action
+from dev.agent_eval._runner import check_exit_code_scenario
 from dev.locales import LocaleManager, LocaleNode
 from dev.locales.manager import locale_catalogue_source
-from dev.quality.cli_action_census import census
-from dev.quality.cli_action_census_dispositions import (
-    DEFAULT_DISPOSITIONS_PATH,
-    DispositionRole,
-    DispositionValidationError,
-    checked_in_dispositions,
-    validate_dispositions,
-)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -176,7 +160,7 @@ def _command_option_names(command: click.Command) -> frozenset[str]:
     """Long/short option strings declared on ``command``.
 
     Mirrors :func:`test_documented_command_conformance._command_option_names`
-    so the suggestion surface validates cited ``--option`` tokens against the
+    so the operator-instruction surface validates cited ``--option`` tokens against the
     same authoritative live-parameter set the how-to docs are checked against.
     """
     names: set[str] = set()
@@ -187,7 +171,7 @@ def _command_option_names(command: click.Command) -> frozenset[str]:
     return frozenset(names)
 
 
-# An ``--option`` / ``-o`` token in suggestion text. ``--help`` is always valid
+# An ``--option`` / ``-o`` token in operator-instruction text. ``--help`` is always valid
 # (it is a root global), so it never reaches the option-validity check; the
 # pattern still captures it so the citation's trailing-help recovery works.
 # A trailing ``=`` form (``--format=json``) is split to the bare option name.
@@ -249,7 +233,7 @@ def _iter_citations(text: str) -> Iterator[tuple[str, tuple[str, ...], bool, tup
 
     ``cited_options`` are the ``--option`` / ``-o`` tokens the regex drops,
     recovered from the text following the verb path (up to the next citation),
-    so a suggestion can be validated against the resolved command's parameter
+    so an operator instruction can be validated against the resolved command's parameter
     set — catching a dead option (e.g. ``... split <id> --dry-run`` where
     ``split`` has no ``--dry-run``) the verb-only check could never see.
     """
@@ -275,7 +259,7 @@ def _dead_citations_in(text: str, *, origin: str, require_runnable_leaf: bool = 
     A citation is dead when one of its tokens does not resolve in the live tree
     — always a failure.
 
-    When ``require_runnable_leaf`` is set (the operator-suggestion surface:
+    When ``require_runnable_leaf`` is set (the operator-instruction surface:
     curated help ``command`` fields,
     where the cited string IS the command the operator is told to run), a
     citation that resolves cleanly to a command GROUP with no trailing
@@ -284,15 +268,16 @@ def _dead_citations_in(text: str, *, origin: str, require_runnable_leaf: bool = 
     ``<group> --help`` IS runnable and is accepted. The flag is OFF for the
     broad production-string-literal scan, where a bare ``aeat config google``
     is overwhelmingly a prose/docstring reference to a command *family*, not a
-    runnable suggestion, and group-termination is legitimate there.
+    runnable instruction, and group-termination is legitimate there.
 
     The flag ALSO gates option validity: under ``require_runnable_leaf`` every
     cited ``--option`` must be a real parameter of the resolved command (or a
-    root-global option), so a suggestion citing an option the target verb does
-    not declare (e.g. ``... split <id> --dry-run`` where ``split`` carries only
-    ``--yes``) is flagged. Option validity is scoped to the runnable-suggestion
-    surfaces because reference prose can legitimately mention an option in the
-    abstract; a runnable suggestion is the line the operator pastes verbatim.
+    root-global option), so an instruction citing an option the target verb
+    does not declare (e.g. ``... split <id> --dry-run`` where ``split`` carries
+    only ``--yes``) is flagged. Option validity is scoped to runnable
+    instructions because reference prose can legitimately mention an option in
+    the abstract; a runnable instruction is the line the operator pastes
+    verbatim.
     """
     failures: list[str] = []
     for cited, tokens, has_trailing_help, cited_options in _iter_citations(text):
@@ -314,7 +299,7 @@ def _dead_citations_in(text: str, *, origin: str, require_runnable_leaf: bool = 
         if require_runnable_leaf and terminates_on_group and not has_trailing_help:
             failures.append(
                 f"{origin}: cites {cited!r} which resolves to a command GROUP, not a runnable leaf; "
-                "append a child command or cite '... --help' so the suggestion runs verbatim"
+                "append a child command or cite '... --help' so the instruction runs verbatim"
             )
         if require_runnable_leaf and cited_options:
             command = _resolve_leaf_command(tokens)
@@ -352,170 +337,6 @@ def _iter_production_modules() -> Iterator[Path]:
             if "tests" in module_path.parts:
                 continue
             yield module_path
-
-
-def test_checked_in_action_dispositions_reconcile_bidirectionally_with_the_real_census(tmp_path: Path) -> None:
-    """The ledger covers every current site and rejects every coverage escape.
-
-    This is deliberately a real-HEAD reconciliation, not a hand-built list of
-    expected rows: the census defines the production denominator, while the
-    checked-in TOML supplies the independent adjudication.  The mutation probes
-    make each rejection arm bite against that actual pair without reimplementing
-    either scanner or validator in test code.
-    """
-    candidates = census("HEAD")
-    rows = checked_in_dispositions("HEAD")
-    assert candidates, "the production action census is unexpectedly empty"
-    assert rows, "the checked-in action-disposition ledger is unexpectedly empty"
-    assert validate_dispositions(candidates, rows) == rows
-
-    current = rows[0]
-    missing = tuple(row for row in rows if row.key != current.key)
-    with pytest.raises(DispositionValidationError, match="missing disposition for current census candidate"):
-        validate_dispositions(candidates, missing)
-
-    with pytest.raises(DispositionValidationError, match="duplicate current disposition"):
-        validate_dispositions(candidates, (*rows, current))
-
-    stale = replace(current, key=replace(current.key, action_identity=f"{current.key.action_identity}<stale>"))
-    replaced_with_stale = tuple(stale if row.key == current.key else row for row in rows)
-    with pytest.raises(DispositionValidationError, match="stale disposition has no current census candidate"):
-        validate_dispositions(candidates, replaced_with_stale)
-
-    excluded = next(row for row in rows if row.role is DispositionRole.EXCLUDED)
-    ungrounded = replace(excluded, exclusion=None)
-    replaced_with_ungrounded = tuple(ungrounded if row.key == excluded.key else row for row in rows)
-    with pytest.raises(DispositionValidationError, match="requires symbol and enclosing_function grounding"):
-        validate_dispositions(candidates, replaced_with_ungrounded)
-
-    malformed = tmp_path / DEFAULT_DISPOSITIONS_PATH.name
-    malformed.write_text(
-        DEFAULT_DISPOSITIONS_PATH.read_text(encoding="utf-8").replace(
-            "[[disposition]]",
-            "[[disposition]]\nunrecognized_row = true",
-            1,
-        ),
-        encoding="utf-8",
-    )
-    with pytest.raises(DispositionValidationError, match="unrecognized field\\(s\\): unrecognized_row"):
-        checked_in_dispositions("HEAD", path=malformed)
-
-
-def test_action_ledger_marks_known_return_and_provenance_clusters_as_producers() -> None:
-    """Known action-chain helpers must not regress to syntactic exclusions.
-
-    These are deliberately real census rows rather than stand-in records.  Each
-    tuple exercises a distinct transport from a literal to the operator or
-    durable action chain: workflow recovery, wizard readiness, auth guidance,
-    modelo binding recovery, profile repair, and application/CLI ledger
-    ``source_command`` provenance.
-    """
-    rows = checked_in_dispositions("HEAD")
-    by_identity = {(row.key.path, row.key.enclosing_symbol, row.key.action_identity): row for row in rows}
-    expected = {
-        (
-            "src/cadrumo/application/workflow/_profile_health.py",
-            "_no_active_profile_next_action",
-            "aeat config login NAME",
-        ),
-        (
-            "src/cadrumo/application/wizard/_status.py",
-            "_next_wizard_action",
-            "aeat config profile create NAME",
-        ),
-        (
-            "src/cadrumo/application/auth/_operator.py",
-            "_auth_configure_next_action",
-            "aeat config auth configure --provider ",
-        ),
-        (
-            "src/cadrumo/entrypoints/cli/_modelo.py",
-            "_bindings_discovery_command",
-            "aeat app modelo bindings list --missing",
-        ),
-        (
-            "src/cadrumo/entrypoints/cli/_config/_repair_profile.py",
-            "_profile_record_repair_next_action",
-            "aeat config repair profile --clear-active --yes",
-        ),
-        (
-            "src/cadrumo/application/ledger/_actions_lifecycle.py",
-            "archive_manual_transaction",
-            "aeat app ledger archive",
-        ),
-        (
-            "src/cadrumo/entrypoints/cli/_ledger_lifecycle_cli.py",
-            "ledger_archive",
-            "aeat app ledger archive",
-        ),
-    }
-
-    missing = expected - by_identity.keys()
-    assert not missing, f"the real census lost action-chain rows: {sorted(missing)}"
-    misclassified = {
-        identity: by_identity[identity].role.value
-        for identity in expected
-        if by_identity[identity].role is not DispositionRole.PRODUCER
-    }
-    assert not misclassified, f"action-chain command literals were not adjudicated as producers: {misclassified}"
-
-
-def test_action_ledger_exclusions_have_specific_non_action_contexts() -> None:
-    """An exclusion needs a non-action role, not absence of a scanner sink.
-
-    The remaining exclusions are static CRUD contract identifiers and resource
-    names, or the schema-derived CLI rendering prefix.  They each carry a
-    source-specific reason; this rejects the former generic syntactic rationale
-    without introducing a fragile numerical baseline.
-    """
-    rows = checked_in_dispositions("HEAD")
-    exclusions = [row for row in rows if row.role is DispositionRole.EXCLUDED]
-    assert exclusions, "the non-action static-contract rows were unexpectedly lost"
-    reasons = [row.reason for row in exclusions]
-    stale_generic = (
-        "without an action alias",
-        "source reference/example",
-        "action-bearing assignment",
-        "renderer sink",
-    )
-    assert not [reason for reason in reasons if any(marker in reason for marker in stale_generic)]
-    assert len(reasons) == len(set(reasons)), "each exclusion needs its own source-context reason"
-
-    category_templates: Counter[tuple[str, str]] = Counter()
-    for row in exclusions:
-        path = row.key.path
-        reason = row.reason
-        if path == "src/cadrumo/application/operator_surface/_crud_registry.py":
-            assert "static cli_path on MutatingNounGroupContract" in reason
-            category = "static-crud-contract"
-        else:
-            pytest.fail(f"exclusion has no approved non-action source context: {row.key.render()}")
-
-        # The source coordinate and quoted identity distinguish individual rows,
-        # but neither proves the explanation is semantic.  Strip those volatile
-        # values while retaining the exclusion category, then cap one repeated
-        # generic template at six: the current CRUD and resource catalogues each
-        # have six explicit members.  A seventh needs its own behavior detail,
-        # not another copy of a mechanically generated rationale.
-        normalized = re.sub(r"^src/[^:]+:\d+ [^:]+: ", "<source>: ", reason)
-        normalized = re.sub(r"'[^']*'", "<quoted-identity>", normalized)
-        category_templates[(category, normalized)] += 1
-
-    def repeated_template_overflow(
-        templates: Counter[tuple[str, str]],
-    ) -> dict[tuple[str, str], int]:
-        return {(category, template): count for (category, template), count in templates.items() if count > 6}
-
-    over_repeated = repeated_template_overflow(category_templates)
-    assert not over_repeated, f"generic exclusion reason template repeated too broadly: {over_repeated}"
-
-    # Prove the normalized-template ratchet is active against a real current
-    # exclusion reason, rather than merely observing that today's six-member
-    # categories happen to sit below the threshold.
-    category, template = next(iter(category_templates))
-    repeated = category_templates.copy()
-    repeated[(category, template)] = 7
-    assert repeated_template_overflow(repeated) == {(category, template): 7}
 
 
 def _iter_help_entry_commands() -> Iterator[tuple[str, str]]:
@@ -670,216 +491,18 @@ def test_operator_help_documents_cite_live_commands() -> None:
     )
 
 
-# The runnable-suggestion fields: a string assigned to one of these — as a
-# keyword argument (``suggestion=...``) or a dict value (``{"recovery": ...}``)
-# — is a command the operator is told to run, so it MUST resolve to a runnable
-# leaf, never a bare command group. Other literals (docstrings, ``cli_path=``
-# path-root declarations, help-document heading/paragraph prose) name a command
-# *family* in reference and legitimately terminate on a group; they stay under
-# the dead-token check only.
-_RUNNABLE_SUGGESTION_KEYS = frozenset({"suggestion", "recovery", "next_action"})
-
-
-def _runnable_suggestion_node_ids(tree: ast.AST) -> set[int]:
-    """Collect ``id()`` of every string ``Constant`` used as a runnable-suggestion value.
-
-    Matches both ``suggestion="aeat ..."`` keyword arguments and
-    ``{"recovery": "aeat ..."}`` / ``{"next_action": "aeat ..."}`` dict
-    entries, where the operator is directed to run the cited command verbatim.
-    """
-    suggestion_ids: set[int] = set()
-    for node in ast.walk(tree):
-        if isinstance(node, ast.keyword) and node.arg in _RUNNABLE_SUGGESTION_KEYS:
-            if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
-                suggestion_ids.add(id(node.value))
-        elif isinstance(node, ast.Dict):
-            for key, value in zip(node.keys, node.values, strict=True):
-                if (
-                    isinstance(key, ast.Constant)
-                    and key.value in _RUNNABLE_SUGGESTION_KEYS
-                    and isinstance(value, ast.Constant)
-                    and isinstance(value.value, str)
-                ):
-                    suggestion_ids.add(id(value))
-    return suggestion_ids
-
-
-def _dotted_name(node: ast.expr) -> tuple[str, ...] | None:
-    """Return a dotted reference path when ``node`` is made only of names/attributes."""
-    if isinstance(node, ast.Name):
-        return (node.id,)
-    if isinstance(node, ast.Attribute):
-        parent = _dotted_name(node.value)
-        return (*parent, node.attr) if parent is not None else None
-    return None
-
-
-def _canonical_notice_constructor_references(tree: ast.Module) -> tuple[frozenset[str], frozenset[tuple[str, ...]]]:
-    """Return local and qualified references to the envelope ``Notice`` model.
-
-    The boundary is import-derived rather than based on a class name alone:
-    LLM proposal objects and exception metadata also use ``suggestion``, but
-    neither is the envelope ``Notice`` imported from ``core.json_contract``.
-    """
-    names: set[str] = set()
-    qualified: set[tuple[str, ...]] = set()
-    for node in tree.body:
-        if isinstance(node, ast.ImportFrom) and node.module is not None:
-            if node.module.endswith("core.json_contract"):
-                for imported in node.names:
-                    if imported.name in {"Notice", "*"}:
-                        names.add(imported.asname or "Notice")
-            elif node.module.endswith("core"):
-                for imported in node.names:
-                    if imported.name == "json_contract":
-                        qualified.add((imported.asname or imported.name, "Notice"))
-            continue
-        if not isinstance(node, ast.Import):
-            continue
-        for imported in node.names:
-            if not imported.name.endswith("core.json_contract"):
-                continue
-            if imported.asname is not None:
-                qualified.add((imported.asname, "Notice"))
-            else:
-                qualified.add((*imported.name.split("."), "Notice"))
-
-    # A source-level alias is still the same constructor. Repeating until the
-    # set stabilises also follows a short chain such as ``Notice2 = Notice1``.
-    while True:
-        aliases = {
-            target.id
-            for node in tree.body
-            if isinstance(node, ast.Assign)
-            and ((isinstance(node.value, ast.Name) and node.value.id in names) or _dotted_name(node.value) in qualified)
-            for target in node.targets
-            if isinstance(target, ast.Name)
-        }
-        if aliases <= names:
-            break
-        names.update(aliases)
-    return frozenset(names), frozenset(qualified)
-
-
-def _is_canonical_notice_constructor(
-    call: ast.Call, names: frozenset[str], qualified: frozenset[tuple[str, ...]]
-) -> bool:
-    """Return whether ``call`` constructs the imported envelope ``Notice``."""
-    if isinstance(call.func, ast.Name):
-        return call.func.id in names
-    return _dotted_name(call.func) in qualified
-
-
-def _function_parameter_names(node: ast.FunctionDef | ast.AsyncFunctionDef) -> frozenset[str]:
-    """Return every declared parameter name without inferring values or types."""
-    parameters = (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs)
-    if node.args.vararg is not None:
-        parameters = (*parameters, node.args.vararg)
-    if node.args.kwarg is not None:
-        parameters = (*parameters, node.args.kwarg)
-    return frozenset(parameter.arg for parameter in parameters)
-
-
-def _notice_suggestion_transport_failures(module_path: Path) -> list[str]:
-    """Report every remaining legacy transport into or out of ``Notice``.
-
-    The migration removes free-text ``suggestion`` from the typed notice
-    envelope. This is a structural scan of production source, covering three
-    ways that retired transport can survive:
-
-    * a canonical ``Notice(..., suggestion=...)`` producer;
-    * a helper parameter named ``suggestion`` that projects it into such a
-      ``Notice``; and
-    * a direct ``notice.suggestion`` consumer.
-
-    The canonical import check is intentional context: it excludes domain LLM
-    suggestion objects and exception ``suggestion`` metadata without a
-    path/line allowlist or a fragile current-count baseline.
-    """
-    tree = ast.parse(module_path.read_text(encoding="utf-8"))
-    notice_names, qualified_notice_names = _canonical_notice_constructor_references(tree)
-    relative = module_path.relative_to(_PACKAGE_ROOT.parent).as_posix()
-    failures: list[str] = []
-    notice_calls = [
-        node
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call) and _is_canonical_notice_constructor(node, notice_names, qualified_notice_names)
-    ]
-
-    for call in notice_calls:
-        for keyword in call.keywords:
-            if keyword.arg == "suggestion":
-                failures.append(f"{relative}:{call.lineno}: canonical Notice producer passes suggestion=")
-
-    for function in ast.walk(tree):
-        if not isinstance(function, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            continue
-        if "suggestion" not in _function_parameter_names(function):
-            continue
-        projects_parameter = any(
-            keyword.arg == "suggestion"
-            and any(isinstance(value, ast.Name) and value.id == "suggestion" for value in ast.walk(keyword.value))
-            for call in ast.walk(function)
-            if isinstance(call, ast.Call)
-            and _is_canonical_notice_constructor(call, notice_names, qualified_notice_names)
-            for keyword in call.keywords
-        )
-        if projects_parameter:
-            failures.append(
-                f"{relative}:{function.lineno}: helper {function.name} accepts suggestion "
-                "for canonical Notice projection"
-            )
-
-    for node in ast.walk(tree):
-        if (
-            isinstance(node, ast.Attribute)
-            and node.attr == "suggestion"
-            and isinstance(node.value, ast.Name)
-            and node.value.id == "notice"
-        ):
-            failures.append(f"{relative}:{node.lineno}: direct notice.suggestion consumer")
-    return failures
-
-
-def _iter_notice_transport_production_modules() -> Iterator[Path]:
-    """Yield every real package module, excluding only test code."""
-    for module_path in scan_directory(_PACKAGE_ROOT, pattern="*.py", recursive=True):
-        if "tests" not in module_path.parts:
-            yield module_path
-
-
-def test_no_legacy_notice_suggestion_transport_survives() -> None:
-    """The typed ``Notice.action`` projection owns all executable recovery data."""
-    failures: list[str] = []
-    for module_path in _iter_notice_transport_production_modules():
-        failures.extend(_notice_suggestion_transport_failures(module_path))
-
-    assert not failures, "legacy Notice suggestion transport remains:\n" + "\n".join(failures)
-
-
 def test_production_string_literals_cite_live_commands() -> None:
     """Every ``aeat app/config`` literal in production modules stays live.
 
-    AST extraction covers exactly the surfaces the pull/--file rule names as
-    ungated: write-policy allowlists, ``next_action`` builders, envelope
-    builders, and any future suggestion string a feature module grows.
-    Comments cannot false-positive (they are not AST constants).
-
-    Two checks per literal: every citation's tokens must resolve (dead-token
-    check, all literals), and a literal assigned to a runnable-suggestion field
-    (``suggestion=`` / ``recovery`` / ``next_action``)
-    must additionally resolve to a runnable LEAF — a bare command group with no
-    trailing ``--help`` is not executable verbatim and fails. Reference prose
-    (docstrings, ``cli_path=`` path roots, help headings) names a command
-    family and legitimately terminates on a group, so the runnable-leaf check
-    is scoped to the suggestion fields only.
+    The gate reads the live Click tree as the sole command authority. Comments
+    cannot false-positive because the source scan visits AST string constants,
+    while command-family prose may legitimately end at a group.
     """
     failures: list[str] = []
     citation_count = 0
     for module_path in _iter_production_modules():
         tree = ast.parse(module_path.read_text(encoding="utf-8"))
         relative = module_path.relative_to(_PACKAGE_ROOT.parent).as_posix()
-        suggestion_ids = _runnable_suggestion_node_ids(tree)
         for node in ast.walk(tree):
             if isinstance(node, ast.Constant) and isinstance(node.value, str):
                 citation_count += _count_citations(node.value)
@@ -887,7 +510,6 @@ def test_production_string_literals_cite_live_commands() -> None:
                     _dead_citations_in(
                         node.value,
                         origin=f"{relative}:{node.lineno}",
-                        require_runnable_leaf=id(node) in suggestion_ids,
                     )
                 )
     assert not failures, "\n".join(failures)
@@ -895,6 +517,131 @@ def test_production_string_literals_cite_live_commands() -> None:
         f"only {citation_count} command citations found across production string literals; "
         "the extractor appears blind — the scan roots carried 760+ when adapters/ enrolled"
     )
+
+
+def _precondition_observed_from_live_profile(
+    coverage: LeafConditionScenario,
+) -> ObservedProductionActionAssertion:
+    """Build an application verdict from one S42 row, then observe it through S43.
+
+    The builder resolves the registered modelo profile itself.  Argument names
+    come from the resolved catalogue declaration, so this gate contains no
+    scenario-owned action identifier, recovery command, or binding schema.
+    """
+    from cadrumo.application.modelo._preconditions import build_modelo_precondition_failure_for_scenario
+
+    resolved_action = coverage.profile.resolved_action
+    action_argument_values = (
+        None
+        if resolved_action is None
+        else {
+            specification.argument_name: f"s45-observation-{specification.argument_name}"
+            for specification in resolved_action.declaration.argument_specifications
+        }
+    )
+    verdict = build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key=coverage.subject_leaf_key,
+        scenario_id=coverage.scenario_id,
+        evidence_id="agent_eval.s45.live_profile",
+        evidence_values={"scenario": coverage.scenario_id},
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        action_argument_values=action_argument_values,
+    ).verdict
+    return observe_production_action(coverage, verdict)
+
+
+def _assert_complete_bijective_observation_join(
+    matrix: tuple[LeafConditionScenario, ...],
+    observations: tuple[ObservedProductionActionAssertion, ...],
+) -> None:
+    """Require the S42 declaration set and observed S43/S44 identities to match exactly."""
+    declared = {coverage.identity for coverage in matrix}
+    observed = tuple(assertion.leaf_condition_scenario for assertion in observations)
+    duplicate_observations = sorted(identity for identity in set(observed) if observed.count(identity) > 1)
+    missing = sorted(declared - set(observed))
+    undeclared = sorted(set(observed) - declared)
+
+    assert not duplicate_observations, f"observed identities duplicate live declarations: {duplicate_observations}"
+    assert not missing, f"live declarations lack an observation: {missing}"
+    assert not undeclared, f"observations lack a live declaration: {undeclared}"
+
+
+def test_live_action_declarations_and_observations_join_bidirectionally() -> None:
+    """Every S42 declaration has one successful S43 observation, and no extras survive."""
+    matrix = production_leaf_condition_scenario_matrix().rows
+    observations = tuple(_precondition_observed_from_live_profile(coverage) for coverage in matrix)
+
+    assert matrix, "the S42 production leaf-condition matrix is unexpectedly empty"
+    assert all(assertion.passed for assertion in observations)
+    _assert_complete_bijective_observation_join(matrix, observations)
+
+
+def test_live_action_observation_join_rejects_missing_duplicate_and_undeclared_rows() -> None:
+    """Mutation probes make every arm of the declaration-to-observation join bite."""
+    matrix = production_leaf_condition_scenario_matrix().rows
+    observations = tuple(_precondition_observed_from_live_profile(coverage) for coverage in matrix)
+    first = observations[0]
+    undeclared = first.model_copy(
+        update={
+            "leaf_condition_scenario": (
+                first.leaf_condition_scenario[0],
+                first.leaf_condition_scenario[1],
+                f"{first.leaf_condition_scenario[2]}.s45-undeclared",
+            ),
+        }
+    )
+
+    with pytest.raises(AssertionError, match="lack an observation"):
+        _assert_complete_bijective_observation_join(matrix, observations[1:])
+    with pytest.raises(AssertionError, match="identities duplicate"):
+        _assert_complete_bijective_observation_join(matrix, (*observations, first))
+    with pytest.raises(AssertionError, match="lack a live declaration"):
+        _assert_complete_bijective_observation_join(matrix, (*observations, undeclared))
+
+
+def test_s44_runner_observes_every_live_no_recovery_outcome_without_dispatch(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """S44 consumes S42/S43's live observation for terminal outcomes without inferring recovery."""
+    from cadrumo.application.modelo._preconditions import build_modelo_precondition_failure_for_scenario
+
+    def fail_on_dispatch(*_args: object, **_kwargs: object) -> None:
+        pytest.fail("no-recovery outcomes must not dispatch a canonical CLI action")
+
+    monkeypatch.setattr("dev.agent_eval._runner._invoke_canonical_cli", fail_on_dispatch)
+
+    no_recovery_rows = tuple(
+        coverage
+        for coverage in production_leaf_condition_scenario_matrix().rows
+        if coverage.profile.declaration.action is None
+    )
+    assert no_recovery_rows, "the live matrix no longer declares a terminal no-recovery outcome"
+
+    runner_observations: list[ObservedProductionActionAssertion] = []
+    for coverage in no_recovery_rows:
+        verdict = build_modelo_precondition_failure_for_scenario(
+            subject_leaf_key=coverage.subject_leaf_key,
+            scenario_id=coverage.scenario_id,
+            evidence_id="agent_eval.s45.runner_no_recovery",
+            evidence_values={"scenario": coverage.scenario_id},
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        ).verdict
+        result = check_exit_code_scenario(
+            ExitCodeScenario(
+                name=f"s45-{coverage.scenario_id}",
+                command=coverage.subject_leaf_key,
+                expected_exit_code=1,
+                tool_result_status=EnvelopeStatus.ERROR,
+                leaf_condition_scenario=coverage.identity,
+            ),
+            exit_code=1,
+            envelope={"command": coverage.subject_leaf_key, "status": EnvelopeStatus.ERROR.value, "notices": []},
+            precondition_verdict=verdict,
+        )
+        assert result.passed, result.failures
+        runner_observations.append(result.production_action_assertion)
+
+    _assert_complete_bijective_observation_join(no_recovery_rows, tuple(runner_observations))
 
 
 def _iter_locale_leaves(node: LocaleNode, prefix: str = "") -> Iterator[tuple[str, str]]:
@@ -917,20 +664,18 @@ def test_locale_catalogues_cite_live_commands() -> None:
     """Every ``aeat app/config`` citation inside the four locale catalogues stays live.
 
     The four shipped locale catalogues (``en``/``es``/``ca``/``hu``) carry the
-    same class of operator-facing citations as the error-registry suggestions
-    and curated help documents, inside translated suggestion and error text.
+    same class of operator-facing citations as curated help documents, inside
+    translated operator and error text.
     This module's own docstring named the catalogues as the one remaining
     ungated surface; this test closes that gap.
 
     ``require_runnable_leaf`` is intentionally OFF here, matching
-    :func:`test_production_string_literals_cite_live_commands` rather than
-    :func:`test_error_registry_suggestions_cite_live_commands`: a locale leaf
-    is a mix of runnable suggestions and reference prose (e.g. a legitimately
-    bare ``aeat config repair`` citation, a command GROUP that is genuinely
-    runnable because its Typer callback executes with no subcommand), so
-    scoping the check to the dead-token class only (a token that resolves to
-    nothing in the live tree) avoids false-flagging a live bare-group
-    citation while still catching a renamed or invented verb.
+    :func:`test_production_string_literals_cite_live_commands`: a locale leaf
+    is a mix of runnable instructions and reference prose (e.g. a legitimately
+    bare ``aeat config repair`` citation), so scoping the check to the
+    dead-token class only (a token that resolves to nothing in the live tree)
+    avoids false-flagging a live bare-group citation while still catching a
+    renamed or invented verb.
     """
     manager = LocaleManager(_PACKAGE_ROOT, _LOCALES_DIR)
     # Resolved per language rather than by scanning for "*.yml": a catalogue
@@ -1065,11 +810,11 @@ def test_scanner_flags_a_group_citation() -> None:
 def test_scanner_flags_a_dead_option_citation() -> None:
     """Anti-tautology proof for the option-validity rule.
 
-    A runnable suggestion that cites an ``--option`` the resolved leaf does NOT
+    A runnable operator instruction that cites an ``--option`` the resolved leaf does NOT
     declare is flagged; the same leaf's REAL option passes. ``aeat app ledger
     split`` is a real leaf carrying ``--yes`` (the destructive-confirm flag) but
     NOT ``--dry-run`` (only ``remove`` / ``reset`` have a dry-run preview), so a
-    suggestion steering the operator to ``... split <id> --dry-run`` sends them
+    instruction steering the operator to ``... split <id> --dry-run`` sends them
     to a flag the command does not accept. This is the dead-option class the
     verb-only check could never see.
     """
@@ -1094,201 +839,3 @@ def test_scanner_flags_a_dead_option_citation() -> None:
     # Option validity is OFF for reference prose (no strict flag), so an abstract
     # mention of an option does not false-positive.
     assert not _dead_citations_in("The aeat app ledger split verb has no --dry-run preview.", origin="synthetic")
-
-
-# ── suggestions must survive the redaction funnel ──────────────────
-#
-# The citation checks above prove a suggested command EXISTS. They cannot
-# prove it is USABLE, and those are different failures: a suggestion rides
-# the notices channel, so it is redacted with the rest of the envelope
-# before the operator ever sees it. A verb that resolves is worthless if its
-# arguments arrive hashed.
-#
-# The evidence-extract hint embedded the extracted supplier NIF and reached
-# the operator as ``--counterparty-nif sha256:1c9f9632``. It broke for
-# natural-person suppliers -- most freelance invoices -- and kept working for
-# companies, so the common path was broken and the uncommon one hid it.
-#
-# The literal scanner above could never have caught it. The extracted
-# ``ast.Constant`` was ``"...catalogue create --kind received "``; the NIF
-# arrived in a separate ``FormattedValue`` of the same f-string, invisible to
-# a check that only reads constants. That is why this scans INTERPOLATIONS.
-
-#: Rule name -> the identifier-name tokens that carry a value that rule redacts.
-#:
-#: This is the one hand-written half, and it is hand-written because the two
-#: vocabularies genuinely differ: the funnel matches VALUE SHAPES, while this
-#: gate can only see the NAME of an interpolated expression. The defect that
-#: prompted the gate is the proof -- its identifier was ``supplier_tax_id``,
-#: which contains no rule name, so deriving tokens from ``default_rules()``
-#: alone would have missed the very case this exists to prevent.
-#:
-#: The coupling is therefore made LOUD rather than left implicit:
-#: :func:`test_every_redaction_rule_declares_its_identifier_vocabulary` fails
-#: when a rule ships without an entry here, naming it. The funnel gained three
-#: arms in one day (NIF/NIE, CIF, then IBAN); a quietly hand-maintained set
-#: would have rotted on the first of them.
-_REDACTABLE_IDENTIFIER_TOKENS: dict[str, frozenset[str]] = {
-    "nif-hash": frozenset({"nif", "nie", "tax_id", "taxid", "dni"}),
-    "nif-separated-hash": frozenset({"nif", "nie", "tax_id", "taxid", "dni"}),
-    "cif-hash": frozenset({"cif"}),
-    "nif-iva-hash": frozenset({"nif_iva", "iva_id", "iva_number"}),
-    "iban-hash": frozenset({"iban"}),
-    "url-host-only": frozenset({"url", "endpoint", "href"}),
-    # Bare ``token`` is deliberately absent. It is ordinary computing
-    # vocabulary here -- a period token (``1T``), a registry token, a parse
-    # token -- and including it flagged ``registry_token`` on the
-    # calculation-preparation hint, which carries a filing period and nothing
-    # redactable. The names that actually carry a credential are qualified, so
-    # the vocabulary is qualified too. The stated cost: a variable named
-    # exactly ``token`` carrying a real bearer value would not be seen. That
-    # is a narrower hole than a gate whose false positives get it disabled.
-    "token-fingerprint": frozenset({"secret", "credential", "api_key"}),
-    "bearer-token-fingerprint": frozenset({"bearer", "access_token", "refresh_token"}),
-}
-
-
-def _redactable_identifier_tokens() -> frozenset[str]:
-    """Return every identifier token that marks an interpolation as redactable."""
-    tokens: set[str] = set()
-    for values in _REDACTABLE_IDENTIFIER_TOKENS.values():
-        tokens.update(values)
-    return frozenset(tokens)
-
-
-def _interpolated_names(node: ast.AST) -> Iterator[str]:
-    """Yield the identifier name behind each value interpolated into ``node``.
-
-    Recurses through the expression forms a suggestion actually uses. The
-    ``or`` fallback shape is not hypothetical -- the original defect was
-    ``{draft.supplier_tax_id or '<nif>'}``, an :class:`ast.BoolOp` whose
-    redactable operand sits one level down, so a check reading only the
-    outermost expression would have passed it.
-    """
-    for child in ast.walk(node):
-        if isinstance(child, ast.FormattedValue):
-            for expression in ast.walk(child.value):
-                name = (
-                    expression.attr
-                    if isinstance(expression, ast.Attribute)
-                    else expression.id
-                    if isinstance(expression, ast.Name)
-                    else None
-                )
-                # A SCREAMING_CASE name is a declared module constant, never a
-                # taxpayer's value: the redactable shapes all arrive at runtime.
-                # Skipping them is a rule about what a constant IS rather than an
-                # exemption for a site, which matters because the alternative was
-                # allowlisting ``_NIF_IVA_AUTH_LOCKED_DESCRIPTOR`` -- a label
-                # naming AEAT's NIF-IVA service, carrying no identity at all.
-                if name is None or name.isupper():
-                    continue
-                yield name
-
-
-def _redactable_interpolations_in(tree: ast.AST, *, origin: str) -> list[str]:
-    """Report every suggestion in ``tree`` that interpolates a redactable name."""
-    tokens = _redactable_identifier_tokens()
-    failures: list[str] = []
-    for node in ast.walk(tree):
-        if not (isinstance(node, ast.keyword) and node.arg in _RUNNABLE_SUGGESTION_KEYS):
-            continue
-        for name in _interpolated_names(node.value):
-            lowered = name.lower()
-            matched = sorted(token for token in tokens if token in lowered)
-            if matched:
-                failures.append(f"{origin}:{node.value.lineno} interpolates {name!r} (matches {', '.join(matched)})")
-    return failures
-
-
-def test_every_redaction_rule_declares_its_identifier_vocabulary() -> None:
-    """A new redaction arm must state which identifier names carry its values.
-
-    This is the loud half of the coupling. The gate below can only match
-    NAMES, while the funnel matches VALUE SHAPES, so the bridge between them
-    cannot be derived -- but it can be forced to stay complete. A fourth arm
-    landing without an entry fails HERE, naming the rule, instead of silently
-    narrowing what the gate can see.
-    """
-    from cadrumo.core.redaction import default_rules
-
-    declared = frozenset(_REDACTABLE_IDENTIFIER_TOKENS)
-    shipped = frozenset(default_rules())
-
-    assert shipped - declared == frozenset(), (
-        f"redaction rules ship without an identifier vocabulary: {sorted(shipped - declared)}. "
-        "Add the identifier-name tokens that carry a value this rule redacts, so the "
-        "suggestion gate can see them."
-    )
-    assert declared - shipped == frozenset(), (
-        f"identifier vocabulary names rules that no longer ship: {sorted(declared - shipped)}. "
-        "Remove the stale entry rather than leaving the gate matching a retired arm."
-    )
-
-
-def test_no_suggestion_interpolates_a_redactable_identifier() -> None:
-    """No runnable suggestion may embed a value the funnel would hash.
-
-    This is REGRESSION PREVENTION, not defect discovery: the tree was swept
-    when this landed and the evidence hint was the only instance, so a green
-    run here is the expected result rather than evidence the scan works.
-    :func:`test_the_gate_flags_a_reconstructed_evidence_defect` is what proves
-    it can fail.
-    """
-    scanned = 0
-    failures: list[str] = []
-    for module_path in _iter_production_modules():
-        tree = ast.parse(module_path.read_text(encoding="utf-8"))
-        scanned += 1
-        failures.extend(_redactable_interpolations_in(tree, origin=str(module_path)))
-
-    assert scanned > 0, "the module scan matched nothing, so a green result here would be vacuous"
-    assert not failures, (
-        "a runnable suggestion embeds a value the redaction funnel hashes, so the operator "
-        "cannot run it as printed:\n" + "\n".join(failures)
-    )
-
-
-def test_the_gate_flags_a_reconstructed_evidence_defect() -> None:
-    """The scanner must fail on the shape that prompted it.
-
-    Reconstructs the retired evidence hint verbatim, including the ``or``
-    fallback that puts the redactable operand one level below the
-    interpolation. Without this the gate above passes for any tree with no
-    suggestions at all, and would keep passing if the extractor broke.
-    """
-    source = "\n".join(
-        (
-            "Notice(",
-            "    suggestion=(",
-            '        "aeat app ledger invoice add --kind received "',
-            "        f\"--counterparty-nif {draft.supplier_tax_id or '<nif>'} \"",
-            '        f"--invoice-number {draft.invoice_number}"',
-            "    ),",
-            ")",
-        ),
-    )
-
-    failures = _redactable_interpolations_in(ast.parse(source), origin="synthetic")
-
-    assert len(failures) == 1, failures
-    assert "supplier_tax_id" in failures[0]
-    assert "tax_id" in failures[0]
-
-
-def test_the_gate_does_not_flag_an_ordinary_interpolated_id() -> None:
-    """The control: a reference that survives the funnel must pass.
-
-    Work-unit, transaction and invoice ids are content-addressed digests the
-    funnel leaves alone by design, and every shipped suggestion embeds one of
-    those. A gate that flagged them would be refused on its first run and
-    rewritten into an allowlist, which is how this class of check dies.
-    """
-    source = "\n".join(
-        (
-            'Notice(suggestion=f"aeat app modelo work calculate {unit.work_unit_id}")',
-            'Notice(suggestion=f"aeat app ledger link <tx> --invoice-id {invoice.invoice_id}")',
-        ),
-    )
-
-    assert _redactable_interpolations_in(ast.parse(source), origin="synthetic") == []
