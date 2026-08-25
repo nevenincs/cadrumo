@@ -17,9 +17,11 @@ from cadrumo.domain.calculations.registry import CensoModeloEventKind
 from cadrumo.domain.calculations.registry._loader import load_modelo_directory
 from cadrumo.domain.calculations.registry._temporal import select_revision
 
+from ..check import SourceConnectivityCheckError, check_capability_locators
 from ..discovery import (
     assign_capabilities_to_census,
     discover_source_ownership,
+    discovered_source_capability_evidence,
     discovered_source_capability_ids,
     validate_census_completeness,
 )
@@ -42,10 +44,16 @@ def test_every_live_capability_has_exactly_one_frozen_census_assignment() -> Non
     assert all(count == 1 for count in assignment_counts.values())
 
 
-def test_new_capability_refuses_selector_digest_drift() -> None:
+@pytest.mark.parametrize(
+    "new_capability",
+    (
+        "calculation_helper:src/cadrumo/domain/probe.py:calculate_probe",
+        "ingress:src/cadrumo/entrypoints/cli/_unclassified_source_probe.py:record_source_probe",
+    ),
+)
+def test_new_capability_refuses_selector_digest_drift(new_capability: str) -> None:
     manifest = load_source_connectivity_census()
     discovered = discovered_source_capability_ids(REPO_ROOT)
-    new_capability = "calculation_helper:src/cadrumo/domain/probe.py:calculate_probe"
 
     with pytest.raises(ValueError, match="capability coverage drift"):
         assign_capabilities_to_census((*discovered, new_capability), manifest)
@@ -136,6 +144,90 @@ def test_modelo_036_profile_ownership_has_one_census_assignment_and_bites_on_rem
     mutated = ownership_manifest.model_copy(
         update={"entries": tuple(misplaced if item == entry else item for item in ownership_entries)}
     )
+    with pytest.raises(ValueError, match="capability coverage drift"):
+        assign_capabilities_to_census(discovered, mutated)
+
+
+def test_modelo_036_profile_ownership_uses_the_canonical_route_locator() -> None:
+    """The human-filed M036 row may name the profile resolver but owns it through the route."""
+    manifest = load_source_connectivity_census()
+    entry = next(item for item in manifest.entries if item.candidate_id == "censo.modelo-036-profile-status")
+    focused_manifest = manifest.model_copy(update={"entries": (entry,)})
+    evidence = discovered_source_capability_evidence(REPO_ROOT)
+    canonical_route = "src/cadrumo/application/modelo/_calculation_route.py"
+
+    assert canonical_route in entry.capability_locators
+    check_capability_locators(REPO_ROOT, focused_manifest, capability_evidence=evidence)
+
+    stale = entry.model_copy(
+        update={"capability_locators": tuple(item for item in entry.capability_locators if item != canonical_route)}
+    )
+    with pytest.raises(SourceConnectivityCheckError, match="census capability locator drift"):
+        check_capability_locators(
+            REPO_ROOT,
+            focused_manifest.model_copy(update={"entries": (stale,)}),
+            capability_evidence=evidence,
+        )
+
+
+def test_inventory_repository_ownership_uses_its_live_discovery_locator() -> None:
+    """Inventory's source candidate must retain the canonical encrypted-repository pointer."""
+    manifest = load_source_connectivity_census()
+    entry = next(item for item in manifest.entries if item.candidate_id == "inventory.stock-valuation")
+    focused_manifest = manifest.model_copy(update={"entries": (entry,)})
+    evidence = discovered_source_capability_evidence(REPO_ROOT)
+    repository_locator = "src/cadrumo/adapters/persistence/profile/inventory.py:121"
+
+    assert repository_locator in entry.capability_locators
+    check_capability_locators(REPO_ROOT, focused_manifest, capability_evidence=evidence)
+
+    stale = entry.model_copy(
+        update={"capability_locators": tuple(item for item in entry.capability_locators if item != repository_locator)}
+    )
+    with pytest.raises(SourceConnectivityCheckError, match="census capability locator drift"):
+        check_capability_locators(
+            REPO_ROOT,
+            focused_manifest.model_copy(update={"entries": (stale,)}),
+            capability_evidence=evidence,
+        )
+
+
+def test_new_calculation_helpers_preserve_their_reviewed_inventory_or_non_source_ownership() -> None:
+    """Keep new helper discovery from silently changing source-census ownership."""
+    manifest = load_source_connectivity_census()
+    discovered = discovered_source_capability_ids(REPO_ROOT)
+    assignments = assign_capabilities_to_census(discovered, manifest)
+    inventory = next(item for item in manifest.entries if item.candidate_id == "inventory.stock-valuation")
+    inventory_closing = (
+        "calculation_helper:src/cadrumo/domain/contribuyente/inventory/__init__.py:"
+        "resolve_inventory_authoritative_closing"
+    )
+    registry_helpers = {
+        "calculation_helper:src/cadrumo/domain/calculations/registry/_deadline_coordinate.py:"
+        "deadline_semantic_coordinate",
+        "calculation_helper:src/cadrumo/domain/calculations/registry/_deadline_coordinate.py:"
+        "deadline_window_semantic_coordinates",
+        "calculation_helper:src/cadrumo/domain/calculations/registry/_relations.py:source_presence_gaps",
+    }
+
+    assert inventory_closing in inventory.capability_ids
+    assert inventory_closing not in assignments["coverage.remaining-calculation-helpers"]
+    assert registry_helpers <= set(assignments["coverage.remaining-calculation-helpers"])
+
+    manual_m036_ingress = {
+        "ingress:src/cadrumo/entrypoints/cli/_modelo_m036_cli.py:m036_alta",
+        "ingress:src/cadrumo/entrypoints/cli/_modelo_m036_cli.py:m036_modificacion",
+        "ingress:src/cadrumo/entrypoints/cli/_modelo_m036_cli.py:m036_baja",
+    }
+    assert manual_m036_ingress <= set(assignments["coverage.remaining-ingress-surfaces"])
+
+    unowned_inventory = inventory.model_copy(
+        update={"capability_ids": tuple(item for item in inventory.capability_ids if item != inventory_closing)}
+    )
+    mutated = manifest.model_copy(
+        update={"entries": tuple(unowned_inventory if item is inventory else item for item in manifest.entries)}
+    )
+
     with pytest.raises(ValueError, match="capability coverage drift"):
         assign_capabilities_to_census(discovered, mutated)
 

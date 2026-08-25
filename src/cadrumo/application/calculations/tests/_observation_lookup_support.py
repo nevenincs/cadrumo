@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ....domain.calculations.registry import selector_period_matches_request
 from .._observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
 
 
@@ -21,6 +22,9 @@ def find_observation(
     """
     for payload in repo.iter_modelo(modelo):
         obs = payload.observation
-        if obs.filing_year == filing_year and obs.period == period:
+        # Compare the way the domain does: an administrative coordinate such
+        # as a censal alta normalises on the way in, so a raw == against the
+        # registry's own lowercase declaration would never match.
+        if obs.filing_year == filing_year and selector_period_matches_request(obs.period, period):
             return payload
     return None

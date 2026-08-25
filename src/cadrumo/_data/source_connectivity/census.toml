@@ -13,6 +13,7 @@ owner = "source-connectivity-campaign"
 review_condition = "Modelo 036's alta, modificacion, and baja are human-filed at AEAT Sede or a competent AEAT office. Cadrumo must not submit an M036 artifact: decl.event-kind receives operator-authoritative profile censo.status through ProfileSourceResolver, while the M036 lifecycle records the declared human filing and audit separately. Reconsider only if an accepted decision replaces that manual profile authority with a distinct authoritative source and complete live connected proof."
 capability_locators = [
   "src/cadrumo/application/aggregation/_source_profile.py:23",
+  "src/cadrumo/application/modelo/_calculation_route.py",
   "src/cadrumo/application/modelo/_m036_lifecycle.py:91",
 ]
 capability_ids = ["source_ownership:profile"]
@@ -56,8 +57,9 @@ disposition = "connect_candidate"
 owner = "source-connectivity-campaign"
 review_condition = "The accepted 2025 inventory prerequisites are complete through the strict schema-v3 projection for 0177, 0181, and 0182. The candidate remains disconnected until S39 and its follow-on resolver, source-mesh, orchestration, ownership, registry-binding, and live-proof steps connect that projection to calculation revisions."
 capability_locators = [
-  "src/cadrumo/adapters/persistence/profile/inventory.py:113",
+  "src/cadrumo/adapters/persistence/profile/inventory.py:121",
   "src/cadrumo/application/inventory/_source_readiness.py:33",
+  "src/cadrumo/domain/contribuyente/inventory/__init__.py:1160",
   "src/cadrumo/domain/contribuyente/inventory/__init__.py:1363",
   "src/cadrumo/application/inventory/_service.py:413",
   "src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py:237",
@@ -65,6 +67,7 @@ capability_locators = [
 capability_ids = [
   "secure_repository:src/cadrumo/adapters/persistence/profile/inventory.py:InventoryLedgerRepository",
   "source_readiness:src/cadrumo/application/inventory/_source_readiness.py:inventory_source_readiness",
+  "calculation_helper:src/cadrumo/domain/contribuyente/inventory/__init__.py:resolve_inventory_authoritative_closing",
   "calculation_helper:src/cadrumo/domain/contribuyente/inventory/__init__.py:compute_inventory_anexo_d_projection",
   "ingress:src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py:inventory_create",
   "ingress:src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py:inventory_movement_add",
@@ -82,7 +85,7 @@ registry_destination_candidates = [
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/adapters/persistence/profile/inventory.py:113"
+reference = "src/cadrumo/adapters/persistence/profile/inventory.py:121"
 summary = "Encrypted FINANCIAL schema-v3 inventory ledger repository persists activity/year movements, valuation inputs, complete acquisition cost, and closing authority."
 
 [[entries.grounding]]
@@ -354,12 +357,12 @@ disposition = "not_applicable"
 owner = "source-connectivity-campaign"
 capability_locators = ["dev/source_connectivity/discovery.py"]
 capability_selector = "remaining_calculation_helpers"
-expected_capability_digest = "sha256:1bd52137591b1878c9240528c0c9c63b753c074c0dca6a5e2b437f25a04ad541"
+expected_capability_digest = "sha256:3ddcba1760dbb46f65c8a1edd558516c24edb093348516bc01f1da73969aaddb"
 
 [[entries.grounding]]
 locator_kind = "repository"
 reference = "dev/source_connectivity/discovery.py"
-summary = "The frozen remainder contains exported arithmetic and aggregation helpers that are not independently accepted source candidates; inventory and finca exceptions have explicit rows."
+summary = "The frozen remainder contains exported arithmetic, deadline-coordinate, and source-presence validation helpers that neither acquire facts nor resolve a source; inventory and finca source-projection exceptions have explicit rows."
 
 [[entries]]
 candidate_id = "coverage.remaining-ingress-surfaces"
@@ -367,12 +370,12 @@ disposition = "not_applicable"
 owner = "source-connectivity-campaign"
 capability_locators = ["dev/source_connectivity/discovery.py"]
 capability_selector = "remaining_ingress_surfaces"
-expected_capability_digest = "sha256:0c80ce3e4e93d7d202e256bcaf4c9b1b540a936876e96c7f54f81b82726196fd"
+expected_capability_digest = "sha256:e46792929eaccb593e16d999a5a41929f3e3c2f826d80985cbd5df08a9bd09c1"
 
 [[entries.grounding]]
 locator_kind = "repository"
 reference = "dev/source_connectivity/discovery.py"
-summary = "The frozen remainder contains operator transport callbacks, not independent source facts; accepted source-specific ingress is covered by explicit candidate rows."
+summary = "The frozen remainder contains operator transport callbacks, including Modelo 036's human-filing declaration recording, not independent binding sources or resolvers; accepted source-specific ingress is covered by explicit candidate rows."
 
 [[entries]]
 candidate_id = "coverage.remaining-row-assemblers"

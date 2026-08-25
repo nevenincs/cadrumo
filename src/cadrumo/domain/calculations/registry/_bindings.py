@@ -24,7 +24,14 @@ from typing import Literal, TypeGuard
 
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
-from ....core import OBJECT_TUPLE_ADAPTER, STRICT_FROZEN_CONFIG, CasillaId, FilingPeriodCode, Period
+from ....core import (
+    OBJECT_TUPLE_ADAPTER,
+    STRICT_FROZEN_CONFIG,
+    CasillaId,
+    FilingPeriodCode,
+    Period,
+    RegistryPeriodCode,
+)
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, CounterpartSourceKind
 from ...iva_compensation import (
     M303_COMPENSATION_APLICADA_CASILLA,
@@ -462,7 +469,11 @@ class RegistryModeloObservation(BaseModel):
     modelo: ModeloId
     filing_period: Period | None = None
     filing_year: int = Field(ge=2000, le=2099)
-    period: FilingPeriodCode
+    #: A registry coordinate, not necessarily a period a taxpayer files in:
+    #: a non-filing modelo such as the censal 036 is addressed by its event
+    #: (alta, modificacion, baja) rather than by a calendar period. The
+    #: span-capable ``filing_period`` above stays ``None`` for those.
+    period: RegistryPeriodCode
     observations: tuple[CasillaObservation, ...] = Field(default_factory=tuple)
 
     @model_validator(mode="before")
@@ -481,8 +492,12 @@ class RegistryModeloObservation(BaseModel):
             return data
         try:
             filing_period = Period.from_year_and_code(filing_year, period)
-        except ValueError as exc:
-            raise RegistryValidationError("observation period must be a bare registry period token") from exc
+        except ValueError:
+            # An administrative coordinate has no calendar span, so a
+            # non-filing modelo simply carries no filing_period. A token that
+            # is not a registry period at all is still refused, by the field
+            # validator that runs after this one.
+            return data
         return {**payload, "filing_period": filing_period}
 
     @field_validator("observations", mode="before")
