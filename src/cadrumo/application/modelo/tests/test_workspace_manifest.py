@@ -81,9 +81,7 @@ def test_workspace_manifest_includes_every_public_selector_root_and_its_extra_un
 
     expected_roots = tuple(
         sorted(
-            f"selector.{source.value}"
-            for source in BindingSourceKind
-            if selector_model_for_source(source) is not None
+            f"selector.{source.value}" for source in BindingSourceKind if selector_model_for_source(source) is not None
         )
     )
     assert selector_roots == expected_roots
