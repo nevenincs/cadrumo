@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:bc3117990351349539eb7380d216caa9aaa2579b209bf3ff72955076ee5f1761'
+body_hash: 'sha256:77dcf1ffb1fe91a39ff677add42d5c6300eb251f425b1171a4603da7be72500f'
 related:
   - '[[2026-08-23-registry-unblock-loop-reference]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
@@ -89,6 +89,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W03-P05-S33]]'
   - '[[2026-08-24-registry-completeness-closure-W03-P05-S84]]'
   - '[[2026-08-24-registry-completeness-closure-W03-P05-S85]]'
+  - '[[2026-08-24-registry-completeness-closure-W03-P05-S86]]'
   - '[[2026-08-24-registry-completeness-closure-W03-P06-S34]]'
   - '[[2026-08-24-registry-completeness-closure-W03-P06-S35]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -409,6 +410,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W03-P05-S33` - Verify official export layout selection, mapped semantic owners, and emitted-byte offsets for every filing-grade revision
 - `2026-08-24-registry-completeness-closure-W03-P05-S84` - Implement a two-channel filing export proof port: value-independent official-layout conformance plus encrypted operator-specific source-owned replay, using only the canonical export_draft writer.
 - `2026-08-24-registry-completeness-closure-W03-P05-S85` - Dynamically classify every current filing-grade revision through canonical law selection, generated provenance, official source bytes, semantic owners, and positioned literal probes
+- `2026-08-24-registry-completeness-closure-W03-P05-S86` - Re-run S33 as the dynamic dual-channel release gate, including secure replay receipts and explicit per-revision refusal
 - `2026-08-24-registry-completeness-closure-W03-P06-S34` - Close registry-temporal-coverage predicate-relevant rows, execution records, summaries, stale assumptions, and final review
 - `2026-08-24-registry-completeness-closure-W03-P06-S35` - Close source-casilla-integration predicate-relevant rows, execution records, summaries, stale assumptions, and final review
 
