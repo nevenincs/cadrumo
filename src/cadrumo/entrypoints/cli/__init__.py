@@ -38,6 +38,9 @@ if TYPE_CHECKING:
     from ._config._google import OAuthClientPayload as OAuthClientPayload
     from ._modelo_rendering import calculation_revision_lines, calculation_revision_payload
     from ._verb_input_schema import cli_path_for_command_key as cli_path_for_command_key
+from ._config._manager_frontend import (
+    persist_active_profile_field as persist_active_profile_field,
+)
 from ._stdio import _disable_rich_cli_rendering as _disable_rich_cli_rendering
 from ._stdio import configure_stdio_for_utf8 as _configure_stdio_for_utf8
 
@@ -361,5 +364,6 @@ __all__ = [
     "current_operator_surface_reconciliation",
     "is_exposable_command",
     "main",
+    "persist_active_profile_field",
     "resolve_cli_precondition_action",
 ]

@@ -787,8 +787,8 @@ async def test_a_modal_secret_never_paints_its_value(tmp_path: Path) -> None:
             passphrase=_VISUAL_PASSWORD,
         )
         record = load_test_profile_record(require_active_bucket_id())
+        from .....entrypoints.cli import persist_active_profile_field
         from .....entrypoints.cli._config._manager_actions import manager_actions
-        from .....entrypoints.cli._config._manager_frontend import persist_active_profile_field
 
         app = ProfileManagerApp(
             build_profile_overview(record, label=_VISUAL_LABEL),

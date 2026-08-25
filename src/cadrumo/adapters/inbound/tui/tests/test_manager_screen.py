@@ -26,7 +26,7 @@ from .....application.user_profile import (
 )
 from .....core import require_active_bucket_id, resolve_active_bucket_id
 from .....core.i18n import tr
-from .....entrypoints.cli._config._manager_frontend import persist_active_profile_field
+from .....entrypoints.cli import persist_active_profile_field
 from .....tests.manager_pilot import wait_until_settled
 from .....tests.profile_capsule import load_test_profile_record
 from .....tests.secure_sql import isolated_profile_storage_root
