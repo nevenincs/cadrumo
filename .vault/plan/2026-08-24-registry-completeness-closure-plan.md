@@ -11,7 +11,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-22-source-casilla-integration-plan]]'
 modified: '2026-08-25'
-body_hash: 'sha256:0c59aecec74eafc42b1bbcceb5a7277cc2b4a12bc205bd3b69cfffdf12c96ddd'
+body_hash: 'sha256:87ab4a3b11cadcd9ae9d5d76330a1c015832963f266e58d326f17a74d71c9636'
 ---
 
 # `registry-completeness-closure` plan
@@ -142,7 +142,7 @@ Exercise the supported revision umbrella through localization, casilla continuit
 - [x] `W03.P05.S31` - Verify casilla identity, semantic linkage, and continuity chains across every supported revision boundary; `src/cadrumo/domain/calculations/registry/tests/`.
 - [x] `W03.P05.S32` - Verify binding selectors, resolver enrollment, calculation paths, and provenance for every filing-grade revision; `src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W03.P05.S33` - Verify official export layout selection, mapped semantic owners, and emitted-byte offsets for every filing-grade revision; `src/cadrumo/application/filing/tests/`.
-- [ ] `W03.P05.S84` - Implement a two-channel filing export proof port: value-independent official-layout conformance plus encrypted operator-specific source-owned replay, using only the canonical export_draft writer.; `src/cadrumo/application/filing/; dev/registry/`.
+- [x] `W03.P05.S84` - Implement a two-channel filing export proof port: value-independent official-layout conformance plus encrypted operator-specific source-owned replay, using only the canonical export_draft writer.; `src/cadrumo/application/filing/; dev/registry/`.
 - [ ] `W03.P05.S85` - Enroll dynamic filing-grade revisions in authoritative generated provenance and non-sensitive conformance vectors; `src/cadrumo/_data/registry/aeat/; dev/registry/`.
 - [ ] `W03.P05.S86` - Re-run S33 as the dynamic dual-channel release gate, including secure replay receipts and explicit per-revision refusal.; `dev/registry/tests/; dev/registry/conformance/`.
 
