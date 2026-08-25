@@ -162,7 +162,7 @@ and deletes it.
 """
 
 [[decision]]
-path = "dev/registry/_export_tree.py"
+path = "dev/registry/pipeline/_export_tree.py"
 disposition = "deferred"
 reference = "2026-08-14-registry-temporal-coverage-drift-census-audit"
 rationale = """
@@ -479,17 +479,17 @@ and imputacion totals. Initial values and a sign constraint, not amounts.
 # -- Grouped decisions, one per file and kind --------------------------------
 
 [[decision]]
-path = "dev/registry/_dp30302_field_matrix.py"
+path = "dev/registry/analysis/_dp30302_field_matrix.py"
 kind = "filing_year_literal"
 group = "registry-tooling-years"
 
 [[decision]]
-path = "dev/registry/_m390_auxiliary_envelope.py"
+path = "dev/registry/pipeline/_m390_auxiliary_envelope.py"
 kind = "filing_year_literal"
 group = "registry-tooling-years"
 
 [[decision]]
-path = "dev/registry/_parity_tapes.py"
+path = "dev/registry/parity/_parity_tapes.py"
 kind = "filing_year_literal"
 group = "registry-tooling-years"
 
@@ -509,7 +509,7 @@ kind = "dev_resident_regulatory_data"
 group = "dev-resident-epoch-data"
 
 [[decision]]
-path = "dev/registry/modelo_embed_classification.py"
+path = "dev/registry/analysis/modelo_embed_classification.py"
 kind = "filing_year_literal"
 group = "registry-tooling-years"
 
