@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:46f5ed80a402fe0d47d34ec1b4528ff12076ce9ee2931d5ab5abf2b2253209f7'
+body_hash: 'sha256:13359470ae8c206fc8be2ed5eca8ddeae7134fe9cf7a4d4a89b23ba11e302499'
 related: []
 ---
 
@@ -616,6 +616,42 @@ Recorded rather than guessed at. Note the shape for whoever continues: the
 useful next probe is asserting `output_language()` from inside the running app
 rather than from the test body, which distinguishes "the app sees a different
 language" from "the app resolved its copy earlier than the assertion assumes".
+
+## The 2026 filing year is admitted but modelo 390 cannot serve it
+
+Twenty application failures resolve to one refusal:
+
+```
+modelo 390: no revision for year=2026 period='0A'
+```
+
+`src/cadrumo/_data/registry/aeat/legal/supported-filing-years.toml` declares
+`years = [2022, 2023, 2024, 2025, 2026]`. Modelo 390 authors one revision per
+year and its latest is `2025`, so a 2026 filing coordinate resolves to nothing.
+Its siblings do not have this shape: modelos 303, 322 and 353 all carry
+`2026-y-siguientes`, and modelo 130 carries an open-ended `2019-y-siguientes`,
+so only 390's per-year authoring makes the admitted year unreachable.
+
+This is not a defect anyone introduced. The catalogue's own comment states the
+policy: "A year is admitted here only after the coverage audit enumerates its
+unresolved modelo/period prerequisites; the audit remains advisory until the
+separately authorised enforcement flip." Modelo 390's missing 2026 revision is
+one of those enumerated-but-unresolved prerequisites, and these twenty failures
+are that advisory state made visible in the suite.
+
+Closing it means authoring a modelo 390 revision for ejercicio 2026, which
+needs the AEAT orden that governs it. That orden is ordinarily published late
+in the year for a return filed the following January, so it may not exist yet --
+which is precisely why the prerequisite is deferred rather than outstanding.
+
+Recorded so these twenty stop being re-diagnosed: they are neither ordinary
+repair nor a regression, and they will not close until either the 2026 orden is
+published and its revision authored, or 2026 is withdrawn from the admitted
+years.
+
+I also want to correct an earlier claim in this campaign: I reported this
+cluster as "already fixed by peers" on the strength of `test_agenda` passing.
+That was one test, not the cluster. The twenty are still red.
 
 ## Durable lesson
 
