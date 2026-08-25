@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:9a8a7287fd9293d0e8da19de234104ba2c3b65da30d6e219fb97df29003e1448'
+body_hash: 'sha256:6e8777d6dfa22362d313ac87d4a9ebf74fa1304b54b6f0a70d783bfc3f69f7b9'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
@@ -54,4 +54,44 @@ residual: direct-import cutover for remaining assembly/dispatch, frontend, and
 receipt consumers not already owned by S171/S172, followed by inert-namespace,
 definition-module, and zero-remnant fixed-point proof. Retain the explicit
 prohibition on repeating the S171, S172, or S128 moves.
+
+## Remediation re-review
+
+### Scope and evidence
+
+Fresh plan-only re-review of remediation commit `a59df5c4eb` against the HIGH
+finding above and the accepted defining-module amendment. The committed diff
+changes only S171, S172, S129, and the CLI-owned plan body hash. The complete
+current rows and their S173, S174, S160, S163, S165, S167, and S128 neighbors
+were re-read for ownership and dependency coherence.
+
+### Prior finding closure
+
+The `atomic-package-binding-cutover` HIGH is closed. S171 now deletes every
+Workspace-model `application.modelo` binding, `__all__` entry, lazy name, and
+re-export and gates namespace inertness in the same commit as the model hard
+move. S172 gives the producer-contract and registration family the identical
+atomic deletion and inertness boundary. Both rows name the package gate and
+focused binding/zero-remnant proof explicitly.
+
+S129 is now a genuine residual cutover. It is limited to remaining assembly,
+dispatch, frontend, and receipt consumers not owned by S171/S172, and it
+explicitly forbids package-binding deletion or moving, redefining, or deleting
+any S171, S172, or S128 surface. Its remaining responsibility is current-HEAD
+direct-import convergence plus inert-namespace, defining-module, and
+zero-remnant fixed-point proof.
+
+Downstream order remains coherent: S173 supplies the public registry capture
+before S174's sole pure evaluator and S160's WORK capture; S163 and S165 supply
+public native owners before S167; S172 supplies the public registration family
+before S167 populates it; S167 precedes S128 public assembly; and S129 closes
+only the residual consumers. The two assertion axes, typed mismatch refusal,
+epoch-v2 comparison domain, and identical contributor-epoch digest across the
+baseline, bounded facets, and typed cursors remain assigned without overlap.
+
+### Remediation disposition
+
+PASS. Commit `a59df5c4eb` closes the prior HIGH and leaves one unambiguous
+direct-defining-module implementation order. No new finding remains in the
+reviewed remediation scope.
 
