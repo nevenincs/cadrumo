@@ -27,7 +27,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from .._retencion_rate_advisory import _profile_suggests_sectoral_activity
 from ._secure_objects_fixtures import secure_profile_backend  # noqa: F401

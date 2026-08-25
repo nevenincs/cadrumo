@@ -43,7 +43,7 @@ from ...core.identity import (
 )
 from ...core.logging import get_logger
 from ...core.time import now, validate_utc_aware
-from ...domain.user_profile import ProfileSetupState
+from ...domain.user_profile.values import ProfileSetupState
 from ..auth_credentials import ActiveCertificateCredentials
 from .acquisition_lock import (
     AuthAcquisitionLockRecord,
@@ -62,7 +62,7 @@ from .protocols import SessionStoreProtocol
 from .providers import AuthProvider, select_provider
 
 if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.auth import (
+    from ...adapters.outbound.aeat.auth.authenticator_types import (
         AeatLoginAssertion,
         AeatSession,
         BrowserSessionFactory,
@@ -104,8 +104,7 @@ class _PersistedTargetProbeProvider(_TargetedAuthProvider, Protocol):
 
 def _get_session_store() -> SessionStoreProtocol:
     """Return the sole encrypted outbound session-store implementation."""
-    outbound_auth = import_module("cadrumo.adapters.outbound.aeat.auth")
-    session_store = outbound_auth.session_store
+    session_store = import_module("cadrumo.adapters.outbound.aeat.auth.session_store")
     if not isinstance(session_store, SessionStoreProtocol):
         raise TypeError("outbound auth session store does not implement SessionStoreProtocol")
     return session_store
@@ -511,7 +510,7 @@ async def _ensure_authenticated_aeat_session_locked(
                 target_url=target_url,
             )
         if not bool(getattr(assertion, "is_valid", False)):
-            from ...adapters.outbound.aeat.auth import AeatLoginAssertionError
+            from ...adapters.outbound.aeat.auth.errors import AeatLoginAssertionError
 
             raise AeatLoginAssertionError(
                 translated_message="errors.auth.auth_aeat_login_assertion",
@@ -1036,7 +1035,7 @@ def _active_profile_auth_facts() -> ClaveAuthFacts:
     """
     from ...adapters.persistence.storage import active_bucket_session_serves
     from ...core.bucket_pointer import resolve_active_bucket_id
-    from ...domain.user_profile import ProfileNotFoundError
+    from ...domain.user_profile.errors import ProfileNotFoundError
     from ..user_profile.profile_record_repository import ProfileRecordRepository
     from ..user_profile.projections import record_to_path_values, record_to_values
 

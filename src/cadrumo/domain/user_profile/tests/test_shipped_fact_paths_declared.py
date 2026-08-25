@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 
 from ....core import scan_directory
-from .._values import declared_field_paths, section_field_key
+from ..values import declared_field_paths, section_field_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

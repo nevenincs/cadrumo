@@ -120,17 +120,14 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
                 inner envelope's schema version is not the consumer's current
                 version.
         """
+        document, _revision_id = self.load_revisioned()
+        return document
+
+    def _decode_record(self, payload: bytes) -> DocumentT:
+        """Validate one loaded encrypted payload against the Envelope contract."""
         from ..storage import Envelope, inner_envelope_classification_is_expected, inner_envelope_version_is_current
 
-        record = self._objects.load(
-            self.namespace,
-            self.object_key,
-            expected_class=self._definition.sensitivity,
-            max_supported_version=self._definition.schema_version,
-        )
-        if record is None:
-            return self._empty_document()
-        envelope = Envelope.for_payload_type(self._model_type).model_validate_json(record.payload)
+        envelope = Envelope.for_payload_type(self._model_type).model_validate_json(payload)
         if not inner_envelope_classification_is_expected(envelope.classification, self._definition.sensitivity):
             from ..storage import ClassificationError
 
@@ -158,7 +155,15 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
         ``ABSENT_SECURE_OBJECT_REVISION_ID`` sentinel, so the first writer of a
         singleton is guarded exactly like every later one.
         """
-        return self._load_with_revision()
+        record = self._objects.load(
+            self.namespace,
+            self.object_key,
+            expected_class=self._definition.sensitivity,
+            max_supported_version=self._definition.schema_version,
+        )
+        if record is None:
+            return self._empty_document(), ABSENT_SECURE_OBJECT_REVISION_ID
+        return self._decode_record(record.payload), record.revision_id
 
     def to_secure_object_write(
         self,
@@ -214,24 +219,6 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
             payload=write.payload,
         )
 
-    def _load_with_revision(self) -> tuple[DocumentT, str]:
-        """Return the stored document and the revision id it was read at.
-
-        An absent row reports :data:`ABSENT_SECURE_OBJECT_REVISION_ID`, the
-        sentinel the write funnel reads as "this row must not exist yet", so the
-        first writer of a singleton is guarded exactly like every later one.
-        """
-        document = self.load()
-        record = self._objects.load(
-            self.namespace,
-            self.object_key,
-            expected_class=self._definition.sensitivity,
-            max_supported_version=self._definition.schema_version,
-        )
-        if record is None:
-            return self._empty_document(), ABSENT_SECURE_OBJECT_REVISION_ID
-        return document, record.revision_id
-
     def mutate(self, mutation: Callable[[DocumentT], DocumentT], *, attempts: int = 4) -> DocumentT:
         """Apply ``mutation`` to the stored document as one guarded unit of work.
 
@@ -267,7 +254,7 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
         """
         last_conflict: SecureObjectRevisionConflictError | None = None
         for _attempt in range(attempts):
-            current, revision_id = self._load_with_revision()
+            current, revision_id = self.load_revisioned()
             updated = mutation(current)
             write = self.to_secure_object_write(updated).model_copy(
                 update={"expected_revision_id": revision_id},

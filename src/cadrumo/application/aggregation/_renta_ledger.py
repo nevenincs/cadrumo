@@ -68,7 +68,8 @@ from ...domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ...domain.user_profile import ProfileNotFoundError, UserProfileRecord
+from ...domain.user_profile.errors import ProfileNotFoundError
+from ...domain.user_profile.values import UserProfileRecord
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import fact_value
 from . import _shared_issue_reasons

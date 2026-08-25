@@ -20,7 +20,7 @@ Major declarations:
   validation failures for export callers.
 
 See Also:
-    :func:`application.ledger.export_ledger_transactions`
+    :func:`application.ledger.actions_export.export_ledger_transactions`
         Ledger command service that calls this serializer, then owns bucket
         events and operator output paths.
     :func:`application.modelo.export_modelo_revision`

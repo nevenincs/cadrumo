@@ -14,7 +14,7 @@ from decimal import Decimal
 
 import pytest
 
-from .._schema import ProfileFieldType, ProfileSchemaDefinition
+from ..schema import ProfileFieldType, ProfileSchemaDefinition
 from ._schema_loader_fixtures import legal_ids_fixture, module_scoped_schema
 
 __all__ = ["legal_ids_fixture", "module_scoped_schema"]

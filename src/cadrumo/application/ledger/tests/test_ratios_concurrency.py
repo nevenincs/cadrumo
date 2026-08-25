@@ -36,7 +36,7 @@ from ....domain.usage_ratios import (
     usage_ratio_bucket_lock,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from .._ratios import set_usage_ratio
+from ..ratios import set_usage_ratio
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

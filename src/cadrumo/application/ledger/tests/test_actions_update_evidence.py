@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 
 from ....domain.invoices import InvoiceLinkError
-from .. import link_manual_transaction_invoice
+from ..actions_manual import link_manual_transaction_invoice
 from ._action_test_support import (
     _BUCKET_ID,
     UTC,
@@ -216,8 +216,8 @@ def test_bulk_classify_columns_never_carry_evidence_fields() -> None:
     # ONLY because the bulk CSV column allowlist excludes every evidence field.
     # This gate keeps the two sets disjoint so a future column addition cannot
     # open an unguarded evidence-write door through the bulk path.
-    from .._actions_manual import _EVIDENCE_PATCH_FIELDS
-    from .._models import BULK_CLASSIFY_ALLOWED_COLUMNS
+    from ..actions_manual import _EVIDENCE_PATCH_FIELDS
+    from ..models import BULK_CLASSIFY_ALLOWED_COLUMNS
 
     assert not (BULK_CLASSIFY_ALLOWED_COLUMNS & _EVIDENCE_PATCH_FIELDS)
 

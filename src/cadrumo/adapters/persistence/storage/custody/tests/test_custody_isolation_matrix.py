@@ -25,7 +25,7 @@ from ......application.user_profile.custody_ports import create_profile_custody_
 from ......application.user_profile.recovery_custody import export_profile_recovery_artifact, mint_profile_creation_recovery
 from ......application.user_profile.registration import register_profile_with_credentials
 from ......application.user_profile.capsule_restore import restore_profile_from_source_with_recovery_artifact
-from ......domain.user_profile import ProfileSetupState, UserProfileRecord
+from ......domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from ......tests.secure_sql import isolated_profile_storage_root
 from .. import (
     ProfileCustodyEnvelope,

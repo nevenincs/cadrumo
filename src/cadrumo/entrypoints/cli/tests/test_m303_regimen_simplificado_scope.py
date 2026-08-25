@@ -15,7 +15,7 @@ from ....core import Period
 from ....core.resources import resources
 from ....domain.deadlines import M303RegimeComposition
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli

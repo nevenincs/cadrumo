@@ -13,13 +13,9 @@ from ....core import Modelo, Period
 from ....core.errors import BaseSeverity
 from ....core.resources import resources
 from ....domain.calculations.registry import ProfileKeyGrounding
-from ....domain.user_profile import (
-    ProfileSchemaDefinition,
-    ProfileSetupState,
-    UserProfileFact,
-    UserProfileRecord,
-    profile_field_label,
-)
+from ....domain.user_profile.schema import ProfileSchemaDefinition
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.labels import profile_field_label
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

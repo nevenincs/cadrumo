@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.application.ledger import party_regions
+from cadrumo.application.ledger.party_colocation import party_regions
 
 from .._colocation_ceiling import (
     CeilingOutcome,

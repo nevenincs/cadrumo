@@ -9,14 +9,8 @@ from typing import TYPE_CHECKING, Any
 
 import typer
 
-from ...application.ledger import (
-    LedgerProviderID,
-    LedgerSourceImportCommand,
-    LedgerSourceImportResult,
-    LedgerSourceValidationReport,
-    LedgerSourceVerificationReport,
-    import_ledger_source,
-)
+from ...application.ledger.actions_import import LedgerProviderID, import_ledger_source
+from ...application.ledger.models import LedgerSourceImportCommand, LedgerSourceImportResult, LedgerSourceValidationReport, LedgerSourceVerificationReport
 from ...core import DirectoryEntryKind, scan_directory
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.external_constants import XLS_EXTENSION, XLSX_EXTENSION

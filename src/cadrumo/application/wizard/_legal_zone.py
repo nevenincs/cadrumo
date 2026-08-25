@@ -6,7 +6,7 @@ reverse-grounding index entry for the page's ``domain_key`` (the consuming
 modelos plus their profile-binding ``legal_refs`` / ``source_refs``). The
 zone is never authored — it is a projection over two authorities the rest
 of the system already owns (the singleton
-:class:`~cadrumo.domain.user_profile.ProfileSchemaDefinition` and the
+:class:`~cadrumo.domain.user_profile.schema.ProfileSchemaDefinition` and the
 validated :class:`ValidatedRegistryAuthority`), computed once at flow
 compile.
 
@@ -34,7 +34,8 @@ from ...domain.calculations.registry import (
     ValidatedRegistryAuthority,
     build_profile_grounding_index,
 )
-from ...domain.user_profile import ProfileSchemaDefinition, UserProfileError
+from ...domain.user_profile.schema import ProfileSchemaDefinition
+from ...domain.user_profile.errors import UserProfileError
 from ..flows.definition import FlowDefinition, FlowPage, FlowRepeatingGroup
 
 

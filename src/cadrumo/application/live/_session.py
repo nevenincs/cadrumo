@@ -18,7 +18,7 @@ See Also:
 
 from __future__ import annotations
 
-from ...adapters.outbound.aeat.auth import AeatSession
+from ...adapters.outbound.aeat.auth.authenticator_types import AeatSession
 from ...application.auth.sessions import ensure_authenticated_aeat_session
 from ...core.access_gate import AeatAccessGate
 from ...core.config import Settings, load_settings

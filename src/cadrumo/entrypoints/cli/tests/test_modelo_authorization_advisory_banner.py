@@ -24,7 +24,8 @@ import pytest
 
 from ....core.access_gate import AuthorizationState
 from ....core.resources import resources
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord, load_user_profile_schema
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.loader import load_user_profile_schema
 from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import seed_test_profile_record

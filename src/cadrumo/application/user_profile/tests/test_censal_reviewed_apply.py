@@ -39,7 +39,7 @@ from cadrumo.application.workflow.state_models import WorkflowState
 from ....adapters.persistence.storage.custody import load_committed_profile_password_material, unlock_profile_custody
 from ....core.config import override_settings
 from ....domain.buckets import BucketEventType
-from ....domain.user_profile import UserProfileFact
+from ....domain.user_profile.values import UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.secure_sql import isolated_profile_storage_root
 
@@ -69,7 +69,7 @@ def _subject(tmp_path: Path) -> Generator[tuple[str, ProfileRecordSession]]:
 
 
 def _proposal(record: object) -> CensalReviewedOperand:
-    from ....domain.user_profile import UserProfileRecord
+    from ....domain.user_profile.values import UserProfileRecord
 
     assert isinstance(record, UserProfileRecord)
     return CensalReviewedOperand(

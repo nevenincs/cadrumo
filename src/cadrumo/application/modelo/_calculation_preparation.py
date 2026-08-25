@@ -31,8 +31,8 @@ from ...domain.deadlines import IVARegime
 from ...domain.modelos import (
     WorkUnit,
     WorkUnitCatalogue,
-    WorkUnitCatalogueRepositoryProtocol,
 )
+from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.period import calculation_filing_date
 from ...domain.transactions import (
     BusinessClassification,
@@ -245,7 +245,7 @@ def _resolved_binding_ids_for_required_binding_gate(
 
 
 def _iva_regime_for_bucket(bucket_id: str) -> str | None:
-    from ...domain.user_profile import ProfileNotFoundError
+    from ...domain.user_profile.errors import ProfileNotFoundError
     from ..user_profile.profile_record_repository import ProfileRecordRepository
     from ..user_profile.projections import record_to_path_values
 
@@ -306,7 +306,7 @@ def _raise_if_ledger_preflight_blocks_calculation(
     iva_regime = _iva_regime_for_bucket(work_unit.bucket_id)
     if iva_regime in _IVA_LEDGER_EXEMPT_REGIMES:
         return
-    from ..ledger import preflight_ledger_tax_readiness
+    from ..ledger.preflight import preflight_ledger_tax_readiness
 
     report = preflight_ledger_tax_readiness(
         bucket_id=work_unit.bucket_id,

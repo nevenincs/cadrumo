@@ -10,6 +10,8 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
+import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
+
 from ......application.auth_credentials import ActiveCertificateCredentials, unnamed_certificate_credentials
 from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 from ......core.config import AEAT_CERTIFICATE_PROTECTED_URL, Settings
@@ -17,17 +19,12 @@ from ......tests.secure_sql import isolated_runtime_profile
 from ...browser import DefaultBrowserSession
 from ...browser.tests.real_http_boundary import opened_http_boundary, real_browser_factory
 from ...tests import wait_for_process_exit
-from .. import (
-    AEAT_SESSION_IDLE_TTL,
-    AeatAuthenticator,
-    AeatLoginAssertionError,
-    AeatSession,
-    CertificateSessionDetail,
-    _session_store,
-    extract_nif_from_subject,
-)
-from .. import _authenticator as authenticator_module
-from .._authenticator_persistence import PersistedSessionMetadata
+from ..authenticator import AEAT_SESSION_IDLE_TTL, AeatAuthenticator
+from ..authenticator_persistence import PersistedSessionMetadata
+from ..authenticator_types import AeatSession
+from ..certificate import extract_nif_from_subject
+from ..errors import AeatLoginAssertionError
+from ..providers import CertificateSessionDetail
 from ._authenticator_support import SECRET_PASSPHRASE, _build_bundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -78,9 +75,9 @@ def _seed_certificate_state(
         certificate_nif=extract_nif_from_subject(certificate),
         authenticated_at=current,
         idle_deadline=(current - timedelta(seconds=1)) if expired else (current + timedelta(hours=1)),
-        storage_state_sha256=_session_store.storage_state_sha256(storage_state),
+        storage_state_sha256=session_store.storage_state_sha256(storage_state),
     )
-    _session_store.save(
+    session_store.save(
         storage_state_path,
         storage_state=storage_state,
         metadata=metadata.model_dump(mode="json"),
@@ -166,7 +163,7 @@ async def test_navigation_failure_redacts_redirect_payload_from_assertion_and_lo
                 friendly_name=None,
             ),
         )
-        caplog.set_level(logging.DEBUG, logger=authenticator_module.__name__)
+        caplog.set_level(logging.DEBUG, logger=authenticator.__name__)
         try:
             assertion = await authenticator._run_login_probe(context, _certificate_session())
         finally:
@@ -198,7 +195,7 @@ async def test_authenticate_replaces_stale_encrypted_state_through_real_browser(
             async with authenticator:
                 session = await authenticator.authenticate()
 
-        persisted = _session_store.load(storage_state_path)
+        persisted = session_store.load(storage_state_path)
         assert persisted is not None
         assert session.identity_nif == extract_nif_from_subject(authenticator.load_certificate())
         assert persisted.metadata["certificate_thumbprint"] == session.certificate_thumbprint
@@ -225,7 +222,7 @@ async def test_failed_live_resume_is_deleted_before_single_fresh_fallback(tmp_pa
             async with authenticator:
                 session = await authenticator.authenticate()
 
-        persisted = _session_store.load(storage_state_path)
+        persisted = session_store.load(storage_state_path)
         assert boundary.navigation_count == 2
         assert persisted is not None
         persisted_authenticated_at = datetime.fromisoformat(
@@ -258,7 +255,7 @@ async def test_reauthenticate_succeeds_then_propagates_a_real_probe_failure(tmp_
                 with pytest.raises(AeatLoginAssertionError, match=r"authentication|verification"):
                     await authenticator.reauthenticate(refreshed)
 
-        assert not _session_store.exists(storage_state_path)
+        assert not session_store.exists(storage_state_path)
 
 
 @pytest.mark.asyncio

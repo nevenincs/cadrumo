@@ -1,9 +1,9 @@
 """Real-path regression for the unverified-party-attribution stamp.
 
 Every stamp asserted here is produced by
-:func:`~application.ledger.ground_draft_against_transcription` -- the one entry
+:func:`~application.ledger.grounded_reading.ground_draft_against_transcription` -- the one entry
 point the reading router uses -- over a real
-:class:`~application.ledger.DocumentTranscription`. Constructing a stamped
+:class:`~application.ledger.document_transcription.DocumentTranscription`. Constructing a stamped
 envelope by hand would prove the field exists and nothing else; what has to be
 true is that a draft coming off a reader carries it.
 
@@ -13,9 +13,9 @@ and every anchor verified, so the stamp is the only thing that says anything is
 wrong.
 
 See Also:
-    :func:`~application.ledger.stamp_unverified_party_attribution`
+    :func:`~application.ledger.party_attribution.stamp_unverified_party_attribution`
         The pass under test.
-    :func:`~application.ledger.party_attribution_advisory`
+    :func:`~application.ledger.party_attribution.party_attribution_advisory`
         What the operator is told in consequence.
 """
 
@@ -28,10 +28,10 @@ import pytest
 
 from ....core import LOCAL_TRANSPORT_LABEL, FieldGroundingOutcome, FieldOrigin
 from ....domain.iva import IvaTerritorialScope
-from .._document_transcription import DocumentTranscription, TranscriberIdentity
-from .._evidence_draft import FieldProvenance, InvoiceDraft
-from .._grounded_reading import ground_draft_against_transcription
-from .._party_attribution import (
+from ..document_transcription import DocumentTranscription, TranscriberIdentity
+from ..evidence_draft import FieldProvenance, InvoiceDraft
+from ..grounded_reading import ground_draft_against_transcription
+from ..party_attribution import (
     ATTRIBUTION_ESTABLISHING_ORIGINS,
     PARTY_ATTRIBUTED_ADDRESS_FIELDS,
     party_addresses,

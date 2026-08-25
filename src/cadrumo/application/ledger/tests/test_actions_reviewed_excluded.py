@@ -1,6 +1,6 @@
 """Reviewed-excluded review-state action tests.
 
-Exercises :func:`~cadrumo.application.ledger.mark_transaction_reviewed_excluded`
+Exercises :func:`~cadrumo.application.ledger.actions_lifecycle.mark_transaction_reviewed_excluded`
 against real encrypted repositories: the operator marks an active transaction as
 deliberately excluded from filing, the uniform mutation quintet reflects the new
 ``excluded`` review status, the ``ledger.transaction.reviewed_excluded`` lifecycle
@@ -13,12 +13,10 @@ from __future__ import annotations
 import pytest
 
 from ...review import LedgerReviewStatus
-from .. import (
-    ManualLedgerTransactionPatch,
-    ledger_transaction_review_status,
-    mark_transaction_reviewed_excluded,
-    update_manual_transaction_fields,
-)
+from ..models import ManualLedgerTransactionPatch
+from ..review_projection import ledger_transaction_review_status
+from ..actions_lifecycle import mark_transaction_reviewed_excluded
+from ..actions_manual import update_manual_transaction_fields
 from ._action_test_support import (
     _BUCKET_ID,
     UTC,

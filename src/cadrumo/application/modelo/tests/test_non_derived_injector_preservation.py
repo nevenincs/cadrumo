@@ -196,7 +196,8 @@ def test_none_of_the_preserved_paths_is_declared_derived() -> None:
     was already stored there. This asserts the premise the tests above rest on
     rather than leaving it implicit.
     """
-    from ....domain.user_profile import derived_selector_for_path, load_user_profile_schema
+    from ....domain.user_profile.schema import derived_selector_for_path
+    from ....domain.user_profile.loader import load_user_profile_schema
 
     schema = load_user_profile_schema()
     preserved_paths = (

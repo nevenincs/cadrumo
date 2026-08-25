@@ -29,7 +29,7 @@ from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core import ConfirmationBlockReason, DraftDiscrepancyKind
 from ....core.config import load_settings, override_settings
 from ....domain.iva import InvoiceKind
-from ....domain.user_profile import UserProfileFact
+from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.loopback_llm import (
     SilentLoopbackHandler,
@@ -42,13 +42,13 @@ from ....tests.pdf_fixtures import text_pdf_bytes
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from .._confirmation_gate import ConfirmationBlockedError, confirmation_blockers
-from .._evidence_draft import (
+from ..confirmation_gate import ConfirmationBlockedError, confirmation_blockers
+from ..evidence_draft import (
     InvoiceDraft,
     confirm_invoice_draft_from_evidence,
     extract_invoice_draft_from_evidence,
 )
-from .._filer_establishment import FILER_TAX_ID_FACT_PATH
+from ..filer_establishment import FILER_TAX_ID_FACT_PATH
 from ._loopback_reader import READING_RUNTIME_MODEL
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -275,7 +275,7 @@ def test_confirming_in_the_direction_the_document_supports_raises_no_direction_b
     """
     draft = live_document(_PURCHASE_LINES, _PURCHASE_READ).extract()
 
-    from .._evidence_draft import _with_direction_contradiction
+    from ..evidence_draft import _with_direction_contradiction
 
     stamped = _with_direction_contradiction(draft, kind=InvoiceKind.RECEIVED)
 

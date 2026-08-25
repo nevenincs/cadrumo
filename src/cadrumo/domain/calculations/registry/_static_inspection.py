@@ -10,7 +10,11 @@ consumer may admit.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
+from types import MappingProxyType
+from typing import Literal, Protocol
 
 from pydantic import Field, model_validator
 
@@ -31,7 +35,120 @@ from ._schema import (
 )
 from ._schema_base import RegistryModel
 
-__all__ = ["RegistryRevisionInspection"]
+__all__ = [
+    "GeneratedArtifactInspection",
+    "GeneratedArtifactSource",
+    "RegistryRevisionInspection",
+    "StaticGeneratedArtifactInspection",
+    "StaticGeneratedArtifactSource",
+]
+
+
+type _GeneratedArtifactSourceKind = Literal[
+    "record_design",
+    "manual_pdf",
+    "instructions",
+    "xsd",
+    "dictionary",
+    "form_spec",
+    "suppression_notice",
+]
+type _GeneratedArtifactCorpusTier = Literal["full_consolidated", "provision_excerpt"]
+
+
+class GeneratedArtifactSource(Protocol):
+    """The byte-authority fields a generated-artifact verifier consumes."""
+
+    id: SourceRefId
+    kind: _GeneratedArtifactSourceKind
+    corpus_path: str
+    sha256: str
+    bytes: int
+    applies_from: date | None
+    applies_to: date | None
+    record_design_epoch: str | None
+    corpus_tier: _GeneratedArtifactCorpusTier | None
+
+
+class GeneratedArtifactInspection(Protocol):
+    """The static revision facts required to verify a generated artefact."""
+
+    modelo_id: ModeloId
+    revision_id: RevisionId
+    revision_source_refs: tuple[SourceRefId, ...]
+    sources: Mapping[SourceRefId, GeneratedArtifactSource]
+    legal_ref_ids: frozenset[LegalRefId]
+    casilla_ids: frozenset[CasillaId]
+    binding_ids: frozenset[BindingId]
+    projection_endpoints: tuple[ProjectionEndpointDeclaration, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class StaticGeneratedArtifactSource:
+    """Immutable byte-authority facts copied for diagnostic verification."""
+
+    id: SourceRefId
+    kind: _GeneratedArtifactSourceKind
+    corpus_path: str
+    sha256: str
+    bytes: int
+    applies_from: date | None
+    applies_to: date | None
+    record_design_epoch: str | None
+    corpus_tier: _GeneratedArtifactCorpusTier | None
+
+    @classmethod
+    def from_source(cls, source: SourceReference) -> StaticGeneratedArtifactSource:
+        """Copy the exact source fields used by generated-artifact verification."""
+        return cls(
+            id=source.id,
+            kind=source.kind,
+            corpus_path=source.corpus_path,
+            sha256=source.sha256,
+            bytes=source.bytes,
+            applies_from=source.applies_from,
+            applies_to=source.applies_to,
+            record_design_epoch=source.record_design_epoch,
+            corpus_tier=source.corpus_tier,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class StaticGeneratedArtifactInspection:
+    """Minimal immutable revision facts for diagnostic generated-artifact checks."""
+
+    modelo_id: ModeloId
+    revision_id: RevisionId
+    revision_source_refs: tuple[SourceRefId, ...]
+    sources: Mapping[SourceRefId, StaticGeneratedArtifactSource]
+    legal_ref_ids: frozenset[LegalRefId]
+    casilla_ids: frozenset[CasillaId]
+    binding_ids: frozenset[BindingId]
+    projection_endpoints: tuple[ProjectionEndpointDeclaration, ...]
+
+    @classmethod
+    def from_inspection(
+        cls,
+        inspection: RegistryRevisionInspection,
+    ) -> StaticGeneratedArtifactInspection:
+        """Copy only the fields the shared generated-artifact verifier reads."""
+        return cls(
+            modelo_id=inspection.modelo_id,
+            revision_id=inspection.revision_id,
+            revision_source_refs=tuple(inspection.revision_source_refs),
+            sources=MappingProxyType(
+                {
+                    source_ref: StaticGeneratedArtifactSource.from_source(source)
+                    for source_ref, source in inspection.sources.items()
+                }
+            ),
+            legal_ref_ids=frozenset(inspection.legal_ref_ids),
+            casilla_ids=frozenset(inspection.casilla_ids),
+            binding_ids=frozenset(inspection.binding_ids),
+            projection_endpoints=tuple(
+                endpoint.model_copy(deep=True) for endpoint in inspection.projection_endpoints
+            ),
+        )
 
 
 class RegistryRevisionInspection(RegistryModel):

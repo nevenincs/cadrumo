@@ -70,7 +70,7 @@ from ...core.logging import get_logger
 from ...core.paths import effective_storage_root
 from ...core.time import now as _now
 from ...core.time import validate_utc_aware
-from ...domain.user_profile import ProfileNotFoundError, UserProfileError
+from ...domain.user_profile.errors import ProfileNotFoundError, UserProfileError
 from .authentication import ProfilePasswordProofOperation
 from .capsule_record import ProfileRecordSession
 from .custody_ports import (

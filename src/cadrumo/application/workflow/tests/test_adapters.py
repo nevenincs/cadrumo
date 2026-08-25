@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING, cast
+from typing import cast
 
 import pytest
 
@@ -17,9 +17,6 @@ from ..protocols import (
     ModeloInputsProviderProtocol,
     SubmissionEngineProtocol,
 )
-
-if TYPE_CHECKING:
-    from ....adapters.outbound.aeat.auth import AeatSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -95,7 +92,7 @@ def test_default_engine_leaves_notifications_unwired_without_a_bucket_scoped_cap
         submission_engine=_boundary_value(SubmissionEngineProtocol),
         deadline_engine=_boundary_value(DeadlineEngineProtocol),
         filing_draft_builder=_boundary_value(ModeloDraftBuilderProtocol),
-        session=cast("AeatSession", object()),
+        session=object(),
         inputs_provider=_boundary_value(ModeloInputsProviderProtocol),
     )
 

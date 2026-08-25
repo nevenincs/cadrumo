@@ -34,9 +34,9 @@ confirmation. The caller is told through an info notice and a ``recorded`` flag
 rather than being left to infer it from an unchanged timestamp.
 
 See Also:
-    :func:`~application.ledger.record_confirmed_counterparty_facts`
+    :func:`~application.ledger.counterparty_establishment.record_confirmed_counterparty_facts`
         The single writer this delegates to, which owns the idempotency rules.
-    :func:`~application.ledger.resolve_confirmed_counterparty_facts`
+    :func:`~application.ledger.counterparty_establishment.resolve_confirmed_counterparty_facts`
         The ladder rung that reads what this writes.
 """
 
@@ -60,7 +60,7 @@ from ._ledger_counterparty_payloads import (
 )
 
 if TYPE_CHECKING:
-    from ...application.ledger import ConfirmedCounterpartyFacts
+    from ...application.ledger.counterparty_establishment import ConfirmedCounterpartyFacts
 
 
 def _confirmed_answers(fact: ConfirmedCounterpartyFacts) -> str:
@@ -115,7 +115,7 @@ def counterparty_confirm(
     actor: str | None = None,
 ) -> None:
     """Persist the operator's answer, or report the stored one unchanged."""
-    from ...application.ledger import record_confirmed_counterparty_facts
+    from ...application.ledger.counterparty_establishment import record_confirmed_counterparty_facts
 
     if scope is None and identification_state is None:
         raise _bad(
@@ -189,7 +189,7 @@ def counterparty_withdraw(
     country_code: str | None = None,
 ) -> None:
     """Remove a confirmed fact so a corrected one can be confirmed."""
-    from ...application.ledger import confirmed_counterparty_facts_key, forget_confirmed_counterparty_facts
+    from ...application.ledger.counterparty_establishment import confirmed_counterparty_facts_key, forget_confirmed_counterparty_facts
 
     bucket_id = _counterparty_bucket_id()
     if confirmed_counterparty_facts_key(tax_identifier, country_code=country_code) is None:
@@ -253,7 +253,7 @@ def counterparty_show(
     nothing indicating that a confirm would refuse to use it -- the two surfaces
     diverging in exactly the case the verb exists for, invisibly.
     """
-    from ...application.ledger import resolve_confirmed_counterparty_facts
+    from ...application.ledger.counterparty_establishment import resolve_confirmed_counterparty_facts
 
     resolution = resolve_confirmed_counterparty_facts(
         bucket_id=_counterparty_bucket_id(),

@@ -31,12 +31,12 @@ from decimal import Decimal
 import pytest
 
 from ....core import DraftDiscrepancyKind
-from .._closure_findings import (
+from ..closure_findings import (
     ROUNDING_ALLOWANCE_PER_TERM,
     closure_findings,
     within_rounding_allowance,
 )
-from .._evidence_draft import InvoiceDraft, InvoiceDraftRateBreakdown
+from ..evidence_draft import InvoiceDraft, InvoiceDraftRateBreakdown
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

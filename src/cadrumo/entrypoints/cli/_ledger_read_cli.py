@@ -23,16 +23,10 @@ import typer
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.export import ExportSerializationFormat
-from ...application.ledger import (
-    LedgerExportCommand,
-    export_ledger_transactions,
-    get_manual_transaction,
-    ledger_transaction_payload,
-    ledger_transaction_result_payload,
-    ledger_transaction_review_status,
-    ledger_transaction_tracking_payload,
-    summarize_manual_transactions,
-)
+from ...application.ledger.models import LedgerExportCommand
+from ...application.ledger.actions_export import export_ledger_transactions
+from ...application.ledger.actions_manual import get_manual_transaction, ledger_transaction_payload, ledger_transaction_result_payload, ledger_transaction_tracking_payload, summarize_manual_transactions
+from ...application.ledger.review_projection import ledger_transaction_review_status
 from ...application.operator_actions import ActionReference
 from ...application.review import FilterParseError, LedgerReviewFilterSpec
 from ...core import ActionArgumentSource, ActionArgumentStatus, LedgerSortField, LedgerSortOrder, Period
@@ -71,12 +65,8 @@ from ._ledger_list import (
 from ._ledger_support import _ledger_cli_no_recovery
 
 if TYPE_CHECKING:
-    from ...application.ledger import (
-        LedgerPreflightReport,
-        LlmConfidenceProviderMetrics,
-        LlmDiagnosticsReport,
-        LlmUsageCostProviderMetrics,
-    )
+    from ...application.ledger.preflight import LedgerPreflightReport
+    from ...application.ledger.llm_diagnostics import LlmConfidenceProviderMetrics, LlmDiagnosticsReport, LlmUsageCostProviderMetrics
     from ._ledger_payloads import LedgerLinkInconsistencyPayload
     from ._ledger_rule_payloads import LedgerLlmDiagnosticsResult
 
@@ -89,7 +79,7 @@ def resolve_ledger_transaction_id(
 ) -> str:
     """Resolve a read-side transaction id while following stable edit lineage."""
     from ...application.cli_exception_preconditions import CliExceptionPrecondition
-    from ...application.ledger import resolve_lineage_transaction_id
+    from ...application.ledger.id_resolution import resolve_lineage_transaction_id
     from ...domain.transactions import TransactionIdPrefixError
 
     catalogue = transaction_repository.load()
@@ -145,7 +135,7 @@ def ledger_llm_diagnostics(
     ctx: typer.Context, since: str | None = None, until: str | None = None, low_confidence_below: float = 0.5
 ) -> None:
     """Report existing LLM usage, cost, and classification-confidence metrics."""
-    from ...application.ledger import build_llm_diagnostics_report
+    from ...application.ledger.llm_diagnostics import build_llm_diagnostics_report
 
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
@@ -450,7 +440,7 @@ def _emit_ledger_check_period(
     link_lines: list[str],
     link_notices: list[Notice],
 ) -> None:
-    from ...application.ledger import preflight_transaction_catalogue
+    from ...application.ledger.preflight import preflight_transaction_catalogue
     from ._ledger_payloads import LedgerCheckResult
 
     report = preflight_transaction_catalogue(
@@ -534,7 +524,7 @@ def _emit_ledger_check_all_periods(
     link_lines: list[str],
     link_notices: list[Notice],
 ) -> None:
-    from ...application.ledger import preflight_transaction_catalogue
+    from ...application.ledger.preflight import preflight_transaction_catalogue
     from ._ledger_payloads import LedgerCheckResult
 
     aggregated_issues: list[Any] = []
@@ -588,7 +578,7 @@ def _ledger_check_issue_lines_from_items(issues: Any) -> list[str]:
 
 def ledger_preflight(ctx: typer.Context, period: str, year: int) -> None:
     """Surface modelo-readiness gaps for the active bucket without mutating ledger state."""
-    from ...application.ledger import preflight_ledger_tax_readiness
+    from ...application.ledger.preflight import preflight_ledger_tax_readiness
 
     transaction_repository = _tx_repo(_state())
     canonical = _canonical_period(period, year=year)
@@ -857,7 +847,7 @@ def ledger_status(ctx: typer.Context, period: str | None = None, year: int | Non
                 f"{tr('cli.ledger.labels.ready')}\t{report.ready}",
             ]
         )
-        from ...application.ledger import preflight_ledger_tax_readiness
+        from ...application.ledger.preflight import preflight_ledger_tax_readiness
 
         preflight = preflight_ledger_tax_readiness(
             bucket_id=transaction_repository.bucket_id,
@@ -938,7 +928,7 @@ def _ledger_track_participated_in(
 ) -> list[dict[str, object]] | None:
     """Return the finalized-revision participations for ``transaction_id``, or ``None``.
 
-    Wraps :func:`~cadrumo.application.ledger.get_transaction_participation`, whose
+    Wraps :func:`~cadrumo.application.ledger.participation_read.get_transaction_participation`, whose
     :class:`~cadrumo.domain.modelos.TransactionRevisionParticipationIndex` is the
     rebuildable inverse index from ledger rows to finalized revisions.
     Surfaces the inverse audit trail on the ``ledger track`` lineage output:
@@ -946,7 +936,7 @@ def _ledger_track_participated_in(
     Returns ``None`` when the transaction appears in no finalized revision so the
     field is omitted from the JSON for transactions with no declarations.
     """
-    from ...application.ledger import get_transaction_participation
+    from ...application.ledger.participation_read import get_transaction_participation
     from ._ledger_payloads import LedgerTransactionParticipationEntryPayload
 
     index = get_transaction_participation(transaction_id=transaction_id, bucket_id=bucket_id)

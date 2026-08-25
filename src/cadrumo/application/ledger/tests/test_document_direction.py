@@ -6,7 +6,7 @@ operator typed on the confirm verb, unchecked, and the draft's ``suggested_kind`
 slot -- declared, documented and printed by the review command -- had no producer
 at all.
 
-Every case here drives :func:`~application.ledger.ground_draft_against_transcription`,
+Every case here drives :func:`~application.ledger.grounded_reading.ground_draft_against_transcription`,
 the entry point the reading router actually calls, rather than the leaf alone.
 That is deliberate: a leaf asserted in isolation proves the function computes
 something, never that the value reaches the draft the operator reviews, and
@@ -18,9 +18,9 @@ headings and the two identifiers are placed deliberately. Both identifiers carry
 valid control characters, so nothing passes for a reason unrelated to the axis.
 
 See Also:
-    :func:`~application.ledger.derive_invoice_kind_from_filer_role`
+    :func:`~application.ledger.document_direction.derive_invoice_kind_from_filer_role`
         The leaf under test.
-    :func:`~application.ledger.party_regions`
+    :func:`~application.ledger.party_colocation.party_regions`
         The heading partition the containment check is read from.
 """
 
@@ -32,15 +32,15 @@ import pytest
 
 from ....core import LOCAL_TRANSPORT_LABEL, DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
 from ....domain.iva import InvoiceKind
-from .._confirmation_gate import BLOCKING_REASON_BY_DISCREPANCY_KIND
-from .._document_direction import (
+from ..confirmation_gate import BLOCKING_REASON_BY_DISCREPANCY_KIND
+from ..document_direction import (
     DIRECTION_BY_FILER_ROLE,
     DirectionDerivationOutcome,
     derive_invoice_kind_from_filer_role,
 )
-from .._document_transcription import DocumentTranscription, TranscriberIdentity
-from .._evidence_draft import FieldProvenance, InvoiceDraft
-from .._grounded_reading import ground_draft_against_transcription
+from ..document_transcription import DocumentTranscription, TranscriberIdentity
+from ..evidence_draft import FieldProvenance, InvoiceDraft
+from ..grounded_reading import ground_draft_against_transcription
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -265,7 +265,7 @@ def test_the_role_table_covers_every_party_the_document_model_declares() -> None
     A hand-written mapping would keep answering for the two roles it knows while
     a newly declared party silently resolved to nothing.
     """
-    from .._party_attribution import party_addresses
+    from ..party_attribution import party_addresses
 
     assert set(DIRECTION_BY_FILER_ROLE) == {party.role for party in party_addresses()}
     assert set(DIRECTION_BY_FILER_ROLE.values()) == set(InvoiceKind)

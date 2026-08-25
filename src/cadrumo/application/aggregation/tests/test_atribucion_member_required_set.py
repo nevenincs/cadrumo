@@ -32,7 +32,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.user_profile import load_user_profile_schema
+from ....domain.user_profile.loader import load_user_profile_schema
 from .._atribucion_member import (
     _REQUIRED_FIELDS,
     _detail_row_from_socio,

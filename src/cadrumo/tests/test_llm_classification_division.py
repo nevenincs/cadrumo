@@ -1,6 +1,6 @@
 """The classification division: inference one side, persistence the other.
 
-``application/ledger/_llm_classification.py`` mixes two concerns that the
+``application/ledger/llm_classification.py`` mixes two concerns that the
 inference boundary separates: the calls that ask a model something, and the
 writes that record what the operator decided. The module is not moved -- it is
 DIVIDED, and these assertions pin the division line so a later change cannot

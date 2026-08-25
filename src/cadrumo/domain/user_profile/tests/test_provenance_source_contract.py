@@ -21,8 +21,8 @@ from ....core.external_constants import (
     PROVENANCE_SOURCE_CENSO_ARTEFACT,
     PROVENANCE_SOURCE_MANUAL_CLI,
 )
-from .. import UserProfileFact, load_user_profile_schema
-from .._values import declared_provenance_sources
+from ..loader import load_user_profile_schema
+from ..values import UserProfileFact, declared_provenance_sources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -1,6 +1,6 @@
 """Encrypted-boundary roundtrip for the counterparty establishment store.
 
-A :class:`~application.ledger.ConfirmedCounterpartyFacts` is the answer to a
+A :class:`~application.ledger.counterparty_establishment.ConfirmedCounterpartyFacts` is the answer to a
 question the operator was asked once and will never be asked again for that
 counterparty, so the record has to come back exactly as it went in. A dropped
 ``territorial_scope`` would not read as corruption downstream -- it would read as
@@ -34,7 +34,7 @@ from ....adapters.persistence.storage import (
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import ClassifierInputSource
 from ....domain.iva import EUMemberState, IvaTerritorialScope
-from .._counterparty_establishment import (
+from ..counterparty_establishment import (
     ConfirmedCounterpartyFacts,
     ConfirmedCounterpartyFactsRepository,
 )

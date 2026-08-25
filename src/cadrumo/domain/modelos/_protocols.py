@@ -21,86 +21,12 @@ from ._calculation_revision import CalculationRevisionCatalogue
 from ._filing_record import ModeloRecord, ModeloRecordCatalogue
 from ._participation_index import TransactionRevisionParticipationIndex
 from ._verification_report import VerificationReportCatalogue
-from ._work_unit import WorkUnitCatalogue
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     # pragma: no cover - typing-only boundary DTO (lives in core, not adapters)
     from ...core import SecureObjectWrite
-
-
-@runtime_checkable
-class WorkUnitCatalogueRepositoryProtocol(Protocol):
-    """Narrow domain-facing repository contract for the work-unit catalogue.
-
-    Any object that provides ``exists``, ``load``, and ``save`` over a
-    per-bucket :class:`WorkUnitCatalogue` satisfies this protocol. The concrete
-    secure-object-backed implementation is :class:`WorkUnitCatalogueRepository`.
-    """
-
-    @property
-    def bucket_id(self) -> str | None:
-        """Return the profile bucket id when this repository resolved one."""
-        ...
-
-    def exists(self) -> bool:
-        """Return whether a work-unit catalogue object has been persisted."""
-        ...
-
-    def load(self) -> WorkUnitCatalogue:
-        """Return the persisted :class:`WorkUnitCatalogue` or an empty catalogue if absent."""
-        ...
-
-    def load_revisioned(self) -> tuple[WorkUnitCatalogue, str]:
-        """Return the catalogue together with its current persistence revision."""
-        ...
-
-    def save(self, catalogue: WorkUnitCatalogue) -> None:
-        """Persist ``catalogue`` as the encrypted singleton object."""
-        ...
-
-    def mutate(self, mutation: Callable[[WorkUnitCatalogue], WorkUnitCatalogue]) -> WorkUnitCatalogue:
-        """Apply ``mutation`` to the stored catalogue as one revision-guarded unit of work.
-
-        Part of the port because the application NEEDS it, not merely because
-        the adapter offers it: the catalogue is a singleton row, so any caller
-        changing one work unit rewrites all of them, and doing that through
-        ``save`` discards whatever a concurrent caller wrote. A stand-in that
-        cannot offer this cannot stand in on those paths.
-        """
-        ...
-
-    def save_with_secure_object_writes(
-        self,
-        catalogue: WorkUnitCatalogue,
-        extra_writes: tuple[SecureObjectWrite, ...],
-        *,
-        expected_revision_id: str | None = None,
-    ) -> None:
-        """Persist ``catalogue`` plus co-emitted secure-object writes atomically."""
-        ...
-
-    def to_secure_object_write(
-        self,
-        catalogue: WorkUnitCatalogue,
-        *,
-        expected_revision_id: str | None = None,
-    ) -> SecureObjectWrite:
-        """Return the :class:`SecureObjectWrite` for ``catalogue`` without committing it.
-
-        Lets a mutation advance the work-unit pointer inside the same unit of
-        work as the catalogues and lifecycle event the pointer names.
-
-        ``expected_revision_id`` is the compare-and-swap half. These
-        catalogues are SINGLETON rows, so a co-commit composed from an
-        unguarded read writes the whole row back and discards any entry
-        another caller added in between. It is declared HERE, not only on
-        the concrete repository, because a caller typed against this
-        protocol could otherwise not pass it at all -- the guard existed
-        and was unreachable.
-        """
-        ...
 
 
 @runtime_checkable
@@ -340,5 +266,4 @@ __all__ = [
     "ModeloRecordCatalogueRepositoryProtocol",
     "TransactionParticipationIndexRepositoryProtocol",
     "VerificationReportCatalogueRepositoryProtocol",
-    "WorkUnitCatalogueRepositoryProtocol",
 ]

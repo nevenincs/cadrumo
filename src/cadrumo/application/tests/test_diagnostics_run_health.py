@@ -26,7 +26,7 @@ from ..diagnostics_run_health import (
     build_run_health_report,
     list_recent_runs,
 )
-from ..ledger import LlmUsageCostProviderMetrics
+from ..ledger.llm_diagnostics import LlmUsageCostProviderMetrics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -496,12 +496,12 @@ def test_build_llm_usage_report_empty_store_reports_no_run_data(profile: TestRun
 def test_llm_provider_metric_authorities_have_no_retired_or_split_public_identity() -> None:
     """The two providers' metric shapes retain distinct canonical homes."""
     assert LlmRunHealthProviderMetrics.__module__ == "cadrumo.application.diagnostics_run_health"
-    assert LlmUsageCostProviderMetrics.__module__ == "cadrumo.application.ledger._llm_diagnostics"
+    assert LlmUsageCostProviderMetrics.__module__ == "cadrumo.application.ledger.llm_diagnostics"
 
     source_root = Path(__file__).parents[2]
     owners = {
         "LlmRunHealthProviderMetrics": Path("application/diagnostics_run_health.py"),
-        "LlmUsageCostProviderMetrics": Path("application/ledger/_llm_diagnostics.py"),
+        "LlmUsageCostProviderMetrics": Path("application/ledger/llm_diagnostics.py"),
     }
     retired_public_name = "LlmUsage" + "ProviderMetrics"
     declarations: dict[str, set[Path]] = {name: set() for name in owners}

@@ -16,7 +16,7 @@ import pytest
 from click.testing import Result
 
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
-from ....application.ledger import get_transaction_participation
+from ....application.ledger.participation_read import get_transaction_participation
 from ....core import Period
 from ....domain.modelos import (
     ModeloCode,

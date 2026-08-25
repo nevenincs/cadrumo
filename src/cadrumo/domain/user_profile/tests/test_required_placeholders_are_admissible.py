@@ -25,7 +25,8 @@ from __future__ import annotations
 import pytest
 
 from ....tests.user_profile import _REQUIRED_PLACEHOLDERS
-from .. import ProfileFieldDefinition, load_user_profile_schema
+from ..loader import load_user_profile_schema
+from ..schema import ProfileFieldDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

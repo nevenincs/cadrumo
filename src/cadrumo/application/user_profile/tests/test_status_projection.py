@@ -27,7 +27,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from ....domain.user_profile import UserProfileRecord
+    from ....domain.user_profile.values import UserProfileRecord
     from ..status_projection import StatusFactRow
 
 
@@ -135,7 +135,7 @@ def test_clave_credential_inputs_mask_on_the_real_shipped_schema(path: str) -> N
     """
     from cadrumo.application.user_profile.overview import mask_profile_field
 
-    from ....domain.user_profile import load_user_profile_schema
+    from ....domain.user_profile.loader import load_user_profile_schema
 
     field_def = load_user_profile_schema().field(path)
     label = field_def.description or path
@@ -168,7 +168,7 @@ def test_every_shipped_schema_field_masks_the_same_under_either_callers_label() 
     """
     from cadrumo.application.user_profile.overview import mask_profile_field
 
-    from ....domain.user_profile import load_user_profile_schema
+    from ....domain.user_profile.loader import load_user_profile_schema
 
     schema = load_user_profile_schema()
     divergent: list[str] = []
@@ -253,7 +253,7 @@ def _auth_provider_display() -> str:
     """The text the surface renders for the stored ``auth.provider`` token."""
     from cadrumo.application.user_profile.overview import profile_field_choices
 
-    from ....domain.user_profile import load_user_profile_schema
+    from ....domain.user_profile.loader import load_user_profile_schema
 
     field = load_user_profile_schema().field(_AUTH_PROVIDER_PATH)
     return next(
@@ -287,7 +287,7 @@ def _seed_auth_facts() -> None:
     -- against the real encrypted record, so the rows projected from them are
     the rows an operator's screen is built from.
     """
-    from ....domain.user_profile import UserProfileFact
+    from ....domain.user_profile.values import UserProfileFact
     from ....tests.profile_capsule import set_active_test_profile_facts
 
     set_active_test_profile_facts(
@@ -347,7 +347,8 @@ def test_build_fact_rows_masks_by_the_real_schema() -> None:
         f"auth.provider must project an unmasked row; labels: {sorted(row.label for row in rows)}"
     )
     assert provider_row.masked is False, "auth.provider is declared identity and must render in the clear"
-    from ....domain.user_profile import load_user_profile_schema, profile_field_label
+    from ....domain.user_profile.loader import load_user_profile_schema
+    from ....domain.user_profile.labels import profile_field_label
 
     soporte_section = _AUTH_SOPORTE_PATH.split(".", 1)[0]
     soporte_label = profile_field_label(soporte_section, load_user_profile_schema().field(_AUTH_SOPORTE_PATH))
@@ -413,7 +414,7 @@ def test_an_unindexed_row_carries_the_label_the_manager_carries() -> None:
     """
     from cadrumo.application.user_profile.overview import build_profile_overview
 
-    from ....domain.user_profile import load_user_profile_schema
+    from ....domain.user_profile.loader import load_user_profile_schema
 
     rows, record = _fact_rows_over_a_real_profile()
 
@@ -445,13 +446,10 @@ def test_an_indexed_row_uses_the_schema_label_and_a_visible_row_marker() -> None
     an indexed fact, and this is a real ``UserProfileRecord`` read by the
     production builder against the real shipped schema.
     """
-    from ....domain.user_profile import (
-        ProfileSetupState,
-        UserProfileFact,
-        load_user_profile_schema,
-        profile_field_label,
-    )
-    from ....domain.user_profile import UserProfileRecord as _Record
+    from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
+    from ....domain.user_profile.loader import load_user_profile_schema
+    from ....domain.user_profile.labels import profile_field_label
+    from ....domain.user_profile.values import UserProfileRecord as _Record
 
     first_path = "attribution_entity_socios.0.nif"
     second_path = "attribution_entity_socios.1.nif"

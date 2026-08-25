@@ -9,7 +9,7 @@ from __future__ import annotations
 import typer
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...application.ledger import ApplyRulesResult
+from ...application.ledger.models import ApplyRulesResult
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...core.i18n import tr
 from ...domain.transactions import (
@@ -52,7 +52,7 @@ def rule_add(
     actor: str | None = None,
 ) -> None:
     """Add or idempotently update a ledger classification rule."""
-    from ...application.ledger import add_classification_rule
+    from ...application.ledger.actions_classification import add_classification_rule
     from ...core.bucket_pointer import resolve_active_bucket_id
 
     bucket_id = _rule_bucket_id()
@@ -121,7 +121,7 @@ def _rule_apply_dry_run_matches(
     bucket_id: str,
     reaffirm: bool,
 ) -> list[dict[str, object]]:
-    from ...application.ledger import LedgerClassificationRuleRepository
+    from ...application.ledger.rule_repository import LedgerClassificationRuleRepository
 
     rule_repo = LedgerClassificationRuleRepository()
     rules = rule_repo.list_rules()
@@ -217,7 +217,7 @@ def rule_apply(
     actor: str | None = None,
 ) -> None:
     """Apply stored rules to ACTIVE NOT_YET_PROCESSED transactions."""
-    from ...application.ledger import apply_classification_rules
+    from ...application.ledger.actions_classification import apply_classification_rules
     from ...core.bucket_pointer import resolve_active_bucket_id
 
     bucket_id = _rule_bucket_id()
@@ -238,7 +238,7 @@ def rule_apply(
 
 def rule_list(ctx: typer.Context) -> None:
     """List all stored ledger classification rules (priority ascending)."""
-    from ...application.ledger import LedgerClassificationRuleRepository
+    from ...application.ledger.rule_repository import LedgerClassificationRuleRepository
 
     _rule_bucket_id()
     rules = LedgerClassificationRuleRepository().list_rules()

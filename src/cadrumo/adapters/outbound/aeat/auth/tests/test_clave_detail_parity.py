@@ -20,7 +20,7 @@ from pydantic import BaseModel, ValidationError
 from pydantic.fields import FieldInfo
 
 from ......core import AuthProviderKind
-from .._providers import (
+from ..providers import (
     ClaveMovilLoginAssertionDetail,
     ClaveMovilSessionDetail,
     ClavePermanenteLoginAssertionDetail,

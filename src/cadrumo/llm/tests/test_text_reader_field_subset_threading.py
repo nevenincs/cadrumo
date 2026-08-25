@@ -26,7 +26,7 @@ from typing import Any, override
 
 import pytest
 
-from ...application.ledger import DocumentTranscription, TranscriberIdentity
+from ...application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from ...core import FieldOrigin
 from .._client import LLMClient
 from .._evidence_draft_text import (

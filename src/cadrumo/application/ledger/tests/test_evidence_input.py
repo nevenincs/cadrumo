@@ -26,18 +26,18 @@ from ....domain.attachments import (
     AttachmentSource,
     add_attachment,
 )
-from .._evidence import (
+from ..evidence import (
     MediaKind,
     PurchaseInvoiceEvidence,
     PurchaseInvoiceEvidenceDocument,
     PurchaseInvoiceEvidenceInputError,
 )
-from .._evidence_input import (
+from ..evidence_input import (
     EvidenceInput,
     resolve_attachment_evidence_input,
     resolve_purchase_invoice_evidence_input,
 )
-from .._preconditions import LedgerPreconditionCondition
+from ..preconditions import LedgerPreconditionCondition
 from ._evidence_input_test_support import _BUCKET_ID, _PDF_BYTES, _added_record, _make_svc, pdf_file
 from ._evidence_input_test_support import runtime_profile as runtime_profile
 from ._ledger_value_fixtures import isolated_settings, secure_objects

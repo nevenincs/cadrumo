@@ -91,7 +91,7 @@ def test_both_entry_points_honour_the_same_selection() -> None:
     ``build`` resolves authority values and delegates, so the two must agree by
     construction -- this asserts the delegation actually carries the argument.
     """
-    from ...application.ledger import resolve_invoice_extraction_authority_values
+    from ...application.ledger.invoice_extraction_authority import resolve_invoice_extraction_authority_values
 
     chosen = _DECLARED[:4]
     built = build_invoice_extraction_prompt(period=_PERIOD, fields=chosen)

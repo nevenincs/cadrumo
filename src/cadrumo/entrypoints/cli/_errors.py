@@ -60,7 +60,7 @@ from ...core.errors import (
 )
 from ...core.json_contract import Notice, ResolvedPreconditionAction
 from ...core.redaction import redact_for_cli_output
-from ...domain.user_profile import StoredProfileDriftError
+from ...domain.user_profile.errors import StoredProfileDriftError
 
 _log = logging.getLogger(__name__)
 

@@ -1,6 +1,6 @@
 """Profile readiness gate for filing-grade modelo work.
 
-Loads the active :class:`domain.user_profile.UserProfileRecord`, builds a
+Loads the active :class:`domain.user_profile.values.UserProfileRecord`, builds a
 :class:`application.user_profile.ProfilePreflightReport`, projects
 local-work applicability through :class:`domain.deadlines.TaxpayerProfile`,
 and raises :class:`application.modelo.ModeloProfileReadinessError` before
@@ -42,11 +42,8 @@ from ...domain.calculations.registry import (
 )
 from ...domain.deadlines import EntityType, IrpfIncomeCategory
 from ...domain.modelos import WorkUnit
-from ...domain.user_profile import (
-    ProfileNotFoundError,
-    ProfileSetupState,
-    UserProfileRecord,
-)
+from ...domain.user_profile.errors import ProfileNotFoundError
+from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from ..user_profile.commands import ProfilePreflightReport, ProfilePreflightRequirement, ProfileValidationIssue
 from ..user_profile.preflight import ProfilePreflightService, build_profile_preflight_requirement, format_profile_preflight_requirement
 from ..user_profile.profile_record_repository import ProfileRecordRepository
@@ -144,7 +141,7 @@ def modelo_work_profile_baseline_missing_paths(
     retain the existing censo-activity baseline.
 
     Args:
-        record: Active :class:`domain.user_profile.UserProfileRecord`
+        record: Active :class:`domain.user_profile.values.UserProfileRecord`
             projected into schema-path values.
         modelo: Optional target modelo used to resolve conditional baseline
             requirements.
@@ -159,7 +156,7 @@ def modelo_work_profile_baseline_validation_issues(record: UserProfileRecord) ->
     """Return profile-status issues for universal modelo-work baseline fields.
 
     Args:
-        record: Active :class:`domain.user_profile.UserProfileRecord`
+        record: Active :class:`domain.user_profile.values.UserProfileRecord`
             checked against the filing-grade baseline.
 
     Returns:
@@ -218,7 +215,7 @@ def modelo_work_profile_preflight_report(
     profile.
 
     Args:
-        record: Active :class:`domain.user_profile.UserProfileRecord`.
+        record: Active :class:`domain.user_profile.values.UserProfileRecord`.
         modelo: Modelo code being checked.
         revision_id: Registry revision identifier for the target modelo work.
         filing_year: Filing year for the target period.
@@ -378,7 +375,7 @@ def modelo_applicability_refusal(
     """Return the local-work applicability refusal for a target, if any.
 
     Args:
-        record: Active :class:`domain.user_profile.UserProfileRecord`
+        record: Active :class:`domain.user_profile.values.UserProfileRecord`
             projected into taxpayer facts for the modelo applicability check.
         bucket_id: Active profile bucket identifier included in the refusal
             context.
@@ -414,7 +411,7 @@ def pre_activity_period_refusal(
     """Return the pre-activity lifecycle refusal for a target, if any.
 
     Args:
-        record: Active :class:`domain.user_profile.UserProfileRecord`
+        record: Active :class:`domain.user_profile.values.UserProfileRecord`
             carrying the profile facts used to resolve
             ``censo.activity_start_date``.
         bucket_id: Active profile bucket identifier included in the refusal
@@ -513,7 +510,7 @@ def require_profile_ready_for_modelo_work(
 ) -> None:
     """Refuse filing-grade modelo work when the active profile is not eligible.
 
-    Loads the bucket's :class:`domain.user_profile.UserProfileRecord`,
+    Loads the bucket's :class:`domain.user_profile.values.UserProfileRecord`,
     evaluates modelo-specific profile requirements through
     :class:`application.user_profile.ProfilePreflightReport`, and then
     applies the pre-activity period check for lifecycle modelos whose obligation
@@ -676,7 +673,7 @@ def require_profile_ready_for_work_unit(work_unit: WorkUnit, *, enforce_applicab
 
     Calculation, verification, filing, and export services call this wrapper so
     a previously created :class:`domain.modelos.WorkUnit` is rechecked
-    against the current :class:`domain.user_profile.UserProfileRecord`
+    against the current :class:`domain.user_profile.values.UserProfileRecord`
     before any filing-grade mutation proceeds.
     """
     require_profile_ready_for_modelo_work(

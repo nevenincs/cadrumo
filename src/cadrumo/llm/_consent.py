@@ -20,7 +20,7 @@ not a defence.
 acknowledgement, not a durable grant; a stored one would be exactly the sticky
 enablement this posture forbids. ``model_dump`` and ``model_dump_json`` are
 overridden to raise, mirroring
-:class:`~application.ledger.EvidenceInput`'s refusal, so a stray persistence
+:class:`~application.ledger.evidence_input.EvidenceInput`'s refusal, so a stray persistence
 call fails loudly rather than minting a consent record that outlives the
 invocation.
 

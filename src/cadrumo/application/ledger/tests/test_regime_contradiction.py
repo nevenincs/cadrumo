@@ -28,9 +28,9 @@ against a gate that refuses everything, so a coherent document is confirmed to
 still pass cleanly. Without it "blocks on contradiction" is unmeasured.
 
 See Also:
-    :func:`~application.ledger.regime_contradiction_finding`
+    :func:`~application.ledger.regime_contradiction.regime_contradiction_finding`
         The producer under test.
-    :data:`~application.ledger.BLOCKING_REASON_BY_DISCREPANCY_KIND`
+    :data:`~application.ledger.confirmation_gate.BLOCKING_REASON_BY_DISCREPANCY_KIND`
         Where the finding's kind becomes a refusal the confirm gate honours.
 """
 
@@ -42,9 +42,9 @@ import pytest
 
 from ....core import ConfirmationBlockReason, DraftDiscrepancyKind
 from ....domain.iva import REGIME_LEGENDS, RegimeLegend
-from .._confirmation_gate import BLOCKING_REASON_BY_DISCREPANCY_KIND, confirmation_blockers
-from .._evidence_draft import InvoiceDraft
-from .._regime_contradiction import draft_prints_a_repercutido_line, regime_contradiction_finding
+from ..confirmation_gate import BLOCKING_REASON_BY_DISCREPANCY_KIND, confirmation_blockers
+from ..evidence_draft import InvoiceDraft
+from ..regime_contradiction import draft_prints_a_repercutido_line, regime_contradiction_finding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

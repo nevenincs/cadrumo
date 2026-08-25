@@ -41,7 +41,7 @@
             {
                 "importer_path": "src/cadrumo/application/auth/tests/test_diagnostics.py",
                 "occurrence": 1,
-                "target_mod": "cadrumo.adapters.outbound.aeat.auth._clave_movil_page_flow",
+                "target_mod": "cadrumo.adapters.outbound.aeat.auth.clave_movil_page_flow",
                 "imported_names": ["_mint_diagnostic_id"],
                 "reason": "White-box test of the private Cl@ve Movil page-flow diagnostic-id minting helper. Internal correctness helper with no consumer outside the adapter; promoting it would expose implementation detail as public API."
             },
@@ -286,3 +286,4 @@
         ]
     }
 }
+

@@ -11,7 +11,7 @@ that is the property this module exists to hold.
 **So every case here drives the real confirm.** Bytes are written through the
 real encrypted evidence service, read back by the real extraction the CLI
 invokes, and handed to
-:func:`~application.ledger.confirm_invoice_draft_from_evidence` --- the function
+:func:`~application.ledger.evidence_draft.confirm_invoice_draft_from_evidence` --- the function
 the ``aeat app ledger evidence confirm`` verb calls. Nothing constructs a draft,
 calls the ladder, or assembles criteria directly. A case that did would be
 green in exactly the state this module was written to detect.
@@ -30,9 +30,9 @@ scope --- silently resolving to the peninsula is the failure the whole ladder
 exists to prevent, and it is invisible from the outside.
 
 See Also:
-    :func:`~application.ledger.resolve_confirmed_establishment`
+    :func:`~application.ledger.confirm_establishment.resolve_confirmed_establishment`
         The confirm-path resolution these cases reach through the verb.
-    :class:`~application.ledger.CounterpartyEstablishment`
+    :class:`~application.ledger.establishment_ladder.CounterpartyEstablishment`
         What the ladder settles, carried onto the confirmation result.
     :class:`~domain.iva.IvaTerritorialScope`
         The closed territory axis every rung resolves into.
@@ -48,8 +48,8 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
 from ....domain.iva import InvoiceKind, IvaTerritorialScope
-from .._establishment_ladder import EstablishmentRung
-from .._evidence_draft import confirm_invoice_draft_from_evidence
+from ..establishment_ladder import EstablishmentRung
+from ..evidence_draft import confirm_invoice_draft_from_evidence
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile
 from ._evidence_test_support import seeded_filer_profile as seeded_filer_profile

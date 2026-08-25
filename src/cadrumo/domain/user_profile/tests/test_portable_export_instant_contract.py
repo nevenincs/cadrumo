@@ -24,7 +24,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.classification import SensitivityClass
-from .._portable_export import CarriedSecureObject
+from ..portable_export import CarriedSecureObject
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

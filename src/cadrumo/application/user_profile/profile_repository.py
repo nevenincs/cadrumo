@@ -26,7 +26,7 @@ from ...adapters.persistence.storage.custody import (
 )
 from ...core.identity import ProfileId, ProfileLabel
 from ...core.paths import effective_storage_root
-from ...domain.user_profile import ProfileNotFoundError
+from ...domain.user_profile.errors import ProfileNotFoundError
 from .aggregate import CommittedProfileView, UnlockedProfileFactSummary
 from .custody_repository import ProfileCustodyTransactionRepository, profile_custody_transaction_lock
 from .custody_transactions import (

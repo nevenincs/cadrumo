@@ -404,7 +404,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/application/ledger/_evidence_draft.py",
+        path="src/cadrumo/application/ledger/evidence_draft.py",
         model="CounterpartyDraftSide",
         field="tax_id",
         group="verbatim external evidence",
@@ -414,7 +414,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/application/ledger/_models.py",
+        path="src/cadrumo/application/ledger/models.py",
         model="BulkClassifyFailure",
         field="transaction_id",
         group="mixed-source diagnostic references",

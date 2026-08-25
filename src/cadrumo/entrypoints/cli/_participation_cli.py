@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING
 import typer
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...application.ledger import get_transaction_participation
+from ...application.ledger.participation_read import get_transaction_participation
 from ._common import _active_bucket_id_or_bad, _state, _tx_repo, emit_envelope, emit_help_text
 from ._ledger_read_cli import resolve_ledger_transaction_id
 

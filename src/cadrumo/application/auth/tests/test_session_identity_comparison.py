@@ -35,8 +35,8 @@ from pydantic import SecretStr, ValidationError
 
 import cadrumo.application.auth.sessions as sessions
 
-from ....adapters.outbound.aeat.auth import (
-    AeatSession,
+from ....adapters.outbound.aeat.auth.authenticator_types import AeatSession
+from ....adapters.outbound.aeat.auth.providers import (
     CertificateSessionDetail,
     ClaveMovilSessionDetail,
 )

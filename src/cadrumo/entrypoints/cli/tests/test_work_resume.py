@@ -23,7 +23,7 @@ from cadrumo.application.workflow.persistence import list_runs, load_run, save_r
 from ....core import ActionArgumentStatus, ActionConditionality, ActionEvidenceProvenance, Modelo, NoRecoveryOutcome, Period
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....domain.deadlines import ObligationStatus
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session, seed_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root

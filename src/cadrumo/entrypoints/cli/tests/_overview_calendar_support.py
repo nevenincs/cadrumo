@@ -24,7 +24,7 @@ from ....domain.modelos import (
     ModeloRecordStatus,
     derive_filing_record_id,
 )
-from ....domain.user_profile import UserProfileFact
+from ....domain.user_profile.values import UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url, justificante_cotejo_url
 from ....tests.profile_capsule import load_test_profile_record, open_test_profile_session, replace_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations

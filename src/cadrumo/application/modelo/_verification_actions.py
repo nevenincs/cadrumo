@@ -97,13 +97,13 @@ from ...domain.modelos import (
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
     WorkUnitCatalogue,
-    WorkUnitCatalogueRepositoryProtocol,
     derive_verification_report_id,
     upsert_calculation_revision,
     upsert_transaction_participation,
     upsert_verification_report,
     upsert_work_unit,
 )
+from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..aggregation import (
     MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND,
     CalculationSourceDiagnostic,

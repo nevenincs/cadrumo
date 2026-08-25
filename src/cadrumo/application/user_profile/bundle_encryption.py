@@ -22,7 +22,8 @@ from ...adapters.persistence.storage.master_key import (
 )
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import UTF_8_ENCODING
-from ...domain.user_profile import UserProfilePortableExport, UserProfileValidationError
+from ...domain.user_profile.portable_export import UserProfilePortableExport
+from ...domain.user_profile.errors import UserProfileValidationError
 from .bundle import (
     SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
     UnsupportedBundleSchemaVersionError,

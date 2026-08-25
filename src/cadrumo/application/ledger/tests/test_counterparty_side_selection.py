@@ -26,9 +26,9 @@ So every case here runs in the configuration where the guards are inert, and
 that they are. What survives is the selection alone.
 
 See Also:
-    :func:`~application.ledger.confirm_invoice_draft_from_evidence`
+    :func:`~application.ledger.evidence_draft.confirm_invoice_draft_from_evidence`
         The confirm step whose side selection these cases pin.
-    :class:`~application.ledger.InvoiceDraft`
+    :class:`~application.ledger.evidence_draft.InvoiceDraft`
         Carries the two printed parties the selection chooses between.
 """
 
@@ -45,8 +45,8 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
 from ....domain.iva import InvoiceKind
 from ....tests.pdf_fixtures import text_pdf_bytes
-from .._evidence import PurchaseInvoiceEvidenceInputError
-from .._evidence_draft import confirm_invoice_draft_from_evidence
+from ..evidence import PurchaseInvoiceEvidenceInputError
+from ..evidence_draft import confirm_invoice_draft_from_evidence
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile
 from ._evidence_test_support import seeded_filer_profile as seeded_filer_profile

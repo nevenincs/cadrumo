@@ -38,7 +38,7 @@ from typing import ClassVar, override
 
 from pydantic import BaseModel
 
-from ...adapters.outbound.aeat.auth import AeatSession as _AeatSession
+from ...adapters.outbound.aeat.auth.authenticator_types import AeatSession as _AeatSession
 from ...adapters.outbound.aeat.sede import PRE303_PRESENTATION_SERVICE_URL as _PRE303_PRESENTATION_SERVICE_URL
 from ...adapters.outbound.aeat.sede import Declaracion as _Declaracion
 from ...adapters.outbound.aeat.sede import FiledDeclaracionObservation as _FiledDeclaracionObservation

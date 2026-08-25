@@ -29,7 +29,7 @@ from ...core.errors import CadrumoError, TerminalPreconditionErrorMixin
 from ..operator_actions import PreconditionVerdict, no_action_precondition_verdict
 
 if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.auth import ClaveMovilApprovalTimeoutError
+    from ...adapters.outbound.aeat.auth.clave_movil_support import ClaveMovilApprovalTimeoutError
     from ...adapters.outbound.aeat.sede import SedeError
 
 
@@ -162,7 +162,7 @@ class LiveIvaSurfaceTimeoutError(LiveApplicationError):
 
 
 def _classify_clave_movil_timeout(exc: ClaveMovilApprovalTimeoutError) -> LiveIvaAcquisitionFailureMode:
-    from ...adapters.outbound.aeat.auth import ClaveMovilFailureMode
+    from ...adapters.outbound.aeat.auth.clave_movil_support import ClaveMovilFailureMode
 
     context = exc.context if isinstance(exc.context, dict) else {}
     phone_state = str(context.get("phone_state") or "")
@@ -207,7 +207,7 @@ def classify_live_iva_acquisition_failure(exc: BaseException) -> LiveIvaAcquisit
     Returns a :class:`LiveIvaAcquisitionFailureMode` member identifying
     the failure category.
     """
-    from ...adapters.outbound.aeat.auth import (
+    from ...adapters.outbound.aeat.auth.clave_movil_support import (
         ClaveMovilApprovalTimeoutError,
         ClaveMovilConfigurationError,
     )

@@ -25,7 +25,7 @@ unequal to every real identifier and would look exactly like a working lookup
 while silently disabling both consumers again.
 
 See Also:
-    :func:`~application.ledger.resolve_filer_tax_id`
+    :func:`~application.ledger.filer_establishment.resolve_filer_tax_id`
         The profile-fact reader this exercises through a live store.
 """
 
@@ -35,9 +35,9 @@ from typing import Final
 
 import pytest
 
-from ....application.ledger import FILER_TAX_ID_FACT_PATH, resolve_filer_tax_id
+from ....application.ledger.filer_establishment import FILER_TAX_ID_FACT_PATH, resolve_filer_tax_id
 from cadrumo.application.workflow.persistence import workflow_state_repository
-from ....domain.user_profile import UserProfileFact
+from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import set_active_test_profile_facts
 from ._ledger_validation_fixtures import bucket
 

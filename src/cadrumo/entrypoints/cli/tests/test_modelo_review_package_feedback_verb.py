@@ -52,7 +52,7 @@ from ....application.modelo import (
 )
 from ....core import STR_KEYED_MAPPING_ADAPTER, CasillaId, validated_casilla_id
 from ....domain.buckets import BucketEventType
-from ....domain.user_profile import UserProfileFact
+from ....domain.user_profile.values import UserProfileFact
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli

@@ -30,16 +30,14 @@ from urllib.parse import quote
 
 import pytest
 
+import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
+
 from ......core.config import Settings
 from ......tests.live_gate import requires_live_enabled
 from ...browser import default_browser_session_factory
-from .. import (
-    AeatLoginAssertion,
-    AeatSession,
-    ClavePermanenteAuthProvider,
-    ClavePermanenteSessionDetail,
-    _session_store,
-)
+from ..authenticator_types import AeatLoginAssertion, AeatSession
+from ..clave_permanente import ClavePermanenteAuthProvider
+from ..providers import ClavePermanenteSessionDetail
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
 
@@ -107,14 +105,14 @@ async def test_clave_permanente_provider_full_login_with_central_playwright() ->
     finally:
         await provider.close()
 
-    from ......core.bucket_pointer import require_active_bucket_id
     from ......core.auth_session_keys import aeat_auth_session_storage_state_path
+    from ......core.bucket_pointer import require_active_bucket_id
 
     storage_state_path = aeat_auth_session_storage_state_path(
         require_active_bucket_id(),
         "clave-permanente-storage",
     )
-    assert _session_store.exists(storage_state_path)
+    assert session_store.exists(storage_state_path)
     assert not storage_state_path.exists()
     assert not storage_state_path.with_suffix(".meta.json").exists()
 

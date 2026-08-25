@@ -245,7 +245,7 @@ def test_the_fiscal_identity_is_reported_in_none_of_the_three_outcomes() -> None
     outcomes about fields the reconciliation actually decides.
     """
     from .....application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS, CensalReconciliation
-    from .....domain.user_profile import UserProfileFact
+    from .....domain.user_profile.values import UserProfileFact
 
     assert "identity.tax_id" not in CENSAL_ADOPTABLE_PATHS
     adoptable_path = next(iter(sorted(CENSAL_ADOPTABLE_PATHS)))

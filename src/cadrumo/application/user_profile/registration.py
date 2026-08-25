@@ -40,7 +40,7 @@ from ...core import assess_profile_password
 from ...core.errors import CadrumoError
 from ...core.identity import BucketId, ProfileId
 from ...core.time import now as _utc_now
-from ...domain.user_profile import ProfileSetupState, UserProfileRecord, new_profile_id
+from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord, new_profile_id
 from ..evidence import try_record_legal_hold_snapshot
 from ..filing import try_record_filing_retention_snapshot
 from .capsule_record import ProfileRecordSession
@@ -58,7 +58,7 @@ from .validation import reject_invalid_profile_facts
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from ...domain.user_profile import UserProfileFact
+    from ...domain.user_profile.values import UserProfileFact
     from .recovery_custody import ProfileRecoveryEnrollment
 
 

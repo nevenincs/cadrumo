@@ -15,7 +15,7 @@ the confirm path on any machine. The PDF lane's cases cannot run without a
 provisioned reader, which is exactly how a CLI-surface regression goes unnoticed.
 
 See Also:
-    :func:`~application.ledger.confirm_invoice_draft_from_evidence`
+    :func:`~application.ledger.evidence_draft.confirm_invoice_draft_from_evidence`
         The application service whose document-identity guard is reached here.
 """
 

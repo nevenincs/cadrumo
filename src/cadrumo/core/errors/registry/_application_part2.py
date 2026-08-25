@@ -1034,7 +1034,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._review_package_recipient_replay_guard.RecipientReplayGuardError",
+        "cadrumo.adapters.persistence.profile.recipient_replay_guard.RecipientReplayGuardError",
         ErrorCode(
             code="ERROR_MODELO_RECIPIENT_REPLAY_GUARD",
             category=ErrorCategory.ERROR,
@@ -1044,7 +1044,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._review_package_recipient_replay_guard.RecipientPackageReplayedError",
+        "cadrumo.adapters.persistence.profile.recipient_replay_guard.RecipientPackageReplayedError",
         ErrorCode(
             code="REFUSED_MODELO_RECIPIENT_PACKAGE_REPLAYED",
             category=ErrorCategory.REFUSED,

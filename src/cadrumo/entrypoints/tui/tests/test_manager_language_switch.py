@@ -83,7 +83,7 @@ _COLUMN_KEYS = (
 
 def _register_in(language: str) -> None:
     """Create the profile already carrying a language, as registration does."""
-    from ....domain.user_profile import UserProfileFact
+    from ....domain.user_profile.values import UserProfileFact
 
     register_profile_with_credentials(
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,

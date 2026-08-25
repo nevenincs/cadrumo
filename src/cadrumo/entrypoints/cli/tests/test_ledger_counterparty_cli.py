@@ -23,7 +23,7 @@ operator answered once.
 Real CLI, real encrypted profile store, real ladder. Nothing is stubbed.
 
 See Also:
-    :func:`~application.ledger.resolve_draft_counterparty_establishment`
+    :func:`~application.ledger.establishment_ladder.resolve_draft_counterparty_establishment`
         The ladder these tests interrogate after the verb has run.
 """
 

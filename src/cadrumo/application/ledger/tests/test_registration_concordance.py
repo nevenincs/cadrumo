@@ -41,8 +41,8 @@ __all__ = ["repository"]
 
 from ....core import ClassifierInputSource
 from ....domain.iva import EUMemberState, IvaTerritorialScope
-from .._counterparty_establishment import ConfirmedCounterpartyFactsRepository
-from .._establishment_ladder import (
+from ..counterparty_establishment import ConfirmedCounterpartyFactsRepository
+from ..establishment_ladder import (
     CounterpartyEstablishment,
     EstablishmentRung,
     resolve_counterparty_establishment_scope,

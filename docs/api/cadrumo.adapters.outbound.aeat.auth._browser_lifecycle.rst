@@ -1,7 +1,8 @@
-cadrumo.adapters.outbound.aeat.auth._browser_lifecycle module
+cadrumo.adapters.outbound.aeat.auth.browser_lifecycle module
 =============================================================
 
-.. automodule:: cadrumo.adapters.outbound.aeat.auth._browser_lifecycle
+.. automodule:: cadrumo.adapters.outbound.aeat.auth.browser_lifecycle
    :members:
    :show-inheritance:
    :ignore-module-all:
+

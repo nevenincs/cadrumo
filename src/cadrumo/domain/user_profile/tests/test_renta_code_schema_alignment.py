@@ -21,7 +21,8 @@ import pytest
 from ....core import RentaDeclaracionType
 from ....domain import contribuyente
 from ....domain.contribuyente import RentaMaritalStatus, RentaSexCode
-from .. import UserProfileNotFoundError, load_user_profile_schema
+from ..errors import UserProfileNotFoundError
+from ..loader import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

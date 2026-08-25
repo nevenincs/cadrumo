@@ -42,7 +42,7 @@ from typing import TYPE_CHECKING, Annotated
 if TYPE_CHECKING:
     from ...core.errors import CadrumoError
     from ...core.json_contract import Notice, ResolvedNoticeAction
-    from ...domain.user_profile import UserProfileFact
+    from ...domain.user_profile.values import UserProfileFact
     from ._results import ConfigProfileCreateResult, ConfigProfileEditResult
 
 import contextlib
@@ -1049,7 +1049,7 @@ def scripted_profile_facts(
     Returns:
         The supplied flags as facts, empty when the caller named none.
     """
-    from ...domain.user_profile import UserProfileFact
+    from ...domain.user_profile.values import UserProfileFact
     from ._persistence import profile_values_from_patch
 
     canonical = _collect_flag_values(flow, dict(kwargs))
@@ -1068,7 +1068,7 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
     every other stored field is left untouched. No full-flow walk, no
     ``SetupAnswers`` model construction, no descriptor-default seeding.
     """
-    from ...domain.user_profile import UserProfileFact
+    from ...domain.user_profile.values import UserProfileFact
     from ..user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
     from ..user_profile.profile_record_repository import ProfileRecordRepository
     from ..user_profile.projections import record_to_path_values
@@ -1113,7 +1113,7 @@ def _run_full_flow(
     hide it, so an explicitly-given flag value is always honoured.
 
     """
-    from ...domain.user_profile import UserProfileFact
+    from ...domain.user_profile.values import UserProfileFact
     from ..user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
     from ..user_profile.profile_record_repository import ProfileRecordRepository
     from ..user_profile.registration import ProfileRegistrationError
@@ -1272,7 +1272,7 @@ def _resolve_profile_id_for_mode(flow: WizardFlow, mode: WizardPersistMode, prof
     itself the registration check: an unresolvable label falls through to the
     missing-flag refusal.
     """
-    from ...domain.user_profile import new_profile_id
+    from ...domain.user_profile.values import new_profile_id
     from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
 
     if mode == "create":
@@ -1561,7 +1561,7 @@ def profile_next_step_modelo(profile_values: dict[str, str]) -> str | None:
         profile_values: Dotted-path fact values as the wizard's canonical
             question-id keys, or the equivalent
             :func:`~cadrumo.application.user_profile.record_to_path_values`
-            projection of a :class:`~cadrumo.domain.user_profile.UserProfileRecord`
+            projection of a :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`
             — the two share the same ``taxpayer_type.fiscal_residency`` key.
     """
     fiscal_residency = profile_values.get("taxpayer_type.fiscal_residency", "").strip().lower()

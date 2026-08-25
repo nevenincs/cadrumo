@@ -186,12 +186,12 @@ def test_binary_mime_consumers_alias_core_constant() -> None:
 def test_default_currency_consumers_alias_core_constant() -> None:
     """Default-currency consumers import ``DEFAULT_CURRENCY`` from core."""
 
-    from ...application.ledger import ManualLedgerTransactionCommand
+    from ...application.ledger.models import ManualLedgerTransactionCommand
     from ..external_constants import DEFAULT_CURRENCY
 
     for module_name, attr_name, message in (
         (
-            "cadrumo.application.ledger._models",
+            "cadrumo.application.ledger.models",
             "DEFAULT_CURRENCY",
             "_models module must import DEFAULT_CURRENCY from external_constants",
         ),
@@ -237,7 +237,7 @@ def test_classified_by_manual_consumers_alias_core_constant() -> None:
 
     for module_name, message in (
         ("cadrumo.application.ledger", "cadrumo.application.ledger must expose CLASSIFIED_BY_MANUAL"),
-        ("cadrumo.application.ledger._models", "_models must import CLASSIFIED_BY_MANUAL from core"),
+        ("cadrumo.application.ledger.models", "_models must import CLASSIFIED_BY_MANUAL from core"),
         (
             "cadrumo.domain.transactions._service",
             "_service must import CLASSIFIED_BY_MANUAL from cadrumo.core.external_constants",

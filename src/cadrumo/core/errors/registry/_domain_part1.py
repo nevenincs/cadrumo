@@ -488,7 +488,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.ledger._aeat_record_projection.AeatRecordProjectionError",
+        "cadrumo.application.ledger.aeat_record_projection.AeatRecordProjectionError",
         ErrorCode(
             code="REFUSED_AEAT_RECORD_MULTI_RECIPIENT",
             category=ErrorCategory.REFUSED,
@@ -498,7 +498,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.ledger._confirmation_gate.ConfirmationBlockedError",
+        "cadrumo.application.ledger.confirmation_gate.ConfirmationBlockedError",
         ErrorCode(
             code="REFUSED_LEDGER_CONFIRMATION_BLOCKED",
             category=ErrorCategory.REFUSED,
@@ -508,7 +508,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.ledger._counterparty_establishment.ConfirmedCounterpartyFactsInputError",
+        "cadrumo.application.ledger.counterparty_establishment.ConfirmedCounterpartyFactsInputError",
         ErrorCode(
             code="REFUSED_LEDGER_COUNTERPARTY_ESTABLISHMENT_INPUT",
             category=ErrorCategory.REFUSED,
@@ -518,7 +518,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.ledger._counterparty_establishment.CounterpartyEstablishmentConflictError",
+        "cadrumo.application.ledger.counterparty_establishment.CounterpartyEstablishmentConflictError",
         ErrorCode(
             code="REFUSED_LEDGER_COUNTERPARTY_ESTABLISHMENT_CONFLICT",
             category=ErrorCategory.REFUSED,
@@ -528,7 +528,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.ledger._evidence.PurchaseInvoiceEvidenceInputError",
+        "cadrumo.application.ledger.evidence.PurchaseInvoiceEvidenceInputError",
         ErrorCode(
             code="REFUSED_LEDGER_EVIDENCE_INPUT",
             category=ErrorCategory.REFUSED,
@@ -538,7 +538,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.ledger._consent_withdrawal.ConsentRederivationError",
+        "cadrumo.application.ledger.consent_withdrawal.ConsentRederivationError",
         ErrorCode(
             code="REFUSED_LEDGER_CONSENT_REDERIVATION",
             category=ErrorCategory.REFUSED,
@@ -548,7 +548,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.ledger._evidence.PurchaseInvoiceEvidenceNotFoundError",
+        "cadrumo.application.ledger.evidence.PurchaseInvoiceEvidenceNotFoundError",
         ErrorCode(
             code="REFUSED_LEDGER_EVIDENCE_NOT_FOUND",
             category=ErrorCategory.REFUSED,

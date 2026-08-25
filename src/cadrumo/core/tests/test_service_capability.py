@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...domain.user_profile import load_user_profile_schema
+from ...domain.user_profile.loader import load_user_profile_schema
 from .. import ServiceCapability
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

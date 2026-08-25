@@ -6,14 +6,14 @@ real encrypted-bucket write path, and asserts
 file written and no field fabricated. No mocks.
 
 See Also:
-    :class:`~application.ledger.InvoiceDraft`
+    :class:`~application.ledger.evidence_draft.InvoiceDraft`
         Public reviewed-draft record returned before any invoice is persisted.
-    :func:`~application.ledger.transcribe_text_layer`
+    :func:`~application.ledger.evidence_textlayer.transcribe_text_layer`
         Acquisition-stage primitive that refuses a document with no text layer.
-    :func:`~application.ledger.extract_invoice_draft_from_evidence`
+    :func:`~application.ledger.evidence_draft.extract_invoice_draft_from_evidence`
         CLI-facing resolver that reads stored evidence bytes from secure storage
         and chooses text-layer or on-host vision extraction.
-    :func:`~application.ledger.confirm_invoice_draft_from_evidence`
+    :func:`~application.ledger.evidence_draft.confirm_invoice_draft_from_evidence`
         Confirmation step that re-extracts, applies overrides, and delegates the
         catalogue write.
     :func:`~application.invoices.create_catalogue_invoice`
@@ -42,19 +42,19 @@ from ....core.config import Settings
 from ....domain.attachments import load_attachment
 from ....domain.invoices import InvoiceValidationError
 from ....domain.iva import InvoiceKind
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.llm_vision_evidence_support import _json_array, _run_against_loopback_ollama
 from ....tests.pdf_fixtures import text_pdf_bytes
 from ....tests.profile_capsule import seed_test_profile_record
-from .._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError
-from .._evidence_draft import (
+from ..evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError
+from ..evidence_draft import (
     InvoiceDraft,
     confirm_invoice_draft_from_evidence,
     extract_invoice_draft_from_evidence,
 )
-from .._evidence_input import EvidenceInput
-from .._evidence_textlayer import transcribe_text_layer
-from .._preconditions import LedgerPreconditionCondition
+from ..evidence_input import EvidenceInput
+from ..evidence_textlayer import transcribe_text_layer
+from ..preconditions import LedgerPreconditionCondition
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile
 from ._evidence_test_support import seeded_filer_profile as seeded_filer_profile

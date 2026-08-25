@@ -4,7 +4,7 @@ Wires the on-host document readers to the ledger CLI: an operator can run
 ``evidence add``
 against a real PDF, then ``evidence extract --evidence-id <id>`` to read the
 supplier NIF / invoice number / date / base / IVA rate / IVA amount / total
-into a reviewable :class:`~application.ledger.InvoiceDraft` -- without
+into a reviewable :class:`~application.ledger.evidence_draft.InvoiceDraft` -- without
 minting an :class:`~domain.invoices.Invoice`.
 
 Every case drives the real Typer CLI tree, a real encrypted bucket session,
@@ -14,13 +14,13 @@ monkeypatch.
 See Also:
     :func:`~entrypoints.cli._ledger_evidence_cli._register_evidence_extract_command`
         CLI command registration exercised by these Typer regressions.
-    :func:`~application.ledger.extract_invoice_draft_from_evidence`
+    :func:`~application.ledger.evidence_draft.extract_invoice_draft_from_evidence`
         CLI-facing resolver that loads stored bytes and returns the draft.
-    :func:`~application.ledger.transcribe_text_layer`
+    :func:`~application.ledger.evidence_textlayer.transcribe_text_layer`
         Acquisition-stage primitive reached by the text-native happy path.
-    :class:`~application.ledger.InvoiceDraft`
+    :class:`~application.ledger.evidence_draft.InvoiceDraft`
         Reviewable, non-persisted payload asserted by the command output.
-    :func:`~application.ledger.confirm_invoice_draft_from_evidence`
+    :func:`~application.ledger.evidence_draft.confirm_invoice_draft_from_evidence`
         Follow-on review step that turns a draft into a catalogue invoice.
 
 Evidence reading stays local-first and secure-storage-only: nothing decrypted

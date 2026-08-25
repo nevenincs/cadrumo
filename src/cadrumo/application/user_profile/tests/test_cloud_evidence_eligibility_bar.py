@@ -46,7 +46,7 @@ from cadrumo.application.user_profile.capabilities import CapabilitySource, reso
 
 from ....core import ServiceCapability, scan_directory
 from ....core.config import Settings, load_settings
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....llm import EvidenceConsentToken, LLMConsentError, cloud_evidence_read_permitted, mint_evidence_consent_token
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

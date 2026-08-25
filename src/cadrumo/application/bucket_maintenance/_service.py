@@ -20,7 +20,7 @@ from ...core.hashing import CONTENT_DIGEST_PREFIX
 from ...core.time import now
 from ...domain.buckets import BucketDeleteRefusedError
 from ...domain.retention import RetentionFloorAssessment
-from ...domain.user_profile import ProfileNotFoundError
+from ...domain.user_profile.errors import ProfileNotFoundError
 from .._bucket_deletion_contracts import BucketDeletionFingerprint
 from ..operator_actions import PreconditionVerdict, no_action_precondition_verdict
 from ..user_profile.custody_ports import default_profile_bucket_storage, inventory_committed_profile_custody

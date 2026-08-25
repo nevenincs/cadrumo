@@ -43,7 +43,8 @@ from ....domain.calculations.registry import (
     CasillaObservation,
     calculate_registry_snapshot,
 )
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord, load_user_profile_schema
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.loader import load_user_profile_schema
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli

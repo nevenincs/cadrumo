@@ -11,8 +11,8 @@ from pydantic import ValidationError
 
 from ....core.classification import SensitivityClass
 from ....core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
-from .._portable_export import CarriedSecureObject, CoverageManifest, UserProfilePortableExport
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ..portable_export import CarriedSecureObject, CoverageManifest, UserProfilePortableExport
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

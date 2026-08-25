@@ -31,20 +31,9 @@ import pytest
 from cadrumo.application.user_profile.overview import build_profile_overview
 
 from ....core.classification import SensitivityClass
-from ....domain.user_profile import (
-    ProfileDerivedSelectorDefinition,
-    ProfileFieldDefinition,
-    ProfileFieldType,
-    ProfileRemovePolicy,
-    ProfileSchemaDefinition,
-    ProfileSectionDefinition,
-    ProfileSetupState,
-    ProfileSnapshotPolicy,
-    UserProfileFact,
-    UserProfileRecord,
-    derived_selector_for_path,
-    load_user_profile_schema,
-)
+from ....domain.user_profile.schema import ProfileDerivedSelectorDefinition, ProfileFieldDefinition, ProfileFieldType, ProfileRemovePolicy, ProfileSchemaDefinition, ProfileSectionDefinition, ProfileSnapshotPolicy, derived_selector_for_path
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.loader import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

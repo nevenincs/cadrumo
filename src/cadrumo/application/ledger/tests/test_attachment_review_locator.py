@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 import pytest
 
 from ....domain.attachments import Attachment, AttachmentKind, AttachmentSource
-from .._attachment_review import _project
+from ..attachment_review import _project
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

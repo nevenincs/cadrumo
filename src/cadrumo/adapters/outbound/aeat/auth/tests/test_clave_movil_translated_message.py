@@ -26,9 +26,9 @@ from pydantic import SecretStr
 from ......core.config import Settings
 from ......core.i18n import tr
 from ......tests.secure_sql import isolated_runtime_profile
-from .._authenticator import AeatLoginAssertionError
-from .._clave_movil import ClaveMovilAuthProvider
-from .._clave_movil_metadata import ClaveMovilSessionMetadata
+from ..authenticator import AeatLoginAssertionError
+from ..clave_movil import ClaveMovilAuthProvider
+from ..clave_movil_metadata import ClaveMovilSessionMetadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -74,7 +74,7 @@ def test_load_persisted_no_session_carries_translated_message(
     tmp_path: Path,
 ) -> None:
     """_load_persisted raises AeatLoginAssertionError with no_persisted_session key
-    when _session_store.load returns None (no file on disk)."""
+    when session_store.load returns None (no file on disk)."""
     settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
     provider = ClaveMovilAuthProvider(settings)
     storage_state_path = tmp_path / "nonexistent-storage.json"
@@ -118,7 +118,7 @@ def test_probe_persisted_session_expired_carries_translated_message(
 ) -> None:
     """probe_persisted_session raises AeatLoginAssertionError with session_expired key
     when the persisted metadata's idle_deadline is in the past."""
-    from .. import _session_store
+    import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
 
     settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
     provider = ClaveMovilAuthProvider(settings)
@@ -137,7 +137,7 @@ def test_probe_persisted_session_expired_carries_translated_message(
         storage_state_sha256="deadbeef" * 8,
     )
     storage_state: dict[str, object] = {"cookies": [{"name": "AEAT_SESSION"}], "origins": []}
-    _session_store.save(
+    session_store.save(
         storage_state_path,
         storage_state=storage_state,
         metadata=metadata.model_dump(mode="json"),
@@ -162,7 +162,7 @@ def test_resume_locked_hash_mismatch_carries_translated_message(
 ) -> None:
     """_resume_locked raises AeatLoginAssertionError with storage_state_hash_mismatch key
     when the persisted sha256 does not match the metadata sha256."""
-    from .. import _session_store
+    import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
 
     settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
     provider = ClaveMovilAuthProvider(settings)
@@ -180,7 +180,7 @@ def test_resume_locked_hash_mismatch_carries_translated_message(
         storage_state_sha256="a" * 64,
     )
     storage_state: dict[str, object] = {"cookies": [{"name": "AEAT_SESSION"}], "origins": []}
-    _session_store.save(
+    session_store.save(
         storage_state_path,
         storage_state=storage_state,
         metadata=metadata.model_dump(mode="json"),

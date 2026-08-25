@@ -7,8 +7,8 @@ import json
 
 import pytest
 
-from ...application.ledger import PurchaseInvoiceEvidenceInputError
-from ...application.ledger._llm_classification import _classify_with_evidence, _ResolvedEvidence
+from ...application.ledger.evidence import PurchaseInvoiceEvidenceInputError
+from ...application.ledger.llm_classification import ResolvedEvidence, classify_with_evidence
 from ...application.provisioning import (
     AcceleratorReading,
     HardwareProfile,
@@ -97,14 +97,14 @@ def test_image_evidence_classifies_with_no_provider() -> None:
             "business_pct": None,
         },
     )
-    evidence = _ResolvedEvidence(
+    evidence = ResolvedEvidence(
         reference="ev-1",
         text=None,
         images=(MultimodalImageInput.from_base64(base64.b64encode(_png_image()).decode("ascii"), ImageMediaType.PNG),),
     )
 
     def _call() -> tuple[LLMClassificationResponse, str]:
-        return _classify_with_evidence(
+        return classify_with_evidence(
             _transaction("ev-1"),
             evidence,
             text_classifier=None,
@@ -134,7 +134,7 @@ def test_text_path_without_a_cloud_provider_now_routes_on_host() -> None:
     by the canonical provisioning verdict rather than transport-specific prose.
     """
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-        _classify_with_evidence(
+        classify_with_evidence(
             _transaction("ev-1"),
             None,
             text_classifier=None,
@@ -152,7 +152,7 @@ def test_text_path_without_a_cloud_provider_now_routes_on_host() -> None:
 
 def test_vision_connection_error_carries_the_runtime_precondition_verdict() -> None:
     """An unreachable on-host reader carries the canonical provisioning verdict."""
-    evidence = _ResolvedEvidence(
+    evidence = ResolvedEvidence(
         reference="ev-1",
         text=None,
         images=(MultimodalImageInput.from_base64(base64.b64encode(_png_image()).decode("ascii"), ImageMediaType.PNG),),
@@ -168,7 +168,7 @@ def test_vision_connection_error_carries_the_runtime_precondition_verdict() -> N
         settings=unreachable_settings,
     )
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-        _classify_with_evidence(
+        classify_with_evidence(
             _transaction("ev-1"),
             evidence,
             text_classifier=None,
@@ -195,7 +195,7 @@ def test_vision_model_override_selects_the_named_model() -> None:
             "iva_category": IvaCategory.DOMESTIC_GENERAL.value,
         },
     )
-    evidence = _ResolvedEvidence(
+    evidence = ResolvedEvidence(
         reference="ev-1",
         text=None,
         images=(MultimodalImageInput.from_base64(base64.b64encode(_png_image()).decode("ascii"), ImageMediaType.PNG),),
@@ -212,7 +212,7 @@ def test_vision_model_override_selects_the_named_model() -> None:
             ),
             settings=settings,
         )
-        return _classify_with_evidence(
+        return classify_with_evidence(
             _transaction("ev-1"),
             evidence,
             text_classifier=None,

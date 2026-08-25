@@ -40,7 +40,7 @@ from ....core.bucket_pointer import read_pointer
 from ....core.config import load_settings
 from ....domain.filing import CasillaSchemaProvider, ModeloDraft
 from ....domain.submission import ModeloDraftStatus
-from ....domain.user_profile import UserProfileFact
+from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile

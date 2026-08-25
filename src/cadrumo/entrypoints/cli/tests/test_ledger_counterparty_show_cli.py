@@ -22,7 +22,7 @@ consumer must act on differently -- never a tax figure, which this verb does not
 compute.
 
 See Also:
-    :func:`~application.ledger.resolve_confirmed_counterparty_facts`
+    :func:`~application.ledger.counterparty_establishment.resolve_confirmed_counterparty_facts`
         The single resolver both this verb and the ladder ask.
     :class:`~entrypoints.cli._ledger_counterparty_payloads.CounterpartyShowResult`
         The payload whose three-state contract is pinned here.

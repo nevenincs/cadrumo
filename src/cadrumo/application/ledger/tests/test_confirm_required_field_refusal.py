@@ -24,8 +24,8 @@ from __future__ import annotations
 
 import pytest
 
-from .._evidence_draft import PurchaseInvoiceEvidenceInputError, _confirmed_counterparty_name
-from .._preconditions import LedgerPreconditionCondition
+from ..evidence_draft import PurchaseInvoiceEvidenceInputError, _confirmed_counterparty_name
+from ..preconditions import LedgerPreconditionCondition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

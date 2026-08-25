@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.user_profile import declared_provenance_sources, load_user_profile_schema
+from ....domain.user_profile.values import declared_provenance_sources
+from ....domain.user_profile.loader import load_user_profile_schema
 from ..censo_sync import CENSO_SOURCE_TAG
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

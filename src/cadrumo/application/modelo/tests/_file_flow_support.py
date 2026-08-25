@@ -46,7 +46,7 @@ from ....domain.modelos import (
     WorkUnit,
     upsert_work_unit,
 )
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.registry_tree import bundled_registry_tree

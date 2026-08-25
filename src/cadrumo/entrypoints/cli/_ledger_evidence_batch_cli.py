@@ -1,7 +1,7 @@
 """Behavior handlers for the bounded evidence batch run.
 
 The operator half of batch ingestion. The run itself belongs to
-:func:`~cadrumo.application.ledger.run_evidence_batch`, which owns per-item
+:func:`~cadrumo.application.ledger.batch_ingest.run_evidence_batch`, which owns per-item
 truth, deterministic ordering, idempotent re-run and the inference lane; this
 module only resolves the operator's sources, projects the run's typed rows onto
 the JSON envelope, and turns the run's own signals into operator-facing text.
@@ -22,9 +22,9 @@ working: the run produced a draft a person must adjudicate. It reports as an
 info notice pointing at the review queue and never touches the exit status.
 
 See Also:
-    :func:`~cadrumo.application.ledger.run_evidence_batch`
+    :func:`~cadrumo.application.ledger.batch_ingest.run_evidence_batch`
         The run under this surface.
-    :class:`~cadrumo.application.ledger.BatchRunResult`
+    :class:`~cadrumo.application.ledger.batch_ingest.BatchRunResult`
         The typed result this module projects.
 """
 
@@ -55,7 +55,7 @@ from ._config._status_rendering import precondition_action_lines
 from ._ledger_evidence_batch_payloads import EvidenceBatchResult
 
 if TYPE_CHECKING:
-    from ...application.ledger import BatchItemResult, BatchRunResult, UnresolvedBatchSource
+    from ...application.ledger.batch_ingest import BatchItemResult, BatchRunResult, UnresolvedBatchSource
     from ...application.operator_actions import PreconditionVerdict
 
 __all__ = ["evidence_batch"]
@@ -85,7 +85,7 @@ def evidence_batch(
         sources.insert(0, directory)
     if not sources:
         raise _bad(tr("cli.app.ledger.evidence.batch_source_required"))
-    from ...application.ledger import run_evidence_batch
+    from ...application.ledger.batch_ingest import run_evidence_batch
 
     bucket_id = _tx_repo(_state()).bucket_id
     text_mode = _format_of(ctx) is not OutputFormat.JSON

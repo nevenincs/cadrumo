@@ -10,10 +10,10 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....core.config import Settings
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from .._evidence import PurchaseInvoiceEvidenceService
-from .._filer_establishment import FILER_POSTCODE_FACT_PATH
+from ..evidence import PurchaseInvoiceEvidenceService
+from ..filer_establishment import FILER_POSTCODE_FACT_PATH
 
 _BUCKET_ID = "29292929-2929-4929-8929-292929292929"
 

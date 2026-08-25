@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from cadrumo.application.user_profile.recovery_custody import ProfileRecoveryEnrollment
-from cadrumo.domain.user_profile import UserProfileFact
+from cadrumo.domain.user_profile.values import UserProfileFact
 
 PROFILE_PASSPHRASE = "harness-current-profile-credential"  # noqa: S105 - synthetic integration credential
 READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (

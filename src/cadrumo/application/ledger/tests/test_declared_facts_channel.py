@@ -42,12 +42,12 @@ from ....domain.iva import (
     IvaTerritorialScope,
     SupplyNature,
 )
-from .._classification_assembly import (
+from ..classification_assembly import (
     DeclaredFact,
     DeclaredFacts,
     assemble_classification_criteria,
 )
-from .._classifier_inputs import ClassifierInputFact, ClassifierInputs
+from ..classifier_inputs import ClassifierInputFact, ClassifierInputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

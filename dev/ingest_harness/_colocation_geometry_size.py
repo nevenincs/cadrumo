@@ -36,7 +36,7 @@ stamp. There is nothing to co-locate against either, because a structured shape
 is read exactly and never transcribed. The second reason is the guard that would
 catch such an envelope if one arrived by another route --
 ``ATTRIBUTION_ESTABLISHING_ORIGINS`` in
-``cadrumo.application.ledger._party_attribution``, which carries
+``cadrumo.application.ledger.party_attribution``, which carries
 ``EXACT_STRUCTURED`` and clears the stamp by origin.
 
 Naming the weaker one alone would misdescribe the mechanism: it governs whether
@@ -60,13 +60,9 @@ from typing import Any, Final
 
 from pydantic import BaseModel, ConfigDict
 
-from cadrumo.application.ledger import (
-    DocumentTranscription,
-    FieldProvenance,
-    InvoiceDraft,
-    TranscriberIdentity,
-    party_regions,
-)
+from cadrumo.application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
+from cadrumo.application.ledger.evidence_draft import FieldProvenance, InvoiceDraft
+from cadrumo.application.ledger.party_colocation import party_regions
 from cadrumo.core import LOCAL_TRANSPORT_LABEL, FieldGroundingOutcome, FieldOrigin
 
 from .._paths import UTF_8
@@ -179,7 +175,7 @@ def column_aware_rendering_partitions(
 ) -> ColumnSegmentationSize:
     """Return whether column-aware rendering alone lets the resolver partition.
 
-    Drives the real :func:`~application.ledger.party_regions` in both renderings,
+    Drives the real :func:`~application.ledger.party_colocation.party_regions` in both renderings,
     so this cannot drift into its own idea of what partitioning means. The split
     is the page midpoint rather than a fitted boundary: a fitted one would be
     tuned on the only layout available and would report its own tuning.

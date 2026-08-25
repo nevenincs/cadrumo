@@ -29,7 +29,7 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....domain.usage_ratios import UsageRatioProfile
-from ....domain.user_profile import UserProfileFact
+from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli

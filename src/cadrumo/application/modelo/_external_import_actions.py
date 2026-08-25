@@ -75,7 +75,6 @@ from ...domain.modelos import (
     ModeloRecordCatalogueRepositoryProtocol,
     ModeloRecordStatus,
     WorkUnit,
-    WorkUnitCatalogueRepositoryProtocol,
     WorkUnitState,
     derive_calculation_revision_id,
     derive_filing_record_id,
@@ -84,6 +83,7 @@ from ...domain.modelos import (
     upsert_filing_record,
     upsert_work_unit,
 )
+from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..calculations import CalculationObservationRepository, ObservationSourceKind
 from ._action_errors import ExternalModeloImportError
 from ._calculation_helpers import external_filing_observations as _external_filing_observations

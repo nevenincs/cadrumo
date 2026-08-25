@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.inbound.einvoice import ParsedAeatRecord, parse_aeat_record_batch
-from .._aeat_record_projection import (
+from ..aeat_record_projection import (
     AeatRecordProjectionError,
     describe_aeat_party_identifier,
     project_aeat_record_counterparty,

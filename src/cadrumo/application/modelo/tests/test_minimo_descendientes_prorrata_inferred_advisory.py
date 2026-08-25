@@ -28,7 +28,7 @@ from ....core import CasillaId, Modelo
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision
 from ....domain.contribuyente import DescendantInfo, RentaMaritalStatus, descendant_facts_from_list
-from ....domain.user_profile import UserProfileFact
+from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import set_active_test_profile_facts
 from ...aggregation import CalculationSourceDiagnostic
 from .._minimo_descendientes_advisory import collect_minimo_descendientes_prorrata_inferred_diagnostics

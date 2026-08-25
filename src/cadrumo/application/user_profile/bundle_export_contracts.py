@@ -38,10 +38,10 @@ from pydantic import BaseModel, Field, SecretStr, computed_field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import ProfileId
-from ...domain.user_profile import ProfileExportError
+from ...domain.user_profile.errors import ProfileExportError
 
 if TYPE_CHECKING:
-    from ...domain.user_profile import UserProfilePortableExport
+    from ...domain.user_profile.portable_export import UserProfilePortableExport
 
 _CARRIED_NAMESPACE_CATEGORY_PREFIX = "secure_object_namespace:"
 

@@ -11,7 +11,7 @@ from pydantic import SecretStr, ValidationError
 
 from cadrumo.application.workflow.persistence import workflow_state_repository
 
-from ....adapters.outbound.aeat.auth import _session_store
+from ....adapters.outbound.aeat.auth import session_store
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
@@ -618,7 +618,7 @@ def test_live_auth_preflight_reports_expired_persisted_session_state() -> None:
         configure_operator_auth("clave_movil")
         captured_at = _EXPIRED_SESSION_AUTHENTICATED_AT
         path = storage_state_paths(AuthProviderKind.CLAVE_MOVIL).storage_state
-        _session_store.save(
+        session_store.save(
             path,
             storage_state={"cookies": [], "origins": []},
             metadata={
@@ -793,7 +793,7 @@ def test_operator_auth_test_reports_profile_scoped_clave_session() -> None:
         configure_operator_auth("clave_movil")
         captured_at = _LIVE_SESSION_AUTHENTICATED_AT
         path = storage_state_paths(AuthProviderKind.CLAVE_MOVIL).storage_state
-        _session_store.save(
+        session_store.save(
             path,
             storage_state={"cookies": [], "origins": []},
             metadata={
@@ -863,13 +863,13 @@ def test_reset_provider_scope_removes_only_the_target_provider_artefacts(tmp_pat
     set_operator_certificate_source_secret(name="personal", secret=SecretStr("cert-passphrase"))
 
     certificate_session = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
-    _session_store.save(
+    session_store.save(
         certificate_session,
         storage_state={"cookies": [], "origins": []},
         metadata={"provider_kind": "certificate"},
     )
     unrelated_session = storage_state_paths(AuthProviderKind.CLAVE_MOVIL).storage_state
-    _session_store.save(
+    session_store.save(
         unrelated_session,
         storage_state={"cookies": [], "origins": []},
         metadata={"provider_kind": "clave_movil"},
@@ -897,11 +897,11 @@ def test_reset_provider_scope_removes_only_the_target_provider_artefacts(tmp_pat
     assert result.cleared_locks == 1
     assert result.removed_certificate_sources == 1
     assert result.removed_certificate_secrets == 1
-    assert _session_store.exists(certificate_session) is False
+    assert session_store.exists(certificate_session) is False
     assert state.auth.certificate_sources == {}
     assert resolve_certificate_source_secret(name="personal", bucket_id=_BUCKET_ID) is None
 
-    assert _session_store.exists(unrelated_session) is True, (
+    assert session_store.exists(unrelated_session) is True, (
         "an unrelated provider's persisted session must survive a scoped reset"
     )
 

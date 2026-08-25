@@ -686,7 +686,13 @@ from ._schema import (
 )
 from ._supported_filing_years import SupportedFilingYearGap, audit_supported_filing_years
 from ._schema_scalars import registry_scalar_value_type, validate_registry_text_scalar
-from ._static_inspection import RegistryRevisionInspection
+from ._static_inspection import (
+    GeneratedArtifactInspection,
+    GeneratedArtifactSource,
+    RegistryRevisionInspection,
+    StaticGeneratedArtifactInspection,
+    StaticGeneratedArtifactSource,
+)
 from ._schema_input_kind import InputKind, InputKindValue
 from ._schema_rounding import RegistryRoundingCode
 from ._schema_verification import (
@@ -1036,6 +1042,8 @@ __all__ = [
     "FormulaExpression",
     "FormulaId",
     "Gasto193Observation",
+    "GeneratedArtifactInspection",
+    "GeneratedArtifactSource",
     "GroiOracle",
     "HandoffPathClassification",
     "ImpatriadoIncomeObservationProtocol",
@@ -1216,6 +1224,8 @@ __all__ = [
     "SourceReference",
     "SourceRefs",
     "StampedRegistryRelease",
+    "StaticGeneratedArtifactInspection",
+    "StaticGeneratedArtifactSource",
     "SupportedFilingYearGap",
     "SupportedFilingYearsCatalogue",
     "TaxRoute",

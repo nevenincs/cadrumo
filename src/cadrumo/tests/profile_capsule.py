@@ -33,12 +33,8 @@ from ..application.user_profile.capsule_record import ProfileRecordSession
 from ..core.identity import canonical_profile_bucket_id
 from ..core.paths import effective_storage_root
 from ..domain.buckets import BucketEventType
-from ..domain.user_profile import (
-    ProfileSchemaValidationError,
-    ProfileSetupState,
-    UserProfileFact,
-    UserProfileRecord,
-)
+from ..domain.user_profile.errors import ProfileSchemaValidationError
+from ..domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
 
 def _active_bucket_dek(profile_id: UUID) -> bytes:

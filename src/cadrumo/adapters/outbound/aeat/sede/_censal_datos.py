@@ -67,7 +67,7 @@ from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from ._walker import assert_landed_url_readable
 
 if TYPE_CHECKING:
-    from ..auth import AeatSession
+    from ..auth.authenticator_types import AeatSession
 
 
 log = get_logger(__name__)

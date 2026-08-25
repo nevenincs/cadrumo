@@ -16,7 +16,7 @@ See Also:
     :class:`~application.workflow.WorkflowState`
         Supplies the active profile record through the secure workflow-state
         repository when the active bucket is readable.
-    :class:`~domain.user_profile.UserProfileRecord`
+    :class:`~domain.user_profile.values.UserProfileRecord`
         Encrypted profile facts whose completeness determines the final health
         status.
     :class:`~application.state_projection.ProjectionActiveProfile`
@@ -57,6 +57,7 @@ from ..user_profile.keys_validation import list_profile_key_records, validate_pr
 from ..user_profile.profile_pointer import active_profile_pointer_transaction
 from ..user_profile.profile_record_repository import profile_record_session_if_authenticated
 from ..user_profile.projections import record_to_path_values
+from .active_profile import resolve_active_profile_record
 from .persistence import workflow_state_repository
 from .profile_bucket_scan import list_profile_buckets, resolve_profile_bucket
 from .state_models import WorkflowState
@@ -443,8 +444,9 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
         )
 
     try:
-        with override_settings(cadrumo_active_profile=registered_pointer.bucket_id):
-            resolved_state = state or workflow_state_repository().load()
+        if state is None:
+            with override_settings(cadrumo_active_profile=registered_pointer.bucket_id):
+                workflow_state_repository().load()
     except (CadrumoError, OSError) as exc:
         # CadrumoError: decryption, session, or domain failures loading the workflow state row.
         # OSError: filesystem I/O failure reading the encrypted database file.
@@ -462,7 +464,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
         )
     try:
         with override_settings(cadrumo_active_profile=registered_pointer.bucket_id):
-            resolution = resolved_state.resolve_active_profile_record()
+            resolution = resolve_active_profile_record()
     except (CadrumoError, ValueError) as exc:
         # CadrumoError: domain or registry failures resolving the profile record.
         # ValueError (including pydantic ValidationError): stored record fails strict validation.

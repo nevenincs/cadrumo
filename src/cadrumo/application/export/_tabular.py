@@ -223,7 +223,7 @@ def verify_export_metadata(
     The single check behind every serialized-payload result. Each argument is a
     pure function of ``payload`` and ``export_format``, so a value that
     disagrees with the bytes is false rather than merely different --
-    and :class:`~application.ledger.LedgerExportResult` redeclares the same
+    and :class:`~application.ledger.models.LedgerExportResult` redeclares the same
     seven fields independently, which is exactly why the verification lives
     here once instead of at each declaration.
 

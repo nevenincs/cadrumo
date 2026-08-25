@@ -23,7 +23,7 @@ from typing import TypedDict
 
 import pytest
 
-from .._evidence import (
+from ..evidence import (
     MediaKind,
     derive_keyed_purchase_invoice_evidence_id,
     derive_purchase_invoice_evidence_id,
@@ -126,7 +126,7 @@ def test_a_same_key_readd_with_divergent_content_names_every_changed_field() -> 
     from datetime import UTC, datetime
     from decimal import Decimal
 
-    from .._evidence import PurchaseInvoiceEvidence, _divergent_evidence_fields
+    from ..evidence import PurchaseInvoiceEvidence, _divergent_evidence_fields
 
     stamp = datetime(2024, 11, 15, 9, 0, tzinfo=UTC)
     prior = PurchaseInvoiceEvidence(
@@ -192,7 +192,7 @@ def test_every_caller_supplied_field_is_covered_by_the_conflict_comparison() -> 
     """
     import inspect
 
-    from .._evidence import PurchaseInvoiceEvidence, _divergent_evidence_fields
+    from ..evidence import PurchaseInvoiceEvidence, _divergent_evidence_fields
 
     not_caller_supplied = {
         "evidence_id",

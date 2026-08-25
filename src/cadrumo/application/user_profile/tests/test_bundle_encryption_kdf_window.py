@@ -41,13 +41,9 @@ from ....adapters.persistence.storage.master_key import (
     MIN_TIME_COST,
     KdfParams,
 )
-from ....domain.user_profile import (
-    ProfileSetupState,
-    UserProfileFact,
-    UserProfilePortableExport,
-    UserProfileRecord,
-    UserProfileValidationError,
-)
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.portable_export import UserProfilePortableExport
+from ....domain.user_profile.errors import UserProfileValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

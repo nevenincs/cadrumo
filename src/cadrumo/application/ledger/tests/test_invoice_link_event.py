@@ -37,7 +37,7 @@ from ....domain.transactions import (
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from ...invoices import link_invoice_transaction_catalogues, link_invoice_transaction_repositories
-from .. import link_manual_transaction_invoice
+from ..actions_manual import link_manual_transaction_invoice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

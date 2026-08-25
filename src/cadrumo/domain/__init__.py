@@ -2,11 +2,11 @@
 
 The root package is intentionally thin: it re-exports only
 :class:`ModeloIdentifier` and does not aggregate every domain authority.
-Callers import focused package facades such as :mod:`modelos`,
-:mod:`filing`, :mod:`user_profile`,
-:mod:`transactions`, and
-:mod:`calculations.registry` for records, repositories, schemas,
-and validation rules.
+Callers import the exact public defining modules that own records,
+repositories, schemas, and validation rules. For user-profile contracts,
+those modules are :mod:`user_profile.values`, :mod:`user_profile.schema`,
+:mod:`user_profile.loader`, :mod:`user_profile.errors`, and
+:mod:`user_profile.registry_contract`.
 
 Domain packages own business semantics: modelo work units and filing records,
 calculation registry definitions, filing drafts, invoices, transactions,
@@ -26,8 +26,8 @@ See Also:
       registry authority and registry snapshot contracts.
     - :mod:`filing` for draft, review, export, amendment, and local
       filing-history records.
-    - :mod:`user_profile` for user-profile schema and persisted
-      profile value records.
+    - :mod:`user_profile.schema` and :mod:`user_profile.values` for
+      user-profile schema and persisted profile value records.
     - :mod:`transactions` for ledger transaction records and
       catalogues.
 

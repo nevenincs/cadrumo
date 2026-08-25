@@ -21,17 +21,8 @@ import pytest
 from cadrumo.application.user_profile.overview import MASKED_PLACEHOLDER, build_profile_overview
 
 from ....core.classification import SensitivityClass
-from ....domain.user_profile import (
-    ProfileFieldDefinition,
-    ProfileFieldType,
-    ProfileRemovePolicy,
-    ProfileSchemaDefinition,
-    ProfileSectionDefinition,
-    ProfileSetupState,
-    ProfileSnapshotPolicy,
-    UserProfileFact,
-    UserProfileRecord,
-)
+from ....domain.user_profile.schema import ProfileFieldDefinition, ProfileFieldType, ProfileRemovePolicy, ProfileSchemaDefinition, ProfileSectionDefinition, ProfileSnapshotPolicy
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -182,7 +173,7 @@ def _shipped_decisions() -> dict[str, bool]:
     """Masking decision for every field the real shipped schema declares."""
     from cadrumo.application.user_profile.overview import mask_profile_field
 
-    from ....domain.user_profile import load_user_profile_schema
+    from ....domain.user_profile.loader import load_user_profile_schema
 
     return {
         f"{section.key}.{field.key}": mask_profile_field(
@@ -210,7 +201,7 @@ def test_a_shipped_field_masks_exactly_when_the_schema_says_secret() -> None:
     """
     from cadrumo.application.user_profile.overview import mask_profile_field
 
-    from ....domain.user_profile import load_user_profile_schema
+    from ....domain.user_profile.loader import load_user_profile_schema
 
     schema = load_user_profile_schema()
     divergent = {

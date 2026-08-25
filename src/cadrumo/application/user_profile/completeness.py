@@ -14,7 +14,7 @@ from ...domain.deadlines import (
 )
 
 if TYPE_CHECKING:
-    from ...domain.user_profile import ProfileSchemaDefinition, ProfileSectionDefinition
+    from ...domain.user_profile.schema import ProfileSchemaDefinition, ProfileSectionDefinition
 
 FISCAL_RESIDENCY_PATH = "taxpayer_type.fiscal_residency"
 COUNTRY_OF_FISCAL_RESIDENCE_PATH = "taxpayer_type.country_of_fiscal_residence"

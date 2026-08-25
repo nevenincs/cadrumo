@@ -21,7 +21,7 @@ pass a test asserting only that the advised row is present. Each case therefore
 pins both the row that must appear and the row that must not.
 
 See Also:
-    :func:`~application.ledger.review_advisory_kinds`
+    :func:`~application.ledger.review_advisories.review_advisory_kinds`
         The one projection the queue and the notices both read.
     :class:`~core.ReviewAdvisoryKind`
         The closed axis the filter accepts.
@@ -37,15 +37,11 @@ from typing import Final
 
 import pytest
 
-from ....application.ledger import (
-    DocumentTranscription,
-    FieldProvenance,
-    InvoiceDraft,
-    TranscriberIdentity,
-    deterministic_findings,
-    ground_draft_against_transcription,
-    write_extraction_draft,
-)
+from ....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
+from ....application.ledger.evidence_draft import FieldProvenance, InvoiceDraft
+from ....application.ledger.deterministic_findings.deterministic_findings import deterministic_findings
+from ....application.ledger.grounded_reading import ground_draft_against_transcription
+from ....application.ledger.extraction_draft_store import write_extraction_draft
 from ....core import LOCAL_TRANSPORT_LABEL, FieldGroundingOutcome, FieldOrigin, ReviewAdvisoryKind
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.config import load_settings
@@ -84,7 +80,7 @@ def _reader_envelope(field: str, anchor: str) -> FieldProvenance:
 def _attribution_draft() -> InvoiceDraft:
     """Return a draft whose address values carry unverified attribution.
 
-    Put through :func:`~application.ledger.ground_draft_against_transcription`,
+    Put through :func:`~application.ledger.grounded_reading.ground_draft_against_transcription`,
     the entry point the reading router uses, rather than hand-stamped: a stamp
     asserted on a constructed envelope would prove the field exists and not that
     the reading path produces it.

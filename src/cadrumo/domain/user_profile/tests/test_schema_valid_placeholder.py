@@ -22,7 +22,9 @@ from datetime import date
 import pytest
 
 from ....tests.user_profile import schema_valid_placeholder
-from .. import NUMERIC_PROFILE_FIELD_TYPES, ProfileFieldType, UserProfileFact, load_user_profile_schema
+from ..loader import load_user_profile_schema
+from ..schema import NUMERIC_PROFILE_FIELD_TYPES, ProfileFieldType
+from ..values import UserProfileFact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

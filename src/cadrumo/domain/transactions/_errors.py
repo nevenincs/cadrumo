@@ -24,7 +24,7 @@ class TransactionPersistenceError(TransactionCatalogueError):
 class StoredTransactionDriftError(TransactionPersistenceError):
     """Raised when a persisted transaction catalogue fails schema validation on load.
 
-    Mirrors :class:`~cadrumo.domain.user_profile.StoredProfileDriftError`:
+    Mirrors :class:`~cadrumo.domain.user_profile.errors.StoredProfileDriftError`:
     the catalogue was valid when written; schema evolution or an
     out-of-band edit caused the on-disk envelope payload to drift from
     the current :class:`~cadrumo.domain.transactions.TransactionCatalogue`

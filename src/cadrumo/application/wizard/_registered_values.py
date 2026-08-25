@@ -41,7 +41,7 @@ from ._format_hints import REGISTERED_NON_OFFICIAL_SUFFIX_LOCALE_KEY
 from ._models import WizardQuestion
 
 if TYPE_CHECKING:
-    from ...domain.user_profile import UserProfileRecord
+    from ...domain.user_profile.values import UserProfileRecord
     from ._models import WizardFlow
 
 #: The localized yes/no pair the CONFIRM widget already renders through the

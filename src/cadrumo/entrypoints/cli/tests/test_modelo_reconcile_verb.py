@@ -227,7 +227,7 @@ def _declaracion_fixture_profile() -> None:
     isolated backend `_isolated_backend` already opened for the test rather
     than nesting a second storage root, which `SecureObjectRepository`
     per-bucket session handling does not support."""
-    from ....domain.user_profile import UserProfileFact
+    from ....domain.user_profile.values import UserProfileFact
 
     set_active_test_profile_facts(
         [UserProfileFact(path="identity.tax_id", value=_DECLARACION_FIXTURE_TAX_ID)],

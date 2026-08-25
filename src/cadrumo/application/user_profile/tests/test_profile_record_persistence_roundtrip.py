@@ -56,7 +56,7 @@ from cadrumo.application.user_profile.custody_ports import (
 )
 
 from ....core import SecureObjectWrite
-from ....domain.user_profile import ProfileSetupState, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from ._profile_record_boundary_support import (
     CREATED_AT,
     PROFILE_ID,

@@ -43,13 +43,9 @@ from ....adapters.persistence.storage.custody import (
 )
 from ....core.bucket_pointer import read_pointer
 from ....domain.buckets import BucketEventType
-from ....domain.user_profile import (
-    ProfileNotFoundError,
-    ProfileSetupState,
-    UserProfileFact,
-    UserProfileRecord,
-    load_user_profile_schema,
-)
+from ....domain.user_profile.errors import ProfileNotFoundError
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.loader import load_user_profile_schema
 from ....tests.user_profile import complete_profile_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

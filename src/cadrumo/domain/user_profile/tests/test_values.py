@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord, UserProfileSnapshot
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord, UserProfileSnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

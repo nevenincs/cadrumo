@@ -11,9 +11,9 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.domain.calculations.registry import (
+    GeneratedArtifactInspection,
     ModeloId,
     ProjectionEndpointDeclaration,
-    RegistryRevisionInspection,
     RegistryValidationError,
     RevisionId,
 )
@@ -151,7 +151,7 @@ class JoinedRecordDesign(_StrictModel):
 def join_record_design_semantics(
     semantic_map: SemanticMap,
     intermediate: RecordDesignIntermediate,
-    inspection: RegistryRevisionInspection,
+    inspection: GeneratedArtifactInspection,
     *,
     anomaly_exceptions: tuple[SemanticMapAnomalyException, ...] = (),
 ) -> JoinedRecordDesign:

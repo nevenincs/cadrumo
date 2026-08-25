@@ -21,7 +21,7 @@ persisted facts.
 Lifecycle of one door invocation:
 
 * **seed** — :func:`build_descendant_door` reads the active
-  :class:`~cadrumo.domain.user_profile.UserProfileRecord`, re-projects its
+  :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`, re-projects its
   ``renta_family.descendiente.{n}.*`` facts to a page-keyed answer map through
   :func:`~cadrumo.application.wizard._persistence.descendant_answers_from_record`,
   and resumes a MODIFY-mode :class:`~cadrumo.application.flows.engine.FlowState` over the
@@ -62,7 +62,7 @@ if TYPE_CHECKING:
     from prompt_toolkit.input import Input
     from prompt_toolkit.output import Output
 
-    from ...domain.user_profile import UserProfileRecord
+    from ...domain.user_profile.values import UserProfileRecord
     from ..flows.review import ReviewProjection
 
 #: The door's flow and familia section ids.
@@ -186,7 +186,7 @@ def persist_descendant_door_answers(
     count-shrink never strands a descendant index above the answered count.
     """
     from ...core.bucket_pointer import require_active_bucket_id
-    from ...domain.user_profile import UserProfileFact
+    from ...domain.user_profile.values import UserProfileFact
     from ..user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
 
     profile_id = require_active_bucket_id()

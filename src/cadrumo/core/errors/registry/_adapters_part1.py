@@ -8,7 +8,7 @@ from .._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "cadrumo.adapters.outbound.aeat.auth._authenticator_types._PersistedSessionInvalidError",
+        "cadrumo.adapters.outbound.aeat.auth.authenticator_types.PersistedSessionInvalidError",
         ErrorCode(
             code="AUTH_AUTH_AUTHENTICATOR_PERSISTED_SESSION_INVALID",
             category=ErrorCategory.AUTH,
@@ -18,7 +18,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.auth._clave_movil_support.ClaveMovilApprovalTimeoutError",
+        "cadrumo.adapters.outbound.aeat.auth.clave_movil_support.ClaveMovilApprovalTimeoutError",
         ErrorCode(
             code="AUTH_AUTH_CLAVE_MOVIL_CLAVE_MOVIL_APPROVAL_TIMEOUT",
             category=ErrorCategory.AUTH,
@@ -28,7 +28,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.auth._clave_movil_support.ClaveMovilConfigurationError",
+        "cadrumo.adapters.outbound.aeat.auth.clave_movil_support.ClaveMovilConfigurationError",
         ErrorCode(
             code="AUTH_AUTH_CLAVE_MOVIL_CLAVE_MOVIL_CONFIGURATION",
             category=ErrorCategory.AUTH,
@@ -528,7 +528,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.auth._errors.AuthValidationError",
+        "cadrumo.adapters.outbound.aeat.auth.errors.AuthValidationError",
         ErrorCode(
             code="AUTH_AUTH_VALIDATION",
             category=ErrorCategory.AUTH,
@@ -568,7 +568,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.auth._errors.AuthError",
+        "cadrumo.adapters.outbound.aeat.auth.errors.AuthError",
         ErrorCode(
             code="AUTH_AUTH",
             category=ErrorCategory.AUTH,
@@ -578,7 +578,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.auth._errors.AuthProviderCleanupError",
+        "cadrumo.adapters.outbound.aeat.auth.errors.AuthProviderCleanupError",
         ErrorCode(
             code="AUTH_AUTH_PROVIDER_CLEANUP",
             category=ErrorCategory.AUTH,
@@ -588,7 +588,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.auth._errors.AuthConfigurationError",
+        "cadrumo.adapters.outbound.aeat.auth.errors.AuthConfigurationError",
         ErrorCode(
             code="AUTH_AUTH_CONFIGURATION",
             category=ErrorCategory.AUTH,
@@ -598,3 +598,4 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
 )
+

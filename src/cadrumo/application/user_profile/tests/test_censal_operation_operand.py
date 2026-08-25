@@ -32,7 +32,7 @@ from cadrumo.application.user_profile.censal_operation import (
 from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 
 from ....adapters.persistence.storage import RepositoryError
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 

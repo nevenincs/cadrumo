@@ -1,6 +1,6 @@
 """Strict roundtrip across the encrypted browser-session boundary.
 
-The :mod:`cadrumo.adapters.outbound.aeat.auth._session_store` module
+The :mod:`cadrumo.adapters.outbound.aeat.auth.session_store` module
 persists Playwright ``storage_state`` payloads encrypted at
 ``SensitivityClass.SESSION`` through :class:`SecureObjectRepository`.
 This test asserts the save / load cycle preserves every key inside
@@ -23,6 +23,8 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
+import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
+
 from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 from ......core.config import AEAT_CERTIFICATE_PROTECTED_URL
 from ......core.time import now
@@ -30,7 +32,6 @@ from ......tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED, aeat_ur
 from ......tests.secure_sql import isolated_runtime_profile
 from .....persistence.storage import AEAT_BROWSER_SESSION_NAMESPACE
 from .....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from .. import _session_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _BUCKET_ID = "1f6b0000-0000-4000-8000-00000000f0f0"
@@ -83,14 +84,14 @@ def test_persisted_browser_session_roundtrips_under_real_encryption(
             "protected_resource_url": AEAT_CERTIFICATE_PROTECTED_URL,
             "renewal_count": 0,
         }
-        sha_at_save = _session_store.storage_state_sha256(storage_state)
+        sha_at_save = session_store.storage_state_sha256(storage_state)
 
-        _session_store.save(
+        session_store.save(
             logical_path,
             storage_state=storage_state,
             metadata=metadata,
         )
-        loaded = _session_store.load(logical_path)
+        loaded = session_store.load(logical_path)
         repo = secure_object_repository_for_active_bucket()
         raw_records = tuple(
             record
@@ -99,7 +100,7 @@ def test_persisted_browser_session_roundtrips_under_real_encryption(
         )
 
         assert loaded is not None
-        assert _session_store.exists(logical_path) is True
+        assert session_store.exists(logical_path) is True
         # Strict equality on the typed envelope: schema_version,
         # storage_state, metadata, written_at must all survive.
         assert loaded.schema_version == AEAT_BROWSER_SESSION_NAMESPACE.schema_version
@@ -135,21 +136,21 @@ def test_storage_state_hash_rejects_non_json_values() -> None:
     storage_state["captured_at"] = _NON_JSON_CAPTURED_AT
 
     with pytest.raises(ValidationError, match="invalid-json-value"):
-        _session_store.storage_state_sha256(storage_state)
+        session_store.storage_state_sha256(storage_state)
 
 
-def test_session_store_rejects_non_json_metadata_before_write(tmp_path: Path) -> None:
+def testsession_store_rejects_non_json_metadata_before_write(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         logical_path = Path("/profile/active/aeat-session")
 
         with pytest.raises(ValidationError, match="invalid-json-value"):
-            _session_store.save(
+            session_store.save(
                 logical_path,
                 storage_state=_playwright_shaped_storage_state(),
                 metadata={"captured_at": _NON_JSON_CAPTURED_AT},
             )
 
-        assert _session_store.exists(logical_path) is False
+        assert session_store.exists(logical_path) is False
 
 
 def test_cadrumo_session_custody_refuses_former_product_state_without_mutation(tmp_path: Path) -> None:
@@ -169,10 +170,10 @@ def test_cadrumo_session_custody_refuses_former_product_state_without_mutation(t
         )
 
         with pytest.raises(
-            _session_store.FormerProductAuthSessionStateError,
+            session_store.FormerProductAuthSessionStateError,
             match="will not read, move, re-key, delete, or adopt",
         ):
-            _session_store.save(
+            session_store.save(
                 current_path,
                 storage_state=_playwright_shaped_storage_state(),
                 metadata={"provider_kind": "certificate"},
@@ -189,19 +190,20 @@ def test_cadrumo_session_custody_refuses_former_product_state_without_mutation(t
         assert repo.exists(AEAT_BROWSER_SESSION_NAMESPACE.namespace, current_path.as_posix()) is False
 
 
-def test_session_store_rejects_direct_former_product_paths_before_repository_access(tmp_path: Path) -> None:
+def testsession_store_rejects_direct_former_product_paths_before_repository_access(tmp_path: Path) -> None:
     """Former logical keys cannot be explicitly read, written, or deleted."""
     former_path = Path(".aeat/auth/sessions/operator-storage.json")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         for operation in (
-            lambda: _session_store.exists(former_path),
-            lambda: _session_store.save(
+            lambda: session_store.exists(former_path),
+            lambda: session_store.save(
                 former_path,
                 storage_state=_playwright_shaped_storage_state(),
                 metadata={"provider_kind": "certificate"},
             ),
-            lambda: _session_store.load(former_path),
-            lambda: _session_store.delete(former_path),
+            lambda: session_store.load(former_path),
+            lambda: session_store.delete(former_path),
         ):
-            with pytest.raises(_session_store.FormerProductAuthSessionStateError):
+            with pytest.raises(session_store.FormerProductAuthSessionStateError):
                 operation()
+

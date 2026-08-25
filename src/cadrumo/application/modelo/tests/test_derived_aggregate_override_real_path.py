@@ -49,7 +49,8 @@ from ....core import Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import BindingId
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
-from ....domain.user_profile import ProfileSchemaValidationError, UserProfileFact
+from ....domain.user_profile.errors import ProfileSchemaValidationError
+from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import (
     load_test_profile_record,
     open_test_profile_session,

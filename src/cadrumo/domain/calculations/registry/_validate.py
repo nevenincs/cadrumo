@@ -267,7 +267,8 @@ class RegistryValidator:
         REGISTRY_VALIDATION_CACHE[cache_key] = (modelo_tuple, self._legal, self._sources, ())
 
     def _validate_user_profile_contract(self, modelos: Iterable[ModeloDefinition]) -> tuple[str, ...]:
-        from ...user_profile import load_user_profile_schema, validate_user_profile_registry_contract
+        from ...user_profile.loader import load_user_profile_schema
+        from ...user_profile.registry_contract import validate_user_profile_registry_contract
 
         schema = self._user_profile_schema or load_user_profile_schema()
         report = validate_user_profile_registry_contract(modelos, schema)

@@ -11,16 +11,16 @@ import pytest
 from ......core.config import Settings
 from ...browser import Profile, create_browser_session
 from ...tests import wait_for_process_exit
-from .._authenticator_types import AeatSession
-from .._browser_lifecycle import (
+from ..authenticator_types import AeatSession
+from ..browser_lifecycle import (
     _CloseIntentBarrier,
     close_owned_browser_context,
     close_owned_browser_session,
 )
-from .._clave_movil import ClaveMovilAuthProvider
-from .._clave_permanente import ClavePermanenteAuthProvider
-from .._errors import AeatLoginAssertionError
-from .._providers import ClaveMovilSessionDetail, ClavePermanenteSessionDetail
+from ..clave_movil import ClaveMovilAuthProvider
+from ..clave_permanente import ClavePermanenteAuthProvider
+from ..errors import AeatLoginAssertionError
+from ..providers import ClaveMovilSessionDetail, ClavePermanenteSessionDetail
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

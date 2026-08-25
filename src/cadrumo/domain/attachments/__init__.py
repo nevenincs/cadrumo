@@ -14,7 +14,7 @@ what the bytes are and where they came from; it never carries a fiscal figure
 (no supplier, invoice number, taxable base, IVA rate, or IVA amount) and is
 immutable once written, because its identity IS the byte digest. A record that
 asserts fiscal figures about a document is the separate middle evidence tier
-:class:`application.ledger.PurchaseInvoiceEvidence`, which stores its bytes here
+:class:`application.ledger.evidence.PurchaseInvoiceEvidence`, which stores its bytes here
 and references them by ``attachment_id``; a confirmed fiscal document is
 :class:`domain.invoices.Invoice`. Read those two before adding a field here: a
 figure belongs on one of them, never on the byte manifest.

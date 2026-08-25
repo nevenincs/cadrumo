@@ -72,7 +72,7 @@ def _module_level_workflow_graph(sources: dict[str, str]) -> dict[str, set[str]]
                     for alias in node.names
                     if alias.name.startswith("cadrumo.application.workflow.")
                 )
-            elif isinstance(node, ast.ImportFrom) and node.level:
+            elif isinstance(node, ast.ImportFrom) and node.level == 1:
                 targets = (
                     (node.module.split(".", maxsplit=1)[0],)
                     if node.module
@@ -227,6 +227,10 @@ def test_workflow_module_level_graph_is_acyclic_and_detector_bites() -> None:
     assert _cycles({"left": {"right"}, "right": {"left"}}) == [("left", "right", "left")]
     compound_source = "with scope():\n    from . import right\n"
     assert _module_level_workflow_graph({"left": compound_source, "right": ""})["left"] == {"right"}
+    sibling_source = "from .adapters import default_engine\n"
+    assert _module_level_workflow_graph({"left": sibling_source, "adapters": ""})["left"] == {"adapters"}
+    parent_package_source = "from ...adapters.outbound import browser\n"
+    assert _module_level_workflow_graph({"left": parent_package_source, "adapters": ""})["left"] == set()
     dynamic_source = "from importlib import import_module\nimport_module('.right', __package__)\n"
     assert _module_level_workflow_graph({"left": dynamic_source, "right": ""})["left"] == {"right"}
     absolute_source = "import cadrumo.application.workflow.right\n"

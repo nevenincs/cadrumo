@@ -23,7 +23,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ...application.ledger import PurchaseInvoiceEvidenceInputError
+from ...application.ledger.evidence import PurchaseInvoiceEvidenceInputError
 from ...core import FieldOrigin, NoRecoveryOutcome
 from ...core.config import load_settings
 from .._errors import LLMConfigError, LLMValidationError

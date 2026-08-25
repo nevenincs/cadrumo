@@ -13,6 +13,10 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from cadrumo.application.workflow.persistence import WorkflowRunRepository, WorkflowStateRepository
+from cadrumo.application.workflow.run_models import WorkflowResult, WorkflowStage, WorkflowStep
+from cadrumo.application.workflow.state_models import DeclaracionPointer, WorkflowState
+
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from .....adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
 from .....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
@@ -41,18 +45,13 @@ from .....application.live import (
     SnapshotLifecycleState,
     derive_borrador_100_snapshot_id,
 )
-from .....application.modelo import (
-    RecipientFingerprintRegistryRepository,
-    RecipientReplayGuardRepository,
-)
+from .....application.modelo import RecipientFingerprintRegistryRepository
+from ...profile.recipient_replay_guard import RecipientReplayGuardRepository
 from .....application.repair_integrity import (
     RepairRemediationDecision,
     RepairRemediationDecisionRepository,
     repair_remediation_decision_id,
 )
-from cadrumo.application.workflow.state_models import DeclaracionPointer, WorkflowState
-from cadrumo.application.workflow.run_models import WorkflowResult, WorkflowStage, WorkflowStep
-from cadrumo.application.workflow.persistence import WorkflowRunRepository, WorkflowStateRepository
 from .....core import CasillaId, IvaCompensationStateProvenance, validated_casilla_id
 from .....core import Period as _Period
 from .....core.config import override_settings

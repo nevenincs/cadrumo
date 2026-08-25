@@ -17,7 +17,7 @@ from cadrumo.application.user_profile.capabilities import CapabilitySource, _par
 from ....core import ServiceCapability
 from ....core.config import load_settings
 from ....core.parsing import parse_bool
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

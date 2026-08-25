@@ -75,7 +75,7 @@ from ....domain.calculations.registry import (
     WithholdingObservation,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record, seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations

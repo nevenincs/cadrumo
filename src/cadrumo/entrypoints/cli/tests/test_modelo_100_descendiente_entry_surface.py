@@ -33,7 +33,8 @@ from pathlib import Path
 import pytest
 
 from ....domain.calculations.registry import RegistrySnapshot, resolve_parameter
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord, load_user_profile_schema
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.loader import load_user_profile_schema
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli

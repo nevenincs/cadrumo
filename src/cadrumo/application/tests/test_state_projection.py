@@ -41,7 +41,8 @@ from ...tests.registry_revision import active_registry_revision_id
 from ...tests.user_profile import register_minimal_profile
 from ..auth.operator import inspect_operator_auth
 from ..auth.operator import test_operator_auth as probe_operator_auth
-from ..ledger import ManualLedgerTransactionCommand, create_manual_transaction
+from ..ledger.models import ManualLedgerTransactionCommand
+from ..ledger.actions_manual import create_manual_transaction
 from ..modelo import create_work_unit, discard_work_unit
 from ..overview import build_overview_status_report
 from ..state_projection import (

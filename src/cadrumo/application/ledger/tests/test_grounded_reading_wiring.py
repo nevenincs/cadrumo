@@ -34,20 +34,20 @@ from ....core import (
 from ....core.config import load_settings
 from ....llm import LLMProviderError, ground_extracted_fields, parse_invoice_extraction_response
 from ....tests.attribute_scope import scoped_attribute
-from .. import _evidence_draft as _router_module
-from .._document_transcription import DocumentTranscription, TranscriberIdentity
-from .._evidence import PurchaseInvoiceEvidenceInputError
-from .._evidence_draft import FieldProvenance, InvoiceDraft
-from .._evidence_input import EvidenceInput
-from .._evidence_textlayer import transcribe_text_layer
-from .._grounded_reading import (
+import cadrumo.application.ledger.evidence_draft as evidence_draft_module
+from ..document_transcription import DocumentTranscription, TranscriberIdentity
+from ..evidence import PurchaseInvoiceEvidenceInputError
+from ..evidence_draft import FieldProvenance, InvoiceDraft
+from ..evidence_input import EvidenceInput
+from ..evidence_textlayer import transcribe_text_layer
+from ..grounded_reading import (
     GROUNDABLE_ORIGINS,
     _identity_candidates,
     ground_draft_against_transcription,
     verified_provenance,
 )
-from .._identity_roles import IdentityCandidate, resolve_counterparty_identity
-from .._preconditions import LedgerPreconditionCondition
+from ..identity_roles import IdentityCandidate, resolve_counterparty_identity
+from ..preconditions import LedgerPreconditionCondition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -336,7 +336,7 @@ def test_the_router_text_path_runs_the_whole_chain() -> None:
 
 def test_an_absent_reader_refuses_with_a_typed_environment_condition() -> None:
     """A missing reader is a typed refusal, not an inferred recovery command."""
-    from .._evidence_draft import _refuse_a_text_read_with_no_reader
+    from ..evidence_draft import _refuse_a_text_read_with_no_reader
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
         _refuse_a_text_read_with_no_reader(LLMProviderError("no provider reachable"))
@@ -355,7 +355,7 @@ def test_an_absent_reader_refuses_with_a_typed_environment_condition() -> None:
 
 def test_a_missing_optional_extra_preserves_registry_facts_without_install_prose() -> None:
     """The dependency registry identity crosses the ledger boundary unchanged."""
-    from .._evidence_draft import _refuse_a_text_read_with_no_reader
+    from ..evidence_draft import _refuse_a_text_read_with_no_reader
 
     dependency_error = MissingOptionalExtraError(LLM_EXTRA)
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
@@ -396,7 +396,7 @@ def test_a_missing_reader_does_not_fall_through_to_the_vision_engine() -> None:
     the condition being reproduced. Nothing about the router is stubbed.
     """
     from .... import llm as llm_module
-    from .._evidence_draft import _read_transcription_semantically
+    from ..evidence_draft import _read_transcription_semantically
 
     def unavailable(*args: object, **kwargs: object) -> object:
         raise LLMProviderError("Ollama is not reachable")
@@ -435,7 +435,7 @@ def test_the_routers_fallback_try_wraps_only_the_transcription() -> None:
     """
     import ast
 
-    module = ast.parse(Path(inspect.getfile(_router_module)).read_text(encoding="utf-8"))
+    module = ast.parse(Path(inspect.getfile(evidence_draft_module)).read_text(encoding="utf-8"))
     router = next(
         node
         for node in ast.walk(module)
@@ -462,7 +462,7 @@ def test_the_no_text_layer_case_still_escalates_to_vision() -> None:
     Without this, "refuse on reader failure" could be implemented as "refuse
     always", silently removing the fallback that scan-only PDFs depend on.
     """
-    from .._evidence_draft import extract_invoice_draft_from_evidence
+    from ..evidence_draft import extract_invoice_draft_from_evidence
 
     source = inspect.getsource(extract_invoice_draft_from_evidence)
 
@@ -486,7 +486,7 @@ def test_the_reader_refusal_preserves_its_typed_no_recovery_outcome() -> None:
     non-blocking notice channel is for a draft that exists but degraded.
     """
     from ....core.errors import build_error_envelope
-    from .._evidence_draft import _refuse_a_text_read_with_no_reader
+    from ..evidence_draft import _refuse_a_text_read_with_no_reader
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
         _refuse_a_text_read_with_no_reader(LLMProviderError("Ollama is not reachable"))

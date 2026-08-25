@@ -19,13 +19,9 @@ from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...domain.deadlines import IVARegime, TaxpayerProfile, taxpayer_profile_from_mapping
-from ...domain.user_profile import (
-    ProfileSchemaDefinition,
-    UserProfileFact,
-    UserProfileRecord,
-    UserProfileSnapshot,
-    load_user_profile_schema,
-)
+from ...domain.user_profile.schema import ProfileSchemaDefinition
+from ...domain.user_profile.values import UserProfileFact, UserProfileRecord, UserProfileSnapshot
+from ...domain.user_profile.loader import load_user_profile_schema
 
 _WINDOWLESS_SENTINEL = date.min
 """Sort position for a fact carrying no ``valid_from``.

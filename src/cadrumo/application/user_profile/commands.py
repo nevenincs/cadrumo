@@ -17,10 +17,7 @@ from ...core import ElidedProse, Hex64Str, Period
 from ...core.errors import BaseSeverity as _BaseSeverity
 from ...core.identity import ProfileId
 from ...domain.calculations.registry import RevisionId
-from ...domain.user_profile import (
-    UserProfileFact,
-    UserProfileRecord,
-)
+from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 
 __all__ = [
     "ProfileImportResult",

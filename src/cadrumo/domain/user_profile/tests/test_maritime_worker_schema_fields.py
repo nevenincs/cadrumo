@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.resources import resources
-from .. import ProfileSchemaDefinition
+from ..schema import ProfileSchemaDefinition
 from ._schema_loader_fixtures import function_scoped_schema  # noqa: F401
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

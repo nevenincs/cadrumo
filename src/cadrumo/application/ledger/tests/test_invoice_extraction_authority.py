@@ -31,7 +31,7 @@ from ....core import Period
 from ....domain import iva as _iva_module
 from ....domain.iva import EUMemberState, IvaCategory, load_iva_rate_table
 from ....tests.attribute_scope import scoped_attribute
-from .._invoice_extraction_authority import (
+from ..invoice_extraction_authority import (
     InvoiceExtractionAuthorityValues,
     default_invoice_extraction_period,
     resolve_invoice_extraction_authority_values,

@@ -2,21 +2,26 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from dataclasses import fields, is_dataclass
+from datetime import date
+from enum import Enum
 from inspect import signature
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
 
 import pytest
+from pydantic import BaseModel
 
 from cadrumo.application.filing import FilingExportProofChannel, FilingExportProofCoordinate
 from cadrumo.core import RegistryAuthorityGrade
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
     RegistryDiagnosticFilingRevision,
+    RegistryRevisionInspection,
     RegistryValidationError,
+    StaticGeneratedArtifactInspection,
     ValidatedRegistryAuthority,
     bundled_authority,
     load_registry_diagnostic_classification,
@@ -29,6 +34,7 @@ from ..filing_export_proof import (
     _derive_static_filing_export_conformance_enrollment,
     canonical_two_channel_filing_export_proof_authority,
     derive_diagnostic_filing_export_conformance_enrollment,
+    derive_filing_export_conformance_enrollment,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -39,15 +45,24 @@ _REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 def _static_data_graph(value: object) -> Iterator[object]:
     """Walk only values stored in the static diagnostic projection."""
     yield value
-    if isinstance(value, (str, int, float, bool, type(None))):
+    if isinstance(value, (str, int, float, bool, date, Enum, type(None))):
         return
-    if isinstance(value, tuple):
+    if isinstance(value, (tuple, frozenset)):
         for item in value:
+            yield from _static_data_graph(item)
+        return
+    if isinstance(value, Mapping):
+        for key, item in value.items():
+            yield from _static_data_graph(key)
             yield from _static_data_graph(item)
         return
     if is_dataclass(value) and not isinstance(value, type):
         for field in fields(value):
             yield from _static_data_graph(getattr(value, field.name))
+        return
+    if isinstance(value, BaseModel):
+        for field_name in type(value).model_fields:
+            yield from _static_data_graph(getattr(value, field_name))
         return
     raise AssertionError(f"diagnostic projection retained a non-static value: {type(value).__name__}")
 
@@ -115,7 +130,7 @@ def test_static_projection_has_one_residue_classifier_and_strict_failure_cannot_
         selection_coordinates=(),
         layout_ids=(),
         layout_json=None,
-        inspection_json=None,
+        inspection=None,
         refusal_reason="law_selection_failed",
         refusal_detail="synthetic static selection failure",
     )
@@ -151,6 +166,76 @@ def test_static_projection_has_one_residue_classifier_and_strict_failure_cannot_
             materializable_vectors=(blocked_vector,),
             residues=(),
         )
+
+
+def _candidate_signature(report: FilingExportConformanceEnrollmentReport) -> tuple[object, ...]:
+    return tuple(
+        sorted(
+            (
+                str(candidate.evidence.coordinate.modelo),
+                str(candidate.evidence.coordinate.revision),
+                candidate.evidence.coordinate.layout_ids,
+                candidate.evidence.filing_year,
+                str(candidate.evidence.period),
+                candidate.evidence.mechanism_source_ref,
+                candidate.evidence.mechanism_source_sha256,
+                candidate.evidence.provenance,
+            )
+            for candidate in report.provenance_candidates
+        )
+    )
+
+
+def _residue_signature(report: FilingExportConformanceEnrollmentReport) -> tuple[object, ...]:
+    return tuple(
+        sorted(
+            (
+                str(residue.modelo),
+                str(residue.revision),
+                residue.layout_ids,
+                residue.reason,
+                residue.owner,
+                residue.reconsideration_condition,
+                residue.detail,
+            )
+            for residue in report.residues
+        )
+    )
+
+
+def test_static_projection_matches_validated_classification_for_every_selected_revision() -> None:
+    """The immutable diagnostic projection preserves every strict disposition."""
+    registry = bundled_authority()
+    classification = load_registry_diagnostic_classification(
+        bundled_path("registry", "aeat"),
+        source_root=bundled_path(),
+        strict_validation_error=RegistryValidationError("forced strict validation failure"),
+    )
+
+    strict_report = derive_filing_export_conformance_enrollment(
+        workspace_root=_REPOSITORY_ROOT,
+        registry_root=bundled_path("registry", "aeat"),
+        source_root=bundled_path(),
+        authority=registry,
+        vectors=CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS,
+    )
+    diagnostic_report = derive_diagnostic_filing_export_conformance_enrollment(
+        workspace_root=_REPOSITORY_ROOT,
+        registry_root=bundled_path("registry", "aeat"),
+        source_root=bundled_path(),
+        classification=classification,
+        vectors=CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS,
+    )
+
+    static_inspections = tuple(
+        selected.inspection for selected in classification.filing_revisions if selected.inspection is not None
+    )
+    assert static_inspections
+    assert all(isinstance(inspection, StaticGeneratedArtifactInspection) for inspection in static_inspections)
+    assert not any(isinstance(value, RegistryRevisionInspection) for value in _static_data_graph(classification))
+    assert _candidate_signature(diagnostic_report) == _candidate_signature(strict_report)
+    assert _residue_signature(diagnostic_report) == _residue_signature(strict_report)
+    assert not diagnostic_report.materializable_vectors
 
 
 def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() -> None:

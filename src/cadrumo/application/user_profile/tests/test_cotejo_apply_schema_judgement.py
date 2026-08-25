@@ -53,12 +53,9 @@ from ....adapters.persistence.storage.custody import (
 )
 from ....core.config import override_settings
 from ....core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
-from ....domain.user_profile import (
-    ProfileSchemaValidationError,
-    ProfileSetupState,
-    UserProfileFact,
-    load_user_profile_schema,
-)
+from ....domain.user_profile.errors import ProfileSchemaValidationError
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
+from ....domain.user_profile.loader import load_user_profile_schema
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import complete_profile_facts
 

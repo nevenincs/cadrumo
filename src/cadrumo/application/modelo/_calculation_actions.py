@@ -96,9 +96,9 @@ from ...domain.modelos import (
     ModeloDetailRow,
     ModeloRecordCatalogueRepositoryProtocol,
     WorkUnit,
-    WorkUnitCatalogueRepositoryProtocol,
     upsert_calculation_revision,
 )
+from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions import TransactionCatalogueRepositoryProtocol
 from ..calculations import CalculationObservationRepository
 from ..calculations import cross_period_dependency_requirements as _cross_period_dependency_requirements

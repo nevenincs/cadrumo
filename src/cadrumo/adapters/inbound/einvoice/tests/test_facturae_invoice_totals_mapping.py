@@ -27,7 +27,7 @@ names the concepts; nothing here is inferred through an English gloss.
 **The total is DERIVED, never read**, because no element carries it.
 
 See Also:
-    :func:`~application.ledger.closure_findings`
+    :func:`~application.ledger.closure_findings.closure_findings`
         The identity this mapping exists to let a correct document satisfy.
 """
 

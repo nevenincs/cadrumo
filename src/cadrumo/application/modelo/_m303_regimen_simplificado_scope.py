@@ -8,7 +8,8 @@ from ...core import ActionEvidenceProvenance, Modelo
 from ...domain.deadlines import M303RegimeComposition, TaxpayerProfile
 from ...domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ...domain.modelos import WorkUnit
-from ...domain.user_profile import ProfileNotFoundError, ProfileSetupState
+from ...domain.user_profile.errors import ProfileNotFoundError
+from ...domain.user_profile.values import ProfileSetupState
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import projection_for_taxpayer
 from ._action_errors import ModeloProfileReadinessError

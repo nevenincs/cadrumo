@@ -40,8 +40,8 @@ from ...domain.modelos import (
     ModeloVerificationFindingSeverity,
     WorkUnit,
     WorkUnitCatalogue,
-    WorkUnitCatalogueRepositoryProtocol,
 )
+from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 
 #: Modelo 303 information box: base of intra-community acquisitions of goods and
 #: services (official casilla 10).

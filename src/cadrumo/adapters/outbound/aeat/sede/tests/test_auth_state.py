@@ -26,10 +26,8 @@ import pytest
 
 from ......core import Period
 from ......core.i18n import tr
-from ...auth import (
-    AeatSession,
-    CertificateSessionDetail,
-)
+from ...auth.authenticator_types import AeatSession
+from ...auth.providers import CertificateSessionDetail
 from .._auth_state import storage_state_for_session
 from .._errors import SedeNavigationError
 

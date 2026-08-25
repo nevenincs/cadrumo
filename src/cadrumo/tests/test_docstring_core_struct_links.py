@@ -60,7 +60,7 @@ CORE_STRUCTS: dict[str, str] = {
     # Profile, deadlines, and filing records
     "TaxpayerProfile": "cadrumo.domain.deadlines._models",
     "Schedule": "cadrumo.domain.deadlines._models",
-    "UserProfileRecord": "cadrumo.domain.user_profile._values",
+    "UserProfileRecord": "cadrumo.domain.user_profile.values",
     "ModeloDraft": "cadrumo.domain.filing._schema",
     "ModeloRecord": "cadrumo.domain.modelos._filing_record",
 }

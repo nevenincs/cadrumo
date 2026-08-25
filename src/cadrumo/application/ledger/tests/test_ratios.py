@@ -14,7 +14,7 @@ from ....domain.usage_ratios import (
     UsageRatioProfile,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from .._ratios import (
+from ..ratios import (
     eligible_ratio_categories,
     list_eligible_ratios_for_bucket,
     set_usage_ratio,

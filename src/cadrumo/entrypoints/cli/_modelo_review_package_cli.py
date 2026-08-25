@@ -35,7 +35,7 @@ which leave the archive itself in plaintext ZIP form.
 the running bucket's OWN X25519 keypair (mirroring the signing keypair's
 mint-once-persist-as-ciphertext contract exactly, via
 :func:`~application.modelo.ensure_recipient_encryption_keypair`) and
-composes :class:`~application.modelo.RecipientReplayGuardRepository`
+composes :class:`~adapters.persistence.profile.recipient_replay_guard.RecipientReplayGuardRepository`
 around the pure decrypt primitive to refuse a captured package presented twice.
 Both verbs operate entirely on in-memory bytes; the plaintext package bytes are
 never written to disk except as the final recovered archive the operator
@@ -88,8 +88,6 @@ from ...application.modelo import (
     RecipientEncryptionError,
     RecipientFingerprintRegistryRepository,
     RecipientNotRegisteredError,
-    RecipientPackageReplayedError,
-    RecipientReplayGuardRepository,
     ReviewPackageCounterSigningError,
     ReviewPackageError,
     ReviewPackageFeedbackError,
@@ -116,6 +114,10 @@ from ...application.modelo import (
     verify_counter_signed_receipt,
     verify_review_package,
     verify_review_package_signature,
+)
+from ...adapters.persistence.profile.recipient_replay_guard import (
+    RecipientPackageReplayedError,
+    RecipientReplayGuardRepository,
 )
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from ...core import PaymentElection, Period, PriorDomiciliationElection, RefundElection

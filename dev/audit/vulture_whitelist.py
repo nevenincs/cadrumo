@@ -16,7 +16,7 @@ consumed in the body:
   google API's keywords and are part of the structural type.
 * ``protocol`` — the positional argument of the ``__reduce_ex__`` dunder
   override on the decrypted-evidence tripwire
-  (:mod:`cadrumo.application.ledger._evidence_input`). The signature is fixed by
+  (:mod:`cadrumo.application.ledger.evidence_input`). The signature is fixed by
   the pickle protocol; the override exists to *refuse* pickling.
 * ``source_citation`` — a keyword-only parameter on
   ``dev.docs.terminology_handbook._curation.set_language_field`` kept as part of the public

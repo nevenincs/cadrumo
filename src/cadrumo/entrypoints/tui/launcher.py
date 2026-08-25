@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import ExitStack, contextmanager
 from pathlib import Path
 
 
 @contextmanager
-def profile_storage_scope(root: Path) -> Iterator[Path]:
+def profile_storage_scope(root: Path) -> Generator[Path]:
     """Bind persistent profile infrastructure rooted at ``root`` for one TUI run.
 
     This is the sole TUI composition seam permitted to construct persistence
@@ -17,8 +17,10 @@ def profile_storage_scope(root: Path) -> Iterator[Path]:
     the session.
     """
     from ...adapters.persistence.storage import build_profile_custody_port, build_profile_login_session_port
+    from ...adapters.persistence.workflow import build_workflow_persistence_port
     from ...application.user_profile.custody_ports import bind_profile_custody_port
     from ...application.user_profile.login_session_port import bind_profile_login_session_port
+    from ...application.workflow.persistence import bind_workflow_persistence_port
     from ...core import STORAGE_TAXONOMY, StorageCategory, storage_location
     from ...core.config import SecretStoreBackend, load_settings, override_settings
 
@@ -41,6 +43,7 @@ def profile_storage_scope(root: Path) -> Iterator[Path]:
         )
         composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
         composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
+        composition.enter_context(bind_workflow_persistence_port(build_workflow_persistence_port()))
         yield storage_root
 
 

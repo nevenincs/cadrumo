@@ -39,11 +39,11 @@ from ....core import (
     FieldOrigin,
     scan_directory,
 )
-from .._closure_findings import closure_findings
-from .._evidence_draft import InvoiceDraft
-from .._evidence_input import EvidenceInput
-from .._evidence_textlayer import transcribe_text_layer
-from .._identity_roles import IdentityCandidate, resolve_counterparty_identity
+from ..closure_findings import closure_findings
+from ..evidence_draft import InvoiceDraft
+from ..evidence_input import EvidenceInput
+from ..evidence_textlayer import transcribe_text_layer
+from ..identity_roles import IdentityCandidate, resolve_counterparty_identity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

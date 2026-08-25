@@ -12,7 +12,7 @@ import pytest
 from cadrumo.application.user_profile.validation import ProfileValidationService
 
 from ....core.resources import resources
-from ....domain.user_profile import UserProfileFact
+from ....domain.user_profile.values import UserProfileFact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

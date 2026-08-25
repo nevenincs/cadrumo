@@ -13,12 +13,8 @@ from ....core import DraftDiscrepancyKind, FindingResolutionAction
 from ....core.config import Settings
 from ....domain.invoices import InvoiceClass
 from ....domain.iva import InvoiceKind
-from .. import (
-    FindingResolution,
-    confirm_invoice_draft_from_evidence,
-    confirmation_blockers,
-    extract_invoice_draft_from_evidence,
-)
+from ..confirmation_gate import FindingResolution, confirmation_blockers
+from ..evidence_draft import confirm_invoice_draft_from_evidence, extract_invoice_draft_from_evidence
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile
 from ._evidence_test_support import seeded_filer_profile as seeded_filer_profile

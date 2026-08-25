@@ -14,7 +14,7 @@ catalogue, the purchase-invoice evidence store, the ledger preflight report,
 and the modelo work-unit catalogue for the requested ``(modelo, filing_year,
 period)`` scope. It persists nothing and never contacts AEAT. Every counter it
 reports is already produced by an existing read model
-(:func:`~application.ledger.preflight_ledger_tax_readiness`,
+(:func:`~application.ledger.preflight.preflight_ledger_tax_readiness`,
 :func:`~application.modelo.list_work_units`) or a direct repository read;
 this module composes them into one ordered checklist rather than introducing a
 new aggregation.
@@ -25,7 +25,7 @@ See Also:
         ``agenda``, ``backlog``, ``explain``) this module follows the same
         shape as.
     :mod:`~application.ledger`
-        Owns :func:`~application.ledger.preflight_ledger_tax_readiness`,
+        Owns :func:`~application.ledger.preflight.preflight_ledger_tax_readiness`,
         the classification/category/IVA-fact readiness gate this walkthrough's
         "classify" step reuses rather than re-deriving.
     :class:`~domain.modelos.WorkUnit`
@@ -46,7 +46,8 @@ from ..operator_actions import DeclaredNextAction
 from ._next_actions import declare_next_action
 
 if TYPE_CHECKING:
-    from ...application.ledger import LedgerPreflightReport, PurchaseInvoiceEvidence
+    from ...application.ledger.preflight import LedgerPreflightReport
+    from ...application.ledger.evidence import PurchaseInvoiceEvidence
     from ...domain.invoices import InvoiceCatalogue
     from ...domain.modelos import WorkUnit
     from ...domain.transactions import Transaction, TransactionCatalogueRepositoryProtocol
@@ -168,7 +169,7 @@ def build_data_prep_walkthrough(
         evidence_records: Loaded purchase-invoice evidence rows
             (``tuple[PurchaseInvoiceEvidence, ...]``) for ``bucket_id``.
         preflight_report: Loaded
-            :class:`~application.ledger.LedgerPreflightReport` for
+            :class:`~application.ledger.preflight.LedgerPreflightReport` for
             ``(bucket_id, period)``.
         work_units: Active (non-discarded)
             :class:`~domain.modelos.WorkUnit` rows for ``bucket_id``.

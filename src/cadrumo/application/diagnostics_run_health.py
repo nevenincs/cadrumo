@@ -7,7 +7,7 @@ session is diagnosable without leaving the host:
 * :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder` records
   duration/outcome metadata for every LLM classification, split-proposal, and
   completion run (see :class:`~llm.LLMClient` and
-  :mod:`~application.ledger._llm_classification`); and
+  :mod:`~application.ledger.llm_classification`); and
 * :func:`~application.auth.test_operator_auth` reports whether an
   encrypted AEAT session token is present on disk and whether it has passed
   its idle deadline.
@@ -40,7 +40,7 @@ backing the ``aeat app diagnostics llm-usage`` verb.
 outcome metadata -- no token counts are recorded on this store -- so the
 usage summary reports run counts, durations, and success rate rather than
 token/cost figures (those are covered by the separate
-:func:`~application.ledger.build_llm_diagnostics_report`
+:func:`~application.ledger.llm_diagnostics.build_llm_diagnostics_report`
 usage/cost/confidence report, which folds the distinct completion-call
 :class:`~llm.UsageRecord` log). This report again
 reuses :meth:`~adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`

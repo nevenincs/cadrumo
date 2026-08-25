@@ -1,7 +1,7 @@
 """The invoice router holds no label-regex reader.
 
 The deletion gate for the Spanish-label regex family that used to read a PDF's
-text layer into an :class:`~application.ledger.InvoiceDraft`. It recovered only
+text layer into an :class:`~application.ledger.evidence_draft.InvoiceDraft`. It recovered only
 what its patterns anticipated, and on an unfamiliar layout it did not decline --
 it grounded whichever labelled line happened to match, which is fabrication with
 a printed anchor behind it. The semantic transcribe-extract-ground chain replaced
@@ -29,9 +29,9 @@ a windowed slice silently stops detecting once the region it measures outgrows
 the window.
 
 See Also:
-    :func:`~application.ledger.extract_invoice_draft_from_evidence`
+    :func:`~application.ledger.evidence_draft.extract_invoice_draft_from_evidence`
         The router this gate binds to.
-    :func:`~application.ledger.transcribe_text_layer`
+    :func:`~application.ledger.evidence_textlayer.transcribe_text_layer`
         Acquisition stage that replaced the text-layer regex primitive.
 """
 
@@ -43,12 +43,12 @@ from typing import TypeIs
 
 import pytest
 
-from ... import ledger
+import cadrumo.application.ledger.evidence_draft as evidence_draft_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SRC_ROOT = Path(__file__).resolve().parents[3]
-_ROUTER = _SRC_ROOT / "application" / "ledger" / "_evidence_draft.py"
+_ROUTER = _SRC_ROOT / "application" / "ledger" / "evidence_draft.py"
 
 # Working AEAT parsers, aimed at fixed published layouts. Deliberately NOT swept
 # by this gate; they serve as its positive control.
@@ -125,17 +125,12 @@ def test_the_router_does_not_import_re() -> None:
     assert not _imports_re(_ROUTER), f"{_ROUTER.name} imports `re`, which no reading path there needs"
 
 
-def test_the_deleted_primitive_is_gone_from_the_package_facade() -> None:
-    """A facade name outliving its module is an import error for every consumer.
-
-    Checked on the facade rather than on the module because that is where an
-    incomplete deletion actually bites: ``__all__`` and the lazy-export map are
-    the two places a stale name survives silently until something resolves it.
-    """
-    assert "extract_invoice_fields" not in ledger.__all__
+def test_the_deleted_primitive_is_gone_from_its_defining_module() -> None:
+    """A deleted reader has no residual defining-module attribute."""
+    assert "extract_invoice_fields" not in vars(evidence_draft_module)
 
     with pytest.raises(AttributeError):
-        _ = ledger.extract_invoice_fields  # type: ignore[attr-defined]
+        _ = evidence_draft_module.extract_invoice_fields  # type: ignore[attr-defined]
 
 
 @pytest.mark.parametrize("parser_path", _AEAT_LAYOUT_PARSERS, ids=lambda path: path.parent.name)

@@ -41,12 +41,12 @@ from ....domain.iva import (
     TransactionKind,
     classify_iva,
 )
-from .._classification_assembly import (
+from ..classification_assembly import (
     DeclaredFact,
     DeclaredFacts,
     assemble_classification_criteria,
 )
-from .._classifier_inputs import ClassifierInputs
+from ..classifier_inputs import ClassifierInputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -60,7 +60,7 @@ def marriage_derived_facts(
     """Return ``(path, canonical-value-string)`` pairs for all marriage facts.
 
     The caller converts these to
-    :class:`domain.user_profile.UserProfileFact` records.  All
+    :class:`domain.user_profile.values.UserProfileFact` records.  All
     four facts are always emitted when a marriage_date is present;
     downstream binding resolution ignores facts that no formula
     consumes.

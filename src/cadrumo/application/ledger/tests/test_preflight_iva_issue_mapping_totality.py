@@ -44,7 +44,7 @@ from ...aggregation import (
     iva_ledger_missing_fact_reasons,
     validate_iva_ledger_counterparty_category,
 )
-from .. import _preflight
+import cadrumo.application.ledger.preflight as preflight_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -150,8 +150,8 @@ def _observed_missing_fact_reasons() -> frozenset[IvaLedgerAggregationIssueReaso
 
 def test_the_shipped_module_imports_with_every_member_classified() -> None:
     """The real imported module classifies every native issue exactly once."""
-    assert set(_preflight._PREFLIGHT_REASON_BY_IVA_ISSUE) | set(
-        _preflight._IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT
+    assert set(preflight_module._PREFLIGHT_REASON_BY_IVA_ISSUE) | set(
+        preflight_module._IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT
     ) == set(
         IvaLedgerAggregationIssueReason,
     )
@@ -177,12 +177,12 @@ def test_every_not_reaching_entry_states_its_reason() -> None:
     checks which members are classified, never whether the classification says
     anything.
     """
-    for reason, rationale in _preflight._IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT.items():
+    for reason, rationale in preflight_module._IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT.items():
         assert rationale.strip(), reason.value
 
 
 def test_every_native_iva_ledger_issue_projects_to_an_operator_action() -> None:
-    projection = _preflight.OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE
+    projection = preflight_module.OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE
 
     assert set(projection) == set(IvaLedgerAggregationIssueReason)
     assert set(projection.values()) <= set(OperatorActionAxis)

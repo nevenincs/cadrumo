@@ -9,6 +9,8 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
+import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
+
 from ......application.auth.diagnostics import load_auth_diagnostic
 from ......application.auth.providers import AuthProvider
 from ......application.auth_credentials import unnamed_certificate_credentials
@@ -18,23 +20,16 @@ from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 from ......core.config import AEAT_CERTIFICATE_PROTECTED_URL, Settings
 from ......tests.secure_sql import isolated_runtime_profile
 from ...browser.tests.real_http_boundary import LocalHttpBoundary, opened_http_boundary, real_browser_factory
-from .. import (
-    AEAT_SESSION_IDLE_TTL,
-    AeatLoginAssertionError,
-    AeatSession,
-    AuthError,
-    CertificateSessionDetail,
-    ClaveMovilApprovalTimeoutError,
-    ClaveMovilAuthProvider,
-    ClaveMovilFailureMode,
-    ClaveMovilLoginAssertionDetail,
-    ClaveMovilSessionDetail,
-    ClavePermanenteFailureMode,
-    _session_store,
-    select_provider,
-)
-from .._clave_movil_metadata import ClaveMovilSessionMetadata
-from .._clave_permanente_metadata import ClavePermanenteSessionMetadata
+from ..authenticator import AEAT_SESSION_IDLE_TTL
+from ..authenticator_types import AeatSession
+from ..clave_movil import ClaveMovilAuthProvider
+from ..clave_movil_metadata import ClaveMovilSessionMetadata
+from ..clave_movil_support import ClaveMovilApprovalTimeoutError, ClaveMovilFailureMode
+from ..clave_permanente_metadata import ClavePermanenteSessionMetadata
+from ..clave_permanente_support import ClavePermanenteFailureMode
+from ..errors import AeatLoginAssertionError, AuthError
+from ..provider_selection import select_provider
+from ..providers import CertificateSessionDetail, ClaveMovilLoginAssertionDetail, ClaveMovilSessionDetail
 from ._authenticator_support import SECRET_PASSPHRASE, _build_bundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -66,7 +61,7 @@ def _settings(tmp_path: Path, kind: AuthProviderKind) -> Settings:
 def _seed_clave_state(kind: AuthProviderKind, *, bucket_id: str) -> None:
     current = datetime.now(UTC)
     storage_state: dict[str, object] = {"cookies": [], "origins": []}
-    storage_sha256 = _session_store.storage_state_sha256(storage_state)
+    storage_sha256 = session_store.storage_state_sha256(storage_state)
     if kind is AuthProviderKind.CLAVE_MOVIL:
         suffix = "clave-movil-storage"
         metadata = ClaveMovilSessionMetadata(
@@ -85,7 +80,7 @@ def _seed_clave_state(kind: AuthProviderKind, *, bucket_id: str) -> None:
             storage_state_sha256=storage_sha256,
             landing_url=AEAT_CERTIFICATE_PROTECTED_URL,
         )
-    _session_store.save(
+    session_store.save(
         aeat_auth_session_storage_state_path(bucket_id, suffix),
         storage_state=storage_state,
         metadata=metadata.model_dump(mode="json"),
@@ -341,7 +336,7 @@ async def test_clave_permanente_public_fresh_authenticate_persists_real_browser_
                 session = await provider.authenticate()
             finally:
                 await provider.close()
-        persisted = _session_store.load(
+        persisted = session_store.load(
             aeat_auth_session_storage_state_path(bucket_id, "clave-permanente-storage"),
         )
 

@@ -24,14 +24,14 @@ from ....core import (
     FieldOrigin,
     FindingResolutionAction,
 )
-from .._confirmation_gate import (
+from ..confirmation_gate import (
     BLOCKING_REASON_BY_DISCREPANCY_KIND,
     ConfirmationBlockedError,
     FindingResolution,
     confirmation_blockers,
     resolved_blockers,
 )
-from .._evidence_draft import (
+from ..evidence_draft import (
     DraftDiscrepancyFinding,
     FieldAmbiguityCandidate,
     FieldProvenance,

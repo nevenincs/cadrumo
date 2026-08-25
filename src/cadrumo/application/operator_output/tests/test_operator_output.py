@@ -30,7 +30,7 @@ from ....adapters.persistence.storage.custody import (
 )
 from ....core.config import override_settings
 from ....core.json_contract import NoticeSeverity, OutputSchemaError
-from ....domain.user_profile import ProfileSetupState, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from ....tests.profile_capsule import mint_test_profile_recovery_envelope
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...user_profile.lifecycle import ProfileCapsuleLifecycle

@@ -28,10 +28,11 @@ from pathlib import Path
 
 import pytest
 
+import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
+
 from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 from ......core.config import Settings
 from ......tests.secure_sql import isolated_runtime_profile
-from .. import _session_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -90,7 +91,7 @@ def test_the_store_is_empty_before_anything_is_persisted() -> None:
     would still satisfy every check below.
     """
 
-    assert _session_store.exists(_path()) is False
+    assert session_store.exists(_path()) is False
 
 
 def test_a_captured_storage_state_round_trips_through_the_encrypted_store() -> None:
@@ -102,9 +103,9 @@ def test_a_captured_storage_state_round_trips_through_the_encrypted_store() -> N
     nothing, which is the failure worth catching.
     """
 
-    _session_store.save(_path(), storage_state=_STORAGE_STATE, metadata=_metadata())
+    session_store.save(_path(), storage_state=_STORAGE_STATE, metadata=_metadata())
 
-    loaded = _session_store.load(_path())
+    loaded = session_store.load(_path())
 
     assert loaded is not None
     assert loaded.storage_state == _STORAGE_STATE
@@ -119,12 +120,12 @@ def test_the_persisted_digest_binds_the_state_that_was_captured() -> None:
     subject would let a substituted state pass as the captured one.
     """
 
-    _session_store.save(_path(), storage_state=_STORAGE_STATE, metadata=_metadata())
+    session_store.save(_path(), storage_state=_STORAGE_STATE, metadata=_metadata())
 
-    loaded = _session_store.load(_path())
+    loaded = session_store.load(_path())
 
     assert loaded is not None
-    assert loaded.storage_state_sha256 == _session_store.storage_state_sha256(_STORAGE_STATE)
+    assert loaded.storage_state_sha256 == session_store.storage_state_sha256(_STORAGE_STATE)
 
 
 def test_a_different_storage_state_yields_a_different_digest() -> None:
@@ -136,7 +137,7 @@ def test_a_different_storage_state_yields_a_different_digest() -> None:
 
     other = _storage_state(cookie_value="a-different-session-value")
 
-    assert _session_store.storage_state_sha256(other) != _session_store.storage_state_sha256(_STORAGE_STATE)
+    assert session_store.storage_state_sha256(other) != session_store.storage_state_sha256(_STORAGE_STATE)
 
 
 def test_persisting_is_what_makes_the_session_discoverable() -> None:
@@ -150,11 +151,11 @@ def test_persisting_is_what_makes_the_session_discoverable() -> None:
     """
 
     path = _path()
-    assert _session_store.exists(path) is False
+    assert session_store.exists(path) is False
 
-    _session_store.save(path, storage_state=_STORAGE_STATE, metadata=_metadata())
+    session_store.save(path, storage_state=_STORAGE_STATE, metadata=_metadata())
 
-    assert _session_store.exists(path) is True
+    assert session_store.exists(path) is True
 
 
 @pytest.fixture(autouse=True)

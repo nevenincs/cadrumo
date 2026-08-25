@@ -43,9 +43,9 @@ from ...domain.modelos import (
     ModeloError,
     ModeloValidationError,
     WorkUnit,
-    WorkUnitCatalogueRepositoryProtocol,
     WorkUnitState,
 )
+from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 
 _BucketId = Annotated[
     str,

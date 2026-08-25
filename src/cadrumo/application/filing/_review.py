@@ -53,7 +53,7 @@ from ...domain.filing import (
 from ...domain.invoices import InvoiceCatalogue
 from ...domain.submission import ModeloDraftStatus
 from ...domain.transactions import Transaction, TransactionCatalogue
-from ...domain.user_profile import ProfileNotFoundError
+from ...domain.user_profile.errors import ProfileNotFoundError
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import record_to_path_values
 

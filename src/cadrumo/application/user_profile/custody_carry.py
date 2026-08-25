@@ -67,7 +67,9 @@ from ...domain.evidence_consent import (
     EvidenceConsentLedgerEntry,
     evidence_consent_ledger_entry_object_key,
 )
-from ...domain.user_profile import CarriedSecureObject, ProfileExportError, UserProfileSnapshot
+from ...domain.user_profile.portable_export import CarriedSecureObject
+from ...domain.user_profile.errors import ProfileExportError
+from ...domain.user_profile.values import UserProfileSnapshot
 from ..aggregation import PercepcionObservationRepository, RetencionObservationRepository
 from ..calculations import (
     CalculationObservationRepository,
@@ -78,14 +80,12 @@ from ..calculations import (
 )
 from ..evidence import EvidenceBundleRepository
 from ..filing import ModeloHistoryRepository
-from ..ledger import (
-    ConfirmationRecordRepository,
-    ConfirmedCounterpartyFactsRepository,
-    ExtractedDocumentCacheRepository,
-    ExtractionDraftRepository,
-    LedgerClassificationRuleRepository,
-    PurchaseInvoiceEvidenceRepository,
-)
+from ..ledger.confirmation_record import ConfirmationRecordRepository
+from ..ledger.counterparty_establishment import ConfirmedCounterpartyFactsRepository
+from ..ledger.extracted_document_cache import ExtractedDocumentCacheRepository
+from ..ledger.extraction_draft_store import ExtractionDraftRepository
+from ..ledger.rule_repository import LedgerClassificationRuleRepository
+from ..ledger.evidence import PurchaseInvoiceEvidenceRepository
 from ..live import (
     Borrador100Snapshot,
     IvaRemoteStateAcquisitionManifestRepository,

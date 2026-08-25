@@ -64,7 +64,7 @@ from ...domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ...domain.user_profile import UserProfileRecord
+from ...domain.user_profile.values import UserProfileRecord
 from . import _shared_issue_reasons
 from ._currency_predicates import (
     effective_eur_iva_amount,

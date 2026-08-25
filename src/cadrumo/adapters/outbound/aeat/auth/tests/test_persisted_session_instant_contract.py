@@ -7,7 +7,7 @@ extend or expire an idle deadline by the local offset — silently lengthening
 a session the operator believes has already lapsed.
 
 The metadata persists inside the encrypted session envelope as JSON
-(``model_dump_json`` / ``model_validate_json`` in ``_session_store``), which
+(``model_dump_json`` / ``model_validate_json`` in ``session_store``), which
 preserves the offset, so the canonical contract is enforceable here. That is
 deliberately not true of the SQL-column-backed records elsewhere, where
 SQLite drops the offset on read.
@@ -23,7 +23,7 @@ from datetime import UTC, datetime, timedelta, timezone
 import pytest
 from pydantic import ValidationError
 
-from .._authenticator_persistence import PersistedSessionMetadata
+from ..authenticator_persistence import PersistedSessionMetadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

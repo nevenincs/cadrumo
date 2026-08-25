@@ -20,7 +20,7 @@ from pydantic import SecretStr, ValidationError
 
 from cadrumo.application.workflow.persistence import workflow_state_repository
 
-from ....adapters.outbound.aeat.auth import _session_store
+from ....adapters.outbound.aeat.auth import session_store
 from ....adapters.persistence.storage import SECRET_INDEX_FILENAME, SecretStore, get_secret_store
 from ....adapters.persistence.storage.master_key import current_active_bucket_session
 from ....core import AuthProviderKind
@@ -973,7 +973,7 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
     configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a)
     session_captured_at = _NOW
     session_a_path = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
-    _session_store.save(
+    session_store.save(
         session_a_path,
         storage_state={"cookies": [], "origins": []},
         metadata={
@@ -1002,7 +1002,7 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
         select_operator_certificate_source(name="selected")
         configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b)
         session_b_path = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
-        _session_store.save(
+        session_store.save(
             session_b_path,
             storage_state={"cookies": [], "origins": []},
             metadata={

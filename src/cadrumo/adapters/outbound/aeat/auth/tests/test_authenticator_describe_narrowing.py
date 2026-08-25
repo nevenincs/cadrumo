@@ -9,8 +9,10 @@ from pydantic import SecretStr
 
 from ......application.auth_credentials import unnamed_certificate_credentials
 from ......core.config import Settings
-from .. import AeatAuthenticator, AuthValidationError, CertificateHealthCheck
+from ..authenticator import AeatAuthenticator
+from ..authenticator_types import CertificateHealthCheck
 from ..certificate import CertificateError
+from ..errors import AuthValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

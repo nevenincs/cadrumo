@@ -667,11 +667,11 @@ convention = "google"
 "src/cadrumo/entrypoints/cli/**/*.py" = ["B008"]
 
 # `_CERT_PASSWORD_SECRET_ENV` is the NAME of an env var, not a password literal.
-"src/cadrumo/adapters/outbound/aeat/auth/_authenticator.py" = ["S105"]
+"src/cadrumo/adapters/outbound/aeat/auth/authenticator.py" = ["S105"]
 # `_CLAVE_PERMANENTE_PASSWORD_ENV` is the NAME of an env var; `PASSWORD_EXPIRED`
 # is a failure-mode enum member name — neither is a password literal.
-"src/cadrumo/adapters/outbound/aeat/auth/_clave_permanente.py" = ["S105"]
-"src/cadrumo/adapters/outbound/aeat/auth/_clave_permanente_support.py" = ["S105"]
+"src/cadrumo/adapters/outbound/aeat/auth/clave_permanente.py" = ["S105"]
+"src/cadrumo/adapters/outbound/aeat/auth/clave_permanente_support.py" = ["S105"]
 # Registry applicability enum + legal-text rationale strings are not passwords.
 "src/cadrumo/domain/calculations/registry/_applicability.py" = ["S105"]
 # Modelo 720 fichero-BOE roundtrip fixture pins fixed-width AEAT envelope rows

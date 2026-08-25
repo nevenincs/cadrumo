@@ -12,7 +12,7 @@ from playwright._impl._errors import Error as PlaywrightError
 from playwright._impl._errors import TargetClosedError
 from pydantic import ValidationError
 
-from ....adapters.outbound.aeat.auth import ClaveMovilApprovalTimeoutError
+from ....adapters.outbound.aeat.auth.clave_movil_support import ClaveMovilApprovalTimeoutError
 from ....adapters.outbound.aeat.sede import SedeFailureMode, SedeNavigationError
 from ....adapters.persistence.storage import (
     LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE,

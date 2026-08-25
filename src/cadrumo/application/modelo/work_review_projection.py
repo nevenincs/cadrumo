@@ -66,8 +66,8 @@ from ...domain.modelos import (
     VerificationReport,
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
-    WorkUnitCatalogueRepositoryProtocol,
 )
+from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     StoredCalculationDriftError,

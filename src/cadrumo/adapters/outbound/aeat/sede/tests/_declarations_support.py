@@ -124,7 +124,7 @@ _COTEJO_DOCUMENT_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.cotejo_document}"
 _REGISTER_DOWNLOAD_URL = f"{_AEAT.domains.www6}{_DECLARATIONS_LISTING_BASE_PATH}/zkau?dtid=z_test&cmd_0=download"
 
 if TYPE_CHECKING:
-    from ...auth import AeatSession
+    from ...auth.authenticator_types import AeatSession
 
 
 # Prevents filed-observation store tests from writing into the active profile DB.
@@ -500,10 +500,8 @@ def _whitespace_nif_session() -> AeatSession:
     """
     from datetime import timedelta
 
-    from ...auth import (
-        AeatSession,
-        CertificateSessionDetail,
-    )
+    from ...auth.authenticator_types import AeatSession
+    from ...auth.providers import CertificateSessionDetail
 
     now = datetime(2026, 5, 28, 12, 0, 0, tzinfo=UTC)
     return AeatSession(

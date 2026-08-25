@@ -13,19 +13,19 @@ from ....core import BindingSourceKind
 from ....core.errors import BaseSeverity
 from ....core.resources import resources
 from ...calculations.registry import DataBindingDefinition, ProfileSelector
-from .. import (
-    ProfileDerivedSelectorDefinition,
+from ..loader import load_user_profile_schema
+from ..registry_contract import (
     UserProfileRegistryContractIssue,
     build_user_profile_selector_index,
-    load_user_profile_schema,
     profile_binding_selectors,
     validate_user_profile_registry_contract,
 )
+from ..schema import ProfileDerivedSelectorDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .._schema import ProfileSchemaDefinition
+    from ..schema import ProfileSchemaDefinition
 
 _MODELO_100_ANUALIDADES_YEARS = (2021, 2022, 2023)
 
@@ -350,14 +350,16 @@ def test_committed_modelo_profile_selectors_are_declared_by_user_profile_schema(
     assert not report.issues
 
 
-def test_user_profile_imports_before_registry_barrel() -> None:
+def test_user_profile_defining_modules_import_before_registry_barrel() -> None:
     result = subprocess.run(
         [
             sys.executable,
             "-c",
-            "import cadrumo.domain.user_profile as u; "
+            "import cadrumo.domain.user_profile.loader as l; "
+            "import cadrumo.domain.user_profile.registry_contract as c; "
             "import cadrumo.domain.calculations.registry as r; "
-            "assert hasattr(u, 'validate_user_profile_registry_contract'); "
+            "assert hasattr(l, 'load_user_profile_schema'); "
+            "assert hasattr(c, 'validate_user_profile_registry_contract'); "
             "assert hasattr(r, 'RegistryValidator')",
         ],
         capture_output=True,

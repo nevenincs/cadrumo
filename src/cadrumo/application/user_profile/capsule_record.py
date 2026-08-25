@@ -29,7 +29,8 @@ from ...domain.buckets import (
     append_bucket_event,
     build_bucket_event,
 )
-from ...domain.user_profile import UserProfileError, UserProfileRecord
+from ...domain.user_profile.errors import UserProfileError
+from ...domain.user_profile.values import UserProfileRecord
 from .custody_ports import (
     ProfileCustodySecureObjectNamespace,
     ProfileCustodySecureObjectRawRowPort,
@@ -67,7 +68,7 @@ _RECORD_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid")
 class ProfileRecordConflictError(UserProfileError, ValueError):
     """The authenticated record changed before its CAS command committed.
 
-    Joins the :class:`~domain.user_profile.UserProfileError` family so the
+    Joins the :class:`~domain.user_profile.errors.UserProfileError` family so the
     refusal binds to the error registry and one clause still catches the whole
     user-profile surface. :exc:`ValueError` is retained deliberately: it is
     load-bearing ancestry here, not decoration -- see
@@ -78,7 +79,7 @@ class ProfileRecordConflictError(UserProfileError, ValueError):
 class ProfileRecordIntegrityError(UserProfileError, ValueError):
     """A current-record row or its event witness is malformed or mis-bound.
 
-    Joins the :class:`~domain.user_profile.UserProfileError` family so the
+    Joins the :class:`~domain.user_profile.errors.UserProfileError` family so the
     refusal binds to the error registry. :exc:`ValueError` is retained
     because the lifecycle restore path converts a failed authenticated
     validation into its own refusal through a ``ValueError`` arm; dropping the

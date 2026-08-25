@@ -35,7 +35,7 @@ from ....domain.contribuyente import (
     descendant_facts_from_list,
     parse_guarderia_mensual,
 )
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .._profile_binding import ProfileBindingResolutionError, resolve_profile_sourced_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

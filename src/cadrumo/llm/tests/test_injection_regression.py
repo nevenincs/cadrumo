@@ -36,9 +36,9 @@ host. That makes the transport assertions real (the hostile bytes genuinely
 travel the client path unmodified) while keeping the gate deterministic.
 
 See Also:
-    :func:`~application.ledger.evaluate_anchor`
+    :func:`~application.ledger.grounding_anchor.evaluate_anchor`
         The S3 anchor check this boundary rests on.
-    :func:`~application.ledger.closure_findings`
+    :func:`~application.ledger.closure_findings.closure_findings`
         The arithmetic leg that catches a printed-but-wrong figure.
 """
 
@@ -58,14 +58,11 @@ import pytest
 
 from ...adapters.inbound.pdf import extract_pages_text_from_bytes
 from ...adapters.outbound.llm import LLMCache, UsageRecorder
-from ...application.ledger import (
-    DocumentTranscription,
-    InvoiceDraft,
-    PurchaseInvoiceEvidenceInputError,
-    TranscriberIdentity,
-    closure_findings,
-    evaluate_anchor,
-)
+from ...application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
+from ...application.ledger.evidence_draft import InvoiceDraft
+from ...application.ledger.evidence import PurchaseInvoiceEvidenceInputError
+from ...application.ledger.closure_findings.closure_findings import closure_findings
+from ...application.ledger.grounding_anchor import evaluate_anchor
 from ...core import LOCAL_TRANSPORT_LABEL, FieldGroundingOutcome, FieldOrigin
 from ...core.config import LLMProvider, override_settings
 from ...tests.fixtures.settings import EnvFileFreeSettings

@@ -21,12 +21,9 @@ from ...core.identity import tax_id_identity_token
 from ...core.resources import resources
 from ...domain.calculations.registry import AtributionMemberObservation, resolve_atribucion_binding_row_values
 from ...domain.modelos import Modelo184MemberRow
-from ...domain.user_profile import (
-    ProfileNotFoundError,
-    UserProfileFact,
-    UserProfileRecord,
-    numeric_value_refusal,
-)
+from ...domain.user_profile.errors import ProfileNotFoundError
+from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
+from ...domain.user_profile.schema import numeric_value_refusal
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ._source_mesh import (
     CalculationSourceContext,
@@ -160,7 +157,7 @@ def _invalid_value_refusals(socio: _SocioFacts) -> tuple[str, ...]:
     """Report why any of this row's values fail their own declaration.
 
     Asks the schema's own
-    :func:`~cadrumo.domain.user_profile.numeric_value_refusal` rather than
+    :func:`~cadrumo.domain.user_profile.schema.numeric_value_refusal` rather than
     re-deciding what a legal share percentage is. The write door admits
     values under that same rule, so a row this resolver refuses is one the
     door would not have written -- which keeps the two from disagreeing

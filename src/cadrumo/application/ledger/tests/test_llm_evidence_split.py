@@ -26,10 +26,8 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.iva import IvaCategory
-from ....llm import LLMSplitSuggestion
-from .. import (
-    suggest_evidence_split,
-)
+from ....llm.suggestions import LLMSplitSuggestion
+from ..llm_classification import suggest_evidence_split
 from ._llm_evidence_split_support import (
     _BUCKET,
     _seed_parent,

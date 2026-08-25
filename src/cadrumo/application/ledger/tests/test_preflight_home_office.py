@@ -13,7 +13,7 @@ from ....domain.categories import SpendingCategory
 from ....domain.transactions import BusinessClassification, TransactionCatalogue
 from ....domain.usage_ratios import UsageRatioProfile
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import LedgerPreflightIssueReason, preflight_ledger_tax_readiness
+from ..preflight import LedgerPreflightIssueReason, preflight_ledger_tax_readiness
 from ._preflight_test_support import (
     _BUCKET_ID,
     _HOME_OFFICE_PROFILE_ID,

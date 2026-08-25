@@ -110,7 +110,7 @@ def _drive_surfaces(work_dir: Path, python: Path) -> dict[str, object]:
         from pathlib import Path
 
         import cadrumo
-        from cadrumo.application.ledger import DocumentTranscription, TranscriberIdentity
+        from cadrumo.application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
         from cadrumo.core import (
             FieldOrigin,
             ImageMediaType,

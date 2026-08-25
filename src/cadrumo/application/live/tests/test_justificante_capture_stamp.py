@@ -20,7 +20,7 @@ from ....domain.modelos import (
     ExternalEvidence,
     ExternalEvidenceKind,
 )
-from ....domain.user_profile import UserProfileFact
+from ....domain.user_profile.values import UserProfileFact
 from .._justificante import register_capture_as_filing_evidence
 from .._snapshot_base import SnapshotLifecycleState
 from ._justificante_reconcile_support import (

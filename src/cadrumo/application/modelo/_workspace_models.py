@@ -31,7 +31,7 @@ from ...domain.calculations.registry import (
 )
 from ...domain.filing import ModeloScalar
 from ...domain.modelos import CalculationSourceRef, ModeloCode, WorkUnitState
-from ..ledger import LedgerPreflightIssueReason
+from ..ledger.preflight import LedgerPreflightIssueReason
 from ..operator_actions import ActionReference
 from ..registry import RegistryClosureLimb
 from ._work_addressing import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarget

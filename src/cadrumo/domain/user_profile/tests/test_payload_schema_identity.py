@@ -23,8 +23,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .._loader import load_user_profile_schema
-from .._values import (
+from ..loader import load_user_profile_schema
+from ..values import (
     ProfileSetupState,
     UserProfileFact,
     UserProfileRecord,

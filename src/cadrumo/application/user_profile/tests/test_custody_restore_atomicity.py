@@ -29,7 +29,7 @@ from ....adapters.persistence.storage import (
 )
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....core.classification import SensitivityClass
-from ....domain.user_profile import CarriedSecureObject
+from ....domain.user_profile.portable_export import CarriedSecureObject
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

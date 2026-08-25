@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...domain.user_profile import UserProfileFact, UserProfileRecord
+from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 from ._descendant_group import DESCENDANTS_COUNT_PAGE_ID
 
 # The descendant fact namespace: indexed rows renta_family.descendiente.{n}.*

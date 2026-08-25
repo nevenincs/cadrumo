@@ -13,16 +13,14 @@ from urllib.parse import quote
 
 import pytest
 
+import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
+
 from ......core.config import Settings
 from ......tests.live_gate import requires_live_enabled
 from ...browser import default_browser_session_factory
-from .. import (
-    AeatLoginAssertion,
-    AeatSession,
-    ClaveMovilAuthProvider,
-    ClaveMovilSessionDetail,
-    _session_store,
-)
+from ..authenticator_types import AeatLoginAssertion, AeatSession
+from ..clave_movil import ClaveMovilAuthProvider
+from ..providers import ClaveMovilSessionDetail
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
 
@@ -69,14 +67,14 @@ async def test_clave_movil_provider_probes_persisted_session_with_central_playwr
     settings = _settings_or_skip()
     if not settings.cadrumo_clave_movil_dni_nie:
         pytest.fail("CADRUMO_CLAVE_MOVIL_DNI_NIE is not configured after live opt-in")
-    from ......core.bucket_pointer import require_active_bucket_id
     from ......core.auth_session_keys import aeat_auth_session_storage_state_path
+    from ......core.bucket_pointer import require_active_bucket_id
 
     storage_state_path = aeat_auth_session_storage_state_path(
         require_active_bucket_id(),
         "clave-movil-storage",
     )
-    if not _session_store.exists(storage_state_path):
+    if not session_store.exists(storage_state_path):
         pytest.fail("No persisted encrypted Cl@ve Móvil session is available to probe after live opt-in")
 
     provider = ClaveMovilAuthProvider(settings, browser_session_factory=_central_browser_session)
@@ -116,14 +114,14 @@ async def test_clave_movil_provider_full_login_with_central_playwright_when_expl
     finally:
         await provider.close()
 
-    from ......core.bucket_pointer import require_active_bucket_id
     from ......core.auth_session_keys import aeat_auth_session_storage_state_path
+    from ......core.bucket_pointer import require_active_bucket_id
 
     storage_state_path = aeat_auth_session_storage_state_path(
         require_active_bucket_id(),
         "clave-movil-storage",
     )
-    assert _session_store.exists(storage_state_path)
+    assert session_store.exists(storage_state_path)
     assert not storage_state_path.exists()
     assert not storage_state_path.with_suffix(".meta.json").exists()
 

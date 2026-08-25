@@ -30,7 +30,7 @@ from cadrumo.application.user_profile.login_session import login_profile
 from cadrumo.application.user_profile.profile_record_repository import require_profile_record_session
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 
-from ....domain.user_profile import ProfileSetupState, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from ....tests.secure_sql import isolated_profile_storage_root
 
 if TYPE_CHECKING:

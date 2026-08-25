@@ -24,7 +24,7 @@ exempted: an uncatalogued country code is a gap in this system's own bundled
 vocabulary, which carries a bounded subset of the world's jurisdictions, so
 blocking on it would refuse a draft for every real jurisdiction outside that
 subset. Those conditions are reported on the non-blocking advisory channel
-instead -- see :func:`~application.ledger.country_vocabulary_advisory` -- on the
+instead -- see :func:`~application.ledger.country_vocabulary_advisory.country_vocabulary_advisory` -- on the
 terms the unconsumed-IVA advisory already holds to: an alert only earns the
 operator's attention if every firing is a genuine defect in the document.
 """

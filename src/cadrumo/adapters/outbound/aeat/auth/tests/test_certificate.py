@@ -13,18 +13,17 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 from pydantic import SecretStr
 
-from ......core.config import Settings
+from ......core.config import AEAT_CERTIFICATE_PROTECTED_ORIGIN, Settings
 from ...browser import Profile, create_browser_session
-from .. import (
-    AEAT_CERTIFICATE_PROTECTED_ORIGIN,
+from ..certificate import (
     CertificateBundle,
-    CertificateContextProvisioner,
     CertificateExpiredError,
     CertificateLoadError,
     CertificatePasswordError,
     LoadedCertificate,
     load_certificate,
 )
+from ..providers import CertificateContextProvisioner
 from ._auth_fixtures import SECRET_PASSPHRASE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

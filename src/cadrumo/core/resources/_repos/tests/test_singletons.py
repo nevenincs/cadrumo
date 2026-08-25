@@ -35,7 +35,7 @@ def test_apoderamientos_singleton_loads_real_catalogue() -> None:
 
 
 def test_user_profile_singleton_loads_real_schema() -> None:
-    from .....domain.user_profile import ProfileSchemaDefinition
+    from .....domain.user_profile.schema import ProfileSchemaDefinition
 
     repo = UserProfileSchemaRepository()
 

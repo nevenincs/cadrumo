@@ -19,7 +19,7 @@ from ....domain.deadlines import (
     IrpfEstimationRegime,
     IVARegime,
 )
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ...wizard import _catalogue as _wizard_catalogue  # noqa: F401  (registration side effect)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

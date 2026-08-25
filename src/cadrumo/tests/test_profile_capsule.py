@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 
 from ..application.user_profile.profile_record_repository import ProfileRecordRepository
-from ..domain.user_profile import ProfileSetupState, UserProfileRecord
+from ..domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from .profile_capsule import seed_test_profile_record
 from .secure_sql import isolated_runtime_profile
 

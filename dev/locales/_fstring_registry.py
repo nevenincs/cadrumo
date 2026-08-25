@@ -166,7 +166,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         IrpfSpecialRegime,
         LegalEntityForm,
     )
-    from cadrumo.domain.user_profile import ProfileSetupState
+    from cadrumo.domain.user_profile.values import ProfileSetupState
 
     return (
         *_wizard_choice_label_registrations(

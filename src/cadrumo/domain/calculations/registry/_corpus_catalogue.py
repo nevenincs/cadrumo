@@ -26,6 +26,7 @@ from ....core.resources import resolve_companion_binary
 from ._errors import RegistryValidationError
 from ._legal import _PROVISION_SUFFIXED_FILENAME
 from ._schema import SourceReference
+from ._static_inspection import GeneratedArtifactSource
 
 #: The one corpus tree carrying the excerpt/full-text duality
 #: ``SourceReference.corpus_tier`` describes -- the same BOE/AEAT norm-text
@@ -50,11 +51,11 @@ _SOURCE_FULL_CONSOLIDATED_SIZE_FLOOR: Final = 10000
 class ResolvedRecordDesignBinary:
     """One verified official binary selected for a target design epoch."""
 
-    source: SourceReference
+    source: GeneratedArtifactSource
     path: Path
 
 
-def verify_source_file(root: Path, source: SourceReference) -> Path:
+def verify_source_file(root: Path, source: GeneratedArtifactSource) -> Path:
     """Verify one source reference against the local repository filesystem.
 
     A source may resolve from the command-bearing package tree or either
@@ -85,7 +86,7 @@ def verify_source_file(root: Path, source: SourceReference) -> Path:
     return present_path
 
 
-def _validate_source_corpus_tier_declaration(source: SourceReference, path: Path) -> None:
+def _validate_source_corpus_tier_declaration(source: GeneratedArtifactSource, path: Path) -> None:
     """Verify a DECLARED ``corpus_tier`` against the bundled file, when present.
 
     Purely additive: nothing in the committed catalogue declares
@@ -133,7 +134,7 @@ def _validate_source_corpus_tier_declaration(source: SourceReference, path: Path
 
 def resolve_record_design_binary(
     root: Path,
-    sources: Mapping[str, SourceReference],
+    sources: Mapping[str, GeneratedArtifactSource],
     *,
     source_ref: str,
     filing_year: int,
@@ -178,7 +179,7 @@ def resolve_record_design_binary(
     return ResolvedRecordDesignBinary(source=source, path=verify_source_file(root, source))
 
 
-def _verify_manual_structure(repo_root: Path, source: SourceReference) -> None:
+def _verify_manual_structure(repo_root: Path, source: GeneratedArtifactSource) -> None:
     """Run the manual-part structure check for a present ``manual_pdf`` source.
 
     Only meaningful when the manual PDF is present under the source tree (the
@@ -214,7 +215,7 @@ def _verify_manual_structure(repo_root: Path, source: SourceReference) -> None:
         ) from exc
 
 
-def _resolve_corpus_path(root: Path, source: SourceReference) -> Path:
+def _resolve_corpus_path(root: Path, source: GeneratedArtifactSource) -> Path:
     direct = (root / source.corpus_path).resolve()
     if direct.is_file():
         return direct

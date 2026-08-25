@@ -173,7 +173,6 @@ from ._protocols import (
     ModeloRecordCatalogueRepositoryProtocol,
     TransactionParticipationIndexRepositoryProtocol,
     VerificationReportCatalogueRepositoryProtocol,
-    WorkUnitCatalogueRepositoryProtocol,
 )
 from ._repository import WorkUnitPersistenceError, upsert_work_unit
 from ._row_models import (
@@ -288,7 +287,6 @@ __all__ = (
     "VerificationReportPersistenceError",
     "WorkUnit",
     "WorkUnitCatalogue",
-    "WorkUnitCatalogueRepositoryProtocol",
     "WorkUnitPersistenceError",
     "WorkUnitState",
     "assert_revision_snapshot_evidence_coverage",

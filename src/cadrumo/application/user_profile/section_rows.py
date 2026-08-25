@@ -11,7 +11,7 @@ later field's refusal"; row writes reach it through
 That makes row creation a batch operation rather than a sequence of field
 edits, so what a surface needs is the index a new row may occupy and the
 facts that fill it -- both derived from the schema's own
-:class:`~cadrumo.domain.user_profile.ProfileSectionDefinition` rather than
+:class:`~cadrumo.domain.user_profile.schema.ProfileSectionDefinition` rather than
 from a path convention restated per caller.
 
 The application-owned row mutation below composes those two pure helpers with
@@ -25,19 +25,16 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from ...domain.user_profile import (
-    ProfileSchemaValidationError,
-    UserProfileFact,
-    UserProfileRecord,
-    load_user_profile_schema,
-)
+from ...domain.user_profile.errors import ProfileSchemaValidationError
+from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
+from ...domain.user_profile.loader import load_user_profile_schema
 from .completeness import profile_section_rows
 from .fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
 from .profile_record_repository import ProfileRecordRepository
 from .projections import record_to_path_values
 
 if TYPE_CHECKING:
-    from ...domain.user_profile import ProfileSectionDefinition
+    from ...domain.user_profile.schema import ProfileSectionDefinition
 
 
 @dataclass(frozen=True, slots=True)

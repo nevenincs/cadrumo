@@ -46,7 +46,7 @@ from ....domain.contribuyente import (
     descendant_facts_from_list,
     parse_guarderia_mensual,
 )
-from ....domain.user_profile import UserProfileFact
+from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import set_active_test_profile_facts
 from ...aggregation import CalculationSourceDiagnostic
 from .._calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics

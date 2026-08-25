@@ -13,9 +13,9 @@ an empty history is still surfaced with the caveat, since an operator with no
 history is precisely the one deciding whether to enable the route.
 
 See Also:
-    :func:`~application.ledger.survey_cloud_consent`
+    :func:`~application.ledger.consent_withdrawal.survey_cloud_consent`
         The enumeration behind ``consent list``.
-    :func:`~application.ledger.rederive_artefact_on_host`
+    :func:`~application.ledger.consent_withdrawal.rederive_artefact_on_host`
         The on-host re-derivation behind ``consent rederive``.
 """
 
@@ -23,14 +23,9 @@ from __future__ import annotations
 
 import typer
 
-from ...application.ledger import (
-    ConsentedDispatch,
-    DocumentTranscription,
-    InvoiceDraft,
-    OnHostReader,
-    rederive_artefact_on_host,
-    survey_cloud_consent,
-)
+from ...application.ledger.consent_withdrawal import ConsentedDispatch, OnHostReader, rederive_artefact_on_host, survey_cloud_consent
+from ...application.ledger.document_transcription import DocumentTranscription
+from ...application.ledger.evidence_draft import InvoiceDraft
 from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity

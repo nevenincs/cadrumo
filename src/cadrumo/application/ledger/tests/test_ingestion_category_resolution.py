@@ -3,9 +3,9 @@
 The confirm path once carried two rival deciding surfaces and consulted the rule
 table through neither. The convergence keeps both evidences and moves only the
 deciding: the document's declared UNTDID 5305 code arrives as a supplied FACT on
-:class:`~application.ledger.DeclaredFacts`, the charged rate arrives as the
+:class:`~application.ledger.classification_assembly.DeclaredFacts`, the charged rate arrives as the
 criteria's own ``rate_tier`` axis, and
-:func:`~application.ledger.resolve_ingestion_iva_category` weighs them.
+:func:`~application.ledger.classification_assembly.resolve_ingestion_iva_category` weighs them.
 
 **What is asserted here is the adjudication contract, never a tax figure.** No
 test below claims a category is the legally correct treatment of a synthetic
@@ -41,15 +41,15 @@ from ....domain.iva import (
     stated_country_code_status,
 )
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2, an_uncatalogued_alpha3
-from .._classification_assembly import (
+from ..classification_assembly import (
     DeclaredFact,
     DeclaredFacts,
     assemble_classification_criteria,
     declared_category_from_document_record,
     resolve_ingestion_iva_category,
 )
-from .._classifier_inputs import collect_classifier_inputs
-from .._evidence_draft import InvoiceDraft
+from ..classifier_inputs import collect_classifier_inputs
+from ..evidence_draft import InvoiceDraft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

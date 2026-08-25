@@ -43,7 +43,7 @@ from ....core import (
     ProfilePasswordRefusalReason,
     assess_profile_password,
 )
-from ....domain.user_profile import ProfileSetupState
+from ....domain.user_profile.values import ProfileSetupState
 from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

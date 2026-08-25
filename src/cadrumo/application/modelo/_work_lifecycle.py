@@ -61,11 +61,11 @@ from ...domain.modelos import (
     ModeloCode,
     WorkUnit,
     WorkUnitCatalogue,
-    WorkUnitCatalogueRepositoryProtocol,
     WorkUnitState,
     derive_work_unit_id,
     upsert_work_unit,
 )
+from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..operator_actions import (
     ActionArgumentBinding,
     ActionReference,

@@ -40,7 +40,7 @@ from ...core.identity import BucketId, ProfileId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...core.time import validate_utc_aware
 from ...domain.calculations.registry import RevisionId
-from ...domain.user_profile import ProfileSetupState
+from ...domain.user_profile.values import ProfileSetupState
 
 # The two wizard-owned profile result schemas are deferred public targets owned
 # by their production CommandSpec declarations, NOT here: the `config` group imports this

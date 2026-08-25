@@ -45,7 +45,7 @@ from cadrumo.application.user_profile.capsule_record import (
 from cadrumo.application.user_profile.custody_ports import profile_custody_secure_object_repository
 
 from ....adapters.persistence.storage import DecryptionError, crypto
-from ....domain.user_profile import UserProfileRecord
+from ....domain.user_profile.values import UserProfileRecord
 from ....tests.subprocess_cli import run_subprocess_cli_harness
 from ._profile_record_boundary_support import (
     PROFILE_ID,

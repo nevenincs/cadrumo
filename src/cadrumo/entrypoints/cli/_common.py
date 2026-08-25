@@ -157,7 +157,7 @@ if TYPE_CHECKING:
     from ...domain.filing import ModeloDraft
     from ...domain.invoices import InvoiceCatalogue
     from ...domain.transactions import TransactionCatalogue
-    from ...domain.user_profile import UserProfileRecord
+    from ...domain.user_profile.values import UserProfileRecord
     from ._verb_input_schema import VerbInputSchema
 
 __all__ = [
@@ -1646,12 +1646,14 @@ def _active_bucket_id_or_bad(state: WorkflowState) -> str:
 
 
 def _tx_repo(state: WorkflowState) -> TransactionCatalogueRepository:
-    from cadrumo.application.workflow.state_models import active_transaction_catalogue_repository
-
+    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+    from ...application.workflow.active_profile import active_transaction_catalogue_repository
     from ...domain.transactions import LedgerNoActiveBucketError
 
     try:
-        return active_transaction_catalogue_repository(state)
+        return active_transaction_catalogue_repository(
+            repository_factory=lambda bucket_id: TransactionCatalogueRepository(bucket_id=bucket_id),
+        )
     except LedgerNoActiveBucketError as exc:
         raise _no_active_profile_refusal() from exc
 

@@ -53,7 +53,9 @@ from ...domain.modelos import (
     ModeloVerificationFindingSeverity,
     WorkUnit,
 )
-from ...domain.user_profile import ProfileNotFoundError, UserProfileFactValue, load_user_profile_schema
+from ...domain.user_profile.errors import ProfileNotFoundError
+from ...domain.user_profile.values import UserProfileFactValue
+from ...domain.user_profile.loader import load_user_profile_schema
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ._profile_binding import (
     MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR,
@@ -83,7 +85,7 @@ def _madrid_nacimiento_adopcion_eligibility_advisory_finding(
 ) -> ModeloVerificationFinding | None:
     """Warn to confirm Madrid nacimiento/adopción eligibility for an indeterminate unit.
 
-    Loads the bucket's :class:`~domain.user_profile.UserProfileRecord`
+    Loads the bucket's :class:`~domain.user_profile.values.UserProfileRecord`
     directly (the same source the calculate-path injector reads) so the verify
     path can see the ``tax_residence.ccaa`` / ``renta_taxpayer.marital_status`` /
     ``renta_filing.declaration_type`` / ``renta_family.descendiente.*`` facts

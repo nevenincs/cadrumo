@@ -1,47 +1,28 @@
-"""Smoke tests for the auth subpackage."""
+"""Smoke tests for the public outbound-auth defining modules."""
+
+import importlib
+import inspect
 
 import pytest
 
-from .. import (
-    AeatAuthenticator,
-    AuthError,
-    ClaveMovilAuthProvider,
-    select_provider,
-)
-from .. import __all__ as auth_all
+from ..authenticator import AeatAuthenticator
+from ..clave_movil import ClaveMovilAuthProvider
+from ..errors import AuthError
+from ..provider_selection import select_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_REQUIRED_SYMBOLS = [
-    "AeatAuthenticator",
-    "AeatSession",
-    "AeatLoginAssertionError",
-    "AeatSessionExpiredError",
-    "AuthError",
-    "AuthConfigurationError",
-    "ClaveMovilAuthProvider",
-    "ClaveMovilApprovalTimeoutError",
-    "ClaveMovilConfigurationError",
-    "select_provider",
-    "LoadedCertificate",
-    "load_certificate",
-    "health",
-    "AEAT_CERTIFICATE_PROTECTED_URL",
-]
 
-
-def test_smoke_auth_public_surface_is_complete() -> None:
-    """Every required public symbol is exported in __all__ and importable."""
-    missing = [sym for sym in _REQUIRED_SYMBOLS if sym not in auth_all]
-    assert not missing, f"auth __all__ is missing symbols: {missing}"
+def test_auth_package_initializer_is_inert() -> None:
+    """The package root must not expose a compatibility facade."""
+    package = importlib.import_module("cadrumo.adapters.outbound.aeat.auth")
+    assert package.__all__ == []
 
 
 def test_smoke_auth_key_symbols_are_importable() -> None:
-    """Key concrete symbols are importable and have the expected types."""
-    import inspect
-
-    assert inspect.isclass(AeatAuthenticator), "AeatAuthenticator must be a class"
-    assert inspect.isclass(ClaveMovilAuthProvider), "ClaveMovilAuthProvider must be a class"
-    assert inspect.isclass(AuthError), "AuthError must be a class"
-    assert issubclass(AuthError, Exception), "AuthError must inherit from Exception"
-    assert callable(select_provider), "select_provider must be callable"
+    """Key concrete symbols are importable from their defining modules."""
+    assert inspect.isclass(AeatAuthenticator)
+    assert inspect.isclass(ClaveMovilAuthProvider)
+    assert inspect.isclass(AuthError)
+    assert issubclass(AuthError, Exception)
+    assert callable(select_provider)

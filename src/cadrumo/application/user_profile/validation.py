@@ -11,17 +11,8 @@ from collections.abc import Iterable
 from typing import Final
 
 from ...core.errors import BaseSeverity
-from ...domain.user_profile import (
-    ProfileFieldDefinition,
-    ProfileSchemaDefinition,
-    ProfileSectionDefinition,
-    ProfileValueRefusalKind,
-    UserProfileFact,
-    UserProfileRecord,
-    derived_selector_for_path,
-    profile_value_refusal,
-    section_field_key,
-)
+from ...domain.user_profile.schema import ProfileFieldDefinition, ProfileSchemaDefinition, ProfileSectionDefinition, ProfileValueRefusalKind, derived_selector_for_path, profile_value_refusal
+from ...domain.user_profile.values import UserProfileFact, UserProfileRecord, section_field_key
 from .commands import (
     ProfileValidationIssue,
     ProfileValidationReport,
@@ -277,7 +268,7 @@ class ProfileValidationService:
         """Reject a fact whose value does not satisfy its declared field type.
 
         The verdict comes from
-        :func:`~cadrumo.domain.user_profile.profile_value_refusal` rather
+        :func:`~cadrumo.domain.user_profile.schema.profile_value_refusal` rather
         than being formed here, so this door admits a value under exactly the
         rule the readers judge it by and the rule an operator surface refuses
         it by. The per-type rules -- enum token, numeric range, yes/no
@@ -511,7 +502,7 @@ def reject_invalid_profile_facts(
     refusal.
 
     ``require_complete`` selects which issues block. A profile that is still
-    :attr:`~cadrumo.domain.user_profile.ProfileSetupState.INCOMPLETE` is by
+    :attr:`~cadrumo.domain.user_profile.values.ProfileSetupState.INCOMPLETE` is by
     definition allowed to be missing the fields filing depends on -- demanding
     them in order to build an incomplete profile is a contradiction. Shape and
     value are judged in both modes; only the missing-required-field issues are
@@ -521,7 +512,8 @@ def reject_invalid_profile_facts(
         ProfileSchemaValidationError: When any blocking issue remains, naming
             the refused paths and why.
     """
-    from ...domain.user_profile import ProfileSchemaValidationError, load_user_profile_schema
+    from ...domain.user_profile.errors import ProfileSchemaValidationError
+    from ...domain.user_profile.loader import load_user_profile_schema
 
     service = ProfileValidationService(schema=schema or load_user_profile_schema())
     report = service.validate_facts(profile_id, facts)

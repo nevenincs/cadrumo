@@ -41,7 +41,8 @@ from cadrumo.application.user_profile.validation import (
 )
 
 from ....core.errors import BaseSeverity
-from ....domain.user_profile import UserProfileFact, load_user_profile_schema
+from ....domain.user_profile.values import UserProfileFact
+from ....domain.user_profile.loader import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

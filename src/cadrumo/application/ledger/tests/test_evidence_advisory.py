@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from .._evidence_advisory import printed_iva_advisory
+from ..evidence_advisory import printed_iva_advisory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

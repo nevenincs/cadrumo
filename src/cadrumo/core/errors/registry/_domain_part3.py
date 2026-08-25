@@ -168,7 +168,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.UserProfileError",
+        "cadrumo.domain.user_profile.errors.UserProfileError",
         ErrorCode(
             code="ERROR_USER_PROFILE",
             category=ErrorCategory.ERROR,
@@ -178,7 +178,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.UserProfileSchemaLoadError",
+        "cadrumo.domain.user_profile.errors.UserProfileSchemaLoadError",
         ErrorCode(
             code="FAIL_USER_PROFILE_SCHEMA_LOAD",
             category=ErrorCategory.FAIL,
@@ -188,7 +188,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.UserProfileValidationError",
+        "cadrumo.domain.user_profile.errors.UserProfileValidationError",
         ErrorCode(
             code="REFUSED_USER_PROFILE_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -198,7 +198,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.UserProfileNotFoundError",
+        "cadrumo.domain.user_profile.errors.UserProfileNotFoundError",
         ErrorCode(
             code="FAIL_USER_PROFILE_NOT_FOUND",
             category=ErrorCategory.FAIL,
@@ -208,7 +208,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.ProfileNotFoundError",
+        "cadrumo.domain.user_profile.errors.ProfileNotFoundError",
         ErrorCode(
             code="REFUSED_PROFILE_NOT_FOUND",
             category=ErrorCategory.REFUSED,
@@ -218,7 +218,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.ProfileAlreadyExistsError",
+        "cadrumo.domain.user_profile.errors.ProfileAlreadyExistsError",
         ErrorCode(
             code="REFUSED_PROFILE_ALREADY_EXISTS",
             category=ErrorCategory.REFUSED,
@@ -228,7 +228,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.ProfileSchemaValidationError",
+        "cadrumo.domain.user_profile.errors.ProfileSchemaValidationError",
         ErrorCode(
             code="REFUSED_PROFILE_SCHEMA_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -238,7 +238,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.ProfilePreflightMissingError",
+        "cadrumo.domain.user_profile.errors.ProfilePreflightMissingError",
         ErrorCode(
             code="REFUSED_PROFILE_PREFLIGHT_MISSING",
             category=ErrorCategory.REFUSED,
@@ -248,7 +248,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.ProfileSnapshotHashMismatchError",
+        "cadrumo.domain.user_profile.errors.ProfileSnapshotHashMismatchError",
         ErrorCode(
             code="INTEGRITY_PROFILE_SNAPSHOT_HASH_MISMATCH",
             category=ErrorCategory.INTEGRITY,
@@ -258,7 +258,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.ProfileBucketMismatchError",
+        "cadrumo.domain.user_profile.errors.ProfileBucketMismatchError",
         ErrorCode(
             code="INTEGRITY_PROFILE_BUCKET_MISMATCH",
             category=ErrorCategory.INTEGRITY,
@@ -268,7 +268,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.ProfileSnapshotNotFoundError",
+        "cadrumo.domain.user_profile.errors.ProfileSnapshotNotFoundError",
         ErrorCode(
             code="INTEGRITY_PROFILE_SNAPSHOT_NOT_FOUND",
             category=ErrorCategory.INTEGRITY,
@@ -278,7 +278,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.StoredProfileDriftError",
+        "cadrumo.domain.user_profile.errors.StoredProfileDriftError",
         ErrorCode(
             code="INTEGRITY_STORED_PROFILE_DRIFT",
             category=ErrorCategory.INTEGRITY,
@@ -298,7 +298,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.ProfileExportError",
+        "cadrumo.domain.user_profile.errors.ProfileExportError",
         ErrorCode(
             code="FAIL_PROFILE_EXPORT",
             category=ErrorCategory.FAIL,
@@ -308,7 +308,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.ProfileImportError",
+        "cadrumo.domain.user_profile.errors.ProfileImportError",
         ErrorCode(
             code="FAIL_PROFILE_IMPORT",
             category=ErrorCategory.FAIL,
@@ -318,7 +318,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.ProfileImportSignatureError",
+        "cadrumo.domain.user_profile.errors.ProfileImportSignatureError",
         ErrorCode(
             code="INTEGRITY_PROFILE_IMPORT_SIGNATURE",
             category=ErrorCategory.INTEGRITY,
@@ -328,7 +328,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.ProfileImportCollisionError",
+        "cadrumo.domain.user_profile.errors.ProfileImportCollisionError",
         ErrorCode(
             code="REFUSED_PROFILE_IMPORT_COLLISION",
             category=ErrorCategory.REFUSED,

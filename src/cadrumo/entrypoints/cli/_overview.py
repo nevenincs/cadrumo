@@ -534,7 +534,8 @@ def _calendar_profile_groups(
 ) -> tuple[dict[str, _ProfileBucketPointer], list[_ProfileBucketPointer], list[_ProfileBucketPointer]]:
     """Classify registered profiles without treating labels as readiness authority."""
     from ...application.user_profile.profile_record_repository import ProfileRecordRepository
-    from ...domain.user_profile import ProfileNotFoundError, ProfileSetupState
+    from ...domain.user_profile.errors import ProfileNotFoundError
+    from ...domain.user_profile.values import ProfileSetupState
 
     active: dict[str, _ProfileBucketPointer] = {}
     setup_incomplete: list[_ProfileBucketPointer] = []
@@ -776,7 +777,8 @@ def overview_prepare(
     renders the typed envelope plus per-step next-command notices.
     """
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ...application.ledger import PurchaseInvoiceEvidenceService, preflight_ledger_tax_readiness
+    from ...application.ledger.evidence import PurchaseInvoiceEvidenceService
+    from ...application.ledger.preflight import preflight_ledger_tax_readiness
     from ...application.modelo import list_work_units, registry_describe_modelo_for_scope
     from ...application.overview import build_data_prep_walkthrough
     from ...domain.calculations.registry import RegistrySnapshotError
@@ -844,7 +846,7 @@ def overview_pipeline(
     from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ...application.ledger import summarize_manual_transactions
+    from ...application.ledger.actions_manual import summarize_manual_transactions
     from ...application.modelo import get_calculation_revision, list_verification_reports, list_work_units
     from ...application.overview import build_pipeline_health_report
     from ...domain.modelos import CalculationRevision, VerificationReport

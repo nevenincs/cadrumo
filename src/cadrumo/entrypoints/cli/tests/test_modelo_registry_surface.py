@@ -33,7 +33,7 @@ import typer
 
 from ....application.modelo import WorkUnitNotFoundError
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
-from ....domain.user_profile import ProfileSetupState
+from ....domain.user_profile.values import ProfileSetupState
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
 from .._modelo import _bad_parameter_from_error
@@ -123,7 +123,7 @@ def test_declared_s91_cli_census_rejects_mutated_local_actions_and_recovery_pros
 
 
 def _seed_modelo_130_ready_profile(bucket_id: str) -> None:
-    from ....domain.user_profile import UserProfileFact, UserProfileRecord
+    from ....domain.user_profile.values import UserProfileFact, UserProfileRecord
     from ....tests.profile_capsule import seed_test_profile_record
 
     seed_test_profile_record(
@@ -448,7 +448,7 @@ def test_work_calculate_missing_m200_m202_relation_prefill_is_advisory(tmp_path)
 
     from ....application.modelo import create_work_unit
     from ....core import Period
-    from ....domain.user_profile import UserProfileFact, UserProfileRecord
+    from ....domain.user_profile.values import UserProfileFact, UserProfileRecord
     from ....tests.profile_capsule import seed_test_profile_record
     from ....tests.secure_sql import isolated_runtime_profile
 

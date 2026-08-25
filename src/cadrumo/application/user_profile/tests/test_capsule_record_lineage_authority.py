@@ -33,7 +33,7 @@ import pytest
 
 from cadrumo.application.user_profile.capsule_record import ProfileRecordIntegrityError, ProfileRecordSession
 
-from ....domain.user_profile import ProfileSetupState, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

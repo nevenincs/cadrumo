@@ -19,7 +19,7 @@ from ....application.modelo.work_wizard import ModeloWorkWizardRun, open_modelo_
 from ....core import Modelo, Period
 from ....core.flows import FlowMode
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from ....domain.user_profile import UserProfileFact
+from ....domain.user_profile.values import UserProfileFact
 from ..flows.app import FlowTuiApp
 from .fixture import harness_storage, passphrase
 

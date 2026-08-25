@@ -45,7 +45,7 @@ boundary.
 See Also:
     :func:`~domain.iva.territorial_scope_for_country`
         The authority the narrowing was stated at.
-    :func:`~application.ledger.country_vocabulary_advisory`
+    :func:`~application.ledger.country_vocabulary_advisory.country_vocabulary_advisory`
         The non-blocking channel the operator-facing half is reported on.
 """
 
@@ -65,17 +65,17 @@ from ....domain.iva import (
     SupplyNature,
 )
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
-from .._classification_assembly import (
+from ..classification_assembly import (
     DeclaredFact,
     DeclaredFacts,
     assemble_classification_criteria,
     classify_from_assembled_criteria,
 )
-from .._classifier_inputs import collect_classifier_inputs
-from .._confirmation_gate import BLOCKING_REASON_BY_DISCREPANCY_KIND, confirmation_blockers
-from .._country_vocabulary_advisory import country_vocabulary_advisory
-from .._deterministic_findings import deterministic_findings
-from .._evidence_draft import InvoiceDraft
+from ..classifier_inputs import collect_classifier_inputs
+from ..confirmation_gate import BLOCKING_REASON_BY_DISCREPANCY_KIND, confirmation_blockers
+from ..country_vocabulary_advisory import country_vocabulary_advisory
+from ..deterministic_findings import deterministic_findings
+from ..evidence_draft import InvoiceDraft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

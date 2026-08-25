@@ -36,7 +36,7 @@ import pytest
 from pydantic import SecretStr
 
 from ....adapters.outbound.llm import LLMCache, UsageRecorder
-from ....application.ledger import DocumentTranscription, TranscriberIdentity
+from ....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from ....core import LOCAL_TRANSPORT_LABEL, FieldOrigin
 from ....core.config import override_settings
 from ....llm import (

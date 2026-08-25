@@ -346,7 +346,7 @@ def _drive_surfaces(work_dir: Path, venv_path: Path, calls: str, *, leaf: str) -
     code = f"""
 import json
 
-from cadrumo.application.ledger import DocumentTranscription, TranscriberIdentity
+from cadrumo.application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from cadrumo.core import FieldOrigin, ImageMediaType, MissingOptionalExtraError
 from cadrumo.llm import (
     LocalTextLLMClassifier,
@@ -550,7 +550,7 @@ def _assert_inference_surfaces_refuse(work_dir: Path, venv_path: Path) -> None:
     code = f"""
 import json
 
-from cadrumo.application.ledger import DocumentTranscription, TranscriberIdentity
+from cadrumo.application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from cadrumo.core import FieldOrigin, ImageMediaType, MissingOptionalExtraError
 from cadrumo.llm import (
     LocalTextLLMClassifier,

@@ -7,7 +7,7 @@ reads as closed while it is open. So this drives the real Typer tree against a
 real encrypted bucket and asserts the notice arrives on the envelope.
 
 The seeded draft is put through
-:func:`~application.ledger.ground_draft_against_transcription`, the entry point
+:func:`~application.ledger.grounded_reading.ground_draft_against_transcription`, the entry point
 the reading router uses, rather than hand-stamped: a stamp asserted on a
 constructed envelope would prove the field exists and not the point.
 
@@ -16,7 +16,7 @@ the context keys and their territory tokens -- never on prose, which is
 localised.
 
 See Also:
-    :func:`~application.ledger.party_attribution_advisory`
+    :func:`~application.ledger.party_attribution.party_attribution_advisory`
         The domain advisory the notice projects.
 """
 
@@ -30,14 +30,10 @@ from typing import Final
 
 import pytest
 
-from ....application.ledger import (
-    DocumentTranscription,
-    FieldProvenance,
-    InvoiceDraft,
-    TranscriberIdentity,
-    ground_draft_against_transcription,
-    write_extraction_draft,
-)
+from ....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
+from ....application.ledger.evidence_draft import FieldProvenance, InvoiceDraft
+from ....application.ledger.grounded_reading import ground_draft_against_transcription
+from ....application.ledger.extraction_draft_store import write_extraction_draft
 from ....core import LOCAL_TRANSPORT_LABEL, STR_KEYED_MAPPING_ADAPTER, FieldGroundingOutcome, FieldOrigin
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.config import load_settings

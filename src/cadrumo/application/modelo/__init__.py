@@ -444,13 +444,6 @@ from ._review_package_recipient_registry import (
     RecipientNotRegisteredError,
     public_key_hex_from_raw_bytes,
 )
-from ._review_package_recipient_replay_guard import (
-    ConsumedNonceLedger,
-    ConsumedNonceRecord,
-    RecipientPackageReplayedError,
-    RecipientReplayGuardError,
-    RecipientReplayGuardRepository,
-)
 from ._review_package_review_only_workspace import (
     ReviewOnlyWorkspace,
     ReviewOnlyWorkspaceAuthorityError,
@@ -619,8 +612,6 @@ __all__ = [
     "CasillaDivergenceKind",
     "CasillaPopulationScope",
     "CasillaProvenanceMissingError",
-    "ConsumedNonceLedger",
-    "ConsumedNonceRecord",
     "CounterSignedReceipt",
     "DataInventoryCasilla",
     "DataInventoryChecklist",
@@ -778,9 +769,6 @@ __all__ = [
     "RecipientFingerprintRegistryRepository",
     "RecipientNotRegisteredError",
     "RecipientPackageExpiredError",
-    "RecipientPackageReplayedError",
-    "RecipientReplayGuardError",
-    "RecipientReplayGuardRepository",
     "ReconciliationCrossBucketRefusedError",
     "ReconciliationDeclaracionSourceUnsupportedError",
     "ReconciliationEvidenceInvalidError",

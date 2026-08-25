@@ -9,8 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.workflow.state_models import WorkflowState, active_transaction_catalogue_repository
-
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.transactions import (
     LedgerNoActiveBucketError,
@@ -22,6 +21,7 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....tests.secure_sql import isolated_runtime_profile
+from ..active_profile import active_transaction_catalogue_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -37,18 +37,6 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
         bucket_id=_RUNTIME_BUCKET_ID,
     ) as profile:
         yield profile.repository
-
-
-def _state(*, profile: str, bucket_id: str) -> WorkflowState:
-    """Build a WorkflowState — the state is a passthrough here.
-
-    ``active_transaction_catalogue_repository`` resolves the authoritative
-    active bucket, not any field on the state record. The ``profile`` and
-    ``bucket_id`` arguments are kept for call-site readability.
-    """
-
-    del profile, bucket_id
-    return WorkflowState()
 
 
 def _transaction(provider_id: str) -> Transaction:
@@ -77,29 +65,29 @@ def _transaction(provider_id: str) -> Transaction:
 
 def test_active_transaction_catalogue_repository_routes_by_active_profile_bucket(
     secure_objects: SecureObjectRepository,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    first_state = _state(profile="alpha", bucket_id=_FIRST_BUCKET_ID)
-    second_state = _state(profile="beta", bucket_id=_SECOND_BUCKET_ID)
+    """The ACTIVE PROFILE decides which bucket the catalogue resolves to.
+
+    Driven through ``override_settings``, the declared seam for a deployment
+    setting, so the routing under test is the real
+    ``require_active_profile_bucket_id`` chain: setting -> active selector ->
+    committed bucket pointer -> bucket id. An earlier version patched that name
+    into the function's ``__globals__`` with an iterator of three ids, which
+    proved only that the function consumed whatever the lambda returned, in the
+    order it happened to call it -- the active profile was not involved anywhere,
+    and caching the lookup would have broken the test while the behaviour stayed
+    correct.
+    """
+    from ....core.config import override_settings
+
     first_transaction = _transaction("same-provider-row")
-    selected_buckets = iter((_FIRST_BUCKET_ID, _FIRST_BUCKET_ID, _SECOND_BUCKET_ID))
-    monkeypatch.setitem(
-        active_transaction_catalogue_repository.__globals__,
-        "require_active_profile_bucket_id",
-        lambda: next(selected_buckets),
-    )
 
-    active_transaction_catalogue_repository(first_state, objects=secure_objects).save(
-        TransactionCatalogue.from_transactions((first_transaction,)),
-    )
-    first_catalogue = active_transaction_catalogue_repository(first_state, objects=secure_objects).load()
-    second_catalogue = active_transaction_catalogue_repository(second_state, objects=secure_objects).load()
+    def factory(bucket_id: str) -> TransactionCatalogueRepository:
+        return TransactionCatalogueRepository(bucket_id=bucket_id, objects=secure_objects)
 
-    assert tuple(first_catalogue.transactions) == (first_transaction.transaction_id,)
-    assert second_catalogue.transactions == {}
-
-
-def test_active_transaction_catalogue_repository_rejects_missing_active_bucket() -> None:
-    with pytest.raises(LedgerNoActiveBucketError) as raised:
-        active_transaction_catalogue_repository(WorkflowState())
-    assert raised.value.translated_message == "application.workflow.errors.no_active_profile_bucket"
+    with override_settings(cadrumo_active_profile=_FIRST_BUCKET_ID):
+        active_transaction_catalogue_repository(repository_factory=factory).save(
+            TransactionCatalogue.from_transactions((first_transaction,)),
+        )
+        first_catalogue = active_transaction_catalogue_repository(repository_factory=factory).load()
+    with overri

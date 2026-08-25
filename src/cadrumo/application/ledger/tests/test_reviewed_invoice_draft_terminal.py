@@ -33,9 +33,9 @@ __all__ = ["profile"]
 from ....core import LOCAL_TRANSPORT_LABEL
 from ....domain.transactions import TransactionNotFoundError
 from ....tests.secure_sql import TestRuntimeProfile
-from .._evidence_draft import InvoiceDraft
-from .._extraction_draft_store import load_extraction_drafts, read_extraction_draft
-from .._llm_review_workflow import (
+from ..evidence_draft import InvoiceDraft
+from ..extraction_draft_store import load_extraction_drafts, read_extraction_draft
+from ..llm_review_workflow import (
     InvoiceDraftDeclineResult,
     LlmReviewDecision,
     LlmReviewInvocationOrigin,
@@ -87,7 +87,7 @@ def test_its_siblings_do_require_confidence_so_the_absence_is_a_choice() -> None
     no suggestion has ever had a confidence, and the ruling it encodes would be
     invisible.
     """
-    from ....llm import LLMClassificationSuggestion, LLMSaturatedSuggestion
+    from ....llm.suggestions import LLMClassificationSuggestion, LLMSaturatedSuggestion
 
     assert "confidence" in LLMClassificationSuggestion.model_fields
     assert "confidence" in LLMSaturatedSuggestion.model_fields
@@ -171,7 +171,7 @@ def test_a_transaction_bound_reject_still_takes_the_original_path(
     above would still pass.
     """
     from ....domain.transactions import BusinessClassification
-    from ....llm import LLMClassificationSuggestion
+    from ....llm.suggestions import LLMClassificationSuggestion
 
     suggestion = LLMClassificationSuggestion(
         transaction_id="a" * 64,

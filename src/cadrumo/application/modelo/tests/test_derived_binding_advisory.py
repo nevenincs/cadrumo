@@ -31,12 +31,8 @@ import pytest
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
-from ....domain.user_profile import (
-    ProfileSetupState,
-    UserProfileFact,
-    UserProfileRecord,
-    load_user_profile_schema,
-)
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.loader import load_user_profile_schema
 from .._profile_binding import _derived_binding_diagnostics, resolve_profile_sourced_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

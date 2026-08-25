@@ -42,7 +42,7 @@ from ...core.locks import exclusive_file_lock
 from ...core.locks_errors import LockAcquisitionError
 from ...core.logging import get_logger
 from ...core.time import now
-from ...domain.user_profile import ProfileExportError, ProfileNotFoundError
+from ...domain.user_profile.errors import ProfileExportError, ProfileNotFoundError
 from .bundle_export_contracts import (
     ProfileBundleExportReconcileFailure,
     ProfileBundleExportRequest,
@@ -66,7 +66,7 @@ from .custody_ports import default_profile_bucket_event_history_repository
 if TYPE_CHECKING:
     from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer
 
-    from ...domain.user_profile import UserProfilePortableExport
+    from ...domain.user_profile.portable_export import UserProfilePortableExport
 
 # The hardened writer stages through its own inner sibling before the rename;
 # see :func:`_orphan_staged_paths` for why recovery must reach it too.

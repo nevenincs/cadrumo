@@ -1,7 +1,8 @@
-cadrumo.adapters.outbound.aeat.auth._clave_permanente module
+cadrumo.adapters.outbound.aeat.auth.clave_permanente module
 ============================================================
 
-.. automodule:: cadrumo.adapters.outbound.aeat.auth._clave_permanente
+.. automodule:: cadrumo.adapters.outbound.aeat.auth.clave_permanente
    :members:
    :show-inheritance:
    :ignore-module-all:
+

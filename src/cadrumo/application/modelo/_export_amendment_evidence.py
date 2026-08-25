@@ -20,10 +20,10 @@ from ...domain.modelos import (
     ModeloRecordCatalogue,
     ModeloRecordCatalogueRepositoryProtocol,
     WorkUnit,
-    WorkUnitCatalogueRepositoryProtocol,
     is_justificante_backed_external_evidence,
     validate_calculation_revision_aggregate,
 )
+from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 
 
 class AmendmentExportCommand(Protocol):

@@ -35,9 +35,10 @@ from ....core import ProfileRecordUnavailability
 from ....core.bucket_pointer import BucketPointer, pointer_path, read_pointer, resolve_active_bucket_id, write_pointer
 from ....core.config import override_settings
 from ....core.errors import NoActiveProfileError, get_registered_error_code
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import mint_test_profile_recovery_envelope
 from ... import wizard as _wizard  # noqa: F401
+from ..active_profile import resolve_active_profile_record
 from ..profile_bucket_scan import resolve_profile_bucket
 from ..profile_health import assess_active_profile_health, repair_active_profile_pointer
 from ..state_models import WorkflowState
@@ -138,11 +139,11 @@ def test_active_profile_record_names_an_absent_capsule_as_the_reason(
     bucket_id = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
     write_pointer(tmp_path, BucketPointer.selected(bucket_id=bucket_id, transition_revision=1))
     with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
-        caplog.set_level(logging.DEBUG, logger="cadrumo.application.workflow.state_models")
+        caplog.set_level(logging.DEBUG, logger="cadrumo.application.workflow.active_profile")
 
         state = WorkflowState()
         assert state.active_profile_record() is None
-        resolution = state.resolve_active_profile_record()
+        resolution = resolve_active_profile_record()
 
     assert resolution.record is None
     assert resolution.unavailability is ProfileRecordUnavailability.NO_LIVE_CAPSULE

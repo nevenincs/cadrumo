@@ -18,8 +18,8 @@ from ....domain.transactions import (
     TransactionLifecycleState,
 )
 from ...aggregation import IvaLedgerAggregationIssueReason
-from .. import LedgerPreflightIssueReason, preflight_transaction_catalogue
-from .._preflight import (
+from ..preflight import LedgerPreflightIssueReason, preflight_transaction_catalogue
+from ..preflight import (
     _PREFLIGHT_DETAIL_BY_IVA_ISSUE,
     _PREFLIGHT_REASON_BY_IVA_ISSUE,
     _preflight_detail_for_iva_issue,

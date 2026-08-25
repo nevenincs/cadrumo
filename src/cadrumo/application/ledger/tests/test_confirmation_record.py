@@ -37,8 +37,8 @@ from ....core import (
     FindingResolutionAction,
 )
 from ....tests.secure_sql import TestRuntimeProfile
-from .._confirmation_gate import ConfirmationBlocker, FindingResolution
-from .._confirmation_record import (
+from ..confirmation_gate import ConfirmationBlocker, FindingResolution
+from ..confirmation_record import (
     ConfirmationRecordDocument,
     FieldAssertion,
     InvoiceConfirmationRecord,
@@ -49,7 +49,7 @@ from .._confirmation_record import (
     re_stamped_provenance,
     write_confirmation_record,
 )
-from .._evidence_draft import FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
+from ..evidence_draft import FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

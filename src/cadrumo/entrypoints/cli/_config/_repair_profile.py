@@ -26,7 +26,7 @@ from ._status_rendering import precondition_action_lines
 if typing.TYPE_CHECKING:
     from cadrumo.application.workflow.profile_health import ActiveProfileHealth
     from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer
-    from ....domain.user_profile import UserProfileRecord
+    from ....domain.user_profile.values import UserProfileRecord
 
 
 ProfileResolver = Callable[[str], "ProfileBucketPointer"]
@@ -168,7 +168,7 @@ def _emit_profile_record_status(
 ) -> None:
     """Emit a non-secret status report for one registered profile bucket."""
     from cadrumo.application.workflow.profile_health import unavailable_profile_record_verdict
-    from ....domain.user_profile import ProfileNotFoundError
+    from ....domain.user_profile.errors import ProfileNotFoundError
     from .._config_payloads import RepairProfileResult
 
     pointer = resolve_profile_by_label(label)

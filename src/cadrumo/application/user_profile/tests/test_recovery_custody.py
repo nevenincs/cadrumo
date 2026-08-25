@@ -46,7 +46,7 @@ from ....adapters.persistence.storage.custody import (
 from ....core.config import override_settings
 from ....core.errors import build_error_envelope, render_error_text
 from ....core.i18n import tr
-from ....domain.user_profile import ProfileSetupState, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileRecord
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

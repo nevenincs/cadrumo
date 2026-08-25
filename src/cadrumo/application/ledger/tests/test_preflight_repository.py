@@ -10,7 +10,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.transactions import TransactionCatalogue, TransactionValidationError
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import preflight_ledger_tax_readiness
+from ..preflight import preflight_ledger_tax_readiness
 from ._preflight_test_support import (
     _BUCKET_ID,
     _OTHER_BUCKET_ID,

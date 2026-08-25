@@ -33,7 +33,7 @@ from .....core import STRICT_FROZEN_CONFIG
 from .....core.logging import get_logger
 
 if TYPE_CHECKING:
-    from ._authenticator_types import BrowserContextLike, BrowserPageLike
+    from .authenticator_types import BrowserContextLike, BrowserPageLike
 
 log = get_logger(__name__)
 

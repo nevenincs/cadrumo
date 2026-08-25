@@ -19,7 +19,7 @@ from ....domain.transactions import (
     TransactionEditLineageEntry,
     TransactionIdPrefixError,
 )
-from .._id_resolution import (
+from ..id_resolution import (
     MINIMUM_DISPLAY_ID_WIDTH,
     compute_display_id_width,
     resolve_lineage_transaction_id,

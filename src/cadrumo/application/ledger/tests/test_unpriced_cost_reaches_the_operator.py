@@ -10,7 +10,7 @@ total unavailable, and a count travels beside it so the absence is attributable
 instead of merely total.
 
 The per-provider fold is exercised through the real
-:func:`~application.ledger.build_llm_diagnostics_report` shapes rather than by
+:func:`~application.ledger.llm_diagnostics.build_llm_diagnostics_report` shapes rather than by
 asserting the helper in isolation, because the defect being guarded lives in the
 FOLD -- an implementation that dropped ``None`` rows on the way in would satisfy
 any assertion made about the estimator alone.
@@ -24,7 +24,7 @@ from decimal import Decimal
 import pytest
 
 from ....llm import LLMProvider, UsageRecord
-from .._llm_diagnostics import _aggregate_usage
+from ..llm_diagnostics import _aggregate_usage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

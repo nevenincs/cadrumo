@@ -110,7 +110,7 @@ if TYPE_CHECKING:
 #: This facade's ``_models`` submodule pulls in ``application.filing`` and its
 #: PDF-extraction chain (``pdfplumber``/``pdfminer``) -- measured at ~160,000 us
 #: cumulative import cost -- for consumers that only ever wanted a single enum
-#: (e.g. ``application.ledger._models`` importing ``LedgerReviewStatus`` for two
+#: (e.g. ``application.ledger.models`` importing ``LedgerReviewStatus`` for two
 #: pydantic field annotations). A CLI process runs one command, so most of that
 #: cost was paid for symbols the invocation never touched.
 _LAZY_EXPORTS: dict[str, str] = {

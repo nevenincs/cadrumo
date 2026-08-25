@@ -117,11 +117,11 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
         "reconcile_invoice_repositories",
     ): "per-transaction rows as above; the singleton invoice catalogue beside it IS guarded",
     (
-        "src/cadrumo/application/ledger/_actions_common.py",
+        "src/cadrumo/application/ledger/actions_common.py",
         "_save_transaction_catalogue_and_events",
     ): "the transaction catalogue arrives as a parameter; its EVENT side is guarded by _commit_with_guarded_events",
     (
-        "src/cadrumo/application/ledger/_actions_common.py",
+        "src/cadrumo/application/ledger/actions_common.py",
         "_save_transaction_catalogue_invoices_and_events",
     ): "transaction and invoice catalogues arrive as parameters; the event side is guarded",
     (

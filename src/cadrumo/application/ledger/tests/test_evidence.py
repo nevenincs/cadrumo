@@ -11,7 +11,7 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
 from ....domain.attachments import load_attachment
 from ....domain.buckets import BucketEventType
-from .._evidence import (
+from ..evidence import (
     PurchaseInvoiceEvidencePatch,
     PurchaseInvoiceEvidenceService,
 )

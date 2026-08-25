@@ -35,7 +35,7 @@ from ....application.user_profile.login_session import login_profile
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.classification import SensitivityClass
-from ....domain.user_profile import load_user_profile_schema
+from ....domain.user_profile.loader import load_user_profile_schema
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..components.status import PinnedStatusBar

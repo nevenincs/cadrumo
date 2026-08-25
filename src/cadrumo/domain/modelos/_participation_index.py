@@ -4,7 +4,7 @@ The ledger persists only the forward link: a :class:`CalculationRevision`
 names its ``source_transaction_ids``. The inverse question an auditor asks of a
 single ledger transaction — which finalized modelo revisions, filings, and
 justificantes consumed it — has no persisted, surfaced answer; the only inverse
-traversal is the transient ``_blocking_modelo_references`` write-guard scan.
+traversal is the transient ``blocking_modelo_references`` write-guard scan.
 
 This module introduces the :class:`TransactionRevisionParticipationIndex`, a
 derived, rebuildable secure-object recording, per ledger transaction id, the set

@@ -77,7 +77,8 @@ import pytest
 
 from ......core.config import Settings, load_settings
 from ..._playwright import Page
-from ...auth import BrowserPageLike, ClaveMovilAuthProvider
+from ...auth.authenticator_types import BrowserPageLike
+from ...auth.clave_movil import ClaveMovilAuthProvider
 from .._iva_compensation_wallet import _dismiss_pre303_alert_modal_if_present as _wallet_dismiss
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from datetime import date
 
     from ...domain.contribuyente import DescendantInfo, GuarderiaMonthSpend
-    from ...domain.user_profile import UserProfileRecord
+    from ...domain.user_profile.values import UserProfileRecord
 
 from ...core import DescendantRelacion
 from ...core.decimal import try_parse_canonical_decimal
@@ -32,7 +32,7 @@ from ...core.flows import REPEATING_INSTANCE_SEPARATOR
 from ...core.parsing import parse_bool, parse_iso8601_date
 from ...core.setup_answers import register_project_answers as _register_project_answers
 from ...core.time import today_madrid
-from ...domain.user_profile import UserProfileFact, UserProfileRecord
+from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 from cadrumo.application.workflow.errors import WorkflowInputMismatchError
 from cadrumo.application.workflow.state_models import WorkflowState
 from ._descendant_group import (

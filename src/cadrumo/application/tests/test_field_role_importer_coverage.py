@@ -16,7 +16,7 @@ from __future__ import annotations
 import pytest
 
 from ...application.invoices import BULK_INVOICE_IMPORT_ALLOWED_COLUMNS
-from ...application.ledger import BULK_CLASSIFY_ALLOWED_COLUMNS
+from ...application.ledger.models import BULK_CLASSIFY_ALLOWED_COLUMNS
 from ...core import FieldRole
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -16,7 +16,7 @@ Also exercises the expiry, review-only, and replay-defence follow-up slice:
 a package presented past its ``valid_until`` deadline refuses, a
 ``review_only`` envelope decrypts but is flagged non-filing-grade, and the
 envelope's replay nonce composes with
-:class:`~application.modelo.RecipientReplayGuardRepository` to refuse a
+:class:`~adapters.persistence.profile.recipient_replay_guard.RecipientReplayGuardRepository` to refuse a
 second presentation of the same package.
 
 See Also:
@@ -76,7 +76,7 @@ from .._review_package_recipient_registry import (
     RecipientFingerprintRegistryRepository,
     public_key_hex_from_raw_bytes,
 )
-from .._review_package_recipient_replay_guard import (
+from ....adapters.persistence.profile.recipient_replay_guard import (
     RecipientPackageReplayedError,
     RecipientReplayGuardRepository,
 )

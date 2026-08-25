@@ -19,12 +19,9 @@ from pydantic_core import ErrorDetails
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.cli_exception_preconditions import CliExceptionPrecondition, cli_exception_no_recovery_verdict
-from ...application.ledger import (
-    ledger_transaction_payload,
-    ledger_transaction_review_status,
-    list_manual_transactions,
-    resolve_transaction_id,
-)
+from ...application.ledger.actions_manual import ledger_transaction_payload, list_manual_transactions
+from ...application.ledger.review_projection import ledger_transaction_review_status
+from ...application.ledger.id_resolution import resolve_transaction_id
 from ...core.decimal import format_decimal
 from ...core.errors import CadrumoError
 from ...core.i18n import tr
@@ -291,7 +288,7 @@ def _resolve_business_pct_with_censo(
     operator_supplied: Decimal | None,
 ) -> Decimal | None:
     """Stamp the censo-derived business_pct when the operator omits one."""
-    from ...application.ledger import censo_business_pct_for
+    from ...application.ledger.ratios import censo_business_pct_for
     from ...application.user_profile.censo_sync import CensoSyncService
 
     if operator_supplied is not None:

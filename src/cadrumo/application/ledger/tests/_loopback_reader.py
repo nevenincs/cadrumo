@@ -26,7 +26,7 @@ loopback home; only the transcription-keyed reply behaviour, which is what this
 module is about, is declared here.
 
 See Also:
-    :func:`~application.ledger.transcribe_text_layer`
+    :func:`~application.ledger.evidence_textlayer.transcribe_text_layer`
         Produces the text this endpoint is keyed on.
 """
 

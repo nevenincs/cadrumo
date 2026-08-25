@@ -24,7 +24,7 @@ from ......tests.aeat_literal_fixtures import (
     NOTIFICATION_ACKNOWLEDGE_PATH_CANARY,
     NOTIFICATION_COMPARECER_PATH_CANARY,
 )
-from ...auth import AeatSession
+from ...auth.authenticator_types import AeatSession
 from ...browser.tests.real_http_boundary import opened_http_boundary, real_browser_factory
 from .._errors import SedeNavigationError
 from .._notifications import (

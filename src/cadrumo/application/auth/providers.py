@@ -10,7 +10,11 @@ from ..auth_credentials import ActiveCertificateCredentials
 from .credentials import resolve_active_certificate_credentials
 
 if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.auth import AeatLoginAssertion, AeatSession, BrowserSessionFactory
+    from ...adapters.outbound.aeat.auth.authenticator_types import (
+        AeatLoginAssertion,
+        AeatSession,
+        BrowserSessionFactory,
+    )
     from ...core.config import Settings
 
 
@@ -53,7 +57,7 @@ def select_provider(
     credentials = certificate_credentials
     if kind is AuthProviderKind.CERTIFICATE and credentials is None:
         credentials = resolve_active_certificate_credentials(settings=settings)
-    outbound_auth = import_module("cadrumo.adapters.outbound.aeat.auth")
+    outbound_auth = import_module("cadrumo.adapters.outbound.aeat.auth.provider_selection")
     provider = outbound_auth.select_provider(
         kind,
         settings=settings,

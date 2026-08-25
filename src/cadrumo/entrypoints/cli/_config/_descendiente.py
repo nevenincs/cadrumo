@@ -69,7 +69,7 @@ def _active_profile_pointer() -> ProfileBucketPointer:
 def _load_descendientes(bucket_id: str) -> tuple[DescendantInfo, ...]:
     """Return the active profile's declared descendants, oldest fact-order preserved."""
     from ....domain.contribuyente import descendant_list_from_facts
-    from ....domain.user_profile import ProfileNotFoundError
+    from ....domain.user_profile.errors import ProfileNotFoundError
     from ._profile_readiness import _read_profile_record
 
     try:
@@ -90,7 +90,8 @@ def _write_descendientes(bucket_id: str, descendientes: tuple[DescendantInfo, ..
     higher-index fact behind for :func:`descendant_list_from_facts` to re-discover.
     """
     from ....domain.contribuyente import descendant_facts_from_list
-    from ....domain.user_profile import ProfileNotFoundError, UserProfileFact
+    from ....domain.user_profile.errors import ProfileNotFoundError
+    from ....domain.user_profile.values import UserProfileFact
     from ._profile_readiness import _read_profile_record
 
     try:

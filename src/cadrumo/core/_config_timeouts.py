@@ -6,7 +6,7 @@ still reads the same ``CADRUMO_*`` environment variable by field name and is
 unchanged at runtime.
 
 The browser cleanup and Cl@ve approval budgets are consumed by
-:class:`~adapters.outbound.aeat.auth._clave_movil.ClaveMovilAuthProvider`.
+:class:`~adapters.outbound.aeat.auth.clave_movil.ClaveMovilAuthProvider`.
 The live IVA surface, filed-register, cancellation-drain, and CLI watchdog
 budgets are consumed by :mod:`application.live._iva_remote_state`,
 :mod:`application.live._filed_data_capture`, and the
@@ -117,3 +117,4 @@ class CadrumoTimeoutSettings(BaseSettings):
             "observation query rather than the whole import."
         ),
     )
+

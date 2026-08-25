@@ -75,7 +75,7 @@ _CLASSIFICATION_COMPARE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
         "not a validation gate that raises on mismatch. SensitivityClass.CORPUS here "
         "is a branch key, not a caller-declared expectation to enforce."
     ),
-    ("application/ledger/_review_projection.py", "_filter_ledger_review_rows"): (
+    ("application/ledger/review_projection.py", "_filter_ledger_review_rows"): (
         "query.classification here is a BusinessClassification-valued ledger review "
         "filter, not a SensitivityClass -- an unrelated taxonomy that happens to share "
         "the attribute name. AST shape alone cannot distinguish the two attribute "

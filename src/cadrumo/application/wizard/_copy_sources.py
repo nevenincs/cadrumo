@@ -11,7 +11,7 @@ same :class:`~cadrumo.core.flows.CopyRefKind`.
 - ``profile-schema:<schema-path>`` resolves a :class:`SCHEMA_FIELD`
   reference to the profile schema field's declared description plus its
   legal-ref citations (the field authority is the singleton
-  :class:`~cadrumo.domain.user_profile.ProfileSchemaDefinition`; the TOML
+  :class:`~cadrumo.domain.user_profile.schema.ProfileSchemaDefinition`; the TOML
   is never re-read here).
 - ``profile-terminology:<concept_id>`` resolves a
   :class:`TERMINOLOGY_CONCEPT` reference to the ``approved`` Terminology
@@ -32,7 +32,7 @@ from ...core import ConceptLifecycle
 from ...core.flows import CopyRefKind
 from ...core.i18n import output_language
 from ...core.resources import resources
-from ...domain.user_profile import UserProfileError
+from ...domain.user_profile.errors import UserProfileError
 from ..corpus_search import CorpusSearchInputError, lookup_terminology
 from ..flows.copy import register_copy_source
 

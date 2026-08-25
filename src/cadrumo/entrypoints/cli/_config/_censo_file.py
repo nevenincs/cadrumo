@@ -59,7 +59,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from ....application.user_profile.censo_sync import CensalReconciliation
-    from ....domain.user_profile import UserProfileFact
+    from ....domain.user_profile.values import UserProfileFact
 
 
 def censo_file(
@@ -114,7 +114,7 @@ def censo_pull(
     from ....application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS, CENSO_SOURCE_TAG, censal_facts_from_read, reconcile_censal_read
     from ....application.user_profile.censal_operation import CensalFieldIntent
     from ....application.user_profile.projections import record_to_effective_facts
-    from ....domain.user_profile import UserProfileFact
+    from ....domain.user_profile.values import UserProfileFact
     from ....entrypoints import run_censal_review
     from ._censo_review_cli import confirm_censal_review
 

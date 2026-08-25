@@ -22,18 +22,9 @@ from cadrumo.application.user_profile.preflight import ProfilePreflightService
 
 from ....core import Period
 from ....core.classification import SensitivityClass
-from ....domain.user_profile import (
-    ProfileFieldDefinition,
-    ProfileFieldType,
-    ProfileRemovePolicy,
-    ProfileSchemaDefinition,
-    ProfileSectionDefinition,
-    ProfileSetupState,
-    ProfileSnapshotPolicy,
-    UserProfileFact,
-    UserProfileRecord,
-    load_user_profile_schema,
-)
+from ....domain.user_profile.schema import ProfileFieldDefinition, ProfileFieldType, ProfileRemovePolicy, ProfileSchemaDefinition, ProfileSectionDefinition, ProfileSnapshotPolicy
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.loader import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

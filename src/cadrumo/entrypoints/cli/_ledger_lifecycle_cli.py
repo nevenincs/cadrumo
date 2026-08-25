@@ -13,18 +13,10 @@ from typing import TYPE_CHECKING
 import typer
 from pydantic import ValidationError
 
-from ...application.ledger import (
-    SplitChildCommand,
-    archive_manual_transaction,
-    compute_display_id_width,
-    mark_transaction_reviewed_excluded,
-    merge_transactions,
-    remove_manual_transaction,
-    reset_ledger_catalogue,
-    restore_manual_transaction,
-    split_transaction,
-    stash_manual_transaction,
-)
+from ...application.ledger.models import SplitChildCommand
+from ...application.ledger.actions_lifecycle import archive_manual_transaction, mark_transaction_reviewed_excluded, remove_manual_transaction, reset_ledger_catalogue, restore_manual_transaction, stash_manual_transaction
+from ...application.ledger.id_resolution import compute_display_id_width
+from ...application.ledger.actions_split_merge import merge_transactions, split_transaction
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.external_constants import PDF_MIME_TYPE
 from ...core.i18n import tr
@@ -36,7 +28,7 @@ from ...domain.transactions import (
     TransactionValidationError,
     is_classified,
 )
-from ...llm import LLMSplitApplyResult
+from ...llm.suggestions import LLMSplitApplyResult
 from ._common import _bad, _state, _tx_repo, emit_envelope, parse_decimal_amount
 from ._ledger_support import (
     _emit_update_result,
@@ -46,8 +38,8 @@ from ._ledger_support import (
 )
 
 if TYPE_CHECKING:
-    from ...application.ledger import ManualLedgerTransactionResult
-    from ...llm import LLMSplitSuggestion
+    from ...application.ledger.models import ManualLedgerTransactionResult
+    from ...llm.suggestions import LLMSplitSuggestion
     from ._ledger_payloads import LedgerSplitChildIdPayload, LedgerSplitChildProposalPayload
 
 
@@ -58,7 +50,7 @@ def ledger_detach(
     actor: str | None = None,
 ) -> None:
     """Detach supplementary attachments from one ledger transaction."""
-    from ...application.ledger import detach_manual_transaction_attachments
+    from ...application.ledger.actions_manual import detach_manual_transaction_attachments
 
     state = _state()
     transaction_repository = _tx_repo(state)
@@ -92,7 +84,7 @@ def ledger_attach(
     actor: str | None = None,
 ) -> None:
     """Attach existing secure evidence objects to one ledger transaction."""
-    from ...application.ledger import attach_manual_transaction_evidence
+    from ...application.ledger.actions_manual import attach_manual_transaction_evidence
 
     state = _state()
     transaction_repository = _tx_repo(state)
@@ -212,7 +204,7 @@ def ledger_doclink(
     from ...adapters.outbound.google import resolve_active_profile, resolve_document_link
     from ...adapters.outbound.storage import build_google_credentials
     from ...adapters.persistence.storage import AttachmentStore
-    from ...application.ledger import attach_manual_transaction_evidence
+    from ...application.ledger.actions_manual import attach_manual_transaction_evidence
     from ...domain.attachments import (
         AttachmentBytesContent,
         AttachmentIngestionRequest,
@@ -890,19 +882,15 @@ def _ledger_split_llm(
     Without ``--apply`` the proposed children (derived amounts, model-selected
     categories, registry-derived IVA) are previewed and nothing is persisted.
     With ``--apply`` (and ``--yes``) the reviewed proposal is routed through the
-    one review workflow (:func:`~application.ledger.execute_reviewed_decision`)
+    one review workflow (:func:`~application.ledger.llm_review_workflow.execute_reviewed_decision`)
     with the ``SPLIT_LLM`` origin, which delegates to the single-writer split
     plus per-child classification, registry-derived numbers, parent-invoice
     evidence link, and ``llm:<model>`` provenance. The manual ``--child-amount`` /
     ``--child-description`` flags are the explicit operator override and cannot be
     combined with ``--llm``.
     """
-    from ...application.ledger import (
-        LlmReviewDecision,
-        LlmReviewInvocationOrigin,
-        execute_reviewed_decision,
-        suggest_evidence_split,
-    )
+    from ...application.ledger.llm_review_workflow import LlmReviewDecision, LlmReviewInvocationOrigin, execute_reviewed_decision
+    from ...application.ledger.llm_classification import suggest_evidence_split
 
     _validate_split_llm_options(
         child_amount=child_amount,

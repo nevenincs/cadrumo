@@ -8,7 +8,7 @@ from .._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "cadrumo.adapters.outbound.aeat.auth._errors.AeatLoginAssertionError",
+        "cadrumo.adapters.outbound.aeat.auth.errors.AeatLoginAssertionError",
         ErrorCode(
             code="AUTH_AEAT_LOGIN_ASSERTION",
             category=ErrorCategory.AUTH,
@@ -18,7 +18,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.auth._errors.AeatSessionExpiredError",
+        "cadrumo.adapters.outbound.aeat.auth.errors.AeatSessionExpiredError",
         ErrorCode(
             code="AUTH_AEAT_SESSION_EXPIRED",
             category=ErrorCategory.AUTH,
@@ -28,7 +28,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.auth._session_store.FormerProductAuthSessionStateError",
+        "cadrumo.adapters.outbound.aeat.auth.session_store.FormerProductAuthSessionStateError",
         ErrorCode(
             code="AUTH_FORMER_PRODUCT_SESSION_STATE",
             category=ErrorCategory.AUTH,
@@ -701,3 +701,4 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
 )
+

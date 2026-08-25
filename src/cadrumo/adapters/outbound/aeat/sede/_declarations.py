@@ -123,7 +123,7 @@ from ._schema import (
 
 if TYPE_CHECKING:
     from .....domain.calculations.registry import ModeloRevision
-    from ..auth import AeatSession
+    from ..auth.authenticator_types import AeatSession
 
 
 log = get_logger(__name__)

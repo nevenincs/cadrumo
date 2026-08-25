@@ -53,13 +53,13 @@ from ....domain.iva import (
     territorial_scope_for_spanish_postal_code,
 )
 from ....tests.attribute_scope import scoped_attribute
-from .. import _establishment_ladder as ladder_module
-from .._counterparty_establishment import (
+import cadrumo.application.ledger.establishment_ladder as ladder_module
+from ..counterparty_establishment import (
     ConfirmedCounterpartyFactsRepository,
     ConfirmedCounterpartyResolution,
     record_confirmed_counterparty_facts,
 )
-from .._establishment_ladder import (
+from ..establishment_ladder import (
     CounterpartyEstablishment,
     EstablishmentRung,
     _charged_iva_rates,
@@ -67,13 +67,13 @@ from .._establishment_ladder import (
     resolve_counterparty_establishment_scope,
     resolve_draft_counterparty_establishment,
 )
-from .._evidence_draft import (
+from ..evidence_draft import (
     InvoiceDraft,
     InvoiceDraftLine,
     InvoiceDraftRateBreakdown,
     counterparty_draft_side,
 )
-from .._regime_contradiction import draft_prints_a_repercutido_line
+from ..regime_contradiction import draft_prints_a_repercutido_line
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

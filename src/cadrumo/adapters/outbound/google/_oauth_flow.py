@@ -35,7 +35,7 @@ from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.config import SecretStoreBackend, load_settings
 from ....core.time import now
 from ....core.tty import stdin_is_tty
-from ....domain.user_profile import ProfileNotFoundError
+from ....domain.user_profile.errors import ProfileNotFoundError
 from ._errors import (
     GoogleAuthBrowserOpenError,
     GoogleAuthLoopbackBindError,

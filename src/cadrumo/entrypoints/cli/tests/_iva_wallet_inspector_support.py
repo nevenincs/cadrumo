@@ -9,7 +9,7 @@ from ....application.wizard import _catalogue as _wizard_catalogue
 from ....application.wizard import _persistence as _wizard_persistence
 from ....core import IvaCompensationStateProvenance, Period
 from ....domain.iva_compensation import IvaCompensationPeriodState
-from ....domain.user_profile import ProfileSetupState
+from ....domain.user_profile.values import ProfileSetupState
 
 _WIZARD_REGISTRATION_MODULES = (_wizard_catalogue, _wizard_persistence)
 _NIF = "12345678Z"
@@ -62,7 +62,7 @@ def _store_profile_with_nif(nif: str, *, bucket_id: str = _SEED_BUCKET_ID) -> No
     verb's active-bucket NIF resolver relies on. ``bucket_id`` must therefore
     be the same UUIDv4 the paired :func:`isolated_runtime_profile` activates.
     """
-    from ....domain.user_profile import UserProfileFact, UserProfileRecord
+    from ....domain.user_profile.values import UserProfileFact, UserProfileRecord
     from ....tests.profile_capsule import seed_test_profile_record
 
     created_at = datetime(2025, 1, 1, 12, 0, tzinfo=UTC)
@@ -80,7 +80,7 @@ def _store_profile_with_nif(nif: str, *, bucket_id: str = _SEED_BUCKET_ID) -> No
 
 def _seed_full_autonomo_profile_for_guidance(bucket_id: str) -> None:
     """Persist a minimal autonomo profile sufficient for M303 work-unit applicability."""
-    from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+    from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
     from ....tests.profile_capsule import seed_test_profile_record
 
     created_at = datetime(2024, 1, 1, 12, 0, tzinfo=UTC)

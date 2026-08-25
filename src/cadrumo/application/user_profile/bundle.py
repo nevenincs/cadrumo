@@ -1,7 +1,7 @@
 """Portable profile-bundle serialisation for bucket export/import.
 
 This module composes
-:class:`~cadrumo.domain.user_profile.UserProfilePortableExport` payloads at
+:class:`~cadrumo.domain.user_profile.portable_export.UserProfilePortableExport` payloads at
 the application boundary. A v3 bundle contains the profile record plus
 the four bucket-local history categories that must move with it: work
 units, ledger transactions, calculation revisions, and filing records.
@@ -52,11 +52,7 @@ __all__ = [
 ]
 
 if TYPE_CHECKING:
-    from ...domain.user_profile import (
-        CarriedSecureObject,
-        CoverageManifest,
-        UserProfilePortableExport,
-    )
+    from ...domain.user_profile.portable_export import CarriedSecureObject, CoverageManifest, UserProfilePortableExport
 
 # Import is an operator handoff, so the trail names the operator rather than the
 # emitting module. The payload version tracks the import event's own key set.
@@ -142,7 +138,7 @@ def validate_bundle_payload(
     :data:`BUNDLE_DURABILITY_FLOOR`, chain-upgrades an older supported
     payload hop by hop through :data:`BUNDLE_PAYLOAD_UPGRADERS`, and
     validates the result against the current strict
-    :class:`~cadrumo.domain.user_profile.UserProfilePortableExport` model.
+    :class:`~cadrumo.domain.user_profile.portable_export.UserProfilePortableExport` model.
 
     Args:
         raw_json: The serialized bundle payload (decrypted transport bytes
@@ -157,7 +153,7 @@ def validate_bundle_payload(
             floor-to-current range, an upgrade hop is unregistered, or the
             stamped version contradicts ``expected_written_version``.
     """
-    from ...domain.user_profile import UserProfilePortableExport
+    from ...domain.user_profile.portable_export import UserProfilePortableExport
 
     payload = json.loads(raw_json)
     if not isinstance(payload, dict):
@@ -195,7 +191,7 @@ def serialize_profile_bundle(
     bucket_id: str,
     custody_profile: StorageCustodyProfile | str = StorageCustodyProfile.STRUCTURED,
 ) -> UserProfilePortableExport:
-    """Build a v3 :class:`~cadrumo.domain.user_profile.UserProfilePortableExport`.
+    """Build a v3 :class:`~cadrumo.domain.user_profile.portable_export.UserProfilePortableExport`.
 
     Reads the profile record and all four financial-history categories
     from ``bucket_id``'s encrypted repositories and assembles them into
@@ -217,7 +213,7 @@ def serialize_profile_bundle(
     from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-    from ...domain.user_profile import UserProfilePortableExport
+    from ...domain.user_profile.portable_export import UserProfilePortableExport
     from .profile_record_repository import ProfileRecordRepository
 
     record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
@@ -257,7 +253,7 @@ def _normalize_custody_profile(custody_profile: StorageCustodyProfile | str) -> 
     try:
         return StorageCustodyProfile(custody_profile)
     except ValueError as exc:
-        from ...domain.user_profile import ProfileExportError
+        from ...domain.user_profile.errors import ProfileExportError
 
         raise ProfileExportError(
             context={"custody_profile": custody_profile},
@@ -270,7 +266,7 @@ def _build_secure_object_custody_payload(
     custody_profile: StorageCustodyProfile,
 ) -> tuple[tuple[CarriedSecureObject, ...], CoverageManifest]:
     from ...adapters.persistence.storage import secure_object_repository_for_bucket
-    from ...domain.user_profile import CoverageManifest
+    from ...domain.user_profile.portable_export import CoverageManifest
     from .custody_carry import (
         TYPED_CATEGORY_NAMESPACES,
         carried_namespace_definitions,
@@ -329,7 +325,7 @@ def _assert_full_custody_coverage(
     missing = tuple(namespace for namespace in populated_namespaces if namespace not in covered_namespaces)
     if not missing:
         return
-    from ...domain.user_profile import ProfileExportError
+    from ...domain.user_profile.errors import ProfileExportError
 
     raise ProfileExportError(
         context={"unclassified_namespaces": missing, "custody_profile": StorageCustodyProfile.FULL.value},

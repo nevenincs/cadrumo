@@ -51,13 +51,7 @@ from ....adapters.persistence.storage import (
     USER_PROFILE_SNAPSHOT_NAMESPACE as USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE,
 )
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....domain.user_profile import (
-    ProfileSetupState,
-    UserProfileFact,
-    UserProfileRecord,
-    UserProfileSnapshot,
-    new_profile_snapshot_id,
-)
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord, UserProfileSnapshot, new_profile_snapshot_id
 from ....tests.secure_sql import isolated_runtime_profile
 from ._profile_record_boundary_support import defaultable_fields_at_default, populated_facts
 

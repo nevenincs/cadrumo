@@ -38,7 +38,7 @@ if TYPE_CHECKING:
 
     from ....application.user_profile.commands import ProfileValidationReport as _ProfileValidationReport
     from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer as _ProfileBucketPointer
-    from ....domain.user_profile import UserProfileRecord as _UserProfileRecord
+    from ....domain.user_profile.values import UserProfileRecord as _UserProfileRecord
 
 
 def _resolve_show_pointer(
@@ -69,7 +69,8 @@ def _resolve_show_pointer(
 
 def _read_record_for_show(ctx: typer.Context, pointer: _ProfileBucketPointer) -> _UserProfileRecord:
     """Read the profile record, rendering the unreadable/missing report and exiting 2."""
-    from ....domain.user_profile import ProfileNotFoundError, UserProfileRecord
+    from ....domain.user_profile.errors import ProfileNotFoundError
+    from ....domain.user_profile.values import UserProfileRecord
 
     try:
         record = cast(object, _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id))
@@ -126,7 +127,7 @@ def config_profile_show(
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile.validation import ProfileValidationService
     from ....application.user_profile.projections import record_to_path_values
-    from ....domain.user_profile import load_user_profile_schema
+    from ....domain.user_profile.loader import load_user_profile_schema
 
     pointer = _resolve_show_pointer(name, ctx=ctx, resolve_active_profile_pointer=resolve_active_profile_pointer)
     record = _read_record_for_show(ctx, pointer)
@@ -256,7 +257,7 @@ def config_profile_preflight(
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.modelo import modelo_work_profile_preflight_report
     from ....core.resources import resources
-    from ....domain.user_profile import ProfileNotFoundError
+    from ....domain.user_profile.errors import ProfileNotFoundError
 
     pointer = resolve_active_profile_pointer()
     if pointer is None:
@@ -398,7 +399,8 @@ def config_profile_validate(
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.modelo import modelo_work_profile_baseline_validation_issues
     from ....application.user_profile.validation import ProfileValidationService
-    from ....domain.user_profile import ProfileNotFoundError, load_user_profile_schema
+    from ....domain.user_profile.errors import ProfileNotFoundError
+    from ....domain.user_profile.loader import load_user_profile_schema
 
     pointer = _resolve_validate_target_pointer(
         name,

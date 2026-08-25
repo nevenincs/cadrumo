@@ -59,7 +59,7 @@ Expiry and replay defence: every envelope carries an
   decryption is even attempted. A ``valid_until=None`` envelope never expires.
 * **Replay defence** is a TWO-PARTY contract this module only half-owns: the
   envelope's ``envelope_nonce_hex`` is the token a caller checks against
-  :class:`~application.modelo.RecipientReplayGuardRepository` (a
+:class:`~adapters.persistence.profile.recipient_replay_guard.RecipientReplayGuardRepository` (a
   persisted, bucket-scoped consumed-nonce ledger) before or after calling
   :func:`decrypt_review_package_for_recipient` -- this module mints and
   carries the nonce but performs no persistence itself (this is the
@@ -95,7 +95,7 @@ See Also:
     :mod:`~application.modelo._review_package_recipient_registry`
         Where a recipient's trusted public key is registered and looked
         up before calling this module.
-    :mod:`~application.modelo._review_package_recipient_replay_guard`
+:mod:`~adapters.persistence.profile.recipient_replay_guard`
         The consumed-nonce ledger a caller composes around
         :func:`decrypt_review_package_for_recipient` for replay defence.
     :mod:`~application.modelo._review_package`
@@ -378,7 +378,7 @@ class RecipientEncryptedPackage(BaseModel):
 
     ``envelope_nonce_hex`` is a replay-detection token, independent of the
     AEAD nonce embedded in ``ciphertext``: a caller checks it against
-    :class:`~application.modelo.RecipientReplayGuardRepository` to
+:class:`~adapters.persistence.profile.recipient_replay_guard.RecipientReplayGuardRepository` to
     refuse a package presented more than once. ``issued_at`` /
     ``valid_until`` bound the envelope's validity window (``valid_until``
     of ``None`` means the envelope never expires); the deadline is checked
@@ -569,7 +569,7 @@ def decrypt_review_package_for_recipient(
     encrypt/decrypt primitive with no persistence dependency
     (``aeat-architecture-boundaries``). A caller that needs
     replay defence composes
-    :class:`~application.modelo.RecipientReplayGuardRepository` around
+:class:`~adapters.persistence.profile.recipient_replay_guard.RecipientReplayGuardRepository` around
     this call, keyed on ``envelope.envelope_nonce_hex``.
 
     Args:

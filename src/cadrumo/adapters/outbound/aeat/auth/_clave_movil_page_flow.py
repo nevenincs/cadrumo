@@ -21,10 +21,8 @@ import base64
 import contextlib
 import json
 import time
-from datetime import datetime
 from typing import TYPE_CHECKING, NoReturn
 from urllib.parse import urlsplit
-from uuid import uuid4
 
 from .....core.config import unwrap_optional_secret
 from .....core.external_constants import UTF_8_ENCODING
@@ -41,31 +39,32 @@ from .._representation_gate import (
     dismiss_pre303_alert_modal_if_present,
     wait_for_own_name_representation_selector,
 )
-from ._authenticator_types import BrowserPageLike
-from ._clave_movil_support import (
+from .authenticator_types import BrowserPageLike
+from .clave_movil_support import (
     DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS as _DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS,
 )
-from ._clave_movil_support import (
+from .clave_movil_support import (
     DIAGNOSTIC_NAMESPACE as _DIAGNOSTIC_NAMESPACE,
 )
-from ._clave_movil_support import (
+from .clave_movil_support import (
     ClaveMovilApprovalTimeoutError,
     ClaveMovilConfigurationError,
     ClaveMovilFailureMode,
+    mint_diagnostic_id,
 )
-from ._clave_movil_support import (
+from .clave_movil_support import (
     auth_browser_action_policy as _auth_browser_action_policy,
 )
-from ._clave_movil_support import (
+from .clave_movil_support import (
     classify_identity as _classify_identity,
 )
-from ._clave_movil_support import (
+from .clave_movil_support import (
     extract_verification_code_from_html as _extract_verification_code_from_html,
 )
-from ._clave_movil_support import (
+from .clave_movil_support import (
     url_diagnostic as _url_diagnostic,
 )
-from ._errors import AeatLoginAssertionError
+from .errors import AeatLoginAssertionError
 
 if TYPE_CHECKING:
     from playwright.async_api import Dialog
@@ -74,16 +73,6 @@ if TYPE_CHECKING:
     from .....core.external_constants import AeatClaveMovilSurface
 
 log = get_logger(__name__)
-
-
-def _mint_diagnostic_id(captured_at: datetime) -> str:
-    """Return a collision-resistant, operator-safe Cl@ve diagnostic identifier.
-
-    The timestamp keeps captured diagnostics naturally inspectable, while the
-    UUID4 suffix prevents distinct failures in one UTC instant from sharing an
-    encrypted secure-object key.
-    """
-    return f"{captured_at:%Y%m%dT%H%M%S}.{captured_at.microsecond:06d}Z-{uuid4().hex}"
 
 
 class _ClaveMovilPageFlowMixin(abc.ABC):
@@ -442,7 +431,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
         """
         try:
             captured_at = now()
-            diagnostic_id = _mint_diagnostic_id(captured_at)
+            diagnostic_id = mint_diagnostic_id(captured_at)
             url = getattr(page, "url", "") or ""
             payload: dict[str, object] = {
                 "diagnostic_id": diagnostic_id,

@@ -8,12 +8,13 @@ from datetime import timezone
 import pytest
 from pydantic import ValidationError
 
+import cadrumo.adapters.outbound.aeat.auth.authenticator as authenticator
+
 from ......core.i18n import tr
-from .. import AuthConfigurationError
-from .. import _authenticator as authenticator_module
-from .._authenticator import _require_exact_active_certificate_session
-from .._authenticator_types import _is_exact_active_provider_session
-from .._providers import ClaveMovilSessionDetail, ClavePermanenteSessionDetail
+from ..authenticator import _require_exact_active_certificate_session
+from ..authenticator_types import _is_exact_active_provider_session
+from ..errors import AuthConfigurationError
+from ..providers import ClaveMovilSessionDetail, ClavePermanenteSessionDetail
 from ._authenticator_support import (
     _SENSITIVE_HEALTH_PAYLOAD,
     _SENSITIVE_STORAGE_BASENAME,
@@ -279,7 +280,7 @@ def test_invalid_persisted_session_redacts_path_and_reason(
     )
     storage_state_path = tmp_path / _SENSITIVE_STORAGE_BASENAME
 
-    caplog.set_level(logging.INFO, logger=authenticator_module.__name__)
+    caplog.set_level(logging.INFO, logger=authenticator.__name__)
     with pytest.raises(AeatLoginAssertionError) as exc_info:
         auth._raise_invalid_persisted_state(
             storage_state_path,
@@ -344,7 +345,7 @@ def test_describe_redacts_certificate_health_error(
     def _certificate_health_error(*args: object, **kwargs: object) -> NoReturn:
         raise CertificateError(f"failed to inspect {_SENSITIVE_HEALTH_PAYLOAD}")
 
-    caplog.set_level(logging.DEBUG, logger=authenticator_module.__name__)
+    caplog.set_level(logging.DEBUG, logger=authenticator.__name__)
     description = AeatAuthenticator(
         settings,
         credentials=unnamed_certificate_credentials(settings),
@@ -370,7 +371,7 @@ def test_describe_redacts_unexpected_certificate_health_error(
     def _unexpected_certificate_health_error(*args: object, **kwargs: object) -> NoReturn:
         raise RuntimeError(f"unexpected certificate probe {_SENSITIVE_HEALTH_PAYLOAD}")
 
-    caplog.set_level(logging.DEBUG, logger=authenticator_module.__name__)
+    caplog.set_level(logging.DEBUG, logger=authenticator.__name__)
     with pytest.raises(AuthValidationError) as exc_info:
         AeatAuthenticator(
             settings,
@@ -399,7 +400,7 @@ def test_describe_forwards_typed_bundle_and_friendly_name(
     settings = _settings_factory(bundle_path, cadrumo_certificate_friendly_name="operator cert")
 
     captured: dict[str, object] = {}
-    real_certificate_health = authenticator_module.certificate_health
+    real_certificate_health = authenticator.certificate_health
 
     def _capture_certificate_health(
         path: Path,

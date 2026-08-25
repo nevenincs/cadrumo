@@ -1,13 +1,8 @@
 """Persistence adapters for profile-scoped taxpayer data.
 
 Namespace package whose children hold concrete repositories for taxpayer data a
-profile owns beyond its core identity. It exposes one shared symbol at the
-package level -- :class:`ProfileBareModelSecurePersistence`, the bare-document
-singleton-persistence kernel several of this package's own repositories
-compose, and the only piece of this package a caller OUTSIDE it (a namespace
-whose on-disk rows are bare JSON, not Envelope-wrapped) has a sanctioned
-reason to import directly, per ``aeat-architecture-boundaries``.
-Every other repository is consumed from its own child module directly:
+profile owns beyond its core identity. Repositories and shared persistence
+kernels are consumed from their defining child modules directly:
 
 * :mod:`adapters.persistence.profile.assets` for the FINANCIAL secure-object
   actividad-económica asset and amortización ledgers.
@@ -33,10 +28,8 @@ Every other repository is consumed from its own child module directly:
   :class:`domain.filing.ModeloAmendmentRepositoryProtocol` port.
 """
 
-from ._secure_model_document import ProfileBareModelSecurePersistence
 from .sync_runs import SyncRunRecordRepository
 
 __all__: list[str] = [
-    "ProfileBareModelSecurePersistence",
     "SyncRunRecordRepository",
 ]

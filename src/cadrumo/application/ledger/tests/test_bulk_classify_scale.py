@@ -33,7 +33,7 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....tests.secure_sql import TestRuntimeProfile
-from .. import bulk_classify_from_csv
+from ..actions_classification import bulk_classify_from_csv
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

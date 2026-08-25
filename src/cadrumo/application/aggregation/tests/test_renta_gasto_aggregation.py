@@ -47,7 +47,7 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .._renta_gasto_ledger import (
     RentaGastoLedgerAggregationIssueReason,
     RentaGastoObservation,

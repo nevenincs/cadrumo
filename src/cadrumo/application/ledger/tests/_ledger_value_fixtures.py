@@ -7,7 +7,7 @@ import pytest
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
 from ....tests.secure_sql import TestRuntimeProfile
-from .._counterparty_establishment import ConfirmedCounterpartyFactsRepository
+from ..counterparty_establishment import ConfirmedCounterpartyFactsRepository
 
 
 @pytest.fixture

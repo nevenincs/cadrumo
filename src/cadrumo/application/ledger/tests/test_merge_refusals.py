@@ -9,13 +9,9 @@ import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.transactions import TransactionDirection, TransactionValidationError
-from .. import (
-    ManualLedgerTransactionCommand,
-    SplitChildCommand,
-    create_manual_transaction,
-    merge_transactions,
-    split_transaction,
-)
+from ..models import ManualLedgerTransactionCommand, SplitChildCommand
+from ..actions_manual import create_manual_transaction
+from ..actions_split_merge import merge_transactions, split_transaction
 from ._merge_test_support import _BUCKET_ID, _repositories, _split_setup
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

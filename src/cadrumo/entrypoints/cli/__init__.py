@@ -244,7 +244,7 @@ def main() -> None:
             _refuse_former_product_state_at_startup()
         except typer.Exit as exit_request:
             raise SystemExit(exit_request.exit_code) from None
-        from ...adapters.outbound.aeat import operator_progress_sink
+        from ...adapters.outbound.aeat.operator_progress import operator_progress_sink
 
         progress_sink = operator_progress_sink(_emit_operator_progress)
     with _metadata_state_isolation(arguments), progress_sink:

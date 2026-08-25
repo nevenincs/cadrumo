@@ -20,7 +20,7 @@ import pytest
 
 from ....core import DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
 from ....core.identity import IdentityError, validate_spanish_tax_id
-from .._identity_roles import (
+from ..identity_roles import (
     IdentityCandidate,
     canonical_identity_token,
     resolve_counterparty_identity,

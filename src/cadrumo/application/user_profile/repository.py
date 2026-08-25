@@ -15,11 +15,8 @@ from ...adapters.persistence.storage import (
 )
 from ...adapters.persistence.storage.bucket import BucketValidationError
 from ...core.time import now
-from ...domain.user_profile import (
-    ProfileBucketMismatchError,
-    ProfileSnapshotNotFoundError,
-    UserProfileSnapshot,
-)
+from ...domain.user_profile.errors import ProfileBucketMismatchError, ProfileSnapshotNotFoundError
+from ...domain.user_profile.values import UserProfileSnapshot
 
 USER_PROFILE_SNAPSHOT_NAMESPACE = USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.namespace
 _USER_PROFILE_SNAPSHOT_VERSION = USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.schema_version

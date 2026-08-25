@@ -10,13 +10,13 @@ that mean* -- so a wrong result could not be attributed to either: a
 transcription error and a reasoning error arrived in the same shape. Worse, the
 anchors came back from the same call that produced the values, so there was
 nothing independent to check them against. The provenance record had to say so
-(:attr:`~application.ledger.FieldProvenance.anchor_self_reported`), and a
+(:attr:`~application.ledger.evidence_draft.FieldProvenance.anchor_self_reported`), and a
 self-reported anchor can never read as verified, because a fabricating model is
 self-consistent too. The vision lane was therefore structurally incapable of
 earning the grounding the text lane earned for free.
 
 **What it does now.** It emits a
-:class:`~application.ledger.DocumentTranscription` -- reading-order text with
+:class:`~application.ledger.document_transcription.DocumentTranscription` -- reading-order text with
 printed forms preserved verbatim -- and stops. The semantic stage
 (:func:`~llm.extract_invoice_fields_from_text`) then reads that text in a
 SEPARATE call, and the anchor check runs against the transcription this module
@@ -43,9 +43,9 @@ request built here is marked evidence-derived unless the caller names the
 public, synthetic measurement corpus.
 
 See Also:
-    :class:`~application.ledger.DocumentTranscription`
+    :class:`~application.ledger.document_transcription.DocumentTranscription`
         The typed stage-one artefact this module produces.
-    :func:`~application.ledger.transcribe_text_layer`
+    :func:`~application.ledger.evidence_textlayer.transcribe_text_layer`
         The deterministic sibling for a document that HAS a text layer.
     :func:`~llm.extract_invoice_fields_from_text`
         The stage-two semantic reader that consumes what this produces.
@@ -56,11 +56,8 @@ from __future__ import annotations
 import asyncio
 from typing import Final
 
-from ..application.ledger import (
-    DocumentTranscription,
-    PurchaseInvoiceEvidenceInputError,
-    TranscriberIdentity,
-)
+from ..application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
+from ..application.ledger.evidence import PurchaseInvoiceEvidenceInputError
 from ..core import LLM_EXTRA, ActionEvidenceProvenance, FieldOrigin, provenance_transport_label, require_optional_extra
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
@@ -277,7 +274,7 @@ class LocalVisionDocumentTranscriber:
                 would make it two.
 
         Returns:
-            :class:`~application.ledger.DocumentTranscription`: The reading-order
+            :class:`~application.ledger.document_transcription.DocumentTranscription`: The reading-order
             text with printed forms intact.
 
         Raises:
@@ -342,7 +339,7 @@ def transcribe_document_images(
         settings: Optional resolved settings override.
 
     Returns:
-        :class:`~application.ledger.DocumentTranscription`: The transcription.
+        :class:`~application.ledger.document_transcription.DocumentTranscription`: The transcription.
     """
     transcriber = LocalVisionDocumentTranscriber(model=model, provider=provider, settings=settings)
     return transcriber.transcribe(evidence_images=evidence_images, source_content_sha256=source_content_sha256)

@@ -18,7 +18,7 @@ from cadrumo.application.auth.models import AuthCleanupOperationKind, Certificat
 from cadrumo.application.workflow.persistence import WorkflowStateRepository, workflow_state_repository
 from cadrumo.application.workflow.state_models import WorkflowState
 
-from ....adapters.outbound.aeat.auth import _session_store
+from ....adapters.outbound.aeat.auth import session_store
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage import RepositoryError
 from ....adapters.persistence.storage.bucket import bucket_paths
@@ -446,7 +446,7 @@ def test_logout_write_failure_resumes_cleanup_and_emits_session_event_once(
                 ),
             )
             session_path = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
-            _session_store.save(
+            session_store.save(
                 session_path,
                 storage_state={},
                 metadata={"provider_kind": "certificate"},
@@ -459,7 +459,7 @@ def test_logout_write_failure_resumes_cleanup_and_emits_session_event_once(
 
             interrupted = repository.load()
             assert interrupted.auth.cleanup_intent is not None
-            assert _session_store.exists(session_path) is False
+            assert session_store.exists(session_path) is False
             assert _event_count(BucketEventType.AUTH_SESSION_CLEARED) == 0
 
             resumed = logout_operator_auth(provider="certificate")
@@ -499,7 +499,7 @@ def test_reset_write_failure_resumes_real_cleanup_and_emits_effects_once(
             register_operator_certificate_source(name="personal", certificate_path=cert_path)
             set_operator_certificate_source_secret(name="personal", secret=SecretStr("private"))
             session_path = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
-            _session_store.save(
+            session_store.save(
                 session_path,
                 storage_state={},
                 metadata={"provider_kind": "certificate"},
@@ -512,7 +512,7 @@ def test_reset_write_failure_resumes_real_cleanup_and_emits_effects_once(
 
             interrupted = workflow_state_repository().load()
             assert interrupted.auth.cleanup_intent is not None
-            assert _session_store.exists(session_path) is False
+            assert session_store.exists(session_path) is False
             assert resolve_certificate_source_secret(name="personal", bucket_id=_BUCKET_ID) is None
             assert _event_count(BucketEventType.AUTH_PROVIDER_CLEARED) == 0
 

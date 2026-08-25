@@ -1,6 +1,6 @@
 """Recipient replay-guard ledger: encrypted roundtrip and anti-tautology proofs.
 
-Exercises :mod:`~application.modelo._review_package_recipient_replay_guard`
+Exercises :mod:`~adapters.persistence.profile.recipient_replay_guard`
 against a REAL encrypted
 :class:`~adapters.persistence.storage.SecureObjectRepository`
 (:func:`~tests.secure_sql.isolated_runtime_profile` -- a genuine
@@ -12,7 +12,7 @@ corrupted on-disk payload is refused at load (the anti-tautology proof required
 by ``aeat-quality-gates``).
 
 See Also:
-    :class:`~application.modelo.RecipientReplayGuardRepository`:
+    :class:`~adapters.persistence.profile.recipient_replay_guard.RecipientReplayGuardRepository`:
         Encrypted consumed-nonce ledger under test.
     :class:`~application.modelo.RecipientEncryptedPackage`:
         Transport envelope carrying the ``envelope_nonce_hex`` replay token.
@@ -38,7 +38,7 @@ from ....adapters.persistence.storage import DecryptionError
 from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....adapters.persistence.storage.sql.session import session_scope
 from ....tests.secure_sql import isolated_runtime_profile
-from .._review_package_recipient_replay_guard import (
+from ....adapters.persistence.profile.recipient_replay_guard import (
     ConsumedNonceLedger,
     RecipientPackageReplayedError,
     RecipientReplayGuardRepository,

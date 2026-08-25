@@ -44,16 +44,8 @@ from ....adapters.persistence.storage.errors import ClassificationError, Envelop
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.i18n import tr
 from ....core.time import now
-from ....domain.user_profile import (
-    ProfileBucketMismatchError,
-    ProfileNotFoundError,
-    ProfileSetupState,
-    ProfileSnapshotNotFoundError,
-    UserProfileFact,
-    UserProfileRecord,
-    UserProfileSnapshot,
-    new_profile_snapshot_id,
-)
+from ....domain.user_profile.errors import ProfileBucketMismatchError, ProfileNotFoundError, ProfileSnapshotNotFoundError
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord, UserProfileSnapshot, new_profile_snapshot_id
 from ....tests.profile_capsule import open_test_profile_session, seed_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 

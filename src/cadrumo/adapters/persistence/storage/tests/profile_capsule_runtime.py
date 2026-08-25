@@ -16,7 +16,7 @@ from .....application.user_profile.capsule_record import ProfileRecordSession
 from .....application.user_profile.recovery_custody import mint_profile_creation_recovery
 from .....core.identity import canonical_profile_bucket_id
 from .....core.paths import effective_storage_root
-from .....domain.user_profile import ProfileSetupState, UserProfileRecord
+from .....domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from ..bucket import BucketPaths, bucket_paths
 from ..custody import (
     ProfileCustodyEnvelope,

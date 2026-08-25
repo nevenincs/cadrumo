@@ -51,7 +51,7 @@ def capabilities_show(ctx: typer.Context) -> None:
 def capabilities_set(ctx: typer.Context, capability: ServiceCapability, state: str) -> None:
     """Opt the active profile in or out of one service capability."""
     from ....application.user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
-    from ....domain.user_profile import UserProfileFact
+    from ....domain.user_profile.values import UserProfileFact
 
     profile_id = resolve_active_bucket_id()
     if profile_id is None:

@@ -11,7 +11,7 @@ from cadrumo.application.user_profile.validation import ProfileValidationService
 
 from ....core import Period
 from ....core.resources import resources
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ... import wizard as _wizard  # noqa: F401 - registers compiled profile keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

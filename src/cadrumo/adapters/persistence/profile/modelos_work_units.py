@@ -39,7 +39,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ....core.bucket_pointer import resolve_repository_bucket_id
-from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....domain.modelos import (
     WorkUnitCatalogue,
@@ -56,10 +55,6 @@ if TYPE_CHECKING:
     from ..storage import SecureObjectRepository, SecureObjectWrite
 
 _LOGGER = get_logger(__name__)
-_WORK_UNIT_NAMESPACE = MODELO_WORK_UNIT_CATALOGUE_NAMESPACE.namespace
-_WORK_UNIT_OBJECT_KEY = MODELO_WORK_UNIT_CATALOGUE_NAMESPACE.require_default_object_key()
-_WORK_UNIT_CATALOGUE_VERSION = MODELO_WORK_UNIT_CATALOGUE_NAMESPACE.schema_version
-_WORK_UNIT_CATALOGUE_SENSITIVITY = MODELO_WORK_UNIT_CATALOGUE_NAMESPACE.sensitivity
 _WORK_UNIT_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_work_unit_persistence"
 
 
@@ -71,9 +66,9 @@ class WorkUnitCatalogueRepository:
     separate "fresh install" path is needed). The write path
     (``to_secure_object_write`` / ``save`` / ``exists``) composes
     :class:`~adapters.persistence.profile._secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
-    for the shared Envelope-construction mechanic; ``load`` stays hand-rolled
-    here because it translates a classification or schema-version mismatch
-    into :class:`WorkUnitPersistenceError` via
+    for the shared one-record decode and Envelope-construction mechanics;
+    :meth:`load_revisioned` translates a classification or schema-version
+    mismatch into :class:`WorkUnitPersistenceError` via
     :func:`~domain.modelos.raise_catalogue_integrity_error`. This class is
     the concrete implementation behind
     :class:`~domain.modelos.WorkUnitCatalogueRepositoryProtocol`.
@@ -121,69 +116,7 @@ class WorkUnitCatalogueRepository:
                 classification or schema version disagrees with the consumer's
                 contract.
         """
-        from ..storage import (
-            ClassificationError,
-            Envelope,
-            EnvelopeVersionError,
-            inner_envelope_classification_is_expected,
-            inner_envelope_version_is_current,
-        )
-
-        try:
-            record = self._objects.load(
-                _WORK_UNIT_NAMESPACE,
-                _WORK_UNIT_OBJECT_KEY,
-                expected_class=_WORK_UNIT_CATALOGUE_SENSITIVITY,
-                max_supported_version=_WORK_UNIT_CATALOGUE_VERSION,
-            )
-        except (ClassificationError, EnvelopeVersionError) as exc:
-            raise_catalogue_integrity_error(
-                exc,
-                error_cls=WorkUnitPersistenceError,
-                label="work-unit",
-                translated_message=_WORK_UNIT_PERSISTENCE_MESSAGE,
-                logger=_LOGGER,
-            )
-        if record is None:
-            _LOGGER.debug("work-unit catalogue not found; returning empty catalogue")
-            return WorkUnitCatalogue()
-        envelope = Envelope[WorkUnitCatalogue].model_validate_json(record.payload.decode(UTF_8_ENCODING))
-        if not inner_envelope_classification_is_expected(envelope.classification, _WORK_UNIT_CATALOGUE_SENSITIVITY):
-            _LOGGER.error(
-                "work-unit catalogue classification mismatch",
-                extra={
-                    "expected_classification": _WORK_UNIT_CATALOGUE_SENSITIVITY.value,
-                    "actual_classification": envelope.classification.value,
-                },
-            )
-            raise WorkUnitPersistenceError(
-                "work-unit catalogue classification mismatch",
-                translated_message=_WORK_UNIT_PERSISTENCE_MESSAGE,
-                context={
-                    "reason": "classification_mismatch",
-                    "expected_classification": _WORK_UNIT_CATALOGUE_SENSITIVITY.value,
-                    "actual_classification": envelope.classification.value,
-                },
-            )
-        if not inner_envelope_version_is_current(envelope.schema_version, _WORK_UNIT_CATALOGUE_VERSION):
-            _LOGGER.error(
-                "work-unit catalogue envelope version unsupported",
-                extra={
-                    "stored_schema_version": envelope.schema_version,
-                    "max_supported_version": _WORK_UNIT_CATALOGUE_VERSION,
-                },
-            )
-            raise WorkUnitPersistenceError(
-                "work-unit catalogue envelope version unsupported",
-                translated_message=_WORK_UNIT_PERSISTENCE_MESSAGE,
-                context={
-                    "reason": "unsupported_envelope_version",
-                    "stored_schema_version": envelope.schema_version,
-                    "max_supported_version": _WORK_UNIT_CATALOGUE_VERSION,
-                },
-            )
-        catalogue = envelope.payload
-        _LOGGER.debug("loaded work-unit catalogue with %d entr(y/ies)", len(catalogue))
+        catalogue, _revision_id = self.load_revisioned()
         return catalogue
 
     def save(self, catalogue: WorkUnitCatalogue) -> None:
@@ -248,7 +181,20 @@ class WorkUnitCatalogueRepository:
         self-committing :meth:`mutate`, and without the revision its batch
         rewrites the whole singleton row over a unit another caller created.
         """
-        return self._storage.load_revisioned()
+        from ..storage import ClassificationError, EnvelopeVersionError
+
+        try:
+            catalogue, revision_id = self._storage.load_revisioned()
+        except (ClassificationError, EnvelopeVersionError) as exc:
+            raise_catalogue_integrity_error(
+                exc,
+                error_cls=WorkUnitPersistenceError,
+                label="work-unit",
+                translated_message=_WORK_UNIT_PERSISTENCE_MESSAGE,
+                logger=_LOGGER,
+            )
+        _LOGGER.debug("loaded work-unit catalogue with %d entr(y/ies)", len(catalogue))
+        return catalogue, revision_id
 
     def save_with_secure_object_writes(
         self,

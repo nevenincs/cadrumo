@@ -31,7 +31,7 @@ from ....domain.modelos import (
     ExternalEvidenceKind,
     upsert_filing_record,
 )
-from ....domain.user_profile import ProfileSetupState
+from ....domain.user_profile.values import ProfileSetupState
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
@@ -913,7 +913,7 @@ def test_operator_manual_censo_facts_are_never_treated_as_aeat_verified() -> Non
     """
     from ....application.user_profile.censo_sync import CENSO_SOURCE_TAG
     from ....core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI
-    from ....domain.user_profile import UserProfileFact, UserProfileRecord
+    from ....domain.user_profile.values import UserProfileFact, UserProfileRecord
 
     verified_sources = {CENSO_SOURCE_TAG}
     assert PROVENANCE_SOURCE_MANUAL_CLI not in verified_sources

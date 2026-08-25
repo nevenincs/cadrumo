@@ -59,7 +59,7 @@ from ...application.user_profile.registration import register_profile_with_crede
 from ...core import AuthProviderKind, OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ...core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ...core.time import now
-from ...domain.user_profile import UserProfileFact
+from ...domain.user_profile.values import UserProfileFact
 from ...tests.aeat_literal_fixtures import aeat_url
 from ...tests.secure_sql import isolated_profile_storage_root
 from .. import build_production_operation_registry

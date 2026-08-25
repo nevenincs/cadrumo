@@ -57,7 +57,7 @@ from ....adapters.persistence.storage.custody import (
 )
 from ....core import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ....core.config import override_settings
-from ....domain.user_profile import UserProfileFact
+from ....domain.user_profile.values import UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.secure_sql import isolated_profile_storage_root
 

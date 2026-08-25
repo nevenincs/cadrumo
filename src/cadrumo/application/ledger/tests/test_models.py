@@ -14,8 +14,8 @@ from ....domain.transactions import (
     BusinessClassification,
     TransactionDirection,
 )
-from .. import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
-from .._models import _ManualLedgerTransactionInput
+from ..models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
+from ..models import _ManualLedgerTransactionInput
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

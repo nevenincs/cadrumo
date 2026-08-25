@@ -17,7 +17,8 @@ from ....domain.transactions import (
     Transaction,
     TransactionDirection,
 )
-from .. import CLASSIFIED_BY_MANUAL, ManualLedgerTransactionResult
+from ..cadrumo.core.external_constants import CLASSIFIED_BY_MANUAL
+from ..models import ManualLedgerTransactionResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

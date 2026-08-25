@@ -43,7 +43,7 @@ from ....domain.renta import (
     MaritimeWorkerFacts,
     ProfileCompletenessError,
 )
-from ....domain.user_profile import load_user_profile_schema
+from ....domain.user_profile.loader import load_user_profile_schema
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

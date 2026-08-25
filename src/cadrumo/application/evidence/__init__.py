@@ -41,7 +41,7 @@ See Also:
         Integrity-check summary emitted by ``check`` and ``export`` flows.
     :class:`BundleVerificationState`
         Closed verification state vocabulary for bundle manifests.
-    :class:`application.ledger.PurchaseInvoiceEvidence`
+    :class:`application.ledger.evidence.PurchaseInvoiceEvidence`
         Source-document evidence for ledger rows.
     :class:`domain.modelos.ExternalEvidence`
         Official filing evidence stamped on current modelo filing records.

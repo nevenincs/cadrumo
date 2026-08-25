@@ -30,7 +30,8 @@ from pathlib import Path
 import pytest
 
 from ......core import FiledHistoryDiscoverySignal
-from ...auth import AeatSession, CertificateSessionDetail
+from ...auth.authenticator_types import AeatSession
+from ...auth.providers import CertificateSessionDetail
 from .._declarations import (
     _combobox_option_texts,
     discover_filed_declaration_availability,

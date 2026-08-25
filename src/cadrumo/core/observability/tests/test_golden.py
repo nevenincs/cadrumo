@@ -23,7 +23,7 @@ from typing import Any, cast
 
 import pytest
 
-from ....domain.user_profile import new_profile_snapshot_id
+from ....domain.user_profile.values import new_profile_snapshot_id
 from ...json_contract import OutputSchema, emit_json_success
 from ...time import frozen_clock, now
 from .. import (

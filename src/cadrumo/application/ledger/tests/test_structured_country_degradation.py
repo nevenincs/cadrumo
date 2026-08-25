@@ -48,17 +48,17 @@ positive case here while destroying the distinction they exist to establish.
 
 Every case drives the REAL path: bytes through the real encrypted evidence
 service, read back through
-:func:`~application.ledger.extract_invoice_draft_from_evidence` -- the function
+:func:`~application.ledger.evidence_draft.extract_invoice_draft_from_evidence` -- the function
 the CLI calls -- and reported through
-:func:`~application.ledger.country_vocabulary_advisory`, the authority the review
+:func:`~application.ledger.country_vocabulary_advisory.country_vocabulary_advisory`, the authority the review
 surface projects its notices from. Nothing constructs a draft by hand, because a
 hand-set country field proves the selector and not that any document can reach
 it.
 
 See Also:
-    :func:`~application.ledger.country_vocabulary_advisory`
+    :func:`~application.ledger.country_vocabulary_advisory.country_vocabulary_advisory`
         The non-blocking channel an unplaceable code reaches the operator on.
-    :class:`~application.ledger.FieldProvenance`
+    :class:`~application.ledger.evidence_draft.FieldProvenance`
         The envelope that records what the record stated, value or none.
 """
 
@@ -83,17 +83,17 @@ from ....domain.iva import (
     record_country_code_status,
 )
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2, an_uncatalogued_alpha3
-from .._classification_assembly import (
+from ..classification_assembly import (
     DeclaredFact,
     DeclaredFacts,
     assemble_classification_criteria,
     resolve_ingestion_iva_category,
 )
-from .._classifier_inputs import collect_classifier_inputs
-from .._confirm_establishment import ConfirmedEstablishment, resolve_confirmed_establishment
-from .._country_vocabulary_advisory import country_vocabulary_advisory
-from .._establishment_ladder import resolve_draft_counterparty_establishment
-from .._evidence_draft import InvoiceDraft, extract_invoice_draft_from_evidence
+from ..classifier_inputs import collect_classifier_inputs
+from ..confirm_establishment import ConfirmedEstablishment, resolve_confirmed_establishment
+from ..country_vocabulary_advisory import country_vocabulary_advisory
+from ..establishment_ladder import resolve_draft_counterparty_establishment
+from ..evidence_draft import InvoiceDraft, extract_invoice_draft_from_evidence
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile
 from ._evidence_test_support import seeded_filer_profile as seeded_filer_profile

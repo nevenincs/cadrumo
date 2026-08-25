@@ -6,8 +6,8 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 from .....core.config import Settings
-from ._authenticator_types import BrowserContextLike, BrowserSessionLike
-from ._browser_lifecycle import close_owned_browser_context, close_owned_browser_session
+from .authenticator_types import BrowserContextLike, BrowserSessionLike
+from .browser_lifecycle import close_owned_browser_context, close_owned_browser_session
 
 if TYPE_CHECKING:
     from logging import Logger

@@ -732,7 +732,7 @@ def _resolved_maternidad_meses(work_unit_id: str) -> MaternidadMesesResolution |
     Returns ``None`` when the bucket has no profile yet, mirroring the
     silent-absent handling profile-sourced bindings already apply.
     """
-    from ...domain.user_profile import ProfileNotFoundError
+    from ...domain.user_profile.errors import ProfileNotFoundError
     from ..user_profile.profile_record_repository import ProfileRecordRepository
     from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
     from ._profile_binding import resolve_maternidad_meses
@@ -869,7 +869,7 @@ def _ambiguous_relacion_hijo_ids(work_unit_id: str, contributing_hijo_ids: froze
     """
     if not contributing_hijo_ids:
         return frozenset[str]()
-    from ...domain.user_profile import ProfileNotFoundError
+    from ...domain.user_profile.errors import ProfileNotFoundError
     from ..user_profile.profile_record_repository import ProfileRecordRepository
     from ._work_lifecycle import get_work_unit
 

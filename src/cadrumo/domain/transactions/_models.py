@@ -92,7 +92,7 @@ def derive_transaction_id(raw: RawTransaction) -> str:
     *lineage* convenience that lets an old, written-down handle still
     resolve to the current row through ``ledger history`` / ``view`` /
     ``track`` (see
-    :func:`application.ledger.resolve_lineage_transaction_id`) is a
+    :func:`application.ledger.id_resolution.resolve_lineage_transaction_id`) is a
     **read-side lookup layer over this authoritative id**; it never
     freezes or re-mints the id, so the content-addressing invariant import
     dedup relies on is untouched.

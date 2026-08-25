@@ -37,7 +37,7 @@ from ._common import resolve_notice_action
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry import TaxRoute
-    from ...domain.user_profile import UserProfileRecord
+    from ...domain.user_profile.values import UserProfileRecord
 
 logger = get_logger(__name__)
 

@@ -10,7 +10,7 @@ record as a hand-written list of names -- and that list is a second declaration
 of the check set, which drifts from the one the readers execute the moment a
 check is added. That is the same two-lists defect that let the structured reader
 run no checks at all, returning one layer up in the record. So the stamp is
-DERIVED from :data:`~application.ledger.DETERMINISTIC_CHECKS`, and the case
+DERIVED from :data:`~application.ledger.deterministic_findings.DETERMINISTIC_CHECKS`, and the case
 below adds a check to that declaration and asserts the stamp moves on its own.
 
 **Three states, not two.** ``None`` means the record makes no claim; an empty
@@ -20,9 +20,9 @@ alarm if read as "no check ran", toward assurance if read as "every current
 check ran".
 
 See Also:
-    :data:`~application.ledger.DETERMINISTIC_CHECKS`
+    :data:`~application.ledger.deterministic_findings.DETERMINISTIC_CHECKS`
         The one declaration the stamp is derived from.
-    :class:`~application.ledger.InvoiceConfirmationRecord`
+    :class:`~application.ledger.confirmation_record.InvoiceConfirmationRecord`
         The record that carries it.
 """
 
@@ -31,8 +31,8 @@ from __future__ import annotations
 import pytest
 
 from ....tests.attribute_scope import scoped_attribute
-from .. import _deterministic_findings
-from .._deterministic_findings import (
+import cadrumo.application.ledger.deterministic_findings.deterministic_findings as deterministic_findings_module
+from ..deterministic_findings import (
     DETERMINISTIC_CHECKS,
     DeterministicCheck,
     deterministic_check_names,
@@ -66,7 +66,7 @@ def test_a_check_added_to_the_declaration_moves_the_stamp_by_itself() -> None:
     before = deterministic_check_names()
 
     added = DeterministicCheck("a_check_that_did_not_exist", lambda draft: ())
-    with scoped_attribute(_deterministic_findings, "DETERMINISTIC_CHECKS", (*DETERMINISTIC_CHECKS, added)):
+    with scoped_attribute(deterministic_findings_module, "DETERMINISTIC_CHECKS", (*DETERMINISTIC_CHECKS, added)):
         after = deterministic_check_names()
 
     assert after == (*before, "a_check_that_did_not_exist")
@@ -81,11 +81,11 @@ def test_a_check_added_to_the_declaration_also_runs() -> None:
     replaced because it reads as evidence.
     """
     from ....core import DraftDiscrepancyKind
-    from .._evidence_draft import DraftDiscrepancyFinding, InvoiceDraft
+    from ..evidence_draft import DraftDiscrepancyFinding, InvoiceDraft
 
     sentinel = DraftDiscrepancyFinding(kind=DraftDiscrepancyKind.ROLE_UNRESOLVED, detail="sentinel")
     with scoped_attribute(
-        _deterministic_findings,
+        deterministic_findings_module,
         "DETERMINISTIC_CHECKS",
         (*DETERMINISTIC_CHECKS, DeterministicCheck("sentinel_check", lambda draft: (sentinel,))),
     ):
@@ -113,8 +113,8 @@ def test_a_minted_record_carries_the_stamp() -> None:
     """
     from decimal import Decimal
 
-    from .._confirmation_record import build_confirmation_record
-    from .._evidence_draft import InvoiceDraft
+    from ..confirmation_record import build_confirmation_record
+    from ..evidence_draft import InvoiceDraft
 
     record = build_confirmation_record(
         bucket_id="bucket-checks-run",
@@ -145,8 +145,8 @@ def test_the_stamp_is_not_folded_into_the_derived_identity() -> None:
     """
     from decimal import Decimal
 
-    from .._confirmation_record import InvoiceConfirmationRecord, build_confirmation_record
-    from .._evidence_draft import InvoiceDraft
+    from ..confirmation_record import InvoiceConfirmationRecord, build_confirmation_record
+    from ..evidence_draft import InvoiceDraft
 
     def _mint() -> InvoiceConfirmationRecord:
         return build_confirmation_record(
@@ -162,7 +162,7 @@ def test_the_stamp_is_not_folded_into_the_derived_identity() -> None:
 
     before = _mint()
     with scoped_attribute(
-        _deterministic_findings,
+        deterministic_findings_module,
         "DETERMINISTIC_CHECKS",
         (*DETERMINISTIC_CHECKS, DeterministicCheck("late_arrival", lambda draft: ())),
     ):

@@ -9,7 +9,8 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.transactions import TransactionDirection
-from .. import ManualLedgerTransactionCommand, create_manual_transaction
+from ..models import ManualLedgerTransactionCommand
+from ..actions_manual import create_manual_transaction
 
 _BUCKET_ID = "24242424-2424-4424-8424-242424242424"
 

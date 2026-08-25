@@ -45,7 +45,7 @@ from ....domain.calculations.registry import (
     resolve_parameter,
 )
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from .._profile_binding import inject_derived_minimo_descendientes_facts, resolve_profile_sourced_bindings

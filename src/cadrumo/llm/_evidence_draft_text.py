@@ -7,7 +7,7 @@ to tell a transcription error from a reasoning error, and a perfect
 transcription obtained by any other means had nowhere to go.
 
 This module is the second stage that made splitting them possible: text in,
-grounded :class:`~application.ledger.InvoiceDraft` out. Both acquisition lanes
+grounded :class:`~application.ledger.evidence_draft.InvoiceDraft` out. Both acquisition lanes
 now feed it -- the deterministic text-layer extractor and
 :class:`~llm.LocalVisionDocumentTranscriber`, which transcribes and interprets
 nothing. Splitting it out means the
@@ -49,7 +49,7 @@ every field against an independent authority, so a fabricated value is dropped
 even if the prompt fails to prevent it.
 
 See Also:
-    :class:`~application.ledger.InvoiceDraft`
+    :class:`~application.ledger.evidence_draft.InvoiceDraft`
         Typed draft this reader returns after grounded re-validation.
     :func:`~llm._invoice_field_grounding.ground_extracted_fields`
         Shared grounded re-validation this reader and the vision reader both use.
@@ -64,13 +64,10 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Collection
 
-from ..application.ledger import (
-    DocumentTranscription,
-    InvoiceDraft,
-    InvoiceExtractionAuthorityValues,
-    PurchaseInvoiceEvidenceInputError,
-    resolve_invoice_extraction_authority_values,
-)
+from ..application.ledger.document_transcription import DocumentTranscription
+from ..application.ledger.evidence_draft import InvoiceDraft
+from ..application.ledger.invoice_extraction_authority import InvoiceExtractionAuthorityValues, resolve_invoice_extraction_authority_values
+from ..application.ledger.evidence import PurchaseInvoiceEvidenceInputError
 from ..core import LLM_EXTRA, ActionEvidenceProvenance, build_provenance_stamp, require_optional_extra
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
@@ -101,7 +98,7 @@ def default_extraction_authority_values() -> InvoiceExtractionAuthorityValues:
     any authority itself.
 
     Returns:
-        :class:`~application.ledger.InvoiceExtractionAuthorityValues`: The values
+        :class:`~application.ledger.invoice_extraction_authority.InvoiceExtractionAuthorityValues`: The values
         in force across the current civil year.
     """
     return resolve_invoice_extraction_authority_values(period=default_extraction_period())
@@ -173,7 +170,7 @@ class TextInvoiceFieldExtractor:
         settings: Injected settings; defaults to ``load_settings()``.
         authority_values: The regulatory values the compiled prompt enumerates,
             resolved by
-            :func:`~application.ledger.resolve_invoice_extraction_authority_values`.
+            :func:`~application.ledger.invoice_extraction_authority.resolve_invoice_extraction_authority_values`.
             Taken as resolved DATA rather than as a period this reader would
             look up for itself: the rates are the application layer's to
             determine, and a reader that resolves its own has quietly become a

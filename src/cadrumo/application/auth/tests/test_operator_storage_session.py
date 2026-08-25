@@ -11,7 +11,7 @@ from pydantic import SecretStr
 
 from cadrumo.application.workflow.persistence import workflow_state_repository
 
-from ....adapters.outbound.aeat.auth import _session_store
+from ....adapters.outbound.aeat.auth import session_store
 from ....adapters.persistence.storage import has_active_bucket_session
 from ....adapters.persistence.storage.bucket import (
     BucketBusyError,
@@ -213,13 +213,13 @@ def test_logout_deletes_real_clave_permanente_session(tmp_path: Path) -> None:
         _create_profile(_PROFILE_A, provider="clave_permanente")
         with open_test_profile_session(_PROFILE_A):
             path = storage_state_paths(AuthProviderKind.CLAVE_PERMANENTE).storage_state
-            _session_store.save(path, storage_state={}, metadata={"provider_kind": "clave_permanente"})
-            assert _session_store.exists(path)
+            session_store.save(path, storage_state={}, metadata={"provider_kind": "clave_permanente"})
+            assert session_store.exists(path)
 
         result = _logout(provider="clave_permanente")
 
         with open_test_profile_session(_PROFILE_A):
-            assert _session_store.exists(path) is False
+            assert session_store.exists(path) is False
         assert result.removed_sessions == 1
 
 
@@ -247,7 +247,7 @@ def test_certificate_logout_removes_session_and_preserves_certificate_configurat
             before = repository.load()
             session_path = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
             authenticated_at = datetime.now(UTC)
-            _session_store.save(
+            session_store.save(
                 session_path,
                 storage_state={"cookies": [], "origins": []},
                 metadata={
@@ -257,7 +257,7 @@ def test_certificate_logout_removes_session_and_preserves_certificate_configurat
                     "idle_deadline": (authenticated_at + timedelta(minutes=30)).isoformat(),
                 },
             )
-            assert _session_store.exists(session_path)
+            assert session_store.exists(session_path)
             persisted_before = load_persisted_session(
                 load_settings(),
                 AuthProviderKind.CERTIFICATE,
@@ -288,7 +288,7 @@ def test_certificate_logout_removes_session_and_preserves_certificate_configurat
                 name="personal",
                 bucket_id=_PROFILE_A,
             )
-            assert _session_store.exists(session_path) is False
+            assert session_store.exists(session_path) is False
 
         assert result.removed_sessions == 1
         assert (after.auth.provider, after.auth.configured_at) == provider_configuration_before
@@ -307,7 +307,7 @@ def test_logout_all_emits_events_only_for_affected_providers(tmp_path: Path) -> 
             repository = workflow_state_repository()
             before = repository.load()
             path = storage_state_paths(AuthProviderKind.CLAVE_PERMANENTE).storage_state
-            _session_store.save(path, storage_state={}, metadata={"provider_kind": "clave_permanente"})
+            session_store.save(path, storage_state={}, metadata={"provider_kind": "clave_permanente"})
 
         result = _logout(all_providers=True)
         with open_test_profile_session(_PROFILE_A):

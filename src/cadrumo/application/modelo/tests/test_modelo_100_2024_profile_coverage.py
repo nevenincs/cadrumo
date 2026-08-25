@@ -12,13 +12,9 @@ import pytest
 from ....core import BindingSourceKind
 from ....core.resources import resources
 from ....domain.calculations.registry import InputKind, RegistrySnapshot
-from ....domain.user_profile import (
-    ProfileSetupState,
-    UserProfileFact,
-    UserProfileRecord,
-    load_user_profile_schema,
-    profile_binding_selectors,
-)
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.loader import load_user_profile_schema
+from ....domain.user_profile.registry_contract import profile_binding_selectors
 from .._profile_binding import profile_fact_index, resolve_profile_binding_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

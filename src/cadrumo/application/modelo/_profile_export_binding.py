@@ -19,12 +19,10 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 
 from ...domain.calculations.registry import DataBindingDefinition
-from ...domain.user_profile import (
-    ProfileNotFoundError,
-    ProfileSchemaDefinition,
-    UserProfileFactValue,
-    load_user_profile_schema,
-)
+from ...domain.user_profile.errors import ProfileNotFoundError
+from ...domain.user_profile.schema import ProfileSchemaDefinition
+from ...domain.user_profile.values import UserProfileFactValue
+from ...domain.user_profile.loader import load_user_profile_schema
 from ..filing import DeclarationContactFacts, PresenterIdentity, TaxpayerIdentityFacts
 
 # Intra-package reuse of this package's own resolver internals, which the

@@ -3,7 +3,7 @@
 Three properties are load-bearing here and each is gated separately:
 
 * the record cannot serialize by any ordinary route, exactly like
-  :class:`~cadrumo.application.ledger.EvidenceInput` -- a transcription of an
+  :class:`~cadrumo.application.ledger.evidence_input.EvidenceInput` -- a transcription of an
   invoice is the invoice in readable form, and the secure-storage rule names
   "on-disk caches" among what the in-memory processing exemption does not reach;
 * the ONE sanctioned durable route roundtrips with strict equality, so the
@@ -29,7 +29,7 @@ from pydantic import ValidationError
 from pydantic_core import PydanticSerializationError
 
 from ....core import LOCAL_TRANSPORT_LABEL, FieldOrigin
-from .._document_transcription import (
+from ..document_transcription import (
     ACQUISITION_ORIGINS,
     DocumentTranscription,
     TranscriberIdentity,

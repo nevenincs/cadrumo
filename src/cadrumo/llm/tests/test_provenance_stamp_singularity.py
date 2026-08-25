@@ -186,7 +186,7 @@ def test_no_transcriber_identity_folds_its_transport_into_a_name() -> None:
     from parts would satisfy any source-level pattern while storing the same
     smuggled shape.
     """
-    from ...application.ledger import text_layer_transcriber_identity
+    from ...application.ledger.evidence_textlayer import text_layer_transcriber_identity
     from ...core import LOCAL_TRANSPORT_LABEL
     from .._evidence_draft_vision import LocalVisionDocumentTranscriber
 

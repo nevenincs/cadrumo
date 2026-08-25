@@ -18,7 +18,7 @@ codes, exit codes -- never on prose, which is localised.
 See Also:
     :func:`~entrypoints.cli._ledger_evidence_batch_cli.register_evidence_batch_command`
         The surface under test.
-    :func:`~application.ledger.run_evidence_batch`
+    :func:`~application.ledger.batch_ingest.run_evidence_batch`
         The run it projects.
 """
 
@@ -30,15 +30,8 @@ from pathlib import Path
 
 import pytest
 
-from ....application.ledger import (
-    BatchItemResult,
-    BatchRunResult,
-    InferencePause,
-    LedgerPreconditionCondition,
-    UnresolvedBatchSource,
-    batch_item_identity,
-    ledger_no_recovery_verdict,
-)
+from ....application.ledger.batch_ingest import BatchItemResult, BatchRunResult, InferencePause, UnresolvedBatchSource, batch_item_identity
+from ....application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 from ....application.operator_actions import ConditionEvidence, PreconditionVerdict
 from ....application.provisioning import ProvisioningPreconditionCondition
 from ....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome

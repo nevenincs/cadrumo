@@ -18,13 +18,10 @@ from ...domain.calculations.registry import (
     ValidatedRegistryAuthority,
     build_profile_grounding_index,
 )
-from ...domain.user_profile import (
-    ProfileSchemaDefinition,
-    UserProfileNotFoundError,
-    UserProfileRecord,
-    profile_field_label,
-    section_field_key,
-)
+from ...domain.user_profile.schema import ProfileSchemaDefinition
+from ...domain.user_profile.errors import UserProfileNotFoundError
+from ...domain.user_profile.values import UserProfileRecord, section_field_key
+from ...domain.user_profile.labels import profile_field_label
 from .commands import (
     ProfilePreflightReport,
     ProfilePreflightRequirement,
@@ -54,7 +51,7 @@ def build_profile_preflight_requirement(
     implementations.
 
     ``path`` is reduced to its declared ``section.field`` form via
-    :func:`~domain.user_profile.section_field_key` before lookup, so a
+    :func:`~domain.user_profile.values.section_field_key` before lookup, so a
     repeatable-row path (``activities.0.iae_epigraph``) and a bare
     non-dotted validation code both resolve correctly. The label is the
     locale-catalogue operator label (falling back to the field's declared

@@ -25,7 +25,7 @@ import pytest
 
 from ....core import Modelo
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
-from ....domain.user_profile import UserProfileFact
+from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import set_active_test_profile_facts
 from .._minimo_descendientes_advisory import collect_descendientes_count_desync_diagnostics
 from ._advisory_bucket_fixture import _bucket  # noqa: F401

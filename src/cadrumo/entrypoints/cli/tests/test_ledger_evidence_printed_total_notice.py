@@ -15,7 +15,7 @@ Drives the real Typer CLI tree, a real encrypted bucket session, and a real
 reportlab-generated text-bearing PDF. No mocks.
 
 See Also:
-    :class:`~application.ledger.PrintedTotalDiscrepancy`
+    :class:`~application.ledger.evidence_draft.PrintedTotalDiscrepancy`
         The record the notice is projected from.
     :func:`~entrypoints.cli._ledger_evidence_cli._run_evidence_confirm`
         CLI runner that emits the notice.

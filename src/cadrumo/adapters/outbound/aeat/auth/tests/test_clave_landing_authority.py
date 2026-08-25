@@ -23,8 +23,8 @@ import pytest
 
 from ......core.config import Settings
 from ......domain.calculations.registry import canonical_remote_hostname
-from .._clave_movil import ClaveMovilAuthProvider
-from .._clave_permanente import ClavePermanenteAuthProvider
+from ..clave_movil import ClaveMovilAuthProvider
+from ..clave_permanente import ClavePermanenteAuthProvider
 from ._clave_movil_support import _DOMAINS, _aeat_url
 from ._clave_movil_support import _settings_for as _movil_settings_for
 from ._clave_permanente_support import _settings_for as _permanente_settings_for

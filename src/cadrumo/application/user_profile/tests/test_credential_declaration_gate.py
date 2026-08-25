@@ -52,15 +52,8 @@ from typing import TYPE_CHECKING, Final
 import pytest
 
 from ....core.classification import SensitivityClass
-from ....domain.user_profile import (
-    ProfileFieldDefinition,
-    ProfileFieldType,
-    ProfileRemovePolicy,
-    ProfileSchemaDefinition,
-    ProfileSectionDefinition,
-    ProfileSnapshotPolicy,
-    load_user_profile_schema,
-)
+from ....domain.user_profile.schema import ProfileFieldDefinition, ProfileFieldType, ProfileRemovePolicy, ProfileSchemaDefinition, ProfileSectionDefinition, ProfileSnapshotPolicy
+from ....domain.user_profile.loader import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

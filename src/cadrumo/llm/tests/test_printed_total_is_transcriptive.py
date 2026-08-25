@@ -6,7 +6,7 @@ figure are different facts: the reader's job is to record what the page states,
 and deriving the arithmetically correct total belongs to
 :func:`~application.invoices.build_catalogue_invoice`, whose disagreement with
 the printed figure is reported by
-:func:`~application.ledger.printed_total_discrepancy`. Two authorities, one each.
+:func:`~application.ledger.evidence_draft.printed_total_discrepancy`. Two authorities, one each.
 
 **So the value this stage must not touch is exactly the one it would be most
 tempted to fix.** A document whose printed total does not equal the sum of its
@@ -25,7 +25,7 @@ authored to agree with itself could not fail on the defect that is actually
 planted in the corpus, so the divergent pair is used as the corpus states it.
 
 See Also:
-    :class:`~application.ledger.InvoiceDraft`
+    :class:`~application.ledger.evidence_draft.InvoiceDraft`
         The record whose total this pins as transcriptive.
 """
 
