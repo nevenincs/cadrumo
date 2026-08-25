@@ -50,8 +50,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.application.operator_surface import MOUNTED_COMMAND_FAMILIES, FamilyMountState
 from cadrumo.core.external_constants import UTF_8_ENCODING
-from dev._paths import REPO_ROOT
 
+from .._paths import REPO_ROOT
 from ._ast_scanner import declares_locale_keys, scan_source_text
 from ._errors import LocaleError
 from .manager import LocaleManager, _parse_locale

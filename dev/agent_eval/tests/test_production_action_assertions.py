@@ -9,8 +9,9 @@ from cadrumo.application.modelo import build_modelo_precondition_failure
 from cadrumo.application.operator_actions import no_action_precondition_verdict
 from cadrumo.core import ActionEvidenceProvenance, NoRecoveryOutcome
 from cadrumo.core.json_contract import EnvelopeStatus
-from dev.agent_eval._action_coverage import LeafConditionScenario, production_leaf_condition_scenario_matrix
-from dev.agent_eval._models import (
+
+from .._action_coverage import LeafConditionScenario, production_leaf_condition_scenario_matrix
+from .._models import (
     ExitCodeScenario,
     ExitCodeVerdict,
     ObservedProductionActionAssertion,

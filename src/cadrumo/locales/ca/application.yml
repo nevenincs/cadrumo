@@ -406,12 +406,6 @@ application:
           de dada declarat al registre.
         text_casilla_not_string: L'entrada de text de la casilla ha de ser un valor
           de text.
-    calculate:
-      errors:
-        repair_hints_forbidden: Les indicacions de correcció només s'accepten quan
-          hi ha bloquejos per resoldre.
-        repair_hints_required: Calen indicacions de correcció quan hi ha bloquejos
-          per resoldre.
     complementaria:
       errors:
         justificante_csv_absent: La complementària requereix el CSV del justificant

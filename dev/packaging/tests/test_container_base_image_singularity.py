@@ -36,8 +36,7 @@ import re
 
 import pytest
 
-from dev._paths import REPO_ROOT
-
+from ..._paths import REPO_ROOT
 from .._base_image import dockerfile_path, linux_base_image
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

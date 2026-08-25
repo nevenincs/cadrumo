@@ -390,10 +390,6 @@ ignore_imports =
     cadrumo.application.tests.** -> cadrumo.adapters.**
     cadrumo.application.**.tests.** -> cadrumo.adapters.**
     cadrumo.application.**.tests.** -> cadrumo.entrypoints.**
-    # The inbound TUI screens are driven end-to-end by their own tests through
-    # the CLI frontend that composes them — the same fixture pattern one layer
-    # further out.
-    cadrumo.adapters.**.tests.** -> cadrumo.entrypoints.**
     cadrumo.core.tests.** -> cadrumo.domain.**
     cadrumo.core.**.tests.** -> cadrumo.domain.**
     cadrumo.core.tests.** -> cadrumo.application.**

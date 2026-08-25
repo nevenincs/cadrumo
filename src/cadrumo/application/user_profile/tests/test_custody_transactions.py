@@ -735,6 +735,7 @@ def test_create_orchestration_journals_stages_verifies_and_publishes_pointer_las
         sentinel=sentinel,
         data_files=data_files,
         label="Custody operator",
+        publication_kind="restore",
         transaction_id=transaction_id,
         now=_INSTANT,
     )
@@ -819,6 +820,7 @@ def test_create_recovery_refuses_a_label_claimed_while_its_real_stage_waited(tmp
         sentinel=sentinel,
         data_files=data_files,
         label="CRASH LABEL",
+        publication_kind="restore",
         now=_INSTANT,
     )
 

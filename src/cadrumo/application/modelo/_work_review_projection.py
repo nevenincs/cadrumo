@@ -37,6 +37,7 @@ from ...domain.calculations.registry import (
     relation_consumption_index,
     relations_by_target_binding,
     revision_date_binding_ids,
+    select_revision,
     xml_dictionary_entries,
 )
 from ...domain.filing import ModeloScalar, ModeloValueKind
@@ -518,7 +519,18 @@ def build_modelo_work_review(
 ) -> ModeloWorkReview:
     """Assemble the sole read record for a persisted modelo work target."""
     resolved_authority = authority or bundled_authority()
-    snapshot = resolved_authority.snapshot(modelo, filing_year=filing_year, period=period.registry_token)
+    selected_revision = select_revision(
+        resolved_authority.validate_modelo(modelo),
+        filing_year=filing_year,
+        period=period.registry_token,
+    )
+    snapshot = resolved_authority.snapshot(
+        modelo,
+        filing_year=filing_year,
+        period=period.registry_token,
+        revision_id=selected_revision.id,
+        grade=selected_revision.effective_authority_grade,
+    )
     work_repo = work_unit_repository
     calculation_repo = calculation_repository
     verification_repo = verification_repository

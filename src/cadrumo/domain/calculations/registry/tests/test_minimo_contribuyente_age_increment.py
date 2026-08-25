@@ -31,6 +31,7 @@ from .....core.resources import bundled_path
 from .. import RegistrySnapshot, build_snapshot
 from .._formula_runtime import calculate_registry_snapshot
 from .._loader import load_registry_tree
+from ._modelo_100_registry_support import _m100_2024_deduccion_maternidad_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -104,7 +105,7 @@ def _calc_2024(birth_date: date) -> Mapping[CasillaId, Decimal]:
             "renta-2024-profile-incremento-guarderia": Decimal("0"),
             "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
             "renta-2024-profile-descendientes-guarderia": Decimal("0"),
-            "renta-2024-profile-deduccion-maternidad": Decimal("0"),
+            **_m100_2024_deduccion_maternidad_bindings(),
             "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
             "renta-2024-profile-marriage-full-year": Decimal("0"),

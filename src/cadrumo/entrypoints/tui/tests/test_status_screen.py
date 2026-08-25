@@ -23,12 +23,12 @@ import pytest
 import yaml
 from textual.widgets import DataTable, Static
 
-from ....application.user_profile import (
+from ....application.user_profile import notice_presentation
+from ....application.user_profile.status_projection import (
     StatusAuthView,
     StatusFactRow,
     StatusPageData,
     StatusProfileRow,
-    notice_presentation,
 )
 from ....core import (
     ActionArgumentSource,

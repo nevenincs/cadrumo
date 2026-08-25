@@ -7,12 +7,11 @@ import secrets
 from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Literal, cast
+from typing import Literal
 from uuid import UUID, uuid4
 
 from pydantic import ValidationError
 
-from ...adapters.persistence.storage import custody
 from ...core import BucketPointer
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.paths import effective_storage_root
@@ -22,8 +21,10 @@ from ._custody_hold_models import ProfileCustodyRetentionOverride, hold_permits_
 from ._custody_pointer import ProfileCustodyPointerSnapshot
 from ._custody_ports import (
     ProfileCustodyEnvelopePort,
+    ProfileCustodyPort,
     ProfileCustodyRecoveryEnvelopePort,
     ProfileCustodySentinelPort,
+    profile_custody_port,
 )
 from ._custody_repository import (
     ProfileCustodyTransactionRepository,
@@ -45,6 +46,7 @@ from ._custody_transactions import (
     ProfileCustodyTransactionState,
 )
 from ._login_session import (
+    ProfileCustodySessionOwnerEffect,
     remove_profile_session_acceleration_for_custody_delete,
     revoke_live_profile_secret_for_custody_delete,
 )
@@ -81,9 +83,9 @@ class _ProfileCustodyTransactionCapability:
     a second public writer from materialising beside that boundary.
     """
 
-    def __init__(self, *, root: Path | None = None, adapters: Any | None = None) -> None:
+    def __init__(self, *, root: Path | None = None) -> None:
         self._root = effective_storage_root(root)
-        self._adapters: Any = adapters if adapters is not None else custody
+        self._adapters: ProfileCustodyPort = profile_custody_port()
         self._repository = ProfileCustodyTransactionRepository(root=self._root)
         self._holds = ProfileCustodyHoldAuthority(root=self._root)
 
@@ -124,7 +126,7 @@ class _ProfileCustodyTransactionCapability:
                 )
             if not hold_permits_local_deletion(hold_assessment, retention_override=retention_override):
                 raise ProfileCustodyTransactionRefusalError("a legal or filing hold blocks local profile deletion")
-            inventory = self._adapters.inventory_committed_profile_custody_capsule(profile_id, root=self._root)
+            inventory = self._adapters.inventory_committed(profile_id, root=self._root)
             journal = ProfileCustodyTransactionJournal.create(
                 transaction_id=transaction,
                 operation=ProfileCustodyTransactionOperation.DELETE,
@@ -163,12 +165,12 @@ class _ProfileCustodyTransactionCapability:
         only after the committed capsule is visible.  Every intermediate state
         is durable so recovery can resume at the last verified boundary.
         """
-        if publication_kind == "enroll" and recovery_envelope is None:
-            raise ProfileCustodyTransactionRefusalError("profile enrollment publication requires a recovery envelope")
         if password_envelope.profile_id != profile_id or sentinel.profile_id != profile_id:
             raise ProfileCustodyTransactionRefusalError("create custody material does not bind its target profile")
+        if publication_kind == "enroll" and recovery_envelope is None:
+            raise ProfileCustodyTransactionRefusalError("profile enrollment publication requires a recovery envelope")
         try:
-            label_record = self._adapters.ProfileCustodyCapsuleLabel.create(
+            label_record = self._adapters.create_capsule_label(
                 profile_id=profile_id,
                 label=label,
             )
@@ -177,7 +179,7 @@ class _ProfileCustodyTransactionCapability:
             raise ProfileCustodyTransactionRefusalError("profile capsule label is invalid") from exc
         transaction = transaction_id or uuid4()
         instant = (now or _utc_now()).astimezone(UTC)
-        staged_relative_path = self._adapters.profile_custody_staging_path(
+        staged_relative_path = self._adapters.staging_path(
             profile_id=profile_id,
             transaction_id=transaction,
             root=self._root,
@@ -200,26 +202,21 @@ class _ProfileCustodyTransactionCapability:
                 staged_relative_path=staged_relative_path,
             )
             self._repository.create_journal(journal)
-            self._adapters.publish_profile_custody_capsule(
+            self._adapters.stage_capsule(
                 profile_id=profile_id,
                 transaction_id=transaction,
                 publication_kind=publication_kind,
-                password_envelope=cast(Any, password_envelope),
-                sentinel=cast(Any, sentinel),
-                data_files={
-                    **data_files,
-                    self._adapters.PROFILE_CUSTODY_LABEL_FILENAME: label_record.canonical_json_bytes(),
-                },
-                recovery_envelope=cast(Any, recovery_envelope),
+                password_envelope=password_envelope,
+                sentinel=sentinel,
+                data_files=data_files,
+                label_record=label_record,
+                recovery_envelope=recovery_envelope,
                 root=self._root,
                 published_at=instant,
-                stage_only=True,
                 stage_initializer=stage_initializer,
             )
             inventory = ProfileCustodyInventoryWitness.from_inventory(
-                self._adapters.inventory_staged_profile_custody_capsule(
-                    profile_id=profile_id, transaction_id=transaction, root=self._root
-                )
+                self._adapters.inventory_staged(profile_id=profile_id, transaction_id=transaction, root=self._root)
             )
             verified = journal.with_update(
                 state=ProfileCustodyTransactionState.STAGE_VERIFIED,
@@ -244,7 +241,7 @@ class _ProfileCustodyTransactionCapability:
         recovery form, a matching profile is accepted only when its durable
         commit names this transaction; an unrelated commit is a conflict.
         """
-        for existing_profile_id in self._adapters.list_current_profile_custody_capsule_ids(root=self._root):
+        for existing_profile_id in self._adapters.list_committed_profile_ids(root=self._root):
             if existing_profile_id == profile_id:
                 if allow_existing_profile:
                     continue
@@ -252,16 +249,14 @@ class _ProfileCustodyTransactionCapability:
                     raise ProfileCustodyTransactionConflictError(
                         "profile UUID already names a committed custody capsule"
                     )
-                material = self._adapters.load_committed_profile_password_material(existing_profile_id, root=self._root)
+                material = self._adapters.load_password_material(existing_profile_id, root=self._root)
                 if material.commit.transaction_id != transaction_id:
                     raise ProfileCustodyTransactionConflictError(
                         "profile UUID is now committed by another custody transaction"
                     )
                 continue
             try:
-                existing_label = self._adapters.load_committed_profile_custody_label_record(
-                    existing_profile_id, root=self._root
-                )
+                existing_label = self._adapters.load_committed_capsule_label(existing_profile_id, root=self._root)
             except Exception as exc:
                 raise ProfileCustodyTransactionCorruptError(
                     "committed profile capsule has no valid label projection"
@@ -283,7 +278,7 @@ class _ProfileCustodyTransactionCapability:
     def _verify_staged_create_label(self, journal: ProfileCustodyTransactionJournal) -> None:
         """Bind journal intent to the exact label covered by the stage inventory."""
         assert journal.label is not None
-        staged_label = self._adapters.load_staged_profile_custody_label_record(
+        staged_label = self._adapters.load_staged_capsule_label(
             journal.profile_id,
             journal.transaction_id,
             root=self._root,
@@ -359,7 +354,7 @@ class _ProfileCustodyTransactionCapability:
         """
         current = ProfileCustodyPointerSnapshot.capture(self._root)
         stage = self._create_stage_path(journal)
-        final = self._adapters.recognize_current_profile_capsule(journal.profile_id, root=self._root)
+        final = self._adapters.committed_capsule_path(journal.profile_id, root=self._root)
         if os.path.lexists(stage) and final is not None:
             raise ProfileCustodyTransactionConflictError("create recovery found both its stage and final capsule")
         if final is None and not os.path.lexists(stage):
@@ -374,7 +369,7 @@ class _ProfileCustodyTransactionCapability:
             raise ProfileCustodyTransactionConflictError("create final capsule lacks its verified journal state")
         try:
             inventory = ProfileCustodyInventoryWitness.from_inventory(
-                self._adapters.inventory_staged_profile_custody_capsule(
+                self._adapters.inventory_staged(
                     profile_id=journal.profile_id, transaction_id=journal.transaction_id, root=self._root
                 )
             )
@@ -411,17 +406,17 @@ class _ProfileCustodyTransactionCapability:
         assert journal.proposed_custody_digest is not None
         self._refuse_duplicate_label_publication_under_root_lock(journal)
         stage = self._create_stage_path(journal)
-        final = self._adapters.recognize_current_profile_capsule(journal.profile_id, root=self._root)
+        final = self._adapters.committed_capsule_path(journal.profile_id, root=self._root)
         if os.path.lexists(stage) and final is None:
             inventory = ProfileCustodyInventoryWitness.from_inventory(
-                self._adapters.inventory_staged_profile_custody_capsule(
+                self._adapters.inventory_staged(
                     profile_id=journal.profile_id, transaction_id=journal.transaction_id, root=self._root
                 )
             )
             if inventory.digest != journal.proposed_custody_digest:
                 raise ProfileCustodyTransactionConflictError("verified create stage differs from its journal")
             self._verify_staged_create_label(journal)
-            self._adapters.publish_staged_profile_custody_capsule(
+            self._adapters.publish_staged(
                 profile_id=journal.profile_id, transaction_id=journal.transaction_id, root=self._root
             )
             published = journal.with_update(state=ProfileCustodyTransactionState.CAPSULE_PUBLISHED, updated_at=instant)
@@ -720,11 +715,11 @@ class _ProfileCustodyTransactionCapability:
             return journal
         assert journal.inventory is not None
         inventory = ProfileCustodyInventoryWitness.from_inventory(
-            self._adapters.inventory_committed_profile_custody_capsule(journal.profile_id, root=self._root)
+            self._adapters.inventory_committed(journal.profile_id, root=self._root)
         )
         if inventory != journal.inventory:
             raise ProfileCustodyTransactionConflictError("profile capsule inventory changed after delete preflight")
-        self._adapters.write_profile_custody_deletion_marker(
+        self._adapters.write_deletion_marker(
             profile_id=journal.profile_id,
             transaction_id=journal.transaction_id,
             inventory_digest=journal.inventory.digest,
@@ -789,13 +784,13 @@ class _ProfileCustodyTransactionCapability:
         """Verify and remove the tombstone, then persist ``LOCAL_REMOVED``."""
         if journal.state is not ProfileCustodyTransactionState.POINTER_CLEARED:
             return journal
-        tombstone = self._adapters.profile_custody_deletion_path(
+        tombstone = self._adapters.deletion_path(
             profile_id=journal.profile_id,
             transaction_id=journal.transaction_id,
             root=self._root,
         )
         if os.path.lexists(tombstone):
-            self._adapters.verify_profile_custody_deletion_tombstone(
+            self._adapters.verify_deletion_tombstone(
                 profile_id=journal.profile_id,
                 transaction_id=journal.transaction_id,
                 inventory_digest=inventory_digest,
@@ -803,7 +798,7 @@ class _ProfileCustodyTransactionCapability:
             )
         else:
             self._verify_source_delete_marker(journal)
-            tombstone = self._adapters.rename_profile_custody_capsule_for_deletion(
+            tombstone = self._adapters.rename_capsule_for_deletion(
                 profile_id=journal.profile_id,
                 transaction_id=journal.transaction_id,
                 root=self._root,
@@ -824,13 +819,13 @@ class _ProfileCustodyTransactionCapability:
     ) -> ProfileCustodyTransactionJournal:
         if journal.state is not ProfileCustodyTransactionState.CAPSULE_RENAMED:
             return journal
-        self._adapters.verify_profile_custody_deletion_tombstone(
+        self._adapters.verify_deletion_tombstone(
             profile_id=journal.profile_id,
             transaction_id=journal.transaction_id,
             inventory_digest=inventory_digest,
             root=self._root,
         )
-        self._adapters.remove_profile_custody_deletion_tombstone(
+        self._adapters.remove_deletion_tombstone(
             profile_id=journal.profile_id,
             transaction_id=journal.transaction_id,
             root=self._root,
@@ -871,14 +866,14 @@ class _ProfileCustodyTransactionCapability:
         match the journal's transaction, generation, label, and custody digest.
         """
         stage = self._create_stage_path(journal)
-        committed = self._adapters.recognize_current_profile_capsule(journal.profile_id, root=self._root)
+        committed = self._adapters.committed_capsule_path(journal.profile_id, root=self._root)
         if os.path.lexists(stage) and committed is not None:
             raise ProfileCustodyTransactionConflictError("create recovery found both its stage and final capsule")
         if committed is None:
             return None
         self._validate_current_create_material(journal)
         inventory = ProfileCustodyInventoryWitness.from_inventory(
-            self._adapters.inventory_committed_profile_custody_capsule(journal.profile_id, root=self._root)
+            self._adapters.inventory_committed(journal.profile_id, root=self._root)
         )
         if inventory.digest != journal.proposed_custody_digest:
             raise ProfileCustodyTransactionConflictError("published create custody digest differs from its journal")
@@ -886,7 +881,7 @@ class _ProfileCustodyTransactionCapability:
 
     def _validate_current_create_material(self, journal: ProfileCustodyTransactionJournal) -> None:
         """Check the commit, password generation, and label against the journal."""
-        material = self._adapters.load_committed_profile_password_material(journal.profile_id, root=self._root)
+        material = self._adapters.load_password_material(journal.profile_id, root=self._root)
         if material.commit.transaction_id != journal.transaction_id:
             raise ProfileCustodyTransactionConflictError("final capsule was not published by this create transaction")
         if material.envelope.password_generation != journal.proposed_generation:
@@ -894,19 +889,15 @@ class _ProfileCustodyTransactionCapability:
                 "final capsule password generation differs from create journal"
             )
         assert journal.label is not None
-        if (
-            self._adapters.load_committed_profile_custody_label_record(journal.profile_id, root=self._root).label
-            != journal.label
-        ):
+        if self._adapters.load_committed_capsule_label(journal.profile_id, root=self._root).label != journal.label:
             raise ProfileCustodyTransactionConflictError("published create label differs from its journal")
 
     def _create_stage_path(self, journal: ProfileCustodyTransactionJournal) -> Path:
         assert journal.staged_relative_path is not None
-        expected = cast(
-            Path,
-            self._adapters.profile_custody_staging_path(
-                profile_id=journal.profile_id, transaction_id=journal.transaction_id, root=self._root
-            ),
+        expected = self._adapters.staging_path(
+            profile_id=journal.profile_id,
+            transaction_id=journal.transaction_id,
+            root=self._root,
         )
         if journal.staged_relative_path != expected.name:
             raise ProfileCustodyTransactionConflictError(
@@ -918,7 +909,7 @@ class _ProfileCustodyTransactionCapability:
         """Authenticate the prepared deletion marker before each destructive step."""
         assert journal.inventory is not None
         try:
-            self._adapters.verify_profile_custody_deletion_marker(
+            self._adapters.verify_deletion_marker(
                 profile_id=journal.profile_id,
                 transaction_id=journal.transaction_id,
                 inventory_digest=journal.inventory.digest,
@@ -936,7 +927,7 @@ class _ProfileCustodyTransactionCapability:
         *,
         owner: Literal["process-secret-revocation", "local-session-acceleration"],
         error_message: str,
-        produce: Callable[[], Any],
+        produce: Callable[[], ProfileCustodySessionOwnerEffect],
     ) -> None:
         """Persist one idempotent owner effect after its real adapter succeeds."""
         if self._repository.load_owner_receipt(journal.transaction_id, owner) is not None:

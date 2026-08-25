@@ -20,10 +20,11 @@ from contextlib import ExitStack, contextmanager
 from pathlib import Path
 
 from cadrumo.application.user_profile import logout_active_profile
+from cadrumo.core.config import load_settings
 
 WORKSPACE_ENV_VAR = "CADRUMO_TUI_WORKSPACE"
 
-_STATE_ROOT = Path(__file__).resolve().parent / ".state"
+_STATE_ROOT = load_settings().cadrumo_local_storage_root / "devtools" / "tui"
 
 
 def workspace() -> Path:
@@ -61,14 +62,16 @@ def passphrase() -> str:
 
 
 @contextmanager
-def harness_storage(*, fresh: bool = False) -> Iterator[Path]:
+def harness_storage(*, fresh: bool = False, namespace: str = "profile") -> Iterator[Path]:
     """Enter the harness's own storage root for the duration of a block.
 
     The devtool owns this isolated configuration seam rather than importing a
     test helper. Its persistent root is still caller-private and encrypted;
     the context simply makes that root the active application configuration.
     """
-    root = workspace() / ("fresh" if fresh else "profile")
+    if not namespace.strip():
+        raise ValueError("devtool storage namespace must not be blank")
+    root = workspace() / ("fresh" if fresh else namespace)
     root.mkdir(parents=True, exist_ok=True)
     with _harness_storage_scope(root) as storage_root:
         yield storage_root

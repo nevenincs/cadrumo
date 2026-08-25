@@ -16,10 +16,6 @@ def config_status(
 ) -> None:
     """Show the readiness of the current configuration profile."""
     _activate_output_language(ctx, output_language)
-    from ._status_frontend import present_status_tui
-
-    if present_status_tui(ctx):
-        return
     from pydantic import ValidationError
 
     from ....application.user_profile import record_to_path_values

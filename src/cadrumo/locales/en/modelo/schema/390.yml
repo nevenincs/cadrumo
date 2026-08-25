@@ -844,47 +844,6 @@ modelo:
             help: null
             label: Deductible VAT under a final administrative decision or court judgment
               at rates no longer in force - deductible VAT amount
-          iva-operaciones-especificas-adquisiciones-interiores-exentas:
-            help: null
-            label: Specific operations - Exempt domestic acquisitions [230]
-          iva-operaciones-especificas-adquisiciones-intracomunitarias-exentas:
-            help: null
-            label: Specific operations - Exempt intra-Community acquisitions [109]
-          iva-operaciones-especificas-base-iva-soportado-no-deducible:
-            help: null
-            label: Specific operations - Taxable base of non-deductible input VAT
-              [232]
-          iva-operaciones-especificas-criterio-caja-adquisiciones-base:
-            help: null
-            label: Specific operations - Acquisitions of goods under the cash accounting
-              scheme - Taxable base [656]
-          iva-operaciones-especificas-criterio-caja-adquisiciones-cuota:
-            help: null
-            label: Specific operations - Acquisitions of goods under the cash accounting
-              scheme - VAT amount [657]
-          iva-operaciones-especificas-criterio-caja-entregas-base:
-            help: null
-            label: Specific operations - Supplies of goods under the cash accounting
-              scheme - Taxable base [654]
-          iva-operaciones-especificas-criterio-caja-entregas-cuota:
-            help: null
-            label: Specific operations - Supplies of goods under the cash accounting
-              scheme - VAT amount [655]
-          iva-operaciones-especificas-entrega-interior-inversion-triangular:
-            help: null
-            label: Specific operations - Domestic supplies of goods charged under
-              the reverse charge in triangular transactions [113]
-          iva-operaciones-especificas-importaciones-exentas:
-            help: null
-            label: Specific operations - Exempt imports [231]
-          iva-operaciones-especificas-operaciones-derecho-devolucion-mensual:
-            help: null
-            label: Specific operations - Taxed operations giving rise to the monthly
-              refund entitlement [111]
-          iva-operaciones-especificas-servicios-tai-inversion-sujeto-pasivo:
-            help: null
-            label: Specific operations - Services located in the Spanish VAT territory
-              under the reverse charge [523]
           iva-isp-interior-base:
             help: null
             label: Taxable base of accrued reverse-charge VAT on domestic transactions
@@ -951,6 +910,62 @@ modelo:
             help: null
             label: Adjustment of equivalence surcharge taxable bases and amounts -
               surcharge amount
+          iva-operaciones-especificas-adquisiciones-interiores-exentas:
+            help: null
+            label: Specific operations - Exempt domestic acquisitions [230]
+          iva-operaciones-especificas-adquisiciones-intracomunitarias-exentas:
+            help: null
+            label: Specific operations - Exempt intra-Community acquisitions [109]
+          iva-operaciones-especificas-base-iva-soportado-no-deducible:
+            help: null
+            label: Specific operations - Taxable base of non-deductible input VAT
+              [232]
+          iva-operaciones-especificas-criterio-caja-adquisiciones-base:
+            help: null
+            label: Specific operations - Acquisitions of goods under the cash accounting
+              scheme - Taxable base [656]
+          iva-operaciones-especificas-criterio-caja-adquisiciones-cuota:
+            help: null
+            label: Specific operations - Acquisitions of goods under the cash accounting
+              scheme - VAT amount [657]
+          iva-operaciones-especificas-criterio-caja-entregas-base:
+            help: null
+            label: Specific operations - Supplies of goods under the cash accounting
+              scheme - Taxable base [654]
+          iva-operaciones-especificas-criterio-caja-entregas-cuota:
+            help: null
+            label: Specific operations - Supplies of goods under the cash accounting
+              scheme - VAT amount [655]
+          iva-operaciones-especificas-entrega-interior-inversion-triangular:
+            help: null
+            label: Specific operations - Domestic supplies of goods charged under
+              the reverse charge in triangular transactions [113]
+          iva-operaciones-especificas-importaciones-exentas:
+            help: null
+            label: Specific operations - Exempt imports [231]
+          iva-operaciones-especificas-operaciones-derecho-devolucion-mensual:
+            help: null
+            label: Specific operations - Taxed operations giving rise to the monthly
+              refund entitlement [111]
+          iva-operaciones-especificas-servicios-tai-inversion-sujeto-pasivo:
+            help: null
+            label: Specific operations - Services located in the Spanish VAT territory
+              under the reverse charge [523]
+          iva-recargo-equivalencia-tipo-0-5-base:
+            help: null
+            label: Equivalence surcharge at the 0.5% rate - taxable base
+          iva-recargo-equivalencia-tipo-1-4-base:
+            help: null
+            label: Equivalence surcharge at the 1.4% rate - taxable base
+          iva-recargo-equivalencia-tipo-1-75-base:
+            help: null
+            label: Equivalence surcharge at the 1.75% rate - taxable base
+          iva-recargo-equivalencia-tipo-1-75-cuota:
+            help: null
+            label: Equivalence surcharge at the 1.75% rate - surcharge amount
+          iva-recargo-equivalencia-tipo-5-2-base:
+            help: null
+            label: Equivalence surcharge at the 5.2% rate - taxable base
           iva-regularizacion-cuotas-art-80-cinco-5:
             help: null
             label: Adjustment of VAT amounts under LIVA art. 80.Five.5
@@ -1123,21 +1138,6 @@ modelo:
           iva-repercutido-intragrupo-tipo-7-5-cuota:
             help: null
             label: Output VAT on intra-group transactions at the 7.5% rate - VAT amount
-          iva-recargo-equivalencia-tipo-0-5-base:
-            help: null
-            label: Equivalence surcharge at the 0.5% rate - taxable base
-          iva-recargo-equivalencia-tipo-1-4-base:
-            help: null
-            label: Equivalence surcharge at the 1.4% rate - taxable base
-          iva-recargo-equivalencia-tipo-1-75-base:
-            help: null
-            label: Equivalence surcharge at the 1.75% rate - taxable base
-          iva-recargo-equivalencia-tipo-1-75-cuota:
-            help: null
-            label: Equivalence surcharge at the 1.75% rate - surcharge amount
-          iva-recargo-equivalencia-tipo-5-2-base:
-            help: null
-            label: Equivalence surcharge at the 5.2% rate - taxable base
           iva-resultado-liquidacion:
             help: null
             label: Result of the assessment

@@ -51,8 +51,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Final
 
-from dev._paths import UTF_8
-
+from .._paths import UTF_8
 from ..packaging._command import run_command
 
 _GH_TIMEOUT_SECONDS: Final[float] = 60.0

@@ -149,6 +149,13 @@ article = "DF unica"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-27528#df"
 published_at = 2024-12-31
 effective_from = 2025-01-01
+# Retroactive reach, stated by this disposicion final and by the bundled corpus
+# ("ejercicio 2024, que se presentaran en el ejercicio 2025"): the Orden enters
+# force in 2025 while governing the ejercicio 2024 informativas. Without it the
+# citation is judged against the in-force window alone and refused, though it
+# grounds exactly these periods.
+governs_periods_from = 2024-01-01
+governs_periods_to = 2024-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"

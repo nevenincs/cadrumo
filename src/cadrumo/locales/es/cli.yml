@@ -482,18 +482,17 @@ cli:
           No está confirmado si esa lista se limita al NIF autenticado, por lo que
           solo amplía el recorrido: un par ausente de ella no prueba que no se presentara
           nada.'
-        limit_reached: 'La pasada se ha detenido en el --limit de {limit} tras alcanzar
-          {reached} declaración(es); los pares posteriores no se han recorrido. La
-          ausencia de un par no prueba que no se presentara nada: vuelva a ejecutar
-          la orden con un --limit mayor o sin él.'
+        limit_reached_factual: El barrido se detuvo en el --limit de {limit} tras
+          alcanzar {reached} declaración(es); no se recorrieron los pares posteriores.
+          La ausencia de un par no demuestra que no se presentara nada.
         list_help: Listar declaraciones presentadas sin descargar artefactos
         pull_all_help: Descarga en una sola pasada el historial de declaraciones presentadas
           ante la AEAT y detalla lo encontrado.
         pull_all_limit_help: Número máximo de pares de modelo y ejercicio que se recorrerán
           en esta pasada.
-        pull_all_pairs_refused: 'No se han podido leer {count} par(es) de modelo y
-          ejercicio y NO se han declarado vacíos: {pairs}. Vuelva a ejecutar la orden
-          para reintentarlo; una negativa no prueba que no se presentara nada.'
+        pull_all_pairs_refused_factual: 'No se pudieron leer {count} par(es) modelo/ejercicio
+          y NO se declararon vacíos: {pairs}. Un rechazo no demuestra que no se presentara
+          nada.'
         pull_dry_run_help: Muestra lo que capturaria esta descarga masiva sin escribir
           nada. Solo en modo masivo.
         pull_dry_run_single_mode_error: --dry-run solo es valido para una descarga
@@ -1370,6 +1369,8 @@ cli:
           de atribución (actividad económica) de su Modelo 100 (arts. 86-89 LIRPF).'
         m210_gross_income_source_help: 'Autoridad de la [5] del Modelo 210: manual
           (predeterminada) o agregación de libro mayor de fuente española.'
+        m210_plazo_resolved: 'Se resolvió el plazo de presentación del Modelo 210:
+          la presentación voluntaria finaliza el %{closes_on}.'
         m303_filing_evidence_help: Ruta al documento JSON completo de evidencias de
           presentación del modelo 303.
         m303_rectificativa_motive_help: 'Obligatorio para una rectificativa aplicable
@@ -2135,15 +2136,17 @@ cli:
         non_official_notice: Los datos derivados del certificado son evidencia aportada
           por el operador, nunca verificada por la AEAT; el alta censal permanece
           en el nivel no oficial.
+        pull_apply_help: Adquiere una vez y abre la propuesta censal exacta revisada
+          antes de aplicarla.
         pull_cleared_notice: 'La autoridad censal aún mantiene un valor para {count}
           campo(s) que borraste: {axes}. Se dejaron vacíos; borrarlos aquí no cambia
           el registro de la autoridad.'
         pull_divergences_notice: 'La autoridad censal informa de {count} campo(s)
           con valores distintos de los declarados: {axes}. Se mantiene tu respuesta;
           resuelve cada discrepancia tú mismo.'
-        pull_apply_help: Adquiere una vez y abre la propuesta censal exacta revisada antes de aplicarla.
-        pull_help: Previsualiza la identidad y el domicilio de los datos censales de la AEAT,
-          o revisa y aplica una propuesta exacta mediante la operación canónica reanudable.
+        pull_help: Previsualiza la identidad y el domicilio de los datos censales
+          de la AEAT, o revisa y aplica una propuesta exacta mediante la operación
+          canónica reanudable.
         pull_preview_notice: 'Solo previsualización: no se ha escrito nada en el perfil.'
         pull_verified_tier_notice: Estos datos se leyeron directamente de la autoridad
           censal, por lo que la incorporación al censo cuenta como verificada.
@@ -2637,6 +2640,8 @@ cli:
         LLM.
       until_help: Límite superior inclusivo (AAAA-MM-DD) en los registros de ejecuciones
         LLM.
+    llm_run_data_observed: No se registró telemetría de ejecución del LLM para este
+      informe.
     llm_usage:
       header: 'Uso de ejecuciones LLM:'
       help: Informa de los totales de uso de ejecuciones LLM (recuentos, duraciones,

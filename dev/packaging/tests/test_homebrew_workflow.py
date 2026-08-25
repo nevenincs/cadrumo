@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 import yaml
 
-from dev._paths import REPO_ROOT
+from ..._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

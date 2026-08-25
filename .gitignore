@@ -469,11 +469,6 @@ cache/
 # and is reclaimed on the next attempt if its holder died.
 /src/cadrumo/locales/.catalogue-write.lock
 
-# TUI evaluation harness: sessions, storage root, screenshots.
-src/cadrumo/entrypoints/tui/devtools/.state/
-# Retain the ignored legacy residue while concurrent harness invocations wind down.
-dev/tui/.state/
-
 # Rendered generator scratch output never enters the tree.
 dev/registry/scratch*/
 

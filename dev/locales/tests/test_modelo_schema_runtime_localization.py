@@ -24,8 +24,9 @@ from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import ModeloDefinition, load_registry_tree
 from cadrumo.domain.calculations.registry import _modelo_localization as modelo_localization
-from dev._paths import REPO_ROOT
-from dev.locales import scan_modelo_schema_keys
+
+from ..._paths import REPO_ROOT
+from .. import scan_modelo_schema_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

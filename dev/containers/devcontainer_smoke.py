@@ -39,7 +39,7 @@ if str(_REPO_ROOT) not in sys.path:
 if not __package__:
     __package__ = "dev.containers"
 
-from dev.ci.lane_reachability import resolve_just_executable  # noqa: E402
+from ..ci.lane_reachability import resolve_just_executable  # noqa: E402
 
 _VENV_ROOT = Path("/workspace/.venv")
 

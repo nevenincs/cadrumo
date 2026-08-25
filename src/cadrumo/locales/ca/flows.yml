@@ -42,7 +42,6 @@ flows:
       abandoned: Sense canvis.
       add_row: Afegir una fila
       add_row_done: S'ha afegit la fila %{index} de %{section}.
-      add_row_empty: No s'ha emplenat res, així que no s'ha afegit cap fila.
       add_row_incomplete: A la fila li manquen dades obligatòries, així que no s'ha
         desat res.
       add_row_none: Aquest esquema de perfil no declara cap secció amb files.
@@ -63,15 +62,10 @@ flows:
       censal_pull: Emplenar amb les dades censals de l'AEAT
       censal_pull_auth_incomplete: La vostra identificació és incompleta, així que
         encara no es pot llegir l'AEAT. Completeu-la primer.
-      censal_pull_cleared: 'L''AEAT encara té un valor per als camps que vau buidar:
-        %{paths}. S''han deixat buits; buidar-los aquí no canvia el registre de l''AEAT.'
-      censal_pull_contested: 'L''AEAT discrepa del que vau declarar a: %{paths}. La
-        vostra resposta es manté; resoleu cada cas vosaltres mateixos.'
-      censal_pull_done: 'Dades censals de l''AEAT llegides: %{adopted} camp(s) emplenats,
-        %{unchanged} ja coincidents, %{diverging} discrepants.'
       censal_pull_no_provider: Trieu com us identifiqueu davant l'AEAT abans de llegir
         les vostres dades censals.
-      censal_pull_review_applied: S'ha aplicat la proposta censal exacta revisada de l'AEAT.
+      censal_pull_review_applied: S'ha aplicat la proposta censal exacta revisada
+        de l'AEAT.
       censal_pull_review_rejected: S'ha rebutjat la proposta censal revisada de l'AEAT;
         el perfil no ha canviat.
       certificate: Certificat

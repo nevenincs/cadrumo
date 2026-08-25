@@ -20,7 +20,7 @@ import re
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT, UTF_8
+from .._paths import REPO_ROOT, UTF_8
 
 _ARG_PATTERN: Final = re.compile(r"^\s*ARG\s+PYTHON_BASE_IMAGE=(?P<image>\S+)\s*$", re.MULTILINE)
 _UTF_8: Final[str] = UTF_8

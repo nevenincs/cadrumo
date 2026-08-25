@@ -9,8 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
-
+from ..._paths import REPO_ROOT
 from ..cohort_manifest import REQUIRED_ARTIFACT_KINDS
 from ..release_cohort import build_release_cohort
 

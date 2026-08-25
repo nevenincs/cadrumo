@@ -211,19 +211,9 @@ def _resume_or_authenticate(
 
 
 def _interactive_authentication(ctx: typer.Context, *, bucket_id: str) -> bool:
-    from ...adapters.persistence.storage import active_bucket_session_serves
-    from ...application.user_profile import bind_resumed_profile_session
-
-    login_frontend = import_module("cadrumo.entrypoints.cli._config._login_frontend")
-    outcome = login_frontend.offer_login_to_a_gated_verb(ctx, bucket_id=bucket_id)
-    if outcome is None or outcome.bucket_id != bucket_id:
-        return False
-    if bind_resumed_profile_session(bucket_id=bucket_id) is not None:
-        return False
-    if not active_bucket_session_serves(bucket_id):
-        return False
-    bind_profile_target(ctx, bucket_id=bucket_id)
-    return True
+    """Keep a parsed CLI invocation non-interactive after a session refusal."""
+    del ctx, bucket_id
+    return False
 
 
 def authenticate_profile_for_manager(ctx: typer.Context, *, bucket_id: str) -> bool:

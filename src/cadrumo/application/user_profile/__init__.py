@@ -300,6 +300,7 @@ if TYPE_CHECKING:
     )
     from ._censal_operation import CensalReviewResponse as CensalReviewResponse
     from ._censal_operation import build_censal_operation_definition as build_censal_operation_definition
+    from ._censal_operation import build_censal_operation_registration as build_censal_operation_registration
     from ._censal_operation import build_censal_operation_request as build_censal_operation_request
     from ._censo_errors import (
         CensoSyncError as CensoSyncError,
@@ -422,7 +423,13 @@ if TYPE_CHECKING:
         ProfileCustodyBucketEventHistoryPort as ProfileCustodyBucketEventHistoryPort,
     )
     from ._custody_ports import (
+        ProfileCustodyCapsuleLabelPort as ProfileCustodyCapsuleLabelPort,
+    )
+    from ._custody_ports import (
         ProfileCustodyCapsuleSourceMaterial as ProfileCustodyCapsuleSourceMaterial,
+    )
+    from ._custody_ports import (
+        ProfileCustodyCommitPort as ProfileCustodyCommitPort,
     )
     from ._custody_ports import (
         ProfileCustodyEnvelopePort as ProfileCustodyEnvelopePort,
@@ -697,6 +704,12 @@ if TYPE_CHECKING:
     from ._login_session_port import (
         profile_session_serves_bucket as profile_session_serves_bucket,
     )
+    from ._operation_definitions import (
+        build_user_profile_operation_definitions as build_user_profile_operation_definitions,
+    )
+    from ._operation_definitions import (
+        build_user_profile_operation_registrations as build_user_profile_operation_registrations,
+    )
     from ._overview import (
         MASKED_PLACEHOLDER as MASKED_PLACEHOLDER,
     )
@@ -864,10 +877,6 @@ if TYPE_CHECKING:
     from ._section_rows import (
         section_row_facts as section_row_facts,
     )
-    from ._status_projection import StatusAuthView as StatusAuthView
-    from ._status_projection import StatusFactRow as StatusFactRow
-    from ._status_projection import StatusPageData as StatusPageData
-    from ._status_projection import StatusProfileRow as StatusProfileRow
     from ._validation import (
         COMPLETENESS_ISSUE_CODES as COMPLETENESS_ISSUE_CODES,
     )
@@ -911,7 +920,9 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfileCapsuleArchiveContentsMaterial": "._custody_ports",
     "ProfileCapsuleArchiveHeaderMaterial": "._custody_ports",
     "ProfileCustodyBucketEventHistoryPort": "._custody_ports",
+    "ProfileCustodyCapsuleLabelPort": "._custody_ports",
     "ProfileCustodyCapsuleSourceMaterial": "._custody_ports",
+    "ProfileCustodyCommitPort": "._custody_ports",
     "ProfileCustodyInventoryPort": "._custody_ports",
     "ProfileCustodyRecordSessionMaterial": "._custody_ports",
     "ProfileCustodyPasswordProofMaterialPort": "._custody_ports",
@@ -1046,10 +1057,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfileLoginThrottledError": "._login_session",
     "ProfileNotFoundError": "._profile_repository",
     "ProfileOverview": "._overview",
-    "StatusAuthView": "._status_projection",
-    "StatusFactRow": "._status_projection",
-    "StatusPageData": "._status_projection",
-    "StatusProfileRow": "._status_projection",
     "ProfilePersistedSessionPort": "._login_session_port",
     "ProfilePreflightReport": "._commands",
     "ProfilePreflightRequirement": "._commands",
@@ -1261,7 +1268,9 @@ __all__ = [
     "ProfileCapsuleSource",
     "ProfileCapsuleSourceError",
     "ProfileCustodyBucketEventHistoryPort",
+    "ProfileCustodyCapsuleLabelPort",
     "ProfileCustodyCapsuleSourceMaterial",
+    "ProfileCustodyCommitPort",
     "ProfileCustodyDeleteConfirmation",
     "ProfileCustodyEnvelopePort",
     "ProfileCustodyHoldAssessment",
@@ -1336,10 +1345,6 @@ __all__ = [
     "ProfileValidationReport",
     "ProfileValidationService",
     "ProspectiveProfilePasswordRefusal",
-    "StatusAuthView",
-    "StatusFactRow",
-    "StatusPageData",
-    "StatusProfileRow",
     "UnsupportedBundleSchemaVersionError",
     "UserProfileFact",
     "UserProfileFactValue",

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from dev.corpus.sync_aeat_record_design_corpus import check
+from ..sync_aeat_record_design_corpus import check
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

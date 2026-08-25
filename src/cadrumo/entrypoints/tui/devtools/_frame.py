@@ -21,10 +21,12 @@ from __future__ import annotations
 
 import io
 from dataclasses import dataclass, field
+from typing import Any
 
 from rich.console import Console
 from textual.app import App
 from textual.containers import ScrollableContainer
+from textual.widget import Widget
 
 
 def _widget_label(widget: object) -> str:
@@ -33,7 +35,7 @@ def _widget_label(widget: object) -> str:
     return f"{name}#{ident}" if ident else name
 
 
-def screen_text(app: App, width: int, height: int) -> str:
+def screen_text(app: App[Any], width: int, height: int) -> str:
     """The painted cells as plain text.
 
     Rendered through a recording Rich console over the app's own
@@ -52,14 +54,14 @@ def screen_text(app: App, width: int, height: int) -> str:
     return console.export_text(styles=False).rstrip("\n")
 
 
-def focus_band(app: App) -> tuple[str, list[str]]:
+def focus_band(app: App[Any]) -> tuple[str, list[str]]:
     """The focused control and the full tab cycle."""
     chain = [_widget_label(w) for w in app.screen.focus_chain]
     focused = _widget_label(app.focused) if app.focused is not None else "(nothing focused)"
     return focused, chain
 
 
-def key_band(app: App) -> list[str]:
+def key_band(app: App[Any]) -> list[str]:
     """Every binding active right now, as ``key=action`` pairs.
 
     Read from ``active_bindings`` rather than the declared ``BINDINGS``:
@@ -76,7 +78,7 @@ def key_band(app: App) -> list[str]:
     return offered
 
 
-def engine_band(app: App) -> list[str]:
+def engine_band(app: App[Any]) -> list[str]:
     """What the flow engine holds, for a surface that has one.
 
     Returns an empty list for the surfaces that are not flow-driven; they
@@ -108,7 +110,7 @@ def engine_band(app: App) -> list[str]:
     return lines
 
 
-def geometry_band(app: App, width: int) -> list[str]:
+def geometry_band(app: App[Any], width: int) -> list[str]:
     """Appearance defects, reported as readings rather than assertions.
 
     These are the same three properties the shipped visual gates prove.
@@ -119,7 +121,7 @@ def geometry_band(app: App, width: int) -> list[str]:
     offenders = [
         f"{_widget_label(w)}{w.region}"
         for w in app.screen.walk_children()
-        if getattr(w, "display", False) and (w.region.x < 0 or w.region.right > width)
+        if isinstance(w, Widget) and w.display and (w.region.x < 0 or w.region.right > width)
     ]
     if offenders:
         findings.append(f"painted past the side edges: {', '.join(offenders)}")
@@ -187,7 +189,7 @@ class Frame:
 
 
 def capture(
-    app: App,
+    app: App[Any],
     *,
     index: int,
     surface: str,

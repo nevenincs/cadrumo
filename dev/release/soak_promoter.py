@@ -32,8 +32,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from cadrumo.core import scan_directory
-from dev._paths import REPO_ROOT
 
+from .._paths import REPO_ROOT
 from ._asset_transport import (
     EvidenceLane,
     download_release_assets,

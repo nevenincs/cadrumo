@@ -41,7 +41,6 @@ flows:
       abandoned: Sin cambios.
       add_row: Añadir una fila
       add_row_done: Se ha añadido la fila %{index} de %{section}.
-      add_row_empty: No se ha rellenado nada, así que no se ha añadido ninguna fila.
       add_row_incomplete: A la fila le faltan datos obligatorios, así que no se ha
         guardado nada.
       add_row_none: Este esquema de perfil no declara ninguna sección con filas.
@@ -63,16 +62,10 @@ flows:
       censal_pull: Rellenar con los datos censales de la AEAT
       censal_pull_auth_incomplete: Su identificación está incompleta, así que aún
         no se puede leer la AEAT. Complétela primero.
-      censal_pull_cleared: 'La AEAT todavía tiene un valor para los campos que usted
-        vació: %{paths}. Se han dejado vacíos; vaciarlos aquí no cambia el registro
-        de la AEAT.'
-      censal_pull_contested: 'La AEAT discrepa de lo que usted declaró en: %{paths}.
-        Su respuesta se mantiene; resuelva cada caso usted mismo.'
-      censal_pull_done: 'Datos censales de la AEAT leídos: %{adopted} campo(s) rellenados,
-        %{unchanged} ya coincidentes, %{diverging} discrepantes.'
       censal_pull_no_provider: Elija cómo se identifica ante la AEAT antes de leer
         sus datos censales.
-      censal_pull_review_applied: Se aplicó la propuesta censal exacta revisada de la AEAT.
+      censal_pull_review_applied: Se aplicó la propuesta censal exacta revisada de
+        la AEAT.
       censal_pull_review_rejected: Se rechazó la propuesta censal revisada de la AEAT;
         el perfil no cambió.
       certificate: Certificado

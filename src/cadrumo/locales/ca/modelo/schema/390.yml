@@ -839,48 +839,6 @@ modelo:
             help: null
             label: Quotes deduïbles en virtut de resolució administrativa o sentència
               fermes amb tipus no vigents - quota deduïble
-          iva-operaciones-especificas-adquisiciones-interiores-exentas:
-            help: null
-            label: Operacions específiques - Adquisicions interiors exemptes [230]
-          iva-operaciones-especificas-adquisiciones-intracomunitarias-exentas:
-            help: null
-            label: Operacions específiques - Adquisicions intracomunitàries exemptes
-              [109]
-          iva-operaciones-especificas-base-iva-soportado-no-deducible:
-            help: null
-            label: Operacions específiques - Bases imposables de l'IVA suportat no
-              deduïble [232]
-          iva-operaciones-especificas-criterio-caja-adquisiciones-base:
-            help: null
-            label: Operacions específiques - Adquisicions de béns en règim especial
-              del criteri de caixa - Base imposable [656]
-          iva-operaciones-especificas-criterio-caja-adquisiciones-cuota:
-            help: null
-            label: Operacions específiques - Adquisicions de béns en règim especial
-              del criteri de caixa - Quota [657]
-          iva-operaciones-especificas-criterio-caja-entregas-base:
-            help: null
-            label: Operacions específiques - Lliuraments de béns en règim especial
-              del criteri de caixa - Base imposable [654]
-          iva-operaciones-especificas-criterio-caja-entregas-cuota:
-            help: null
-            label: Operacions específiques - Lliuraments de béns en règim especial
-              del criteri de caixa - Quota [655]
-          iva-operaciones-especificas-entrega-interior-inversion-triangular:
-            help: null
-            label: Operacions específiques - Lliuraments interiors de béns meritats
-              per inversió del subjecte passiu en operacions triangulars [113]
-          iva-operaciones-especificas-importaciones-exentas:
-            help: null
-            label: Operacions específiques - Importacions exemptes [231]
-          iva-operaciones-especificas-operaciones-derecho-devolucion-mensual:
-            help: null
-            label: Operacions específiques - Operacions subjectes que originen el
-              dret a la devolució mensual [111]
-          iva-operaciones-especificas-servicios-tai-inversion-sujeto-pasivo:
-            help: null
-            label: Operacions específiques - Serveis localitzats al territori d'aplicació
-              de l'impost per inversió del subjecte passiu [523]
           iva-isp-interior-base:
             help: null
             label: Base imposable de l'IVA autorepercutit en operacions interiors
@@ -950,6 +908,63 @@ modelo:
             help: null
             label: Modificació de bases imposables i quotes del recàrrec d'equivalència
               - quota
+          iva-operaciones-especificas-adquisiciones-interiores-exentas:
+            help: null
+            label: Operacions específiques - Adquisicions interiors exemptes [230]
+          iva-operaciones-especificas-adquisiciones-intracomunitarias-exentas:
+            help: null
+            label: Operacions específiques - Adquisicions intracomunitàries exemptes
+              [109]
+          iva-operaciones-especificas-base-iva-soportado-no-deducible:
+            help: null
+            label: Operacions específiques - Bases imposables de l'IVA suportat no
+              deduïble [232]
+          iva-operaciones-especificas-criterio-caja-adquisiciones-base:
+            help: null
+            label: Operacions específiques - Adquisicions de béns en règim especial
+              del criteri de caixa - Base imposable [656]
+          iva-operaciones-especificas-criterio-caja-adquisiciones-cuota:
+            help: null
+            label: Operacions específiques - Adquisicions de béns en règim especial
+              del criteri de caixa - Quota [657]
+          iva-operaciones-especificas-criterio-caja-entregas-base:
+            help: null
+            label: Operacions específiques - Lliuraments de béns en règim especial
+              del criteri de caixa - Base imposable [654]
+          iva-operaciones-especificas-criterio-caja-entregas-cuota:
+            help: null
+            label: Operacions específiques - Lliuraments de béns en règim especial
+              del criteri de caixa - Quota [655]
+          iva-operaciones-especificas-entrega-interior-inversion-triangular:
+            help: null
+            label: Operacions específiques - Lliuraments interiors de béns meritats
+              per inversió del subjecte passiu en operacions triangulars [113]
+          iva-operaciones-especificas-importaciones-exentas:
+            help: null
+            label: Operacions específiques - Importacions exemptes [231]
+          iva-operaciones-especificas-operaciones-derecho-devolucion-mensual:
+            help: null
+            label: Operacions específiques - Operacions subjectes que originen el
+              dret a la devolució mensual [111]
+          iva-operaciones-especificas-servicios-tai-inversion-sujeto-pasivo:
+            help: null
+            label: Operacions específiques - Serveis localitzats al territori d'aplicació
+              de l'impost per inversió del subjecte passiu [523]
+          iva-recargo-equivalencia-tipo-0-5-base:
+            help: null
+            label: Recàrrec d'equivalència al tipus 0,5% - base imposable
+          iva-recargo-equivalencia-tipo-1-4-base:
+            help: null
+            label: Recàrrec d'equivalència al tipus 1,4% - base imposable
+          iva-recargo-equivalencia-tipo-1-75-base:
+            help: null
+            label: Recàrrec d'equivalència al tipus 1,75% - base imposable
+          iva-recargo-equivalencia-tipo-1-75-cuota:
+            help: null
+            label: Recàrrec d'equivalència al tipus 1,75% - quota
+          iva-recargo-equivalencia-tipo-5-2-base:
+            help: null
+            label: Recàrrec d'equivalència al tipus 5,2% - base imposable
           iva-regularizacion-cuotas-art-80-cinco-5:
             help: null
             label: Regularització de quotes de l'art. 80.Cinc.5a LIVA
@@ -1109,21 +1124,6 @@ modelo:
           iva-repercutido-intragrupo-tipo-7-5-cuota:
             help: null
             label: IVA meritat en operacions intragrup al tipus 7,5% - quota
-          iva-recargo-equivalencia-tipo-0-5-base:
-            help: null
-            label: Recàrrec d'equivalència al tipus 0,5% - base imposable
-          iva-recargo-equivalencia-tipo-1-4-base:
-            help: null
-            label: Recàrrec d'equivalència al tipus 1,4% - base imposable
-          iva-recargo-equivalencia-tipo-1-75-base:
-            help: null
-            label: Recàrrec d'equivalència al tipus 1,75% - base imposable
-          iva-recargo-equivalencia-tipo-1-75-cuota:
-            help: null
-            label: Recàrrec d'equivalència al tipus 1,75% - quota
-          iva-recargo-equivalencia-tipo-5-2-base:
-            help: null
-            label: Recàrrec d'equivalència al tipus 5,2% - base imposable
           iva-resultado-liquidacion:
             help: null
             label: Resultat de la liquidació

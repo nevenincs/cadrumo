@@ -14,8 +14,8 @@ from typing import Final, Literal, Self
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from cadrumo.core import scan_directory
-from dev._paths import UTF_8
 
+from .._paths import UTF_8
 from ._hashing import sha256_path
 
 _UTF_8: Final[str] = UTF_8

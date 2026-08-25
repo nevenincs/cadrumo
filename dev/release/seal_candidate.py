@@ -27,8 +27,7 @@ from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 
-from dev._paths import REPO_ROOT, UTF_8
-
+from .._paths import REPO_ROOT, UTF_8
 from ..docs.download_matrix import claimed_channels, load_descriptor
 from ._asset_transport import (
     EvidenceLane,

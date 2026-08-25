@@ -8,13 +8,13 @@ infrastructure for its lifetime through the single aggregate port below.
 
 from __future__ import annotations
 
-from collections.abc import Generator, Iterator
+from collections.abc import Callable, Generator, Iterator, Mapping
 from contextlib import AbstractContextManager, contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, NoReturn, Protocol, Self, cast, runtime_checkable
+from typing import TYPE_CHECKING, Literal, NoReturn, Protocol, Self, cast, runtime_checkable
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -31,6 +31,43 @@ from ...core.hashing import bounded_canonical_json_bytes, canonical_json_digest
 from ...core.paths import effective_storage_root
 from ._authentication import ProfileAuthenticationRefusedError, ProfilePasswordProofOperation
 from ._login_session_port import profile_current_bucket_session, profile_session_serves_bucket
+
+
+class ProfileCustodyCommitPort(Protocol):
+    """Publication identity exposed by one recognized profile capsule."""
+
+    @property
+    def transaction_id(self) -> UUID:
+        """The transaction that durably published this capsule."""
+        ...
+
+
+class ProfileCustodyCapsuleLabelPort(Protocol):
+    """Canonical label provenance exposed by physical custody storage."""
+
+    @property
+    def label(self) -> str:
+        """The normalized operator-facing profile label."""
+        ...
+
+    @property
+    def label_revision(self) -> int:
+        """The revision of this label lineage."""
+        ...
+
+    @property
+    def content_digest(self) -> str:
+        """The digest of the label payload excluding derived digests."""
+        ...
+
+    @property
+    def self_digest(self) -> str:
+        """The digest authenticating the complete label record."""
+        ...
+
+    def canonical_json_bytes(self) -> bytes:
+        """Return the canonical bytes committed into the capsule inventory."""
+        ...
 
 
 class ProfileCustodyPasswordMaterialPort(Protocol):
@@ -61,6 +98,11 @@ class ProfileCustodyPasswordMaterialPort(Protocol):
         The application does not open custody files by path; the provider owns
         those reads. The path identifies the exact recognized capsule.
         """
+        ...
+
+    @property
+    def commit(self) -> ProfileCustodyCommitPort:
+        """The capsule publication marker that authenticated this material."""
         ...
 
 
@@ -772,6 +814,113 @@ class ProfileCustodyPort(Protocol):
         """Observe the canonical committed-capsule inventory."""
         ...
 
+    def create_capsule_label(self, *, profile_id: UUID, label: str) -> ProfileCustodyCapsuleLabelPort:
+        """Create the canonical initial label record for a new capsule."""
+        ...
+
+    def staging_path(self, *, profile_id: UUID, transaction_id: UUID, root: Path) -> Path:
+        """Resolve the transaction-owned sibling staging path."""
+        ...
+
+    def deletion_path(self, *, profile_id: UUID, transaction_id: UUID, root: Path) -> Path:
+        """Resolve the transaction-owned deletion tombstone path."""
+        ...
+
+    def committed_capsule_path(self, profile_id: UUID, *, root: Path) -> Path | None:
+        """Return the recognized current-format capsule path when committed."""
+        ...
+
+    def list_committed_profile_ids(self, *, root: Path) -> tuple[UUID, ...]:
+        """List recognized current-format capsule identities."""
+        ...
+
+    def load_committed_capsule_label(self, profile_id: UUID, *, root: Path) -> ProfileCustodyCapsuleLabelPort:
+        """Load the authenticated label from one committed capsule."""
+        ...
+
+    def load_staged_capsule_label(
+        self,
+        profile_id: UUID,
+        transaction_id: UUID,
+        *,
+        root: Path,
+    ) -> ProfileCustodyCapsuleLabelPort:
+        """Load the authenticated label from one transaction-owned stage."""
+        ...
+
+    def stage_capsule(
+        self,
+        *,
+        profile_id: UUID,
+        transaction_id: UUID,
+        publication_kind: Literal["enroll", "restore"],
+        password_envelope: ProfileCustodyEnvelopePort,
+        sentinel: ProfileCustodySentinelPort,
+        data_files: Mapping[str, bytes],
+        label_record: ProfileCustodyCapsuleLabelPort,
+        recovery_envelope: ProfileCustodyRecoveryEnvelopePort | None,
+        root: Path,
+        published_at: datetime,
+        stage_initializer: Callable[[Path], None] | None,
+    ) -> Path:
+        """Durably build, but do not publish, one transaction-owned capsule stage."""
+        ...
+
+    def inventory_staged(
+        self,
+        *,
+        profile_id: UUID,
+        transaction_id: UUID,
+        root: Path,
+    ) -> ProfileCustodyInventoryPort:
+        """Observe the exact inventory of one transaction-owned stage."""
+        ...
+
+    def publish_staged(self, *, profile_id: UUID, transaction_id: UUID, root: Path) -> Path:
+        """Atomically publish one verified transaction-owned stage."""
+        ...
+
+    def write_deletion_marker(
+        self,
+        *,
+        profile_id: UUID,
+        transaction_id: UUID,
+        inventory_digest: str,
+        root: Path,
+    ) -> None:
+        """Bind one prepared deletion to its committed capsule."""
+        ...
+
+    def verify_deletion_marker(
+        self,
+        *,
+        profile_id: UUID,
+        transaction_id: UUID,
+        inventory_digest: str,
+        root: Path,
+    ) -> None:
+        """Authenticate the prepared marker while its capsule remains current."""
+        ...
+
+    def verify_deletion_tombstone(
+        self,
+        *,
+        profile_id: UUID,
+        transaction_id: UUID,
+        inventory_digest: str,
+        root: Path,
+    ) -> None:
+        """Authenticate the exact renamed capsule before local removal."""
+        ...
+
+    def rename_capsule_for_deletion(self, *, profile_id: UUID, transaction_id: UUID, root: Path) -> Path:
+        """Atomically rename one marked capsule to its transaction tombstone."""
+        ...
+
+    def remove_deletion_tombstone(self, *, profile_id: UUID, transaction_id: UUID, root: Path) -> None:
+        """Remove only the transaction-owned, previously verified tombstone."""
+        ...
+
     def bucket_storage(self) -> ProfileBucketStoragePort:
         """Return canonical bucket path and lock operations."""
         ...
@@ -1220,6 +1369,8 @@ __all__ = [
     "ProfileBucketStoragePathsPort",
     "ProfileBucketStoragePort",
     "ProfileCustodyBucketEventHistoryPort",
+    "ProfileCustodyCapsuleLabelPort",
+    "ProfileCustodyCommitPort",
     "ProfileCustodyEnvelopePort",
     "ProfileCustodyLocalRecordStore",
     "ProfileCustodyPasswordMaterialPort",

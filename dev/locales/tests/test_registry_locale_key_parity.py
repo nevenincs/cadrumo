@@ -22,8 +22,9 @@ from typing import cast
 import pytest
 
 from cadrumo.core.i18n import tr
-from dev.locales import LocaleManager, scan_registry_keys
-from dev.locales._paths import LOCALES_DIR
+
+from .. import LocaleManager, scan_registry_keys
+from .._paths import LOCALES_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

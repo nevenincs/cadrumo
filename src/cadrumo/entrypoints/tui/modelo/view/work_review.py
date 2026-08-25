@@ -1,6 +1,6 @@
 """Read-only Textual projection of the canonical modelo work review.
 
-The application layer owns every join represented here.  This adapter accepts
+The application layer owns every join represented here.  This entrypoint projection accepts
 one already-built :class:`ModeloWorkReview` through the public
 ``application.modelo`` facade and renders it without consulting repositories,
 the registry, CLI payloads, or private application modules.  Consequently the
@@ -25,28 +25,28 @@ from textual.containers import Vertical
 from textual.screen import Screen
 from textual.widgets import Button, Collapsible, Footer, Label, Select, Static
 
-from ....application.modelo import (
+from .....application.modelo import (
     BlockerRef,
     ModeloWorkOriginAnomaly,
     ModeloWorkProgressDenominator,
     ModeloWorkReview,
     ModeloWorkReviewCasilla,
 )
-from ....core import BindingSourceKind, EstadoCasillaOficial, ModeloWorkProgressState, OperatorActionAxis
-from ....core.i18n import tr
-from ....domain.calculations.registry import InputKind, RelationConsumptionChannel
-from ....domain.filing import ModeloValueKind
-from ....domain.modelos import (
+from .....core import BindingSourceKind, EstadoCasillaOficial, ModeloWorkProgressState, OperatorActionAxis
+from .....core.i18n import tr
+from .....domain.calculations.registry import InputKind, RelationConsumptionChannel
+from .....domain.filing import ModeloValueKind
+from .....domain.modelos import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
-from ....entrypoints.tui.components.theme import (
+from ...components.theme import (
     BASE_CSS,
     install_cadrumo_themes,
     toggle_appearance,
 )
-from ....entrypoints.tui.components.widgets import ContentDataTable, ContentScroll
+from ...components.widgets import ContentDataTable, ContentScroll
 
 _PRESENT = "present"
 _ABSENT = "absent"
@@ -233,6 +233,7 @@ class ModeloWorkReviewScreen(Screen[None]):
         yield Footer()
 
     def on_mount(self) -> None:
+        """Render the immutable review when the screen enters the application."""
         self._localize_bindings()
         review = self.review_app.review
         self.query_one("#modelo-review-header", Static).update(
@@ -538,9 +539,11 @@ class ModeloWorkReviewScreen(Screen[None]):
         self.query_one("#modelo-review-blockers-empty", Static).display = not blockers
 
     def action_quit_review(self) -> None:
+        """Exit the standalone review host without changing the work record."""
         self.review_app.exit(None)
 
     def action_toggle_appearance(self) -> None:
+        """Toggle the shared presentation theme for the review host."""
         toggle_appearance(self.review_app)
 
 
@@ -645,10 +648,12 @@ class ModeloWorkReviewApp(App[None]):
     )
 
     def __init__(self, review: ModeloWorkReview) -> None:
+        """Bind the one immutable application review rendered by this host."""
         super().__init__()
         self.review = review
 
     def on_mount(self) -> None:
+        """Install shared themes and open the canonical review screen."""
         install_cadrumo_themes(self)
         self.push_screen(ModeloWorkReviewScreen())
 

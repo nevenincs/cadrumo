@@ -26,8 +26,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core import iter_directory, scan_directory
-from dev._paths import REPO_ROOT as _REPO_ROOT
 
+from ..._paths import REPO_ROOT as _REPO_ROOT
 from ..campaign import _LANES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

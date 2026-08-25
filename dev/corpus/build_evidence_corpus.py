@@ -17,7 +17,7 @@ import urllib.parse
 from pathlib import Path
 from typing import Final
 
-from dev._paths import UTF_8
+from .._paths import UTF_8
 
 _UTF_8: Final[str] = UTF_8
 _CORPUS = Path("src/cadrumo/application/ledger/tests/_evidence_corpus")

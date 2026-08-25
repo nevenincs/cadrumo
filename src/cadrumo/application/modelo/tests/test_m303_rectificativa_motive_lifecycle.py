@@ -25,7 +25,6 @@ from ....application.filing import (
 )
 from ....application.modelo import (
     AmendmentM303RectificativaMotiveError,
-    CalculationRevisionStateError,
     amend_modelo_revision,
 )
 from ....core import (
@@ -75,9 +74,9 @@ from ....tests.secure_sql import isolated_runtime_profile
 from .._export import (
     ModeloExportCommand,
     ModeloExportError,
-    _require_matching_amendment_evidence,
     export_modelo_revision,
 )
+from .._export_amendment_evidence import resolve_persisted_amendment_export_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -305,7 +304,9 @@ def test_context_free_missing_and_cross_context_rectificativa_refuse() -> None:
     with pytest.raises(ValidationError, match="context-bound aggregate"):
         CalculationRevision.model_validate(payload)
 
-    missing_motive = revision.amendment_identity.model_copy(update={"m303_rectificativa_motive": None})
+    amendment_identity = revision.amendment_identity
+    assert amendment_identity is not None
+    missing_motive = amendment_identity.model_copy(update={"m303_rectificativa_motive": None})
     missing_payload = {
         **payload,
         "amendment_identity": missing_motive,
@@ -568,7 +569,7 @@ def test_export_refuses_command_substitution_and_derives_persisted_receipt(tmp_p
         )
         derived_command = command.model_copy(update={"amendment_evidence": None})
         assert (
-            _require_matching_amendment_evidence(
+            resolve_persisted_amendment_export_evidence(
                 derived_command,
                 revision,
                 work_unit=work_unit,
@@ -580,7 +581,7 @@ def test_export_refuses_command_substitution_and_derives_persisted_receipt(tmp_p
             == exact
         )
         assert (
-            _require_matching_amendment_evidence(
+            resolve_persisted_amendment_export_evidence(
                 command,
                 revision,
                 work_unit=work_unit,
@@ -604,7 +605,7 @@ def test_export_refuses_command_substitution_and_derives_persisted_receipt(tmp_p
         for replacement in substitutions:
             substituted = command.model_copy(update={"amendment_evidence": replacement})
             with pytest.raises(ModeloExportError):
-                _require_matching_amendment_evidence(
+                resolve_persisted_amendment_export_evidence(
                     substituted,
                     revision,
                     work_unit=work_unit,
@@ -631,7 +632,7 @@ def test_export_amendment_gate_refuses_missing_injected_justificante_authority(t
         )
 
         with pytest.raises(ModeloExportError) as raised:
-            _require_matching_amendment_evidence(
+            resolve_persisted_amendment_export_evidence(
                 command,
                 revision,
                 work_unit=work_unit,
@@ -645,8 +646,8 @@ def test_export_amendment_gate_refuses_missing_injected_justificante_authority(t
         assert raised.value.context["cause"] == "amendment export requires injected justificante repository authority"
 
 
-def test_public_export_default_loads_persisted_justificante_authority(tmp_path: Path) -> None:
-    """The public default is concrete persisted authority, never nullable injection."""
+def test_public_export_requires_injected_persisted_justificante_authority(tmp_path: Path) -> None:
+    """Persisted receipt state does not bypass the application port boundary."""
     work_unit, baseline_revision, target, receipt, context, revision = _authorities()
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="S92 public export") as runtime:
         objects = runtime.repository
@@ -671,7 +672,7 @@ def test_public_export_default_loads_persisted_justificante_authority(tmp_path: 
             )
         )
 
-        with pytest.raises(CalculationRevisionStateError):
+        with pytest.raises(ModeloExportError) as raised:
             export_modelo_revision(
                 ModeloExportCommand(
                     calculation_revision_id=revision.calculation_revision_id,
@@ -683,6 +684,9 @@ def test_public_export_default_loads_persisted_justificante_authority(tmp_path: 
                 calculation_repository=calculation_repo,
                 filing_repository=filing_repo,
             )
+
+        assert raised.value.context is not None
+        assert raised.value.context["cause"] == "amendment export requires injected justificante repository authority"
 
 
 def test_m303_motive_is_refused_for_another_modelo_snapshot() -> None:

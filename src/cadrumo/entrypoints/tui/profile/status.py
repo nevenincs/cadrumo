@@ -41,7 +41,7 @@ from ....entrypoints.tui.components.theme import (
 from ....entrypoints.tui.components.widgets import ContentDataTable, ContentScroll, NoticeBand
 
 if TYPE_CHECKING:
-    from ....application.user_profile import StatusPageData
+    from ....application.user_profile.status_projection import StatusPageData
 
 _PROFILE_SETUP_STATE_LOCALE_KEYS: dict[str, str] = {
     "complete": "flows.status.profiles.status.complete",

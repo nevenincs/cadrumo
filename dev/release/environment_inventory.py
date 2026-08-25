@@ -74,7 +74,8 @@ from typing import Any, Final
 import yaml
 
 from cadrumo.core import scan_directory
-from dev._paths import REPO_ROOT, UTF_8
+
+from .._paths import REPO_ROOT, UTF_8
 
 _GH_TIMEOUT_SECONDS: Final[float] = 30.0
 _DEFAULT_REPO_SLUG: Final[str] = "nevenincs/cadrumo"

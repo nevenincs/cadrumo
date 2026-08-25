@@ -6,7 +6,7 @@ no way to tell how long they had left before re-authenticating. These
 tests drive the real chain — a real credential registration followed by the
 canonical authenticated login door, the real in-process
 :class:`~cadrumo.adapters.persistence.storage.master_key.BucketSession`, the real
-:func:`~cadrumo.entrypoints.cli.build_status_page_data`
+:func:`~cadrumo.application.user_profile.status_projection.build_status_page_data`
 builder, and the real :class:`~cadrumo.entrypoints.tui.profile.status.StatusApp`
 surface. No mock, stub, or hand-built session record.
 """
@@ -21,8 +21,8 @@ from ....application.user_profile import (
     login_profile,
     register_profile_with_credentials,
 )
+from ....application.user_profile.status_projection import build_status_page_data
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...cli import build_status_page_data
 from ..profile.status import StatusApp
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

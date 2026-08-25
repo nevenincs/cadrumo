@@ -99,7 +99,8 @@ from typing import Final
 import pytest
 
 from cadrumo.core import identity, scan_directory
-from dev.identity.identifier_noun_census import annotation_text, is_bare_str
+
+from ..identifier_noun_census import annotation_text, is_bare_str
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

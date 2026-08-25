@@ -55,10 +55,14 @@ adapters:
         api_target_not_found: El destí de Google {action} no s'ha trobat.
         conflicting_duplicate_metadata: El full de Google conté metadades AEAT duplicades
           i contradictòries.
+        developer_metadata_invalid: Les metadades de desenvolupador del full de càlcul
+          no són vàlides.
         foreign_spreadsheet_not_owned: El full de Google no està marcat com a propietat
           d'aquest perfil Cadrumo.
         googleapiclient_not_importable: googleapiclient no es pot importar; l'adaptador
           de Google no pot accedir a l'API.
+        ownership_metadata_invalid: Les metadades de propietat del full de càlcul
+          no són vàlides.
         spreadsheet_id_blank: L'id del full de càlcul de Google no pot estar buit.
         workbook_snapshot_mismatch: Les metadades del full de Google no coincideixen
           amb la instantània de càlcul.

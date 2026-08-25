@@ -1,0 +1,438 @@
+# Every filing coordinate is an independently cited AEAT presentation fact.
+# payment_cutoff_on is present only where the bundled calendar explicitly
+# publishes bank domiciliation.
+# Split by filing year: the single file had grown past the registry
+# reviewability ceiling, and a reviewer reads one year at a time.
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2024-01"
+filing_year = 2024
+period = "2024 01"
+period_kind = "monthly"
+opens_on = 2024-02-01
+closes_on = 2024-02-20
+payment_cutoff_on = 2024-02-15
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2024-02"
+filing_year = 2024
+period = "2024 02"
+period_kind = "monthly"
+opens_on = 2024-03-01
+closes_on = 2024-03-20
+payment_cutoff_on = 2024-03-15
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2024-03"
+filing_year = 2024
+period = "2024 03"
+period_kind = "monthly"
+opens_on = 2024-04-01
+closes_on = 2024-04-22
+payment_cutoff_on = 2024-04-17
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2024-04"
+filing_year = 2024
+period = "2024 04"
+period_kind = "monthly"
+opens_on = 2024-05-01
+closes_on = 2024-05-20
+payment_cutoff_on = 2024-05-15
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2024-05"
+filing_year = 2024
+period = "2024 05"
+period_kind = "monthly"
+opens_on = 2024-06-01
+closes_on = 2024-06-20
+payment_cutoff_on = 2024-06-17
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2024-06"
+filing_year = 2024
+period = "2024 06"
+period_kind = "monthly"
+opens_on = 2024-07-01
+closes_on = 2024-07-22
+payment_cutoff_on = 2024-07-17
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2024-07"
+filing_year = 2024
+period = "2024 07"
+period_kind = "monthly"
+opens_on = 2024-08-01
+closes_on = 2024-08-20
+payment_cutoff_on = 2024-08-15
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2024-08"
+filing_year = 2024
+period = "2024 08"
+period_kind = "monthly"
+opens_on = 2024-09-01
+closes_on = 2024-09-20
+payment_cutoff_on = 2024-09-17
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2024-09"
+filing_year = 2024
+period = "2024 09"
+period_kind = "monthly"
+opens_on = 2024-10-01
+closes_on = 2024-10-21
+payment_cutoff_on = 2024-10-16
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2024-10"
+filing_year = 2024
+period = "2024 10"
+period_kind = "monthly"
+opens_on = 2024-11-01
+closes_on = 2024-11-20
+payment_cutoff_on = 2024-11-15
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2024-11"
+filing_year = 2024
+period = "2024 11"
+period_kind = "monthly"
+opens_on = 2024-12-01
+closes_on = 2024-12-20
+payment_cutoff_on = 2024-12-17
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2024-12"
+filing_year = 2024
+period = "2024 12"
+period_kind = "monthly"
+opens_on = 2025-01-01
+closes_on = 2025-01-20
+payment_cutoff_on = 2025-01-15
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2024-1t"
+filing_year = 2024
+period = "2024 1T"
+period_kind = "quarterly"
+opens_on = 2024-04-01
+closes_on = 2024-04-22
+payment_cutoff_on = 2024-04-17
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2024-2t"
+filing_year = 2024
+period = "2024 2T"
+period_kind = "quarterly"
+opens_on = 2024-07-01
+closes_on = 2024-07-22
+payment_cutoff_on = 2024-07-17
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2024-3t"
+filing_year = 2024
+period = "2024 3T"
+period_kind = "quarterly"
+opens_on = 2024-10-01
+closes_on = 2024-10-21
+payment_cutoff_on = 2024-10-16
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2024"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2024-4t"
+filing_year = 2024
+period = "2024 4T"
+period_kind = "quarterly"
+opens_on = 2025-01-01
+closes_on = 2025-01-20
+payment_cutoff_on = 2025-01-15
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2025"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]

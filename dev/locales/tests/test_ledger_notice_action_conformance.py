@@ -32,7 +32,8 @@ from cadrumo.entrypoints.cli import (
     _ledger_rules_cli,
     _ledger_support,
 )
-from dev.locales import LocaleManager, LocaleNode
+
+from .. import LocaleManager, LocaleNode
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

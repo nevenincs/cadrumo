@@ -11,13 +11,13 @@ from pathlib import Path
 
 import pytest
 
-from dev.corpus.extract_manual_corpus_text import extract_raw_text
-from dev.docs.preprocess import (
+from ...docs.preprocess import (
     EXTRACTED_JSON_SUFFIX,
     EXTRACTED_TEXT_SUFFIX,
     PreprocessOutput,
 )
-from dev.docs.preprocess._html import HTML_EXTRACTOR_ID, build_outputs
+from ...docs.preprocess._html import HTML_EXTRACTOR_ID, build_outputs
+from ..extract_manual_corpus_text import extract_raw_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

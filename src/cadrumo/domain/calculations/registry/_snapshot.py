@@ -40,6 +40,7 @@ from ._schema import (
     SourceReference,
     filing_period_from_scope,
 )
+from ._schema_references import governed_period_span
 from ._temporal import select_revision
 from ._validate import RegistryValidator
 from ._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow, validate_orden_aplicabilidad
@@ -577,25 +578,6 @@ _SUBSTANTIVE_LAW_KINDS = frozenset(
 )
 
 
-def _governed_period_span(reference: LegalReference) -> tuple[date, date | None]:
-    """Return the devengo span ``reference`` governs, which may precede its force.
-
-    Defaults to the in-force window, so a reference that declares nothing is
-    tested exactly as before -- the retroactive fields cannot relax a citation
-    by existing. A reference that DOES declare reach is tested against the
-    declared span, because that is the axis its citation defends: RDL 13/2025 is
-    in force only from 2025-11-27 yet governs periods 2022 through 2025 by its
-    own operative text, so the 2024 devengo it grounds is inside its reach and
-    outside its force.
-
-    The declaration is validated retroactive-only at the model boundary, so this
-    can widen a span backwards but never forwards.
-    """
-    if reference.governs_periods_from is None:
-        return reference.effective_from, reference.effective_to
-    return reference.governs_periods_from, reference.governs_periods_to
-
-
 def _legal_window_covers_devengo(revision: ModeloRevision, reference: LegalReference) -> bool:
     """Return whether ``reference``'s effective window grounds ``revision``.
 
@@ -628,7 +610,7 @@ def _legal_window_covers_devengo(revision: ModeloRevision, reference: LegalRefer
     """
     if reference.kind not in _SUBSTANTIVE_LAW_KINDS:
         return RevisionLegalApplicabilityWindow.from_revision(revision).overlaps(reference)
-    governs_from, governs_to = _governed_period_span(reference)
+    governs_from, governs_to = governed_period_span(reference)
     if governs_to is not None and governs_to < revision.valid_from:
         return False
     if revision.valid_to is None:

@@ -53,8 +53,8 @@ from typing import Final, cast
 from pydantic import ValidationError
 
 from cadrumo.core import PRODUCT_IDENTITY, scan_directory
-from dev._paths import REPO_ROOT, UTF_8
 
+from .._paths import REPO_ROOT, UTF_8
 from ..docs.download_matrix import load_descriptor, required_evidence_rows
 from ..packaging.cohort_manifest import load_release_cohort
 from ..packaging.evidence import (

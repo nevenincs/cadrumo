@@ -20,8 +20,8 @@ from typing import Any, Final
 from packaging.requirements import Requirement
 
 from cadrumo.core import scan_directory
-from dev._paths import REPO_ROOT, UTF_8
 
+from .._paths import REPO_ROOT, UTF_8
 from ._distribution_limits import PYPI_FILE_CAP_BYTES
 from ._distribution_names import normalise_distribution_name
 from ._hashing import sha256_path

@@ -21,7 +21,8 @@ from cadrumo.tests import (
     repo_path,
     repo_relative,
 )
-from dev.locales import LocaleManager
+
+from .. import LocaleManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

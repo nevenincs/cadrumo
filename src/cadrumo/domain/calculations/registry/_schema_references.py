@@ -430,3 +430,22 @@ class LegalParameter(RegistryModel):
     reviewed_at: date | None = None
     reviewed_by: str | None = None
     notes: str | None = None
+
+
+def governed_period_span(reference: LegalReference) -> tuple[date, date | None]:
+    """Return the devengo span ``reference`` governs, which may precede its force.
+
+    Defaults to the in-force window, so a reference that declares nothing is
+    tested exactly as before -- the retroactive fields cannot relax a citation
+    by existing. A reference that DOES declare reach is tested against the
+    declared span, because that is the axis its citation defends: RDL 13/2025 is
+    in force only from 2025-11-27 yet governs periods 2022 through 2025 by its
+    own operative text, so the 2024 devengo it grounds is inside its reach and
+    outside its force.
+
+    The declaration is validated retroactive-only at the model boundary, so this
+    can widen a span backwards but never forwards.
+    """
+    if reference.governs_periods_from is None:
+        return reference.effective_from, reference.effective_to
+    return reference.governs_periods_from, reference.governs_periods_to

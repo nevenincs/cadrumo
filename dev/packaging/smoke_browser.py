@@ -6,8 +6,7 @@ import argparse
 import os
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
-
+from .._paths import REPO_ROOT
 from ._smoke_common import (
     install_wheel,
     record_proof,

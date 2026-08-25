@@ -18,8 +18,7 @@ from typing import cast
 
 import pytest
 
-from dev._paths import REPO_ROOT
-
+from ..._paths import REPO_ROOT
 from ..campaign import _LANES
 from ..python_cohort import (
     _COMMAND_SPEC_PROBE,

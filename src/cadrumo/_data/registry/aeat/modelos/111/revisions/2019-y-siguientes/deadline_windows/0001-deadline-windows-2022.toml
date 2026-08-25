@@ -1,0 +1,438 @@
+# Every filing coordinate is an independently cited AEAT presentation fact.
+# payment_cutoff_on is present only where the bundled calendar explicitly
+# publishes bank domiciliation.
+# Split by filing year: the single file had grown past the registry
+# reviewability ceiling, and a reviewer reads one year at a time.
+
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2022-01"
+filing_year = 2022
+period = "2022 01"
+period_kind = "monthly"
+opens_on = 2022-02-01
+closes_on = 2022-02-21
+payment_cutoff_on = 2022-02-16
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2022-02"
+filing_year = 2022
+period = "2022 02"
+period_kind = "monthly"
+opens_on = 2022-03-01
+closes_on = 2022-03-21
+payment_cutoff_on = 2022-03-16
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2022-03"
+filing_year = 2022
+period = "2022 03"
+period_kind = "monthly"
+opens_on = 2022-04-01
+closes_on = 2022-04-20
+payment_cutoff_on = 2022-04-15
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2022-04"
+filing_year = 2022
+period = "2022 04"
+period_kind = "monthly"
+opens_on = 2022-05-01
+closes_on = 2022-05-20
+payment_cutoff_on = 2022-05-15
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2022-05"
+filing_year = 2022
+period = "2022 05"
+period_kind = "monthly"
+opens_on = 2022-06-01
+closes_on = 2022-06-20
+payment_cutoff_on = 2022-06-15
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2022-06"
+filing_year = 2022
+period = "2022 06"
+period_kind = "monthly"
+opens_on = 2022-07-01
+closes_on = 2022-07-20
+payment_cutoff_on = 2022-07-15
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2022-07"
+filing_year = 2022
+period = "2022 07"
+period_kind = "monthly"
+opens_on = 2022-08-01
+closes_on = 2022-08-22
+payment_cutoff_on = 2022-08-17
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2022-08"
+filing_year = 2022
+period = "2022 08"
+period_kind = "monthly"
+opens_on = 2022-09-01
+closes_on = 2022-09-20
+payment_cutoff_on = 2022-09-15
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2022-09"
+filing_year = 2022
+period = "2022 09"
+period_kind = "monthly"
+opens_on = 2022-10-01
+closes_on = 2022-10-20
+payment_cutoff_on = 2022-10-15
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2022-10"
+filing_year = 2022
+period = "2022 10"
+period_kind = "monthly"
+opens_on = 2022-11-01
+closes_on = 2022-11-21
+payment_cutoff_on = 2022-11-16
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2022-11"
+filing_year = 2022
+period = "2022 11"
+period_kind = "monthly"
+opens_on = 2022-12-01
+closes_on = 2022-12-20
+payment_cutoff_on = 2022-12-15
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2022-12"
+filing_year = 2022
+period = "2022 12"
+period_kind = "monthly"
+opens_on = 2023-01-01
+closes_on = 2023-01-20
+payment_cutoff_on = 2023-01-15
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2022-1t"
+filing_year = 2022
+period = "2022 1T"
+period_kind = "quarterly"
+opens_on = 2022-04-01
+closes_on = 2022-04-20
+payment_cutoff_on = 2022-04-15
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2022-2t"
+filing_year = 2022
+period = "2022 2T"
+period_kind = "quarterly"
+opens_on = 2022-07-01
+closes_on = 2022-07-20
+payment_cutoff_on = 2022-07-15
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2022-3t"
+filing_year = 2022
+period = "2022 3T"
+period_kind = "quarterly"
+opens_on = 2022-10-01
+closes_on = 2022-10-20
+payment_cutoff_on = 2022-10-15
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2022"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-111-2022-4t"
+filing_year = 2022
+period = "2022 4T"
+period_kind = "quarterly"
+opens_on = 2023-01-01
+closes_on = 2023-01-20
+payment_cutoff_on = 2023-01-15
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "has_employees"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos del trabajo sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_professionals_with_retencion"
+op = "equals"
+value = true
+explanation = "Obligado que satisface rendimientos de actividades economicas sujetos a retencion o ingreso a cuenta."
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-modelo-111-instructions"]

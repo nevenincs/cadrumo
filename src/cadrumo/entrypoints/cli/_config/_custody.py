@@ -143,41 +143,6 @@ def _login_notices(outcome: ProfileLoginOutcome) -> tuple[Notice, ...]:
     return tuple(notices)
 
 
-def _login_through_the_screen(*, name: str | None) -> ProfileLoginOutcome:
-    """Log in on the full-screen surface, refusing when the operator leaves.
-
-    Leaving the screen without unlocking is an ordinary choice, but it is
-    not a successful login: ``login`` is the precondition every other verb
-    is gated on, so reporting success with no session minted would hand a
-    caller an exit code that says the gate is open when it is shut. The
-    refusal names the verb to run again, exactly as the session gate does.
-
-    A named target preselects its row; an unknown one is refused before
-    the screen opens, so a mistyped label can never quietly become a
-    login to whichever profile happened to sort first.
-    """
-    from ....application.cli_exception_preconditions import (
-        CliExceptionPrecondition,
-        cli_exception_no_recovery_verdict,
-    )
-    from .._common import attach_cli_policy_verdict
-    from .._errors import CliRefusedBoundaryError
-    from ._login_frontend import preselected_profile_id, present_login
-
-    outcome = present_login(preselected=preselected_profile_id(name))
-    if outcome is None:
-        raise attach_cli_policy_verdict(
-            CliRefusedBoundaryError(
-                translated_message="cli.config.login.refusal.abandoned",
-            ),
-            verdict=cli_exception_no_recovery_verdict(
-                CliExceptionPrecondition.LOGIN_COMPLETED,
-                facts={"login_completed": False},
-            ),
-        )
-    return outcome
-
-
 def _login_through_the_prompt(
     ctx: typer.Context,
     *,
@@ -255,21 +220,17 @@ def config_login(
 ) -> None:
     """Authenticate one profile and mint its resumable session."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ._login_frontend import login_screen_is_available
     from ._secure_input import select_machine_secret_channel
 
     machine_secret = select_machine_secret_channel(
         secrets_stdin=secrets_stdin,
         secrets_fd=secrets_fd,
     )
-    if login_screen_is_available(ctx, secrets_stdin=secrets_stdin, secrets_fd=secrets_fd):
-        outcome = _login_through_the_screen(name=name)
-    else:
-        outcome = _login_through_the_prompt(
-            ctx,
-            name=name,
-            machine_secret=machine_secret,
-        )
+    outcome = _login_through_the_prompt(
+        ctx,
+        name=name,
+        machine_secret=machine_secret,
+    )
 
     from .._config_payloads import ConfigLoginResult
 

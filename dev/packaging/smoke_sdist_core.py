@@ -7,8 +7,7 @@ import sys
 import tarfile
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
-
+from .._paths import REPO_ROOT
 from ._smoke_common import (
     assert_attachment_and_llm_surfaces,
     assert_cli_smoke,

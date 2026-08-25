@@ -7,7 +7,7 @@ test imported both the public re-export and the private definition side by
 side and asserted they were the same object, so a second definition anywhere
 in the tree would have broken that identity check on sight.
 
-That cross-reference is gone (``test_status_frontend_gate.py`` now reaches
+That cross-reference is gone (``test_status_projection.py`` now reaches
 only the public facade, correctly — a private-import is exactly what
 ``aeat-architecture-boundaries`` forbids), and nothing replaced
 its enforcement. What is left is a docstring claim: *"there is one
@@ -263,7 +263,7 @@ def _tree(source: str) -> ast.AST:
 
 def test_rule_fires_on_a_rival_masking_function_outside_the_canonical_module() -> None:
     violations = masking_verdict_signature_violations(
-        "src/cadrumo/entrypoints/cli/_config/_status_frontend.py",
+        "src/cadrumo/application/user_profile/status_projection.py",
         _tree(_RIVAL_MASKING_FUNCTION),
         is_canonical=False,
     )

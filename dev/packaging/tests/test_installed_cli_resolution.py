@@ -23,9 +23,9 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
-from dev.packaging._hashing import sha256_path
-from dev.packaging._smoke_common import (
+from ..._paths import REPO_ROOT
+from .._hashing import sha256_path
+from .._smoke_common import (
     build_companion_wheels,
     build_harness_wheel,
     build_wheel,
@@ -35,8 +35,8 @@ from dev.packaging._smoke_common import (
     venv_bin_dir,
     venv_python_path,
 )
-from dev.packaging.installed_mcp_oracle import run_installed_mcp_oracle
-from dev.packaging.installed_tax_oracle import EXPECTED_LEGAL_REF
+from ..installed_mcp_oracle import run_installed_mcp_oracle
+from ..installed_tax_oracle import EXPECTED_LEGAL_REF
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 

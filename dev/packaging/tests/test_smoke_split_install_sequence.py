@@ -10,8 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
-
+from ..._paths import REPO_ROOT
 from .._smoke_common import (
     build_companion_wheels,
     build_wheel,

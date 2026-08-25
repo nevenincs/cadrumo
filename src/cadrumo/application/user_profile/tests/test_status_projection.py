@@ -1,16 +1,9 @@
-"""The status-page presenter must never pre-empt the machine contract.
+"""The frontend-neutral status projection preserves safe display facts.
 
-``present_status_tui`` is the seam that decides whether ``aeat config
-profile status`` renders the read-only full-screen surface or falls
-through to the unchanged envelope path. These tests pin that gate with
-real behaviour only: a ``--format json`` request and this test process's
-genuinely non-full-screen host MUST return ``False`` so the JSON / text
-envelope callers reach the identical machine output the conformance
-suites lock. The full-screen presentation itself is never launched here
-(it would take over the controlling terminal); the gate's refusal is what
-guards the contract. The masking and degradation contracts run against
-the real profile schema, a real created profile, and a real empty
-storage root — no patched seams, no stand-in schema objects.
+The projection is a public application module, independent from a terminal
+frontend. These tests exercise its masking and graceful-degradation contracts
+against the real profile schema, a real created profile, and an empty storage
+root — no patched seams and no stand-in schema objects.
 """
 
 from __future__ import annotations
@@ -18,67 +11,42 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-import typer
-import typer.core
 
-from .....tests.profile_capsule import open_test_profile_session
-from .....tests.profile_storage_root_fixture import profile_storage_root_fixture
+from ....tests.profile_capsule import open_test_profile_session
+from ....tests.profile_storage_root_fixture import profile_storage_root_fixture
 
 __all__ = ["profile_storage_root_fixture"]
 
-from .....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
-from .....tests.user_profile import register_cli_profile
-from ....cli._config import _status_frontend
-from ....cli._config._status_frontend import present_status_tui
+from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
+from ....tests.user_profile import register_cli_profile
+from .. import status_projection
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from .....application.user_profile import StatusFactRow
-    from .....domain.user_profile import UserProfileRecord
+    from ....domain.user_profile import UserProfileRecord
+    from ..status_projection import StatusFactRow
 
 
-def _ctx_with_format(format_name: str) -> typer.Context:
-    ctx = typer.Context(typer.core.TyperCommand("status"))
-    ctx.ensure_object(dict)["format"] = format_name
-    return ctx
-
-
-def test_json_format_falls_through_to_the_envelope_path() -> None:
-    # A JSON caller must never be diverted into the interactive surface,
-    # regardless of the host's console capability.
-    assert present_status_tui(_ctx_with_format("json")) is False
-
-
-def test_non_full_screen_host_falls_through() -> None:
-    """The real captured test host is not full-screen capable, so text falls through.
-
-    Anti-vacuity first: this process runs under pytest's captured IO, so
-    the live capability probe genuinely reports a non-full-screen host.
-    The gate must then fall through for a text caller on this real host —
-    the same decision a piped / CI invocation gets in production.
-    """
-    from .....application.flows import detect_frontend_capability
-    from .....core.flows import FrontendCapability
-
-    assert detect_frontend_capability() is not FrontendCapability.FULL_SCREEN
-    assert present_status_tui(_ctx_with_format("text")) is False
-
-
-def test_presenter_module_exposes_a_read_only_builder() -> None:
-    # The builder assembles a view-model and nothing else; it is the only
-    # public surface besides the gate, so the presenter has no write verb.
-    assert set(_status_frontend.__all__) == {"build_status_page_data", "present_status_tui"}
+def test_projection_module_exposes_only_status_projection_symbols() -> None:
+    assert set(status_projection.__all__) == {
+        "StatusAuthView",
+        "StatusFactRow",
+        "StatusPageData",
+        "StatusProfileRow",
+        "build_active_profile_notices",
+        "build_status_page_data",
+    }
 
 
 # ── masking decision (which facts get masked) ───────────────────────────────
 
 
 def test_secret_classed_field_is_masked() -> None:
-    from .....application.user_profile import mask_profile_field
-    from .....core.classification import SensitivityClass
+    from ....core.classification import SensitivityClass
+    from .. import mask_profile_field
 
     assert mask_profile_field(
         path="identity.tax_id",
@@ -96,14 +64,14 @@ def test_secret_classed_field_is_masked() -> None:
     ],
 )
 def test_password_or_key_like_field_is_masked(path: str, label: str) -> None:
-    from .....application.user_profile import mask_profile_field
+    from .. import mask_profile_field
 
     assert mask_profile_field(path=path, label=label, sensitivity=None)
 
 
 def test_plain_identity_field_is_not_masked() -> None:
-    from .....application.user_profile import mask_profile_field
-    from .....core.classification import SensitivityClass
+    from ....core.classification import SensitivityClass
+    from .. import mask_profile_field
 
     assert not mask_profile_field(
         path="identity.tax_id",
@@ -130,8 +98,8 @@ def test_status_surface_holds_no_private_masking_policy() -> None:
     to agree with the canonical one today would satisfy any output-shaped
     assertion while restoring the drift hazard tomorrow.
     """
-    assert not hasattr(_status_frontend, "_is_masked")
-    assert not hasattr(_status_frontend, "_MASK_KEYWORDS")
+    assert not hasattr(status_projection, "_is_masked")
+    assert not hasattr(status_projection, "_MASK_KEYWORDS")
 
 
 @pytest.mark.parametrize(
@@ -162,8 +130,8 @@ def test_clave_credential_inputs_mask_on_the_real_shipped_schema(path: str) -> N
     from the schema instead would make the gate read its expectation off
     the thing it checks, and it could then never fail.
     """
-    from .....application.user_profile import mask_profile_field
-    from .....domain.user_profile import load_user_profile_schema
+    from ....domain.user_profile import load_user_profile_schema
+    from .. import mask_profile_field
 
     field_def = load_user_profile_schema().field(path)
     label = field_def.description or path
@@ -176,7 +144,7 @@ def test_every_shipped_schema_field_masks_the_same_under_either_callers_label() 
     """The status and overview call sites build ``label`` differently; masking must agree anyway.
 
     There is one ``mask_profile_field`` -- the status surface
-    (``_status_frontend.py``) and the overview surface (``_overview.py``)
+    (``status_projection.py``) and the overview surface (``_overview.py``)
     both call it, so there is no second decision to fork. That singularity
     is enforced, not merely asserted here: ``test_mask_profile_field_singularity.py``
     fails the build if a second masking-verdict function appears anywhere
@@ -184,7 +152,7 @@ def test_every_shipped_schema_field_masks_the_same_under_either_callers_label() 
     different -- given the one authority, do the two call sites' differing
     label construction agree on its answer. What differs between them is
     the ``label`` argument each site constructs:
-    ``_status_frontend.py`` falls back to the path when the schema
+    ``status_projection.py`` falls back to the path when the schema
     description is empty, ``_overview.py`` passes the description as-is
     (possibly ``None``). ``sensitivity`` only defers to the keyword net on
     ``label`` when the schema declares no sensitivity for the field, so
@@ -194,8 +162,8 @@ def test_every_shipped_schema_field_masks_the_same_under_either_callers_label() 
     It walks every field the real schema declares rather than a sample,
     so a field added later is covered without touching this test.
     """
-    from .....application.user_profile import mask_profile_field
-    from .....domain.user_profile import load_user_profile_schema
+    from ....domain.user_profile import load_user_profile_schema
+    from .. import mask_profile_field
 
     schema = load_user_profile_schema()
     divergent: list[str] = []
@@ -220,7 +188,7 @@ def test_unknown_field_falls_back_to_the_keyword_policy() -> None:
     fact and the screen. The negative case (``unknown.city``) is
     supporting: it pins that the policy is not simply mask-everything.
     """
-    from .....application.user_profile import mask_profile_field
+    from .. import mask_profile_field
 
     assert mask_profile_field(path="unknown.api_credential", label="unknown.api_credential", sensitivity=None)
     assert mask_profile_field(path="unknown.private_key", label="unknown.private_key", sensitivity=None)
@@ -241,7 +209,7 @@ def test_bare_key_keyword_still_subsumes_the_compound_key_names(fragment: str) -
     listed the compounds explicitly, so consolidating onto bare ``key``
     silently relies on it -- and is pinned here rather than assumed.
     """
-    from .....application.user_profile import mask_profile_field
+    from .. import mask_profile_field
 
     assert mask_profile_field(path=f"vault.{fragment}", label=fragment, sensitivity=None)
 
@@ -278,8 +246,8 @@ _AUTH_PROVIDER_VALUE = "clave_movil"
 
 def _auth_provider_display() -> str:
     """The text the surface renders for the stored ``auth.provider`` token."""
-    from .....application.user_profile import profile_field_choices
-    from .....domain.user_profile import load_user_profile_schema
+    from ....domain.user_profile import load_user_profile_schema
+    from .. import profile_field_choices
 
     field = load_user_profile_schema().field(_AUTH_PROVIDER_PATH)
     return next(
@@ -313,8 +281,8 @@ def _seed_auth_facts() -> None:
     -- against the real encrypted record, so the rows projected from them are
     the rows an operator's screen is built from.
     """
-    from .....domain.user_profile import UserProfileFact
-    from .....tests.profile_capsule import set_active_test_profile_facts
+    from ....domain.user_profile import UserProfileFact
+    from ....tests.profile_capsule import set_active_test_profile_facts
 
     set_active_test_profile_facts(
         (
@@ -330,7 +298,7 @@ def _fact_rows_over_a_real_profile() -> tuple[tuple[StatusFactRow, ...], UserPro
     The record is returned alongside its rows so a caller can project the
     SAME record through another surface and compare the two readings.
     """
-    from .....application.workflow import read_profile_bucket, workflow_state_repository
+    from ...workflow import read_profile_bucket, workflow_state_repository
 
     _create_profile()
     pointer = read_profile_bucket("operator")
@@ -339,7 +307,7 @@ def _fact_rows_over_a_real_profile() -> tuple[tuple[StatusFactRow, ...], UserPro
         _seed_auth_facts()
         record = workflow_state_repository().load().active_profile_record()
         assert record is not None
-        return _status_frontend._build_fact_rows(record=record), record
+        return status_projection._build_fact_rows(record=record), record
 
 
 @pytest.mark.usefixtures("_isolated_cli_backend")
@@ -353,7 +321,7 @@ def test_build_fact_rows_masks_by_the_real_schema() -> None:
     decision tested here is byte-for-byte the one the operator's screen
     gets.
     """
-    from .....application.user_profile import mask_profile_field
+    from .. import mask_profile_field
 
     rows, _record = _fact_rows_over_a_real_profile()
 
@@ -372,7 +340,7 @@ def test_build_fact_rows_masks_by_the_real_schema() -> None:
         f"auth.provider must project an unmasked row; labels: {sorted(row.label for row in rows)}"
     )
     assert provider_row.masked is False, "auth.provider is declared identity and must render in the clear"
-    from .....domain.user_profile import load_user_profile_schema, profile_field_label
+    from ....domain.user_profile import load_user_profile_schema, profile_field_label
 
     soporte_section = _AUTH_SOPORTE_PATH.split(".", 1)[0]
     soporte_label = profile_field_label(soporte_section, load_user_profile_schema().field(_AUTH_SOPORTE_PATH))
@@ -436,8 +404,8 @@ def test_an_unindexed_row_carries_the_label_the_manager_carries() -> None:
     sentences of authority prose. A row that still equals the description
     is a row that never reached the catalogue.
     """
-    from .....application.user_profile import build_profile_overview
-    from .....domain.user_profile import load_user_profile_schema
+    from ....domain.user_profile import load_user_profile_schema
+    from .. import build_profile_overview
 
     rows, record = _fact_rows_over_a_real_profile()
 
@@ -469,13 +437,13 @@ def test_an_indexed_row_uses_the_schema_label_and_a_visible_row_marker() -> None
     an indexed fact, and this is a real ``UserProfileRecord`` read by the
     production builder against the real shipped schema.
     """
-    from .....domain.user_profile import (
+    from ....domain.user_profile import (
         ProfileSetupState,
         UserProfileFact,
         load_user_profile_schema,
         profile_field_label,
     )
-    from .....domain.user_profile import UserProfileRecord as _Record
+    from ....domain.user_profile import UserProfileRecord as _Record
 
     first_path = "attribution_entity_socios.0.nif"
     second_path = "attribution_entity_socios.1.nif"
@@ -488,7 +456,7 @@ def test_an_indexed_row_uses_the_schema_label_and_a_visible_row_marker() -> None
         ),
     )
 
-    rows = _status_frontend._build_fact_rows(record=record)
+    rows = status_projection._build_fact_rows(record=record)
     labels = {row.value: row.label for row in rows}
     assert labels.keys() >= {"B12345678", "B87654321"}, f"both socios must project a row; got {labels}"
     assert labels["B12345678"] != labels["B87654321"], "two socios rendered under one indistinguishable row name"
@@ -513,9 +481,9 @@ def test_every_zone_degrades_on_an_empty_storage_root(profile_storage_root: Path
     """
     from dataclasses import fields as dataclass_fields
 
-    from .....application.user_profile import StatusPageData
+    from ..status_projection import StatusPageData
 
-    data = _status_frontend.build_status_page_data()
+    data = status_projection.build_status_page_data()
     assert isinstance(data, StatusPageData)
 
     zones = tuple(field.name for field in dataclass_fields(StatusPageData))
@@ -529,4 +497,4 @@ def test_every_zone_degrades_on_an_empty_storage_root(profile_storage_root: Path
     assert degraded == {zone: getattr(pristine, zone) for zone in zones}, (
         f"a zone did not degrade to its declared empty shape: {degraded}"
     )
-    assert _status_frontend._build_profile_rows(active_uuid="no-such-uuid") == ()
+    assert status_projection._build_profile_rows(active_uuid="no-such-uuid") == ()

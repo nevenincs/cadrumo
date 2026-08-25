@@ -75,6 +75,16 @@ _MODELO = "303"
 _YEAR_N = 2025
 _YEAR_N_PLUS_1 = 2026
 
+# The 2024 intra-year boundary changes M303's official diseño after 2T. The
+# source 2T is governed by ``aeat-dr-303-2024-early`` and the target 3T by
+# ``aeat-dr-303-2024-late``; both are the accepted official M303 sources for
+# their respective registry revisions.
+_YEAR_2024 = 2024
+_EARLY_2024_PERIOD = "2T"
+_LATE_2024_PERIOD = "3T"
+_EARLY_2024_REVISION = "2024-hasta-08-y-2t"
+_LATE_2024_REVISION = "2024-desde-09-y-3t"
+
 #: The relation that carries the prior-period saldo into casilla 110, and the
 #: binding/casilla it targets. Declared in the 303 2023+ revision.
 _CARRY_RELATION: RelationId = "modelo-303-rel-self-compensacion-anteriores"
@@ -240,6 +250,118 @@ _YEAR_N_4T_INPUTS = {
 _YEAR_N_PLUS_1_1T_INPUTS = {
     "modelo-303-iva-repercutido-general-cuota": Decimal("50.00"),
 }
+
+# LIVA art. 99 permits a negative settlement to be carried into the following
+# period. The official 2024 early M303 design (``aeat-dr-303-2024-early``)
+# supplies the 2T form context. These independently grounded inputs make the
+# expected source settlement and available carry 42.00: 63.00 deductible VAT
+# minus 21.00 accrued VAT, rather than an amount echoed back from the engine.
+_YEAR_2024_2T_CREDIT_INPUTS = {
+    "modelo-303-iva-repercutido-general-cuota": Decimal("21.00"),
+    "modelo-303-iva-soportado-interiores-cuota": Decimal("63.00"),
+}
+_YEAR_2024_CARRY = Decimal("42.00")
+
+
+def test_2024_2t_credit_carries_to_3t_across_the_official_design_boundary(tmp_path: Path) -> None:
+    """A real 2T/2024 credit reaches 3T's carried-carry casilla and binding.
+
+    LIVA art. 99 makes the 2T surplus available for the following settlement.
+    The two source values are independently grounded form inputs: 63.00
+    deductible less 21.00 accrued VAT yields the asserted 42.00 carry; the
+    calculation engine is not used as the expected-value oracle.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        observation_repository = CalculationObservationRepository()
+        source_snapshot = resources().modelos.authority.snapshot(
+            _MODELO,
+            filing_year=_YEAR_2024,
+            period=_EARLY_2024_PERIOD,
+        )
+        assert source_snapshot.revision.id == _EARLY_2024_REVISION
+        source_result, _ = _calculate_303(
+            filing_year=_YEAR_2024,
+            period=_EARLY_2024_PERIOD,
+            cuota_binding_overrides=_YEAR_2024_2T_CREDIT_INPUTS,
+            relation_values={},
+        )
+        assert source_result.values[_M303_RESULTADO_CASILLA] == -_YEAR_2024_CARRY
+        assert source_result.values[_M303_SALDO_COMPENSACION_CASILLA] == _YEAR_2024_CARRY
+        observation_repository.save(
+            observation_repository.prepare_observation_envelope(
+                _registry_observation(
+                    filing_year=_YEAR_2024,
+                    period=_EARLY_2024_PERIOD,
+                    result=source_result,
+                ),
+                source_kind="app_filing",
+                captured_at=_CLOCK,
+                stamped_revision_id=source_snapshot.revision.id,
+            )
+        )
+
+        target_snapshot = resources().modelos.authority.snapshot(
+            _MODELO,
+            filing_year=_YEAR_2024,
+            period=_LATE_2024_PERIOD,
+        )
+        assert target_snapshot.revision.id == _LATE_2024_REVISION
+        relation_values = resolve_relations_from_local_store(target_snapshot, repository=observation_repository)
+        carry_relation = next(item for item in relation_values.values if item.relation == _CARRY_RELATION)
+        resolved = {item.relation: item.value for item in relation_values.values if item.value is not None}
+        target_binding_values = materialize_relation_binding_values(
+            target_snapshot.revision,
+            resolved,
+            period=_LATE_2024_PERIOD,
+        )
+        target_result, _ = _calculate_303(
+            filing_year=_YEAR_2024,
+            period=_LATE_2024_PERIOD,
+            cuota_binding_overrides={},
+            relation_values=resolved,
+        )
+
+    assert carry_relation.source_modelo == _MODELO
+    assert carry_relation.source_filing_year == _YEAR_2024
+    assert carry_relation.source_periods == (_EARLY_2024_PERIOD,)
+    assert carry_relation.value == _YEAR_2024_CARRY
+    assert target_binding_values[_CARRY_BINDING] == _YEAR_2024_CARRY
+    assert target_result.values[_M303_COMPENSACION_PENDIENTE_CASILLA] == _YEAR_2024_CARRY
+
+
+def test_2024_3t_refuses_a_2t_observation_stamped_with_the_late_revision(tmp_path: Path) -> None:
+    """A persisted 2T observation cannot carry when its design stamp is wrong."""
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        observation_repository = CalculationObservationRepository()
+        source_result, _ = _calculate_303(
+            filing_year=_YEAR_2024,
+            period=_EARLY_2024_PERIOD,
+            cuota_binding_overrides=_YEAR_2024_2T_CREDIT_INPUTS,
+            relation_values={},
+        )
+        observation_repository.save(
+            observation_repository.prepare_observation_envelope(
+                _registry_observation(
+                    filing_year=_YEAR_2024,
+                    period=_EARLY_2024_PERIOD,
+                    result=source_result,
+                ),
+                source_kind="app_filing",
+                captured_at=_CLOCK,
+                # Mutation bite: 2T must be stamped with the early, not 3T,
+                # design. The real carry gate drops this persisted source.
+                stamped_revision_id=_LATE_2024_REVISION,
+            )
+        )
+        target_snapshot = resources().modelos.authority.snapshot(
+            _MODELO,
+            filing_year=_YEAR_2024,
+            period=_LATE_2024_PERIOD,
+        )
+        relation_values = resolve_relations_from_local_store(target_snapshot, repository=observation_repository)
+
+    carry_relation = next(item for item in relation_values.values if item.relation == _CARRY_RELATION)
+    assert carry_relation.value is None
 
 
 def test_year_n_4t_credit_produces_carry_forward_saldo(tmp_path: Path) -> None:

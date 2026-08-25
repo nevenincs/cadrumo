@@ -30,8 +30,8 @@ from mcp.types import CallToolResult, TextResourceContents
 from pydantic import AnyUrl
 
 from cadrumo.core import scan_directory
-from dev._paths import UTF_8
 
+from .._paths import UTF_8
 from ._command import run_command
 from ._installed_wheel_binding import installed_distribution_payload_sha256
 from .installed_tax_oracle import (

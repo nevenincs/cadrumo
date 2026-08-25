@@ -137,7 +137,7 @@ msgstr ""
 "megmutatja, hogy a 303-as modelo `export` parancsa visszautasítja a "
 "kérést, majd rögzíti a helyi benyújtott jelölőt. A visszautasítás és a "
 "jelölő között magad nyújtod be a számokat az AEAT portálján (az alábbi "
-"2–4. lépés). Az utolsó keret az egyeztetési parancs, amelyet akkor "
+"2., 3. és 4. lépés). Az utolsó keret az egyeztetési parancs, amelyet akkor "
 "futtatsz, amikor az AEAT igazolása már a lemezen van; itt csak "
 "megjelenik, nem fut le, mert a valódi bizonylatodra van szüksége:"
 
@@ -556,4 +556,3 @@ msgstr "[CLI-referencia](../cli/index.rst) - teljes parancs- és kapcsolórészl
 #~ "Ezeknél a `export` elutasít, és a "
 #~ "kiszámított casilla-értékeket a portál "
 #~ "űrlapján kell megadnod."
-

@@ -48,12 +48,6 @@ from ._models import (
     new_operation_id,
 )
 from ._observation import OperationObservationService
-from ._profile_manager import (
-    ManagerAction,
-    ManagerActionDisposition,
-    ManagerActionOutcome,
-    ManagerProgressSinkBinder,
-)
 from ._projection_services import (
     OperationCancellationService,
     OperationDetachService,
@@ -149,10 +143,6 @@ from ._supervisor import OperationSupervisor
 __all__ = [
     "CredentialFreeOperationRequest",
     "EphemeralSecretSubmission",
-    "ManagerAction",
-    "ManagerActionDisposition",
-    "ManagerActionOutcome",
-    "ManagerProgressSinkBinder",
     "OperationApplyResponse",
     "OperationBaselinePolicy",
     "OperationCancellation",

@@ -68,7 +68,8 @@ from cadrumo.application.ledger import (
     party_regions,
 )
 from cadrumo.core import LOCAL_TRANSPORT_LABEL, FieldGroundingOutcome, FieldOrigin
-from dev._paths import UTF_8
+
+from .._paths import UTF_8
 
 _UTF_8: Final[str] = UTF_8
 

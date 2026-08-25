@@ -283,10 +283,7 @@ def test_modelo_038_refuses_unevidenced_history_and_keeps_historical_pdf_unselec
     current_source = catalogues.sources["aeat-dr-038-2024"]
     historical_source = catalogues.sources["aeat-dr-038-2012-inspection"]
 
-    amendment_refs = {
-        ref_id: catalogues.legal[ref_id]
-        for ref_id in _M038_SOURCE_ERA_LEGAL_REFS
-    }
+    amendment_refs = {ref_id: catalogues.legal[ref_id] for ref_id in _M038_SOURCE_ERA_LEGAL_REFS}
     verify_legal_catalogue_grounding(amendment_refs, source_root=bundled_path())
     assert amendment_refs["orden-hac-646-2024:art-1"].required_text == (
         "Se introduce un nuevo campo, «Identificador registral único de la sociedad (IRUS)»",
@@ -326,9 +323,7 @@ def test_modelo_038_refuses_unevidenced_history_and_keeps_historical_pdf_unselec
     widened_revision = june_2024.model_copy(
         update={"valid_from": date(2024, 1, 1), "period_selector": widened_selector}
     )
-    widened_modelo = modelo.model_copy(
-        update={"revisions": {**modelo.revisions, "2024-desde-06": widened_revision}}
-    )
+    widened_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, "2024-desde-06": widened_revision}})
     selected = select_revision(widened_modelo, filing_year=2024, period="05")
     sources = [
         catalogues.sources[source_ref]
@@ -348,8 +343,7 @@ def test_committed_registry_tree_has_required_model_law_coverage() -> None:
     modelo_038 = next(
         ledger
         for ledger in audit.ledgers
-        if (ledger.modelo, ledger.revision, ledger.filing_year, ledger.period)
-        == ("038", "2024-desde-06", 2024, "06")
+        if (ledger.modelo, ledger.revision, ledger.filing_year, ledger.period) == ("038", "2024-desde-06", 2024, "06")
     )
     assert modelo_038.revision == "2024-desde-06"
     assert modelo_038.authority_scope == "inspection_only"

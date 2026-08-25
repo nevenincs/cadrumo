@@ -368,11 +368,6 @@ application:
         text_casilla_invalid: The casilla text value does not match its declared registry
           data type.
         text_casilla_not_string: The casilla text input must be a text value.
-    calculate:
-      errors:
-        repair_hints_forbidden: Repair hints are accepted only when blockers must
-          be resolved.
-        repair_hints_required: Repair hints are required when blockers must be resolved.
     complementaria:
       errors:
         justificante_csv_absent: The complementaria requires the original filing's

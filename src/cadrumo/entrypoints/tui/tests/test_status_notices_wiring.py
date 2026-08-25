@@ -9,7 +9,7 @@ was structurally invisible to a full-screen one.
 These tests drive the real production chain end to end: a real profile, a
 real (or absent) persisted calculation observation, the real
 :func:`~cadrumo.application.overview.no_aeat_history_notice` producer, the
-real :func:`~cadrumo.entrypoints.cli.build_status_page_data`
+real :func:`~cadrumo.application.user_profile.status_projection.build_status_page_data`
 builder, and the real :class:`~cadrumo.entrypoints.tui.profile.status.StatusApp`
 surface. No mock, stub, or reimplementation of what the wiring should do.
 """
@@ -21,9 +21,9 @@ from textual.widgets import Static
 
 from ....application.calculations import CalculationObservationRepository
 from ....application.user_profile import login_profile, register_profile_with_credentials
+from ....application.user_profile.status_projection import build_status_page_data
 from ....domain.calculations.registry import RegistryModeloObservation
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...cli import build_status_page_data
 from ..profile.status import StatusApp
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

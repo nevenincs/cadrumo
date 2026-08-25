@@ -12,8 +12,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core import iter_directory, scan_directory
-from dev._paths import REPO_ROOT
 
+from ..._paths import REPO_ROOT
 from .._distribution_limits import PYPI_FILE_CAP_BYTES
 from .._smoke_common import (
     _CORPUS_SOURCE_PREFIX,

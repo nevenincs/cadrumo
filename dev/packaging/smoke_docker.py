@@ -14,8 +14,8 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core import iter_directory
-from dev._paths import REPO_ROOT, UTF_8
 
+from .._paths import REPO_ROOT, UTF_8
 from ._base_image import linux_base_image
 from ._proof_ledger import record_proof
 from ._smoke_common import relative_manifest_path, require_executable, write_smoke_manifest

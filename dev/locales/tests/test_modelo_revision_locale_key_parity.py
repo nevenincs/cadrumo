@@ -24,8 +24,8 @@ from __future__ import annotations
 
 import pytest
 
-from dev.locales import LocaleManager, classify_revision_moves, classify_revision_parity, scan_modelo_schema_keys
-from dev.locales._paths import LOCALES_DIR, SRC_DIR
+from .. import LocaleManager, classify_revision_moves, classify_revision_parity, scan_modelo_schema_keys
+from .._paths import LOCALES_DIR, SRC_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -18,18 +18,14 @@ IVA-only total over the four devengada rungs this revision currently models,
 and repoints the page 02 offset-1628 field to it; a new page 02 bis
 offset-353 field carries the pre-existing recargo-inclusive total to [47].
 
-This module loads the registry through the raw compiler
-(``load_registry_tree``), not the validated ``ValidatedRegistryAuthority``,
-because full-tree business-rule validation is broken tree-wide right now for
-reasons entirely outside this module's casillas, formulas, bindings, and
-export fields (an M303 semantic-role cardinality regression and a legal
-corpus text gap on ley-37-1992:art-94) -- confirmed by cross-checking that
-EVERY Modelo 390 test file, including ones this module never touches, fails
-identically on the same ``RegistryValidationError``. The compiler-level checks
-here are real: they load the actual on-disk TOML fragments and assert the
-actual compiled structure, and the mutation proof below breaks that same
-on-disk structure (via an isolated scratch copy, never the tracked tree) to
-confirm the assertions are load-bearing.
+Both shipped revisions have the official geometry this gate protects: box [34]
+is written at offset 1628 of ``modelo-390-page-02`` and box [47] at offset 353
+of ``modelo-390-page-02b``.  The full tree is currently accepted by the
+fail-closed authority.  This focused test nevertheless reads the compiled raw
+registry so it can recompile an isolated scratch mutation and inspect the exact
+export structure.  Its mutation proof keeps the IVA-versus-recargo disclosure
+split honest, while the position assertions keep both totals on their respective
+official records.
 """
 
 from __future__ import annotations
@@ -137,9 +133,11 @@ def test_each_total_is_exported_to_its_own_position_in_every_revision() -> None:
     box-34 slot, which is the exact identity the original defect inverted.
 
     A revision that exports neither total is a failure here, not an excused case.
-    Modelo 390 currently declares no export layout, so this test fails until one
-    is authored -- which is the honest report: the disclosure this gate protects
-    cannot be printed at all today.
+    The shipped 2024 and 2025 layouts place [34] at
+    ``modelo-390-page-02:1628`` and [47] at
+    ``modelo-390-page-02b:353``.  The formula mutation below proves that [34]
+    remains recargo-sensitive; the position assertions prove each total reaches
+    its own official field.
     """
     for revision_id, revision in sorted(_m390_revisions(_bundled_registry_root()).items()):
         positions_34 = _positions(revision, _CASILLA_BOX_34)
