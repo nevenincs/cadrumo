@@ -4,7 +4,7 @@ tags:
   - '#tui-architecture'
 date: '2026-08-11'
 modified: '2026-08-25'
-body_hash: 'sha256:398591554d5e3796f8639fac01a5f02fd4c9a16c1a047450b7f229145adabc37'
+body_hash: 'sha256:2b9aa2a18c297dcd4964e11baf72bca0a7fe897f0663c61b80c8f7add695b620'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -211,7 +211,7 @@ Create the canonical TUI entrypoint packages and relocate presentation-only them
 
 Mechanically relocate profile, secret, flow, test, and development surfaces without changing application policy or wizard semantics.
 
-- [ ] `W04.P10.S54` - Relocate profile overview, editor, status, and task projections without changing profile policy; `src/cadrumo/entrypoints/tui/profile`.
+- [x] `W04.P10.S54` - Relocate profile overview, editor, status, and task projections without changing profile policy; `src/cadrumo/entrypoints/tui/profile`.
 - [ ] `W04.P10.S55` - Relocate credential, login, registration, and passphrase projections while keeping secrets ephemeral; `src/cadrumo/entrypoints/tui/secret`.
 - [ ] `W04.P10.S56` - Relocate the existing flow renderer mechanically without changing application flow or wizard semantics; `src/cadrumo/entrypoints/tui/flows`.
 - [ ] `W04.P10.S57` - Relocate TUI-owned pilot, replay, screenshot, and terminal-surface tooling; `src/cadrumo/entrypoints/tui/devtools`.
