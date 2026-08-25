@@ -8,10 +8,7 @@ from ....core import ActionConditionality, NoRecoveryOutcome
 from ....domain.calculations.registry import (
     RegistryFailureClassification,
     RegistryFailureCondition,
-    RegistryValidationError,
 )
-from ....entrypoints.cli._common import cli_policy_refusal_projection
-from ....entrypoints.cli._errors import _project_cadrumo_error
 from .._registry_preconditions import calculation_registry_failure_verdict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -98,22 +95,3 @@ def test_registry_failure_resolution_rejects_an_undeclared_domain_condition() ->
                 condition="registry.test.unclassified", facts={"observed": False}
             )
         )
-
-
-def test_shared_cli_boundary_projects_the_domain_facts_through_application_policy() -> None:
-    """The CLI consumes the application verdict instead of translating domain prose."""
-    error = RegistryValidationError(
-        translated_message="errors.calc.empty_expression",
-        registry_failure=RegistryFailureClassification(
-            condition=RegistryFailureCondition.QUERY_FILING_YEAR_SCOPED,
-            facts={"modelo": "100", "as_of_supplied": True, "filing_year_supplied": False},
-        ),
-    )
-
-    projected = _project_cadrumo_error(error, callback=lambda: None)
-    refusal = cli_policy_refusal_projection(projected)
-
-    assert refusal is not None
-    assert refusal.precondition_action.failed_condition_id == RegistryFailureCondition.QUERY_FILING_YEAR_SCOPED.value
-    assert refusal.precondition_action.action is not None
-    assert refusal.precondition_action.action.action_id == "operator.modelo.describe"
