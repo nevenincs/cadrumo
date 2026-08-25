@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:95dd97002090b2f7029b48b475472fade21bd2349232a495201156f4448b7e92'
+body_hash: 'sha256:c649c753ee9b668c9b80a17cca69c07a24adca6f3c43a7759d20724f75ca1bc2'
 related:
   - '[[2026-08-23-registry-unblock-loop-reference]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
@@ -207,6 +207,7 @@ related:
   - '[[2026-08-25-registry-completeness-closure-s73-independent-post-review-audit]]'
   - '[[2026-08-25-registry-completeness-closure-s73-source-connectivity-revalidation-audit]]'
   - '[[2026-08-25-registry-completeness-closure-s84-independent-two-channel-proof-audit]]'
+  - '[[2026-08-25-registry-completeness-closure-s85-independent-classification-review-audit]]'
   - '[[2026-08-25-registry-completeness-closure-source-casilla-predecessor-reconciliation-audit]]'
 ---
 
@@ -317,6 +318,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-25-registry-completeness-closure-s73-independent-post-review-audit` - `registry-completeness-closure` audit: `S73 independent post-review`
 - `2026-08-25-registry-completeness-closure-s73-source-connectivity-revalidation-audit` - `registry-completeness-closure` audit: `S73 source-connectivity revalidation audit`
 - `2026-08-25-registry-completeness-closure-s84-independent-two-channel-proof-audit` - `registry-completeness-closure` audit: `S84 independent two-channel proof review`
+- `2026-08-25-registry-completeness-closure-s85-independent-classification-review-audit` - `registry-completeness-closure` audit: `S85 independent classification review`
 - `2026-08-25-registry-completeness-closure-source-casilla-predecessor-reconciliation-audit` - `registry-completeness-closure` audit: `S35 source-casilla predecessor reconciliation`
 
 ### exec
