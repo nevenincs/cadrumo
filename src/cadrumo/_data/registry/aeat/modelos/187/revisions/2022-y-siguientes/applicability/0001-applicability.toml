@@ -1,4 +1,4 @@
-[[revisions."2019-y-siguientes".applicability]]
+[[revisions."2022-y-siguientes".applicability]]
 id = "m187-seed"
 applicable_entity_types = ["attribution_entity", "legal_entity", "natural_person"]
 # This is only Article 2's withholding/pay-on-account limb. Article 42 RGAT

@@ -1,10 +1,10 @@
-[revisions."2019-y-siguientes"]
+[revisions."2022-y-siguientes"]
 # Applicability grade: Article 2 has independent withholding and RGAT Article 42
 # filer limbs; an ordinary participant is not itself made a filer by holding IIC
 # interests. The current single payer-fact selector only decides the former limb.
 authority_grade = "applicability"
-valid_from = 2019-01-01
-period_selector = { year_from = 2019, periods = ["0A"] }
+valid_from = 2022-01-01
+period_selector = { year_from = 2022, periods = ["0A"] }
 orden_aplicabilidad = ["orden-hap-1608-2014:art-1"]
 legal_refs = ["orden-hap-1608-2014:art-1", "orden-hac-1417-2018:art-primero", "ley-35-2006:art-99", "rd-439-2007:art-108"]
 source_refs = ["aeat-modelo-187-procedure", "boe-modelo-187-form-layout", "aeat-dr-187-2022"]
@@ -21,9 +21,9 @@ this review does. Stated because it is not a discriminator: 60 of the 80 revisio
 2026-08-21 carry the same flag and none of them name it."""
 reviewed_at = 2026-08-21
 
-[revisions."2019-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
+[revisions."2022-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
 reason = """
-CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2019-y-siguientes' of modelo 187 has no strictly-earlier sibling revision of this modelo (valid_from 2019-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity \
+CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2022-y-siguientes' of modelo 187 has no strictly-earlier sibling revision of this modelo (valid_from 2019-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity \
 transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."""
 legal_refs = [
     "orden-hap-1608-2014:art-1",

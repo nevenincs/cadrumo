@@ -27,6 +27,7 @@ from ._registry_schema_support import _committed_modelo
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MODELOS = ("187", "188", "194")
+_REVISION_BY_MODELO = {"187": "2022-y-siguientes", "188": "2019-y-siguientes", "194": "2019-y-siguientes"}
 _SOURCE_CASILLA: CasillaId = validated_casilla_id("04", surface="_SOURCE_CASILLA")
 _TARGET_CASILLA: CasillaId = validated_casilla_id("05", surface="_TARGET_CASILLA")
 
@@ -61,7 +62,7 @@ def test_modelo_187_188_194_declare_no_formula(modelo_id: str) -> None:
     absence is the contract now.
     """
     modelo, _ = _committed_modelo(modelo_id)
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[_REVISION_BY_MODELO[modelo_id]]
 
     assert revision.formulas == (), (
         f"modelo {modelo_id} declares {len(revision.formulas)} formula(s); its printed "
@@ -73,7 +74,7 @@ def test_modelo_187_188_194_declare_no_formula(modelo_id: str) -> None:
 def test_modelo_187_preserves_both_article_2_filer_population_limbs() -> None:
     """The retained withholding selector must not erase Article 42 RGAT filers."""
     modelo, catalogues = _committed_modelo("187")
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions["2022-y-siguientes"]
     (rule,) = revision.applicability
 
     assert rule.required_payer_fact == "pays_capital_income_with_retencion"
@@ -96,7 +97,7 @@ def test_modelo_187_preserves_both_article_2_filer_population_limbs() -> None:
 def test_modelo_187_188_194_casilla_set_is_the_printed_box_set(modelo_id: str, expected: tuple[str, ...]) -> None:
     """The declared casillas are the boxes the approving orden's annex prints."""
     modelo, _ = _committed_modelo(modelo_id)
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions[_REVISION_BY_MODELO[modelo_id]]
 
     assert tuple(str(casilla.id) for casilla in revision.casillas) == expected
     assert all(casilla.input_kind.value == "manual" for casilla in revision.casillas), (

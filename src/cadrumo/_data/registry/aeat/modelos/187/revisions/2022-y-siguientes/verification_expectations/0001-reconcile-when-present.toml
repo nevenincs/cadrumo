@@ -1,12 +1,12 @@
-# Reconcile-when-present for Modelo 187 revision 2019-y-siguientes. The hoja
+# Reconcile-when-present for Modelo 187 revision 2022-y-siguientes. The hoja
 # resumen prints four boxes and every one of them is operator input, so none is
 # engine-computed: the expectation reconciles a filed value against the stored
 # one WHEN the filing prints it, and is EXCLUDED from the coverage denominator
 # (min_coverage = 0), so enrollment can never lower coverage or flip a
 # legitimate filing's verdict. Grounded in the casillas' own declared
 # legal_refs/source_refs, which name the annex the boxes are printed in.
-[[revisions."2019-y-siguientes".verification_expectations]]
-id = "modelo-187-2019-y-siguientes-reconcile-when-present"
+[[revisions."2022-y-siguientes".verification_expectations]]
+id = "modelo-187-2022-y-siguientes-reconcile-when-present"
 computed_casilla_ids = []
 reconcile_when_present_casilla_ids = [
     "01",
