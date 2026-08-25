@@ -21,8 +21,7 @@ import pytest
 
 from cadrumo.core import DirectoryEntryKind, scan_directory
 
-from .._workspace import materialise_marketplace, materialise_plugin
-from ._plugin_cohort import TestPluginCohort
+from .._workspace import _PluginPythonCohort, materialise_marketplace, materialise_plugin
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -34,7 +33,7 @@ _SCAFFOLD_SUPERSEDES = _REPO_ROOT / "packaging" / "marketplace" / ".claude-plugi
 
 
 def test_marketplace_manifest_is_schema_shaped_and_resolves_to_the_plugin(
-    tmp_path: Path, plugin_cohort: TestPluginCohort
+    tmp_path: Path, plugin_cohort: _PluginPythonCohort
 ) -> None:
     output = tmp_path / "marketplace"
     manifest = materialise_marketplace(output, cohort=plugin_cohort)
@@ -63,7 +62,9 @@ def test_marketplace_manifest_is_schema_shaped_and_resolves_to_the_plugin(
     assert manifest.plugin.agents_written > 0
 
 
-def test_served_plugin_equals_the_standalone_plugin_emission(tmp_path: Path, plugin_cohort: TestPluginCohort) -> None:
+def test_served_plugin_equals_the_standalone_plugin_emission(
+    tmp_path: Path, plugin_cohort: _PluginPythonCohort
+) -> None:
     """No drift by construction: the served plugin is the standalone emission."""
     marketplace_dir = tmp_path / "marketplace"
     standalone_dir = tmp_path / "standalone"
@@ -84,7 +85,9 @@ def test_served_plugin_equals_the_standalone_plugin_emission(tmp_path: Path, plu
         assert served_path.read_bytes() == standalone[relative].read_bytes(), relative
 
 
-def test_checked_in_marketplace_scaffold_matches_the_generator(tmp_path: Path, plugin_cohort: TestPluginCohort) -> None:
+def test_checked_in_marketplace_scaffold_matches_the_generator(
+    tmp_path: Path, plugin_cohort: _PluginPythonCohort
+) -> None:
     """The ``packaging/marketplace`` scaffold cannot drift from the generator."""
     output = tmp_path / "marketplace"
     materialise_marketplace(output, cohort=plugin_cohort)
@@ -94,7 +97,7 @@ def test_checked_in_marketplace_scaffold_matches_the_generator(tmp_path: Path, p
 
 
 def test_the_supersedes_sidecar_is_emitted_and_matches_the_scaffold(
-    tmp_path: Path, plugin_cohort: TestPluginCohort
+    tmp_path: Path, plugin_cohort: _PluginPythonCohort
 ) -> None:
     """The retirement declaration ships beside the manifest, and cannot drift either.
 
@@ -122,7 +125,7 @@ def test_the_supersedes_sidecar_is_emitted_and_matches_the_scaffold(
 
 
 def test_emitted_marketplace_passes_claude_validate_strict_when_cli_present(
-    tmp_path: Path, plugin_cohort: TestPluginCohort
+    tmp_path: Path, plugin_cohort: _PluginPythonCohort
 ) -> None:
     """The emitted marketplace is schema-valid; where ``claude`` exists, prove it strict.
 
