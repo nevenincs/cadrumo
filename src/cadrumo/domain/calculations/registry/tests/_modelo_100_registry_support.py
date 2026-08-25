@@ -34,9 +34,11 @@ _UNKNOWN_CONSTRUCT_MEMBER_CASILLA: CasillaId = validated_casilla_id(
 def _m100_2024_deduccion_maternidad_bindings() -> Mapping[str, Decimal]:
     """Return M100 2024's empty-descendant maternity binding from domain law."""
     return {
-        "renta-2024-profile-deduccion-maternidad": compute_deduccion_maternidad_0611(
-            [],
-            filing_year=2024,
+        "renta-2024-profile-deduccion-maternidad": Decimal(
+            compute_deduccion_maternidad_0611(
+                [],
+                filing_year=2024,
+            ),
         ),
     }
 
