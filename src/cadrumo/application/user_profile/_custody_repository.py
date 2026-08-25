@@ -5,15 +5,15 @@ from __future__ import annotations
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Literal
+from typing import Literal
 from uuid import UUID
 
 from pydantic import ValidationError
 
-from ...adapters.persistence.storage import custody
 from ...core import StorageCategory, storage_location
 from ...core.paths import effective_storage_root
 from ._custody_pointer import ProfileCustodyPointerSnapshot
+from ._custody_ports import ProfileCustodyLocalRecordStore, default_profile_custody_local_record_store
 from ._custody_transactions import (
     CUSTODY_RECEIPT_MAX_BYTES,
     CUSTODY_TRANSACTION_MAX_BYTES,
@@ -29,9 +29,9 @@ from ._custody_transactions import (
 class ProfileCustodyTransactionRepository:
     """Persist strict current-format transaction journals and owner receipts."""
 
-    def __init__(self, *, root: Path | None = None, adapters: Any | None = None) -> None:
+    def __init__(self, *, root: Path | None = None, adapters: ProfileCustodyLocalRecordStore | None = None) -> None:
         self._storage_root = effective_storage_root(root)
-        self._adapters: Any = adapters if adapters is not None else custody
+        self._adapters = adapters if adapters is not None else default_profile_custody_local_record_store()
         self._journal_root = (
             self._storage_root / storage_location(StorageCategory.PROFILE_CUSTODY_TRANSACTION_JOURNAL).relative_path()
         )
@@ -55,7 +55,7 @@ class ProfileCustodyTransactionRepository:
     def create_journal(self, journal: ProfileCustodyTransactionJournal) -> None:
         self._ensure_root(self._journal_root, "custody transaction journal")
         path = self.journal_path(journal.transaction_id)
-        with self._adapters.profile_custody_local_lock(self._journal_root / ".repository.lock"):
+        with self._adapters.lock(self._journal_root / ".repository.lock"):
             self._write_exclusive(path, journal.canonical_json_bytes(), "custody transaction journal")
 
     def load_journal(self, transaction_id: UUID) -> ProfileCustodyTransactionJournal:
@@ -74,7 +74,7 @@ class ProfileCustodyTransactionRepository:
     def save_journal(self, journal: ProfileCustodyTransactionJournal) -> None:
         self._ensure_root(self._journal_root, "custody transaction journal")
         path = self.journal_path(journal.transaction_id)
-        with self._adapters.profile_custody_local_lock(self._journal_root / f".{path.name}.lock"):
+        with self._adapters.lock(self._journal_root / f".{path.name}.lock"):
             try:
                 self._read_bounded(path, CUSTODY_TRANSACTION_MAX_BYTES, "custody transaction journal")
             except ProfileCustodyTransactionConflictError:
@@ -85,7 +85,7 @@ class ProfileCustodyTransactionRepository:
         self._ensure_root(self._receipt_root, "custody receipt")
         path = self.receipt_path(receipt.transaction_id)
         payload = receipt.canonical_json_bytes()
-        with self._adapters.profile_custody_local_lock(self._receipt_root / f".{path.name}.lock"):
+        with self._adapters.lock(self._receipt_root / f".{path.name}.lock"):
             try:
                 existing = self._read_bounded(path, CUSTODY_RECEIPT_MAX_BYTES, "custody receipt")
             except ProfileCustodyTransactionConflictError:
@@ -114,7 +114,7 @@ class ProfileCustodyTransactionRepository:
         self._ensure_root(self._receipt_root, "custody owner receipt")
         path = self.owner_receipt_path(receipt.transaction_id, receipt.owner)
         payload = receipt.canonical_json_bytes()
-        with self._adapters.profile_custody_local_lock(self._receipt_root / f".{path.name}.lock"):
+        with self._adapters.lock(self._receipt_root / f".{path.name}.lock"):
             try:
                 existing = self._read_bounded(path, CUSTODY_RECEIPT_MAX_BYTES, "custody owner receipt")
             except ProfileCustodyTransactionConflictError:
@@ -147,7 +147,7 @@ class ProfileCustodyTransactionRepository:
 
     def _ensure_root(self, root: Path, subject: str) -> None:
         try:
-            self._adapters.ensure_profile_custody_local_directory(root)
+            self._adapters.ensure_directory(root)
         except Exception as exc:
             raise ProfileCustodyTransactionCorruptError(f"{subject} root cannot be anchored") from exc
 
@@ -157,13 +157,13 @@ class ProfileCustodyTransactionRepository:
 
     def _write_exclusive(self, path: Path, payload: bytes, subject: str) -> None:
         try:
-            self._adapters.write_profile_custody_local_record(path, payload, publish_once=True)
+            self._adapters.write(path, payload, publish_once=True)
         except Exception as exc:
             raise ProfileCustodyTransactionCorruptError(f"{subject} cannot be exclusively created") from exc
 
     def _write_replace(self, path: Path, payload: bytes, subject: str) -> None:
         try:
-            self._adapters.write_profile_custody_local_record(path, payload, publish_once=False)
+            self._adapters.write(path, payload, publish_once=False)
         except Exception as exc:
             raise ProfileCustodyTransactionCorruptError(f"{subject} cannot be atomically replaced") from exc
 
@@ -187,7 +187,7 @@ def profile_custody_transaction_lock(root: Path, profile_id: UUID) -> Generator[
     """
     from ._profile_pointer_transaction import active_profile_pointer_transaction
 
-    adapters = custody
+    adapters = default_profile_custody_local_record_store()
     storage_root = effective_storage_root(root)
     capsules_root = storage_root / storage_location(StorageCategory.BUCKETS).relative_path()
     # Use the application pointer transaction rather than reacquiring the raw
@@ -195,11 +195,11 @@ def profile_custody_transaction_lock(root: Path, profile_id: UUID) -> Generator[
     # to bind an inactive-target decision across the complete custody delete.
     with active_profile_pointer_transaction(storage_root):
         try:
-            adapters.ensure_profile_custody_local_directory(capsules_root)
+            adapters.ensure_directory(capsules_root)
         except Exception as exc:
             raise ProfileCustodyTransactionCorruptError("profile custody lock root cannot be anchored") from exc
         profile_target = capsules_root / f".profile-custody-{profile_id}.lock"
-        with adapters.profile_custody_local_lock(profile_target):
+        with adapters.lock(profile_target):
             yield
 
 
