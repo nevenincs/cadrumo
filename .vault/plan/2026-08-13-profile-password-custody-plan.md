@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#profile-password-custody'
 date: '2026-08-13'
+modified: '2026-08-25'
+body_hash: 'sha256:289bbe550acb39e476e69ec85b131844fe63256747745236d3eec2f92b2f7958'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -18,8 +20,6 @@ related:
   - '[[2026-08-13-recovery-mnemonic-presentation-successor-adr]]'
   - '[[2026-08-13-sealed-archive-transport-successor-adr]]'
   - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
-modified: '2026-08-25'
-body_hash: 'sha256:ce171e6c270958fe24e6b0b716e076ecc7d3c2a9136f05f29da15dd70640c4cb'
 ---
 
 # `profile-password-custody` plan
@@ -376,3 +376,4 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 - [ ] `W06.P12.S265` - Bring overview.calendar beneath the real output-schema size budget by reducing its returned payload while preserving retrievable operator detail; `src/cadrumo/application/ and src/cadrumo-harness/src/cadrumo_harness/mcp/tests/test_result_size_budget.py`.
 - [ ] `W06.P12.S266` - Restore typed fail-closed machine-secret descriptor behavior so Windows root refusals never become unexpected internal boundaries and WSL passphrase change through the fd leaf succeeds while preserving descriptor consumption; `src/cadrumo/entrypoints/cli/ and src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`.
 - [ ] `W06.P12.S267` - Reconcile feature and full Vaultspec warnings by exact document owner, removing scaffold annotations, reattesting modified bodies, refreshing indexes, and resolving only genuine corpus hygiene debt; `.vault/`.
+- [ ] `W06.P12.S268` - Repair defining-source API docstring cross-references and public facade targets for every stable main nitpicky warning left after generated stub reconciliation, without promoting private implementation ownership; `src/cadrumo/ and docs/api/`.
