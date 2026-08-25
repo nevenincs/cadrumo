@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:fa71c9bf11718cf80c08b730a663a726ac79b8205f334984cdbb30331d187c50'
+body_hash: 'sha256:00e0f3cd8e956d1d1072fd48469085f94a5c1dc3b47c483897ead93c3ae98d86'
 related:
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
   - "[[2026-08-25-tui-architecture-s128-workspace-projection-composition-reference]]"
@@ -157,3 +157,37 @@ still blocked by one unresolved pointer-transition ownership decision and two
 HIGH incompatibilities with the closed S125/S126 contracts. Correct the ADR and
 add the named prerequisite contract rows before implementing native WORK
 capture or Workspace composition.
+
+## Remediation re-review
+
+### Scope and evidence
+
+Fresh independent re-review at committed HEAD `105a6380199f1858aa266d69f56e9f74c8336bfb` of the substantive remediation bodies in `b9cb7a3682` and their CLI-owned closure metadata in `d22845d2cc`. The three amended records have no later body delta through HEAD, and the relevant audit, Workspace model/producer, pointer model/IO, and pointer-transaction files were clean relative to HEAD. Unrelated shared-worktree changes were preserved.
+
+Discovery again led with semantic Vaultspec RAG searches for the pointer transition owner, epoch comparison domain, and independent revision axes. The code index reported two missing published sections, so every presence and absence conclusion was closed with whole-file reads and exact `git grep` against HEAD. The exact source census found `ModeloWorkspaceEpochV1` only in `_workspace_producers.py` and its focused test, the baseline stamp digest and single `revision_assertion` only in `_workspace_models.py` and its focused test, and zero source occurrences of `comparison_domain`, `requested_revision_assertion`, or `stored_revision_assertion`. That is expected unimplemented state, not contrary implementation evidence.
+
+### Prior HIGH closure
+
+The `implicit-pointer-transition-owner` HIGH is architecturally closed. The accepted ADR now names the existing active-profile pointer owner behind the public `cadrumo.application.user_profile` facade, the public core pointer IO record, and the existing custody-root transaction lock as the sole transition authority. The same pointer record carries a durable monotonic coordinate; clear writes an absent-selection tombstone; each successful state-changing write, restore, or clear advances exactly once; and idempotent no-change does not advance. Because another process must publish through the same locked record, a completed A -> B -> A remains observable even when no WORK capture occurs between transitions. WORK neither persists nor owns a pointer counter.
+
+The implicit and explicit WORK compositions are now disjoint and implementable. Implicit capture atomically composes the authoritative pointer coordinate with the one-record catalogue coordinate, rereads the pointer coordinate under the same dependency order, retries on change, and derives an injective order-preserving native generation from those two owner coordinates. Its comparison domain binds root, pointer-owner physical identity, selected bucket, catalogue namespace/key, and process incarnation. Explicit capture excludes the pointer coordinate, lock, retry limb, and pointer-domain limb and preserves the catalogue generation unchanged. Catalogue and pointer ABA, switched bucket, distinct root, and stale-currentness behavior are all named as biting conformance cases.
+
+The `epoch-comparison-domain` HIGH is architecturally closed. The ADR requires epoch schema version 2 with an opaque native-owner-derived `comparison_domain` beside the unchanged native integer. An S126 registration copies both unchanged; it cannot derive the domain from the semantic owner. Equality, successor checks, and second-pass currentness require exact domain equality before integer comparison, so distinct roots, switched roots, physical scopes, and process incarnations refuse rather than compare coincident integers. The complete owner/kind/schema/domain/generation tuple feeds a separate sorted contributor-epoch digest, the Workspace baseline token, and every cursor or facet continuation. Producer-contract and inventory digests change for schema version 2, the runtime domain stays out of the static stamp, and no schema-version-1 reader remains.
+
+The `dual-law-assertion-shape` HIGH is architecturally closed. S125 now has fixed `requested_revision_assertion` and `stored_revision_assertion` records with source-fixed discriminators, optional revision IDs, and the closed `not_present`/`matched`/`mismatched` disposition. The resolved target and revision-mismatch refusal preserve both axes, including natural absence, exact lookup, visible persisted work, requested-only mismatch, stored-only mismatch, and simultaneous mismatch. S128 performs exactly one WORK capture, then exactly one S159 law-selected REGISTRY capture, and only then applies one pure two-axis assertion without a work reread, raw registry loader, asserted-id selection, or generic-fact escape.
+
+### Required plan prerequisites
+
+The remediation is a decision closure, not proof that the checked S125, S126, or S159 implementations already satisfy it. Before S160/S167/S128 execution, the plan needs explicit CLI-authored ownership for these exact prerequisite changes:
+
+- an S125 contract-correction row replacing the single assertion with the two fixed axes and adding `contributor_epoch_digest` to the baseline/cursor consistency shape, with no compatibility reader;
+- an S126 epoch-schema-v2 row adding the opaque comparison domain, domain-before-integer comparison, contract/inventory digest changes, and same-root, distinct-root, switched-root, and cross-process tests;
+- a registry-native-coordinate correction row extending the checked S159 capture/currentness surface to derive and return its opaque physical-root/process domain, because current `RegistryAuthorityCapture` and `read_current_generation` expose only the integer and S126 is forbidden to mint the missing coordinate;
+- a pointer-authority cutover row owning the pointer record/IO schema, durable coordinate and absent tombstone, public pointer transaction/facade, every production pointer reader/writer/restore/clear migration, custody journal/rollback adaptation, canonical root-lock proof, idempotence, and between-WORK-observations cross-process A -> B -> A;
+- a one-record persistence row repairing both singleton `load_revisioned` kernels and exposing the inseparable catalogue/revision observation through `WorkUnitCatalogueRepositoryProtocol` and its concrete adapter, with real present/present, absent/present, and present/absent interleaving tests.
+
+S160 must then depend on those rows and S159, widen beyond `_work_addressing.py`, publish the implicit/explicit WORK native capture/current-coordinate pair through the sole application Modelo facade, converge the pure captured-catalogue selector and every substitutable consumer, remove the raw-loader assertion path, and delete parallel scans rather than bridge them. S161-S166 must each return their native comparison domain as well as generation; S167 follows all eight corrected native surfaces plus S126 v2; S128 follows S160-S167 plus the S125 correction; and S130/S139 retain the aggregate no-duplicate, domain, baseline/cursor, ABA, and two-axis fixed-point proof. None of these prerequisites belongs inside S128 composition.
+
+### Remediation disposition
+
+PASS for the amended architecture. All three prior HIGH decision gaps are resolved without a WORK-owned shadow counter, root/process integer comparison, or collapsed revision evidence. The original FAIL above remains the historical disposition of the earlier amendment and is intentionally not rewritten. This PASS does not assert source delivery or authorize coding under the current narrow plan: implementation remains blocked until the prerequisite rows and row dependencies above are added through the plan verbs.
