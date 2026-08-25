@@ -15,7 +15,7 @@ from ...core import (
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
-from ...domain.calculations.registry._errors import (
+from ...domain.calculations.registry import (
     RegistryFailureClassification,
     RegistryFailureCondition,
 )
