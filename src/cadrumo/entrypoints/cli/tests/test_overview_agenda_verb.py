@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from ....tests.cli_runner import invoke_cached_cli
@@ -25,6 +27,39 @@ def test_agenda_renders_envelope_with_explicit_date() -> None:
     assert "due_today\t" in result.output
     assert "due_soon\t" in result.output
     assert "overdue\t" in result.output
+
+
+def test_agenda_json_preserves_exact_modelo_303_2025_quarterly_coordinates() -> None:
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "overview",
+            "agenda",
+            "--date",
+            "2025-02-01",
+            "--horizon",
+            "365",
+            "--allow-incomplete",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)["result"]
+    entries = (*payload["overdue"], *payload["due_today"], *payload["due_soon"])
+    coordinates = tuple(
+        (entry["modelo"], entry["period"])
+        for entry in entries
+        if entry["modelo"] == "303" and entry["period"].startswith("2025 ")
+    )
+
+    assert coordinates == (
+        ("303", "2025 1T"),
+        ("303", "2025 2T"),
+        ("303", "2025 3T"),
+        ("303", "2025 4T"),
+    )
 
 
 def test_agenda_rejects_zero_horizon() -> None:

@@ -766,6 +766,51 @@ def test_work_create_without_revision_uses_registry_revision_for_supplied_year(
     assert payload["revision_id"] == expected_revision
 
 
+def test_modelo_303_workflow_json_resolves_each_2025_quarter_once() -> None:
+    """The real workflow boundary binds all four M303 targets through registry authority."""
+    _create_profile()
+    modelos, _catalogues = bundled_registry_tree()
+    modelo_303 = next(candidate for candidate in modelos if candidate.id == "303")
+    payloads: list[dict[str, object]] = []
+
+    for period in ("1T", "2T", "3T", "4T"):
+        created = _invoke(
+            [
+                "--format",
+                "json",
+                "app",
+                "modelo",
+                "work",
+                "create",
+                "--modelo",
+                "303",
+                "--year",
+                "2025",
+                "--period",
+                period,
+            ],
+        )
+        assert created.exit_code == 0, created.output
+        payload = _payload(created.output)
+        assert payload["revision_id"] == select_revision(
+            modelo_303,
+            filing_year=2025,
+            period=period,
+        ).id
+        payloads.append(payload)
+
+    coordinates = tuple(
+        (payload["modelo"], payload["filing_year"], payload["period"])
+        for payload in payloads
+    )
+    assert coordinates == (
+        ("303", 2025, {"filing_year": 2025, "code": "1T"}),
+        ("303", 2025, {"filing_year": 2025, "code": "2T"}),
+        ("303", 2025, {"filing_year": 2025, "code": "3T"}),
+        ("303", 2025, {"filing_year": 2025, "code": "4T"}),
+    )
+
+
 def test_m131_modulos_manual_entry_calculates_without_ledger_observations(
     _isolated_cli_backend: Path,
 ) -> None:

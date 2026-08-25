@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from ....adapters.persistence.storage import SensitivityClass, secure_object_repository_for_bucket
@@ -34,6 +36,38 @@ def test_backlog_renders_envelope_with_explicit_window() -> None:
     assert "to\t2026-12-31" in result.output
     assert "as_of\t" in result.output
     assert "late_count\t" in result.output
+
+
+def test_backlog_json_preserves_exact_modelo_303_2025_quarterly_coordinates() -> None:
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "overview",
+            "backlog",
+            "--from",
+            "2025-01-01",
+            "--to",
+            "2026-02-28",
+            "--allow-incomplete",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    items = json.loads(result.output)["result"]["items"]
+    coordinates = tuple(
+        (item["modelo"], item["period"])
+        for item in items
+        if item["modelo"] == "303" and item["period"].startswith("2025 ")
+    )
+
+    assert coordinates == (
+        ("303", "2025 1T"),
+        ("303", "2025 2T"),
+        ("303", "2025 3T"),
+        ("303", "2025 4T"),
+    )
 
 
 def test_backlog_rejects_malformed_from_date() -> None:
