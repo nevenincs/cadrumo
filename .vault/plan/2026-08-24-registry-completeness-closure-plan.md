@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-25'
-body_hash: 'sha256:54747145f75ac1b38a7e9b5a82622af50496fd87d160184aaf34e5f6c43d4ab1'
+body_hash: 'sha256:be1542d1f96ca17f08edb56fe47019a0c285242af5930a597b603f4c714e6520'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -151,7 +151,7 @@ Exercise the supported revision umbrella through localization, casilla continuit
 Close the predicate-relevant work in temporal coverage, source-casilla integration, and export-fragment authority with records, summaries, reviews, and canonical plan state.
 
 - [ ] `W03.P06.S34` - Close registry-temporal-coverage predicate-relevant rows, execution records, summaries, stale assumptions, and final review; `.vault/plan/2026-08-14-registry-temporal-coverage-plan.md`.
-- [ ] `W03.P06.S35` - Close source-casilla-integration predicate-relevant rows, execution records, summaries, stale assumptions, and final review; `.vault/plan/2026-08-22-source-casilla-integration-plan.md`.
+- [x] `W03.P06.S35` - Close source-casilla-integration predicate-relevant rows, execution records, summaries, stale assumptions, and final review; `.vault/plan/2026-08-22-source-casilla-integration-plan.md`.
 - [ ] `W03.P06.S36` - Close aeat-export-fragment-generator-authority predicate-relevant rows, execution records, summaries, stale assumptions, and final review; `.vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md`.
 
 ### Phase `W03.P07` - release honesty and delivery

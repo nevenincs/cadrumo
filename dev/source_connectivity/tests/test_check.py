@@ -71,8 +71,13 @@ def test_expired_blocked_row_is_rejected() -> None:
 
 def test_unresolved_row_without_bounded_follow_up_is_rejected() -> None:
     manifest = load_source_connectivity_census()
+    blocked_dispositions = {
+        SourceConnectivityDisposition.GROUNDING_BLOCKED,
+        SourceConnectivityDisposition.INGRESS_BLOCKED,
+        SourceConnectivityDisposition.REGISTRY_BLOCKED,
+    }
     candidate = next(
-        row for row in manifest.entries if row.disposition is SourceConnectivityDisposition.CONNECT_CANDIDATE
+        row for row in manifest.entries if row.disposition in blocked_dispositions
     )
     unactioned = candidate.model_copy(update={"bounded_follow_up": None})
     mutation = manifest.model_copy(
