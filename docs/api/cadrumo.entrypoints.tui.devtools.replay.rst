@@ -1,7 +1,7 @@
-cadrumo.entrypoints.tui.devtools._frame module
+cadrumo.entrypoints.tui.devtools.replay module
 ==============================================
 
-.. automodule:: cadrumo.entrypoints.tui.devtools._frame
+.. automodule:: cadrumo.entrypoints.tui.devtools.replay
    :members:
    :show-inheritance:
    :ignore-module-all:

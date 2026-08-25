@@ -14,9 +14,9 @@ Submodules
    :maxdepth: 4
 
    cadrumo.entrypoints.tui.devtools.__main__
-   cadrumo.entrypoints.tui.devtools._fixture
-   cadrumo.entrypoints.tui.devtools._frame
-   cadrumo.entrypoints.tui.devtools._journal
-   cadrumo.entrypoints.tui.devtools._replay
-   cadrumo.entrypoints.tui.devtools._surfaces
+   cadrumo.entrypoints.tui.devtools.fixture
+   cadrumo.entrypoints.tui.devtools.frame
+   cadrumo.entrypoints.tui.devtools.journal
    cadrumo.entrypoints.tui.devtools.modelo_work_wizard
+   cadrumo.entrypoints.tui.devtools.replay
+   cadrumo.entrypoints.tui.devtools.surfaces

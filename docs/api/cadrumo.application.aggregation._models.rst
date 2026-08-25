@@ -5,8 +5,3 @@ cadrumo.application.aggregation._models module
    :members:
    :show-inheritance:
    :ignore-module-all:
-   :exclude-members: LedgerAggregationResultBase
-
-.. autoclass:: cadrumo.application.aggregation._models.LedgerAggregationResultBase
-   :members:
-   :show-inheritance:

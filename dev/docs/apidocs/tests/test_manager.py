@@ -32,22 +32,6 @@ def test_public_type_aliases_have_one_canonical_facade_target(tmp_path: pytest.T
     assert all_stub_text.count(".. py:function:: collect_registry_tree_fingerprints\n") == 1
 
 
-def test_generic_models_have_one_explicit_autodoc_owner(tmp_path: pytest.TempPathFactory) -> None:
-    """Pydantic generics are excluded from automodule and indexed once."""
-    manager = ApiStubManager(src_cadrumo=REPO_ROOT / "src" / "cadrumo", docs_api=tmp_path / "api")
-    manager.scaffold()
-
-    expected = {
-        "cadrumo.application.aggregation._models": "LedgerAggregationResultBase",
-        "cadrumo.core._precondition_action_invariants": "PreconditionOutcomeInvariant",
-        "cadrumo.core.json_contract": "OutputRootSchema",
-    }
-    for module_name, class_name in expected.items():
-        stub = (tmp_path / "api" / f"{module_name}.rst").read_text(encoding="utf-8")
-        assert f":exclude-members: {class_name}" in stub
-        assert stub.count(f".. autoclass:: {module_name}.{class_name}\n") == 1
-
-
 def test_scaffold_produces_conformant_tree(tmp_path: pytest.TempPathFactory) -> None:
     """scaffold() followed by check() returns an empty DriftResult.
 

@@ -5,8 +5,3 @@ cadrumo.core._precondition_action_invariants module
    :members:
    :show-inheritance:
    :ignore-module-all:
-   :exclude-members: PreconditionOutcomeInvariant
-
-.. autoclass:: cadrumo.core._precondition_action_invariants.PreconditionOutcomeInvariant
-   :members:
-   :show-inheritance:

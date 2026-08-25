@@ -143,6 +143,7 @@ Submodules
    cadrumo.domain.calculations.registry._validate_cross_revision
    cadrumo.domain.calculations.registry._validate_cross_revision_advisory
    cadrumo.domain.calculations.registry._validate_cross_revision_contiguity
+   cadrumo.domain.calculations.registry._validate_cross_revision_evolution
    cadrumo.domain.calculations.registry._validate_dependency_sections
    cadrumo.domain.calculations.registry._validate_evidence
    cadrumo.domain.calculations.registry._validate_export_exemption
@@ -156,8 +157,10 @@ Submodules
    cadrumo.domain.calculations.registry._validate_layout_authority_content
    cadrumo.domain.calculations.registry._validate_official_source_guidance_content
    cadrumo.domain.calculations.registry._validate_orden_aplicabilidad
+   cadrumo.domain.calculations.registry._validate_parameter_temporal
    cadrumo.domain.calculations.registry._validate_previous_filing_sources
    cadrumo.domain.calculations.registry._validate_previous_filing_year_coverage
+   cadrumo.domain.calculations.registry._validate_producer_inventory
    cadrumo.domain.calculations.registry._validate_projection_endpoints
    cadrumo.domain.calculations.registry._validate_record_design_epochs
    cadrumo.domain.calculations.registry._validate_record_sections

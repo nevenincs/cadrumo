@@ -64,4 +64,5 @@ Submodules
    cadrumo.application.user_profile._section_rows
    cadrumo.application.user_profile._validation
    cadrumo.application.user_profile.login_interaction
+   cadrumo.application.user_profile.profile_fields
    cadrumo.application.user_profile.status_projection
