@@ -9,16 +9,18 @@ from ._dormant_resolver_live_support import _revision
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # Deferred detalle kinds — related_party_operation (M232), refund_operation
-# (M360), donativo_donor (M182)
+# (M360), donativo_donor (M182), gasto193_contributor (M193)
 # ---------------------------------------------------------------------------
 
 
-#: One (modelo, revision, source kind) advisory case per deferred kind. Bound to
-#: ``DEFERRED_SOURCE_KINDS`` by ``test_every_deferred_kind_has_an_advisory_case``.
+#: One (modelo, revision, source kind) advisory case per registry-declared
+#: deferred kind. Bound to the live registry by
+#: ``test_every_registry_declared_deferred_kind_has_an_advisory_case``.
 _DEFERRED_ADVISORY_CASES = [
     ("232", "2018-y-siguientes", "related_party_operation"),
     ("360", "2010-y-siguientes", "refund_operation"),
     ("182", "2025", "donativo_donor"),
+    ("193", "2025-y-siguientes", "gasto193_contributor"),
 ]
 
 
@@ -31,13 +33,13 @@ def test_deferred_detalle_kinds_emit_unhandled_advisory_not_silent_blank(
     """Every deferred detalle kind surfaces the unhandled-source advisory.
 
     related_party_operation (M232 operaciones vinculadas), refund_operation
-    (M360 IVA refund operations), and donativo_donor (M182 donativos) are
-    Sheets-pull-only row-producer source kinds with no live resolver. Each must
-    emit an ``unhandled_binding_source`` advisory rather than a silent blank, and
-    none may sit on the manual_sources allowlist — the allowlist would suppress
-    the advisory. This parametrisation covers the whole of
-    ``DEFERRED_SOURCE_KINDS``; the completeness assertion below fails if a kind
-    is added to the set without an advisory case here.
+    (M360 IVA refund operations), donativo_donor (M182 donativos), and
+    gasto193_contributor (M193 contributor expenses) are Sheets-pull-only
+    row-producer source kinds with no live resolver. Each must emit an
+    ``unhandled_binding_source`` advisory rather than a silent blank, and none
+    may sit on the manual_sources allowlist — the allowlist would suppress the
+    advisory. The completeness assertion below binds this parametrisation to
+    every deferred source kind actually declared by a live registry revision.
 
     Asserted via the ``collect_unhandled_source_diagnostics`` boundary (mirroring
     the source-boundary tests): these revisions carry row-producer relation
@@ -67,17 +69,25 @@ def test_deferred_detalle_kinds_emit_unhandled_advisory_not_silent_blank(
     assert deferred_kind in DEFERRED_SOURCE_KINDS
 
 
-def test_every_deferred_kind_has_an_advisory_case() -> None:
-    """The advisory parametrisation covers every member of ``DEFERRED_SOURCE_KINDS``.
+def test_every_registry_declared_deferred_kind_has_an_advisory_case() -> None:
+    """The advisory parametrisation covers each registry-declared deferred kind.
 
-    Without this, a source kind could be added to the deferred set and ship with
-    no proof that it emits a standing advisory instead of a silent blank.
+    A deferred kind without a registry binding has no live calculate boundary at
+    which to emit an advisory. Once it is declared by a revision, it must gain an
+    explicit real-revision case here rather than silently joining the mesh.
     """
     from ...aggregation import DEFERRED_SOURCE_KINDS
+    from ....core.resources import resources
 
     covered = {deferred_kind for _modelo, _revision_id, deferred_kind in _DEFERRED_ADVISORY_CASES}
-    declared = {kind.value for kind in DEFERRED_SOURCE_KINDS}
+    declared = {
+        binding.source.value
+        for modelo in resources().modelos.all()
+        for revision in modelo.revisions.values()
+        for binding in revision.bindings
+        if binding.source in DEFERRED_SOURCE_KINDS
+    }
     assert covered == declared, (
-        f"deferred kinds without an advisory case: {sorted(declared - covered)}; "
+        f"registry-declared deferred kinds without an advisory case: {sorted(declared - covered)}; "
         f"advisory cases for non-deferred kinds: {sorted(covered - declared)}"
     )

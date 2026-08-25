@@ -26,7 +26,12 @@ from ....core import (
     scan_directory,
 )
 from ._compiled_cache import load_compiled_registry_cache, store_compiled_registry_cache
-from ._errors import RegistryLoadError, RegistryValidationError
+from ._errors import (
+    RegistryFailureClassification,
+    RegistryFailureCondition,
+    RegistryLoadError,
+    RegistryValidationError,
+)
 from ._export_semantics import ExportComputedKey, ExportDraftAttribute
 from ._identity import RegistryIdentity, resolve_registry_identity, stamped_cache_key_tuples
 from ._ids import RevisionId
@@ -1225,8 +1230,11 @@ def _collect_registry_directory_fingerprints(resolved: Path) -> _RegistryPathFin
 
     def _raise_walk_error(exc: OSError) -> None:
         raise RegistryLoadError(
-            f"{resolved}: registry directory could not be walked during cache fingerprinting; "
-            f"retry after concurrent registry writes settle: {exc}",
+            f"{resolved}: registry directory could not be walked during cache fingerprinting; {exc}",
+            registry_failure=RegistryFailureClassification(
+                condition=RegistryFailureCondition.TREE_QUIESCENT,
+                facts={"path": str(resolved), "registry_tree_quiescent": False, "operation": "directory_walk"},
+            ),
         ) from exc
 
     fingerprints: list[_RegistryPathFingerprint] = []
@@ -1353,8 +1361,16 @@ def _refresh_modelo_directory_fingerprints_after_load_error(
         return _collect_modelo_directory_fingerprints(resolved)
     except RegistryLoadError as refresh_error:
         raise RegistryLoadError(
-            f"{resolved}: modelo directory changed during load; retry after concurrent registry writes settle. "
+            f"{resolved}: modelo directory changed during load. "
             f"Initial failure: {initial_error}; refresh failure: {refresh_error}",
+            registry_failure=RegistryFailureClassification(
+                condition=RegistryFailureCondition.TREE_QUIESCENT,
+                facts={
+                    "path": str(resolved),
+                    "registry_tree_quiescent": False,
+                    "operation": "modelo_directory_refresh",
+                },
+            ),
         ) from refresh_error
 
 
@@ -1366,8 +1382,12 @@ def _refresh_registry_tree_fingerprints_after_load_error(
         return _collect_registry_tree_fingerprints_uncached(resolved)
     except RegistryLoadError as refresh_error:
         raise RegistryLoadError(
-            f"{resolved}: registry tree changed during load; retry after concurrent registry writes settle. "
+            f"{resolved}: registry tree changed during load. "
             f"Initial failure: {initial_error}; refresh failure: {refresh_error}",
+            registry_failure=RegistryFailureClassification(
+                condition=RegistryFailureCondition.TREE_QUIESCENT,
+                facts={"path": str(resolved), "registry_tree_quiescent": False, "operation": "registry_tree_refresh"},
+            ),
         ) from refresh_error
 
 
@@ -1376,8 +1396,11 @@ def _directory_fingerprint(path: Path) -> _RegistryPathFingerprint:
         stat = path.stat()
     except OSError as exc:
         raise RegistryLoadError(
-            f"{path}: registry directory could not be fingerprinted; "
-            f"retry after concurrent registry writes settle: {exc}",
+            f"{path}: registry directory could not be fingerprinted; {exc}",
+            registry_failure=RegistryFailureClassification(
+                condition=RegistryFailureCondition.TREE_QUIESCENT,
+                facts={"path": str(path), "registry_tree_quiescent": False, "operation": "directory_stat"},
+            ),
         ) from exc
     # A directory has no hashable content of its own; layout changes are what
     # its stat observes, and member-file content is covered by the per-file

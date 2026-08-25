@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field, StringConstraints
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.external_constants import MODELO_202_ART_40_3_INCN_THRESHOLD_EUR
 from ...deadlines import EntityType, TaxpayerProfile
+from ._errors import RegistryFailureClassification, RegistryFailureCondition
 from ._ids import LegalRefId
 
 type _OperatorReason = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
@@ -42,6 +43,8 @@ class Modelo202ModalityVerdict(BaseModel):
     modality: Modelo202Modality
     reason: _OperatorReason
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    failure: RegistryFailureClassification | None = None
+    """Domain facts for a boundary to project when the modality is incomplete."""
 
 
 _MODELO_202_ART_40_3_MANDATORY_REASON = (
@@ -63,8 +66,7 @@ _MODELO_202_INCOMPLETE_REASON = (
     "No se puede determinar la modalidad del Modelo 202: el importe neto "
     "de la cifra de negocios de los doce meses anteriores no está "
     "declarado. Sin este dato el motor no infiere modalidad — un pago "
-    "fraccionado equivocado es peor que una respuesta incompleta. Declare "
-    "el INCN con 'aeat config profile edit'."
+    "fraccionado equivocado es peor que una respuesta incompleta."
 )
 
 _MODELO_202_NOT_APPLICABLE_REASON = (
@@ -102,6 +104,14 @@ def modelo_202_modality_from_inputs(
             modality=Modelo202Modality.INCOMPLETE,
             reason=_MODELO_202_INCOMPLETE_REASON,
             legal_refs=_MODELO_202_MODALITY_LEGAL_REFS,
+            failure=RegistryFailureClassification(
+                condition=RegistryFailureCondition.MODELO_202_INCN_DECLARED,
+                facts={
+                    "modelo": "202",
+                    "incn_prior_12_months_declared": False,
+                    "entity_type_legal": True,
+                },
+            ),
         )
     if incn_prior_12_months > MODELO_202_ART_40_3_INCN_THRESHOLD_EUR:
         return Modelo202ModalityVerdict(

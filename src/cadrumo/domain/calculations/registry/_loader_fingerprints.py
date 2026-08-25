@@ -7,7 +7,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Protocol
 
-from ._errors import RegistryLoadError
+from ._errors import RegistryFailureClassification, RegistryFailureCondition, RegistryLoadError
 from ._loader_cache import toml_file_fingerprint
 
 type RegistryPathFingerprint = tuple[str, int, int, str]
@@ -105,8 +105,12 @@ def refresh_toml_fingerprint_after_load_error(
         return toml_file_fingerprint(path)
     except RegistryLoadError as refresh_error:
         raise RegistryLoadError(
-            f"{path}: registry TOML changed during load; retry after concurrent registry writes settle. "
+            f"{path}: registry TOML changed during load. "
             f"Initial failure: {initial_error}; refresh failure: {refresh_error}",
+            registry_failure=RegistryFailureClassification(
+                condition=RegistryFailureCondition.TREE_QUIESCENT,
+                facts={"path": str(path), "registry_tree_quiescent": False, "operation": "toml_load_refresh"},
+            ),
         ) from refresh_error
 
 
@@ -170,8 +174,15 @@ def collect_registry_tree_fingerprints_for_cache(
     if refreshed_directory_fingerprints != directory_fingerprints:
         fingerprint_cache.pop(resolved, None)
         raise RegistryLoadError(
-            f"{resolved}: registry directory changed during cache fingerprinting; "
-            "retry after concurrent registry writes settle",
+            f"{resolved}: registry directory changed during cache fingerprinting",
+            registry_failure=RegistryFailureClassification(
+                condition=RegistryFailureCondition.TREE_QUIESCENT,
+                facts={
+                    "path": str(resolved),
+                    "registry_tree_quiescent": False,
+                    "operation": "cache_fingerprint",
+                },
+            ),
         )
     if bundled:
         store(

@@ -23,7 +23,7 @@ from dev.registry.filing_export_proof import (
     canonical_live_filing_export_proof_authority,
 )
 
-from ....application.registry import compose_filing_export_coverage
+from ....application.registry import RegistryClosureLimb, compose_filing_export_coverage
 from ....core import Modelo, RegistryAuthorityGrade
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
@@ -76,7 +76,7 @@ def _narrow_authority(
     )
 
 
-def _limbs_by_coordinate(report) -> dict[tuple[str, str], object]:
+def _limbs_by_coordinate(report) -> dict[tuple[str, str], RegistryClosureLimb]:
     return {(str(limb.modelo), str(limb.revision)): limb for limb in report.limbs}
 
 

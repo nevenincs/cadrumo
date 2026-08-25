@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import ast
+import asyncio
 import inspect
 import sys
 from dataclasses import dataclass
 from types import ModuleType
+from typing import override
 
 import pytest
+from playwright.async_api import async_playwright
 
 from ......core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ......core.config import Settings
@@ -132,7 +135,10 @@ def _message_identity(node: ast.expr) -> str:
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
         return node.value
     assert isinstance(node, ast.JoinedStr)
-    return "".join(part.value if isinstance(part, ast.Constant) else "{value}" for part in node.values)
+    return "".join(
+        part.value if isinstance(part, ast.Constant) and isinstance(part.value, str) else "{value}"
+        for part in node.values
+    )
 
 
 def _browser_error_carriers() -> dict[str, ast.Call]:
@@ -145,21 +151,28 @@ def _browser_error_carriers() -> dict[str, ast.Call]:
                 self.module_name = module_name
                 self.owner = "<module>"
 
+            @override
             def visit_ClassDef(self, node: ast.ClassDef) -> None:
                 prior_owner = self.owner
                 self.owner = node.name if prior_owner == "<module>" else f"{prior_owner}.{node.name}"
                 self.generic_visit(node)
                 self.owner = prior_owner
 
+            @override
             def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
                 prior_owner = self.owner
                 self.owner = node.name if prior_owner == "<module>" else f"{prior_owner}.{node.name}"
                 self.generic_visit(node)
                 self.owner = prior_owner
 
+            @override
             def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
-                self.visit_FunctionDef(node)
+                prior_owner = self.owner
+                self.owner = node.name if prior_owner == "<module>" else f"{prior_owner}.{node.name}"
+                self.generic_visit(node)
+                self.owner = prior_owner
 
+            @override
             def visit_Call(self, node: ast.Call) -> None:
                 error_type = _call_name(node.func)
                 if error_type in {"BrowserError", "BrowserEvasionError"}:
@@ -275,8 +288,15 @@ def test_browser_producers_have_no_direct_verdict_constructor_or_authored_recove
 async def test_missing_evasion_support_has_an_exact_runtime_safety_verdict(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setitem(sys.modules, "playwright_stealth", None)
 
-    with pytest.raises(BrowserEvasionError) as raised:
-        await PlaywrightStealthEvasion().apply(object())
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch(headless=True)
+        context = await browser.new_context()
+        try:
+            with pytest.raises(BrowserEvasionError) as raised:
+                await PlaywrightStealthEvasion().apply(context)
+        finally:
+            await context.close()
+            await browser.close()
 
     _assert_terminal_contract(
         raised.value,
@@ -286,28 +306,26 @@ async def test_missing_evasion_support_has_an_exact_runtime_safety_verdict(monke
     )
 
 
-class _ContentReadFailurePage:
-    class _Response:
-        status = 200
-        headers: dict[str, str] = {}
-
-    async def goto(self, _url: str) -> _Response:
-        return self._Response()
-
-    async def content(self) -> str:
-        raise RuntimeError("page detached")
-
-
 @pytest.mark.asyncio
 async def test_page_content_failure_has_an_exact_runtime_safety_verdict() -> None:
-    session = BrowserSession(
-        playwright=object(),
-        settings=Settings(),
-        profile=Profile(name="terminal-precondition"),
-    )
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch(headless=True)
+        context = await browser.new_context()
+        page = await context.new_page()
+        page.on("load", lambda: asyncio.create_task(page.close()))
+        session = BrowserSession(
+            playwright=playwright,
+            settings=Settings(),
+            profile=Profile(name="terminal-precondition"),
+        )
 
-    with pytest.raises(BrowserError) as raised:
-        await session.navigate(_ContentReadFailurePage(), "https://example.test")
+        try:
+            with pytest.raises(BrowserError) as raised:
+                await session.navigate(page, "data:text/html,<html><body>detached</body></html>")
+        finally:
+            await context.close()
+            await session.close()
+            await browser.close()
 
     _assert_terminal_contract(
         raised.value,

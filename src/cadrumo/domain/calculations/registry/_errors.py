@@ -13,16 +13,66 @@ factories yet; migration is additive and non-breaking.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
+from enum import StrEnum
 from typing import Self
 
 from ....core import CasillaId, Modelo
-from ....core.errors import CadrumoError, CoreValidationError
+from ....core.errors import CadrumoError, CoreValidationError, TerminalPreconditionErrorMixin
 from ._ids import BindingId, RelationId, RevisionId
 
 
-class RegistryError(CadrumoError, ValueError):
-    """Base error for registry loading, resolution, and validation."""
+class RegistryFailureCondition(StrEnum):
+    """Domain-owned failed-condition identities for registry refusals.
+
+    These names identify facts the registry can observe.  They deliberately do
+    not encode a command or an outcome: application policy decides whether a
+    live surface has a canonical action, and the CLI resolves that action.
+    """
+
+    TAXPAYER_MODEL_DECLARED = "registry.applicability.taxpayer_model.declared"
+    MODELO_202_INCN_DECLARED = "registry.applicability.modelo_202.incn.declared"
+    QUERY_FILING_YEAR_SCOPED = "registry.query.filing_year.scoped"
+    QUERY_CASILLA_DECLARED = "registry.query.casilla.declared"
+    SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT = "registry.snapshot.authority_grade.sufficient"
+    SNAPSHOT_EXPORT_LAYOUT_DECLARED = "registry.snapshot.export_layout.declared"
+    TREE_QUIESCENT = "registry.tree.concurrent_write.quiescent"
+
+
+@dataclass(frozen=True)
+class RegistryFailureClassification:
+    """One registry-observed failed condition and its locale-neutral facts."""
+
+    condition: RegistryFailureCondition
+    facts: Mapping[str, str | int | bool]
+
+
+class RegistryError(TerminalPreconditionErrorMixin, CadrumoError, ValueError):
+    """Base error retaining domain facts for a higher-layer action projection."""
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        registry_failure: RegistryFailureClassification | None = None,
+        precondition_verdict: object | None = None,
+    ) -> None:
+        """Keep a domain classification without importing application policy."""
+        super().__init__(
+            message=message,
+            context=context,
+            translated_message=translated_message,
+            precondition_verdict=precondition_verdict,
+        )
+        self._registry_failure = registry_failure
+
+    @property
+    def registry_failure(self) -> RegistryFailureClassification | None:
+        """Return the domain fact classification for an application to resolve."""
+        return self._registry_failure
 
 
 class RegistryLoadError(RegistryError):

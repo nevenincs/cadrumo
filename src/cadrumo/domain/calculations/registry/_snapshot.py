@@ -25,7 +25,7 @@ from ....core import (
     RegistryAuthorityGrade,
     RevisionReviewStatus,
 )
-from ._errors import RegistryValidationError
+from ._errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from ._export import derive_export_layouts_from_bindings
 from ._ids import RevisionId
 from ._legal import verify_legal_reference
@@ -380,8 +380,16 @@ def _check_snapshot_authority_grade(
     if not revision.is_graded:
         raise RegistryValidationError(
             f"modelo {modelo.id} revision {revision.id} declares no authority_grade, so it cannot satisfy "
-            f"the requested {requested_grade.value!r} snapshot authority. Declare and validate the intended "
-            "authority grade before requesting a snapshot.",
+            f"the requested {requested_grade.value!r} snapshot authority.",
+            registry_failure=RegistryFailureClassification(
+                condition=RegistryFailureCondition.SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT,
+                facts={
+                    "modelo": str(modelo.id),
+                    "revision_id": str(revision.id),
+                    "requested_authority_grade": requested_grade.value,
+                    "authority_grade_declared": False,
+                },
+            ),
         )
 
     ladder = tuple(RegistryAuthorityGrade)
@@ -390,8 +398,17 @@ def _check_snapshot_authority_grade(
         return
     raise RegistryValidationError(
         f"modelo {modelo.id} revision {revision.id} declares {declared_grade.value!r} authority grade, "
-        f"which cannot satisfy the requested {requested_grade.value!r} snapshot authority. Validate and "
-        "attest the revision at the requested grade before retrying.",
+        f"which cannot satisfy the requested {requested_grade.value!r} snapshot authority.",
+        registry_failure=RegistryFailureClassification(
+            condition=RegistryFailureCondition.SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT,
+            facts={
+                "modelo": str(modelo.id),
+                "revision_id": str(revision.id),
+                "requested_authority_grade": requested_grade.value,
+                "declared_authority_grade": declared_grade.value,
+                "authority_grade_declared": True,
+            },
+        ),
     )
 
 
@@ -443,8 +460,16 @@ def _check_snapshot_filing_capability(
         return
     raise RegistryValidationError(
         f"modelo {modelo.id} revision {revision.id} declares no export layout, so no filing artifact "
-        "can be produced from it. Author the revision's fixed-width export layout, or the bindings it "
-        "derives from, before requesting a filing-grade snapshot, draft or export.",
+        "can be produced from it.",
+        registry_failure=RegistryFailureClassification(
+            condition=RegistryFailureCondition.SNAPSHOT_EXPORT_LAYOUT_DECLARED,
+            facts={
+                "modelo": str(modelo.id),
+                "revision": str(revision.id),
+                "export_layout_declared": False,
+                "filing_artifact_supported": False,
+            },
+        ),
     )
 
 

@@ -29,7 +29,7 @@ from ....core import (
 from ....core.i18n import output_language
 from ._authority import ValidatedRegistryAuthority
 from ._binding_selector_utils import boolean_binding_encoded_values
-from ._errors import RegistryValidationError
+from ._errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from ._ids import BindingId, RelationId
 from ._period_selector_match import registry_period_for_request, selector_token_for_request
 from ._query_reports import (
@@ -502,9 +502,17 @@ class RegistryQueryService:
             # Refuse explicitly rather than accept-and-ignore (the accepted-parameter
             # lie this contract closes); the *_for_scope queries honour as_of.
             raise RegistryValidationError(
-                "as_of point-in-time selection is not honoured by the unscoped period query, "
-                "which resolves the latest revision by period; resolve with an explicit filing "
-                "year so the as_of date is gated against each revision's validity window.",
+                "as_of point-in-time selection requires a filing-year-scoped query; "
+                "the unscoped period query resolves the latest revision by period.",
+                registry_failure=RegistryFailureClassification(
+                    condition=RegistryFailureCondition.QUERY_FILING_YEAR_SCOPED,
+                    facts={
+                        "modelo": modelo.strip(),
+                        "as_of_supplied": True,
+                        "filing_year_supplied": False,
+                        "query_scope": "unscoped_period",
+                    },
+                ),
             )
         definition = self._authority.validate_modelo(modelo.strip())
         if period is None:
@@ -796,8 +804,8 @@ def _casilla_detail_report(context: ResolvedRegistryQueryContext, casilla: str) 
 
     The casilla is matched by canonical id first, then by printed ``number``
     (the same dual key the ``casillas --number`` filter accepts). An unknown
-    casilla raises an instructive :class:`RegistryValidationError` naming a
-    bounded sample of valid ids and the ``casillas`` verb that lists them all.
+    casilla raises a :class:`RegistryValidationError` with its observed
+    condition and a bounded sample of valid ids.
     A computed casilla's ``formula`` id is resolved against the revision's
     formulas so the structured expression rides the report.
     """
@@ -814,8 +822,16 @@ def _casilla_detail_report(context: ResolvedRegistryQueryContext, casilla: str) 
         overflow = "" if len(valid_ids) <= 20 else f" (+{len(valid_ids) - 20} more)"
         raise RegistryValidationError(
             f"casilla {casilla!r} is not defined by revision {revision.id} of modelo {definition.id}; "
-            f"valid casilla ids include: {sample}{overflow}. "
-            f"Run 'aeat app modelo casillas {definition.id}' to list every casilla id and number.",
+            f"valid casilla ids include: {sample}{overflow}.",
+            registry_failure=RegistryFailureClassification(
+                condition=RegistryFailureCondition.QUERY_CASILLA_DECLARED,
+                facts={
+                    "modelo": str(definition.id),
+                    "revision": str(revision.id),
+                    "casilla": needle,
+                    "casilla_declared": False,
+                },
+            ),
         )
     formula_expression: Mapping[str, object] | None = None
     if matched.formula is not None:
