@@ -66,11 +66,12 @@ related:
 - The 2025 record design remains bounded to devengos through 2025; no presentation-year authority was invented.
 - M210 no longer appears in the whole-tree claimed-year divergence report.
 - No new selector type, horizon, deadline resolver, or design catalogue was introduced.
-- Focused verification passed 22 tests and Ruff before a concurrent unrelated missing `lru_cache` import in `_authority.py` prevented the final post-refinement rerun.
+- Focused verification passed 22 tests and Ruff before refinement, then the final M210/M720 controls passed 4 tests and the independent review passed 17 focused tests with Ruff.
 
 ## Notes
 
 - RAG queries covered claimed-year design authority, M210 long refund deadlines, and axis selection; exact search confirmed reuse of `SourceReference.period_selector`.
 - The whole-tree gate remains red for thirteen separately named modelo design gaps, but its output no longer contains Modelo 210.
 - The final classifier refinement preserves Modelo 720 by requiring selector-start and source-start year agreement rather than treating selector presence alone as decisive.
+- The final whole-tree output contains neither Modelo 210 nor Modelo 720; its thirteen remaining entries belong to separate registry-corpus work.
 - No unrelated concurrent file was modified or staged.
