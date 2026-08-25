@@ -4,7 +4,7 @@ tags:
   - '#source-casilla-integration'
 date: '2026-08-22'
 modified: '2026-08-25'
-body_hash: 'sha256:1e64c0927340f266d385957dc53c37c9a9cdb814a74a0097102dfb5bdbc779c3'
+body_hash: 'sha256:564f79b3230617fbdedd66e66b7e00a6a6081d8f90814b0f0b6cee955d6221aa'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -375,7 +375,7 @@ Repeat discovery and bounded delivery until the census reaches a stable, fully a
 - [x] `W06.P20.S114` - close S114 with no vertical slice: S112 found no new candidate and S113 classified both reviewed helpers not_applicable; `dev/source_connectivity/tests/test_census_completeness.py, S114 exec, source plan, generated feature index`.
 - [x] `W06.P20.S115` - classify the S112/S113 structural helpers as evidence-backed not_applicable selector members without creating source candidates; `src/cadrumo/_data/source_connectivity/census.toml; src/cadrumo/application/registry/source_connectivity.py; dev/source_connectivity/discovery.py; dev/source_connectivity/tests/test_census_completeness.py; .vault/exec/2026-08-22-source-casilla-integration/2026-08-22-source-casilla-integration-W06-P20-S115.md; .vault/index/source-casilla-integration.index.md`.
 - [x] `W06.P20.S116` - rerun discovery until two consecutive runs produce no unclassified or unactioned candidate; `.vault/audit/2026-08-22-source-casilla-connectivity-close-audit.md`.
-- [ ] `W06.P20.S117` - prove the final census has no expired deferral, unexplained disappearance, or unsupported connected claim; `dev/source_connectivity/tests/test_campaign_close.py`.
+- [x] `W06.P20.S117` - prove the final census has no expired deferral, unexplained disappearance, or unsupported connected claim; `dev/source_connectivity/tests/test_campaign_close.py`.
 - [x] `W06.P20.S226` - Adjudicate Modelo 187's non-substitutable payer and Article 42 RGAT entity/IIC value paths, including required type-1/type-2 filer facts, before defining a canonical source, binding, casilla, provenance, collision policy, or census disposition.; `.vault/research/; .vault/adr/; src/cadrumo/_data/source_connectivity/census.toml; src/cadrumo/_data/registry/aeat/modelos/187/`.
 - [x] `W06.P20.S227` - record the accepted M220 ingress-blocked source-owner deferral without source implementation; `M220 grounding research, accepted M220 deferral ADR, S227 exec, source plan, generated feature index`.
 - [x] `W06.P20.S228` - record the accepted M390 2021 grounding-blocked source-owner decision without source implementation; `M390-2021 grounding research, accepted M390-2021 deferral ADR, S228 exec, source plan, generated feature index`.

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:0e71afa008e0d8afd83b66aeca10308de705251900d730416f1462e6a6201705'
+body_hash: 'sha256:76ec8af4c26251dd9209d6e9dc9535560a500cd6be0ac43b0ea8e608663e8c23'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -138,6 +138,7 @@ related:
   - '[[2026-08-22-source-casilla-integration-W06-P20-S114]]'
   - '[[2026-08-22-source-casilla-integration-W06-P20-S115]]'
   - '[[2026-08-22-source-casilla-integration-W06-P20-S116]]'
+  - '[[2026-08-22-source-casilla-integration-W06-P20-S117]]'
   - '[[2026-08-22-source-casilla-integration-W06-P20-S226]]'
   - '[[2026-08-22-source-casilla-integration-W06-P20-S227]]'
   - '[[2026-08-22-source-casilla-integration-W06-P20-S228]]'
@@ -222,6 +223,7 @@ related:
   - '[[2026-08-25-source-casilla-integration-s115-related-party-locator-followup-audit]]'
   - '[[2026-08-25-source-casilla-integration-s115-structural-helper-selector-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s116-connectivity-fixed-point-audit]]'
+  - '[[2026-08-25-source-casilla-integration-s117-campaign-close-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s226-m187-source-owner-decision-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s227-m220-source-owner-deferral-repair-follow-up-audit]]'
   - '[[2026-08-25-source-casilla-integration-s227-modelo-220-source-deferral-review-audit]]'
@@ -325,6 +327,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-25-source-casilla-integration-s115-related-party-locator-followup-audit` - `source-casilla-integration` audit: `S115 related-party locator follow-up`
 - `2026-08-25-source-casilla-integration-s115-structural-helper-selector-review-audit` - `source-casilla-integration` audit: `S115 structural helper selector review`
 - `2026-08-25-source-casilla-integration-s116-connectivity-fixed-point-audit` - `source-casilla-integration` audit: `S116 source-connectivity fixed-point execution evidence`
+- `2026-08-25-source-casilla-integration-s117-campaign-close-review-audit` - `source-casilla-integration` audit: `S117 campaign close review`
 - `2026-08-25-source-casilla-integration-s226-m187-source-owner-decision-review-audit` - `source-casilla-integration` audit: `S226 Modelo 187 source-owner decision review`
 - `2026-08-25-source-casilla-integration-s227-m220-source-owner-deferral-repair-follow-up-audit` - `source-casilla-integration` audit: `S227 M220 source-owner deferral repair follow-up`
 - `2026-08-25-source-casilla-integration-s227-modelo-220-source-deferral-review-audit` - `source-casilla-integration` audit: `S227 Modelo 220 source deferral review`
@@ -489,6 +492,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-W06-P20-S113` - classify the two S112-discovered structural helper identities without creating a source claim
 - `2026-08-22-source-casilla-integration-W06-P20-S114` - record the zero-delivery closure: S112 exposed no connect candidates and S113 classified both additions not_applicable, so no source-connectivity vertical slice is authorized
 - `2026-08-22-source-casilla-integration-W06-P20-S115` - classify the S112/S113 structural-helper handoff in the frozen census selector
+- `2026-08-22-source-casilla-integration-W06-P20-S117` - prove the final census has no expired deferral, unexplained disappearance, or unsupported connected claim
 - `2026-08-22-source-casilla-integration-W06-P20-S226` - Adjudicate Modelo 187's non-substitutable payer and Article 42 RGAT entity/IIC value paths, including required type-1/type-2 filer facts, before defining a canonical source, binding, casilla, provenance, collision policy, or census disposition.
 - `2026-08-22-source-casilla-integration-W06-P20-S227` - defer Modelo 220 group values as an ingress-blocked evidence decision
 - `2026-08-22-source-casilla-integration-W06-P20-S228` - defer Modelo 390 2021's complete annual surface at a grounding boundary
