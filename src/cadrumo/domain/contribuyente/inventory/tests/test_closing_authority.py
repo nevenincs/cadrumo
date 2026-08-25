@@ -8,7 +8,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.contribuyente.inventory import (
+from ....filing_evidence import FilingEvidenceReference
+from .. import (
     InventoryClosingAuthority,
     InventoryClosingAuthorityDecision,
     InventoryClosingAuthorityRecord,
@@ -29,7 +30,6 @@ from cadrumo.domain.contribuyente.inventory import (
     fingerprint_prior_authoritative_closing,
     resolve_inventory_authoritative_closing,
 )
-from cadrumo.domain.filing_evidence import FilingEvidenceReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -114,16 +114,27 @@ def _continuity(**overrides: object) -> PriorAuthoritativeClosingLink:
         "evidence": evidence,
     }
     fields.update(overrides)
-    fields.setdefault(
-        "prior_authoritative_closing_fingerprint",
-        fingerprint_prior_authoritative_closing(
-            actividad_id=str(fields["actividad_id"]),
-            filing_year=int(fields["prior_filing_year"]),
-            authoritative_closing_value=Decimal(fields["prior_authoritative_closing_value"]),
-            authoritative_source_fingerprint=str(fields["prior_authoritative_source_fingerprint"]),
-            evidence=fields["evidence"],
-        ),
-    )
+    actividad_id = fields["actividad_id"]
+    prior_filing_year = fields["prior_filing_year"]
+    prior_authoritative_closing_value = fields["prior_authoritative_closing_value"]
+    prior_authoritative_source_fingerprint = fields["prior_authoritative_source_fingerprint"]
+    continuity_evidence = fields["evidence"]
+    if (
+        "prior_authoritative_closing_fingerprint" not in fields
+        and isinstance(actividad_id, str)
+        and isinstance(prior_filing_year, int)
+        and isinstance(prior_authoritative_closing_value, Decimal)
+        and isinstance(prior_authoritative_source_fingerprint, str)
+        and isinstance(continuity_evidence, tuple)
+        and all(isinstance(item, PriorClosingContinuityEvidence) for item in continuity_evidence)
+    ):
+        fields["prior_authoritative_closing_fingerprint"] = fingerprint_prior_authoritative_closing(
+            actividad_id=actividad_id,
+            filing_year=prior_filing_year,
+            authoritative_closing_value=prior_authoritative_closing_value,
+            authoritative_source_fingerprint=prior_authoritative_source_fingerprint,
+            evidence=tuple(item for item in continuity_evidence if isinstance(item, PriorClosingContinuityEvidence)),
+        )
     return PriorAuthoritativeClosingLink.model_validate(fields)
 
 
