@@ -18,6 +18,7 @@ profile rather than projected from an existing substrate.
 
 from __future__ import annotations
 
+from ...domain.calculations.registry import ExportLayoutDefinition, RegistrySnapshot
 from ._producer_snapshot import FilingProducerSnapshot, Modelo200ProfileFacts
 from ._projection import FilingProjectionPlan, FilingProjectionValue, FilingRecordRenderContext
 
@@ -53,8 +54,8 @@ def _rows_for(profile: object, kind: str) -> tuple[object, ...]:
 
 def build_m200_filing_projection_plan(
     *,
-    registry_snapshot: object,
-    layout: object,
+    registry_snapshot: RegistrySnapshot,
+    layout: ExportLayoutDefinition,
     producer_snapshot: FilingProducerSnapshot,
 ) -> FilingProjectionPlan:
     """Project every modelo 200 repeated-row family from one selected snapshot and layout."""
