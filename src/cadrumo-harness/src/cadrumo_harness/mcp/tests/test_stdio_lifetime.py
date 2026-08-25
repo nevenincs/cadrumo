@@ -35,13 +35,13 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from cadrumo.core.config import reset_settings_cache
-
+from .._settings import reset_mcp_settings_cache
 from .._stdio_lifetime import (
     _GRACE_SECONDS,
     PARENT_PID_ENV,
     STDIO_WATCHDOG_ENV,
     arm_stdio_lifetime_watchdog,
+    disarm_stdio_lifetime_watchdog,
     register_pre_exit_hook,
     resolve_stdin_client_pid,
     watchdog_disabled,
@@ -171,18 +171,54 @@ def test_kill_switch_disables_arming_in_process() -> None:
     # environment variable through the real settings facade - the point of the
     # test - instead of substituting `override_settings`, which would prove the
     # override mechanism rather than the operator's knob.
-    reset_settings_cache()
+    reset_mcp_settings_cache()
     try:
         assert watchdog_disabled() is True
         assert arm_stdio_lifetime_watchdog() is False
+        os.environ[STDIO_WATCHDOG_ENV] = "true"
+        reset_mcp_settings_cache()
+        assert watchdog_disabled() is False
     finally:
         if previous is None:
             del os.environ[STDIO_WATCHDOG_ENV]
         else:
             os.environ[STDIO_WATCHDOG_ENV] = previous
-        reset_settings_cache()
-    # The switch is genuinely load-bearing: with it restored, arming succeeds.
-    assert watchdog_disabled() is False
+        reset_mcp_settings_cache()
+
+
+def test_disarm_prevents_an_armed_watchdog_from_killing_later_work(tmp_path: Path) -> None:
+    """Normal completion cancels the generation before its client dies."""
+    victim = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"])
+    worker_code = textwrap.dedent(
+        f"""
+        import time
+        from {_MODULE} import arm_stdio_lifetime_watchdog, disarm_stdio_lifetime_watchdog
+        print(f"armed={{arm_stdio_lifetime_watchdog(client_pid={victim.pid}, parent_pid={victim.pid}, rearm_seconds=0.1)}}", flush=True)
+        print(f"disarmed={{disarm_stdio_lifetime_watchdog()}}", flush=True)
+        time.sleep(3)
+        print("later-work-complete", flush=True)
+        """
+    )
+    worker = subprocess.Popen([sys.executable, "-c", worker_code], stdout=subprocess.PIPE, text=True)
+    try:
+        assert worker.stdout is not None
+        assert worker.stdout.readline().strip() == "armed=True"
+        assert worker.stdout.readline().strip() == "disarmed=True"
+        victim.kill()
+        victim.wait(timeout=30)
+        assert worker.stdout.readline().strip() == "later-work-complete"
+        assert worker.wait(timeout=30) == 0
+    finally:
+        if worker.poll() is None:
+            worker.kill()
+        if victim.poll() is None:
+            victim.kill()
+
+
+def test_disarm_is_idempotent_without_an_active_generation() -> None:
+    """Repeated normal cleanup cannot affect a later watchdog generation."""
+    disarm_stdio_lifetime_watchdog()
+    assert disarm_stdio_lifetime_watchdog() is False
 
 
 def test_armed_worker_exits_when_dead_client_pid_signals() -> None:
@@ -497,15 +533,20 @@ def _orphanable_spawn() -> tuple[str, dict[str, str]]:
 
     base_candidate: object = getattr(sys, "_base_executable", None)
     base = base_candidate if isinstance(base_candidate, str) and base_candidate else sys.executable
-    # Derived from this test module's own location (four parents up: tests ->
-    # mcp -> entrypoints -> cadrumo -> src) rather than an absolute `import
+    # Derived from this test module's own location (three parents up: tests ->
+    # mcp -> cadrumo_harness -> src) rather than an absolute `import
     # cadrumo`, so the relative-imports gate stays satisfied.
-    src_root = _Path(__file__).resolve().parents[4]
-    roots = [str(src_root), sysconfig.get_paths()["purelib"]]
+    src_root = _Path(__file__).resolve().parents[3]
+    application_src_root = _Path(__file__).resolve().parents[5]
+    roots = [str(src_root), str(application_src_root), sysconfig.get_paths()["purelib"]]
     existing = os.environ.get("PYTHONPATH")
     if existing:
         roots.append(existing)
-    return base, {**os.environ, "PYTHONPATH": os.pathsep.join(roots)}
+    return base, {
+        **os.environ,
+        "PYTHONPATH": os.pathsep.join(roots),
+        STDIO_WATCHDOG_ENV: "true",
+    }
 
 
 def _spawn_unanchored_worker(tmp_path: Path, *, stderr_path: Path, confirmations: int = 2) -> int:
@@ -736,11 +777,10 @@ def test_unanchored_worker_emits_disarm_and_reasoned_exit_events(tmp_path: Path)
     worker_pid = _spawn_unanchored_worker(tmp_path, stderr_path=stderr_path)
     try:
         assert _wait_for_pid_exit(worker_pid, timeout=60), "worker was never reaped"
-        events = [
-            json.loads(line) for line in stderr_path.read_text(encoding="utf-8").splitlines() if line.startswith("{")
-        ]
+        stderr_text = stderr_path.read_text(encoding="utf-8")
+        events = [json.loads(line) for line in stderr_text.splitlines() if line.startswith("{")]
         names = [event["event"] for event in events]
-        assert "stdio_watchdog_disarmed" in names, events
+        assert "stdio_watchdog_disarmed" in names, stderr_text
         disarmed = next(e for e in events if e["event"] == "stdio_watchdog_disarmed")
         assert disarmed["reason"] == "no_anchor_after_grace", disarmed
         assert disarmed["shim_pid"] == worker_pid
