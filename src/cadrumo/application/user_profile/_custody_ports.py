@@ -1104,6 +1104,11 @@ def profile_session_serves_bucket(session: ProfileBucketSessionPort | None, buck
     return bool(master_key.session_serves_bucket(resolved, bucket_id))
 
 
+def profile_current_bucket_session() -> ProfileBucketSessionPort | None:
+    """Observe the currently bound bucket session through the custody port boundary."""
+    return master_key.current_active_bucket_session()
+
+
 def profile_bind_bucket_session(session: ProfileBucketSessionPort) -> None:
     """Bind one authenticated bucket session to the process context."""
     master_key.bind_active_bucket_session(_substrate_handle(session, master_key.BucketSession, "bucket session"))

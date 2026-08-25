@@ -16,7 +16,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID
 
-from ...adapters.persistence.storage import master_key
 from ...core.paths import effective_storage_root
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventType
@@ -28,6 +27,7 @@ from ._capsule_record import (
     ProfileRecordStore,
 )
 from ._custody_ports import (
+    profile_current_bucket_session,
     profile_custody_record_session_material,
     profile_session_serves_bucket,
 )
@@ -235,8 +235,8 @@ def _live_custody_session_backs(profile_id: UUID) -> bool:
     Both are in-memory reads; nothing is opened and no capsule file is
     touched, so this is cheap enough to ask on every resolution.
     """
-    live = master_key.current_active_bucket_session()
-    return profile_session_serves_bucket(live, str(profile_id)) and not live.sealed
+    live = profile_current_bucket_session()
+    return live is not None and profile_session_serves_bucket(live, str(profile_id)) and not live.sealed
 
 
 def _record_session_from_live_custody_session(profile_id: UUID) -> ProfileRecordSession | None:
