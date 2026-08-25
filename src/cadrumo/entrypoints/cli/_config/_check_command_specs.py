@@ -24,9 +24,7 @@ CONFIG_CHECK_COMMAND_SPECS = (
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(),
         policy=ENCRYPTED_READ,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._config._check_cli", "config_check")
-        ),
+        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._config._check_cli", "config_check")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget("cadrumo.entrypoints.cli._config._check_payloads", "ConfigCheckResult"),

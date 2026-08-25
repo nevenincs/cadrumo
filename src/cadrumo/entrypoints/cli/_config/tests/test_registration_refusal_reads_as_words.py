@@ -59,12 +59,18 @@ def test_a_reused_name_is_refused_in_words_the_operator_can_act_on(tmp_path: Pat
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         first = attempt_registration(
-            label=_LABEL, passphrase=_passphrase(), output_language="en", recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic
+            label=_LABEL,
+            passphrase=_passphrase(),
+            output_language="en",
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         )
         assert first.outcome is not None, first.refusal
 
         second = attempt_registration(
-            label=_LABEL, passphrase=_passphrase(), output_language="en", recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic
+            label=_LABEL,
+            passphrase=_passphrase(),
+            output_language="en",
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         )
 
     assert second.outcome is None

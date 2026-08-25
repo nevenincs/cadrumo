@@ -41,12 +41,14 @@ def test_passphrase_change_declares_exact_channels_payload_and_exemption() -> No
         if getattr(parameter, "machine_secret_channel", None) is not None
     ) == (MachineSecretChannelKind.STDIN, MachineSecretChannelKind.FILE_DESCRIPTOR)
     assert spec.machine_secret is not None
-    assert tuple(field.name for field in spec.machine_secret.variants[0].fields) == tuple(
-        PassphraseChangeSecrets.model_fields
-    ) == (
-        "current_passphrase",
-        "new_passphrase",
-        "new_passphrase_confirmation",
+    assert (
+        tuple(field.name for field in spec.machine_secret.variants[0].fields)
+        == tuple(PassphraseChangeSecrets.model_fields)
+        == (
+            "current_passphrase",
+            "new_passphrase",
+            "new_passphrase_confirmation",
+        )
     )
 
 
@@ -59,6 +61,6 @@ def test_passphrase_change_handler_signature_and_public_metadata_match_spec() ->
     )
     row = next(row for row in command_registration_metadata() if row.command == "config.passphrase.change")
     assert row.profile_authentication == "self-authenticating"
-    assert tuple((variant.key, tuple(field.name for field in variant.fields)) for variant in row.machine_secret_payloads) == (
-        ("rotation", ("current_passphrase", "new_passphrase", "new_passphrase_confirmation")),
-    )
+    assert tuple(
+        (variant.key, tuple(field.name for field in variant.fields)) for variant in row.machine_secret_payloads
+    ) == (("rotation", ("current_passphrase", "new_passphrase", "new_passphrase_confirmation")),)

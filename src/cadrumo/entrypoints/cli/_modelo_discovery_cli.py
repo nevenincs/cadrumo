@@ -821,8 +821,7 @@ def bindings_list(
         # has to NAME the accepted codes: "not present in the calculation
         # registry" alone leaves the operator guessing which codes exist.
         raise typer.BadParameter(
-            f"modelo {modelo!r} is not in the calculation registry. "
-            f"Accepted: {', '.join(known_codes)}."
+            f"modelo {modelo!r} is not in the calculation registry. Accepted: {', '.join(known_codes)}."
         )
     targets = known_codes if modelo is None else (modelo,)
     per_modelo_reports = []

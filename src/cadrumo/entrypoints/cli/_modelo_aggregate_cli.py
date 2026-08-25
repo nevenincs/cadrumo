@@ -45,9 +45,7 @@ def _route_invoice_retenciones_into_command(
     if command.modelo not in RETENCIONES_MODELOS:
         raise typer.BadParameter(tr("cli.app.modelo.aggregate.invoice_retencion_wrong_modelo", modelo=command.modelo))
     catalogue = _load_invoices()
-    entries = tuple(
-        (resolve_catalogue_invoice(catalogue, request.invoice_id), request.scheme) for request in requests
-    )
+    entries = tuple((resolve_catalogue_invoice(catalogue, request.invoice_id), request.scheme) for request in requests)
     routing = route_invoice_retenciones(entries)
     merged = command.model_copy(
         update={
@@ -105,10 +103,8 @@ def _aggregate_output_lines(
     if clave_breakdown:
         lines.append("clave\tpercepcion_count\tpercibido_total\tretencion_total")
         lines.extend(
-
-                f"clave_breakdown\t{row.clave.value}\t{row.percepcion_count}\t{row.percibido_total}\t{row.retencion_total}"
-                for row in clave_breakdown
-
+            f"clave_breakdown\t{row.clave.value}\t{row.percepcion_count}\t{row.percibido_total}\t{row.retencion_total}"
+            for row in clave_breakdown
         )
     lines.extend(notice.message for notice in notices)
     return lines

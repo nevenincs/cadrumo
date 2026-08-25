@@ -61,9 +61,7 @@ BOOTSTRAP_DESTRUCTIVE = _policy(
     write_route="bootstrap-root",
     destructive=True,
 )
-GOOGLE_READ = _policy(
-    frozenset({"google", "encrypted-facts"}), frozenset({"google"}), "external-io"
-)
+GOOGLE_READ = _policy(frozenset({"google", "encrypted-facts"}), frozenset({"google"}), "external-io")
 GOOGLE_WRITE = _policy(
     frozenset({"google", "encrypted-facts", "profile-custody"}),
     frozenset({"google", "local-state"}),
@@ -84,9 +82,7 @@ GOOGLE_HANDOFF = _policy(
     write_route="profile-bound",
     handoff=True,
 )
-CALCULATION_READ = _policy(
-    frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute"
-)
+CALCULATION_READ = _policy(frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute")
 REGISTRY_READ = _policy(frozenset({"calculation"}), frozenset({"none"}), "compute")
 CALCULATION_WRITE = _policy(
     frozenset({"calculation", "encrypted-facts", "profile-custody"}),

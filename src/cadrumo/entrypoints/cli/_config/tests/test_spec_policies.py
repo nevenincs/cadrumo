@@ -29,10 +29,7 @@ def test_config_spec_policy_module_imports_no_cli_framework() -> None:
     module_path = Path(_spec_policies.__file__).resolve()
     tree = ast.parse(module_path.read_text(encoding="utf-8"))
     imported_roots = {
-        alias.name.split(".", 1)[0]
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Import)
-        for alias in node.names
+        alias.name.split(".", 1)[0] for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names
     }
     imported_roots.update(
         (node.module or "").split(".", 1)[0]

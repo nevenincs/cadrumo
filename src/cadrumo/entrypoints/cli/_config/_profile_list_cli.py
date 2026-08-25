@@ -14,6 +14,7 @@ from .._common import activate_subcommand_output_language as _activate_output_la
 if TYPE_CHECKING:
     from ....application.workflow import ProfileBucketPointer
 
+
 def profile_list_lines(
     rows: Sequence[ProfileBucketPointer],
     *,

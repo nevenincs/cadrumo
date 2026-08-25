@@ -250,9 +250,7 @@ def test_headless_create_without_recovery_descriptors_refuses_without_mutation(t
         listed = invoke_cached_cli(("--format", "json", "config", "profile", "list"))
 
     assert refused.exit_code != 0
-    assert json.loads(refused.stderr)["error"]["message"] == tr(
-        "cli.config.profile.create_recovery_channel_absent"
-    )
+    assert json.loads(refused.stderr)["error"]["message"] == tr("cli.config.profile.create_recovery_channel_absent")
     assert json.loads(listed.stdout)["result"]["profiles"] == []
 
 
@@ -309,9 +307,18 @@ def test_headless_recovery_proof_parser_refuses_without_publication(tmp_path: Pa
     (
         (("--recovery-handoff-fd", "9"), "cli.config.profile.create_recovery_descriptor_pair_required"),
         (("--recovery-verification-fd", "9"), "cli.config.profile.create_recovery_descriptor_pair_required"),
-        (("--recovery-handoff-fd", "-1", "--recovery-verification-fd", "9"), "cli.config.profile.create_recovery_descriptor_reserved"),
-        (("--recovery-handoff-fd", "1", "--recovery-verification-fd", "9"), "cli.config.profile.create_recovery_descriptor_reserved"),
-        (("--recovery-handoff-fd", "9", "--recovery-verification-fd", "9"), "cli.config.profile.create_recovery_descriptor_collision"),
+        (
+            ("--recovery-handoff-fd", "-1", "--recovery-verification-fd", "9"),
+            "cli.config.profile.create_recovery_descriptor_reserved",
+        ),
+        (
+            ("--recovery-handoff-fd", "1", "--recovery-verification-fd", "9"),
+            "cli.config.profile.create_recovery_descriptor_reserved",
+        ),
+        (
+            ("--recovery-handoff-fd", "9", "--recovery-verification-fd", "9"),
+            "cli.config.profile.create_recovery_descriptor_collision",
+        ),
     ),
 )
 def test_recovery_descriptor_preflight_refuses_before_creation(
@@ -319,7 +326,17 @@ def test_recovery_descriptor_preflight_refuses_before_creation(
 ) -> None:
     with override_settings(**_storage_overrides(tmp_path, passphrase=None)):
         refused = invoke_cached_cli(
-            ("--format", "json", "config", "profile", "create", "Bad Descriptors", "--quiet", "--secrets-stdin", *extra),
+            (
+                "--format",
+                "json",
+                "config",
+                "profile",
+                "create",
+                "Bad Descriptors",
+                "--quiet",
+                "--secrets-stdin",
+                *extra,
+            ),
             input=_creation_payload(),
         )
         listed = invoke_cached_cli(("--format", "json", "config", "profile", "list"))
@@ -336,9 +353,16 @@ def test_unwritable_handoff_closes_both_recovery_descriptors_without_publication
     with override_settings(**_storage_overrides(tmp_path, passphrase=None)):
         refused = invoke_cached_cli(
             (
-                "config", "profile", "create", "Unwritable Handoff", "--quiet", "--secrets-stdin",
-                "--recovery-handoff-fd", str(handoff_reader),
-                "--recovery-verification-fd", str(verification_reader),
+                "config",
+                "profile",
+                "create",
+                "Unwritable Handoff",
+                "--quiet",
+                "--secrets-stdin",
+                "--recovery-handoff-fd",
+                str(handoff_reader),
+                "--recovery-verification-fd",
+                str(verification_reader),
             ),
             input=_creation_payload(),
         )
