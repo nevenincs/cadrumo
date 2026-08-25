@@ -5,9 +5,10 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence, Set
 from functools import cache
 from types import NoneType, UnionType
-from typing import Annotated, Literal, TypeAliasType, Union, get_args, get_origin, get_type_hints
+from typing import Annotated, Literal, TypeAliasType, TypeGuard, Union, get_args, get_origin, get_type_hints
 
 from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic.fields import FieldInfo
 
 from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, content_hash_hex
 from ...core.identity import ContentDigest
@@ -242,7 +243,8 @@ def _walk_annotation(
             return
         visited.add(pair)
         annotations = _model_annotations(model_type)
-        for field_name, field in model_type.model_fields.items():
+        fields: dict[str, FieldInfo] = model_type.model_fields
+        for field_name, field in fields.items():
             field_annotation = annotations.get(field_name, field.annotation)
             _walk_annotation(
                 annotation=field_annotation,
@@ -508,7 +510,7 @@ def _is_collection_origin(origin: object) -> bool:
     return origin is not None and isinstance(origin, type) and issubclass(origin, (Sequence, Set))
 
 
-def _is_model_type(annotation: object) -> bool:
+def _is_model_type(annotation: object) -> TypeGuard[type[BaseModel]]:
     return isinstance(annotation, type) and issubclass(annotation, BaseModel)
 
 
