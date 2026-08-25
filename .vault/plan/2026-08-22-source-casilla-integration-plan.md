@@ -3,8 +3,6 @@ tags:
   - '#plan'
   - '#source-casilla-integration'
 date: '2026-08-22'
-modified: '2026-08-25'
-body_hash: 'sha256:ca3742e2606b07c7997c0c639f27ffe1ee772e4cf0281f3bdcc3ddb3493bb151'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -15,6 +13,8 @@ related:
   - '[[2026-08-23-amortization-casilla-mapping-adr]]'
   - '[[2026-08-23-inventory-casilla-grounding-research]]'
   - '[[2026-08-23-amortization-casilla-grounding-research]]'
+modified: '2026-08-25'
+body_hash: 'sha256:f80b67f72de712099924a57e2251176cc84b21478e4c9a3a657a6102b5bfe044'
 ---
 
 <!-- RETIRED: S52, S191, S193 -->
@@ -333,7 +333,7 @@ administrators remain separate filing-population limbs until official evidence
 settles their source and record semantics.
 
 - [x] `W05.P17.S100` - adjudicate Modelo 182 donor-detail and Article-3 declarant/header source semantics, including type-1 nature `3` and administrator-holder identity, from official evidence; `.vault/research/2026-08-22-source-casilla-integration-m182-row-source-grounding-research.md`.
-- [ ] `W05.P17.S101` - enroll only the resolver paths that preserve the non-substitutable type-1 declarant/header and type-2 donor-detail facts, then remove their deferrals; `src/cadrumo/application/aggregation/_source_mesh.py`.
+- [ ] `W05.P17.S101` - recast Modelo 182 as a bounded terminal ingress-blocked deferral pending distinct non-lossy type-1 declarant/header and type-2 donor-detail carriers, secure owner(s), durable identity/fingerprint, and S102 lifecycle/export proof; `src/cadrumo/_data/source_connectivity/census.toml`.
 - [ ] `W05.P17.S102` - prove Modelo 182 declarant and donor-detail persistence, diagnostics, provenance, replay, review, and supported export without a lossy fold; `src/cadrumo/application/modelo/tests/test_m182_row_source.py`.
 - [ ] `W05.P17.S103` - close the Modelo 182 census disposition and obtain formal review only after every accepted declarant and donor source path has proof; `.vault/audit/2026-08-22-m182-row-source-code-review.md`.
 

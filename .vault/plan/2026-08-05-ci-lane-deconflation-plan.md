@@ -3,14 +3,16 @@ tags:
   - '#plan'
   - '#ci-lane-deconflation'
 date: '2026-08-05'
-modified: '2026-08-13'
-body_hash: 'sha256:88d6c75f1823df1ff03fc668b4ca8350ac6fc0297e20fa09a928412ad8e65544'
+modified: '2026-08-25'
+body_hash: 'sha256:9eabd78405ebaa347fa901e067222b2049d81822a3893d99dea5c23ccb010aff'
 tier: L2
 related:
   - '[[2026-07-21-ci-discipline-adr]]'
   - '[[2026-07-20-ci-speed-redesign-adr]]'
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
 ---
+
+<!-- RETIRED: S01 -->
 
 # `ci-lane-deconflation` plan
 
@@ -35,7 +37,6 @@ not have.
 
 The two new lanes both failed their first real execution and their fixes are unverified. Nothing in this phase can be called done from a local run: the claim being tested is that these lanes behave correctly on a runner, which is a different claim from the code being right.
 
-- [ ] `P01.S01` - Verify the docs lane passes on a runner now that it builds before it reads, its first run failed 13 times on an absent docs/_build/html. CLOSE CRITERION UNCHANGED, a named run id whose conclusion is success, and a passing local invocation is not evidence. STANDING INSTRUCTION UNCHANGED, do not dispatch to force an observation but take the next real push-triggered execution. WHAT IS SETTLED. The build-before-read ordering this row landed WORKS and the thirteen failures the row names are CLOSED. Run 31679802188, push-triggered 2026-08-13, executed Build the documentation site rather than failing on an absent docs/_build/html. THE 30-MINUTE CEILING HYPOTHESIS IS FALSIFIED, superseding every earlier note on this row asserting otherwise. That run occupied 07:55:29 to 08:15:59 UTC, twenty minutes thirty seconds, and its build step reached a genuine completion well inside the ceiling, neither cancelled nor killed. The earlier 30m17s datapoint from 31672122119 is a property of the freshly-provisioned WSL runner this row itself attributes to the operator registration swap, not of the lane. DO NOT RAISE timeout-minutes. The measurement that would have justified it no longer stands and the change would spend this row's budget on a defect that is not there. A future build exceeding the ceiling is a fresh observation to record, not a return to this one. THE ACTUAL BLOCKER IS NAMED, REPRODUCIBLE AND OWNED ELSEWHERE. The nitpicky Sphinx build raises on a docs-sequences divergence, page workstation-setup, sequence install-confirm, frame 3, envelope diverging at post-mask paths result.preflight[7].facts.long_paths_enabled and result.preflight[7].facts.platform_windows. The golden carries a Windows authoring host's facts, the Linux runner contradicts both, and the host-conditional fact mask does not cover these two paths, so the recipe exits 2 and Documentation conformance is skipped and the lane still yields no verdict, for a content reason rather than a budget one. That masking layer is another campaign's live surface carrying UNCOMMITTED WORK IN THE SHARED TREE on dev/docs/sequences/_golden_store.py and docs/_sequences/workstation-setup/install-confirm.json, so the fix is in flight rather than absent. THIS ROW MUST NOT TOUCH THOSE FILES. It waits for that landing and takes the next push-triggered Docs Check as its observation; `.github/workflows/docs.yml`.
 - [x] `P01.S02` - Verify the frontend lane passes on a runner under Node 22, its first run refused npm ci because jest-dom 7.0.0 requires node 22 and the manifest under-declares at 20.19; `.github/workflows/frontend.yml`.
 - [x] `P01.S03` - Dispatch ci-full for its first ever execution and record the result, its run count is zero so every claim about its steps is structural rather than observed; `.github/workflows/ci-full.yml`.
 - [x] `P01.S04` - Move the ci-full docs build above the tooling-gates step so the terminology gates that resolve to built HTML get their artefact, blocked until the legal-entry defect stops masking the dependency; `.github/workflows/ci-full.yml`.
