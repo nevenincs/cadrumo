@@ -14,22 +14,21 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
-from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from cadrumo.application.operations.capabilities import OperationRequestStoragePolicy
-from cadrumo.application.operations.models import OperationIdentity
-from cadrumo.application.operations.persistence.events import OperationPhaseEvent
-from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
-from cadrumo.application.operations.persistence.leases import (
+from .....application.operations.capabilities import OperationRequestStoragePolicy
+from .....application.operations.models import OperationIdentity
+from .....application.operations.persistence.events import OperationPhaseEvent
+from .....application.operations.persistence.journal import OperationPersistedSnapshot
+from .....application.operations.persistence.leases import (
     OperationLeaseDisposition,
     OperationLeaseObservationDisposition,
     OperationOwnerLease,
     operation_conflict_scope_reference,
 )
-from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-
+from .....application.operations.persistence.replay import OperationReplayStatus
 from .....core import OperationEffect, OperationLifecycle, scan_directory
 from ...storage import RepositoryError
+from ..journal import OperationJournalRepository
+from ..lease import OperationLeaseFilesystemRepository
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
