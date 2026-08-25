@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:f425fce822747e4e16cc4dd9ea852c5164172a9f6041942705c1964d9d853c48'
+body_hash: 'sha256:0d5da04f004e6d830922c8bd1817bc5f8dda8f87eec73a768fc4b97d0d15c5ab'
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-plan]]'
@@ -318,20 +318,22 @@ not depend on this ADR and may proceed independently per its Description — the
 four are narrow, self-contained blockers on their own four rows only, not on
 the rest of this plan or on other campaigns.
 
-### Operator attestation ledger | medium | 6. Export-fragment legal worklists (`S88`/`S89`/`S90`) — agent prep not yet started, so nothing is operator-actionable yet
+### Operator attestation ledger | medium | 6. Export-fragment legal worklists (`S88`/`S89`/`S90`) — derive the live population before operator action
 
 **Where:** `.vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md`,
-rows `W04.P07.S88` (shared-nine), `S89` (Modelo-303-only-nine), `S90`
-(Modelo-390-only-two) — all open. Each row is two clauses: an agent-doable
-"prepare the exact worklist" clause, then a human clause ("require the human
-operator to review and attest each reference one at a time against live
-official authority... Refuse agent or bulk promotion").
+rows `W04.P07.S88` (shared), `S89` (Modelo-303-only), and `S90`
+(Modelo-390-only) — all open. The plan rows now own only the agent-executable
+packet derivation and mutation gates. This ledger remains the sole operational
+home for the later human review ceremony.
 
-**What the operator must eventually decide:** per legal reference in the
-partition (twenty references total: nine shared, nine Modelo-303-only, two
-Modelo-390-only, per `S91`'s stated target), confirm exact identity, provision,
-corpus anchor, presence/absence clauses, applicability, amounts, and rates
-against live official authority, one at a time — no bulk promotion permitted.
+**What the operator must eventually decide:** per legal reference in the live
+derived partition, confirm exact identity, provision, corpus anchor,
+presence/absence clauses, applicability, amounts, and rates against live
+official authority, one at a time — no bulk promotion permitted. The
+population is deliberately not baselined here. The 2026-08-25 observation is
+77 selected references partitioned as 38 shared, 13 Modelo-303-only, and 26
+Modelo-390-only; 37 are not operator-reviewed. Those counts are diagnostic,
+not authority, and must be re-derived by the packet gate.
 
 **What is already prepared:** nothing yet. No worklist document exists under
 `.vault/audit/` for any of the three partitions as of this writing (confirmed
@@ -349,15 +351,15 @@ integration and release (`W04.P08`) cannot proceed. Ranked below the fully-prepa
 items above because there is no reviewable artifact yet — an operator handed
 this today would have nothing to read.
 
-### Operator attestation ledger | medium | 7. Export-fragment revision signoff (`S91`) — thirteen revisions, blocked upstream on item 6 and on the still-open epoch maps
+### Operator attestation ledger | medium | 7. Export-fragment revision signoff (`S91`) — nine revisions, blocked upstream on item 6 and review-tier adjudication
 
 **Where:** `.vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md`,
 row `W04.P07.S91` (open).
 
-**What the operator must decide:** one-at-a-time signoff for nine Modelo 303
+**What the operator must decide:** one-at-a-time signoff for five Modelo 303
 revisions (`2023`, `2024-hasta-08-y-2t`, `2024-desde-09-y-3t`, `2025`,
 `2026-y-siguientes`) and four Modelo 390 revisions (`2022`, `2023`, `2024`,
-`2025`) — thirteen total — confirming the selected revision and every selected
+`2025`) — nine total — confirming the selected revision and every selected
 legal reference is operator-reviewed, before real filing-grade snapshots and the
 public M303 filing-instance renderer proof can be built on top.
 
@@ -365,9 +367,13 @@ public M303 filing-instance renderer proof can be built on top.
 depends on item 6 (the three legal worklists) landing first, and on the still-open
 `W04.P07.S70`/`S71` epoch maps and `S20` generation row.
 
-**What is missing:** everything upstream. This is the widest single-row scope
-in the ledger (thirteen revisions against twenty legal references) but also the
-least actionable today.
+**What is missing:** everything upstream, plus reconciliation of the accepted
+temporal-review decision with production snapshot admission. The accepted ADR
+requires operator-reviewed revisions and a complete operator-reviewed legal
+slice, while production currently admits agent-reviewed revisions and reports
+the weakest selected tier. The implementation row may report this refusal but
+must not silently resolve the architectural conflict or own the attestation
+ceremony.
 
 **What stays blocked until this lands:** the export-fragment campaign's
 release phase (`W04.P08`), and per the sequencing audit, the `registry-temporal-coverage`
