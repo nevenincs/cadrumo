@@ -66,6 +66,23 @@ using production derivation. `P02.S10` still lacks the exact 2024 2T-negative to
 3T-compensacion end-to-end regression. `P03.S13` still has the guarded Modelo 390
 position-1628 disclosure-split question. These are not tracker drift.
 
+### live-suite-rebaseline | high | The old row inventory was not the current closure surface
+
+A sequential registry run on 2026-08-25 completed 5,628 selected tests with 37
+failures and 5,591 passes. Every failed node was then rerun alone because concurrent
+registry writes can invalidate the loader's tree fingerprint. Seven passed alone and
+were classified as contention noise; thirty reproduced. The reproducing set includes
+the claimed-year layout-design divergence, temporal holes, filing-grade and export
+capability residue, continuity enrollment, parser coverage, stale synthetic fixtures
+and scenario declarations, public-boundary imports, validator reviewability, and
+verdict-cache behavior.
+
+The stale Modelo 390 diagnosis is independently resolved, but that does not make the
+campaign complete. `P03.S22` owns the exact fourteen-revision layout-design gate and
+routes its changes to existing authorities. `P03.S23` owns draining the remaining
+isolated clusters without duplicating those authorities. Campaign closure still
+requires the isolated nodes and a fresh sequential whole-tree run to pass.
+
 ## Recommendations
 
 - Retire S09, S12, and S14 through the canonical plan CLI and preserve the
@@ -75,3 +92,5 @@ position-1628 disclosure-split question. These are not tracker drift.
 - Reconstruct focused evidence for S15 and S16, then close them through the plan
   CLI.
 - Implement S08, S10, and S13 in that order without reviving superseded shapes.
+- Treat the isolated 2026-08-25 failure set, not the historical checkbox count, as
+  the live closure baseline and re-run it after every cluster lands.
