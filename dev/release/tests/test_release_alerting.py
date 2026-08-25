@@ -19,8 +19,8 @@ import pytest
 import yaml
 
 from cadrumo.core import iter_directory, scan_directory
-from dev._paths import REPO_ROOT
 
+from ..._paths import REPO_ROOT
 from .. import alerting
 from ..alerting import AlertError, ReleaseAlert, alert_payload, emit_alert
 

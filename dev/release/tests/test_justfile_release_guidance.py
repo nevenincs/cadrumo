@@ -6,8 +6,7 @@ import subprocess
 
 import pytest
 
-from dev._paths import REPO_ROOT
-
+from ..._paths import REPO_ROOT
 from ...ci.lane_reachability import resolve_just_executable
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

@@ -41,8 +41,7 @@ from typing import Final
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from dev._paths import UTF_8
-
+from .._paths import UTF_8
 from ._asset_transport import (
     download_release_assets,
     list_releases,

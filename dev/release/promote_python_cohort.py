@@ -7,8 +7,7 @@ import json
 from pathlib import Path
 from typing import Any, Final, cast
 
-from dev._paths import UTF_8
-
+from .._paths import UTF_8
 from ..packaging.installed_tax_oracle import (
     EXPECTED_FORMULA,
     EXPECTED_LEGAL_REF,

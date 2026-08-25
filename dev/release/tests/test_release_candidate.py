@@ -18,8 +18,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from dev._paths import REPO_ROOT
-
+from ..._paths import REPO_ROOT
 from .. import release_candidate
 from ..release_candidate import (
     ReleaseCandidate,
