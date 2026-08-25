@@ -187,14 +187,14 @@ def test_workflow_deadline_gate_and_projection_share_the_production_schedule() -
     today = date(2026, 4, 12)
 
     schedule = compute_obligation_schedule(DeadlineEngine(), profile, today=today)
-    authority_rows = {
+    authority_rows = tuple(
         (obligation.modelo, obligation.period, obligation.opens_on, obligation.closes_on, obligation.status)
         for obligation in schedule.obligations
-    }
-    projection_rows = {
+    )
+    projection_rows = tuple(
         (obligation.modelo, obligation.period, obligation.opens_on, obligation.closes_on, obligation.status)
         for obligation in build_pending_obligations(profile, today=today)
-    }
+    )
 
     assert authority_rows
     assert projection_rows == authority_rows
