@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
@@ -10,6 +11,7 @@ import pytest
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
+from .....domain.contribuyente import compute_deduccion_maternidad_0611
 from .....tests.aeat_literal_fixtures import aeat_url, configured_path
 from .. import (
     ModeloDefinition,
@@ -27,6 +29,16 @@ _UNKNOWN_CONSTRUCT_MEMBER_CASILLA: CasillaId = validated_casilla_id(
     "0000-ghost",
     surface="_UNKNOWN_CONSTRUCT_MEMBER_CASILLA",
 )
+
+
+def _m100_2024_deduccion_maternidad_bindings() -> Mapping[str, Decimal]:
+    """Return M100 2024's empty-descendant maternity binding from domain law."""
+    return {
+        "renta-2024-profile-deduccion-maternidad": compute_deduccion_maternidad_0611(
+            [],
+            filing_year=2024,
+        ),
+    }
 
 
 @cache

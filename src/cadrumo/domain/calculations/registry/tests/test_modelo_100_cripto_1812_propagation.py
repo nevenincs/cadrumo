@@ -33,6 +33,7 @@ import pytest
 
 from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from .. import BindingId, RegistrySnapshot, RelationId, calculate_registry_snapshot
+from ._modelo_100_registry_support import _m100_2024_deduccion_maternidad_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -68,7 +69,7 @@ def _binding_values_2024() -> dict[BindingId, Decimal]:
         "renta-2024-profile-incremento-guarderia": Decimal("0"),
         "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
         "renta-2024-profile-descendientes-guarderia": Decimal("0"),
-        "renta-2024-profile-deduccion-maternidad": Decimal("0"),
+        **_m100_2024_deduccion_maternidad_bindings(),
         "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
         # matrimonio-sobrevenido bindings (81feae7b0): zero = marriage pre-dates filing year.

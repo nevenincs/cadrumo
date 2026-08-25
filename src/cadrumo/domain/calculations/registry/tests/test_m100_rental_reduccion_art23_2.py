@@ -12,6 +12,7 @@ from .....core import RegistryAuthorityGrade
 from .._errors import RegistryValidationError
 from .._formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from .._schema import RegistrySnapshot
+from ._modelo_100_registry_support import _m100_2024_deduccion_maternidad_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -54,7 +55,7 @@ def _calculate(
             "renta-2024-profile-incremento-guarderia": Decimal("0"),
             "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
             "renta-2024-profile-descendientes-guarderia": Decimal("0"),
-            "renta-2024-profile-deduccion-maternidad": Decimal("0"),
+            **_m100_2024_deduccion_maternidad_bindings(),
             "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
             "renta-2024-profile-declaration-type": Decimal("1"),

@@ -86,6 +86,7 @@ from .. import (
     ValidatedRegistryAuthority,
 )
 from ._manual_oracle_support import oracle_declared_figures, read_manual_worked_example
+from ._modelo_100_registry_support import _m100_2024_deduccion_maternidad_bindings
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -143,7 +144,7 @@ _BASE_BINDINGS_2024: dict[str, Decimal] = {
     "renta-2024-profile-declaration-type": Decimal("1"),
     "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
     "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("0"),
-    "renta-2024-profile-deduccion-maternidad": Decimal("0"),
+    **_m100_2024_deduccion_maternidad_bindings(),
     "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
     "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
 }

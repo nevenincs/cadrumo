@@ -13,6 +13,7 @@ from .._authority import ValidatedRegistryAuthority, bundled_authority
 from .._errors import RegistryValidationError
 from .._formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from .._schema import RegistrySnapshot
+from ._modelo_100_registry_support import _m100_2024_deduccion_maternidad_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -64,7 +65,7 @@ def _binding_values(year: int) -> dict[str, Decimal]:
                 # an art. 85 imputed-real-estate example and claims no
                 # maternity deducción. It joined the 2024 closure after the
                 # others and was the only one left unsupplied.
-                "renta-2024-profile-deduccion-maternidad": Decimal("0"),
+                **_m100_2024_deduccion_maternidad_bindings(),
             },
         )
     return values
