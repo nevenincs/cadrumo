@@ -39,13 +39,6 @@ flows:
     action:
       auth_clave_movil_route_app_request: Sol·licitud a l'aplicació
       auth_clave_movil_route_qr: Codi QR
-      busy: Encara hi ha una altra operació en curs. Espera que acabi.
-      failed: L'operació no s'ha completat.
-      logout: Tanca la sessió
-      logout_done: Sessió tancada.
-      working: S'està executant {action}...
-    actions:
-      section: Accions
     censal_review:
       apply: Aplica aquesta proposta exacta
     choice_unavailable: Opció no disponible

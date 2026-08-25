@@ -38,13 +38,6 @@ flows:
     action:
       auth_clave_movil_route_app_request: Solicitud en la aplicación
       auth_clave_movil_route_qr: Código QR en un navegador visible
-      busy: Todavía hay otra operación en curso. Espera a que termine.
-      failed: La operación no se completó.
-      logout: Cerrar sesión
-      logout_done: Sesión cerrada.
-      working: Ejecutando {action}...
-    actions:
-      section: Acciones
     censal_review:
       apply: Aplicar esta propuesta exacta
     choice_unavailable: Opción no disponible

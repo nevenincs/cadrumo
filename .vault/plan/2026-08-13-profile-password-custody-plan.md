@@ -19,7 +19,7 @@ related:
   - '[[2026-08-13-sealed-archive-transport-successor-adr]]'
   - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
 modified: '2026-08-25'
-body_hash: 'sha256:362533f096347f47b605c44b9e57d540544a6cc70b8ab3f86eea70bc3b2f0f2d'
+body_hash: 'sha256:15ac25cde160b395261e7e9665d543716e2594fcfec2460c3fda3578bf20a179'
 ---
 
 # `profile-password-custody` plan
@@ -378,4 +378,4 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 - [x] `W06.P12.S267` - Reconcile feature and full Vaultspec warnings by exact document owner, removing scaffold annotations, reattesting modified bodies, refreshing indexes, and resolving only genuine corpus hygiene debt; `.vault/`.
 - [x] `W06.P12.S268` - Repair defining-source API docstring cross-references and public facade targets for every stable main nitpicky warning left after generated stub reconciliation, without promoting private implementation ownership; `src/cadrumo/, docs/api/, docs/conf.py, and dev/docs/apidocs/`.
 - [x] `W06.P12.S269` - Move the documentation sequence runner to the canonical relocated profile-capsule runtime helper and repair its ownership link without recreating the retired test facade; `dev/docs/sequences/_runner.py and cadrumo/adapters/persistence/storage/tests/profile_capsule_runtime.py`.
-- [ ] `W06.P12.S270` - Retire the six newly orphaned manager action translations from all four production catalogues after the canonical TUI cutover, then rerun locale audit and scaffold drift; `src/cadrumo/locales/ and dev/locales/`.
+- [x] `W06.P12.S270` - Retire the six newly orphaned manager action translations from all four production catalogues after the canonical TUI cutover, then rerun locale audit and scaffold drift; `src/cadrumo/locales/ and dev/locales/`.
