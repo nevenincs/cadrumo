@@ -13,8 +13,6 @@ from typing import TYPE_CHECKING, Final
 
 from textual.theme import Theme
 
-from ....core.config import TuiAppearance
-
 if TYPE_CHECKING:
     from textual.app import App
 
@@ -161,11 +159,13 @@ NOTICE_BAND_CSS: Final[str] = """
     .cadrumo-notice-warning { color: $warning; text-style: bold; }
     .cadrumo-notice-action { color: $text-muted; margin: 0 0 1 2; }
 """
-def resolve_theme_name(appearance: TuiAppearance, *, host_prefers_dark: bool = True) -> str:
+
+
+def resolve_theme_name(appearance: str, *, host_prefers_dark: bool = True) -> str:
     """Return the registered theme name for an operator appearance choice."""
-    if appearance is TuiAppearance.LIGHT:
+    if appearance == "light":
         return CADRUMO_LIGHT_THEME_NAME
-    if appearance is TuiAppearance.DARK:
+    if appearance == "dark":
         return CADRUMO_DARK_THEME_NAME
     return CADRUMO_DARK_THEME_NAME if host_prefers_dark else CADRUMO_LIGHT_THEME_NAME
 
@@ -173,14 +173,14 @@ def resolve_theme_name(appearance: TuiAppearance, *, host_prefers_dark: bool = T
 def install_cadrumo_themes[ReturnT](
     app: App[ReturnT],
     *,
-    appearance: TuiAppearance | None = None,
+    appearance: str | None = None,
 ) -> None:
     """Register both themes on ``app`` and activate the resolved one.
 
     The component has no settings or application-state authority.  A caller
     that omits an appearance receives the neutral ``AUTO`` resolution.
     """
-    selected = TuiAppearance.AUTO if appearance is None else appearance
+    selected = "auto" if appearance is None else appearance
     for theme in CADRUMO_THEMES:
         app.register_theme(theme)
     app.theme = resolve_theme_name(selected)

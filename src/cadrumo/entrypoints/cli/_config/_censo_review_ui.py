@@ -6,7 +6,7 @@ from collections.abc import Mapping
 
 from ....application.user_profile import CensalReviewProjectionV1
 from ....core.i18n import tr
-from ....entrypoints.tui.components.forms import FormChoice, FormField, FormFieldKind, FormPage
+from ....core.presentation import FormChoice, FormField, FormFieldKind, FormPage
 from ._manager_frontend import present_form
 
 _DECISION_KEY = "censo-review-decision"

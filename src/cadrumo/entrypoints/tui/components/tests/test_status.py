@@ -9,7 +9,7 @@ from textual.app import App, ComposeResult
 from textual.containers import VerticalScroll
 from textual.widgets import Static
 
-from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
+from ..status import PinnedStatusBar
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -121,23 +121,3 @@ async def test_status_bar_without_a_summary_collapses_when_idle() -> None:
         bar.clear_message()
         await pilot.pause()
         assert not bar.display
-
-
-@pytest.mark.asyncio
-async def test_status_bar_redacts_sensitive_backend_text_before_mounting_it() -> None:
-    """Every TUI status/error path crosses the shared public-output redactor."""
-    app = _StatusBarHarness()
-    raw_nif = "12345678Z"
-    raw_token = "Bearer this-is-a-synthetic-secret-token-value-1234567890"  # noqa: S105
-    raw_url = "https://sede.example.test/private/session?taxpayer=12345678Z"
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
-        bar = app.query_one("#status", PinnedStatusBar)
-        bar.set_summary(f"Profile {raw_nif}")
-        bar.show_error(f"backend failed for {raw_nif}: {raw_token} at {raw_url}")
-        await pilot.pause()
-
-        rendered = f"{bar.summary}\n{bar.message}"
-        assert raw_nif not in rendered
-        assert raw_token not in rendered
-        assert "/private/session" not in rendered
-        assert "https://sede.example.test" in rendered

@@ -9325,7 +9325,7 @@ modelo:
                   fiscal
           field:
             label: Orden HAC/657/2025 (modelo 220), exercici 2024
-        2025-y-siguientes:
+        '2025':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: null

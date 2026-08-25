@@ -748,6 +748,8 @@ if TYPE_CHECKING:
     from ._preflight import (
         format_profile_selector_requirements as format_profile_selector_requirements,
     )
+    from ._presentation import notice_presentation as notice_presentation
+    from ._presentation import profile_field_shape_hint as profile_field_shape_hint
     from ._profile_pointer_transaction import (
         active_profile_pointer_transaction as active_profile_pointer_transaction,
     )
@@ -862,6 +864,10 @@ if TYPE_CHECKING:
     from ._section_rows import (
         section_row_facts as section_row_facts,
     )
+    from ._status_projection import StatusAuthView as StatusAuthView
+    from ._status_projection import StatusFactRow as StatusFactRow
+    from ._status_projection import StatusPageData as StatusPageData
+    from ._status_projection import StatusProfileRow as StatusProfileRow
     from ._validation import (
         COMPLETENESS_ISSUE_CODES as COMPLETENESS_ISSUE_CODES,
     )
@@ -1040,6 +1046,10 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfileLoginThrottledError": "._login_session",
     "ProfileNotFoundError": "._profile_repository",
     "ProfileOverview": "._overview",
+    "StatusAuthView": "._status_projection",
+    "StatusFactRow": "._status_projection",
+    "StatusPageData": "._status_projection",
+    "StatusProfileRow": "._status_projection",
     "ProfilePersistedSessionPort": "._login_session_port",
     "ProfilePreflightReport": "._commands",
     "ProfilePreflightRequirement": "._commands",
@@ -1117,6 +1127,8 @@ _LAZY_EXPORTS: dict[str, str] = {
     "prepare_profile_export": "._bundle_export",
     "profile_custody_transaction_lock": "._custody_repository",
     "profile_field_choices": "._overview",
+    "profile_field_shape_hint": "._presentation",
+    "notice_presentation": "._presentation",
     "profile_record_session_if_authenticated": "._profile_record_repository",
     "profile_section_rows": "._completeness",
     "projection_for_taxpayer": "._projections",
@@ -1324,6 +1336,10 @@ __all__ = [
     "ProfileValidationReport",
     "ProfileValidationService",
     "ProspectiveProfilePasswordRefusal",
+    "StatusAuthView",
+    "StatusFactRow",
+    "StatusPageData",
+    "StatusProfileRow",
     "UnsupportedBundleSchemaVersionError",
     "UserProfileFact",
     "UserProfileFactValue",
@@ -1379,11 +1395,13 @@ __all__ = [
     "missing_filing_baseline_flags",
     "missing_required_field_paths",
     "next_section_row_index",
+    "notice_presentation",
     "open_censo_divergences",
     "prepare_profile_export",
     "profile_custody_port",
     "profile_custody_transaction_lock",
     "profile_field_choices",
+    "profile_field_shape_hint",
     "profile_record_session_if_authenticated",
     "profile_section_rows",
     "projection_for_taxpayer",

@@ -9505,7 +9505,7 @@ modelo:
                   consolidación fiscal
           field:
             label: Orden HAC/657/2025 (modelo 220), ejercicio 2024
-        2025-y-siguientes:
+        '2025':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
@@ -9519,4 +9519,4 @@ modelo:
                 title: Modelo 220 declaración anual del grupo fiscal en régimen de
                   consolidación fiscal
           field:
-            label: Orden HAC/529/2026 (modelo 220), ejercicios 2025 y siguientes
+            label: Orden HAC/529/2026 (modelo 220), ejercicio 2025

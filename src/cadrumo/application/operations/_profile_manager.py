@@ -1,10 +1,4 @@
-"""Presentation contracts for work offered from the profile overview.
-
-The entrypoint supplies each task's callable and owns its effects.  This
-module carries only the screen-facing projection of that task and its settled
-outcome, so the overview never learns profile, authentication, export, or
-operation policy.
-"""
+"""Frontend-neutral contracts for profile-manager actions."""
 
 from __future__ import annotations
 
@@ -14,17 +8,16 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from ....core import OperatorProgress
+from ...core import OperatorProgress
 
 if TYPE_CHECKING:
-    from ....application.user_profile import ProfileOverview
-
+    from ..user_profile import ProfileOverview
 
 type ManagerProgressSinkBinder = Callable[[Callable[[OperatorProgress], None]], AbstractContextManager[None]]
 
 
 class ManagerActionDisposition(StrEnum):
-    """How a completed task should be presented to the operator."""
+    """How a completed manager action should be presented."""
 
     SUCCESS = "success"
     WARNING = "warning"
@@ -33,7 +26,7 @@ class ManagerActionDisposition(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class ManagerActionOutcome:
-    """What an injected task did, as the overview needs to know it."""
+    """Result of one frontend-neutral profile-manager action."""
 
     message: str
     overview: ProfileOverview | None = None
@@ -43,7 +36,7 @@ class ManagerActionOutcome:
 
 @dataclass(frozen=True, slots=True)
 class ManagerAction:
-    """One injected task offered alongside the profile fields."""
+    """One profile-manager action supplied to a presentation surface."""
 
     key: str
     label: str

@@ -19,23 +19,23 @@ import pytest
 from textual.widget import Widget
 from textual.widgets import DataTable, Input, Static
 
-from .....application.user_profile import (
+from ....application.user_profile import (
     build_profile_overview,
     login_profile,
     register_profile_with_credentials,
 )
-from .....core import require_active_bucket_id, resolve_active_bucket_id
-from .....core.i18n import tr
-from .....entrypoints.cli import persist_active_profile_field
-from .....entrypoints.tui.components.status import PinnedStatusBar
-from .....entrypoints.tui.profile.overview import ProfileManagerApp
-from .....tests.manager_pilot import wait_until_settled
-from .....tests.profile_capsule import load_test_profile_record
-from .....tests.secure_sql import isolated_profile_storage_root
+from ....core import require_active_bucket_id, resolve_active_bucket_id
+from ....core.i18n import tr
+from ....entrypoints.cli import persist_active_profile_field
+from ....tests.profile_capsule import load_test_profile_record
+from ....tests.secure_sql import isolated_profile_storage_root
+from ..components.status import PinnedStatusBar
+from ..profile.overview import ProfileManagerApp
+from .manager_pilot import wait_until_settled
 
 pytestmark = [
     pytest.mark.integration,
-    pytest.mark.hex_inbound_adapter,
+    pytest.mark.hex_entrypoint,
 ]
 
 _TERMINAL_SIZE = (160, 60)
@@ -159,7 +159,7 @@ async def test_profile_context_names_missing_requirements_but_has_no_healthy_pla
 @pytest.mark.asyncio
 async def test_profile_body_renders_the_envelopes_typed_advisories(tmp_path) -> None:
     """The manager consumes Notice in scrollable context, not permanent chrome."""
-    from .....core.json_contract import Notice, NoticeSeverity
+    from ....core.json_contract import Notice, NoticeSeverity
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(
@@ -352,7 +352,7 @@ async def test_a_second_edit_is_refused_before_its_dialog_opens(tmp_path) -> Non
 
 
 def _edit_screen(field):
-    from .....entrypoints.tui.profile.editor import FieldEditScreen
+    from ..profile.overview import FieldEditScreen
 
     return FieldEditScreen(field)
 
@@ -365,8 +365,8 @@ async def test_a_masked_field_opens_empty_rather_than_prefilled(tmp_path) -> Non
     moment the operator pressed save, silently overwriting the secret with
     a row of bullets.
     """
-    from .....application.user_profile import MASKED_PLACEHOLDER, ProfileFieldView
-    from .....entrypoints.tui.profile.editor import FieldEditScreen
+    from ....application.user_profile import MASKED_PLACEHOLDER, ProfileFieldView
+    from ..profile.overview import FieldEditScreen
 
     masked = ProfileFieldView(
         path="access.token",
@@ -395,14 +395,25 @@ async def test_a_masked_field_opens_empty_rather_than_prefilled(tmp_path) -> Non
 @pytest.mark.asyncio
 async def test_aeat_progress_replaces_the_inherited_stderr_sink_with_the_pinned_header(tmp_path) -> None:
     """Cl@ve verification progress must be visible before the pull finishes."""
-    from .....adapters.outbound.aeat import emit_operator_progress, operator_progress_sink
-    from .....core import OperatorProgress
-    from .....entrypoints.tui.profile.tasks import ManagerAction, ManagerActionOutcome
+    from collections.abc import Callable, Generator
+    from contextlib import contextmanager
+
+    from ....application.operations import ManagerAction, ManagerActionOutcome
+    from ....core import OperatorProgress
 
     release = threading.Event()
+    active_sinks: list[Callable[[OperatorProgress], None]] = []
+
+    @contextmanager
+    def _progress_sink(sink: Callable[[OperatorProgress], None]) -> Generator[None]:
+        active_sinks.append(sink)
+        try:
+            yield
+        finally:
+            active_sinks.pop()
 
     def _run() -> ManagerActionOutcome:
-        emit_operator_progress(
+        active_sinks[-1](
             OperatorProgress(
                 message="Cl@ve Movil: verify that code TUI-CODE matches in both places.",
                 timeout_seconds=120,
@@ -425,7 +436,7 @@ async def test_aeat_progress_replaces_the_inherited_stderr_sink_with_the_pinned_
                     key="sync",
                     label="Sync",
                     run=_run,
-                    progress_sink=operator_progress_sink,
+                    progress_sink=_progress_sink,
                 ),
             ],
         )
@@ -455,7 +466,7 @@ async def test_aeat_progress_replaces_the_inherited_stderr_sink_with_the_pinned_
 @pytest.mark.asyncio
 async def test_a_returned_refusal_is_not_styled_as_a_success(tmp_path) -> None:
     """Handled command errors carry an explicit disposition into the header."""
-    from .....entrypoints.tui.profile.tasks import ManagerAction, ManagerActionDisposition, ManagerActionOutcome
+    from ....application.operations import ManagerAction, ManagerActionDisposition, ManagerActionOutcome
 
     def _run() -> ManagerActionOutcome:
         return ManagerActionOutcome(
@@ -487,7 +498,7 @@ async def test_a_returned_refusal_is_not_styled_as_a_success(tmp_path) -> None:
 @pytest.mark.asyncio
 async def test_an_action_runs_and_reports_what_it_did(tmp_path) -> None:
     """The bar renders one button per action and shows its message."""
-    from .....entrypoints.tui.profile.tasks import ManagerAction, ManagerActionOutcome
+    from ....application.operations import ManagerAction, ManagerActionOutcome
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(
@@ -520,7 +531,7 @@ async def test_an_action_that_changed_the_record_redraws_the_page(tmp_path) -> N
     An export writes a file and changes nothing, so it must not redraw —
     a redraw from stale data is how a page starts lying about storage.
     """
-    from .....entrypoints.tui.profile.tasks import ManagerAction, ManagerActionOutcome
+    from ....application.operations import ManagerAction, ManagerActionOutcome
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(
@@ -528,8 +539,9 @@ async def test_an_action_that_changed_the_record_redraws_the_page(tmp_path) -> N
             label="Manager Subject",
             passphrase=_PASSWORD,
         )
-        _persist(_EDITED_PATH, "Before")
-        app = ProfileManagerApp(_live_overview(), persist=_persist, actions=[])
+        _live_overview()
+        before = _persist(_EDITED_PATH, "Before")
+        app = ProfileManagerApp(before, persist=_persist, actions=[])
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             assert _rows(app)[_EDITED_PATH][2] == "Before"
@@ -540,7 +552,7 @@ async def test_an_action_that_changed_the_record_redraws_the_page(tmp_path) -> N
             return ManagerActionOutcome(message="renamed", overview=_persist(_EDITED_PATH, "After"))
 
         refreshing = ProfileManagerApp(
-            _live_overview(),
+            before,
             persist=_persist,
             actions=[ManagerAction(key="rename", label="Rename", run=_rename)],
         )
@@ -565,7 +577,7 @@ async def test_a_refusing_action_reports_it_instead_of_taking_the_screen_down(tm
     key material; both can refuse for ordinary reasons. Losing the whole
     screen mid-edit over one of them would be the worse failure.
     """
-    from .....entrypoints.tui.profile.tasks import ManagerAction, ManagerActionOutcome
+    from ....application.operations import ManagerAction, ManagerActionOutcome
 
     def _refuse() -> ManagerActionOutcome:
         raise RuntimeError("NO-CERTIFICATE-REGISTERED")
@@ -595,8 +607,8 @@ async def test_a_refusing_action_reports_it_instead_of_taking_the_screen_down(tm
 @pytest.mark.asyncio
 async def test_a_registered_worker_error_is_localised_before_it_reaches_the_header(tmp_path) -> None:
     """The TUI must not expose a translation key as its error message."""
-    from .....core.errors import NoActiveProfileError
-    from .....entrypoints.tui.profile.tasks import ManagerAction, ManagerActionOutcome
+    from ....application.operations import ManagerAction, ManagerActionOutcome
+    from ....core.errors import NoActiveProfileError
 
     def _refuse() -> ManagerActionOutcome:
         raise NoActiveProfileError(translated_message="flows.manager.action.censal_pull_no_provider")
@@ -652,7 +664,7 @@ async def test_a_failure_carrying_no_text_is_named_rather_than_shown_blank(
     What is asserted is the rendered notice, not the handling: the whole
     complaint is about what is on the operator's screen.
     """
-    from .....entrypoints.tui.profile.tasks import ManagerAction, ManagerActionOutcome
+    from ....application.operations import ManagerAction, ManagerActionOutcome
 
     def _wordless() -> ManagerActionOutcome:
         raise raise_wordlessly
@@ -753,7 +765,7 @@ async def test_a_row_an_action_owns_opens_that_action_not_the_edit_box(tmp_path)
     letting the Cl@ve identity drift from the fiscal one until a login
     refused over it.
     """
-    from .....entrypoints.tui.profile.tasks import ManagerAction, ManagerActionOutcome
+    from ....application.operations import ManagerAction, ManagerActionOutcome
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(
@@ -791,7 +803,7 @@ async def test_an_unowned_row_still_opens_the_edit_box(tmp_path) -> None:
     pass while the manager had stopped being editable, and nothing else
     here would say so.
     """
-    from .....entrypoints.tui.profile.tasks import ManagerAction, ManagerActionOutcome
+    from ....application.operations import ManagerAction, ManagerActionOutcome
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(
@@ -826,7 +838,7 @@ async def test_an_action_owning_nothing_leaves_every_row_editable(tmp_path) -> N
     ``owns_paths`` defaults to empty, so an action that declares no
     ownership — which is every action but one — cannot capture a row.
     """
-    from .....entrypoints.tui.profile.tasks import ManagerAction, ManagerActionOutcome
+    from ....application.operations import ManagerAction, ManagerActionOutcome
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(
@@ -861,7 +873,7 @@ async def test_the_action_row_never_paints_past_a_floor_terminal(tmp_path) -> No
     every one of them, however many or however long, inside the surface's
     one sanctioned overflow mechanism: the page's own vertical scroll.
     """
-    from .....entrypoints.tui.profile.tasks import ManagerAction, ManagerActionOutcome
+    from ....application.operations import ManagerAction, ManagerActionOutcome
 
     long_labels = [
         "Certificado digital",
@@ -923,9 +935,10 @@ async def test_a_long_field_label_never_pushes_the_value_off_screen(tmp_path) ->
             label="Manager Subject",
             passphrase=_PASSWORD,
         )
-        _persist(_long_label_field_path, "12345.67")
+        _live_overview()
+        written = _persist(_long_label_field_path, "12345.67")
 
-        app = ProfileManagerApp(_live_overview(), persist=_persist)
+        app = ProfileManagerApp(written, persist=_persist)
         async with app.run_test(size=(80, 24)) as pilot:
             await pilot.pause()
             # The IRPF section sits well below the fold on an 80x24
@@ -958,7 +971,7 @@ async def test_logout_closes_both_the_session_and_the_surface(tmp_path) -> None:
     session is gone (the real ``logout_active_profile`` door, not a
     stand-in) AND that the app is no longer running, not either alone.
     """
-    from .....entrypoints.cli import logout_action
+    from ....entrypoints.cli import logout_action
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(

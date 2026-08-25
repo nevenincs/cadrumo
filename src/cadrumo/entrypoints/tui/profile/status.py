@@ -24,9 +24,7 @@ rendered here rather than re-modelled as a bespoke TUI-only advisory.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding, BindingsMap
@@ -34,7 +32,6 @@ from textual.containers import Vertical
 from textual.widgets import Footer, Static
 
 from ....core.i18n import tr
-from ....core.json_contract import Notice
 from ....entrypoints.tui.components.theme import (
     BASE_CSS,
     NOTICE_BAND_CSS,
@@ -43,73 +40,8 @@ from ....entrypoints.tui.components.theme import (
 )
 from ....entrypoints.tui.components.widgets import ContentDataTable, ContentScroll, NoticeBand
 
-
-@dataclass(frozen=True, slots=True)
-class StatusFactRow:
-    """One resolved profile fact: its display label, value, and mask flag.
-
-    ``masked`` is decided by the entry-point builder from the schema
-    sensitivity (and a defensive key-like path/label heuristic). When it is
-    ``True`` the builder has ALREADY replaced ``value`` with the mask token,
-    so the secret never enters this view-model: a later consumer -- a screen,
-    a diagnostic dump, a snapshot -- cannot leak what it was never given.
-    The flag remains so a renderer can style a redacted cell distinctly.
-    """
-
-    label: str
-    value: str
-    masked: bool = False
-
-
-@dataclass(frozen=True, slots=True)
-class StatusProfileRow:
-    """One registered profile bucket: label, setup-state token, active marker."""
-
-    label: str
-    setup_state: str | None = None
-    active: bool = False
-
-
-@dataclass(frozen=True, slots=True)
-class StatusAuthView:
-    """Local AEAT access readiness projected from the workflow auth state.
-
-    ``idle_deadline`` and ``absolute_deadline`` are a second, unrelated
-    fact carried on this same panel: not AEAT auth readiness, but how long
-    the operator's own unlocked PROFILE session — the one ``aeat config
-    login`` opened — has left before it locks again. They share this zone
-    because it is the one place on the page an operator already looks to
-    ask "am I authenticated right now", and "for how much longer" is the
-    same question. ``None`` for either means no live profile session could
-    be read (never logged in, or the session artefacts are unreadable).
-    """
-
-    provider: str | None = None
-    login_ready: bool = False
-    subject: str | None = None
-    certificate_source: str | None = None
-    idle_deadline: datetime | None = None
-    absolute_deadline: datetime | None = None
-
-
-@dataclass(frozen=True, slots=True)
-class StatusPageData:
-    """The full read-only view-model rendered by :class:`StatusApp`.
-
-    Masking is a build-time invariant: the entry-point builder substitutes
-    the mask token before a ``StatusFactRow`` is constructed, so a secret
-    never enters this view-model and no renderer can be trusted wrongly.
-    """
-
-    active_profile_label: str | None = None
-    facts: tuple[StatusFactRow, ...] = ()
-    profiles: tuple[StatusProfileRow, ...] = ()
-    auth: StatusAuthView = field(default_factory=StatusAuthView)
-    notices: tuple[Notice, ...] = ()
-    """Operator-facing advisories, off the same typed channel a CLI envelope
-    carries. Empty on a healthy profile; the panel that renders these is
-    omitted entirely rather than shown blank."""
-
+if TYPE_CHECKING:
+    from ....application.user_profile import StatusPageData
 
 _PROFILE_SETUP_STATE_LOCALE_KEYS: dict[str, str] = {
     "complete": "flows.status.profiles.status.complete",
@@ -277,10 +209,4 @@ class StatusApp(App[None]):
         panel.mount(Static("\n".join(lines), id="auth-lines"))
 
 
-__all__ = [
-    "StatusApp",
-    "StatusAuthView",
-    "StatusFactRow",
-    "StatusPageData",
-    "StatusProfileRow",
-]
+__all__ = ["StatusApp"]

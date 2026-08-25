@@ -27,8 +27,8 @@ if TYPE_CHECKING:
 
     from ....application.user_profile import ProfileOverview, ProfileRecoveryEnrollment, ProfileRegistrationOutcome
     from ....core.json_contract import Notice
+    from ....core.presentation import FormPage
     from ....domain.user_profile import ProfileFieldDefinition, ProfileValueRefusalKind, UserProfileRecord
-    from ....entrypoints.tui.components.forms import FormPage
     from ....entrypoints.tui.secret.registration import RegistrationAttempt
 
 
@@ -416,12 +416,14 @@ def present_form(
     binds a presenter that opens the page on itself, and this call finds
     it. Callers say what they want shown and stay out of that decision.
     """
-    from ....adapters.inbound.tui import active_form_presenter, run_form_tui
+    from ....entrypoints.tui.components.form_screen import active_form_presenter, run_form_tui
 
     presenter = active_form_presenter()
     if presenter is not None:
         return presenter(page, rebuild)
-    return run_form_tui(page, rebuild=rebuild)
+    from ....core.i18n import tr
+
+    return run_form_tui(page, translate=tr, rebuild=rebuild)
 
 
 def attempt_registration(

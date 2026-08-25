@@ -8,7 +8,7 @@ modelo:
           e IRNR en relación con las rentas o ganancias patrimoniales obtenidas.
         title: Acciones y participaciones de IIC - resumen anual
       revision:
-        2019-y-siguientes:
+        2022-y-siguientes:
           casilla:
             '01':
               help: Número total de operaciones declaradas, equivalente al número
@@ -31,4 +31,4 @@ modelo:
               field:
                 title: Modelo 187 calculation construct
           field:
-            label: Orden HAP/1608/2014, ejercicios 2019 y siguientes
+            label: Orden HAP/1608/2014, ejercicios 2022 y siguientes

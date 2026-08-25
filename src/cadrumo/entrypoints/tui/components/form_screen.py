@@ -34,22 +34,20 @@ from textual.events import DescendantFocus
 from textual.screen import ModalScreen, Screen
 from textual.widgets import Button, DataTable, Footer, Static
 
-from ....core.i18n import tr
-from ....entrypoints.tui.components.dialogs import ChoiceEditScreen, OneChoiceEditScreen, TextEditScreen
-from ....entrypoints.tui.components.forms import (
-    FormChoice,
+from ....core.presentation import (
     FormField,
     FormFieldKind,
     FormPage,
     form_choices,
     multi_choice_tokens,
 )
-from ....entrypoints.tui.components.theme import (
+from .dialogs import ChoiceEditScreen, OneChoiceEditScreen, TextEditScreen
+from .theme import (
     BASE_CSS,
     install_cadrumo_themes,
     toggle_appearance,
 )
-from ....entrypoints.tui.components.widgets import ContentDataTable, ContentScroll
+from .widgets import ContentDataTable, ContentScroll
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator, Mapping
@@ -78,7 +76,10 @@ Fixed length avoids leaking how long the secret is, which a per-character
 mask would not."""
 
 
-def _display_value(form_field: FormField, value: str) -> str:
+type FormTranslator = Callable[[str], str]
+
+
+def _display_value(form_field: FormField, value: str, *, translate: FormTranslator) -> str:
     """Render stored choice tokens only through their operator labels."""
     if form_field.secret and value:
         return _MASKED_TABLE_VALUE
@@ -86,19 +87,21 @@ def _display_value(form_field: FormField, value: str) -> str:
         return value
     labels_by_value = {choice.value: choice.label for choice in form_field.choices}
     tokens = multi_choice_tokens(value) if form_field.kind is FormFieldKind.MULTI_CHOICE else (value,)
-    unavailable = tr("flows.manager.choice_unavailable")
+    unavailable = translate("flows.manager.choice_unavailable")
     return ", ".join(labels_by_value.get(token, unavailable) for token in tokens)
 
 
-def _edit_screen_for(field: FormField) -> ModalScreen[str | None]:
+def _edit_screen_for(field: FormField, *, translate: FormTranslator) -> ModalScreen[str | None]:
     """Return the dialog that edits one field, by its declared kind."""
+    cancel_label = translate("flows.manager.edit.cancel")
+    save_label = translate("flows.manager.edit.save")
     match field.kind:
         case FormFieldKind.MULTI_CHOICE:
-            return ChoiceEditScreen(field)
+            return ChoiceEditScreen(field, cancel_label=cancel_label, save_label=save_label)
         case FormFieldKind.SINGLE_CHOICE:
-            return OneChoiceEditScreen(field)
+            return OneChoiceEditScreen(field, cancel_label=cancel_label, save_label=save_label)
         case FormFieldKind.TEXT:
-            return TextEditScreen(field)
+            return TextEditScreen(field, cancel_label=cancel_label, save_label=save_label)
 
 
 class FormScreen(Screen["Mapping[str, str] | None"]):
@@ -137,10 +140,13 @@ class FormScreen(Screen["Mapping[str, str] | None"]):
         self,
         page: FormPage,
         *,
+        translate: FormTranslator,
         rebuild: Callable[[Mapping[str, str]], FormPage] | None = None,
     ) -> None:
+        """Initialize one form screen from its immutable page projection."""
         super().__init__()
         self._page = page
+        self._translate = translate
         self._rebuild = rebuild
         """Recomputes the field list after an edit, for a page whose shape
         depends on its own answers — a descendant count deciding how many
@@ -162,11 +168,12 @@ class FormScreen(Screen["Mapping[str, str] | None"]):
             yield ContentDataTable(id="form-table", cursor_type="row", zebra_stripes=True)
             yield Static(id="form-refusal")
             with Horizontal(id="form-actions"):
-                yield Button(tr("flows.manager.edit.cancel"), id="btn-form-cancel")
-                yield Button(tr("flows.manager.edit.save"), id="btn-form-save", classes="-primary")
+                yield Button(self._translate("flows.manager.edit.cancel"), id="btn-form-cancel")
+                yield Button(self._translate("flows.manager.edit.save"), id="btn-form-save", classes="-primary")
         yield Footer()
 
     def on_mount(self) -> None:
+        """Mount the supplied page title, section, and initial rows."""
         self.query_one("#form-banner", Static).update(self._page.title)
         self.query_one("#form-body", Vertical).border_title = self._page.section
         self._render_rows()
@@ -190,12 +197,12 @@ class FormScreen(Screen["Mapping[str, str] | None"]):
             (
                 form_field.key,
                 form_field.label,
-                _display_value(form_field, self._values.get(form_field.key, "")),
+                _display_value(form_field, self._values.get(form_field.key, ""), translate=self._translate),
             )
             for form_field in self._page.fields
         )
-        field_heading = tr("flows.manager.column.field")
-        value_heading = tr("flows.manager.column.value")
+        field_heading = self._translate("flows.manager.column.field")
+        value_heading = self._translate("flows.manager.column.value")
         field_width = max((cell_len(label) for _key, label, _value in rows), default=cell_len(field_heading))
         value_width = max((cell_len(value) for _key, _label, value in rows), default=cell_len(value_heading))
         table.clear(columns=True)
@@ -208,6 +215,7 @@ class FormScreen(Screen["Mapping[str, str] | None"]):
         return next((form_field for form_field in self._page.fields if form_field.key == key), None)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        """Open the editor declared by the selected field's kind."""
         key = event.row_key.value
         if key is None:
             return
@@ -224,7 +232,7 @@ class FormScreen(Screen["Mapping[str, str] | None"]):
             validate=form_field.validate,
             secret=form_field.secret,
         )
-        screen = _edit_screen_for(current)
+        screen = _edit_screen_for(current, translate=self._translate)
         # The stack belongs to the application, not to a screen on it, so
         # the dialog is pushed through the host rather than by this page.
         self.app.push_screen(screen, self._accept_for(current.key))
@@ -248,6 +256,7 @@ class FormScreen(Screen["Mapping[str, str] | None"]):
         return _accept
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Commit or abandon according to the selected action button."""
         if event.button.id == "btn-form-save":
             self.action_commit()
         elif event.button.id == "btn-form-cancel":
@@ -271,6 +280,7 @@ class FormScreen(Screen["Mapping[str, str] | None"]):
         self.dismiss(self.collected)
 
     def action_abandon(self) -> None:
+        """Dismiss without returning collected values."""
         self.collected = None
         self.dismiss(None)
 
@@ -292,10 +302,13 @@ class FormApp(App["Mapping[str, str] | None"]):
         self,
         page: FormPage,
         *,
+        translate: FormTranslator,
         rebuild: Callable[[Mapping[str, str]], FormPage] | None = None,
     ) -> None:
+        """Initialize the standalone host for one immutable form page."""
         super().__init__()
         self._page = page
+        self._translate = translate
         self._rebuild = rebuild
         self.collected: Mapping[str, str] | None = None
         """The committed values, or ``None`` when the operator left without
@@ -303,8 +316,12 @@ class FormApp(App["Mapping[str, str] | None"]):
         because abandoning is an ordinary choice."""
 
     def on_mount(self) -> None:
+        """Install themes and push the only form screen."""
         install_cadrumo_themes(self)
-        self.push_screen(FormScreen(self._page, rebuild=self._rebuild), self._finish)
+        self.push_screen(
+            FormScreen(self._page, translate=self._translate, rebuild=self._rebuild),
+            self._finish,
+        )
 
     def _finish(self, collected: Mapping[str, str] | None) -> None:
         """Carry the screen's answer out to the caller and close.
@@ -317,12 +334,14 @@ class FormApp(App["Mapping[str, str] | None"]):
         self.exit(collected)
 
     def action_toggle_appearance(self) -> None:
+        """Toggle between the registered light and dark themes."""
         toggle_appearance(self)
 
 
 def run_form_tui(
     page: FormPage,
     *,
+    translate: FormTranslator,
     rebuild: Callable[[Mapping[str, str]], FormPage] | None = None,
 ) -> Mapping[str, str] | None:
     """Run one form page and return the committed values, or ``None``.
@@ -332,7 +351,7 @@ def run_form_tui(
     application from inside a running event loop is what this function
     cannot do.
     """
-    app = FormApp(page, rebuild=rebuild)
+    app = FormApp(page, translate=translate, rebuild=rebuild)
     app.run()
     return app.collected
 
@@ -378,12 +397,9 @@ def active_form_presenter() -> FormPresenter | None:
 
 __all__ = [
     "FormApp",
-    "FormChoice",
-    "FormField",
-    "FormFieldKind",
-    "FormPage",
     "FormPresenter",
     "FormScreen",
+    "FormTranslator",
     "active_form_presenter",
     "form_choices",
     "multi_choice_tokens",

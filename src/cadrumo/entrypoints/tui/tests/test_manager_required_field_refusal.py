@@ -17,22 +17,22 @@ from __future__ import annotations
 import pytest
 from textual.widgets import Input
 
-from .....application.user_profile import (
+from ....application.user_profile import (
     build_profile_overview,
     login_profile,
     register_profile_with_credentials,
 )
-from .....core import require_active_bucket_id
-from .....entrypoints.cli import persist_active_profile_field
-from .....entrypoints.tui.components.status import PinnedStatusBar
-from .....entrypoints.tui.profile.overview import ProfileManagerApp
-from .....tests.manager_pilot import wait_until_settled
-from .....tests.profile_capsule import load_test_profile_record
-from .....tests.secure_sql import isolated_profile_storage_root
+from ....core import require_active_bucket_id
+from ....entrypoints.cli import persist_active_profile_field
+from ....tests.profile_capsule import load_test_profile_record
+from ....tests.secure_sql import isolated_profile_storage_root
+from ..components.status import PinnedStatusBar
+from ..profile.overview import ProfileManagerApp
+from .manager_pilot import wait_until_settled
 
 pytestmark = [
     pytest.mark.integration,
-    pytest.mark.hex_inbound_adapter,
+    pytest.mark.hex_entrypoint,
 ]
 
 _TERMINAL_SIZE = (160, 60)
@@ -80,7 +80,7 @@ def _notice(app: ProfileManagerApp) -> str:
 
 async def _submit(app, pilot, path: str, value: str) -> None:
     """Drive one real edit: open the dialog, type, press save."""
-    from .....entrypoints.tui.profile.editor import FieldEditScreen
+    from ..profile.overview import FieldEditScreen
 
     field = app._field_by_key[path]
     app.push_screen(FieldEditScreen(field), app._apply_edit_for(field))
@@ -147,6 +147,7 @@ async def test_a_blank_submission_on_an_optional_field_still_clears_it(tmp_path)
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await _submit(app, pilot, _OPTIONAL_PATH, "")
+            await wait_until_settled(app, pilot)
             app.exit(None)
 
         assert _stored().get(_OPTIONAL_PATH) is None

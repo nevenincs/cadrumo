@@ -5,7 +5,7 @@ modelo:
         official_name: null
         title: null
       revision:
-        2019-y-siguientes:
+        2022-y-siguientes:
           casilla:
             '01':
               help: Total number of declared transactions, equal to the number of

@@ -10,7 +10,6 @@ from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.widgets import Static
 
-from ....core.errors import ErrorCategory, ErrorEnvelope
 from ._safe_text import bounded_pre_redacted_text
 
 MAX_ERROR_MESSAGE_CHARACTERS: Final[int] = 320
@@ -27,37 +26,32 @@ class SafeErrorRecord:
     category: str
     message: str
 
-
-def safe_error_record(envelope: ErrorEnvelope) -> SafeErrorRecord:
-    """Project one canonical envelope without reading context or diagnostics."""
-    if not isinstance(envelope, ErrorEnvelope):
-        raise TypeError("error renderer accepts ErrorEnvelope, never a raw exception")
-    if not isinstance(envelope.code, str) or _ERROR_CODE.fullmatch(envelope.code) is None:
-        raise ValueError("error envelope code is not a stable presentation identifier")
-    try:
-        category = ErrorCategory(envelope.category)
-    except ValueError as error:
-        raise ValueError("error envelope category is not a closed presentation category") from error
-    if category.value != envelope.category:
-        raise ValueError("error envelope category is not a closed presentation category")
-    return SafeErrorRecord(
-        code=envelope.code,
-        category=category.value,
-        message=bounded_pre_redacted_text(
-            envelope.message,
-            field="error envelope message",
-            maximum_characters=MAX_ERROR_MESSAGE_CHARACTERS,
-        ),
-    )
+    def __post_init__(self) -> None:
+        """Retain only bounded, pre-redacted presentation facts."""
+        if _ERROR_CODE.fullmatch(self.code) is None:
+            raise ValueError("error code is not a stable presentation identifier")
+        if self.category not in {"BUG", "CONFLICT", "REFUSED", "TRANSIENT", "UNAVAILABLE"}:
+            raise ValueError("error category is not a closed presentation category")
+        object.__setattr__(
+            self,
+            "message",
+            bounded_pre_redacted_text(
+                self.message,
+                field="error envelope message",
+                maximum_characters=MAX_ERROR_MESSAGE_CHARACTERS,
+            ),
+        )
 
 
 class ErrorPanel(Vertical, can_focus=False):
     """Render a safe error envelope without retaining exception authority."""
 
-    def __init__(self, envelope: ErrorEnvelope, *, id: str | None = None, classes: str | None = None) -> None:
+    def __init__(self, record: SafeErrorRecord, *, id: str | None = None, classes: str | None = None) -> None:
         """Store only the bounded facts this panel is permitted to display."""
         super().__init__(id=id, classes=classes)
-        self._record = safe_error_record(envelope)
+        if not isinstance(record, SafeErrorRecord):
+            raise TypeError("error renderer accepts SafeErrorRecord, never a raw exception")
+        self._record = record
 
     @property
     def record(self) -> SafeErrorRecord:
@@ -74,4 +68,4 @@ class ErrorPanel(Vertical, can_focus=False):
         yield Static(self._record.message, classes="cadrumo-error-message", markup=False)
 
 
-__all__ = ["MAX_ERROR_MESSAGE_CHARACTERS", "ErrorPanel", "SafeErrorRecord", "safe_error_record"]
+__all__ = ["MAX_ERROR_MESSAGE_CHARACTERS", "ErrorPanel", "SafeErrorRecord"]

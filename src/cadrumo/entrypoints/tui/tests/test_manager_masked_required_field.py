@@ -29,27 +29,26 @@ from __future__ import annotations
 import pytest
 from textual.widgets import Input
 
-from .....application.user_profile import (
+from ....application.user_profile import (
     MASKED_PLACEHOLDER,
     ProfileFieldView,
     build_profile_overview,
     login_profile,
     register_profile_with_credentials,
 )
-from .....core import require_active_bucket_id
-from .....core.classification import SensitivityClass
-from .....domain.user_profile import load_user_profile_schema
-from .....entrypoints.cli import persist_active_profile_field
-from .....entrypoints.tui.components.status import PinnedStatusBar
-from .....entrypoints.tui.profile.editor import FieldEditScreen
-from .....entrypoints.tui.profile.overview import ProfileManagerApp
-from .....tests.manager_pilot import wait_until_settled
-from .....tests.profile_capsule import load_test_profile_record
-from .....tests.secure_sql import isolated_profile_storage_root
+from ....core import require_active_bucket_id
+from ....core.classification import SensitivityClass
+from ....domain.user_profile import load_user_profile_schema
+from ....entrypoints.cli import persist_active_profile_field
+from ....tests.profile_capsule import load_test_profile_record
+from ....tests.secure_sql import isolated_profile_storage_root
+from ..components.status import PinnedStatusBar
+from ..profile.overview import FieldEditScreen, ProfileManagerApp
+from .manager_pilot import wait_until_settled
 
 pytestmark = [
     pytest.mark.integration,
-    pytest.mark.hex_inbound_adapter,
+    pytest.mark.hex_entrypoint,
 ]
 
 _TERMINAL_SIZE = (160, 60)

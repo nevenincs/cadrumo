@@ -21,25 +21,24 @@ from __future__ import annotations
 import pytest
 from textual.widgets import Input, Label, OptionList, Static
 
-from .....application.user_profile import (
+from ....application.user_profile import (
     build_profile_overview,
     login_profile,
     register_profile_with_credentials,
 )
-from .....core import require_active_bucket_id
-from .....entrypoints.cli import (
+from ....core import require_active_bucket_id
+from ....entrypoints.cli import (
     persist_active_profile_field,
     profile_field_value_refusal,
 )
-from .....entrypoints.tui.profile.editor import FieldEditScreen
-from .....entrypoints.tui.profile.overview import ProfileManagerApp
-from .....tests.manager_pilot import wait_until_settled
-from .....tests.profile_capsule import load_test_profile_record
-from .....tests.secure_sql import isolated_profile_storage_root
+from ....tests.profile_capsule import load_test_profile_record
+from ....tests.secure_sql import isolated_profile_storage_root
+from ..profile.overview import FieldEditScreen, ProfileManagerApp
+from .manager_pilot import wait_until_settled
 
 pytestmark = [
     pytest.mark.integration,
-    pytest.mark.hex_inbound_adapter,
+    pytest.mark.hex_entrypoint,
 ]
 
 _TERMINAL_SIZE = (160, 60)
@@ -343,7 +342,7 @@ def test_the_dialog_judge_agrees_with_the_write_door() -> None:
     a looser one would close on values the door then rejects, which is the
     behaviour the operator met before this seam existed.
     """
-    from .....domain.user_profile import (
+    from ....domain.user_profile import (
         UserProfileFact,
         load_user_profile_schema,
         profile_value_refusal,
@@ -381,7 +380,7 @@ def test_every_refusal_kind_reaches_the_operator_as_words() -> None:
     only "invalid" leaves the operator re-reading a box whose contents they
     already believed were right.
     """
-    from .....domain.user_profile import ProfileValueRefusalKind
+    from ....domain.user_profile import ProfileValueRefusalKind
 
     by_kind = {
         ProfileValueRefusalKind.DATE: (_DATE_PATH, _MALFORMED_DATE),

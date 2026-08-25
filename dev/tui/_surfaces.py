@@ -129,8 +129,9 @@ def _form() -> App:
     # layout of two plain text fields, or wording is a finding about the
     # harness, never about the application. Drive one of the real callers
     # above instead when the thing under evaluation is an actual form.
-    from cadrumo.adapters.inbound.tui import FormApp
-    from cadrumo.entrypoints.tui.components.forms import FormField, FormPage
+    from cadrumo.core.i18n import tr
+    from cadrumo.core.presentation import FormField, FormPage
+    from cadrumo.entrypoints.tui.components.form_screen import FormApp
 
     return FormApp(
         FormPage(
@@ -141,6 +142,7 @@ def _form() -> App:
                 FormField(key="b", label="Second"),
             ),
         ),
+        translate=tr,
     )
 
 

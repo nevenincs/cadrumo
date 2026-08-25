@@ -6,8 +6,8 @@ import pytest
 from textual.app import App
 from textual.widgets import Input, OptionList, SelectionList, Static
 
-from cadrumo.entrypoints.tui.components.dialogs import ChoiceEditScreen, OneChoiceEditScreen, TextEditScreen
-from cadrumo.entrypoints.tui.components.forms import FormField, FormFieldKind, form_choices
+from .....core.presentation import FormField, FormFieldKind, form_choices
+from ..dialogs import ChoiceEditScreen, OneChoiceEditScreen, TextEditScreen
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -26,7 +26,7 @@ async def test_text_dialog_refuses_an_invalid_value_before_dismissing() -> None:
 
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
-        app.push_screen(TextEditScreen(field), dismissed.append)
+        app.push_screen(TextEditScreen(field, cancel_label="Cancel", save_label="Save"), dismissed.append)
         await pilot.pause()
 
         dialog = app.screen
@@ -60,7 +60,7 @@ async def test_multi_choice_dialog_preserves_selected_storage_tokens() -> None:
 
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
-        app.push_screen(ChoiceEditScreen(field), dismissed.append)
+        app.push_screen(ChoiceEditScreen(field, cancel_label="Cancel", save_label="Save"), dismissed.append)
         await pilot.pause()
 
         app.screen.query_one("#edit-choices", SelectionList).select_all()
@@ -84,7 +84,7 @@ async def test_one_choice_dialog_keeps_the_declared_value_highlighted() -> None:
 
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
-        app.push_screen(OneChoiceEditScreen(field), dismissed.append)
+        app.push_screen(OneChoiceEditScreen(field, cancel_label="Cancel", save_label="Save"), dismissed.append)
         await pilot.pause()
 
         assert app.screen.query_one("#edit-options", OptionList).highlighted == 1

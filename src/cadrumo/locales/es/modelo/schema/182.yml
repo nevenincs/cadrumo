@@ -9,7 +9,7 @@ modelo:
         title: Donativos, donaciones y aportaciones recibidas y disposiciones realizadas
           (informativa anual)
       revision:
-        2007-y-siguientes:
+        '2025':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
@@ -42,4 +42,4 @@ modelo:
                 title: Modelo 182 informative declaration of donativos, donaciones
                   y aportaciones recibidas
           field:
-            label: Modelo 182 ejercicios 2007 y siguientes (Orden EHA/3021/2007)
+            label: Modelo 182, ejercicio 2025 (Orden HAC/1430/2025)

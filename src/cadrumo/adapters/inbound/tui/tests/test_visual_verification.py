@@ -30,12 +30,14 @@ from textual.containers import ScrollableContainer
 from textual.css.query import NoMatches
 from textual.widgets import Button, DataTable, Input, Static
 
-from cadrumo.entrypoints.tui.components.forms import FormField, FormPage
+from cadrumo.core.presentation import FormField, FormPage
+from cadrumo.entrypoints.tui.components.form_screen import FormApp, FormScreen
 from cadrumo.entrypoints.tui.components.theme import (
     CADRUMO_DARK_THEME_NAME,
     CADRUMO_LIGHT_THEME_NAME,
 )
 from cadrumo.entrypoints.tui.components.widgets import ContentScroll
+from cadrumo.entrypoints.tui.flows.app import FlowTuiApp
 
 from .....application.flows import CopyRef, FlowDefinition, FlowPage, FlowSection
 from .....application.user_profile import (
@@ -52,11 +54,6 @@ from .....entrypoints.tui.secret.registration import RegistrationApp
 from .....tests.manager_pilot import wait_until_settled
 from .....tests.profile_capsule import load_test_profile_record
 from .....tests.secure_sql import isolated_profile_storage_root
-from .. import (
-    FlowTuiApp,
-    FormApp,
-    FormScreen,
-)
 
 pytestmark = [
     pytest.mark.integration,
@@ -110,6 +107,7 @@ def _form(tmp_path: Path) -> Iterator[FormApp]:
             section="SECTION",
             fields=(FormField(key="a", label="A"), FormField(key="b", label="B")),
         ),
+        translate=lambda key: key,
     )
 
 

@@ -23,30 +23,31 @@ import pytest
 import yaml
 from textual.widgets import DataTable, Static
 
-from .....core import (
+from ....application.user_profile import (
+    StatusAuthView,
+    StatusFactRow,
+    StatusPageData,
+    StatusProfileRow,
+    notice_presentation,
+)
+from ....core import (
     ActionArgumentSource,
     ActionArgumentStatus,
 )
-from .....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
-from .....core.json_contract import (
+from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
+from ....core.json_contract import (
     Notice,
     NoticeSeverity,
     ResolvedActionArgument,
     ResolvedActionReference,
     ResolvedNoticeAction,
 )
-from .....entrypoints.tui.profile.status import (
-    StatusApp,
-    StatusAuthView,
-    StatusFactRow,
-    StatusPageData,
-    StatusProfileRow,
-)
-from .....tests.locales_root_fixture import locales_root_scope
+from ....tests.locales_root_fixture import locales_root_scope
+from ..profile.status import StatusApp
 
 pytestmark = [
     pytest.mark.unit,
-    pytest.mark.hex_inbound_adapter,
+    pytest.mark.hex_entrypoint,
 ]
 
 if TYPE_CHECKING:
@@ -228,7 +229,6 @@ async def test_auth_panel_reports_unconfigured_provider() -> None:
 
 
 @pytest.mark.asyncio
-@pytest.mark.asyncio
 async def test_a_notice_paints_its_severity_glyph_message_and_resolved_action() -> None:
     """The band renders exactly what the typed Notice carries, glyph and all.
 
@@ -238,41 +238,44 @@ async def test_a_notice_paints_its_severity_glyph_message_and_resolved_action() 
     target identity on its own line beneath the message.
     """
     data = StatusPageData(
-        notices=(
-            Notice(severity=NoticeSeverity.INFO, code="test.info", message="INFO-MESSAGE"),
-            Notice(
-                severity=NoticeSeverity.WARNING,
-                code="test.warning",
-                message="WARNING-MESSAGE",
-                action=ResolvedNoticeAction(
-                    action=ResolvedActionReference(
-                        action_id="operator.profile.status",
-                        target_command_key="config.profile.status",
-                        cli_path=("config", "profile", "status"),
-                    ),
-                ),
-            ),
-            Notice(
-                severity=NoticeSeverity.INFO,
-                code="test.bound-action",
-                message="BOUND-ACTION-MESSAGE",
-                action=ResolvedNoticeAction(
-                    action=ResolvedActionReference(
-                        action_id="operator.profile.create",
-                        target_command_key="config.profile.create",
-                        cli_path=("config", "profile", "create"),
-                    ),
-                    argument_bindings=(
-                        ResolvedActionArgument(
-                            argument_name="profile_name",
-                            status=ActionArgumentStatus.RESOLVED,
-                            value="Taxpayer One",
-                            source=ActionArgumentSource.REQUEST_CONTEXT,
-                            source_key="profile_name",
+        notices=tuple(
+            notice_presentation(notice)
+            for notice in (
+                Notice(severity=NoticeSeverity.INFO, code="test.info", message="INFO-MESSAGE"),
+                Notice(
+                    severity=NoticeSeverity.WARNING,
+                    code="test.warning",
+                    message="WARNING-MESSAGE",
+                    action=ResolvedNoticeAction(
+                        action=ResolvedActionReference(
+                            action_id="operator.profile.status",
+                            target_command_key="config.profile.status",
+                            cli_path=("config", "profile", "status"),
                         ),
                     ),
                 ),
-            ),
+                Notice(
+                    severity=NoticeSeverity.INFO,
+                    code="test.bound-action",
+                    message="BOUND-ACTION-MESSAGE",
+                    action=ResolvedNoticeAction(
+                        action=ResolvedActionReference(
+                            action_id="operator.profile.create",
+                            target_command_key="config.profile.create",
+                            cli_path=("config", "profile", "create"),
+                        ),
+                        argument_bindings=(
+                            ResolvedActionArgument(
+                                argument_name="profile_name",
+                                status=ActionArgumentStatus.RESOLVED,
+                                value="Taxpayer One",
+                                source=ActionArgumentSource.REQUEST_CONTEXT,
+                                source_key="profile_name",
+                            ),
+                        ),
+                    ),
+                ),
+            )
         ),
     )
     app = StatusApp(data)
@@ -362,7 +365,11 @@ async def test_a_notice_does_not_eliminate_the_other_panels() -> None:
     """
     data = replace(
         _populated_data(),
-        notices=(Notice(severity=NoticeSeverity.WARNING, code="test.regression", message="REGRESSION-NOTICE"),),
+        notices=(
+            notice_presentation(
+                Notice(severity=NoticeSeverity.WARNING, code="test.regression", message="REGRESSION-NOTICE")
+            ),
+        ),
     )
     app = StatusApp(data)
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
@@ -398,7 +405,11 @@ async def test_a_notice_does_not_eliminate_the_other_panels_at_a_smaller_termina
     """The same property at 100x50 — the second size the original bug report named."""
     data = replace(
         _populated_data(),
-        notices=(Notice(severity=NoticeSeverity.WARNING, code="test.regression", message="REGRESSION-NOTICE"),),
+        notices=(
+            notice_presentation(
+                Notice(severity=NoticeSeverity.WARNING, code="test.regression", message="REGRESSION-NOTICE")
+            ),
+        ),
     )
     app = StatusApp(data)
     async with app.run_test(size=(100, 50)) as pilot:
@@ -428,6 +439,6 @@ def test_status_screen_never_imports_the_application_layer() -> None:
 
 
 def _status_screen_path() -> str:
-    from .....entrypoints.tui.profile import status
+    from ..profile import status
 
     return status.__file__

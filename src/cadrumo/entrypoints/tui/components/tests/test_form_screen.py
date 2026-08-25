@@ -12,28 +12,38 @@ rendered prose, which is locale data and would make them tautological.
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
+
 import pytest
 from textual.app import App
 from textual.containers import ScrollableContainer
 from textual.widgets import Button, DataTable, Input, SelectionList, Static
 
-from cadrumo.entrypoints.tui.components.forms import (
+from .....core.presentation import (
     FormField,
     FormFieldKind,
     FormPage,
     form_choices,
     multi_choice_tokens,
 )
-from cadrumo.entrypoints.tui.components.widgets import ContentScroll
-
-from .. import FormApp, FormScreen
+from ..form_screen import FormApp, FormScreen
+from ..widgets import ContentScroll
 
 pytestmark = [
     pytest.mark.unit,
-    pytest.mark.hex_inbound_adapter,
+    pytest.mark.hex_entrypoint,
 ]
 
 _TERMINAL_SIZE = (140, 60)
+
+
+def _form_app(
+    page: FormPage,
+    *,
+    rebuild: Callable[[Mapping[str, str]], FormPage] | None = None,
+) -> FormApp:
+    """Build the canonical host with deterministic test-only labels."""
+    return FormApp(page, translate=lambda key: key, rebuild=rebuild)
 
 
 def _page(*fields: FormField) -> FormPage:
@@ -59,7 +69,7 @@ def _rows[AppResult](app: App[AppResult]) -> dict[str, str]:
 @pytest.mark.asyncio
 async def test_every_field_is_on_one_page_in_declaration_order() -> None:
     """The paradigm difference: no next, no back, everything visible."""
-    app = FormApp(_page(FormField(key="a", label="A"), FormField(key="b", label="B", value="set")))
+    app = _form_app(_page(FormField(key="a", label="A"), FormField(key="b", label="B", value="set")))
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
         assert list(_rows(app)) == ["a", "b"]
@@ -69,7 +79,7 @@ async def test_every_field_is_on_one_page_in_declaration_order() -> None:
 
 @pytest.mark.asyncio
 async def test_editing_a_row_writes_the_typed_value_back_to_the_page() -> None:
-    app = FormApp(_page(FormField(key="a", label="A")))
+    app = _form_app(_page(FormField(key="a", label="A")))
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
         _form(app).query_one("#form-table", DataTable).action_select_cursor()
@@ -88,7 +98,7 @@ async def test_a_refused_value_holds_the_dialog_open_and_never_reaches_the_page(
     A refusal that only surfaced at commit would make the operator hunt
     for which of several fields it came from.
     """
-    app = FormApp(_page(FormField(key="a", label="A", validate=lambda value: "NO" if value == "bad" else None)))
+    app = _form_app(_page(FormField(key="a", label="A", validate=lambda value: "NO" if value == "bad" else None)))
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
         _form(app).query_one("#form-table", DataTable).action_select_cursor()
@@ -104,7 +114,7 @@ async def test_a_refused_value_holds_the_dialog_open_and_never_reaches_the_page(
 @pytest.mark.asyncio
 async def test_commit_rechecks_a_field_the_operator_never_opened() -> None:
     """A required field left untouched has never been validated once."""
-    app = FormApp(_page(FormField(key="a", label="A", validate=lambda value: None if value else "REQUIRED")))
+    app = _form_app(_page(FormField(key="a", label="A", validate=lambda value: None if value else "REQUIRED")))
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
         await pilot.click("#btn-form-save")
@@ -116,14 +126,14 @@ async def test_commit_rechecks_a_field_the_operator_never_opened() -> None:
 
 @pytest.mark.asyncio
 async def test_committing_returns_every_value_and_abandoning_returns_nothing() -> None:
-    app = FormApp(_page(FormField(key="a", label="A", value="one"), FormField(key="b", label="B", value="two")))
+    app = _form_app(_page(FormField(key="a", label="A", value="one"), FormField(key="b", label="B", value="two")))
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
         await pilot.click("#btn-form-save")
         await pilot.pause()
     assert app.collected == {"a": "one", "b": "two"}
 
-    abandoned = FormApp(_page(FormField(key="a", label="A", value="one")))
+    abandoned = _form_app(_page(FormField(key="a", label="A", value="one")))
     async with abandoned.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
         await pilot.click("#btn-form-cancel")
@@ -139,7 +149,7 @@ async def test_a_multi_choice_field_stores_the_tokens_it_was_given() -> None:
         kind=FormFieldKind.MULTI_CHOICE,
         choices=form_choices([("READ", "Read"), ("WRITE", "Write")]),
     )
-    app = FormApp(_page(field))
+    app = _form_app(_page(field))
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
         _form(app).query_one("#form-table", DataTable).action_select_cursor()
@@ -164,7 +174,7 @@ async def test_choice_rows_render_labels_and_never_storage_tokens() -> None:
         kind=FormFieldKind.SINGLE_CHOICE,
         choices=form_choices([("qr", "QR code"), ("app_request", "Request in app")]),
     )
-    app = FormApp(_page(field))
+    app = _form_app(_page(field))
 
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
@@ -198,7 +208,10 @@ async def test_the_page_works_in_a_host_that_is_not_its_own_application() -> Non
         await pilot.pause()
         collected: list[object] = []
         host.push_screen(
-            FormScreen(_page(FormField(key="a", label="A", value="carried"))),
+            FormScreen(
+                _page(FormField(key="a", label="A", value="carried")),
+                translate=lambda key: key,
+            ),
             collected.append,
         )
         await pilot.pause()
@@ -227,7 +240,7 @@ async def test_a_shrinking_page_drops_the_values_it_no_longer_asks_for() -> None
             *[FormField(key=f"child-{index}", label=f"Child {index}") for index in range(count)],
         )
 
-    app = FormApp(_page(FormField(key="count", label="Count", value="2")), rebuild=rebuild)
+    app = _form_app(_page(FormField(key="count", label="Count", value="2")), rebuild=rebuild)
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
         table: DataTable[str] = _form(app).query_one("#form-table", DataTable)
@@ -260,7 +273,7 @@ async def test_an_overflowing_form_has_exactly_one_visible_vertical_scrollbar() 
     be vacuous. The mounted widget geometry proves both the overflow and the
     single-owner result that prevents adjacent right-side tracks.
     """
-    app = FormApp(
+    app = _form_app(
         _page(
             *[FormField(key=f"field-{index}", label=f"Field {index}", value=str(index)) for index in range(20)],
         ),

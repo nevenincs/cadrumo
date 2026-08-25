@@ -36,13 +36,16 @@ from typing import TYPE_CHECKING, ClassVar, cast, override
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.containers import Vertical
-from textual.widgets import Button, DataTable, Footer, LoadingIndicator, Static
+from textual.containers import Horizontal, Vertical
+from textual.screen import ModalScreen
+from textual.widgets import Button, DataTable, Footer, Input, Label, LoadingIndicator, OptionList, Static
 from textual.worker import Worker, WorkerState
 
-from ....adapters.inbound.tui import FormScreen, presenting_forms_through
+from ....application.operations import ManagerAction, ManagerActionDisposition, ManagerActionOutcome
+from ....application.user_profile import notice_presentation, profile_field_shape_hint
 from ....core import OperatorProgress
 from ....core.i18n import tr
+from ....entrypoints.tui.components.form_screen import FormScreen, presenting_forms_through
 from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.components.theme import (
     BASE_CSS,
@@ -51,8 +54,6 @@ from ....entrypoints.tui.components.theme import (
     toggle_appearance,
 )
 from ....entrypoints.tui.components.widgets import ContentDataTable, ContentScroll, NoticeBand
-from .editor import FieldEditScreen
-from .tasks import ManagerAction, ManagerActionDisposition, ManagerActionOutcome
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -60,7 +61,7 @@ if TYPE_CHECKING:
     from textual.widgets.data_table import ColumnKey
 
     from ....application.user_profile import ProfileFieldView, ProfileOverview, ProfileSectionView
-    from ....entrypoints.tui.components.forms import FormPage
+    from ....core.presentation import FormPage
 
 
 _PRESENT_GLYPH = "●"
@@ -111,6 +112,146 @@ bounds how long the thread survives an application that went away without
 answering."""
 
 _OUTPUT_LANGUAGE_PATH = "preferences.output_language"
+
+_EDIT_DIALOG_CSS = """
+#edit-dialog {
+    border: thick $accent;
+    background: $surface;
+    padding: 0 1;
+    width: 100%;
+    height: auto;
+}
+#edit-label { text-style: bold; }
+#edit-hint { color: $text-muted; }
+#edit-refusal { color: $error; text-style: bold; }
+#edit-masked-note { color: $text-muted; }
+#edit-dialog Input { margin: 0; }
+#edit-actions { height: auto; align-horizontal: right; margin: 0; }
+#edit-actions Button { margin: 0 0 0 1; }
+"""
+
+
+class FieldEditScreen(ModalScreen[str | None]):
+    """Edit one projected profile field without owning profile policy."""
+
+    DEFAULT_CSS = _EDIT_DIALOG_CSS
+    BINDINGS: ClassVar = [Binding("escape", "cancel", "", show=False)]
+
+    def __init__(
+        self,
+        field: ProfileFieldView,
+        *,
+        prompt: str | None = None,
+        choice_labels: Mapping[str, str] | None = None,
+        validate: Callable[[str], str | None] | None = None,
+    ) -> None:
+        """Initialize the modal from one already-projected profile field."""
+        super().__init__()
+        self._field = field
+        self._prompt = prompt if prompt is not None else field.label
+        self._choice_labels = dict(choice_labels or {})
+        self._validate = validate
+
+    def _label_for(self, value: str) -> str:
+        """Return the operator label for one stored choice token."""
+        override = self._choice_labels.get(value)
+        if override is not None:
+            return override
+        return next(
+            (choice.label for choice in self._field.choices if choice.value == value),
+            tr("flows.manager.choice_unavailable"),
+        )
+
+    @property
+    def _box_hides_a_value(self) -> bool:
+        """Whether an empty box conceals an existing masked value."""
+        return self._field.masked and self._field.present and not self._field.choices
+
+    @property
+    def _offers_clear(self) -> bool:
+        """Whether the masked optional value can be explicitly cleared."""
+        return self._field.masked and self._field.present and not self._field.required
+
+    @override
+    def compose(self) -> ComposeResult:
+        """Lay out the choice or typed editor without exposing masked values."""
+        with Vertical(id="edit-dialog"):
+            yield Label(self._prompt, id="edit-label")
+            if self._field.choices:
+                yield OptionList(
+                    *[self._label_for(choice.value) for choice in self._field.choices],
+                    id="edit-options",
+                )
+            else:
+                yield Input(value="" if self._field.masked else (self._field.value or ""), id="edit-input")
+                hint = profile_field_shape_hint(self._field.field_type)
+                if hint:
+                    yield Static(hint, id="edit-hint")
+                yield Static(id="edit-refusal")
+            if self._box_hides_a_value:
+                yield Static(tr("flows.manager.edit.masked_kept"), id="edit-masked-note")
+            with Horizontal(id="edit-actions"):
+                yield Button(tr("flows.manager.edit.cancel"), id="btn-edit-cancel")
+                if self._offers_clear:
+                    yield Button(tr("flows.manager.edit.clear"), id="btn-edit-clear")
+                yield Button(tr("flows.manager.edit.save"), id="btn-edit-save", classes="-primary")
+
+    def on_mount(self) -> None:
+        """Focus the editor and restore an exact current choice only."""
+        if not self._field.choices:
+            self.query_one("#edit-input", Input).focus()
+            return
+        options = self.query_one("#edit-options", OptionList)
+        current = next(
+            (index for index, choice in enumerate(self._field.choices) if choice.value == self._field.value),
+            None,
+        )
+        options.focus()
+        options.highlighted = current
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Translate one editor button into a value, clear, or cancellation."""
+        if event.button.id == "btn-edit-save":
+            if self._field.choices:
+                self._dismiss_highlighted_option()
+            else:
+                self._submit_typed(self.query_one("#edit-input", Input).value)
+        elif event.button.id == "btn-edit-clear":
+            self.dismiss("")
+        else:
+            self.dismiss(None)
+
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        """Validate and submit the typed value."""
+        self._submit_typed(event.value)
+
+    def _submit_typed(self, value: str) -> None:
+        """Dismiss with a valid value while preserving an untouched mask."""
+        if self._box_hides_a_value and not value.strip():
+            self.dismiss(None)
+            return
+        refusal = self._validate(value) if (self._validate is not None and value.strip()) else None
+        if refusal is not None:
+            self.query_one("#edit-refusal", Static).update(refusal)
+            return
+        self.dismiss(value)
+
+    def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
+        """Submit the option explicitly selected by the operator."""
+        self._dismiss_highlighted_option()
+
+    def _dismiss_highlighted_option(self) -> None:
+        highlighted = self.query_one("#edit-options", OptionList).highlighted
+        if highlighted is None:
+            self.dismiss(None)
+            return
+        self.dismiss(self._field.choices[highlighted].value)
+
+    def action_cancel(self) -> None:
+        """Dismiss without requesting a profile change."""
+        self.dismiss(None)
+
+
 """The profile field deciding what language this page is written in.
 
 Named here because the page reaches for it directly, which it does for no
@@ -380,7 +521,12 @@ class ProfileManagerApp(App[None]):
                 Static(requirements, id="manager-requirements", classes="cadrumo-note", markup=False),
             )
         if self.overview.notices:
-            await context.mount(NoticeBand(self.overview.notices, id="manager-notice-band"))
+            await context.mount(
+                NoticeBand(
+                    tuple(notice_presentation(notice) for notice in self.overview.notices),
+                    id="manager-notice-band",
+                )
+            )
 
     @staticmethod
     def _section_title(section: ProfileSectionView) -> str:
@@ -885,7 +1031,7 @@ class ProfileManagerApp(App[None]):
             answered.set()
 
         try:
-            self.call_from_thread(self.push_screen, FormScreen(page, rebuild=rebuild), _accept)
+            self.call_from_thread(self.push_screen, FormScreen(page, translate=tr, rebuild=rebuild), _accept)
         except RuntimeError:
             # Guarded for the same reason the wait below is: the
             # application can stop between this action starting and its

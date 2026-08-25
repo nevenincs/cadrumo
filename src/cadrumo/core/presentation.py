@@ -1,4 +1,4 @@
-"""Immutable, state-free form presentation contracts and helpers."""
+"""Layer-neutral immutable presentation contracts shared by entrypoints."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from enum import StrEnum
 
 class FormFieldKind(StrEnum):
     """Editing mode for one immutable form field."""
+
     TEXT = "text"
     MULTI_CHOICE = "multi_choice"
     SINGLE_CHOICE = "single_choice"
@@ -17,6 +18,7 @@ class FormFieldKind(StrEnum):
 @dataclass(frozen=True, slots=True)
 class FormChoice:
     """One selectable value and its operator-facing label."""
+
     value: str
     label: str
 
@@ -24,6 +26,7 @@ class FormChoice:
 @dataclass(frozen=True, slots=True)
 class FormField:
     """Immutable field descriptor supplied by a form presenter."""
+
     key: str
     label: str
     value: str = ""
@@ -37,9 +40,19 @@ class FormField:
 @dataclass(frozen=True, slots=True)
 class FormPage:
     """Immutable page title, section, and field descriptors."""
+
     title: str
     section: str
     fields: tuple[FormField, ...] = field(default_factory=tuple)
+
+
+@dataclass(frozen=True, slots=True)
+class NoticePresentation:
+    """Already-resolved notice facts safe for inert presentation widgets."""
+
+    severity: str
+    message: str
+    action_target: str | None = None
 
 
 def multi_choice_tokens(value: str) -> tuple[str, ...]:
@@ -52,4 +65,12 @@ def form_choices(pairs: Sequence[tuple[str, str]]) -> tuple[FormChoice, ...]:
     return tuple(FormChoice(value, label) for value, label in pairs)
 
 
-__all__ = ["FormChoice", "FormField", "FormFieldKind", "FormPage", "form_choices", "multi_choice_tokens"]
+__all__ = [
+    "FormChoice",
+    "FormField",
+    "FormFieldKind",
+    "FormPage",
+    "NoticePresentation",
+    "form_choices",
+    "multi_choice_tokens",
+]

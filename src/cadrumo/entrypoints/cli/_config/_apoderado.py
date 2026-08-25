@@ -176,7 +176,7 @@ def _collect_apoderado_answers_interactively(
     """
     from ....core.i18n import tr as _tr
     from ....core.identity import IdentityError, validate_identity
-    from ....entrypoints.tui.components.forms import (
+    from ....core.presentation import (
         FormField,
         FormFieldKind,
         FormPage,
