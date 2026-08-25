@@ -92,6 +92,7 @@ _NON_OWNER_GENERIC_IMPORTS: dict[str, tuple[str, ...]] = {
     "cadrumo.core.json_contract": ("PreconditionOutcomeInvariant",),
 }
 
+
 def _public_data_aliases(module_name: str) -> list[str]:
     """Render canonical Python-domain targets for public type aliases."""
     lines: list[str] = []

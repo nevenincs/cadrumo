@@ -107,7 +107,8 @@ def test_public_devtool_homes_are_single_defining_modules_with_inert_initializer
     assert not [
         node
         for node in ast.walk(initializer_tree)
-        if isinstance(node, (ast.Import, ast.ImportFrom)) and not (isinstance(node, ast.ImportFrom) and node.module == "__future__")
+        if isinstance(node, (ast.Import, ast.ImportFrom))
+        and not (isinstance(node, ast.ImportFrom) and node.module == "__future__")
     ]
 
 
