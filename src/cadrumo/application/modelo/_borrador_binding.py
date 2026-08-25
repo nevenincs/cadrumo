@@ -122,12 +122,9 @@ def resolve_modelo_100_borrador_bindings(
             owned_sources=(BindingSourceKind.BORRADOR,),
         )
 
-    from ..live import (
-        Borrador100SnapshotRepository,
-        BorradorSnapshotNotFoundError,
-        LiveApplicationInputError,
-        SnapshotLifecycleState,
-    )
+    from ..live.borrador_100 import Borrador100SnapshotRepository, BorradorSnapshotNotFoundError
+    from ..live.errors import LiveApplicationInputError
+    from ..live.snapshot_base import SnapshotLifecycleState
 
     if not registry_snapshot.modelo.has_capability("borrador"):
         target_modelo = command.modelo.strip()
