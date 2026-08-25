@@ -1,7 +1,7 @@
-cadrumo.entrypoints.tui.profile.editor module
+cadrumo.application.modelo.work_wizard module
 =============================================
 
-.. automodule:: cadrumo.entrypoints.tui.profile.editor
+.. automodule:: cadrumo.application.modelo.work_wizard
    :members:
    :show-inheritance:
    :ignore-module-all:

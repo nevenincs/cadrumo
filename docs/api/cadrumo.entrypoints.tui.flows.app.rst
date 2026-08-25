@@ -1,7 +1,7 @@
-cadrumo.adapters.inbound.tui._app module
+cadrumo.entrypoints.tui.flows.app module
 ========================================
 
-.. automodule:: cadrumo.adapters.inbound.tui._app
+.. automodule:: cadrumo.entrypoints.tui.flows.app
    :members:
    :show-inheritance:
    :ignore-module-all:

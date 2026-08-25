@@ -1,7 +1,7 @@
-cadrumo.adapters.inbound.tui._form_screen module
+cadrumo.entrypoints.tui.devtools._fixture module
 ================================================
 
-.. automodule:: cadrumo.adapters.inbound.tui._form_screen
+.. automodule:: cadrumo.entrypoints.tui.devtools._fixture
    :members:
    :show-inheritance:
    :ignore-module-all:

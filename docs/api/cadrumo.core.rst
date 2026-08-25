@@ -157,6 +157,7 @@ Submodules
    cadrumo.core.operations
    cadrumo.core.output_rendering
    cadrumo.core.paths
+   cadrumo.core.presentation
    cadrumo.core.product_identity
    cadrumo.core.prose_elision
    cadrumo.core.secure_object_write

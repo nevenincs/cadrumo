@@ -123,3 +123,4 @@ Submodules
    cadrumo.application.modelo._workspace_manifest
    cadrumo.application.modelo._workspace_models
    cadrumo.application.modelo._workspace_producers
+   cadrumo.application.modelo.work_wizard

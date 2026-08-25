@@ -1,7 +1,7 @@
-cadrumo.adapters.inbound.tui._select module
+cadrumo.entrypoints.tui.secret.login module
 ===========================================
 
-.. automodule:: cadrumo.adapters.inbound.tui._select
+.. automodule:: cadrumo.entrypoints.tui.secret.login
    :members:
    :show-inheritance:
    :ignore-module-all:

@@ -29,6 +29,7 @@ Submodules
    cadrumo.application.operations._model_contract
    cadrumo.application.operations._models
    cadrumo.application.operations._observation
+   cadrumo.application.operations._profile_manager
    cadrumo.application.operations._projection_services
    cadrumo.application.operations._public
    cadrumo.application.operations._registry

@@ -1,7 +1,7 @@
-cadrumo.adapters.inbound.tui._login_screen module
+cadrumo.entrypoints.tui.devtools._surfaces module
 =================================================
 
-.. automodule:: cadrumo.adapters.inbound.tui._login_screen
+.. automodule:: cadrumo.entrypoints.tui.devtools._surfaces
    :members:
    :show-inheritance:
    :ignore-module-all:
