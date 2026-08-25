@@ -359,12 +359,11 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         # Non-ctx-scoped (one ExitStack spanning the command body) - the
         # surface the wrong-language bound was proven against:
         ("application/wizard/_commands.py", "_enter_requested_output_language"),
-        # Non-ctx-scoped, and reviewed: the credential screen has no ctx to
-        # scope to - it is an inbound TUI adapter, and reaching up into the
-        # entrypoint tier for one would invert the dependency direction. It
-        # holds the override on an ExitStack for the screen's lifetime so the
-        # operator sees the whole page re-render in the language they just
-        # picked, which is the point of the chooser.
+        # Non-ctx-scoped, and reviewed: the credential screen is an entrypoint
+        # TUI surface with no command context to scope to. It holds the
+        # override on an ExitStack for the screen's lifetime so the operator
+        # sees the whole page re-render in the language they just picked,
+        # which is the point of the chooser.
         #
         # It is bounded against the post-unwind hazard this gate exists
         # for, and the bound is structural rather than a promise. The
