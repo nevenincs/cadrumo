@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:8f607a3a308d2574eadb1f4e2c1da33994584701d2a7332483a2b3b45daf2a68'
+body_hash: 'sha256:0d7a3821a8f4b76616a0b7959b576833795e91e6f32f52dfaa4d3632d1cea247'
 related:
   - '[[2026-08-11-tui-architecture-W01-P01-S01]]'
   - '[[2026-08-11-tui-architecture-W01-P01-S02]]'
@@ -66,6 +66,7 @@ related:
   - '[[2026-08-11-tui-architecture-W03-P08-S114]]'
   - '[[2026-08-11-tui-architecture-W03-P08-S39]]'
   - '[[2026-08-11-tui-architecture-W03-P08-S40]]'
+  - '[[2026-08-11-tui-architecture-W03-P08-S42]]'
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-11-tui-architecture-plan]]'
   - '[[2026-08-11-tui-architecture-research]]'
@@ -126,6 +127,7 @@ related:
   - '[[2026-08-24-tui-architecture-s37-live-facade-audit]]'
   - '[[2026-08-24-tui-architecture-s38-filed-history-conformance-audit]]'
   - '[[2026-08-24-tui-architecture-s39-auth-operations-audit]]'
+  - '[[2026-08-25-tui-architecture-s123-dependency-receipt-review-audit]]'
 ---
 
 # `tui-architecture` feature index
@@ -193,6 +195,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-24-tui-architecture-s37-live-facade-audit` - `tui-architecture` audit: `S37 live facade review`
 - `2026-08-24-tui-architecture-s38-filed-history-conformance-audit` - `tui-architecture` audit: `S38 filed-history conformance review`
 - `2026-08-24-tui-architecture-s39-auth-operations-audit` - `tui-architecture` audit: `s39 auth operations`
+- `2026-08-25-tui-architecture-s123-dependency-receipt-review-audit` - `tui-architecture` audit: `s123 dependency receipt review`
 
 ### exec
 
@@ -254,6 +257,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W03-P08-S114` - Implement credential-free non-secret operation requests and one-shot supervisor-owned ephemeral secret submission with exact binding, expiry, zeroisation, restart interruption, and no durable secret derivatives before registering login or passphrase operations
 - `2026-08-11-tui-architecture-W03-P08-S39` - Register login, provider configuration, credential acquisition, passphrase rotation, and auth teardown as application-owned operations
 - `2026-08-11-tui-architecture-W03-P08-S40` - Register profile field mutation, repeatable-row mutation, bundle export, and profile logout operations through existing user-profile authorities
+- `2026-08-11-tui-architecture-W03-P08-S42` - Expose authentication operation definitions through the authentication application facade
 
 ### plan
 
