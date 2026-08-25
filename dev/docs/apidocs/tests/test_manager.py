@@ -34,6 +34,19 @@ def test_public_type_aliases_have_one_canonical_facade_target(tmp_path: pytest.T
     assert all_stub_text.count(".. py:function:: collect_registry_tree_fingerprints\n") == 1
 
 
+def test_imported_generic_models_are_excluded_only_at_consumers(tmp_path: pytest.TempPathFactory) -> None:
+    """Pydantic generic consumers must not re-index their defining objects."""
+    manager = ApiStubManager(src_cadrumo=REPO_ROOT / "src" / "cadrumo", docs_api=tmp_path / "api")
+    manager.scaffold()
+
+    owner = (tmp_path / "api" / "cadrumo.application.aggregation._models.rst").read_text(encoding="utf-8")
+    consumer = (tmp_path / "api" / "cadrumo.application.aggregation._renta_ledger.rst").read_text(
+        encoding="utf-8",
+    )
+    assert "LedgerAggregationResultBase" not in owner
+    assert ":exclude-members: LedgerAggregationResultBase" in consumer
+
+
 def test_scaffold_produces_conformant_tree(tmp_path: pytest.TempPathFactory) -> None:
     """scaffold() followed by check() returns an empty DriftResult.
 

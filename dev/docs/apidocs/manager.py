@@ -76,6 +76,22 @@ _PUBLIC_DATA_ALIASES: dict[str, tuple[str, ...]] = {
 _PUBLIC_FUNCTION_ALIASES: dict[str, tuple[str, ...]] = {
     "cadrumo.domain.calculations.registry": ("collect_registry_tree_fingerprints",),
 }
+
+# Pydantic materialises generic bases on each concrete consumer with the
+# defining class's original ``__module__``/``__qualname__``.  Autodoc would
+# consequently index the defining object (and its fields) again from every
+# importing module.  Exclude only those imported names at the consumer stub;
+# the defining-module stub remains their sole object owner.
+_NON_OWNER_GENERIC_IMPORTS: dict[str, tuple[str, ...]] = {
+    "cadrumo.application.aggregation._impatriado_income_ledger": ("LedgerAggregationResultBase",),
+    "cadrumo.application.aggregation._irnr_income_ledger": ("LedgerAggregationResultBase",),
+    "cadrumo.application.aggregation._renta_gasto_ledger": ("LedgerAggregationResultBase",),
+    "cadrumo.application.aggregation._renta_income_ledger": ("LedgerAggregationResultBase",),
+    "cadrumo.application.aggregation._renta_ledger": ("LedgerAggregationResultBase",),
+    "cadrumo.application.operator_actions._models": ("PreconditionOutcomeInvariant",),
+    "cadrumo.core.json_contract": ("PreconditionOutcomeInvariant",),
+}
+
 def _public_data_aliases(module_name: str) -> list[str]:
     """Render canonical Python-domain targets for public type aliases."""
     lines: list[str] = []
@@ -346,6 +362,9 @@ class ApiStubManager:
             "   :show-inheritance:",
             "   :ignore-module-all:",
         ]
+        excluded_generics = _NON_OWNER_GENERIC_IMPORTS.get(mod_name, ())
+        if excluded_generics:
+            lines.append(f"   :exclude-members: {','.join(excluded_generics)}")
         lines.append("")
         lines.extend(_public_data_aliases(mod_name))
         lines.extend(_public_function_aliases(mod_name))

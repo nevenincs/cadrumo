@@ -359,33 +359,6 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         # Non-ctx-scoped (one ExitStack spanning the command body) - the
         # surface the wrong-language bound was proven against:
         ("application/wizard/_commands.py", "_enter_requested_output_language"),
-        # Non-ctx-scoped, and reviewed: the credential screen is an entrypoint
-        # TUI surface with no command context to scope to. It holds the
-        # override on an ExitStack for the screen's lifetime so the operator
-        # sees the whole page re-render in the language they just picked,
-        # which is the point of the chooser.
-        #
-        # It is bounded against the post-unwind hazard this gate exists
-        # for, and the bound is structural rather than a promise. The
-        # override is entered on the app's own message-pump task, and a
-        # task's context is a copy, so a ContextVar set inside it is not
-        # reachable from the caller that started the app - the screen
-        # cannot colour the CLI's closing envelope. The stack is also
-        # closed in ``RegistrationApp.leave``, which every exit path
-        # routes through, but that close is hygiene on top: removing it
-        # leaves the behaviour unchanged and every test green, which was
-        # measured rather than assumed. The close happens in a handler
-        # rather than at teardown because a ContextVar token cannot be
-        # released from a context other than the one that created it.
-        #
-        # The enforced guarantee is the outcome, not the means:
-        # ``test_the_chosen_language_does_not_outlive_the_screen`` in
-        # ``entrypoints/tui/tests/test_registration_language_switch.py``
-        # drives the real screen and fails if the caller's rendering
-        # language moved. Swapping this site to a process-global mechanism
-        # (an env var plus a settings-cache reset) reds it - that is the
-        # substitution that would genuinely leak, and the one worth
-        # catching.
         # Ctx-scoped (entered and unwound inside the command callback's
         # settings scope - safe by construction):
         ("entrypoints/cli/_root_cli.py", "root_command"),

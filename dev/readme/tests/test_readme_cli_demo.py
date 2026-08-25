@@ -6,8 +6,9 @@ import subprocess
 import sys
 
 import pytest
-from dev._paths import REPO_ROOT
-from dev.readme import prepare_cli_demo, render_cli_demo
+
+from ..._paths import REPO_ROOT
+from .. import prepare_cli_demo, render_cli_demo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -35,5 +36,5 @@ def test_demo_bootstrap_runs_the_real_cadrumo_help_surface() -> None:
     )
 
     assert completed.returncode == 0, completed.stderr
-    assert completed.stdout.splitlines()[0] == ("CADRUMO - local-first workflow for Spanish tax work with AEAT")
+    assert completed.stdout.splitlines()[0] == ("CADRUMO - local-first workflow with the Spanish Tax Agency (AEAT)")
     assert "import aeat" not in completed.stderr
