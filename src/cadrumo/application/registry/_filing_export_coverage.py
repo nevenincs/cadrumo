@@ -35,6 +35,7 @@ from ._filing_export_authority import (
     FilingExportProofAuthority,
     FilingExportProofConflictError,
 )
+
 __all__ = [
     "FilingExportCoverageReport",
     "compose_filing_export_coverage",
@@ -166,7 +167,9 @@ def _compose_revision_limb(
                 reason="cross_limb_disagreement",
                 detail=f"{filing_year}/{period}: filing snapshot changed materialised export layout ids",
                 work_item="registry-temporal-coverage:law-selection",
-                reconsideration_condition="Split the revision at the exact layout boundary before asserting one export proof.",
+                reconsideration_condition=(
+                    "Split the revision at the exact layout boundary before asserting one export proof."
+                ),
             )
         expected_layout_ids = layout_ids
         evidence, evidence_failure = _layout_byte_evidence(authority=authority, snapshot=snapshot)
@@ -177,7 +180,9 @@ def _compose_revision_limb(
                 reason=evidence_failure.reason,
                 detail=f"{filing_year}/{period}: {evidence_failure.detail}",
                 work_item="aeat-export-fragment-generator-authority:official-layout-evidence",
-                reconsideration_condition="Restore byte-exact official layout evidence for every emitted filing layout.",
+                reconsideration_condition=(
+                    "Restore byte-exact official layout evidence for every emitted filing layout."
+                ),
             )
         evidence_by_locator.update({(item.authority, item.locator): item for item in evidence})
         snapshots.append(snapshot)

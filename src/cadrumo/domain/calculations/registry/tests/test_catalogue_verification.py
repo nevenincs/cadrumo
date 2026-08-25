@@ -13,9 +13,9 @@ from .....core import RECORD_DESIGN_EPOCH_RE
 from .....core.external_constants import PDF_EXTENSION, XLS_EXTENSION, XLSM_EXTENSION, XLSX_EXTENSION
 from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
+from .._authority import bundled_authority
 from .._corpus_catalogue import verify_source_catalogue, verify_source_file
 from .._coverage import EvidenceTierCoverageGate, audit_registry_model_law_coverage, build_model_law_coverage_ledger
-from .._authority import bundled_authority
 from .._legal import verify_legal_catalogue_grounding
 from .._schema import filing_period_from_scope
 from .._snapshot import build_snapshot

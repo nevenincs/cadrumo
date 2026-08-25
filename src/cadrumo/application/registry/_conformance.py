@@ -1344,7 +1344,7 @@ def _model_law_coverage(ledgers: tuple[_ModelLawCoverageLedger, ...]) -> Revisio
         raise _RegistryValidationError("revision model-law coverage requires at least one selector coordinate")
     gates_by_tier = {
         tier: tuple(next(gate for gate in ledger.gates if gate.tier == tier) for ledger in ledgers)
-        for tier in _REQUIRED_COVERAGE_TIERS + ("executable_parity_evidence",)
+        for tier in (*_REQUIRED_COVERAGE_TIERS, "executable_parity_evidence")
     }
     satisfied: tuple[_EvidenceTier, ...] = tuple(
         tier for tier, gates in gates_by_tier.items() if all(gate.status == "satisfied" for gate in gates)

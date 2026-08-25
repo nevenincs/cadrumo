@@ -53,6 +53,7 @@ from ....core import (
     REVIEWED_LEGAL_STATUSES,
     REVIEWED_REVISION_REVIEW_STATUSES,
     LegalReviewStatus,
+    RegistryAuthorityGrade,
     RegistrySelectorPeriodCode,
     RevisionReviewStatus,
 )
@@ -432,7 +433,7 @@ def _model_law_coverage_for_coordinate(
             f"{inspection.revision_id!r} instead of declared revision {revision.id!r}",
         )
     proof = _revision_filing_authority_proof(revision, inspection, authority.catalogues.legal)
-    if proof is not None:
+    if proof is not None and revision.effective_authority_grade is RegistryAuthorityGrade.FILING:
         try:
             snapshot = authority.snapshot(
                 modelo.id,
@@ -504,7 +505,7 @@ def audit_registry_construct_evidence(
                     )
             inspection = inspections[0]
             proof = _revision_filing_authority_proof(revision, inspection, authority.catalogues.legal)
-            if proof is not None:
+            if proof is not None and revision.effective_authority_grade is RegistryAuthorityGrade.FILING:
                 try:
                     snapshots = tuple(
                         authority.snapshot(
