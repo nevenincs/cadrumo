@@ -227,8 +227,6 @@ ignore_imports =
     # the shared file-walk helpers; that package reaches storage for its own
     # roundtrip fixtures. A test-file chain origin, pinned like its siblings.
     cadrumo.llm.tests.test_provenance_stamp_singularity -> cadrumo.tests
-    cadrumo.llm.tests.test_evidence_draft_vision -> cadrumo.tests.secure_sql
-    cadrumo.llm.tests.test_llm_vision_classifier -> cadrumo.tests.secure_sql
     cadrumo.llm.tests.test_redaction -> cadrumo.tests.secure_sql
     # The consent-ledger gate drives the REAL consent ledger and the real
     # active-bucket repository, because the property under test is that a
