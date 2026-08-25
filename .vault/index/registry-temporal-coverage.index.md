@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:ba71eb60a77a5ec994268d9be3c29be1bcf817d691e84f2ab9bb90f1ceccf5ec'
+body_hash: 'sha256:2cd02c1ae6b39a4163700abd34b75298a45ea9912fb11a78612732c78d3a0eba'
 related:
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S01]]'
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S02]]'
@@ -26,6 +26,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-W01-P09-S26]]'
   - '[[2026-08-14-registry-temporal-coverage-W01-P09-S27]]'
   - '[[2026-08-14-registry-temporal-coverage-W02-P05-S24]]'
+  - '[[2026-08-14-registry-temporal-coverage-W02-P05-S43]]'
   - '[[2026-08-14-registry-temporal-coverage-W02-P05-S48]]'
   - '[[2026-08-14-registry-temporal-coverage-W02-P06-S13]]'
   - '[[2026-08-14-registry-temporal-coverage-W02-P06-S14]]'
@@ -47,6 +48,7 @@ related:
   - '[[2026-08-24-registry-temporal-coverage-supported-year-redeclaration-audit]]'
   - '[[2026-08-25-registry-temporal-coverage-s13-full-span-matrix-audit]]'
   - '[[2026-08-25-registry-temporal-coverage-s14-independent-post-review-audit]]'
+  - '[[2026-08-25-registry-temporal-coverage-s48-m220-2025-scope-review-audit]]'
 ---
 
 # `registry-temporal-coverage` feature index
@@ -73,6 +75,7 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 - `2026-08-24-registry-temporal-coverage-supported-year-redeclaration-audit` - `registry-temporal-coverage` audit: `supported filing year canonical-home and redeclaration audit`
 - `2026-08-25-registry-temporal-coverage-s13-full-span-matrix-audit` - `registry-temporal-coverage` audit: `s13 full span matrix`
 - `2026-08-25-registry-temporal-coverage-s14-independent-post-review-audit` - `registry-temporal-coverage` audit: `S14 independent post-review`
+- `2026-08-25-registry-temporal-coverage-s48-m220-2025-scope-review-audit` - `registry-temporal-coverage` audit: `S48 Modelo 220 2025 scope review`
 
 ### exec
 
@@ -94,6 +97,7 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 - `2026-08-14-registry-temporal-coverage-W01-P09-S27` - Build and run a repo-wide drift detector over src/cadrumo AND dev/, not the registry package alone, explicitly naming the design-prose grammar in dev/registry/_export_tree.py (regex-parsing Spanish AEAT design prose patterns such as "15 enteros y 2 decimales", Constante "00500", and trailing Nota N references to derive filing wire facts) as a known in-scope instance alongside dev/registry/mappings/ and dev/registry/render_profiles/, finding regulatory numeric literals, year sets and modelo-conditional branches outside the sanctioned channels of registry TOML, core external_constants and the allowlisted math constants, with every allowlist entry stating its reason and keyed by path and enclosing function, and persist the census as a vault audit where every finding is enrolled as a plan row or formally deferred with a reference, gated on zero unclassified findings and on a re-run reproducing the census exactly
 - `2026-08-14-registry-temporal-coverage-W01-P01-S03` - Enforce the disposition-conditional grade ladder in registry build validation, registered in the family dispatch table: a calculation claim with an empty applicable formula family refuses and an informative revision at filing grade with a reasoned not_applicable formula family passes
 - `2026-08-14-registry-temporal-coverage-W02-P05-S24` - Declare the supported-filing-years catalogue in the registry authoring tree, replacing every Python-resident year set including SUPPORTED_EJERCICIOS, and refuse the entire registry load when any declared year has any obliged modelo without its required grade, resolvable revision or evidence-backed cells for every period, enumerating every gap with modelo, period and missing prerequisite, advisory-first until the flip
+- `2026-08-14-registry-temporal-coverage-W02-P05-S43` - Correct Modelo 038 source-era scope: retain the 2024 dr038 design only from the June 2024 declaration, acquire and hash-pin an earlier official design before asserting the 2002-to-May-2024 window, and split the revision or source binding through the validated temporal authority without guessed coverage, legacy fallback, a filing-grade promotion, or an export layout.
 - `2026-08-14-registry-temporal-coverage-W02-P05-S48` - Constrain Modelo 220 2025 source and selection scope to 2025 authority, remove or replace the 2026 publication-bound exception, and admit a 2026 successor only from hash-pinned exact authority without promoting authority grade.
 - `2026-08-14-registry-temporal-coverage-W02-P06-S13` - Replace the single-representative-year assessment with a derived modelo, filing-year, period and schema-family matrix over the validated authority that assesses every claimed year up to the assessment horizon, proven by property on a real long-span open revision
 - `2026-08-14-registry-temporal-coverage-W02-P06-S14` - Collapse the duplicated filing-eligibility predicate onto the snapshot-owned check and delete the coverage-ledger duplicate and the by-construction-empty filing gap surface outright, replacing them with matrix-derived gaps proven non-vacuous on a synthetic reviewed corpus, with no superseded ledger surface retained beside the matrix
