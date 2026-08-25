@@ -16,11 +16,15 @@ from pathlib import Path, PurePosixPath
 from cadrumo.core import iter_directory
 from cadrumo.domain.calculations.registry import (
     ExportLayoutDefinition,
+    ModeloDefinition,
     RegistrySnapshot,
     RegistryValidationError,
     ValidatedRegistryAuthority,
+    build_snapshot,
     load_modelo_directory,
+    load_registry_tree,
 )
+from cadrumo.domain.calculations.registry._validate_registry_scope import validate_registry_scope
 
 from ._export_tree import RenderedExportTree
 from ._provenance_manifest import (
@@ -63,6 +67,16 @@ class GeneratedExportTreeValidationContext:
     #: revision, and the authority selecting exactly that modelo and revision --
     #: are unchanged and unaffected by a supporting modelo being present.
     supporting_modelos: frozenset[str] = frozenset()
+    #: A separately staged, non-export witness for continuity predecessors.
+    #:
+    #: A generated candidate intentionally contains only its target revision.
+    #: Strict continuidad evolutions, however, name real predecessor revisions.
+    #: This optional directory-mode modelo supplies only those predecessors'
+    #: scalar revision metadata, casilla continuity surfaces, and evolution
+    #: declarations.  It is never part of the candidate registry, never
+    #: rendered, compared, or published, and its target revision is refused:
+    #: the rendered target remains the sole source of its own facts.
+    continuity_metadata_modelo_root: Path | None = None
 
     def __post_init__(self) -> None:
         if not self.period.strip():
@@ -141,13 +155,13 @@ def validate_generated_export_tree(
         render_profile_source_evidence=render_profile_source_evidence,
     )
 
-    authority = ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
-    snapshot = authority.snapshot(
-        modelo_id,
-        filing_year=context.filing_year,
-        period=context.period,
-        on=context.on,
+    snapshot = _validated_target_snapshot(
+        context=context,
+        registry_root=registry_root,
+        source_root=source_root,
+        modelo_id=modelo_id,
         revision_id=revision_id,
+        target_definition=definition,
     )
     if str(snapshot.modelo.id) != modelo_id or str(snapshot.revision.id) != revision_id:
         raise RegistryValidationError(
@@ -165,6 +179,99 @@ def validate_generated_export_tree(
         snapshot=snapshot,
         provenance_manifest=provenance,
     )
+
+
+def _validated_target_snapshot(
+    *,
+    context: GeneratedExportTreeValidationContext,
+    registry_root: Path,
+    source_root: Path,
+    modelo_id: str,
+    revision_id: str,
+    target_definition: ModeloDefinition,
+) -> RegistrySnapshot:
+    """Select the target through canonical authority, with an optional continuity witness.
+
+    Normal candidates retain the ordinary :class:`ValidatedRegistryAuthority`
+    route.  A candidate that declares an incoming strict-continuity transition
+    can instead carry a separate witness for the predecessor facts that are
+    intentionally absent from its target-only tree.  That witness is checked by
+    the existing registry-scope validator after replacing *only* its target
+    revision with the freshly loaded candidate revision; it cannot validate a
+    stale target by copying one into the witness.
+    """
+    if context.continuity_metadata_modelo_root is None:
+        authority = ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
+        return authority.snapshot(
+            modelo_id,
+            filing_year=context.filing_year,
+            period=context.period,
+            on=context.on,
+            revision_id=revision_id,
+        )
+
+    continuity_modelo = _load_continuity_metadata_modelo(
+        context.continuity_metadata_modelo_root,
+        modelo_id=modelo_id,
+        revision_id=revision_id,
+    )
+    loaded_modelos, catalogues = load_registry_tree(registry_root)
+    loaded_target = next((modelo for modelo in loaded_modelos if str(modelo.id) == modelo_id), None)
+    if loaded_target is None:
+        raise RegistryValidationError(f"generated target modelo {modelo_id!r} is absent from the isolated registry")
+    if loaded_target != target_definition:
+        raise RegistryValidationError("generated target loader result changed before continuity validation")
+
+    witness = continuity_modelo.model_copy(
+        update={
+            "revisions": {
+                **continuity_modelo.revisions,
+                revision_id: target_definition.revisions[revision_id],
+            },
+        },
+    )
+    scoped_modelos = tuple(witness if str(modelo.id) == modelo_id else modelo for modelo in loaded_modelos)
+    continuity_failures = validate_registry_scope(scoped_modelos)
+    if continuity_failures:
+        raise RegistryValidationError(
+            "registry validation failed:\n" + "\n".join(f" - {failure}" for failure in continuity_failures)
+        )
+
+    # ``build_snapshot`` owns exactly the model-local validation and filing-grade
+    # selection that the production authority delegates to after its registry
+    # scope has passed.  The scope above is the same existing validator, with
+    # the copied predecessor facts used only to make strict continuity answerable.
+    return build_snapshot(
+        target_definition,
+        catalogues,
+        source_root=source_root,
+        filing_year=context.filing_year,
+        period=context.period,
+        on=context.on,
+        revision_id=revision_id,
+    )
+
+
+def _load_continuity_metadata_modelo(
+    metadata_root: Path,
+    *,
+    modelo_id: str,
+    revision_id: str,
+) -> ModeloDefinition:
+    """Load source-copied predecessor facts without admitting another target."""
+    resolved = _require_directory(metadata_root, subject="generated continuity metadata modelo root")
+    modelo = load_modelo_directory(resolved)
+    if str(modelo.id) != modelo_id:
+        raise RegistryValidationError(
+            f"generated continuity metadata loads modelo {modelo.id!r}, expected {modelo_id!r}",
+        )
+    if revision_id in modelo.revisions:
+        raise RegistryValidationError(
+            f"generated continuity metadata must not contain target revision {revision_id!r}",
+        )
+    if not modelo.revisions:
+        raise RegistryValidationError("generated continuity metadata declares no sibling revisions")
+    return modelo
 
 
 def _require_isolated_target_context(
