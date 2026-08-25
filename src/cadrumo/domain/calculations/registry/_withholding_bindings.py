@@ -402,7 +402,7 @@ class WithholdingObservation(BaseModel):
     base_retenciones: Decimal = Decimal("0")
     """Modelo 193 base de retenciones e ingresos a cuenta (positions 152-164);
     the design's own zeros when no content."""
-    porcentaje_retencion: Decimal = Field(default=Decimal("0"), ge=0, le=100)
+    porcentaje_retencion: Decimal = Field(default=Decimal("0"), ge=Decimal("0"), le=Decimal("100"))
     """Modelo 193 retention/ingreso-a-cuenta percentage applied (positions
     165-168), generally 19 with the design's clave-naturaleza specific rates;
     the last percentage applied when several were used."""
@@ -778,7 +778,7 @@ _GASTOS_E_SUBCLAVES: frozenset[str] = frozenset({"01", "02"})
 _GASTOS_L_SUBCLAVES: frozenset[str] = frozenset({"05", "10", "27"})
 
 
-def _declares_datos_adicionales(clave: RetencionClave, subclave: str) -> bool:
+def _declares_datos_adicionales(clave: str, subclave: str) -> bool:
     """True for the claves the Modelo 190 design's 153-254 block applies to.
 
     The design names ``A``, ``B -subclaves 01, 03, 04 y 99-``, and ``C`` for the
@@ -1167,8 +1167,13 @@ def _finalise_withholding_row(
                 "foral_retention_bizkaia",
             )
         )
+        assert all(isinstance(part, Decimal) for part in foral_parts)
         foral_total = sum(foral_parts, Decimal("0"))
-        clave_e_total = row["retencion_practicada"] + row["ingreso_a_cuenta"]
+        retencion_practicada = row["retencion_practicada"]
+        ingreso_a_cuenta = row["ingreso_a_cuenta"]
+        assert isinstance(retencion_practicada, Decimal)
+        assert isinstance(ingreso_a_cuenta, Decimal)
+        clave_e_total = retencion_practicada + ingreso_a_cuenta
         if any(part != 0 for part in foral_parts) and clave != "E":
             raise RegistryValidationError(
                 f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
@@ -1545,7 +1550,7 @@ def _build_withholding_rows(
         if observation.province_code is not None:
             identity["province_code"] = observation.province_code
         if observation.territorial_deduction_clave is not None:
-            identity["territorial_deduction_clave"] = observation.territorial_deduction_clave
+            identity["territorial_deduction_clave"] = str(observation.territorial_deduction_clave)
         bucket = accum.setdefault(key, identity)
         _require_consistent_identity_facts(
             bucket,
