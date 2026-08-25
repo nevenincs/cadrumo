@@ -118,9 +118,7 @@ def test_production_composition_imports_only_public_operation_defining_modules()
         node
         for node in ast.walk(tree)
         if isinstance(node, ast.ImportFrom)
-        and (node.module or "").startswith(
-            ("application.operations", "cadrumo.application.operations")
-        )
+        and (node.module or "").startswith(("application.operations", "cadrumo.application.operations"))
     )
 
     assert operation_imports
