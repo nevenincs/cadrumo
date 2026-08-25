@@ -27,7 +27,7 @@ period = "2026 12"
 period_kind = "monthly"
 opens_on = 2027-01-01
 closes_on = 2027-02-01
-payment_cutoff_on = 2027-01-29
+payment_cutoff_on = 2027-01-27
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = [
     "boe-modelo-353-2007-form",

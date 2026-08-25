@@ -411,7 +411,7 @@ def test_modelo_353_2026_deadlines_are_exactly_grounded() -> None:
         "09": (date(2026, 10, 1), date(2026, 10, 30), date(2026, 10, 27)),
         "10": (date(2026, 11, 1), date(2026, 11, 30), date(2026, 11, 25)),
         "11": (date(2026, 12, 1), date(2026, 12, 30), date(2026, 12, 24)),
-        "12": (date(2027, 1, 1), date(2027, 2, 1), date(2027, 1, 29)),
+        "12": (date(2027, 1, 1), date(2027, 2, 1), date(2027, 1, 27)),
     }
 
     assert len(windows) == len(expected) == 12

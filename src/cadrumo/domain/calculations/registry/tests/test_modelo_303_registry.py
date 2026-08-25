@@ -547,7 +547,7 @@ def test_modelo_303_sii_2026_monthly_deadlines_are_exactly_grounded() -> None:
         "modelo-303-2026-09-mensual": (date(2026, 10, 1), date(2026, 10, 30), date(2026, 10, 27)),
         "modelo-303-2026-10-mensual": (date(2026, 11, 1), date(2026, 11, 30), date(2026, 11, 25)),
         "modelo-303-2026-11-mensual": (date(2026, 12, 1), date(2026, 12, 30), date(2026, 12, 24)),
-        "modelo-303-2026-12-mensual": (date(2027, 1, 1), date(2027, 2, 1), date(2027, 1, 29)),
+        "modelo-303-2026-12-mensual": (date(2027, 1, 1), date(2027, 2, 1), date(2027, 1, 27)),
     }
 
     for window_id, (opens_on, closes_on, payment_cutoff_on) in expected.items():

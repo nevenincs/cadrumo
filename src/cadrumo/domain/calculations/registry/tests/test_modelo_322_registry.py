@@ -235,7 +235,7 @@ def test_modelo_322_supported_deadlines_are_exact_complete_and_canonically_owned
         assert window.id == f"modelo-322-{year}-{period}"
         assert window.filing_year == window.period.filing_year == year
         assert window.period_kind == "monthly"
-        expected_payment = date(2027, 1, 29) if coordinate == (2026, "12") else None
+        expected_payment = date(2027, 1, 27) if coordinate == (2026, "12") else None
         assert (window.opens_on, window.closes_on, window.payment_cutoff_on) == (
             opens_on,
             closes_on,
