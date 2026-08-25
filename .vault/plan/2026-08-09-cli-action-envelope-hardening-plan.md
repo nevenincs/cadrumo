@@ -8,8 +8,8 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
-modified: '2026-08-24'
-body_hash: 'sha256:70552da30ac8b526f3857c19397770e589666e0f52abac1a9b78728c344f42a3'
+modified: '2026-08-25'
+body_hash: 'sha256:870fe82d6a83ebac13cec5d2a80d9ab7484f6ce6ac8254863040958a5db52392'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -195,7 +195,7 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [x] `W05.P10.S36` - Replace the remaining authentication diagnostics report command literal with a typed action projection or explicit non-action classification; `src/cadrumo/application/auth/_diagnostics.py; src/cadrumo/application/auth/tests`.
 - [x] `W05.P10.S37` - Replace wizard status, missing-input, label, console, and next-action command authority with canonical typed verdicts, and prove unavailable interactive profile-create recovery is never recommended; `src/cadrumo/application/wizard; src/cadrumo/application/tests/test_diagnostics_dispatch.py`.
 - [x] `W05.P10.S38` - Consume the S33 typed reader-availability facts at _batch_ingest.py and _llm_classification.py within the exclusive ledger area, retain no MissingOptionalExtraError prose or compatibility bridge, and preserve only explicit typed reader-availability verdicts; `src/cadrumo/application/ledger`.
-- [ ] `W05.P10.S39` - Replace the remaining DeadlineRecovery.next_command transport and its overview projection with typed recovery actions; `src/cadrumo/domain/deadlines/_models.py; src/cadrumo/domain/deadlines/_recargo.py; src/cadrumo/domain/deadlines/tests/test_extemporaneidad.py; src/cadrumo/domain/deadlines/tests/test_recargo.py; src/cadrumo/application/overview; src/cadrumo/entrypoints/cli/_overview.py`.
+- [ ] `W05.P10.S39` - Delete Deadline Recovery.next_command and project overdue pre-work recovery as a canonical operator.modelo.work.create declaration resolved at the overview CLI boundary; `src/cadrumo/domain/deadlines/_models.py; src/cadrumo/domain/deadlines/_recargo.py; src/cadrumo/domain/deadlines/tests/test_extemporaneidad.py; src/cadrumo/domain/deadlines/tests/test_recargo.py; src/cadrumo/application/overview; src/cadrumo/entrypoints/cli/_overview_payloads.py; src/cadrumo/entrypoints/cli/_overview_rendering.py; src/cadrumo/entrypoints/cli/tests/test_overview_recovery_payload_parity.py`.
 - [x] `W05.P10.S40` - Migrate the remaining LiveIvaSurfaceTimeoutError producers and boundary projection to typed actions with explicit safety dispositions; `src/cadrumo/application/live/_errors.py; src/cadrumo/application/live/_filed_data_capture.py; src/cadrumo/application/live/_iva_remote_state.py; src/cadrumo/entrypoints/cli/_app_live.py`.
 - [x] `W05.P10.S41` - Own every new provisioning and optional-extra renderer key and template in all four locale catalogues, accepting only typed condition facts plus resolved action or no-recovery outcome and never feature identity, package command, or English prose; `src/cadrumo/locales`.
 - [x] `W05.P10.S58` - Replace AEAT browser optional-extra, launch, evasion, session, navigation, and teardown recovery prose with canonical typed external-system outcomes and redacted facts; `src/cadrumo/adapters/outbound/aeat/browser/_errors.py; src/cadrumo/adapters/outbound/aeat/browser/_factory.py; src/cadrumo/adapters/outbound/aeat/browser/session.py; src/cadrumo/adapters/outbound/aeat/browser/evasion.py; src/cadrumo/adapters/outbound/aeat/browser/tests`.
@@ -275,7 +275,7 @@ retired absence and reference-only status, and preserves the complete immutable
 - [ ] `W06.P12.S47` - Add a code-only closure gate that rejects unclassified sites, unresolved actions, insufficient bindings, missing proofs, or ungrounded exclusions against the live census and operator surface, without reading plans, execution records, audits, or retired rehoming ledgers; `dev/tests/test_action_coverage_closure.py [new]; dev/quality/cli_action_census_dispositions.toml; src/cadrumo/application/operator_surface/_manifest.py; src/cadrumo/application/operator_actions`.
 - [ ] `W06.P12.S48` - Publish the final reconciliation and fresh-context honesty findings; `.vault/audit/2026-08-09-cli-action-envelope-hardening-audit.md`.
 - [ ] `W06.P12.S95` - Teach autonomous operators the explicit actionable-versus-no-recovery refusal algorithm and pin the rule to the live envelope schema; `src/cadrumo-harness/src/cadrumo_harness/_data/agent/rules/cadrumo-operator-envelope-reading.md; src/cadrumo-harness/src/cadrumo_harness/tests; src/cadrumo/core/tests; src/cadrumo/application/operator_actions/tests`.
-- [ ] `W06.P12.S120` - Derive the exact registered-code and authored-message join, then partition the positional-English defect into exclusive owner steps without performing a whole-tree migration in this row; `dev/quality/cli_action_census.py; dev/quality/cli_action_census_dispositions.py; dev/tests/test_cli_action_census.py; dev/tests/test_cli_action_census_dispositions.py; src/cadrumo/core; src/cadrumo/application; src/cadrumo/domain; src/cadrumo/adapters; src/cadrumo/entrypoints`.
+- [ ] `W06.P12.S120` - Derive and exclusively partition the whole-tree registered-error-code to authored-message-site join without migrating producer code; `dev/quality/cli_action_census.py; dev/quality/cli_action_census_dispositions.py; dev/quality/cli_action_census_dispositions.toml; dev/tests/test_cli_action_census.py; dev/tests/test_cli_action_census_dispositions.py; dev/tests/test_authored_error_message_join.py [new]`.
 
 ## Parallelization
 
