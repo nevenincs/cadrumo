@@ -31,7 +31,6 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import create_work_unit
 from .._action_errors import CalculationRevisionStateError
 from .._selectors import (
     ModeloCalculationRevisionSelector,
@@ -42,6 +41,7 @@ from .._selectors import (
     select_exportable_revision,
     select_modelo_calculation_revision,
 )
+from .._work_lifecycle import create_work_unit
 from ..work_addressing import (
     ModeloWorkAddress,
     ModeloWorkRevisionConflictError,
