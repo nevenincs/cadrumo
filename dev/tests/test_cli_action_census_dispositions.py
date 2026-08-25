@@ -17,7 +17,6 @@ from ..quality.cli_action_census_dispositions import (
     DispositionValidationError,
     ExclusionGrounding,
     checked_in_current_dispositions,
-    checked_in_dispositions,
     current_exception_override_observations,
     current_tree_dispositions,
     load_authored_message_exclusions,
@@ -357,7 +356,7 @@ def test_missing_ledger_path_fails_the_checked_in_and_cli_entrypoints(
     assert not missing_path.exists()
 
     with pytest.raises(DispositionValidationError, match="cannot read disposition ledger"):
-        checked_in_dispositions("HEAD", path=missing_path)
+        checked_in_current_dispositions(path=missing_path)
 
-    assert main(["HEAD", "--dispositions", str(missing_path)]) == 1
+    assert main(["--current-tree", "--dispositions", str(missing_path)]) == 1
     assert "cannot read disposition ledger" in capsys.readouterr().out
