@@ -56,7 +56,6 @@ _APPROVED_EXPLICIT_ROUTE_TEST_SURFACES = {
     "src/cadrumo/application/tests/test_storage_write_policy.py",
     "src/cadrumo/application/workflow/tests/test_runtime_defaults.py",
     "src/cadrumo/core/tests/test_storage_route_classification.py",
-    "src/cadrumo/entrypoints/cli/tests/test_root_fallback_write_guard.py",
     "src/cadrumo/tests/secure_sql.py",
     # Approved on the same ground as every entry above: the explicit database
     # route is the SUBJECT of these modules, not convenience setup they could
@@ -67,7 +66,7 @@ _APPROVED_EXPLICIT_ROUTE_TEST_SURFACES = {
     # `engine_bootstrap` is the shared plumbing the already-approved `sql/` and
     # `envelope/` suites build their engines with. The last two assert the
     # operator-facing guard that REFUSES an explicit route, alongside the
-    # already-approved `test_root_fallback_write_guard`.
+    # already-approved explicit-route refusal surfaces above.
     "src/cadrumo/adapters/persistence/storage/sql/tests/test_bucket_root_is_capsule_owned.py",
     "src/cadrumo/adapters/persistence/storage/tests/engine_bootstrap.py",
     "src/cadrumo/entrypoints/cli/tests/test_refusal_boundary_action_projection.py",
