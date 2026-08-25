@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:ba8825cb27a9755cce96c084526c25440ac4d7d691fa7d14215893308f77cbb4'
+body_hash: 'sha256:b3193e70248d94c85d459f967f3dc22c0a83736c6719411d39b699a15490b6ee'
 step_id: 'S171'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -28,6 +28,7 @@ related:
 
 - Preserve the public Workspace model defining module introduced by shared relocation commit `3ec3f7908a` and delete the retired private import surface through direct consumer convergence.
 - Replace the single revision assertion with required requested and stored source-fixed assertion axes and a typed mismatch-refusal arm.
+- Require an explicit nullable asserted revision identifier, refusing omitted values rather than synthesising absence.
 - Bind the contributor epoch digest across baseline, bounded facet, and typed cursor coordinates with fail-closed equality checks.
 - Regenerate the two affected API-reference stubs, update the regulatory-drift path, and prove the inert package plus active-tree fixed point.
 
@@ -40,4 +41,5 @@ related:
 ## Notes
 
 - Shared commit `3ec3f7908a` swept the filesystem renames before the S171 consumer and schema cutover. The current commit records the direct-import and validation closure from that provenance.
+- Shared commit `06e55cfadd` swept the required-nullable source-model correction before its negative test proof could be committed; the follow-up commit records that proof.
 - API-stub scaffolding initially produced unrelated shared-tree drift. The 234 tracked and 161 untracked non-S171 generator outputs were restored or removed using the captured pre-run clean status; only the two S171 generated stubs remain in scope.

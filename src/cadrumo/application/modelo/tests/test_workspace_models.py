@@ -527,6 +527,7 @@ def test_workspace_revision_assertion_axes_are_required_independent_and_current_
     stored = ModeloWorkspaceRevisionAssertionV1(
         source=ModeloWorkspaceRevisionAssertionSource.STORED,
         disposition=ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT,
+        asserted_revision_id=None,
     )
     target = ModeloWorkspaceResolvedTargetV1.model_validate(
         {
