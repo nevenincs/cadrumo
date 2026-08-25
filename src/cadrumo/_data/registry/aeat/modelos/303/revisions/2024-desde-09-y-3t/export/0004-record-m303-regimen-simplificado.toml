@@ -8,6 +8,7 @@ order = 1
 encoding = 'latin-1'
 line_ending = 'crlf'
 required = true
+repeat = 'projection_rows'
 
 [[revisions.2024-desde-09-y-3t.export_layouts.records.fields]]
 id = 'm303-2024-late.dp30302.f115'

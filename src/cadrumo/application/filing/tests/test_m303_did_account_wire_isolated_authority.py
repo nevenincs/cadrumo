@@ -906,3 +906,75 @@ def test_production_m303_generated_authority_is_visible_at_the_filing_boundary()
         "m303-prorrata-deducciones",
         "m303-domiciliacion",
     )
+    published_regimen_record = next(record for record in layout.records if record.id == "m303-regimen-simplificado")
+    assert published_regimen_record.repeat == "projection_rows"
+    regimen_indicator_field = next(
+        field for field in published_regimen_record.fields if field.id == "m303-2026.dp30302.f023"
+    )
+    regimen_record = published_regimen_record.model_copy(update={"fields": (regimen_indicator_field,)})
+    envelope = layout.filing_envelope
+    assert envelope is not None
+
+    # The other generated projection fields have independent value-arrival
+    # contracts. Keep this public-render proof to the real no-agricultural
+    # auxiliary-indicator field rather than manufacturing those unrelated facts.
+    regimen_layout = layout.model_copy(
+        update={
+            "records": (regimen_record,),
+            "filing_envelope": envelope.model_copy(update={"body_record_ids": (regimen_record.id,)}),
+        },
+    )
+    regimen_snapshot = registry_snapshot.model_copy(
+        update={
+            "revision": registry_snapshot.revision.model_copy(update={"export_layouts": (regimen_layout,)}),
+        },
+    )
+
+    producer_snapshot = _m303_did_producer_snapshot(
+        ResultDisposition.DEVOLUCION,
+        registry_snapshot=regimen_snapshot,
+        non_agricultural_activity_count=1,
+    )
+    rendered = render_filing_envelope(
+        FilingEnvelopeRenderRequest(
+            registry_snapshot=regimen_snapshot,
+            layout=regimen_layout,
+            draft=_draft(),
+            producer_snapshot=producer_snapshot,
+            prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+            product_software_identity=_product_software_identity(),
+        ),
+    )
+    assert tuple((item.record_id, item.occurrence) for item in rendered.occurrences) == ((regimen_record.id, 1),)
+
+    malformed_layout = regimen_layout.model_copy(
+        update={
+            "records": tuple(
+                record.model_copy(update={"repeat": None}) if record.id == regimen_record.id else record
+                for record in regimen_layout.records
+            ),
+        },
+    )
+    malformed_snapshot = regimen_snapshot.model_copy(
+        update={
+            "revision": regimen_snapshot.revision.model_copy(update={"export_layouts": (malformed_layout,)}),
+        },
+    )
+    with pytest.raises(
+        FilingExportValidationError,
+        match="regimen-simplificado projection record must repeat projection_rows",
+    ):
+        render_filing_envelope(
+            FilingEnvelopeRenderRequest(
+                registry_snapshot=malformed_snapshot,
+                layout=malformed_layout,
+                draft=_draft(),
+                producer_snapshot=_m303_did_producer_snapshot(
+                    ResultDisposition.DEVOLUCION,
+                    registry_snapshot=malformed_snapshot,
+                    non_agricultural_activity_count=1,
+                ),
+                prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+                product_software_identity=_product_software_identity(),
+            ),
+        )
