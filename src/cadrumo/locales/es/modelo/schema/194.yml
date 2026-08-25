@@ -10,7 +10,7 @@ modelo:
           y utilización de capitales ajenos. Resumen anual.
         title: Retenciones capital mobiliario y transmisión de activos - resumen anual
       revision:
-        2019-y-siguientes:
+        '2019':
           casilla:
             '01':
               help: Número de perceptores (registros) cuya base de retenciones e ingresos
@@ -37,4 +37,60 @@ modelo:
               field:
                 title: Modelo 194 calculation construct
           field:
-            label: Orden de 18 de noviembre de 1999, ejercicios 2019 y siguientes
+            label: Diseño de registro del modelo 194, ejercicio 2019
+        '2023':
+          casilla:
+            '01':
+              help: Número de perceptores (registros) cuya base de retenciones e ingresos
+                a cuenta es positiva.
+              label: Número total de perceptores con base positiva
+            '02':
+              help: Suma de las bases de retención e ingreso a cuenta de los registros
+                de perceptor con base positiva.
+              label: Base de retenciones e ingresos a cuenta
+            '03':
+              help: Suma de las retenciones e ingresos a cuenta practicados sobre
+                las rentas declaradas.
+              label: Retenciones e ingresos a cuenta
+            '04':
+              help: Número de perceptores (registros) cuya base de retenciones e ingresos
+                a cuenta es negativa.
+              label: Número total de perceptores con base negativa
+            '05':
+              help: Suma de las bases de retención e ingreso a cuenta de los registros
+                de perceptor con base negativa.
+              label: Base de retenciones e ingresos a cuenta negativa
+          construct:
+            modelo-194-calculation-construct:
+              field:
+                title: Modelo 194 calculation construct
+          field:
+            label: Diseño de registro del modelo 194, ejercicio 2023
+        '2024':
+          casilla:
+            '01':
+              help: Número de perceptores (registros) cuya base de retenciones e ingresos
+                a cuenta es positiva.
+              label: Número total de perceptores con base positiva
+            '02':
+              help: Suma de las bases de retención e ingreso a cuenta de los registros
+                de perceptor con base positiva.
+              label: Base de retenciones e ingresos a cuenta
+            '03':
+              help: Suma de las retenciones e ingresos a cuenta practicados sobre
+                las rentas declaradas.
+              label: Retenciones e ingresos a cuenta
+            '04':
+              help: Número de perceptores (registros) cuya base de retenciones e ingresos
+                a cuenta es negativa.
+              label: Número total de perceptores con base negativa
+            '05':
+              help: Suma de las bases de retención e ingreso a cuenta de los registros
+                de perceptor con base negativa.
+              label: Base de retenciones e ingresos a cuenta negativa
+          construct:
+            modelo-194-calculation-construct:
+              field:
+                title: Modelo 194 calculation construct
+          field:
+            label: Diseño de registro del modelo 194, ejercicio 2024

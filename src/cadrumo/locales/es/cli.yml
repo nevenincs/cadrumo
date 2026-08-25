@@ -2141,10 +2141,10 @@ cli:
         pull_divergences_notice: 'La autoridad censal informa de {count} campo(s)
           con valores distintos de los declarados: {axes}. Se mantiene tu respuesta;
           resuelve cada discrepancia tú mismo.'
-        pull_help: Lee tu identidad y tu domicilio de los datos censales de la AEAT
-          y previsualiza o inscríbelos en el perfil activo.
-        pull_preview_notice: 'Solo previsualización: no se ha escrito nada en el perfil.
-          Vuelve a ejecutar con --apply para inscribir estos datos.'
+        pull_apply_help: Adquiere una vez y abre la propuesta censal exacta revisada antes de aplicarla.
+        pull_help: Previsualiza la identidad y el domicilio de los datos censales de la AEAT,
+          o revisa y aplica una propuesta exacta mediante la operación canónica reanudable.
+        pull_preview_notice: 'Solo previsualización: no se ha escrito nada en el perfil.'
         pull_verified_tier_notice: Estos datos se leyeron directamente de la autoridad
           censal, por lo que la incorporación al censo cuenta como verificada.
         pull_withheld_notice: 'Los valores de {count} campo(s) se ocultan en la salida:

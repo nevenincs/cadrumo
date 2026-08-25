@@ -1,0 +1,17 @@
+[[revisions."2023".verification_expectations]]
+id = "modelo-194-2023-reconcile-when-present"
+computed_casilla_ids = []
+reconcile_when_present_casilla_ids = [
+    "01",
+    "02",
+    "03",
+    "04",
+    "05",
+]
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "0"
+discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-modelo-194-procedure", "boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
+

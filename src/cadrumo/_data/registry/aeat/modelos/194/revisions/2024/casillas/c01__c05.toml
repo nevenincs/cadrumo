@@ -1,4 +1,4 @@
-[[revisions."2019-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "01"
 number = "01"
 section = ["resumen"]
@@ -11,7 +11,7 @@ input_kind = "manual"
 legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
 source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
 
-[[revisions."2019-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "02"
 number = "02"
 section = ["resumen"]
@@ -22,7 +22,7 @@ input_kind = "manual"
 legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
 source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
 
-[[revisions."2019-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "03"
 number = "03"
 section = ["resumen"]
@@ -33,7 +33,7 @@ input_kind = "manual"
 legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
 source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
 
-[[revisions."2019-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "04"
 number = "04"
 section = ["resumen"]
@@ -46,7 +46,7 @@ input_kind = "manual"
 legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
 source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
 
-[[revisions."2019-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "05"
 number = "05"
 section = ["resumen"]
@@ -56,3 +56,4 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
 source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
+

@@ -5,7 +5,59 @@ modelo:
         official_name: null
         title: null
       revision:
-        2019-y-siguientes:
+        '2019':
+          casilla:
+            '01':
+              help: Number of recipients (records) whose withholding base is positive.
+              label: Total number of recipients with a positive base
+            '02':
+              help: Sum of the withholding bases in recipient records with a positive
+                base.
+              label: Base for withholdings and payments on account
+            '03':
+              help: Sum of the withholdings and payments on account applied to the
+                declared income.
+              label: Withholdings and payments on account
+            '04':
+              help: Number of recipients (records) whose withholding base is negative.
+              label: Total number of recipients with a negative base
+            '05':
+              help: Sum of the withholding bases in recipient records with a negative
+                base.
+              label: Negative base for withholdings and payments on account
+          construct:
+            modelo-194-calculation-construct:
+              field:
+                title: null
+          field:
+            label: null
+        '2023':
+          casilla:
+            '01':
+              help: Number of recipients (records) whose withholding base is positive.
+              label: Total number of recipients with a positive base
+            '02':
+              help: Sum of the withholding bases in recipient records with a positive
+                base.
+              label: Base for withholdings and payments on account
+            '03':
+              help: Sum of the withholdings and payments on account applied to the
+                declared income.
+              label: Withholdings and payments on account
+            '04':
+              help: Number of recipients (records) whose withholding base is negative.
+              label: Total number of recipients with a negative base
+            '05':
+              help: Sum of the withholding bases in recipient records with a negative
+                base.
+              label: Negative base for withholdings and payments on account
+          construct:
+            modelo-194-calculation-construct:
+              field:
+                title: null
+          field:
+            label: null
+        '2024':
           casilla:
             '01':
               help: Number of recipients (records) whose withholding base is positive.

@@ -1825,6 +1825,110 @@ required_text = [
     "CÓDIGO PROVINCIA",
 ]
 
+[legal."orden-hac-1276-2019:art-primero"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1276-2019.html#a1"
+document_id = "BOE-A-2019-18752"
+article = "primero"
+section = "Modelo 194"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2019-18752#a1"
+published_at = 2019-12-31
+effective_from = 2019-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-25
+reviewed_by = "agent: inspected the bundled full BOE-A-2019-18752 text and the official AEAT 2019 record design"
+notes = "Orden HAC/1276/2019 articulo primero modifies the Modelo 194 record design and its disposicion final unica applies it first to ejercicio 2019 declarations presented in 2020."
+required_text = [
+    "Artículo primero. Modificación de la Orden de 18 de noviembre de 1999",
+    "modelos 194",
+    "VALOR TRANSMISIÓN, AMORTIZACIÓN, REEMBOLSO, CANJE O CONVERSIÓN",
+]
+
+[legal."orden-hac-1276-2019:df-unica"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1276-2019.html#df"
+document_id = "BOE-A-2019-18752"
+article = "DF unica"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2019-18752#df"
+published_at = 2019-12-31
+effective_from = 2019-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-25
+reviewed_by = "agent: inspected the bundled full BOE-A-2019-18752 text and the official AEAT 2019 record design"
+notes = "Orden HAC/1276/2019 disposicion final unica: first application to declarations for ejercicio 2019 presented in 2020."
+required_text = [
+    "Disposición final única. Entrada en vigor.",
+    "declaraciones correspondientes a 2019 que se presenten en 2020",
+]
+
+[legal."orden-hfp-1284-2023:art-6"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1284-2023.html#a6"
+document_id = "BOE-A-2023-24412"
+article = "6"
+section = "Modelo 194"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-24412#a6"
+published_at = 2023-11-30
+effective_from = 2023-12-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-25
+reviewed_by = "agent: inspected the bundled full BOE-A-2023-24412 text and the official AEAT 2023 record design"
+notes = "Orden HFP/1284/2023 articulo 6 modifies the Modelo 194 record design for the 2023 declaration era."
+required_text = [
+    "Artículo 6",
+    "modelos 194",
+    "N.I.F. DEL DECLARANTE",
+]
+
+[legal."orden-hfp-1284-2023:df-unica"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1284-2023.html#df"
+document_id = "BOE-A-2023-24412"
+article = "DF unica"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-24412#df"
+published_at = 2023-11-30
+effective_from = 2023-12-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-25
+reviewed_by = "agent: inspected the bundled full BOE-A-2023-24412 text and the official AEAT 2023 record design"
+notes = "Orden HFP/1284/2023 disposicion final unica: first application to declarations for ejercicio 2023 presented in 2024."
+required_text = [
+    "Disposición final única",
+    "declaraciones informativas correspondientes al ejercicio 2023",
+    "ejercicio 2024",
+]
+
+[legal."orden-hac-1504-2024:art-primero"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1504-2024.html#a1"
+document_id = "BOE-A-2024-27528"
+article = "primero"
+section = "Modelo 194"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-27528#a1"
+published_at = 2024-12-31
+effective_from = 2025-01-01
+governs_periods_from = 2024-01-01
+governs_periods_to = 2024-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-25
+reviewed_by = "agent: inspected the bundled full BOE-A-2024-27528 text and the official AEAT 2024 record design"
+notes = "Orden HAC/1504/2024 articulo primero modifies the Modelo 194 record design; its final provision makes the Orden first applicable to ejercicio 2024 declarations presented in 2025."
+required_text = [
+    "Artículo primero",
+    "modelos 194",
+    "TIPO DE SOPORTE",
+]
+
 [legal."orden-1999-11-17:apartado-primero"]
 evidence_tier = "legal_authority"
 authority = "boe"

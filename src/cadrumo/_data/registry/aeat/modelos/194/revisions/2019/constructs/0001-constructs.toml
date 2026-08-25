@@ -1,7 +1,8 @@
-[[revisions."2019-y-siguientes".constructs]]
+[[revisions."2019".constructs]]
 id = "modelo-194-calculation-construct"
 legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
 source_refs = ["aeat-modelo-194-procedure", "boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
 casilla_ids = ["01", "02", "03", "04", "05"]
 formulas = []
 application_links = ["modelo-194-calculation", "modelo-194-deadline", "modelo-194-filing", "modelo-194-review", "modelo-194-approval", "modelo-194-reconciliation", "modelo-194-workflow"]
+

@@ -1,0 +1,9 @@
+[[revisions."2024".applicability]]
+id = "m194-seed"
+applicable_entity_types = ["attribution_entity", "legal_entity", "natural_person"]
+required_payer_fact = "pays_capital_income_with_retencion"
+applicable_reason = "Modelo 194 (resumen anual de retenciones sobre capital mobiliario): el contribuyente satisface rendimientos del capital mobiliario o rentas de transmisión/amortización de activos sujetos a retención y presenta el resumen anual de las retenciones practicadas."
+not_applicable_reason = "Modelo 194 no aplica: el resumen anual de retenciones sobre capital mobiliario solo corresponde a quien satisface tales rendimientos sujetos a retención."
+cuota_bearing = false
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-1999-11-18:apartado-cuarto"]
+
