@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-25'
-body_hash: 'sha256:a50f98e20dec2aa697e2ae618fe43a1e1d620e1fa363cc3aa66b430afa5c081e'
+body_hash: 'sha256:b2926695cf95b68ba342829912eb93414b4e7d6a2d2f52ba4aaacbc64ed49c9a'
 ---
 
 # `tui-architecture` plan
@@ -200,7 +200,7 @@ Create the canonical TUI entrypoint packages and relocate presentation-only them
 
 - [x] `W04.P09.S46` - Create the narrow TUI package facade and reserve launcher-level exports only; `src/cadrumo/entrypoints/tui/__init__.py`.
 - [x] `W04.P09.S47` - Relocate terminal theme and styling primitives without carrying application state; `src/cadrumo/entrypoints/tui/components/theme.py`.
-- [ ] `W04.P09.S48` - Relocate reusable terminal widgets behind the components facade; `src/cadrumo/entrypoints/tui/components/widgets.py`.
+- [x] `W04.P09.S48` - Relocate reusable terminal widgets behind the components facade; `src/cadrumo/entrypoints/tui/components/widgets.py`.
 - [ ] `W04.P09.S49` - Relocate immutable form presentation contracts and widgets without orchestration or backend validation; `src/cadrumo/entrypoints/tui/components/forms.py`.
 - [ ] `W04.P09.S50` - Relocate generic dialogs while keeping approval and operation lifecycle out of component state; `src/cadrumo/entrypoints/tui/components/dialogs.py`.
 - [ ] `W04.P09.S51` - Relocate status and busy presentation so it renders supplied operation state rather than owning timers or work; `src/cadrumo/entrypoints/tui/components/status.py`.
