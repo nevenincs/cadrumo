@@ -23,8 +23,7 @@ if str(_REPO_ROOT) not in sys.path:
 if not __package__:
     __package__ = "dev.packaging"
 
-from .._paths import REPO_ROOT
-
+from .._paths import REPO_ROOT  # noqa: E402
 from ._command import CommandResult, run_command  # noqa: E402
 from ._hashing import sha256_path  # noqa: E402
 from .python_cohort import load_python_cohort  # noqa: E402
