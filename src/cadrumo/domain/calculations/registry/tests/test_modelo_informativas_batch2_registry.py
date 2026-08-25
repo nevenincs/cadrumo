@@ -4,9 +4,9 @@ Modelos 165, 233, 156 (annual, January plazo) and 038, 185, 186 (monthly plazo)
 were promoted from :data:`~core.UNMODELED_OBLIGATIONS` to registry-loadable definitions.
 Each is approved by a bundled orden whose approval (art 1) and plazo (art 4 or 6)
 articles are cross-checked against the bundled BOE corpus at build. These
-revisions are scheduling/applicability-grade (declaration-header casillas only):
-no authoritative diseño de registro is bundled for any of the six, so no numbered
-form casilla is fabricated.
+revisions are scheduling/applicability-grade (declaration-header casillas only).
+Modelo 038's official design is bundled but remains geometry-recovered, so no
+numbered form casilla is fabricated from it.
 
 See Also:
     :func:`~domain.calculations.registry.tests._registry_schema_support._committed_modelo`
@@ -60,7 +60,7 @@ _MODELOS = [
         "BOE-A-2003-23509",
         "annual",
     ),
-    ("038", "2002-y-siguientes", "orden-hac-66-2002:art-1", "orden-hac-66-2002:art-6", "BOE-A-2002-1041", "monthly"),
+    ("038", "2025-y-siguientes", "orden-hac-66-2002:art-1", "orden-hac-66-2002:art-6", "BOE-A-2002-1041", "monthly"),
     (
         "185",
         "2025-y-siguientes",

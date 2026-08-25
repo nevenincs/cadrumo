@@ -49,23 +49,15 @@ applies_from = 2002-01-16
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-1041"
 review_status = "reviewed"
 
-# Re-pointed 2026-08-15: the previous corpus_path (orden-hac-66-2002.html,
-# 1093 bytes) carries no annex section and no record-layout vocabulary --
-# it approves the model but does not contain its positional design. The
-# real Diseño de Registro (94268 bytes, "N.I.F. ... 1 2 3 4 ... 237"
-# position-numbered header row verified directly) is bundled and was never
-# cited. corpus_path/sha256/bytes/source_url/retrieved_at now point at it,
-# sourced from the bundle's own manifest.json (real, observed provenance,
-# not re-fetched). applies_from/record_design_epoch deliberately left
-# undeclared: the file states no ejercicio or effective date of its own
-# ("actualizado 28/06/2024" is an update stamp, not a coverage start).
-# The bundled design is AEAT's dr038_2024.pdf. Orden HAC/646/2024, de 25 de junio,
-# approved the change, and AEAT states it applies for the first time to "la declaracion
-# correspondiente a junio de 2024, a presentar en julio de 2024" -- hence applies_from
-# 2024-06-01. Not inferred from the filename: the date is AEAT's own statement.
-[sources."enrolled-modelo-038-layout"]
-record_design_epoch = "2002"
-applies_from = 2002-01-16
+# AEAT's current dr038_2024.pdf records the design introduced by
+# BOE-A-2024-13049. Its final provision makes article 1 applicable first to
+# the June 2024 declaration (filed in July); the order supplies no terminal
+# date, and AEAT's current filing guidance requires the vigente design. The
+# open end therefore records the continuing amendment, not a guessed
+# exercise label inferred from the filename.
+[sources."aeat-dr-038-2024"]
+record_design_epoch = "2024-late"
+applies_from = 2024-06-01
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
@@ -74,4 +66,20 @@ sha256 = "f2f713cd60b26548ab9fb57b457f28c5a7841423592f95debdf83a78d9e2f0fe"
 bytes = 94268
 retrieved_at = 2026-07-21
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/dr038_2024.pdf"
+review_status = "reviewed"
+
+# The historical AEAT artefact is a hash-pinned inspection receipt. Its index
+# title says it was updated in 2012, but neither that title nor the PDF states
+# a complete filing-period window. Deliberately omit epoch and applicability
+# fields and cite it from no revision: it cannot become selected design
+# authority for the unevidenced 2002-to-May-2024 interval.
+[sources."aeat-dr-038-2012-inspection"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_038/files/02-038-orden-hac-66-2002-de-15-de-enero-actualizado-a-18-01-2012.pdf"
+sha256 = "e9008d9c0c407c76143d6997f3a5fb52a2a482c40571f395da7dcf8a8fee3d9d"
+bytes = 79486
+retrieved_at = 2026-08-25
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/dr038_2005.pdf"
 review_status = "reviewed"

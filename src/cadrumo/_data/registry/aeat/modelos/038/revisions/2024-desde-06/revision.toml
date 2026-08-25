@@ -1,0 +1,36 @@
+[revisions."2024-desde-06"]
+authority_grade = "applicability"
+# BOE-A-2024-13049 applies the IRUS design amendment first to the June 2024
+# declaration. No selected source attests the earlier 2024 months, so this
+# revision begins at that exact declaration boundary and stops at year end.
+valid_from = 2024-06-01
+valid_to = 2024-12-31
+period_selector = { years = [2024], periods = ["06", "07", "08", "09", "10", "11", "12"] }
+orden_aplicabilidad = ["orden-hac-66-2002:art-1"]
+legal_refs = [
+    "orden-hac-66-2002:art-1",
+    "orden-hac-66-2002:art-6",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-038-procedure",
+    "aeat-dr-038-2024",
+]
+review_status = "agent_reviewed"
+reviewed_by = "agent: applicability-grade review; June-December 2024 selection is bounded by BOE-A-2024-13049's first-applicable declaration; no pre-June design authority is selected"
+reviewed_at = 2026-08-25
+
+[revisions."2024-desde-06".family_dispositions.casilla_continuidad_evolutions]
+reason = """
+No older registered revision is selected because the acquired historical PDF
+does not state a complete applicability window. This revision therefore has no
+evidenced predecessor identity from which to declare a casilla evolution."""
+legal_refs = [
+    "orden-hac-66-2002:art-1",
+    "orden-hac-66-2002:art-6",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-038-procedure",
+    "aeat-dr-038-2024",
+]

@@ -2,7 +2,7 @@
 # declaración está referida, con periodicidad mensual. Each window opens the
 # 1st and closes the last natural day of the month following the reference month.
 
-[[revisions."2002-y-siguientes".deadline_windows]]
+[[revisions."2025-y-siguientes".deadline_windows]]
 id = "modelo-038-2025-01"
 filing_year = 2025
 period = "2025 01"
@@ -12,7 +12,7 @@ closes_on = 2025-02-28
 legal_refs = ["orden-hac-66-2002:art-6", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-038-procedure"]
 
-[[revisions."2002-y-siguientes".deadline_windows]]
+[[revisions."2025-y-siguientes".deadline_windows]]
 id = "modelo-038-2025-02"
 filing_year = 2025
 period = "2025 02"
@@ -22,7 +22,7 @@ closes_on = 2025-03-31
 legal_refs = ["orden-hac-66-2002:art-6", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-038-procedure"]
 
-[[revisions."2002-y-siguientes".deadline_windows]]
+[[revisions."2025-y-siguientes".deadline_windows]]
 id = "modelo-038-2025-03"
 filing_year = 2025
 period = "2025 03"
@@ -32,7 +32,7 @@ closes_on = 2025-04-30
 legal_refs = ["orden-hac-66-2002:art-6", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-038-procedure"]
 
-[[revisions."2002-y-siguientes".deadline_windows]]
+[[revisions."2025-y-siguientes".deadline_windows]]
 id = "modelo-038-2025-04"
 filing_year = 2025
 period = "2025 04"
@@ -42,7 +42,7 @@ closes_on = 2025-05-31
 legal_refs = ["orden-hac-66-2002:art-6", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-038-procedure"]
 
-[[revisions."2002-y-siguientes".deadline_windows]]
+[[revisions."2025-y-siguientes".deadline_windows]]
 id = "modelo-038-2025-05"
 filing_year = 2025
 period = "2025 05"
@@ -52,7 +52,7 @@ closes_on = 2025-06-30
 legal_refs = ["orden-hac-66-2002:art-6", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-038-procedure"]
 
-[[revisions."2002-y-siguientes".deadline_windows]]
+[[revisions."2025-y-siguientes".deadline_windows]]
 id = "modelo-038-2025-06"
 filing_year = 2025
 period = "2025 06"
@@ -62,7 +62,7 @@ closes_on = 2025-07-31
 legal_refs = ["orden-hac-66-2002:art-6", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-038-procedure"]
 
-[[revisions."2002-y-siguientes".deadline_windows]]
+[[revisions."2025-y-siguientes".deadline_windows]]
 id = "modelo-038-2025-07"
 filing_year = 2025
 period = "2025 07"
@@ -72,7 +72,7 @@ closes_on = 2025-08-31
 legal_refs = ["orden-hac-66-2002:art-6", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-038-procedure"]
 
-[[revisions."2002-y-siguientes".deadline_windows]]
+[[revisions."2025-y-siguientes".deadline_windows]]
 id = "modelo-038-2025-08"
 filing_year = 2025
 period = "2025 08"
@@ -82,7 +82,7 @@ closes_on = 2025-09-30
 legal_refs = ["orden-hac-66-2002:art-6", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-038-procedure"]
 
-[[revisions."2002-y-siguientes".deadline_windows]]
+[[revisions."2025-y-siguientes".deadline_windows]]
 id = "modelo-038-2025-09"
 filing_year = 2025
 period = "2025 09"
@@ -92,7 +92,7 @@ closes_on = 2025-10-31
 legal_refs = ["orden-hac-66-2002:art-6", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-038-procedure"]
 
-[[revisions."2002-y-siguientes".deadline_windows]]
+[[revisions."2025-y-siguientes".deadline_windows]]
 id = "modelo-038-2025-10"
 filing_year = 2025
 period = "2025 10"
@@ -102,7 +102,7 @@ closes_on = 2025-11-30
 legal_refs = ["orden-hac-66-2002:art-6", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-038-procedure"]
 
-[[revisions."2002-y-siguientes".deadline_windows]]
+[[revisions."2025-y-siguientes".deadline_windows]]
 id = "modelo-038-2025-11"
 filing_year = 2025
 period = "2025 11"
@@ -112,7 +112,7 @@ closes_on = 2025-12-31
 legal_refs = ["orden-hac-66-2002:art-6", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-038-procedure"]
 
-[[revisions."2002-y-siguientes".deadline_windows]]
+[[revisions."2025-y-siguientes".deadline_windows]]
 id = "modelo-038-2025-12"
 filing_year = 2025
 period = "2025 12"
