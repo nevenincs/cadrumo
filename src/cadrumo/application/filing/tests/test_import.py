@@ -7,7 +7,6 @@ end-to-end against local justificante fixture PDFs under
 
 from __future__ import annotations
 
-import re
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -81,10 +80,22 @@ def test_normalise_period_returns_supported_typed_period(
 
 
 @pytest.mark.parametrize(
-    ("modelo", "ejercicio", "raw_period", "match"),
+    ("modelo", "ejercicio", "raw_period", "expected_key", "expected_context"),
     [
-        ("130", "2026", Period.from_year_and_code(2025, "1T"), r"cannot canonicalise period 2025 1T"),
-        ("390", "2021", Period.from_year_and_code(2021, "1T"), r"period token '1T' is not declared"),
+        (
+            "130",
+            "2026",
+            Period.from_year_and_code(2025, "1T"),
+            "application.filing.errors.period_ejercicio_mismatch",
+            {"modelo": "130"},
+        ),
+        (
+            "390",
+            "2021",
+            Period.from_year_and_code(2021, "1T"),
+            "application.filing.import.errors.period_token_undeclared",
+            {"modelo": "390", "filing_year": 2021, "period_code": "1T"},
+        ),
     ],
     ids=("year-mismatch", "registry-period-missing"),
 )
@@ -93,8 +104,16 @@ def test_normalise_period_rejects_unsupported_typed_period(
     modelo: str,
     ejercicio: str,
     raw_period: Period,
-    match: str,
+    expected_key: str,
+    expected_context: dict[str, object],
 ) -> None:
+    """Both refusals name the offending pair through the typed error, not prose.
+
+    The refusals render through the locale catalogues, so the rendered string is
+    the catalogue's business and changes with a translation edit. What the
+    caller can rely on is the translated_message key and the typed context the
+    renderer interpolates, and that is what is asserted here.
+    """
     with pytest.raises(ModeloImportError) as exc_info:
         _normalise_period(
             modelo=modelo,
@@ -102,12 +121,11 @@ def test_normalise_period_rejects_unsupported_typed_period(
             raw_period=raw_period,
             schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
         )
-    # The year-mismatch case now renders via a translated_message key; force the
-    # English locale so the assertion matches the byte-identical English text
-    # (the registry-period-missing case still carries a raw args[0] string).
+    error = exc_info.value
+    assert error.translated_message == expected_key
+    assert expected_context.items() <= dict(error.context).items(), error.context
     with override_settings(cadrumo_output_language="en"):
-        rendered = resolve_error_message(exc_info.value)
-    assert re.search(match, rendered), rendered
+        assert resolve_error_message(error)
 
 
 def test_submission_record_preserves_typed_draft_period(

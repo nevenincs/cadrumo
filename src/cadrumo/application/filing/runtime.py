@@ -70,6 +70,7 @@ from ...domain.calculations.registry import (
     ModeloDefinition,
     ModeloRevision,
     RateBoxPartition,
+    RegistryFailureCondition,
     RegistrySnapshot,
     RegistrySnapshotError,
     RegistryValidationError,
@@ -524,6 +525,8 @@ def _build_runtime_schema_provider_cached(
                 period=period,
             )
         except (RegistrySnapshotError, RegistryValidationError) as exc:
+            if selected_tuple is None and _is_below_filing_authority(exc):
+                continue
             if filing_year is None or period is None:
                 raise _registry_snapshot_unavailable_error(
                     modelo=modelo,
@@ -653,6 +656,23 @@ def _validate_period_arguments(*, filing_year: int | None, period: object | None
             context={"filing_year": str(filing_year), "period": str(period)},
         )
     return period
+
+
+def _is_below_filing_authority(exc: Exception) -> bool:
+    """Report whether one snapshot refusal was a grade insufficiency, not a defect.
+
+    This provider serves filing drafts, so it asks the registry for FILING
+    authority. A modelo whose revision declares a lower rung -- modelo 036,
+    whose censal alta/modificacion/baja is filed on AEAT's sede and produces no
+    fichero here -- is not a filing-draft schema at all, and an unfiltered sweep
+    that raised on it made the whole provider unbuildable. An explicitly
+    requested modelo still raises: the caller named it.
+    """
+    classification = getattr(exc, "registry_failure", None)
+    return (
+        classification is not None
+        and classification.condition is RegistryFailureCondition.SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT
+    )
 
 
 def _snapshot_for_provider(
